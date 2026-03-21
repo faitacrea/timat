@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { supabase, seConnecter, seDeconnecter, getSession, getProfil, inscrireAsmat, inscrireParent } from "../lib/supabase.js";
 
 // ─── DATES (déclarées en premier pour éviter TDZ) ─────────────────────────────
 var _D=new Date();
@@ -3234,15 +3235,57 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({onLogin,dark,setDark}){
   const [showLogin,setShowLogin]=useState(false);
-  const [email,setEmail]=useState("");const [err,setErr]=useState("");
-  const comptes=[
+  const [mode,setMode]=useState("connexion"); // "connexion" | "inscription"
+  const [form,setForm]=useState({email:"",password:"",prenom:"",nom:"",role:"asmat"});
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+
+  // Comptes démo (accès rapide)
+  const demos=[
     {...D.asmat,label:"Marie Dupont (AssMat)",hint:"marie.dupont@mail.fr"},
     {...D.parents[0],label:"Sophie Martin — Léo",hint:"sophie.martin@mail.fr"},
     {...D.parents[1],label:"Thomas Bernard — Emma",hint:"thomas.bernard@mail.fr"},
     {...D.parents[2],label:"Camille Petit — Noah",hint:"camille.petit@mail.fr"},
   ];
-  const tenter=()=>{const c=comptes.find(x=>x.email===email.trim().toLowerCase());
-    if(c)onLogin(c);else setErr("Email non reconnu.");};
+
+  const connexion=async()=>{
+    if(!form.email||!form.password){setErr("Email et mot de passe requis.");return;}
+    setLoading(true);setErr("");
+    try{
+      // Essai connexion réelle Supabase
+      const{data,error}=await supabase.auth.signInWithPassword({email:form.email,password:form.password});
+      if(error){
+        // Si pas de compte Supabase, essayer les comptes démo
+        const demo=demos.find(d=>d.email===form.email.trim().toLowerCase());
+        if(demo){onLogin(demo);}
+        else{setErr("Email ou mot de passe incorrect.");}
+      }else if(data?.user){
+        const{data:profil}=await supabase.from("profiles").select("*").eq("id",data.user.id).single();
+        if(profil)onLogin({...profil,id:data.user.id,email:data.user.email});
+      }
+    }catch(e){setErr("Erreur de connexion.");}
+    setLoading(false);
+  };
+
+  const inscription=async()=>{
+    if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs.");return;}
+    if(form.password.length<6){setErr("Le mot de passe doit faire au moins 6 caractères.");return;}
+    setLoading(true);setErr("");
+    try{
+      const{data,error}=await supabase.auth.signUp({
+        email:form.email,password:form.password,
+        options:{data:{role:form.role,prenom:form.prenom,nom:form.nom}}
+      });
+      if(error){setErr(error.message);}
+      else if(data?.user){
+        setErr("");
+        setMode("connexion");
+        setForm(f=>({...f,password:""}));
+        setErr("✅ Compte créé ! Connecte-toi maintenant.");
+      }
+    }catch(e){setErr("Erreur lors de l'inscription.");}
+    setLoading(false);
+  };
 
   const feats=[
     {ic:"✨",t:"Bilan de journée automatique",d:"Rédigé en un clic, envoyé aux parents par message"},
@@ -3354,26 +3397,85 @@ function LandingPage({onLogin,dark,setDark}){
       </button>
     </div>
 
-    {/* Modale Login */}
+    {/* Modale Auth */}
     {showLogin&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
       onClick={e=>e.target===e.currentTarget&&setShowLogin(false)}>
-      <div className="card"style={{width:"100%",maxWidth:400,padding:28}}>
+      <div className="card"style={{width:"100%",maxWidth:420,padding:28,maxHeight:"90vh",overflowY:"auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-          <div className="pf"style={{fontSize:20,fontWeight:600,color:"var(--b)"}}>Connexion démo</div>
+          <div className="pf"style={{fontSize:20,fontWeight:600,color:"var(--b)"}}>
+            {mode==="connexion"?"Connexion":"Créer un compte"}
+          </div>
           <button onClick={()=>setShowLogin(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
         </div>
-        <label className="lbl">Email</label>
-        <input className="inp"type="email"placeholder="votre@email.fr"value={email}
-          onChange={e=>{setEmail(e.target.value);setErr("");}}
-          onKeyDown={e=>e.key==="Enter"&&tenter()}
-          style={{marginBottom:err?6:14}}/>
-        {err&&<div style={{color:"var(--R)",fontSize:12,marginBottom:10}}>{err}</div>}
-        <button className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:16}}onClick={tenter}>
-          Se connecter →
+
+        {/* Onglets Connexion / Inscription */}
+        <div style={{display:"flex",marginBottom:20,borderBottom:"2px solid var(--br)"}}>
+          {["connexion","inscription"].map(m=><button key={m}onClick={()=>{setMode(m);setErr("");}}style={{
+            flex:1,padding:"8px",border:"none",background:"none",cursor:"pointer",
+            fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
+            color:mode===m?"var(--T)":"var(--l)",
+            borderBottom:mode===m?"2px solid var(--T)":"2px solid transparent",
+            marginBottom:-2,transition:"all .15s"
+          }}>{m==="connexion"?"Se connecter":"Créer un compte"}</button>)}
+        </div>
+
+        {/* Formulaire Inscription */}
+        {mode==="inscription"&&<>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div>
+              <label className="lbl">Prénom *</label>
+              <input className="inp"placeholder="Marie"value={form.prenom}onChange={e=>setForm(f=>({...f,prenom:e.target.value}))}/>
+            </div>
+            <div>
+              <label className="lbl">Nom</label>
+              <input className="inp"placeholder="Dupont"value={form.nom}onChange={e=>setForm(f=>({...f,nom:e.target.value}))}/>
+            </div>
+          </div>
+          <div style={{marginBottom:10}}>
+            <label className="lbl">Je suis *</label>
+            <select className="sel"value={form.role}onChange={e=>setForm(f=>({...f,role:e.target.value}))}>
+              <option value="asmat">👩‍👧 Assistante maternelle</option>
+              <option value="parent">👪 Parent</option>
+            </select>
+          </div>
+        </>}
+
+        {/* Email + Mot de passe (communs) */}
+        <div style={{marginBottom:10}}>
+          <label className="lbl">Email *</label>
+          <input className="inp"type="email"placeholder="votre@email.fr"value={form.email}
+            onChange={e=>setForm(f=>({...f,email:e.target.value}))}
+            onKeyDown={e=>e.key==="Enter"&&(mode==="connexion"?connexion():inscription())}/>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label className="lbl">Mot de passe *</label>
+          <input className="inp"type="password"placeholder={mode==="inscription"?"6 caractères minimum":"Votre mot de passe"}
+            value={form.password}onChange={e=>setForm(f=>({...f,password:e.target.value}))}
+            onKeyDown={e=>e.key==="Enter"&&(mode==="connexion"?connexion():inscription())}/>
+        </div>
+
+        {err&&<div style={{
+          color:err.startsWith("✅")?"var(--S)":"var(--R)",
+          fontSize:12,marginBottom:12,padding:"8px 12px",
+          background:err.startsWith("✅")?"var(--Sp)":"var(--Rp)",
+          borderRadius:8
+        }}>{err}</div>}
+
+        <button className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:16,opacity:loading?.7:1}}
+          onClick={mode==="connexion"?connexion:inscription} disabled={loading}>
+          {loading?"⏳ Chargement…":mode==="connexion"?"Se connecter →":"Créer mon compte →"}
         </button>
+
+        {/* Séparateur démo */}
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+          <div style={{flex:1,height:1,background:"var(--br)"}}/>
+          <span style={{fontSize:11,color:"var(--l)"}}>ou accès démo rapide</span>
+          <div style={{flex:1,height:1,background:"var(--br)"}}/>
+        </div>
+
         <div style={{background:"var(--c)",borderRadius:10,padding:12}}>
           <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:8,textTransform:"uppercase",letterSpacing:".5px"}}>Comptes démo</div>
-          {comptes.map(c=><button key={c.id}onClick={()=>{setEmail(c.email);setErr("");}}
+          {demos.map(c=><button key={c.id}onClick={()=>onLogin(c)}
             style={{display:"block",width:"100%",textAlign:"left",padding:"7px 10px",background:"none",border:"none",cursor:"pointer",borderRadius:8,transition:"background .15s"}}
             onMouseEnter={e=>e.currentTarget.style.background="var(--br)"}
             onMouseLeave={e=>e.currentTarget.style.background="none"}>
@@ -3488,6 +3590,7 @@ export default function App(){
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
   const [dark,setDark]=useState(false);
+  const [loading,setLoading]=useState(true);
   const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length);
   const [notifs,setNotifs]=useState([
     {id:"n1",ic:"📬",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi"},
@@ -3496,8 +3599,51 @@ export default function App(){
   ]);
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
-  const [onboardStep,setOnboardStep]=useState(0);
   const notifNonLus=notifs.filter(n=>!n.lu).length;
+
+  // ── Vérifier session Supabase au démarrage ────────────────
+  useEffect(()=>{
+    const init=async()=>{
+      try{
+        const{data:{session}}=await supabase.auth.getSession();
+        if(session?.user){
+          const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+          if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
+        }
+      }catch(e){console.log("Pas de session");}
+      finally{setLoading(false);}
+    };
+    init();
+    const{data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
+      if(event==="SIGNED_IN"&&session?.user){
+        const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
+        if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
+        else setUser({id:session.user.id,email:session.user.email,
+          prenom:session.user.user_metadata?.prenom||"Utilisateur",
+          nom:session.user.user_metadata?.nom||"",
+          role:session.user.user_metadata?.role||"asmat",
+          couleur:"#C4714A"});
+      }
+      if(event==="SIGNED_OUT"){setUser(null);setPage("accueil");}
+    });
+    return()=>subscription.unsubscribe();
+  },[]);
+
+  const handleLogout=async()=>{
+    try{await supabase.auth.signOut();}catch(e){}
+    setUser(null);setPage("accueil");setOnboarded(false);
+  };
+
+  if(loading)return(
+    <><Styles/>
+    <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+      <div className="pf"style={{fontSize:36,color:"var(--T)",fontStyle:"italic"}}>TiMat</div>
+      <div style={{display:"flex",gap:6}}>
+        <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
+      </div>
+      <div style={{fontSize:12,color:"var(--l)"}}>Chargement…</div>
+    </div></>
+  );
 
   if(!user)return <><Styles/><div className={`app${dark?" dark":""}`}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
   if(!onboarded&&user.role==="asmat")return <><Styles/><div className={`app${dark?" dark":""}`}><Onboarding onFinish={()=>setOnboarded(true)} user={user}/></div></>;
@@ -3511,7 +3657,6 @@ export default function App(){
   const renderPage=()=>{
     switch(page){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
-      // Nouveaux onglets fusionnés
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
       case "eveil_complet": return <EveilComplet {...P}/>;
@@ -3521,7 +3666,6 @@ export default function App(){
       case "calendrier": return <Calendrier enfants={enfants} role={role}/>;
       case "messagerie": return <Messagerie {...P}/>;
       case "pmi": return <CommunicationPMI role={role}/>;
-      // Legacy
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;
       case "repas": return <JournalComplet {...P}/>;
@@ -3539,7 +3683,8 @@ export default function App(){
       case "facturation": return <AdminFinances {...P}/>;
       case "contrats": return <AdminFinances {...P}/>;
       case "recap": return <AdminFinances {...P}/>;
-      case "dashboard": return <TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>;      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
+      case "dashboard": return <TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>;
+      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
     }
   };
 
@@ -3548,7 +3693,7 @@ export default function App(){
       <Styles/>
       <div className={`app${dark?" dark":""}`}>
         <TopBar role={role} groups={groups} page={page} setPage={setPage} user={user}
-          onLogout={()=>{setUser(null);setPage("accueil");setOnboarded(false);}}
+          onLogout={handleLogout}
           pmiNonLus={pmiNonLus} dark={dark} setDark={setDark}
           notifNonLus={notifNonLus} notifs={notifs} setNotifs={setNotifs}
           showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
