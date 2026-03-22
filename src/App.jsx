@@ -3315,10 +3315,14 @@ function LandingPage({onLogin,dark,setDark}){
           <button onClick={()=>setDark&&setDark(d=>!d)}style={{background:"rgba(255,255,255,.1)",border:"none",color:"#fff",padding:"6px 10px",borderRadius:8,cursor:"pointer",fontSize:14}}>
             {dark?"☀️":"🌙"}
           </button>
+          <button onClick={()=>document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}
+            className="btn"style={{background:"rgba(255,255,255,.1)",color:"#fff",border:"1px solid rgba(255,255,255,.3)"}}>
+            Tarifs
+          </button>
           <button onClick={()=>setShowLogin(true)}className="btn"style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.3)"}}>
             Connexion
           </button>
-          <button onClick={()=>setShowLogin(true)}className="btn bT">Essayer gratuitement →</button>
+          <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT">Essayer gratuitement →</button>
         </div>
       </div>
       {/* Titre */}
@@ -3384,6 +3388,126 @@ function LandingPage({onLogin,dark,setDark}){
             <div style={{fontSize:12,fontWeight:700,color:"var(--b)"}}>{t.nom}</div>
             <div style={{fontSize:11,color:"var(--l)"}}>{t.ville}</div>
           </div>)}
+        </div>
+      </div>
+    </div>
+
+    {/* ── PRICING ──────────────────────────────────────────── */}
+    <div id="pricing"style={{background:"linear-gradient(180deg,var(--c) 0%,var(--w) 100%)",padding:"60px 20px"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:48}}>
+          <div style={{display:"inline-block",background:"var(--Tp)",borderRadius:20,padding:"5px 16px",fontSize:12,color:"var(--T)",fontWeight:700,marginBottom:12,letterSpacing:".5px"}}>
+            💰 TARIFS SIMPLES
+          </div>
+          <div className="pf"style={{fontSize:36,fontWeight:600,color:"var(--b)",marginBottom:8}}>
+            Choisissez votre offre
+          </div>
+          <div style={{fontSize:15,color:"var(--l)",maxWidth:480,margin:"0 auto"}}>
+            Commencez gratuitement, passez au Pro quand vous êtes prête.
+            Aucun engagement, résiliable à tout moment.
+          </div>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:20,alignItems:"start"}}>
+
+          {/* Gratuit */}
+          <div className="card"style={{padding:28,border:"2px solid var(--br)"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--l)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Gratuit</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
+              <span className="pf"style={{fontSize:42,fontWeight:700,color:"var(--b)"}}>0€</span>
+              <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
+            </div>
+            <div style={{fontSize:13,color:"var(--m)",marginBottom:20,lineHeight:1.5}}>Pour découvrir TiMat et ses fonctionnalités de base.</div>
+            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bG"style={{width:"100%",justifyContent:"center",marginBottom:24}}>
+              Commencer gratuitement
+            </button>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {[
+                [true,"1 enfant"],
+                [true,"Journal quotidien"],
+                [true,"Pointage & Repas"],
+                [true,"Messagerie parents"],
+                [true,"Calendrier"],
+                [false,"Bilans IA & CR Trimestriel"],
+                [false,"Pajemploi & Attestation fiscale"],
+                [false,"Photos illimitées"],
+                [false,"Communication PMI"],
+                [false,"Documents illimités"],
+              ].map(([ok,txt],i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
+                <span style={{color:ok?"var(--S)":"var(--br)",fontSize:16,flexShrink:0}}>{ok?"✓":"✗"}</span>
+                <span style={{color:ok?"var(--b)":"var(--l)",textDecoration:ok?"none":"none"}}>{txt}</span>
+              </div>)}
+            </div>
+          </div>
+
+          {/* Pro ← recommandé */}
+          <div className="card"style={{padding:28,border:"2px solid var(--T)",position:"relative",transform:"scale(1.03)",boxShadow:"var(--sh2)"}}>
+            <div style={{position:"absolute",top:-14,left:"50%",transform:"translateX(-50%)",
+              background:"linear-gradient(135deg,#C4714A,#A85535)",color:"#fff",
+              borderRadius:20,padding:"4px 16px",fontSize:11,fontWeight:700,letterSpacing:".5px",whiteSpace:"nowrap"}}>
+              ⭐ RECOMMANDÉ
+            </div>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--T)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Pro</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
+              <span className="pf"style={{fontSize:42,fontWeight:700,color:"var(--T)"}}>9,90€</span>
+              <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
+            </div>
+            <div style={{fontSize:13,color:"var(--m)",marginBottom:20,lineHeight:1.5}}>La solution complète pour les assistantes maternelles professionnelles.</div>
+            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:24}}>
+              Démarrer l'essai gratuit →
+            </button>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {[
+                [true,"Enfants illimités"],
+                [true,"Journal quotidien"],
+                [true,"Pointage & Repas"],
+                [true,"Messagerie parents"],
+                [true,"Calendrier"],
+                [true,"✨ Bilans IA & CR Trimestriel"],
+                [true,"🏛️ Pajemploi & Attestation fiscale"],
+                [true,"📸 Photos illimitées"],
+                [true,"🏛️ Communication PMI"],
+                [true,"🗂️ Documents illimités (5 Go)"],
+              ].map(([ok,txt],i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
+                <span style={{color:"var(--S)",fontSize:16,flexShrink:0}}>✓</span>
+                <span style={{color:"var(--b)",fontWeight:txt.startsWith("✨")||txt.startsWith("🏛️")||txt.startsWith("📸")||txt.startsWith("🗂️")?700:400}}>{txt}</span>
+              </div>)}
+            </div>
+          </div>
+
+          {/* Premium */}
+          <div className="card"style={{padding:28,border:"2px solid var(--P)"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--P)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Premium</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
+              <span className="pf"style={{fontSize:42,fontWeight:700,color:"var(--P)"}}>24,90€</span>
+              <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
+            </div>
+            <div style={{fontSize:13,color:"var(--m)",marginBottom:20,lineHeight:1.5}}>Pour les assmat qui gèrent plusieurs enfants et veulent le meilleur.</div>
+            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bP"style={{width:"100%",justifyContent:"center",marginBottom:24}}>
+              Choisir Premium →
+            </button>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {[
+                "Tout ce qu'inclut Pro",
+                "Stockage illimité",
+                "Support prioritaire 7j/7",
+                "Export données complet",
+                "Statistiques avancées",
+                "Accès multi-appareils",
+              ].map((txt,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
+                <span style={{color:"var(--P)",fontSize:16,flexShrink:0}}>✓</span>
+                <span style={{color:"var(--b)",fontWeight:i===0?700:400}}>{txt}</span>
+              </div>)}
+            </div>
+          </div>
+        </div>
+
+        {/* Garantie */}
+        <div style={{textAlign:"center",marginTop:32,fontSize:13,color:"var(--l)",display:"flex",gap:24,justifyContent:"center",flexWrap:"wrap"}}>
+          <span>✅ 14 jours d'essai gratuit</span>
+          <span>✅ Sans carte bancaire</span>
+          <span>✅ Résiliable en 1 clic</span>
+          <span>✅ Données hébergées en France</span>
         </div>
       </div>
     </div>
