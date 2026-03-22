@@ -1258,13 +1258,13 @@ function Calendrier({enfants,role,pEId}){
         </div>
 
         {/* Légende enfants (asmat) ou mon enfant (parent) */}
-        {!isWeekend&&<div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:10,color:"var(--l)",fontWeight:700}}>Jours d'accueil :</span>
           {enfants.map(e=><div key={e.id}style={{display:"flex",alignItems:"center",gap:4}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:e.couleur}}/>
             <span style={{fontSize:10,color:"var(--m)"}}>{e.emoji} {e.prenom}</span>
           </div>)}
-        </div>}
+        </div>
 
         {/* Anniversaires ce mois */}
         {enfants.some(e=>e.naissance?.slice(5)&&`${an}-${e.naissance.slice(5)}`.startsWith(moisStr))&&
@@ -3272,6 +3272,360 @@ function DocumentsComplet({enfants,role,pEId}){
   </div>;
 }
 
+// ─── DONNÉES DÉMO — DEMANDES DE CONTACT ──────────────────────────────────────
+const DEMANDES_DEMO=[
+  {
+    id:"d1",statut:"nouveau",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),
+    parent:{prenom:"Camille",nom:"Moreau",email:"camille.moreau@gmail.com",tel:"06 12 34 56 78",profession:"Infirmière"},
+    enfant:{prenom:"Chloé",naissance:"2023-08-14",allergies:"Aucune connue",dejaCrèche:false},
+    contrat:{debut:"2024-09-02",jours:["Lundi","Mardi","Mercredi","Jeudi"],
+      heureArrivee:"07h30",heureDepart:"17h30",heuresHebdo:40,
+      anneeComplete:true,vacances:"Oui, pendant les vacances scolaires"},
+    message:"Bonjour Madame Dupont, nous avons trouvé votre profil sur monenfant.fr. Notre fille Chloé aura 1 an en août et nous cherchons une assistante maternelle de confiance pour la rentrée. Votre profil nous correspond parfaitement.",
+  },
+  {
+    id:"d2",statut:"en_discussion",date:new Date(Date.now()-5*86400000).toISOString().slice(0,10),
+    parent:{prenom:"Antoine",nom:"Lefebvre",email:"antoine.lefebvre@hotmail.fr",tel:"07 89 01 23 45",profession:"Comptable"},
+    enfant:{prenom:"Mathieu",naissance:"2022-11-03",allergies:"Lactose",dejaCrèche:true},
+    contrat:{debut:"2024-10-01",jours:["Lundi","Mercredi","Vendredi"],
+      heureArrivee:"08h00",heureDepart:"18h00",heuresHebdo:30,
+      anneeComplete:false,vacances:"Non, pas pendant les vacances"},
+    message:"Bonjour, mon fils Mathieu est actuellement à la crèche mais nous souhaitons le confier à une assistante maternelle à partir d'octobre. Il a une intolérance au lactose. Serait-il possible d'échanger ?",
+  },
+  {
+    id:"d3",statut:"accepte",date:new Date(Date.now()-12*86400000).toISOString().slice(0,10),
+    parent:{prenom:"Lucie",nom:"Bernard",email:"lucie.b@orange.fr",tel:"06 55 44 33 22",profession:"Enseignante"},
+    enfant:{prenom:"Tom",naissance:"2021-04-20",allergies:"Aucune",dejaCrèche:false},
+    contrat:{debut:"2024-09-02",jours:["Lundi","Mardi","Jeudi","Vendredi"],
+      heureArrivee:"08h30",heureDepart:"16h30",heuresHebdo:32,
+      anneeComplete:true,vacances:"Pendant les petites vacances uniquement"},
+    message:"Bonjour, je suis enseignante et je cherche une assistante maternelle pour mon fils Tom. Vos horaires correspondent parfaitement aux miens.",
+  },
+  {
+    id:"d4",statut:"refuse",date:new Date(Date.now()-20*86400000).toISOString().slice(0,10),
+    parent:{prenom:"Marc",nom:"Petit",email:"marc.petit@sfr.fr",tel:"06 11 22 33 44",profession:"Commercial"},
+    enfant:{prenom:"Emma",naissance:"2024-01-15",allergies:"Aucune",dejaCrèche:false},
+    contrat:{debut:"2024-06-01",jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
+      heureArrivee:"07h00",heureDepart:"19h00",heuresHebdo:48,
+      anneeComplete:true,vacances:"Oui, toutes les vacances"},
+    message:"Bonjour, nous cherchons une solution d'urgence pour notre bébé Emma dès le 1er juin.",
+  },
+];
+
+// ─── LISTE D'ATTENTE — ESPACE ASMAT ───────────────────────────────────────────
+function ListeAttente({role}){
+  const [demandes,setDemandes]=useState(DEMANDES_DEMO);
+  const [selId,setSelId]=useState(null);
+  const [filtre,setFiltre]=useState("tous");
+  const [repTxt,setRepTxt]=useState("");
+  const [toast,setToast]=useState("");
+  const sel=demandes.find(d=>d.id===selId);
+
+  const statutLabel={nouveau:"🔵 Nouveau",en_discussion:"🟡 En discussion",accepte:"🟢 Accepté",refuse:"🔴 Refusé"};
+  const statutColor={nouveau:"var(--B)",en_discussion:"var(--G)",accepte:"var(--S)",refuse:"var(--R)"};
+  const statutBg={nouveau:"var(--Bp)",en_discussion:"var(--Gp)",accepte:"var(--Sp)",refuse:"var(--Rp)"};
+
+  const changerStatut=(id,statut)=>{
+    setDemandes(p=>p.map(d=>d.id===id?{...d,statut}:d));
+    if(statut==="accepte")setToast("Demande acceptée — un contrat peut maintenant être créé ✓");
+    if(statut==="refuse")setToast("Demande refusée — un email sera envoyé aux parents.");
+  };
+
+  const envoyerReponse=()=>{
+    if(!repTxt.trim())return;
+    setToast("Réponse envoyée à "+sel?.parent.email+" ✓");
+    setRepTxt("");
+    changerStatut(selId,"en_discussion");
+  };
+
+  const demandesFiltrees=filtre==="tous"?demandes:demandes.filter(d=>d.statut===filtre);
+  const nbNouveaux=demandes.filter(d=>d.statut==="nouveau").length;
+
+  const ageEnfant=(naiss)=>{
+    const n=new Date(naiss),now=new Date();
+    const mois=(now.getFullYear()-n.getFullYear())*12+(now.getMonth()-n.getMonth());
+    return mois<12?mois+" mois":Math.floor(mois/12)+" an"+(mois>=24?"s":"");
+  };
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📬" title="Demandes de contact"
+      sub="Parents qui souhaitent vous confier leur enfant via votre profil TiMat"/>
+
+    {/* Info email public */}
+    <div style={{background:"linear-gradient(135deg,var(--Bp),var(--Pp))",border:"1px solid var(--B)",borderRadius:14,padding:"14px 18px",marginBottom:20,display:"flex",gap:14,alignItems:"flex-start"}}>
+      <span style={{fontSize:24}}>💡</span>
+      <div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}>Votre adresse de contact publique</div>
+        <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--B)",fontWeight:600,marginBottom:6}}>
+          marie.dupont@timat.app
+        </div>
+        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
+          Mettez cette adresse sur votre profil <strong>monenfant.fr</strong>. 
+          Les parents qui vous écrivent arrivent sur votre formulaire TiMat et vous voyez leur demande complète ici.
+        </div>
+      </div>
+    </div>
+
+    {nbNouveaux>0&&<div style={{background:"var(--Bp)",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
+      <span style={{fontSize:18}}>📬</span>
+      <span style={{fontWeight:700,fontSize:13,color:"var(--B)"}}>{nbNouveaux} nouvelle{nbNouveaux>1?"s":""} demande{nbNouveaux>1?"s":""} en attente</span>
+    </div>}
+
+    {/* Filtres */}
+    <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+      {[["tous","Toutes"],["nouveau","Nouvelles"],["en_discussion","En discussion"],["accepte","Acceptées"],["refuse","Refusées"]].map(([v,l])=>
+        <button key={v}onClick={()=>setFiltre(v)}style={{
+          padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+          background:filtre===v?"var(--b)":"transparent",
+          color:filtre===v?"#fff":"var(--m)",
+          borderColor:filtre===v?"var(--b)":"var(--br)"
+        }}>{l} {v==="tous"?`(${demandes.length})`:v==="nouveau"&&nbNouveaux>0?`(${nbNouveaux})`:""}</button>)}
+    </div>
+
+    <div className="g2">
+      {/* Liste des demandes */}
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {demandesFiltrees.length===0&&<div className="card"style={{padding:20,textAlign:"center",color:"var(--l)",fontSize:13}}>
+          Aucune demande dans cette catégorie.
+        </div>}
+        {demandesFiltrees.map(d=><div key={d.id}className="card card-lift"
+          onClick={()=>setSelId(selId===d.id?null:d.id)}
+          style={{padding:16,cursor:"pointer",borderLeft:`4px solid ${statutColor[d.statut]}`,
+            boxShadow:selId===d.id?"var(--sh2)":"var(--sh)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
+                <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{d.parent.prenom} {d.parent.nom}</span>
+                <span className="badge"style={{background:statutBg[d.statut],color:statutColor[d.statut],fontSize:10}}>
+                  {statutLabel[d.statut]}
+                </span>
+              </div>
+              <div style={{fontSize:12,color:"var(--m)"}}>
+                Pour <strong>{d.enfant.prenom}</strong> · {ageEnfant(d.enfant.naissance)} · {d.contrat.jours.length}j/sem · {d.contrat.heuresHebdo}h/sem
+              </div>
+              <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>
+                Souhaite commencer le {fmt(d.contrat.debut)}
+              </div>
+            </div>
+            <div style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",flexShrink:0}}>{fmt(d.date)}</div>
+          </div>
+          {d.statut==="nouveau"&&<div style={{marginTop:8,fontSize:12,color:"var(--m)",fontStyle:"italic",lineHeight:1.5,
+            overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>
+            "{d.message}"
+          </div>}
+        </div>)}
+      </div>
+
+      {/* Détail demande sélectionnée */}
+      {sel?<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {/* Infos famille */}
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
+            <span>👪</span> {sel.parent.prenom} {sel.parent.nom}
+            <span className="badge"style={{background:statutBg[sel.statut],color:statutColor[sel.statut],fontSize:10,marginLeft:4}}>
+              {statutLabel[sel.statut]}
+            </span>
+          </div>
+          {/* Parent */}
+          <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>Le parent</div>
+          {[["📧 Email",sel.parent.email],["📞 Téléphone",sel.parent.tel],["💼 Profession",sel.parent.profession]].map(([l,v])=>
+            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+              <span style={{color:"var(--l)"}}>{l}</span>
+              <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
+            </div>)}
+
+          {/* Enfant */}
+          <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginTop:14,marginBottom:8}}>L'enfant</div>
+          {[
+            ["👶 Prénom",sel.enfant.prenom],
+            ["🎂 Naissance",fmt(sel.enfant.naissance)+" ("+ageEnfant(sel.enfant.naissance)+")"],
+            ["⚠️ Allergies",sel.enfant.allergies],
+            ["🏠 Actuellement",sel.enfant.dejaCrèche?"En crèche":"À domicile"],
+          ].map(([l,v])=>
+            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+              <span style={{color:"var(--l)"}}>{l}</span>
+              <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
+            </div>)}
+
+          {/* Contrat souhaité */}
+          <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginTop:14,marginBottom:8}}>Contrat souhaité</div>
+          {[
+            ["📅 Début",fmt(sel.contrat.debut)],
+            ["📆 Jours",sel.contrat.jours.join(", ")],
+            ["⏰ Horaires",sel.contrat.heureArrivee+" → "+sel.contrat.heureDepart],
+            ["⏱ Heures/semaine",sel.contrat.heuresHebdo+"h"],
+            ["📋 Durée",sel.contrat.anneeComplete?"Année complète":"Partielle"],
+            ["🏖 Vacances",sel.contrat.vacances],
+          ].map(([l,v])=>
+            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+              <span style={{color:"var(--l)"}}>{l}</span>
+              <span style={{fontWeight:600,color:"var(--b)",textAlign:"right",maxWidth:"55%"}}>{v}</span>
+            </div>)}
+
+          {/* Message */}
+          <div style={{marginTop:14,padding:"12px 14px",background:"var(--c)",borderRadius:10,fontSize:13,color:"var(--m)",lineHeight:1.7,fontStyle:"italic"}}>
+            "{sel.message}"
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>💬 Répondre</div>
+          <textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
+            placeholder={`Bonjour ${sel.parent.prenom},\n\nMerci pour votre message…`}
+            style={{width:"100%",minHeight:90,marginBottom:10,resize:"vertical"}}/>
+          <button className="btn bT"style={{width:"100%",marginBottom:10}}onClick={envoyerReponse}
+            disabled={!repTxt.trim()}>
+            📧 Envoyer par email
+          </button>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {sel.statut!=="accepte"&&<button className="btn bS"onClick={()=>changerStatut(sel.id,"accepte")}style={{fontSize:12}}>
+              ✅ Accepter
+            </button>}
+            {sel.statut!=="refuse"&&<button className="btn bR"onClick={()=>changerStatut(sel.id,"refuse")}style={{fontSize:12}}>
+              ❌ Refuser
+            </button>}
+            {sel.statut==="accepte"&&<button className="btn bP"onClick={()=>setToast("Redirection vers la création de contrat…")}style={{fontSize:12}}>
+              📄 Créer le contrat
+            </button>}
+          </div>
+        </div>
+      </div>
+
+      :<div className="card"style={{padding:28,textAlign:"center",color:"var(--l)"}}>
+        <div style={{fontSize:36,marginBottom:12}}>👈</div>
+        <div style={{fontSize:13}}>Sélectionnez une demande pour voir le détail</div>
+      </div>}
+    </div>
+  </div>;
+}
+
+// ─── KIT CMG — ESPACE PARENT ──────────────────────────────────────────────────
+function KitCMG({enfants,role,pEId}){
+  const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
+  const asmat=D.asmat;
+  const contrat=enfant?.contrat||{};
+  const [copie,setCopie]=useState({});
+  const [toast,setToast]=useState("");
+
+  const copy=(key,val)=>{
+    navigator.clipboard?.writeText(val).catch(()=>{});
+    setCopie(p=>({...p,[key]:true}));
+    setTimeout(()=>setCopie(p=>({...p,[key]:false})),2000);
+    setToast("Copié ✓");
+  };
+
+  const InfoRow=({label,value,copyKey})=>(
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+      padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
+      <span style={{fontSize:12,color:"var(--l)",maxWidth:"45%"}}>{label}</span>
+      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        <span style={{fontSize:13,fontWeight:700,color:"var(--b)",textAlign:"right"}}>{value}</span>
+        {copyKey&&<button onClick={()=>copy(copyKey,value)}style={{
+          background:copie[copyKey]?"var(--Sp)":"var(--c)",border:"1px solid var(--br)",
+          borderRadius:6,padding:"3px 8px",fontSize:10,cursor:"pointer",
+          color:copie[copyKey]?"var(--S)":"var(--l)",fontWeight:600,flexShrink:0
+        }}>{copie[copyKey]?"✓ Copié":"Copier"}</button>}
+      </div>
+    </div>
+  );
+
+  // Calcul salaire net estimé
+  const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
+  const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||4.05)*1.1*10)/10;
+  const entretienMensuel=Math.round((contrat.entretien||3.80)*heuresMois/contrat.heuresHebdo*5)/10;
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="💶" title="Aide CMG — Kit déclaration"
+      sub="Toutes les informations pour déclarer votre mode de garde sur monenfant.fr"/>
+
+    {/* Explication */}
+    <div style={{background:"linear-gradient(135deg,var(--Gp),var(--Bp))",border:"1px solid var(--G)",borderRadius:14,padding:"16px 20px",marginBottom:20}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>📋 Comment utiliser ce kit ?</div>
+      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.8}}>
+        1. Allez sur <strong>monenfant.fr</strong> → "Déclarer votre mode de garde"<br/>
+        2. Utilisez les boutons <strong>"Copier"</strong> ci-dessous pour coller chaque information<br/>
+        3. Soumettez votre déclaration<br/>
+        4. La CAF calcule votre <strong>Complément Mode de Garde (CMG)</strong> automatiquement
+      </div>
+      <a href="https://www.monenfant.fr" target="_blank" rel="noopener noreferrer"
+        style={{display:"inline-block",marginTop:10,background:"var(--B)",color:"#fff",
+        borderRadius:8,padding:"7px 14px",fontSize:12,fontWeight:700,textDecoration:"none"}}>
+        Aller sur monenfant.fr →
+      </a>
+    </div>
+
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {/* Infos assistante maternelle */}
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
+            <span>👩‍👧</span> Votre assistante maternelle
+          </div>
+          <InfoRow label="Nom complet" value={`${asmat.prenom} ${asmat.nom}`} copyKey="asmNom"/>
+          <InfoRow label="N° agrément" value="AGR-2019-0042" copyKey="agrement"/>
+          <InfoRow label="Email professionnel" value="marie.dupont@timat.app" copyKey="asmEmail"/>
+          <InfoRow label="Code postal" value="75015" copyKey="cp"/>
+          <InfoRow label="Commune" value="Paris 15e" copyKey="commune"/>
+        </div>
+
+        {/* Infos contrat */}
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
+            <span>📄</span> Votre contrat
+          </div>
+          <InfoRow label="Date de début du contrat" value={fmt(contrat.debut||"2023-09-04")} copyKey="debut"/>
+          <InfoRow label="Jours d'accueil" value={(contrat.jours||["Lu","Ma","Me","Je","Ve"]).join(", ")} copyKey="jours"/>
+          <InfoRow label="Heures par semaine" value={(contrat.heuresHebdo||40)+"h"} copyKey="heures"/>
+          <InfoRow label="Heures par mois (estimé)" value={heuresMois+"h"} copyKey="heuresMois"/>
+          <InfoRow label="Horaires journaliers" value={contrat.horaires||"07h30–17h30"} copyKey="horaires"/>
+        </div>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {/* Rémunération */}
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
+            <span>💰</span> Rémunération mensuelle
+          </div>
+          <InfoRow label="Taux horaire net" value={(contrat.tauxHoraire||4.05).toFixed(2)+"€/h"} copyKey="taux"/>
+          <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
+          <InfoRow label="Indemnité d'entretien/jour" value={(contrat.entretien||3.80).toFixed(2)+"€"} copyKey="entretien"/>
+          <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
+          <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
+            💡 Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
+          </div>
+        </div>
+
+        {/* Enfant */}
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
+            <span>{enfant?.emoji||"👶"}</span> {enfant?.prenom||"Votre enfant"}
+          </div>
+          <InfoRow label="Prénom" value={enfant?.prenom||"—"} copyKey="enfPrenom"/>
+          <InfoRow label="Date de naissance" value={fmt(enfant?.naissance||"")} copyKey="enfNaiss"/>
+          <InfoRow label="Lieu de garde" value="Domicile de l'assistante maternelle" copyKey="lieuGarde"/>
+        </div>
+
+        {/* Lien Pajemploi */}
+        <div className="card"style={{padding:16,background:"var(--Tp)",border:"1px solid var(--Tl)"}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:8}}>🏛️ Pajemploi</div>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
+            Une fois déclaré sur monenfant.fr, vous devrez aussi déclarer les heures mensuelles sur <strong>Pajemploi</strong> pour que Marie soit payée et déclarée à l'URSSAF.
+          </div>
+          <a href="https://www.pajemploi.urssaf.fr" target="_blank" rel="noopener noreferrer"
+            style={{display:"inline-block",background:"var(--T)",color:"#fff",
+            borderRadius:8,padding:"7px 14px",fontSize:12,fontWeight:700,textDecoration:"none"}}>
+            Aller sur Pajemploi →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
 // ─── STRUCTURE DE NAVIGATION 2 NIVEAUX ───────────────────────────────────────
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
@@ -3285,6 +3639,7 @@ const GROUPS_AM={
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
+    {id:"liste_attente",l:"Demandes",ic:"📬"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
@@ -3302,6 +3657,7 @@ const GROUPS_P={
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
+    {id:"kit_cmg",l:"Aide CMG",ic:"💶"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
   ]},
@@ -4028,6 +4384,8 @@ export default function App(){
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
       case "messagerie": return <Messagerie {...P}/>;
       case "pmi": return <CommunicationPMI role={role}/>;
+      case "liste_attente": return <ListeAttente enfants={enfants} role={role}/>;
+      case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;
       case "repas": return <JournalComplet {...P}/>;
