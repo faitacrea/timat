@@ -1063,36 +1063,137 @@ const VACANCES_2024=[
 const isVacances=(ds)=>VACANCES_2024.some(v=>ds>=v.debut&&ds<=v.fin);
 const nomVacances=(ds)=>VACANCES_2024.find(v=>ds>=v.debut&&ds<=v.fin)?.nom||"";
 
-function Calendrier({enfants,role}){
-  const [mois,setMois]=useState(2);const [an,setAn]=useState(2024);
-  const [sel,setSel]=useState(null);const [evs,setEvs]=useState(D.evenements);
+function Calendrier({enfants,role,pEId}){
+  const [mois,setMois]=useState(new Date().getMonth());
+  const [an,setAn]=useState(new Date().getFullYear());
+  const [sel,setSel]=useState(null);
+  const [evs,setEvs]=useState(D.evenements);
   const [newEv,setNewEv]=useState({type:"rdv",txt:""});
+  const [showAbsenceModal,setShowAbsenceModal]=useState(false);
+  const [absForm,setAbsForm]=useState({eId:pEId||enfants[0]?.id,date:"",motif:"Maladie",heures:"",indemnise:true});
+  const [toast,setToast]=useState("");
   const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-  const jours=["Lu","Ma","Me","Je","Ve","Sa","Di"];
-  const premier=new Date(an,mois,1).getDay();const offset=(premier+6)%7;
+  const joursSemaine=["Lu","Ma","Me","Je","Ve","Sa","Di"];
+  const jourMap={Lundi:0,Mardi:1,Mercredi:2,Jeudi:3,Vendredi:4,Samedi:5,Dimanche:6};
+  const premier=new Date(an,mois,1).getDay();
+  const offset=(premier+6)%7;
   const total=new Date(an,mois+1,0).getDate();
-  const today=11;
+  const todayDate=new Date();
+  const isActualToday=(d)=>d===todayDate.getDate()&&mois===todayDate.getMonth()&&an===todayDate.getFullYear();
 
   const ds=(d)=>`${an}-${String(mois+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-  const getUserEv=(d)=>evs.find(e=>e.date===ds(d));
+  const moisStr=`${an}-${String(mois+1).padStart(2,"0")}`;
+
+  // Jour de la semaine (0=Lundi…6=Dim) pour un jour du mois
+  const jourIdx=(d)=>(new Date(an,mois,d).getDay()+6)%7;
+
+  // Filtrage selon le rôle
+  const evsFiltres=role==="parent"
+    ? evs.filter(e=>{
+        // Parent voit : ses propres absences + congés de Marie (cng) + fériés
+        if(e.type==="cng")return true; // Congés Marie → toujours visible
+        if(e.type==="abs"&&enfants.some(en=>e.txt&&e.txt.includes(en.prenom)))return true;
+        if(e.type==="abs"&&pEId&&e.eId===pEId)return true;
+        return false;
+      })
+    : evs;
+
+  const getUserEv=(d)=>evsFiltres.find(e=>e.date===ds(d));
   const getFerie=(d)=>FERIES_2024[ds(d)];
   const getBirthday=(d)=>enfants.find(e=>e.naissance&&e.naissance.slice(5)===ds(d).slice(5));
   const getVac=(d)=>isVacances(ds(d));
+  // Quels enfants sont accueillis ce jour ?
+  const getAccueil=(d)=>enfants.filter(e=>{
+    const ji=jourIdx(d);
+    const jours=e.contrat?.jours||[];
+    return jours.some(j=>jourMap[j]===ji);
+  });
 
-  const addEv=()=>{if(!sel||!newEv.txt.trim())return;
+  const addEv=()=>{
+    if(!sel||!newEv.txt.trim())return;
     setEvs(p=>[...p,{id:"ev"+Date.now(),date:ds(sel),...newEv}]);
-    setNewEv({type:"rdv",txt:""});};
+    setNewEv({type:"rdv",txt:""});
+  };
 
-  const moisStr=`${an}-${String(mois+1).padStart(2,"0")}`;
+  const declarerAbsence=()=>{
+    if(!absForm.heures||!absForm.date)return;
+    const enfant=enfants.find(e=>e.id===absForm.eId)||enfants[0];
+    setEvs(p=>[...p,{id:"abs"+Date.now(),date:absForm.date,type:"abs",eId:absForm.eId,txt:`Absent — ${enfant?.prenom} (${absForm.motif})`}]);
+    D.absences.push({id:"abn"+Date.now(),eId:absForm.eId,date:absForm.date,motif:absForm.motif,indemnise:absForm.indemnise,heures:parseFloat(absForm.heures)||8});
+    setShowAbsenceModal(false);
+    setToast(`Absence déclarée — Marie a été notifiée ✓`);
+  };
+
+  // Événements du mois filtrés pour le panneau latéral
   const moisEvs=[
-    ...evs.filter(e=>e.date.startsWith(moisStr)).map(e=>({...e,src:"user"})),
+    ...evsFiltres.filter(e=>e.date.startsWith(moisStr)).map(e=>({...e,src:"user"})),
     ...Object.entries(FERIES_2024).filter(([d])=>d.startsWith(moisStr)).map(([d,n])=>({id:d,date:d,txt:n,type:"ferie",src:"ferie"})),
     ...enfants.filter(e=>e.naissance&&`${an}-${e.naissance.slice(5)}`.startsWith(moisStr))
       .map(e=>({id:"bd"+e.id,date:`${an}-${e.naissance.slice(5)}`,txt:"🎂 Anniversaire de "+e.prenom,type:"anniv",src:"birthday"}))
   ].sort((a,b)=>a.date>b.date?1:-1);
 
+  // Légende couleurs des enfants (asmat uniquement)
+  const couleursEnfants=enfants.map(e=>({emoji:e.emoji,prenom:e.prenom,couleur:e.couleur}));
+
   return <div className="fi">
-    <PageHeader icon="📅" title="Calendrier partagé" sub="Événements, congés, anniversaires et vacances scolaires Zone C"/>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📅"
+      title={role==="parent"?"Mon calendrier":"Calendrier"}
+      sub={role==="parent"?"Jours d'accueil, congés de Marie et jours fériés":"Accueil, congés, anniversaires, vacances scolaires Zone C"}
+      action={role==="parent"&&<button className="btn bR"style={{fontSize:13,padding:"10px 18px",fontWeight:700}}
+        onClick={()=>{setAbsForm(f=>({...f,date:ds(todayDate.getDate())}));setShowAbsenceModal(true);}}>
+        🤒 Déclarer une absence
+      </button>}
+    />
+
+    {/* Modale absence parent */}
+    {showAbsenceModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
+      onClick={e=>e.target===e.currentTarget&&setShowAbsenceModal(false)}>
+      <div className="card"style={{width:"100%",maxWidth:420,padding:28}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}>🤒 Déclarer une absence</div>
+          <button onClick={()=>setShowAbsenceModal(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
+        </div>
+        <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)",lineHeight:1.5}}>
+          📢 Marie sera notifiée immédiatement. L'absence sera notée dans votre calendrier et dans le décompte des heures.
+        </div>
+        <div style={{display:"grid",gap:12}}>
+          {enfants.length>1&&<div>
+            <label className="lbl">Enfant concerné</label>
+            <select className="sel"value={absForm.eId}onChange={e=>setAbsForm(f=>({...f,eId:e.target.value}))}>
+              {enfants.map(e=><option key={e.id}value={e.id}>{e.emoji} {e.prenom}</option>)}
+            </select>
+          </div>}
+          <div>
+            <label className="lbl">Date d'absence *</label>
+            <input type="date"className="inp"value={absForm.date}onChange={e=>setAbsForm(f=>({...f,date:e.target.value}))}/>
+          </div>
+          <div>
+            <label className="lbl">Motif</label>
+            <select className="sel"value={absForm.motif}onChange={e=>setAbsForm(f=>({...f,motif:e.target.value}))}>
+              {["Maladie","Congés parents","Décision parent","Rendez-vous médical","Autre"].map(m=><option key={m}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="lbl">Heures prévues ce jour *</label>
+            <input type="number"className="inp"placeholder="ex: 9"value={absForm.heures}
+              onChange={e=>setAbsForm(f=>({...f,heures:e.target.value}))} min="0"max="12"step="0.5"/>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <input type="checkbox"id="indem2"checked={absForm.indemnise}
+              onChange={e=>setAbsForm(f=>({...f,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer"}}/>
+            <label htmlFor="indem2"style={{fontSize:13,color:"var(--b)",cursor:"pointer"}}>Absence indemnisée (selon contrat)</label>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:20}}>
+          <button className="btn bG"style={{flex:1}}onClick={()=>setShowAbsenceModal(false)}>Annuler</button>
+          <button className="btn bR"style={{flex:2}}onClick={declarerAbsence}disabled={!absForm.date||!absForm.heures}>
+            📢 Notifier Marie
+          </button>
+        </div>
+      </div>
+    </div>}
+
     <div className="g2">
       <div className="card"style={{padding:18}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
@@ -1101,7 +1202,7 @@ function Calendrier({enfants,role}){
           <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===11){setMois(0);setAn(a=>a+1)}else setMois(m=>m+1)}}>›</button>
         </div>
         <div className="cgrid"style={{marginBottom:8}}>
-          {jours.map(j=><div key={j}style={{textAlign:"center",fontSize:10,fontWeight:700,color:"var(--l)",padding:"4px 0",letterSpacing:".5px"}}>{j}</div>)}
+          {joursSemaine.map(j=><div key={j}style={{textAlign:"center",fontSize:10,fontWeight:700,color:"var(--l)",padding:"4px 0",letterSpacing:".5px"}}>{j}</div>)}
         </div>
         <div className="cgrid">
           {Array(offset).fill(null).map((_,i)=><div key={"e"+i}/>)}
@@ -1111,55 +1212,75 @@ function Calendrier({enfants,role}){
             const ferie=getFerie(d);
             const bday=getBirthday(d);
             const vac=getVac(d);
-            const isToday=mois===2&&d===today;
+            const accueil=getAccueil(d);
+            const isToday=isActualToday(d);
             const isSel=sel===d;
-            let cls="cday";
-            if(isToday||isSel)cls+=" tod";
-            else if(ferie)cls+=" abs";
-            else if(vac)cls+=" hol";
-            else if(uev?.type==="abs")cls+=" abs";
-            else if(uev?.type==="cng")cls+=" cng";
-            else if(uev?.type==="hol")cls+=" hol";
+            const isWeekend=jourIdx(d)>=5;
 
-            return <div key={d}className={cls}onClick={()=>setSel(sel===d?null:d)}
-              title={ferie||bday?(ferie||"")+(bday?" 🎂 "+bday.prenom:""):""}>
-              <span>{d}</span>
-              {bday&&<div style={{position:"absolute",top:1,right:2,fontSize:7}}>🎂</div>}
-              {ferie&&!isToday&&<div style={{position:"absolute",bottom:2,fontSize:7}}>⭐</div>}
-              {uev&&!isToday&&!ferie&&<div className="dot"/>}
+            let cls="cday";
+            let bgStyle={};
+            if(isToday||isSel)cls+=" tod";
+            else if(ferie)cls+=" abs"; // Féries → rouge
+            else if(uev?.type==="cng"){cls+=" cng";} // Congés Marie → jaune/doré
+            else if(vac)cls+=" hol"; // Vacances → bleu
+            else if(uev?.type==="abs")cls+=" abs"; // Absence enfant → rouge
+            else if(isWeekend){bgStyle={background:"rgba(0,0,0,.04)"};} // Weekend grisé
+
+            // Accueil : petits points colorés par enfant
+            const accueilDots=accueil.filter(e=>!isWeekend&&!ferie&&!(uev?.type==="cng"));
+
+            return <div key={d}className={cls}style={{...bgStyle,position:"relative"}}
+              onClick={()=>setSel(sel===d?null:d)}
+              title={ferie||(accueil.length>0?accueil.map(e=>e.prenom).join(", "):"")}>
+              <span style={{fontSize:11,fontWeight:isToday?700:400}}>{d}</span>
+              {/* Indicateurs en bas du jour */}
+              <div style={{position:"absolute",bottom:2,left:0,right:0,display:"flex",justifyContent:"center",gap:2}}>
+                {ferie&&!isToday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--R)"}}/>}
+                {uev?.type==="cng"&&!isToday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--G)"}}/>}
+                {bday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--T)"}}/>}
+                {accueilDots.slice(0,3).map(e=><div key={e.id}style={{width:4,height:4,borderRadius:"50%",background:e.couleur}}/>)}
+              </div>
             </div>;})}
         </div>
 
         {/* Légende */}
-        <div style={{display:"flex",gap:10,marginTop:14,flexWrap:"wrap"}}>
-          {[["var(--Rp)","var(--R)","Absence / Férié"],
-            ["var(--Tp)","var(--T)","Aujourd'hui"],
-            ["var(--Gp)","var(--G)","Congé"],
-            ["var(--Bp)","var(--B)","Vacances / Événement"],
+        <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
+          {[
+            ["var(--Rp)","var(--R)","Absence / Jour férié"],
+            ["var(--Gp)","var(--G)","Congé Marie"],
+            ["var(--Tp)","var(--T)","Aujourd'hui / Anniversaire"],
+            ["var(--Bp)","var(--B)","Vacances scolaires"],
           ].map(([bg,c,l])=>
             <div key={l}style={{display:"flex",alignItems:"center",gap:4}}>
-              <div style={{width:10,height:10,borderRadius:3,background:bg,border:`1px solid ${c}`}}/>
+              <div style={{width:9,height:9,borderRadius:2,background:bg,border:`1px solid ${c}`}}/>
               <span style={{fontSize:10,color:"var(--m)"}}>{l}</span>
             </div>)}
         </div>
+
+        {/* Légende enfants (asmat) ou mon enfant (parent) */}
+        {!isWeekend&&<div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          <span style={{fontSize:10,color:"var(--l)",fontWeight:700}}>Jours d'accueil :</span>
+          {enfants.map(e=><div key={e.id}style={{display:"flex",alignItems:"center",gap:4}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:e.couleur}}/>
+            <span style={{fontSize:10,color:"var(--m)"}}>{e.emoji} {e.prenom}</span>
+          </div>)}
+        </div>}
 
         {/* Anniversaires ce mois */}
         {enfants.some(e=>e.naissance?.slice(5)&&`${an}-${e.naissance.slice(5)}`.startsWith(moisStr))&&
           <div style={{marginTop:12,padding:"8px 12px",background:"var(--Tp)",borderRadius:10,border:"1px solid var(--Tl)"}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--T)",marginBottom:4}}>🎂 Anniversaires ce mois</div>
             {enfants.filter(e=>`${an}-${e.naissance?.slice(5)}`.startsWith(moisStr)).map(e=>
-              <div key={e.id}style={{fontSize:13,color:"var(--b)"}}>
-                {e.emoji} {e.prenom} — {parseInt(e.naissance?.slice(5,7))} 
-                {new Date(an,mois,parseInt(`${an}-${e.naissance?.slice(5)}`.slice(8))).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}
-              </div>)}
+              <div key={e.id}style={{fontSize:13,color:"var(--b)"}}>{e.emoji} {e.prenom} — {new Date(an,mois,parseInt(`${an}-${e.naissance?.slice(5)}`.slice(8))).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}</div>)}
           </div>}
       </div>
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {/* Formulaire ajout événement — asmat uniquement */}
         {sel&&role==="asmat"&&<div className="card"style={{padding:14}}>
           <div style={{fontWeight:600,fontSize:13,marginBottom:10,color:"var(--b)"}}>
             ➕ {sel} {noms[mois]} {an}
-            {getFerie(sel)&&<span style={{fontSize:11,color:"var(--R)",marginLeft:8}}>Jour férié</span>}
+            {getFerie(sel)&&<span style={{fontSize:11,color:"var(--R)",marginLeft:8}}>⭐ Jour férié</span>}
             {getBirthday(sel)&&<span style={{fontSize:11,color:"var(--T)",marginLeft:8}}>🎂 Anniversaire</span>}
           </div>
           <div style={{marginBottom:8}}>
@@ -1175,27 +1296,57 @@ function Calendrier({enfants,role}){
           <button className="btn bT"style={{width:"100%"}}onClick={addEv}>Ajouter</button>
         </div>}
 
+        {/* Détail jour sélectionné */}
+        {sel&&<div className="card"style={{padding:14}}>
+          <div style={{fontWeight:600,fontSize:13,marginBottom:10,color:"var(--b)"}}>
+            📍 {sel} {noms[mois]} {an}
+          </div>
+          {getFerie(sel)&&<div style={{padding:"6px 10px",background:"var(--Rp)",borderRadius:8,fontSize:12,color:"var(--R)",fontWeight:600,marginBottom:6}}>
+            ⭐ Jour férié — {getFerie(sel)}
+          </div>}
+          {getUserEv(sel)?.type==="cng"&&<div style={{padding:"6px 10px",background:"var(--Gp)",borderRadius:8,fontSize:12,color:"var(--G)",fontWeight:600,marginBottom:6}}>
+            🟡 Congé de Marie — {getUserEv(sel).txt}
+          </div>}
+          {getUserEv(sel)?.type==="abs"&&<div style={{padding:"6px 10px",background:"var(--Rp)",borderRadius:8,fontSize:12,color:"var(--R)",fontWeight:600,marginBottom:6}}>
+            🔴 {getUserEv(sel).txt}
+          </div>}
+          {getAccueil(sel).length>0&&!([0,6].includes(jourIdx(sel)))&&<div style={{marginBottom:6}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Enfants accueillis :</div>
+            {getAccueil(sel).map(e=><div key={e.id}style={{display:"flex",gap:6,alignItems:"center",padding:"3px 0",fontSize:13}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:e.couleur}}/>
+              <span style={{color:"var(--b)"}}>{e.emoji} {e.prenom}</span>
+              <span style={{fontSize:11,color:"var(--l)"}}>{e.contrat?.horaires}</span>
+            </div>)}
+          </div>}
+          {isVacances(ds(sel))&&<div style={{padding:"6px 10px",background:"var(--Bp)",borderRadius:8,fontSize:12,color:"var(--B)",fontWeight:600,marginBottom:6}}>
+            🏖️ Vacances scolaires {nomVacances(ds(sel))} — Zone C
+          </div>}
+          {getBirthday(sel)&&<div style={{padding:"6px 10px",background:"var(--Tp)",borderRadius:8,fontSize:12,color:"var(--T)",fontWeight:600}}>
+            🎂 Anniversaire de {getBirthday(sel)?.prenom} !
+          </div>}
+          {!getFerie(sel)&&!getUserEv(sel)&&!getAccueil(sel).length&&!isVacances(ds(sel))&&!getBirthday(sel)&&
+            <div style={{fontSize:12,color:"var(--l)"}}>Aucun événement ce jour.</div>}
+        </div>}
+
+        {/* Liste événements du mois */}
         <div className="card"style={{padding:14}}>
           <div style={{fontWeight:600,fontSize:13,marginBottom:10,color:"var(--b)"}}>📋 {noms[mois]} {an}</div>
           {moisEvs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun événement.</div>}
           {moisEvs.map(ev=><div key={ev.id}style={{display:"flex",gap:8,padding:"7px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
             <span className="badge"style={{
-              background:ev.type==="abs"||ev.type==="ferie"?"var(--Rp)":ev.type==="anniv"?"var(--Tp)":ev.type==="cng"?"var(--Gp)":"var(--Bp)",
-              color:ev.type==="abs"||ev.type==="ferie"?"var(--R)":ev.type==="anniv"?"var(--T)":ev.type==="cng"?"var(--G)":"var(--B)",
+              background:ev.type==="ferie"?"var(--Rp)":ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":ev.type==="anniv"?"var(--Tp)":"var(--Bp)",
+              color:ev.type==="ferie"?"var(--R)":ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":ev.type==="anniv"?"var(--T)":"var(--B)",
               whiteSpace:"nowrap",fontSize:10}}>
               {ev.date.slice(8)} {noms[mois].slice(0,3).toLowerCase()}
             </span>
-            <span style={{fontSize:12,color:"var(--m)",flex:1}}>{ev.txt}</span>
+            <span style={{fontSize:11,color:"var(--m)",flex:1}}>{ev.txt}</span>
           </div>)}
         </div>
 
         {/* Vacances ce mois */}
-        {VACANCES_2024.filter(v=>v.debut.startsWith(moisStr)||v.fin.startsWith(moisStr)||
-          (v.debut<moisStr+"-99"&&v.fin>moisStr)).map(v=>
+        {VACANCES_2024.filter(v=>v.debut.startsWith(moisStr)||v.fin.startsWith(moisStr)||(v.debut<moisStr+"-99"&&v.fin>moisStr)).map(v=>
           <div key={v.nom}className="card"style={{padding:12,background:"var(--Bp)",border:"1px solid rgba(46,95,138,.3)"}}>
-            <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}>
-              🏖️ Vacances {v.nom} — Zone C
-            </div>
+            <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}>🏖️ Vacances {v.nom} — Zone C</div>
             <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(v.fin)}</div>
           </div>)}
       </div>
@@ -3874,7 +4025,7 @@ export default function App(){
       case "documents_complet": return <DocumentsComplet {...P}/>;
       case "admin_finances": return <AdminFinances {...P}/>;
       case "pointage": return <Pointage {...P}/>;
-      case "calendrier": return <Calendrier enfants={enfants} role={role}/>;
+      case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
       case "messagerie": return <Messagerie {...P}/>;
       case "pmi": return <CommunicationPMI role={role}/>;
       case "journal": return <JournalComplet {...P}/>;
