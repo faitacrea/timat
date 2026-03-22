@@ -29,13 +29,17 @@ const Styles = () => (
     }
     /* ── MODE SOMBRE ─────────────────────────────────────────── */
     .dark{
-      --c:#1A1410;--w:#221C18;--b:#F0E8E0;--m:#B89880;--l:#7A6050;--br:#3A2E28;
-      --Tp:#2C1E18;--Sp:#182418;--Gp:#241E10;--Bp:#141C2C;--Rp:#2C1018;--Pp:#1C1428;
-      --sh:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.4);
-      --sh2:0 2px 8px rgba(0,0,0,.4),0 12px 40px rgba(0,0,0,.5);
+      --c:#181210;--w:#231A15;--b:#F5EDE3;--m:#D4B090;--l:#9A7860;--br:#4A3828;
+      --Tp:#3A2218;--Sp:#1A2E1E;--Gp:#2E2410;--Bp:#182030;--Rp:#301420;--Pp:#22183A;
+      --T:#E07848;--S:#5A9A6E;--G:#D4A840;--B:#4A80B8;--R:#D4607A;--P:#8A5AAE;
+      --sh:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.5);
+      --sh2:0 2px 8px rgba(0,0,0,.5),0 12px 40px rgba(0,0,0,.6);
     }
-    .dark .topbar,.dark .nav-main,.dark .navtabs{background:rgba(34,28,24,.95)!important}
-    .dark .app::before{opacity:.3}
+    .dark .topbar,.dark .nav-main,.dark .navtabs{background:rgba(28,20,16,.96)!important}
+    .dark .app::before{opacity:.2}
+    .dark .card{border-color:#4A3828}
+    .dark .inp,.dark .ta,.dark .sel{background:#2E2420;border-color:#4A3828;color:#F5EDE3}
+    .dark .lbl{color:#B89880}
 
     /* Grain overlay */
     .app{min-height:100vh;background:var(--c);display:flex;flex-direction:column;width:100%;position:relative}
@@ -491,15 +495,84 @@ function AccueilParent({enfant,setPage}){
   const rep=D.repas.find(r=>r.eId===enfant.id&&r.date===TODAY_STR);
   const mms=D.milestones[enfant.id]||[];
   const recentMs=mms.filter(m=>m.ok).slice(-1)[0];
+  const [showAbsence,setShowAbsence]=useState(false);
+  const [absence,setAbsence]=useState({date:TODAY_STR,motif:"Maladie",heures:"",indemnise:true});
+  const [absEnvoyee,setAbsEnvoyee]=useState(false);
+  const [toast,setToast]=useState("");
+
+  const declarerAbsence=()=>{
+    if(!absence.heures)return;
+    D.absences.push({id:"ab"+Date.now(),eId:enfant.id,date:absence.date,motif:absence.motif,indemnise:absence.indemnise,heures:parseFloat(absence.heures)});
+    D.evenements.push({id:"ev"+Date.now(),date:absence.date,type:"abs",txt:`Absent — ${enfant.prenom} (${absence.motif})`});
+    setAbsEnvoyee(true);
+    setShowAbsence(false);
+    setToast(`Absence déclarée — Marie a été notifiée ✓`);
+  };
 
   return <div className="fi">
-    <div style={{marginBottom:14}}>
-      <div className="pf"style={{fontSize:21,fontWeight:700,color:"var(--b)"}}>Bonjour ! La journée de {enfant.prenom} ✨</div>
-      <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>{todayStr()}</div>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
+      <div>
+        <div className="pf"style={{fontSize:21,fontWeight:700,color:"var(--b)"}}>Bonjour ! La journée de {enfant.prenom} ✨</div>
+        <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>{todayStr()}</div>
+      </div>
+      <button className="btn bR"style={{fontSize:12,padding:"8px 14px"}}onClick={()=>setShowAbsence(true)}>
+        🤒 Déclarer une absence
+      </button>
     </div>
 
+    {/* Modale absence */}
+    {showAbsence&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
+      onClick={e=>e.target===e.currentTarget&&setShowAbsence(false)}>
+      <div className="card"style={{width:"100%",maxWidth:420,padding:28}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}>🤒 Déclarer une absence</div>
+          <button onClick={()=>setShowAbsence(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
+        </div>
+        <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)"}}>
+          📢 Marie sera notifiée immédiatement. L'absence sera notée dans le calendrier et prise en compte dans le décompte des heures.
+        </div>
+        <div style={{display:"grid",gap:12}}>
+          <div>
+            <label className="lbl">Date d'absence</label>
+            <input type="date"className="inp"value={absence.date}onChange={e=>setAbsence(a=>({...a,date:e.target.value}))}/>
+          </div>
+          <div>
+            <label className="lbl">Motif</label>
+            <select className="sel"value={absence.motif}onChange={e=>setAbsence(a=>({...a,motif:e.target.value}))}>
+              <option>Maladie</option>
+              <option>Congés parents</option>
+              <option>Décision parent</option>
+              <option>Rendez-vous médical</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div>
+            <label className="lbl">Heures prévues ce jour</label>
+            <input type="number"className="inp"placeholder="ex: 9"value={absence.heures}onChange={e=>setAbsence(a=>({...a,heures:e.target.value}))} min="0"max="12"step="0.5"/>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <input type="checkbox"id="indem"checked={absence.indemnise}onChange={e=>setAbsence(a=>({...a,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer"}}/>
+            <label htmlFor="indem"style={{fontSize:13,color:"var(--b)",cursor:"pointer"}}>
+              Absence indemnisée (selon contrat)
+            </label>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:20}}>
+          <button className="btn bG"style={{flex:1}}onClick={()=>setShowAbsence(false)}>Annuler</button>
+          <button className="btn bR"style={{flex:2}}onClick={declarerAbsence}>
+            📢 Notifier Marie
+          </button>
+        </div>
+      </div>
+    </div>}
+
+    {absEnvoyee&&<div style={{background:"var(--Rp)",border:"1.5px solid var(--R)",borderRadius:12,padding:"10px 16px",marginBottom:14,fontSize:13,color:"var(--R)",fontWeight:600}}>
+      ✅ Absence déclarée et notée dans le calendrier et le décompte des heures.
+    </div>}
+
     <div className="g2"style={{marginBottom:12}}>
-      {/* Card enfant — allergie cliquable → santé */}
+      {/* Card enfant */}
       <div className="card"style={{padding:18,borderTop:`4px solid ${enfant.couleur}`}}>
         <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:12}}>
           <span style={{fontSize:52}}>{enfant.emoji}</span>
@@ -515,7 +588,7 @@ function AccueilParent({enfant,setPage}){
           🌱 Dernière étape : {recentMs.txt} →
         </div>}
       </div>
-      {/* Pointage cliquable */}
+      {/* Pointage */}
       <div className="card"onClick={()=>setPage&&setPage("pointage")}style={{padding:18,cursor:"pointer",transition:"box-shadow .18s"}}
         onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
         onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
@@ -529,7 +602,7 @@ function AccueilParent({enfant,setPage}){
       </div>
     </div>
 
-    {/* Transmissions — cliquables → journal */}
+    {/* Transmissions */}
     <div className="card"onClick={()=>setPage&&setPage("journal_complet")}
       style={{padding:16,marginBottom:12,cursor:"pointer",transition:"box-shadow .18s"}}
       onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
@@ -547,7 +620,6 @@ function AccueilParent({enfant,setPage}){
         </div>)}
     </div>
 
-    {/* Repas — cliquable → repas */}
     {rep&&<div className="card"onClick={()=>setPage&&setPage("journal_complet")}
       style={{padding:16,cursor:"pointer",transition:"box-shadow .18s"}}
       onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
@@ -3300,214 +3372,229 @@ function LandingPage({onLogin,dark,setDark}){
   ];
 
   return <div style={{minHeight:"100vh",background:"var(--c)",overflowX:"hidden"}}>
-    {/* Hero */}
+    {/* Hero — nouveau design vert forêt + copywriting émotionnel */}
     <div style={{
-      background:"linear-gradient(135deg,#2C1F14 0%,#4A2E1A 50%,#B8622F 100%)",
-      padding:"0 20px 60px",position:"relative",overflow:"hidden"
+      background:"linear-gradient(160deg,#1C3028 0%,#2A4A38 40%,#3D6B50 80%,#B8622F 100%)",
+      padding:"0 20px 70px",position:"relative",overflow:"hidden"
     }}>
+      {/* Cercles déco */}
+      <div style={{position:"absolute",top:-80,right:-80,width:300,height:300,borderRadius:"50%",background:"rgba(255,255,255,.04)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",bottom:-40,left:-60,width:200,height:200,borderRadius:"50%",background:"rgba(184,98,47,.15)",pointerEvents:"none"}}/>
+
       {/* Nav */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 0",maxWidth:900,margin:"0 auto"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 0",maxWidth:960,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div className="pf"style={{fontSize:26,fontWeight:600,color:"#fff",fontStyle:"italic"}}>TiMat</div>
-          <div style={{width:5,height:5,borderRadius:"50%",background:"#B8622F",marginBottom:2}}/>
+          <div className="pf"style={{fontSize:26,fontWeight:600,color:"#fff",fontStyle:"italic",letterSpacing:".5px"}}>TiMat</div>
+          <div style={{width:5,height:5,borderRadius:"50%",background:"#E8B060",marginBottom:2}}/>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <button onClick={()=>setDark&&setDark(d=>!d)}style={{background:"rgba(255,255,255,.1)",border:"none",color:"#fff",padding:"6px 10px",borderRadius:8,cursor:"pointer",fontSize:14}}>
             {dark?"☀️":"🌙"}
           </button>
           <button onClick={()=>document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}
-            className="btn"style={{background:"rgba(255,255,255,.1)",color:"#fff",border:"1px solid rgba(255,255,255,.3)"}}>
+            className="btn"style={{background:"rgba(255,255,255,.1)",color:"#fff",border:"1px solid rgba(255,255,255,.25)",fontSize:13}}>
             Tarifs
           </button>
-          <button onClick={()=>setShowLogin(true)}className="btn"style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.3)"}}>
+          <button onClick={()=>setShowLogin(true)}className="btn"style={{background:"rgba(255,255,255,.12)",color:"#fff",border:"1px solid rgba(255,255,255,.25)",fontSize:13}}>
             Connexion
           </button>
-          <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT">Essayer gratuitement →</button>
+          <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn"style={{background:"#B8622F",color:"#fff",border:"none",fontSize:13,boxShadow:"0 2px 12px rgba(184,98,47,.5)"}}>
+            Commencer gratuitement →
+          </button>
         </div>
       </div>
-      {/* Titre */}
-      <div style={{maxWidth:700,margin:"40px auto 0",textAlign:"center"}}>
-        <div style={{display:"inline-block",background:"rgba(255,255,255,.1)",borderRadius:20,padding:"5px 16px",fontSize:12,color:"rgba(255,255,255,.8)",marginBottom:16,fontWeight:600,letterSpacing:".5px"}}>
-          🇫🇷 CONÇU POUR LES ASSISTANTES MATERNELLES FRANÇAISES
+
+      {/* Problème → Solution */}
+      <div style={{maxWidth:760,margin:"48px auto 0",textAlign:"center"}}>
+        {/* Accroche émotionnelle */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(232,176,96,.15)",border:"1px solid rgba(232,176,96,.3)",borderRadius:20,padding:"6px 18px",fontSize:12,color:"#E8D0A0",marginBottom:24,fontWeight:600,letterSpacing:".5px"}}>
+          💛 POUR TOUTES LES ASSISTANTES MATERNELLES DE FRANCE
         </div>
-        <div className="pf"style={{fontSize:"clamp(32px,6vw,58px)",fontWeight:700,color:"#fff",lineHeight:1.15,marginBottom:16,fontStyle:"italic"}}>
-          L'app qui réinvente<br/>votre quotidien
+
+        {/* Titre choc */}
+        <div className="pf"style={{fontSize:"clamp(28px,5.5vw,54px)",fontWeight:700,color:"#fff",lineHeight:1.2,marginBottom:20,fontStyle:"italic"}}>
+          Fini les cahiers perdus,<br/>les papiers qui s'accumulent,<br/>
+          <span style={{color:"#E8B060"}}>les soirées à faire la compta.</span>
         </div>
-        <div style={{fontSize:"clamp(15px,2.5vw,18px)",color:"rgba(255,255,255,.75)",lineHeight:1.7,marginBottom:28,maxWidth:560,margin:"0 auto 28px"}}>
-          Bilans de journée automatiques, suivi des enfants, administratif simplifié. 
-          Tout ce dont une assistante maternelle a besoin, dans une seule app élégante.
+
+        {/* Problème → Solution */}
+        <div style={{background:"rgba(0,0,0,.2)",borderRadius:16,padding:"20px 28px",marginBottom:28,textAlign:"left",maxWidth:640,margin:"0 auto 28px"}}>
+          <div style={{fontSize:14,color:"rgba(255,255,255,.5)",marginBottom:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px"}}>Vous en avez assez de…</div>
+          {["Rédiger des bilans à la main tous les soirs","Perdre des documents importants","Passer des heures sur Pajemploi chaque mois","Ne pas avoir de traces en cas de litige","Jongler entre WhatsApp, Excel et les papiers"].map((p,i)=>
+            <div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,fontSize:13,color:"rgba(255,255,255,.75)"}}>
+              <span style={{color:"#E87070",fontSize:16,flexShrink:0,marginTop:1}}>✗</span>{p}
+            </div>)}
+          <div style={{height:1,background:"rgba(255,255,255,.1)",margin:"16px 0"}}/>
+          <div style={{fontSize:14,color:"#A8D4A0",fontWeight:700,marginBottom:12,textTransform:"uppercase",letterSpacing:".5px"}}>TiMat s'occupe de tout ✓</div>
+          {["Bilans de journée rédigés automatiquement par IA","Tous vos documents sécurisés, accessibles partout","Calcul salaire + export Pajemploi en 1 clic","Historique complet, rien ne se perd jamais","Une seule app pour tout gérer"].map((s,i)=>
+            <div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,fontSize:13,color:"rgba(255,255,255,.85)"}}>
+              <span style={{color:"#80C880",fontSize:16,flexShrink:0,marginTop:1}}>✓</span>{s}
+            </div>)}
         </div>
-        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={()=>setShowLogin(true)}className="btn bT"style={{fontSize:15,padding:"13px 28px"}}>
-            Essayer la démo →
+
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+          <button onClick={()=>{setShowLogin(true);setMode("inscription");}}
+            style={{background:"linear-gradient(135deg,#B8622F,#8A3A20)",color:"#fff",border:"none",borderRadius:10,padding:"14px 32px",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(184,98,47,.5)",fontFamily:"'DM Sans',sans-serif"}}>
+            Essayer gratuitement — sans CB →
           </button>
           <button onClick={()=>document.getElementById('features')?.scrollIntoView({behavior:'smooth'})}
-            className="btn"style={{background:"rgba(255,255,255,.1)",color:"#fff",border:"1px solid rgba(255,255,255,.3)",fontSize:15,padding:"13px 28px"}}>
+            style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"14px 28px",fontSize:15,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
             Voir les fonctionnalités
           </button>
         </div>
-      </div>
-      {/* Badge concurrents */}
-      <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:32,flexWrap:"wrap"}}>
-        {["✅ Plus complet que Kidizz","✅ Plus intelligent que Noé","✅ Bilans IA exclusifs","✅ Communication PMI intégrée"].map(t=>
-          <span key={t}style={{background:"rgba(255,255,255,.1)",borderRadius:20,padding:"5px 14px",fontSize:11,color:"rgba(255,255,255,.85)",fontWeight:600}}>{t}</span>
-        )}
+
+        {/* Réassurance */}
+        <div style={{display:"flex",gap:20,justifyContent:"center",marginTop:24,flexWrap:"wrap"}}>
+          {["🔒 Données hébergées en France","⚡ 2 minutes pour démarrer","🎓 Conforme aux exigences PMI","💳 Gratuit, sans carte bancaire"].map(t=>
+            <span key={t}style={{fontSize:11,color:"rgba(255,255,255,.6)",fontWeight:600}}>{t}</span>)}
+        </div>
       </div>
     </div>
 
-    {/* Features */}
-    <div id="features"style={{maxWidth:900,margin:"0 auto",padding:"60px 20px"}}>
-      <div style={{textAlign:"center",marginBottom:40}}>
-        <div className="pf"style={{fontSize:34,fontWeight:600,color:"var(--b)",marginBottom:8}}>Tout ce que vous attendiez</div>
-        <div style={{fontSize:15,color:"var(--l)",maxWidth:500,margin:"0 auto"}}>
-          TiMat regroupe tout ce dont vous avez besoin au quotidien. Aucun concurrent ne propose autant.
+    {/* Fonctionnalités clés */}
+    <div id="features"style={{maxWidth:960,margin:"0 auto",padding:"60px 20px"}}>
+      <div style={{textAlign:"center",marginBottom:44}}>
+        <div className="pf"style={{fontSize:34,fontWeight:600,color:"var(--b)",marginBottom:10}}>
+          Tout ce dont vous avez besoin, enfin réuni
+        </div>
+        <div style={{fontSize:15,color:"var(--l)",maxWidth:520,margin:"0 auto",lineHeight:1.7}}>
+          TiMat est la seule app spécialement conçue pour les assistantes maternelles françaises.
+          Vos concurrents utilisent des cahiers. Vous, vous aurez une longueur d'avance.
         </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
-        {feats.map((f,i)=><div key={i}className="card"style={{padding:18,borderTop:`3px solid var(--T)`}}>
-          <div style={{fontSize:28,marginBottom:10}}>{f.ic}</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>
+        {feats.map((f,i)=><div key={i}className="card card-lift"style={{padding:20,borderLeft:`4px solid var(--T)`}}>
+          <div style={{fontSize:30,marginBottom:12}}>{f.ic}</div>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{f.t}</div>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>{f.d}</div>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>{f.d}</div>
         </div>)}
       </div>
+
+      {/* Argument clé central */}
+      <div style={{marginTop:40,background:"linear-gradient(135deg,var(--Sp),var(--Gp))",borderRadius:20,padding:"28px 32px",display:"flex",gap:20,alignItems:"center",flexWrap:"wrap"}}>
+        <div style={{fontSize:40}}>🛡️</div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:6}}>Tout est gardé. Rien ne se perd. Jamais.</div>
+          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>
+            Vos transmissions, photos, contrats, bilans, attestations fiscales — tout est stocké
+            de façon sécurisée dans le cloud français. En cas de contrôle PMI, de litige ou simplement
+            pour retrouver un document d'il y a 3 ans : tout est là, en 2 secondes.
+          </div>
+        </div>
+      </div>
     </div>
 
-    {/* Social proof */}
-    <div style={{background:"var(--Tp)",padding:"40px 20px"}}>
-      <div style={{maxWidth:700,margin:"0 auto",textAlign:"center"}}>
-        <div className="pf"style={{fontSize:22,fontWeight:600,color:"var(--b)",marginBottom:24,fontStyle:"italic"}}>
+    {/* Témoignages */}
+    <div style={{background:"linear-gradient(135deg,#1C3028,#2A4A38)",padding:"48px 20px"}}>
+      <div style={{maxWidth:860,margin:"0 auto",textAlign:"center"}}>
+        <div className="pf"style={{fontSize:24,fontWeight:600,color:"#fff",marginBottom:8,fontStyle:"italic"}}>
           "Enfin une app qui comprend notre métier"
         </div>
+        <div style={{fontSize:13,color:"rgba(255,255,255,.5)",marginBottom:32}}>Assistantes maternelles utilisatrices de TiMat</div>
         <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
           {[
-            {nom:"Marie D.",ville:"Paris 15e",txt:"Le bilan de journée automatique a changé ma relation avec les parents. Ils adorent !"},
-            {nom:"Sylvie R.",ville:"Lyon",txt:"L'export Pajemploi me fait économiser 2h par mois. Je ne peux plus m'en passer."},
-            {nom:"Fatima B.",ville:"Bordeaux",txt:"Le suivi de croissance et les jalons OMS me permettent d'être vraiment professionnelle."},
-          ].map((t,i)=><div key={i}className="card"style={{padding:16,maxWidth:200,textAlign:"left"}}>
-            <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10,fontStyle:"italic"}}>"{t.txt}"</div>
-            <div style={{fontSize:12,fontWeight:700,color:"var(--b)"}}>{t.nom}</div>
-            <div style={{fontSize:11,color:"var(--l)"}}>{t.ville}</div>
+            {nom:"Marie D.",ville:"Paris 15e",etoiles:5,txt:"Le bilan de journée automatique a changé ma relation avec les parents. Ils adorent recevoir quelque chose d'aussi beau chaque soir."},
+            {nom:"Sylvie R.",ville:"Lyon",etoiles:5,txt:"J'économise 2h par mois sur Pajemploi et l'attestation fiscale se génère toute seule. Je ne peux plus m'en passer."},
+            {nom:"Fatima B.",ville:"Bordeaux",etoiles:5,txt:"Plus rien ne se perd. Mes contrats, mes bilans, mes photos — tout est là. Même ma PMI est impressionnée."},
+          ].map((t,i)=><div key={i}style={{background:"rgba(255,255,255,.07)",borderRadius:14,padding:"18px 20px",maxWidth:240,textAlign:"left",border:"1px solid rgba(255,255,255,.1)"}}>
+            <div style={{color:"#E8B060",marginBottom:8,fontSize:14}}>{"⭐".repeat(t.etoiles)}</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,.8)",lineHeight:1.7,marginBottom:12,fontStyle:"italic"}}>"{t.txt}"</div>
+            <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>{t.nom}</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>{t.ville}</div>
           </div>)}
         </div>
       </div>
     </div>
 
-    {/* ── PRICING ──────────────────────────────────────────── */}
-    <div id="pricing"style={{background:"linear-gradient(180deg,var(--c) 0%,var(--w) 100%)",padding:"60px 20px"}}>
-      <div style={{maxWidth:900,margin:"0 auto"}}>
-        <div style={{textAlign:"center",marginBottom:48}}>
+    {/* ── PRICING — 2 offres seulement ──────────────────────── */}
+    <div id="pricing"style={{background:"var(--c)",padding:"60px 20px"}}>
+      <div style={{maxWidth:700,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:44}}>
           <div style={{display:"inline-block",background:"var(--Tp)",borderRadius:20,padding:"5px 16px",fontSize:12,color:"var(--T)",fontWeight:700,marginBottom:12,letterSpacing:".5px"}}>
-            💰 TARIFS SIMPLES
+            💰 TARIFS SIMPLES ET TRANSPARENTS
           </div>
-          <div className="pf"style={{fontSize:36,fontWeight:600,color:"var(--b)",marginBottom:8}}>
-            Choisissez votre offre
+          <div className="pf"style={{fontSize:34,fontWeight:600,color:"var(--b)",marginBottom:10}}>
+            Un prix accessible pour toutes
           </div>
-          <div style={{fontSize:15,color:"var(--l)",maxWidth:480,margin:"0 auto"}}>
-            Commencez gratuitement, passez au Pro quand vous êtes prête.
-            Aucun engagement, résiliable à tout moment.
+          <div style={{fontSize:15,color:"var(--l)",maxWidth:440,margin:"0 auto",lineHeight:1.7}}>
+            Commencez gratuitement. Passez au Pro quand vous êtes prête.
+            Tout est inclus, rien de caché.
           </div>
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:20,alignItems:"start"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:24,alignItems:"center"}}>
 
           {/* Gratuit */}
-          <div className="card"style={{padding:28,border:"2px solid var(--br)"}}>
-            <div style={{fontSize:13,fontWeight:700,color:"var(--l)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Gratuit</div>
-            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
-              <span className="pf"style={{fontSize:42,fontWeight:700,color:"var(--b)"}}>0€</span>
+          <div className="card"style={{padding:30,border:"2px solid var(--br)"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--l)",marginBottom:10,textTransform:"uppercase",letterSpacing:"1px"}}>Découverte</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:8}}>
+              <span className="pf"style={{fontSize:46,fontWeight:700,color:"var(--b)"}}>0€</span>
               <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
             </div>
-            <div style={{fontSize:13,color:"var(--m)",marginBottom:20,lineHeight:1.5}}>Pour découvrir TiMat et ses fonctionnalités de base.</div>
-            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bG"style={{width:"100%",justifyContent:"center",marginBottom:24}}>
+            <div style={{fontSize:13,color:"var(--m)",marginBottom:22,lineHeight:1.6}}>Pour découvrir TiMat sans engagement ni carte bancaire.</div>
+            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bG"style={{width:"100%",justifyContent:"center",marginBottom:26,padding:"12px"}}>
               Commencer gratuitement
             </button>
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {[
-                [true,"1 enfant"],
-                [true,"Journal quotidien"],
-                [true,"Pointage & Repas"],
-                [true,"Messagerie parents"],
-                [true,"Calendrier"],
-                [false,"Bilans IA & CR Trimestriel"],
-                [false,"Pajemploi & Attestation fiscale"],
-                [false,"Photos illimitées"],
-                [false,"Communication PMI"],
-                [false,"Documents illimités"],
-              ].map(([ok,txt],i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
-                <span style={{color:ok?"var(--S)":"var(--br)",fontSize:16,flexShrink:0}}>{ok?"✓":"✗"}</span>
-                <span style={{color:ok?"var(--b)":"var(--l)",textDecoration:ok?"none":"none"}}>{txt}</span>
-              </div>)}
-            </div>
+            {[
+              [true,"1 enfant accueilli"],
+              [true,"Journal quotidien"],
+              [true,"Pointage & Repas"],
+              [true,"Messagerie avec les parents"],
+              [true,"Calendrier"],
+              [false,"Bilans IA & CR Trimestriel"],
+              [false,"Pajemploi & Attestation fiscale"],
+              [false,"Photos illimitées"],
+              [false,"Communication PMI"],
+              [false,"Documents illimités"],
+              [false,"Enfants illimités"],
+            ].map(([ok,t],i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13,padding:"5px 0",borderBottom:i<10?"1px solid var(--br)":"none"}}>
+              <span style={{color:ok?"var(--S)":"var(--br)",fontSize:15,flexShrink:0,fontWeight:700}}>{ok?"✓":"✗"}</span>
+              <span style={{color:ok?"var(--b)":"var(--l)"}}>{t}</span>
+            </div>)}
           </div>
 
-          {/* Pro ← recommandé */}
-          <div className="card"style={{padding:28,border:"2px solid var(--T)",position:"relative",transform:"scale(1.03)",boxShadow:"var(--sh2)"}}>
-            <div style={{position:"absolute",top:-14,left:"50%",transform:"translateX(-50%)",
-              background:"linear-gradient(135deg,#C4714A,#A85535)",color:"#fff",
-              borderRadius:20,padding:"4px 16px",fontSize:11,fontWeight:700,letterSpacing:".5px",whiteSpace:"nowrap"}}>
-              ⭐ RECOMMANDÉ
+          {/* Pro */}
+          <div className="card"style={{padding:30,border:"2.5px solid var(--T)",position:"relative",boxShadow:"var(--sh2)"}}>
+            <div style={{position:"absolute",top:-15,left:"50%",transform:"translateX(-50%)",
+              background:"linear-gradient(135deg,#C4714A,#8A3A20)",color:"#fff",
+              borderRadius:20,padding:"5px 18px",fontSize:11,fontWeight:700,letterSpacing:".8px",whiteSpace:"nowrap"}}>
+              ⭐ TOUT INCLUS
             </div>
-            <div style={{fontSize:13,fontWeight:700,color:"var(--T)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Pro</div>
-            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
-              <span className="pf"style={{fontSize:42,fontWeight:700,color:"var(--T)"}}>9,90€</span>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--T)",marginBottom:10,textTransform:"uppercase",letterSpacing:"1px"}}>Pro</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:4}}>
+              <span className="pf"style={{fontSize:46,fontWeight:700,color:"var(--T)"}}>9,99€</span>
               <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
             </div>
-            <div style={{fontSize:13,color:"var(--m)",marginBottom:20,lineHeight:1.5}}>La solution complète pour les assistantes maternelles professionnelles.</div>
-            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:24}}>
-              Démarrer l'essai gratuit →
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:8}}>soit 0,33€/jour — moins qu'un café</div>
+            <div style={{fontSize:13,color:"var(--m)",marginBottom:22,lineHeight:1.6}}>La solution complète. Tout est inclus, aucune surprise.</div>
+            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:26,padding:"12px"}}>
+              14 jours gratuits, sans CB →
             </button>
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {[
-                [true,"Enfants illimités"],
-                [true,"Journal quotidien"],
-                [true,"Pointage & Repas"],
-                [true,"Messagerie parents"],
-                [true,"Calendrier"],
-                [true,"✨ Bilans IA & CR Trimestriel"],
-                [true,"🏛️ Pajemploi & Attestation fiscale"],
-                [true,"📸 Photos illimitées"],
-                [true,"🏛️ Communication PMI"],
-                [true,"🗂️ Documents illimités (5 Go)"],
-              ].map(([ok,txt],i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
-                <span style={{color:"var(--S)",fontSize:16,flexShrink:0}}>✓</span>
-                <span style={{color:"var(--b)",fontWeight:txt.startsWith("✨")||txt.startsWith("🏛️")||txt.startsWith("📸")||txt.startsWith("🗂️")?700:400}}>{txt}</span>
-              </div>)}
-            </div>
-          </div>
-
-          {/* Premium */}
-          <div className="card"style={{padding:28,border:"2px solid var(--P)"}}>
-            <div style={{fontSize:13,fontWeight:700,color:"var(--P)",marginBottom:8,textTransform:"uppercase",letterSpacing:".8px"}}>Premium</div>
-            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
-              <span className="pf"style={{fontSize:42,fontWeight:700,color:"var(--P)"}}>24,90€</span>
-              <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
-            </div>
-            <div style={{fontSize:13,color:"var(--m)",marginBottom:20,lineHeight:1.5}}>Pour les assmat qui gèrent plusieurs enfants et veulent le meilleur.</div>
-            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bP"style={{width:"100%",justifyContent:"center",marginBottom:24}}>
-              Choisir Premium →
-            </button>
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {[
-                "Tout ce qu'inclut Pro",
-                "Stockage illimité",
-                "Support prioritaire 7j/7",
-                "Export données complet",
-                "Statistiques avancées",
-                "Accès multi-appareils",
-              ].map((txt,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13}}>
-                <span style={{color:"var(--P)",fontSize:16,flexShrink:0}}>✓</span>
-                <span style={{color:"var(--b)",fontWeight:i===0?700:400}}>{txt}</span>
-              </div>)}
-            </div>
+            {[
+              "✨ Bilans de journée rédigés par IA",
+              "📝 CR Trimestriel professionnel",
+              "🏛️ Export Pajemploi en 1 clic",
+              "📑 Attestation fiscale automatique",
+              "📸 Photos illimitées dans le journal",
+              "🏥 Communication PMI par email",
+              "🗂️ Documents illimités (5 Go)",
+              "👶 Enfants illimités",
+              "📊 Tableau de bord analytique",
+              "🔒 Données hébergées en France",
+              "💬 Support prioritaire",
+            ].map((t,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13,padding:"5px 0",borderBottom:i<10?"1px solid rgba(184,98,47,.15)":"none"}}>
+              <span style={{color:"var(--S)",fontSize:15,flexShrink:0,fontWeight:700}}>✓</span>
+              <span style={{color:"var(--b)",fontWeight:i<4?700:400}}>{t}</span>
+            </div>)}
           </div>
         </div>
 
         {/* Garantie */}
-        <div style={{textAlign:"center",marginTop:32,fontSize:13,color:"var(--l)",display:"flex",gap:24,justifyContent:"center",flexWrap:"wrap"}}>
-          <span>✅ 14 jours d'essai gratuit</span>
-          <span>✅ Sans carte bancaire</span>
+        <div style={{textAlign:"center",marginTop:28,display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",fontSize:13,color:"var(--l)"}}>
+          <span>✅ 14 jours d'essai sans CB</span>
           <span>✅ Résiliable en 1 clic</span>
           <span>✅ Données hébergées en France</span>
+          <span>✅ Aucun engagement</span>
         </div>
       </div>
     </div>
