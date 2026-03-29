@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase, seConnecter, seDeconnecter, getSession, getProfil, inscrireAsmat, inscrireParent } from "../lib/supabase.js";
 // ─── IMPORT DES COMPOSANTS RGPD ─────────────────────────────────────────────
-import { ConsentementRGPD, SupprimerCompte } from "./composants-rgpd";
-
+import { ConsentementRGPD, SupprimerCompte } from './composants-rgpd.jsx';
 // ─── DATES (déclarées en premier pour éviter TDZ) ─────────────────────────────
 var _D=new Date();
 var TODAY_STR=_D.getFullYear()+"-"+String(_D.getMonth()+1).padStart(2,"0")+"-"+String(_D.getDate()).padStart(2,"0");
