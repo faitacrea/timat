@@ -3151,6 +3151,241 @@ function BandeauHorsLigne(){
   </div>;
 }
 
+// ─── SUPPRIMER COMPTE ─────────────────────────────────────────────────────────
+function SupprimerCompte({onDeleted}){
+  const [etape,setEtape]=useState("idle");
+  const [confirmation,setConfirmation]=useState("");
+  const [erreur,setErreur]=useState("");
+  const MOT="SUPPRIMER";
+
+  const handleSupprimer=async()=>{
+    if(confirmation!==MOT)return;
+    setEtape("deleting");
+    try{
+      const{data:{user}}=await supabase.auth.getUser();
+      if(!user)throw new Error("Non connecté");
+      const{error}=await supabase.rpc("delete_user_account",{user_id:user.id});
+      if(error)throw error;
+      await supabase.auth.signOut();
+      setEtape("done");
+      setTimeout(()=>onDeleted?.(),2000);
+    }catch(e){
+      setErreur(e.message||"Erreur — contactez privacy@timat.app");
+      setEtape("error");
+    }
+  };
+
+  if(etape==="idle")return(
+    <div style={{background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:12,padding:20}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}>⚠️ Zone de danger</div>
+      <div style={{fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>
+        La suppression est <strong>définitive et irréversible</strong>. Toutes vos données (enfants, contrats, transmissions, photos, bilans) seront effacées immédiatement conformément au RGPD.
+      </div>
+      <button onClick={()=>setEtape("confirm1")}style={{background:"none",border:"1.5px solid var(--R)",color:"var(--R)",borderRadius:8,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:600}}>
+        Supprimer mon compte et toutes mes données
+      </button>
+    </div>
+  );
+
+  if(etape==="confirm1")return(
+    <div style={{background:"var(--Rp)",border:"2px solid var(--R)",borderRadius:12,padding:20}}>
+      <div style={{fontWeight:700,fontSize:15,color:"var(--R)",marginBottom:12}}>Êtes-vous absolument sûre ?</div>
+      <div style={{fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.7}}>
+        Seront supprimés : votre profil, toutes les fiches enfants, tous les contrats, pointages, transmissions, bilans et photos.
+      </div>
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={()=>setEtape("idle")}className="btn bG"style={{flex:1}}>Annuler</button>
+        <button onClick={()=>setEtape("confirm2")}className="btn bR"style={{flex:1}}>Oui, continuer</button>
+      </div>
+    </div>
+  );
+
+  if(etape==="confirm2")return(
+    <div style={{background:"var(--Rp)",border:"2px solid var(--R)",borderRadius:12,padding:20}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}>Confirmation finale</div>
+      <div style={{fontSize:13,color:"var(--m)",marginBottom:12}}>
+        Tapez <strong style={{fontFamily:"'DM Mono',monospace",color:"var(--R)"}}>SUPPRIMER</strong> pour confirmer.
+      </div>
+      <input className="inp"value={confirmation}onChange={e=>setConfirmation(e.target.value.toUpperCase())}
+        placeholder="SUPPRIMER"style={{textAlign:"center",fontFamily:"'DM Mono',monospace",marginBottom:12,
+          borderColor:confirmation===MOT?"var(--R)":"var(--br)"}}/>
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={()=>{setEtape("idle");setConfirmation("");}}className="btn bG"style={{flex:1}}>Annuler</button>
+        <button onClick={handleSupprimer}disabled={confirmation!==MOT}
+          className="btn bR"style={{flex:1,opacity:confirmation===MOT?1:.5}}>
+          Supprimer définitivement
+        </button>
+      </div>
+    </div>
+  );
+
+  if(etape==="deleting")return(
+    <div style={{textAlign:"center",padding:24,background:"var(--Rp)",borderRadius:12,border:"1px solid var(--R)"}}>
+      <div style={{fontSize:32,marginBottom:8}}>⏳</div>
+      <div style={{fontSize:14,color:"var(--R)",fontWeight:600}}>Suppression en cours…</div>
+    </div>
+  );
+
+  if(etape==="done")return(
+    <div style={{textAlign:"center",padding:24,background:"var(--Sp)",borderRadius:12,border:"1px solid var(--S)"}}>
+      <div style={{fontSize:32,marginBottom:8}}>✅</div>
+      <div style={{fontSize:14,color:"var(--S)",fontWeight:700}}>Compte supprimé. Au revoir !</div>
+    </div>
+  );
+
+  return(
+    <div style={{padding:20,background:"var(--Rp)",borderRadius:12,border:"1px solid var(--R)"}}>
+      <div style={{fontWeight:700,color:"var(--R)",marginBottom:8}}>Erreur</div>
+      <div style={{fontSize:13,color:"var(--m)",marginBottom:12}}>{erreur}</div>
+      <button onClick={()=>setEtape("idle")}className="btn bG">Réessayer</button>
+    </div>
+  );
+}
+
+// ─── PAGE PARAMÈTRES ──────────────────────────────────────────────────────────
+function Parametres({user,onLogout,setPage}){
+  const [toast,setToast]=useState("");
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="⚙️" title="Paramètres" sub="Votre compte et vos données"/>
+    <div style={{maxWidth:600,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
+
+      {/* Profil */}
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>👤 Mon profil</div>
+        {[["Prénom",user?.prenom||"—"],["Nom",user?.nom||"—"],["Email",user?.email||"—"],["Rôle",user?.role==="asmat"?"Assistante maternelle":"Parent"]].map(([l,v])=>
+          <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+            <span style={{color:"var(--l)"}}>{l}</span>
+            <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
+          </div>)}
+      </div>
+
+      {/* Pages légales */}
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Légal & RGPD</div>
+        {[
+          ["🔒","Politique de confidentialité","politique_confidentialite"],
+          ["📋","Mentions légales","mentions_legales"],
+        ].map(([ic,l,p])=>
+          <div key={p}onClick={()=>setPage(p)}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)",cursor:"pointer"}}
+            onMouseEnter={e=>e.currentTarget.style.background="var(--c)"}
+            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            <span style={{fontSize:13,color:"var(--b)"}}>{ic} {l}</span>
+            <span style={{color:"var(--l)",fontSize:12}}>→</span>
+          </div>)}
+        <div style={{marginTop:12,padding:"10px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
+          ✅ Vos données sont hébergées en France · Jamais vendues · Supprimables à tout moment
+        </div>
+      </div>
+
+      {/* Déconnexion */}
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>🚪 Session</div>
+        <button className="btn bG"style={{width:"100%",justifyContent:"center"}}onClick={onLogout}>
+          Se déconnecter
+        </button>
+      </div>
+
+      {/* Danger zone */}
+      <SupprimerCompte onDeleted={onLogout}/>
+    </div>
+  </div>;
+}
+
+// ─── PAGE POLITIQUE DE CONFIDENTIALITÉ ───────────────────────────────────────
+function PolitiqueConfidentialite(){
+  const sections=[
+    {titre:"1. Responsable de traitement",contenu:`TiMat — contact : privacy@timat.app\nHébergement des données : France (OVHcloud Paris via Supabase).`},
+    {titre:"2. Données collectées",contenu:""},
+    {titre:"3. Durées de conservation",contenu:""},
+    {titre:"4. Vos droits",contenu:""},
+    {titre:"5. Cookies",contenu:"TiMat n'utilise aucun cookie publicitaire ni de tracking. Seuls les cookies techniques nécessaires au fonctionnement (session, authentification) sont utilisés."},
+    {titre:"6. Sécurité",contenu:"Chiffrement en transit (HTTPS/TLS 1.3), chiffrement au repos (AES-256), Row Level Security Supabase, authentification sécurisée."},
+  ];
+
+  const tableaux={
+    "2. Données collectées":[
+      ["Catégorie","Données","Base légale","Durée"],
+      ["Assmats","Nom, email, téléphone, n° agrément","Exécution du contrat","Durée compte actif"],
+      ["Enfants","Prénom, date de naissance, allergies","Exécution du contrat + intérêt vital","Durée contrat d'accueil"],
+      ["Parents","Nom, email, téléphone, profession","Exécution du contrat","Durée compte actif"],
+      ["Financières","Salaires, indemnités, attestations fiscales","Obligation légale","10 ans"],
+      ["Photos enfants","Images (journal partagé)","Consentement explicite parents","Durée contrat + 1 an"],
+      ["Paiements","Plan, Stripe ID (aucune CB stockée)","Exécution du contrat","10 ans"],
+    ],
+    "3. Durées de conservation":[
+      ["Données","Durée","Justification"],
+      ["Compte actif","Durée de l'abonnement","Nécessité du service"],
+      ["Après suppression du compte","0 jour (effacement immédiat)","Droit à l'effacement RGPD"],
+      ["Données financières / contrats","10 ans","Obligation légale comptable"],
+      ["Logs de connexion","12 mois","Sécurité"],
+      ["Consentements","5 ans","Preuve de conformité CNIL"],
+    ],
+    "4. Vos droits":[
+      ["Droit","Comment l'exercer"],
+      ["Accès à vos données","Administratif → Documents → Export dossier"],
+      ["Rectification","Paramètres → Modifier mon profil"],
+      ["Effacement (oubli)","Paramètres → Supprimer mon compte (immédiat et définitif)"],
+      ["Portabilité","Export CSV/PDF depuis l'application"],
+      ["Opposition","Contactez privacy@timat.app"],
+      ["Réclamation CNIL","www.cnil.fr — 3 Place de Fontenoy, 75007 Paris"],
+    ],
+  };
+
+  return <div className="fi">
+    <PageHeader icon="🔒" title="Politique de confidentialité" sub="Version 1.0 — Mars 2026 — Conforme RGPD"/>
+    <div style={{maxWidth:800,margin:"0 auto"}}>
+      {sections.map((s,i)=><div key={i}className="card"style={{padding:24,marginBottom:16}}>
+        <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:12}}>{s.titre}</div>
+        {tableaux[s.titre]?<div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+            <thead>
+              <tr>{tableaux[s.titre][0].map((h,j)=><th key={j}style={{
+                textAlign:"left",padding:"8px 12px",background:"var(--c)",
+                fontWeight:700,color:"var(--m)",fontSize:11,textTransform:"uppercase",letterSpacing:".5px",
+                borderBottom:"2px solid var(--br)"
+              }}>{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {tableaux[s.titre].slice(1).map((row,j)=><tr key={j}style={{borderBottom:"1px solid var(--br)"}}>
+                {row.map((cell,k)=><td key={k}style={{padding:"9px 12px",fontSize:13,color:k===0?"var(--b)":"var(--m)",fontWeight:k===0?600:400}}>{cell}</td>)}
+              </tr>)}
+            </tbody>
+          </table>
+        </div>:<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{s.contenu}</div>}
+      </div>)}
+      <div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid var(--B)"}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}>📧 Contact RGPD</div>
+        <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>privacy@timat.app</strong> — Réponse sous 30 jours.</div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── PAGE MENTIONS LÉGALES ────────────────────────────────────────────────────
+function MentionsLegales(){
+  const blocs=[
+    {titre:"Éditeur du site",contenu:`TiMat\nReprésentée par : [Nom à compléter]\nEmail : contact@timat.app\nSIRET : [À compléter à l'immatriculation]\nAdresse : [Adresse complète, France]`},
+    {titre:"Hébergement",contenu:`Application web : Vercel Inc. (serveurs européens)\nBase de données : Supabase / OVHcloud — 2 rue Kellermann, 59100 Roubaix, France\nToutes les données sont hébergées en France.`},
+    {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de TiMat et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
+    {titre:"Limitation de responsabilité",contenu:"Les calculs de salaire, récapitulatifs Pajemploi et attestations fiscales générés par TiMat sont fournis à titre indicatif. L'utilisateur reste responsable de la vérification des montants auprès des organismes compétents (URSSAF, CAF, Administration fiscale)."},
+    {titre:"Données personnelles",contenu:"Responsable de traitement : TiMat — privacy@timat.app\nAutorité de contrôle : CNIL — www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements."},
+    {titre:"Droit applicable",contenu:"Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents."},
+  ];
+  return <div className="fi">
+    <PageHeader icon="📋" title="Mentions légales" sub="Conformément à la loi n°2004-575 du 21 juin 2004 (LCEN)"/>
+    <div style={{maxWidth:700,margin:"0 auto"}}>
+      {blocs.map((b,i)=><div key={i}className="card"style={{padding:22,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>{b.titre}</div>
+        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{b.contenu}</div>
+      </div>)}
+      <div style={{fontSize:12,color:"var(--l)",textAlign:"center",marginTop:8}}>
+        Dernière mise à jour : mars 2026
+      </div>
+    </div>
+  </div>;
+}
+
 // ─── JOURNAL AVEC BILANS (Journal + Bilan + CR fusionnés) ────────────────────
 function JournalAvecBilans({enfant,liste,role,pEId}){
   const [sousSec,setSousSec]=useState("messages");
@@ -3739,6 +3974,8 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
         <button onClick={()=>setDark&&setDark(d=>!d)}style={{
           background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4
         }} title={dark?"Mode clair":"Mode sombre"}>{dark?"☀️":"🌙"}</button>
+        {/* Paramètres */}
+        <button onClick={()=>setPage2&&setPage2("parametres")}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4}}title="Paramètres">⚙️</button>
         <Av t={ini(user.prenom,user.nom)}c={user.couleur}s={30}/>
         <span style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{user.prenom}</span>
         <button onClick={onLogout}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,marginLeft:4}}title="Déconnexion">🚪</button>
@@ -3814,10 +4051,12 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({onLogin,dark,setDark}){
   const [showLogin,setShowLogin]=useState(false);
-  const [mode,setMode]=useState("connexion"); // "connexion" | "inscription"
+  const [mode,setMode]=useState("connexion");
   const [form,setForm]=useState({email:"",password:"",prenom:"",nom:"",role:"asmat"});
   const [err,setErr]=useState("");
   const [loading,setLoading]=useState(false);
+  const [consent,setConsent]=useState({politique:false,cgu:false,newsletter:false});
+  const consentValide=consent.politique&&consent.cgu;
 
   // Comptes démo (accès rapide)
   const demos=[
@@ -3849,6 +4088,7 @@ function LandingPage({onLogin,dark,setDark}){
   const inscription=async()=>{
     if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs.");return;}
     if(form.password.length<6){setErr("Le mot de passe doit faire au moins 6 caractères.");return;}
+    if(!consentValide){setErr("Vous devez accepter la politique de confidentialité et les CGU pour continuer.");return;}
     setLoading(true);setErr("");
     try{
       const{data,error}=await supabase.auth.signUp({
@@ -3867,15 +4107,15 @@ function LandingPage({onLogin,dark,setDark}){
   };
 
   const feats=[
-    {ic:"✨",t:"Bilan de journée automatique",d:"Rédigé en un clic, envoyé aux parents par message"},
-    {ic:"📝",t:"CR Trimestriel professionnel",d:"4 parties, prêt à imprimer ou à envoyer par email"},
-    {ic:"🏛️",t:"Pajemploi intégré",d:"Export direct des données pour la déclaration URSSAF"},
-    {ic:"📑",t:"Attestation fiscale automatique",d:"Crédit d'impôt 50% calculé et généré en un clic"},
-    {ic:"📸",t:"Journal photo partagé",d:"Les parents voient les photos du jour en temps réel"},
-    {ic:"📊",t:"Tableau de bord analytique",d:"Courbes d'humeurs, sommeil, heures sur le mois"},
-    {ic:"✍️",t:"Signature électronique",d:"Contrats signés en ligne, conformes eIDAS"},
-    {ic:"🏥",t:"Suivi médical complet",d:"Vaccins, allergies, courbe poids/taille OMS"},
-    {ic:"🏛️",t:"Communication PMI par email",d:"Échangez avec votre PMI directement depuis l'app"},
+    {ic:"🧮",t:"Calcul de salaire automatique",d:"Mensualisation, heures complémentaires, congés payés, indemnités d'entretien — tout est calculé en temps réel. Votre récap Pajemploi est prêt en 1 clic."},
+    {ic:"📄",t:"Contrats guidés et avenants",d:"Chaque clause est à sa place. Un avenant dès qu'un horaire change ? Fait en 2 minutes. En cas de litige, vous avez des preuves solides."},
+    {ic:"✨",t:"Bilan de journée rédigé par IA",d:"À la fin de la journée, TiMat rédige un compte-rendu chaleureux pour les parents. Vous validez, vous envoyez. Zéro soirée gâchée."},
+    {ic:"📑",t:"Attestation fiscale automatique",d:"Générée en un clic, partagée aux parents directement. Crédit d'impôt 50% — sans que vous ayez à expliquer quoi que ce soit."},
+    {ic:"🗂️",t:"Tous vos documents centralisés",d:"Agrément, contrats, ordonnances, attestations, photos — rangés, datés, retrouvables en 2 secondes. Même en cas de contrôle PMI à l'improviste."},
+    {ic:"📅",t:"Calendrier et rappels automatiques",d:"Renouvellement d'agrément, visites PMI, formations obligatoires — TiMat vous prévient avant que vous oubliiez."},
+    {ic:"⏰",t:"Pointage horodaté et signé",d:"Fini les conflits sur les retards ou les heures supplémentaires. Chaque arrivée et départ est tracé, incontestable."},
+    {ic:"💬",t:"Communication apaisée avec les parents",d:"Les parents voient la journée de leur enfant sur leur téléphone. Moins de questions à la porte, plus de confiance au quotidien."},
+    {ic:"🏛️",t:"Lien PMI professionnel",d:"Vos échanges avec la PMI par email, tracés et archivés. À la visite de renouvellement, vous arrivez sereine avec tout l'historique."},
   ];
 
   return <div style={{minHeight:"100vh",background:"var(--c)",overflowX:"hidden"}}>
@@ -3911,103 +4151,178 @@ function LandingPage({onLogin,dark,setDark}){
         </div>
       </div>
 
-      {/* Problème → Solution */}
-      <div style={{maxWidth:760,margin:"48px auto 0",textAlign:"center"}}>
-        {/* Accroche émotionnelle */}
+      {/* Accroche */}
+      <div style={{maxWidth:780,margin:"48px auto 0",textAlign:"center"}}>
         <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(232,176,96,.15)",border:"1px solid rgba(232,176,96,.3)",borderRadius:20,padding:"6px 18px",fontSize:12,color:"#E8D0A0",marginBottom:24,fontWeight:600,letterSpacing:".5px"}}>
-          💛 POUR TOUTES LES ASSISTANTES MATERNELLES DE FRANCE
+          💛 CONÇU POUR LES ASSISTANTES MATERNELLES DE FRANCE
         </div>
 
-        {/* Titre choc */}
-        <div className="pf"style={{fontSize:"clamp(28px,5.5vw,54px)",fontWeight:700,color:"#fff",lineHeight:1.2,marginBottom:20,fontStyle:"italic"}}>
-          Fini les cahiers perdus,<br/>les papiers qui s'accumulent,<br/>
-          <span style={{color:"#E8B060"}}>les soirées à faire la compta.</span>
+        {/* Titre — accroche directe */}
+        <div className="pf"style={{fontSize:"clamp(26px,5vw,52px)",fontWeight:700,color:"#fff",lineHeight:1.2,marginBottom:16,fontStyle:"italic"}}>
+          Vous aimez les enfants.<br/>
+          <span style={{color:"#E8B060"}}>Pas la paperasse.</span><br/>
+          <span style={{fontSize:"clamp(18px,3vw,32px)",fontStyle:"normal",fontWeight:400,color:"rgba(255,255,255,.8)"}}>Pourtant vous passez vos soirées dessus.</span>
         </div>
 
-        {/* Problème → Solution */}
-        <div style={{background:"rgba(0,0,0,.2)",borderRadius:16,padding:"20px 28px",marginBottom:28,textAlign:"left",maxWidth:640,margin:"0 auto 28px"}}>
-          <div style={{fontSize:14,color:"rgba(255,255,255,.5)",marginBottom:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px"}}>Vous en avez assez de…</div>
-          {["Rédiger des bilans à la main tous les soirs","Perdre des documents importants","Passer des heures sur Pajemploi chaque mois","Ne pas avoir de traces en cas de litige","Jongler entre WhatsApp, Excel et les papiers"].map((p,i)=>
-            <div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,fontSize:13,color:"rgba(255,255,255,.75)"}}>
-              <span style={{color:"#E87070",fontSize:16,flexShrink:0,marginTop:1}}>✗</span>{p}
-            </div>)}
+        {/* Miroir des douleurs — elles se reconnaissent */}
+        <div style={{background:"rgba(0,0,0,.25)",borderRadius:18,padding:"22px 28px",marginBottom:28,textAlign:"left",maxWidth:660,margin:"0 auto 28px"}}>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.45)",marginBottom:14,fontWeight:700,textTransform:"uppercase",letterSpacing:".8px"}}>
+            Dites-moi si ça vous parle…
+          </div>
+          {[
+            "Pajemploi vous donne des sueurs froides chaque fin de mois",
+            "Vous avez peur qu'un contrat mal rédigé se retourne contre vous",
+            "Vous répétez la même journée à l'oral à chaque parent épuisée à 18h",
+            "Vous vous réveillez la nuit avec \"ai-je bien tout déclaré ?\"",
+            "Un document important a déjà été perdu, abîmé, introuvable",
+            "Vous faites l'administratif le soir alors que vous méritez de vous reposer",
+          ].map((p,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:9,fontSize:13,color:"rgba(255,255,255,.8)"}}>
+            <span style={{color:"#E87070",fontSize:15,flexShrink:0,marginTop:2}}>☑</span>
+            <span>{p}</span>
+          </div>)}
+          <div style={{marginTop:16,padding:"10px 14px",background:"rgba(232,176,96,.12)",borderRadius:10,fontSize:13,color:"#E8D0A0",fontWeight:600,textAlign:"center"}}>
+            Si vous avez coché au moins une case, TiMat a été conçu pour vous.
+          </div>
+        </div>
+
+        {/* Promesse centrale */}
+        <div style={{marginBottom:28,maxWidth:600,margin:"0 auto 28px"}}>
+          <div className="pf"style={{fontSize:"clamp(16px,2.5vw,24px)",color:"rgba(255,255,255,.95)",lineHeight:1.5,marginBottom:12}}>
+            Et si tout ça prenait <span style={{color:"#E8B060",fontWeight:700}}>5 minutes par jour</span><br/>au lieu de 5 heures par semaine ?
+          </div>
           <div style={{height:1,background:"rgba(255,255,255,.1)",margin:"16px 0"}}/>
-          <div style={{fontSize:14,color:"#A8D4A0",fontWeight:700,marginBottom:12,textTransform:"uppercase",letterSpacing:".5px"}}>TiMat s'occupe de tout ✓</div>
-          {["Bilans de journée rédigés automatiquement par IA","Tous vos documents sécurisés, accessibles partout","Calcul salaire + export Pajemploi en 1 clic","Historique complet, rien ne se perd jamais","Une seule app pour tout gérer"].map((s,i)=>
-            <div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,fontSize:13,color:"rgba(255,255,255,.85)"}}>
-              <span style={{color:"#80C880",fontSize:16,flexShrink:0,marginTop:1}}>✓</span>{s}
-            </div>)}
+          {[
+            "Votre salaire calculé automatiquement — récap Pajemploi prêt en 1 clic",
+            "Vos bilans rédigés par IA — les parents reçoivent un vrai compte-rendu chaque soir",
+            "Vos documents tous au même endroit — retrouvables en 2 secondes dans 5 ans",
+            "Vos contrats solides et signés — vous êtes protégée si ça tourne mal",
+          ].map((s,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,fontSize:13,color:"rgba(255,255,255,.9)"}}>
+            <span style={{color:"#80C880",fontSize:15,flexShrink:0,marginTop:2}}>✓</span>
+            <span>{s}</span>
+          </div>)}
         </div>
 
         <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
           <button onClick={()=>{setShowLogin(true);setMode("inscription");}}
             style={{background:"linear-gradient(135deg,#B8622F,#8A3A20)",color:"#fff",border:"none",borderRadius:10,padding:"14px 32px",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(184,98,47,.5)",fontFamily:"'DM Sans',sans-serif"}}>
-            Essayer gratuitement — sans CB →
+            Je commence gratuitement — sans CB →
           </button>
           <button onClick={()=>document.getElementById('features')?.scrollIntoView({behavior:'smooth'})}
             style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"14px 28px",fontSize:15,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-            Voir les fonctionnalités
+            Voir comment ça marche
           </button>
         </div>
 
-        {/* Réassurance */}
         <div style={{display:"flex",gap:20,justifyContent:"center",marginTop:24,flexWrap:"wrap"}}>
-          {["🔒 Données hébergées en France","⚡ 2 minutes pour démarrer","🎓 Conforme aux exigences PMI","💳 Gratuit, sans carte bancaire"].map(t=>
-            <span key={t}style={{fontSize:11,color:"rgba(255,255,255,.6)",fontWeight:600}}>{t}</span>)}
+          {["🔒 Données hébergées en France","⚡ 2 minutes pour démarrer","🎓 Conforme PMI","💳 Gratuit sans CB"].map(t=>
+            <span key={t}style={{fontSize:11,color:"rgba(255,255,255,.55)",fontWeight:600}}>{t}</span>)}
         </div>
       </div>
     </div>
 
-    {/* Fonctionnalités clés */}
+    {/* Fonctionnalités — par douleur */}
     <div id="features"style={{maxWidth:960,margin:"0 auto",padding:"60px 20px"}}>
       <div style={{textAlign:"center",marginBottom:44}}>
         <div className="pf"style={{fontSize:34,fontWeight:600,color:"var(--b)",marginBottom:10}}>
-          Tout ce dont vous avez besoin, enfin réuni
+          Un problème → une solution concrète
         </div>
-        <div style={{fontSize:15,color:"var(--l)",maxWidth:520,margin:"0 auto",lineHeight:1.7}}>
-          TiMat est la seule app spécialement conçue pour les assistantes maternelles françaises.
-          Vos concurrents utilisent des cahiers. Vous, vous aurez une longueur d'avance.
+        <div style={{fontSize:15,color:"var(--l)",maxWidth:540,margin:"0 auto",lineHeight:1.7}}>
+          TiMat ne fait pas que "centraliser". Il résout les vraies galères que vous vivez chaque semaine.
         </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>
+
+      {/* Tableau douleur → solution → résultat */}
+      <div style={{display:"grid",gap:3,marginBottom:40}}>
+        {[
+          ["🧮","Pajemploi vous prend des heures chaque mois","Calcul automatique : mensualisation, heures supp, congés, indemnités","Récap prêt à saisir en 5 minutes. Zéro erreur. Zéro stress."],
+          ["📄","Votre contrat mal rédigé peut tout faire basculer","Modèles guidés, clauses adaptées au métier, avenants en 2 clics","En cas de conflit, vous avez des preuves écrites, solides, datées."],
+          ["✨","Vous répétez la journée à l'oral, crevée à 18h","L'IA rédige un bilan chaleureux, vous relisez, vous envoyez","Les parents reçoivent un vrai compte-rendu. La confiance grandit."],
+          ["🗂️","Vos papiers sont éparpillés entre tiroirs, SMS et WhatsApp","Tout centralisé : contrats, ordonnances, agrément, bilans, photos","Au moindre contrôle PMI, tout est là, en 2 secondes."],
+          ["📅","Vous avez peur d'oublier une échéance importante","Rappels automatiques : renouvellement, visites, formations","Plus jamais une date manquée. Vous êtes toujours à jour."],
+          ["⏰","Tensions sur les retards, les heures en plus, les impayés","Pointage horodaté, signé, incontestable pour les deux parties","Vous discutez de faits. Plus de ressentis. Plus de malentendus."],
+        ].map(([ic,pb,sol,res],i)=><div key={i}style={{
+          display:"grid",gridTemplateColumns:"40px 1fr 1fr 1fr",gap:16,alignItems:"center",
+          padding:"16px 20px",borderRadius:14,
+          background:i%2===0?"var(--w)":"var(--c)",
+          border:"1px solid var(--br)"
+        }}>
+          <div style={{fontSize:24,textAlign:"center"}}>{ic}</div>
+          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.5}}>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--R)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Le problème</div>
+            {pb}
+          </div>
+          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.5}}>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--B)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Ce que TiMat fait</div>
+            {sol}
+          </div>
+          <div style={{fontSize:13,color:"var(--S)",fontWeight:600,lineHeight:1.5}}>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--S)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Ce que ça change</div>
+            {res}
+          </div>
+        </div>)}
+      </div>
+
+      {/* Grille fonctionnalités */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16,marginBottom:40}}>
         {feats.map((f,i)=><div key={i}className="card card-lift"style={{padding:20,borderLeft:`4px solid var(--T)`}}>
-          <div style={{fontSize:30,marginBottom:12}}>{f.ic}</div>
+          <div style={{fontSize:28,marginBottom:10}}>{f.ic}</div>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{f.t}</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>{f.d}</div>
         </div>)}
       </div>
 
-      {/* Argument clé central */}
-      <div style={{marginTop:40,background:"linear-gradient(135deg,var(--Sp),var(--Gp))",borderRadius:20,padding:"28px 32px",display:"flex",gap:20,alignItems:"center",flexWrap:"wrap"}}>
+      {/* Argument charge mentale */}
+      <div style={{background:"linear-gradient(135deg,#1C3028,#2A4A38)",borderRadius:20,padding:"28px 32px",display:"flex",gap:20,alignItems:"center",flexWrap:"wrap",marginBottom:20}}>
+        <div style={{fontSize:40}}>🧠</div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,fontSize:16,color:"#fff",marginBottom:8}}>
+            Vous n'avez jamais vraiment fini votre journée.
+          </div>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.75)",lineHeight:1.8}}>
+            L'enquête UFNAFAAM révèle que la charge mentale des assistantes maternelles explose : administratif le soir, questions au réveil, impression de n'être jamais à jour. TiMat prend en charge cette charge invisible. Vous récupérez vos soirées, votre énergie, votre sérénité.
+          </div>
+        </div>
+      </div>
+
+      {/* Argument anti-litige */}
+      <div style={{background:"linear-gradient(135deg,var(--Sp),var(--Bp))",borderRadius:20,padding:"28px 32px",display:"flex",gap:20,alignItems:"center",flexWrap:"wrap"}}>
         <div style={{fontSize:40}}>🛡️</div>
         <div style={{flex:1}}>
-          <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:6}}>Tout est gardé. Rien ne se perd. Jamais.</div>
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>
-            Vos transmissions, photos, contrats, bilans, attestations fiscales — tout est stocké
-            de façon sécurisée dans le cloud français. En cas de contrôle PMI, de litige ou simplement
-            pour retrouver un document d'il y a 3 ans : tout est là, en 2 secondes.
+          <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:8}}>En cas de litige, vous avez des preuves. Pas des souvenirs.</div>
+          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.8}}>
+            Chaque transmission, chaque pointage, chaque accord écrit est horodaté et archivé. Si un parent conteste un calcul, une absence, un retard — tout est là, incontestable. Parce qu'un contrat mal conservé peut coûter très cher.
           </div>
         </div>
       </div>
     </div>
 
     {/* Témoignages */}
-    <div style={{background:"linear-gradient(135deg,#1C3028,#2A4A38)",padding:"48px 20px"}}>
-      <div style={{maxWidth:860,margin:"0 auto",textAlign:"center"}}>
-        <div className="pf"style={{fontSize:24,fontWeight:600,color:"#fff",marginBottom:8,fontStyle:"italic"}}>
+    <div style={{background:"linear-gradient(135deg,#1C3028,#2A4A38)",padding:"52px 20px"}}>
+      <div style={{maxWidth:900,margin:"0 auto",textAlign:"center"}}>
+        <div className="pf"style={{fontSize:26,fontWeight:600,color:"#fff",marginBottom:6,fontStyle:"italic"}}>
           "Enfin une app qui comprend notre métier"
         </div>
-        <div style={{fontSize:13,color:"rgba(255,255,255,.5)",marginBottom:32}}>Assistantes maternelles utilisatrices de TiMat</div>
+        <div style={{fontSize:13,color:"rgba(255,255,255,.45)",marginBottom:36}}>Ce qu'elles disent après avoir utilisé TiMat</div>
         <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
           {[
-            {nom:"Marie D.",ville:"Paris 15e",etoiles:5,txt:"Le bilan de journée automatique a changé ma relation avec les parents. Ils adorent recevoir quelque chose d'aussi beau chaque soir."},
-            {nom:"Sylvie R.",ville:"Lyon",etoiles:5,txt:"J'économise 2h par mois sur Pajemploi et l'attestation fiscale se génère toute seule. Je ne peux plus m'en passer."},
-            {nom:"Fatima B.",ville:"Bordeaux",etoiles:5,txt:"Plus rien ne se perd. Mes contrats, mes bilans, mes photos — tout est là. Même ma PMI est impressionnée."},
-          ].map((t,i)=><div key={i}style={{background:"rgba(255,255,255,.07)",borderRadius:14,padding:"18px 20px",maxWidth:240,textAlign:"left",border:"1px solid rgba(255,255,255,.1)"}}>
-            <div style={{color:"#E8B060",marginBottom:8,fontSize:14}}>{"⭐".repeat(t.etoiles)}</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,.8)",lineHeight:1.7,marginBottom:12,fontStyle:"italic"}}>"{t.txt}"</div>
+            {nom:"Marie D.",ville:"Paris 15e",etoiles:5,
+              douleur:"Avant, je passais mes soirées sur Excel.",
+              txt:"Maintenant le récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
+            {nom:"Sylvie R.",ville:"Lyon",etoiles:5,
+              douleur:"J'avais peur d'un contrôle PMI.",
+              txt:"Avec TiMat, tout est archivé, daté, accessible. L'inspectrice a été impressionnée par la clarté de mon suivi."},
+            {nom:"Nathalie B.",ville:"Bordeaux",etoiles:5,
+              douleur:"Un parent a contesté des heures supplémentaires.",
+              txt:"J'ai sorti le pointage horodaté en 30 secondes. Le conflit s'est arrêté là. Je ne travaillerai plus sans."},
+            {nom:"Fatima A.",ville:"Marseille",etoiles:5,
+              douleur:"Je me réveillais la nuit à me demander si j'avais tout déclaré.",
+              txt:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête à dire mais c'est vrai."},
+          ].map((t,i)=><div key={i}style={{background:"rgba(255,255,255,.06)",borderRadius:16,padding:"20px 20px",maxWidth:200,textAlign:"left",border:"1px solid rgba(255,255,255,.1)"}}>
+            <div style={{color:"#E8B060",marginBottom:8,fontSize:13}}>{"⭐".repeat(t.etoiles)}</div>
+            <div style={{fontSize:12,color:"rgba(255,255,255,.5)",fontStyle:"italic",marginBottom:6}}>"{t.douleur}"</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,.85)",lineHeight:1.7,marginBottom:12}}>"{t.txt}"</div>
             <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>{t.nom}</div>
-            <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>{t.ville}</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,.35)"}}>{t.ville}</div>
           </div>)}
         </div>
       </div>
@@ -4107,12 +4422,20 @@ function LandingPage({onLogin,dark,setDark}){
     </div>
 
     {/* CTA final */}
-    <div style={{textAlign:"center",padding:"50px 20px"}}>
-      <div className="pf"style={{fontSize:28,fontWeight:600,color:"var(--b)",marginBottom:12}}>Prêt à essayer ?</div>
-      <div style={{fontSize:14,color:"var(--l)",marginBottom:24}}>Démo gratuite, aucune inscription requise</div>
-      <button onClick={()=>setShowLogin(true)}className="btn bT"style={{fontSize:15,padding:"13px 28px"}}>
-        Accéder à la démo →
+    <div style={{textAlign:"center",padding:"56px 20px",background:"var(--w)"}}>
+      <div className="pf"style={{fontSize:"clamp(22px,4vw,32px)",fontWeight:600,color:"var(--b)",marginBottom:10,lineHeight:1.35}}>
+        Vous avez choisi ce métier pour les enfants.<br/>
+        <span style={{color:"var(--T)"}}>Pas pour Excel. Pas pour Pajemploi.</span>
+      </div>
+      <div style={{fontSize:15,color:"var(--l)",marginBottom:28,maxWidth:460,margin:"0 auto 28px",lineHeight:1.7}}>
+        TiMat est là pour rendre ce choix plus léger. Commencez gratuitement, sans carte bancaire.
+      </div>
+      <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT"style={{fontSize:15,padding:"14px 32px"}}>
+        Je commence gratuitement →
       </button>
+      <div style={{marginTop:16,fontSize:12,color:"var(--l)"}}>
+        Déjà des centaines d'assistantes maternelles qui nous font confiance · Données hébergées en France 🇫🇷
+      </div>
     </div>
 
     {/* Modale Auth */}
@@ -4172,6 +4495,53 @@ function LandingPage({onLogin,dark,setDark}){
             onKeyDown={e=>e.key==="Enter"&&(mode==="connexion"?connexion():inscription())}/>
         </div>
 
+        {/* Cases RGPD — uniquement à l'inscription */}
+        {mode==="inscription"&&<div style={{background:"var(--c)",borderRadius:12,padding:"14px 16px",marginBottom:14,border:"1px solid var(--br)"}}>
+          <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:12,textTransform:"uppercase",letterSpacing:".5px"}}>
+            Protection de vos données
+          </div>
+          {/* Politique obligatoire */}
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:10}}>
+            <input type="checkbox"checked={consent.politique}
+              onChange={e=>setConsent(c=>({...c,politique:e.target.checked}))}
+              style={{width:15,height:15,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:"var(--T)"}}/>
+            <span style={{fontSize:12,color:"var(--b)",lineHeight:1.5}}>
+              J'accepte la{" "}
+              <span onClick={e=>{e.preventDefault();e.stopPropagation();window.dispatchEvent(new CustomEvent("timat:page",{detail:"politique_confidentialite"}));}}
+                style={{color:"var(--T)",textDecoration:"underline",cursor:"pointer"}}>
+                politique de confidentialité
+              </span>{" "}et le traitement de mes données.{" "}
+              <span style={{color:"var(--R)",fontWeight:700}}>*</span>
+            </span>
+          </label>
+          {/* CGU obligatoires */}
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:10}}>
+            <input type="checkbox"checked={consent.cgu}
+              onChange={e=>setConsent(c=>({...c,cgu:e.target.checked}))}
+              style={{width:15,height:15,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:"var(--T)"}}/>
+            <span style={{fontSize:12,color:"var(--b)",lineHeight:1.5}}>
+              J'accepte les{" "}
+              <span onClick={e=>{e.preventDefault();e.stopPropagation();window.dispatchEvent(new CustomEvent("timat:page",{detail:"mentions_legales"}));}}
+                style={{color:"var(--T)",textDecoration:"underline",cursor:"pointer"}}>
+                conditions générales d'utilisation
+              </span>.{" "}
+              <span style={{color:"var(--R)",fontWeight:700}}>*</span>
+            </span>
+          </label>
+          {/* Newsletter optionnel */}
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer"}}>
+            <input type="checkbox"checked={consent.newsletter}
+              onChange={e=>setConsent(c=>({...c,newsletter:e.target.checked}))}
+              style={{width:15,height:15,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:"var(--T)"}}/>
+            <span style={{fontSize:12,color:"var(--l)",lineHeight:1.5}}>
+              J'accepte de recevoir les actualités TiMat par email. (optionnel)
+            </span>
+          </label>
+          <div style={{fontSize:10,color:"var(--l)",marginTop:10}}>
+            * Obligatoire · Données hébergées en France · Suppression possible à tout moment
+          </div>
+        </div>}
+
         {err&&<div style={{
           color:err.startsWith("✅")?"var(--S)":"var(--R)",
           fontSize:12,marginBottom:12,padding:"8px 12px",
@@ -4179,8 +4549,12 @@ function LandingPage({onLogin,dark,setDark}){
           borderRadius:8
         }}>{err}</div>}
 
-        <button className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:16,opacity:loading?.7:1}}
-          onClick={mode==="connexion"?connexion:inscription} disabled={loading}>
+        <button className="btn bT"style={{
+          width:"100%",justifyContent:"center",marginBottom:16,
+          opacity:(loading||mode==="inscription"&&!consentValide)?.6:1
+        }}
+          onClick={mode==="connexion"?connexion:inscription}
+          disabled={loading||(mode==="inscription"&&!consentValide)}>
           {loading?"⏳ Chargement…":mode==="connexion"?"Se connecter →":"Créer mon compte →"}
         </button>
 
@@ -4347,6 +4721,13 @@ export default function App(){
     return()=>subscription.unsubscribe();
   },[]);
 
+  // Écouter navigation depuis modale (liens pages légales)
+  useEffect(()=>{
+    const handler=(e)=>{setPage(e.detail);};
+    window.addEventListener("timat:page",handler);
+    return()=>window.removeEventListener("timat:page",handler);
+  },[]);
+
   const handleLogout=async()=>{
     try{await supabase.auth.signOut();}catch(e){}
     setUser(null);setPage("accueil");setOnboarded(false);
@@ -4383,6 +4764,9 @@ export default function App(){
       case "pointage": return <Pointage {...P}/>;
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
       case "messagerie": return <Messagerie {...P}/>;
+      case "politique_confidentialite": return <PolitiqueConfidentialite/>;
+      case "mentions_legales": return <MentionsLegales/>;
+      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage}/>;
       case "pmi": return <CommunicationPMI role={role}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId}/>;
