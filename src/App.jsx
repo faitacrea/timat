@@ -5977,9 +5977,6 @@ export default function App(){
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
       case "support": return <Support role={role}/>;
-      case "faq": return <FAQ/>;
-      case "simulateur": return <SimulateurCout/>;
-      case "export_donnees": return <ExportComplet enfants={enfants} role={role} pEId={pEId}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId}/>;
       case "journal": return <JournalComplet {...P}/>;
