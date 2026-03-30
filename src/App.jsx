@@ -5323,6 +5323,131 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 }
 
 
+// ── Compteur animé ────────────────────────────────────────────────────────────
+function Counter({target,suffix="",prefix="",duration=2000}){
+  const [count,setCount]=useState(0);
+  const ref=useRef(null);
+  const started=useRef(false);
+  useEffect(()=>{
+    const observer=new IntersectionObserver(([e])=>{
+      if(e.isIntersecting&&!started.current){
+        started.current=true;
+        const start=performance.now();
+        const tick=(now)=>{
+          const p=Math.min((now-start)/duration,1);
+          const ease=1-Math.pow(1-p,3);
+          setCount(Math.round(ease*target));
+          if(p<1)requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    },{threshold:0.3});
+    if(ref.current)observer.observe(ref.current);
+    return()=>observer.disconnect();
+  },[target,duration]);
+  return <span ref={ref}>{prefix}{count.toLocaleString("fr-FR")}{suffix}</span>;
+}
+
+// ── Apparition au scroll ──────────────────────────────────────────────────────
+function FadeIn({children,delay=0,className=""}){
+  const ref=useRef(null);
+  const [visible,setVisible]=useState(false);
+  useEffect(()=>{
+    const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting)setVisible(true);},{threshold:0.1});
+    if(ref.current)obs.observe(ref.current);
+    return()=>obs.disconnect();
+  },[]);
+  return(
+    <div ref={ref}className={className}style={{
+      opacity:visible?1:0,
+      transform:visible?"translateY(0)":"translateY(32px)",
+      transition:`opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+    }}>{children}</div>
+  );
+}
+
+// ── Démo interactive ──────────────────────────────────────────────────────────
+const DEMO_SCREENS=[
+  {
+    id:"journal",label:"Journal quotidien",icon:"📋",color:"#B8622F",
+    preview:()=>(
+      <div style={{padding:20,fontFamily:"system-ui"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>📋 Journal du jour — Léo 🦁</div>
+        <div style={{background:"#FBF0E8",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #B8622F"}}>
+          <div style={{fontSize:10,color:"#B8622F",fontWeight:700,marginBottom:3}}>👩‍👧 Marie · 11h30</div>
+          <div style={{fontSize:12,color:"#2C1F14",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
+        </div>
+        <div style={{background:"#EAF4EE",borderRadius:10,padding:12,borderLeft:"3px solid #3D6B50"}}>
+          <div style={{fontSize:10,color:"#3D6B50",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
+          <div style={{fontSize:12,color:"#2C1F14"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
+        </div>
+        <div style={{marginTop:12,display:"flex",gap:6}}>
+          <div style={{background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#166534"}}>😊 Joyeux</div>
+          <div style={{background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#166534"}}>💤 Sieste 1h20</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#B8892A",
+    preview:()=>(
+      <div style={{padding:20,fontFamily:"system-ui"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>💰 Salaire Mars 2024 — Léo</div>
+        {[["Heures réalisées","160h × 4,05€","648,00€"],["Indemnité entretien","20j × 3,80€","76,00€"],["Heures majorées","8h × 5,06€","40,50€"]].map(([l,d,v])=>(
+          <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #DDD5C8",fontSize:12}}>
+            <div><div style={{fontWeight:600,color:"#2C1F14"}}>{l}</div><div style={{fontSize:10,color:"#A68970"}}>{d}</div></div>
+            <div style={{fontWeight:700,color:"#3D6B50"}}>{v}</div>
+          </div>
+        ))}
+        <div style={{marginTop:10,padding:"10px 12px",background:"#FBF0E8",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:13,fontWeight:700,color:"#2C1F14"}}>Total brut mensuel</span>
+          <span style={{fontSize:20,fontWeight:700,color:"#B8622F",fontFamily:"Georgia,serif"}}>764,50 €</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#2E5F8A",
+    preview:()=>(
+      <div style={{padding:20,fontFamily:"system-ui"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>📅 Mars 2024</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:10}}>
+          {["Lu","Ma","Me","Je","Ve","Sa","Di"].map(j=><div key={j}style={{textAlign:"center",fontSize:9,color:"#A68970",fontWeight:700,padding:"3px 0"}}>{j}</div>)}
+          {[null,null,null,null,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map((d,i)=>(
+            <div key={i}style={{textAlign:"center",fontSize:10,padding:"4px 2px",borderRadius:5,
+              background:d===11?"#B8622F":d&&[4,5,6,7,11,12,13,14,18,19,20,21,25,26,27,28].includes(d)?"#EAF4EE":"transparent",
+              color:d===11?"#fff":"#2C1F14",fontWeight:d===11?700:400}}>{d||""}</div>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {[["🟢","Léo accueilli"],["🔵","Vacances"],["🔴","Absence"]].map(([ic,l])=>(
+            <div key={l}style={{fontSize:10,color:"#6B4F3A",display:"flex",gap:4,alignItems:"center"}}><span>{ic}</span><span>{l}</span></div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id:"parent",label:"Espace parent",icon:"👪",color:"#6A3F88",
+    preview:()=>(
+      <div style={{padding:20,fontFamily:"system-ui"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>👪 Sophie — Léo 🦁</div>
+        <div style={{background:"#F2EAF8",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #C4A0DC"}}>
+          <div style={{fontSize:10,color:"#6A3F88",fontWeight:700,marginBottom:4}}>⏰ Pointage</div>
+          <div style={{display:"flex",gap:16}}>
+            {[["Arrivée","07h35","#3D6B50"],["Départ","17h20","#B8622F"],["Total","9h45","#2C1F14"]].map(([l,v,c])=>(
+              <div key={l}style={{textAlign:"center"}}><div style={{fontSize:9,color:"#A68970"}}>{l}</div><div style={{fontSize:16,fontWeight:700,color:c}}>{v}</div></div>
+            ))}
+          </div>
+        </div>
+        <div style={{background:"#FBF0E8",borderRadius:10,padding:10,fontSize:12,color:"#2C1F14",lineHeight:1.5}}>
+          📋 Léo a peint un tableau et l'a offert à sa maman !
+        </div>
+      </div>
+    ),
+  },
+];
+
 // ── Landing page principale ────────────────────────────────────────────────────
 
 function LandingPage({onLogin,dark,setDark}) {
