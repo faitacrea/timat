@@ -5454,18 +5454,66 @@ function LandingPage({onLogin,dark,setDark}) {
   const [activeDemo, setActiveDemo] = useState("journal");
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState("asmat");
+  const [modeAuth, setModeAuth] = useState("inscription"); // inscription | connexion
+  const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
+  const consentValide = consent.politique && consent.cgu;
   const demo = DEMO_SCREENS.find(s => s.id === activeDemo);
 
-  // Injection polices Google Fonts via DOM (évite <link> en JSX)
+  const demos=[
+    {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
+    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:"#2E5F8A",label:"Sophie Martin — Léo"},
+    {id:"demo-parent2",email:"thomas.bernard@mail.fr",prenom:"Thomas",nom:"Bernard",role:"parent",couleur:"#3D6B50",label:"Thomas Bernard — Emma"},
+  ];
+
+  // Injection polices Google Fonts via DOM
   useEffect(()=>{
     const id = 'timat-fonts';
     if (document.getElementById(id)) return;
     const link = document.createElement('link');
-    link.id = id;
-    link.rel = 'stylesheet';
+    link.id = id; link.rel = 'stylesheet';
     link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap';
     document.head.appendChild(link);
   }, []);
+
+  const connexion = async () => {
+    if (!form.email || !form.password) { setErr("Email et mot de passe requis."); return; }
+    setLoading(true); setErr("");
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+      if (error) {
+        // Fallback démo
+        const demo = demos.find(d => d.email === form.email.trim().toLowerCase());
+        if (demo) { onLogin(demo); return; }
+        setErr("Email ou mot de passe incorrect.");
+      } else if (data?.user) {
+        const { data: profil } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
+        onLogin(profil ? {...profil, id:data.user.id, email:data.user.email} : {id:data.user.id, email:data.user.email, prenom:"Utilisateur", role});
+      }
+    } catch(e) { setErr("Erreur de connexion."); }
+    setLoading(false);
+  };
+
+  const inscription = async () => {
+    if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
+    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
+    if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
+    setLoading(true); setErr("");
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email, password: form.password,
+        options: { data: { prenom: form.prenom, nom: form.nom, role } }
+      });
+      if (error) { setErr(error.message); }
+      else if (data?.user) {
+        // Connexion directe après inscription
+        onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
+      }
+    } catch(e) { setErr("Erreur lors de l'inscription."); }
+    setLoading(false);
+  };
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDFAF6" }}>
@@ -5856,13 +5904,13 @@ function LandingPage({onLogin,dark,setDark}) {
       {showModal && (
         <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#FDFAF6", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }}>
+          <div style={{ background: "#FDFAF6", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             {/* Sélecteur rôle */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
               {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
-                <button key={r} onClick={() => setRole(r)} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? `3px solid ${col}44` : "none", transition: "all .2s" }}>
+                <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? `3px solid ${col}44` : "none", transition: "all .2s", fontFamily:"inherit" }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(255,255,255,.4)", whiteSpace: "pre-line", lineHeight: 1.3, fontFamily: "inherit" }}>{l}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(255,255,255,.4)", whiteSpace: "pre-line", lineHeight: 1.3 }}>{l}</div>
                 </button>
               ))}
             </div>
@@ -5874,25 +5922,106 @@ function LandingPage({onLogin,dark,setDark}) {
                     {role === "asmat" ? "Espace pro" : "Espace famille"}
                   </div>
                   <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>
-                    {role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite"}
+                    {modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}
                   </div>
                 </div>
                 <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
               </div>
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".5px" }}>Email *</div>
-                <input type="email" placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"}
-                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #DDD5C8", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+
+              {/* Onglets connexion / inscription */}
+              <div style={{ display:"flex", marginBottom:16, background:"#F7F2EC", borderRadius:10, padding:3 }}>
+                {["inscription","connexion"].map(m => (
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{
+                    flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8,
+                    background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent",
+                    color: modeAuth===m ? "#fff" : "#6B4F3A",
+                    fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s"
+                  }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+                ))}
               </div>
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".5px" }}>Mot de passe *</div>
-                <input type="password" placeholder="6 caractères minimum"
-                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #DDD5C8", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+
+              {/* Champs inscription */}
+              {modeAuth === "inscription" && <>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Prénom *</div>
+                    <input value={form.prenom} onChange={e=>setForm(f=>({...f,prenom:e.target.value}))}
+                      placeholder={role==="asmat"?"Marie":"Sophie"}
+                      style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Nom</div>
+                    <input value={form.nom} onChange={e=>setForm(f=>({...f,nom:e.target.value}))}
+                      placeholder="Dupont"
+                      style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                  </div>
+                </div>
+              </>}
+
+              {/* Email */}
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Email *</div>
+                <input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}
+                  placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"}
+                  onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())}
+                  style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
-              <button style={{ width: "100%", background: role === "asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "inherit" }}>
-                {role === "asmat" ? "Créer mon espace pro →" : "Accéder à l'espace famille →"}
+
+              {/* Mot de passe */}
+              <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
+                <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}
+                  placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"}
+                  onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())}
+                  style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+              </div>
+
+              {/* RGPD à l'inscription */}
+              {modeAuth === "inscription" && <div style={{ background:"#F7F2EC", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
+                {[
+                  {k:"politique", l:"J'accepte la politique de confidentialité", req:true},
+                  {k:"cgu", l:"J'accepte les conditions générales d'utilisation", req:true},
+                  {k:"newsletter", l:"Recevoir les actualités TiMat (optionnel)", req:false},
+                ].map(({k,l,req}) => (
+                  <label key={k} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer", marginBottom:7 }}>
+                    <input type="checkbox" checked={consent[k]} onChange={e=>setConsent(c=>({...c,[k]:e.target.checked}))}
+                      style={{ width:14, height:14, marginTop:2, accentColor: role==="asmat"?"#B8622F":"#2E5F8A", flexShrink:0 }} />
+                    <span style={{ fontSize:11, color:"#2C1F14", lineHeight:1.5 }}>{l}{req&&<span style={{color:"#B84060",fontWeight:700}}> *</span>}</span>
+                  </label>
+                ))}
+                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
+              </div>}
+
+              {/* Erreur */}
+              {err && <div style={{ color:"#B84060", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
+
+              {/* Bouton principal */}
+              <button onClick={modeAuth==="connexion" ? connexion : inscription}
+                disabled={loading || (modeAuth==="inscription" && !consentValide)}
+                style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+                {loading ? "⏳ Chargement…" : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
-              <div style={{ marginTop: 12, fontSize: 11, color: "#A68970", textAlign: "center" }}>
+
+              {/* Démos */}
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou démo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
+              </div>
+              <div style={{ background:"#F7F2EC", borderRadius:10, padding:10 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>
+                  {role==="asmat" ? "Compte asmat démo" : "Comptes parents démo"}
+                </div>
+                {demos.filter(d=>d.role===role).map(d => (
+                  <button key={d.id} onClick={()=>onLogin(d)}
+                    style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }}
+                    onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"}
+                    onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                    {d.role==="asmat"?"👩‍👧":"👪"} {d.label}
+                    <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginTop:12, fontSize:11, color:"#A68970", textAlign:"center" }}>
                 Données hébergées en France · Aucun engagement
               </div>
             </div>
