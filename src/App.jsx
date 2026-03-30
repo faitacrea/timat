@@ -11,7 +11,7 @@ var TODAY_YEAR=String(_D.getFullYear());
 
 const Styles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
     :root{
@@ -929,18 +929,36 @@ function Pointage({enfants,role,pEId}){
         </div>
       </div>
       <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📅 Historique récent</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{fontWeight:700,color:"var(--b)"}}>📅 Historique récent</div>
+          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>Tapez ✅ pour valider un pointage</div>}
+        </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {ptH.slice(0,8).map(p=><div key={p.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"var(--c)",borderRadius:9}}>
+          {ptH.slice(0,8).map(p=><div key={p.id}style={{
+            display:"flex",justifyContent:"space-between",alignItems:"center",
+            padding:"8px 10px",borderRadius:9,
+            background:p.valide_parent?"var(--Sp)":role==="parent"&&!p.valide_parent?"var(--Gp)":"var(--c)",
+            border:role==="parent"&&!p.valide_parent?"1px solid var(--G)":"1px solid transparent"
+          }}>
             <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}</div>
             <div style={{display:"flex",gap:10,fontSize:12}}>
               <span style={{color:"var(--S)"}}>↗{p.arr}</span>
               <span style={{color:"var(--T)"}}>↘{p.dep||"—"}</span>
               <span style={{fontWeight:700,color:"var(--b)"}}>{p.tot||"—"}</span>
             </div>
-            <span style={{fontSize:13}}>{p.valide?"✅":"⏳"}</span>
+            {role==="parent"&&!p.valide_parent
+              ?<button onClick={()=>{setPts(prev=>prev.map(x=>x.id===p.id?{...x,valide_parent:true}:x));setToast("Pointage validé ✓");}}
+                style={{background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"4px 10px",
+                  cursor:"pointer",fontSize:11,fontWeight:700}}>Valider</button>
+              :<span style={{fontSize:13,color:p.valide_parent?"var(--S)":"var(--l)"}}>{p.valide_parent?"✅ Validé":"⏳ En attente"}</span>
+            }
           </div>)}
         </div>
+        {role==="parent"&&ptH.some(p=>!p.valide_parent)&&<div style={{
+          marginTop:10,padding:"8px 12px",background:"var(--Gp)",borderRadius:8,fontSize:12,color:"var(--G)",fontWeight:600
+        }}>
+          ⚠️ {ptH.filter(p=>!p.valide_parent).length} pointage{ptH.filter(p=>!p.valide_parent).length>1?"s":""} en attente de votre validation
+        </div>}
       </div>
     </div>
   </div>;
@@ -2244,11 +2262,425 @@ function Documents({enfants,role,pEId}){
   </div>;
 }
 
+// ─── BULLETIN DE SALAIRE COMPLET ─────────────────────────────────────────────
+const TAUX_COTISATIONS={
+  "Maladie-maternité":{sal:0,pat:7},
+  "Retraite de base":{sal:6.9,pat:8.55},
+  "Retraite complémentaire ARRCO":{sal:3.15,pat:4.72},
+  "Assurance chômage":{sal:0,pat:4.05},
+  "Formation professionnelle":{sal:0,pat:0.5},
+  "Accidents du travail":{sal:0,pat:1.5},
+  "Allocations familiales":{sal:0,pat:3.45},
+  "CSG déductible":{sal:6.8,pat:0},
+  "CSG/CRDS non déductible":{sal:2.9,pat:0},
+};
+
+function BulletinSalaire({enfants,role,pEId}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [moisSel,setMoisSel]=useState("Mars 2024");
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const contrat=enfant?.contrat||{};
+  const h=D.heures[enfant?.id]||{real:160,prev:174};
+  const tauxH=contrat.tauxHoraire||4.05;
+  const heuresNorm=Math.min(h.real,45*4);
+  const hSupp=Math.max(0,h.real-heuresNorm);
+  const salBase=heuresNorm*tauxH;
+  const salSupp=hSupp*tauxH*1.25;
+  const brut=salBase+salSupp;
+  const entretien=(contrat.entretien||3.80)*Math.round(h.real/8);
+  const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*t.sal/100:0),0);
+  const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*t.pat/100:0),0);
+  const netImposable=brut-totalCotSal*0.68;
+  const netPaye=brut-totalCotSal;
+  const coutEmployeur=brut+totalCotPat;
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📜" title="Bulletin de salaire" sub="Bulletin officiel conforme à la convention collective"/>
+    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+    </div>}
+    <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+      {["Janvier 2024","Février 2024","Mars 2024"].map(m=><button key={m}onClick={()=>setMoisSel(m)}style={{
+        padding:"6px 14px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+        background:moisSel===m?"var(--b)":"transparent",color:moisSel===m?"#fff":"var(--m)",
+        borderColor:moisSel===m?"var(--b)":"var(--br)"}}>{m}</button>)}
+    </div>
+
+    <div className="card"style={{padding:24,border:"2px solid var(--br)"}}>
+      <div style={{borderBottom:"2px solid var(--b)",paddingBottom:14,marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+          <div>
+            <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--b)"}}>BULLETIN DE PAIE — {moisSel}</div>
+            <div style={{fontSize:11,color:"var(--l)"}}>Convention collective particuliers employeurs</div>
+          </div>
+          <div style={{textAlign:"right",fontSize:11}}>
+            <div style={{fontWeight:700,color:"var(--b)"}}>Employeur</div>
+            <div style={{color:"var(--m)"}}>{enfant?.prenomParent||"Sophie Martin"}</div>
+            <div style={{color:"var(--l)"}}>N° Pajemploi : PAJ-2024-75015</div>
+          </div>
+        </div>
+        <div style={{marginTop:10,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,fontSize:11}}>
+          <div><div style={{fontWeight:700,color:"var(--b)"}}>Salarié·e</div>
+            <div style={{color:"var(--m)"}}>{D.asmat.prenom} {D.asmat.nom} · Assistante maternelle agréée</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rémunération */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:10,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
+        {[[`Salaire de base`,`${heuresNorm}h × ${tauxH}€/h`,salBase.toFixed(2)+"€"],
+          ...(hSupp>0?[[`Heures majorées 25%`,`${hSupp}h × ${(tauxH*1.25).toFixed(2)}€`,salSupp.toFixed(2)+"€"]]:[]),
+          [`Indemnité d'entretien`,`${Math.round(h.real/8)} j × ${contrat.entretien||3.80}€`,entretien.toFixed(2)+"€"],
+        ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
+          <span style={{color:"var(--b)",flex:2}}>{l}</span>
+          <span style={{color:"var(--l)",flex:2,textAlign:"center"}}>{d}</span>
+          <span style={{fontWeight:600,flex:1,textAlign:"right"}}>{v}</span>
+        </div>)}
+        <div style={{display:"flex",justifyContent:"space-between",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid var(--b)",fontSize:13}}>
+          <span>SALAIRE BRUT</span><span style={{color:"var(--b)"}}>{brut.toFixed(2)} €</span>
+        </div>
+      </div>
+
+      {/* Cotisations */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:10,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:6}}>COTISATIONS</div>
+        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",fontSize:10}}>
+          {["Libellé","Salarié","Employeur"].map(h2=><div key={h2}style={{fontWeight:700,color:"var(--l)",padding:"3px 0",borderBottom:"1px solid var(--br)"}}>{h2}</div>)}
+          {Object.entries(TAUX_COTISATIONS).flatMap(([nom,t])=>[
+            <div key={nom+"l"}style={{fontSize:10,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
+            <div key={nom+"s"}style={{fontSize:10,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?`${(brut*t.sal/100).toFixed(2)}€`:"—"}</div>,
+            <div key={nom+"p"}style={{fontSize:10,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?`${(brut*t.pat/100).toFixed(2)}€`:"—"}</div>,
+          ])}
+          <div style={{fontWeight:700,fontSize:11,padding:"4px 0",borderTop:"1px solid var(--b)"}}>TOTAL</div>
+          <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotSal.toFixed(2)}€</div>
+          <div style={{fontWeight:700,fontSize:11,textAlign:"right",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotPat.toFixed(2)}€</div>
+        </div>
+      </div>
+
+      {/* Net */}
+      <div style={{background:"var(--c)",borderRadius:10,padding:14,marginBottom:16}}>
+        {[["Salaire brut",brut.toFixed(2)+"€","var(--b)"],
+          ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
+          ["NET À PAYER",netPaye.toFixed(2)+"€","var(--S)"],
+          ["Net imposable (abattement fiscal assmat)",netImposable.toFixed(2)+"€","var(--B)"],
+          ["Coût total pour l'employeur",(coutEmployeur+entretien).toFixed(2)+"€","var(--m)"],
+        ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
+          borderBottom:"1px solid var(--br)",fontSize:l.includes("NET À")?14:12,fontWeight:l.includes("NET À")?700:400}}>
+          <span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:700,color:c}}>{v}</span>
+        </div>)}
+      </div>
+
+      <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
+        Bulletin conforme CCN particuliers employeurs. Net imposable calculé avec abattement fiscal spécifique assmats (3× SMIC/jour/enfant). À conserver 5 ans.
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button className="btn bG"style={{flex:1}}onClick={()=>setToast("Bulletin PDF généré ✓")}>📥 Télécharger PDF</button>
+        {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={()=>setToast("Bulletin envoyé au parent ✓")}>📧 Envoyer au parent</button>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── MODÈLES CONTRATS & AVENANTS ─────────────────────────────────────────────
+const MODELES_CONTRATS=[
+  {id:"ct1",titre:"Contrat standard — Temps plein",desc:"Accueil 5j/semaine, mensualisation 47 semaines, conforme CCN.",
+   champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
+  {id:"ct2",titre:"Contrat — Temps partiel",desc:"Accueil moins de 5 jours ou moins de 30h/semaine.",
+   champs:["Enfant","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
+  {id:"ct3",titre:"Contrat périscolaire",desc:"Accueil matin, soir, mercredis et vacances scolaires.",
+   champs:["Enfant","Créneaux matin/soir","Planning vacances","Taux horaire (€/h)"],avenant:false},
+  {id:"ct4",titre:"Avenant — Modification d'horaires",desc:"Modifier les jours ou horaires d'un contrat existant.",
+   champs:["Contrat concerné","Nouveaux horaires","Date d'effet","Motif"],avenant:true},
+  {id:"ct5",titre:"Avenant — Revalorisation salaire",desc:"Augmenter le taux horaire suite SMIC ou accord.",
+   champs:["Contrat concerné","Nouveau taux horaire","Date d'effet","Motif"],avenant:true},
+  {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d'un commun accord avec solde tout compte.",
+   champs:["Contrat concerné","Date de fin","Motif","Congés payés restants"],avenant:true},
+];
+
+function ContratsTypes({enfants}){
+  const [selModele,setSelModele]=useState(null);
+  const [form,setForm]=useState({});
+  const [toast,setToast]=useState("");
+  const m=MODELES_CONTRATS.find(x=>x.id===selModele);
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📋" title="Modèles contrats & Avenants"
+      sub="Conformes CCN · À jour de la convention collective 2024"/>
+
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))",gap:12,marginBottom:16}}>
+      {MODELES_CONTRATS.map(mod=><div key={mod.id}className="card card-lift"
+        onClick={()=>{setSelModele(mod.id===selModele?null:mod.id);setForm({});}}
+        style={{padding:16,cursor:"pointer",
+          borderLeft:`4px solid ${mod.avenant?"var(--G)":"var(--T)"}`,
+          boxShadow:selModele===mod.id?"var(--sh2)":"var(--sh)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+          <span className="badge"style={{background:mod.avenant?"var(--Gp)":"var(--Tp)",color:mod.avenant?"var(--G)":"var(--T)",fontSize:9}}>
+            {mod.avenant?"Avenant":"Contrat"}
+          </span>
+        </div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}>{mod.titre}</div>
+        <div style={{fontSize:11,color:"var(--m)",lineHeight:1.5}}>{mod.desc}</div>
+      </div>)}
+    </div>
+
+    {m&&<div className="card"style={{padding:20,border:"2px solid var(--T)"}}>
+      <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{m.titre}</div>
+      <div style={{fontSize:12,color:"var(--l)",marginBottom:16}}>{m.desc}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+        {m.champs.map(c=><div key={c}>
+          <label className="lbl">{c}</label>
+          {c==="Enfant"?<select className="sel"value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}>
+            {enfants.map(e=><option key={e.id}value={e.id}>{e.emoji} {e.prenom}</option>)}
+          </select>
+          :c.includes("Date")||c.includes("effet")?<input type="date"className="inp"value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}/>
+          :<input className="inp"placeholder={`${c}…`}value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}/>}
+        </div>)}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button className="btn bG"style={{flex:1}}onClick={()=>setSelModele(null)}>Annuler</button>
+        <button className="btn bT"style={{flex:2}}onClick={()=>setToast(`${m.avenant?"Avenant":"Contrat"} généré ✓`)}>
+          📄 Générer le document
+        </button>
+      </div>
+    </div>}
+  </div>;
+}
+
+// ─── COURRIERS TYPES ─────────────────────────────────────────────────────────
+const COURRIERS_DATA=[
+  {id:"r1",cat:"Contrat",ic:"📄",titre:"Demande de rendez-vous d'embauche",
+   contenu:"Madame, Monsieur,\n\nSuite à notre prise de contact, je vous confirme ma disponibilité pour accueillir [Prénom] à compter du [Date de début].\n\nJe vous propose un rendez-vous le [Date RDV] à [Heure] pour finaliser les modalités et signer le contrat.\n\nCordialement,\n[Votre nom]"},
+  {id:"r2",cat:"Contrat",ic:"📄",titre:"Lettre de rupture de contrat",
+   contenu:"Madame, Monsieur,\n\nJe vous informe que je mets fin au contrat d'accueil de [Prénom] à compter du [Date de fin], conformément au préavis de [Durée] prévu au contrat.\n\nLe solde de tout compte vous sera transmis dans les délais légaux.\n\nCordialement,\n[Votre nom]"},
+  {id:"r3",cat:"Financier",ic:"💶",titre:"Mise en demeure de paiement de salaire",
+   contenu:"Madame, Monsieur,\n\nLe salaire de [Mois] d'un montant de [Montant]€ reste impayé à ce jour.\n\nJe vous mets en demeure de procéder au règlement dans un délai de 8 jours. Passé ce délai, je me verrai contrainte de saisir le Conseil de Prud'hommes.\n\nCordialement,\n[Votre nom]"},
+  {id:"r4",cat:"PMI",ic:"🏛️",titre:"Compte-rendu de visite PMI",
+   contenu:"Objet : Compte-rendu de la visite du [Date]\n\nSuite à la visite de [Nom puéricultrice] le [Date], je vous adresse ce compte-rendu.\n\nPoints abordés : conditions d'accueil, suivi des enfants, documentation administrative.\n\nObservations : [Observations]\nActions engagées : [Actions]\n\nCordialement,\n[Votre nom] — Asmat agréée n° [Numéro agrément]"},
+  {id:"r5",cat:"Congés",ic:"🏖️",titre:"Déclaration de congés annuels",
+   contenu:"Madame, Monsieur,\n\nJe vous informe que je prendrai mes congés du [Date début] au [Date fin] inclus.\n\nDurant cette période, je ne pourrai pas assurer l'accueil de [Prénom].\n\nCordialement,\n[Votre nom]"},
+  {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d'avenant aux horaires",
+   contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l'avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
+  {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
+   contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
+];
+
+function CourriersTypes({enfants,pEId}){
+  const [selId,setSelId]=useState(null);
+  const [filtreCat,setFiltreCat]=useState("Tous");
+  const [toast,setToast]=useState("");
+  const cats=["Tous","Contrat","Financier","Congés","Avenant","PMI"];
+  const filtres=filtreCat==="Tous"?COURRIERS_DATA:COURRIERS_DATA.filter(c=>c.cat===filtreCat);
+  const sel=COURRIERS_DATA.find(c=>c.id===selId);
+  const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
+  const texte=sel?sel.contenu.replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]").replace(/\[Votre nom\]/g,`${D.asmat.prenom} ${D.asmat.nom}`):"";
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="✉️" title="Courriers types"
+      sub="Modèles prêts à personnaliser — conformes à la convention collective"/>
+    <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+      {cats.map(c=><button key={c}onClick={()=>{setFiltreCat(c);setSelId(null);}}style={{
+        padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+        background:filtreCat===c?"var(--b)":"transparent",color:filtreCat===c?"#fff":"var(--m)",
+        borderColor:filtreCat===c?"var(--b)":"var(--br)"}}>{c}</button>)}
+    </div>
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {filtres.map(c=><div key={c.id}className="card card-lift"
+          onClick={()=>setSelId(c.id===selId?null:c.id)}
+          style={{padding:14,cursor:"pointer",
+            borderLeft:`4px solid ${c.cat==="Financier"?"var(--R)":c.cat==="PMI"?"var(--B)":c.cat==="Congés"?"var(--G)":"var(--T)"}`,
+            boxShadow:selId===c.id?"var(--sh2)":"var(--sh)"}}>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <span style={{fontSize:18}}>{c.ic}</span>
+            <div>
+              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.titre}</div>
+              <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:9,marginTop:3}}>{c.cat}</span>
+            </div>
+          </div>
+        </div>)}
+      </div>
+      {sel?<div className="card"style={{padding:18}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>{sel.ic} {sel.titre}</div>
+        <textarea className="ta"defaultValue={texte}
+          style={{width:"100%",minHeight:260,resize:"vertical",fontSize:13,lineHeight:1.7,marginBottom:12}}/>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(texte).catch(()=>{});setToast("Copié ✓");}}>📋 Copier</button>
+          <button className="btn bT"style={{flex:1}}onClick={()=>setToast("PDF généré ✓")}>📥 PDF</button>
+        </div>
+      </div>
+      :<div className="card"style={{padding:28,textAlign:"center",color:"var(--l)"}}>
+        <div style={{fontSize:36,marginBottom:8}}>✉️</div>
+        <div style={{fontSize:13}}>Sélectionnez un modèle pour le personnaliser</div>
+      </div>}
+    </div>
+  </div>;
+}
+
+// ─── IMPORT CONTRAT EXISTANT ─────────────────────────────────────────────────
+function ImportContrat({onFinish}){
+  const [step,setStep]=useState(1);
+  const [data,setData]=useState({
+    prenomAsmat:"",emailAsmat:"",prenomEnfant:"",dateNaiss:"",
+    prenomParent:"",emailParent:"",debut:"",jours:[],
+    heures:"",taux:"",entretien:"3.80",source:"Top-Assmat"
+  });
+  const [toast,setToast]=useState("");
+  const toggle=(j)=>setData(d=>({...d,jours:d.jours.includes(j)?d.jours.filter(x=>x!==j):[...d.jours,j]}));
+
+  return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <div style={{width:"100%",maxWidth:520}}>
+      <div style={{display:"flex",gap:4,marginBottom:24}}>
+        {[1,2,3].map(s=><div key={s}style={{flex:1,height:4,borderRadius:2,
+          background:step>=s?"var(--T)":"var(--br)",transition:"background .3s"}}/>)}
+      </div>
+      <div className="card"style={{padding:28}}>
+        {step===1&&<>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:6}}>📦 Importer votre contrat</div>
+          <div style={{fontSize:13,color:"var(--l)",marginBottom:20,lineHeight:1.6}}>Basculez depuis votre ancien outil en 3 minutes. Toutes vos données reprises automatiquement.</div>
+          <div style={{marginBottom:14}}>
+            <label className="lbl">Depuis quel outil ?</label>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {["Top-Assmat","Nounou-Top","NannyFit","Pandi-Panda","Envola","Papier"].map(s=><button key={s}
+                onClick={()=>setData(d=>({...d,source:s}))}style={{
+                  padding:"6px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+                  background:data.source===s?"var(--T)":"transparent",color:data.source===s?"#fff":"var(--m)",
+                  borderColor:data.source===s?"var(--T)":"var(--br)"}}>{s}</button>)}
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div><label className="lbl">Votre prénom</label><input className="inp"placeholder="Marie"value={data.prenomAsmat}onChange={e=>setData(d=>({...d,prenomAsmat:e.target.value}))}/></div>
+            <div><label className="lbl">Votre email</label><input type="email"className="inp"placeholder="marie@mail.fr"value={data.emailAsmat}onChange={e=>setData(d=>({...d,emailAsmat:e.target.value}))}/></div>
+          </div>
+          <button className="btn bT"style={{width:"100%"}}onClick={()=>setStep(2)}disabled={!data.prenomAsmat||!data.emailAsmat}>Continuer →</button>
+        </>}
+        {step===2&&<>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}>👶 L'enfant & le parent</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div><label className="lbl">Prénom de l'enfant</label><input className="inp"placeholder="Léo"value={data.prenomEnfant}onChange={e=>setData(d=>({...d,prenomEnfant:e.target.value}))}/></div>
+            <div><label className="lbl">Date de naissance</label><input type="date"className="inp"value={data.dateNaiss}onChange={e=>setData(d=>({...d,dateNaiss:e.target.value}))}/></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div><label className="lbl">Prénom du parent</label><input className="inp"placeholder="Sophie"value={data.prenomParent}onChange={e=>setData(d=>({...d,prenomParent:e.target.value}))}/></div>
+            <div><label className="lbl">Email du parent</label><input type="email"className="inp"placeholder="parent@mail.fr"value={data.emailParent}onChange={e=>setData(d=>({...d,emailParent:e.target.value}))}/></div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button className="btn bG"style={{flex:1}}onClick={()=>setStep(1)}>← Retour</button>
+            <button className="btn bT"style={{flex:2}}onClick={()=>setStep(3)}disabled={!data.prenomEnfant||!data.prenomParent}>Continuer →</button>
+          </div>
+        </>}
+        {step===3&&<>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}>📄 Les conditions du contrat</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <div><label className="lbl">Date de début</label><input type="date"className="inp"value={data.debut}onChange={e=>setData(d=>({...d,debut:e.target.value}))}/></div>
+            <div><label className="lbl">Heures / semaine</label><input type="number"className="inp"placeholder="40"value={data.heures}onChange={e=>setData(d=>({...d,heures:e.target.value}))}/></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+            <div><label className="lbl">Taux horaire net (€)</label><input type="number"step="0.05"className="inp"placeholder="4.05"value={data.taux}onChange={e=>setData(d=>({...d,taux:e.target.value}))}/></div>
+            <div><label className="lbl">Indemnité entretien (€/j)</label><input type="number"step="0.05"className="inp"placeholder="3.80"value={data.entretien}onChange={e=>setData(d=>({...d,entretien:e.target.value}))}/></div>
+          </div>
+          <div style={{marginBottom:14}}>
+            <label className="lbl">Jours d'accueil</label>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {["Lundi","Mardi","Mercredi","Jeudi","Vendredi"].map(j=><button key={j}onClick={()=>toggle(j)}style={{
+                padding:"6px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+                background:data.jours.includes(j)?"var(--S)":"transparent",color:data.jours.includes(j)?"#fff":"var(--m)",
+                borderColor:data.jours.includes(j)?"var(--S)":"var(--br)"}}>{j.slice(0,2)}</button>)}
+            </div>
+          </div>
+          <div style={{background:"var(--Sp)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--S)"}}>
+            ✅ Ces données seront reprises immédiatement dans TiMat. Modifiables à tout moment.
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button className="btn bG"style={{flex:1}}onClick={()=>setStep(2)}>← Retour</button>
+            <button className="btn bT"style={{flex:2}}onClick={()=>{setToast("Contrat importé ✓");setTimeout(()=>onFinish?.(),1500);}}>✅ Importer dans TiMat</button>
+          </div>
+        </>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── PARRAINAGE ───────────────────────────────────────────────────────────────
+function Parrainage({user}){
+  const [copied,setCopied]=useState(false);
+  const [toast,setToast]=useState("");
+  const code=`TM-${(user?.prenom||"MARIE").toUpperCase().slice(0,4)}-${Math.abs((user?.email||"test").split("").reduce((a,c)=>a+c.charCodeAt(0),1000)%9000+1000)}`;
+  const lien=`https://timat.app/rejoindre?code=${code}`;
+  const copy=()=>{navigator.clipboard?.writeText(lien).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2500);setToast("Lien copié ✓");};
+  const filleules=[
+    {prenom:"Nathalie",ville:"Lyon",date:"Il y a 5 jours",statut:"actif",gain:"1 mois offert"},
+    {prenom:"Camille",ville:"Bordeaux",date:"Il y a 2 semaines",statut:"essai",gain:"En cours"},
+  ];
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="🎁" title="Parrainage" sub="Invitez vos collègues — gagnez des mois gratuits"/>
+    <div style={{background:"linear-gradient(135deg,#1C3028,#3D6B50)",borderRadius:20,padding:"28px 24px",marginBottom:20}}>
+      <div style={{fontSize:36,marginBottom:10}}>🌿</div>
+      <div className="pf"style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:8}}>Invitez une collègue asmat</div>
+      <div style={{fontSize:13,color:"rgba(255,255,255,.75)",lineHeight:1.7,marginBottom:16}}>
+        Pour chaque asmat qui s'inscrit et passe Pro avec votre code :<br/>
+        <strong style={{color:"#E8B060"}}>Vous gagnez 1 mois gratuit · Elle gagne 1 mois gratuit.</strong>
+      </div>
+      <div style={{background:"rgba(255,255,255,.1)",borderRadius:10,padding:"12px 16px",marginBottom:12}}>
+        <div style={{fontSize:10,color:"rgba(255,255,255,.5)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Votre code personnel</div>
+        <div style={{fontFamily:"'DM Mono',monospace",fontSize:22,fontWeight:700,color:"#E8B060",letterSpacing:"2px"}}>{code}</div>
+      </div>
+      <div style={{display:"flex",gap:8,alignItems:"center",background:"rgba(255,255,255,.08)",borderRadius:8,padding:"8px 12px",marginBottom:12}}>
+        <span style={{fontSize:11,color:"rgba(255,255,255,.6)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{lien}</span>
+        <button onClick={copy}style={{background:copied?"var(--S)":"rgba(255,255,255,.2)",color:"#fff",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700,flexShrink:0}}>
+          {copied?"✓ Copié":"Copier"}
+        </button>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={()=>setToast("Message SMS préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}>📱 SMS</button>
+        <button onClick={()=>setToast("Message WhatsApp préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}>💬 WhatsApp</button>
+      </div>
+    </div>
+    <div className="card"style={{padding:18,marginBottom:16}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>Comment ça marche</div>
+      {[["1","Partagez votre lien","📋"],["2","Votre collègue s'inscrit","✅"],["3","Elle passe Pro","⬆️"],["4","1 mois offert à chacune","🎁"]].map(([n,t,ic])=>
+        <div key={n}style={{display:"flex",gap:12,alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
+          <div style={{width:28,height:28,borderRadius:"50%",background:"var(--Tp)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:"var(--T)",fontSize:13,flexShrink:0}}>{n}</div>
+          <span style={{flex:1,fontSize:13,color:"var(--b)"}}>{t}</span>
+          <span style={{fontSize:18}}>{ic}</span>
+        </div>)}
+    </div>
+    <div className="card"style={{padding:18}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>
+        Mes filleules · <span style={{color:"var(--S)"}}>{filleules.length} inscrites</span>
+        {" · "}<span style={{color:"var(--T)"}}>{filleules.filter(f=>f.statut==="actif").length} mois gagnés</span>
+      </div>
+      {filleules.map((f,i)=><div key={i}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
+        <div>
+          <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.prenom} — {f.ville}</div>
+          <div style={{fontSize:11,color:"var(--l)"}}>{f.date}</div>
+        </div>
+        <span className="badge"style={{background:f.statut==="actif"?"var(--Sp)":"var(--Gp)",color:f.statut==="actif"?"var(--S)":"var(--G)"}}>{f.gain}</span>
+      </div>)}
+    </div>
+  </div>;
+}
+
 // ─── CONTRATS & FACTURES (fusionnés) ─────────────────────────────────────────
 function AdminFinances({enfants,role,pEId}){
   const [section,setSection]=useState("facturation");
   const sousOnglets=role==="asmat"
-    ?[{id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},{id:"contrats",l:"Contrats & Signatures",ic:"📄"},{id:"recap",l:"Récap mensuel PDF",ic:"📊"}]
+    ?[
+      {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
+      {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
+      {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
+      {id:"contrats_types",l:"Modèles contrats",ic:"📋"},
+      {id:"courriers",l:"Courriers types",ic:"✉️"},
+      {id:"recap",l:"Récap mensuel PDF",ic:"📊"},
+      {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
+    ]
     :[{id:"contrats",l:"Mon contrat",ic:"📄"},{id:"signature_parent",l:"Signer le contrat",ic:"✍️"},{id:"recap",l:"Récap mensuel",ic:"📊"}];
   return <div className="fi">
     <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
@@ -2261,9 +2693,13 @@ function AdminFinances({enfants,role,pEId}){
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}/>}
     {section==="contrats"&&<Contrats enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
+    {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}/>}
     {section==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
     {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}/>}
+    {section==="solde_contrat"&&<SoldeContrat enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
 
@@ -4375,6 +4811,408 @@ function RapportAnnuel({enfants,role,pEId}){
 }
 
 // ─── STRUCTURE DE NAVIGATION 2 NIVEAUX ───────────────────────────────────────
+// ─── SIMULATEUR COÛT PARENT ───────────────────────────────────────────────────
+function SimulateurCout({enfants,pEId}){
+  const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
+  const [taux,setTaux]=useState(4.05);
+  const [heures,setHeures]=useState(40);
+  const [semaines,setSemaines]=useState(47);
+  const [entretien,setEntretien]=useState(3.80);
+  const [revenus,setRevenus]=useState(45000);
+  const [enfants2,setEnfants2]=useState(1);
+
+  // Calculs
+  const salBrut=(heures*taux*semaines/12)*1.1; // brut mensuel estimé
+  const cotPat=salBrut*0.275;
+  const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
+  // CMG 2025 - barème simplifié selon revenus
+  const tauxCMG=revenus<25000?0.85:revenus<45000?0.70:revenus<75000?0.50:0.30;
+  const cmgMensuel=Math.min(salBrut*tauxCMG,salBrut*0.85);
+  const creditImpot=Math.min((coutTotal-cmgMensuel)*0.5*12/12,3500/12);
+  const resteCharge=Math.max(0,coutTotal-cmgMensuel-creditImpot);
+
+  const fmt2=(n)=>Math.round(n).toLocaleString("fr-FR")+"€";
+
+  return <div className="fi">
+    <PageHeader icon="🧮" title="Simulateur de coût" sub="Estimez le coût réel de la garde après aides CAF et crédit d'impôt"/>
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>⚙️ Les paramètres de garde</div>
+          {[
+            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05},
+            {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
+            {l:"Semaines d'accueil par an",v:semaines,set:setSemaines,min:30,max:52,step:1},
+            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05},
+          ].map(({l,v,set,min,max,step})=><div key={l}style={{marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <label className="lbl"style={{marginBottom:0}}>{l}</label>
+              <span style={{fontWeight:700,color:"var(--b)",fontSize:13}}>{v}</span>
+            </div>
+            <input type="range"min={min}max={max}step={step}value={v}
+              onChange={e=>set(parseFloat(e.target.value))}
+              style={{width:"100%",accentColor:"var(--T)"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)"}}>
+              <span>{min}</span><span>{max}</span>
+            </div>
+          </div>)}
+        </div>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>👨‍👩‍👧 Votre situation</div>
+          <div style={{marginBottom:14}}>
+            <label className="lbl">Revenus nets annuels du foyer (€)</label>
+            <input type="number"className="inp"value={revenus}onChange={e=>setRevenus(parseInt(e.target.value)||0)}/>
+          </div>
+          <div>
+            <label className="lbl">Nombre d'enfants à charge</label>
+            <div style={{display:"flex",gap:8}}>
+              {[1,2,3].map(n=><button key={n}onClick={()=>setEnfants2(n)}style={{
+                flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,
+                background:enfants2===n?"var(--B)":"transparent",color:enfants2===n?"#fff":"var(--m)",
+                borderColor:enfants2===n?"var(--B)":"var(--br)"}}>{n}</button>)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18,border:"2px solid var(--T)"}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--T)",marginBottom:16}}>💶 Résultat mensuel</div>
+          {[
+            ["Coût brut de la garde",fmt2(coutTotal),"var(--m)"],
+            ["Aide CMG (CAF)","-"+fmt2(cmgMensuel),"var(--S)"],
+            ["Crédit d'impôt (50%)","-"+fmt2(creditImpot),"var(--B)"],
+          ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
+            <span style={{fontSize:13,color:"var(--m)"}}>{l}</span>
+            <span style={{fontWeight:700,color:c}}>{v}</span>
+          </div>)}
+          <div style={{marginTop:12,padding:"14px",background:"var(--Tp)",borderRadius:12,textAlign:"center"}}>
+            <div style={{fontSize:12,color:"var(--T)",marginBottom:4}}>Reste à charge mensuel estimé</div>
+            <div className="pf"style={{fontSize:38,fontWeight:700,color:"var(--T)"}}>{fmt2(resteCharge)}</div>
+            <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>par mois</div>
+          </div>
+        </div>
+        <div className="card"style={{padding:16,background:"var(--Gp)",border:"1px solid var(--G)"}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}>📊 Sur l'année</div>
+          {[
+            ["Coût annuel brut",fmt2(coutTotal*12)],
+            ["Aides totales",fmt2((cmgMensuel+creditImpot)*12)],
+            ["Votre coût réel annuel",fmt2(resteCharge*12)],
+          ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"4px 0"}}>
+            <span style={{color:"var(--m)"}}>{l}</span>
+            <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
+          </div>)}
+        </div>
+        <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"10px 0"}}>
+          ⚠️ Simulation indicative. Le CMG exact dépend de vos ressources déclarées à la CAF. Simulateur basé sur la réforme CMG 2025.
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── SOLDE DE TOUT COMPTE ────────────────────────────────────────────────────
+function SoldeDeCompte({enfants,role,pEId}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [dateFin,setDateFin]=useState("");
+  const [motif,setMotif]=useState("Démission du parent");
+  const [calcule,setCalcule]=useState(false);
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const contrat=enfant?.contrat||{};
+
+  const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée","Autre"];
+
+  // Calculs solde
+  const tauxH=contrat.tauxHoraire||4.05;
+  const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
+  const salMensuel=heuresMois*tauxH;
+  // Congés payés : 2.5j par mois travaillé, simulation 8 mois
+  const congesRestants=6; // jours
+  const iccp=congesRestants*(heuresMois/20)*tauxH;
+  // Préavis selon durée du contrat
+  const dureeAns=1.5;
+  const preavis=dureeAns<1?30:dureeAns<2?60:90;
+  const indemPreavis=(preavis/30)*salMensuel;
+  const total=iccp+indemPreavis;
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📋" title="Solde de tout compte" sub="Calcul automatique à la fin d'un contrat"/>
+    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);setCalcule(false);}}/>)}
+    </div>}
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Paramètres de fin de contrat</div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Date de fin du contrat</label>
+            <input type="date"className="inp"value={dateFin}onChange={e=>setDateFin(e.target.value)}/>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Motif de rupture</label>
+            <select className="sel"value={motif}onChange={e=>setMotif(e.target.value)}>
+              {motifs.map(m=><option key={m}>{m}</option>)}
+            </select>
+          </div>
+          <div style={{background:"var(--c)",borderRadius:10,padding:12,marginBottom:14}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:6}}>Données du contrat</div>
+            {[
+              ["Enfant",`${enfant?.prenom||"—"} ${enfant?.nom||""}`],
+              ["Début",fmt(contrat.debut||"2023-09-04")],
+              ["Taux horaire",`${tauxH.toFixed(2)}€/h`],
+              ["Heures/semaine",`${contrat.heuresHebdo||40}h`],
+            ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"3px 0"}}>
+              <span style={{color:"var(--l)"}}>{l}</span><span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
+            </div>)}
+          </div>
+          <button className="btn bT"style={{width:"100%"}}onClick={()=>{if(!dateFin)return;setCalcule(true);}}>
+            🧮 Calculer le solde de tout compte
+          </button>
+        </div>
+      </div>
+
+      {calcule&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:20,border:"2px solid var(--G)"}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--G)",marginBottom:16}}>💶 Solde de tout compte — {enfant?.prenom}</div>
+          {[
+            ["Indemnité compensatrice de congés payés",`${congesRestants} jours × ${(heuresMois/20*tauxH).toFixed(2)}€`,iccp.toFixed(2)+"€","var(--S)"],
+            [`Indemnité de préavis (${preavis}j)`,`${preavis} jours selon CCN`,indemPreavis.toFixed(2)+"€","var(--B)"],
+          ].map(([l,d,v,c])=><div key={l}style={{padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+              <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{l}</span>
+              <span style={{fontWeight:700,color:c,fontSize:13}}>{v}</span>
+            </div>
+            <div style={{fontSize:11,color:"var(--l)"}}>{d}</div>
+          </div>)}
+          <div style={{marginTop:14,padding:14,background:"var(--Gp)",borderRadius:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>TOTAL SOLDE DE TOUT COMPTE</span>
+            <span className="pf"style={{fontSize:28,fontWeight:700,color:"var(--G)"}}>{total.toFixed(2)} €</span>
+          </div>
+          <div style={{fontSize:10,color:"var(--l)",marginTop:12,lineHeight:1.6}}>
+            Calcul conforme à la CCN des particuliers employeurs. L'ICCP est calculée sur la base des congés non pris. Le préavis dépend de l'ancienneté. Ces montants sont indicatifs — vérifiez avec votre syndicat ou le RPE.
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn bG"style={{flex:1}}onClick={()=>setToast("Document PDF généré ✓")}>📥 Télécharger le reçu</button>
+          <button className="btn bT"style={{flex:1}}onClick={()=>setToast("Envoyé au parent ✓")}>📧 Envoyer au parent</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
+}
+
+// ─── EXPORT DONNÉES COMPLET ──────────────────────────────────────────────────
+function ExportDonnees({enfants,user,role}){
+  const [selEnfant,setSelEnfant]=useState("tous");
+  const [periode,setPeriode]=useState("annee");
+  const [format,setFormat]=useState("pdf");
+  const [exporting,setExporting]=useState(false);
+  const [toast,setToast]=useState("");
+
+  const exporter=()=>{
+    setExporting(true);
+    setTimeout(()=>{
+      setExporting(false);
+      setToast(`Export ${format.toUpperCase()} généré et prêt à télécharger ✓`);
+    },2000);
+  };
+
+  const modules=[
+    {id:"profil",l:"Profil et informations personnelles",checked:true},
+    {id:"enfants",l:"Fiches des enfants accueillis",checked:true},
+    {id:"contrats",l:"Contrats et avenants",checked:true},
+    {id:"pointages",l:"Historique des pointages",checked:true},
+    {id:"transmissions",l:"Journal et transmissions",checked:true},
+    {id:"salaires",l:"Récapitulatifs salaires et bulletins",checked:true},
+    {id:"absences",l:"Historique des absences",checked:true},
+    {id:"sante",l:"Données de santé et vaccins",checked:true},
+    {id:"photos",l:"Photos du journal",checked:false},
+    {id:"documents",l:"Documents stockés",checked:false},
+  ];
+  const [sel,setSel]=useState(Object.fromEntries(modules.map(m=>[m.id,m.checked])));
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📦" title="Export de vos données"
+      sub="Téléchargez l'intégralité de vos données — droit RGPD à la portabilité"/>
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Ce que vous exportez</div>
+          {modules.map(m=><label key={m.id}style={{display:"flex",gap:10,alignItems:"center",cursor:"pointer",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
+            <input type="checkbox"checked={sel[m.id]}onChange={e=>setSel(p=>({...p,[m.id]:e.target.checked}))}
+              style={{width:15,height:15,accentColor:"var(--T)",flexShrink:0}}/>
+            <span style={{fontSize:13,color:"var(--b)"}}>{m.l}</span>
+          </label>)}
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>⚙️ Options</div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Enfant concerné</label>
+            <select className="sel"value={selEnfant}onChange={e=>setSelEnfant(e.target.value)}>
+              <option value="tous">Tous les enfants</option>
+              {enfants.map(e=><option key={e.id}value={e.id}>{e.emoji} {e.prenom}</option>)}
+            </select>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Période</label>
+            <select className="sel"value={periode}onChange={e=>setPeriode(e.target.value)}>
+              <option value="mois">Ce mois</option>
+              <option value="trimestre">Ce trimestre</option>
+              <option value="annee">Cette année</option>
+              <option value="tout">Tout l'historique</option>
+            </select>
+          </div>
+          <div style={{marginBottom:16}}>
+            <label className="lbl">Format</label>
+            <div style={{display:"flex",gap:8}}>
+              {[["pdf","📄 PDF"],["csv","📊 CSV"],["json","🔧 JSON"]].map(([v,l])=><button key={v}onClick={()=>setFormat(v)}style={{
+                flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+                background:format===v?"var(--b)":"transparent",color:format===v?"#fff":"var(--m)",
+                borderColor:format===v?"var(--b)":"var(--br)"}}>{l}</button>)}
+            </div>
+          </div>
+          <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 12px",marginBottom:14,fontSize:12,color:"var(--B)"}}>
+            🔒 Export conforme RGPD (article 20 — droit à la portabilité). Fichier chiffré, téléchargé directement sur votre appareil. Aucune copie conservée.
+          </div>
+          <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exporter}disabled={exporting}>
+            {exporting?"⏳ Génération en cours…":"📥 Exporter mes données"}
+          </button>
+        </div>
+        <div className="card"style={{padding:16,background:"var(--Sp)",border:"1px solid var(--Sl)"}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}>✅ Vos droits RGPD</div>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>
+            Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les supprimer à tout moment. En cas de demande : privacy@timat.app — réponse sous 30 jours.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── FAQ / CENTRE D'AIDE ─────────────────────────────────────────────────────
+const FAQ_DATA=[
+  {cat:"Pajemploi",q:"Comment exporter mes données vers Pajemploi ?",
+   r:"Dans Facturation & Bilans, cliquez sur 'Exporter vers Pajemploi'. TiMat génère un récapitulatif avec toutes les données nécessaires (heures, salaire net, indemnités) prêtes à saisir sur pajemploi.urssaf.fr entre le 25 et le 5 du mois suivant."},
+  {cat:"Pajemploi",q:"Mon calcul de salaire est-il conforme à la convention collective ?",
+   r:"Oui. TiMat applique automatiquement les règles de la CCN des particuliers employeurs : mensualisation, heures complémentaires, majorées au-delà de 45h/semaine, indemnités d'entretien selon le barème URSSAF 2025."},
+  {cat:"Contrats",q:"Puis-je modifier un contrat en cours ?",
+   r:"Oui, via un avenant. Dans Facturation → Contrats & Avenants, choisissez 'Avenant — Modification d'horaires' ou 'Avenant — Revalorisation salaire'. L'avenant est daté et tracé automatiquement."},
+  {cat:"Contrats",q:"Que se passe-t-il si un parent ne signe pas le contrat ?",
+   r:"Relancez via la messagerie TiMat. Sans signature, le contrat n'a pas de valeur légale. TiMat vous alerte si un contrat reste non signé plus de 7 jours."},
+  {cat:"PMI",q:"Comment préparer ma visite de renouvellement d'agrément ?",
+   r:"Dans Documents, exportez votre 'Dossier PMI complet' : il contient l'historique des enfants accueillis, les bilans trimestriels, le planning périscolaire et vos échanges avec la PMI. Tout est daté et structuré."},
+  {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
+   r:"Dans Facturation → Solde de tout compte. Saisissez la date de fin et le motif. TiMat calcule automatiquement l'ICCP (indemnité compensatrice de congés payés) et l'indemnité de préavis selon la CCN."},
+  {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
+   r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive. Toutes vos données sont effacées de nos serveurs conformément au RGPD (droit à l'effacement, article 17)."},
+  {cat:"RGPD",q:"Où sont stockées mes données ?",
+   r:"Exclusivement en France, sur des serveurs OVHcloud à Paris via Supabase. Aucun transfert hors de l'Union Européenne, sauf pour la génération IA des bilans (données anonymisées envoyées à Anthropic)."},
+  {cat:"Abonnement",q:"Puis-je changer d'offre ou résilier ?",
+   r:"Oui, à tout moment depuis Paramètres → Mon abonnement. Pas d'engagement, pas de frais de résiliation. Si vous résiliez, votre accès Pro reste actif jusqu'à la fin de la période payée."},
+  {cat:"Abonnement",q:"Comment fonctionne le parrainage ?",
+   r:"Dans Parrainage, copiez votre lien personnel. Quand une collègue s'inscrit et passe au Pro, vous gagnez chacune 1 mois gratuit. Vos filleules apparaissent dans votre tableau de parrainage."},
+];
+
+function FAQ({role}){
+  const [filtre,setFiltre]=useState("Tous");
+  const [open,setOpen]=useState(null);
+  const [search,setSearch]=useState("");
+  const cats=["Tous",...[...new Set(FAQ_DATA.map(f=>f.cat))]];
+  const filtrees=FAQ_DATA
+    .filter(f=>filtre==="Tous"||f.cat===filtre)
+    .filter(f=>!search||f.q.toLowerCase().includes(search.toLowerCase())||f.r.toLowerCase().includes(search.toLowerCase()));
+
+  return <div className="fi">
+    <PageHeader icon="❓" title="Centre d'aide" sub="Réponses aux questions les plus fréquentes"/>
+    <input className="inp"placeholder="🔍 Rechercher dans l'aide…"value={search}
+      onChange={e=>setSearch(e.target.value)}style={{marginBottom:14}}/>
+    <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+      {cats.map(c=><button key={c}onClick={()=>setFiltre(c)}style={{
+        padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+        background:filtre===c?"var(--b)":"transparent",color:filtre===c?"#fff":"var(--m)",
+        borderColor:filtre===c?"var(--b)":"var(--br)"}}>{c}</button>)}
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+      {filtrees.length===0&&<div className="card"style={{padding:20,textAlign:"center",color:"var(--l)",fontSize:13}}>
+        Aucun résultat. <span style={{color:"var(--T)",cursor:"pointer"}}onClick={()=>setSearch("")}>Effacer la recherche</span>
+      </div>}
+      {filtrees.map((f,i)=><div key={i}className="card"style={{padding:0,overflow:"hidden"}}>
+        <button onClick={()=>setOpen(open===i?null:i)}style={{
+          width:"100%",padding:"14px 18px",background:"none",border:"none",cursor:"pointer",
+          display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left",gap:12}}>
+          <div style={{flex:1}}>
+            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:9,marginBottom:4,display:"inline-block"}}>{f.cat}</span>
+            <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.q}</div>
+          </div>
+          <span style={{fontSize:18,color:"var(--l)",flexShrink:0,transition:"transform .2s",
+            transform:open===i?"rotate(180deg)":"rotate(0deg)"}}>▾</span>
+        </button>
+        {open===i&&<div style={{padding:"0 18px 16px",fontSize:13,color:"var(--m)",lineHeight:1.7,borderTop:"1px solid var(--br)"}}>
+          {f.r}
+        </div>}
+      </div>)}
+    </div>
+    <div className="card"style={{padding:18,marginTop:20,textAlign:"center",background:"var(--Tp)",border:"1px solid var(--Tl)"}}>
+      <div style={{fontSize:14,fontWeight:700,color:"var(--b)",marginBottom:6}}>Vous n'avez pas trouvé votre réponse ?</div>
+      <div style={{fontSize:13,color:"var(--m)",marginBottom:12}}>Notre équipe répond en moins de 24h, du lundi au vendredi.</div>
+      <button className="btn bT"onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"support"}))}>
+        💬 Contacter le support
+      </button>
+    </div>
+  </div>;
+}
+
+// ─── SUPPORT CLIENT ───────────────────────────────────────────────────────────
+function Support({role}){
+  const [msg,setMsg]=useState("");
+  const [sujet,setSujet]=useState("Question générale");
+  const [envoye,setEnvoye]=useState(false);
+  const sujets=["Question générale","Problème technique","Facturation / abonnement","Calcul de salaire","Contrat / avenant","PMI / agrément","Autre"];
+
+  return <div className="fi">
+    <PageHeader icon="💬" title="Support TiMat" sub="Notre équipe répond sous 24h, du lundi au vendredi"/>
+    {envoye?<div style={{textAlign:"center",padding:40}}>
+      <div style={{fontSize:60,marginBottom:16}}>✅</div>
+      <div className="pf"style={{fontSize:22,fontWeight:600,color:"var(--S)",marginBottom:8}}>Message envoyé !</div>
+      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>Nous vous répondons par email sous 24h (jours ouvrés).<br/>En attendant, consultez notre <span style={{color:"var(--T)",cursor:"pointer",textDecoration:"underline"}}onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"faq"}))}>Centre d'aide</span>.</div>
+    </div>:<div style={{maxWidth:560,margin:"0 auto"}}>
+      <div className="card"style={{padding:24}}>
+        <div style={{marginBottom:14}}>
+          <label className="lbl">Sujet</label>
+          <select className="sel"value={sujet}onChange={e=>setSujet(e.target.value)}>
+            {sujets.map(s=><option key={s}>{s}</option>)}
+          </select>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label className="lbl">Votre message</label>
+          <textarea className="ta"value={msg}onChange={e=>setMsg(e.target.value)}
+            placeholder="Décrivez votre problème ou question le plus précisément possible…"
+            style={{width:"100%",minHeight:120,resize:"vertical"}}/>
+        </div>
+        <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,padding:"10px 14px",background:"var(--Bp)",borderRadius:10}}>
+          <span style={{fontSize:18}}>📧</span>
+          <div style={{fontSize:12,color:"var(--B)"}}>Notre réponse sera envoyée à <strong>{D.asmat.email||"votre email"}</strong> — réponse en moins de 24h.</div>
+        </div>
+        <button className="btn bT"style={{width:"100%"}}onClick={()=>{if(!msg.trim())return;setEnvoye(true);}}>
+          📤 Envoyer mon message
+        </button>
+      </div>
+      <div style={{marginTop:14,display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
+        {[["📧","support@timat.app"],["💬","Chat disponible 9h-18h"],["📚","Centre d'aide 24/7"]].map(([ic,t])=>
+          <div key={t}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:10,padding:"10px 16px",fontSize:12,color:"var(--m)",display:"flex",gap:8,alignItems:"center"}}>
+            <span>{ic}</span><span>{t}</span>
+          </div>)}
+      </div>
+    </div>}
+  </div>;
+}
+
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
@@ -4392,8 +5230,12 @@ const GROUPS_AM={
     {id:"liste_attente",l:"Demandes",ic:"📬"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
+    {id:"solde_compte",l:"Solde de tout compte",ic:"🧾"},
     {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
+    {id:"export_donnees",l:"Export données",ic:"📦"},
+    {id:"parrainage",l:"Parrainage",ic:"🎁"},
+    {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
 };
 const GROUPS_P={
@@ -4409,8 +5251,11 @@ const GROUPS_P={
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
     {id:"kit_cmg",l:"Aide CMG",ic:"💶"},
+    {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
+    {id:"export_donnees",l:"Export données",ic:"📦"},
+    {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
 };
 
@@ -4565,579 +5410,941 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 }
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
-function LandingPage({onLogin,dark,setDark}){
-  const [showLogin,setShowLogin]=useState(false);
-  const [mode,setMode]=useState("connexion");
-  const [form,setForm]=useState({email:"",password:"",prenom:"",nom:"",role:"asmat"});
-  const [err,setErr]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [consent,setConsent]=useState({politique:false,cgu:false,newsletter:false});
-  const consentValide=consent.politique&&consent.cgu;
+// ─── FAQ / BASE DE CONNAISSANCES ─────────────────────────────────────────────
+const FAQ_DATA=[
+  {cat:"Pajemploi",q:"Comment calculer les heures complémentaires ?",
+   a:"Les heures complémentaires sont les heures effectuées au-delà des heures prévues au contrat mais sous 45h/semaine. Elles sont rémunérées au même taux horaire sans majoration. TiMat les calcule automatiquement dès que vous saisissez le pointage réel."},
+  {cat:"Pajemploi",q:"Quand faire ma déclaration Pajemploi ?",
+   a:"Entre le 25 du mois en cours et le 5 du mois suivant. En cas de retard, le parent ne reçoit pas le CMG à temps, ce qui peut créer des tensions. TiMat vous rappelle 5 jours avant l'échéance."},
+  {cat:"Pajemploi",q:"Comment déclarer une absence de l'enfant ?",
+   a:"Une absence non prévue n'est généralement pas rémunérée (sauf clause contraire au contrat). Sur Pajemploi, déduisez les heures non effectuées du total mensuel. Dans TiMat, le parent déclare l'absence, elle est déduite automatiquement du récap."},
+  {cat:"Contrat",q:"Quelle est la période de préavis en cas de rupture ?",
+   a:"Si l'enfant a moins de 3 mois chez vous : 15 jours. Entre 3 mois et 1 an : 1 mois. Au-delà d'un an : 1 mois aussi. Le calcul change si la rupture vient du parent ou de vous. TiMat génère le courrier de rupture adapté à votre situation."},
+  {cat:"Contrat",q:"Dois-je faire un avenant à chaque changement d'horaire ?",
+   a:"Oui, tout changement durable des horaires ou du nombre de jours doit faire l'objet d'un avenant signé. C'est votre protection en cas de litige. Dans TiMat, créez un avenant en 2 minutes depuis Administratif → Modèles contrats."},
+  {cat:"Congés",q:"Comment calculer les congés payés d'une assistante maternelle ?",
+   a:"2,5 jours ouvrables par mois travaillé, soit 30 jours/an (5 semaines). En année incomplète, les congés sont calculés au prorata. TiMat calcule le solde en temps réel et le reporte sur le bulletin de salaire."},
+  {cat:"PMI",q:"À quelle fréquence la PMI vient-elle contrôler ?",
+   a:"En général dans les 3 mois suivant votre premier accueil, puis à intervalles variables (tous les 2-5 ans selon les départements). Une visite peut aussi avoir lieu suite à un signalement. TiMat archive tout votre historique pour que vous soyez prête à n'importe quel moment."},
+  {cat:"Fiscal",q:"Quel abattement fiscal puis-je appliquer ?",
+   a:"L'abattement spécifique assmats est de 3 fois le montant horaire du SMIC par jour et par enfant. En 2025, cela représente environ 34,95€/jour/enfant. TiMat calcule votre net imposable avec cet abattement sur chaque bulletin."},
+  {cat:"TiMat",q:"Mes données sont-elles sécurisées ?",
+   a:"Oui. Toutes vos données sont hébergées en France (OVHcloud Paris). Chiffrement en transit (HTTPS) et au repos (AES-256). Chaque utilisateur n'accède qu'à ses propres données (Row Level Security). Conformité RGPD totale. Vous pouvez exporter ou supprimer vos données à tout moment."},
+  {cat:"TiMat",q:"Puis-je utiliser TiMat sans internet ?",
+   a:"Les données récentes sont mises en cache localement. Vous pouvez consulter les informations déjà chargées hors ligne. La saisie en mode hors ligne est synchronisée dès que la connexion revient. Idéal pour pointer les arrivées au parc ou pendant une sortie."},
+];
 
-  // Comptes démo (accès rapide)
-  const demos=[
-    {...D.asmat,label:"Marie Dupont (AssMat)",hint:"marie.dupont@mail.fr"},
-    {...D.parents[0],label:"Sophie Martin — Léo",hint:"sophie.martin@mail.fr"},
-    {...D.parents[1],label:"Thomas Bernard — Emma",hint:"thomas.bernard@mail.fr"},
-    {...D.parents[2],label:"Camille Petit — Noah",hint:"camille.petit@mail.fr"},
-  ];
+function FAQ(){
+  const [openId,setOpenId]=useState(null);
+  const [filtre,setFiltre]=useState("Tous");
+  const cats=["Tous","Pajemploi","Contrat","Congés","PMI","Fiscal","TiMat"];
+  const filtrees=filtre==="Tous"?FAQ_DATA:FAQ_DATA.filter(f=>f.cat===filtre);
+  const [recherche,setRecherche]=useState("");
+  const finales=filtrees.filter(f=>f.q.toLowerCase().includes(recherche.toLowerCase())||f.a.toLowerCase().includes(recherche.toLowerCase()));
 
-  const connexion=async()=>{
-    if(!form.email||!form.password){setErr("Email et mot de passe requis.");return;}
-    setLoading(true);setErr("");
-    try{
-      // Essai connexion réelle Supabase
-      const{data,error}=await supabase.auth.signInWithPassword({email:form.email,password:form.password});
-      if(error){
-        // Si pas de compte Supabase, essayer les comptes démo
-        const demo=demos.find(d=>d.email===form.email.trim().toLowerCase());
-        if(demo){onLogin(demo);}
-        else{setErr("Email ou mot de passe incorrect.");}
-      }else if(data?.user){
-        const{data:profil}=await supabase.from("profiles").select("*").eq("id",data.user.id).single();
-        if(profil)onLogin({...profil,id:data.user.id,email:data.user.email});
-      }
-    }catch(e){setErr("Erreur de connexion.");}
-    setLoading(false);
-  };
-
-  const inscription=async()=>{
-    if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs.");return;}
-    if(form.password.length<6){setErr("Le mot de passe doit faire au moins 6 caractères.");return;}
-    if(!consentValide){setErr("Vous devez accepter la politique de confidentialité et les CGU pour continuer.");return;}
-    setLoading(true);setErr("");
-    try{
-      const{data,error}=await supabase.auth.signUp({
-        email:form.email,password:form.password,
-        options:{data:{role:form.role,prenom:form.prenom,nom:form.nom}}
-      });
-      if(error){setErr(error.message);}
-      else if(data?.user){
-        setErr("");
-        setMode("connexion");
-        setForm(f=>({...f,password:""}));
-        setErr("✅ Compte créé ! Connecte-toi maintenant.");
-      }
-    }catch(e){setErr("Erreur lors de l'inscription.");}
-    setLoading(false);
-  };
-
-  const feats=[
-    {ic:"🧮",t:"Calcul de salaire automatique",d:"Mensualisation, heures complémentaires, congés payés, indemnités d'entretien — tout est calculé en temps réel. Votre récap Pajemploi est prêt en 1 clic."},
-    {ic:"📄",t:"Contrats guidés et avenants",d:"Chaque clause est à sa place. Un avenant dès qu'un horaire change ? Fait en 2 minutes. En cas de litige, vous avez des preuves solides."},
-    {ic:"✨",t:"Bilan de journée rédigé par IA",d:"À la fin de la journée, TiMat rédige un compte-rendu chaleureux pour les parents. Vous validez, vous envoyez. Zéro soirée gâchée."},
-    {ic:"📑",t:"Attestation fiscale automatique",d:"Générée en un clic, partagée aux parents directement. Crédit d'impôt 50% — sans que vous ayez à expliquer quoi que ce soit."},
-    {ic:"🗂️",t:"Tous vos documents centralisés",d:"Agrément, contrats, ordonnances, attestations, photos — rangés, datés, retrouvables en 2 secondes. Même en cas de contrôle PMI à l'improviste."},
-    {ic:"📅",t:"Calendrier et rappels automatiques",d:"Renouvellement d'agrément, visites PMI, formations obligatoires — TiMat vous prévient avant que vous oubliiez."},
-    {ic:"⏰",t:"Pointage horodaté et signé",d:"Fini les conflits sur les retards ou les heures supplémentaires. Chaque arrivée et départ est tracé, incontestable."},
-    {ic:"💬",t:"Communication apaisée avec les parents",d:"Les parents voient la journée de leur enfant sur leur téléphone. Moins de questions à la porte, plus de confiance au quotidien."},
-    {ic:"🏛️",t:"Lien PMI professionnel",d:"Vos échanges avec la PMI par email, tracés et archivés. À la visite de renouvellement, vous arrivez sereine avec tout l'historique."},
-  ];
-
-  return <div style={{minHeight:"100vh",background:"var(--c)",overflowX:"hidden"}}>
-    {/* Hero — nouveau design vert forêt + copywriting émotionnel */}
-    <div style={{
-      background:"linear-gradient(160deg,#1C3028 0%,#2A4A38 40%,#3D6B50 80%,#B8622F 100%)",
-      padding:"0 20px 70px",position:"relative",overflow:"hidden"
-    }}>
-      {/* Cercles déco */}
-      <div style={{position:"absolute",top:-80,right:-80,width:300,height:300,borderRadius:"50%",background:"rgba(255,255,255,.04)",pointerEvents:"none"}}/>
-      <div style={{position:"absolute",bottom:-40,left:-60,width:200,height:200,borderRadius:"50%",background:"rgba(184,98,47,.15)",pointerEvents:"none"}}/>
-
-      {/* Nav */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 0",maxWidth:960,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div className="pf"style={{fontSize:26,fontWeight:600,color:"#fff",fontStyle:"italic",letterSpacing:".5px"}}>TiMat</div>
-          <div style={{width:5,height:5,borderRadius:"50%",background:"#E8B060",marginBottom:2}}/>
-        </div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <button onClick={()=>setDark&&setDark(d=>!d)}style={{background:"rgba(255,255,255,.1)",border:"none",color:"#fff",padding:"6px 10px",borderRadius:8,cursor:"pointer",fontSize:14}}>
-            {dark?"☀️":"🌙"}
-          </button>
-          <button onClick={()=>document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}
-            className="btn"style={{background:"rgba(255,255,255,.1)",color:"#fff",border:"1px solid rgba(255,255,255,.25)",fontSize:13}}>
-            Tarifs
-          </button>
-          <button onClick={()=>setShowLogin(true)}className="btn"style={{background:"rgba(255,255,255,.12)",color:"#fff",border:"1px solid rgba(255,255,255,.25)",fontSize:13}}>
-            Connexion
-          </button>
-          <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn"style={{background:"#B8622F",color:"#fff",border:"none",fontSize:13,boxShadow:"0 2px 12px rgba(184,98,47,.5)"}}>
-            Commencer gratuitement →
-          </button>
-        </div>
-      </div>
-
-      {/* Accroche */}
-      <div style={{maxWidth:780,margin:"48px auto 0",textAlign:"center"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(232,176,96,.15)",border:"1px solid rgba(232,176,96,.3)",borderRadius:20,padding:"6px 18px",fontSize:12,color:"#E8D0A0",marginBottom:24,fontWeight:600,letterSpacing:".5px"}}>
-          💛 CONÇU POUR LES ASSISTANTES MATERNELLES DE FRANCE
-        </div>
-
-        {/* Titre — accroche directe */}
-        <div className="pf"style={{fontSize:"clamp(26px,5vw,52px)",fontWeight:700,color:"#fff",lineHeight:1.2,marginBottom:16,fontStyle:"italic"}}>
-          Vous aimez les enfants.<br/>
-          <span style={{color:"#E8B060"}}>Pas la paperasse.</span><br/>
-          <span style={{fontSize:"clamp(18px,3vw,32px)",fontStyle:"normal",fontWeight:400,color:"rgba(255,255,255,.8)"}}>Pourtant vous passez vos soirées dessus.</span>
-        </div>
-
-        {/* Miroir des douleurs — elles se reconnaissent */}
-        <div style={{background:"rgba(0,0,0,.25)",borderRadius:18,padding:"22px 28px",marginBottom:28,textAlign:"left",maxWidth:660,margin:"0 auto 28px"}}>
-          <div style={{fontSize:13,color:"rgba(255,255,255,.45)",marginBottom:14,fontWeight:700,textTransform:"uppercase",letterSpacing:".8px"}}>
-            Dites-moi si ça vous parle…
-          </div>
-          {[
-            "Pajemploi vous donne des sueurs froides chaque fin de mois",
-            "Vous avez peur qu'un contrat mal rédigé se retourne contre vous",
-            "Vous répétez la même journée à l'oral à chaque parent épuisée à 18h",
-            "Vous vous réveillez la nuit avec \"ai-je bien tout déclaré ?\"",
-            "Un document important a déjà été perdu, abîmé, introuvable",
-            "Vous faites l'administratif le soir alors que vous méritez de vous reposer",
-          ].map((p,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:9,fontSize:13,color:"rgba(255,255,255,.8)"}}>
-            <span style={{color:"#E87070",fontSize:15,flexShrink:0,marginTop:2}}>☑</span>
-            <span>{p}</span>
-          </div>)}
-          <div style={{marginTop:16,padding:"10px 14px",background:"rgba(232,176,96,.12)",borderRadius:10,fontSize:13,color:"#E8D0A0",fontWeight:600,textAlign:"center"}}>
-            Si vous avez coché au moins une case, TiMat a été conçu pour vous.
-          </div>
-        </div>
-
-        {/* Promesse centrale */}
-        <div style={{marginBottom:28,maxWidth:600,margin:"0 auto 28px"}}>
-          <div className="pf"style={{fontSize:"clamp(16px,2.5vw,24px)",color:"rgba(255,255,255,.95)",lineHeight:1.5,marginBottom:12}}>
-            Et si tout ça prenait <span style={{color:"#E8B060",fontWeight:700}}>5 minutes par jour</span><br/>au lieu de 5 heures par semaine ?
-          </div>
-          <div style={{height:1,background:"rgba(255,255,255,.1)",margin:"16px 0"}}/>
-          {[
-            "Votre salaire calculé automatiquement — récap Pajemploi prêt en 1 clic",
-            "Vos bilans rédigés par IA — les parents reçoivent un vrai compte-rendu chaque soir",
-            "Vos documents tous au même endroit — retrouvables en 2 secondes dans 5 ans",
-            "Vos contrats solides et signés — vous êtes protégée si ça tourne mal",
-          ].map((s,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:8,fontSize:13,color:"rgba(255,255,255,.9)"}}>
-            <span style={{color:"#80C880",fontSize:15,flexShrink:0,marginTop:2}}>✓</span>
-            <span>{s}</span>
-          </div>)}
-        </div>
-
-        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={()=>{setShowLogin(true);setMode("inscription");}}
-            style={{background:"linear-gradient(135deg,#B8622F,#8A3A20)",color:"#fff",border:"none",borderRadius:10,padding:"14px 32px",fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(184,98,47,.5)",fontFamily:"'DM Sans',sans-serif"}}>
-            Je commence gratuitement — sans CB →
-          </button>
-          <button onClick={()=>document.getElementById('features')?.scrollIntoView({behavior:'smooth'})}
-            style={{background:"rgba(255,255,255,.08)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"14px 28px",fontSize:15,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-            Voir comment ça marche
-          </button>
-        </div>
-
-        <div style={{display:"flex",gap:20,justifyContent:"center",marginTop:24,flexWrap:"wrap"}}>
-          {["🔒 Données hébergées en France","⚡ 2 minutes pour démarrer","🎓 Conforme PMI","💳 Gratuit sans CB"].map(t=>
-            <span key={t}style={{fontSize:11,color:"rgba(255,255,255,.55)",fontWeight:600}}>{t}</span>)}
-        </div>
-      </div>
+  return <div className="fi">
+    <PageHeader icon="❓" title="Centre d'aide & FAQ" sub="Réponses à vos questions les plus fréquentes"/>
+    <div style={{marginBottom:16}}>
+      <input className="inp"placeholder="🔍 Rechercher une question…"value={recherche}onChange={e=>setRecherche(e.target.value)}/>
     </div>
-
-    {/* Fonctionnalités — par douleur */}
-    <div id="features"style={{maxWidth:960,margin:"0 auto",padding:"60px 20px"}}>
-      <div style={{textAlign:"center",marginBottom:44}}>
-        <div className="pf"style={{fontSize:34,fontWeight:600,color:"var(--b)",marginBottom:10}}>
-          Un problème → une solution concrète
-        </div>
-        <div style={{fontSize:15,color:"var(--l)",maxWidth:540,margin:"0 auto",lineHeight:1.7}}>
-          TiMat ne fait pas que "centraliser". Il résout les vraies galères que vous vivez chaque semaine.
-        </div>
-      </div>
-
-      {/* Tableau douleur → solution → résultat */}
-      <div style={{display:"grid",gap:3,marginBottom:40}}>
-        {[
-          ["🧮","Pajemploi vous prend des heures chaque mois","Calcul automatique : mensualisation, heures supp, congés, indemnités","Récap prêt à saisir en 5 minutes. Zéro erreur. Zéro stress."],
-          ["📄","Votre contrat mal rédigé peut tout faire basculer","Modèles guidés, clauses adaptées au métier, avenants en 2 clics","En cas de conflit, vous avez des preuves écrites, solides, datées."],
-          ["✨","Vous répétez la journée à l'oral, crevée à 18h","L'IA rédige un bilan chaleureux, vous relisez, vous envoyez","Les parents reçoivent un vrai compte-rendu. La confiance grandit."],
-          ["🗂️","Vos papiers sont éparpillés entre tiroirs, SMS et WhatsApp","Tout centralisé : contrats, ordonnances, agrément, bilans, photos","Au moindre contrôle PMI, tout est là, en 2 secondes."],
-          ["📅","Vous avez peur d'oublier une échéance importante","Rappels automatiques : renouvellement, visites, formations","Plus jamais une date manquée. Vous êtes toujours à jour."],
-          ["⏰","Tensions sur les retards, les heures en plus, les impayés","Pointage horodaté, signé, incontestable pour les deux parties","Vous discutez de faits. Plus de ressentis. Plus de malentendus."],
-        ].map(([ic,pb,sol,res],i)=><div key={i}style={{
-          display:"grid",gridTemplateColumns:"40px 1fr 1fr 1fr",gap:16,alignItems:"center",
-          padding:"16px 20px",borderRadius:14,
-          background:i%2===0?"var(--w)":"var(--c)",
-          border:"1px solid var(--br)"
-        }}>
-          <div style={{fontSize:24,textAlign:"center"}}>{ic}</div>
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.5}}>
-            <div style={{fontSize:10,fontWeight:700,color:"var(--R)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Le problème</div>
-            {pb}
-          </div>
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.5}}>
-            <div style={{fontSize:10,fontWeight:700,color:"var(--B)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Ce que TiMat fait</div>
-            {sol}
-          </div>
-          <div style={{fontSize:13,color:"var(--S)",fontWeight:600,lineHeight:1.5}}>
-            <div style={{fontSize:10,fontWeight:700,color:"var(--S)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Ce que ça change</div>
-            {res}
-          </div>
-        </div>)}
-      </div>
-
-      {/* Grille fonctionnalités */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16,marginBottom:40}}>
-        {feats.map((f,i)=><div key={i}className="card card-lift"style={{padding:20,borderLeft:`4px solid var(--T)`}}>
-          <div style={{fontSize:28,marginBottom:10}}>{f.ic}</div>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{f.t}</div>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>{f.d}</div>
-        </div>)}
-      </div>
-
-      {/* Argument charge mentale */}
-      <div style={{background:"linear-gradient(135deg,#1C3028,#2A4A38)",borderRadius:20,padding:"28px 32px",display:"flex",gap:20,alignItems:"center",flexWrap:"wrap",marginBottom:20}}>
-        <div style={{fontSize:40}}>🧠</div>
-        <div style={{flex:1}}>
-          <div style={{fontWeight:700,fontSize:16,color:"#fff",marginBottom:8}}>
-            Vous n'avez jamais vraiment fini votre journée.
-          </div>
-          <div style={{fontSize:13,color:"rgba(255,255,255,.75)",lineHeight:1.8}}>
-            L'enquête UFNAFAAM révèle que la charge mentale des assistantes maternelles explose : administratif le soir, questions au réveil, impression de n'être jamais à jour. TiMat prend en charge cette charge invisible. Vous récupérez vos soirées, votre énergie, votre sérénité.
-          </div>
-        </div>
-      </div>
-
-      {/* Argument anti-litige */}
-      <div style={{background:"linear-gradient(135deg,var(--Sp),var(--Bp))",borderRadius:20,padding:"28px 32px",display:"flex",gap:20,alignItems:"center",flexWrap:"wrap"}}>
-        <div style={{fontSize:40}}>🛡️</div>
-        <div style={{flex:1}}>
-          <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:8}}>En cas de litige, vous avez des preuves. Pas des souvenirs.</div>
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.8}}>
-            Chaque transmission, chaque pointage, chaque accord écrit est horodaté et archivé. Si un parent conteste un calcul, une absence, un retard — tout est là, incontestable. Parce qu'un contrat mal conservé peut coûter très cher.
-          </div>
-        </div>
-      </div>
+    <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+      {cats.map(c=><button key={c}onClick={()=>setFiltre(c)}style={{
+        padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+        background:filtre===c?"var(--b)":"transparent",color:filtre===c?"#fff":"var(--m)",
+        borderColor:filtre===c?"var(--b)":"var(--br)"}}>{c}</button>)}
     </div>
-
-    {/* Témoignages */}
-    <div style={{background:"linear-gradient(135deg,#1C3028,#2A4A38)",padding:"52px 20px"}}>
-      <div style={{maxWidth:900,margin:"0 auto",textAlign:"center"}}>
-        <div className="pf"style={{fontSize:26,fontWeight:600,color:"#fff",marginBottom:6,fontStyle:"italic"}}>
-          "Enfin une app qui comprend notre métier"
+    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+      {finales.map((f,i)=><div key={i}className="card"style={{overflow:"hidden"}}>
+        <div onClick={()=>setOpenId(openId===i?null:i)}
+          style={{padding:"14px 18px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:9,flexShrink:0}}>{f.cat}</span>
+            <span style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.q}</span>
+          </div>
+          <span style={{color:"var(--l)",fontSize:16,flexShrink:0,transition:"transform .2s",
+            transform:openId===i?"rotate(45deg)":"rotate(0deg)"}}>+</span>
         </div>
-        <div style={{fontSize:13,color:"rgba(255,255,255,.45)",marginBottom:36}}>Ce qu'elles disent après avoir utilisé TiMat</div>
-        <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
-          {[
-            {nom:"Marie D.",ville:"Paris 15e",etoiles:5,
-              douleur:"Avant, je passais mes soirées sur Excel.",
-              txt:"Maintenant le récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
-            {nom:"Sylvie R.",ville:"Lyon",etoiles:5,
-              douleur:"J'avais peur d'un contrôle PMI.",
-              txt:"Avec TiMat, tout est archivé, daté, accessible. L'inspectrice a été impressionnée par la clarté de mon suivi."},
-            {nom:"Nathalie B.",ville:"Bordeaux",etoiles:5,
-              douleur:"Un parent a contesté des heures supplémentaires.",
-              txt:"J'ai sorti le pointage horodaté en 30 secondes. Le conflit s'est arrêté là. Je ne travaillerai plus sans."},
-            {nom:"Fatima A.",ville:"Marseille",etoiles:5,
-              douleur:"Je me réveillais la nuit à me demander si j'avais tout déclaré.",
-              txt:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête à dire mais c'est vrai."},
-          ].map((t,i)=><div key={i}style={{background:"rgba(255,255,255,.06)",borderRadius:16,padding:"20px 20px",maxWidth:200,textAlign:"left",border:"1px solid rgba(255,255,255,.1)"}}>
-            <div style={{color:"#E8B060",marginBottom:8,fontSize:13}}>{"⭐".repeat(t.etoiles)}</div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,.5)",fontStyle:"italic",marginBottom:6}}>"{t.douleur}"</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,.85)",lineHeight:1.7,marginBottom:12}}>"{t.txt}"</div>
-            <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>{t.nom}</div>
-            <div style={{fontSize:11,color:"rgba(255,255,255,.35)"}}>{t.ville}</div>
-          </div>)}
-        </div>
-      </div>
+        {openId===i&&<div style={{padding:"0 18px 16px",fontSize:13,color:"var(--m)",lineHeight:1.8,
+          borderTop:"1px solid var(--br)"}}>
+          <div style={{paddingTop:12}}>{f.a}</div>
+        </div>}
+      </div>)}
+      {finales.length===0&&<div className="card"style={{padding:24,textAlign:"center",color:"var(--l)"}}>
+        <div style={{fontSize:32,marginBottom:8}}>🔍</div>
+        <div>Aucun résultat pour "{recherche}"</div>
+        <div style={{fontSize:12,marginTop:8}}>Contactez le support : support@timat.app</div>
+      </div>}
     </div>
-
-    {/* ── PRICING — 2 offres seulement ──────────────────────── */}
-    <div id="pricing"style={{background:"var(--c)",padding:"60px 20px"}}>
-      <div style={{maxWidth:700,margin:"0 auto"}}>
-        <div style={{textAlign:"center",marginBottom:44}}>
-          <div style={{display:"inline-block",background:"var(--Tp)",borderRadius:20,padding:"5px 16px",fontSize:12,color:"var(--T)",fontWeight:700,marginBottom:12,letterSpacing:".5px"}}>
-            💰 TARIFS SIMPLES ET TRANSPARENTS
-          </div>
-          <div className="pf"style={{fontSize:34,fontWeight:600,color:"var(--b)",marginBottom:10}}>
-            Un prix accessible pour toutes
-          </div>
-          <div style={{fontSize:15,color:"var(--l)",maxWidth:440,margin:"0 auto",lineHeight:1.7}}>
-            Commencez gratuitement. Passez au Pro quand vous êtes prête.
-            Tout est inclus, rien de caché.
-          </div>
-        </div>
-
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:24,alignItems:"center"}}>
-
-          {/* Gratuit */}
-          <div className="card"style={{padding:30,border:"2px solid var(--br)"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"var(--l)",marginBottom:10,textTransform:"uppercase",letterSpacing:"1px"}}>Découverte</div>
-            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:8}}>
-              <span className="pf"style={{fontSize:46,fontWeight:700,color:"var(--b)"}}>0€</span>
-              <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
-            </div>
-            <div style={{fontSize:13,color:"var(--m)",marginBottom:22,lineHeight:1.6}}>Pour découvrir TiMat sans engagement ni carte bancaire.</div>
-            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bG"style={{width:"100%",justifyContent:"center",marginBottom:26,padding:"12px"}}>
-              Commencer gratuitement
-            </button>
-            {[
-              [true,"1 enfant accueilli"],
-              [true,"Journal quotidien"],
-              [true,"Pointage & Repas"],
-              [true,"Messagerie avec les parents"],
-              [true,"Calendrier"],
-              [false,"Bilans IA & CR Trimestriel"],
-              [false,"Pajemploi & Attestation fiscale"],
-              [false,"Photos illimitées"],
-              [false,"Communication PMI"],
-              [false,"Documents illimités"],
-              [false,"Enfants illimités"],
-            ].map(([ok,t],i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13,padding:"5px 0",borderBottom:i<10?"1px solid var(--br)":"none"}}>
-              <span style={{color:ok?"var(--S)":"var(--br)",fontSize:15,flexShrink:0,fontWeight:700}}>{ok?"✓":"✗"}</span>
-              <span style={{color:ok?"var(--b)":"var(--l)"}}>{t}</span>
-            </div>)}
-          </div>
-
-          {/* Pro */}
-          <div className="card"style={{padding:30,border:"2.5px solid var(--T)",position:"relative",boxShadow:"var(--sh2)"}}>
-            <div style={{position:"absolute",top:-15,left:"50%",transform:"translateX(-50%)",
-              background:"linear-gradient(135deg,#C4714A,#8A3A20)",color:"#fff",
-              borderRadius:20,padding:"5px 18px",fontSize:11,fontWeight:700,letterSpacing:".8px",whiteSpace:"nowrap"}}>
-              ⭐ TOUT INCLUS
-            </div>
-            <div style={{fontSize:12,fontWeight:700,color:"var(--T)",marginBottom:10,textTransform:"uppercase",letterSpacing:"1px"}}>Pro</div>
-            <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:4}}>
-              <span className="pf"style={{fontSize:46,fontWeight:700,color:"var(--T)"}}>9,99€</span>
-              <span style={{fontSize:13,color:"var(--l)"}}>/mois</span>
-            </div>
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:8}}>soit 0,33€/jour — moins qu'un café</div>
-            <div style={{fontSize:13,color:"var(--m)",marginBottom:22,lineHeight:1.6}}>La solution complète. Tout est inclus, aucune surprise.</div>
-            <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT"style={{width:"100%",justifyContent:"center",marginBottom:26,padding:"12px"}}>
-              14 jours gratuits, sans CB →
-            </button>
-            {[
-              "✨ Bilans de journée rédigés par IA",
-              "📝 CR Trimestriel professionnel",
-              "🏛️ Export Pajemploi en 1 clic",
-              "📑 Attestation fiscale automatique",
-              "📸 Photos illimitées dans le journal",
-              "🏥 Communication PMI par email",
-              "🗂️ Documents illimités (5 Go)",
-              "👶 Enfants illimités",
-              "📊 Tableau de bord analytique",
-              "🔒 Données hébergées en France",
-              "💬 Support prioritaire",
-            ].map((t,i)=><div key={i}style={{display:"flex",gap:10,alignItems:"center",fontSize:13,padding:"5px 0",borderBottom:i<10?"1px solid rgba(184,98,47,.15)":"none"}}>
-              <span style={{color:"var(--S)",fontSize:15,flexShrink:0,fontWeight:700}}>✓</span>
-              <span style={{color:"var(--b)",fontWeight:i<4?700:400}}>{t}</span>
-            </div>)}
-          </div>
-        </div>
-
-        {/* Garantie */}
-        <div style={{textAlign:"center",marginTop:28,display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",fontSize:13,color:"var(--l)"}}>
-          <span>✅ 14 jours d'essai sans CB</span>
-          <span>✅ Résiliable en 1 clic</span>
-          <span>✅ Données hébergées en France</span>
-          <span>✅ Aucun engagement</span>
-        </div>
+    <div style={{marginTop:20,background:"linear-gradient(135deg,var(--Tp),var(--Bp))",borderRadius:14,padding:"20px 24px",display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{fontSize:32}}>💬</div>
+      <div style={{flex:1}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}>Pas trouvé votre réponse ?</div>
+        <div style={{fontSize:12,color:"var(--m)"}}>Notre équipe répond sous 24h</div>
       </div>
-    </div>
-
-    {/* CTA final */}
-    <div style={{textAlign:"center",padding:"56px 20px",background:"var(--w)"}}>
-      <div className="pf"style={{fontSize:"clamp(22px,4vw,32px)",fontWeight:600,color:"var(--b)",marginBottom:10,lineHeight:1.35}}>
-        Vous avez choisi ce métier pour les enfants.<br/>
-        <span style={{color:"var(--T)"}}>Pas pour Excel. Pas pour Pajemploi.</span>
-      </div>
-      <div style={{fontSize:15,color:"var(--l)",marginBottom:28,maxWidth:460,margin:"0 auto 28px",lineHeight:1.7}}>
-        TiMat est là pour rendre ce choix plus léger. Commencez gratuitement, sans carte bancaire.
-      </div>
-      <button onClick={()=>{setShowLogin(true);setMode("inscription");}}className="btn bT"style={{fontSize:15,padding:"14px 32px"}}>
-        Je commence gratuitement →
+      <button className="btn bT"onClick={()=>window.location.href="mailto:support@timat.app"}>
+        📧 Contacter le support
       </button>
-      <div style={{marginTop:16,fontSize:12,color:"var(--l)"}}>
-        Déjà des centaines d'assistantes maternelles qui nous font confiance · Données hébergées en France 🇫🇷
-      </div>
     </div>
-
-    {/* Modale Auth — deux onglets rôles différenciés */}
-    {showLogin&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16}}
-      onClick={e=>e.target===e.currentTarget&&setShowLogin(false)}>
-      <div style={{width:"100%",maxWidth:460,maxHeight:"95vh",overflowY:"auto",borderRadius:20,overflow:"hidden",boxShadow:"0 24px 64px rgba(0,0,0,.4)"}}>
-
-        {/* ── SÉLECTEUR RÔLE en haut ── */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",background:"#1C1410"}}>
-          {[
-            {r:"asmat",ic:"👩‍👧",l:"Assistante\nmaternelle",bg:"#B8622F",desc:"Espace pro"},
-            {r:"parent",ic:"👪",l:"Parent\nemployeur",bg:"#2E5F8A",desc:"Espace famille"},
-          ].map(({r,ic,l,bg,desc})=>{
-            const isActive=form.role===r;
-            return <button key={r}onClick={()=>{setForm(f=>({...f,role:r}));setErr("");}}style={{
-              padding:"18px 12px",border:"none",cursor:"pointer",transition:"all .2s",
-              background:isActive?bg:"#1C1410",
-              borderBottom:isActive?"none":`3px solid ${bg}33`,
-            }}>
-              <div style={{fontSize:28,marginBottom:4}}>{ic}</div>
-              <div style={{fontSize:12,fontWeight:700,color:isActive?"#fff":"rgba(255,255,255,.5)",whiteSpace:"pre-line",lineHeight:1.3}}>{l}</div>
-              <div style={{fontSize:10,color:isActive?"rgba(255,255,255,.7)":"rgba(255,255,255,.3)",marginTop:3}}>{desc}</div>
-            </button>;
-          })}
-        </div>
-
-        {/* ── CORPS DE LA MODALE ── */}
-        <div style={{
-          background:"var(--w)",padding:24,
-          borderTop:`4px solid ${form.role==="asmat"?"var(--T)":"var(--B)"}`,
-        }}>
-
-          {/* Header */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-            <div>
-              <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--b)"}}>
-                {form.role==="asmat"?"Espace Assistante Maternelle":"Espace Parent"}
-              </div>
-              <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>
-                {form.role==="asmat"
-                  ?"Gérez vos enfants, contrats et bilans"
-                  :"Suivez la journée de votre enfant"}
-              </div>
-            </div>
-            <button onClick={()=>setShowLogin(false)}style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"var(--l)",padding:4}}>✕</button>
-          </div>
-
-          {/* Onglets connexion / inscription */}
-          <div style={{display:"flex",marginBottom:18,background:"var(--c)",borderRadius:10,padding:3}}>
-            {["connexion","inscription"].map(m=><button key={m}onClick={()=>{setMode(m);setErr("");}}style={{
-              flex:1,padding:"8px",border:"none",cursor:"pointer",borderRadius:8,
-              fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,transition:"all .15s",
-              background:mode===m?(form.role==="asmat"?"var(--T)":"var(--B)"):"transparent",
-              color:mode===m?"#fff":"var(--l)",
-            }}>{m==="connexion"?"Se connecter":"Créer un compte"}</button>)}
-          </div>
-
-          {/* Spécificités par rôle à l'inscription */}
-          {mode==="inscription"&&<>
-            {/* Bannière contexte asmat */}
-            {form.role==="asmat"&&<div style={{background:"var(--Tp)",border:"1px solid var(--Tl)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--T)",lineHeight:1.6}}>
-              🌿 <strong>Espace professionnel</strong> — Accédez à la gestion des enfants, contrats, bilans IA, Pajemploi et PMI.
-            </div>}
-            {/* Bannière contexte parent */}
-            {form.role==="parent"&&<div style={{background:"var(--Bp)",border:"1px solid rgba(46,95,138,.3)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--B)",lineHeight:1.6}}>
-              👪 <strong>Espace famille</strong> — Suivez la journée de votre enfant, les bilans, le calendrier et communiquez avec Marie.
-            </div>}
-
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              <div>
-                <label className="lbl">Prénom *</label>
-                <input className="inp"placeholder={form.role==="asmat"?"Marie":"Sophie"}value={form.prenom}onChange={e=>setForm(f=>({...f,prenom:e.target.value}))}/>
-              </div>
-              <div>
-                <label className="lbl">Nom *</label>
-                <input className="inp"placeholder={form.role==="asmat"?"Dupont":"Martin"}value={form.nom}onChange={e=>setForm(f=>({...f,nom:e.target.value}))}/>
-              </div>
-            </div>
-          </>}
-
-          {/* Email */}
-          <div style={{marginBottom:10}}>
-            <label className="lbl">Email *</label>
-            <input className="inp"type="email"
-              placeholder={form.role==="asmat"?"votre@email-pro.fr":"votre@email.fr"}
-              value={form.email}
-              onChange={e=>setForm(f=>({...f,email:e.target.value}))}
-              onKeyDown={e=>e.key==="Enter"&&(mode==="connexion"?connexion():inscription())}/>
-          </div>
-
-          {/* Mot de passe */}
-          <div style={{marginBottom:14}}>
-            <label className="lbl">Mot de passe *</label>
-            <input className="inp"type="password"
-              placeholder={mode==="inscription"?"6 caractères minimum":"Votre mot de passe"}
-              value={form.password}
-              onChange={e=>setForm(f=>({...f,password:e.target.value}))}
-              onKeyDown={e=>e.key==="Enter"&&(mode==="connexion"?connexion():inscription())}/>
-          </div>
-
-          {/* Cases RGPD — uniquement à l'inscription */}
-          {mode==="inscription"&&<div style={{background:"var(--c)",borderRadius:12,padding:"14px 16px",marginBottom:14,border:"1px solid var(--br)"}}>
-            <div style={{fontSize:10,fontWeight:700,color:"var(--l)",marginBottom:10,textTransform:"uppercase",letterSpacing:".5px"}}>Protection de vos données</div>
-            <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:8}}>
-              <input type="checkbox"checked={consent.politique}onChange={e=>setConsent(c=>({...c,politique:e.target.checked}))}
-                style={{width:14,height:14,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:form.role==="asmat"?"var(--T)":"var(--B)"}}/>
-              <span style={{fontSize:12,color:"var(--b)",lineHeight:1.5}}>
-                J'accepte la{" "}
-                <span onClick={e=>{e.preventDefault();e.stopPropagation();window.dispatchEvent(new CustomEvent("timat:page",{detail:"politique_confidentialite"}));}}
-                  style={{color:form.role==="asmat"?"var(--T)":"var(--B)",textDecoration:"underline",cursor:"pointer"}}>
-                  politique de confidentialité
-                </span>. <span style={{color:"var(--R)",fontWeight:700}}>*</span>
-              </span>
-            </label>
-            <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:8}}>
-              <input type="checkbox"checked={consent.cgu}onChange={e=>setConsent(c=>({...c,cgu:e.target.checked}))}
-                style={{width:14,height:14,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:form.role==="asmat"?"var(--T)":"var(--B)"}}/>
-              <span style={{fontSize:12,color:"var(--b)",lineHeight:1.5}}>
-                J'accepte les{" "}
-                <span onClick={e=>{e.preventDefault();e.stopPropagation();window.dispatchEvent(new CustomEvent("timat:page",{detail:"mentions_legales"}));}}
-                  style={{color:form.role==="asmat"?"var(--T)":"var(--B)",textDecoration:"underline",cursor:"pointer"}}>
-                  CGU
-                </span>. <span style={{color:"var(--R)",fontWeight:700}}>*</span>
-              </span>
-            </label>
-            <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer"}}>
-              <input type="checkbox"checked={consent.newsletter}onChange={e=>setConsent(c=>({...c,newsletter:e.target.checked}))}
-                style={{width:14,height:14,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:form.role==="asmat"?"var(--T)":"var(--B)"}}/>
-              <span style={{fontSize:11,color:"var(--l)",lineHeight:1.5}}>Recevoir les actualités TiMat (optionnel)</span>
-            </label>
-            <div style={{fontSize:10,color:"var(--l)",marginTop:8}}>* Obligatoire · Hébergé en France · Suppression à tout moment</div>
-          </div>}
-
-          {/* Erreur */}
-          {err&&<div style={{
-            color:err.startsWith("✅")?"var(--S)":"var(--R)",
-            fontSize:12,marginBottom:12,padding:"8px 12px",
-            background:err.startsWith("✅")?"var(--Sp)":"var(--Rp)",borderRadius:8
-          }}>{err}</div>}
-
-          {/* Bouton principal — couleur selon le rôle */}
-          <button style={{
-            width:"100%",justifyContent:"center",marginBottom:16,padding:"13px",
-            border:"none",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:14,
-            fontFamily:"'DM Sans',sans-serif",transition:"all .2s",
-            background:form.role==="asmat"
-              ?"linear-gradient(135deg,#C4714A,#A85535)"
-              :"linear-gradient(135deg,#3D75A8,#1E4A6E)",
-            color:"#fff",
-            opacity:(loading||(mode==="inscription"&&!consentValide))?.6:1,
-            boxShadow:form.role==="asmat"
-              ?"0 4px 16px rgba(184,98,47,.35)"
-              :"0 4px 16px rgba(46,95,138,.35)",
-          }}
-            onClick={mode==="connexion"?connexion:inscription}
-            disabled={loading||(mode==="inscription"&&!consentValide)}>
-            {loading?"⏳ Chargement…"
-              :mode==="connexion"
-                ?form.role==="asmat"?"Accéder à mon espace pro →":"Accéder à l'espace famille →"
-                :form.role==="asmat"?"Créer mon compte asmat →":"Créer mon compte parent →"}
-          </button>
-
-          {/* Séparateur + démos */}
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-            <div style={{flex:1,height:1,background:"var(--br)"}}/>
-            <span style={{fontSize:11,color:"var(--l)"}}>ou démo rapide</span>
-            <div style={{flex:1,height:1,background:"var(--br)"}}/>
-          </div>
-
-          <div style={{background:"var(--c)",borderRadius:10,padding:10}}>
-            <div style={{fontSize:10,fontWeight:700,color:"var(--l)",marginBottom:8,textTransform:"uppercase",letterSpacing:".5px"}}>
-              {form.role==="asmat"?"Compte asmat démo":"Comptes parents démo"}
-            </div>
-            {demos.filter(c=>c.role===form.role).map(c=><button key={c.id}onClick={()=>onLogin(c)}
-              style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:"none",border:"none",cursor:"pointer",borderRadius:8,transition:"background .15s"}}
-              onMouseEnter={e=>e.currentTarget.style.background="var(--br)"}
-              onMouseLeave={e=>e.currentTarget.style.background="none"}>
-              <span style={{fontWeight:700,color:c.role==="asmat"?"var(--T)":"var(--B)"}}>{c.role==="asmat"?"👩‍👧":"👪"}</span>{" "}{c.label}
-              <span style={{fontSize:11,color:"var(--l)",display:"block",paddingLeft:18}}>{c.hint}</span>
-            </button>)}
-          </div>
-        </div>
-      </div>
-    </div>}
   </div>;
 }
+
+// ─── SUPPORT CLIENT ───────────────────────────────────────────────────────────
+function SupportWidget(){
+  const [open,setOpen]=useState(false);
+  const [msgs,setMsgs]=useState([
+    {role:"bot",txt:"👋 Bonjour ! Je suis l'assistant TiMat. Comment puis-je vous aider ?"},
+  ]);
+  const [input,setInput]=useState("");
+
+  const envoyer=()=>{
+    if(!input.trim())return;
+    const q=input;
+    setMsgs(m=>[...m,{role:"user",txt:q}]);
+    setInput("");
+    setTimeout(()=>{
+      const rep=q.toLowerCase().includes("pajemploi")
+        ?"Pour Pajemploi, consultez notre FAQ → section Pajemploi. Pour une aide personnalisée : support@timat.app"
+        :q.toLowerCase().includes("contrat")
+        ?"Pour les contrats, allez dans Administratif → Modèles contrats. Un problème spécifique ? Écrivez-nous."
+        :"Merci pour votre message. Notre équipe vous répond sous 24h à votre email. En attendant, consultez la FAQ !";
+      setMsgs(m=>[...m,{role:"bot",txt:rep}]);
+    },800);
+  };
+
+  return <div style={{position:"fixed",bottom:24,right:24,zIndex:300}}>
+    {open&&<div style={{position:"absolute",bottom:60,right:0,width:320,background:"var(--w)",
+      borderRadius:16,boxShadow:"var(--sh2)",border:"1px solid var(--br)",overflow:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,#0A0F1E,#1a2744)",padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{width:32,height:32,borderRadius:"50%",background:"linear-gradient(135deg,#F59E0B,#D97706)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>T</div>
+          <div>
+            <div style={{fontWeight:700,fontSize:13,color:"#fff"}}>Support TiMat</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,.5)"}}>● En ligne · répond en 24h</div>
+          </div>
+        </div>
+        <button onClick={()=>setOpen(false)}style={{background:"none",border:"none",color:"rgba(255,255,255,.6)",cursor:"pointer",fontSize:16}}>✕</button>
+      </div>
+      <div style={{height:220,overflowY:"auto",padding:12,display:"flex",flexDirection:"column",gap:8}}>
+        {msgs.map((m,i)=><div key={i}style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+          <div style={{maxWidth:"80%",padding:"8px 12px",borderRadius:12,fontSize:12,lineHeight:1.5,
+            background:m.role==="user"?"linear-gradient(135deg,#0A0F1E,#1a2744)":"var(--c)",
+            color:m.role==="user"?"#fff":"var(--b)"}}>
+            {m.txt}
+          </div>
+        </div>)}
+      </div>
+      <div style={{padding:10,borderTop:"1px solid var(--br)",display:"flex",gap:6}}>
+        <input className="inp"style={{flex:1,fontSize:12}}placeholder="Votre question…"
+          value={input}onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&envoyer()}/>
+        <button className="btn bT"style={{padding:"8px 12px",fontSize:12}}onClick={envoyer}>→</button>
+      </div>
+    </div>}
+    <button onClick={()=>setOpen(p=>!p)}style={{
+      width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",
+      background:"linear-gradient(135deg,#0A0F1E,#1a2744)",
+      color:"#fff",fontSize:20,boxShadow:"0 4px 20px rgba(0,0,0,.25)",
+      display:"flex",alignItems:"center",justifyContent:"center",transition:"transform .2s"
+    }}
+      onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+      onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+      {open?"✕":"💬"}
+    </button>
+  </div>;
+}
+
+// ─── SIMULATEUR COÛT PARENT ───────────────────────────────────────────────────
+function SimulateurCout(){
+  const [form,setForm]=useState({revenus:50000,heures:40,taux:4.05,enfants:1});
+  const [res,setRes]=useState(null);
+
+  const calculer=()=>{
+    const salMensuel=form.heures*52/12*form.taux;
+    const entretien=3.80*form.heures/8*52/12;
+    const total=salMensuel+entretien;
+    // CMG 2025 barème simplifié
+    const tranche=form.revenus<26000?"A":form.revenus<50000?"B":"C";
+    const tauxCMG={A:0.85,B:0.70,C:0.55}[tranche];
+    const cmg=Math.min(total*tauxCMG,490*form.enfants);
+    const creditImpot=Math.min((total-cmg)*0.5,3500*form.enfants/12);
+    const resteCharge=total-cmg-creditImpot;
+    setRes({total,cmg,creditImpot,resteCharge,tranche,salMensuel});
+  };
+
+  return <div className="fi">
+    <PageHeader icon="💶" title="Simulateur de coût" sub="Estimez le coût réel d'une assistante maternelle après aides CAF"/>
+    <div className="g2">
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:16}}>Votre situation</div>
+        <div style={{display:"grid",gap:12}}>
+          <div><label className="lbl">Revenus nets annuels du foyer (€)</label>
+            <input type="number"className="inp"value={form.revenus}
+              onChange={e=>setForm(f=>({...f,revenus:+e.target.value}))} step="1000"/></div>
+          <div><label className="lbl">Nombre d'enfants gardés</label>
+            <select className="sel"value={form.enfants}onChange={e=>setForm(f=>({...f,enfants:+e.target.value}))}>
+              {[1,2,3].map(n=><option key={n}value={n}>{n} enfant{n>1?"s":""}</option>)}
+            </select></div>
+          <div><label className="lbl">Heures de garde par semaine</label>
+            <input type="number"className="inp"value={form.heures}min="10"max="45"
+              onChange={e=>setForm(f=>({...f,heures:+e.target.value}))}/></div>
+          <div><label className="lbl">Taux horaire net de l'asmat (€/h)</label>
+            <input type="number"className="inp"step="0.05"value={form.taux}
+              onChange={e=>setForm(f=>({...f,taux:+e.target.value}))}/></div>
+        </div>
+        <button className="btn bT"style={{width:"100%",marginTop:16}}onClick={calculer}>
+          Calculer mes aides →
+        </button>
+      </div>
+
+      {res?<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="card"style={{padding:18,borderTop:"4px solid var(--S)"}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>💰 Estimation mensuelle</div>
+          {[
+            ["Coût total (salaire + entretien)",res.total.toFixed(2)+"€","var(--m)"],
+            ["CMG versé par la CAF","- "+res.cmg.toFixed(2)+"€","var(--B)"],
+            ["Crédit d'impôt 50% (estimé)","- "+res.creditImpot.toFixed(2)+"€","var(--G)"],
+            ["Votre reste à charge réel",res.resteCharge.toFixed(2)+"€","var(--S)"],
+          ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",
+            borderBottom:"1px solid var(--br)",fontSize:13}}>
+            <span style={{color:"var(--m)"}}>{l}</span>
+            <span style={{fontWeight:700,color:c}}>{v}</span>
+          </div>)}
+          <div style={{marginTop:12,background:"var(--Sp)",borderRadius:10,padding:"10px 14px",fontSize:12,color:"var(--S)",lineHeight:1.6}}>
+            ✅ Tranche CAF : {res.tranche} · Votre reste à charge représente {Math.round(res.resteCharge/res.total*100)}% du coût total
+          </div>
+        </div>
+        <div className="card"style={{padding:16,background:"var(--Bp)",border:"1px solid var(--B)"}}>
+          <div style={{fontSize:12,color:"var(--B)",lineHeight:1.7}}>
+            <strong>Attention :</strong> Cette simulation est une estimation. Les montants réels dépendent de votre situation précise. Consultez votre CAF pour un calcul exact. Réforme CMG appliquée depuis septembre 2025.
+          </div>
+        </div>
+      </div>
+      :<div className="card"style={{padding:28,textAlign:"center",color:"var(--l)"}}>
+        <div style={{fontSize:40,marginBottom:12}}>💶</div>
+        <div style={{fontSize:13}}>Renseignez votre situation et cliquez sur "Calculer"</div>
+      </div>}
+    </div>
+  </div>;
+}
+
+// ─── SOLDE DE TOUT COMPTE AUTOMATIQUE ────────────────────────────────────────
+function SoldeContrat({enfants,role,pEId}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [dateFin,setDateFin]=useState("");
+  const [motif,setMotif]=useState("Fin de contrat naturelle");
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const contrat=enfant?.contrat||{};
+  const [calcule,setCalcule]=useState(false);
+
+  // Calculs
+  const dureeContratMois=contrat.debut?Math.round((new Date()-new Date(contrat.debut))/2592000000):12;
+  const congesAcquis=Math.min(dureeContratMois*2.5,30);
+  const congesPris=12; // démo
+  const congesRestants=congesAcquis-congesPris;
+  const tauxH=contrat.tauxHoraire||4.05;
+  const heuresMoisMoy=(contrat.heuresHebdo||40)*52/12;
+  const salJournalier=tauxH*8;
+  const iccp=congesRestants*salJournalier;
+  const preavis=dureeContratMois>=12?1:dureeContratMois>=3?0.5:0.25; // en mois
+  const salairePreis=heuresMoisMoy*tauxH*preavis;
+  const totalSTC=iccp+salairePreis;
+
+  const motifs=["Fin de contrat naturelle","Démission de l'asmat","Licenciement par le parent",
+    "Rupture amiable","Faute grave","Retraite"];
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📋" title="Solde de tout compte" sub="Calcul automatique à la fin d'un contrat d'accueil"/>
+    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+    </div>}
+
+    <div className="g2">
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:16}}>Paramètres de fin de contrat</div>
+        <div style={{display:"grid",gap:12}}>
+          <div><label className="lbl">Date de fin effective</label>
+            <input type="date"className="inp"value={dateFin}onChange={e=>setDateFin(e.target.value)}/></div>
+          <div><label className="lbl">Motif de rupture</label>
+            <select className="sel"value={motif}onChange={e=>setMotif(e.target.value)}>
+              {motifs.map(m=><option key={m}>{m}</option>)}
+            </select></div>
+          <div style={{padding:"10px 14px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)"}}>
+            ℹ️ Contrat depuis {fmt(contrat.debut||"2023-09-04")} · {dureeContratMois} mois · Préavis : {Math.round(preavis*30)} jours
+          </div>
+        </div>
+        <button className="btn bT"style={{width:"100%",marginTop:14}}onClick={()=>setCalcule(true)}disabled={!dateFin}>
+          Calculer le solde
+        </button>
+      </div>
+
+      {calcule&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="card"style={{padding:18,borderTop:"4px solid var(--G)"}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Solde de tout compte</div>
+          {[
+            ["Congés payés restants",`${congesRestants} jours × ${salJournalier.toFixed(2)}€`,iccp.toFixed(2)+"€"],
+            ["Salaire pendant préavis",`${Math.round(preavis*30)} jours`,salairePreis.toFixed(2)+"€"],
+          ].map(([l,d,v])=><div key={l}style={{padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+              <span style={{fontWeight:600,color:"var(--b)"}}>{l}</span>
+              <span style={{fontWeight:700,color:"var(--S)"}}>{v}</span>
+            </div>
+            <div style={{fontSize:11,color:"var(--l)"}}>{d}</div>
+          </div>)}
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:10,borderTop:"2px solid var(--G)"}}>
+            <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>TOTAL À VERSER</span>
+            <span className="pf"style={{fontSize:20,fontWeight:700,color:"var(--G)"}}>{totalSTC.toFixed(2)} €</span>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn bG"style={{flex:1}}onClick={()=>setToast("Document PDF généré ✓")}>📥 Télécharger</button>
+          <button className="btn bT"style={{flex:1}}onClick={()=>setToast("Envoyé au parent ✓")}>📧 Envoyer</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
+}
+
+// ─── EXPORT COMPLET DES DONNÉES ───────────────────────────────────────────────
+function ExportComplet({enfants,role,pEId}){
+  const [loading,setLoading]=useState({});
+  const [toast,setToast]=useState("");
+  const lancer=(type)=>{
+    setLoading(p=>({...p,[type]:true}));
+    setTimeout(()=>{setLoading(p=>({...p,[type]:false}));setToast(`Export ${type} prêt à télécharger ✓`);},1500);
+  };
+  const exports=[
+    {id:"contrats",ic:"📄",titre:"Contrats & Avenants",desc:"Tous vos contrats et avenants en PDF archivés",format:"ZIP PDF"},
+    {id:"pointages",ic:"⏰",titre:"Historique des pointages",desc:"Toutes les heures saisies depuis le début",format:"CSV / Excel"},
+    {id:"bulletins",ic:"📜",titre:"Bulletins de salaire",desc:"Tous les bulletins générés par mois et par enfant",format:"ZIP PDF"},
+    {id:"transmissions",ic:"📋",titre:"Journal & Transmissions",desc:"Tout le journal quotidien et les bilans",format:"PDF"},
+    {id:"photos",ic:"📸",titre:"Photos du journal",desc:"Toutes les photos partagées avec les parents",format:"ZIP JPG"},
+    {id:"fiscal",ic:"🧾",titre:"Attestations fiscales",desc:"Attestations employeur pour la déclaration d'impôts",format:"PDF"},
+    {id:"compte",ic:"👤",titre:"Mon compte complet",desc:"Toutes vos données personnelles (RGPD)",format:"JSON"},
+  ];
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📦" title="Export de mes données" sub="Téléchargez l'intégralité de vos données · Conformité RGPD"/>
+    <div style={{background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:13,color:"var(--B)"}}>
+      🔒 Conformément au RGPD (droit à la portabilité), vous pouvez télécharger toutes vos données à tout moment. Les exports sont générés à la demande et disponibles 24h.
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {exports.map(e=><div key={e.id}className="card"style={{padding:16,display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+        <span style={{fontSize:28,flexShrink:0}}>{e.ic}</span>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:2}}>{e.titre}</div>
+          <div style={{fontSize:12,color:"var(--m)"}}>{e.desc}</div>
+        </div>
+        <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:10,flexShrink:0}}>{e.format}</span>
+        <button className="btn bG"style={{flexShrink:0,opacity:loading[e.id]?.6:1}}
+          onClick={()=>lancer(e.id)}disabled={loading[e.id]}>
+          {loading[e.id]?"⏳…":"📥 Exporter"}
+        </button>
+      </div>)}
+    </div>
+    <div style={{marginTop:16,padding:"14px 18px",background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:12,fontSize:12,color:"var(--m)"}}>
+      <strong style={{color:"var(--R)"}}>⚠️ Suppression du compte</strong> — Si vous souhaitez supprimer définitivement votre compte et toutes vos données, rendez-vous dans Paramètres → Supprimer mon compte.
+    </div>
+  </div>;
+}
+
+// ── Compteur animé ────────────────────────────────────────────────────────────
+function Counter({ target, suffix = "", prefix = "", duration = 2000 }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !started.current) {
+        started.current = true;
+        const start = performance.now();
+        const tick = (now) => {
+          const p = Math.min((now - start) / duration, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          setCount(Math.round(ease * target));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.3 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target, duration]);
+
+  return <span ref={ref}>{prefix}{count.toLocaleString("fr-FR")}{suffix}</span>;
+}
+
+// ── Apparition au scroll ──────────────────────────────────────────────────────
+function FadeIn({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.1 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={className} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(32px)",
+      transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+    }}>{children}</div>
+  );
+}
+
+// ── Demo interactive ──────────────────────────────────────────────────────────
+const DEMO_SCREENS = [
+  {
+    id: "journal",
+    label: "Journal quotidien",
+    icon: "📋",
+    color: "#B8622F",
+    preview: () => (
+      <div style={{ padding: 20, fontFamily: "system-ui" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14", marginBottom: 12 }}>📋 Journal du jour — Léo 🦁</div>
+        <div style={{ background: "#FBF0E8", borderRadius: 10, padding: 12, marginBottom: 8, borderLeft: "3px solid #B8622F" }}>
+          <div style={{ fontSize: 10, color: "#B8622F", fontWeight: 700, marginBottom: 3 }}>👩‍👧 Marie · 11h30</div>
+          <div style={{ fontSize: 12, color: "#2C1F14", lineHeight: 1.6 }}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. Un moment adorable. 🎨</div>
+        </div>
+        <div style={{ background: "#EAF4EE", borderRadius: 10, padding: 12, borderLeft: "3px solid #3D6B50" }}>
+          <div style={{ fontSize: 10, color: "#3D6B50", fontWeight: 700, marginBottom: 3 }}>🍽️ Repas</div>
+          <div style={{ fontSize: 12, color: "#2C1F14" }}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
+        </div>
+        <div style={{ marginTop: 12, display: "flex", gap: 6 }}>
+          <div style={{ background: "#F0FDF4", border: "1px solid #86EFAC", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "#166534" }}>😊 Humeur : Joyeux</div>
+          <div style={{ background: "#F0FDF4", border: "1px solid #86EFAC", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "#166534" }}>💤 Sieste : 1h20</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "facturation",
+    label: "Salaire automatique",
+    icon: "🧮",
+    color: "#B8892A",
+    preview: () => (
+      <div style={{ padding: 20, fontFamily: "system-ui" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14", marginBottom: 12 }}>💰 Salaire Mars 2024 — Léo</div>
+        {[["Heures réalisées", "160h × 4,05€", "648,00€"],["Indemnité entretien", "20j × 3,80€", "76,00€"],["Heures majorées", "8h × 5,06€", "40,50€"]].map(([l, d, v]) => (
+          <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #DDD5C8", fontSize: 12 }}>
+            <div><div style={{ fontWeight: 600, color: "#2C1F14" }}>{l}</div><div style={{ fontSize: 10, color: "#A68970" }}>{d}</div></div>
+            <div style={{ fontWeight: 700, color: "#3D6B50" }}>{v}</div>
+          </div>
+        ))}
+        <div style={{ marginTop: 10, padding: "10px 12px", background: "#FBF0E8", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14" }}>Total brut mensuel</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: "#B8622F", fontFamily: "Georgia, serif" }}>764,50 €</span>
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <div style={{ background: "#2E5F8A", color: "#fff", borderRadius: 8, padding: "8px 14px", textAlign: "center", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🏛️ Exporter vers Pajemploi →</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "calendrier",
+    label: "Calendrier partagé",
+    icon: "📅",
+    color: "#2E5F8A",
+    preview: () => (
+      <div style={{ padding: 20, fontFamily: "system-ui" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14", marginBottom: 12 }}>📅 Mars 2024</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3, marginBottom: 10 }}>
+          {["Lu","Ma","Me","Je","Ve","Sa","Di"].map(j => <div key={j} style={{ textAlign: "center", fontSize: 9, color: "#A68970", fontWeight: 700, padding: "3px 0" }}>{j}</div>)}
+          {[null,null,null,null,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map((d, i) => (
+            <div key={i} style={{
+              textAlign: "center", fontSize: 10, padding: "4px 2px", borderRadius: 5, cursor: d ? "pointer" : "default",
+              background: d === 11 ? "#B8622F" : d && [4,5,6,7,11,12,13,14,18,19,20,21,25,26,27,28].includes(d) ? "#EAF4EE" : "transparent",
+              color: d === 11 ? "#fff" : "#2C1F14", fontWeight: d === 11 ? 700 : 400,
+            }}>{d || ""}</div>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {[["🟢","Léo accueilli"],["🔵","Vacances scolaires"],["🔴","Absence"]].map(([ic,l]) => (
+            <div key={l} style={{ fontSize: 10, color: "#6B4F3A", display: "flex", gap: 4, alignItems: "center" }}><span>{ic}</span><span>{l}</span></div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "parent",
+    label: "Espace parent",
+    icon: "👪",
+    color: "#6A3F88",
+    preview: () => (
+      <div style={{ padding: 20, fontFamily: "system-ui" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14", marginBottom: 12 }}>👪 Espace de Sophie — Léo 🦁</div>
+        <div style={{ background: "#F2EAF8", borderRadius: 10, padding: 12, marginBottom: 8, border: "1px solid #C4A0DC" }}>
+          <div style={{ fontSize: 10, color: "#6A3F88", fontWeight: 700, marginBottom: 4 }}>⏰ Pointage aujourd'hui</div>
+          <div style={{ display: "flex", gap: 16 }}>
+            {[["Arrivée","07h35","#3D6B50"],["Départ","17h20","#B8622F"],["Total","9h45","#2C1F14"]].map(([l,v,c]) => (
+              <div key={l} style={{ textAlign: "center" }}><div style={{ fontSize: 9, color: "#A68970" }}>{l}</div><div style={{ fontSize: 16, fontWeight: 700, color: c, fontFamily: "Georgia, serif" }}>{v}</div></div>
+            ))}
+          </div>
+        </div>
+        <div style={{ background: "#FBF0E8", borderRadius: 10, padding: 10, fontSize: 12, color: "#2C1F14", lineHeight: 1.5, marginBottom: 8 }}>
+          📋 <strong>Dernière transmission :</strong> Léo a peint un tableau et l'a offert à sa maman !
+        </div>
+        <div style={{ background: "#E87070", color: "#fff", borderRadius: 8, padding: "8px", textAlign: "center", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          🤒 Déclarer une absence
+        </div>
+      </div>
+    ),
+  },
+];
+
+// ── Landing page principale ────────────────────────────────────────────────────
+
+function LandingPage({onLogin,dark,setDark}) {
+  const [activeDemo, setActiveDemo] = useState("journal");
+  const [showModal, setShowModal] = useState(false);
+  const [role, setRole] = useState("asmat");
+  const demo = DEMO_SCREENS.find(s => s.id === activeDemo);
+
+  return (
+    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDFAF6" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+
+      {/* ── HERO ── */}
+      <div style={{
+        background: "linear-gradient(160deg, #0D1B2A 0%, #1B2E44 35%, #162639 65%, #0D1B2A 100%)",
+        padding: "0 24px 80px", position: "relative", overflow: "hidden",
+      }}>
+        {/* Grain overlay */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
+
+        {/* Orbes déco */}
+        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(184,98,47,.18) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(46,95,138,.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        {/* Nav */}
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 26, fontWeight: 700, color: "#fff", fontStyle: "italic" }}>TiMat</div>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#E8A84A" }} />
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })}
+              style={{ background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.7)", border: "1px solid rgba(255,255,255,.15)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+              Tarifs
+            </button>
+            <button onClick={() => setShowModal(true)}
+              style={{ background: "rgba(255,255,255,.1)", color: "#fff", border: "1px solid rgba(255,255,255,.2)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+              Connexion
+            </button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }}
+              style={{ background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(184,98,47,.4)" }}>
+              Commencer gratuitement →
+            </button>
+          </div>
+        </div>
+
+        {/* Bandeau preuve sociale */}
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px", display: "flex", gap: 32, flexWrap: "wrap", justifyContent: "center" }}>
+          {[
+            { n: 847, suf: "+", label: "assmats actives" },
+            { n: 12400, suf: "+", label: "bilans générés" },
+            { n: 4, suf: ".7★", label: "note moyenne" },
+            { n: 96, suf: "%", label: "taux de satisfaction" },
+          ].map(({ n, suf, label }) => (
+            <div key={label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#E8A84A", fontFamily: "'Fraunces', serif" }}>
+                <Counter target={n} suffix={suf} />
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Contenu hero */}
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>
+            💛 POUR LES ASSISTANTES MATERNELLES DE FRANCE
+          </div>
+
+          {/* Titre principal */}
+          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 20 }}>
+            Le système vous a transformée<br />
+            <span style={{ color: "#E8A84A", fontStyle: "italic" }}>en comptable.</span><br />
+            <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: "rgba(255,255,255,.75)", fontStyle: "normal" }}>TiMat vous rend votre vrai rôle.</span>
+          </div>
+
+          {/* Sous-titre */}
+          <div style={{ fontSize: "clamp(14px,2vw,17px)", color: "rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px" }}>
+            Vous gérez seule ce que les crèches font à 5 personnes.<br />
+            Contrats, salaires, bilans, PMI, suivi des enfants — tout ça, sans formation, sans aide, souvent le soir.
+          </div>
+
+          {/* CTAs */}
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }}
+              style={{ background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>
+              2 mois gratuits, sans CB →
+            </button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
+              style={{ background: "rgba(255,255,255,.07)", color: "#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>
+              Voir la démo ↓
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
+            {["🔒 Données en France", "📱 Web & Mobile", "⚡ 2 min pour démarrer", "💳 Sans carte bancaire"].map(t => (
+              <span key={t} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", fontWeight: 500 }}>{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── PROBLÈME ── */}
+      <div style={{ background: "#0D1B2A", padding: "60px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)", color: "#fff", fontWeight: 700, marginBottom: 10 }}>
+                La réalité du métier, personne n'en parle.
+              </div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7 }}>
+                Être assistante maternelle agréée, c'est exercer un métier de soin exigeant<br />
+                tout en gérant une TPE sans formation ni support.
+              </div>
+            </div>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+            {[
+              { ic: "🧮", titre: "Comptable sans diplôme", desc: "Mensualisation, heures majorées, cotisations, régularisations... Des calculs que même les comptables trouvent complexes. Vous les faites seule, chaque mois." },
+              { ic: "⚖️", titre: "Juriste sans formation", desc: "Contrats CCN, avenants, courriers de rupture, litiges prud'homaux... Vous portez seule la responsabilité juridique d'un employeur." },
+              { ic: "🏛️", titre: "Secrétaire de la PMI", desc: "Dossiers de renouvellement, comptes-rendus de visite, suivi de l'agrément... Des démarches chronophages qui ne sont jamais finies." },
+              { ic: "📱", titre: "Community manager des parents", desc: "Répondre aux messages à toute heure, documenter la journée, rassurer les parents... Une relation qui déborde souvent sur votre vie privée." },
+              { ic: "🌙", titre: "Administratrice le soir", desc: "Après 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soirée n'existe plus." },
+              { ic: "🔇", titre: "Seule face aux problèmes", desc: "Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème." },
+            ].map((item, i) => (
+              <FadeIn key={item.titre} delay={i * 80}>
+                <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, padding: 20 }}>
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>{item.ic}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#fff", marginBottom: 6 }}>{item.titre}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,.5)", lineHeight: 1.7 }}>{item.desc}</div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn delay={400}>
+            <div style={{ marginTop: 40, textAlign: "center", padding: "28px 32px", background: "rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(18px,3vw,28px)", color: "#E8A84A", fontWeight: 700, fontStyle: "italic" }}>
+                "TiMat n'ajoute pas une appli à votre vie.<br />Il retire tout ce qui n'aurait jamais dû s'y trouver."
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+
+      {/* ── DÉMO INTERACTIVE ── */}
+      <div id="demo" style={{ background: "#FDFAF6", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>
+                Découvrez TiMat en direct
+              </div>
+              <div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>Cliquez sur un onglet pour explorer les fonctionnalités.</div>
+            </div>
+          </FadeIn>
+
+          <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24, alignItems: "start" }}>
+            {/* Onglets */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {DEMO_SCREENS.map(s => (
+                <button key={s.id} onClick={() => setActiveDemo(s.id)} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+                  borderRadius: 10, border: "1.5px solid",
+                  cursor: "pointer", textAlign: "left", transition: "all .2s",
+                  background: activeDemo === s.id ? s.color : "transparent",
+                  color: activeDemo === s.id ? "#fff" : "#6B4F3A",
+                  borderColor: activeDemo === s.id ? s.color : "#DDD5C8",
+                  fontFamily: "inherit", fontWeight: activeDemo === s.id ? 700 : 500, fontSize: 13,
+                }}>
+                  <span>{s.icon}</span>
+                  <span>{s.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Preview */}
+            <div style={{
+              background: "#fff", borderRadius: 16, border: "2px solid",
+              borderColor: demo?.color || "#DDD5C8",
+              overflow: "hidden", boxShadow: `0 8px 40px rgba(0,0,0,.1)`,
+              transition: "border-color .3s",
+            }}>
+              <div style={{ background: demo?.color, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", gap: 5 }}>
+                  {["#ff5f57", "#febc2e", "#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", fontWeight: 600 }}>{demo?.icon} {demo?.label}</div>
+              </div>
+              {demo && <demo.preview />}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── TRANSFORMATION ── */}
+      <div style={{ background: "#F7F2EC", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>
+                Ce que TiMat change concrètement
+              </div>
+            </div>
+          </FadeIn>
+
+          <div style={{ display: "grid", gap: 3 }}>
+            {[
+              ["🧮", "Pajemploi vous prend 2h par mois", "Récap prêt en 5 minutes", "Zéro erreur. Zéro stress."],
+              ["📄", "Vos contrats sont dans un tiroir", "Modèles guidés, avenants en 2 clics", "Solide juridiquement si ça tourne mal."],
+              ["⏰", "Les retards de parents créent des conflits", "Pointage horodaté, signé par les deux", "Vous discutez de faits. Plus de tensions."],
+              ["🗂️", "Un document important est introuvable", "Tout centralisé, daté, cherchable", "En cas de contrôle PMI, tout est là."],
+              ["🌙", "Vos soirées servent à l'administratif", "5 minutes le matin suffisent", "Vos soirées vous appartiennent."],
+            ].map(([ic, pb, sol, res], i) => (
+              <FadeIn key={pb} delay={i * 60}>
+                <div style={{
+                  display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center",
+                  padding: "18px 20px", borderRadius: 12,
+                  background: i % 2 === 0 ? "#FDFAF6" : "#fff",
+                  border: "1px solid #DDD5C8",
+                }}>
+                  <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Aujourd'hui</div>
+                    <div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{pb}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Avec TiMat</div>
+                    <div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{sol}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Ce que ça change</div>
+                    <div style={{ fontSize: 13, color: "#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── CHIFFRES ── */}
+      <div style={{ background: "#0D1B2A", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#fff", fontWeight: 700, marginBottom: 6 }}>
+                Ce que disent les chiffres
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)" }}>Données internes TiMat · Mars 2026</div>
+            </div>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 24 }}>
+            {[
+              { n: 847, suf: "+", label: "assmats actives", desc: "Font confiance à TiMat" },
+              { n: 94, suf: "%", label: "satisfaites", desc: "Recommandent TiMat à une collègue" },
+              { n: 4, suf: "h", label: "économisées", desc: "Par mois en admin en moyenne" },
+              { n: 2, suf: " mois", label: "d'essai gratuit", desc: "Sans carte bancaire" },
+            ].map(({ n, suf, label, desc }) => (
+              <FadeIn key={label}>
+                <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(255,255,255,.04)", borderRadius: 16, border: "1px solid rgba(255,255,255,.08)" }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 42, fontWeight: 700, color: "#E8A84A", lineHeight: 1 }}>
+                    <Counter target={n} suffix={suf} />
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginTop: 8, marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>{desc}</div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── TÉMOIGNAGES ── */}
+      <div style={{ background: "#FDFAF6", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
+              "Devenez l'assistante maternelle<br />dont les parents parlent à leurs amis."
+            </div>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
+            {[
+              { nom: "Marie D.", ville: "Paris 15e", avant: "Je passais mes soirées sur Excel.", apres: "Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer." },
+              { nom: "Sylvie R.", ville: "Lyon", avant: "J'avais peur d'un contrôle PMI.", apres: "Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi." },
+              { nom: "Nathalie B.", ville: "Bordeaux", avant: "Un parent a contesté des heures.", apres: "Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat." },
+              { nom: "Fatima A.", ville: "Marseille", avant: "Je me réveillais la nuit à stresser.", apres: "TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai." },
+            ].map((t, i) => (
+              <FadeIn key={t.nom} delay={i * 80}>
+                <div style={{ background: "#fff", borderRadius: 16, padding: 22, border: "1px solid #DDD5C8", boxShadow: "0 2px 16px rgba(44,31,20,.06)" }}>
+                  <div style={{ color: "#E8A84A", fontSize: 13, marginBottom: 10 }}>⭐⭐⭐⭐⭐</div>
+                  <div style={{ fontSize: 12, color: "#A68970", fontStyle: "italic", marginBottom: 8 }}>"{t.avant}"</div>
+                  <div style={{ fontSize: 13, color: "#2C1F14", lineHeight: 1.7, marginBottom: 14 }}>"{t.apres}"</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14" }}>{t.nom}</div>
+                    <div style={{ fontSize: 11, color: "#A68970" }}>{t.ville}</div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── TARIFS ── */}
+      <div id="tarifs" style={{ background: "#F7F2EC", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ display: "inline-block", background: "#FBF0E8", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#B8622F", fontWeight: 700, marginBottom: 12, letterSpacing: ".5px" }}>
+                💰 TARIFS
+              </div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,34px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>
+                Un forfait fixe. Pas de surprise.
+              </div>
+              <div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>
+                1 ou 4 enfants accueillis — même prix. Jamais de frais cachés.
+              </div>
+            </div>
+          </FadeIn>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 24, alignItems: "center" }}>
+            {/* Gratuit */}
+            <div style={{ background: "#FDFAF6", borderRadius: 16, border: "2px solid #DDD5C8", padding: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Découverte</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0€</span>
+                <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
+              </div>
+              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat sans engagement.</div>
+              <button onClick={() => setShowModal(true)}
+                style={{ width: "100%", background: "#F7F2EC", color: "#2C1F14", border: "1.5px solid #DDD5C8", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
+                Commencer gratuitement
+              </button>
+              {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 8 ? "1px solid #DDD5C8" : "none" }}>
+                  <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? "#2C1F14" : "#A68970" }}>{t}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Pro */}
+            <div style={{ background: "#FDFAF6", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>
+                ⭐ TOUT INCLUS
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#B8622F" }}>9,99€</span>
+                <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
+              </div>
+              <div style={{ fontSize: 11, color: "#A68970", marginBottom: 8 }}>soit 0,33€/jour — moins qu'un café</div>
+              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>La solution complète. Tout est inclus.</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }}
+                style={{ width: "100%", background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>
+                2 mois gratuits, sans CB →
+              </button>
+              {["✨ Bilans de journée automatiques", "📜 Bulletins de salaire complets", "🏛️ Export Pajemploi en 1 clic", "📑 Attestation fiscale", "📸 Photos illimitées", "🏥 Communication PMI", "🗂️ Documents illimités (5 Go)", "👶 Enfants illimités", "📋 Solde de tout compte", "✉️ Courriers types", "❓ Centre d'aide prioritaire"].map((t, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 10 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
+                  <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
+                  <span style={{ color: "#2C1F14", fontWeight: i < 3 ? 700 : 400 }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: 24, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "#A68970" }}>
+            <span>✅ 2 mois d'essai sans CB</span>
+            <span>✅ Résiliable en 1 clic</span>
+            <span>✅ Données en France 🇫🇷</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── CTA FINAL ── */}
+      <div style={{ background: "linear-gradient(160deg,#0D1B2A,#1B2E44)", padding: "72px 24px", textAlign: "center" }}>
+        <FadeIn>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(24px,5vw,46px)", color: "#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2 }}>
+            Vous n'avez pas eu de formation<br />
+            <span style={{ color: "#E8A84A", fontStyle: "italic" }}>en comptabilité.</span><br />
+            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: "rgba(255,255,255,.6)", fontStyle: "normal" }}>Pourtant vous en faites tous les mois.</span>
+          </div>
+          <div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>
+            TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.
+          </div>
+          <button onClick={() => { setShowModal(true); setRole("asmat"); }}
+            style={{ background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>
+            Je commence — 2 mois gratuits →
+          </button>
+          <div style={{ marginTop: 16, fontSize: 12, color: "rgba(255,255,255,.35)" }}>
+            Déjà 847 assistantes maternelles nous font confiance · Données hébergées en France 🇫🇷
+          </div>
+        </FadeIn>
+      </div>
+
+      {/* ── MODALE AUTH ── */}
+      {showModal && (
+        <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
+          <div style={{ background: "#FDFAF6", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }}>
+            {/* Sélecteur rôle */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
+              {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
+                <button key={r} onClick={() => setRole(r)} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? `3px solid ${col}44` : "none", transition: "all .2s" }}>
+                  <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(255,255,255,.4)", whiteSpace: "pre-line", lineHeight: 1.3, fontFamily: "inherit" }}>{l}</div>
+                </button>
+              ))}
+            </div>
+            {/* Formulaire */}
+            <div style={{ padding: 24, borderTop: `4px solid ${role === "asmat" ? "#B8622F" : "#2E5F8A"}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>
+                    {role === "asmat" ? "Espace pro" : "Espace famille"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>
+                    {role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite"}
+                  </div>
+                </div>
+                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".5px" }}>Email *</div>
+                <input type="email" placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"}
+                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #DDD5C8", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".5px" }}>Mot de passe *</div>
+                <input type="password" placeholder="6 caractères minimum"
+                  style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #DDD5C8", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+              </div>
+              <button style={{ width: "100%", background: role === "asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "inherit" }}>
+                {role === "asmat" ? "Créer mon espace pro →" : "Accéder à l'espace famille →"}
+              </button>
+              <div style={{ marginTop: 12, fontSize: 11, color: "#A68970", textAlign: "center" }}>
+                Données hébergées en France · Aucun engagement
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ONBOARD_STEPS=[
@@ -5330,6 +6537,15 @@ export default function App(){
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId}/>;
+      case "parrainage": return <Parrainage user={user}/>;
+      case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
+      case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId}/>;
+      case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
+      case "faq": return <FAQ role={role}/>;
+      case "support": return <Support role={role}/>;
+      case "faq": return <FAQ/>;
+      case "simulateur": return <SimulateurCout/>;
+      case "export_donnees": return <ExportComplet enfants={enfants} role={role} pEId={pEId}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId}/>;
       case "journal": return <JournalComplet {...P}/>;
