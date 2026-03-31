@@ -3605,21 +3605,76 @@ function SupprimerCompte({onDeleted}){
 }
 
 // ─── PAGE PARAMÈTRES ──────────────────────────────────────────────────────────
-function Parametres({user,onLogout,setPage}){
+function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail}){
   const [toast,setToast]=useState("");
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="⚙️" title="Paramètres" sub="Votre compte et vos données"/>
     <div style={{maxWidth:600,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
 
+      {/* Abonnement — uniquement pour les assmats */}
+      {user?.role==="asmat"&&<div className="card"style={{padding:20,border:isPro?"2px solid var(--S)":"2px solid var(--T)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>💳 Mon abonnement</div>
+          <span style={{
+            background:isPro?"var(--Sp)":"var(--Tp)",
+            color:isPro?"var(--S)":"var(--T)",
+            borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:700
+          }}>{isTrialing?"✨ Essai gratuit":isPro?"✅ Pro actif":"🔓 Gratuit"}</span>
+        </div>
+
+        {isPro?<>
+          {isTrialing&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10,padding:"10px 14px",marginBottom:12,fontSize:12,color:"var(--G)"}}>
+            🎉 Vous bénéficiez de 2 mois d'essai gratuit. Aucun prélèvement avant la fin de l'essai.
+          </div>}
+          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:14}}>
+            {isTrialing
+              ? "Votre abonnement Pro démarrera automatiquement à la fin de votre période d'essai."
+              : "Votre abonnement Pro est actif. Toutes les fonctionnalités sont débloquées."}
+          </div>
+          <button className="btn bG"style={{width:"100%",justifyContent:"center"}}onClick={ouvrirPortail||undefined}>
+            ⚙️ Gérer mon abonnement (facturation, résiliation)
+          </button>
+          <div style={{fontSize:11,color:"var(--l)",marginTop:6,textAlign:"center"}}>
+            Vous serez redirigée vers le portail Stripe sécurisé.
+          </div>
+        </>:<>
+          <div style={{marginBottom:14}}>
+            {[
+              "✨ Bilans de journée automatiques",
+              "📜 Bulletins de salaire complets",
+              "🏛️ Export Pajemploi en 1 clic",
+              "📋 Contrats, avenants, courriers illimités",
+              "👶 Enfants illimités",
+              "❓ Support prioritaire",
+            ].map(f=><div key={f}style={{display:"flex",gap:8,padding:"5px 0",fontSize:13,borderBottom:"1px solid var(--br)"}}>
+              <span style={{color:"var(--S)"}}>✓</span>
+              <span style={{color:"var(--b)"}}>{f}</span>
+            </div>)}
+          </div>
+          <div style={{textAlign:"center",marginBottom:12}}>
+            <div style={{fontSize:26,fontWeight:700,color:"var(--T)",fontFamily:"'DM Sans',sans-serif"}}>9,99€<span style={{fontSize:13,color:"var(--l)",fontWeight:400}}>/mois</span></div>
+            <div style={{fontSize:11,color:"var(--l)"}}>2 mois gratuits · Sans engagement · Résiliable en 1 clic</div>
+          </div>
+          <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:14,padding:"13px"}}
+            onClick={lancerCheckout||undefined}>
+            🚀 Passer à Pro — Commencer mon essai gratuit
+          </button>
+        </>}
+      </div>}
+
       {/* Profil */}
       <div className="card"style={{padding:20}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>👤 Mon profil</div>
-        {[["Prénom",user?.prenom||"—"],["Nom",user?.nom||"—"],["Email",user?.email||"—"],["Rôle",user?.role==="asmat"?"Assistante maternelle":"Parent"]].map(([l,v])=>
-          <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-            <span style={{color:"var(--l)"}}>{l}</span>
-            <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
-          </div>)}
+        {[
+          ["Prénom",user?.prenom||"—"],
+          ["Nom",user?.nom||"—"],
+          ["Email",user?.email||"—"],
+          ["Rôle",user?.role==="asmat"?"Assistante maternelle":"Parent employeur"],
+        ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+          <span style={{color:"var(--l)"}}>{l}</span>
+          <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
+        </div>)}
       </div>
 
       {/* Pages légales */}
@@ -3636,7 +3691,7 @@ function Parametres({user,onLogout,setPage}){
             <span style={{color:"var(--l)",fontSize:12}}>→</span>
           </div>)}
         <div style={{marginTop:12,padding:"10px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
-          ✅ Vos données sont hébergées en France · Jamais vendues · Supprimables à tout moment
+          ✅ Données hébergées en France · Jamais vendues · Supprimables à tout moment
         </div>
       </div>
 
@@ -3648,7 +3703,6 @@ function Parametres({user,onLogout,setPage}){
         </button>
       </div>
 
-      {/* Danger zone */}
       <SupprimerCompte onDeleted={onLogout}/>
     </div>
   </div>;
@@ -6287,6 +6341,57 @@ export default function App(){
   if(!onboarded&&user.role==="asmat")return <><Styles/><div className={`app${dark?" dark":""}`}><Onboarding onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
   const role=user.role;
+  // ── Statut abonnement ────────────────────────────────────
+  const isPro=['pro','trialing'].includes(user?.subscription_status)||user?.role==="parent";
+  const isTrialing=user?.subscription_status==="trialing";
+
+  // ── Détecter retour depuis Stripe Checkout ───────────────
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const payment=params.get('payment');
+    if(payment==='success'){
+      // Rafraîchir le profil depuis Supabase
+      supabase.from('profiles').select('*').eq('id',user.id).single()
+        .then(({data})=>{
+          if(data)setUser(u=>({...u,...data}));
+        });
+      setPage('parametres');
+      window.history.replaceState({},'','/');
+    }
+    if(payment==='cancelled'){
+      window.history.replaceState({},'','/');
+    }
+  },[]);
+
+  // ── Lancer le checkout Stripe ────────────────────────────
+  const lancerCheckout=async()=>{
+    try{
+      const res=await fetch('/api/create-checkout-session',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
+      });
+      const data=await res.json();
+      if(data.url)window.location.href=data.url;
+      else alert("Erreur lors de la création de la session de paiement.");
+    }catch(e){
+      alert("Erreur réseau. Vérifiez votre connexion.");
+    }
+  };
+
+  // ── Portail client Stripe (gérer abonnement) ─────────────
+  const ouvrirPortail=async()=>{
+    if(!user.stripe_customer_id){alert("Aucun abonnement actif trouvé.");return;}
+    try{
+      const res=await fetch('/api/customer-portal',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({stripeCustomerId:user.stripe_customer_id}),
+      });
+      const data=await res.json();
+      if(data.url)window.location.href=data.url;
+    }catch(e){alert("Erreur lors de l'ouverture du portail.");}
+  };
   // Pour les démos, parentId="p1/p2/p3" correspond à user.id
   // Pour les vrais comptes Supabase, fallback sur l'email
   const enfants=role==="asmat"?D.enfants:(()=>{
@@ -6314,7 +6419,7 @@ export default function App(){
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
-      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage}/>;
+      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail}/>;
       case "pmi": return <CommunicationPMI role={role}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
