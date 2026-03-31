@@ -626,7 +626,7 @@ function AccueilParent({enfant,setPage}){
         :txs.map(t=><div key={t.id}style={{display:"flex",gap:10,marginBottom:10}}>
           <div style={{fontSize:22}}>{t.mood}</div>
           <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
-            borderLeft:`3px solid ${t.auteur==="asmat"?"var(--T)":"var(--B)"}`}}>
+            borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
             <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:3}}>
               {t.auteur==="asmat"?"👩‍👧 Marie":"👪 Vous"} · {t.h}</div>
             <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{t.txt}</div>
@@ -715,7 +715,7 @@ function Transmissions({enfants,role,pEId}){
           {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
             <div style={{textAlign:"center",minWidth:38}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
-              borderLeft:`3px solid ${t.auteur==="asmat"?"var(--T)":"var(--B)"}`}}>
+              borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:3}}>
                 {t.auteur==="asmat"?"👩‍👧 Marie":"👪 Parent"}</div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{t.txt}</div>
@@ -913,7 +913,7 @@ function Pointage({enfants,role,pEId}){
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📊 Bilan Mars 2024 — {enfant?.prenom}</div>
           <div className="g3"style={{marginBottom:12}}>
-            {[["Prévues",`${h.prev}h`,"var(--B)"],["Réalisées",`${h.real}h`,"var(--S)"],["Solde",`${solde>0?"+":""}${solde}h`,solde<0?"var(--R)":"var(--S)"]].map(([l,v,c])=>
+            {[["Prévues",h.prev+"h","var(--B)"],["Réalisées",h.real+"h","var(--S)"],["Solde",`${solde>0?"+":""}${solde}h`,solde<0?"var(--R)":"var(--S)"]].map(([l,v,c])=>
               <div key={l}style={{background:"var(--c)",borderRadius:10,padding:12,textAlign:"center"}}>
                 <div className="pf"style={{fontSize:20,fontWeight:700,color:c}}>{v}</div>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{l}</div>
@@ -1411,7 +1411,7 @@ function Messagerie({enfants,role,pEId}){
             <div style={{fontSize:11,color:"var(--S)",fontWeight:700}}>● En ligne</div></div>
         </div>
         <div className="msgs">
-          {conv.map(m=><div key={m.id}className={`msg ${m.de==="asmat"?"msg-me":"msg-ot"}`}>
+          {conv.map(m=><div key={m.id}className={(m.de==="asmat"?"msg msg-me":"msg msg-ot")}>
             <div>{m.txt}</div>
             <div style={{fontSize:10,opacity:.7,marginTop:3,textAlign:"right"}}>{m.h}</div>
           </div>)}
@@ -1754,8 +1754,8 @@ function Portfolio({enfants,role,pEId}){
       action={role==="asmat"&&<button className="btn bT"onClick={()=>setShowForm(!showForm)}>+ Activité</button>}/>
 
     {role==="asmat"&&<div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
-      <button className={`btn ${!selId?"bT":"bG"}`}onClick={()=>setSelId(null)}>Tous</button>
-      {listeEnfants.map(e=><button key={e.id}className={`btn ${selId===e.id?"bT":"bG"}`}onClick={()=>setSelId(selId===e.id?null:e.id)}>{e.emoji} {e.prenom}</button>)}
+      <button className={(!selId?"btn bT":"btn bG")}onClick={()=>setSelId(null)}>Tous</button>
+      {listeEnfants.map(e=><button key={e.id}className={(selId===e.id?"btn bT":"btn bG")}onClick={()=>setSelId(selId===e.id?null:e.id)}>{e.emoji} {e.prenom}</button>)}
     </div>}
 
     {showForm&&<div className="card"style={{padding:16,marginBottom:14,border:"1.5px solid var(--T)"}}>
@@ -2457,7 +2457,7 @@ function ContratsTypes({enfants}){
       {MODELES_CONTRATS.map(mod=><div key={mod.id}className="card card-lift"
         onClick={()=>{setSelModele(mod.id===selModele?null:mod.id);setForm({});}}
         style={{padding:16,cursor:"pointer",
-          borderLeft:`4px solid ${mod.avenant?"var(--G)":"var(--T)"}`,
+          borderLeft:(mod.avenant?"4px solid var(--G)":"4px solid var(--T)"),
           boxShadow:selModele===mod.id?"var(--sh2)":"var(--sh)"}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
           <span className="badge"style={{background:mod.avenant?"var(--Gp)":"var(--Tp)",color:mod.avenant?"var(--G)":"var(--T)",fontSize:9}}>
@@ -2484,7 +2484,7 @@ function ContratsTypes({enfants}){
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>setSelModele(null)}>Annuler</button>
-        <button className="btn bT"style={{flex:2}}onClick={()=>setToast(`${m.avenant?"Avenant":"Contrat"} généré ✓`)}>
+        <button className="btn bT"style={{flex:2}}onClick={()=>setToast((m.avenant?"Avenant généré ✓":"Contrat généré ✓"))}>
           📄 Générer le document
         </button>
       </div>
@@ -2535,7 +2535,7 @@ function CourriersTypes({enfants,pEId}){
         {filtres.map(c=><div key={c.id}className="card card-lift"
           onClick={()=>setSelId(c.id===selId?null:c.id)}
           style={{padding:14,cursor:"pointer",
-            borderLeft:`4px solid ${c.cat==="Financier"?"var(--R)":c.cat==="PMI"?"var(--B)":c.cat==="Congés"?"var(--G)":"var(--T)"}`,
+            borderLeft:(c.cat==="Financier"?"4px solid var(--R)":c.cat==="PMI"?"4px solid var(--B)":c.cat==="Congés"?"4px solid var(--G)":"4px solid var(--T)"),
             boxShadow:selId===c.id?"var(--sh2)":"var(--sh)"}}>
           <div style={{display:"flex",gap:10,alignItems:"center"}}>
             <span style={{fontSize:18}}>{c.ic}</span>
@@ -2871,7 +2871,7 @@ function TransmissionsContent({enfant,role}){
           {msgs.length===0&&<div style={{fontSize:13,color:"var(--l)",textAlign:"center",padding:"20px 0"}}>Aucune transmission pour le moment.</div>}
           {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
             <div style={{textAlign:"center",minWidth:38,flexShrink:0}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
-            <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"10px 14px",borderLeft:`3px solid ${t.auteur==="asmat"?"var(--T)":"var(--B)"}`}}>
+            <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"10px 14px",borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:4}}>
                 {t.auteur==="asmat"?"👩‍👧 Marie":`👪 ${D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent"}`}</div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>{t.txt}</div>
@@ -3454,7 +3454,7 @@ function CommunicationPMI({role}){
           {msgs.map(m=><div key={m.id}onClick={()=>!m.lu&&m.de==="PMI"&&markRead(m.id)}
             style={{cursor:!m.lu&&m.de==="PMI"?"pointer":"default"}}>
             <div style={{flex:1,background:m.de==="PMI"?"var(--Bp)":"var(--Tp)",borderRadius:12,padding:"10px 14px",
-              borderLeft:`3px solid ${m.de==="PMI"?"var(--B)":"var(--T)"}`,
+              borderLeft:(m.de==="PMI"?"3px solid var(--B)":"3px solid var(--T)"),
               opacity:m.lu?1:.95,boxShadow:!m.lu&&m.de==="PMI"?"0 0 0 2px var(--B)":"none"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:11,fontWeight:700,color:m.de==="PMI"?"var(--B)":"var(--T)"}}>
@@ -3683,7 +3683,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           </div>
           <div style={{textAlign:"center",marginBottom:12}}>
             <div style={{fontSize:26,fontWeight:700,color:"var(--T)",fontFamily:"'DM Sans',sans-serif"}}>9,99€<span style={{fontSize:13,color:"var(--l)",fontWeight:400}}>/mois</span></div>
-            <div style={{fontSize:11,color:"var(--l)"}}>2 mois gratuits · Sans engagement · Résiliable en 1 clic</div>
+            <div style={{fontSize:11,color:"var(--l)"}}>2 mois gratuits · Premier paiement à J+60 · Résiliable à tout moment</div>
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:14,padding:"13px"}}
             onClick={lancerCheckout||undefined}>
@@ -3985,7 +3985,7 @@ function SanteComplete({enfants,role,pEId}){
           return <div key={i}style={{
             display:"flex",gap:12,alignItems:"center",padding:"12px 14px",borderRadius:12,
             background:v.fait?"var(--Sp)":enRetard?"var(--Rp)":proche?"var(--Gp)":"var(--c)",
-            border:`1px solid ${v.fait?"var(--Sl)":enRetard?"var(--R)":proche?"var(--G)":"var(--br)"}`
+            border:(v.fait?"1px solid var(--Sl)":enRetard?"1px solid var(--R)":proche?"1px solid var(--G)":"1px solid var(--br)")
           }}>
             <span style={{fontSize:20,flexShrink:0}}>{v.fait?"✅":enRetard?"❌":proche?"⏰":"⏳"}</span>
             <div style={{flex:1}}>
@@ -4553,7 +4553,7 @@ function PlanningPeriscolaire({enfants,role,pEId}){
     </div>}
 
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      {PERIODES.map(per=><div key={per.id}className="card"style={{padding:18,borderLeft:`4px solid var(--B)`}}>
+      {PERIODES.map(per=><div key={per.id}className="card"style={{padding:18,borderLeft:"4px solid var(--B)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div>
             <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{per.ic} {per.l}</div>
@@ -4573,7 +4573,7 @@ function PlanningPeriscolaire({enfants,role,pEId}){
           {JOURS_SEM.filter(j=>j!=="Mercredi"||per.id!=="mercredi").map(jour=>{
             const actif=p[per.id]?.includes(jour);
             return <button key={jour}onClick={()=>role==="asmat"&&toggleJour(per.id,jour)}style={{
-              padding:"6px 14px",borderRadius:20,border:`1.5px solid ${actif?"var(--B)":"var(--br)"}`,
+              padding:"6px 14px",borderRadius:20,border:(actif?"1.5px solid var(--B)":"1.5px solid var(--br)"),
               background:actif?"var(--Bp)":"transparent",color:actif?"var(--B)":"var(--l)",
               fontWeight:actif?700:400,fontSize:13,cursor:role==="asmat"?"pointer":"default",transition:"all .15s"
             }}>{jour.slice(0,2)}</button>;
@@ -5685,7 +5685,7 @@ function LandingPage({onLogin,dark,setDark}) {
         {/* Image de fond petite enfance */}
         <div style={{
           position:"absolute", inset:0, zIndex:0,
-          backgroundImage:"url('https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=1600&q=60')",
+          backgroundImage:"url('https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=1600&q=60')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
           opacity:0.08,
         }}/>
@@ -6206,8 +6206,8 @@ function LandingPage({onLogin,dark,setDark}) {
 const ONBOARD_STEPS=[
   {
     emoji:"🌿",
-    color:"#3D6B50",
-    bg:"linear-gradient(135deg,#EAF4EE,#F0FAF4)",
+    color:"#4A7C5F",
+    bg:"linear-gradient(135deg,#F0FAF4,#E8F5EE)",
     titre:"Bienvenue sur TiMat",
     sousTitre:"Fait pour vous. Par quelqu'un qui vous comprend.",
     texte:"TiMat a été créé par une développeuse passionnée de petite enfance, pour les assistantes maternelles comme vous. Ici, pas de jargon compliqué — juste les outils dont vous avez vraiment besoin, au quotidien.",
@@ -6216,8 +6216,8 @@ const ONBOARD_STEPS=[
   },
   {
     emoji:"📋",
-    color:"#B8622F",
-    bg:"linear-gradient(135deg,#FBF0E8,#FEF6F0)",
+    color:"#C4714A",
+    bg:"linear-gradient(135deg,#FEF6F0,#FFF8F4)",
     titre:"Le journal du quotidien",
     sousTitre:"Ce que vous faites chaque jour, simplifié.",
     texte:"Pointages, repas, siestes, activités, transmissions aux parents... Tout se note en quelques secondes. Et si vous voulez, TiMat rédige le bilan de journée à votre place — chaleureux, précis, sans effort.",
@@ -6226,8 +6226,8 @@ const ONBOARD_STEPS=[
   },
   {
     emoji:"🧾",
-    color:"#B8892A",
-    bg:"linear-gradient(135deg,#FBF6E8,#FFFBF0)",
+    color:"#C49A3A",
+    bg:"linear-gradient(135deg,#FFFBF0,#FEF9E8)",
     titre:"L'administratif, enfin simple",
     sousTitre:"Vous n'êtes pas comptable. On s'en occupe.",
     texte:"Salaires, bulletins, Pajemploi, contrats, avenants, courriers types... TiMat calcule, génère et archive tout. Vous n'avez plus qu'à vérifier et envoyer. Le soir, vous pouvez souffler.",
@@ -6236,8 +6236,8 @@ const ONBOARD_STEPS=[
   },
   {
     emoji:"👪",
-    color:"#2E5F8A",
-    bg:"linear-gradient(135deg,#EBF4FF,#F0F8FF)",
+    color:"#3D70A0",
+    bg:"linear-gradient(135deg,#F0F8FF,#EAF4FF)",
     titre:"Le lien avec les parents",
     sousTitre:"Une relation transparente, apaisée.",
     texte:"Les parents accèdent à leur propre espace : journal, pointages, contrat, messagerie. Fini les malentendus. Fini les tensions sur les heures. Tout est tracé, signé, partagé. Vous travaillez en confiance.",
@@ -6246,8 +6246,8 @@ const ONBOARD_STEPS=[
   },
   {
     emoji:"🌸",
-    color:"#7B4FA0",
-    bg:"linear-gradient(135deg,#F5EEFF,#FAF0FF)",
+    color:"#6B8F71",
+    bg:"linear-gradient(135deg,#F0FAF4,#EEF8F2)",
     titre:"Vous êtes prête !",
     sousTitre:"TiMat est à vous. Prenez votre temps.",
     texte:"Commencez par ajouter votre premier enfant, ou explorez librement. Si vous avez la moindre question, le centre d'aide est là. Et notre équipe vous répond en moins de 24h.",
