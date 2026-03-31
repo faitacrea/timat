@@ -489,7 +489,19 @@ function AccueilAssMat({enfants,setPage}){
 
 // ─── ACCUEIL PARENT ───────────────────────────────────────────────────────────
 function AccueilParent({enfant,setPage}){
-  if(!enfant)return <div>Chargement...</div>;
+  if(!enfant)return(
+    <div className="fi">
+      <PageHeader icon="👶" title="Espace famille" sub="Bienvenue sur TiMat"/>
+      <div className="card" style={{padding:28,textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:12}}>👶</div>
+        <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:8}}>Aucun enfant lié à votre compte</div>
+        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>
+          Votre assistante maternelle doit vous inviter depuis son espace TiMat.<br/>
+          Ou connectez-vous avec un compte démo pour tester l'application.
+        </div>
+      </div>
+    </div>
+  );
   const pt=D.pointages.find(p=>p.eId===enfant.id&&p.date===TODAY_STR);
   const txs=D.transmissions.filter(t=>t.eId===enfant.id&&t.date===TODAY_STR);
   const rep=D.repas.find(r=>r.eId===enfant.id&&r.date===TODAY_STR);
@@ -2670,7 +2682,7 @@ function Parrainage({user}){
 
 // ─── CONTRATS & FACTURES (fusionnés) ─────────────────────────────────────────
 function AdminFinances({enfants,role,pEId}){
-  const [section,setSection]=useState("facturation");
+  const [section,setSection]=useState(role==="asmat"?"facturation":"contrats");
   const sousOnglets=role==="asmat"
     ?[
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
@@ -3714,20 +3726,57 @@ function PolitiqueConfidentialite(){
 
 // ─── PAGE MENTIONS LÉGALES ────────────────────────────────────────────────────
 function MentionsLegales(){
+  const [edit,setEdit]=useState(false);
+  const [info,setInfo]=useState({
+    representant:"[Votre prénom et nom]",
+    siret:"[Numéro SIRET]",
+    adresse:"[Adresse complète, Code postal, Ville]",
+    telephone:"[Téléphone professionnel]",
+  });
+
   const blocs=[
-    {titre:"Éditeur du site",contenu:`TiMat\nReprésentée par : [Nom à compléter]\nEmail : contact@timat.app\nSIRET : [À compléter à l'immatriculation]\nAdresse : [Adresse complète, France]`},
+    {titre:"Éditeur du site",custom:true},
     {titre:"Hébergement",contenu:`Application web : Vercel Inc. (serveurs européens)\nBase de données : Supabase / OVHcloud — 2 rue Kellermann, 59100 Roubaix, France\nToutes les données sont hébergées en France.`},
     {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de TiMat et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
     {titre:"Limitation de responsabilité",contenu:"Les calculs de salaire, récapitulatifs Pajemploi et attestations fiscales générés par TiMat sont fournis à titre indicatif. L'utilisateur reste responsable de la vérification des montants auprès des organismes compétents (URSSAF, CAF, Administration fiscale)."},
     {titre:"Données personnelles",contenu:"Responsable de traitement : TiMat — privacy@timat.app\nAutorité de contrôle : CNIL — www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements."},
     {titre:"Droit applicable",contenu:"Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents."},
   ];
+
   return <div className="fi">
     <PageHeader icon="📋" title="Mentions légales" sub="Conformément à la loi n°2004-575 du 21 juin 2004 (LCEN)"/>
     <div style={{maxWidth:700,margin:"0 auto"}}>
       {blocs.map((b,i)=><div key={i}className="card"style={{padding:22,marginBottom:14}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>{b.titre}</div>
-        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{b.contenu}</div>
+        {b.custom?<div>
+          {/* Bloc éditeur éditable */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{fontSize:12,color:"var(--l)"}}>À compléter avec vos informations légales</div>
+            <button onClick={()=>setEdit(p=>!p)}className="btn bG"style={{fontSize:11,padding:"4px 12px"}}>
+              {edit?"✓ Sauvegarder":"✏️ Modifier"}
+            </button>
+          </div>
+          {[
+            ["Raison sociale","TiMat"],
+            ["Représentée par","representant"],
+            ["Email","contact@timat.app"],
+            ["SIRET","siret"],
+            ["Adresse","adresse"],
+            ["Téléphone","telephone"],
+          ].map(([label,key])=><div key={label}style={{display:"flex",gap:12,padding:"6px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
+            <span style={{fontSize:12,color:"var(--l)",minWidth:120,flexShrink:0}}>{label}</span>
+            {edit&&info[key]!==undefined?
+              <input className="inp"style={{flex:1,padding:"4px 8px",fontSize:12}}
+                value={info[key]}onChange={e=>setInfo(p=>({...p,[key]:e.target.value}))}/>
+            :<span style={{fontSize:13,color:"var(--b)",fontWeight:500}}>
+              {info[key]||key}
+            </span>}
+          </div>)}
+          {info.siret.includes("[")&&<div style={{marginTop:10,padding:"8px 12px",background:"var(--Rp)",borderRadius:8,fontSize:11,color:"var(--R)"}}>
+            ⚠️ Ces informations doivent être complétées avant la mise en ligne de l'application. Cliquez sur "Modifier" pour renseigner vos données légales.
+          </div>}
+        </div>
+        :<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{b.contenu}</div>}
       </div>)}
       <div style={{fontSize:12,color:"var(--l)",textAlign:"center",marginTop:8}}>
         Dernière mise à jour : mars 2026
@@ -4621,7 +4670,32 @@ function RapportAnnuel({enfants,role,pEId}){
 
   const generer=()=>{
     setGen(true);
-    setTimeout(()=>{setGen(false);setToast("Rapport annuel généré — prêt à télécharger ✓");},1800);
+    setTimeout(()=>{
+      setGen(false);
+      // Générer un document HTML imprimable
+      const w=window.open("","_blank");
+      if(!w){setToast("Autorisez les popups pour télécharger le PDF");return;}
+      w.document.write(`<!DOCTYPE html><html><head><title>Rapport annuel ${annee} — ${enfant?.prenom||""}</title>
+      <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;}
+      h1{color:#B8622F;}table{width:100%;border-collapse:collapse;margin:20px 0;}
+      td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}
+      .total{font-weight:bold;font-size:1.1em;} @media print{button{display:none}}</style></head>
+      <body><h1>Rapport annuel ${annee}</h1>
+      <p><strong>Assistante maternelle :</strong> Marie Dupont</p>
+      <p><strong>Enfant :</strong> ${enfant?.prenom||""} ${enfant?.nom||""}</p>
+      <h2>Récapitulatif financier</h2>
+      <table><tr><th>Poste</th><th>Montant</th></tr>
+      <tr><td>Salaire net annuel estimé</td><td>${salaireAnnuel}€</td></tr>
+      <tr><td>Indemnités d'entretien</td><td>${entretienAnnuel}€</td></tr>
+      <tr class="total"><td>Total versé par les parents</td><td>${totalAnnuel}€</td></tr>
+      <tr><td>Crédit d'impôt estimé (50%)</td><td>${creditImpot}€</td></tr>
+      </table>
+      <p style="font-size:12px;color:#888;">Rapport généré par TiMat — ${new Date().toLocaleDateString("fr-FR")} — À conserver pour votre déclaration d'impôts.</p>
+      <button onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
+      </body></html>`);
+      w.document.close();
+      setToast("Rapport ouvert dans un nouvel onglet ✓");
+    },1000);
   };
 
   return <div className="fi">
@@ -4832,7 +4906,7 @@ function SoldeDeCompte({enfants,role,pEId}){
   const [calcule,setCalcule]=useState(false);
   const [toast,setToast]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const enfant=liste.find(e=>e.id===selId)||liste[0]||{contrat:{}};
   const contrat=enfant?.contrat||{};
 
   const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée","Autre"];
@@ -5143,7 +5217,6 @@ const GROUPS_AM={
     {id:"liste_attente",l:"Demandes",ic:"📬"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
-    {id:"solde_compte",l:"Solde de tout compte",ic:"🧾"},
     {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
@@ -5223,7 +5296,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
             <div style={{padding:"12px 16px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:13,color:"var(--b)"}}>
               🔔 Notifications
             </div>
-            {notifs.map(n=><div key={n.id}onClick={()=>{
+            {notifs.filter(n=>!n.roles||n.roles.includes(role)).map(n=><div key={n.id}onClick={()=>{
               setNotifs&&setNotifs(p=>p.map(x=>x.id===n.id?{...x,lu:true}:x));
               setPage2&&setPage2(n.page);
               setShowNotifs&&setShowNotifs(false);
@@ -5492,7 +5565,7 @@ function LandingPage({onLogin,dark,setDark}) {
         const { data: profil } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onLogin(profil ? {...profil, id:data.user.id, email:data.user.email} : {id:data.user.id, email:data.user.email, prenom:"Utilisateur", role});
       }
-    } catch(e) { setErr("Erreur de connexion."); }
+    } catch(e) { setErr("Erreur réseau. Vérifiez votre connexion ou utilisez un compte démo."); }
     setLoading(false);
   };
 
@@ -5506,7 +5579,11 @@ function LandingPage({onLogin,dark,setDark}) {
         email: form.email, password: form.password,
         options: { data: { prenom: form.prenom, nom: form.nom, role } }
       });
-      if (error) { setErr(error.message); }
+      if (error) {
+        if(error.message?.includes('already registered')) setErr("Cet email est déjà utilisé. Connectez-vous.");
+        else if(error.message?.includes('fetch')) setErr("Erreur réseau. Vérifiez votre connexion.");
+        else setErr(error.message||"Erreur lors de l'inscription.");
+      }
       else if (data?.user) {
         // Connexion directe après inscription
         onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
@@ -5522,6 +5599,13 @@ function LandingPage({onLogin,dark,setDark}) {
         background: "linear-gradient(160deg, #0D1B2A 0%, #1B2E44 35%, #162639 65%, #0D1B2A 100%)",
         padding: "0 24px 80px", position: "relative", overflow: "hidden",
       }}>
+        {/* Image de fond petite enfance */}
+        <div style={{
+          position:"absolute", inset:0, zIndex:0,
+          backgroundImage:"url('https://images.unsplash.com/photo-1544776193-352d25ca82cd?w=1600&q=60')",
+          backgroundSize:"cover", backgroundPosition:"center 30%",
+          opacity:0.08,
+        }}/>
         {/* Grain overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
 
@@ -6139,13 +6223,14 @@ export default function App(){
   const [loading,setLoading]=useState(true);
   const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length);
   const [notifs,setNotifs]=useState([
-    {id:"n1",ic:"📬",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi"},
-    {id:"n2",ic:"✍️",txt:"Contrat de Noah en attente de signature",date:TODAY_STR,lu:false,page:"admin_finances"},
-    {id:"n3",ic:"🎂",txt:"Anniversaire de Léo dans 3 jours",date:TODAY_STR,lu:true,page:"calendrier"},
+    {id:"n1",ic:"📬",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi",roles:["asmat"]},
+    {id:"n2",ic:"✍️",txt:"Contrat de Noah en attente de signature",date:TODAY_STR,lu:false,page:"admin_finances",roles:["asmat","parent"]},
+    {id:"n3",ic:"🎂",txt:"Anniversaire de Léo dans 3 jours",date:TODAY_STR,lu:true,page:"calendrier",roles:["asmat","parent"]},
+    {id:"n4",ic:"📋",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_complet",roles:["parent"]},
   ]);
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
-  const notifNonLus=notifs.filter(n=>!n.lu).length;
+  // notifNonLus calculé dynamiquement dans le render selon le rôle
 
   // ── Vérifier session Supabase au démarrage ────────────────
   useEffect(()=>{
@@ -6202,7 +6287,16 @@ export default function App(){
   if(!onboarded&&user.role==="asmat")return <><Styles/><div className={`app${dark?" dark":""}`}><Onboarding onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
   const role=user.role;
-  const enfants=role==="asmat"?D.enfants:D.enfants.filter(e=>e.parentId===user.id);
+  // Pour les démos, parentId="p1/p2/p3" correspond à user.id
+  // Pour les vrais comptes Supabase, fallback sur l'email
+  const enfants=role==="asmat"?D.enfants:(()=>{
+    const byId=D.enfants.filter(e=>e.parentId===user.id);
+    if(byId.length>0)return byId;
+    // Fallback email pour comptes réels
+    const parentDemo=D.parents.find(p=>p.email===user.email);
+    if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
+    return [D.enfants[0]]; // fallback démo
+  })();
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId};
@@ -6261,8 +6355,8 @@ export default function App(){
       <div className={`app${dark?" dark":""}`}>
         <TopBar role={role} groups={groups} page={page} setPage={setPage} user={user}
           onLogout={handleLogout}
-          pmiNonLus={pmiNonLus} dark={dark} setDark={setDark}
-          notifNonLus={notifNonLus} notifs={notifs} setNotifs={setNotifs}
+          pmiNonLus={role==="parent"?0:pmiNonLus} dark={dark} setDark={setDark}
+          notifNonLus={notifs.filter(n=>(!n.roles||n.roles.includes(role))&&!n.lu).length} notifs={notifs} setNotifs={setNotifs}
           showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
         <BandeauHorsLigne/>
         <div className="content">{renderPage()}</div>
