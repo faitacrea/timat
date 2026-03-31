@@ -489,6 +489,12 @@ function AccueilAssMat({enfants,setPage}){
 
 // ─── ACCUEIL PARENT ───────────────────────────────────────────────────────────
 function AccueilParent({enfant,setPage}){
+  // ⚠️ Tous les hooks AVANT le return conditionnel (règle React)
+  const [showAbsence,setShowAbsence]=useState(false);
+  const [absence,setAbsence]=useState({date:TODAY_STR,motif:"Maladie",heures:"",indemnise:true});
+  const [absEnvoyee,setAbsEnvoyee]=useState(false);
+  const [toast,setToast]=useState("");
+
   if(!enfant)return(
     <div className="fi">
       <PageHeader icon="👶" title="Espace famille" sub="Bienvenue sur TiMat"/>
@@ -507,10 +513,6 @@ function AccueilParent({enfant,setPage}){
   const rep=D.repas.find(r=>r.eId===enfant.id&&r.date===TODAY_STR);
   const mms=D.milestones[enfant.id]||[];
   const recentMs=mms.filter(m=>m.ok).slice(-1)[0];
-  const [showAbsence,setShowAbsence]=useState(false);
-  const [absence,setAbsence]=useState({date:TODAY_STR,motif:"Maladie",heures:"",indemnise:true});
-  const [absEnvoyee,setAbsEnvoyee]=useState(false);
-  const [toast,setToast]=useState("");
 
   const declarerAbsence=()=>{
     if(!absence.heures)return;
@@ -6284,7 +6286,6 @@ export default function App(){
   ]);
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
-  // notifNonLus calculé dynamiquement dans le render selon le rôle
 
   // ── Vérifier session Supabase au démarrage ────────────────
   useEffect(()=>{
@@ -6294,6 +6295,13 @@ export default function App(){
         if(session?.user){
           const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
           if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
+          else setUser({
+            id:session.user.id,email:session.user.email,
+            prenom:session.user.user_metadata?.prenom||"Utilisateur",
+            nom:session.user.user_metadata?.nom||"",
+            role:session.user.user_metadata?.role||"asmat",
+            couleur:"#C4714A",subscription_status:"free"
+          });
         }
       }catch(e){console.log("Pas de session");}
       finally{setLoading(false);}
@@ -6307,19 +6315,35 @@ export default function App(){
           prenom:session.user.user_metadata?.prenom||"Utilisateur",
           nom:session.user.user_metadata?.nom||"",
           role:session.user.user_metadata?.role||"asmat",
-          couleur:"#C4714A"});
+          couleur:"#C4714A",subscription_status:"free"});
       }
       if(event==="SIGNED_OUT"){setUser(null);setPage("accueil");}
     });
     return()=>subscription.unsubscribe();
   },[]);
 
-  // Écouter navigation depuis modale (liens pages légales)
+  // Écouter navigation depuis modale
   useEffect(()=>{
     const handler=(e)=>{setPage(e.detail);};
     window.addEventListener("timat:page",handler);
     return()=>window.removeEventListener("timat:page",handler);
   },[]);
+
+  // ── Détecter retour depuis Stripe Checkout ───────────────
+  useEffect(()=>{
+    if(!user)return;
+    const params=new URLSearchParams(window.location.search);
+    const payment=params.get('payment');
+    if(payment==='success'){
+      supabase.from('profiles').select('*').eq('id',user.id).single()
+        .then(({data})=>{if(data)setUser(u=>({...u,...data}));});
+      setPage('parametres');
+      window.history.replaceState({},'','/');
+    }
+    if(payment==='cancelled'){
+      window.history.replaceState({},'','/');
+    }
+  },[user?.id]);
 
   const handleLogout=async()=>{
     try{await supabase.auth.signOut();}catch(e){}
@@ -6345,24 +6369,6 @@ export default function App(){
   const isPro=['pro','trialing'].includes(user?.subscription_status)||user?.role==="parent";
   const isTrialing=user?.subscription_status==="trialing";
 
-  // ── Détecter retour depuis Stripe Checkout ───────────────
-  useEffect(()=>{
-    const params=new URLSearchParams(window.location.search);
-    const payment=params.get('payment');
-    if(payment==='success'){
-      // Rafraîchir le profil depuis Supabase
-      supabase.from('profiles').select('*').eq('id',user.id).single()
-        .then(({data})=>{
-          if(data)setUser(u=>({...u,...data}));
-        });
-      setPage('parametres');
-      window.history.replaceState({},'','/');
-    }
-    if(payment==='cancelled'){
-      window.history.replaceState({},'','/');
-    }
-  },[]);
-
   // ── Lancer le checkout Stripe ────────────────────────────
   const lancerCheckout=async()=>{
     try{
@@ -6378,6 +6384,7 @@ export default function App(){
       alert("Erreur réseau. Vérifiez votre connexion.");
     }
   };
+
 
   // ── Portail client Stripe (gérer abonnement) ─────────────
   const ouvrirPortail=async()=>{
@@ -6469,3 +6476,4 @@ export default function App(){
     </>
   );
 }
+
