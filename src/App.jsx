@@ -2392,7 +2392,34 @@ function BulletinSalaire({enfants,role,pEId}){
         Bulletin conforme CCN particuliers employeurs. Net imposable calculé avec abattement fiscal spécifique assmats (3× SMIC/jour/enfant). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button className="btn bG"style={{flex:1}}onClick={()=>setToast("Bulletin PDF généré ✓")}>📥 Télécharger PDF</button>
+        <button className="btn bG"style={{flex:1}}onClick={()=>{
+        const w=window.open('','_blank');
+        if(!w){setToast('Autorisez les popups pour télécharger');return;}
+        w.document.write(`<!DOCTYPE html><html><head><title>Bulletin de salaire ${moisSel}</title>
+        <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;}
+        h1{color:#B8622F;border-bottom:2px solid #B8622F;padding-bottom:10px;}
+        table{width:100%;border-collapse:collapse;margin:16px 0;}
+        td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f9f9f9;font-weight:700;}
+        .total{background:#FBF0E8;font-weight:700;font-size:1.1em;}
+        .net{background:#EAF4EE;font-weight:700;font-size:1.3em;color:#3D6B50;}
+        @media print{button{display:none}}</style></head>
+        <body><h1>Bulletin de paie — \${moisSel}</h1>
+        <p><strong>Employeur :</strong> \${enfant?.prenomParent||'Parent'} &nbsp;|&nbsp; <strong>Salarié·e :</strong> Marie Dupont</p>
+        <p><strong>Enfant accueilli :</strong> \${enfant?.prenom||''} \${enfant?.nom||''}</p>
+        <table><tr><th>Libellé</th><th>Base</th><th>Montant</th></tr>
+        <tr><td>Salaire de base</td><td>\${heuresNorm}h × \${tauxH}€</td><td>\${salBase.toFixed(2)}€</td></tr>
+        <tr><td>Indemnité d'entretien</td><td>\${Math.round(h.real/8)} j × \${contrat.entretien||3.80}€</td><td>\${entretien.toFixed(2)}€</td></tr>
+        <tr class="total"><td colspan="2">SALAIRE BRUT</td><td>\${brut.toFixed(2)}€</td></tr>
+        <tr><td colspan="2">Cotisations salariales</td><td>-\${totalCotSal.toFixed(2)}€</td></tr>
+        <tr class="net"><td colspan="2">NET À PAYER</td><td>\${netPaye.toFixed(2)}€</td></tr>
+        <tr><td colspan="2">Net imposable</td><td>\${netImposable.toFixed(2)}€</td></tr>
+        </table>
+        <p style="font-size:11px;color:#888;">Généré par TiMat — \${new Date().toLocaleDateString('fr-FR')} — À conserver 5 ans</p>
+        <button onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;">🖨️ Imprimer / Sauvegarder en PDF</button>
+        </body></html>\`);
+        w.document.close();
+        setToast('Bulletin ouvert dans un nouvel onglet ✓');
+      }}>📥 Télécharger PDF</button>
         {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={()=>setToast("Bulletin envoyé au parent ✓")}>📧 Envoyer au parent</button>}
       </div>
     </div>
@@ -2695,7 +2722,7 @@ function AdminFinances({enfants,role,pEId}){
       {id:"recap",l:"Récap mensuel PDF",ic:"📊"},
       {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
     ]
-    :[{id:"contrats",l:"Mon contrat",ic:"📄"},{id:"signature_parent",l:"Signer le contrat",ic:"✍️"},{id:"recap",l:"Récap mensuel",ic:"📊"}];
+    :[{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"},{id:"recap",l:"Récap mensuel",ic:"📊"}];
   return <div className="fi">
     <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
@@ -2713,7 +2740,7 @@ function AdminFinances({enfants,role,pEId}){
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}/>}
     {section==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
     {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}/>}
-    {section==="solde_contrat"&&<SoldeContrat enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="solde_contrat"&&<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
 
@@ -5658,7 +5685,7 @@ function LandingPage({onLogin,dark,setDark}) {
         {/* Image de fond petite enfance */}
         <div style={{
           position:"absolute", inset:0, zIndex:0,
-          backgroundImage:"url('https://images.unsplash.com/photo-1544776193-352d25ca82cd?w=1600&q=60')",
+          backgroundImage:"url('https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=1600&q=60')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
           opacity:0.08,
         }}/>
@@ -6175,45 +6202,158 @@ function LandingPage({onLogin,dark,setDark}) {
 
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
+// ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ONBOARD_STEPS=[
-  {ic:"🌿",t:"Bienvenue sur TiMat !",d:"L'app tout-en-un pour les assistantes maternelles. Voici un tour rapide de 30 secondes pour démarrer.",btn:"C'est parti !"},
-  {ic:"👶",t:"Vos enfants au centre",d:"Dans l'onglet L'enfant → Pointage, gérez les arrivées et départs. Dans Journal, rédigez les transmissions et générez les bilans de journée automatiquement.",btn:"Suivant →"},
-  {ic:"✨",t:"Bilan IA exclusif",d:"Cliquez sur Journal → Journal & Bilans → Bilan du jour. En un clic, TiMat rédige un bilan chaleureux à envoyer aux parents. Exclusivité absolue.",btn:"Suivant →"},
-  {ic:"🧾",t:"Administratif simplifié",d:"Dans Administratif → Facturation & Bilans, calculez votre salaire automatiquement et exportez vers Pajemploi. L'attestation fiscale est générée en un clic.",btn:"Suivant →"},
-  {ic:"🏛️",t:"Communication PMI",d:"Dans Administratif → PMI, échangez directement avec votre PMI par email. Vos messages sont envoyés depuis votre adresse professionnelle TiMat.",btn:"Terminer et découvrir TiMat 🎉"},
+  {
+    emoji:"🌿",
+    color:"#3D6B50",
+    bg:"linear-gradient(135deg,#EAF4EE,#F0FAF4)",
+    titre:"Bienvenue sur TiMat",
+    sousTitre:"Fait pour vous. Par quelqu'un qui vous comprend.",
+    texte:"TiMat a été créé par une développeuse passionnée de petite enfance, pour les assistantes maternelles comme vous. Ici, pas de jargon compliqué — juste les outils dont vous avez vraiment besoin, au quotidien.",
+    illustration:"👩‍👧‍👦",
+    btn:"Je commence →",
+  },
+  {
+    emoji:"📋",
+    color:"#B8622F",
+    bg:"linear-gradient(135deg,#FBF0E8,#FEF6F0)",
+    titre:"Le journal du quotidien",
+    sousTitre:"Ce que vous faites chaque jour, simplifié.",
+    texte:"Pointages, repas, siestes, activités, transmissions aux parents... Tout se note en quelques secondes. Et si vous voulez, TiMat rédige le bilan de journée à votre place — chaleureux, précis, sans effort.",
+    illustration:"✏️",
+    btn:"Suivant →",
+  },
+  {
+    emoji:"🧾",
+    color:"#B8892A",
+    bg:"linear-gradient(135deg,#FBF6E8,#FFFBF0)",
+    titre:"L'administratif, enfin simple",
+    sousTitre:"Vous n'êtes pas comptable. On s'en occupe.",
+    texte:"Salaires, bulletins, Pajemploi, contrats, avenants, courriers types... TiMat calcule, génère et archive tout. Vous n'avez plus qu'à vérifier et envoyer. Le soir, vous pouvez souffler.",
+    illustration:"📊",
+    btn:"Suivant →",
+  },
+  {
+    emoji:"👪",
+    color:"#2E5F8A",
+    bg:"linear-gradient(135deg,#EBF4FF,#F0F8FF)",
+    titre:"Le lien avec les parents",
+    sousTitre:"Une relation transparente, apaisée.",
+    texte:"Les parents accèdent à leur propre espace : journal, pointages, contrat, messagerie. Fini les malentendus. Fini les tensions sur les heures. Tout est tracé, signé, partagé. Vous travaillez en confiance.",
+    illustration:"💬",
+    btn:"Suivant →",
+  },
+  {
+    emoji:"🌸",
+    color:"#7B4FA0",
+    bg:"linear-gradient(135deg,#F5EEFF,#FAF0FF)",
+    titre:"Vous êtes prête !",
+    sousTitre:"TiMat est à vous. Prenez votre temps.",
+    texte:"Commencez par ajouter votre premier enfant, ou explorez librement. Si vous avez la moindre question, le centre d'aide est là. Et notre équipe vous répond en moins de 24h.",
+    illustration:"🎉",
+    btn:"Découvrir TiMat 🌿",
+  },
 ];
 
 function Onboarding({onFinish,user}){
   const [step,setStep]=useState(0);
   const s=ONBOARD_STEPS[step];
   const isLast=step===ONBOARD_STEPS.length-1;
-  return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-    <div style={{width:"100%",maxWidth:460}}>
-      {/* Progress */}
-      <div style={{display:"flex",gap:6,marginBottom:32,justifyContent:"center"}}>
-        {ONBOARD_STEPS.map((_,i)=><div key={i}style={{
-          height:4,borderRadius:2,flex:1,maxWidth:60,
-          background:i<=step?"var(--T)":"var(--br)",
-          transition:"background .3s"
-        }}/>)}
-      </div>
-      <div className="card"style={{padding:36,textAlign:"center"}}>
-        <div style={{fontSize:56,marginBottom:16}}>{s.ic}</div>
-        <div className="pf"style={{fontSize:24,fontWeight:600,color:"var(--b)",marginBottom:12}}>{s.t}</div>
-        <div style={{fontSize:14,color:"var(--m)",lineHeight:1.8,marginBottom:28}}>{s.d}</div>
-        <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:14,padding:"13px"}}
-          onClick={()=>isLast?onFinish():setStep(s=>s+1)}>
-          {s.btn}
-        </button>
-        {!isLast&&<button onClick={onFinish}style={{marginTop:12,background:"none",border:"none",fontSize:12,color:"var(--l)",cursor:"pointer"}}>
-          Passer le tutoriel
-        </button>}
-      </div>
-      <div style={{textAlign:"center",marginTop:16,fontSize:12,color:"var(--l)"}}>
-        {step+1} / {ONBOARD_STEPS.length}
+  const pct=Math.round(((step+1)/ONBOARD_STEPS.length)*100);
+
+  return(
+    <div style={{minHeight:"100vh",background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:20,transition:"background .5s"}}>
+      <div style={{width:"100%",maxWidth:480}}>
+
+        {/* Barre de progression */}
+        <div style={{display:"flex",gap:6,marginBottom:32,alignItems:"center"}}>
+          {ONBOARD_STEPS.map((_,i)=>(
+            <div key={i}style={{
+              flex:1,height:4,borderRadius:2,
+              background:i<=step?s.color:"rgba(0,0,0,.1)",
+              transition:"background .4s",
+            }}/>
+          ))}
+          <span style={{fontSize:11,color:"rgba(0,0,0,.35)",marginLeft:6,flexShrink:0}}>{pct}%</span>
+        </div>
+
+        <div style={{background:"#fff",borderRadius:24,overflow:"hidden",boxShadow:"0 8px 48px rgba(0,0,0,.08)"}}>
+
+          {/* Header coloré */}
+          <div style={{
+            background:s.bg,padding:"36px 32px 28px",textAlign:"center",
+            borderBottom:"1px solid rgba(0,0,0,.06)",
+          }}>
+            <div style={{
+              fontSize:72,marginBottom:12,lineHeight:1,
+              filter:"drop-shadow(0 4px 12px rgba(0,0,0,.1))",
+            }}>{s.illustration}</div>
+            <div style={{
+              display:"inline-flex",alignItems:"center",gap:6,
+              background:"rgba(255,255,255,.7)",borderRadius:20,
+              padding:"4px 14px",marginBottom:14,
+            }}>
+              <span style={{fontSize:14}}>{s.emoji}</span>
+              <span style={{fontSize:11,fontWeight:700,color:s.color,textTransform:"uppercase",letterSpacing:".8px"}}>{s.sousTitre}</span>
+            </div>
+            <div style={{
+              fontFamily:"'Fraunces',Georgia,serif",
+              fontSize:"clamp(20px,4vw,26px)",fontWeight:700,
+              color:"#0D1B2A",lineHeight:1.2,
+            }}>{s.titre}</div>
+          </div>
+
+          {/* Corps */}
+          <div style={{padding:"28px 32px 32px"}}>
+            <p style={{fontSize:14,color:"#4A3728",lineHeight:1.85,marginBottom:28,margin:"0 0 28px"}}>
+              {s.texte}
+            </p>
+
+            <button
+              onClick={()=>isLast?onFinish():setStep(p=>p+1)}
+              style={{
+                width:"100%",padding:"14px",borderRadius:12,border:"none",
+                background:`linear-gradient(135deg, ${s.color}, ${s.color}CC)`,
+                color:"#fff",fontWeight:700,fontSize:15,cursor:"pointer",
+                fontFamily:"inherit",letterSpacing:".2px",
+                boxShadow:`0 4px 20px ${s.color}40`,
+                transition:"all .2s",
+              }}
+              onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
+              onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}
+            >
+              {s.btn}
+            </button>
+
+            {!isLast&&(
+              <button
+                onClick={onFinish}
+                style={{
+                  display:"block",width:"100%",marginTop:12,
+                  background:"none",border:"none",
+                  fontSize:12,color:"rgba(0,0,0,.35)",
+                  cursor:"pointer",fontFamily:"inherit",
+                }}
+              >
+                Passer le tutoriel
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Prénom de l'utilisateur */}
+        {user?.prenom&&step===0&&(
+          <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"rgba(0,0,0,.45)"}}>
+            Bonjour {user.prenom} 👋 — ravi de vous accueillir
+          </div>
+        )}
+        <div style={{textAlign:"center",marginTop:10,fontSize:11,color:"rgba(0,0,0,.25)"}}>
+          {step+1} sur {ONBOARD_STEPS.length}
+        </div>
       </div>
     </div>
-  </div>;
+  );
 }
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
@@ -6280,7 +6420,7 @@ export default function App(){
   const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length);
   const [notifs,setNotifs]=useState([
     {id:"n1",ic:"📬",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi",roles:["asmat"]},
-    {id:"n2",ic:"✍️",txt:"Contrat de Noah en attente de signature",date:TODAY_STR,lu:false,page:"admin_finances",roles:["asmat","parent"]},
+    {id:"n2",ic:"✍️",txt:"Contrat en attente de signature",date:TODAY_STR,lu:false,page:"admin_finances",roles:["asmat"]},
     {id:"n3",ic:"🎂",txt:"Anniversaire de Léo dans 3 jours",date:TODAY_STR,lu:true,page:"calendrier",roles:["asmat","parent"]},
     {id:"n4",ic:"📋",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_complet",roles:["parent"]},
   ]);
