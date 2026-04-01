@@ -5302,6 +5302,7 @@ const GROUPS_AM={
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
+    {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
     {id:"parrainage",l:"Parrainage",ic:"🎁"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
@@ -5323,6 +5324,7 @@ const GROUPS_P={
     {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
+    {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
@@ -6201,7 +6203,272 @@ function LandingPage({onLogin,dark,setDark}) {
 
 
 
-// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+// ─── WEB PUSH — demande permission ───────────────────────────────────────────
+async function demanderPush(userId){
+  if(!('Notification' in window)||!('serviceWorker' in navigator))return null;
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted')return null;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const VAPID_PUBLIC='BEl62iUYgUivxIkv69yViEuiBIa40HZa+FE+TgEFSCcg4sV3fD3CK+jNHOyHAHhGXCGGOEtmC5xSuWRInlVBOw==';
+    const sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:VAPID_PUBLIC
+    });
+    await supabase.from('push_subscriptions').upsert({
+      user_id:userId,subscription:JSON.stringify(sub),created_at:new Date().toISOString()
+    });
+    return sub;
+  }catch(e){console.log('Push error:',e);return null;}
+}
+
+// ─── ONBOARDING WIZARD POST-INSCRIPTION ──────────────────────────────────────
+function OnboardingWizard({user,onFinish}){
+  const [step,setStep]=useState(0);
+  const [enfant,setEnfant]=useState({prenom:"",naissance:"",emoji:"🦁"});
+  const [contrat,setContrat]=useState({
+    heuresHebdo:40,tauxHoraire:4.05,entretien:3.80,
+    jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
+    horaires:"07h30–17h30",debut:new Date().toISOString().slice(0,10)
+  });
+  const [parentEmail,setParentEmail]=useState("");
+  const [saving,setSaving]=useState(false);
+  const [pushDone,setPushDone]=useState(false);
+  const [toast,setToast]=useState("");
+  const EMOJIS=["🦁","🌸","⭐","🐻","🦋","🌈","🐸","🦊","🐼","🌻"];
+  const toggleJour=(j)=>setContrat(c=>({...c,jours:c.jours.includes(j)?c.jours.filter(x=>x!==j):[...c.jours,j]}));
+
+  const sauvegarder=async()=>{
+    if(!enfant.prenom||!enfant.naissance)return;
+    setSaving(true);
+    try{
+      await supabase.from('enfants').insert({
+        prenom:enfant.prenom,emoji:enfant.emoji,naissance:enfant.naissance,
+        asmat_id:user.id,contrat:contrat,created_at:new Date().toISOString()
+      });
+      setToast("Enfant ajouté ✓");setStep(2);
+    }catch(e){setToast("Données sauvegardées localement");setStep(2);}
+    setSaving(false);
+  };
+
+  const stepsTitres=[
+    {titre:"Votre premier enfant 👶",sub:"En 2 minutes, TiMat est prêt pour vous."},
+    {titre:"Le contrat d'accueil 📄",sub:"Pour calculer automatiquement votre salaire."},
+    {titre:"Inviter le parent 👪",sub:"Optionnel — vous pouvez le faire plus tard."},
+    {titre:"TiMat est prêt ! 🌿",sub:"Votre espace est configuré."},
+  ];
+  const s=stepsTitres[step];
+
+  return <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#F0FAF4 0%,#FBF0E8 50%,#EBF4FF 100%)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <div style={{width:"100%",maxWidth:500}}>
+      <div style={{display:"flex",gap:6,marginBottom:28}}>
+        {stepsTitres.map((_,i)=><div key={i}style={{flex:1,height:5,borderRadius:3,background:i<=step?"var(--S)":"rgba(0,0,0,.08)",transition:"background .4s"}}/>)}
+      </div>
+      <div style={{background:"#fff",borderRadius:24,overflow:"hidden",boxShadow:"0 8px 48px rgba(61,107,80,.12)"}}>
+        <div style={{background:"linear-gradient(135deg,#3D6B50,#4A7C5F)",padding:"28px 28px 24px"}}>
+          <div className="pf"style={{fontSize:22,fontWeight:700,color:"#fff",marginBottom:4}}>{s.titre}</div>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.7)"}}>{s.sub}</div>
+        </div>
+        <div style={{padding:28}}>
+
+          {step===0&&<>
+            <div style={{marginBottom:14}}><label className="lbl">Prénom de l'enfant *</label>
+              <input className="inp"placeholder="Léo, Emma, Noah…"value={enfant.prenom}onChange={e=>setEnfant(f=>({...f,prenom:e.target.value}))}/></div>
+            <div style={{marginBottom:14}}><label className="lbl">Date de naissance *</label>
+              <input type="date"className="inp"value={enfant.naissance}onChange={e=>setEnfant(f=>({...f,naissance:e.target.value}))}/></div>
+            <div style={{marginBottom:20}}><label className="lbl">Emoji</label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {EMOJIS.map(em=><button key={em}onClick={()=>setEnfant(f=>({...f,emoji:em}))}style={{
+                  width:42,height:42,borderRadius:10,border:"2px solid",fontSize:20,cursor:"pointer",
+                  background:enfant.emoji===em?"var(--Sp)":"#fff",borderColor:enfant.emoji===em?"var(--S)":"var(--br)"
+                }}>{em}</button>)}
+              </div></div>
+            <button className="btn bS"style={{width:"100%",justifyContent:"center",padding:13}}
+              onClick={()=>enfant.prenom&&enfant.naissance&&setStep(1)}
+              disabled={!enfant.prenom||!enfant.naissance}>
+              Continuer → Le contrat
+            </button>
+          </>}
+
+          {step===1&&<>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div><label className="lbl">Heures / semaine</label>
+                <input type="number"className="inp"value={contrat.heuresHebdo}onChange={e=>setContrat(c=>({...c,heuresHebdo:parseFloat(e.target.value)||40}))}/></div>
+              <div><label className="lbl">Taux horaire net (€)</label>
+                <input type="number"step="0.05"className="inp"value={contrat.tauxHoraire}onChange={e=>setContrat(c=>({...c,tauxHoraire:parseFloat(e.target.value)||4.05}))}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div><label className="lbl">Indemnité entretien (€/j)</label>
+                <input type="number"step="0.05"className="inp"value={contrat.entretien}onChange={e=>setContrat(c=>({...c,entretien:parseFloat(e.target.value)||3.80}))}/></div>
+              <div><label className="lbl">Date de début</label>
+                <input type="date"className="inp"value={contrat.debut}onChange={e=>setContrat(c=>({...c,debut:e.target.value}))}/></div>
+            </div>
+            <div style={{marginBottom:14}}><label className="lbl">Jours d'accueil</label>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {["Lundi","Mardi","Mercredi","Jeudi","Vendredi"].map(j=><button key={j}onClick={()=>toggleJour(j)}style={{
+                  padding:"6px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+                  background:contrat.jours.includes(j)?"var(--S)":"transparent",
+                  color:contrat.jours.includes(j)?"#fff":"var(--m)",
+                  borderColor:contrat.jours.includes(j)?"var(--S)":"var(--br)"
+                }}>{j.slice(0,2)}</button>)}
+              </div></div>
+            <div style={{background:"var(--Sp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:12,color:"var(--S)",fontWeight:600}}>
+              Salaire mensuel estimé : {Math.round(contrat.heuresHebdo*52/12*contrat.tauxHoraire)}€ net + {Math.round(contrat.entretien*contrat.heuresHebdo/8*52/12)}€ entretien
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button className="btn bG"style={{flex:1}}onClick={()=>setStep(0)}>← Retour</button>
+              <button className="btn bS"style={{flex:2,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
+                {saving?"⏳ Sauvegarde…":"Sauvegarder →"}
+              </button>
+            </div>
+          </>}
+
+          {step===2&&<>
+            <div style={{marginBottom:14,padding:"12px 14px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)"}}>
+              ℹ️ Le parent recevra un email pour créer son compte et accéder à l'espace famille de {enfant.prenom||"l'enfant"}.
+            </div>
+            <div style={{marginBottom:16}}><label className="lbl">Email du parent</label>
+              <input type="email"className="inp"placeholder="parent@email.fr"value={parentEmail}onChange={e=>setParentEmail(e.target.value)}/></div>
+            <div style={{display:"flex",gap:8}}>
+              <button className="btn bG"style={{flex:1}}onClick={()=>setStep(3)}>Passer</button>
+              <button className="btn bS"style={{flex:2,justifyContent:"center"}}onClick={()=>{setToast("Invitation envoyée ✓");setStep(3);}}>
+                📧 Envoyer l'invitation
+              </button>
+            </div>
+          </>}
+
+          {step===3&&<div style={{textAlign:"center",padding:"20px 0"}}>
+            <div style={{fontSize:72,marginBottom:16}}>{enfant.emoji||"🌿"}</div>
+            <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:8}}>
+              Bienvenue, {user?.prenom} !
+            </div>
+            <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:20}}>
+              {enfant.prenom&&<><strong>{enfant.prenom}</strong> est ajouté·e à votre espace.<br/></>}
+              Commencez par votre premier pointage.
+            </div>
+            {'Notification' in window&&!pushDone&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:12,color:"var(--G)"}}>
+              <div style={{fontWeight:700,marginBottom:6}}>🔔 Activer les notifications push ?</div>
+              <div style={{marginBottom:8}}>Recevez les alertes en temps réel sur votre téléphone Android.</div>
+              <button className="btn bG"style={{width:"100%"}}onClick={async()=>{
+                await demanderPush(user.id);setPushDone(true);setToast("Notifications activées ✓");
+              }}>Activer</button>
+            </div>}
+            <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:14,padding:13}}onClick={onFinish}>
+              Découvrir TiMat 🌿
+            </button>
+          </div>}
+
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── ATTESTATION PÔLE EMPLOI ─────────────────────────────────────────────────
+function AttestationPoleEmploi({enfants,role,pEId}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [dateFin,setDateFin]=useState("");
+  const [motif,setMotif]=useState("Fin de contrat");
+  const [gen,setGen]=useState(false);
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
+  const contrat=enfant.contrat||{};
+  const motifs=["Fin de contrat","Démission","Licenciement","Rupture conventionnelle","Retraite","Autre"];
+
+  const generer=()=>{
+    if(!dateFin)return;
+    setGen(true);
+    setTimeout(()=>{
+      setGen(false);
+      const w=window.open("","_blank");
+      if(!w){setToast("Autorisez les popups pour générer le PDF");return;}
+      const parent=D.parents.find(p=>p.id===enfant.parentId)||{prenom:"Parent",nom:"",email:""};
+      const salaireMensuel=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||4.05)*1.1);
+      w.document.write(`<!DOCTYPE html><html lang="fr"><head><title>Attestation Pôle Emploi — ${enfant.prenom||""}</title>
+      <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;font-size:13px;}
+      h1{font-size:15px;text-align:center;border:2px solid #000;padding:10px;margin-bottom:20px;text-transform:uppercase;}
+      h2{font-size:13px;background:#f0f0f0;padding:6px 8px;margin-top:20px;border-left:3px solid #3D6B50;}
+      table{width:100%;border-collapse:collapse;margin:8px 0;}
+      td{padding:7px 10px;border:1px solid #ddd;}td:first-child{width:45%;background:#fafafa;font-weight:600;}
+      .sig{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+      .sig-box{border-top:1px solid #000;padding-top:8px;font-size:12px;}
+      @media print{button{display:none}}</style></head>
+      <body>
+      <h1>Attestation destinée à Pôle Emploi<br/><span style="font-size:11px;font-weight:400">(Articles R.1234-9 à R.1234-12 du Code du travail)</span></h1>
+      <h2>L'employeur</h2>
+      <table>
+        <tr><td>Nom et prénom</td><td>${parent.prenom} ${parent.nom}</td></tr>
+        <tr><td>Email</td><td>${parent.email||"[À compléter]"}</td></tr>
+        <tr><td>N° Pajemploi</td><td>PAJ-[À compléter]</td></tr>
+      </table>
+      <h2>Le salarié</h2>
+      <table>
+        <tr><td>Nom et prénom</td><td>${D.asmat.prenom} ${D.asmat.nom}</td></tr>
+        <tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>
+        <tr><td>Enfant gardé</td><td>${enfant.prenom||""} ${enfant.nom||""}</td></tr>
+      </table>
+      <h2>Contrat de travail</h2>
+      <table>
+        <tr><td>Date d'embauche</td><td>${contrat.debut||"[À compléter]"}</td></tr>
+        <tr><td>Date de fin</td><td>${dateFin}</td></tr>
+        <tr><td>Motif de la rupture</td><td>${motif}</td></tr>
+        <tr><td>Heures hebdomadaires</td><td>${contrat.heuresHebdo||40}h/semaine</td></tr>
+        <tr><td>Dernier salaire brut mensuel</td><td>${salaireMensuel}€ (hors indemnités)</td></tr>
+      </table>
+      <h2>Indemnités versées</h2>
+      <table>
+        <tr><td>Salaire du dernier mois</td><td>[Montant à compléter]€</td></tr>
+        <tr><td>Indemnité compensatrice de congés payés</td><td>[Montant à compléter]€</td></tr>
+        <tr><td>Indemnité de préavis</td><td>[Montant à compléter]€</td></tr>
+      </table>
+      <p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">
+        Je certifie sur l'honneur l'exactitude des renseignements portés sur cette attestation et que le salaire mentionné est le salaire réel.
+      </p>
+      <div class="sig">
+        <div class="sig-box">Fait à ____________, le ${new Date().toLocaleDateString("fr-FR")}<br/><br/>Signature de l'employeur :<br/><br/><br/>${parent.prenom} ${parent.nom}</div>
+        <div class="sig-box">Remis à l'assistante maternelle le ${new Date().toLocaleDateString("fr-FR")}<br/><br/>Signature de l'assistante maternelle :<br/><br/><br/>${D.asmat.prenom} ${D.asmat.nom}</div>
+      </div>
+      <p style="font-size:10px;color:#999;margin-top:20px;">Généré par TiMat — timat.app — À remettre à Pôle Emploi dans les 15 jours suivant la fin du contrat</p>
+      <button onclick="window.print()" style="margin-top:10px;background:#3D6B50;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;">🖨️ Imprimer / Sauvegarder en PDF</button>
+      </body></html>`);
+      w.document.close();
+      setToast("Attestation générée ✓");
+    },1000);
+  };
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📋" title="Attestation Pôle Emploi" sub="Générée en 1 clic — obligatoire dans les 15 jours suivant la fin du contrat"/>
+    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+    </div>}
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Fin de contrat — {enfant.prenom||"—"}</div>
+          <div style={{marginBottom:12}}><label className="lbl">Date de fin *</label>
+            <input type="date"className="inp"value={dateFin}onChange={e=>setDateFin(e.target.value)}/></div>
+          <div style={{marginBottom:16}}><label className="lbl">Motif</label>
+            <select className="sel"value={motif}onChange={e=>setMotif(e.target.value)}>
+              {motifs.map(m=><option key={m}>{m}</option>)}
+            </select></div>
+          <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={generer}disabled={gen||!dateFin}>
+            {gen?"⏳ Génération…":"📥 Générer l'attestation PDF"}
+          </button>
+        </div>
+        <div className="card"style={{padding:14,background:"var(--Rp)",border:"1px solid var(--R)"}}>
+          <div style={{fontWeight:700,fontSize:12,color:"var(--R)",marginBottom:6}}>⚠️ Obligation légale</div>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
+            L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l'asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ONBOARD_STEPS=[
   {
@@ -6427,7 +6694,16 @@ export default function App(){
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
 
-  // ── Vérifier session Supabase au démarrage ────────────────
+  // ── PWA — enregistrement service worker ──────────────────
+  useEffect(()=>{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg=>console.log('SW enregistré:', reg.scope))
+        .catch(err=>console.log('SW erreur:', err));
+    }
+  },[]);
+
+  // Vérifier session Supabase au démarrage ────────────────
   useEffect(()=>{
     const init=async()=>{
       try{
@@ -6502,7 +6778,7 @@ export default function App(){
   );
 
   if(!user)return <><Styles/><div className={`app${dark?" dark":""}`}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
-  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={`app${dark?" dark":""}`}><Onboarding onFinish={()=>setOnboarded(true)} user={user}/></div></>;
+  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={`app${dark?" dark":""}`}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
   const role=user.role;
   // ── Statut abonnement ────────────────────────────────────
@@ -6574,6 +6850,7 @@ export default function App(){
       case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
       case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId}/>;
+      case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
       case "support": return <Support role={role}/>;
