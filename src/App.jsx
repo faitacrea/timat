@@ -587,7 +587,7 @@ function AccueilParent({enfant,setPage}){
 
     <div className="g2"style={{marginBottom:12}}>
       {/* Card enfant */}
-      <div className="card"style={{padding:18,borderTop:`4px solid ${enfant.couleur}`}}>
+      <div className="card"style={{padding:18,borderTop:"4px solid "+enfant.couleur}}>
         <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:12}}>
           <span style={{fontSize:52}}>{enfant.emoji}</span>
           <div><div className="pf"style={{fontSize:20,fontWeight:600,color:"var(--b)"}}>{enfant.prenom} {enfant.nom}</div>
@@ -735,7 +735,7 @@ function Transmissions({enfants,role,pEId}){
           <div style={{marginBottom:10}}>
             <label className="lbl">Message</label>
             <textarea className="ta"value={msg}onChange={e=>setMsg(e.target.value)}
-              placeholder={role==="asmat"?`Racontez la journée de ${enfant?.prenom}…`:"Informations pour la journée…"}/>
+              placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"…"):"Informations pour la journée…"}/>
           </div>
           <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer ✉️</button>
         </div>
@@ -921,7 +921,7 @@ function Pointage({enfants,role,pEId}){
           </div>
           <div style={{marginBottom:4}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--m)",marginBottom:4}}>
             <span>Progression</span><span>{h.real}h / {h.prev}h</span></div>
-            <div className="bar"><div className="bar-fill"style={{width:`${Math.min(h.real/h.prev*100,100)}%`,background:"var(--S)"}}/></div>
+            <div className="bar"><div className="bar-fill"style={{width:Math.min(h.real/h.prev*100,100)+"%",background:"var(--S)"}}/></div>
           </div>
         </div>
         <div className="card"style={{padding:16}}>
@@ -2518,7 +2518,7 @@ function CourriersTypes({enfants,pEId}){
   const filtres=filtreCat==="Tous"?COURRIERS_DATA:COURRIERS_DATA.filter(c=>c.cat===filtreCat);
   const sel=COURRIERS_DATA.find(c=>c.id===selId);
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
-  const texte=sel?sel.contenu.replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]").replace(/\[Votre nom\]/g,`${D.asmat.prenom} ${D.asmat.nom}`):"";
+  const texte=sel?sel.contenu.replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]").replace(/\[Votre nom\]/g,D.asmat.prenom+" "+D.asmat.nom):"";
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2889,7 +2889,7 @@ function TransmissionsContent({enfant,role}){
             </div>
           </div>
           <textarea className="ta"style={{marginBottom:10}}value={msg}onChange={e=>setMsg(e.target.value)}
-            placeholder={role==="asmat"?`Racontez la journée de ${enfant?.prenom}…`:"Informations pour la journée…"}/>
+            placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"…"):"Informations pour la journée…"}/>
           <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer ✉️</button>
         </div>
         {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
