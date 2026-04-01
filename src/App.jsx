@@ -6210,7 +6210,7 @@ async function demanderPush(userId){
   if(perm!=='granted')return null;
   try{
     const reg=await navigator.serviceWorker.ready;
-    const VAPID_PUBLIC='BEl62iUYgUivxIkv69yViEuiBIa40HZa+FE+TgEFSCcg4sV3fD3CK+jNHOyHAHhGXCGGOEtmC5xSuWRInlVBOw==';
+    const VAPID_PUBLIC='BPYC1LBrYgWYabL6aFOENWaYAP_kRL6ZZPyroUVDm94cl5ff9l1xV0jfPjRijgpYEt6yB1LnMMJRAJrtUlvG3Hc';
     const sub=await reg.pushManager.subscribe({
       userVisibleOnly:true,
       applicationServerKey:VAPID_PUBLIC
