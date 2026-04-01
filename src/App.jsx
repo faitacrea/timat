@@ -2395,28 +2395,28 @@ function BulletinSalaire({enfants,role,pEId}){
         <button className="btn bG"style={{flex:1}}onClick={()=>{
         const w=window.open('','_blank');
         if(!w){setToast('Autorisez les popups pour télécharger');return;}
-        w.document.write(`<!DOCTYPE html><html><head><title>Bulletin de salaire ${moisSel}</title>
-        <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;}
-        h1{color:#B8622F;border-bottom:2px solid #B8622F;padding-bottom:10px;}
-        table{width:100%;border-collapse:collapse;margin:16px 0;}
-        td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f9f9f9;font-weight:700;}
-        .total{background:#FBF0E8;font-weight:700;font-size:1.1em;}
-        .net{background:#EAF4EE;font-weight:700;font-size:1.3em;color:#3D6B50;}
-        @media print{button{display:none}}</style></head>
-        <body><h1>Bulletin de paie — \${moisSel}</h1>
-        <p><strong>Employeur :</strong> \${enfant?.prenomParent||'Parent'} &nbsp;|&nbsp; <strong>Salarié·e :</strong> Marie Dupont</p>
-        <p><strong>Enfant accueilli :</strong> \${enfant?.prenom||''} \${enfant?.nom||''}</p>
-        <table><tr><th>Libellé</th><th>Base</th><th>Montant</th></tr>
-        <tr><td>Salaire de base</td><td>\${heuresNorm}h × \${tauxH}€</td><td>\${salBase.toFixed(2)}€</td></tr>
-        <tr><td>Indemnité d'entretien</td><td>\${Math.round(h.real/8)} j × \${contrat.entretien||3.80}€</td><td>\${entretien.toFixed(2)}€</td></tr>
-        <tr class="total"><td colspan="2">SALAIRE BRUT</td><td>\${brut.toFixed(2)}€</td></tr>
-        <tr><td colspan="2">Cotisations salariales</td><td>-\${totalCotSal.toFixed(2)}€</td></tr>
-        <tr class="net"><td colspan="2">NET À PAYER</td><td>\${netPaye.toFixed(2)}€</td></tr>
-        <tr><td colspan="2">Net imposable</td><td>\${netImposable.toFixed(2)}€</td></tr>
-        </table>
-        <p style="font-size:11px;color:#888;">Généré par TiMat — \${new Date().toLocaleDateString('fr-FR')} — À conserver 5 ans</p>
-        <button onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;">🖨️ Imprimer / Sauvegarder en PDF</button>
-        </body></html>\`);
+        const htmlBulletin='<!DOCTYPE html><html><head><title>Bulletin de salaire '+moisSel+'</title>'
+          +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;}'
+          +'h1{color:#B8622F;border-bottom:2px solid #B8622F;padding-bottom:10px;}'
+          +'table{width:100%;border-collapse:collapse;margin:16px 0;}'
+          +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f9f9f9;font-weight:700;}'
+          +'.total{background:#FBF0E8;font-weight:700;}.net{background:#EAF4EE;font-weight:700;color:#3D6B50;}'
+          +'@media print{button{display:none}}</style></head>'
+          +'<body><h1>Bulletin de paie — '+moisSel+'</h1>'
+          +'<p><strong>Employeur:</strong> '+(enfant?.prenomParent||'Parent')+'</p>'
+          +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
+          +'<table><tr><th>Libellé</th><th>Base</th><th>Montant</th></tr>'
+          +'<tr><td>Salaire de base</td><td>'+heuresNorm+'h x '+tauxH+'€</td><td>'+salBase.toFixed(2)+'€</td></tr>'
+          +'<tr><td>Indemnité entretien</td><td>'+Math.round(h.real/8)+' j x '+(contrat.entretien||3.80)+'€</td><td>'+entretien.toFixed(2)+'€</td></tr>'
+          +'<tr class="total"><td colspan="2">SALAIRE BRUT</td><td>'+brut.toFixed(2)+'€</td></tr>'
+          +'<tr><td colspan="2">Cotisations salariales</td><td>-'+totalCotSal.toFixed(2)+'€</td></tr>'
+          +'<tr class="net"><td colspan="2">NET À PAYER</td><td>'+netPaye.toFixed(2)+'€</td></tr>'
+          +'<tr><td colspan="2">Net imposable</td><td>'+netImposable.toFixed(2)+'€</td></tr>'
+          +'</table>'
+          +'<p style="font-size:11px;color:#888;">Généré par TiMat — '+new Date().toLocaleDateString('fr-FR')+' — À conserver 5 ans</p>'
+          +'<button onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;">🖨️ Imprimer / PDF</button>'
+          +'</body></html>';
+        w.document.write(htmlBulletin);
         w.document.close();
         setToast('Bulletin ouvert dans un nouvel onglet ✓');
       }}>📥 Télécharger PDF</button>
@@ -4760,24 +4760,25 @@ function RapportAnnuel({enfants,role,pEId}){
       // Générer un document HTML imprimable
       const w=window.open("","_blank");
       if(!w){setToast("Autorisez les popups pour télécharger le PDF");return;}
-      w.document.write(`<!DOCTYPE html><html><head><title>Rapport annuel ${annee} — ${enfant?.prenom||""}</title>
-      <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;}
-      h1{color:#B8622F;}table{width:100%;border-collapse:collapse;margin:20px 0;}
-      td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}
-      .total{font-weight:bold;font-size:1.1em;} @media print{button{display:none}}</style></head>
-      <body><h1>Rapport annuel ${annee}</h1>
-      <p><strong>Assistante maternelle :</strong> Marie Dupont</p>
-      <p><strong>Enfant :</strong> ${enfant?.prenom||""} ${enfant?.nom||""}</p>
-      <h2>Récapitulatif financier</h2>
-      <table><tr><th>Poste</th><th>Montant</th></tr>
-      <tr><td>Salaire net annuel estimé</td><td>${salaireAnnuel}€</td></tr>
-      <tr><td>Indemnités d'entretien</td><td>${entretienAnnuel}€</td></tr>
-      <tr class="total"><td>Total versé par les parents</td><td>${totalAnnuel}€</td></tr>
-      <tr><td>Crédit d'impôt estimé (50%)</td><td>${creditImpot}€</td></tr>
-      </table>
-      <p style="font-size:12px;color:#888;">Rapport généré par TiMat — ${new Date().toLocaleDateString("fr-FR")} — À conserver pour votre déclaration d'impôts.</p>
-      <button onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button>
-      </body></html>`);
+      const htmlRapport='<!DOCTYPE html><html><head><title>Rapport annuel '+annee+' — '+(enfant?.prenom||'')+'</title>'
+        +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;}'
+        +'h1{color:#B8622F;}table{width:100%;border-collapse:collapse;margin:20px 0;}'
+        +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}'
+        +'.total{font-weight:bold;}@media print{button{display:none}}</style></head>'
+        +'<body><h1>Rapport annuel '+annee+'</h1>'
+        +'<p><strong>Assistante maternelle:</strong> Marie Dupont</p>'
+        +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
+        +'<h2>Récapitulatif financier</h2>'
+        +'<table><tr><th>Poste</th><th>Montant</th></tr>'
+        +'<tr><td>Salaire net annuel estimé</td><td>'+salaireAnnuel+'€</td></tr>'
+        +'<tr><td>Indemnités d'entretien</td><td>'+entretienAnnuel+'€</td></tr>'
+        +'<tr class="total"><td>Total versé</td><td>'+totalAnnuel+'€</td></tr>'
+        +'<tr><td>Crédit d'impôt estimé (50%)</td><td>'+creditImpot+'€</td></tr>'
+        +'</table>'
+        +'<p style="font-size:12px;color:#888;">Généré par TiMat — '+new Date().toLocaleDateString('fr-FR')+'</p>'
+        +'<button onclick="window.print()">🖨️ Imprimer / PDF</button>'
+        +'</body></html>';
+      w.document.write(htmlRapport);
       w.document.close();
       setToast("Rapport ouvert dans un nouvel onglet ✓");
     },1000);
@@ -6388,53 +6389,44 @@ function AttestationPoleEmploi({enfants,role,pEId}){
       if(!w){setToast("Autorisez les popups pour générer le PDF");return;}
       const parent=D.parents.find(p=>p.id===enfant.parentId)||{prenom:"Parent",nom:"",email:""};
       const salaireMensuel=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||4.05)*1.1);
-      w.document.write(`<!DOCTYPE html><html lang="fr"><head><title>Attestation Pôle Emploi — ${enfant.prenom||""}</title>
-      <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;font-size:13px;}
-      h1{font-size:15px;text-align:center;border:2px solid #000;padding:10px;margin-bottom:20px;text-transform:uppercase;}
-      h2{font-size:13px;background:#f0f0f0;padding:6px 8px;margin-top:20px;border-left:3px solid #3D6B50;}
-      table{width:100%;border-collapse:collapse;margin:8px 0;}
-      td{padding:7px 10px;border:1px solid #ddd;}td:first-child{width:45%;background:#fafafa;font-weight:600;}
-      .sig{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
-      .sig-box{border-top:1px solid #000;padding-top:8px;font-size:12px;}
-      @media print{button{display:none}}</style></head>
-      <body>
-      <h1>Attestation destinée à Pôle Emploi<br/><span style="font-size:11px;font-weight:400">(Articles R.1234-9 à R.1234-12 du Code du travail)</span></h1>
-      <h2>L'employeur</h2>
-      <table>
-        <tr><td>Nom et prénom</td><td>${parent.prenom} ${parent.nom}</td></tr>
-        <tr><td>Email</td><td>${parent.email||"[À compléter]"}</td></tr>
-        <tr><td>N° Pajemploi</td><td>PAJ-[À compléter]</td></tr>
-      </table>
-      <h2>Le salarié</h2>
-      <table>
-        <tr><td>Nom et prénom</td><td>${D.asmat.prenom} ${D.asmat.nom}</td></tr>
-        <tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>
-        <tr><td>Enfant gardé</td><td>${enfant.prenom||""} ${enfant.nom||""}</td></tr>
-      </table>
-      <h2>Contrat de travail</h2>
-      <table>
-        <tr><td>Date d'embauche</td><td>${contrat.debut||"[À compléter]"}</td></tr>
-        <tr><td>Date de fin</td><td>${dateFin}</td></tr>
-        <tr><td>Motif de la rupture</td><td>${motif}</td></tr>
-        <tr><td>Heures hebdomadaires</td><td>${contrat.heuresHebdo||40}h/semaine</td></tr>
-        <tr><td>Dernier salaire brut mensuel</td><td>${salaireMensuel}€ (hors indemnités)</td></tr>
-      </table>
-      <h2>Indemnités versées</h2>
-      <table>
-        <tr><td>Salaire du dernier mois</td><td>[Montant à compléter]€</td></tr>
-        <tr><td>Indemnité compensatrice de congés payés</td><td>[Montant à compléter]€</td></tr>
-        <tr><td>Indemnité de préavis</td><td>[Montant à compléter]€</td></tr>
-      </table>
-      <p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">
-        Je certifie sur l'honneur l'exactitude des renseignements portés sur cette attestation et que le salaire mentionné est le salaire réel.
-      </p>
-      <div class="sig">
-        <div class="sig-box">Fait à ____________, le ${new Date().toLocaleDateString("fr-FR")}<br/><br/>Signature de l'employeur :<br/><br/><br/>${parent.prenom} ${parent.nom}</div>
-        <div class="sig-box">Remis à l'assistante maternelle le ${new Date().toLocaleDateString("fr-FR")}<br/><br/>Signature de l'assistante maternelle :<br/><br/><br/>${D.asmat.prenom} ${D.asmat.nom}</div>
-      </div>
-      <p style="font-size:10px;color:#999;margin-top:20px;">Généré par TiMat — timat.app — À remettre à Pôle Emploi dans les 15 jours suivant la fin du contrat</p>
-      <button onclick="window.print()" style="margin-top:10px;background:#3D6B50;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;">🖨️ Imprimer / Sauvegarder en PDF</button>
-      </body></html>`);
+      const htmlAttest='<!DOCTYPE html><html lang="fr"><head><title>Attestation Pôle Emploi — '+(enfant.prenom||'')+'</title>'
+        +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;font-size:13px;}'
+        +'h1{font-size:15px;text-align:center;border:2px solid #000;padding:10px;margin-bottom:20px;text-transform:uppercase;}'
+        +'h2{font-size:13px;background:#f0f0f0;padding:6px 8px;margin-top:20px;border-left:3px solid #3D6B50;}'
+        +'table{width:100%;border-collapse:collapse;margin:8px 0;}'
+        +'td{padding:7px 10px;border:1px solid #ddd;}td:first-child{width:45%;background:#fafafa;font-weight:600;}'
+        +'.sig{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}'
+        +'.sig-box{border-top:1px solid #000;padding-top:8px;font-size:12px;}'
+        +'@media print{button{display:none}}</style></head>'
+        +'<body>'
+        +'<h1>Attestation destinée à Pôle Emploi<br/><span style="font-size:11px;font-weight:400">(Articles R.1234-9 à R.1234-12 du Code du travail)</span></h1>'
+        +'<h2>L'employeur</h2>'
+        +'<table><tr><td>Nom et prénom</td><td>'+parent.prenom+' '+parent.nom+'</td></tr>'
+        +'<tr><td>Email</td><td>'+(parent.email||'[À compléter]')+'</td></tr>'
+        +'<tr><td>N° Pajemploi</td><td>PAJ-[À compléter]</td></tr></table>'
+        +'<h2>Le salarié</h2>'
+        +'<table><tr><td>Nom et prénom</td><td>'+D.asmat.prenom+' '+D.asmat.nom+'</td></tr>'
+        +'<tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>'
+        +'<tr><td>Enfant gardé</td><td>'+(enfant.prenom||'')+' '+(enfant.nom||'')+'</td></tr></table>'
+        +'<h2>Contrat de travail</h2>'
+        +'<table><tr><td>Date d'embauche</td><td>'+(contrat.debut||'[À compléter]')+'</td></tr>'
+        +'<tr><td>Date de fin</td><td>'+dateFin+'</td></tr>'
+        +'<tr><td>Motif</td><td>'+motif+'</td></tr>'
+        +'<tr><td>Heures hebdo</td><td>'+(contrat.heuresHebdo||40)+'h/semaine</td></tr>'
+        +'<tr><td>Dernier salaire brut</td><td>'+salaireMensuel+'€</td></tr></table>'
+        +'<h2>Indemnités versées</h2>'
+        +'<table><tr><td>Salaire du dernier mois</td><td>[À compléter]€</td></tr>'
+        +'<tr><td>ICCP</td><td>[À compléter]€</td></tr>'
+        +'<tr><td>Indemnité de préavis</td><td>[À compléter]€</td></tr></table>'
+        +'<p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">Je certifie sur l'honneur l'exactitude des renseignements portés sur cette attestation.</p>'
+        +'<div class="sig">'
+        +'<div class="sig-box">Fait à ___, le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature employeur:<br/><br/>'+parent.prenom+' '+parent.nom+'</div>'
+        +'<div class="sig-box">Remis le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature asmat:<br/><br/>'+D.asmat.prenom+' '+D.asmat.nom+'</div>'
+        +'</div>'
+        +'<p style="font-size:10px;color:#999;margin-top:20px;">Généré par TiMat — timat.app</p>'
+        +'<button onclick="window.print()" style="margin-top:10px;background:#3D6B50;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;">🖨️ Imprimer / PDF</button>'
+        +'</body></html>';
+      w.document.write(htmlAttest);
       w.document.close();
       setToast("Attestation générée ✓");
     },1000);
