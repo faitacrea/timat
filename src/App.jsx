@@ -2875,7 +2875,7 @@ function TransmissionsContent({enfant,role}){
             <div style={{textAlign:"center",minWidth:38,flexShrink:0}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"10px 14px",borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:4}}>
-                {t.auteur==="asmat"?"👩‍👧 Marie":`👪 ${D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent"}`}</div>
+                {t.auteur==="asmat"?"👩‍👧 Marie":"👪 "+(D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent")}</div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>{t.txt}</div>
             </div>
           </div>)}
@@ -3033,7 +3033,7 @@ function Sommeil({enfants,role,pEId}){
             {hist.slice(0,7).reverse().map((s,i)=>{
               const[h,m]=s.duree.split("h").map(Number);const mins=h*60+(m||0);
               const pct=Math.min(mins/180*100,100);
-              return <div key={i}style={{flex:1,borderRadius:"3px 3px 0 0",height:`${pct}%`,background:pct>70?"var(--S)":pct>40?"var(--G)":"var(--R)",transition:"height .5s ease"}}title={s.duree}/>;
+              return <div key={i}style={{flex:1,borderRadius:"3px 3px 0 0",height:pct+"%",background:pct>70?"var(--S)":pct>40?"var(--G)":"var(--R)",transition:"height .5s ease"}}title={s.duree}/>;
             })}
           </div>
         </div>}
@@ -3065,8 +3065,8 @@ function TableauDeBord({enfants,role,pEId,setPage}){
     x:10+i*(svgW-20)/(Math.max(histSlice.length-1,1)),
     y:svgH-10-(v/5)*(svgH-20)
   }));
-  const pathD=moodPts.length>1?moodPts.map((p,i)=>i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`).join(" "):"";
-  const areaD=moodPts.length>1?`${pathD} L${moodPts[moodPts.length-1].x},${svgH} L${moodPts[0].x},${svgH} Z`:"";
+  const pathD=moodPts.length>1?moodPts.map((p,i)=>i===0?"M"+p.x+","+p.y:"L"+p.x+","+p.y).join(" "):"";
+  const areaD=moodPts.length>1?pathD+" L"+moodPts[moodPts.length-1].x+","+svgH+" L"+moodPts[0].x+","+svgH+" Z":"";
 
   // Heures semaine
   const heuresData=[
@@ -3146,7 +3146,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
             <div style={{fontSize:9,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{d.h||""}</div>
             <div style={{
               width:"100%",borderRadius:"4px 4px 0 0",
-              height:`${(d.h/maxH)*60}px`,
+              height:((d.h/maxH)*60)+"px",
               background:d.h>0?"linear-gradient(to top,var(--T),var(--Tl))":"var(--br)",
               transition:"height .6s ease",minHeight:d.h>0?4:0
             }}/>
@@ -3169,7 +3169,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
             <span style={{fontSize:11,color:"var(--B)",fontWeight:600}}>{Math.floor(d.d)}h{Math.round((d.d%1)*60).toString().padStart(2,"0")}</span>
           </div>
           <div style={{height:8,background:"var(--Bp)",borderRadius:4,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${(d.d/maxS)*100}%`,background:"linear-gradient(to right,var(--B),#5B9BD5)",borderRadius:4,transition:"width .6s ease"}}/>
+            <div style={{height:"100%",width:((d.d/maxS)*100)+"%",background:"linear-gradient(to right,var(--B),#5B9BD5)",borderRadius:4,transition:"width .6s ease"}}/>
           </div>
         </div>)}
       </div>
@@ -3305,10 +3305,10 @@ function CourbeCroissance({enfants,role,pEId}){
             {[0,6,12,18,24,36].filter(v=>v<=Math.max(maxAge+3,24)).map(v=>
               <text key={v}x={xScale(v)}y={H-4}fontSize="7"fill="var(--l)"textAnchor="middle">{v}m</text>)}
             {/* Zone OMS */}
-            {vue==="poids"&&<polyline points={OMS_POIDS.slice(0,Math.min(13,mesures.length+2)).map((v,i)=>`${xScale(i)},${yScale(v)}`).join(" ")}
+            {vue==="poids"&&<polyline points={OMS_POIDS.slice(0,Math.min(13,mesures.length+2)).map((v,i)=>xScale(i)+","+yScale(v)).join(" ")}
               fill="none"stroke="var(--B)"strokeWidth="1"strokeDasharray="3,3"opacity=".5"/>}
             {/* Courbe */}
-            {pts.length>1&&<polyline points={pts.map(p=>`${p.x},${p.y}`).join(" ")}fill="none"stroke="var(--T)"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"/>}
+            {pts.length>1&&<polyline points={pts.map(p=>p.x+","+p.y).join(" ")}fill="none"stroke="var(--T)"strokeWidth="2.5"strokeLinecap="round"strokeLinejoin="round"/>}
             {/* Points */}
             {pts.map((p,i)=><circle key={i}cx={p.x}cy={p.y}r="4"fill="var(--T)"stroke="#fff"strokeWidth="1.5"/>)}
           </svg>:<div style={{textAlign:"center",padding:"30px 0",color:"var(--l)",fontSize:13}}>Pas encore de données</div>}
@@ -3386,7 +3386,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
-      {activites.map((a,i)=><div key={i}className="card"style={{padding:16,borderTop:`3px solid ${catColors[a.cat]||"var(--T)"}`}}>
+      {activites.map((a,i)=><div key={i}className="card"style={{padding:16,borderTop:"3px solid "+(catColors[a.cat]||"var(--T)")}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
           <span className="badge"style={{background:(catColors[a.cat]||"var(--T)")+"22",color:catColors[a.cat]||"var(--T)",fontSize:11}}>{a.cat}</span>
           <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>⏱ {a.duree}</span>
@@ -4843,7 +4843,7 @@ function RapportAnnuel({enfants,role,pEId}){
 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {/* Enfant concerné */}
-        <div className="card"style={{padding:18,textAlign:"center",borderTop:`4px solid ${enfant?.couleur||"var(--T)"}`}}>
+        <div className="card"style={{padding:18,textAlign:"center",borderTop:"4px solid "+(enfant?.couleur||"var(--T)")}}>
           <div style={{fontSize:52,marginBottom:8}}>{enfant?.emoji||"👶"}</div>
           <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)",marginBottom:4}}>{enfant?.prenom} {enfant?.nom}</div>
           <div style={{fontSize:12,color:"var(--l)"}}>{age(enfant?.naissance||"")}</div>
@@ -5034,8 +5034,8 @@ function SoldeDeCompte({enfants,role,pEId}){
             {[
               ["Enfant",(enfant?.prenom||"—")+" "+(enfant?.nom||"")],
               ["Début",fmt(contrat.debut||"2023-09-04")],
-              ["Taux horaire",`${tauxH.toFixed(2)}€/h`],
-              ["Heures/semaine",`${contrat.heuresHebdo||40}h`],
+              ["Taux horaire",tauxH.toFixed(2)+"€/h"],
+              ["Heures/semaine",(contrat.heuresHebdo||40)+"h"],
             ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"3px 0"}}>
               <span style={{color:"var(--l)"}}>{l}</span><span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
             </div>)}
@@ -5050,8 +5050,8 @@ function SoldeDeCompte({enfants,role,pEId}){
         <div className="card"style={{padding:20,border:"2px solid var(--G)"}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--G)",marginBottom:16}}>💶 Solde de tout compte — {enfant?.prenom}</div>
           {[
-            ["Indemnité compensatrice de congés payés",`${congesRestants} jours × ${(heuresMois/20*tauxH).toFixed(2)}€`,iccp.toFixed(2)+"€","var(--S)"],
-            [`Indemnité de préavis (${preavis}j)`,`${preavis} jours selon CCN`,indemPreavis.toFixed(2)+"€","var(--B)"],
+            ["Indemnité compensatrice de congés payés",congesRestants+" jours × "+(heuresMois/20*tauxH).toFixed(2)+"€",iccp.toFixed(2)+"€","var(--S)"],
+            ["Indemnité de préavis ("+preavis+"j)",preavis+" jours selon CCN",indemPreavis.toFixed(2)+"€","var(--B)"],
           ].map(([l,d,v,c])=><div key={l}style={{padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
               <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{l}</span>
@@ -5466,7 +5466,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           cursor:"pointer",transition:"all .15s",flexShrink:0,whiteSpace:"nowrap",
           background:isSubActive?group.color+"18":"transparent",
           color:isSubActive?group.color:"var(--m)",
-          borderBottom:isSubActive?`2px solid ${group.color}`:"2px solid transparent",
+          borderBottom:isSubActive?"2px solid "+group.color:"2px solid transparent",
           marginBottom:-2,position:"relative",
         }}>
           <span>{s.ic}</span>
@@ -5521,7 +5521,7 @@ function FadeIn({children,delay=0,className=""}){
     <div ref={ref}className={className}style={{
       opacity:visible?1:0,
       transform:visible?"translateY(0)":"translateY(32px)",
-      transition:`opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+      transition:"opacity 0.7s ease "+delay+"ms, transform 0.7s ease "+delay+"ms",
     }}>{children}</div>
   );
 }
@@ -6079,7 +6079,7 @@ function LandingPage({onLogin,dark,setDark}) {
             {/* Sélecteur rôle */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
               {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
-                <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? `3px solid ${col}44` : "none", transition: "all .2s", fontFamily:"inherit" }}>
+                <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? "3px solid "+col+"44" : "none", transition: "all .2s", fontFamily:"inherit" }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(255,255,255,.4)", whiteSpace: "pre-line", lineHeight: 1.3 }}>{l}</div>
                 </button>
@@ -6583,10 +6583,10 @@ function Onboarding({onFinish,user}){
               onClick={()=>isLast?onFinish():setStep(p=>p+1)}
               style={{
                 width:"100%",padding:"14px",borderRadius:12,border:"none",
-                background:`linear-gradient(135deg, ${s.color}, ${s.color}CC)`,
+                background:"linear-gradient(135deg, "+s.color+", "+s.color+"CC)",
                 color:"#fff",fontWeight:700,fontSize:15,cursor:"pointer",
                 fontFamily:"inherit",letterSpacing:".2px",
-                boxShadow:`0 4px 20px ${s.color}40`,
+                boxShadow:"0 4px 20px "+s.color+"40",
                 transition:"all .2s",
               }}
               onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
