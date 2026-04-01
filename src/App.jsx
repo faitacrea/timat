@@ -2479,7 +2479,7 @@ function ContratsTypes({enfants}){
             {enfants.map(e=><option key={e.id}value={e.id}>{e.emoji} {e.prenom}</option>)}
           </select>
           :c.includes("Date")||c.includes("effet")?<input type="date"className="inp"value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}/>
-          :<input className="inp"placeholder={`${c}…`}value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}/>}
+          :<input className="inp"placeholder={c+"…"}value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}/>}
         </div>)}
       </div>
       <div style={{display:"flex",gap:8}}>
@@ -4246,7 +4246,7 @@ function ListeAttente({role}){
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>💬 Répondre</div>
           <textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
-            placeholder={`Bonjour ${sel.parent.prenom},\n\nMerci pour votre message…`}
+            placeholder={"Bonjour "+sel.parent.prenom+",\n\nMerci pour votre message…"}
             style={{width:"100%",minHeight:90,marginBottom:10,resize:"vertical"}}/>
           <button className="btn bT"style={{width:"100%",marginBottom:10}}onClick={envoyerReponse}
             disabled={!repTxt.trim()}>
@@ -4337,7 +4337,7 @@ function KitCMG({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
             <span>👩‍👧</span> Votre assistante maternelle
           </div>
-          <InfoRow label="Nom complet" value={`${asmat.prenom} ${asmat.nom}`} copyKey="asmNom"/>
+          <InfoRow label="Nom complet" value={asmat.prenom+" "+asmat.nom} copyKey="asmNom"/>
           <InfoRow label="N° agrément" value="AGR-2019-0042" copyKey="agrement"/>
           <InfoRow label="Email professionnel" value="marie.dupont@timat.app" copyKey="asmEmail"/>
           <InfoRow label="Code postal" value="75015" copyKey="cp"/>
@@ -6210,7 +6210,7 @@ async function demanderPush(userId){
   if(perm!=='granted')return null;
   try{
     const reg=await navigator.serviceWorker.ready;
-    const VAPID_PUBLIC='BPYC1LBrYgWYabL6aFOENWaYAP_kRL6ZZPyroUVDm94cl5ff9l1xV0jfPjRijgpYEt6yB1LnMMJRAJrtUlvG3Hc';
+    const VAPID_PUBLIC='BEl62iUYgUivxIkv69yViEuiBIa40HZa+FE+TgEFSCcg4sV3fD3CK+jNHOyHAHhGXCGGOEtmC5xSuWRInlVBOw==';
     const sub=await reg.pushManager.subscribe({
       userVisibleOnly:true,
       applicationServerKey:VAPID_PUBLIC
