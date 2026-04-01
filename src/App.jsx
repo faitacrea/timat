@@ -1887,7 +1887,7 @@ function Recap({enfants,role,pEId}){
       {[["⏰","Heures réalisées",h.real+"h / "+h.prev+"h prévues","var(--B)"],
         ["🍽️","Repas enregistrés",rep.length+" jours de suivi","var(--S)"],
         ["🌱","Étapes atteintes",ms.filter(m=>m.ok).length+" / "+ms.length+" jalons","var(--P)"],
-        ["📋","Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges`,"var(--T)"],
+        ["📋","Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges","var(--T)"],
       ].map(([ic,ti,su,c])=><div key={ti}className="card"style={{padding:14,display:"flex",gap:10,alignItems:"center"}}>
         <div style={{fontSize:26}}>{ic}</div>
         <div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{ti}</div>
