@@ -318,9 +318,9 @@ const D = {
 };
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
-const age=(d)=>{const n=new Date(d),t=new Date(),m=(t.getFullYear()-n.getFullYear())*12+(t.getMonth()-n.getMonth());return m>=24?`${Math.floor(m/12)} ans`:`${m} mois`};
+const age=(d)=>{const n=new Date(d),t=new Date(),m=(t.getFullYear()-n.getFullYear())*12+(t.getMonth()-n.getMonth());return m>=24?Math.floor(m/12)+" ans":m+" mois"};
 const fmt=(s)=>s?new Date(s).toLocaleDateString("fr-FR"):"—";
-const ini=(p,n)=>`${p[0]}${n[0]}`.toUpperCase();
+const ini=(p,n)=>(p[0]+n[0]).toUpperCase();
 const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
 
@@ -396,7 +396,7 @@ function AccueilAssMat({enfants,setPage}){
           const t=tx.filter(x=>x.eId===e.id).slice(-1)[0];
           const msg=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
           const rep=D.repas.find(r=>r.eId===e.id&&r.date===TODAY_STR);
-          return <div key={e.id} style={{background:"var(--c)",borderRadius:14,padding:14,border:`2px solid ${e.couleur}20`,transition:"all .2s"}}>
+          return <div key={e.id} style={{background:"var(--c)",borderRadius:14,padding:14,border:"2px solid "+e.couleur+"20",transition:"all .2s"}}>
             {/* En-tête enfant cliquable → journal */}
             <div onClick={()=>setPage("journal_complet")}style={{display:"flex",gap:10,alignItems:"center",marginBottom:10,cursor:"pointer"}}>
               <span style={{fontSize:28}}>{e.emoji}</span>
@@ -517,7 +517,7 @@ function AccueilParent({enfant,setPage}){
   const declarerAbsence=()=>{
     if(!absence.heures)return;
     D.absences.push({id:"ab"+Date.now(),eId:enfant.id,date:absence.date,motif:absence.motif,indemnise:absence.indemnise,heures:parseFloat(absence.heures)});
-    D.evenements.push({id:"ev"+Date.now(),date:absence.date,type:"abs",txt:`Absent — ${enfant.prenom} (${absence.motif})`});
+    D.evenements.push({id:"ev"+Date.now(),date:absence.date,type:"abs",txt:"Absent — "+enfant.prenom+" ("+absence.motif+")"});
     setAbsEnvoyee(true);
     setShowAbsence(false);
     setToast(`Absence déclarée — Marie a été notifiée ✓`);
@@ -743,7 +743,7 @@ function Transmissions({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📈 Humeurs — 15 derniers jours</div>
           <div className="mood-bar">
             {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{
-              height:`${v/5*100}%`,width:"100%",
+              height:(v/5*100)+"%",width:"100%",
               background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
           </div>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:4}}>
@@ -898,7 +898,7 @@ function Pointage({enfants,role,pEId}){
     if(!arr)return;
     const tot=()=>{if(!arr||!dep)return null;
       const[h1,m1]=arr.split(":").map(Number);const[h2,m2]=dep.split(":").map(Number);
-      const d=(h2*60+m2)-(h1*60+m1);return`${Math.floor(d/60)}h${String(d%60).padStart(2,"0")}`;};
+      const d=(h2*60+m2)-(h1*60+m1);return Math.floor(d/60)+"h"+String(d%60).padStart(2,"0");};
     setPts(p=>[...p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR)),
       {id:"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,arr:arr.replace(":","h"),dep:dep?dep.replace(":","h"):null,tot:tot(),valide:true}]);
     setArr("");setDep("");setToast("Pointage enregistré ✓");};
@@ -913,7 +913,7 @@ function Pointage({enfants,role,pEId}){
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📊 Bilan Mars 2024 — {enfant?.prenom}</div>
           <div className="g3"style={{marginBottom:12}}>
-            {[["Prévues",h.prev+"h","var(--B)"],["Réalisées",h.real+"h","var(--S)"],["Solde",`${solde>0?"+":""}${solde}h`,solde<0?"var(--R)":"var(--S)"]].map(([l,v,c])=>
+            {[["Prévues",h.prev+"h","var(--B)"],["Réalisées",h.real+"h","var(--S)"],["Solde",(solde>0?"+":"")+solde+"h",solde<0?"var(--R)":"var(--S)"]].map(([l,v,c])=>
               <div key={l}style={{background:"var(--c)",borderRadius:10,padding:12,textAlign:"center"}}>
                 <div className="pf"style={{fontSize:20,fontWeight:700,color:c}}>{v}</div>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{l}</div>
@@ -1113,8 +1113,8 @@ function Calendrier({enfants,role,pEId}){
   const todayDate=new Date();
   const isActualToday=(d)=>d===todayDate.getDate()&&mois===todayDate.getMonth()&&an===todayDate.getFullYear();
 
-  const ds=(d)=>`${an}-${String(mois+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-  const moisStr=`${an}-${String(mois+1).padStart(2,"0")}`;
+  const ds=(d)=>an+"-"+String(mois+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+  const moisStr=an+"-"+String(mois+1).padStart(2,"0");
 
   // Jour de la semaine (0=Lundi…6=Dim) pour un jour du mois
   const jourIdx=(d)=>(new Date(an,mois,d).getDay()+6)%7;
@@ -1150,7 +1150,7 @@ function Calendrier({enfants,role,pEId}){
   const declarerAbsence=()=>{
     if(!absForm.heures||!absForm.date)return;
     const enfant=enfants.find(e=>e.id===absForm.eId)||enfants[0];
-    setEvs(p=>[...p,{id:"abs"+Date.now(),date:absForm.date,type:"abs",eId:absForm.eId,txt:`Absent — ${enfant?.prenom} (${absForm.motif})`}]);
+    setEvs(p=>[...p,{id:"abs"+Date.now(),date:absForm.date,type:"abs",eId:absForm.eId,txt:"Absent — "+(enfant?.prenom||"")+" ("+absForm.motif+")"}]);
     D.absences.push({id:"abn"+Date.now(),eId:absForm.eId,date:absForm.date,motif:absForm.motif,indemnise:absForm.indemnise,heures:parseFloat(absForm.heures)||8});
     setShowAbsenceModal(false);
     setToast(`Absence déclarée — Marie a été notifiée ✓`);
@@ -1160,8 +1160,8 @@ function Calendrier({enfants,role,pEId}){
   const moisEvs=[
     ...evsFiltres.filter(e=>e.date.startsWith(moisStr)).map(e=>({...e,src:"user"})),
     ...Object.entries(FERIES_2024).filter(([d])=>d.startsWith(moisStr)).map(([d,n])=>({id:d,date:d,txt:n,type:"ferie",src:"ferie"})),
-    ...enfants.filter(e=>e.naissance&&`${an}-${e.naissance.slice(5)}`.startsWith(moisStr))
-      .map(e=>({id:"bd"+e.id,date:`${an}-${e.naissance.slice(5)}`,txt:"🎂 Anniversaire de "+e.prenom,type:"anniv",src:"birthday"}))
+    ...enfants.filter(e=>e.naissance&&(an+"-"+e.naissance.slice(5)).startsWith(moisStr))
+      .map(e=>({id:"bd"+e.id,date:an+"-"+e.naissance.slice(5),txt:"🎂 Anniversaire de "+e.prenom,type:"anniv",src:"birthday"}))
   ].sort((a,b)=>a.date>b.date?1:-1);
 
   // Légende couleurs des enfants (asmat uniquement)
@@ -1284,7 +1284,7 @@ function Calendrier({enfants,role,pEId}){
             ["var(--Bp)","var(--B)","Vacances scolaires"],
           ].map(([bg,c,l])=>
             <div key={l}style={{display:"flex",alignItems:"center",gap:4}}>
-              <div style={{width:9,height:9,borderRadius:2,background:bg,border:`1px solid ${c}`}}/>
+              <div style={{width:9,height:9,borderRadius:2,background:bg,border:"1px solid "+c}}/>
               <span style={{fontSize:10,color:"var(--m)"}}>{l}</span>
             </div>)}
         </div>
@@ -1299,11 +1299,11 @@ function Calendrier({enfants,role,pEId}){
         </div>
 
         {/* Anniversaires ce mois */}
-        {enfants.some(e=>e.naissance?.slice(5)&&`${an}-${e.naissance.slice(5)}`.startsWith(moisStr))&&
+        {enfants.some(e=>e.naissance?.slice(5)&&(an+"-"+e.naissance.slice(5)).startsWith(moisStr))&&
           <div style={{marginTop:12,padding:"8px 12px",background:"var(--Tp)",borderRadius:10,border:"1px solid var(--Tl)"}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--T)",marginBottom:4}}>🎂 Anniversaires ce mois</div>
-            {enfants.filter(e=>`${an}-${e.naissance?.slice(5)}`.startsWith(moisStr)).map(e=>
-              <div key={e.id}style={{fontSize:13,color:"var(--b)"}}>{e.emoji} {e.prenom} — {new Date(an,mois,parseInt(`${an}-${e.naissance?.slice(5)}`.slice(8))).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}</div>)}
+            {enfants.filter(e=>(an+"-"+(e.naissance?.slice(5)||"")).startsWith(moisStr)).map(e=>
+              <div key={e.id}style={{fontSize:13,color:"var(--b)"}}>{e.emoji} {e.prenom} — {new Date(an,mois,parseInt((an+"-"+(e.naissance?.slice(5)||"")).slice(8))).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}</div>)}
           </div>}
       </div>
 
@@ -1477,9 +1477,9 @@ function Facturation({enfants,role,pEId}){
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)"}}>💰 Salaire Mars 2024 — {enfant?.prenom}</div>
-          {[["Heures réalisées",`${h.real}h × ${contrat.tauxHoraire}€`,(h.real*contrat.tauxHoraire).toFixed(2)+"€"],
-            ["Indemnité entretien",`${h.real} jrs × ${contrat.entretien}€`,(h.real/5*contrat.entretien).toFixed(2)+"€"],
-            ["Absences indemnisées",`${absMois.filter(a=>a.indemnise).length} jours`,"+"+indemAbs.toFixed(2)+"€"],
+          {[["Heures réalisées",h.real+"h × "+contrat.tauxHoraire+"€",(h.real*contrat.tauxHoraire).toFixed(2)+"€"],
+            ["Indemnité entretien",h.real+" jrs × "+contrat.entretien+"€",(h.real/5*contrat.entretien).toFixed(2)+"€"],
+            ["Absences indemnisées",absMois.filter(a=>a.indemnise).length+" jours","+"+indemAbs.toFixed(2)+"€"],
           ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
             <div><div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{l}</div>
               <div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
@@ -1584,7 +1584,7 @@ function Contrats({enfants,role,pEId}){
             <span className="badge"style={{background:signes[enfant?.id]?"var(--Sp)":"var(--Gp)",color:signes[enfant?.id]?"var(--S)":"var(--G)"}}>
               {signes[enfant?.id]?"✅ Signé":"⏳ En attente de signature"}</span>
           </div>
-          {[["Période",`${fmt(contrat.debut)} → ${fmt(contrat.fin)}`],
+          {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",contrat.jours.join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
             ["Taux horaire",contrat.tauxHoraire.toFixed(2)+" €/h"],
@@ -1825,7 +1825,7 @@ function Developpement({enfants,role,pEId}){
             </div>
           </div>
           <div className="bar"style={{height:10,marginBottom:8}}>
-            <div className="bar-fill"style={{width:`${pct}%`,background:"var(--S)"}}/>
+            <div className="bar-fill"style={{width:pct+"%",background:"var(--S)"}}/>
           </div>
           <div style={{fontSize:12,color:"var(--m)"}}>{done} / {items.length} étapes atteintes</div>
         </div>
@@ -1840,7 +1840,7 @@ function Developpement({enfants,role,pEId}){
               <span style={{fontSize:12,color:"var(--S)",fontWeight:700}}>{cpct}%</span>
             </div>
             <div className="bar"style={{marginBottom:2}}>
-              <div className="bar-fill"style={{width:`${cpct}%`,background:"var(--S)"}}/>
+              <div className="bar-fill"style={{width:cpct+"%",background:"var(--S)"}}/>
             </div>
           </div>;})}
       </div>
@@ -1884,10 +1884,10 @@ function Recap({enfants,role,pEId}){
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
     <div className="g2"style={{marginBottom:12}}>
-      {[["⏰","Heures réalisées",`${h.real}h / ${h.prev}h prévues`,"var(--B)"],
-        ["🍽️","Repas enregistrés",`${rep.length} jours de suivi`,"var(--S)"],
-        ["🌱","Étapes atteintes",`${ms.filter(m=>m.ok).length} / ${ms.length} jalons`,"var(--P)"],
-        ["📋","Transmissions",`${D.transmissions.filter(t=>t.eId===enfant?.id).length} échanges`,"var(--T)"],
+      {[["⏰","Heures réalisées",h.real+"h / "+h.prev+"h prévues","var(--B)"],
+        ["🍽️","Repas enregistrés",rep.length+" jours de suivi","var(--S)"],
+        ["🌱","Étapes atteintes",ms.filter(m=>m.ok).length+" / "+ms.length+" jalons","var(--P)"],
+        ["📋","Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges`,"var(--T)"],
       ].map(([ic,ti,su,c])=><div key={ti}className="card"style={{padding:14,display:"flex",gap:10,alignItems:"center"}}>
         <div style={{fontSize:26}}>{ic}</div>
         <div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{ti}</div>
@@ -2198,7 +2198,7 @@ function Documents({enfants,role,pEId}){
     {parCat.map(c=>(
       <div key={c.key}style={{marginBottom:20}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-          <div style={{padding:"4px 12px",borderRadius:20,background:c.bg,color:c.c,fontSize:12,fontWeight:700,border:`1px solid ${c.c}33`}}>
+          <div style={{padding:"4px 12px",borderRadius:20,background:c.bg,color:c.c,fontSize:12,fontWeight:700,border:"1px solid "+c.c+"33"}}>
             {c.ic} {c.l}
           </div>
           <div style={{flex:1,height:1,background:"linear-gradient(90deg,var(--br),transparent)"}}/>
@@ -2223,7 +2223,7 @@ function Documents({enfants,role,pEId}){
                   <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{doc.date.split("-").reverse().join("/")}</span>
                   {doc.taille!=="—"&&<><span style={{fontSize:11,color:"var(--l)"}}>·</span>
                   <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{doc.taille}</span></>}
-                  {enfant&&<span className="badge"style={{background:`${enfant.couleur}18`,color:enfant.couleur,fontSize:10,padding:"1px 7px"}}>
+                  {enfant&&<span className="badge"style={{background:enfant.couleur+"18",color:enfant.couleur,fontSize:10,padding:"1px 7px"}}>
                     {enfant.emoji} {enfant.prenom}
                   </span>}
                   {!doc.partage&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:10}}>Privé</span>}
@@ -2346,9 +2346,9 @@ function BulletinSalaire({enfants,role,pEId}){
       {/* Rémunération */}
       <div style={{marginBottom:14}}>
         <div style={{fontSize:10,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
-        {[[`Salaire de base`,`${heuresNorm}h × ${tauxH}€/h`,salBase.toFixed(2)+"€"],
-          ...(hSupp>0?[[`Heures majorées 25%`,`${hSupp}h × ${(tauxH*1.25).toFixed(2)}€`,salSupp.toFixed(2)+"€"]]:[]),
-          [`Indemnité d'entretien`,`${Math.round(h.real/8)} j × ${contrat.entretien||3.80}€`,entretien.toFixed(2)+"€"],
+        {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
+          ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
+          ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.80)+"€",entretien.toFixed(2)+"€"],
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
           <span style={{color:"var(--b)",flex:2}}>{l}</span>
           <span style={{color:"var(--l)",flex:2,textAlign:"center"}}>{d}</span>
@@ -2366,8 +2366,8 @@ function BulletinSalaire({enfants,role,pEId}){
           {["Libellé","Salarié","Employeur"].map(h2=><div key={h2}style={{fontWeight:700,color:"var(--l)",padding:"3px 0",borderBottom:"1px solid var(--br)"}}>{h2}</div>)}
           {Object.entries(TAUX_COTISATIONS).flatMap(([nom,t])=>[
             <div key={nom+"l"}style={{fontSize:10,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
-            <div key={nom+"s"}style={{fontSize:10,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?`${(brut*t.sal/100).toFixed(2)}€`:"—"}</div>,
-            <div key={nom+"p"}style={{fontSize:10,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?`${(brut*t.pat/100).toFixed(2)}€`:"—"}</div>,
+            <div key={nom+"s"}style={{fontSize:10,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?(brut*t.sal/100).toFixed(2)+"€":"—"}</div>,
+            <div key={nom+"p"}style={{fontSize:10,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?(brut*t.pat/100).toFixed(2)+"€":"—"}</div>,
           ])}
           <div style={{fontWeight:700,fontSize:11,padding:"4px 0",borderTop:"1px solid var(--b)"}}>TOTAL</div>
           <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotSal.toFixed(2)}€</div>
@@ -2652,8 +2652,10 @@ function ImportContrat({onFinish}){
 function Parrainage({user}){
   const [copied,setCopied]=useState(false);
   const [toast,setToast]=useState("");
-  const code=`TM-${(user?.prenom||"MARIE").toUpperCase().slice(0,4)}-${Math.abs((user?.email||"test").split("").reduce((a,c)=>a+c.charCodeAt(0),1000)%9000+1000)}`;
-  const lien=`https://timat.app/rejoindre?code=${code}`;
+  const prefix=(user?.prenom||"MARIE").toUpperCase().slice(0,4);
+  const codeNum=Math.abs((user?.email||"test").split("").reduce((a,c)=>a+c.charCodeAt(0),1000)%9000+1000);
+  const code="TM-"+prefix+"-"+codeNum;
+  const lien="https://timat.app/rejoindre?code="+code;
   const copy=()=>{navigator.clipboard?.writeText(lien).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2500);setToast("Lien copié ✓");};
   const filleules=[
     {prenom:"Nathalie",ville:"Lyon",date:"Il y a 5 jours",statut:"actif",gain:"1 mois offert"},
@@ -2895,7 +2897,7 @@ function TransmissionsContent({enfant,role}){
         {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📈 Humeurs — 15 jours</div>
           <div className="mood-bar">
-            {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{height:`${v/5*100}%`,width:"100%",background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
+            {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{height:(v/5*100)+"%",width:"100%",background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
           </div>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:4}}>
             <span>J-14</span><span>Aujourd'hui</span>
@@ -4153,7 +4155,7 @@ function ListeAttente({role}){
           background:filtre===v?"var(--b)":"transparent",
           color:filtre===v?"#fff":"var(--m)",
           borderColor:filtre===v?"var(--b)":"var(--br)"
-        }}>{l} {v==="tous"?`(${demandes.length})`:v==="nouveau"&&nbNouveaux>0?`(${nbNouveaux})`:""}</button>)}
+        }}>{l} {v==="tous"?"("+demandes.length+")":v==="nouveau"&&nbNouveaux>0?"("+nbNouveaux+")":""}</button>)}
     </div>
 
     <div className="g2">
@@ -4164,7 +4166,7 @@ function ListeAttente({role}){
         </div>}
         {demandesFiltrees.map(d=><div key={d.id}className="card card-lift"
           onClick={()=>setSelId(selId===d.id?null:d.id)}
-          style={{padding:16,cursor:"pointer",borderLeft:`4px solid ${statutColor[d.statut]}`,
+          style={{padding:16,cursor:"pointer",borderLeft:"4px solid "+statutColor[d.statut],
             boxShadow:selId===d.id?"var(--sh2)":"var(--sh)"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
             <div style={{flex:1}}>
@@ -4460,7 +4462,7 @@ function SignatureContratParent({enfants,pEId}){
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Contrat d'accueil — {enfant?.prenom}</div>
       {[
         ["Assistante maternelle","Marie Dupont"],
-        ["Enfant",`${enfant?.prenom||"—"} ${enfant?.nom||""}`],
+        ["Enfant",(enfant?.prenom||"—")+" "+(enfant?.nom||"")],
         ["Début du contrat",fmt(contrat.debut||"2023-09-04")],
         ["Jours d'accueil",(contrat.jours||[]).join(", ")],
         ["Horaires",contrat.horaires||"07h30–17h30"],
@@ -5030,7 +5032,7 @@ function SoldeDeCompte({enfants,role,pEId}){
           <div style={{background:"var(--c)",borderRadius:10,padding:12,marginBottom:14}}>
             <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:6}}>Données du contrat</div>
             {[
-              ["Enfant",`${enfant?.prenom||"—"} ${enfant?.nom||""}`],
+              ["Enfant",(enfant?.prenom||"—")+" "+(enfant?.nom||"")],
               ["Début",fmt(contrat.debut||"2023-09-04")],
               ["Taux horaire",`${tauxH.toFixed(2)}€/h`],
               ["Heures/semaine",`${contrat.heuresHebdo||40}h`],
@@ -6084,7 +6086,7 @@ function LandingPage({onLogin,dark,setDark}) {
               ))}
             </div>
             {/* Formulaire */}
-            <div style={{ padding: 24, borderTop: `4px solid ${role === "asmat" ? "#B8622F" : "#2E5F8A"}` }}>
+            <div style={{ padding: 24, borderTop: role === "asmat" ? "4px solid #B8622F" : "4px solid #2E5F8A" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>
