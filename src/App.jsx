@@ -656,9 +656,32 @@ function Transmissions({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [msg,setMsg]=useState("");
   const [mood,setMood]=useState("😊");
-  const [txs,setTxs]=useState(D.transmissions);
+  const [txs,setTxs]=useState([]);
+  const [sending,setSending]=useState(false);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+
+  // Charger transmissions depuis Supabase
+  useEffect(()=>{
+    if(!enfant?.id)return;
+    const charger=async()=>{
+      const{data}=await supabase.from("transmissions")
+        .select("*").eq("enfant_id",enfant.id)
+        .order("created_at",{ascending:true}).limit(50);
+      if(data&&data.length>0){
+        setTxs(data.map(t=>({
+          id:t.id,eId:t.enfant_id,
+          auteur:t.auteur_role,
+          date:t.date,h:t.heure||"",
+          txt:t.texte,mood:t.mood||"😊"
+        })));
+      }else{
+        setTxs(D.transmissions.filter(t=>t.eId===enfant?.id));
+      }
+    };
+    charger();
+  },[enfant?.id]);
+
   const msgs=txs.filter(t=>t.eId===enfant?.id).sort((a,b)=>a.id>b.id?1:-1);
 
   // Bilans reçus de Marie (demo data)
@@ -668,9 +691,28 @@ function Transmissions({enfants,role,pEId}){
   ].filter(b=>b.txt):[];
   const [docOuvert,setDocOuvert]=useState(null);
 
-  const send=()=>{if(!msg.trim())return;
-    setTxs(p=>[...p,{id:"tn"+Date.now(),eId:enfant.id,auteur:role,date:TODAY_STR,h:TODAY_H,txt:msg,mood}]);
-    setMsg("");};
+  const send=async()=>{
+    if(!msg.trim()||!enfant)return;
+    setSending(true);
+    const{data:{user}}=await supabase.auth.getUser();
+    const{data,error}=await supabase.from("transmissions").insert({
+      enfant_id:enfant.id,
+      auteur_id:user?.id,
+      auteur_role:role,
+      date:TODAY_STR,
+      heure:TODAY_H,
+      texte:msg,
+      mood,
+    }).select().single();
+    if(!error&&data){
+      setTxs(p=>[...p,{id:data.id,eId:enfant.id,auteur:role,date:TODAY_STR,h:TODAY_H,txt:msg,mood}]);
+    }else{
+      // Fallback local si erreur
+      setTxs(p=>[...p,{id:"tn"+Date.now(),eId:enfant.id,auteur:role,date:TODAY_STR,h:TODAY_H,txt:msg,mood}]);
+    }
+    setMsg("");
+    setSending(false);
+  };
 
   return <div className="fi">
     <PageHeader icon="📋" title="Journal" sub="Échanges quotidiens avec Marie"/>
@@ -884,24 +926,84 @@ function RecitIA({enfants,role,pEId}){
 // ─── POINTAGE ────────────────────────────────────────────────────────────────
 function Pointage({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [pts,setPts]=useState(D.pointages);
-  const [arr,setArr]=useState("");const [dep,setDep]=useState("");
+  const [pts,setPts]=useState([]);
+  const [arr,setArr]=useState("");
+  const [dep,setDep]=useState("");
   const [toast,setToast]=useState("");
+  const [saving,setSaving]=useState(false);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+
+  // Charger les pointages depuis Supabase
+  useEffect(()=>{
+    if(!enfant?.id)return;
+    const charger=async()=>{
+      const{data}=await supabase.from("pointages")
+        .select("*").eq("enfant_id",enfant.id)
+        .order("date",{ascending:false}).limit(30);
+      if(data&&data.length>0){
+        // Adapter au format attendu par l'UI
+        setPts(data.map(p=>({
+          id:p.id,eId:p.enfant_id,date:p.date,
+          arr:p.arrivee,dep:p.depart,
+          tot:p.total_minutes?Math.floor(p.total_minutes/60)+"h"+String(p.total_minutes%60).padStart(2,"0"):null,
+          valide:true,valide_parent:p.valide_parent
+        })));
+      }else{
+        // Fallback démo si pas de données réelles
+        setPts(D.pointages.filter(p=>p.eId===enfant?.id));
+      }
+    };
+    charger();
+  },[enfant?.id]);
+
   const ptJ=pts.find(p=>p.eId===enfant?.id&&p.date===TODAY_STR);
   const ptH=pts.filter(p=>p.eId===enfant?.id).sort((a,b)=>b.date>a.date?-1:1);
-  const h=D.heures[enfant?.id]||{};
-  const solde=h.real-h.prev;
 
-  const save=()=>{
-    if(!arr)return;
-    const tot=()=>{if(!arr||!dep)return null;
-      const[h1,m1]=arr.split(":").map(Number);const[h2,m2]=dep.split(":").map(Number);
-      const d=(h2*60+m2)-(h1*60+m1);return Math.floor(d/60)+"h"+String(d%60).padStart(2,"0");};
-    setPts(p=>[...p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR)),
-      {id:"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,arr:arr.replace(":","h"),dep:dep?dep.replace(":","h"):null,tot:tot(),valide:true}]);
-    setArr("");setDep("");setToast("Pointage enregistré ✓");};
+  // Calcul bilan mensuel
+  const heuresMois=pts.filter(p=>p.eId===enfant?.id&&p.tot).reduce((s,p)=>{
+    if(!p.tot)return s;
+    const[h,m]=(p.tot||"0h0").replace("h",":").split(":").map(Number);
+    return s+(h*60+(m||0));
+  },0);
+  const heuresPrev=Math.round((enfant?.contrat?.heuresHebdo||40)*52/12);
+  const soldeMin=heuresMois-heuresPrev*60/60;
+
+  const save=async()=>{
+    if(!arr||!enfant)return;
+    setSaving(true);
+    const[h1,m1]=arr.split(":").map(Number);
+    const totalMin=dep?(()=>{const[h2,m2]=dep.split(":").map(Number);return(h2*60+m2)-(h1*60+m1);})():null;
+    const totStr=totalMin?Math.floor(totalMin/60)+"h"+String(totalMin%60).padStart(2,"0"):null;
+
+    // Sauvegarder dans Supabase
+    const{error}=await supabase.from("pointages").upsert({
+      enfant_id:enfant.id,
+      asmat_id:(await supabase.auth.getUser()).data.user?.id,
+      date:TODAY_STR,
+      arrivee:arr,
+      depart:dep||null,
+      total_minutes:totalMin,
+      valide_parent:false,
+    },{onConflict:"enfant_id,date"});
+
+    if(!error){
+      setPts(p=>[...p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR)),
+        {id:"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,
+         arr:arr.replace(":","h"),dep:dep?dep.replace(":","h"):null,
+         tot:totStr,valide:true,valide_parent:false}]);
+      setArr("");setDep("");setToast("Pointage enregistré ✓");
+    }else{
+      setToast("Erreur — pointage sauvegardé localement");
+    }
+    setSaving(false);
+  };
+
+  const validerPointage=async(ptId)=>{
+    await supabase.from("pointages").update({valide_parent:true}).eq("id",ptId);
+    setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true}:x));
+    setToast("Pointage validé ✓");
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -911,21 +1013,21 @@ function Pointage({enfants,role,pEId}){
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📊 Bilan Mars 2024 — {enfant?.prenom}</div>
+          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📊 Bilan du mois — {enfant?.prenom}</div>
           <div className="g3"style={{marginBottom:12}}>
-            {[["Prévues",h.prev+"h","var(--B)"],["Réalisées",h.real+"h","var(--S)"],["Solde",(solde>0?"+":"")+solde+"h",solde<0?"var(--R)":"var(--S)"]].map(([l,v,c])=>
+            {[
+              ["Prévues",heuresPrev+"h","var(--B)"],
+              ["Réalisées",Math.floor(heuresMois/60)+"h"+String(heuresMois%60).padStart(2,"0"),"var(--S)"],
+              ["Solde",(soldeMin>=0?"+":"")+Math.floor(soldeMin)+"h",soldeMin<0?"var(--R)":"var(--S)"]
+            ].map(([l,v,c])=>
               <div key={l}style={{background:"var(--c)",borderRadius:10,padding:12,textAlign:"center"}}>
                 <div className="pf"style={{fontSize:20,fontWeight:700,color:c}}>{v}</div>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{l}</div>
               </div>)}
           </div>
-          <div style={{marginBottom:4}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--m)",marginBottom:4}}>
-            <span>Progression</span><span>{h.real}h / {h.prev}h</span></div>
-            <div className="bar"><div className="bar-fill"style={{width:Math.min(h.real/h.prev*100,100)+"%",background:"var(--S)"}}/></div>
-          </div>
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📍 Aujourd'hui</div>
+          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📍 Aujourd&#39;hui</div>
           {ptJ?<div style={{background:"var(--Sp)",borderRadius:10,padding:12,border:"1px solid var(--Sl)",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               {[["Arrivée",ptJ.arr,"var(--S)"],["→","","var(--l)"],["Départ",ptJ.dep||"En cours","var(--T)"],["Total",ptJ.tot||"—","var(--b)"]].map(([l,v,c])=>
@@ -938,40 +1040,50 @@ function Pointage({enfants,role,pEId}){
               <div><label className="lbl">Arrivée</label><input type="time"className="inp"value={arr}onChange={e=>setArr(e.target.value)}/></div>
               <div><label className="lbl">Départ</label><input type="time"className="inp"value={dep}onChange={e=>setDep(e.target.value)}/></div>
             </div>
-            <button className="btn bS"style={{width:"100%"}}onClick={save}>Enregistrer le pointage</button>
+            <button className="btn bS"style={{width:"100%"}}onClick={save}disabled={saving}>
+              {saving?"⏳ Sauvegarde…":"Enregistrer le pointage"}
+            </button>
           </div>}
         </div>
       </div>
       <div className="card"style={{padding:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontWeight:700,color:"var(--b)"}}>📅 Historique récent</div>
-          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>Tapez ✅ pour valider un pointage</div>}
+          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>Tapez ✅ pour valider</div>}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {ptH.slice(0,8).map(p=><div key={p.id}style={{
+          {ptH.slice(0,10).map(p=><div key={p.id}style={{
             display:"flex",justifyContent:"space-between",alignItems:"center",
             padding:"8px 10px",borderRadius:9,
-            background:p.valide_parent?"var(--Sp)":role==="parent"&&!p.valide_parent?"var(--Gp)":"var(--c)",
+            background:p.valide_parent?"var(--Sp)":role==="parent"?"var(--Gp)":"var(--c)",
             border:role==="parent"&&!p.valide_parent?"1px solid var(--G)":"1px solid transparent"
           }}>
-            <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}</div>
+            <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>
+              {new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}
+            </div>
             <div style={{display:"flex",gap:10,fontSize:12}}>
-              <span style={{color:"var(--S)"}}>↗{p.arr}</span>
-              <span style={{color:"var(--T)"}}>↘{p.dep||"—"}</span>
+              <span style={{color:"var(--S)"}}>{p.arr?"↗"+p.arr:""}</span>
+              <span style={{color:"var(--T)"}}>{p.dep?"↘"+p.dep:""}</span>
               <span style={{fontWeight:700,color:"var(--b)"}}>{p.tot||"—"}</span>
             </div>
             {role==="parent"&&!p.valide_parent
-              ?<button onClick={()=>{setPts(prev=>prev.map(x=>x.id===p.id?{...x,valide_parent:true}:x));setToast("Pointage validé ✓");}}
-                style={{background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"4px 10px",
-                  cursor:"pointer",fontSize:11,fontWeight:700}}>Valider</button>
-              :<span style={{fontSize:13,color:p.valide_parent?"var(--S)":"var(--l)"}}>{p.valide_parent?"✅ Validé":"⏳ En attente"}</span>
+              ?<button onClick={()=>validerPointage(p.id)}
+                style={{background:"var(--G)",color:"#fff",border:"none",borderRadius:6,
+                  padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>Valider</button>
+              :<span style={{fontSize:13,color:p.valide_parent?"var(--S)":"var(--l)"}}>
+                {p.valide_parent?"✅":"⏳"}
+              </span>
             }
           </div>)}
+          {ptH.length===0&&<div style={{fontSize:13,color:"var(--l)",textAlign:"center",padding:20}}>
+            Aucun pointage enregistré pour le moment.
+          </div>}
         </div>
         {role==="parent"&&ptH.some(p=>!p.valide_parent)&&<div style={{
-          marginTop:10,padding:"8px 12px",background:"var(--Gp)",borderRadius:8,fontSize:12,color:"var(--G)",fontWeight:600
+          marginTop:10,padding:"8px 12px",background:"var(--Gp)",borderRadius:8,
+          fontSize:12,color:"var(--G)",fontWeight:600
         }}>
-          ⚠️ {ptH.filter(p=>!p.valide_parent).length} pointage{ptH.filter(p=>!p.valide_parent).length>1?"s":""} en attente de votre validation
+          ⚠️ {ptH.filter(p=>!p.valide_parent).length} pointage(s) en attente de validation
         </div>}
       </div>
     </div>
@@ -6809,16 +6921,77 @@ export default function App(){
       if(data.url)window.location.href=data.url;
     }catch(e){alert("Erreur lors de l'ouverture du portail.");}
   };
+  const [enfantsDB,setEnfantsDB]=useState([]);
+  const [contratsDB,setContratsDB]=useState([]);
+  const [pointagesDB,setPointagesDB]=useState([]);
+  const [transmissionsDB,setTransmissionsDB]=useState([]);
+  const [dbLoading,setDbLoading]=useState(false);
+
+  // ── Charger les données réelles depuis Supabase ───────────
+  useEffect(()=>{
+    if(!user?.id)return;
+    const charger=async()=>{
+      setDbLoading(true);
+      try{
+        // Enfants
+        let q=supabase.from("enfants").select("*");
+        if(user.role==="asmat") q=q.eq("asmat_id",user.id);
+        else q=q.eq("parent_id",user.id);
+        const{data:e}=await q.order("created_at");
+        if(e&&e.length>0){
+          // Charger les contrats pour chaque enfant
+          const enfantIds=e.map(x=>x.id);
+          const{data:c}=await supabase.from("contrats").select("*")
+            .in("enfant_id",enfantIds).eq("actif",true);
+          setContratsDB(c||[]);
+          // Mapper les contrats sur les enfants
+          const enfantsAvecContrat=e.map(enf=>({
+            ...enf,
+            parentId:enf.parent_id,
+            naissance:enf.naissance,
+            contrat:c?.find(ct=>ct.enfant_id===enf.id)?{
+              debut:c.find(ct=>ct.enfant_id===enf.id).debut,
+              fin:c.find(ct=>ct.enfant_id===enf.id).fin,
+              heuresHebdo:c.find(ct=>ct.enfant_id===enf.id).heures_hebdo,
+              tauxHoraire:c.find(ct=>ct.enfant_id===enf.id).taux_horaire,
+              entretien:c.find(ct=>ct.enfant_id===enf.id).entretien,
+              jours:c.find(ct=>ct.enfant_id===enf.id).jours||["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
+              horaires:c.find(ct=>ct.enfant_id===enf.id).horaires||"07h30–17h30",
+              indemniteAbsence:0.5,
+            }:null,
+          }));
+          setEnfantsDB(enfantsAvecContrat);
+          // Charger pointages du mois
+          const debut=new Date();debut.setDate(1);
+          const{data:p}=await supabase.from("pointages").select("*")
+            .in("enfant_id",enfantIds)
+            .gte("date",debut.toISOString().slice(0,10));
+          setPointagesDB(p||[]);
+          // Charger transmissions du jour
+          const{data:t}=await supabase.from("transmissions").select("*")
+            .in("enfant_id",enfantIds)
+            .eq("date",TODAY_STR);
+          setTransmissionsDB(t||[]);
+        }else{
+          setEnfantsDB([]);
+        }
+      }catch(err){console.error("Erreur chargement données:",err);}
+      finally{setDbLoading(false);}
+    };
+    charger();
+  },[user?.id]);
+
+  // ── Utiliser données réelles si disponibles, sinon démo ───
+  const hasRealData=enfantsDB.length>0;
   // Pour les démos, parentId="p1/p2/p3" correspond à user.id
   // Pour les vrais comptes Supabase, fallback sur l'email
-  const enfants=role==="asmat"?D.enfants:(()=>{
+  const enfants=hasRealData?enfantsDB:(role==="asmat"?D.enfants:(()=>{
     const byId=D.enfants.filter(e=>e.parentId===user.id);
     if(byId.length>0)return byId;
-    // Fallback email pour comptes réels
     const parentDemo=D.parents.find(p=>p.email===user.email);
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
-    return [D.enfants[0]]; // fallback démo
-  })();
+    return [];
+  })());
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId};
