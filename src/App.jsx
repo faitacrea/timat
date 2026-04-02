@@ -6985,7 +6985,7 @@ export default function App(){
     }catch(e){alert("Erreur lors de l'ouverture du portail.");}
   };
 
- si disponibles, sinon démo ───
+ // ── Utiliser données réelles si disponibles, sinon démo ───
   const hasRealData=enfantsDB.length>0;
   // Pour les démos, parentId="p1/p2/p3" correspond à user.id
   // Pour les vrais comptes Supabase, fallback sur l'email
