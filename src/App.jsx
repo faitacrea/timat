@@ -658,6 +658,7 @@ function Transmissions({enfants,role,pEId}){
   const [mood,setMood]=useState("😊");
   const [txs,setTxs]=useState([]);
   const [sending,setSending]=useState(false);
+  const [docOuvert,setDocOuvert]=useState(null);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
 
@@ -689,7 +690,6 @@ function Transmissions({enfants,role,pEId}){
     {id:"br1",type:"bilan",date:"11/03/2024",txt:BILANS[enfant?.id]?.[0]||""},
     {id:"br2",type:"cr",trim:"T1 2024",txt:CRS[enfant?.id]?.[0]||""},
   ].filter(b=>b.txt):[];
-  const [docOuvert,setDocOuvert]=useState(null);
 
   const send=async()=>{
     if(!msg.trim()||!enfant)return;
@@ -6800,6 +6800,13 @@ export default function App(){
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
 
+  // ── États données Supabase — AVANT tout return conditionnel ──
+  const [enfantsDB,setEnfantsDB]=useState([]);
+  const [contratsDB,setContratsDB]=useState([]);
+  const [pointagesDB,setPointagesDB]=useState([]);
+  const [transmissionsDB,setTransmissionsDB]=useState([]);
+  const [dbLoading,setDbLoading]=useState(false);
+
   // ── PWA — enregistrement service worker ──────────────────
   useEffect(()=>{
     if('serviceWorker' in navigator){
@@ -6883,50 +6890,6 @@ export default function App(){
     </div></>
   );
 
-  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
-  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
-
-  const role=user.role;
-  // ── Statut abonnement ────────────────────────────────────
-  const isPro=['pro','trialing'].includes(user?.subscription_status)||user?.role==="parent";
-  const isTrialing=user?.subscription_status==="trialing";
-
-  // ── Lancer le checkout Stripe ────────────────────────────
-  const lancerCheckout=async()=>{
-    try{
-      const res=await fetch('/api/create-checkout-session',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
-      });
-      const data=await res.json();
-      if(data.url)window.location.href=data.url;
-      else alert("Erreur lors de la création de la session de paiement.");
-    }catch(e){
-      alert("Erreur réseau. Vérifiez votre connexion.");
-    }
-  };
-
-
-  // ── Portail client Stripe (gérer abonnement) ─────────────
-  const ouvrirPortail=async()=>{
-    if(!user.stripe_customer_id){alert("Aucun abonnement actif trouvé.");return;}
-    try{
-      const res=await fetch('/api/customer-portal',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({stripeCustomerId:user.stripe_customer_id}),
-      });
-      const data=await res.json();
-      if(data.url)window.location.href=data.url;
-    }catch(e){alert("Erreur lors de l'ouverture du portail.");}
-  };
-  const [enfantsDB,setEnfantsDB]=useState([]);
-  const [contratsDB,setContratsDB]=useState([]);
-  const [pointagesDB,setPointagesDB]=useState([]);
-  const [transmissionsDB,setTransmissionsDB]=useState([]);
-  const [dbLoading,setDbLoading]=useState(false);
-
   // ── Charger les données réelles depuis Supabase ───────────
   useEffect(()=>{
     if(!user?.id)return;
@@ -6981,7 +6944,47 @@ export default function App(){
     charger();
   },[user?.id]);
 
-  // ── Utiliser données réelles si disponibles, sinon démo ───
+  // ── Utiliser données réelles
+  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
+  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
+
+  const role=user.role;
+  // ── Statut abonnement ────────────────────────────────────
+  const isPro=['pro','trialing'].includes(user?.subscription_status)||user?.role==="parent";
+  const isTrialing=user?.subscription_status==="trialing";
+
+  // ── Lancer le checkout Stripe ────────────────────────────
+  const lancerCheckout=async()=>{
+    try{
+      const res=await fetch('/api/create-checkout-session',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
+      });
+      const data=await res.json();
+      if(data.url)window.location.href=data.url;
+      else alert("Erreur lors de la création de la session de paiement.");
+    }catch(e){
+      alert("Erreur réseau. Vérifiez votre connexion.");
+    }
+  };
+
+
+  // ── Portail client Stripe (gérer abonnement) ─────────────
+  const ouvrirPortail=async()=>{
+    if(!user?.stripe_customer_id){alert("Aucun abonnement actif trouvé.");return;}
+    try{
+      const res=await fetch('/api/customer-portal',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({stripeCustomerId:user.stripe_customer_id}),
+      });
+      const data=await res.json();
+      if(data.url)window.location.href=data.url;
+    }catch(e){alert("Erreur lors de l'ouverture du portail.");}
+  };
+
+ si disponibles, sinon démo ───
   const hasRealData=enfantsDB.length>0;
   // Pour les démos, parentId="p1/p2/p3" correspond à user.id
   // Pour les vrais comptes Supabase, fallback sur l'email
