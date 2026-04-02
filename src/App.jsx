@@ -5793,25 +5793,25 @@ function LandingPage({onLogin,dark,setDark}) {
   };
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDFAF6" }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FBF6F0" }}>
       {/* ── HERO ── */}
       <div style={{
-        background: "linear-gradient(160deg, #0D1B2A 0%, #1B2E44 35%, #162639 65%, #0D1B2A 100%)",
+        background: "linear-gradient(160deg, #1A120B 0%, #2C1810 35%, #1F1209 65%, #1A120B 100%)",
         padding: "0 24px 80px", position: "relative", overflow: "hidden",
       }}>
         {/* Image de fond petite enfance */}
         <div style={{
           position:"absolute", inset:0, zIndex:0,
-          backgroundImage:"url('https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=1600&q=60')",
+          backgroundImage:"url('https://images.unsplash.com/photo-1576765608866-5b51046452be?w=1600&q=60')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
-          opacity:0.08,
+          opacity:0.14,
         }}/>
         {/* Grain overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
 
         {/* Orbes déco */}
-        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(184,98,47,.18) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(46,95,138,.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(61,107,80,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
@@ -5934,7 +5934,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── DÉMO INTERACTIVE ── */}
-      <div id="demo" style={{ background: "#FDFAF6", padding: "72px 24px" }}>
+      <div id="demo" style={{ background: "#FBF6F0", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6062,7 +6062,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TÉMOIGNAGES ── */}
-      <div style={{ background: "#FDFAF6", padding: "72px 24px" }}>
+      <div style={{ background: "#FBF6F0", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6111,7 +6111,7 @@ function LandingPage({onLogin,dark,setDark}) {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 24, alignItems: "center" }}>
             {/* Gratuit */}
-            <div style={{ background: "#FDFAF6", borderRadius: 16, border: "2px solid #DDD5C8", padding: 28 }}>
+            <div style={{ background: "#FBF6F0", borderRadius: 16, border: "2px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Découverte</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0€</span>
@@ -6131,7 +6131,7 @@ function LandingPage({onLogin,dark,setDark}) {
             </div>
 
             {/* Pro */}
-            <div style={{ background: "#FDFAF6", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+            <div style={{ background: "#FBF6F0", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
               <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>
                 ⭐ TOUT INCLUS
               </div>
@@ -6188,7 +6188,7 @@ function LandingPage({onLogin,dark,setDark}) {
       {showModal && (
         <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#FDFAF6", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
+          <div style={{ background: "#FBF6F0", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             {/* Sélecteur rôle */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
               {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
@@ -6447,8 +6447,26 @@ function OnboardingWizard({user,onFinish}){
               <input type="email"className="inp"placeholder="parent@email.fr"value={parentEmail}onChange={e=>setParentEmail(e.target.value)}/></div>
             <div style={{display:"flex",gap:8}}>
               <button className="btn bG"style={{flex:1}}onClick={()=>setStep(3)}>Passer</button>
-              <button className="btn bS"style={{flex:2,justifyContent:"center"}}onClick={()=>{setToast("Invitation envoyée ✓");setStep(3);}}>
-                📧 Envoyer l'invitation
+              <button className="btn bS"style={{flex:2,justifyContent:"center"}}disabled={saving}
+                onClick={async()=>{
+                  if(!parentEmail.trim()){setStep(3);return;}
+                  setSaving(true);
+                  try{
+                    const res=await fetch('/api/invite-parent',{
+                      method:'POST',headers:{'Content-Type':'application/json'},
+                      body:JSON.stringify({
+                        emailParent:parentEmail,
+                        prenomEnfant:enfant.prenom,
+                        prenomAsmat:user?.prenom||"Votre assistante maternelle",
+                        asmatId:user?.id,enfantId:null,
+                      })
+                    });
+                    const d=await res.json();
+                    setToast(d.success?"✉️ Invitation envoyée — le parent recevra un email":"Erreur: "+d.error);
+                  }catch(e){setToast("Erreur réseau");}
+                  setSaving(false);setStep(3);
+                }}>
+                {saving?"⏳ Envoi…":"📧 Envoyer l'invitation"}
               </button>
             </div>
           </>}
@@ -6798,7 +6816,10 @@ export default function App(){
     {id:"n4",ic:"📋",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_complet",roles:["parent"]},
   ]);
   const [showNotifs,setShowNotifs]=useState(false);
-  const [onboarded,setOnboarded]=useState(false);
+  // onboarded = true si l'asmat a déjà des enfants dans Supabase
+  // ou si elle vient de terminer l'onboarding dans cette session
+  const [onboardedSession,setOnboardedSession]=useState(false);
+  const onboarded=onboardedSession||(enfantsDB.length>0);
 
   // ── États données Supabase — AVANT tout return conditionnel ──
   const [enfantsDB,setEnfantsDB]=useState([]);
@@ -6876,7 +6897,7 @@ export default function App(){
 
   const handleLogout=async()=>{
     try{await supabase.auth.signOut();}catch(e){}
-    setUser(null);setPage("accueil");setOnboarded(false);
+    setUser(null);setPage("accueil");setOnboardedSession(false);
   };
 
   // ── Charger les données réelles depuis Supabase ───────────
@@ -6947,7 +6968,7 @@ export default function App(){
 
   // ── Utiliser données réelles
   if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
-  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
+  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboardedSession(true)} user={user}/></div></>;
 
   const role=user.role;
   // ── Statut abonnement ────────────────────────────────────
