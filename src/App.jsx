@@ -6879,17 +6879,6 @@ export default function App(){
     setUser(null);setPage("accueil");setOnboarded(false);
   };
 
-  if(loading)return(
-    <><Styles/>
-    <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div className="pf"style={{fontSize:36,color:"var(--T)",fontStyle:"italic"}}>TiMat</div>
-      <div style={{display:"flex",gap:6}}>
-        <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
-      </div>
-      <div style={{fontSize:12,color:"var(--l)"}}>Chargement…</div>
-    </div></>
-  );
-
   // ── Charger les données réelles depuis Supabase ───────────
   useEffect(()=>{
     if(!user?.id)return;
@@ -6943,6 +6932,18 @@ export default function App(){
     };
     charger();
   },[user?.id]);
+
+  if(loading)return(
+    <><Styles/>
+    <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+      <div className="pf"style={{fontSize:36,color:"var(--T)",fontStyle:"italic"}}>TiMat</div>
+      <div style={{display:"flex",gap:6}}>
+        <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
+      </div>
+      <div style={{fontSize:12,color:"var(--l)"}}>Chargement…</div>
+    </div></>
+  );
+
 
   // ── Utiliser données réelles
   if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
