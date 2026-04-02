@@ -6816,10 +6816,7 @@ export default function App(){
     {id:"n4",ic:"📋",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_complet",roles:["parent"]},
   ]);
   const [showNotifs,setShowNotifs]=useState(false);
-  // onboarded = true si l'asmat a déjà des enfants dans Supabase
-  // ou si elle vient de terminer l'onboarding dans cette session
-  const [onboardedSession,setOnboardedSession]=useState(false);
-  const onboarded=onboardedSession||(enfantsDB.length>0);
+  const [onboarded,setOnboarded]=useState(false);
 
   // ── États données Supabase — AVANT tout return conditionnel ──
   const [enfantsDB,setEnfantsDB]=useState([]);
@@ -6897,7 +6894,7 @@ export default function App(){
 
   const handleLogout=async()=>{
     try{await supabase.auth.signOut();}catch(e){}
-    setUser(null);setPage("accueil");setOnboardedSession(false);
+    setUser(null);setPage("accueil");setOnboarded(false);
   };
 
   // ── Charger les données réelles depuis Supabase ───────────
@@ -6968,7 +6965,8 @@ export default function App(){
 
   // ── Utiliser données réelles
   if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark}/></div></>;
-  if(!onboarded&&user.role==="asmat")return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboardedSession(true)} user={user}/></div></>;
+  // Afficher onboarding si asmat sans enfants (vérifié après chargement DB)
+  if(!onboarded&&user.role==="asmat"&&!dbLoading&&enfantsDB.length===0)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
   const role=user.role;
   // ── Statut abonnement ────────────────────────────────────
