@@ -1,5 +1,27 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
+
+// ─── ERROR BOUNDARY — évite les pages blanches ────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props){super(props);this.state={error:null};}
+  static getDerivedStateFromError(e){return{error:e};}
+  render(){
+    if(this.state.error)return(
+      <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24,background:"#FBF6F0",fontFamily:"sans-serif"}}>
+        <div style={{fontSize:48,marginBottom:16}}>😕</div>
+        <div style={{fontSize:18,fontWeight:700,color:"#B8622F",marginBottom:8}}>Une erreur est survenue</div>
+        <div style={{fontSize:13,color:"#666",marginBottom:20,maxWidth:400,textAlign:"center"}}>
+          {this.state.error?.message||"Erreur inconnue"}
+        </div>
+        <button onClick={()=>window.location.reload()}
+          style={{background:"#3D6B50",color:"#fff",border:"none",borderRadius:10,padding:"10px 24px",cursor:"pointer",fontSize:14,fontWeight:600}}>
+          🔄 Recharger la page
+        </button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
 
 // ─── DATES (déclarées en premier pour éviter TDZ) ─────────────────────────────
 var _D=new Date();
@@ -6873,14 +6895,14 @@ export default function App(){
   const [transmissionsDB,setTransmissionsDB]=useState([]);
   const [dbLoading,setDbLoading]=useState(false);
 
-  // ── PWA — service worker désactivé temporairement ───────
-  // useEffect(()=>{
-  //   if('serviceWorker' in navigator){
-  //     navigator.serviceWorker.register('/sw.js')
-  //       .then(reg=>console.log('SW enregistré:', reg.scope))
-  //       .catch(err=>console.log('SW erreur:', err));
-  //   }
-  // },[]);
+  // ── Désactiver le service worker bloqué ──────────────────
+  useEffect(()=>{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(regs=>{
+        regs.forEach(reg=>reg.unregister());
+      });
+    }
+  },[]);
 
   // Vérifier session Supabase au démarrage ────────────────
   useEffect(()=>{
