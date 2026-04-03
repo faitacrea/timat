@@ -6873,14 +6873,14 @@ export default function App(){
   const [transmissionsDB,setTransmissionsDB]=useState([]);
   const [dbLoading,setDbLoading]=useState(false);
 
-  // ── PWA — enregistrement service worker ──────────────────
-  useEffect(()=>{
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg=>console.log('SW enregistré:', reg.scope))
-        .catch(err=>console.log('SW erreur:', err));
-    }
-  },[]);
+  // ── PWA — service worker désactivé temporairement ───────
+  // useEffect(()=>{
+  //   if('serviceWorker' in navigator){
+  //     navigator.serviceWorker.register('/sw.js')
+  //       .then(reg=>console.log('SW enregistré:', reg.scope))
+  //       .catch(err=>console.log('SW erreur:', err));
+  //   }
+  // },[]);
 
   // Vérifier session Supabase au démarrage ────────────────
   useEffect(()=>{
