@@ -417,7 +417,7 @@ function AccueilAssMat({enfants,setPage,user}){
           const p=pt.find(x=>x.eId===e.id);
           const t=tx.filter(x=>x.eId===e.id).slice(-1)[0];
           const msg=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
-          const rep=D.repas.find(r=>r.eId===e.id&&r.date===TODAY_STR);
+          const rep=D.repas?.find(r=>r.eId===e.id&&r.date===TODAY_STR)||null;
           const couleur=e.couleur||"#B8622F";
           const allergies=e.allergies||[];
           return <div key={e.id} style={{background:"var(--c)",borderRadius:14,padding:14,border:"2px solid "+couleur+"20",transition:"all .2s"}}>
@@ -529,7 +529,7 @@ function AccueilParent({enfant,setPage}){
   const pt=D.pointages.find(p=>p.eId===enfant.id&&p.date===TODAY_STR);
   const txs=D.transmissions.filter(t=>t.eId===enfant.id&&t.date===TODAY_STR);
   const rep=D.repas.find(r=>r.eId===enfant.id&&r.date===TODAY_STR);
-  const mms=D.milestones[enfant.id]||[];
+  const mms=(D.milestones&&D.milestones[enfant.id])||[];
   const recentMs=mms.filter(m=>m.ok).slice(-1)[0];
 
   const declarerAbsence=()=>{
@@ -1589,7 +1589,7 @@ function Facturation({enfants,role,pEId}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
-  const h=D.heures[enfant?.id]||{};
+  const h=D.heures[enfant?.id]||{real:0,prev:Math.round((enfant?.contrat?.heuresHebdo||40)*52/12)};
   const salBrut=contrat?(h.real*contrat.tauxHoraire+(h.real/5*contrat.entretien)):0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
   const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||4.05)*contrat?.indemniteAbsence),0);
@@ -2002,7 +2002,7 @@ function Recap({enfants,role,pEId}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
-  const h=D.heures[enfant?.id]||{};
+  const h=D.heures[enfant?.id]||{real:0,prev:Math.round((enfant?.contrat?.heuresHebdo||40)*52/12)};
   const rep=D.repas.filter(r=>r.eId===enfant?.id);
   const ms=D.milestones[enfant?.id]||[];
 
@@ -2842,7 +2842,7 @@ function Parrainage({user}){
 }
 
 // ─── CONTRATS & FACTURES (fusionnés) ─────────────────────────────────────────
-function AdminFinances({enfants,role,pEId}){
+function AdminFinances({enfants,role,pEId,user}){
   const [section,setSection]=useState(role==="asmat"?"facturation":"contrats");
   const sousOnglets=role==="asmat"
     ?[
@@ -2866,7 +2866,7 @@ function AdminFinances({enfants,role,pEId}){
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}/>}
-    {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<Contrats enfants={enfants}role={role}pEId={pEId}/>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
@@ -3182,7 +3182,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
   const ptAuj=D.pointages.filter(p=>p.date===TODAY_STR);
   const presents=ptAuj.filter(p=>!p.dep).length;
   const msgsNonLus=D.messages.filter(m=>!m.lu).length;
-  const totalH=Object.values(D.heures).reduce((a,h)=>a+h.real,0);
+  const totalH=enfants.reduce((a,e)=>{const h=D.heures[e.id];return a+(h?h.real:0);},0);
 
   // Humeurs historique
   const hist=D.moodHistory[enfant?.id]||[];
@@ -7130,9 +7130,9 @@ export default function App(){
       case "developpement": return <EveilComplet {...P}/>;
       case "documents": return <DocumentsComplet {...P}/>;
       case "export": return <DocumentsComplet {...P}/>;
-      case "facturation": return <AdminFinances {...P}/>;
-      case "contrats": return <AdminFinances {...P}/>;
-      case "recap": return <AdminFinances {...P}/>;
+      case "facturation": return <AdminFinances {...P} user={user}/>;
+      case "contrats": return <AdminFinances {...P} user={user}/>;
+      case "recap": return <AdminFinances {...P} user={user}/>;
       case "dashboard": return <TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>;
       default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
     }
