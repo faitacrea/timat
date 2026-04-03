@@ -396,28 +396,27 @@ function AccueilAssMat({enfants,setPage,user}){
           const t=tx.filter(x=>x.eId===e.id).slice(-1)[0];
           const msg=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
           const rep=D.repas.find(r=>r.eId===e.id&&r.date===TODAY_STR);
-          return <div key={e.id} style={{background:"var(--c)",borderRadius:14,padding:14,border:"2px solid "+e.couleur+"20",transition:"all .2s"}}>
+          const couleur=e.couleur||"#B8622F";
+          const allergies=e.allergies||[];
+          return <div key={e.id} style={{background:"var(--c)",borderRadius:14,padding:14,border:"2px solid "+couleur+"20",transition:"all .2s"}}>
             {/* En-tête enfant cliquable → journal */}
             <div onClick={()=>setPage("journal_complet")}style={{display:"flex",gap:10,alignItems:"center",marginBottom:10,cursor:"pointer"}}>
-              <span style={{fontSize:28}}>{e.emoji}</span>
+              <span style={{fontSize:28}}>{e.emoji||"👶"}</span>
               <div style={{flex:1}}>
                 <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{e.prenom}</div>
-                <div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div>
+                <div style={{fontSize:11,color:"var(--l)"}}>{e.naissance?age(e.naissance):""}</div>
               </div>
-              {/* Badge messages → messagerie */}
               {msg>0&&<span className="badge"onClick={ev=>{ev.stopPropagation();setPage("messagerie");}}
                 style={{background:"var(--Rp)",color:"var(--R)",cursor:"pointer",fontSize:12}}>
                 {msg} 💬
               </span>}
             </div>
 
-            {/* Allergie → santé */}
-            {e.allergies.length>0&&<div onClick={()=>setPage("sante_complet")}
+            {allergies.length>0&&<div onClick={()=>setPage("sante_complet")}
               style={{fontSize:11,color:"var(--R)",fontWeight:700,marginBottom:8,cursor:"pointer",padding:"3px 6px",background:"#FFF0F4",borderRadius:6,display:"inline-block"}}>
-              ⚠️ {e.allergies.join(", ")}
+              ⚠️ {allergies.join(", ")}
             </div>}
 
-            {/* Pointage → pointage */}
             {p?<div onClick={()=>setPage("pointage")}
               style={{fontSize:12,color:"var(--S)",fontWeight:600,cursor:"pointer",marginBottom:6}}>
               ↗ {p.arr} {p.dep?"· ↘ "+p.dep:"· en cours ⏱"}
@@ -426,15 +425,12 @@ function AccueilAssMat({enfants,setPage,user}){
               ⏰ Pas encore arrivé — pointer →
             </div>}
 
-            {/* Repas → repas */}
             {rep&&<div onClick={()=>setPage("journal_complet")}
               style={{fontSize:11,cursor:"pointer",color:"var(--G)",fontWeight:600,marginBottom:6}}>
               🍽 {rep.dej} · {rep.q==="bien"?"✅":"🟡"}
             </div>}
 
-            {/* Humeur → bilan de journée */}
             {t&&<div onClick={()=>setPage("journal_complet")}
-              title="Voir le bilan de journée"
               style={{fontSize:22,cursor:"pointer",display:"inline-block",transition:"transform .2s"}}
               onMouseEnter={ev=>ev.currentTarget.style.transform="scale(1.25)"}
               onMouseLeave={ev=>ev.currentTarget.style.transform="scale(1)"}>
