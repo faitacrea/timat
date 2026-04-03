@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
+import { Analytics } from "@vercel/analytics/react";
 
 // ─── ERROR BOUNDARY — évite les pages blanches ────────────────────────────────
 class ErrorBoundary extends React.Component {
@@ -7153,6 +7154,7 @@ export default function App(){
         <BandeauHorsLigne/>
         <div className="content">{renderPage()}</div>
       </div>
+      <Analytics />
     </>
   );
 }
