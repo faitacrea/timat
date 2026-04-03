@@ -5802,7 +5802,7 @@ function LandingPage({onLogin,dark,setDark}) {
         {/* Image de fond petite enfance */}
         <div style={{
           position:"absolute", inset:0, zIndex:0,
-          backgroundImage:"url('https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=1600&q=60')",
+          backgroundImage:"url('https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=1600&q=60')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
           opacity:0.14,
         }}/>
