@@ -337,17 +337,15 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
   {sub&&<div style={{fontSize:12,color:"var(--l)"}}>{sub}</div>}</div>{action}</div>}
 
 // ─── ACCUEIL ASMAT ────────────────────────────────────────────────────────────
-function AccueilAssMat({enfants,setPage}){
-  const pt=D.pointages.filter(p=>p.date===TODAY_STR);
-  const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
-  const msgs=D.messages.filter(m=>!m.lu);
-  const nonSigne=enfants.filter(e=>!e.signe);
+function AccueilAssMat({enfants,setPage,user}){
+  const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
+  const nbEnfants=enfants.length;
 
   const kpis=[
-    {icon:"👶",val:pt.filter(p=>!p.dep).length+"/"+enfants.length,lbl:"Présents",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
-    {icon:"💬",val:msgs.length,lbl:"Messages non lus",c:"var(--B)",page:"messagerie",hint:"→ Messagerie"},
-    {icon:"⏰",val:Object.values(D.heures).reduce((a,h)=>a+h.real,0)+"h",lbl:"Heures ce mois",c:"var(--S)",page:"pointage",hint:"→ Voir bilan"},
-    {icon:"🧾",val:"3",lbl:"Factures à émettre",c:"var(--G)",page:"admin_finances",hint:"→ Facturation"},
+    {icon:"👶",val:nbEnfants>0?nbEnfants+" enfant"+(nbEnfants>1?"s":""):"Aucun",lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
+    {icon:"💬",val:"0",lbl:"Messages non lus",c:"var(--B)",page:"messagerie",hint:"→ Messagerie"},
+    {icon:"📋",val:nbEnfants>0?"Actif":"—",lbl:"Journal du jour",c:"var(--S)",page:"journal_complet",hint:"→ Journal"},
+    {icon:"🧾",val:nbEnfants,lbl:"Contrat"+(nbEnfants>1?"s":"")+" actif"+(nbEnfants>1?"s":""),c:"var(--G)",page:"admin_finances",hint:"→ Facturation"},
   ];
 
   return <div className="fi">
@@ -355,7 +353,7 @@ function AccueilAssMat({enfants,setPage}){
       <div style={{fontSize:11,color:"var(--l)",marginBottom:4,fontFamily:"'DM Mono',monospace",letterSpacing:".5px"}}>
         {todayStr().toUpperCase()}
       </div>
-      <div className="pf"style={{fontSize:26,fontWeight:600,color:"var(--b)",lineHeight:1.2}}>Bonjour Marie 👋</div>
+      <div className="pf"style={{fontSize:26,fontWeight:600,color:"var(--b)",lineHeight:1.2}}>Bonjour {user?.prenom||"Marie"} 👋</div>
       <div style={{fontSize:13,color:"var(--m)",marginTop:4}}>Votre espace professionnel</div>
     </div>
 
@@ -2401,7 +2399,7 @@ const TAUX_COTISATIONS={
   "CSG/CRDS non déductible":{sal:2.9,pat:0},
 };
 
-function BulletinSalaire({enfants,role,pEId}){
+function BulletinSalaire({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [moisSel,setMoisSel]=useState("Mars 2024");
   const [toast,setToast]=useState("");
@@ -2450,7 +2448,7 @@ function BulletinSalaire({enfants,role,pEId}){
         </div>
         <div style={{marginTop:10,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,fontSize:11}}>
           <div><div style={{fontWeight:700,color:"var(--b)"}}>Salarié·e</div>
-            <div style={{color:"var(--m)"}}>{D.asmat.prenom} {D.asmat.nom} · Assistante maternelle agréée</div>
+            <div style={{color:"var(--m)"}}>{user?.prenom||D.asmat.prenom} {user?.nom||D.asmat.nom} · Assistante maternelle agréée</div>
           </div>
         </div>
       </div>
@@ -2630,7 +2628,7 @@ function CourriersTypes({enfants,pEId}){
   const filtres=filtreCat==="Tous"?COURRIERS_DATA:COURRIERS_DATA.filter(c=>c.cat===filtreCat);
   const sel=COURRIERS_DATA.find(c=>c.id===selId);
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
-  const texte=sel?sel.contenu.replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]").replace(/\[Votre nom\]/g,D.asmat.prenom+" "+D.asmat.nom):"";
+  const texte=sel?sel.contenu.replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]").replace(/\[Votre nom\]/g,(user?.prenom||D.asmat.prenom)+" "+(user?.nom||D.asmat.nom)):"";
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2851,7 +2849,7 @@ function AdminFinances({enfants,role,pEId}){
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}/>}
     {section==="contrats"&&<Contrats enfants={enfants}role={role}pEId={pEId}/>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
-    {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
     {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}/>}
     {section==="solde_contrat"&&<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
@@ -4391,7 +4389,7 @@ function ListeAttente({role}){
 // ─── KIT CMG — ESPACE PARENT ──────────────────────────────────────────────────
 function KitCMG({enfants,role,pEId}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
-  const asmat=D.asmat;
+  const asmat={...D.asmat,prenom:user?.prenom||D.asmat.prenom,nom:user?.nom||D.asmat.nom,email:user?.email||D.asmat.email};
   const contrat=enfant?.contrat||{};
   const [copie,setCopie]=useState({});
   const [toast,setToast]=useState("");
@@ -4849,7 +4847,7 @@ function ForumCommunaute({role}){
 }
 
 // ─── RAPPORT ANNUEL PDF ───────────────────────────────────────────────────────
-function RapportAnnuel({enfants,role,pEId}){
+function RapportAnnuel({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [annee,setAnnee]=useState(2024);
   const [gen,setGen]=useState(false);
@@ -5382,7 +5380,7 @@ function Support({role}){
         </div>
         <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,padding:"10px 14px",background:"var(--Bp)",borderRadius:10}}>
           <span style={{fontSize:18}}>📧</span>
-          <div style={{fontSize:12,color:"var(--B)"}}>Notre réponse sera envoyée à <strong>{D.asmat.email||"votre email"}</strong> — réponse en moins de 24h.</div>
+          <div style={{fontSize:12,color:"var(--B)"}}>Notre réponse sera envoyée à <strong>{user?.email||D.asmat.email||"votre email"}</strong> — réponse en moins de 24h.</div>
         </div>
         <button className="btn bT"style={{width:"100%"}}onClick={()=>{if(!msg.trim())return;setEnvoye(true);}}>
           📤 Envoyer mon message
@@ -6551,7 +6549,7 @@ function OnboardingWizard({user,onFinish}){
 }
 
 // ─── ATTESTATION PÔLE EMPLOI ─────────────────────────────────────────────────
-function AttestationPoleEmploi({enfants,role,pEId}){
+function AttestationPoleEmploi({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [dateFin,setDateFin]=useState("");
   const [motif,setMotif]=useState("Fin de contrat");
@@ -6587,7 +6585,7 @@ function AttestationPoleEmploi({enfants,role,pEId}){
         +'<tr><td>Email</td><td>'+(parent.email||'[À compléter]')+'</td></tr>'
         +'<tr><td>N° Pajemploi</td><td>PAJ-[À compléter]</td></tr></table>'
         +'<h2>Le salarié</h2>'
-        +'<table><tr><td>Nom et prénom</td><td>'+D.asmat.prenom+' '+D.asmat.nom+'</td></tr>'
+        +'<table><tr><td>Nom et prénom</td><td>'+(user?.prenom||D.asmat.prenom)+' '+(user?.nom||D.asmat.nom)+'</td></tr>'
         +'<tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>'
         +'<tr><td>Enfant gardé</td><td>'+(enfant.prenom||'')+' '+(enfant.nom||'')+'</td></tr></table>'
         +'<h2>Contrat de travail</h2>'
@@ -6603,7 +6601,7 @@ function AttestationPoleEmploi({enfants,role,pEId}){
         +'<p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">Je certifie sur l&#39;honneur l&#39;exactitude des renseignements portés sur cette attestation.</p>'
         +'<div class="sig">'
         +'<div class="sig-box">Fait à ___, le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature employeur:<br/><br/>'+parent.prenom+' '+parent.nom+'</div>'
-        +'<div class="sig-box">Remis le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature asmat:<br/><br/>'+D.asmat.prenom+' '+D.asmat.nom+'</div>'
+        +'<div class="sig-box">Remis le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature asmat:<br/><br/>'+(user?.prenom||D.asmat.prenom)+' '+(user?.nom||D.asmat.nom)+'</div>'
         +'</div>'
         +'<p style="font-size:10px;color:#999;margin-top:20px;">Généré par TiMat — timat.app</p>'
         +'<button onclick="window.print()" style="margin-top:10px;background:#3D6B50;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;">🖨️ Imprimer / PDF</button>'
@@ -7069,16 +7067,16 @@ export default function App(){
   })());
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
-  const P={enfants,role,pEId};
+  const P={enfants,role,pEId,user};
 
   const renderPage=()=>{
     switch(page){
-      case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
+      case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
       case "eveil_complet": return <EveilComplet {...P}/>;
       case "documents_complet": return <DocumentsComplet {...P}/>;
-      case "admin_finances": return <AdminFinances {...P}/>;
+      case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
       case "messagerie": return <Messagerie {...P}/>;
@@ -7088,11 +7086,11 @@ export default function App(){
       case "pmi": return <CommunicationPMI role={role}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
-      case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId}/>;
+      case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
       case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId}/>;
-      case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId}/>;
+      case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
       case "support": return <Support role={role}/>;
@@ -7116,7 +7114,7 @@ export default function App(){
       case "contrats": return <AdminFinances {...P}/>;
       case "recap": return <AdminFinances {...P}/>;
       case "dashboard": return <TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>;
-      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
+      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
     }
   };
 
