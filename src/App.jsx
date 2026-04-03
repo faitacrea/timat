@@ -5785,7 +5785,18 @@ function LandingPage({onLogin,dark,setDark}) {
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
-        // Connexion directe après inscription
+        // Créer le profil explicitement (le trigger peut être lent)
+        try{
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email: data.user.email,
+            prenom: form.prenom,
+            nom: form.nom||'',
+            role: role,
+            couleur: role === "asmat" ? "#B8622F" : "#2E5F8A",
+            subscription_status: 'free',
+          },{onConflict:'id'});
+        }catch(e){console.log('Profile upsert:', e);}
         onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
       }
     } catch(e) { setErr("Erreur lors de l'inscription."); }
@@ -6357,12 +6368,53 @@ function OnboardingWizard({user,onFinish}){
     if(!enfant.prenom||!enfant.naissance)return;
     setSaving(true);
     try{
-      await supabase.from('enfants').insert({
-        prenom:enfant.prenom,emoji:enfant.emoji,naissance:enfant.naissance,
-        asmat_id:user.id,contrat:contrat,created_at:new Date().toISOString()
+      // 1. S'assurer que le profil existe dans Supabase
+      const{data:profil}=await supabase.from('profiles').select('id').eq('id',user.id).single();
+      if(!profil){
+        await supabase.from('profiles').insert({
+          id:user.id,email:user.email,
+          prenom:user.prenom||'',nom:user.nom||'',
+          role:user.role||'asmat',couleur:'#B8622F',
+          subscription_status:'free'
+        });
+      }
+
+      // 2. Créer l'enfant
+      const{data:enfantData,error:errEnfant}=await supabase.from('enfants').insert({
+        prenom:enfant.prenom,
+        emoji:enfant.emoji||'👶',
+        naissance:enfant.naissance,
+        asmat_id:user.id,
+        actif:true,
+      }).select().single();
+
+      if(errEnfant){
+        console.error('Erreur enfant:', errEnfant);
+        setToast('Erreur: '+errEnfant.message);
+        setSaving(false);return;
+      }
+
+      // 3. Créer le contrat lié à l'enfant
+      const{error:errContrat}=await supabase.from('contrats').insert({
+        enfant_id:enfantData.id,
+        asmat_id:user.id,
+        debut:contrat.debut||new Date().toISOString().slice(0,10),
+        heures_hebdo:contrat.heuresHebdo||40,
+        taux_horaire:contrat.tauxHoraire||4.05,
+        entretien:contrat.entretien||3.80,
+        jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
+        horaires:contrat.horaires||'07h30–17h30',
+        actif:true,
       });
-      setToast("Enfant ajouté ✓");setStep(2);
-    }catch(e){setToast("Données sauvegardées localement");setStep(2);}
+
+      if(errContrat){console.error('Erreur contrat:', errContrat);}
+
+      setToast('✅ '+enfant.prenom+' ajouté avec succès !');
+      setStep(2);
+    }catch(e){
+      console.error('Erreur sauvegarde:', e);
+      setToast('Erreur: '+e.message);
+    }
     setSaving(false);
   };
 
