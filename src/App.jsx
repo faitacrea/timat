@@ -364,6 +364,7 @@ function AccueilAssMat({enfants,setPage,user}){
   const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
   const nbEnfants=enfants.length;
+  const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
 
   const kpis=[
     {icon:"👶",val:nbEnfants>0?nbEnfants+" enfant"+(nbEnfants>1?"s":""):"Aucun",lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
@@ -487,7 +488,7 @@ function AccueilAssMat({enfants,setPage,user}){
 
       <div className="card"style={{padding:16}}>
         <div style={{fontWeight:600,fontSize:13,marginBottom:12,color:"var(--b)"}}>📅 Prochains événements</div>
-        {D.evenements.slice(0,4).map(ev=><div key={ev.id}onClick={()=>setPage("calendrier")}
+        {isDemoUser&&D.evenements.slice(0,4).map(ev=><div key={ev.id}onClick={()=>setPage("calendrier")}
           style={{display:"flex",gap:8,padding:"7px 6px",borderBottom:"1px solid var(--br)",alignItems:"center",cursor:"pointer",borderRadius:8,transition:"background .15s"}}
           onMouseEnter={ev2=>ev2.currentTarget.style.background="var(--c)"}
           onMouseLeave={ev2=>ev2.currentTarget.style.background="transparent"}>
@@ -4220,8 +4221,9 @@ const DEMANDES_DEMO=[
 ];
 
 // ─── LISTE D'ATTENTE — ESPACE ASMAT ───────────────────────────────────────────
-function ListeAttente({role}){
-  const [demandes,setDemandes]=useState(enfants.every(e=>["e1","e2","e3"].includes(e.id))?DEMANDES_DEMO:[]);
+function ListeAttente({role,enfants}){
+  const isDemoMode=(enfants||[]).every(e=>["e1","e2","e3"].includes(e.id));
+  const [demandes,setDemandes]=useState(isDemoMode?DEMANDES_DEMO:[]);
   const [selId,setSelId]=useState(null);
   const [filtre,setFiltre]=useState("tous");
   const [repTxt,setRepTxt]=useState("");
@@ -5825,10 +5827,10 @@ function LandingPage({onLogin,dark,setDark}) {
   };
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FFFFFF" }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDFAF8" }}>
       {/* ── HERO ── */}
       <div style={{
-        background: "linear-gradient(160deg, #3D6B50 0%, #4A7C5F 35%, #3D6B50 65%, #2E5240 100%)",
+        background: "linear-gradient(160deg, #4A7C5F 0%, #5A8C6F 35%, #4A7C5F 65%, #3D6B50 100%)",
         padding: "0 24px 80px", position: "relative", overflow: "hidden",
       }}>
         {/* Image de fond petite enfance */}
@@ -5924,7 +5926,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── PROBLÈME ── */}
-      <div style={{ background: "#0D1B2A", padding: "60px 24px" }}>
+      <div style={{ background: "#3D6B50", padding: "60px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -5966,7 +5968,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── DÉMO INTERACTIVE ── */}
-      <div id="demo" style={{ background: "#FFFFFF", padding: "72px 24px" }}>
+      <div id="demo" style={{ background: "#F9F5F2", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6016,7 +6018,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TRANSFORMATION ── */}
-      <div style={{ background: "#F7F2EC", padding: "72px 24px" }}>
+      <div style={{ background: "#FEF6F2", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -6038,7 +6040,7 @@ function LandingPage({onLogin,dark,setDark}) {
                 <div style={{
                   display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center",
                   padding: "18px 20px", borderRadius: 12,
-                  background: i % 2 === 0 ? "#FDFAF6" : "#fff",
+                  background: i % 2 === 0 ? "#FEF6F2" : "#fff",
                   border: "1px solid #DDD5C8",
                 }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
@@ -6062,7 +6064,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── CHIFFRES ── */}
-      <div style={{ background: "#0D1B2A", padding: "72px 24px" }}>
+      <div style={{ background: "#C4714A", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -6094,7 +6096,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TÉMOIGNAGES ── */}
-      <div style={{ background: "#FFFFFF", padding: "72px 24px" }}>
+      <div style={{ background: "#F9F5F2", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6125,7 +6127,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TARIFS ── */}
-      <div id="tarifs" style={{ background: "#F8FFFE", padding: "72px 24px" }}>
+      <div id="tarifs" style={{ background: "#FEF6F2", padding: "72px 24px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6143,7 +6145,7 @@ function LandingPage({onLogin,dark,setDark}) {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 24, alignItems: "center" }}>
             {/* Gratuit */}
-            <div style={{ background: "#FFFFFF", borderRadius: 16, border: "2px solid #DDD5C8", padding: 28 }}>
+            <div style={{ background: "#fff", borderRadius: 16, border: "2px solid #F0D8CC", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Découverte</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0€</span>
@@ -6151,7 +6153,7 @@ function LandingPage({onLogin,dark,setDark}) {
               </div>
               <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat sans engagement.</div>
               <button onClick={() => setShowModal(true)}
-                style={{ width: "100%", background: "#F7F2EC", color: "#2C1F14", border: "1.5px solid #DDD5C8", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
+                style={{ width: "100%", background: "#FEF6F2", color: "#B8622F", border: "1.5px solid #F0D8CC", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
                 Commencer gratuitement
               </button>
               {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
@@ -6163,7 +6165,7 @@ function LandingPage({onLogin,dark,setDark}) {
             </div>
 
             {/* Pro */}
-            <div style={{ background: "#FFFFFF", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+            <div style={{ background: "#FDFAF8", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
               <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>
                 ⭐ TOUT INCLUS
               </div>
@@ -6220,7 +6222,7 @@ function LandingPage({onLogin,dark,setDark}) {
       {showModal && (
         <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#FFFFFF", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
+          <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             {/* Sélecteur rôle */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
               {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
