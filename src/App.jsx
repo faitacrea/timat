@@ -646,7 +646,7 @@ function AccueilParent({enfant,setPage}){
           <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
             borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
             <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:3}}>
-              {t.auteur==="asmat"?"👩‍👧 Marie":"👪 Vous"} · {t.h}</div>
+              {t.auteur==="asmat"?"👩‍👧 "+(user?.prenom||"Marie"):"👪 Vous"} · {t.h}</div>
             <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{t.txt}</div>
           </div>
         </div>)}
@@ -777,7 +777,7 @@ function Transmissions({enfants,role,pEId}){
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
               borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:3}}>
-                {t.auteur==="asmat"?"👩‍👧 Marie":"👪 Parent"}</div>
+                {t.auteur==="asmat"?"👩‍👧 "+(user?.prenom||"Marie"):"👪 Parent"}</div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{t.txt}</div>
             </div>
           </div>)}
@@ -1229,7 +1229,8 @@ function Calendrier({enfants,role,pEId}){
   const [mois,setMois]=useState(new Date().getMonth());
   const [an,setAn]=useState(new Date().getFullYear());
   const [sel,setSel]=useState(null);
-  const [evs,setEvs]=useState(D.evenements);
+  const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const [evs,setEvs]=useState(isDemoUser?D.evenements:[]);
   const [newEv,setNewEv]=useState({type:"rdv",txt:""});
   const [showAbsenceModal,setShowAbsenceModal]=useState(false);
   const [absForm,setAbsForm]=useState({eId:pEId||enfants[0]?.id,date:"",motif:"Maladie",heures:"",indemnise:true});
@@ -1797,7 +1798,8 @@ function Sante({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
-  const vacs=enfant?.vaccins||[];
+  const isRealChild=!["e1","e2","e3"].includes(enfant?.id);
+  const vacs=isRealChild?[]:(enfant?.vaccins||[]);
 
   return <div className="fi">
     <PageHeader icon="🏥" title="Carnet de santé" sub="Informations médicales, vaccins, allergies"/>
@@ -2200,7 +2202,7 @@ function Documents({enfants,role,pEId}){
   const [annee,setAnnee]=useState("2024");
   const [cat,setCat]=useState("tous");
   const [eId,setEId]=useState("tous");
-  const [docs,setDocs]=useState(DOCS_DEMO);
+  const [docs,setDocs]=useState(enfants.every(e=>["e1","e2","e3"].includes(e.id))?DOCS_DEMO:[]);
   const [toast,setToast]=useState("");
   const [apercu,setApercu]=useState(null);
   const [showUpload,setShowUpload]=useState(false);
@@ -3005,7 +3007,7 @@ function TransmissionsContent({enfant,role}){
             <div style={{textAlign:"center",minWidth:38,flexShrink:0}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"10px 14px",borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:4}}>
-                {t.auteur==="asmat"?"👩‍👧 Marie":"👪 "+(D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent")}</div>
+                {t.auteur==="asmat"?"👩‍👧 "+(user?.prenom||"Marie"):"👪 "+(D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent")}</div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>{t.txt}</div>
             </div>
           </div>)}
@@ -3545,13 +3547,13 @@ const PMI_MESSAGES=[
   {id:"pmi3",de:"PMI",h:"14h20",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),txt:"Votre agrément arrive à renouvellement en juin 2024. Merci de nous contacter pour planifier la visite de renouvellement.",lu:false},
 ];
 
-function CommunicationPMI({role}){
-  const [msgs,setMsgs]=useState(PMI_MESSAGES);
+function CommunicationPMI({role,user,hasRealData}){
+  const [msgs,setMsgs]=useState(hasRealData?[]:PMI_MESSAGES);
   const [txt,setTxt]=useState("");
   const [toast,setToast]=useState("");
   const nonLus=msgs.filter(m=>!m.lu&&m.de==="PMI").length;
   const pmiEmail="pmi75-paris@sante.gouv.fr";
-  const asmatEmail="marie.dupont@timat.fr";
+  const asmatEmail=user?.email||"votre-email@timat.fr";
 
   const markRead=(id)=>setMsgs(p=>p.map(m=>m.id===id?{...m,lu:true}:m));
 
@@ -3590,7 +3592,7 @@ function CommunicationPMI({role}){
               opacity:m.lu?1:.95,boxShadow:!m.lu&&m.de==="PMI"?"0 0 0 2px var(--B)":"none"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:11,fontWeight:700,color:m.de==="PMI"?"var(--B)":"var(--T)"}}>
-                  {m.de==="PMI"?"🏛️ PMI":"👩‍👧 Marie"}
+                  {m.de==="PMI"?"🏛️ PMI":"👩‍👧 "+(user?.prenom||"Marie")}
                   {m.email&&<span style={{fontSize:10,color:"var(--l)",marginLeft:6}}>via {m.email}</span>}
                 </span>
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -4219,7 +4221,7 @@ const DEMANDES_DEMO=[
 
 // ─── LISTE D'ATTENTE — ESPACE ASMAT ───────────────────────────────────────────
 function ListeAttente({role}){
-  const [demandes,setDemandes]=useState(DEMANDES_DEMO);
+  const [demandes,setDemandes]=useState(enfants.every(e=>["e1","e2","e3"].includes(e.id))?DEMANDES_DEMO:[]);
   const [selId,setSelId]=useState(null);
   const [filtre,setFiltre]=useState("tous");
   const [repTxt,setRepTxt]=useState("");
@@ -5550,25 +5552,25 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
     {/* Barre principale — 3 gros onglets */}
     <div className="nav-main"style={{
       background:"var(--w)",borderBottom:"1px solid var(--br)",
-      display:"flex",gap:2,padding:"0 12px",height:50,alignItems:"center",
+      display:"flex",gap:4,padding:"0 16px",height:48,alignItems:"center",
     }}>
       {Object.entries(groups).map(([key,g])=>{
         const isActive=activeGroup===key;
         const hasAdminBadge=key==="admin"&&pmiNonLus>0;
         return <button key={key}onClick={()=>onGroupClick(key)}style={{
-          display:"flex",alignItems:"center",gap:7,
-          padding:"8px 18px",borderRadius:10,border:"none",
-          fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,
-          cursor:"pointer",transition:"all .2s",flexShrink:0,whiteSpace:"nowrap",
-          background:isActive?g.color:"transparent",
+          display:"flex",alignItems:"center",gap:6,
+          padding:"7px 16px",borderRadius:20,border:"none",
+          fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
+          cursor:"pointer",transition:"all .18s",flexShrink:0,whiteSpace:"nowrap",
+          background:isActive?g.color:"rgba(0,0,0,.04)",
           color:isActive?"#fff":"var(--m)",
-          boxShadow:isActive?"0 2px 10px rgba(0,0,0,.18)":"none",
-          transform:isActive?"scale(1.02)":"scale(1)",
+          boxShadow:isActive?"0 2px 12px rgba(0,0,0,.15)":"none",
+          letterSpacing:".1px",
           position:"relative",
         }}>
-          <span style={{fontSize:18}}>{g.ic}</span>
+          <span style={{fontSize:16}}>{g.ic}</span>
           <span>{g.l}</span>
-          {g.subs&&<span style={{fontSize:10,opacity:.7,marginLeft:2}}>{isActive?"▲":"▼"}</span>}
+          {g.subs&&<span style={{fontSize:9,opacity:.6,marginLeft:1}}>{isActive?"▲":"▼"}</span>}
           {hasAdminBadge&&<span style={{
             position:"absolute",top:4,right:4,
             background:"var(--R)",color:"#fff",
@@ -5595,10 +5597,11 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           padding:"6px 14px",borderRadius:8,border:"none",
           fontFamily:"'DM Sans',sans-serif",fontWeight:isSubActive?700:500,fontSize:12.5,
           cursor:"pointer",transition:"all .15s",flexShrink:0,whiteSpace:"nowrap",
-          background:isSubActive?group.color+"18":"transparent",
-          color:isSubActive?group.color:"var(--m)",
+          background:"transparent",
+          color:isSubActive?group.color:"var(--l)",
           borderBottom:isSubActive?"2px solid "+group.color:"2px solid transparent",
           marginBottom:-2,position:"relative",
+          fontWeight:isSubActive?700:400,
         }}>
           <span>{s.ic}</span>
           <span>{s.l}</span>
@@ -5822,10 +5825,10 @@ function LandingPage({onLogin,dark,setDark}) {
   };
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FBF6F0" }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FFFFFF" }}>
       {/* ── HERO ── */}
       <div style={{
-        background: "linear-gradient(160deg, #1A120B 0%, #2C1810 35%, #1F1209 65%, #1A120B 100%)",
+        background: "linear-gradient(160deg, #3D6B50 0%, #4A7C5F 35%, #3D6B50 65%, #2E5240 100%)",
         padding: "0 24px 80px", position: "relative", overflow: "hidden",
       }}>
         {/* Image de fond petite enfance */}
@@ -5833,14 +5836,14 @@ function LandingPage({onLogin,dark,setDark}) {
           position:"absolute", inset:0, zIndex:0,
           backgroundImage:"url('/hero-enfants.jpg')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
-          opacity:0.18,
+          opacity:0.22,
         }}/>
         {/* Grain overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
 
         {/* Orbes déco */}
-        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(61,107,80,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,230,210,.15) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
@@ -5963,7 +5966,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── DÉMO INTERACTIVE ── */}
-      <div id="demo" style={{ background: "#FBF6F0", padding: "72px 24px" }}>
+      <div id="demo" style={{ background: "#FFFFFF", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6091,7 +6094,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TÉMOIGNAGES ── */}
-      <div style={{ background: "#FBF6F0", padding: "72px 24px" }}>
+      <div style={{ background: "#FFFFFF", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6122,7 +6125,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TARIFS ── */}
-      <div id="tarifs" style={{ background: "#F7F2EC", padding: "72px 24px" }}>
+      <div id="tarifs" style={{ background: "#F8FFFE", padding: "72px 24px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6140,7 +6143,7 @@ function LandingPage({onLogin,dark,setDark}) {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 24, alignItems: "center" }}>
             {/* Gratuit */}
-            <div style={{ background: "#FBF6F0", borderRadius: 16, border: "2px solid #DDD5C8", padding: 28 }}>
+            <div style={{ background: "#FFFFFF", borderRadius: 16, border: "2px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Découverte</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0€</span>
@@ -6160,7 +6163,7 @@ function LandingPage({onLogin,dark,setDark}) {
             </div>
 
             {/* Pro */}
-            <div style={{ background: "#FBF6F0", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+            <div style={{ background: "#FFFFFF", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
               <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>
                 ⭐ TOUT INCLUS
               </div>
@@ -6217,7 +6220,7 @@ function LandingPage({onLogin,dark,setDark}) {
       {showModal && (
         <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#FBF6F0", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             {/* Sélecteur rôle */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
               {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
@@ -6882,7 +6885,7 @@ export default function App(){
   const [notifs,setNotifs]=useState([
     {id:"n1",ic:"📬",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi",roles:["asmat"]},
     {id:"n2",ic:"✍️",txt:"Contrat en attente de signature",date:TODAY_STR,lu:false,page:"admin_finances",roles:["asmat"]},
-    {id:"n3",ic:"🎂",txt:"Anniversaire de Léo dans 3 jours",date:TODAY_STR,lu:true,page:"calendrier",roles:["asmat","parent"]},
+
     {id:"n4",ic:"📋",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_complet",roles:["parent"]},
   ]);
   const [showNotifs,setShowNotifs]=useState(false);
@@ -7103,7 +7106,7 @@ export default function App(){
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail}/>;
-      case "pmi": return <CommunicationPMI role={role}/>;
+      case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
