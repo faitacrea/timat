@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { supabase, seConnecter, seDeconnecter, getSession, getProfil, inscrireAsmat, inscrireParent } from "../lib/supabase.js";
+import { supabase } from "../lib/supabase.js";
 
 // ─── DATES (déclarées en premier pour éviter TDZ) ─────────────────────────────
 var _D=new Date();
