@@ -338,6 +338,8 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
 
 // ─── ACCUEIL ASMAT ────────────────────────────────────────────────────────────
 function AccueilAssMat({enfants,setPage,user}){
+  const pt=D.pointages.filter(p=>p.date===TODAY_STR);
+  const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
   const nbEnfants=enfants.length;
 
