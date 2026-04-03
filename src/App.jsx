@@ -5802,9 +5802,9 @@ function LandingPage({onLogin,dark,setDark}) {
         {/* Image de fond petite enfance */}
         <div style={{
           position:"absolute", inset:0, zIndex:0,
-          backgroundImage:"url('https://images.unsplash.com/photo-1566004100631-35d015d6a491?w=1600&q=60')",
+          backgroundImage:"url('/hero-enfants.jpg')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
-          opacity:0.14,
+          opacity:0.18,
         }}/>
         {/* Grain overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
