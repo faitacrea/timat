@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
-import { Analytics } from "@vercel/analytics/react";
 
 // ─── ERROR BOUNDARY — évite les pages blanches ────────────────────────────────
 class ErrorBoundary extends React.Component {
@@ -38,200 +37,84 @@ const Styles = () => (
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
     :root{
-      --c:#F7F2EC;--w:#FDFAF6;--b:#2C1F14;--m:#6B4F3A;--l:#A68970;--br:#DDD5C8;
-      --T:#B8622F;--Tp:#FBF0E8;--Tl:#E8B898;
-      --S:#3D6B50;--Sp:#EAF4EE;--Sl:#96C8A8;
-      --G:#B8892A;--Gp:#FBF5E0;
-      --B:#2E5F8A;--Bp:#E6F0F8;
-      --R:#B84060;--Rp:#FAEEF2;
-      --P:#6A3F88;--Pp:#F2EAF8;
-      --sh:0 1px 3px rgba(44,31,20,.06),0 4px 16px rgba(44,31,20,.08);
-      --sh2:0 2px 8px rgba(44,31,20,.08),0 12px 40px rgba(44,31,20,.14);
-      --sh3:0 0 0 3px rgba(184,98,47,.15);
-      --r:16px;--r2:12px;--r3:10px
+      --c:#FDF5F8;--w:#FFFFFF;--b:#1A1118;--m:#6B4F5A;--l:#A8909A;--br:#EAE0E8;
+      --T:#C4714A;--Tp:#FBF0EB;--Tl:#E8B8A0;
+      --S:#9B6BAA;--Sp:#F4EFF8;--Sl:#C4A8D8;
+      --G:#4A8B6E;--Gp:#EBF5F0;
+      --B:#5A7AB8;--Bp:#EBF0F8;
+      --R:#C44A6A;--Rp:#FAECF0;
+      --P:#7B5A9A;--Pp:#F0EAF8;
+      --sh:0 1px 4px rgba(26,17,24,.05),0 4px 20px rgba(26,17,24,.07);
+      --sh2:0 2px 12px rgba(26,17,24,.08),0 16px 48px rgba(26,17,24,.12);
+      --sh3:0 0 0 3px rgba(155,107,170,.2);
+      --r:18px;--r2:14px;--r3:10px
     }
-    /* ── MODE SOMBRE ─────────────────────────────────────────── */
     .dark{
-      --c:#181210;--w:#231A15;--b:#F5EDE3;--m:#D4B090;--l:#9A7860;--br:#4A3828;
-      --Tp:#3A2218;--Sp:#1A2E1E;--Gp:#2E2410;--Bp:#182030;--Rp:#301420;--Pp:#22183A;
-      --T:#E07848;--S:#5A9A6E;--G:#D4A840;--B:#4A80B8;--R:#D4607A;--P:#8A5AAE;
-      --sh:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.5);
-      --sh2:0 2px 8px rgba(0,0,0,.5),0 12px 40px rgba(0,0,0,.6);
+      --c:#160E14;--w:#1E1420;--b:#F5EDF2;--m:#C4A0B8;--l:#8A6880;--br:#3A2838;
+      --Tp:#3A2018;--Sp:#221830;--Gp:#182818;--Bp:#182030;--Rp:#301420;--Pp:#22183A;
+      --T:#E08858;--S:#B888CC;--G:#60B888;--B:#6898D8;--R:#E06888;--P:#B888CC;
+      --sh:0 1px 4px rgba(0,0,0,.4),0 4px 20px rgba(0,0,0,.5);
+      --sh2:0 2px 12px rgba(0,0,0,.5),0 16px 48px rgba(0,0,0,.6);
     }
-    .dark .topbar,.dark .nav-main,.dark .navtabs{background:rgba(28,20,16,.96)!important}
-    .dark .app::before{opacity:.2}
-    .dark .card{border-color:#4A3828}
-    .dark .inp,.dark .ta,.dark .sel{background:#2E2420;border-color:#4A3828;color:#F5EDE3}
-    .dark .lbl{color:#B89880}
-
-    /* Grain overlay */
+    .dark .topbar,.dark .nav-main{background:rgba(22,14,20,.97)!important}
+    .dark .card{border-color:#3A2838}
+    .dark .inp,.dark .ta,.dark .sel{background:#2A1828;border-color:#3A2838;color:#F5EDF2}
+    .dark .lbl{color:#A880A0}
     .app{min-height:100vh;background:var(--c);display:flex;flex-direction:column;width:100%;position:relative}
-    .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.6}
-
-    /* Cards */
-    .card{background:var(--w);border-radius:var(--r);border:1px solid var(--br);box-shadow:var(--sh);position:relative;z-index:1}
+    .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+    .card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:var(--r);border:1px solid rgba(234,224,232,.8);box-shadow:var(--sh);position:relative;z-index:1}
     .card-lift{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease}
     .card-lift:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
-
-    /* Typography */
-    .pf{font-family:'Cormorant Garamond',serif}
-    .mono{font-family:'DM Mono',monospace}
-
-    /* Buttons */
-    .btn{border:none;border-radius:var(--r3);padding:10px 18px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;display:inline-flex;align-items:center;gap:7px;letter-spacing:.01em}
-    .bT{background:linear-gradient(135deg,#C4714A,#A85535);color:#fff;box-shadow:0 2px 8px rgba(184,98,47,.3)}
-    .bT:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(184,98,47,.4)}
-    .bT:active{transform:translateY(0)}
-    .bS{background:linear-gradient(135deg,#4E7A5C,#3A6047);color:#fff;box-shadow:0 2px 8px rgba(61,107,80,.25)}
-    .bS:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(61,107,80,.35)}
-    .bG{background:var(--w);color:var(--b);border:1.5px solid var(--br);box-shadow:var(--sh)}
-    .bG:hover{background:var(--c);border-color:var(--l);transform:translateY(-1px)}
-    .bP{background:linear-gradient(135deg,#7A4E9A,#5E3A78);color:#fff;box-shadow:0 2px 8px rgba(106,63,136,.3)}
-    .bP:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(106,63,136,.4)}
-    .bR{background:linear-gradient(135deg,#C44E72,#A83A5A);color:#fff}
-    .bR:hover{transform:translateY(-2px)}
-
-    /* Inputs */
-    .inp{width:100%;border:1.5px solid var(--br);border-radius:var(--r3);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--b);background:var(--w);outline:none;transition:all .18s}
-    .inp:focus{border-color:var(--T);box-shadow:var(--sh3)}
-    .ta{width:100%;border:1.5px solid var(--br);border-radius:var(--r3);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--b);background:var(--w);outline:none;resize:vertical;min-height:75px;transition:all .18s;line-height:1.6}
-    .ta:focus{border-color:var(--T);box-shadow:var(--sh3)}
-    .sel{width:100%;border:1.5px solid var(--br);border-radius:var(--r3);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--b);background:var(--w);outline:none;cursor:pointer;transition:border-color .18s}
-    .sel:focus{border-color:var(--T)}
-    .lbl{font-size:10.5px;font-weight:600;color:var(--l);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
-    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.01em}
-
-    /* Topbar */
-    .topbar{position:sticky;top:0;z-index:100;background:rgba(253,250,246,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(221,213,200,.6);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0}
-    .logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--T);font-style:italic;letter-spacing:.5px}
-    .logo-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--T);margin-left:2px;vertical-align:middle;margin-bottom:3px}
-
-    /* Nav */
-    .navtabs{background:rgba(247,242,236,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(221,213,200,.5);overflow-x:auto;display:flex;align-items:center;gap:2px;padding:0 12px;height:46px;flex-shrink:0;scrollbar-width:none}
-    .navtabs::-webkit-scrollbar{display:none}
-    .ntab{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--r3);border:none;background:transparent;font-family:'DM Sans',sans-serif;font-weight:500;font-size:12.5px;color:var(--m);cursor:pointer;white-space:nowrap;transition:all .18s;flex-shrink:0;letter-spacing:.01em}
-    .ntab:hover{background:rgba(184,98,47,.08);color:var(--T)}
-    .ntab.act{background:linear-gradient(135deg,#C4714A,#A85535);color:#fff;box-shadow:0 2px 8px rgba(184,98,47,.3);font-weight:600}
-
-    /* Main */
-    .content{flex:1;padding:20px 20px;overflow-x:hidden;width:100%;position:relative;z-index:1}
-
-    /* Grids */
-    .g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
-    .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-    .g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-
-    /* Animations */
-    @keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    .fi{animation:fi .3s cubic-bezier(.4,0,.2,1) forwards}
-    @keyframes fi2{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    .fi2{animation:fi2 .3s cubic-bezier(.4,0,.2,1) .1s both}
-    .fi3{animation:fi2 .3s cubic-bezier(.4,0,.2,1) .2s both}
-    @keyframes pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
-    .pop{animation:pop .22s cubic-bezier(.34,1.56,.64,1) forwards}
-    @keyframes glow{0%,100%{box-shadow:0 0 0 3px rgba(106,63,136,.15),var(--sh)}50%{box-shadow:0 0 0 4px rgba(106,63,136,.28),var(--sh2)}}
-
-    /* Chat */
-    .msgs{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;padding:4px 2px}
-    .msgs::-webkit-scrollbar{width:3px}
-    .msgs::-webkit-scrollbar-thumb{background:var(--br);border-radius:3px}
-    .msg{max-width:78%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55}
-    .msg-me{align-self:flex-end;background:linear-gradient(135deg,#C4714A,#A85535);color:#fff;border-bottom-right-radius:4px}
-    .msg-ot{align-self:flex-start;background:var(--w);border:1px solid var(--br);color:var(--b);border-bottom-left-radius:4px;box-shadow:var(--sh)}
-
-    /* Calendar */
-    .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-    .cday{min-height:36px;border-radius:var(--r3);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer;position:relative;transition:all .15s;color:var(--b)}
-    .cday:hover{background:var(--Tp);color:var(--T)}
-    .cday.tod{background:linear-gradient(135deg,#C4714A,#A85535);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(184,98,47,.35)}
-    .cday.abs{background:var(--Rp);color:var(--R)}
-    .cday.cng{background:var(--Gp);color:var(--G)}
-    .cday.hol{background:var(--Bp);color:var(--B)}
-    .cday .dot{width:4px;height:4px;border-radius:50%;background:var(--S);position:absolute;bottom:3px}
-
-    /* Milestones */
-    .ms{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:var(--r3);cursor:pointer;transition:all .15s}
-    .ms:hover{background:var(--Tp)}
-    .msc{width:24px;height:24px;border-radius:50%;border:2px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .22s cubic-bezier(.34,1.56,.64,1)}
-    .msc.ok{background:linear-gradient(135deg,#4E7A5C,#3A6047);border-color:transparent;color:#fff;box-shadow:0 2px 6px rgba(61,107,80,.3)}
-
-    /* AI */
-    @keyframes ai-pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
-    .ai-dot{width:9px;height:9px;border-radius:50%;background:var(--P);animation:ai-pulse 1.4s ease infinite}
-    .ai-card{border-color:rgba(106,63,136,.35) !important;animation:glow 2.8s ease infinite}
-
-    /* Mood */
-    .moo{padding:8px 11px;border-radius:var(--r3);border:1.5px solid var(--br);background:var(--w);cursor:pointer;font-size:18px;transition:all .18s cubic-bezier(.34,1.56,.64,1)}
-    .moo:hover,.moo.on{border-color:var(--T);background:var(--Tp);transform:scale(1.12);box-shadow:0 2px 8px rgba(184,98,47,.2)}
-
-    /* Child pill */
-    .cp{cursor:pointer;border:2px solid transparent;transition:all .2s cubic-bezier(.34,1.56,.64,1)}
-    .cp:hover{border-color:var(--Tl);transform:translateY(-2px);box-shadow:var(--sh2)}
-    .cp.on{border-color:var(--T);background:var(--Tp);box-shadow:0 0 0 4px rgba(184,98,47,.1)}
-
-    /* Avatar */
-    .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Cormorant Garamond',serif;flex-shrink:0}
-
-    /* Signature */
-    canvas.sig-c{border:2px dashed rgba(221,213,200,.8);border-radius:var(--r2);cursor:crosshair;background:var(--w);touch-action:none}
-
-    /* Bar chart */
-    .bar{background:rgba(221,213,200,.4);border-radius:6px;overflow:hidden;height:7px}
-    .bar-fill{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1)}
-
-    /* Toast */
-    @keyframes tin{from{transform:translateY(80px) scale(.9);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-    .toast{position:fixed;bottom:24px;right:20px;background:linear-gradient(135deg,#2C1F14,#4A3322);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:999;animation:tin .35s cubic-bezier(.34,1.56,.64,1) forwards;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(44,31,20,.3);letter-spacing:.01em}
-
-    /* PDF preview */
-    .pdf-preview{background:#fff;border:1px solid var(--br);border-radius:var(--r2);padding:28px;font-size:12px;line-height:1.8;color:#333;max-height:420px;overflow-y:auto}
-    .pdf-preview h2{font-family:'Cormorant Garamond',serif;color:var(--T);font-size:18px;margin-bottom:14px}
-    .pdf-preview table{width:100%;border-collapse:collapse;margin:12px 0}
-    .pdf-preview td,.pdf-preview th{padding:6px 10px;border:1px solid #e8e0d8;font-size:11.5px}
-    .pdf-preview th{background:#f7f2ec;font-weight:600}
-
-    /* Mood sparkline */
-    .mood-bar{display:flex;gap:3px;align-items:flex-end;height:36px}
-    .mood-b{border-radius:3px 3px 0 0;transition:height .5s cubic-bezier(.4,0,.2,1)}
-
-    /* Divider */
+    .pf{font-family:'Cormorant Garamond','Georgia',serif}
+    .topbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(234,224,232,.6);display:flex;justify-content:space-between;align-items:center;padding:0 20px;height:54px;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+    .logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-.5px}
+    .logo-dot{width:5px;height:5px;border-radius:50%;background:var(--S);margin-top:2px}
+    .nav-main{background:rgba(255,255,255,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(234,224,232,.5);display:flex;gap:4px;padding:0 16px;height:46px;align-items:center}
+    .inp{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s;background:#fff;color:var(--b)}
+    .inp:focus{border-color:var(--S);box-shadow:var(--sh3)}
+    .ta{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;resize:vertical;min-height:80px;transition:border-color .15s;background:#fff;color:var(--b)}
+    .ta:focus{border-color:var(--S);box-shadow:var(--sh3)}
+    .sel{width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;background:#fff;color:var(--b)}
+    .lbl{display:block;font-size:11.5px;font-weight:600;color:var(--l);margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase}
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.1px}
+    .bT{background:linear-gradient(135deg,#C4714A,#D4824A);color:#fff;box-shadow:0 2px 10px rgba(196,113,74,.3)}
+    .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
+    .bS{background:linear-gradient(135deg,#9B6BAA,#B87CC8);color:#fff;box-shadow:0 2px 10px rgba(155,107,170,.3)}
+    .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(155,107,170,.4)}
+    .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
+    .bG:hover{background:rgba(26,17,24,.1)}
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .content{flex:1;overflow-y:auto;overflow-x:hidden}
+    .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+    @media(max-width:400px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
+    .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
+    .moo{border:2px solid transparent;border-radius:10px;padding:4px 6px;font-size:18px;cursor:pointer;transition:all .15s;background:transparent}
+    .moo.on,.moo:hover{border-color:var(--S);background:var(--Sp);transform:scale(1.15)}
+    .msc{width:18px;height:18px;border-radius:50%;border:2px solid var(--br);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;transition:all .15s}
+    .msc.ok{background:var(--G);border-color:var(--G);color:#fff}
+    .mood-bar{display:flex;gap:2px;height:32px;align-items:flex-end;margin-top:4px}
+    .mood-b{border-radius:3px 3px 0 0;background:linear-gradient(to top,var(--T),var(--S));min-width:8px;transition:height .3s ease}
+    .ai-card{background:linear-gradient(135deg,var(--Sp),var(--Tp))!important;border-color:var(--Sl)!important}
+    .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--S);animation:ai-pulse 1.2s ease-in-out infinite}
+    @keyframes ai-pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.3);opacity:1}}
+    .cp{padding:7px 12px!important;display:inline-flex!important;align-items:center;gap:6px;cursor:pointer;flex:unset!important;transition:all .15s!important;border-radius:20px!important}
+    .cp.on{border-color:var(--S)!important;background:var(--Sp)!important}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
     .div{height:1px;background:linear-gradient(90deg,transparent,var(--br),transparent);margin:4px 0}
-
-    /* Section header */
     .sec-h{display:flex;align-items:center;gap:8px;margin-bottom:14px}
     .sec-h-line{flex:1;height:1px;background:linear-gradient(90deg,var(--br),transparent)}
-
-    /* ── MOBILE OPTIMISÉ ───────────────────────────────────────────────── */
-    @media(max-width:640px){
-      .content{padding:12px 12px}
-      .g2{grid-template-columns:1fr;gap:10px}
-      .g3{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-      .g4{grid-template-columns:repeat(2,1fr);gap:8px}
-      .card{border-radius:12px}
-      .topbar{height:50px;padding:0 12px}
-      .logo{font-size:19px}
-      .btn{padding:8px 14px;font-size:12px}
-      .pf{letter-spacing:-.2px}
-      /* Nav mobile : boutons plus petits */
-      .nav-main button{padding:7px 12px !important;font-size:12px !important}
-      .nav-sub button{padding:5px 10px !important;font-size:11.5px !important}
-      /* Toast en bas full width */
-      .toast{left:12px;right:12px;bottom:16px;justify-content:center}
-      /* Formulaires pleine largeur */
-      .inp,.ta,.sel{font-size:16px !important} /* Évite le zoom iOS */
-      /* Photos grille plus serrée */
-      .photo-grid{grid-template-columns:repeat(3,1fr) !important}
-    }
-    @media(max-width:380px){
-      .g4{grid-template-columns:repeat(2,1fr)}
-      .nav-main button span:last-child{display:none} /* Icônes seules sur très petit */
-    }
-    /* Touch feedback */
-    @media(hover:none){
-      .card-lift:active{transform:scale(.98);box-shadow:var(--sh)}
-      .btn:active{transform:scale(.96) !important}
-      .ntab:active{background:rgba(184,98,47,.12)}
-    }
+    #bandeau-hl{display:none;background:linear-gradient(90deg,var(--T),var(--S));color:#fff;font-size:11px;text-align:center;padding:4px;font-weight:600}
+    .offline #bandeau-hl{display:block}
+    @media(max-width:640px){.content{padding:0}.fi{padding:14px}.topbar{height:50px;padding:0 14px}.logo{font-size:20px}.btn{padding:8px 14px;font-size:12px}.nav-main button{padding:6px 12px!important;font-size:12px!important}}
+    @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
   `}</style>
 );
 
@@ -4063,11 +3946,12 @@ function SanteComplete({enfants,role,pEId}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
 
   // Rappels vaccins automatiques
+  const isRealEnfant=!["e1","e2","e3"].includes(enfant?.id);
   const VACCINS_CALENDRIER=[
-    {nom:"DT-Polio-Coq-Hib-HB-Pneumo",age_mois:2,fait:true},
-    {nom:"DT-Polio-Coq-Hib-HB-Pneumo (2e)",age_mois:4,fait:true},
-    {nom:"DT-Polio-Coq-Hib-HB-Méningocoque",age_mois:5,fait:true},
-    {nom:"ROR + Pneumo + Méningocoque (2e)",age_mois:11,fait:true},
+    {nom:"DT-Polio-Coq-Hib-HB-Pneumo",age_mois:2,fait:isRealEnfant?false:true},
+    {nom:"DT-Polio-Coq-Hib-HB-Pneumo (2e)",age_mois:4,fait:isRealEnfant?false:true},
+    {nom:"DT-Polio-Coq-Hib-HB-Méningocoque",age_mois:5,fait:isRealEnfant?false:true},
+    {nom:"ROR + Pneumo + Méningocoque (2e)",age_mois:11,fait:isRealEnfant?false:true},
     {nom:"ROR (2e dose)",age_mois:12,fait:false},
     {nom:"DT-Polio-Coq rappel",age_mois:18,fait:false},
     {nom:"Varicelle",age_mois:24,fait:false},
@@ -4222,7 +4106,7 @@ const DEMANDES_DEMO=[
 ];
 
 // ─── LISTE D'ATTENTE — ESPACE ASMAT ───────────────────────────────────────────
-function ListeAttente({role,enfants}){
+function ListeAttente({role,enfants,user}){
   const isDemoMode=(enfants||[]).every(e=>["e1","e2","e3"].includes(e.id));
   const [demandes,setDemandes]=useState(isDemoMode?DEMANDES_DEMO:[]);
   const [selId,setSelId]=useState(null);
@@ -4268,7 +4152,7 @@ function ListeAttente({role,enfants}){
       <div>
         <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}>Votre adresse de contact publique</div>
         <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--B)",fontWeight:600,marginBottom:6}}>
-          marie.dupont@timat.app
+          {user?.email||"votre-email@timat.app"}
         </div>
         <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
           Mettez cette adresse sur votre profil <strong>monenfant.fr</strong>. 
@@ -4476,7 +4360,7 @@ function KitCMG({enfants,role,pEId}){
           </div>
           <InfoRow label="Nom complet" value={asmat.prenom+" "+asmat.nom} copyKey="asmNom"/>
           <InfoRow label="N° agrément" value="AGR-2019-0042" copyKey="agrement"/>
-          <InfoRow label="Email professionnel" value="marie.dupont@timat.app" copyKey="asmEmail"/>
+          <InfoRow label="Email professionnel" value={user?.email||"marie.dupont@timat.app"} copyKey="asmEmail"/>
           <InfoRow label="Code postal" value="75015" copyKey="cp"/>
           <InfoRow label="Commune" value="Paris 15e" copyKey="commune"/>
         </div>
@@ -5828,10 +5712,10 @@ function LandingPage({onLogin,dark,setDark}) {
   };
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDFAF8" }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDF5F8" }}>
       {/* ── HERO ── */}
       <div style={{
-        background: "linear-gradient(160deg, #4A7C5F 0%, #5A8C6F 35%, #4A7C5F 65%, #3D6B50 100%)",
+        background: "linear-gradient(160deg, #6B3D5A 0%, #7A4A68 35%, #6B3D5A 65%, #582E4A 100%)",
         padding: "0 24px 80px", position: "relative", overflow: "hidden",
       }}>
         {/* Image de fond petite enfance */}
@@ -5839,14 +5723,14 @@ function LandingPage({onLogin,dark,setDark}) {
           position:"absolute", inset:0, zIndex:0,
           backgroundImage:"url('/hero-enfants.jpg')",
           backgroundSize:"cover", backgroundPosition:"center 30%",
-          opacity:0.22,
+          opacity:0.20,
         }}/>
         {/* Grain overlay */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
 
         {/* Orbes déco */}
-        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,230,210,.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,220,240,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(220,180,220,.18) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
@@ -5969,7 +5853,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── DÉMO INTERACTIVE ── */}
-      <div id="demo" style={{ background: "#F9F5F2", padding: "72px 24px" }}>
+      <div id="demo" style={{ background: "#FDF5F8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6019,7 +5903,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TRANSFORMATION ── */}
-      <div style={{ background: "#FEF6F2", padding: "72px 24px" }}>
+      <div style={{ background: "#FBF0F8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -6041,7 +5925,7 @@ function LandingPage({onLogin,dark,setDark}) {
                 <div style={{
                   display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center",
                   padding: "18px 20px", borderRadius: 12,
-                  background: i % 2 === 0 ? "#FEF6F2" : "#fff",
+                  background: i % 2 === 0 ? "#FBF0F8" : "#fff",
                   border: "1px solid #DDD5C8",
                 }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
@@ -6097,7 +5981,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TÉMOIGNAGES ── */}
-      <div style={{ background: "#F9F5F2", padding: "72px 24px" }}>
+      <div style={{ background: "#FDF5F8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6128,7 +6012,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TARIFS ── */}
-      <div id="tarifs" style={{ background: "#FEF6F2", padding: "72px 24px" }}>
+      <div id="tarifs" style={{ background: "#FBF0F8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6146,7 +6030,7 @@ function LandingPage({onLogin,dark,setDark}) {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 24, alignItems: "center" }}>
             {/* Gratuit */}
-            <div style={{ background: "#fff", borderRadius: 16, border: "2px solid #F0D8CC", padding: 28 }}>
+            <div style={{ background: "#fff", borderRadius: 16, border: "2px solid #E8D0E8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Découverte</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0€</span>
@@ -6154,7 +6038,7 @@ function LandingPage({onLogin,dark,setDark}) {
               </div>
               <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat sans engagement.</div>
               <button onClick={() => setShowModal(true)}
-                style={{ width: "100%", background: "#FEF6F2", color: "#B8622F", border: "1.5px solid #F0D8CC", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
+                style={{ width: "100%", background: "#FBF0F8", color: "#6B3D5A", border: "1.5px solid #E8D0E8", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
                 Commencer gratuitement
               </button>
               {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
@@ -7120,7 +7004,7 @@ export default function App(){
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
       case "support": return <Support role={role}/>;
-      case "liste_attente": return <ListeAttente enfants={enfants} role={role}/>;
+      case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;
@@ -7156,7 +7040,6 @@ export default function App(){
         <BandeauHorsLigne/>
         <div className="content">{renderPage()}</div>
       </div>
-      <Analytics />
     </>
   );
 }
