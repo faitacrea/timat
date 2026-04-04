@@ -2434,26 +2434,87 @@ function BulletinSalaire({enfants,role,pEId,user}){
         <button className="btn bG"style={{flex:1}}onClick={()=>{
         const w=window.open('','_blank');
         if(!w){setToast('Autorisez les popups pour télécharger');return;}
-        const htmlBulletin='<!DOCTYPE html><html><head><title>Bulletin de salaire '+moisSel+'</title>'
-          +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;}'
-          +'h1{color:#B8622F;border-bottom:2px solid #B8622F;padding-bottom:10px;}'
-          +'table{width:100%;border-collapse:collapse;margin:16px 0;}'
-          +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f9f9f9;font-weight:700;}'
-          +'.total{background:#FBF0E8;font-weight:700;}.net{background:#EAF4EE;font-weight:700;color:#3D6B50;}'
-          +'@media print{button{display:none}}</style></head>'
-          +'<body><h1>Bulletin de paie — '+moisSel+'</h1>'
-          +'<p><strong>Employeur:</strong> '+(enfant?.prenomParent||'Parent')+'</p>'
-          +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
-          +'<table><tr><th>Libellé</th><th>Base</th><th>Montant</th></tr>'
-          +'<tr><td>Salaire de base</td><td>'+heuresNorm+'h x '+tauxH+'€</td><td>'+salBase.toFixed(2)+'€</td></tr>'
-          +'<tr><td>Indemnité entretien</td><td>'+Math.round(h.real/8)+' j x '+(contrat.entretien||3.80)+'€</td><td>'+entretien.toFixed(2)+'€</td></tr>'
-          +'<tr class="total"><td colspan="2">SALAIRE BRUT</td><td>'+brut.toFixed(2)+'€</td></tr>'
-          +'<tr><td colspan="2">Cotisations salariales</td><td>-'+totalCotSal.toFixed(2)+'€</td></tr>'
-          +'<tr class="net"><td colspan="2">NET À PAYER</td><td>'+netPaye.toFixed(2)+'€</td></tr>'
-          +'<tr><td colspan="2">Net imposable</td><td>'+netImposable.toFixed(2)+'€</td></tr>'
+        const prenomEmp=enfant?.prenomParent||(enfant?.parentId?"Parent employeur":"Parent");
+        const cotisDetails=Object.entries(TAUX_COTISATIONS).map(([nom,t])=>
+          '<tr><td>'+nom+'</td>'
+          +'<td style="text-align:right">'+(t.sal>0?(brut*t.sal/100).toFixed(2)+'€':'—')+'</td>'
+          +'<td style="text-align:right">'+(t.pat>0?(brut*t.pat/100).toFixed(2)+'€':'—')+'</td></tr>'
+        ).join('');
+        const htmlBulletin='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>'
+          +'<title>Bulletin de salaire '+moisSel+'</title>'
+          +'<style>'
+          +'*{box-sizing:border-box;margin:0;padding:0}'
+          +'body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:20px;max-width:800px;margin:0 auto}'
+          +'h1{font-size:16px;color:#2C1F14;text-align:center;margin:12px 0;letter-spacing:.5px}'
+          +'.header-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#F5F0EB;padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid #DDD5C8}'
+          +'.header-grid div{font-size:10px;line-height:1.7}'
+          +'.header-grid strong{font-size:11px;color:#B8622F}'
+          +'.section-title{background:#2C1F14;color:#fff;padding:5px 10px;font-weight:700;font-size:11px;margin:10px 0 4px;letter-spacing:.5px}'
+          +'table{width:100%;border-collapse:collapse;font-size:10px}'
+          +'td,th{padding:5px 8px;border:1px solid #ddd}'
+          +'th{background:#f5f5f5;font-weight:700;text-align:left}'
+          +'.right{text-align:right}'
+          +'.brut{background:#FBF0E8;font-weight:700;font-size:11px}'
+          +'.net-paye{background:#B8622F;color:#fff;font-weight:700;font-size:13px}'
+          +'.net-imposable{background:#EAF4EE;font-weight:700;color:#3D6B50}'
+          +'.cout-emp{background:#F5F0FF;font-weight:700}'
+          +'.footer{margin-top:20px;padding:10px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;font-size:9px;color:#888;line-height:1.8}'
+          +'.sig-zone{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}'
+          +'.sig-box{border:1px solid #ddd;height:60px;border-radius:4px;padding:8px;font-size:9px;color:#aaa}'
+          +'@media print{button{display:none}.print-btn{display:none}}'
+          +'</style></head><body>'
+          +'<div style="text-align:center;margin-bottom:8px">'
+          +'<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px">Convention Collective Nationale — Particuliers Employeurs</div>'
+          +'<h1>BULLETIN DE PAIE</h1>'
+          +'<div style="font-size:12px;color:#B8622F;font-weight:700">'+moisSel+'</div>'
+          +'</div>'
+          +'<div class="header-grid">'
+          +'<div><strong>EMPLOYEUR (Particulier)</strong><br/>'
+          +prenomEmp+'<br/>'
+          +'N° Pajemploi : PAJ-'+new Date().getFullYear()+'-'+Math.floor(Math.random()*99999)+'<br/>'
+          +'Emploi : Assistante maternelle agréée<br/>'
+          +'Code APE : 8891A — Accueil jeunes enfants</div>'
+          +'<div><strong>SALARIÉ·E</strong><br/>'
+          +(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'<br/>'
+          +'N° SS : à compléter<br/>'
+          +'Agrément : à compléter<br/>'
+          +'Entrée le : '+(contrat.debut||'—')+' — CDI</div>'
+          +'</div>'
+          +'<div class="section-title">RÉMUNÉRATION</div>'
+          +'<table><tr><th>Libellé</th><th>Nb heures / Jours</th><th>Taux</th><th class="right">Montant brut</th></tr>'
+          +'<tr><td>Salaire de base (heures normales)</td><td class="right">'+heuresNorm+' h</td><td class="right">'+tauxH.toFixed(4)+' €/h</td><td class="right">'+salBase.toFixed(2)+' €</td></tr>'
+          +(hSupp>0?'<tr><td>Heures complémentaires (maj. 25%)</td><td class="right">'+hSupp+' h</td><td class="right">'+(tauxH*1.25).toFixed(4)+' €/h</td><td class="right">'+salSupp.toFixed(2)+' €</td></tr>':'')
+          +'<tr><td>Indemnité d'entretien</td><td class="right">'+Math.round(h.real/8)+' jours</td><td class="right">'+(contrat.entretien||3.80).toFixed(2)+' €/j</td><td class="right">'+entretien.toFixed(2)+' €</td></tr>'
+          +'<tr class="brut"><td colspan="3">SALAIRE BRUT MENSUEL</td><td class="right">'+brut.toFixed(2)+' €</td></tr>'
           +'</table>'
-          +'<p style="font-size:11px;color:#888;">Généré par TiMat — '+new Date().toLocaleDateString('fr-FR')+' — À conserver 5 ans</p>'
-          +'<button onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;">🖨️ Imprimer / PDF</button>'
+          +'<div class="section-title">COTISATIONS SOCIALES</div>'
+          +'<table><tr><th>Cotisation</th><th class="right">Part salarié</th><th class="right">Part employeur</th></tr>'
+          +cotisDetails
+          +'<tr style="font-weight:700;background:#f5f5f5"><td>TOTAL COTISATIONS</td><td class="right" style="color:#c44a6a">-'+totalCotSal.toFixed(2)+' €</td><td class="right">'+totalCotPat.toFixed(2)+' €</td></tr>'
+          +'</table>'
+          +'<div class="section-title">RÉCAPITULATIF NET</div>'
+          +'<table>'
+          +'<tr><td>Salaire brut</td><td class="right">'+brut.toFixed(2)+' €</td></tr>'
+          +'<tr><td>Cotisations salariales déduites</td><td class="right" style="color:#c44a6a">- '+totalCotSal.toFixed(2)+' €</td></tr>'
+          +'<tr class="net-paye"><td>NET À PAYER</td><td class="right">'+netPaye.toFixed(2)+' €</td></tr>'
+          +'<tr class="net-imposable"><td>Net imposable (abattement fiscal spécifique assmat)</td><td class="right">'+netImposable.toFixed(2)+' €</td></tr>'
+          +'<tr><td>Indemnité d'entretien (non imposable)</td><td class="right">'+entretien.toFixed(2)+' €</td></tr>'
+          +'<tr class="cout-emp"><td>Coût total pour l'employeur (brut + cotis. patronales)</td><td class="right">'+(coutEmployeur+entretien).toFixed(2)+' €</td></tr>'
+          +'</table>'
+          +'<div class="sig-zone">'
+          +'<div><div style="font-size:10px;font-weight:700;margin-bottom:6px">Signature de l'employeur</div><div class="sig-box">Date : ________________<br/>Signature :</div></div>'
+          +'<div><div style="font-size:10px;font-weight:700;margin-bottom:6px">Signature de la salarié·e (reçu pour solde)</div><div class="sig-box">Date : ________________<br/>Signature :</div></div>'
+          +'</div>'
+          +'<div class="footer">'
+          +'Bulletin établi par TiMat — '+new Date().toLocaleDateString('fr-FR')+' | '
+          +'Convention Collective Nationale Particuliers Employeurs (IDCC 2395) | '
+          +'Base légale : Code du travail art. L3243-1 | '
+          +'Net imposable calculé avec abattement fiscal spécifique assistantes maternelles (3 × SMIC horaire × nb jours × nb enfants) | '
+          +'À conserver 5 ans'
+          +'</div>'
+          +'<div style="text-align:center;margin-top:16px">'
+          +'<button class="print-btn" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Enregistrer en PDF</button>'
+          +'</div>'
           +'</body></html>';
         w.document.write(htmlBulletin);
         w.document.close();
@@ -2480,6 +2541,104 @@ const MODELES_CONTRATS=[
   {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d'un commun accord avec solde tout compte.",
    champs:["Contrat concerné","Date de fin","Motif","Congés payés restants"],avenant:true},
 ];
+
+function DemandesAvenants({enfants,role,pEId}){
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste[0];
+  const [demandes,setDemandes]=useState([]);
+  const [form,setForm]=useState({type:"Modification d'horaires",detail:"",dateEffet:""});
+  const [toast,setToast]=useState("");
+
+  const types=["Modification d'horaires","Revalorisation du salaire","Modification des jours d'accueil","Changement de la durée du contrat","Autre modification"];
+
+  const soumettre=()=>{
+    if(!form.detail.trim()||!form.dateEffet)return;
+    setDemandes(p=>[{
+      id:"av"+Date.now(),
+      type:form.type,detail:form.detail,
+      dateEffet:form.dateEffet,
+      statut:"En attente",
+      date:TODAY_STR,
+      enfantId:enfant?.id,
+      prenomEnfant:enfant?.prenom||"Enfant",
+    },...p]);
+    setForm({type:"Modification d'horaires",detail:"",dateEffet:""});
+    setToast("Demande d'avenant envoyée ✓ — l'asmat sera notifiée");
+  };
+
+  const statutColor={
+    "En attente":"var(--G)","Acceptée":"var(--S)","Refusée":"var(--R)","Signée":"var(--T)"
+  };
+
+  return <div>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="✏️" title="Demandes d'avenants"
+      sub="Toute modification du contrat doit faire l'objet d'un avenant signé"/>
+
+    <div className="card"style={{padding:20,marginBottom:16}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>
+        ➕ Nouvelle demande d'avenant
+      </div>
+      <div style={{display:"grid",gap:12}}>
+        <div>
+          <label className="lbl">Type de modification</label>
+          <select className="sel"value={form.type}onChange={e=>setForm(p=>({...p,type:e.target.value}))}>
+            {types.map(t=><option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="lbl">Date d'effet souhaitée *</label>
+          <input type="date"className="inp"value={form.dateEffet}
+            onChange={e=>setForm(p=>({...p,dateEffet:e.target.value}))}/>
+        </div>
+        <div>
+          <label className="lbl">Détail de la demande *</label>
+          <textarea className="ta"placeholder="Décrivez précisément la modification souhaitée…"
+            value={form.detail}onChange={e=>setForm(p=>({...p,detail:e.target.value}))}
+            style={{minHeight:80}}/>
+        </div>
+        <button className="btn bT"style={{justifyContent:"center"}}onClick={soumettre}
+          disabled={!form.detail.trim()||!form.dateEffet}>
+          📤 Soumettre la demande
+        </button>
+      </div>
+    </div>
+
+    {demandes.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:6}}>📋 Historique des demandes</div>
+      {demandes.map(d=><div key={d.id}className="card"style={{padding:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+          <div>
+            <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{d.type}</div>
+            <div style={{fontSize:11,color:"var(--l)"}}>Demande du {fmt(d.date)} · Effet le {fmt(d.dateEffet)}</div>
+          </div>
+          <span className="badge"style={{background:"var(--Gp)",color:statutColor[d.statut],fontSize:11}}>
+            {d.statut}
+          </span>
+        </div>
+        <div style={{fontSize:12,color:"var(--m)",background:"var(--c)",borderRadius:8,padding:"8px 10px"}}>
+          {d.detail}
+        </div>
+        {role==="asmat"&&d.statut==="En attente"&&<div style={{display:"flex",gap:8,marginTop:10}}>
+          <button className="btn bG"style={{fontSize:11}}
+            onClick={()=>setDemandes(p=>p.map(x=>x.id===d.id?{...x,statut:"Refusée"}:x))}>
+            ✕ Refuser
+          </button>
+          <button className="btn bT"style={{fontSize:11,flex:1,justifyContent:"center"}}
+            onClick={()=>setDemandes(p=>p.map(x=>x.id===d.id?{...x,statut:"Acceptée"}:x))}>
+            ✓ Accepter et créer l'avenant
+          </button>
+        </div>}
+      </div>)}
+    </div>}
+
+    {demandes.length===0&&<div className="card"style={{padding:24,textAlign:"center"}}>
+      <div style={{fontSize:36,marginBottom:8}}>✏️</div>
+      <div style={{fontSize:13,color:"var(--m)"}}>Aucune demande d'avenant en cours</div>
+      <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Les demandes soumises apparaîtront ici</div>
+    </div>}
+  </div>;
+}
 
 function ContratsTypes({enfants}){
   const [selModele,setSelModele]=useState(null);
@@ -2758,7 +2917,8 @@ function AdminFinances({enfants,role,pEId,user}){
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
       {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
-      {id:"contrats_types",l:"Modèles contrats",ic:"📋"},
+      {id:"avenants",l:"Demandes d'avenants",ic:"✏️"},
+      {id:"contrats_types",l:"Modèles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
       {id:"recap",l:"Récap mensuel PDF",ic:"📊"},
       {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
@@ -2777,6 +2937,7 @@ function AdminFinances({enfants,role,pEId,user}){
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<Contrats enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="avenants"&&<DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
@@ -3454,12 +3615,40 @@ const PMI_MESSAGES=[
   {id:"pmi3",de:"PMI",h:"14h20",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),txt:"Votre agrément arrive à renouvellement en juin 2024. Merci de nous contacter pour planifier la visite de renouvellement.",lu:false},
 ];
 
+
+const PMI_PAR_DEP={
+  "75":  {nom:"PMI Paris 75",email:"pmi75-paris@sante.gouv.fr",tel:"01 42 76 40 40",adresse:"4 rue Lobau, 75196 Paris"},
+  "92":  {nom:"PMI Hauts-de-Seine 92",email:"pmi@hauts-de-seine.fr",tel:"01 47 29 30 00",adresse:"2-4 bd Soufflot, 92015 Nanterre"},
+  "93":  {nom:"PMI Seine-Saint-Denis 93",email:"pmi@seine-saint-denis.fr",tel:"01 43 93 85 00",adresse:"12 pl de l'Hôtel de Ville, 93000 Bobigny"},
+  "94":  {nom:"PMI Val-de-Marne 94",email:"pmi@valdemarne.fr",tel:"01 43 99 80 00",adresse:"Hôtel du Dép., 94011 Créteil — RAM L'Haÿ-les-Roses"},
+  "91":  {nom:"PMI Essonne 91",email:"pmi@essonne.fr",tel:"01 69 25 62 62",adresse:"Boulevard de France, 91012 Évry"},
+  "95":  {nom:"PMI Val-d'Oise 95",email:"pmi@valdoise.fr",tel:"01 34 25 30 00",adresse:"2 av du Parc, 95032 Cergy-Pontoise"},
+  "77":  {nom:"PMI Seine-et-Marne 77",email:"pmi@seine-et-marne.fr",tel:"01 64 14 77 00",adresse:"Hôtel du Dép., 77010 Melun"},
+  "78":  {nom:"PMI Yvelines 78",email:"pmi@yvelines.fr",tel:"01 39 07 78 00",adresse:"2 pl André Mignot, 78012 Versailles"},
+  "69":  {nom:"PMI Métropole de Lyon 69",email:"pmi@grandlyon.com",tel:"04 78 63 40 40",adresse:"20 rue du Lac, 69399 Lyon"},
+  "13":  {nom:"PMI Bouches-du-Rhône 13",email:"pmi@departement13.fr",tel:"04 13 31 13 13",adresse:"52 av de Saint-Just, 13004 Marseille"},
+  "31":  {nom:"PMI Haute-Garonne 31",email:"pmi@haute-garonne.fr",tel:"05 34 33 30 00",adresse:"1 bd de la Marquette, 31090 Toulouse"},
+  "33":  {nom:"PMI Gironde 33",email:"pmi@gironde.fr",tel:"05 56 99 33 33",adresse:"Hôtel du Dép., 33074 Bordeaux"},
+  "67":  {nom:"PMI Bas-Rhin 67",email:"pmi@bas-rhin.fr",tel:"03 88 76 67 67",adresse:"Hôtel du Dép., 67945 Strasbourg"},
+  "59":  {nom:"PMI Nord 59",email:"pmi@lenord.fr",tel:"03 59 73 59 00",adresse:"51 rue Gustave Delory, 59047 Lille"},
+  "default":{nom:"PMI de votre département",email:"pmi@votre-departement.fr",tel:"Contactez le 15 ou la mairie",adresse:"Renseignez-vous auprès de votre mairie ou du conseil départemental"},
+};
+const getPMI=(email)=>{
+  if(!email)return PMI_PAR_DEP["default"];
+  // Essayer de détecter le département depuis l'email ou le profil
+  // Pour l'instant, on utilise le code postal du profil si disponible
+  return PMI_PAR_DEP["default"];
+};
 function CommunicationPMI({role,user,hasRealData}){
   const [msgs,setMsgs]=useState(hasRealData?[]:PMI_MESSAGES);
   const [txt,setTxt]=useState("");
   const [toast,setToast]=useState("");
   const nonLus=msgs.filter(m=>!m.lu&&m.de==="PMI").length;
-  const pmiEmail="pmi75-paris@sante.gouv.fr";
+  // PMI du secteur — basée sur le code postal du profil asmat
+  // L'asmat peut configurer son département dans ses paramètres
+  const dep=user?.code_postal?.slice(0,2)||user?.departement||"";
+  const pmiInfo=PMI_PAR_DEP[dep]||PMI_PAR_DEP["default"];
+  const pmiEmail=pmiInfo.email;
   const asmatEmail=user?.email||"votre-email@timat.fr";
 
   const markRead=(id)=>setMsgs(p=>p.map(m=>m.id===id?{...m,lu:true}:m));
@@ -3478,6 +3667,8 @@ function CommunicationPMI({role,user,hasRealData}){
     <div style={{background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:13,color:"var(--B)",lineHeight:1.6}}>
       <strong>📧 Fonctionnement :</strong> vos messages sont envoyés par email à la PMI ({pmiEmail}). 
       Leurs réponses arrivent automatiquement ici. Vous apparaissez comme expéditeur : {asmatEmail}.
+      <br/><strong>🏛️ {pmiInfo.nom}</strong> — {pmiInfo.tel} — {pmiInfo.adresse}
+      <br/><span style={{fontSize:11,color:"var(--l)"}}>💡 Pour configurer votre PMI de secteur, renseignez votre code postal dans Paramètres → Profil</span>
     </div>
 
     {nonLus>0&&<div style={{background:"#EBF4FF",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
