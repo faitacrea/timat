@@ -420,7 +420,7 @@ function AccueilParent({enfant,setPage}){
   const declarerAbsence=()=>{
     if(!absence.heures)return;
     D.absences.push({id:"ab"+Date.now(),eId:enfant.id,date:absence.date,motif:absence.motif,indemnise:absence.indemnise,heures:parseFloat(absence.heures)});
-    D.evenements.push({id:"ev"+Date.now(),date:absence.date,type:"abs",txt:"Absent — "+enfant.prenom+" ("+absence.motif+")"});
+    // Ne pas modifier D.evenements (données démo globales)
     setAbsEnvoyee(true);
     setShowAbsence(false);
     setToast("Absence déclarée — Marie a été notifiée ✓");
@@ -1114,8 +1114,13 @@ function Calendrier({enfants,role,pEId}){
   const [mois,setMois]=useState(new Date().getMonth());
   const [an,setAn]=useState(new Date().getFullYear());
   const [sel,setSel]=useState(null);
-  const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
-  const [evs,setEvs]=useState(isDemoUser?D.evenements:[]);
+  const isDemoUser=enfants.length>0&&enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const [evs,setEvs]=useState([]);
+  // Initialiser les événements après le chargement des enfants
+  useEffect(()=>{
+    if(enfants.length===0)return;
+    setEvs(isDemoUser?D.evenements:[]);
+  },[isDemoUser,enfants.length]);
   const [newEv,setNewEv]=useState({type:"rdv",txt:""});
   const [showAbsenceModal,setShowAbsenceModal]=useState(false);
   const [absForm,setAbsForm]=useState({eId:pEId||enfants[0]?.id,date:"",motif:"Maladie",heures:"",indemnise:true});
@@ -3947,7 +3952,7 @@ function SanteComplete({enfants,role,pEId}){
 
   // Rappels vaccins automatiques
   const isRealEnfant=!["e1","e2","e3"].includes(enfant?.id);
-  const VACCINS_CALENDRIER=[
+  const VAC_BASE=[
     {nom:"DT-Polio-Coq-Hib-HB-Pneumo",age_mois:2,fait:isRealEnfant?false:true},
     {nom:"DT-Polio-Coq-Hib-HB-Pneumo (2e)",age_mois:4,fait:isRealEnfant?false:true},
     {nom:"DT-Polio-Coq-Hib-HB-Méningocoque",age_mois:5,fait:isRealEnfant?false:true},
@@ -3956,6 +3961,8 @@ function SanteComplete({enfants,role,pEId}){
     {nom:"DT-Polio-Coq rappel",age_mois:18,fait:false},
     {nom:"Varicelle",age_mois:24,fait:false},
   ];
+  const [vacsState,setVacsState]=useState(VAC_BASE);
+  const VACCINS_CALENDRIER=vacsState;
   const ageActuel=enfant?Math.round((new Date()-new Date(enfant.naissance))/2592000000):12;
   const prochainsVaccins=VACCINS_CALENDRIER.filter(v=>!v.fait&&v.age_mois<=ageActuel+3);
 
@@ -4005,14 +4012,25 @@ function SanteComplete({enfants,role,pEId}){
           return <div key={i}style={{
             display:"flex",gap:12,alignItems:"center",padding:"12px 14px",borderRadius:12,
             background:v.fait?"var(--Sp)":enRetard?"var(--Rp)":proche?"var(--Gp)":"var(--c)",
-            border:(v.fait?"1px solid var(--Sl)":enRetard?"1px solid var(--R)":proche?"1px solid var(--G)":"1px solid var(--br)")
+            border:(v.fait?"1px solid var(--Sl)":enRetard?"1px solid var(--R)":proche?"1px solid var(--G)":"1px solid var(--br)"),
+            cursor:"pointer",transition:"all .2s",
+          }}onClick={()=>{
+            const updated=[...VACCINS_CALENDRIER];
+            updated[i]={...updated[i],fait:!updated[i].fait};
+            setVacsState(updated);
           }}>
             <span style={{fontSize:20,flexShrink:0}}>{v.fait?"✅":enRetard?"❌":proche?"⏰":"⏳"}</span>
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
-              <div style={{fontSize:11,color:"var(--l)"}}>À {v.age_mois} mois · {v.fait?"Fait":enRetard?"En retard":proche?"À prévoir prochainement":"À venir"}</div>
+              <div style={{fontSize:11,color:"var(--l)"}}>À {v.age_mois} mois · {v.fait?"Fait ✓":enRetard?"En retard":proche?"À prévoir":"À venir"}</div>
             </div>
-            {proche&&<span className="badge"style={{background:"var(--G)",color:"#fff",fontSize:10}}>Prochain</span>}
+            <div style={{width:22,height:22,borderRadius:6,border:"2px solid",
+              borderColor:v.fait?"var(--G)":"var(--br)",
+              background:v.fait?"var(--G)":"transparent",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              color:"#fff",fontSize:12,flexShrink:0}}>
+              {v.fait?"✓":""}
+            </div>
           </div>;
         })}
       </div>
@@ -5438,26 +5456,28 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 
     {/* Barre principale — 3 gros onglets */}
     <div className="nav-main"style={{
-      background:"var(--w)",borderBottom:"1px solid var(--br)",
-      display:"flex",gap:4,padding:"0 16px",height:48,alignItems:"center",
+      background:"rgba(255,255,255,.95)",backdropFilter:"blur(20px)",
+      borderBottom:"1px solid rgba(234,224,232,.6)",
+      display:"flex",gap:6,padding:"0 20px",height:52,alignItems:"center",
     }}>
       {Object.entries(groups).map(([key,g])=>{
         const isActive=activeGroup===key;
         const hasAdminBadge=key==="admin"&&pmiNonLus>0;
         return <button key={key}onClick={()=>onGroupClick(key)}style={{
-          display:"flex",alignItems:"center",gap:6,
-          padding:"7px 16px",borderRadius:20,border:"none",
-          fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
-          cursor:"pointer",transition:"all .18s",flexShrink:0,whiteSpace:"nowrap",
-          background:isActive?g.color:"rgba(0,0,0,.04)",
+          display:"flex",alignItems:"center",gap:7,
+          padding:"8px 18px",borderRadius:24,border:"none",
+          fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,
+          cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",
+          flexShrink:0,whiteSpace:"nowrap",
+          background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",
           color:isActive?"#fff":"var(--m)",
-          boxShadow:isActive?"0 2px 12px rgba(0,0,0,.15)":"none",
-          letterSpacing:".1px",
-          position:"relative",
+          boxShadow:isActive?"0 4px 16px rgba(155,107,170,.3)":"none",
+          transform:isActive?"scale(1.03)":"scale(1)",
+          letterSpacing:".1px",position:"relative",
         }}>
-          <span style={{fontSize:16}}>{g.ic}</span>
+          <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
           <span>{g.l}</span>
-          {g.subs&&<span style={{fontSize:9,opacity:.6,marginLeft:1}}>{isActive?"▲":"▼"}</span>}
+          {g.subs&&<span style={{fontSize:9,opacity:.5,marginLeft:2,transform:isActive?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
           {hasAdminBadge&&<span style={{
             position:"absolute",top:4,right:4,
             background:"var(--R)",color:"#fff",
@@ -5472,8 +5492,9 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 
     {/* Sous-onglets */}
     {subs&&<div style={{
-      background:"var(--c)",borderBottom:"2px solid var(--br)",
-      display:"flex",gap:2,padding:"6px 12px",overflowX:"auto",
+      background:"rgba(245,235,248,.6)",backdropFilter:"blur(12px)",
+      borderBottom:"1px solid rgba(234,224,232,.5)",
+      display:"flex",gap:4,padding:"6px 16px",overflowX:"auto",
       scrollbarWidth:"none",flexShrink:0,alignItems:"center",
     }}>
       {subs.map(s=>{
@@ -5481,14 +5502,14 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
         const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
         return <button key={s.id}onClick={()=>setPage(s.id)}style={{
           display:"flex",alignItems:"center",gap:5,
-          padding:"6px 14px",borderRadius:8,border:"none",
-          fontFamily:"'DM Sans',sans-serif",fontWeight:isSubActive?700:500,fontSize:12.5,
+          padding:"5px 13px",borderRadius:16,border:"none",
+          fontFamily:"'DM Sans',sans-serif",fontSize:12,
           cursor:"pointer",transition:"all .15s",flexShrink:0,whiteSpace:"nowrap",
-          background:"transparent",
-          color:isSubActive?group.color:"var(--l)",
-          borderBottom:isSubActive?"2px solid "+group.color:"2px solid transparent",
-          marginBottom:-2,position:"relative",
-          fontWeight:isSubActive?700:400,
+          background:isSubActive?"rgba(155,107,170,.12)":"transparent",
+          color:isSubActive?"var(--S)":"var(--l)",
+          fontWeight:isSubActive?700:500,
+          boxShadow:isSubActive?"inset 0 0 0 1.5px rgba(155,107,170,.3)":"none",
+          position:"relative",
         }}>
           <span>{s.ic}</span>
           <span>{s.l}</span>
@@ -5729,8 +5750,8 @@ function LandingPage({onLogin,dark,setDark}) {
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
 
         {/* Orbes déco */}
-        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,220,240,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(220,180,220,.18) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,200,255,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
@@ -5740,15 +5761,15 @@ function LandingPage({onLogin,dark,setDark}) {
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })}
-              style={{ background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.7)", border: "1px solid rgba(255,255,255,.15)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+              style={{ background: "rgba(255,255,255,.12)", color: "rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
               Tarifs
             </button>
             <button onClick={() => setShowModal(true)}
-              style={{ background: "rgba(255,255,255,.1)", color: "#fff", border: "1px solid rgba(255,255,255,.2)", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+              style={{ background: "rgba(255,255,255,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
               Connexion
             </button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }}
-              style={{ background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(184,98,47,.4)" }}>
+              style={{ background: "linear-gradient(135deg,#9B6BAA,#B87CC8)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>
               Commencer gratuitement →
             </button>
           </div>
@@ -5811,7 +5832,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── PROBLÈME ── */}
-      <div style={{ background: "#3D6B50", padding: "60px 24px" }}>
+      <div style={{ background: "linear-gradient(135deg,#6B3D5A,#9B6BAA)", padding: "60px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -5853,7 +5874,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── DÉMO INTERACTIVE ── */}
-      <div id="demo" style={{ background: "#FDF5F8", padding: "72px 24px" }}>
+      <div id="demo" style={{ background: "#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -5903,7 +5924,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TRANSFORMATION ── */}
-      <div style={{ background: "#FBF0F8", padding: "72px 24px" }}>
+      <div style={{ background: "#F8F0FC", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -5925,7 +5946,7 @@ function LandingPage({onLogin,dark,setDark}) {
                 <div style={{
                   display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center",
                   padding: "18px 20px", borderRadius: 12,
-                  background: i % 2 === 0 ? "#FBF0F8" : "#fff",
+                  background: i % 2 === 0 ? "#F8F0FC" : "#FDF5FB",
                   border: "1px solid #DDD5C8",
                 }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
@@ -5981,7 +6002,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TÉMOIGNAGES ── */}
-      <div style={{ background: "#FDF5F8", padding: "72px 24px" }}>
+      <div style={{ background: "#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6012,7 +6033,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TARIFS ── */}
-      <div id="tarifs" style={{ background: "#FBF0F8", padding: "72px 24px" }}>
+      <div id="tarifs" style={{ background: "#F8F0FC", padding: "72px 24px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6038,7 +6059,7 @@ function LandingPage({onLogin,dark,setDark}) {
               </div>
               <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat sans engagement.</div>
               <button onClick={() => setShowModal(true)}
-                style={{ width: "100%", background: "#FBF0F8", color: "#6B3D5A", border: "1.5px solid #E8D0E8", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
+                style={{ width: "100%", background: "linear-gradient(135deg,#9B6BAA,#B87CC8)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
                 Commencer gratuitement
               </button>
               {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
@@ -6083,7 +6104,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── CTA FINAL ── */}
-      <div style={{ background: "linear-gradient(160deg,#0D1B2A,#1B2E44)", padding: "72px 24px", textAlign: "center" }}>
+      <div style={{ background: "linear-gradient(135deg,#5C3370,#9B6BAA)", padding: "72px 24px", textAlign: "center" }}>
         <FadeIn>
           <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(24px,5vw,46px)", color: "#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2 }}>
             Vous n'avez pas eu de formation<br />
@@ -6132,7 +6153,7 @@ function LandingPage({onLogin,dark,setDark}) {
               </div>
 
               {/* Onglets connexion / inscription */}
-              <div style={{ display:"flex", marginBottom:16, background:"#F7F2EC", borderRadius:10, padding:3 }}>
+              <div style={{ display:"flex", marginBottom:16, background:"#F4EFF8", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
                   <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{
                     flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8,
@@ -6180,7 +6201,7 @@ function LandingPage({onLogin,dark,setDark}) {
               </div>
 
               {/* RGPD à l'inscription */}
-              {modeAuth === "inscription" && <div style={{ background:"#F7F2EC", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
+              {modeAuth === "inscription" && <div style={{ background:"#F4EFF8", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
                 {[
                   {k:"politique", l:"J'accepte la politique de confidentialité", req:true},
@@ -6197,7 +6218,7 @@ function LandingPage({onLogin,dark,setDark}) {
               </div>}
 
               {/* Erreur */}
-              {err && <div style={{ color:"#B84060", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
+              {err && <div style={{ color:"#C44A6A", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
 
               {/* Bouton principal */}
               <button onClick={modeAuth==="connexion" ? connexion : inscription}
