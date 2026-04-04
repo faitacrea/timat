@@ -115,6 +115,23 @@ const Styles = () => (
     .offline #bandeau-hl{display:block}
     @media(max-width:640px){.content{padding:0}.fi{padding:14px}.topbar{height:50px;padding:0 14px}.logo{font-size:20px}.btn{padding:8px 14px;font-size:12px}.nav-main button{padding:6px 12px!important;font-size:12px!important}}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
+    /* ── CALENDRIER ─────────────────────────────────── */
+    .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+    .cday{min-height:38px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;cursor:pointer;transition:all .15s;font-size:12px;color:var(--b);position:relative;background:transparent}
+    .cday:hover{background:var(--Sp)}
+    .cday.tod{background:linear-gradient(135deg,var(--T),var(--S));color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(155,107,170,.3)}
+    .cday.abs{background:var(--Rp);color:var(--R)}
+    .cday.cng{background:var(--Gp);color:var(--G)}
+    .cday.hol{background:var(--Bp);color:var(--B)}
+    /* ── TOAST ──────────────────────────────────────── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--b);color:#fff;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;max-width:360px;animation:toast-in .3s ease}
+    @keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    /* ── PHOTO GRID ─────────────────────────────────── */
+    .photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    @media(max-width:640px){.photo-grid{grid-template-columns:repeat(3,1fr)}}
+    /* ── NAV TABS ──────────────────────────────────── */
+    .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--l);transition:all .15s}
+    .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
   `}</style>
 );
 
@@ -1144,7 +1161,7 @@ function Calendrier({enfants,role,pEId}){
   const evsFiltres=role==="parent"
     ? evs.filter(e=>{
         // Parent voit : ses propres absences + congés de Marie (cng) + fériés
-        if(e.type==="cng")return true; // Congés Marie → toujours visible
+        if(e.type==="cng")return true; // Mes congés → toujours visible
         if(e.type==="abs"&&enfants.some(en=>e.txt&&e.txt.includes(en.prenom)))return true;
         if(e.type==="abs"&&pEId&&e.eId===pEId)return true;
         return false;
@@ -1274,7 +1291,7 @@ function Calendrier({enfants,role,pEId}){
             let bgStyle={};
             if(isToday||isSel)cls+=" tod";
             else if(ferie)cls+=" abs"; // Féries → rouge
-            else if(uev?.type==="cng"){cls+=" cng";} // Congés Marie → jaune/doré
+            else if(uev?.type==="cng"){cls+=" cng";} // Mes congés → jaune/doré
             else if(vac)cls+=" hol"; // Vacances → bleu
             else if(uev?.type==="abs")cls+=" abs"; // Absence enfant → rouge
             else if(isWeekend){bgStyle={background:"rgba(0,0,0,.04)"};} // Weekend grisé
@@ -1300,7 +1317,7 @@ function Calendrier({enfants,role,pEId}){
         <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
           {[
             ["var(--Rp)","var(--R)","Absence / Jour férié"],
-            ["var(--Gp)","var(--G)","Congé Marie"],
+            ["var(--Gp)","var(--G)","Mes congés"],
             ["var(--Tp)","var(--T)","Aujourd'hui / Anniversaire"],
             ["var(--Bp)","var(--B)","Vacances scolaires"],
           ].map(([bg,c,l])=>
@@ -1358,7 +1375,7 @@ function Calendrier({enfants,role,pEId}){
             ⭐ Jour férié — {getFerie(sel)}
           </div>}
           {getUserEv(sel)?.type==="cng"&&<div style={{padding:"6px 10px",background:"var(--Gp)",borderRadius:8,fontSize:12,color:"var(--G)",fontWeight:600,marginBottom:6}}>
-            🟡 Congé de Marie — {getUserEv(sel).txt}
+            🟡 Congé — {getUserEv(sel).txt}
           </div>}
           {getUserEv(sel)?.type==="abs"&&<div style={{padding:"6px 10px",background:"var(--Rp)",borderRadius:8,fontSize:12,color:"var(--R)",fontWeight:600,marginBottom:6}}>
             🔴 {getUserEv(sel).txt}
@@ -5448,6 +5465,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
         }} title={dark?"Mode clair":"Mode sombre"}>{dark?"☀️":"🌙"}</button>
         {/* Paramètres */}
         <button onClick={()=>setPage2&&setPage2("parametres")}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4}}title="Paramètres">⚙️</button>
+        {user?.email===ADMIN_EMAIL&&<button onClick={()=>setPage2&&setPage2("backoffice")}style={{background:"linear-gradient(135deg,var(--T),var(--S))",border:"none",cursor:"pointer",fontSize:11,padding:"3px 8px",borderRadius:8,color:"#fff",fontWeight:700}}title="Admin">🔧 Admin</button>}
         <Av t={ini(user.prenom,user.nom)}c={user.couleur}s={30}/>
         <span style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{user.prenom}</span>
         <button onClick={onLogout}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,marginLeft:4}}title="Déconnexion">🚪</button>
@@ -5832,7 +5850,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── PROBLÈME ── */}
-      <div style={{ background: "linear-gradient(135deg,#6B3D5A,#9B6BAA)", padding: "60px 24px" }}>
+      <div style={{ background: "linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "60px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -5970,7 +5988,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── CHIFFRES ── */}
-      <div style={{ background: "#C4714A", padding: "72px 24px" }}>
+      <div style={{ background: "linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -6033,7 +6051,7 @@ function LandingPage({onLogin,dark,setDark}) {
       </div>
 
       {/* ── TARIFS ── */}
-      <div id="tarifs" style={{ background: "#F8F0FC", padding: "72px 24px" }}>
+      <div id="tarifs" style={{ background: "#F5EBF8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -6071,7 +6089,7 @@ function LandingPage({onLogin,dark,setDark}) {
             </div>
 
             {/* Pro */}
-            <div style={{ background: "#FDFAF8", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+            <div style={{ background: "#FDF5FB", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
               <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>
                 ⭐ TOUT INCLUS
               </div>
@@ -6130,7 +6148,7 @@ function LandingPage({onLogin,dark,setDark}) {
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             {/* Sélecteur rôle */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#0D1B2A" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#7B4B2A" }}>
               {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
                 <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? "3px solid "+col+"44" : "none", transition: "all .2s", fontFamily:"inherit" }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
@@ -6784,6 +6802,214 @@ function Login({onLogin}){
 }
 
 // ─── APP ──────────────────────────────────────────────────────────────────────
+// ─── BACKOFFICE ADMIN ────────────────────────────────────────────────────────
+// Accessible uniquement à sophie@faitacreas.fr (ou l'email admin configuré)
+const ADMIN_EMAIL = "sophie@faitacreas.fr";
+
+function Backoffice({user,setPage}){
+  const [sec,setSec]=useState("couleurs");
+  const [saving,setSaving]=useState(false);
+  const [toast,setToast]=useState("");
+  const [stats,setStats]=useState({users:0,pro:0,enfants:0});
+
+  // Couleurs éditables
+  const [cols,setCols]=useState({
+    T:"#C4714A",S:"#9B6BAA",G:"#4A8B6E",R:"#C44A6A",
+    c:"#FDF5F8",w:"#FFFFFF",b:"#1A1118"
+  });
+  // Textes landing éditables
+  const [txts,setTxts]=useState({
+    heroTitle:"Le système vous a transformée en comptable.",
+    heroSub:"TiMat vous rend votre vrai rôle.",
+    heroBtn:"Commencer gratuitement →",
+    prixMensuel:"9,99",
+    prixEssai:"2 mois gratuits",
+  });
+  const [feats,setFeats]=useState({
+    parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true,
+  });
+
+  useEffect(()=>{
+    // Charger les stats réelles depuis Supabase
+    const load=async()=>{
+      const {count:u}=await supabase.from('profiles').select('*',{count:'exact',head:true});
+      const {count:p}=await supabase.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','pro');
+      const {count:e}=await supabase.from('enfants').select('*',{count:'exact',head:true});
+      setStats({users:u||0,pro:p||0,enfants:e||0});
+    };
+    load();
+  },[]);
+
+  const appliquerCouleurs=()=>{
+    // Applique les couleurs via CSS variables sur la page en live
+    const root=document.documentElement;
+    Object.entries(cols).forEach(([k,v])=>root.style.setProperty('--'+k,v));
+    setToast("✅ Couleurs appliquées en live — rechargez pour revenir aux défauts");
+  };
+
+  const sauvegarder=async()=>{
+    setSaving(true);
+    try{
+      await supabase.from('profiles').upsert({
+        id:user.id,
+        backoffice_config:JSON.stringify({cols,txts,feats}),
+        updated_at:new Date().toISOString()
+      },{onConflict:'id'});
+      setToast("✅ Configuration sauvegardée");
+    }catch(e){setToast("❌ Erreur: "+e.message);}
+    setSaving(false);
+  };
+
+  const secs=[
+    {id:"couleurs",l:"Couleurs",ic:"🎨"},
+    {id:"textes",l:"Textes landing",ic:"✏️"},
+    {id:"fonctionnalites",l:"Fonctionnalités",ic:"⚙️"},
+    {id:"stats",l:"Statistiques",ic:"📊"},
+  ];
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="🔧" title="Backoffice TiMat" sub={"Admin — "+user.email}
+      action={<button className="btn bG"style={{fontSize:12}}onClick={()=>setPage("accueil")}>← Retour</button>}
+    />
+
+    <div style={{background:"linear-gradient(135deg,var(--Sp),var(--Tp))",borderRadius:16,padding:"14px 18px",marginBottom:20,border:"1px solid var(--Sl)",fontSize:13,color:"var(--b)"}}>
+      ⚠️ <strong>Zone admin réservée.</strong> Les modifications impactent tous les utilisateurs. Les couleurs s'appliquent en live dans ce navigateur. Pour les rendre permanentes, modifie les CSS variables dans le code.
+    </div>
+
+    <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}}>
+      {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
+        padding:"8px 16px",borderRadius:20,border:"none",cursor:"pointer",
+        fontFamily:"inherit",fontWeight:600,fontSize:12,
+        background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",
+        color:sec===s.id?"#fff":"var(--m)",
+        transition:"all .15s"
+      }}>{s.ic} {s.l}</button>)}
+    </div>
+
+    {sec==="couleurs"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>🎨 Palette de couleurs</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          {[
+            {k:"T",l:"Terracotta (accent principal)",desc:"Boutons, liens actifs"},
+            {k:"S",l:"Mauve (couleur secondaire)",desc:"Sous-onglets, highlights"},
+            {k:"G",l:"Vert (succès, santé)",desc:"Badges succès, vaccins ok"},
+            {k:"R",l:"Rose/Rouge (alertes)",desc:"Erreurs, absences"},
+            {k:"c",l:"Fond général",desc:"Background de l'app"},
+            {k:"w",l:"Fond cartes",desc:"Background des cards"},
+          ].map(({k,l,desc})=><div key={k}style={{background:"var(--c)",borderRadius:12,padding:12}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:2}}>{l}</div>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:8}}>{desc}</div>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <input type="color"value={cols[k]}onChange={e=>setCols(p=>({...p,[k]:e.target.value}))}
+                style={{width:44,height:36,border:"none",borderRadius:8,cursor:"pointer",padding:2}}/>
+              <input className="inp"style={{flex:1,fontSize:12,padding:"6px 10px"}}
+                value={cols[k]}onChange={e=>setCols(p=>({...p,[k]:e.target.value}))}
+                placeholder="#xxxxxx"/>
+              <div style={{width:28,height:28,borderRadius:8,background:cols[k],border:"1px solid var(--br)",flexShrink:0}}/>
+            </div>
+          </div>)}
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:16}}>
+          <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={appliquerCouleurs}>
+            👁 Aperçu live
+          </button>
+          <button className="btn bS"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
+            {saving?"⏳ Sauvegarde…":"💾 Sauvegarder"}
+          </button>
+        </div>
+        <div style={{marginTop:12,padding:"10px 14px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)"}}>
+          💡 Pour appliquer définitivement : copie les valeurs dans le CSS de l'app (variables <code>--T</code>, <code>--S</code>, etc.)
+        </div>
+      </div>
+    </div>}
+
+    {sec==="textes"&&<div className="card"style={{padding:20}}>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>✏️ Textes de la landing page</div>
+      {[
+        {k:"heroTitle",l:"Titre hero",placeholder:"Le système vous a transformée…"},
+        {k:"heroSub",l:"Sous-titre hero",placeholder:"TiMat vous rend votre vrai rôle."},
+        {k:"heroBtn",l:"Bouton CTA",placeholder:"Commencer gratuitement →"},
+        {k:"prixMensuel",l:"Prix mensuel (€)",placeholder:"9,99"},
+        {k:"prixEssai",l:"Durée essai gratuit",placeholder:"2 mois gratuits"},
+      ].map(({k,l,placeholder})=><div key={k}style={{marginBottom:14}}>
+        <label className="lbl">{l}</label>
+        <input className="inp"value={txts[k]}onChange={e=>setTxts(p=>({...p,[k]:e.target.value}))}
+          placeholder={placeholder}/>
+      </div>)}
+      <div style={{display:"flex",gap:8,marginTop:8}}>
+        <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
+          {saving?"⏳…":"💾 Sauvegarder les textes"}
+        </button>
+        <div style={{fontSize:11,color:"var(--l)",alignSelf:"center",flex:1}}>
+          ⚠️ Les textes modifiés ici nécessitent de les appliquer dans le code pour être permanents.
+        </div>
+      </div>
+    </div>}
+
+    {sec==="fonctionnalites"&&<div className="card"style={{padding:20}}>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>⚙️ Activer / Désactiver des modules</div>
+      {[
+        {k:"parrainage",l:"Parrainage",ic:"🎁",desc:"Onglet parrainage visible pour les asmats"},
+        {k:"forum",l:"Forum communauté",ic:"💬",desc:"Accès au forum communautaire"},
+        {k:"pmi",l:"Communication PMI",ic:"🏛️",desc:"Messagerie avec la PMI"},
+        {k:"periscolaire",l:"Planning périscolaire",ic:"🚌",desc:"Gestion périscolaire avancée"},
+        {k:"rappelsVaccins",l:"Rappels vaccins",ic:"💉",desc:"Badge et alertes vaccins"},
+      ].map(({k,l,ic,desc})=><div key={k}style={{
+        display:"flex",justifyContent:"space-between",alignItems:"center",
+        padding:"12px 0",borderBottom:"1px solid var(--br)"
+      }}>
+        <div>
+          <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{ic} {l}</div>
+          <div style={{fontSize:11,color:"var(--l)"}}>{desc}</div>
+        </div>
+        <div onClick={()=>setFeats(p=>({...p,[k]:!p[k]}))}style={{
+          width:44,height:24,borderRadius:12,cursor:"pointer",
+          background:feats[k]?"var(--G)":"var(--br)",
+          position:"relative",transition:"background .2s"
+        }}>
+          <div style={{
+            width:18,height:18,borderRadius:9,background:"#fff",
+            position:"absolute",top:3,
+            left:feats[k]?23:3,transition:"left .2s",
+            boxShadow:"0 1px 4px rgba(0,0,0,.2)"
+          }}/>
+        </div>
+      </div>)}
+      <button className="btn bT"style={{marginTop:16,width:"100%",justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
+        {saving?"⏳…":"💾 Sauvegarder la config"}
+      </button>
+    </div>}
+
+    {sec==="stats"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+        {[
+          {ic:"👩‍👧",val:stats.users,l:"Utilisateurs inscrits",c:"var(--T)"},
+          {ic:"⭐",val:stats.pro,l:"Abonnés Pro actifs",c:"var(--S)"},
+          {ic:"👶",val:stats.enfants,l:"Enfants enregistrés",c:"var(--G)"},
+        ].map(k=><div key={k.l}className="card"style={{padding:16,textAlign:"center"}}>
+          <div style={{fontSize:28,marginBottom:6}}>{k.ic}</div>
+          <div className="pf"style={{fontSize:32,fontWeight:700,color:k.c}}>{k.val}</div>
+          <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>{k.l}</div>
+        </div>)}
+      </div>
+      <div className="card"style={{padding:16}}>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>💡 Prochaines actions</div>
+        {[
+          "Configurer un domaine personnalisé (timat.fr)",
+          "Ajouter les vraies photos Unsplash dans les sections landing",
+          "Connecter Stripe webhook en production (live key)",
+          "Configurer les emails Supabase avec ton domaine",
+          "Ajouter Google Analytics",
+        ].map((t,i)=><div key={i}style={{display:"flex",gap:8,padding:"7px 0",borderBottom:"1px solid var(--br)",fontSize:13,color:"var(--m)"}}>
+          <span style={{color:"var(--S)",fontWeight:700}}>{i+1}.</span>{t}
+        </div>)}
+      </div>
+    </div>}
+  </div>;
+}
+
 export default function App(){
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
@@ -7014,6 +7240,7 @@ export default function App(){
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail}/>;
+      case "backoffice": return user?.email===ADMIN_EMAIL?<Backoffice user={user} setPage={setPage}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
