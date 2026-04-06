@@ -1,23 +1,30 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
-// ─── ERROR BOUNDARY — évite les pages blanches ────────────────────────────────
+// ERROR BOUNDARY
 class ErrorBoundary extends React.Component {
 constructor(props){super(props);this.state={error:null};}
 static getDerivedStateFromError(e){return{error:e};}
 render(){
-if(this.state.error)return(
-<div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center
+if(this.state.error){
+const s1={minHeight:"100vh",display:"flex",flexDirection:"column",
+alignItems:"center",justifyContent:"center",
+padding:24,background:"#FBF6F0",fontFamily:"sans-serif"};
+const s2={fontSize:18,fontWeight:700,color:"#B8622F",marginBottom:8};
+const s3={fontSize:13,color:"#666",marginBottom:20,maxWidth:400,textAlign:"center"};
+const s4={background:"#3D6B50",color:"#fff",border:"none",
+borderRadius:10,padding:"10px 24px",cursor:"pointer",
+fontSize:14,fontWeight:600};
+return(
+<div style={s1}>
 <div style={{fontSize:48,marginBottom:16}}>:(</div>
-<div style={{fontSize:18,fontWeight:700,color:"#B8622F",marginBottom:8}}>Une erreur e
-<div style={{fontSize:13,color:"#666",marginBottom:20,maxWidth:400,textAlign:"center"
-{this.state.error?.message||"Erreur inconnue"}
-</div>
-<button onClick={()=>window.location.reload()}
-style={{background:"#3D6B50",color:"#fff",border:"none",borderRadius:10,padding:"10
+<div style={s2}>Une erreur est survenue</div>
+<div style={s3}>{this.state.error?.message||"Erreur inconnue"}</div>
+<button onClick={()=>window.location.reload()} style={s4}>
 Recharger la page
 </button>
 </div>
 );
+}
 return this.props.children;
 }
 }
@@ -77,6 +84,7 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
 .bS{background:linear-gradient(135deg,#9B6BAA,#B87CC8);color:#fff;box-shadow:0 2px .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(155,107,170,.4)}
 .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
+10px r
 .bG:hover{background:rgba(26,17,24,.1)}
 .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;bord
 .content{flex:1;overflow-y:auto;overflow-x:hidden}
@@ -84,7 +92,6 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-10px r
 @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
 @media(max-width:400px){.g2,.g3,.g4{grid-template-columns:1fr}}
 .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
@@ -608,6 +615,7 @@ return <div className="fi">
 <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Documents reçus de Marie</
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:8}}>
+· Cliq
 {bilansRecus.map(b=><div key={b.id}>
 <div onClick={()=>setDocOuvert(docOuvert===b.id?null:b.id)}
 style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding
@@ -615,8 +623,7 @@ style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddin
 <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>
 {b.type==="bilan"?" Bilan de journée du "+b.date:" CR Trimestriel — "+b.t
 </div>
-<div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Par Marie Dupont · Cliq
-</div>
+<div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Par Marie Dupont </div>
 <span style={{fontSize:16,color:"var(--P)"}}>{docOuvert===b.id?"▲":"▼"}</span>
 </div>
 {docOuvert===b.id&&<div style={{padding:"14px 16px",background:"var(--w)",borderRad
@@ -653,13 +660,13 @@ borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
 {[" "," "," "," "," "," "," "," "].map(h=><button key={h}className={"
 </div>
+Nouve
 </div>
 <div style={{marginBottom:10}}>
 <label className="lbl">Message</label>
 <textarea className="ta"value={msg}onChange={e=>setMsg(e.target.value)}
 placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"…"
 </div>
-Nouve
 <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer </button>
 </div>
 {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
@@ -785,14 +792,14 @@ Donné
 </div>)}
 </div>
 <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(
-<div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}> <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>
+<div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}> Exclus
+<div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>
 Aucun concurrent ne génère un bilan personnalisé de la journée. TiMat transforme
 </div>
 </div>
 </div>
 </div>
 </div>;
-Exclus
 }
 // ─── POINTAGE ────────────────────────────────────────────────────────────────
 function Pointage({enfants,role,pEId}){
@@ -1008,9 +1015,9 @@ onChange={e=>setRe(p=>({...p,[f]:e.target.value}))} placeholder={l+"..."}/>
 <option value="bien"> Bon appétit</option><option value="peu"> Peu mangé</o
 </select>
 </div>
+<button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer les re
 </div>}
 </div>
-<button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer les re
 <div className="card"style={{padding:16}}>
 <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}> Changes
 <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
@@ -1365,7 +1372,6 @@ return <div className="fi">
 {conv.map(m=><div key={m.id}className={(m.de==="asmat"?"msg msg-me":"msg msg-ot")}>
 <div>{m.txt}</div>
 <div style={{fontSize:10,opacity:.7,marginTop:3,textAlign:"right"}}>{m.h}</div>
-Conve
 </div>)}
 <div ref={endRef}/>
 </div>
@@ -1389,6 +1395,7 @@ style={{display:"flex",gap:10,padding:"9px 0",borderBottom:"1px solid var(--br)
 </div>
 {unread>0&&<span className="badge"style={{background:"var(--T)",color:"white"}}
 </div>;})}
+Conve
 Bon à
 </div>
 <div className="card"style={{padding:14,background:"var(--Sp)",border:"1px solid var(
@@ -1453,8 +1460,8 @@ Exporter vers Pajemploi
 </button>
 </div>
 </div>
-— {a.m
-<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{fmt(a.date)} <div style={{fontSize:11,color:"var(--l)"}}>{a.heures}h · {a.indemnise?"Indemni
+<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{fmt(a.date)} — {a.m
+<div style={{fontSize:11,color:"var(--l)"}}>{a.heures}h · {a.indemnise?"Indemni
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
 <div className="card"style={{padding:16}}>
 <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}> Absen
@@ -1628,12 +1635,12 @@ return <div className="fi">
 {enfant.allergies.map(a=><span key={a}className="badge"style={{background:"#FEE
 </div>}
 {role==="parent"&&<div style={{marginTop:12,display:"flex",gap:8}}>
-Aller
-Aucu
 <input className="inp"placeholder="Ajouter une allergie…"style={{flex:1}}/>
 <button className="btn bT"style={{fontSize:12}}>+</button>
 </div>}
 </div>
+Aller
+Aucu
 {/* Urgences */}
 <div className="card"style={{padding:16,background:"#FFF5F5",border:"1px solid <div style={{fontWeight:700,fontSize:14,marginBottom:10,color:"#DC2626"}}> #FCA5A
 En cas
@@ -1838,6 +1845,8 @@ action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> Aperçu PD
 <tr><td>Heures prévues</td><td>Contrat mensuel</td><td><strong>{h.prev}h</strong>
 <tr><td>Heures réalisées</td><td>Pointage validé</td><td><strong>{h.real}h</stron
 <tr><td>Solde</td><td>Différence</td><td style={{color:h.real-h.prev<0?"#DC2626":
+— {age
+<thead><tr><th>Section</th><th>Détail</th><th>Valeur</th></tr></thead>
 <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{(h.r
 <tr><td>Repas suivis</td><td>Journaux renseignés</td><td><strong>{rep.length} jou
 <tr><td>Étapes dév.</td><td>Jalons OMS</td><td><strong>{ms.filter(m=>m.ok).length
@@ -1845,8 +1854,6 @@ action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> Aperçu PD
 </table>
 <div style={{marginTop:14,paddingTop:10,borderTop:"1px solid #ddd",fontSize:11,color:
 Document généré automatiquement par TiMat · Confidentiel
-— {age
-<thead><tr><th>Section</th><th>Détail</th><th>Valeur</th></tr></thead>
 </div>
 </div>
 </div>}
@@ -1930,14 +1937,14 @@ Envoyer aux parents
 </div>
 </div>}
 </div>
+Unique
+Donné
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
 <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(
 <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}> <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>Un compte-rendu trimestr
 </div>
 <div className="card"style={{padding:14}}>
-Unique
-Donné
 <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}> {[[" Jalons acquis",ms.filter(m=>m.ok).length+"/"+ms.length],
 [" Activités",pfs.length+" dans le portfolio"],
 [" Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échang
@@ -2375,8 +2382,8 @@ setToast('Bulletin ouvert dans un nouvel onglet ✓');
 // ─── MODÈLES CONTRATS & AVENANTS ─────────────────────────────────────────────
 const MODELES_CONTRATS=[
 {id:"ct1",titre:"Contrat standard — Temps plein",desc:"Accueil 5j/semaine, mensualisation 4
-champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité entret
-{id:"ct2",titre:"Contrat — Temps partiel",desc:"Accueil moins de 5 jours ou moins de 30h/se
+champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité {id:"ct2",titre:"Contrat — Temps partiel",desc:"Accueil moins de 5 jours ou moins de entret
+30h/se
 champs:["Enfant","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],aven
 {id:"ct3",titre:"Contrat périscolaire",desc:"Accueil matin, soir, mercredis et vacances sco
 champs:["Enfant","Créneaux matin/soir","Planning vacances","Taux horaire (€/h)"],avenant:f
@@ -2876,13 +2883,13 @@ style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddin
 <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>
 {b.type==="bilan"?" Bilan du "+b.date:" CR — "+b.trim}
 </div>
+<span style={{color:"var(--P)"}}>{docOuvert===b.id?"▲":"▼"}</span>
 </div>
+{docOuvert===b.id&&<div style={{padding:16,background:"var(--w)",borderRadius:"0 0 10
 {b.txt}
 </div>}
 </div>)}
 </div>}
-<span style={{color:"var(--P)"}}>{docOuvert===b.id?"▲":"▼"}</span>
-{docOuvert===b.id&&<div style={{padding:16,background:"var(--w)",borderRadius:"0 0 10
 {/* Messages */}
 <div className="g2">
 <div className="card"style={{padding:16}}>
@@ -2911,6 +2918,7 @@ style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddin
 placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"…"):
 <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer </button>
 </div>
+Nouve
 {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
 <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}> <div className="mood-bar">
 {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{height
@@ -2918,12 +2926,11 @@ placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"�
 <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(-
 <span>J-14</span><span>Aujourd'hui</span>
 </div>
-Nouve
-Humeu
 </div>}
 </div>
 </div>
 </div>;
+Humeu
 }
 // ─── ÉVEIL (Portfolio + Développement fusionnés) ──────────────────────────────
 function Eveil({enfants,role,pEId}){
@@ -3008,9 +3015,9 @@ return <div className="fi">
 </div>
 </div>:<div style={{color:"var(--l)",fontSize:13,textAlign:"center",padding:"20px 0
 </div>
-Enregi
 {role==="asmat"&&<div className="card"style={{padding:16}}>
-<div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>+ <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+<div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>+ Enregi
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
 <div><label className="lbl">Début</label><input type="time"className="inp"value={
 <div><label className="lbl">Fin</label><input type="time"className="inp"value={nS
 </div>
@@ -3030,8 +3037,6 @@ Enregi
 {hist.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune donnée</div>}
 {hist.map(s=><div key={s.id}style={{display:"flex",justifyContent:"space-between",ali
 <div>
-<div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(s.date).toLo
-<div style={{fontSize:11,color:"var(--l)"}}>{s.debut} → {s.fin}</div>
 </div>
 <div style={{display:"flex",gap:8,alignItems:"center"}}>
 <div className="pf"style={{fontSize:16,fontWeight:700,color:"var(--T)"}}>{s.duree
@@ -3048,6 +3053,8 @@ const pct=Math.min(mins/180*100,100);
 return <div key={i}style={{flex:1,borderRadius:"3px 3px 0 0",height:pct+"%",bac
 })}
 </div>
+<div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(s.date).toLo
+<div style={{fontSize:11,color:"var(--l)"}}>{s.debut} → {s.fin}</div>
 </div>}
 </div>
 </div>
@@ -3267,11 +3274,11 @@ return <div className="fi">
 <PageHeader icon=" " title="Courbe de croissance" sub="Poids et taille jusqu'à 3 ans · R
 {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
 {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}<
+Derni
 {enfant&&<div className="g2">
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
 {/* Dernière mesure */}
 {last&&<div className="card"style={{padding:16}}>
-Derni
 <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}> <div style={{display:"flex",gap:16,justifyContent:"center"}}>
 {[[" Poids",last.poids+"kg","var(--T)"],[" Taille",last.taille+"cm","var(--B)
 <div key={l}style={{textAlign:"center"}}>
@@ -3309,6 +3316,7 @@ fill="none"stroke="var(--B)"strokeWidth="1"strokeDasharray="3,3"opacity=".5"/>}
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
 {role==="asmat"&&<div className="card"style={{padding:16}}>
+Histo
 <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>+ Nouvel
 <div style={{marginBottom:8}}><label className="lbl">Date</label><input type="date"
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -3316,7 +3324,6 @@ fill="none"stroke="var(--B)"strokeWidth="1"strokeDasharray="3,3"opacity=".5"/>}
 <div><label className="lbl">Taille (cm)</label><input className="inp"type="number
 </div>
 <button className="btn bT"style={{width:"100%"}}onClick={ajouter}>Enregistrer</butt
-Histo
 </div>}
 <div className="card"style={{padding:14}}>
 <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}> {mesures.slice().reverse().slice(0,6).map(m=><div key={m.date}style={{display:"flex
@@ -3442,8 +3449,8 @@ return <div className="fi">
 {/* Explication du fonctionnement */}
 <div style={{background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"
 <strong> Fonctionnement :</strong> vos messages sont envoyés par email à la PMI ({pmi
-{asmat
-Leurs réponses arrivent automatiquement ici. Vous apparaissez comme expéditeur : <br/><strong> {pmiInfo.nom}</strong> — {pmiInfo.tel} — {pmiInfo.adresse}
+Leurs réponses arrivent automatiquement ici. Vous apparaissez comme expéditeur : {asmat
+<br/><strong> {pmiInfo.nom}</strong> — {pmiInfo.tel} — {pmiInfo.adresse}
 <br/><span style={{fontSize:11,color:"var(--l)"}}> Pour configurer votre PMI de secte
 </div>
 {nonLus>0&&<div style={{background:"#EBF4FF",border:"1.5px solid var(--B)",borderRadius:1
@@ -3785,10 +3792,10 @@ borderBottom:"2px solid var(--br)"
 </table>
 </div>:<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"
 </div>)}
-<div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid var(--
-<div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}> Contact
+<div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}> Contact
 <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>privacy
 </div>
+var(--
 </div>
 </div>;
 }
@@ -4212,10 +4219,10 @@ overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:
 "{sel.message}"
 </div>
 </div>
+Répon
 {/* Actions */}
 <div className="card"style={{padding:16}}>
-<div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}> Répon
-<textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
+<div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}> <textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
 placeholder={"Bonjour "+sel.parent.prenom+",\n\nMerci pour votre message…"}
 style={{width:"100%",minHeight:90,marginBottom:10,resize:"vertical"}}/>
 <button className="btn bT"style={{width:"100%",marginBottom:10}}onClick={envoyerRep
@@ -4444,11 +4451,11 @@ onMouseDown={startDraw}onMouseMove={draw}onMouseUp={()=>setDrawing(false)}
 onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={()=>setDrawing(false)}/>
 <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
 <div style={{fontSize:11,color:"var(--l)"}}>
-{hasSig?" Signature dessinée":"Tracez votre signature ci-dessus"}
+{hasSig?" </div>
 </div>
+</div>
+Signature dessinée":"Tracez votre signature ci-dessus"}
 {hasSig&&<button onClick={clearSig}style={{background:"none",border:"none",color:"var
-</div>
-</div>
 {/* Bouton valider */}
 <button className="btn bS"style={{width:"100%",justifyContent:"center",fontSize:14,paddin
 opacity:lu&&hasSig?1:.5}}
@@ -4748,12 +4755,12 @@ Ces montants sont estimés. Le rapport PDF contient les chiffres exacts basés s
 </div>
 {/* Contenu du rapport */}
 <div className="card"style={{padding:18}}>
-<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}> {[
-Conte
-[" [" [" [" [" ","Page de garde — identité asmat et enfant"],
+<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}> Conte
+{[
+[" [" [" ","Page de garde — identité asmat et enfant"],
 ","Récapitulatif mensuel des heures (jan→déc)"],
 ","Total salaire net mensuel et annuel"],
-","Indemnités d'entretien et de repas"],
+[" [" ","Indemnités d'entretien et de repas"],
 ","Congés payés pris et restants"],
 [" ","Absences et indemnisations"],
 [" ","Attestation fiscale employeur (crédit d'impôt)"],
@@ -4789,10 +4796,10 @@ Inclut l'attestation fiscale
 {gen?" Génération en cours…":" Générer et télécharger le PDF"}
 </button>
 </div>
-Envoi
 {/* Partage parent */}
 {role==="asmat"&&<div className="card"style={{padding:16,background:"var(--Gp)",borde
-<div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}> <div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
+<div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}> Envoi
+<div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
 L'attestation fiscale peut être envoyée directement aux parents pour leur déclara
 </div>
 <button className="btn bG"style={{width:"100%"}}onClick={()=>setToast("Attestation
@@ -4838,13 +4845,13 @@ Les p
 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
 <label className="lbl"style={{marginBottom:0}}>{l}</label>
 <span style={{fontWeight:700,color:"var(--b)",fontSize:13}}>{v}</span>
+Votre
 </div>
 <input type="range"min={min}max={max}step={step}value={v}
 onChange={e=>set(parseFloat(e.target.value))}
 style={{width:"100%",accentColor:"var(--T)"}}/>
 <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var
 <span>{min}</span><span>{max}</span>
-Votre
 </div>
 </div>)}
 </div>
@@ -5014,14 +5021,14 @@ const modules=[
 {id:"documents",l:"Documents stockés",checked:false},
 ];
 const [sel,setSel]=useState(Object.fromEntries(modules.map(m=>[m.id,m.checked])));
+Ce qu
+Optio
 return <div className="fi">
 {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
 <PageHeader icon=" " title="Export de vos données"
 sub="Téléchargez l'intégralité de vos données — droit RGPD à la portabilité"/>
 <div className="g2">
 <div style={{display:"flex",flexDirection:"column",gap:14}}>
-Ce qu
-Optio
 <div className="card"style={{padding:18}}>
 <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}> {modules.map(m=><label key={m.id}style={{display:"flex",gap:10,alignItems:"center",
 <input type="checkbox"checked={sel[m.id]}onChange={e=>setSel(p=>({...p,[m.id]:e.t
@@ -5066,13 +5073,13 @@ Export conforme RGPD (article 20 — droit à la portabilité). Fichier chiffré
 </div>
 <div className="card"style={{padding:16,background:"var(--Sp)",border:"1px solid var(
 <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}> <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>
-Vos dr
 Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les
 </div>
 </div>
 </div>
 </div>
 </div>;
+Vos dr
 }
 ?",
 — Modi
@@ -5427,10 +5434,6 @@ transition:"opacity 0.7s ease "+delay+"ms, transform 0.7s ease "+delay+"ms",
 const DEMO_SCREENS=[
 {
 id:"journal",label:"Journal quotidien",icon:" ",color:"#B8622F",
-},
-{
-},
-{
 preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
 <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}> Journal
@@ -5448,6 +5451,8 @@ preview:()=>(
 </div>
 </div>
 ),
+},
+{
 id:"facturation",label:"Salaire automatique",icon:" ",color:"#B8892A",
 preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
@@ -5464,6 +5469,8 @@ preview:()=>(
 </div>
 </div>
 ),
+},
+{
 id:"calendrier",label:"Calendrier partagé",icon:" ",color:"#2E5F8A",
 preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
@@ -5686,10 +5693,10 @@ tout en gérant une TPE sans formation ni support.
 </FadeIn>
 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px,
 {[
-{ ic: " { ic: " { ic: " { ic: " { ic: " { ic: " ", titre: "Comptable sans diplôme", desc: "Mensualisation, heures majo
-", titre: "Juriste sans formation", desc: "Contrats CCN, avenants, cou
-", titre: "Secrétaire de la PMI", desc: "Dossiers de renouvellement, c
-", titre: "Community manager des parents", desc: "Répondre aux message
+{ ic: " ", titre: "Comptable sans diplôme", desc: "Mensualisation, heures majo
+{ ic: " ", titre: "Juriste sans formation", desc: "Contrats CCN, avenants, cou
+{ ic: " ", titre: "Secrétaire de la PMI", desc: "Dossiers de renouvellement, c
+{ ic: " { ic: " { ic: " ", titre: "Community manager des parents", desc: "Répondre aux message
 ", titre: "Administratrice le soir", desc: "Après 10h avec les enfants
 ", titre: "Seule face aux problèmes", desc: "Pas de collègue à qui dem
 ].map((item, i) => (
@@ -5950,18 +5957,18 @@ Déjà 847 assistantes maternelles nous font confiance · Données hébergées e
 </div>
 </FadeIn>
 </div>
-"flex"
 {/* ── MODALE AUTH ── */}
 {showModal && (
 <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
-style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420
+style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex"
+<div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420
+"#7B4B
+{ r: "
 {/* Sélecteur rôle */}
 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: {[{ r: "asmat", ic: " ", l: "Assistante\nmaternelle", col: "#B8622F" }, <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding:
 <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
 <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "
 </button>
-"#7B4B
-{ r: "
 ))}
 </div>
 {/* Formulaire */}
@@ -6356,10 +6363,8 @@ return <div className="fi">
 <select className="sel"value={motif}onChange={e=>setMotif(e.target.value)}>
 {motifs.map(m=><option key={m}>{m}</option>)}
 </select></div>
-Fin d
 <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={ge
 {gen?" Génération…":" Générer l'attestation PDF"}
-Obliga
 </button>
 </div>
 <div className="card"style={{padding:14,background:"var(--Rp)",border:"1px solid var(
@@ -6370,6 +6375,8 @@ L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce docum
 </div>
 </div>
 </div>;
+Fin d
+Obliga
 }
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const ONBOARD_STEPS=[
@@ -6441,8 +6448,8 @@ background:i<=step?s.color:"rgba(0,0,0,.1)",
 transition:"background .4s",
 }}/>
 ))}
-</div>
 <span style={{fontSize:11,color:"rgba(0,0,0,.35)",marginLeft:6,flexShrink:0}}>{pct}
+</div>
 <div style={{background:"#fff",borderRadius:24,overflow:"hidden",boxShadow:"0 8px 48p
 {/* Header coloré */}
 <div style={{
@@ -6495,13 +6502,13 @@ display:"block",width:"100%",marginTop:12,
 background:"none",border:"none",
 fontSize:12,color:"rgba(0,0,0,.35)",
 cursor:"pointer",fontFamily:"inherit",
+}}
 >
+Passer le tutoriel
+</button>
 )}
 </div>
 </div>
-}}
-Passer le tutoriel
-</button>
 {/* Prénom de l'utilisateur */}
 {user?.prenom&&step===0&&(
 <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"rgba(0,0,0,.45)"}}>
@@ -6621,9 +6628,9 @@ const ColPicker=({label,desc,k,state,setState})=>(
 style={{width:44,height:36,border:"none",borderRadius:8,cursor:"pointer",padding:2}
 <input className="inp"style={{flex:1,fontSize:12,padding:"6px 10px"}}
 value={state[k]}onChange={e=>setState(p=>({...p,[k]:e.target.value}))}/>
-<div style={{width:28,height:28,borderRadius:8,background:state[k],border:"1px solid
+<div style={{width:28,height:28,borderRadius:8,background:state[k],border:"1px </div>
 </div>
-</div>
+solid
 );
 return <div className="fi">
 {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -6931,7 +6938,6 @@ onClick={sauvegarder}disabled={saving}>
 {ic:" ",val:stats.users,l:"Utilisateurs inscrits",c:"var(--T)"},
 {ic:" ",val:stats.pro,l:"Abonnés Pro actifs",c:"var(--S)"},
 {ic:" ",val:stats.enfants,l:"Enfants enregistrés",c:"var(--G)"},
-}
 ].map(k=><div key={k.l}className="card"style={{padding:16,textAlign:"center"}}>
 <div style={{fontSize:28,marginBottom:6}}>{k.ic}</div>
 <div className="pf"style={{fontSize:32,fontWeight:700,color:k.c}}>{k.val}</div>
@@ -6955,6 +6961,7 @@ CREATE POLICY "admin_all" ON app_config USING (true);
 </div>
 </div>}
 </div>;
+}
 // Textes landing éditables
 const [txts,setTxts]=useState({
 heroTitle:"Le système vous a transformée en comptable.",
@@ -7068,8 +7075,8 @@ const [dark,setDark]=useState(false);
 const [loading,setLoading]=useState(true);
 const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length)
 const [notifs,setNotifs]=useState([
-{id:"n1",ic:" ",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi",roles
-{id:"n2",ic:" ",txt:"Contrat en attente de signature",date:TODAY_STR,lu:false,page:"admi
+{id:"n1",ic:" {id:"n2",ic:" ",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi",roles
+",txt:"Contrat en attente de signature",date:TODAY_STR,lu:false,page:"admi
 {id:"n4",ic:" ",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_c
 ]);
 const [showNotifs,setShowNotifs]=useState(false);
@@ -7140,9 +7147,9 @@ supabase.from('profiles').select('*').eq('id',user.id).single()
 .then(({data})=>{if(data)setUser(u=>({...u,...data}));});
 setPage('parametres');
 window.history.replaceState({},'','/');
+}
 if(payment==='cancelled'){
 window.history.replaceState({},'','/');
-}
 }
 },[user?.id]);
 const handleLogout=async()=>{
@@ -7324,5 +7331,5 @@ showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
 <div className="content">{renderPage()}</div>
 </div>
 </>
-);
 }
+);
