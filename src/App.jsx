@@ -2435,88 +2435,83 @@ function BulletinSalaire({enfants,role,pEId,user}){
         const w=window.open('','_blank');
         if(!w){setToast('Autorisez les popups pour télécharger');return;}
         const prenomEmp=enfant?.prenomParent||(enfant?.parentId?"Parent employeur":"Parent");
-        const cotisDetails=Object.entries(TAUX_COTISATIONS).map(([nom,t])=>
-          '<tr><td>'+nom+'</td>'
-          +'<td style="text-align:right">'+(t.sal>0?(brut*t.sal/100).toFixed(2)+'€':'—')+'</td>'
-          +'<td style="text-align:right">'+(t.pat>0?(brut*t.pat/100).toFixed(2)+'€':'—')+'</td></tr>'
-        ).join('');
-        const htmlBulletin='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>'
-          +'<title>Bulletin de salaire '+moisSel+'</title>'
-          +'<style>'
-          +'*{box-sizing:border-box;margin:0;padding:0}'
-          +'body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:20px;max-width:800px;margin:0 auto}'
-          +'h1{font-size:16px;color:#2C1F14;text-align:center;margin:12px 0;letter-spacing:.5px}'
-          +'.header-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#F5F0EB;padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid #DDD5C8}'
-          +'.header-grid div{font-size:10px;line-height:1.7}'
-          +'.header-grid strong{font-size:11px;color:#B8622F}'
-          +'.section-title{background:#2C1F14;color:#fff;padding:5px 10px;font-weight:700;font-size:11px;margin:10px 0 4px;letter-spacing:.5px}'
-          +'table{width:100%;border-collapse:collapse;font-size:10px}'
-          +'td,th{padding:5px 8px;border:1px solid #ddd}'
-          +'th{background:#f5f5f5;font-weight:700;text-align:left}'
-          +'.right{text-align:right}'
-          +'.brut{background:#FBF0E8;font-weight:700;font-size:11px}'
-          +'.net-paye{background:#B8622F;color:#fff;font-weight:700;font-size:13px}'
-          +'.net-imposable{background:#EAF4EE;font-weight:700;color:#3D6B50}'
-          +'.cout-emp{background:#F5F0FF;font-weight:700}'
-          +'.footer{margin-top:20px;padding:10px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;font-size:9px;color:#888;line-height:1.8}'
-          +'.sig-zone{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}'
-          +'.sig-box{border:1px solid #ddd;height:60px;border-radius:4px;padding:8px;font-size:9px;color:#aaa}'
-          +'@media print{button{display:none}.print-btn{display:none}}'
-          +'</style></head><body>'
-          +'<div style="text-align:center;margin-bottom:8px">'
-          +'<div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px">Convention Collective Nationale — Particuliers Employeurs</div>'
-          +'<h1>BULLETIN DE PAIE</h1>'
-          +'<div style="font-size:12px;color:#B8622F;font-weight:700">'+moisSel+'</div>'
-          +'</div>'
-          +'<div class="header-grid">'
-          +'<div><strong>EMPLOYEUR (Particulier)</strong><br/>'
-          +prenomEmp+'<br/>'
-          +'N° Pajemploi : PAJ-'+new Date().getFullYear()+'-'+Math.floor(Math.random()*99999)+'<br/>'
-          +'Emploi : Assistante maternelle agréée<br/>'
-          +'Code APE : 8891A — Accueil jeunes enfants</div>'
-          +'<div><strong>SALARIÉ·E</strong><br/>'
-          +(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'<br/>'
-          +'N° SS : à compléter<br/>'
-          +'Agrément : à compléter<br/>'
-          +'Entrée le : '+(contrat.debut||'—')+' — CDI</div>'
-          +'</div>'
-          +'<div class="section-title">RÉMUNÉRATION</div>'
-          +'<table><tr><th>Libellé</th><th>Nb heures / Jours</th><th>Taux</th><th class="right">Montant brut</th></tr>'
-          +'<tr><td>Salaire de base (heures normales)</td><td class="right">'+heuresNorm+' h</td><td class="right">'+tauxH.toFixed(4)+' €/h</td><td class="right">'+salBase.toFixed(2)+' €</td></tr>'
-          +(hSupp>0?'<tr><td>Heures complémentaires (maj. 25%)</td><td class="right">'+hSupp+' h</td><td class="right">'+(tauxH*1.25).toFixed(4)+' €/h</td><td class="right">'+salSupp.toFixed(2)+' €</td></tr>':'')
-          +'<tr><td>Indemnité d'entretien</td><td class="right">'+Math.round(h.real/8)+' jours</td><td class="right">'+(contrat.entretien||3.80).toFixed(2)+' €/j</td><td class="right">'+entretien.toFixed(2)+' €</td></tr>'
-          +'<tr class="brut"><td colspan="3">SALAIRE BRUT MENSUEL</td><td class="right">'+brut.toFixed(2)+' €</td></tr>'
-          +'</table>'
-          +'<div class="section-title">COTISATIONS SOCIALES</div>'
-          +'<table><tr><th>Cotisation</th><th class="right">Part salarié</th><th class="right">Part employeur</th></tr>'
-          +cotisDetails
-          +'<tr style="font-weight:700;background:#f5f5f5"><td>TOTAL COTISATIONS</td><td class="right" style="color:#c44a6a">-'+totalCotSal.toFixed(2)+' €</td><td class="right">'+totalCotPat.toFixed(2)+' €</td></tr>'
-          +'</table>'
-          +'<div class="section-title">RÉCAPITULATIF NET</div>'
-          +'<table>'
-          +'<tr><td>Salaire brut</td><td class="right">'+brut.toFixed(2)+' €</td></tr>'
-          +'<tr><td>Cotisations salariales déduites</td><td class="right" style="color:#c44a6a">- '+totalCotSal.toFixed(2)+' €</td></tr>'
-          +'<tr class="net-paye"><td>NET À PAYER</td><td class="right">'+netPaye.toFixed(2)+' €</td></tr>'
-          +'<tr class="net-imposable"><td>Net imposable (abattement fiscal spécifique assmat)</td><td class="right">'+netImposable.toFixed(2)+' €</td></tr>'
-          +'<tr><td>Indemnité d'entretien (non imposable)</td><td class="right">'+entretien.toFixed(2)+' €</td></tr>'
-          +'<tr class="cout-emp"><td>Coût total pour l'employeur (brut + cotis. patronales)</td><td class="right">'+(coutEmployeur+entretien).toFixed(2)+' €</td></tr>'
-          +'</table>'
-          +'<div class="sig-zone">'
-          +'<div><div style="font-size:10px;font-weight:700;margin-bottom:6px">Signature de l'employeur</div><div class="sig-box">Date : ________________<br/>Signature :</div></div>'
-          +'<div><div style="font-size:10px;font-weight:700;margin-bottom:6px">Signature de la salarié·e (reçu pour solde)</div><div class="sig-box">Date : ________________<br/>Signature :</div></div>'
-          +'</div>'
-          +'<div class="footer">'
-          +'Bulletin établi par TiMat — '+new Date().toLocaleDateString('fr-FR')+' | '
-          +'Convention Collective Nationale Particuliers Employeurs (IDCC 2395) | '
-          +'Base légale : Code du travail art. L3243-1 | '
-          +'Net imposable calculé avec abattement fiscal spécifique assistantes maternelles (3 × SMIC horaire × nb jours × nb enfants) | '
-          +'À conserver 5 ans'
-          +'</div>'
-          +'<div style="text-align:center;margin-top:16px">'
-          +'<button class="print-btn" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Enregistrer en PDF</button>'
-          +'</div>'
-          +'</body></html>';
-        w.document.write(htmlBulletin);
+        const cotisDetails=Object.entries(TAUX_COTISATIONS).map(function(entry){
+          var nom=entry[0],t=entry[1];
+          return "<tr><td>"+nom+"</td>"
+            +"<td class=\"right\">"+(t.sal>0?(brut*t.sal/100).toFixed(2)+"€":"—")+"</td>"
+            +"<td class=\"right\">"+(t.pat>0?(brut*t.pat/100).toFixed(2)+"€":"—")+"</td></tr>";
+        }).join("");
+        var hSuppRow=hSupp>0?"<tr><td>Heures compl. (maj. 25%)</td><td class=\"right\">"+hSupp+" h</td><td class=\"right\">"+(tauxH*1.25).toFixed(4)+" €/h</td><td class=\"right\">"+salSupp.toFixed(2)+" €</td></tr>":"";
+        var htmlParts=[
+          "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"UTF-8\"/>",
+          "<title>Bulletin de salaire "+moisSel+"</title>",
+          "<style>",
+          "*{box-sizing:border-box;margin:0;padding:0}",
+          "body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:20px;max-width:800px;margin:0 auto}",
+          "h1{font-size:16px;color:#2C1F14;text-align:center;margin:12px 0}",
+          ".hg{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#F5F0EB;padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid #DDD5C8}",
+          ".hg div{font-size:10px;line-height:1.7}",
+          ".hg strong{font-size:11px;color:#B8622F}",
+          ".st{background:#2C1F14;color:#fff;padding:5px 10px;font-weight:700;font-size:11px;margin:10px 0 4px;letter-spacing:.5px}",
+          "table{width:100%;border-collapse:collapse;font-size:10px}",
+          "td,th{padding:5px 8px;border:1px solid #ddd}",
+          "th{background:#f5f5f5;font-weight:700;text-align:left}",
+          ".right{text-align:right}",
+          ".brut{background:#FBF0E8;font-weight:700;font-size:11px}",
+          ".net{background:#B8622F;color:#fff;font-weight:700;font-size:13px}",
+          ".ni{background:#EAF4EE;font-weight:700;color:#3D6B50}",
+          ".ce{background:#F5F0FF;font-weight:700}",
+          ".sz{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}",
+          ".sb{border:1px solid #ddd;height:60px;border-radius:4px;padding:8px;font-size:9px;color:#aaa}",
+          "@media print{.nb{display:none}}",
+          "</style></head><body>",
+          "<div style=\"text-align:center;margin-bottom:8px\">",
+          "<div style=\"font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px\">Convention Collective Nationale - Particuliers Employeurs</div>",
+          "<h1>BULLETIN DE PAIE</h1>",
+          "<div style=\"font-size:12px;color:#B8622F;font-weight:700\">"+moisSel+"</div>",
+          "</div>",
+          "<div class=\"hg\">",
+          "<div><strong>EMPLOYEUR (Particulier)</strong><br/>"+prenomEmp+"<br/>",
+          "N° Pajemploi : PAJ-"+new Date().getFullYear()+"-"+Math.floor(Math.random()*99999)+"<br/>",
+          "Emploi : Assistante maternelle agréée<br/>Code APE : 8891A</div>",
+          "<div><strong>SALARIE(E)</strong><br/>"+(user?.prenom||"Prénom")+" "+(user?.nom||"Nom")+"<br/>",
+          "Entree le : "+(contrat.debut||"—")+" — CDI</div>",
+          "</div>",
+          "<div class=\"st\">REMUNERATION</div>",
+          "<table><tr><th>Libellé</th><th>Heures / Jours</th><th>Taux</th><th class=\"right\">Montant brut</th></tr>",
+          "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+tauxH.toFixed(4)+" euros/h</td><td class=\"right\">"+salBase.toFixed(2)+" euros</td></tr>",
+          hSuppRow,
+          "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+(contrat.entretien||3.80).toFixed(2)+" euros/j</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
+          "</table>",
+          "<div class=\"st\">COTISATIONS SOCIALES</div>",
+          "<table><tr><th>Cotisation</th><th class=\"right\">Part salarie</th><th class=\"right\">Part employeur</th></tr>",
+          cotisDetails,
+          "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+totalCotSal.toFixed(2)+" euros</td><td class=\"right\">"+totalCotPat.toFixed(2)+" euros</td></tr>",
+          "</table>",
+          "<div class=\"st\">RECAPITULATIF NET</div>",
+          "<table>",
+          "<tr><td>Salaire brut</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable (abattement fiscal assmat)</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+(coutEmployeur+entretien).toFixed(2)+" euros</td></tr>",
+          "</table>",
+          "<div class=\"sz\">",
+          "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
+          "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de la salariee</div><div class=\"sb\">Date: ________________</div></div>",
+          "</div>",
+          "<p style=\"margin-top:16px;font-size:9px;color:#888;line-height:1.8\">",
+          "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN Particuliers Employeurs (IDCC 2395) | A conserver 5 ans",
+          "</p>",
+          "<div style=\"text-align:center;margin-top:12px\">",
+          "<button class=\"nb\" onclick=\"window.print()\" style=\"background:#B8622F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700\">Imprimer / PDF</button>",
+          "</div>",
+          "</body></html>"
+        ];
+        var htmlBulletin=htmlParts.join("");
+                w.document.write(htmlBulletin);
         w.document.close();
         setToast('Bulletin ouvert dans un nouvel onglet ✓');
       }}>📥 Télécharger PDF</button>
@@ -2538,7 +2533,7 @@ const MODELES_CONTRATS=[
    champs:["Contrat concerné","Nouveaux horaires","Date d'effet","Motif"],avenant:true},
   {id:"ct5",titre:"Avenant — Revalorisation salaire",desc:"Augmenter le taux horaire suite SMIC ou accord.",
    champs:["Contrat concerné","Nouveau taux horaire","Date d'effet","Motif"],avenant:true},
-  {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d'un commun accord avec solde tout compte.",
+  {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d&#39;un commun accord avec solde tout compte.",
    champs:["Contrat concerné","Date de fin","Motif","Congés payés restants"],avenant:true},
 ];
 
@@ -2563,7 +2558,7 @@ function DemandesAvenants({enfants,role,pEId}){
       prenomEnfant:enfant?.prenom||"Enfant",
     },...p]);
     setForm({type:"Modification d'horaires",detail:"",dateEffet:""});
-    setToast("Demande d'avenant envoyée ✓ — l'asmat sera notifiée");
+    setToast("Demande d&#39;avenant envoyée ✓ — l&#39;asmat sera notifiée");
   };
 
   const statutColor={
@@ -2572,12 +2567,12 @@ function DemandesAvenants({enfants,role,pEId}){
 
   return <div>
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="✏️" title="Demandes d'avenants"
+    <PageHeader icon="✏️" title="Demandes d&#39;avenants"
       sub="Toute modification du contrat doit faire l'objet d'un avenant signé"/>
 
     <div className="card"style={{padding:20,marginBottom:16}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>
-        ➕ Nouvelle demande d'avenant
+        ➕ Nouvelle demande d&#39;avenant
       </div>
       <div style={{display:"grid",gap:12}}>
         <div>
@@ -2626,7 +2621,7 @@ function DemandesAvenants({enfants,role,pEId}){
           </button>
           <button className="btn bT"style={{fontSize:11,flex:1,justifyContent:"center"}}
             onClick={()=>setDemandes(p=>p.map(x=>x.id===d.id?{...x,statut:"Acceptée"}:x))}>
-            ✓ Accepter et créer l'avenant
+            ✓ Accepter et créer l&#39;avenant
           </button>
         </div>}
       </div>)}
@@ -2634,7 +2629,7 @@ function DemandesAvenants({enfants,role,pEId}){
 
     {demandes.length===0&&<div className="card"style={{padding:24,textAlign:"center"}}>
       <div style={{fontSize:36,marginBottom:8}}>✏️</div>
-      <div style={{fontSize:13,color:"var(--m)"}}>Aucune demande d'avenant en cours</div>
+      <div style={{fontSize:13,color:"var(--m)"}}>Aucune demande d&#39;avenant en cours</div>
       <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Les demandes soumises apparaîtront ici</div>
     </div>}
   </div>;
@@ -2702,8 +2697,8 @@ const COURRIERS_DATA=[
    contenu:"Objet : Compte-rendu de la visite du [Date]\n\nSuite à la visite de [Nom puéricultrice] le [Date], je vous adresse ce compte-rendu.\n\nPoints abordés : conditions d'accueil, suivi des enfants, documentation administrative.\n\nObservations : [Observations]\nActions engagées : [Actions]\n\nCordialement,\n[Votre nom] — Asmat agréée n° [Numéro agrément]"},
   {id:"r5",cat:"Congés",ic:"🏖️",titre:"Déclaration de congés annuels",
    contenu:"Madame, Monsieur,\n\nJe vous informe que je prendrai mes congés du [Date début] au [Date fin] inclus.\n\nDurant cette période, je ne pourrai pas assurer l'accueil de [Prénom].\n\nCordialement,\n[Votre nom]"},
-  {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d'avenant aux horaires",
-   contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l'avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
+  {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d&#39;avenant aux horaires",
+   contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l&#39;avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
   {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
    contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
 ];
@@ -2917,7 +2912,7 @@ function AdminFinances({enfants,role,pEId,user}){
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
       {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
-      {id:"avenants",l:"Demandes d'avenants",ic:"✏️"},
+      {id:"avenants",l:"Demandes d&#39;avenants",ic:"✏️"},
       {id:"contrats_types",l:"Modèles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
       {id:"recap",l:"Récap mensuel PDF",ic:"📊"},
@@ -6775,7 +6770,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
         <div className="card"style={{padding:14,background:"var(--Rp)",border:"1px solid var(--R)"}}>
           <div style={{fontWeight:700,fontSize:12,color:"var(--R)",marginBottom:6}}>⚠️ Obligation légale</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
-            L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l'asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
+            L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l&#39;asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
           </div>
         </div>
       </div>
@@ -6995,7 +6990,7 @@ function Login({onLogin}){
 // ─── APP ──────────────────────────────────────────────────────────────────────
 // ─── BACKOFFICE ADMIN ────────────────────────────────────────────────────────
 // Accessible uniquement à sophie@faitacreas.fr (ou l'email admin configuré)
-const ADMIN_EMAIL = "sophie@faitacreas.fr";
+const ADMIN_EMAIL = "faitacreapro@gmail.com";
 
 function Backoffice({user,setPage}){
   const [sec,setSec]=useState("couleurs");
