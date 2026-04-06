@@ -6,7 +6,7 @@ var TODAY_STR=_D.getFullYear()+"-"+String(_D.getMonth()+1).padStart(2,"0")+"-"+S
 var TODAY_H=String(_D.getHours()).padStart(2,"0")+"h"+String(_D.getMinutes()).padStart(2,"0")
 var TODAY_MONTH=String(_D.getMonth()+1).padStart(2,"0");
 var TODAY_YEAR=String(_D.getFullYear());
-const Styles = () => (
+function Styles(){return(
 <style>{`
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -108,7 +108,7 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointe
 .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
 `}</style>
-);
+);}
 const D = {
 asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrem
 parents:[
