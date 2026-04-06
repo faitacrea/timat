@@ -1,33 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
-// ERROR BOUNDARY
-class ErrorBoundary extends React.Component {
-constructor(props){super(props);this.state={error:null};}
-static getDerivedStateFromError(e){return{error:e};}
-render(){
-if(this.state.error){
-const s1={minHeight:"100vh",display:"flex",flexDirection:"column",
-alignItems:"center",justifyContent:"center",
-padding:24,background:"#FBF6F0",fontFamily:"sans-serif"};
-const s2={fontSize:18,fontWeight:700,color:"#B8622F",marginBottom:8};
-const s3={fontSize:13,color:"#666",marginBottom:20,maxWidth:400,textAlign:"center"};
-const s4={background:"#3D6B50",color:"#fff",border:"none",
-borderRadius:10,padding:"10px 24px",cursor:"pointer",
-fontSize:14,fontWeight:600};
-return(
-<div style={s1}>
-<div style={{fontSize:48,marginBottom:16}}>:(</div>
-<div style={s2}>Une erreur est survenue</div>
-<div style={s3}>{this.state.error?.message||"Erreur inconnue"}</div>
-<button onClick={()=>window.location.reload()} style={s4}>
-Recharger la page
-</button>
-</div>
-);
-}
-return this.props.children;
-}
-}
 // DATES
 var _D=new Date();
 var TODAY_STR=_D.getFullYear()+"-"+String(_D.getMonth()+1).padStart(2,"0")+"-"+String(_D.getD
@@ -67,6 +39,7 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%
 .card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:var(--r);bo
 .card-lift{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease}
+10px r
 .card-lift:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
 .pf{font-family:'Cormorant Garamond','Georgia',serif}
 .topbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filte
@@ -84,7 +57,6 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
 .bS{background:linear-gradient(135deg,#9B6BAA,#B87CC8);color:#fff;box-shadow:0 2px .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(155,107,170,.4)}
 .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
-10px r
 .bG:hover{background:rgba(26,17,24,.1)}
 .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;bord
 .content{flex:1;overflow-y:auto;overflow-x:hidden}
@@ -136,8 +108,6 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointe
 .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
 `}</style>
-);
-//
 const D = {
 asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrem
 parents:[
@@ -615,7 +585,6 @@ return <div className="fi">
 <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Documents reçus de Marie</
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:8}}>
-· Cliq
 {bilansRecus.map(b=><div key={b.id}>
 <div onClick={()=>setDocOuvert(docOuvert===b.id?null:b.id)}
 style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding
@@ -637,6 +606,7 @@ Copier
 </div>)}
 </div>
 </div>}
+· Cliq
 <div className="g2">
 <div className="card"style={{padding:16}}>
 <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>{enfant?.e
@@ -660,7 +630,6 @@ borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
 {[" "," "," "," "," "," "," "," "].map(h=><button key={h}className={"
 </div>
-Nouve
 </div>
 <div style={{marginBottom:10}}>
 <label className="lbl">Message</label>
@@ -682,6 +651,7 @@ background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
 </div>
 </div>
 </div>;
+Nouve
 Humeu
 }
 //
@@ -792,14 +762,14 @@ Donné
 </div>)}
 </div>
 <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(
-<div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}> Exclus
-<div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>
+<div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}> <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>
 Aucun concurrent ne génère un bilan personnalisé de la journée. TiMat transforme
 </div>
 </div>
 </div>
 </div>
 </div>;
+Exclus
 }
 //
 function Pointage({enfants,role,pEId}){
@@ -1015,9 +985,9 @@ onChange={e=>setRe(p=>({...p,[f]:e.target.value}))} placeholder={l+"..."}/>
 <option value="bien"> Bon appétit</option><option value="peu"> Peu mangé</o
 </select>
 </div>
-<button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer les re
-</div>}
+<button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer </div>}
 </div>
+les re
 <div className="card"style={{padding:16}}>
 <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}> Changes
 <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
@@ -1443,8 +1413,8 @@ return <div className="fi">
 <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Total b
 <span className="pf"style={{fontSize:20,fontWeight:700,color:"var(--T)"}}>{totalB
 </div>
-<div style={{fontSize:11,color:"var(--l)",marginTop:6}}>* Net ≈ {(totalBrut*0.78).t
 </div>
+<div style={{fontSize:11,color:"var(--l)",marginTop:6}}>* Net ≈ {(totalBrut*0.78).t
 {/* Pajemploi */}
 <div className="card"style={{padding:16,background:"#EBF4FF",border:"1.5px solid var(
 <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12}}>
@@ -1831,6 +1801,7 @@ action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> Aperçu PD
 <div style={{borderBottom:"2px solid #C4714A",paddingBottom:12,marginBottom:16,displa
 <div><h2 style={{color:"#C4714A",fontFamily:"Georgia",fontSize:18}}> TiMat</h2>
 <div style={{fontSize:11,color:"#888"}}>Marie Dupont · Assistante Maternelle agré
+- {age
 <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
 <div><strong>Récapitulatif mensuel</strong></div>
 <div>Mars 2024</div>
@@ -1841,12 +1812,11 @@ action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> Aperçu PD
 <div style={{fontWeight:700,marginBottom:4}}> {enfant.prenom} {enfant.nom} <div style={{fontSize:11,color:"#666"}}>Période d'accueil : {enfant.contrat?.horair
 </div>
 <table>
+<thead><tr><th>Section</th><th>Détail</th><th>Valeur</th></tr></thead>
 <tbody>
 <tr><td>Heures prévues</td><td>Contrat mensuel</td><td><strong>{h.prev}h</strong>
 <tr><td>Heures réalisées</td><td>Pointage validé</td><td><strong>{h.real}h</stron
 <tr><td>Solde</td><td>Différence</td><td style={{color:h.real-h.prev<0?"#DC2626":
-- {age
-<thead><tr><th>Section</th><th>Détail</th><th>Valeur</th></tr></thead>
 <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{(h.r
 <tr><td>Repas suivis</td><td>Journaux renseignés</td><td><strong>{rep.length} jou
 <tr><td>Étapes dév.</td><td>Jalons OMS</td><td><strong>{ms.filter(m=>m.ok).length
@@ -1937,8 +1907,6 @@ Envoyer aux parents
 </div>
 </div>}
 </div>
-Unique
-Donné
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
 <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(
@@ -1955,6 +1923,8 @@ Donné
 </div>
 </div>
 </div>;
+Unique
+Donné
 }
 //
 const DOCS_DEMO=[
@@ -2382,8 +2352,8 @@ setToast('Bulletin ouvert dans un nouvel onglet ✓');
 //
 const MODELES_CONTRATS=[
 {id:"ct1",titre:"Contrat standard - Temps plein",desc:"Accueil 5j/semaine, mensualisation 4
-champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité {id:"ct2",titre:"Contrat - Temps partiel",desc:"Accueil moins de 5 jours ou moins de entret
-30h/se
+champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité entret
+{id:"ct2",titre:"Contrat - Temps partiel",desc:"Accueil moins de 5 jours ou moins de 30h/se
 champs:["Enfant","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],aven
 {id:"ct3",titre:"Contrat périscolaire",desc:"Accueil matin, soir, mercredis et vacances sco
 champs:["Enfant","Créneaux matin/soir","Planning vacances","Taux horaire (€/h)"],avenant:f
@@ -2531,7 +2501,6 @@ Générer le document
 </div>;
 }
 //
-impayé
 const COURRIERS_DATA=[
 {id:"r1",cat:"Contrat",ic:" ",titre:"Demande de rendez-vous d'embauche",
 contenu:"Madame, Monsieur,\n\nSuite à notre prise de contact, je vous confirme ma disponib
@@ -2543,6 +2512,7 @@ contenu:"Objet : Compte-rendu de la visite du [Date]\n\nSuite à la visite de [N
 {id:"r5",cat:"Congés",ic:" ",titre:"Déclaration de congés annuels",
 contenu:"Madame, Monsieur,\n\nJe vous informe que je prendrai mes congés du [Date début] a
 {id:"r6",cat:"Avenant",ic:" ",titre:"Proposition d&#39;avenant aux horaires",
+impayé
 contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom]
 {id:"r7",cat:"PMI",ic:" ",titre:"Demande de renouvellement d'agrément",
 contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon
@@ -2904,6 +2874,7 @@ style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddin
 <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>{t.txt}</div>
 </div>
 </div>)}
+Nouve
 </div>
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -2918,7 +2889,6 @@ style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddin
 placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"…"):
 <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer </button>
 </div>
-Nouve
 {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
 <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}> <div className="mood-bar">
 {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{height
@@ -3037,6 +3007,8 @@ return <div className="fi">
 {hist.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune donnée</div>}
 {hist.map(s=><div key={s.id}style={{display:"flex",justifyContent:"space-between",ali
 <div>
+<div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(s.date).toLo
+<div style={{fontSize:11,color:"var(--l)"}}>{s.debut} → {s.fin}</div>
 </div>
 <div style={{display:"flex",gap:8,alignItems:"center"}}>
 <div className="pf"style={{fontSize:16,fontWeight:700,color:"var(--T)"}}>{s.duree
@@ -3053,8 +3025,6 @@ const pct=Math.min(mins/180*100,100);
 return <div key={i}style={{flex:1,borderRadius:"3px 3px 0 0",height:pct+"%",bac
 })}
 </div>
-<div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(s.date).toLo
-<div style={{fontSize:11,color:"var(--l)"}}>{s.debut} → {s.fin}</div>
 </div>}
 </div>
 </div>
@@ -3316,7 +3286,6 @@ fill="none"stroke="var(--B)"strokeWidth="1"strokeDasharray="3,3"opacity=".5"/>}
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
 {role==="asmat"&&<div className="card"style={{padding:16}}>
-Histo
 <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>+ Nouvel
 <div style={{marginBottom:8}}><label className="lbl">Date</label><input type="date"
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -3337,6 +3306,7 @@ Histo
 </div>
 </div>}
 </div>;
+Histo
 }
 //
 const ACTIVITES_PAR_AGE=[
@@ -3513,7 +3483,8 @@ Renouvellement à prévoir dans 2 mois - contacter la PMI
 </div>)}
 </div>
 <div className="card"style={{padding:14,background:"var(--Bp)",border:"1px solid var(
-<div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}> <div style={{fontSize:12,color:"var(--b)",lineHeight:1.7}}>
+<div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}> Contac
+<div style={{fontSize:12,color:"var(--b)",lineHeight:1.7}}>
 Email : {pmiEmail}<br/>
 Tél : 01 XX XX XX XX<br/>
 Horaires : Lun–Ven 9h–17h
@@ -3522,7 +3493,6 @@ Horaires : Lun–Ven 9h–17h
 </div>
 </div>
 </div>;
-Contac
 }
 //
 function BandeauHorsLigne(){
@@ -3792,12 +3762,12 @@ borderBottom:"2px solid var(--br)"
 </table>
 </div>:<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"
 </div>)}
-<div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid var(--
-<div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}> Contact
+<div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}> Contact
 <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>privacy
 </div>
 </div>
 </div>;
+var(--
 }
 //
 function MentionsLegales(){
@@ -3960,8 +3930,8 @@ padding:"1px 5px",fontSize:9,fontWeight:700}}>{s.badge}</span>}
 {prochainsVaccins.length} vaccin{prochainsVaccins.length>1?"s":""} à prévoir pour
 </div>
 </div>
-<div style={{fontSize:12,color:"var(--m)"}}>À mentionner au médecin lors du prochai
 </div>}
+<div style={{fontSize:12,color:"var(--m)"}}>À mentionner au médecin lors du prochai
 <div style={{display:"flex",flexDirection:"column",gap:8}}>
 {VACCINS_CALENDRIER.map((v,i)=>{
 const enRetard=!v.fait&&v.age_mois<ageActuel;
@@ -4090,8 +4060,8 @@ const statutColor={nouveau:"var(--B)",en_discussion:"var(--G)",accepte:"var(--S)
 const statutBg={nouveau:"var(--Bp)",en_discussion:"var(--Gp)",accepte:"var(--Sp)",refuse:"v
 const changerStatut=(id,statut)=>{
 setDemandes(p=>p.map(d=>d.id===id?{...d,statut}:d));
-if(statut==="accepte")setToast("Demande acceptée - un contrat peut maintenant être if(statut==="refuse")setToast("Demande refusée - un email sera envoyé aux parents.");
-créé ✓
+if(statut==="accepte")setToast("Demande acceptée - un contrat peut maintenant être créé ✓
+if(statut==="refuse")setToast("Demande refusée - un email sera envoyé aux parents.");
 };
 const envoyerReponse=()=>{
 if(!repTxt.trim())return;
@@ -4347,8 +4317,8 @@ Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est
 <InfoRow label="Date de naissance" value={fmt(enfant?.naissance||"")} copyKey="enfN
 <InfoRow label="Lieu de garde" value="Domicile de l'assistante maternelle" copyKey=
 </div>
-Pajemp
 {/* Lien Pajemploi */}
+Pajemp
 <div className="card"style={{padding:16,background:"var(--Tp)",border:"1px solid var(
 <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:8}}> <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
 Une fois déclaré sur monenfant.fr, vous devrez aussi déclarer les heures mensuell
@@ -4431,11 +4401,11 @@ sub="Signature électronique conforme eIDAS - valeur légale"/>
 <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
 </div>)}
 </div>
-16px"}
 {/* Case lecture */}
 <label style={{display:"flex",gap:12,alignItems:"flex-start",cursor:"pointer",marginBotto
 background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"14px <input type="checkbox"checked={lu}onChange={e=>setLu(e.target.checked)}
 style={{width:18,height:18,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:"var
+16px"}
 <span style={{fontSize:13,color:"var(--B)",lineHeight:1.6}}>
 J'ai lu et j'accepte les conditions du contrat d'accueil pour {enfant?.prenom}. Je ce
 </span>
@@ -4451,11 +4421,11 @@ onMouseDown={startDraw}onMouseMove={draw}onMouseUp={()=>setDrawing(false)}
 onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={()=>setDrawing(false)}/>
 <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
 <div style={{fontSize:11,color:"var(--l)"}}>
-{hasSig?" </div>
+{hasSig?" Signature dessinée":"Tracez votre signature ci-dessus"}
 </div>
-</div>
-Signature dessinée":"Tracez votre signature ci-dessus"}
 {hasSig&&<button onClick={clearSig}style={{background:"none",border:"none",color:"var
+</div>
+</div>
 {/* Bouton valider */}
 <button className="btn bS"style={{width:"100%",justifyContent:"center",fontSize:14,paddin
 opacity:lu&&hasSig?1:.5}}
@@ -4566,6 +4536,7 @@ contenu:"Bonjour à toutes, je me retrouve avec une régularisation positive de 
 {id:"p2",auteur:"Nathalie B.",ville:"Bordeaux",date:"Il y a 4h",titre:"Activités pour 18 mo
 contenu:"Ma petite Inès a 18 mois et commence à s'ennuyer des mêmes activités. Est-ce que
 reponses:14,tags:["Activités","Éveil"],epingle:false},
+légal
 {id:"p3",auteur:"Farida K.",ville:"Paris",date:"Il y a 1j",titre:"Contrat - Clause de ruptu
 contenu:"J'ai une famille qui veut enlever la clause de rupture du contrat. Est-ce reponses:5,tags:["Contrat","Juridique"],epingle:false},
 {id:"p4",auteur:"Caroline D.",ville:"Nantes",date:"Il y a 2j",titre:"PMI - Renouvellement a
@@ -4573,7 +4544,6 @@ contenu:"Mon renouvellement c'est dans 3 mois. Qu'est-ce que vous avez préparé
 reponses:22,tags:["PMI","Agrément"],epingle:false},
 {id:"p5",auteur:"Isabelle R.",ville:"Toulouse",date:"Il y a 3j",titre:"MAM - Qui est contenu:"Je cherche 1 ou 2 collègues pour monter une MAM. J'ai déjà un local en vue. Si v
 reponses:3,tags:["MAM","Réseau"],epingle:false},
-légal
 intére
 ];
 function ForumCommunaute({role}){
@@ -4739,8 +4709,8 @@ borderColor:annee===y?"var(--b)":"var(--br)"
 <div style={{display:"flex",flexDirection:"column",gap:14}}>
 {/* Récap financier */}
 <div className="card"style={{padding:18}}>
-<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}> {[
-Récap
+<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}> Récap
+{[
 ["Salaire net annuel estimé",salaireAnnuel+"€","var(--S)"],
 ["Indemnités d'entretien",""+entretienAnnuel+"€","var(--G)"],
 ["Total versé par les parents",""+totalAnnuel+"€","var(--b)"],
@@ -4755,8 +4725,8 @@ Ces montants sont estimés. Le rapport PDF contient les chiffres exacts basés s
 </div>
 {/* Contenu du rapport */}
 <div className="card"style={{padding:18}}>
-<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}> Conte
-{[
+<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}> {[
+Conte
 [" [" [" ","Page de garde - identité asmat et enfant"],
 ","Récapitulatif mensuel des heures (jan→déc)"],
 ","Total salaire net mensuel et annuel"],
@@ -4796,10 +4766,10 @@ Inclut l'attestation fiscale
 {gen?" Génération en cours…":" Générer et télécharger le PDF"}
 </button>
 </div>
+Envoi
 {/* Partage parent */}
 {role==="asmat"&&<div className="card"style={{padding:16,background:"var(--Gp)",borde
-<div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}> Envoi
-<div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
+<div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}> <div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
 L'attestation fiscale peut être envoyée directement aux parents pour leur déclara
 </div>
 <button className="btn bG"style={{width:"100%"}}onClick={()=>setToast("Attestation
@@ -4845,7 +4815,6 @@ Les p
 <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
 <label className="lbl"style={{marginBottom:0}}>{l}</label>
 <span style={{fontWeight:700,color:"var(--b)",fontSize:13}}>{v}</span>
-Votre
 </div>
 <input type="range"min={min}max={max}step={step}value={v}
 onChange={e=>set(parseFloat(e.target.value))}
@@ -4871,10 +4840,11 @@ borderColor:enfants2===n?"var(--B)":"var(--br)"}}>{n}</button>)}
 </div>
 </div>
 </div>
+Votre
 <div style={{display:"flex",flexDirection:"column",gap:14}}>
 <div className="card"style={{padding:18,border:"2px solid var(--T)"}}>
-<div style={{fontWeight:700,fontSize:14,color:"var(--T)",marginBottom:16}}> {[
-Résul
+<div style={{fontWeight:700,fontSize:14,color:"var(--T)",marginBottom:16}}> Résul
+{[
 ["Coût brut de la garde",fmt2(coutTotal),"var(--m)"],
 ["Aide CMG (CAF)","-"+fmt2(cmgMensuel),"var(--S)"],
 ["Crédit d'impôt (50%)","-"+fmt2(creditImpot),"var(--B)"],
@@ -4889,8 +4859,8 @@ Résul
 </div>
 </div>
 <div className="card"style={{padding:16,background:"var(--Gp)",border:"1px solid var(
-<div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}> Sur l'
-{[
+<div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}> {[
+Sur l'
 ["Coût annuel brut",fmt2(coutTotal*12)],
 ["Aides totales",fmt2((cmgMensuel+creditImpot)*12)],
 ["Votre coût réel annuel",fmt2(resteCharge*12)],
@@ -5021,8 +4991,6 @@ const modules=[
 {id:"documents",l:"Documents stockés",checked:false},
 ];
 const [sel,setSel]=useState(Object.fromEntries(modules.map(m=>[m.id,m.checked])));
-Ce qu
-Optio
 return <div className="fi">
 {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
 <PageHeader icon=" " title="Export de vos données"
@@ -5030,7 +4998,8 @@ sub="Téléchargez l'intégralité de vos données - droit RGPD à la portabilit
 <div className="g2">
 <div style={{display:"flex",flexDirection:"column",gap:14}}>
 <div className="card"style={{padding:18}}>
-<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}> {modules.map(m=><label key={m.id}style={{display:"flex",gap:10,alignItems:"center",
+<div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}> Ce qu
+{modules.map(m=><label key={m.id}style={{display:"flex",gap:10,alignItems:"center",
 <input type="checkbox"checked={sel[m.id]}onChange={e=>setSel(p=>({...p,[m.id]:e.t
 style={{width:15,height:15,accentColor:"var(--T)",flexShrink:0}}/>
 <span style={{fontSize:13,color:"var(--b)"}}>{m.l}</span>
@@ -5051,6 +5020,7 @@ style={{width:15,height:15,accentColor:"var(--T)",flexShrink:0}}/>
 <select className="sel"value={periode}onChange={e=>setPeriode(e.target.value)}>
 <option value="mois">Ce mois</option>
 <option value="trimestre">Ce trimestre</option>
+Optio
 <option value="annee">Cette année</option>
 <option value="tout">Tout l'historique</option>
 </select>
@@ -5458,6 +5428,10 @@ preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
 <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}> Salaire
 {[["Heures réalisées","160h × 4,05€","648,00€"],["Indemnité entretien","20j × 3,80€",
+},
+{
+},
+{
 <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",b
 <div><div style={{fontWeight:600,color:"#2C1F14"}}>{l}</div><div style={{fontSize
 <div style={{fontWeight:700,color:"#3D6B50"}}>{v}</div>
@@ -5469,8 +5443,6 @@ preview:()=>(
 </div>
 </div>
 ),
-},
-{
 id:"calendrier",label:"Calendrier partagé",icon:" ",color:"#2E5F8A",
 preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
@@ -5490,8 +5462,6 @@ color:d===11?"#fff":"#2C1F14",fontWeight:d===11?700:400}}>{d||""}</div>
 </div>
 </div>
 ),
-},
-{
 id:"parent",label:"Espace parent",icon:" ",color:"#6A3F88",
 preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
@@ -5591,9 +5561,9 @@ return (
 <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", {/* - HERO - */}
 <div style={{
 background: config.landing.heroBg,
+overfl
 padding: "0 24px 80px", position: "relative", overflow: "hidden",
 }}>
-overfl
 {/* Image de fond petite enfance */}
 <div style={{
 position:"absolute", inset:0, zIndex:0,
@@ -5639,8 +5609,8 @@ Commencer gratuitement →
 <div style={{ fontSize: 22, fontWeight: 800, color: "#E8A84A", fontFamily: "'Fr
 <Counter target={n} suffix={suf} />
 </div>
-<div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 </div>
-}}>{la
+</div>
+<div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 }}>{la
 ))}
 </div>
 {/* Contenu hero */}
@@ -5726,9 +5696,9 @@ tout en gérant une TPE sans formation ni support.
 <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)"
 Découvrez TiMat en direct
 </div>
-<div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>Cliquez </div>
+</div>
 </FadeIn>
-sur un
+<div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>Cliquez sur un
 <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24, alignItem
 {/* Onglets */}
 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -5777,6 +5747,7 @@ Ce que TiMat change concrètement
 </FadeIn>
 <div style={{ display: "grid", gap: 3 }}>
 {[
+<div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
 [" [" [" [" [" ", "Pajemploi vous prend 2h par mois", "Récap prêt en 5 minutes", "Zéro err
 ", "Vos contrats sont dans un tiroir", "Modèles guidés, avenants en 2 clics
 ", "Les retards de parents créent des conflits", "Pointage horodaté, signé
@@ -5790,7 +5761,6 @@ padding: "18px 20px", borderRadius: 12,
 background: i % 2 === 0 ? "#F8F0FC" : "#FDF5FB",
 border: "1px solid #DDD5C8",
 }}>
-<div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
 <div>
 <div style={{ fontSize: 10, fontWeight: 700, color: "#B84060", textTransf
 <div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{pb}</di
@@ -5861,11 +5831,11 @@ config.landing.s5Title||"Devenez l'assistante maternelle dont les parents parle
 <div style={{ fontSize: 12, color: "#A68970", fontStyle: "italic", marginBo
 <div style={{ fontSize: 13, color: "#2C1F14", lineHeight: 1.7, marginBottom
 <div>
+<div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14" }}>{t.nom}<
+<div style={{ fontSize: 11, color: "#A68970" }}>{t.ville}</div>
 </div>
 </div>
 </FadeIn>
-<div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14" }}>{t.nom}<
-<div style={{ fontSize: 11, color: "#A68970" }}>{t.ville}</div>
 ))}
 </div>
 </div>
@@ -5937,7 +5907,6 @@ style={{ width: "100%", background: "linear-gradient(135deg,#C4714A,#9A4020)"
 </div>
 </div>
 </div>
-maxWid
 {/* - CTA FINAL - */}
 <div style={{ background: "linear-gradient(135deg,#5C3370,#9B6BAA)", padding: "72px 24p
 <FadeIn>
@@ -5947,6 +5916,7 @@ Vous n'avez pas eu de formation<br />
 <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: "rgba(25
 </div>
 <div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.
+maxWid
 </div>
 <button onClick={() => { setShowModal(true); setRole("asmat"); }}
 style={{ background: config.landing.heroBtnPrimBg||"linear-gradient(135deg,#C4714
@@ -5957,18 +5927,18 @@ Déjà 847 assistantes maternelles nous font confiance · Données hébergées e
 </div>
 </FadeIn>
 </div>
+"flex"
 {/* - MODALE AUTH - */}
 {showModal && (
 <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
-style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex"
-<div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420
-"#7B4B
-{ r: "
+style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420
 {/* Sélecteur rôle */}
 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: {[{ r: "asmat", ic: " ", l: "Assistante\nmaternelle", col: "#B8622F" }, <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding:
 <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
 <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "
 </button>
+"#7B4B
+{ r: "
 ))}
 </div>
 {/* Formulaire */}
@@ -5991,8 +5961,8 @@ style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "fl
 flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8,
 background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transp
 color: modeAuth===m ? "#fff" : "#6B4F3A",
-fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
-.15s"
+fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s"
+}}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
 ))}
 </div>
 {/* Champs inscription */}
@@ -6348,6 +6318,7 @@ w.document.close();
 setToast("Attestation générée ✓");
 },1000);
 };
+Fin d
 return <div className="fi">
 {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
 <PageHeader icon=" " title="Attestation Pôle Emploi" sub="Générée en 1 clic - obligatoir
@@ -6375,7 +6346,6 @@ L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce docum
 </div>
 </div>
 </div>;
-Fin d
 Obliga
 }
 //
@@ -6448,8 +6418,8 @@ background:i<=step?s.color:"rgba(0,0,0,.1)",
 transition:"background .4s",
 }}/>
 ))}
-<span style={{fontSize:11,color:"rgba(0,0,0,.35)",marginLeft:6,flexShrink:0}}>{pct}
 </div>
+<span style={{fontSize:11,color:"rgba(0,0,0,.35)",marginLeft:6,flexShrink:0}}>{pct}
 <div style={{background:"#fff",borderRadius:24,overflow:"hidden",boxShadow:"0 8px 48p
 {/* Header coloré */}
 <div style={{
@@ -6502,8 +6472,8 @@ display:"block",width:"100%",marginTop:12,
 background:"none",border:"none",
 fontSize:12,color:"rgba(0,0,0,.35)",
 cursor:"pointer",fontFamily:"inherit",
->
 }}
+>
 Passer le tutoriel
 </button>
 )}
@@ -6694,11 +6664,11 @@ backgroundImage:"url("+(landing.heroImg||"/hero-enfants.jpg")+")",
 backgroundSize:"cover",backgroundPosition:"center",position:"relative",
 border:"2px solid var(--br)"
 }}>
+</div>
+</div>
 <div style={{position:"absolute",inset:0,background:landing.heroBg,opacity:.7}}/>
 <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justify
 <span style={{color:"#fff",fontSize:12,fontWeight:700,textShadow:"0 1px 4px rgba(
-</div>
-</div>
 {/* Upload depuis l'appareil */}
 <div style={{marginBottom:12}}>
 <label className="lbl">Uploader une nouvelle photo</label>
@@ -7331,5 +7301,5 @@ showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
 <div className="content">{renderPage()}</div>
 </div>
 </>
-}
 );
+}
