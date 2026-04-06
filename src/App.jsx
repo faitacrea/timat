@@ -6790,7 +6790,7 @@ placeholder="linear-gradient(135deg,#C4714A,#9A4020)"/>
 <div style={{display:"flex",gap:8,marginTop:6,alignItems:"center"}}>
 <div style={{flex:1,height:32,borderRadius:8,background:landing.heroBtnPrimBg||
 display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWe
-color:landing.heroBtnPrimColor||"#fff",borderRadius:8}}>
+color:landing.heroBtnPrimColor||"#fff"}}>
 2 mois gratuits, sans CB →
 </div>
 </div>
