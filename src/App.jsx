@@ -108,6 +108,7 @@ html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
 .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointe
 .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
 `}</style>
+);
 const D = {
 asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrem
 parents:[
@@ -614,6 +615,7 @@ Copier
 {msgs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune transmission.<
 {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
 <div style={{textAlign:"center",minWidth:38}}><div style={{fontSize:20}}>{t.mood}
+Nouve
 <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderR
 borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
 <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"va
@@ -651,7 +653,6 @@ background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
 </div>
 </div>
 </div>;
-Nouve
 Humeu
 }
 //
@@ -1363,10 +1364,10 @@ style={{display:"flex",gap:10,padding:"9px 0",borderBottom:"1px solid var(--br)
 <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div>
 {last&&<div style={{fontSize:12,color:"var(--l)",overflow:"hidden",textOverfl
 </div>
-{unread>0&&<span className="badge"style={{background:"var(--T)",color:"white"}}
-</div>;})}
 Conve
+{unread>0&&<span className="badge"style={{background:"var(--T)",color:"white"}}
 Bon à
+</div>;})}
 </div>
 <div className="card"style={{padding:14,background:"var(--Sp)",border:"1px solid var(
 <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}> <div style={{fontSize:12,color:"var(--b)",lineHeight:1.6}}>
@@ -1413,8 +1414,8 @@ return <div className="fi">
 <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Total b
 <span className="pf"style={{fontSize:20,fontWeight:700,color:"var(--T)"}}>{totalB
 </div>
-</div>
 <div style={{fontSize:11,color:"var(--l)",marginTop:6}}>* Net ≈ {(totalBrut*0.78).t
+</div>
 {/* Pajemploi */}
 <div className="card"style={{padding:16,background:"#EBF4FF",border:"1.5px solid var(
 <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12}}>
@@ -1794,14 +1795,14 @@ action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> Aperçu PD
 <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Aperçu du récapitulatif</d
 <div style={{display:"flex",gap:8}}>
 <button className="btn bP"onClick={()=>setToast("PDF généré et envoyé par email ✓")
-<button className="btn bS"onClick={()=>setToast("Téléchargement en cours ✓")}> Té
-</div>
+<button className="btn bS"onClick={()=>setToast("Téléchargement en cours ✓")}> </div>
 </div>
 <div className="pdf-preview">
 <div style={{borderBottom:"2px solid #C4714A",paddingBottom:12,marginBottom:16,displa
 <div><h2 style={{color:"#C4714A",fontFamily:"Georgia",fontSize:18}}> TiMat</h2>
-<div style={{fontSize:11,color:"#888"}}>Marie Dupont · Assistante Maternelle agré
+Té
 - {age
+<div style={{fontSize:11,color:"#888"}}>Marie Dupont · Assistante Maternelle agré
 <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
 <div><strong>Récapitulatif mensuel</strong></div>
 <div>Mars 2024</div>
@@ -2511,8 +2512,8 @@ contenu:"Madame, Monsieur,\n\nLe salaire de [Mois] d'un montant de [Montant]€ 
 contenu:"Objet : Compte-rendu de la visite du [Date]\n\nSuite à la visite de [Nom puéricul
 {id:"r5",cat:"Congés",ic:" ",titre:"Déclaration de congés annuels",
 contenu:"Madame, Monsieur,\n\nJe vous informe que je prendrai mes congés du [Date début] a
-{id:"r6",cat:"Avenant",ic:" ",titre:"Proposition d&#39;avenant aux horaires",
 impayé
+{id:"r6",cat:"Avenant",ic:" ",titre:"Proposition d&#39;avenant aux horaires",
 contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom]
 {id:"r7",cat:"PMI",ic:" ",titre:"Demande de renouvellement d'agrément",
 contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon
@@ -2873,8 +2874,8 @@ style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddin
 {t.auteur==="asmat"?" "+(user?.prenom||"Marie"):" "+(D.parents.find(p=>p
 <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>{t.txt}</div>
 </div>
-</div>)}
 Nouve
+</div>)}
 </div>
 </div>
 <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -2986,8 +2987,7 @@ return <div className="fi">
 </div>:<div style={{color:"var(--l)",fontSize:13,textAlign:"center",padding:"20px 0
 </div>
 {role==="asmat"&&<div className="card"style={{padding:16}}>
-<div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>+ Enregi
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+<div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>+ <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
 <div><label className="lbl">Début</label><input type="time"className="inp"value={
 <div><label className="lbl">Fin</label><input type="time"className="inp"value={nS
 </div>
@@ -3007,6 +3007,7 @@ return <div className="fi">
 {hist.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune donnée</div>}
 {hist.map(s=><div key={s.id}style={{display:"flex",justifyContent:"space-between",ali
 <div>
+Enregi
 <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{new Date(s.date).toLo
 <div style={{fontSize:11,color:"var(--l)"}}>{s.debut} → {s.fin}</div>
 </div>
@@ -3483,9 +3484,9 @@ Renouvellement à prévoir dans 2 mois - contacter la PMI
 </div>)}
 </div>
 <div className="card"style={{padding:14,background:"var(--Bp)",border:"1px solid var(
-<div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}> Contac
-<div style={{fontSize:12,color:"var(--b)",lineHeight:1.7}}>
+<div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}> <div style={{fontSize:12,color:"var(--b)",lineHeight:1.7}}>
 Email : {pmiEmail}<br/>
+Contac
 Tél : 01 XX XX XX XX<br/>
 Horaires : Lun–Ven 9h–17h
 </div>
@@ -4060,8 +4061,8 @@ const statutColor={nouveau:"var(--B)",en_discussion:"var(--G)",accepte:"var(--S)
 const statutBg={nouveau:"var(--Bp)",en_discussion:"var(--Gp)",accepte:"var(--Sp)",refuse:"v
 const changerStatut=(id,statut)=>{
 setDemandes(p=>p.map(d=>d.id===id?{...d,statut}:d));
-if(statut==="accepte")setToast("Demande acceptée - un contrat peut maintenant être créé ✓
-if(statut==="refuse")setToast("Demande refusée - un email sera envoyé aux parents.");
+if(statut==="accepte")setToast("Demande acceptée - un contrat peut maintenant être if(statut==="refuse")setToast("Demande refusée - un email sera envoyé aux parents.");
+créé ✓
 };
 const envoyerReponse=()=>{
 if(!repTxt.trim())return;
@@ -4317,8 +4318,8 @@ Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est
 <InfoRow label="Date de naissance" value={fmt(enfant?.naissance||"")} copyKey="enfN
 <InfoRow label="Lieu de garde" value="Domicile de l'assistante maternelle" copyKey=
 </div>
-{/* Lien Pajemploi */}
 Pajemp
+{/* Lien Pajemploi */}
 <div className="card"style={{padding:16,background:"var(--Tp)",border:"1px solid var(
 <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:8}}> <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
 Une fois déclaré sur monenfant.fr, vous devrez aussi déclarer les heures mensuell
@@ -4404,8 +4405,8 @@ sub="Signature électronique conforme eIDAS - valeur légale"/>
 {/* Case lecture */}
 <label style={{display:"flex",gap:12,alignItems:"flex-start",cursor:"pointer",marginBotto
 background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"14px <input type="checkbox"checked={lu}onChange={e=>setLu(e.target.checked)}
-style={{width:18,height:18,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:"var
 16px"}
+style={{width:18,height:18,marginTop:2,flexShrink:0,cursor:"pointer",accentColor:"var
 <span style={{fontSize:13,color:"var(--B)",lineHeight:1.6}}>
 J'ai lu et j'accepte les conditions du contrat d'accueil pour {enfant?.prenom}. Je ce
 </span>
@@ -4535,8 +4536,8 @@ const FORUM_POSTS=[
 contenu:"Bonjour à toutes, je me retrouve avec une régularisation positive de 180€ reponses:8,tags:["Pajemploi","Salaire"],epingle:true},
 {id:"p2",auteur:"Nathalie B.",ville:"Bordeaux",date:"Il y a 4h",titre:"Activités pour 18 mo
 contenu:"Ma petite Inès a 18 mois et commence à s'ennuyer des mêmes activités. Est-ce que
-reponses:14,tags:["Activités","Éveil"],epingle:false},
 légal
+reponses:14,tags:["Activités","Éveil"],epingle:false},
 {id:"p3",auteur:"Farida K.",ville:"Paris",date:"Il y a 1j",titre:"Contrat - Clause de ruptu
 contenu:"J'ai une famille qui veut enlever la clause de rupture du contrat. Est-ce reponses:5,tags:["Contrat","Juridique"],epingle:false},
 {id:"p4",auteur:"Caroline D.",ville:"Nantes",date:"Il y a 2j",titre:"PMI - Renouvellement a
@@ -4843,8 +4844,8 @@ borderColor:enfants2===n?"var(--B)":"var(--br)"}}>{n}</button>)}
 Votre
 <div style={{display:"flex",flexDirection:"column",gap:14}}>
 <div className="card"style={{padding:18,border:"2px solid var(--T)"}}>
-<div style={{fontWeight:700,fontSize:14,color:"var(--T)",marginBottom:16}}> Résul
-{[
+<div style={{fontWeight:700,fontSize:14,color:"var(--T)",marginBottom:16}}> {[
+Résul
 ["Coût brut de la garde",fmt2(coutTotal),"var(--m)"],
 ["Aide CMG (CAF)","-"+fmt2(cmgMensuel),"var(--S)"],
 ["Crédit d'impôt (50%)","-"+fmt2(creditImpot),"var(--B)"],
@@ -5019,8 +5020,8 @@ style={{width:15,height:15,accentColor:"var(--T)",flexShrink:0}}/>
 <label className="lbl">Période</label>
 <select className="sel"value={periode}onChange={e=>setPeriode(e.target.value)}>
 <option value="mois">Ce mois</option>
-<option value="trimestre">Ce trimestre</option>
 Optio
+<option value="trimestre">Ce trimestre</option>
 <option value="annee">Cette année</option>
 <option value="tout">Tout l'historique</option>
 </select>
@@ -5052,7 +5053,6 @@ Vous avez le droit d'accéder à toutes vos données, de les télécharger, et d
 Vos dr
 }
 ?",
-- Modi
 //
 const FAQ_DATA=[
 {cat:"Pajemploi",q:"Comment exporter mes données vers Pajemploi ?",
@@ -5066,6 +5066,7 @@ r:"Dans Documents, exportez votre 'Dossier PMI complet' : il contient l'historiq
 {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
 r:"Dans Facturation → Solde de tout compte. Saisissez la date de fin et le motif. TiMat ca
 {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
+- Modi
 r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive. Tou
 {cat:"RGPD",q:"Où sont stockées mes données ?",
 r:"Exclusivement en France, sur des serveurs OVHcloud à Paris via Supabase. Aucun transfer
@@ -5427,11 +5428,11 @@ id:"facturation",label:"Salaire automatique",icon:" ",color:"#B8892A",
 preview:()=>(
 <div style={{padding:20,fontFamily:"system-ui"}}>
 <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}> Salaire
+},
+{
+},
+{
 {[["Heures réalisées","160h × 4,05€","648,00€"],["Indemnité entretien","20j × 3,80€",
-},
-{
-},
-{
 <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",b
 <div><div style={{fontWeight:600,color:"#2C1F14"}}>{l}</div><div style={{fontSize
 <div style={{fontWeight:700,color:"#3D6B50"}}>{v}</div>
@@ -5560,8 +5561,8 @@ setLoading(false);
 return (
 <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", {/* - HERO - */}
 <div style={{
-background: config.landing.heroBg,
 overfl
+background: config.landing.heroBg,
 padding: "0 24px 80px", position: "relative", overflow: "hidden",
 }}>
 {/* Image de fond petite enfance */}
@@ -5609,8 +5610,8 @@ Commencer gratuitement →
 <div style={{ fontSize: 22, fontWeight: 800, color: "#E8A84A", fontFamily: "'Fr
 <Counter target={n} suffix={suf} />
 </div>
-</div>
-<div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 }}>{la
+<div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 </div>
+}}>{la
 ))}
 </div>
 {/* Contenu hero */}
@@ -5915,8 +5916,8 @@ Vous n'avez pas eu de formation<br />
 <span style={{ color: "#E8A84A", fontStyle: "italic" }}>en comptabilité.</span><b
 <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: "rgba(25
 </div>
-<div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.
-maxWid
+<div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, maxWid
+TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.
 </div>
 <button onClick={() => { setShowModal(true); setRole("asmat"); }}
 style={{ background: config.landing.heroBtnPrimBg||"linear-gradient(135deg,#C4714
@@ -5927,11 +5928,11 @@ Déjà 847 assistantes maternelles nous font confiance · Données hébergées e
 </div>
 </FadeIn>
 </div>
-"flex"
 {/* - MODALE AUTH - */}
 {showModal && (
 <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
-style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420
+style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex"
+<div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420
 {/* Sélecteur rôle */}
 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: {[{ r: "asmat", ic: " ", l: "Assistante\nmaternelle", col: "#B8622F" }, <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding:
 <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
@@ -5961,8 +5962,8 @@ style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: <di
 flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8,
 background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transp
 color: modeAuth===m ? "#fff" : "#6B4F3A",
-fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s"
-}}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+.15s"
 ))}
 </div>
 {/* Champs inscription */}
