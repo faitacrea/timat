@@ -7,7 +7,7 @@ static getDerivedStateFromError(e){return{error:e};}
 render(){
 if(this.state.error)return(
 <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center
-<div style={{fontSize:48,marginBottom:16}}> </div>
+<div style={{fontSize:48,marginBottom:16}}>:(</div>
 <div style={{fontSize:18,fontWeight:700,color:"#B8622F",marginBottom:8}}>Une erreur e
 <div style={{fontSize:13,color:"#666",marginBottom:20,maxWidth:400,textAlign:"center"
 {this.state.error?.message||"Erreur inconnue"}
