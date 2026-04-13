@@ -549,7 +549,7 @@ function AccueilParent({enfant,setPage}){
 }
 
 //
-function Transmissions({enfants,role,pEId}){
+function Transmissions({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [msg,setMsg]=useState("");
   const [mood,setMood]=useState("😊");
@@ -2680,7 +2680,7 @@ const COURRIERS_DATA=[
    contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
 ];
 
-function CourriersTypes({enfants,pEId}){
+function CourriersTypes({enfants,pEId,user}){
   const [selId,setSelId]=useState(null);
   const [filtreCat,setFiltreCat]=useState("Tous");
   const [toast,setToast]=useState("");
@@ -2919,7 +2919,7 @@ function AdminFinances({enfants,role,pEId,user}){
 }
 
 //
-function Journal({enfants,role,pEId}){
+function Journal({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sousOnglet,setSousOnglet]=useState("journal");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
@@ -2940,13 +2940,13 @@ function Journal({enfants,role,pEId}){
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
-    {sousOnglet==="journal"&&<TransmissionsContent enfant={enfant}role={role}/>}
+    {sousOnglet==="journal"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
     {sousOnglet==="bilan"&&<RecitIA enfants={liste}role={role}pEId={pEId}/>}
     {sousOnglet==="cr"&&<CompteRenduTrimestriel enfants={liste}role={role}pEId={pEId}/>}
   </div>;
 }
 
-function TransmissionsContent({enfant,role}){
+function TransmissionsContent({enfant,role,user}){
   const [msg,setMsg]=useState("");
   const [mood,setMood]=useState("😊");
   const [txs,setTxs]=useState(D.transmissions);
@@ -4073,9 +4073,9 @@ function MentionsLegales(){
 }
 
 //
-function JournalAvecBilans({enfant,liste,role,pEId}){
+function JournalAvecBilans({enfant,liste,role,pEId,user}){
   const [sousSec,setSousSec]=useState("messages");
-  if(role!=="asmat") return <TransmissionsContent enfant={enfant}role={role}/>;
+  if(role!=="asmat") return <TransmissionsContent enfant={enfant}role={role}user={user}/>;
   return <div>
     <div style={{display:"flex",gap:2,marginBottom:14,borderBottom:"1.5px solid var(--br)"}}>
       {[{id:"messages",l:"Messages",ic:"💬"},{id:"bilan",l:"Bilan du jour",ic:"✨"},{id:"cr",l:"CR Trimestriel",ic:"📝"}].map(s=>
@@ -4088,14 +4088,14 @@ function JournalAvecBilans({enfant,liste,role,pEId}){
         }}><span>{s.ic}</span><span>{s.l}</span></button>
       )}
     </div>
-    {sousSec==="messages"&&<TransmissionsContent enfant={enfant}role={role}/>}
+    {sousSec==="messages"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
     {sousSec==="bilan"&&<RecitIA enfants={liste}role={role}pEId={enfant?.id}/>}
     {sousSec==="cr"&&<CompteRenduTrimestriel enfants={liste}role={role}pEId={enfant?.id}/>}
   </div>;
 }
 
 //
-function JournalComplet({enfants,role,pEId}){
+function JournalComplet({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sec,setSec]=useState("journal");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
@@ -4116,7 +4116,7 @@ function JournalComplet({enfants,role,pEId}){
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
-    {sec==="journal"&&<JournalAvecBilans enfant={enfant}liste={liste}role={role}pEId={selId}/>}
+    {sec==="journal"&&<JournalAvecBilans enfant={enfant}liste={liste}role={role}pEId={selId}user={user}/>}
     {sec==="repas"&&<RepasChanges enfants={liste}role={role}pEId={selId}/>}
     {sec==="sommeil"&&<Sommeil enfants={liste}role={role}pEId={selId}/>}
     {sec==="activites"&&<ActivitesSuggerees enfants={liste}role={role}pEId={selId}/>}
@@ -4494,7 +4494,7 @@ function ListeAttente({role,enfants,user}){
 }
 
 //
-function KitCMG({enfants,role,pEId}){
+function KitCMG({enfants,role,pEId,user}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
   const asmat={...D.asmat,prenom:user?.prenom||D.asmat.prenom,nom:user?.nom||D.asmat.nom,email:user?.email||D.asmat.email};
   const contrat=enfant?.contrat||{};
@@ -7375,60 +7375,7 @@ function Backoffice({user,setPage}){
     </div>}
   </div>;
 }
-  // Textes landing éditables
-  const [txts,setTxts]=useState({
-    heroTitle:"Le système vous a transformée en comptable.",
-    heroSub:"TiMat vous rend votre vrai rôle.",
-    heroBtn:"Commencer gratuitement →",
-    prixMensuel:"9,99",
-    prixEssai:"2 mois gratuits",
-  });
-  const [feats,setFeats]=useState({
-    parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true,
-  });
 
-  useEffect(()=>{
-    // Charger les stats réelles depuis Supabase
-    const load=async()=>{
-      const {count:u}=await supabase.from('profiles').select('*',{count:'exact',head:true});
-      const {count:p}=await supabase.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','pro');
-      const {count:e}=await supabase.from('enfants').select('*',{count:'exact',head:true});
-      setStats({users:u||0,pro:p||0,enfants:e||0});
-    };
-    load();
-  },[]);
-
-  const appliquerCouleurs=()=>{
-    // Applique les couleurs via CSS variables sur la page en live
-    const root=document.documentElement;
-    Object.entries(cols).forEach(([k,v])=>root.style.setProperty('--'+k,v));
-    setToast("✅ Couleurs appliquées en live - rechargez pour revenir aux défauts");
-  };
-
-  const sauvegarder=async()=>{
-    setSaving(true);
-    try{
-      await supabase.from('profiles').upsert({
-        id:user.id,
-        backoffice_config:JSON.stringify({cols,txts,feats}),
-        updated_at:new Date().toISOString()
-      },{onConflict:'id'});
-      setToast("✅ Configuration sauvegardée");
-    }catch(e){setToast("❌ Erreur: "+e.message);}
-    setSaving(false);
-  };
-
-  const secs=[
-    {id:"couleurs",l:"Couleurs",ic:"🎨"},
-    {id:"textes",l:"Textes landing",ic:"✏️"},
-    {id:"fonctionnalites",l:"Fonctionnalités",ic:"⚙️"},
-    {id:"stats",l:"Statistiques",ic:"📊"},
-  ];
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🔧" title="Backoffice TiMat" sub={"Admin - "+user.email}
-      action={<button className="btn bG"style={{fontSize:12}}onClick={()=>setPage("accueil")}>← Retour</button>}
 const DEFAULT_CONFIG = {
   cols: {T:"#C4714A",S:"#9B6BAA",G:"#4A8B6E",R:"#C44A6A",c:"#FDF5F8",w:"#FFFFFF",b:"#1A1118"},
   txts: {
@@ -7737,7 +7684,7 @@ export default function App(){
       case "faq": return <FAQ role={role}/>;
       case "support": return <Support role={role}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
-      case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId}/>;
+      case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;
       case "repas": return <JournalComplet {...P}/>;
