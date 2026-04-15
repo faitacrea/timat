@@ -7359,7 +7359,7 @@ function Backoffice({user,setPage}){
       </div>
       <div className="card"style={{padding:16}}>
         <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🗄️ Table Supabase requise</div>
-        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7,background:"var(--c)",borderRadius:8,padding:10,fontFamily:"monospace",fontSize:11}}>
+        <div style={{color:"var(--m)",lineHeight:1.7,background:"var(--c)",borderRadius:8,padding:10,fontFamily:"monospace",fontSize:11}}>
           CREATE TABLE app_config (<br/>
           &nbsp;&nbsp;id TEXT PRIMARY KEY,<br/>
           &nbsp;&nbsp;config JSONB,<br/>
