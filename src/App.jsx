@@ -7189,9 +7189,10 @@ export default function App(){
 
   // Vérifier session Supabase au démarrage -
   useEffect(()=>{
-    const init=async()=>{
-      try{
-        const{data:{session}}=await supabase.auth.getSession();
+    // Listener FIRST (Supabase recommended pattern to avoid lock race)
+    const{data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
+      if(event==="INITIAL_SESSION"){
+        // Initial session loaded
         if(session?.user){
           const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
           if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
@@ -7203,11 +7204,8 @@ export default function App(){
             couleur:"#C4714A",subscription_status:"free"
           });
         }
-      }catch(e){console.log("Pas de session");}
-      finally{setLoading(false);}
-    };
-    init();
-    const{data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
+        setLoading(false);
+      }
       if(event==="SIGNED_IN"&&session?.user){
         const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
         if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
@@ -7219,7 +7217,9 @@ export default function App(){
       }
       if(event==="SIGNED_OUT"){setUser(null);setPage("accueil");}
     });
-    return()=>subscription.unsubscribe();
+    // Fallback: if INITIAL_SESSION never fires after 3s, stop loading
+    const fallback=setTimeout(()=>setLoading(false),3000);
+    return()=>{subscription.unsubscribe();clearTimeout(fallback);};
   },[]);
 
   // Écouter navigation depuis modale
