@@ -5837,21 +5837,22 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [activeDemo, setActiveDemo] = useState("journal");
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState("asmat");
-  const [modeAuth, setModeAuth] = useState("inscription"); // inscription | connexion
+  const [modeAuth, setModeAuth] = useState("inscription");
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
   const demo = DEMO_SCREENS.find(s => s.id === activeDemo);
+  const L = config.landing;
+  const T = config.txts;
 
   const demos=[
     {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
-    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:"#2E5F8A",label:"Sophie Martin - Léo"},
+    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:"#2E5F8A",label:"Sophie Martin - L\u00e9o"},
     {id:"demo-parent2",email:"thomas.bernard@mail.fr",prenom:"Thomas",nom:"Bernard",role:"parent",couleur:"#3D6B50",label:"Thomas Bernard - Emma"},
   ];
 
-  // Injection polices Google Fonts via DOM
   useEffect(()=>{
     const id = 'timat-fonts';
     if (document.getElementById(id)) return;
@@ -5867,7 +5868,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
       if (error) {
-        // Fallback démo
         const demo = demos.find(d => d.email === form.email.trim().toLowerCase());
         if (demo) { onLogin(demo); return; }
         setErr("Email ou mot de passe incorrect.");
@@ -5875,14 +5875,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         const { data: profil } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onLogin(profil ? {...profil, id:data.user.id, email:data.user.email} : {id:data.user.id, email:data.user.email, prenom:"Utilisateur", role});
       }
-    } catch(e) { setErr("Erreur réseau. Vérifiez votre connexion ou utilisez un compte démo."); }
+    } catch(e) { setErr("Erreur r\u00e9seau. V\u00e9rifiez votre connexion ou utilisez un compte d\u00e9mo."); }
     setLoading(false);
   };
 
   const inscription = async () => {
     if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
-    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
-    if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
+    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caract\u00e8res."); return; }
+    if (!consentValide) { setErr("Accepte la politique de confidentialit\u00e9 et les CGU pour continuer."); return; }
     setLoading(true); setErr("");
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -5890,20 +5890,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         options: { data: { prenom: form.prenom, nom: form.nom, role } }
       });
       if (error) {
-        if(error.message?.includes('already registered')) setErr("Cet email est déjà utilisé. Connectez-vous.");
-        else if(error.message?.includes('fetch')) setErr("Erreur réseau. Vérifiez votre connexion.");
+        if(error.message?.includes('already registered')) setErr("Cet email est d\u00e9j\u00e0 utilis\u00e9. Connectez-vous.");
+        else if(error.message?.includes('fetch')) setErr("Erreur r\u00e9seau. V\u00e9rifiez votre connexion.");
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
-        // Créer le profil explicitement (le trigger peut être lent)
         try{
           await supabase.from('profiles').upsert({
-            id: data.user.id,
-            email: data.user.email,
-            prenom: form.prenom,
-            nom: form.nom||'',
-            role: role,
-            couleur: role === "asmat" ? "#B8622F" : "#2E5F8A",
+            id: data.user.id, email: data.user.email,
+            prenom: form.prenom, nom: form.nom||'',
+            role: role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A",
             subscription_status: 'free',
           },{onConflict:'id'});
         }catch(e){console.log('Profile upsert:', e);}
@@ -5913,128 +5909,74 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     setLoading(false);
   };
 
-  return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif", overflowX: "hidden", background: "#FDF5F8" }}>
-      {/* - HERO - */}
-      <div style={{
-        background: config.landing.heroBg,
-        padding: "0 24px 80px", position: "relative", overflow: "hidden",
-      }}>
-        {/* Image de fond petite enfance */}
-        <div style={{
-          position:"absolute", inset:0, zIndex:0,
-          backgroundImage:"url("+(config.landing.heroImg||"/hero-enfants.jpg")+")",
-          backgroundSize:"cover", backgroundPosition:"center 30%",
-          opacity:config.landing.heroImgOpacity||0.20,
-        }}/>
-        {/* Grain overlay */}
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
+  const accent = L.accentColor||"#E8A84A";
+  const fTitle = L.fontTitle||"'Fraunces', Georgia, serif";
+  const fBody = L.fontBody||"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
+  const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
+  const transformations = config.transformations||DEFAULT_CONFIG.transformations;
+  const statsHero = config.statsHero||DEFAULT_CONFIG.statsHero;
+  const statsSection = config.statsSection||DEFAULT_CONFIG.statsSection;
+  const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
 
-        {/* Orbes déco */}
+  return (
+    <div style={{ fontFamily: fBody, overflowX: "hidden", background: "#FDF5F8" }}>
+      {/* HERO */}
+      <div style={{ background: L.heroBg, padding: "0 24px 80px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:"url("+(L.heroImg||"/hero-enfants.jpg")+")", backgroundSize:"cover", backgroundPosition:"center 30%", opacity:L.heroImgOpacity||0.20 }}/>
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,200,255,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
-
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 26, fontWeight: 700, color: "#fff", fontStyle: "italic" }}>TiMat</div>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#E8A84A" }} />
+            <div style={{ fontFamily: fTitle, fontSize: 26, fontWeight: 700, color: "#fff", fontStyle: "italic" }}>TiMat</div>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent }} />
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })}
-              style={{ background: "rgba(255,255,255,.12)", color: "rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
-              Tarifs
-            </button>
-            <button onClick={() => setShowModal(true)}
-              style={{ background: "rgba(255,255,255,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
-              Connexion
-            </button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }}
-              style={{ background: config.landing.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: config.landing.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>
-              Commencer gratuitement →
-            </button>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "rgba(255,255,255,.12)", color: "rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Tarifs</button>
+            <button onClick={() => setShowModal(true)} style={{ background: "rgba(255,255,255,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Connexion</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement \u2192"}</button>
           </div>
         </div>
-
-        {/* Bandeau preuve sociale */}
+        {/* Hero stats */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px", display: "flex", gap: 32, flexWrap: "wrap", justifyContent: "center" }}>
-          {[
-            { n: 847, suf: "+", label: "assmats actives" },
-            { n: 12400, suf: "+", label: "bilans générés" },
-            { n: 4, suf: ".7★", label: "note moyenne" },
-            { n: 96, suf: "%", label: "taux de satisfaction" },
-          ].map(({ n, suf, label }) => (
+          {statsHero.map(({ n, suf, label }) => (
             <div key={label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#E8A84A", fontFamily: "'Fraunces', serif" }}>
-                <Counter target={n} suffix={suf} />
-              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
-
-        {/* Contenu hero */}
+        {/* Hero content */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>
-            💛 POUR LES ASSISTANTES MATERNELLES DE FRANCE
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
+          <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 20 }}>
+            {T.heroTitle}<br/>
+            <span style={{ color: accent, fontStyle: "italic" }}>en comptable.</span><br/>
+            <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: "rgba(255,255,255,.75)", fontStyle: "normal" }}>{T.heroSub}</span>
           </div>
-
-          {/* Titre principal */}
-          <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 20 }}>
-            {config.txts.heroTitle}<br />
-            <span style={{ color: "#E8A84A", fontStyle: "italic" }}>en comptable.</span><br />
-            <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: "rgba(255,255,255,.75)", fontStyle: "normal" }}>{config.txts.heroSub}</span>
-          </div>
-
-          {/* Sous-titre */}
-          <div style={{ fontSize: "clamp(14px,2vw,17px)", color: "rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px" }}>
-            Vous gérez seule ce que les crèches font à 5 personnes.<br />
-            Contrats, salaires, bilans, PMI, suivi des enfants - tout ça, sans formation, sans aide, souvent le soir.
-          </div>
-
-          {/* CTAs */}
+          <div style={{ fontSize: "clamp(14px,2vw,17px)", color: "rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }}
-              style={{ background: config.landing.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: config.landing.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>
-              2 mois gratuits, sans CB →
-            </button>
-            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
-              style={{ background: config.landing.heroBtnSecBg||"rgba(255,255,255,.07)", color: config.landing.heroBtnSecColor||"#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>
-              Voir la démo ↓
-            </button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
-
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
-            {["🔒 Données en France", "📱 Web & Mobile", "⚡ 2 min pour démarrer", "💳 Sans carte bancaire"].map(t => (
-              <span key={t} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", fontWeight: 500 }}>{t}</span>
-            ))}
+            {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
           </div>
         </div>
       </div>
 
-      {/* - PROBLÈME - */}
-      <div style={{ background: "linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "60px 24px" }}>
+      {/* SECTION 1 - PROBLEME */}
+      <div style={{ background: L.section1Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "60px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)", color: "#fff", fontWeight: 700, marginBottom: 10 }}>
-                La réalité du métier, personne n'en parle.
-              </div>
-              <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7 }}>
-                Être assistante maternelle agréée, c'est exercer un métier de soin exigeant<br />
-                tout en gérant une TPE sans formation ni support.
-              </div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#fff", fontWeight: 700, marginBottom: 10 }}>{L.s1Title}</div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7, whiteSpace:"pre-line" }}>{L.s1Desc}</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-            {[
-              { ic: "🧮", titre: "Comptable sans diplôme", desc: "Mensualisation, heures majorées, cotisations, régularisations... Des calculs que même les comptables trouvent complexes. Vous les faites seule, chaque mois." },
-              { ic: "⚖️", titre: "Juriste sans formation", desc: "Contrats CCN, avenants, courriers de rupture, litiges prud'homaux... Vous portez seule la responsabilité juridique d'un employeur." },
-              { ic: "🏛️", titre: "Secrétaire de la PMI", desc: "Dossiers de renouvellement, comptes-rendus de visite, suivi de l'agrément... Des démarches chronophages qui ne sont jamais finies." },
-              { ic: "📱", titre: "Community manager des parents", desc: "Répondre aux messages à toute heure, documenter la journée, rassurer les parents... Une relation qui déborde souvent sur votre vie privée." },
-              { ic: "🌙", titre: "Administratrice le soir", desc: "Après 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soirée n'existe plus." },
-              { ic: "🔇", titre: "Seule face aux problèmes", desc: "Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème." },
-            ].map((item, i) => (
+            {painPoints.map((item, i) => (
               <FadeIn key={item.titre} delay={i * 80}>
                 <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, padding: 20 }}>
                   <div style={{ fontSize: 28, marginBottom: 10 }}>{item.ic}</div>
@@ -6046,56 +5988,35 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           <FadeIn delay={400}>
             <div style={{ marginTop: 40, textAlign: "center", padding: "28px 32px", background: "rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(18px,3vw,28px)", color: "#E8A84A", fontWeight: 700, fontStyle: "italic" }}>
-                "TiMat n'ajoute pas une appli à votre vie.<br />Il retire tout ce qui n'aurait jamais dû s'y trouver."
-              </div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>"{L.s1Quote}"</div>
             </div>
           </FadeIn>
         </div>
       </div>
 
-      {/* - DÉMO INTERACTIVE - */}
-      <div id="demo" style={{ background: "#FDF5FB", padding: "72px 24px" }}>
+      {/* SECTION 2 - DEMO */}
+      <div id="demo" style={{ background: L.section2Bg||"#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>
-                Découvrez TiMat en direct
-              </div>
-              <div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>Cliquez sur un onglet pour explorer les fonctionnalités.</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
+              <div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
-
           <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24, alignItems: "start" }}>
-            {/* Onglets */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {DEMO_SCREENS.map(s => (
                 <button key={s.id} onClick={() => setActiveDemo(s.id)} style={{
                   display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-                  borderRadius: 10, border: "1.5px solid",
-                  cursor: "pointer", textAlign: "left", transition: "all .2s",
-                  background: activeDemo === s.id ? s.color : "transparent",
-                  color: activeDemo === s.id ? "#fff" : "#6B4F3A",
-                  borderColor: activeDemo === s.id ? s.color : "#DDD5C8",
-                  fontFamily: "inherit", fontWeight: activeDemo === s.id ? 700 : 500, fontSize: 13,
-                }}>
-                  <span>{s.icon}</span>
-                  <span>{s.label}</span>
-                </button>
+                  borderRadius: 10, border: "1.5px solid", cursor: "pointer", textAlign: "left", transition: "all .2s",
+                  background: activeDemo === s.id ? s.color : "transparent", color: activeDemo === s.id ? "#fff" : "#6B4F3A",
+                  borderColor: activeDemo === s.id ? s.color : "#DDD5C8", fontFamily: "inherit", fontWeight: activeDemo === s.id ? 700 : 500, fontSize: 13,
+                }}><span>{s.icon}</span><span>{s.label}</span></button>
               ))}
             </div>
-
-            {/* Preview */}
-            <div style={{
-              background: "#fff", borderRadius: 16, border: "2px solid",
-              borderColor: demo?.color || "#DDD5C8",
-              overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,.1)",
-              transition: "border-color .3s",
-            }}>
+            <div style={{ background: "#fff", borderRadius: 16, border: "2px solid", borderColor: demo?.color || "#DDD5C8", overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,.1)", transition: "border-color .3s" }}>
               <div style={{ background: demo?.color, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ display: "flex", gap: 5 }}>
-                  {["#ff5f57", "#febc2e", "#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
-                </div>
+                <div style={{ display: "flex", gap: 5 }}>{["#ff5f57", "#febc2e", "#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", fontWeight: 600 }}>{demo?.icon} {demo?.label}</div>
               </div>
               {demo && <demo.preview />}
@@ -6104,45 +6025,22 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
       </div>
 
-      {/* - TRANSFORMATION - */}
-      <div style={{ background: "#F8F0FC", padding: "72px 24px" }}>
+      {/* SECTION 3 - TRANSFORMATION */}
+      <div style={{ background: L.section3Bg||"#F8F0FC", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>
-                Ce que TiMat change concrètement
-              </div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title}</div>
             </div>
           </FadeIn>
-
           <div style={{ display: "grid", gap: 3 }}>
-            {[
-              ["🧮", "Pajemploi vous prend 2h par mois", "Récap prêt en 5 minutes", "Zéro erreur. Zéro stress."],
-              ["📄", "Vos contrats sont dans un tiroir", "Modèles guidés, avenants en 2 clics", "Solide juridiquement si ça tourne mal."],
-              ["⏰", "Les retards de parents créent des conflits", "Pointage horodaté, signé par les deux", "Vous discutez de faits. Plus de tensions."],
-              ["🗂️", "Un document important est introuvable", "Tout centralisé, daté, cherchable", "En cas de contrôle PMI, tout est là."],
-              ["🌙", "Vos soirées servent à l'administratif", "5 minutes le matin suffisent", "Vos soirées vous appartiennent."],
-            ].map(([ic, pb, sol, res], i) => (
+            {transformations.map(([ic, pb, sol, res], i) => (
               <FadeIn key={pb} delay={i * 60}>
-                <div style={{
-                  display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center",
-                  padding: "18px 20px", borderRadius: 12,
-                  background: i % 2 === 0 ? "#F8F0FC" : "#FDF5FB",
-                  border: "1px solid #DDD5C8",
-                }}>
+                <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center", padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? "#F8F0FC" : "#FDF5FB", border: "1px solid #DDD5C8" }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Aujourd'hui</div>
-                    <div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{pb}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Avec TiMat</div>
-                    <div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{sol}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Ce que ça change</div>
-                    <div style={{ fontSize: 13, color: "#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div>
-                  </div>
+                  <div><div style={{ fontSize: 10, fontWeight: 700, color: "#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Aujourd'hui</div><div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
+                  <div><div style={{ fontSize: 10, fontWeight: 700, color: "#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Avec TiMat</div><div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
+                  <div><div style={{ fontSize: 10, fontWeight: 700, color: "#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Ce que \u00e7a change</div><div style={{ fontSize: 13, color: "#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
                 </div>
               </FadeIn>
             ))}
@@ -6150,29 +6048,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
       </div>
 
-      {/* - CHIFFRES - */}
-      <div style={{ background: "linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "72px 24px" }}>
+      {/* SECTION 4 - CHIFFRES */}
+      <div style={{ background: L.section4Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#fff", fontWeight: 700, marginBottom: 6 }}>
-                Ce que disent les chiffres
-              </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)" }}>Données internes TiMat · Mars 2026</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: "#fff", fontWeight: 700, marginBottom: 6 }}>{L.s4Title}</div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)" }}>{L.s4Sub}</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 24 }}>
-            {[
-              { n: 847, suf: "+", label: "assmats actives", desc: "Font confiance à TiMat" },
-              { n: 94, suf: "%", label: "satisfaites", desc: "Recommandent TiMat à une collègue" },
-              { n: 4, suf: "h", label: "économisées", desc: "Par mois en admin en moyenne" },
-              { n: 2, suf: " mois", label: "d'essai gratuit", desc: "Sans carte bancaire" },
-            ].map(({ n, suf, label, desc }) => (
+            {statsSection.map(({ n, suf, label, desc }) => (
               <FadeIn key={label}>
                 <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(255,255,255,.04)", borderRadius: 16, border: "1px solid rgba(255,255,255,.08)" }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 42, fontWeight: 700, color: "#E8A84A", lineHeight: 1 }}>
-                    <Counter target={n} suffix={suf} />
-                  </div>
+                  <div style={{ fontFamily: fTitle, fontSize: 42, fontWeight: 700, color: accent, lineHeight: 1 }}><Counter target={n} suffix={suf} /></div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginTop: 8, marginBottom: 4 }}>{label}</div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>{desc}</div>
                 </div>
@@ -6182,24 +6071,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
       </div>
 
-      {/* - TÉMOIGNAGES - */}
-      <div style={{ background: "#FDF5FB", padding: "72px 24px" }}>
+      {/* SECTION 5 - TEMOIGNAGES */}
+      <div style={{ background: L.section5Bg||"#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
-              config.landing.s5Title||"Devenez l'assistante maternelle dont les parents parlent à leurs amis."
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
+              {L.s5Title}
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
-            {[
-              { nom: "Marie D.", ville: "Paris 15e", avant: "Je passais mes soirées sur Excel.", apres: "Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer." },
-              { nom: "Sylvie R.", ville: "Lyon", avant: "J'avais peur d'un contrôle PMI.", apres: "Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi." },
-              { nom: "Nathalie B.", ville: "Bordeaux", avant: "Un parent a contesté des heures.", apres: "Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat." },
-              { nom: "Fatima A.", ville: "Marseille", avant: "Je me réveillais la nuit à stresser.", apres: "TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai." },
-            ].map((t, i) => (
+            {testimonials.map((t, i) => (
               <FadeIn key={t.nom} delay={i * 80}>
                 <div style={{ background: "#fff", borderRadius: 16, padding: 22, border: "1px solid #DDD5C8", boxShadow: "0 2px 16px rgba(44,31,20,.06)" }}>
-                  <div style={{ color: "#E8A84A", fontSize: 13, marginBottom: 10 }}>⭐⭐⭐⭐⭐</div>
+                  <div style={{ color: accent, fontSize: 13, marginBottom: 10 }}>\u2b50\u2b50\u2b50\u2b50\u2b50</div>
                   <div style={{ fontSize: 12, color: "#A68970", fontStyle: "italic", marginBottom: 8 }}>"{t.avant}"</div>
                   <div style={{ fontSize: 13, color: "#2C1F14", lineHeight: 1.7, marginBottom: 14 }}>"{t.apres}"</div>
                   <div>
@@ -6213,222 +6097,139 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
       </div>
 
-      {/* - TARIFS - */}
-      <div id="tarifs" style={{ background: "#F5EBF8", padding: "72px 24px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      {/* SECTION 6 - TARIFS */}
+      <div id="tarifs" style={{ background: L.section6Bg||"#F5EBF8", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ display: "inline-block", background: "#FBF0E8", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#B8622F", fontWeight: 700, marginBottom: 12, letterSpacing: ".5px" }}>
-                💰 TARIFS
-              </div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,4vw,34px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>
-                Un forfait fixe. Pas de surprise.
-              </div>
-              <div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>
-                1 ou 4 enfants accueillis - même prix. Jamais de frais cachés.
-              </div>
-            </div>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48 }}>{L.s6Title}</div>
           </FadeIn>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 24, alignItems: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
             {/* Gratuit */}
-            <div style={{ background: "#fff", borderRadius: 16, border: "2px solid #E8D0E8", padding: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Découverte</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
-                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0€</span>
-                <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
+            <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0\u20ac</span>
               </div>
-              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat sans engagement.</div>
-              <button onClick={() => setShowModal(true)}
-                style={{ width: "100%", background: "linear-gradient(135deg,#9B6BAA,#B87CC8)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", cursor: "pointer", fontWeight: 600, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>
-                Commencer gratuitement
-              </button>
-              {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
+              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour d\u00e9couvrir TiMat.</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: "#0D1B2A", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>{T.freeBtnTxt||"Commencer gratuitement"}</button>
+              {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimit\u00e9s"]].map(([ok, t], i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 8 ? "1px solid #DDD5C8" : "none" }}>
-                  <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "\u2713" : "\u2717"}</span>
                   <span style={{ color: ok ? "#2C1F14" : "#A68970" }}>{t}</span>
                 </div>
               ))}
             </div>
-
             {/* Pro */}
             <div style={{ background: "#FDF5FB", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
-              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>
-                ⭐ TOUT INCLUS
-              </div>
+              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>{T.proLabel}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                <span style={{ fontFamily: "'Fraunces', serif", fontSize: 46, fontWeight: 700, color: "#B8622F" }}>{config.txts.prixMensuel}€</span>
+                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: "#B8622F" }}>{T.prixMensuel}\u20ac</span>
                 <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
               </div>
-              <div style={{ fontSize: 11, color: "#A68970", marginBottom: 8 }}>soit 0,33€/jour - moins qu'un café</div>
-              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>La solution complète. Tout est inclus.</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }}
-                style={{ width: "100%", background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>
-                2 mois gratuits, sans CB →
-              </button>
-              {["✨ Bilans de journée automatiques", "📜 Bulletins de salaire complets", "🏛️ Export Pajemploi en 1 clic", "📑 Attestation fiscale", "📸 Photos illimitées", "🏥 Communication PMI", "🗂️ Documents illimités (5 Go)", "👶 Enfants illimités", "📋 Solde de tout compte", "✉️ Courriers types", "❓ Centre d'aide prioritaire"].map((t, i) => (
+              <div style={{ fontSize: 11, color: "#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
+              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
+              {["\u2728 Bilans de journ\u00e9e automatiques", "\ud83d\udcdc Bulletins de salaire complets", "\ud83c\udfdb\ufe0f Export Pajemploi en 1 clic", "\ud83d\udcd1 Attestation fiscale", "\ud83d\udcf8 Photos illimit\u00e9es", "\ud83c\udfe5 Communication PMI", "\ud83d\uddc2\ufe0f Documents illimit\u00e9s (5 Go)", "\ud83d\udc76 Enfants illimit\u00e9s", "\ud83d\udccb Solde de tout compte", "\u2709\ufe0f Courriers types", "\u2753 Centre d'aide prioritaire"].map((t, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 10 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
-                  <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
+                  <span style={{ color: "#3D6B50", fontWeight: 700 }}>\u2713</span>
                   <span style={{ color: "#2C1F14", fontWeight: i < 3 ? 700 : 400 }}>{t}</span>
                 </div>
               ))}
             </div>
           </div>
-
           <div style={{ textAlign: "center", marginTop: 24, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "#A68970" }}>
-            <span>✅ 2 mois d'essai sans CB</span>
-            <span>✅ Résiliable en 1 clic</span>
-            <span>✅ Données en France 🇫🇷</span>
+            <span>\u2705 2 mois d'essai sans CB</span><span>\u2705 R\u00e9siliable en 1 clic</span><span>\u2705 Donn\u00e9es en France \ud83c\uddeb\ud83c\uddf7</span>
           </div>
         </div>
       </div>
 
-      {/* - CTA FINAL - */}
-      <div style={{ background: "linear-gradient(135deg,#5C3370,#9B6BAA)", padding: "72px 24px", textAlign: "center" }}>
+      {/* CTA FINAL */}
+      <div style={{ background: L.ctaBg||"linear-gradient(135deg,#5C3370,#9B6BAA)", padding: "72px 24px", textAlign: "center" }}>
         <FadeIn>
-          <div style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(24px,5vw,46px)", color: "#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2 }}>
-            Vous n'avez pas eu de formation<br />
-            <span style={{ color: "#E8A84A", fontStyle: "italic" }}>en comptabilité.</span><br />
-            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: "rgba(255,255,255,.6)", fontStyle: "normal" }}>Pourtant vous en faites tous les mois.</span>
+          <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: "#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
+            {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilit\u00e9.")[0]}
+            <span style={{ color: accent, fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
+            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: "rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
           </div>
-          <div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>
-            TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.
-          </div>
-          <button onClick={() => { setShowModal(true); setRole("asmat"); }}
-            style={{ background: config.landing.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: config.landing.heroBtnPrimColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>
-            Je commence - 2 mois gratuits →
-          </button>
-          <div style={{ marginTop: 16, fontSize: 12, color: "rgba(255,255,255,.35)" }}>
-            Déjà 847 assistantes maternelles nous font confiance · Données hébergées en France 🇫🇷
-          </div>
+          <div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
+          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
+          <div style={{ marginTop: 16, fontSize: 12, color: "rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
         </FadeIn>
       </div>
 
-      {/* - MODALE AUTH - */}
+      {/* MODALE AUTH */}
       {showModal && (
-        <div onClick={e => e.target === e.currentTarget && setShowModal(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
+        <div onClick={e => e.target === e.currentTarget && setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
-            {/* Sélecteur rôle */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#7B4B2A" }}>
-              {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
+              {[{ r: "asmat", ic: "\ud83d\udc69\u200d\ud83d\udc67", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "\ud83d\udc6a", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
                 <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? "3px solid "+col+"44" : "none", transition: "all .2s", fontFamily:"inherit" }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(255,255,255,.4)", whiteSpace: "pre-line", lineHeight: 1.3 }}>{l}</div>
                 </button>
               ))}
             </div>
-            {/* Formulaire */}
             <div style={{ padding: 24, borderTop: role === "asmat" ? "4px solid #B8622F" : "4px solid #2E5F8A" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>
-                    {role === "asmat" ? "Espace pro" : "Espace famille"}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>
-                    {modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}
-                  </div>
+                  <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>{role === "asmat" ? "Espace pro" : "Espace famille"}</div>
+                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits \u00b7 sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
                 </div>
-                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
+                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>\u2715</button>
               </div>
-
-              {/* Onglets connexion / inscription */}
               <div style={{ display:"flex", marginBottom:16, background:"#F4EFF8", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
-                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{
-                    flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8,
-                    background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent",
-                    color: modeAuth===m ? "#fff" : "#6B4F3A",
-                    fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s"
-                  }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Cr\u00e9er un compte" : "Se connecter"}</button>
                 ))}
               </div>
-
-              {/* Champs inscription */}
               {modeAuth === "inscription" && <>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
                   <div>
-                    <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Prénom *</div>
-                    <input value={form.prenom} onChange={e=>setForm(f=>({...f,prenom:e.target.value}))}
-                      placeholder={role==="asmat"?"Marie":"Sophie"}
-                      style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                    <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Pr\u00e9nom *</div>
+                    <input value={form.prenom} onChange={e=>setForm(f=>({...f,prenom:e.target.value}))} placeholder={role==="asmat"?"Marie":"Sophie"} style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
                   </div>
                   <div>
                     <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Nom</div>
-                    <input value={form.nom} onChange={e=>setForm(f=>({...f,nom:e.target.value}))}
-                      placeholder="Dupont"
-                      style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                    <input value={form.nom} onChange={e=>setForm(f=>({...f,nom:e.target.value}))} placeholder="Dupont" style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
                   </div>
                 </div>
               </>}
-
-              {/* Email */}
               <div style={{ marginBottom:10 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Email *</div>
-                <input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}
-                  placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"}
-                  onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())}
-                  style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
-
-              {/* Mot de passe */}
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}
-                  placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"}
-                  onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())}
-                  style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caract\u00e8res minimum" : "Votre mot de passe"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
-
-              {/* RGPD à l'inscription */}
               {modeAuth === "inscription" && <div style={{ background:"#F4EFF8", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
-                {[
-                  {k:"politique", l:"J'accepte la politique de confidentialité", req:true},
-                  {k:"cgu", l:"J'accepte les conditions générales d'utilisation", req:true},
-                  {k:"newsletter", l:"Recevoir les actualités TiMat (optionnel)", req:false},
-                ].map(({k,l,req}) => (
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos donn\u00e9es</div>
+                {[{k:"politique", l:"J'accepte la politique de confidentialit\u00e9", req:true},{k:"cgu", l:"J'accepte les conditions g\u00e9n\u00e9rales d'utilisation", req:true},{k:"newsletter", l:"Recevoir les actualit\u00e9s TiMat (optionnel)", req:false}].map(({k,l,req}) => (
                   <label key={k} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer", marginBottom:7 }}>
-                    <input type="checkbox" checked={consent[k]} onChange={e=>setConsent(c=>({...c,[k]:e.target.checked}))}
-                      style={{ width:14, height:14, marginTop:2, accentColor: role==="asmat"?"#B8622F":"#2E5F8A", flexShrink:0 }} />
+                    <input type="checkbox" checked={consent[k]} onChange={e=>setConsent(c=>({...c,[k]:e.target.checked}))} style={{ width:14, height:14, marginTop:2, accentColor: role==="asmat"?"#B8622F":"#2E5F8A", flexShrink:0 }} />
                     <span style={{ fontSize:11, color:"#2C1F14", lineHeight:1.5 }}>{l}{req&&<span style={{color:"#B84060",fontWeight:700}}> *</span>}</span>
                   </label>
                 ))}
-                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
+                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire \u00b7 Donn\u00e9es h\u00e9berg\u00e9es en France \u00b7 Suppression possible \u00e0 tout moment</div>
               </div>}
-
-              {/* Erreur */}
               {err && <div style={{ color:"#C44A6A", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
-
-              {/* Bouton principal */}
-              <button onClick={modeAuth==="connexion" ? connexion : inscription}
-                disabled={loading || (modeAuth==="inscription" && !consentValide)}
-                style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
-                {loading ? "⏳ Chargement…" : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
+              <button onClick={modeAuth==="connexion" ? connexion : inscription} disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+                {loading ? "\u23f3 Chargement\u2026" : modeAuth==="connexion" ? (role==="asmat" ? "Acc\u00e9der \u00e0 mon espace \u2192" : "Acc\u00e9der \u00e0 l'espace famille \u2192") : (role==="asmat" ? "Cr\u00e9er mon espace pro \u2192" : "Cr\u00e9er mon compte parent \u2192")}
               </button>
-
-              {/* Démos */}
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou démo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
+                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou d\u00e9mo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
               </div>
               <div style={{ background:"#F7F2EC", borderRadius:10, padding:10 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>
-                  {role==="asmat" ? "Compte asmat démo" : "Comptes parents démo"}
-                </div>
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte asmat d\u00e9mo" : "Comptes parents d\u00e9mo"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
-                  <button key={d.id} onClick={()=>onLogin(d)}
-                    style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }}
-                    onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"}
-                    onMouseLeave={e=>e.currentTarget.style.background="none"}>
-                    {d.role==="asmat"?"👩‍👧":"👪"} {d.label}
+                  <button key={d.id} onClick={()=>onLogin(d)} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                    {d.role==="asmat"?"\ud83d\udc69\u200d\ud83d\udc67":"\ud83d\udc6a"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
                   </button>
                 ))}
               </div>
-              <div style={{ marginTop:12, fontSize:11, color:"#A68970", textAlign:"center" }}>
-                Données hébergées en France · Aucun engagement
-              </div>
+              <div style={{ marginTop:12, fontSize:11, color:"#A68970", textAlign:"center" }}>Donn\u00e9es h\u00e9berg\u00e9es en France \u00b7 Aucun engagement</div>
             </div>
           </div>
         </div>
@@ -6969,17 +6770,15 @@ function Login({onLogin}){
 // Accessible uniquement à sophie@faitacreas.fr (ou l'email admin configuré)
 const ADMIN_EMAIL = "faitacreapro@gmail.com";
 
-function Backoffice({user,setPage}){
-  const [sec,setSec]=useState("couleurs");
+function Backoffice({user,setPage,appConfig,setAppConfig}){
+  const [sec,setSec]=useState("hero");
   const [saving,setSaving]=useState(false);
   const [toast,setToast]=useState("");
   const [stats,setStats]=useState({users:0,pro:0,enfants:0});
+  const [showPreview,setShowPreview]=useState(true);
 
-  // État local = copie de G (config globale)
-  const [cols,setCols]=useState({...G.cols});
-  const [txts,setTxts]=useState({...G.txts});
-  const [landing,setLanding]=useState({...G.landing});
-  const [feats,setFeats]=useState({...G.feats});
+  // Local editing state = deep copy of appConfig
+  const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
 
   useEffect(()=>{
     const load=async()=>{
@@ -6991,421 +6790,334 @@ function Backoffice({user,setPage}){
     load();
   },[]);
 
-  const appliquerLive=()=>{
-    // Met à jour G (store global) → affecte app ET landing immédiatement
-    G.cols={...cols};G.txts={...txts};G.landing={...landing};G.feats={...feats};
-    applyColsToDOM(cols);
-    setToast("✅ Aperçu live appliqué - va sur la landing pour voir les changements");
-  };
+  // Helpers to update nested config
+  const setCol=(k,v)=>setCfg(c=>({...c,cols:{...c.cols,[k]:v}}));
+  const setTxt=(k,v)=>setCfg(c=>({...c,txts:{...c.txts,[k]:v}}));
+  const setLand=(k,v)=>setCfg(c=>({...c,landing:{...c.landing,[k]:v}}));
+  const setFeat=(k,v)=>setCfg(c=>({...c,feats:{...c.feats,[k]:v}}));
+  const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
+  const setTesti=(idx,field,v)=>setCfg(c=>{const tt=[...(c.testimonials||[])];tt[idx]={...tt[idx],[field]:v};return{...c,testimonials:tt};});
+  const setStat=(which,idx,field,v)=>setCfg(c=>{const ss=[...(c[which]||[])];ss[idx]={...ss[idx],[field]:field==="n"?Number(v):v};return{...c,[which]:ss};});
 
   const sauvegarder=async()=>{
     setSaving(true);
-    G.cols={...cols};G.txts={...txts};G.landing={...landing};G.feats={...feats};
-    applyColsToDOM(cols);
+    // Push to global G + parent state
+    Object.assign(G, JSON.parse(JSON.stringify(cfg)));
+    applyColsToDOM(cfg.cols);
+    setAppConfig(JSON.parse(JSON.stringify(cfg)));
     const ok=await saveConfig();
-    setToast(ok?"✅ Configuration sauvegardée dans Supabase - permanente":"❌ Erreur sauvegarde - crée la table app_config d'abord");
+    setToast(ok?"Sauvegard\u00e9 ! Les changements sont en ligne.":"Erreur - cr\u00e9e la table app_config d'abord");
     setSaving(false);
   };
 
+  const reset=()=>{setCfg(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));setToast("Config r\u00e9initialis\u00e9e (non sauvegard\u00e9e)");};
+
   const secs=[
-    {id:"couleurs",l:"Couleurs App",ic:"🎨"},
-    {id:"landing",l:"Landing Page",ic:"🌐"},
-    {id:"textes",l:"Textes",ic:"✏️"},
-    {id:"fonctionnalites",l:"Modules",ic:"⚙️"},
-    {id:"stats",l:"Statistiques",ic:"📊"},
+    {id:"hero",l:"Hero",ic:"\ud83c\udfe0"},
+    {id:"couleurs",l:"Couleurs",ic:"\ud83c\udfa8"},
+    {id:"sections",l:"Sections",ic:"\ud83d\udcdd"},
+    {id:"temoignages",l:"T\u00e9moignages",ic:"\u2b50"},
+    {id:"stats_edit",l:"Statistiques",ic:"\ud83d\udcca"},
+    {id:"boutons",l:"Boutons",ic:"\ud83d\udd18"},
+    {id:"modules",l:"Modules",ic:"\u2699\ufe0f"},
   ];
 
-  const ColPicker=({label,desc,k,state,setState})=>(
-    <div style={{background:"var(--c)",borderRadius:12,padding:12}}>
-      <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:2}}>{label}</div>
-      <div style={{fontSize:11,color:"var(--l)",marginBottom:8}}>{desc}</div>
-      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        <input type="color"value={state[k]}onChange={e=>setState(p=>({...p,[k]:e.target.value}))}
-          style={{width:44,height:36,border:"none",borderRadius:8,cursor:"pointer",padding:2}}/>
-        <input className="inp"style={{flex:1,fontSize:12,padding:"6px 10px"}}
-          value={state[k]}onChange={e=>setState(p=>({...p,[k]:e.target.value}))}/>
-        <div style={{width:28,height:28,borderRadius:8,background:state[k],border:"1px solid var(--br)",flexShrink:0}}/>
+  const ColPicker=({label,k,state,setter})=>(
+    <div style={{marginBottom:10}}>
+      <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:4}}>{label}</div>
+      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+        <input type="color"value={state[k]||"#000000"}onChange={e=>setter(k,e.target.value)} style={{width:36,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1}}/>
+        <input className="inp"style={{flex:1,fontSize:11,padding:"5px 8px"}} value={state[k]||""}onChange={e=>setter(k,e.target.value)}/>
       </div>
     </div>
   );
 
-  return <div className="fi">
+  const TxtField=({label,k,state,setter,multi})=>(
+    <div style={{marginBottom:10}}>
+      <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:4}}>{label}</div>
+      {multi?<textarea className="inp"rows={3}style={{fontSize:11,padding:"6px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}/>
+        :<input className="inp"style={{fontSize:11,padding:"5px 8px"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}/>}
+    </div>
+  );
+
+  return <div className="fi" style={{maxWidth:"100%",padding:0}}>
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🔧" title="Backoffice TiMat" sub={"Admin - "+user.email}
-      action={<button className="btn bG"style={{fontSize:12}}onClick={()=>setPage("accueil")}>← App</button>}
-    />
 
-    <div style={{background:"linear-gradient(135deg,var(--Sp),var(--Tp))",borderRadius:14,padding:"12px 16px",marginBottom:16,border:"1px solid var(--Sl)",fontSize:13}}>
-      💡 Les modifications s'appliquent à <strong>l'app ET la landing page</strong>. Cliquez "Aperçu live" pour voir en temps réel, puis "Sauvegarder" pour rendre permanent.
-    </div>
-
-    <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}}>
-      {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
-        padding:"8px 16px",borderRadius:20,border:"none",cursor:"pointer",
-        fontFamily:"inherit",fontWeight:600,fontSize:12,
-        background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",
-        color:sec===s.id?"#fff":"var(--m)",transition:"all .15s"
-      }}>{s.ic} {s.l}</button>)}
-    </div>
-
-    {/* - COULEURS APP - */}
-    {sec==="couleurs"&&<div className="card"style={{padding:20}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"var(--b)"}}>🎨 Palette de l'application</div>
-      <div style={{fontSize:12,color:"var(--l)",marginBottom:16}}>Ces couleurs s'appliquent à toute l'interface (onglets, boutons, cartes…)</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-        <ColPicker label="Couleur principale (terracotta)" desc="Boutons primaires, accents" k="T" state={cols} setState={setCols}/>
-        <ColPicker label="Couleur secondaire (mauve)" desc="Sous-onglets, badges" k="S" state={cols} setState={setCols}/>
-        <ColPicker label="Vert (succès)" desc="Confirmations, vaccins ok" k="G" state={cols} setState={setCols}/>
-        <ColPicker label="Rouge/Rose (alertes)" desc="Erreurs, absences, alertes" k="R" state={cols} setState={setCols}/>
-        <ColPicker label="Fond général" desc="Background de l'app" k="c" state={cols} setState={setCols}/>
-        <ColPicker label="Fond cartes" desc="Background des cards" k="w" state={cols} setState={setCols}/>
+    {/* Top bar */}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",borderBottom:"1px solid var(--br)",background:"var(--w)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={()=>setPage("accueil")}>\u2190 App</button>
+        <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>\ud83d\udd27 Backoffice</span>
       </div>
-      {/* Aperçu live */}
-      <div style={{background:"var(--c)",borderRadius:12,padding:14,marginBottom:16,border:"1px solid var(--br)"}}>
-        <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:10,textTransform:"uppercase",letterSpacing:".3px"}}>Aperçu</div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
-          {[["bT","Bouton principal"],["bS","Bouton secondaire"],["bG","Bouton neutre"]].map(([cls,l])=>
-            <button key={cls}className={"btn "+cls}style={{fontSize:12,padding:"7px 14px"}}>{l}</button>
+      <div style={{display:"flex",gap:6}}>
+        <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"\ud83d\udc41 Masquer aper\u00e7u":"\ud83d\udc41 Afficher aper\u00e7u"}</button>
+        <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={reset}>\u21ba Reset</button>
+        <button className="btn bT"style={{fontSize:11,padding:"5px 14px"}}onClick={sauvegarder}disabled={saving}>{saving?"\u23f3":"Sauvegarder"}</button>
+      </div>
+    </div>
+
+    <div style={{display:"flex",height:"calc(100vh - 56px)",overflow:"hidden"}}>
+      {/* LEFT: Editor */}
+      <div style={{width:showPreview?"420px":"100%",minWidth:320,overflowY:"auto",padding:16,borderRight:"1px solid var(--br)",background:"var(--c)",transition:"width .3s"}}>
+        {/* Tabs */}
+        <div style={{display:"flex",gap:4,marginBottom:16,flexWrap:"wrap"}}>
+          {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
+            padding:"6px 12px",borderRadius:16,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11,
+            background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",color:sec===s.id?"#fff":"var(--m)",transition:"all .15s"
+          }}>{s.ic} {s.l}</button>)}
+        </div>
+
+        {/* === HERO === */}
+        {sec==="hero"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfe0 Contenu du hero</div>
+            <TxtField label="Badge (bandeau haut)" k="heroBadge" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Titre principal" k="heroTitle" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Sous-titre" k="heroSub" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Description sous les stats" k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/>
+            <TxtField label="Tags (s\u00e9par\u00e9s par des virgules)" k="heroTags" state={cfg.txts} setter={setTxt}/>
+          </div>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udcf8 Image de fond</div>
+            <TxtField label="URL de l'image hero" k="heroImg" state={cfg.landing} setter={setLand}/>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:4}}>Opacit\u00e9 ({Math.round((cfg.landing.heroImgOpacity||0.2)*100)}%)</div>
+              <input type="range"min="0"max="1"step="0.05"value={cfg.landing.heroImgOpacity||0.2} onChange={e=>setLand("heroImgOpacity",parseFloat(e.target.value))} style={{width:"100%"}}/>
+            </div>
+            <TxtField label="Fond hero (gradient CSS)" k="heroBg" state={cfg.landing} setter={setLand}/>
+            <div style={{height:24,borderRadius:6,background:cfg.landing.heroBg,border:"1px solid var(--br)"}}/>
+          </div>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfa8 Style</div>
+            <TxtField label="Couleur d'accent (dor\u00e9)" k="accentColor" state={cfg.landing} setter={setLand}/>
+            <TxtField label="Police titres" k="fontTitle" state={cfg.landing} setter={setLand}/>
+            <TxtField label="Police corps" k="fontBody" state={cfg.landing} setter={setLand}/>
+          </div>
+        </div>}
+
+        {/* === COULEURS APP === */}
+        {sec==="couleurs"&&<div className="card"style={{padding:14}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfa8 Palette de l'application</div>
+          {[["T","Principale (terracotta)"],["S","Secondaire (mauve)"],["G","Vert (succ\u00e8s)"],["R","Rouge/Rose (alertes)"],["c","Fond g\u00e9n\u00e9ral"],["w","Fond cartes"],["b","Texte principal"]].map(([k,l])=>
+            <ColPicker key={k}label={l}k={k}state={cfg.cols}setter={setCol}/>
           )}
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          <div className="badge"style={{background:"var(--Tp)",color:"var(--T)"}}>Badge terracotta</div>
-          <div className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>Badge mauve</div>
-          <div className="badge"style={{background:"var(--Gp)",color:"var(--G)"}}>Badge vert</div>
-        </div>
-      </div>
-      <div style={{display:"flex",gap:8}}>
-        <button className="btn bG"style={{flex:1,justifyContent:"center"}}onClick={appliquerLive}>👁 Aperçu live</button>
-        <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
-          {saving?"⏳…":"💾 Sauvegarder"}
-        </button>
-      </div>
-    </div>}
+        </div>}
 
-    {/* - LANDING PAGE - */}
-    {sec==="landing"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {/* === SECTIONS === */}
+        {sec==="sections"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {[
+            {id:"s1",title:"Section 1 \u2014 Probl\u00e8matique",fields:[{k:"s1Title",l:"Titre"},{k:"s1Desc",l:"Description",multi:true},{k:"s1Quote",l:"Citation",multi:true},{k:"section1Bg",l:"Fond (gradient/couleur)"}]},
+            {id:"s2",title:"Section 2 \u2014 D\u00e9mo",fields:[{k:"s2Title",l:"Titre"},{k:"s2Desc",l:"Description"}]},
+            {id:"s3",title:"Section 3 \u2014 Transformation",fields:[{k:"s3Title",l:"Titre"},{k:"section3Bg",l:"Fond"}]},
+            {id:"s4",title:"Section 4 \u2014 Chiffres",fields:[{k:"s4Title",l:"Titre"},{k:"s4Sub",l:"Sous-titre"},{k:"section4Bg",l:"Fond"}]},
+            {id:"s5",title:"Section 5 \u2014 T\u00e9moignages",fields:[{k:"s5Title",l:"Titre"},{k:"section5Bg",l:"Fond"}]},
+            {id:"s6",title:"Section 6 \u2014 Tarifs",fields:[{k:"s6Title",l:"Titre"},{k:"section6Bg",l:"Fond"},{k:"prixMensuel",l:"Prix mensuel",isTxt:true},{k:"prixEssai",l:"Dur\u00e9e essai",isTxt:true}]},
+            {id:"cta",title:"CTA Final",fields:[{k:"ctaTitle",l:"Titre (avant accent)",multi:true},{k:"ctaTitleAccent",l:"Texte accent"},{k:"ctaSubTitle",l:"Sous-titre"},{k:"ctaBg",l:"Fond"}]},
+          ].map(section=><div key={section.id}className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>{section.title}</div>
+            {section.fields.map(f=><TxtField key={f.k}label={f.l}k={f.k}state={f.isTxt?cfg.txts:cfg.landing}setter={f.isTxt?setTxt:setLand}multi={f.multi}/>)}
+          </div>)}
+        </div>}
 
-      {/* - Photo hero - */}
-      <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"var(--b)"}}>📸 Photo hero</div>
-        <div style={{fontSize:12,color:"var(--l)",marginBottom:14}}>L'image de fond du haut de la landing page</div>
+        {/* === TEMOIGNAGES === */}
+        {sec==="temoignages"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {(cfg.testimonials||[]).map((t,i)=><div key={i}className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:8,color:"var(--b)"}}>\u2b50 T\u00e9moignage {i+1}</div>
+            {[["nom","Nom"],["ville","Ville"],["avant","Avant (citation)"],["apres","Apr\u00e8s (t\u00e9moignage)"]].map(([k,l])=>
+              <div key={k}style={{marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:600,color:"var(--m)",marginBottom:3}}>{l}</div>
+                {k==="apres"?<textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>
+                  :<input className="inp"style={{fontSize:11,padding:"5px 8px"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>}
+              </div>
+            )}
+          </div>)}
+        </div>}
 
-        {/* Aperçu actuel */}
-        <div style={{
-          height:120,borderRadius:12,overflow:"hidden",marginBottom:12,
-          backgroundImage:"url("+(landing.heroImg||"/hero-enfants.jpg")+")",
-          backgroundSize:"cover",backgroundPosition:"center",position:"relative",
-          border:"2px solid var(--br)"
-        }}>
-          <div style={{position:"absolute",inset:0,background:landing.heroBg,opacity:.7}}/>
-          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <span style={{color:"#fff",fontSize:12,fontWeight:700,textShadow:"0 1px 4px rgba(0,0,0,.5)"}}>Aperçu du hero</span>
-          </div>
-        </div>
-
-        {/* Upload depuis l'appareil */}
-        <div style={{marginBottom:12}}>
-          <label className="lbl">Uploader une nouvelle photo</label>
-          <input type="file"accept="image/*"style={{display:"none"}}id="hero-upload"
-            onChange={async(e)=>{
-              const file=e.target.files?.[0];
-              if(!file)return;
-              // Convertir en base64 pour aperçu immédiat
-              const reader=new FileReader();
-              reader.onload=(ev)=>{
-                const dataUrl=ev.target.result;
-                setLanding(p=>({...p,heroImg:dataUrl}));
-                setToast("📸 Photo chargée - cliquez Aperçu live pour voir, puis Sauvegarder");
-              };
-              reader.readAsDataURL(file);
-            }}
-          />
-          <label htmlFor="hero-upload"style={{
-            display:"flex",alignItems:"center",justifyContent:"center",gap:8,
-            padding:"12px 20px",border:"2px dashed var(--br)",borderRadius:12,
-            cursor:"pointer",fontSize:13,color:"var(--m)",fontWeight:600,
-            background:"var(--c)",transition:"all .15s"
-          }}>
-            📁 Choisir une photo depuis mon appareil
-          </label>
-          <div style={{fontSize:11,color:"var(--l)",marginTop:6}}>Formats : JPG, PNG, WebP. Recommandé : largeur 1600px minimum.</div>
-        </div>
-
-        {/* OU URL externe */}
-        <div style={{marginBottom:12}}>
-          <label className="lbl">Ou coller une URL d'image</label>
-          <input className="inp"value={landing.heroImg||""}
-            onChange={e=>setLanding(p=>({...p,heroImg:e.target.value}))}
-            placeholder="https://images.unsplash.com/photo-xxx..."/>
-        </div>
-
-        {/* Opacité */}
-        <div style={{marginBottom:16}}>
-          <label className="lbl">Opacité de la photo (0 = invisible, 1 = pleine)</label>
-          <div style={{display:"flex",gap:10,alignItems:"center"}}>
-            <input type="range"min="0"max="1"step="0.05"
-              value={landing.heroImgOpacity||0.20}
-              onChange={e=>setLanding(p=>({...p,heroImgOpacity:parseFloat(e.target.value)}))}
-              style={{flex:1}}/>
-            <span style={{fontSize:13,fontWeight:700,color:"var(--T)",minWidth:36}}>
-              {Math.round((landing.heroImgOpacity||0.20)*100)}%
-            </span>
-          </div>
-        </div>
-
-        <div style={{display:"flex",gap:8}}>
-          <button className="btn bG"style={{flex:1,justifyContent:"center"}}onClick={appliquerLive}>👁 Aperçu live</button>
-          <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
-            {saving?"⏳…":"💾 Sauvegarder"}
-          </button>
-        </div>
-      </div>
-
-      {/* - Couleurs sections - */}
-      <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>🎨 Couleurs des sections</div>
-        <div style={{display:"grid",gap:10,marginBottom:16}}>
-          <div>
-            <label className="lbl">Fond du hero (gradient CSS)</label>
-            <input className="inp"value={landing.heroBg}onChange={e=>setLanding(p=>({...p,heroBg:e.target.value}))}
-              placeholder="linear-gradient(160deg, #6B3D5A, #7A4A68)"/>
-            <div style={{height:32,borderRadius:8,background:landing.heroBg,marginTop:6,border:"1px solid var(--br)"}}/>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {[
-              {k:"section1Bg",l:"Section 1 & 3"},
-              {k:"section2Bg",l:"Section 2 & tarifs"},
-              {k:"statsBg",l:"Bandeau statistiques"},
-              {k:"ctaBg",l:"Section CTA final"},
-            ].map(({k,l})=><div key={k}>
-              <label className="lbl">{l}</label>
-              <input className="inp"style={{fontSize:11,padding:"6px 10px"}}value={landing[k]||""}
-                onChange={e=>setLanding(p=>({...p,[k]:e.target.value}))}/>
-              <div style={{height:18,borderRadius:6,background:landing[k]||"#eee",marginTop:4,border:"1px solid var(--br)"}}/>
+        {/* === STATS EDIT === */}
+        {sec==="stats_edit"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udcca Stats du hero (bandeau haut)</div>
+            {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"60px 40px 1fr",gap:6,marginBottom:6}}>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsHero",i,"suf",e.target.value)}/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsHero",i,"label",e.target.value)}/>
             </div>)}
           </div>
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          <button className="btn bG"style={{flex:1,justifyContent:"center"}}onClick={appliquerLive}>👁 Aperçu live</button>
-          <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
-            {saving?"⏳…":"💾 Sauvegarder"}
-          </button>
-        </div>
-      </div>
-
-      {/* - Boutons hero - */}
-      <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"var(--b)"}}>🔘 Boutons du hero</div>
-        <div style={{fontSize:12,color:"var(--l)",marginBottom:14}}>Les boutons visibles dans la section hero (haut de la landing)</div>
-        <div style={{display:"grid",gap:10,marginBottom:16}}>
-          <div>
-            <label className="lbl">Bouton principal - fond (gradient ou couleur)</label>
-            <input className="inp"value={landing.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)"}
-              onChange={e=>setLanding(p=>({...p,heroBtnPrimBg:e.target.value}))}
-              placeholder="linear-gradient(135deg,#C4714A,#9A4020)"/>
-            <div style={{display:"flex",gap:8,marginTop:6,alignItems:"center"}}>
-              <div style={{flex:1,height:32,borderRadius:8,background:landing.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)",
-                display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,
-                color:landing.heroBtnPrimColor||"#fff"}}>
-                2 mois gratuits, sans CB →
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udcca Stats section chiffres</div>
+            {(cfg.statsSection||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"60px 40px 1fr 1fr",gap:6,marginBottom:6}}>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsSection",i,"n",e.target.value)}/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsSection",i,"suf",e.target.value)}/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsSection",i,"label",e.target.value)}/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.desc||""}onChange={e=>setStat("statsSection",i,"desc",e.target.value)}/>
+            </div>)}
+          </div>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udd25 Pain points (section 1)</div>
+            {(cfg.painPoints||[]).map((p,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
+              <div style={{display:"flex",gap:6,marginBottom:4}}>
+                <input className="inp"style={{width:40,fontSize:11,padding:"4px 6px",textAlign:"center"}}value={p.ic}onChange={e=>setPain(i,"ic",e.target.value)}/>
+                <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={p.titre}onChange={e=>setPain(i,"titre",e.target.value)}placeholder="Titre"/>
               </div>
+              <textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={p.desc}onChange={e=>setPain(i,"desc",e.target.value)}/>
+            </div>)}
+          </div>
+        </div>}
+
+        {/* === BOUTONS === */}
+        {sec==="boutons"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udd18 Textes des boutons</div>
+            <TxtField label="Bouton nav (topbar)" k="heroBtnNavTxt" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Bouton principal hero" k="heroBtnPrimTxt" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Bouton secondaire hero" k="heroBtnSecTxt" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Bouton CTA final" k="ctaBtnTxt" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Texte sous CTA" k="ctaSub" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Footer CTA" k="ctaFooter" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Bouton Pro" k="proBtnTxt" state={cfg.txts} setter={setTxt}/>
+            <TxtField label="Bouton Gratuit" k="freeBtnTxt" state={cfg.txts} setter={setTxt}/>
+          </div>
+          <div className="card"style={{padding:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfa8 Styles des boutons</div>
+            <TxtField label="Fond bouton principal (gradient)" k="heroBtnPrimBg" state={cfg.landing} setter={setLand}/>
+            <ColPicker label="Couleur texte principal" k="heroBtnPrimColor" state={cfg.landing} setter={setLand}/>
+            <TxtField label="Fond bouton secondaire" k="heroBtnSecBg" state={cfg.landing} setter={setLand}/>
+            <ColPicker label="Couleur texte secondaire" k="heroBtnSecColor" state={cfg.landing} setter={setLand}/>
+            <TxtField label="Fond bouton nav" k="heroBtnNavBg" state={cfg.landing} setter={setLand}/>
+          </div>
+        </div>}
+
+        {/* === MODULES === */}
+        {sec==="modules"&&<div className="card"style={{padding:14}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>\u2699\ufe0f Activer / D\u00e9sactiver</div>
+          {[
+            {k:"parrainage",l:"Parrainage",ic:"\ud83c\udf81"},
+            {k:"forum",l:"Forum communaut\u00e9",ic:"\ud83d\udcac"},
+            {k:"pmi",l:"Communication PMI",ic:"\ud83c\udfdb\ufe0f"},
+            {k:"periscolaire",l:"Planning p\u00e9riscolaire",ic:"\ud83d\ude8c"},
+            {k:"rappelsVaccins",l:"Rappels vaccins",ic:"\ud83d\udc89"},
+          ].map(({k,l,ic})=><div key={k}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
+            <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{ic} {l}</span>
+            <div onClick={()=>setFeat(k,!cfg.feats[k])}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:cfg.feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"}}>
+              <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
+            </div>
+          </div>)}
+          {/* Admin stats */}
+          <div style={{marginTop:16,padding:12,background:"var(--c)",borderRadius:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:8}}>STATS EN DIRECT</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
+              {[{v:stats.users,l:"Inscrits",c:"var(--T)"},{v:stats.pro,l:"Pro",c:"var(--S)"},{v:stats.enfants,l:"Enfants",c:"var(--G)"}].map(s=>
+                <div key={s.l}><div style={{fontSize:20,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:10,color:"var(--l)"}}>{s.l}</div></div>
+              )}
             </div>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <div>
-              <label className="lbl">Couleur texte bouton principal</label>
-              <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                <input type="color"value={landing.heroBtnPrimColor||"#ffffff"}
-                  onChange={e=>setLanding(p=>({...p,heroBtnPrimColor:e.target.value}))}
-                  style={{width:40,height:32,border:"none",borderRadius:6,cursor:"pointer",padding:2}}/>
-                <input className="inp"style={{fontSize:11}}value={landing.heroBtnPrimColor||"#fff"}
-                  onChange={e=>setLanding(p=>({...p,heroBtnPrimColor:e.target.value}))}/>
-              </div>
-            </div>
-            <div>
-              <label className="lbl">Couleur texte bouton secondaire</label>
-              <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                <input type="color"value={landing.heroBtnSecColor||"#ffffff"}
-                  onChange={e=>setLanding(p=>({...p,heroBtnSecColor:e.target.value}))}
-                  style={{width:40,height:32,border:"none",borderRadius:6,cursor:"pointer",padding:2}}/>
-                <input className="inp"style={{fontSize:11}}value={landing.heroBtnSecColor||"#fff"}
-                  onChange={e=>setLanding(p=>({...p,heroBtnSecColor:e.target.value}))}/>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="lbl">Bouton nav (topbar) - fond</label>
-            <input className="inp"value={landing.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)"}
-              onChange={e=>setLanding(p=>({...p,heroBtnNavBg:e.target.value}))}
-              placeholder="linear-gradient(135deg,#9B6BAA,#B87CC8)"/>
-            <div style={{height:28,borderRadius:8,background:landing.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)",
-              marginTop:6,display:"flex",alignItems:"center",justifyContent:"center",
-              fontSize:11,fontWeight:700,color:landing.heroBtnPrimColor||"#fff"}}>
-              Commencer gratuitement →
-            </div>
-          </div>
-          <div>
-            <label className="lbl">Bouton secondaire "Voir la démo" - fond</label>
-            <input className="inp"value={landing.heroBtnSecBg||"rgba(255,255,255,.07)"}
-              onChange={e=>setLanding(p=>({...p,heroBtnSecBg:e.target.value}))}
-              placeholder="rgba(255,255,255,.07)"/>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          <button className="btn bG"style={{flex:1,justifyContent:"center"}}onClick={appliquerLive}>👁 Aperçu live</button>
-          <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
-            {saving?"⏳…":"💾 Sauvegarder"}
-          </button>
-        </div>
-      </div>
-      <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>✏️ Titres des sections</div>
-        {[
-          {k:"s1Title",l:"Section 1 - Titre principal (fond foncé)"},
-          {k:"s2Title",l:"Section 2 - Titre démo"},
-          {k:"s3Title",l:"Section 3 - Titre fonctionnalités"},
-          {k:"s4Title",l:"Section 4 - Titre statistiques"},
-          {k:"s5Title",l:"Section 5 - Titre témoignages"},
-          {k:"s6Title",l:"Section 6 - Titre tarifs"},
-          {k:"ctaTitle",l:"Section finale - Titre CTA"},
-        ].map(({k,l})=><div key={k}style={{marginBottom:10}}>
-          <label className="lbl">{l}</label>
-          <input className="inp"value={landing[k]||""}
-            onChange={e=>setLanding(p=>({...p,[k]:e.target.value}))}
-            placeholder={G.landing[k]||"Titre…"}/>
-        </div>)}
-        <div style={{display:"flex",gap:8,marginTop:8}}>
-          <button className="btn bG"style={{flex:1,justifyContent:"center"}}onClick={appliquerLive}>👁 Aperçu live</button>
-          <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
-            {saving?"⏳…":"💾 Sauvegarder les textes"}
-          </button>
-        </div>
+        </div>}
+
       </div>
 
-      <div style={{padding:"12px 16px",background:"var(--Bp)",borderRadius:12,border:"1px solid var(--B)",fontSize:12,color:"var(--B)"}}>
-        💡 Après "Aperçu live", déconnecte-toi (bouton 🚪) pour voir la landing avec tes modifications. "Sauvegarder" les rend permanents pour tous les visiteurs.
-      </div>
-    </div>}
-
-    {/* - TEXTES - */}
-    {sec==="textes"&&<div className="card"style={{padding:20}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>✏️ Textes de la landing page</div>
-      {[
-        {k:"heroTitle",l:"Titre hero (ligne d'accroche)",placeholder:"Le système vous a transformée en comptable."},
-        {k:"heroSub",l:"Sous-titre hero",placeholder:"TiMat vous rend votre vrai rôle."},
-        {k:"heroBtn",l:"Bouton CTA principal",placeholder:"Commencer gratuitement →"},
-        {k:"prixMensuel",l:"Prix mensuel (chiffre sans €)",placeholder:"9,99"},
-        {k:"prixEssai",l:"Durée de l'essai gratuit",placeholder:"2 mois gratuits"},
-        {k:"heroDesc",l:"Description courte sous les stats (optionnel)",placeholder:"+500 assmats utilisent TiMat…"},
-      ].map(({k,l,placeholder})=><div key={k}style={{marginBottom:12}}>
-        <label className="lbl">{l}</label>
-        <input className="inp"value={txts[k]||""}onChange={e=>setTxts(p=>({...p,[k]:e.target.value}))}
-          placeholder={placeholder}/>
-      </div>)}
-      <div style={{display:"flex",gap:8,marginTop:8}}>
-        <button className="btn bG"style={{flex:1,justifyContent:"center"}}onClick={appliquerLive}>👁 Aperçu live</button>
-        <button className="btn bT"style={{flex:1,justifyContent:"center"}}onClick={sauvegarder}disabled={saving}>
-          {saving?"⏳…":"💾 Sauvegarder les textes"}
-        </button>
-      </div>
-    </div>}
-
-    {/* - FONCTIONNALITÉS - */}
-    {sec==="fonctionnalites"&&<div className="card"style={{padding:20}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:16,color:"var(--b)"}}>⚙️ Activer / Désactiver des modules</div>
-      {[
-        {k:"parrainage",l:"Parrainage",ic:"🎁",desc:"Onglet parrainage visible pour les asmats"},
-        {k:"forum",l:"Forum communauté",ic:"💬",desc:"Accès au forum communautaire"},
-        {k:"pmi",l:"Communication PMI",ic:"🏛️",desc:"Messagerie avec la PMI"},
-        {k:"periscolaire",l:"Planning périscolaire",ic:"🚌",desc:"Gestion périscolaire avancée"},
-        {k:"rappelsVaccins",l:"Rappels vaccins",ic:"💉",desc:"Badge et alertes vaccins"},
-      ].map(({k,l,ic,desc})=><div key={k}style={{
-        display:"flex",justifyContent:"space-between",alignItems:"center",
-        padding:"12px 0",borderBottom:"1px solid var(--br)"
-      }}>
-        <div>
-          <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{ic} {l}</div>
-          <div style={{fontSize:11,color:"var(--l)"}}>{desc}</div>
+      {/* RIGHT: Live Preview */}
+      {showPreview&&<div style={{flex:1,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
+        <div style={{position:"absolute",top:8,left:8,zIndex:10,fontSize:10,fontWeight:700,color:"#fff",background:"var(--S)",padding:"3px 10px",borderRadius:8,opacity:.8}}>APER\u00c7U LIVE</div>
+        <div style={{width:"1200px",height:"100%",transform:"scale("+Math.min(1,(typeof window!=="undefined"?(window.innerWidth-440)/1200:0.6))+")",transformOrigin:"top left",overflow:"auto",background:"#fff"}}>
+          <LandingPage onLogin={()=>{}}dark={false}setDark={()=>{}}config={cfg}/>
         </div>
-        <div onClick={()=>setFeats(p=>({...p,[k]:!p[k]}))}style={{
-          width:44,height:24,borderRadius:12,cursor:"pointer",
-          background:feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"
-        }}>
-          <div style={{
-            width:18,height:18,borderRadius:9,background:"#fff",
-            position:"absolute",top:3,left:feats[k]?23:3,
-            transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,.2)"
-          }}/>
-        </div>
-      </div>)}
-      <button className="btn bT"style={{marginTop:16,width:"100%",justifyContent:"center"}}
-        onClick={sauvegarder}disabled={saving}>
-        {saving?"⏳…":"💾 Sauvegarder la config"}
-      </button>
-    </div>}
-
-    {/* - STATS - */}
-    {sec==="stats"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-        {[
-          {ic:"👩‍👧",val:stats.users,l:"Utilisateurs inscrits",c:"var(--T)"},
-          {ic:"⭐",val:stats.pro,l:"Abonnés Pro actifs",c:"var(--S)"},
-          {ic:"👶",val:stats.enfants,l:"Enfants enregistrés",c:"var(--G)"},
-        ].map(k=><div key={k.l}className="card"style={{padding:16,textAlign:"center"}}>
-          <div style={{fontSize:28,marginBottom:6}}>{k.ic}</div>
-          <div className="pf"style={{fontSize:32,fontWeight:700,color:k.c}}>{k.val}</div>
-          <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>{k.l}</div>
-        </div>)}
-      </div>
-      <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🗄️ Table Supabase requise</div>
-        <div style={{color:"var(--m)",lineHeight:1.7,background:"var(--c)",borderRadius:8,padding:10,fontFamily:"monospace",fontSize:11}}>
-          CREATE TABLE app_config (<br/>
-          &nbsp;&nbsp;id TEXT PRIMARY KEY,<br/>
-          &nbsp;&nbsp;config JSONB,<br/>
-          &nbsp;&nbsp;updated_at TIMESTAMPTZ<br/>
-          );<br/>
-          ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;<br/>
-          CREATE POLICY "admin_all" ON app_config USING (true);
-        </div>
-        <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
-          À exécuter dans Supabase SQL Editor pour activer la sauvegarde permanente.
-        </div>
-      </div>
-    </div>}
+      </div>}
+    </div>
   </div>;
 }
 
 const DEFAULT_CONFIG = {
   cols: {T:"#C4714A",S:"#9B6BAA",G:"#4A8B6E",R:"#C44A6A",c:"#FDF5F8",w:"#FFFFFF",b:"#1A1118"},
   txts: {
-    heroTitle:"Le système vous a transformée en comptable.",
-    heroSub:"TiMat vous rend votre vrai rôle.",
-    heroBtn:"Commencer gratuitement →",
+    heroTitle:"Le syst\u00e8me vous a transform\u00e9e en comptable.",
+    heroSub:"TiMat vous rend votre vrai r\u00f4le.",
+    heroBtn:"Commencer gratuitement \u2192",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     heroDesc:"",
+    heroBadge:"\ud83d\udc9b POUR LES ASSISTANTES MATERNELLES DE FRANCE",
+    heroSubDesc:"Vous g\u00e9rez seule ce que les cr\u00e8ches font \u00e0 5 personnes.\nContrats, salaires, bilans, PMI, suivi des enfants - tout \u00e7a, sans formation, sans aide, souvent le soir.",
+    heroBtnPrimTxt:"2 mois gratuits, sans CB \u2192",
+    heroBtnSecTxt:"Voir la d\u00e9mo \u2193",
+    heroBtnNavTxt:"Commencer gratuitement \u2192",
+    heroTags:"\ud83d\udd12 Donn\u00e9es en France,\ud83d\udcf1 Web & Mobile,\u26a1 2 min pour d\u00e9marrer,\ud83d\udcb3 Sans carte bancaire",
+    ctaBtnTxt:"Je commence - 2 mois gratuits \u2192",
+    ctaSub:"TiMat s'occupe de \u00e7a. Pour que vous puissiez vous occuper des enfants.",
+    ctaFooter:"D\u00e9j\u00e0 847 assistantes maternelles nous font confiance \u00b7 Donn\u00e9es h\u00e9berg\u00e9es en France \ud83c\uddeb\ud83c\uddf7",
+    proLabel:"\u2b50 TOUT INCLUS",
+    proSubtxt:"soit 0,33\u20ac/jour - moins qu'un caf\u00e9",
+    proDesc:"La solution compl\u00e8te. Tout est inclus.",
+    proBtnTxt:"2 mois gratuits, sans CB \u2192",
+    freeLabel:"Gratuit",
+    freeBtnTxt:"Commencer gratuitement",
   },
   landing: {
     heroBg:"linear-gradient(160deg, #6B3D5A 0%, #7A4A68 35%, #6B3D5A 65%, #582E4A 100%)",
     heroImg:"/hero-enfants.jpg",
     heroImgOpacity:0.20,
-    section1Bg:"#FDF5FB",section2Bg:"#F5EBF8",ctaBg:"linear-gradient(135deg,#9B6BAA,#C4714A)",
+    section1Bg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
+    section2Bg:"#FDF5FB",
+    section3Bg:"#F8F0FC",
+    section4Bg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
+    section5Bg:"#FDF5FB",
+    section6Bg:"#F5EBF8",
+    ctaBg:"linear-gradient(135deg,#5C3370,#9B6BAA)",
     statsBg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
     heroBtnPrimBg:"linear-gradient(135deg,#C4714A,#9A4020)",
     heroBtnPrimColor:"#fff",
     heroBtnSecBg:"rgba(255,255,255,.07)",
     heroBtnSecColor:"#fff",
     heroBtnNavBg:"linear-gradient(135deg,#9B6BAA,#B87CC8)",
-    s1Title:"La réalité du métier, personne n'en parle.",
-    s1Desc:"",
-    s2Title:"Découvrez TiMat en direct",
-    s3Title:"Ce que TiMat change concrètement",
+    accentColor:"#E8A84A",
+    fontTitle:"'Fraunces', Georgia, serif",
+    fontBody:"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",
+    s1Title:"La r\u00e9alit\u00e9 du m\u00e9tier, personne n'en parle.",
+    s1Desc:"\u00catre assistante maternelle agr\u00e9\u00e9e, c'est exercer un m\u00e9tier de soin exigeant\ntout en g\u00e9rant une TPE sans formation ni support.",
+    s1Quote:"TiMat n'ajoute pas une appli \u00e0 votre vie.\nIl retire tout ce qui n'aurait jamais d\u00fb s'y trouver.",
+    s2Title:"D\u00e9couvrez TiMat en direct",
+    s2Desc:"Cliquez sur un onglet pour explorer les fonctionnalit\u00e9s.",
+    s3Title:"Ce que TiMat change concr\u00e8tement",
     s4Title:"Ce que disent les chiffres",
-    s5Title:"Devenez l'assistante maternelle dont les parents parlent à leurs amis.",
+    s4Sub:"Donn\u00e9es internes TiMat \u00b7 Mars 2026",
+    s5Title:"Devenez l'assistante maternelle dont les parents parlent \u00e0 leurs amis.",
     s6Title:"Un forfait fixe. Pas de surprise.",
-    ctaTitle:"Vous n'avez pas eu de formation en comptabilité.",
+    ctaTitle:"Vous n'avez pas eu de formation\nen comptabilit\u00e9.",
+    ctaTitleAccent:"en comptabilit\u00e9.",
+    ctaSubTitle:"Pourtant vous en faites tous les mois.",
   },
+  painPoints:[
+    {ic:"\ud83e\uddee",titre:"Comptable sans dipl\u00f4me",desc:"Mensualisation, heures major\u00e9es, cotisations, r\u00e9gularisations... Des calculs que m\u00eame les comptables trouvent complexes. Vous les faites seule, chaque mois."},
+    {ic:"\u2696\ufe0f",titre:"Juriste sans formation",desc:"Contrats CCN, avenants, courriers de rupture, litiges prud'homaux... Vous portez seule la responsabilit\u00e9 juridique d'un employeur."},
+    {ic:"\ud83c\udfdb\ufe0f",titre:"Secr\u00e9taire de la PMI",desc:"Dossiers de renouvellement, comptes-rendus de visite, suivi de l'agr\u00e9ment... Des d\u00e9marches chronophages qui ne sont jamais finies."},
+    {ic:"\ud83d\udcf1",titre:"Community manager des parents",desc:"R\u00e9pondre aux messages \u00e0 toute heure, documenter la journ\u00e9e, rassurer les parents... Une relation qui d\u00e9borde souvent sur votre vie priv\u00e9e."},
+    {ic:"\ud83c\udf19",titre:"Administratrice le soir",desc:"Apr\u00e8s 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soir\u00e9e n'existe plus."},
+    {ic:"\ud83d\udd07",titre:"Seule face aux probl\u00e8mes",desc:"Pas de coll\u00e8gue \u00e0 qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le m\u00eame probl\u00e8me."},
+  ],
+  transformations:[
+    ["\ud83e\uddee","Pajemploi vous prend 2h par mois","R\u00e9cap pr\u00eat en 5 minutes","Z\u00e9ro erreur. Z\u00e9ro stress."],
+    ["\ud83d\udcc4","Vos contrats sont dans un tiroir","Mod\u00e8les guid\u00e9s, avenants en 2 clics","Solide juridiquement si \u00e7a tourne mal."],
+    ["\u23f0","Les retards de parents cr\u00e9ent des conflits","Pointage horodat\u00e9, sign\u00e9 par les deux","Vous discutez de faits. Plus de tensions."],
+    ["\ud83d\uddc2\ufe0f","Un document important est introuvable","Tout centralis\u00e9, dat\u00e9, cherchable","En cas de contr\u00f4le PMI, tout est l\u00e0."],
+    ["\ud83c\udf19","Vos soir\u00e9es servent \u00e0 l'administratif","5 minutes le matin suffisent","Vos soir\u00e9es vous appartiennent."],
+  ],
+  statsHero:[
+    {n:847,suf:"+",label:"assmats actives"},
+    {n:12400,suf:"+",label:"bilans g\u00e9n\u00e9r\u00e9s"},
+    {n:4,suf:".7\u2605",label:"note moyenne"},
+    {n:96,suf:"%",label:"taux de satisfaction"},
+  ],
+  statsSection:[
+    {n:847,suf:"+",label:"assmats actives",desc:"Font confiance \u00e0 TiMat"},
+    {n:94,suf:"%",label:"satisfaites",desc:"Recommandent TiMat \u00e0 une coll\u00e8gue"},
+    {n:4,suf:"h",label:"\u00e9conomis\u00e9es",desc:"Par mois en admin en moyenne"},
+    {n:2,suf:" mois",label:"d'essai gratuit",desc:"Sans carte bancaire"},
+  ],
+  testimonials:[
+    {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soir\u00e9es sur Excel.",apres:"Mon r\u00e9cap Pajemploi est pr\u00eat en 5 minutes. Je ne sais m\u00eame plus pourquoi j'attendais de changer."},
+    {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contr\u00f4le PMI.",apres:"Tout est archiv\u00e9, dat\u00e9, accessible. L'inspectrice a \u00e9t\u00e9 impressionn\u00e9e par mon suivi."},
+    {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contest\u00e9 des heures.",apres:"Le pointage horodat\u00e9 a tout r\u00e9gl\u00e9 en 30 secondes. Je ne travaillerai plus sans TiMat."},
+    {nom:"Fatima A.",ville:"Marseille",avant:"Je me r\u00e9veillais la nuit \u00e0 stresser.",apres:"TiMat me pr\u00e9vient avant chaque \u00e9ch\u00e9ance. Je dors mieux. C'est b\u00eate mais c'est vrai."},
+  ],
   feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
@@ -7459,6 +7171,7 @@ export default function App(){
   const [pointagesDB,setPointagesDB]=useState([]);
   const [transmissionsDB,setTransmissionsDB]=useState([]);
   const [dbLoading,setDbLoading]=useState(false);
+  const [appConfig,setAppConfig]=useState(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
 
   // //  Dsactiver le service worker bloqu
   useEffect(()=>{
@@ -7470,7 +7183,9 @@ export default function App(){
   },[]);
 
   // Charger config backoffice au démarrage -
-  useEffect(()=>{loadConfig();},[]);
+  useEffect(()=>{
+    loadConfig().then(()=>setAppConfig(JSON.parse(JSON.stringify(G))));
+  },[]);
 
   // Vérifier session Supabase au démarrage -
   useEffect(()=>{
@@ -7602,7 +7317,7 @@ export default function App(){
 
 
   // - Utiliser données réelles
-  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark} config={G}/></div></>;
+  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark} config={appConfig}/></div></>;
   // Afficher onboarding si asmat sans enfants (vérifié après chargement DB)
   if(!onboarded&&user.role==="asmat"&&!dbLoading&&enfantsDB.length===0)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
@@ -7671,7 +7386,7 @@ export default function App(){
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail}/>;
-      case "backoffice": return user?.email===ADMIN_EMAIL?<Backoffice user={user} setPage={setPage}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
+      case "backoffice": return user?.email===ADMIN_EMAIL?<Backoffice user={user} setPage={setPage} appConfig={appConfig} setAppConfig={setAppConfig}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
