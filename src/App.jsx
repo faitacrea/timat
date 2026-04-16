@@ -6828,10 +6828,10 @@ const BOTextInput=({k,state,setter,multi,placeholder})=>(
 
 const BOAlignInput=({k,state,setter})=>(
   <div style={{display:"flex",gap:2}}>
-    {["left","center","right"].map(a=><button key={a}onClick={()=>setter(k,a)}style={{
-      flex:1,padding:"5px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:600,
+    {[["left","☰ Gauche"],["center","☰ Centre"],["right","☰ Droite"],["justify","☰ Justifié"]].map(([a,label])=><button key={a}onClick={()=>setter(k,a)}style={{
+      flex:1,padding:"5px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600,
       background:state[k]===a?"var(--S)":"var(--c)",color:state[k]===a?"#fff":"var(--m)",transition:"all .15s"
-    }}>{a==="left"?"◁ Gauche":a==="center"?"⊡ Centre":"▷ Droite"}</button>)}
+    }}>{label}</button>)}
   </div>
 );
 
