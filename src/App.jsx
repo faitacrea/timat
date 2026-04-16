@@ -6815,8 +6815,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     Object.assign(G, JSON.parse(JSON.stringify(cfg)));
     applyColsToDOM(cfg.cols);
     setAppConfig(JSON.parse(JSON.stringify(cfg)));
-    const ok=await saveConfig();
-    setToast(ok?"✅ Sauvegardé ! Les changements sont en ligne.":"❌ Erreur - crée la table app_config d\'abord");
+    const result=await saveConfig();
+    if(result.ok){
+      setToast("✅ Sauvegardé ! Changements en ligne.");
+    }else{
+      setToast("❌ Échec : "+result.error);
+      console.error("Échec sauvegarde:", result.error);
+    }
     setSaving(false);
   };
 
@@ -6837,20 +6842,50 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   };
 
   const diagnostiquer=async()=>{
-    const {data,error}=await supabase.from('app_config').select('*').eq('id','main').single();
-    if(error){
-      alert("❌ Erreur Supabase : "+error.message+"\\n\\nVérifie que la table app_config existe et que les policies RLS permettent l\\'accès.");
-      return;
+    let report="🔍 DIAGNOSTIC SUPABASE\n\n";
+
+    // 1. Test lecture
+    const {data:readData,error:readErr}=await supabase.from('app_config').select('*').eq('id','main').maybeSingle();
+    if(readErr){
+      report+="❌ LECTURE : "+readErr.message+"\n";
+      if(readErr.message.includes('relation')||readErr.message.includes('does not exist')){
+        report+="\n⚠️ La table n\'existe pas. Exécute ce SQL dans Supabase :\n\nCREATE TABLE app_config (id TEXT PRIMARY KEY, config JSONB, updated_at TIMESTAMPTZ);\nALTER TABLE app_config ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+      }else if(readErr.message.includes('policy')||readErr.message.includes('permission')){
+        report+="\n⚠️ Problème RLS. Exécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+      }
+      alert(report);return;
     }
-    if(!data){
-      alert("⚠️ Aucune config en base. Clique Sauvegarder pour créer.");
-      return;
+    if(!readData){
+      report+="⚠️ LECTURE : Table vide (aucune ligne avec id='main')\n";
+      report+="→ C\'est pour ça que tes anciennes sauvegardes semblent perdues.\n\n";
+    }else{
+      const parsed=typeof readData.config==='string'?JSON.parse(readData.config):readData.config;
+      report+="✅ LECTURE OK\n";
+      report+="  Dernière maj : "+readData.updated_at+"\n";
+      report+="  Clés : "+Object.keys(parsed).join(", ")+"\n";
+      report+="  landing : "+(parsed.landing?Object.keys(parsed.landing).length:0)+" champs\n";
+      report+="  txts : "+(parsed.txts?Object.keys(parsed.txts).length:0)+" champs\n\n";
     }
-    const parsed=typeof data.config==='string'?JSON.parse(data.config):data.config;
-    const keys=Object.keys(parsed).join(", ");
-    const landingKeys=parsed.landing?Object.keys(parsed.landing).length:0;
-    const txtsKeys=parsed.txts?Object.keys(parsed.txts).length:0;
-    alert("✅ Config trouvée en base\\n\\nDernière maj : "+data.updated_at+"\\n\\nClés : "+keys+"\\n\\nlanding : "+landingKeys+" champs\\ntxts : "+txtsKeys+" champs\\n\\nTaille : "+JSON.stringify(parsed).length+" octets");
+
+    // 2. Test écriture
+    const testPayload={id:'_diag_test',config:{test:true,ts:Date.now()},updated_at:new Date().toISOString()};
+    const {error:writeErr}=await supabase.from('app_config').upsert(testPayload);
+    if(writeErr){
+      report+="❌ ÉCRITURE : "+writeErr.message+"\n";
+      report+="→ Tes sauvegardes échouent silencieusement.\n";
+      if(writeErr.message.includes('policy')||writeErr.message.includes('permission')||writeErr.message.includes('violates')){
+        report+="\n⚠️ Problème RLS en écriture. Exécute dans Supabase :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+      }else if(writeErr.message.includes('column')||writeErr.message.includes('type')){
+        report+="\n⚠️ Mauvais type de colonne. La colonne config doit être JSONB. Vérifie avec :\n\nSELECT column_name, data_type FROM information_schema.columns WHERE table_name='app_config';";
+      }
+    }else{
+      report+="✅ ÉCRITURE OK (test écrit avec id='_diag_test')\n";
+      // Cleanup
+      await supabase.from('app_config').delete().eq('id','_diag_test');
+      report+="  (ligne de test nettoyée)\n";
+    }
+
+    alert(report);
   };
 
   // Google Fonts presets
@@ -7479,9 +7514,13 @@ const applyColsToDOM = (cols) => {
 
 const loadConfig = async () => {
   try {
-    const {data,error} = await supabase.from('app_config').select('config').eq('id','main').single();
+    const {data,error} = await supabase.from('app_config').select('config').eq('id','main').maybeSingle();
     if (error) {
-      console.log('[TiMat config] Pas de config en base ou erreur:', error.message);
+      console.log('[TiMat config] Erreur Supabase:', error.message);
+      return;
+    }
+    if (!data) {
+      console.log('[TiMat config] Aucune config en base (table vide) - utilisation des défauts');
       return;
     }
     if (data?.config) {
@@ -7494,7 +7533,6 @@ const loadConfig = async () => {
         txts:{...DEFAULT_CONFIG.txts,...(saved.txts||{})},
         landing:{...DEFAULT_CONFIG.landing,...(saved.landing||{})},
         feats:{...DEFAULT_CONFIG.feats,...(saved.feats||{})},
-        // Arrays: use saved if present, else default
         painPoints: saved.painPoints||DEFAULT_CONFIG.painPoints,
         transformations: saved.transformations||DEFAULT_CONFIG.transformations,
         statsHero: saved.statsHero||DEFAULT_CONFIG.statsHero,
@@ -7502,14 +7540,13 @@ const loadConfig = async () => {
         testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
       };
       applyColsToDOM(G.cols);
-      // Inject custom Google Fonts URL if configured
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
         const existing = document.getElementById('timat-fonts');
         if (existing) existing.href = G.landing.googleFontsUrl;
       }
     }
   } catch(e) {
-    console.log('[TiMat config] Erreur chargement:', e.message);
+    console.log('[TiMat config] Exception chargement:', e.message);
   }
 };
 
@@ -7518,18 +7555,18 @@ const saveConfig = async () => {
     const payload = JSON.stringify(G);
     const {error} = await supabase.from('app_config').upsert({
       id:'main',
-      config: payload,
+      config: G,  // JSONB column accepts object directly
       updated_at: new Date().toISOString()
     });
     if (error) {
       console.error('[TiMat config] Erreur sauvegarde:', error.message);
-      return false;
+      return {ok:false, error:error.message};
     }
     console.log('[TiMat config] Sauvegardé ('+payload.length+' octets)');
-    return true;
+    return {ok:true};
   } catch(e) {
     console.error('[TiMat config] Exception sauvegarde:', e);
-    return false;
+    return {ok:false, error:e.message};
   }
 };
 
