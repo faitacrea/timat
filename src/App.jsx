@@ -5871,9 +5871,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         const demo = demos.find(d => d.email === form.email.trim().toLowerCase());
         if (demo) { onLogin(demo); return; }
         setErr("Email ou mot de passe incorrect.");
+      } else if (data?.user) {
+        // Pass minimal user data - auth listener will enrich with profile from DB
+        onLogin({
+          id: data.user.id,
+          email: data.user.email,
+          prenom: data.user.user_metadata?.prenom || "Utilisateur",
+          nom: data.user.user_metadata?.nom || "",
+          role: data.user.user_metadata?.role || "asmat",
+          couleur: "#C4714A",
+          subscription_status: "free"
+        });
       }
-      // On success: the onAuthStateChange listener in App.jsx will fetch the profile
-      // and call setUser(). We don't query here to avoid lock race.
     } catch(e) { setErr("Erreur réseau. Vérifiez votre connexion ou utilisez un compte démo."); }
     setLoading(false);
   };
@@ -5905,7 +5914,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             },{onConflict:'id'});
           }catch(e){console.log('Profile upsert:', e);}
         },500);
-        // Don't call onLogin - the auth listener will handle it
+        onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
       }
     } catch(e) { setErr("Erreur lors de l'inscription."); }
     setLoading(false);
