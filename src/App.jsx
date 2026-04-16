@@ -5871,10 +5871,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         const demo = demos.find(d => d.email === form.email.trim().toLowerCase());
         if (demo) { onLogin(demo); return; }
         setErr("Email ou mot de passe incorrect.");
-      } else if (data?.user) {
-        const { data: profil } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
-        onLogin(profil ? {...profil, id:data.user.id, email:data.user.email} : {id:data.user.id, email:data.user.email, prenom:"Utilisateur", role});
       }
+      // On success: the onAuthStateChange listener in App.jsx will fetch the profile
+      // and call setUser(). We don't query here to avoid lock race.
     } catch(e) { setErr("Erreur réseau. Vérifiez votre connexion ou utilisez un compte démo."); }
     setLoading(false);
   };
@@ -5895,15 +5894,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
-        try{
-          await supabase.from('profiles').upsert({
-            id: data.user.id, email: data.user.email,
-            prenom: form.prenom, nom: form.nom||'',
-            role: role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A",
-            subscription_status: 'free',
-          },{onConflict:'id'});
-        }catch(e){console.log('Profile upsert:', e);}
-        onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
+        // Delay profile upsert so auth listener settles first (avoids lock race)
+        setTimeout(async()=>{
+          try{
+            await supabase.from('profiles').upsert({
+              id: data.user.id, email: data.user.email,
+              prenom: form.prenom, nom: form.nom||'',
+              role: role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A",
+              subscription_status: 'free',
+            },{onConflict:'id'});
+          }catch(e){console.log('Profile upsert:', e);}
+        },500);
+        // Don't call onLogin - the auth listener will handle it
       }
     } catch(e) { setErr("Erreur lors de l'inscription."); }
     setLoading(false);
@@ -6278,35 +6280,53 @@ function OnboardingWizard({user,onFinish}){
   const sauvegarder=async()=>{
     if(!enfant.prenom||!enfant.naissance)return;
     setSaving(true);
+    // Helper: retry on Supabase lock errors
+    const withRetry=async(fn,retries=3)=>{
+      for(let i=0;i<retries;i++){
+        try{
+          const result=await fn();
+          return result;
+        }catch(e){
+          if(e.message?.includes('lock')||e.message?.includes('Lock')){
+            console.log(`[TiMat] Lock conflict, retry ${i+1}/${retries}...`);
+            await new Promise(r=>setTimeout(r,300*(i+1)));
+            continue;
+          }
+          throw e;
+        }
+      }
+      throw new Error('Trop de conflits de lock - réessaie dans quelques secondes');
+    };
+
     try{
       // 1. S'assurer que le profil existe dans Supabase
-      const{data:profil}=await supabase.from('profiles').select('id').eq('id',user.id).single();
+      const{data:profil}=await withRetry(()=>supabase.from('profiles').select('id').eq('id',user.id).maybeSingle());
       if(!profil){
-        await supabase.from('profiles').insert({
+        await withRetry(()=>supabase.from('profiles').insert({
           id:user.id,email:user.email,
           prenom:user.prenom||'',nom:user.nom||'',
           role:user.role||'asmat',couleur:'#B8622F',
           subscription_status:'free'
-        });
+        }));
       }
 
       // 2. Créer l'enfant
-      const{data:enfantData,error:errEnfant}=await supabase.from('enfants').insert({
+      const{data:enfantData,error:errEnfant}=await withRetry(()=>supabase.from('enfants').insert({
         prenom:enfant.prenom,
         emoji:enfant.emoji||'👶',
         naissance:enfant.naissance,
         asmat_id:user.id,
         actif:true,
-      }).select().single();
+      }).select().single());
 
       if(errEnfant){
         console.error('Erreur enfant:', errEnfant);
-        setToast('Erreur: '+errEnfant.message);
+        setToast('❌ Erreur: '+errEnfant.message);
         setSaving(false);return;
       }
 
       // 3. Créer le contrat lié à l'enfant
-      const{error:errContrat}=await supabase.from('contrats').insert({
+      const{error:errContrat}=await withRetry(()=>supabase.from('contrats').insert({
         enfant_id:enfantData.id,
         asmat_id:user.id,
         debut:contrat.debut||new Date().toISOString().slice(0,10),
@@ -6316,7 +6336,7 @@ function OnboardingWizard({user,onFinish}){
         jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
         horaires:contrat.horaires||'07h30–17h30',
         actif:true,
-      });
+      }));
 
       if(errContrat){console.error('Erreur contrat:', errContrat);}
 
@@ -6324,7 +6344,7 @@ function OnboardingWizard({user,onFinish}){
       setStep(2);
     }catch(e){
       console.error('Erreur sauvegarde:', e);
-      setToast('Erreur: '+e.message);
+      setToast('❌ Erreur: '+e.message);
     }
     setSaving(false);
   };
@@ -7729,26 +7749,30 @@ export default function App(){
       if(event==="INITIAL_SESSION"){
         // Initial session loaded
         if(session?.user){
-          const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-          if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
-          else setUser({
-            id:session.user.id,email:session.user.email,
-            prenom:session.user.user_metadata?.prenom||"Utilisateur",
-            nom:session.user.user_metadata?.nom||"",
-            role:session.user.user_metadata?.role||"asmat",
-            couleur:"#C4714A",subscription_status:"free"
-          });
+          try{
+            const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+            if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
+            else setUser({
+              id:session.user.id,email:session.user.email,
+              prenom:session.user.user_metadata?.prenom||"Utilisateur",
+              nom:session.user.user_metadata?.nom||"",
+              role:session.user.user_metadata?.role||"asmat",
+              couleur:"#C4714A",subscription_status:"free"
+            });
+          }catch(e){console.log("Profil load error:",e.message);}
         }
         setLoading(false);
       }
       if(event==="SIGNED_IN"&&session?.user){
-        const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).single();
-        if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
-        else setUser({id:session.user.id,email:session.user.email,
-          prenom:session.user.user_metadata?.prenom||"Utilisateur",
-          nom:session.user.user_metadata?.nom||"",
-          role:session.user.user_metadata?.role||"asmat",
-          couleur:"#C4714A",subscription_status:"free"});
+        try{
+          const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+          if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
+          else setUser({id:session.user.id,email:session.user.email,
+            prenom:session.user.user_metadata?.prenom||"Utilisateur",
+            nom:session.user.user_metadata?.nom||"",
+            role:session.user.user_metadata?.role||"asmat",
+            couleur:"#C4714A",subscription_status:"free"});
+        }catch(e){console.log("Profil load error:",e.message);}
       }
       if(event==="SIGNED_OUT"){setUser(null);setPage("accueil");}
     });
@@ -7770,7 +7794,7 @@ export default function App(){
     const params=new URLSearchParams(window.location.search);
     const payment=params.get('payment');
     if(payment==='success'){
-      supabase.from('profiles').select('*').eq('id',user.id).single()
+      supabase.from('profiles').select('*').eq('id',user.id).maybeSingle()
         .then(({data})=>{if(data)setUser(u=>({...u,...data}));});
       setPage('parametres');
       window.history.replaceState({},'','/');
