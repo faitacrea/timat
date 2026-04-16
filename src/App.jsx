@@ -6842,50 +6842,75 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   };
 
   const diagnostiquer=async()=>{
-    let report="🔍 DIAGNOSTIC SUPABASE\n\n";
+    try{
+      let report="🔍 DIAGNOSTIC SUPABASE\n\n";
 
-    // 1. Test lecture
-    const {data:readData,error:readErr}=await supabase.from('app_config').select('*').eq('id','main').maybeSingle();
-    if(readErr){
-      report+="❌ LECTURE : "+readErr.message+"\n";
-      if(readErr.message.includes('relation')||readErr.message.includes('does not exist')){
-        report+="\n⚠️ La table n\'existe pas. Exécute ce SQL dans Supabase :\n\nCREATE TABLE app_config (id TEXT PRIMARY KEY, config JSONB, updated_at TIMESTAMPTZ);\nALTER TABLE app_config ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
-      }else if(readErr.message.includes('policy')||readErr.message.includes('permission')){
-        report+="\n⚠️ Problème RLS. Exécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+      // 1. Test lecture
+      const {data:readData,error:readErr}=await supabase.from('app_config').select('*').eq('id','main').maybeSingle();
+      if(readErr){
+        report+="❌ LECTURE : "+readErr.message+"\n";
+        if(readErr.message.includes('relation')||readErr.message.includes('does not exist')){
+          report+="\n⚠️ La table n\'existe pas. Exécute dans Supabase SQL Editor :\n\nCREATE TABLE app_config (id TEXT PRIMARY KEY, config JSONB, updated_at TIMESTAMPTZ);\nALTER TABLE app_config ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+        }else if(readErr.message.includes('policy')||readErr.message.includes('permission')){
+          report+="\n⚠️ Problème RLS. Exécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+        }
+        alert(report);return;
       }
-      alert(report);return;
-    }
-    if(!readData){
-      report+="⚠️ LECTURE : Table vide (aucune ligne avec id='main')\n";
-      report+="→ C\'est pour ça que tes anciennes sauvegardes semblent perdues.\n\n";
-    }else{
-      const parsed=typeof readData.config==='string'?JSON.parse(readData.config):readData.config;
-      report+="✅ LECTURE OK\n";
-      report+="  Dernière maj : "+readData.updated_at+"\n";
-      report+="  Clés : "+Object.keys(parsed).join(", ")+"\n";
-      report+="  landing : "+(parsed.landing?Object.keys(parsed.landing).length:0)+" champs\n";
-      report+="  txts : "+(parsed.txts?Object.keys(parsed.txts).length:0)+" champs\n\n";
-    }
-
-    // 2. Test écriture
-    const testPayload={id:'_diag_test',config:{test:true,ts:Date.now()},updated_at:new Date().toISOString()};
-    const {error:writeErr}=await supabase.from('app_config').upsert(testPayload);
-    if(writeErr){
-      report+="❌ ÉCRITURE : "+writeErr.message+"\n";
-      report+="→ Tes sauvegardes échouent silencieusement.\n";
-      if(writeErr.message.includes('policy')||writeErr.message.includes('permission')||writeErr.message.includes('violates')){
-        report+="\n⚠️ Problème RLS en écriture. Exécute dans Supabase :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
-      }else if(writeErr.message.includes('column')||writeErr.message.includes('type')){
-        report+="\n⚠️ Mauvais type de colonne. La colonne config doit être JSONB. Vérifie avec :\n\nSELECT column_name, data_type FROM information_schema.columns WHERE table_name='app_config';";
+      if(!readData){
+        report+="⚠️ LECTURE : Table vide (aucune ligne avec id='main')\n\n";
+      }else{
+        let parsed;
+        try{
+          parsed=typeof readData.config==='string'?JSON.parse(readData.config):readData.config;
+        }catch(e){
+          parsed={_raw:readData.config,_parseError:e.message};
+        }
+        report+="✅ LECTURE OK\n";
+        report+="  Type colonne config : "+(typeof readData.config)+"\n";
+        report+="  Dernière maj : "+readData.updated_at+"\n";
+        if(parsed&&typeof parsed==='object'){
+          report+="  Clés : "+Object.keys(parsed).join(", ")+"\n";
+          report+="  landing : "+(parsed.landing?Object.keys(parsed.landing).length:0)+" champs\n";
+          report+="  txts : "+(parsed.txts?Object.keys(parsed.txts).length:0)+" champs\n\n";
+        }
       }
-    }else{
-      report+="✅ ÉCRITURE OK (test écrit avec id='_diag_test')\n";
-      // Cleanup
-      await supabase.from('app_config').delete().eq('id','_diag_test');
-      report+="  (ligne de test nettoyée)\n";
-    }
 
-    alert(report);
+      // 2. Test écriture JSONB (objet)
+      const tsJsonb=Date.now();
+      const {error:errJsonb}=await supabase.from('app_config').upsert({id:'_diag_test_jsonb',config:{test:true,ts:tsJsonb},updated_at:new Date().toISOString()});
+      if(errJsonb){
+        report+="❌ ÉCRITURE JSONB (objet) : "+errJsonb.message+"\n";
+      }else{
+        report+="✅ ÉCRITURE JSONB OK\n";
+      }
+
+      // 3. Test écriture TEXT (string)
+      const {error:errText}=await supabase.from('app_config').upsert({id:'_diag_test_text',config:JSON.stringify({test:true}),updated_at:new Date().toISOString()});
+      if(errText){
+        report+="❌ ÉCRITURE TEXT (string) : "+errText.message+"\n";
+      }else{
+        report+="✅ ÉCRITURE TEXT OK\n";
+      }
+
+      // Cleanup test rows
+      try{
+        await supabase.from('app_config').delete().in('id',['_diag_test_jsonb','_diag_test_text']);
+      }catch(e){}
+
+      // Suggestions
+      if(errJsonb&&!errText){
+        report+="\n💡 Ta colonne config est de type TEXT, pas JSONB.\nL\'app gère ça automatiquement maintenant. Réessaie de sauvegarder.";
+      }else if(!errJsonb&&errText){
+        report+="\n💡 Ta colonne config est de type JSONB. OK.";
+      }else if(errJsonb&&errText){
+        report+="\n🔴 Aucun format ne marche. Problème RLS probable.\n\nExécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+      }
+
+      alert(report);
+    }catch(e){
+      alert("❌ Exception dans le diagnostic : "+e.message+"\n\n"+e.stack);
+      console.error(e);
+    }
   };
 
   // Google Fonts presets
@@ -7551,22 +7576,34 @@ const loadConfig = async () => {
 };
 
 const saveConfig = async () => {
+  const configStr = JSON.stringify(G);
+  // Try JSONB first (object), then TEXT fallback (string)
   try {
-    const payload = JSON.stringify(G);
-    const {error} = await supabase.from('app_config').upsert({
+    const {error: errObj} = await supabase.from('app_config').upsert({
       id:'main',
-      config: G,  // JSONB column accepts object directly
+      config: G,
       updated_at: new Date().toISOString()
     });
-    if (error) {
-      console.error('[TiMat config] Erreur sauvegarde:', error.message);
-      return {ok:false, error:error.message};
+    if (!errObj) {
+      console.log('[TiMat config] Sauvegardé en JSONB ('+configStr.length+' octets)');
+      return {ok:true};
     }
-    console.log('[TiMat config] Sauvegardé ('+payload.length+' octets)');
-    return {ok:true};
+    console.warn('[TiMat config] JSONB a échoué, tentative TEXT:', errObj.message);
+    // Fallback: string
+    const {error: errStr} = await supabase.from('app_config').upsert({
+      id:'main',
+      config: configStr,
+      updated_at: new Date().toISOString()
+    });
+    if (!errStr) {
+      console.log('[TiMat config] Sauvegardé en TEXT ('+configStr.length+' octets)');
+      return {ok:true};
+    }
+    console.error('[TiMat config] Les deux formats ont échoué. JSONB:', errObj.message, 'TEXT:', errStr.message);
+    return {ok:false, error: errObj.message + ' | ' + errStr.message};
   } catch(e) {
     console.error('[TiMat config] Exception sauvegarde:', e);
-    return {ok:false, error:e.message};
+    return {ok:false, error: e.message || 'Exception inconnue'};
   }
 };
 
