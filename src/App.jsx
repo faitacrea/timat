@@ -5849,7 +5849,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
   const demos=[
     {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
-    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:"#2E5F8A",label:"Sophie Martin - L\u00e9o"},
+    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:"#2E5F8A",label:"Sophie Martin - Léo"},
     {id:"demo-parent2",email:"thomas.bernard@mail.fr",prenom:"Thomas",nom:"Bernard",role:"parent",couleur:"#3D6B50",label:"Thomas Bernard - Emma"},
   ];
 
@@ -5858,7 +5858,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     if (document.getElementById(id)) return;
     const link = document.createElement('link');
     link.id = id; link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap';
+    link.href = config.landing.googleFontsUrl || 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap';
     document.head.appendChild(link);
   }, []);
 
@@ -5875,14 +5875,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         const { data: profil } = await supabase.from("profiles").select("*").eq("id", data.user.id).single();
         onLogin(profil ? {...profil, id:data.user.id, email:data.user.email} : {id:data.user.id, email:data.user.email, prenom:"Utilisateur", role});
       }
-    } catch(e) { setErr("Erreur r\u00e9seau. V\u00e9rifiez votre connexion ou utilisez un compte d\u00e9mo."); }
+    } catch(e) { setErr("Erreur réseau. Vérifiez votre connexion ou utilisez un compte démo."); }
     setLoading(false);
   };
 
   const inscription = async () => {
     if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
-    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caract\u00e8res."); return; }
-    if (!consentValide) { setErr("Accepte la politique de confidentialit\u00e9 et les CGU pour continuer."); return; }
+    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
+    if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
     setLoading(true); setErr("");
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -5890,8 +5890,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         options: { data: { prenom: form.prenom, nom: form.nom, role } }
       });
       if (error) {
-        if(error.message?.includes('already registered')) setErr("Cet email est d\u00e9j\u00e0 utilis\u00e9. Connectez-vous.");
-        else if(error.message?.includes('fetch')) setErr("Erreur r\u00e9seau. V\u00e9rifiez votre connexion.");
+        if(error.message?.includes('already registered')) setErr("Cet email est déjà utilisé. Connectez-vous.");
+        else if(error.message?.includes('fetch')) setErr("Erreur réseau. Vérifiez votre connexion.");
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
@@ -5919,7 +5919,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
 
   return (
-    <div style={{ fontFamily: fBody, overflowX: "hidden", background: "#FDF5F8" }}>
+    <div style={{ fontFamily: fBody, overflowX: "hidden", background: L.pageBg||"#FDF5F8" }}>
       {/* HERO */}
       <div style={{ background: L.heroBg, padding: "0 24px 80px", position: "relative", overflow: "hidden" }}>
         <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:"url("+(L.heroImg||"/hero-enfants.jpg")+")", backgroundSize:"cover", backgroundPosition:"center 30%", opacity:L.heroImgOpacity||0.20 }}/>
@@ -5933,35 +5933,35 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent }} />
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "rgba(255,255,255,.12)", color: "rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Tarifs</button>
-            <button onClick={() => setShowModal(true)} style={{ background: "rgba(255,255,255,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Connexion</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement \u2192"}</button>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnTarifsBg||"rgba(255,255,255,.12)", color: L.heroBtnTarifsColor||"rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Tarifs</button>
+            <button onClick={() => setShowModal(true)} style={{ background: L.heroBtnConnexionBg||"rgba(255,255,255,.18)", color: L.heroBtnConnexionColor||"#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Connexion</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
           </div>
         </div>
         {/* Hero stats */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px", display: "flex", gap: 32, flexWrap: "wrap", justifyContent: "center" }}>
           {statsHero.map(({ n, suf, label }) => (
             <div key={label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 2 }}>{label}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
+              <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"rgba(255,255,255,.45)", marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
         {/* Hero content */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
-          <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 20 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
+          <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.15, marginBottom: 20 }}>
             {T.heroTitle}<br/>
             <span style={{ color: accent, fontStyle: "italic" }}>en comptable.</span><br/>
-            <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: "rgba(255,255,255,.75)", fontStyle: "normal" }}>{T.heroSub}</span>
+            <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: L.heroSubColor||"rgba(255,255,255,.75)", fontStyle: "normal" }}>{T.heroSub}</span>
           </div>
-          <div style={{ fontSize: "clamp(14px,2vw,17px)", color: "rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
+          <div style={{ fontSize: "clamp(14px,2vw,17px)", color: L.heroSubDescColor||"rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
-            {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
+            {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
           </div>
         </div>
       </div>
@@ -5971,24 +5971,24 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#fff", fontWeight: 700, marginBottom: 10 }}>{L.s1Title}</div>
-              <div style={{ fontSize: 15, color: "rgba(255,255,255,.5)", lineHeight: 1.7, whiteSpace:"pre-line" }}>{L.s1Desc}</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s1Title}</div>
+              <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.5)", lineHeight: 1.7, whiteSpace:"pre-line" }}>{L.s1Desc}</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
             {painPoints.map((item, i) => (
               <FadeIn key={item.titre} delay={i * 80}>
-                <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, padding: 20 }}>
+                <div style={{ background: L.s1CardBg||"rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, padding: 20 }}>
                   <div style={{ fontSize: 28, marginBottom: 10 }}>{item.ic}</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#fff", marginBottom: 6 }}>{item.titre}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,.5)", lineHeight: 1.7 }}>{item.desc}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: L.s1CardTitleColor||"#fff", marginBottom: 6 }}>{item.titre}</div>
+                  <div style={{ fontSize: 12, color: L.s1CardDescColor||"rgba(255,255,255,.5)", lineHeight: 1.7 }}>{item.desc}</div>
                 </div>
               </FadeIn>
             ))}
           </div>
           <FadeIn delay={400}>
-            <div style={{ marginTop: 40, textAlign: "center", padding: "28px 32px", background: "rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>"{L.s1Quote}"</div>
+            <div style={{ marginTop: 40, textAlign: "center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: L.s1QuoteColor||accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>"{L.s1Quote}"</div>
             </div>
           </FadeIn>
         </div>
@@ -5999,8 +5999,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
-              <div style={{ fontSize: 15, color: "#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
+              <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24, alignItems: "start" }}>
@@ -6030,17 +6030,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title}</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s3TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title}</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gap: 3 }}>
             {transformations.map(([ic, pb, sol, res], i) => (
               <FadeIn key={pb} delay={i * 60}>
-                <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center", padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? "#F8F0FC" : "#FDF5FB", border: "1px solid #DDD5C8" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center", padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F8F0FC") : (L.s3RowBg2||"#FDF5FB"), border: "1px solid #DDD5C8" }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
-                  <div><div style={{ fontSize: 10, fontWeight: 700, color: "#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Aujourd'hui</div><div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
-                  <div><div style={{ fontSize: 10, fontWeight: 700, color: "#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Avec TiMat</div><div style={{ fontSize: 13, color: "#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
-                  <div><div style={{ fontSize: 10, fontWeight: 700, color: "#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>Ce que \u00e7a change</div><div style={{ fontSize: 13, color: "#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
+                  <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
+                  <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
+                  <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelResult||"Ce que ça change"}</div><div style={{ fontSize: 13, color: L.s3ResultColor||"#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
                 </div>
               </FadeIn>
             ))}
@@ -6053,17 +6053,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: "#fff", fontWeight: 700, marginBottom: 6 }}>{L.s4Title}</div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,.4)" }}>{L.s4Sub}</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s4TitleColor||"#fff", fontWeight: 700, marginBottom: 6 }}>{L.s4Title}</div>
+              <div style={{ fontSize: 13, color: L.s4SubColor||"rgba(255,255,255,.4)" }}>{L.s4Sub}</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 24 }}>
             {statsSection.map(({ n, suf, label, desc }) => (
               <FadeIn key={label}>
                 <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(255,255,255,.04)", borderRadius: 16, border: "1px solid rgba(255,255,255,.08)" }}>
-                  <div style={{ fontFamily: fTitle, fontSize: 42, fontWeight: 700, color: accent, lineHeight: 1 }}><Counter target={n} suffix={suf} /></div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginTop: 8, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>{desc}</div>
+                  <div style={{ fontFamily: fTitle, fontSize: 42, fontWeight: 700, color: L.s4StatColor||accent, lineHeight: 1 }}><Counter target={n} suffix={suf} /></div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: L.s4StatLabelColor||"#fff", marginTop: 8, marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 11, color: L.s4StatDescColor||"rgba(255,255,255,.4)" }}>{desc}</div>
                 </div>
               </FadeIn>
             ))}
@@ -6075,20 +6075,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div style={{ background: L.section5Bg||"#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
               {L.s5Title}
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
             {testimonials.map((t, i) => (
               <FadeIn key={t.nom} delay={i * 80}>
-                <div style={{ background: "#fff", borderRadius: 16, padding: 22, border: "1px solid #DDD5C8", boxShadow: "0 2px 16px rgba(44,31,20,.06)" }}>
-                  <div style={{ color: accent, fontSize: 13, marginBottom: 10 }}>\u2b50\u2b50\u2b50\u2b50\u2b50</div>
-                  <div style={{ fontSize: 12, color: "#A68970", fontStyle: "italic", marginBottom: 8 }}>"{t.avant}"</div>
-                  <div style={{ fontSize: 13, color: "#2C1F14", lineHeight: 1.7, marginBottom: 14 }}>"{t.apres}"</div>
+                <div style={{ background: L.testimonialBg||"#fff", borderRadius: 16, padding: 22, border: "1px solid #DDD5C8", boxShadow: "0 2px 16px rgba(44,31,20,.06)" }}>
+                  <div style={{ color: L.testimonialStarColor||accent, fontSize: 13, marginBottom: 10 }}>⭐⭐⭐⭐⭐</div>
+                  <div style={{ fontSize: 12, color: L.testimonialBeforeColor||"#A68970", fontStyle: "italic", marginBottom: 8 }}>"{t.avant}"</div>
+                  <div style={{ fontSize: 13, color: L.testimonialAfterColor||"#2C1F14", lineHeight: 1.7, marginBottom: 14 }}>"{t.apres}"</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#2C1F14" }}>{t.nom}</div>
-                    <div style={{ fontSize: 11, color: "#A68970" }}>{t.ville}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: L.testimonialNameColor||"#2C1F14" }}>{t.nom}</div>
+                    <div style={{ fontSize: 11, color: L.testimonialCityColor||"#A68970" }}>{t.ville}</div>
                   </div>
                 </div>
               </FadeIn>
@@ -6101,45 +6101,45 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div id="tarifs" style={{ background: L.section6Bg||"#F5EBF8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48 }}>{L.s6Title}</div>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48 }}>{L.s6Title}</div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
             {/* Gratuit */}
-            <div style={{ background: "#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
+            <div style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: "#0D1B2A" }}>0\u20ac</span>
+                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.freePriceColor||"#0D1B2A" }}>0€</span>
               </div>
-              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour d\u00e9couvrir TiMat.</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: "#0D1B2A", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>{T.freeBtnTxt||"Commencer gratuitement"}</button>
-              {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimit\u00e9s"]].map(([ok, t], i) => (
+              <div style={{ fontSize: 13, color: L.freeDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat.</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.freeBtnBg||"#0D1B2A", color: L.freeBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>{T.freeBtnTxt||"Commencer gratuitement"}</button>
+              {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 8 ? "1px solid #DDD5C8" : "none" }}>
-                  <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "\u2713" : "\u2717"}</span>
+                  <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
                   <span style={{ color: ok ? "#2C1F14" : "#A68970" }}>{t}</span>
                 </div>
               ))}
             </div>
             {/* Pro */}
-            <div style={{ background: "#FDF5FB", borderRadius: 16, border: "2.5px solid #B8622F", padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+            <div style={{ background: L.proBg||"#FDF5FB", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
               <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>{T.proLabel}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: "#B8622F" }}>{T.prixMensuel}\u20ac</span>
+                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
                 <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
               </div>
-              <div style={{ fontSize: 11, color: "#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
-              <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
-              {["\u2728 Bilans de journ\u00e9e automatiques", "\ud83d\udcdc Bulletins de salaire complets", "\ud83c\udfdb\ufe0f Export Pajemploi en 1 clic", "\ud83d\udcd1 Attestation fiscale", "\ud83d\udcf8 Photos illimit\u00e9es", "\ud83c\udfe5 Communication PMI", "\ud83d\uddc2\ufe0f Documents illimit\u00e9s (5 Go)", "\ud83d\udc76 Enfants illimit\u00e9s", "\ud83d\udccb Solde de tout compte", "\u2709\ufe0f Courriers types", "\u2753 Centre d'aide prioritaire"].map((t, i) => (
+              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
+              <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
+              {["✨ Bilans de journée automatiques", "📜 Bulletins de salaire complets", "🏛️ Export Pajemploi en 1 clic", "📑 Attestation fiscale", "📸 Photos illimitées", "🏥 Communication PMI", "🗂️ Documents illimités (5 Go)", "👶 Enfants illimités", "📋 Solde de tout compte", "✉️ Courriers types", "❓ Centre d'aide prioritaire"].map((t, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 10 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
-                  <span style={{ color: "#3D6B50", fontWeight: 700 }}>\u2713</span>
+                  <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
                   <span style={{ color: "#2C1F14", fontWeight: i < 3 ? 700 : 400 }}>{t}</span>
                 </div>
               ))}
             </div>
           </div>
           <div style={{ textAlign: "center", marginTop: 24, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "#A68970" }}>
-            <span>\u2705 2 mois d'essai sans CB</span><span>\u2705 R\u00e9siliable en 1 clic</span><span>\u2705 Donn\u00e9es en France \ud83c\uddeb\ud83c\uddf7</span>
+            <span>✅ 2 mois d'essai sans CB</span><span>✅ Résiliable en 1 clic</span><span>✅ Données en France 🇫🇷</span>
           </div>
         </div>
       </div>
@@ -6147,14 +6147,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       {/* CTA FINAL */}
       <div style={{ background: L.ctaBg||"linear-gradient(135deg,#5C3370,#9B6BAA)", padding: "72px 24px", textAlign: "center" }}>
         <FadeIn>
-          <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: "#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
-            {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilit\u00e9.")[0]}
+          <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
+            {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
             <span style={{ color: accent, fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
-            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: "rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
+            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
           </div>
-          <div style={{ fontSize: 16, color: "rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
-          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
-          <div style={{ marginTop: 16, fontSize: 12, color: "rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
+          <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
+          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
+          <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
         </FadeIn>
       </div>
 
@@ -6163,7 +6163,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div onClick={e => e.target === e.currentTarget && setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#7B4B2A" }}>
-              {[{ r: "asmat", ic: "\ud83d\udc69\u200d\ud83d\udc67", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "\ud83d\udc6a", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
+              {[{ r: "asmat", ic: "👩‍👧", l: "Assistante\nmaternelle", col: "#B8622F" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E5F8A" }].map(({ r, ic, l, col }) => (
                 <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? "3px solid "+col+"44" : "none", transition: "all .2s", fontFamily:"inherit" }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(255,255,255,.4)", whiteSpace: "pre-line", lineHeight: 1.3 }}>{l}</div>
@@ -6174,19 +6174,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>{role === "asmat" ? "Espace pro" : "Espace famille"}</div>
-                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits \u00b7 sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
+                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
                 </div>
-                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>\u2715</button>
+                <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
               </div>
               <div style={{ display:"flex", marginBottom:16, background:"#F4EFF8", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
-                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Cr\u00e9er un compte" : "Se connecter"}</button>
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
               </div>
               {modeAuth === "inscription" && <>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
                   <div>
-                    <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Pr\u00e9nom *</div>
+                    <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Prénom *</div>
                     <input value={form.prenom} onChange={e=>setForm(f=>({...f,prenom:e.target.value}))} placeholder={role==="asmat"?"Marie":"Sophie"} style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
                   </div>
                   <div>
@@ -6201,35 +6201,35 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caract\u00e8res minimum" : "Votre mot de passe"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F4EFF8", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos donn\u00e9es</div>
-                {[{k:"politique", l:"J'accepte la politique de confidentialit\u00e9", req:true},{k:"cgu", l:"J'accepte les conditions g\u00e9n\u00e9rales d'utilisation", req:true},{k:"newsletter", l:"Recevoir les actualit\u00e9s TiMat (optionnel)", req:false}].map(({k,l,req}) => (
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
+                {[{k:"politique", l:"J'accepte la politique de confidentialité", req:true},{k:"cgu", l:"J'accepte les conditions générales d'utilisation", req:true},{k:"newsletter", l:"Recevoir les actualités TiMat (optionnel)", req:false}].map(({k,l,req}) => (
                   <label key={k} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer", marginBottom:7 }}>
                     <input type="checkbox" checked={consent[k]} onChange={e=>setConsent(c=>({...c,[k]:e.target.checked}))} style={{ width:14, height:14, marginTop:2, accentColor: role==="asmat"?"#B8622F":"#2E5F8A", flexShrink:0 }} />
                     <span style={{ fontSize:11, color:"#2C1F14", lineHeight:1.5 }}>{l}{req&&<span style={{color:"#B84060",fontWeight:700}}> *</span>}</span>
                   </label>
                 ))}
-                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire \u00b7 Donn\u00e9es h\u00e9berg\u00e9es en France \u00b7 Suppression possible \u00e0 tout moment</div>
+                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               {err && <div style={{ color:"#C44A6A", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
               <button onClick={modeAuth==="connexion" ? connexion : inscription} disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
-                {loading ? "\u23f3 Chargement\u2026" : modeAuth==="connexion" ? (role==="asmat" ? "Acc\u00e9der \u00e0 mon espace \u2192" : "Acc\u00e9der \u00e0 l'espace famille \u2192") : (role==="asmat" ? "Cr\u00e9er mon espace pro \u2192" : "Cr\u00e9er mon compte parent \u2192")}
+                {loading ? "⏳ Chargement…" : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou d\u00e9mo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
+                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou démo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
               </div>
               <div style={{ background:"#F7F2EC", borderRadius:10, padding:10 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte asmat d\u00e9mo" : "Comptes parents d\u00e9mo"}</div>
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte asmat démo" : "Comptes parents démo"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
                   <button key={d.id} onClick={()=>onLogin(d)} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
-                    {d.role==="asmat"?"\ud83d\udc69\u200d\ud83d\udc67":"\ud83d\udc6a"} {d.label}
+                    {d.role==="asmat"?"👩‍👧":"👪"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
                   </button>
                 ))}
               </div>
-              <div style={{ marginTop:12, fontSize:11, color:"#A68970", textAlign:"center" }}>Donn\u00e9es h\u00e9berg\u00e9es en France \u00b7 Aucun engagement</div>
+              <div style={{ marginTop:12, fontSize:11, color:"#A68970", textAlign:"center" }}>Données hébergées en France · Aucun engagement</div>
             </div>
           </div>
         </div>
@@ -6772,12 +6772,13 @@ const ADMIN_EMAIL = "faitacreapro@gmail.com";
 
 function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [sec,setSec]=useState("hero");
+  const [subSec,setSubSec]=useState("textes");
   const [saving,setSaving]=useState(false);
   const [toast,setToast]=useState("");
   const [stats,setStats]=useState({users:0,pro:0,enfants:0});
   const [showPreview,setShowPreview]=useState(true);
+  const [search,setSearch]=useState("");
 
-  // Local editing state = deep copy of appConfig
   const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
 
   useEffect(()=>{
@@ -6790,235 +6791,478 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     load();
   },[]);
 
-  // Helpers to update nested config
+  // Live preview: apply colors to DOM as cfg changes
+  useEffect(()=>{
+    applyColsToDOM(cfg.cols);
+  },[cfg.cols]);
+
+  // Helpers
   const setCol=(k,v)=>setCfg(c=>({...c,cols:{...c.cols,[k]:v}}));
   const setTxt=(k,v)=>setCfg(c=>({...c,txts:{...c.txts,[k]:v}}));
   const setLand=(k,v)=>setCfg(c=>({...c,landing:{...c.landing,[k]:v}}));
   const setFeat=(k,v)=>setCfg(c=>({...c,feats:{...c.feats,[k]:v}}));
   const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
+  const setTransfo=(idx,pos,v)=>setCfg(c=>{const tt=[...(c.transformations||[])];const row=[...tt[idx]];row[pos]=v;tt[idx]=row;return{...c,transformations:tt};});
   const setTesti=(idx,field,v)=>setCfg(c=>{const tt=[...(c.testimonials||[])];tt[idx]={...tt[idx],[field]:v};return{...c,testimonials:tt};});
   const setStat=(which,idx,field,v)=>setCfg(c=>{const ss=[...(c[which]||[])];ss[idx]={...ss[idx],[field]:field==="n"?Number(v):v};return{...c,[which]:ss};});
+  const addPain=()=>setCfg(c=>({...c,painPoints:[...(c.painPoints||[]),{ic:"✨",titre:"Nouveau",desc:"Description"}]}));
+  const removePain=(idx)=>setCfg(c=>({...c,painPoints:(c.painPoints||[]).filter((_,i)=>i!==idx)}));
+  const addTesti=()=>setCfg(c=>({...c,testimonials:[...(c.testimonials||[]),{nom:"Nouveau",ville:"Ville",avant:"Avant...",apres:"Après..."}]}));
+  const removeTesti=(idx)=>setCfg(c=>({...c,testimonials:(c.testimonials||[]).filter((_,i)=>i!==idx)}));
 
   const sauvegarder=async()=>{
     setSaving(true);
-    // Push to global G + parent state
     Object.assign(G, JSON.parse(JSON.stringify(cfg)));
     applyColsToDOM(cfg.cols);
     setAppConfig(JSON.parse(JSON.stringify(cfg)));
     const ok=await saveConfig();
-    setToast(ok?"Sauvegard\u00e9 ! Les changements sont en ligne.":"Erreur - cr\u00e9e la table app_config d'abord");
+    setToast(ok?"✅ Sauvegardé ! Les changements sont en ligne.":"❌ Erreur - crée la table app_config d\'abord");
     setSaving(false);
   };
 
-  const reset=()=>{setCfg(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));setToast("Config r\u00e9initialis\u00e9e (non sauvegard\u00e9e)");};
+  const reset=()=>{
+    if(!window.confirm("Réinitialiser toute la config ? Les modifications non sauvegardées seront perdues."))return;
+    setCfg(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
+    setToast("🔄 Config réinitialisée (cliquer Sauvegarder pour valider)");
+  };
 
-  const secs=[
-    {id:"hero",l:"Hero",ic:"\ud83c\udfe0"},
-    {id:"couleurs",l:"Couleurs",ic:"\ud83c\udfa8"},
-    {id:"sections",l:"Sections",ic:"\ud83d\udcdd"},
-    {id:"temoignages",l:"T\u00e9moignages",ic:"\u2b50"},
-    {id:"stats_edit",l:"Statistiques",ic:"\ud83d\udcca"},
-    {id:"boutons",l:"Boutons",ic:"\ud83d\udd18"},
-    {id:"modules",l:"Modules",ic:"\u2699\ufe0f"},
+  // Google Fonts presets
+  const FONT_PRESETS=[
+    {name:"Fraunces + Jakarta (défaut)",title:"\'Fraunces\', Georgia, serif",body:"\'Plus Jakarta Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap"},
+    {name:"Playfair + Inter",title:"\'Playfair Display\', serif",body:"\'Inter\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap"},
+    {name:"Cormorant + Lato",title:"\'Cormorant Garamond\', serif",body:"\'Lato\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Lato:wght@400;700&display=swap"},
+    {name:"DM Serif + DM Sans",title:"\'DM Serif Display\', serif",body:"\'DM Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap"},
+    {name:"Poppins partout",title:"\'Poppins\', sans-serif",body:"\'Poppins\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"},
+    {name:"Montserrat + Open Sans",title:"\'Montserrat\', sans-serif",body:"\'Open Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&display=swap"},
+    {name:"Raleway + Roboto",title:"\'Raleway\', sans-serif",body:"\'Roboto\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Raleway:wght@600;700;800&family=Roboto:wght@400;500;700&display=swap"},
+    {name:"Merriweather + Source Sans",title:"\'Merriweather\', serif",body:"\'Source Sans Pro\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Source+Sans+Pro:wght@400;600;700&display=swap"},
   ];
 
-  const ColPicker=({label,k,state,setter})=>(
+  const applyFontPreset=(p)=>{
+    setLand("fontTitle",p.title);
+    setLand("fontBody",p.body);
+    setLand("googleFontsUrl",p.url);
+    setToast("🎨 Police \""+p.name+"\" appliquée");
+  };
+
+  // --- Reusable components ---
+  const Field=({label,children,hint})=>(
     <div style={{marginBottom:10}}>
-      <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:4}}>{label}</div>
-      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-        <input type="color"value={state[k]||"#000000"}onChange={e=>setter(k,e.target.value)} style={{width:36,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1}}/>
-        <input className="inp"style={{flex:1,fontSize:11,padding:"5px 8px"}} value={state[k]||""}onChange={e=>setter(k,e.target.value)}/>
-      </div>
+      <div style={{fontSize:10,fontWeight:700,color:"var(--m)",marginBottom:3,textTransform:"uppercase",letterSpacing:".4px"}}>{label}</div>
+      {children}
+      {hint&&<div style={{fontSize:10,color:"var(--l)",marginTop:3,fontStyle:"italic"}}>{hint}</div>}
     </div>
   );
 
-  const TxtField=({label,k,state,setter,multi})=>(
-    <div style={{marginBottom:10}}>
-      <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:4}}>{label}</div>
-      {multi?<textarea className="inp"rows={3}style={{fontSize:11,padding:"6px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}/>
-        :<input className="inp"style={{fontSize:11,padding:"5px 8px"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}/>}
+  const ColorInput=({k,state,setter})=>{
+    const v=state[k]||"";
+    const isSolid=/^#[0-9a-fA-F]{3,8}$/.test(v);
+    return (
+      <div style={{display:"flex",gap:4,alignItems:"center"}}>
+        {isSolid&&<input type="color"value={v.slice(0,7)}onChange={e=>setter(k,e.target.value)} style={{width:32,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1,flexShrink:0}}/>}
+        <input className="inp"style={{flex:1,fontSize:10,padding:"5px 7px",minWidth:0}}value={v}onChange={e=>setter(k,e.target.value)}placeholder="#rrggbb ou rgba(...) ou gradient"/>
+        <div style={{width:20,height:20,borderRadius:4,background:v||"transparent",border:"1px solid var(--br)",flexShrink:0}}/>
+      </div>
+    );
+  };
+
+  const TextInput=({k,state,setter,multi,placeholder})=>(
+    multi
+      ?<textarea className="inp"rows={3}style={{fontSize:11,padding:"6px 8px",resize:"vertical",width:"100%",boxSizing:"border-box",fontFamily:"inherit"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
+      :<input className="inp"style={{fontSize:11,padding:"6px 8px",width:"100%",boxSizing:"border-box"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
+  );
+
+  const NumInput=({k,state,setter,min,max,step})=>(
+    <input type="number"className="inp"min={min}max={max}step={step}style={{fontSize:11,padding:"6px 8px",width:"100%",boxSizing:"border-box"}}value={state[k]||0}onChange={e=>setter(k,parseFloat(e.target.value))}/>
+  );
+
+  const Card=({title,icon,children})=>(
+    <div className="card"style={{padding:14,marginBottom:10}}>
+      {title&&<div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"var(--b)",display:"flex",alignItems:"center",gap:6,paddingBottom:8,borderBottom:"1px solid var(--br)"}}>
+        {icon&&<span style={{fontSize:14}}>{icon}</span>}{title}
+      </div>}
+      {children}
     </div>
   );
+
+  // Helper to filter by search
+  const matches=(txt)=>!search||txt.toLowerCase().includes(search.toLowerCase());
+
+  // Main nav sections
+  const secs=[
+    {id:"hero",l:"Hero",ic:"🏠"},
+    {id:"sections",l:"Sections",ic:"📝"},
+    {id:"textes",l:"Textes",ic:"✏️"},
+    {id:"couleurs",l:"Couleurs",ic:"🎨"},
+    {id:"boutons",l:"Boutons",ic:"🔘"},
+    {id:"polices",l:"Polices",ic:"𝐓"},
+    {id:"contenu",l:"Contenu",ic:"📋"},
+    {id:"app",l:"App",ic:"⚙️"},
+  ];
 
   return <div className="fi" style={{maxWidth:"100%",padding:0}}>
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
 
     {/* Top bar */}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",borderBottom:"1px solid var(--br)",background:"var(--w)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid var(--br)",background:"var(--w)",flexWrap:"wrap",gap:8}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={()=>setPage("accueil")}>\u2190 App</button>
-        <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>\ud83d\udd27 Backoffice</span>
+        <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={()=>setPage("accueil")}>← App</button>
+        <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>🔧 Backoffice</span>
+        <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
       </div>
       <div style={{display:"flex",gap:6}}>
-        <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"\ud83d\udc41 Masquer aper\u00e7u":"\ud83d\udc41 Afficher aper\u00e7u"}</button>
-        <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={reset}>\u21ba Reset</button>
-        <button className="btn bT"style={{fontSize:11,padding:"5px 14px"}}onClick={sauvegarder}disabled={saving}>{saving?"\u23f3":"Sauvegarder"}</button>
+        <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
+        <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={reset}>↺ Reset</button>
+        <button className="btn bT"style={{fontSize:11,padding:"5px 14px"}}onClick={sauvegarder}disabled={saving}>{saving?"⏳":"💾 Sauvegarder"}</button>
       </div>
     </div>
 
-    <div style={{display:"flex",height:"calc(100vh - 56px)",overflow:"hidden"}}>
-      {/* LEFT: Editor */}
-      <div style={{width:showPreview?"420px":"100%",minWidth:320,overflowY:"auto",padding:16,borderRight:"1px solid var(--br)",background:"var(--c)",transition:"width .3s"}}>
-        {/* Tabs */}
-        <div style={{display:"flex",gap:4,marginBottom:16,flexWrap:"wrap"}}>
+    <div style={{display:"flex",height:"calc(100vh - 52px)",overflow:"hidden"}}>
+      {/* LEFT PANEL */}
+      <div style={{width:showPreview?"460px":"100%",minWidth:340,overflowY:"auto",padding:12,borderRight:"1px solid var(--br)",background:"var(--c)",transition:"width .3s"}}>
+
+        {/* Main tabs */}
+        <div style={{display:"flex",gap:3,marginBottom:12,flexWrap:"wrap"}}>
           {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
-            padding:"6px 12px",borderRadius:16,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11,
+            padding:"5px 10px",borderRadius:14,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11,
             background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",color:sec===s.id?"#fff":"var(--m)",transition:"all .15s"
           }}>{s.ic} {s.l}</button>)}
         </div>
 
-        {/* === HERO === */}
-        {sec==="hero"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfe0 Contenu du hero</div>
-            <TxtField label="Badge (bandeau haut)" k="heroBadge" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Titre principal" k="heroTitle" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Sous-titre" k="heroSub" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Description sous les stats" k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/>
-            <TxtField label="Tags (s\u00e9par\u00e9s par des virgules)" k="heroTags" state={cfg.txts} setter={setTxt}/>
-          </div>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udcf8 Image de fond</div>
-            <TxtField label="URL de l'image hero" k="heroImg" state={cfg.landing} setter={setLand}/>
-            <div style={{marginBottom:10}}>
-              <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:4}}>Opacit\u00e9 ({Math.round((cfg.landing.heroImgOpacity||0.2)*100)}%)</div>
+        {/* ====================== HERO ====================== */}
+        {sec==="hero"&&<>
+          <Card title="Image de fond" icon="📸">
+            <Field label="URL de l\'image">
+              <TextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="/hero-enfants.jpg ou https://..."/>
+            </Field>
+            <Field label={`Opacité (${Math.round((cfg.landing.heroImgOpacity||0.2)*100)}%)`}>
               <input type="range"min="0"max="1"step="0.05"value={cfg.landing.heroImgOpacity||0.2} onChange={e=>setLand("heroImgOpacity",parseFloat(e.target.value))} style={{width:"100%"}}/>
-            </div>
-            <TxtField label="Fond hero (gradient CSS)" k="heroBg" state={cfg.landing} setter={setLand}/>
-            <div style={{height:24,borderRadius:6,background:cfg.landing.heroBg,border:"1px solid var(--br)"}}/>
-          </div>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfa8 Style</div>
-            <TxtField label="Couleur d'accent (dor\u00e9)" k="accentColor" state={cfg.landing} setter={setLand}/>
-            <TxtField label="Police titres" k="fontTitle" state={cfg.landing} setter={setLand}/>
-            <TxtField label="Police corps" k="fontBody" state={cfg.landing} setter={setLand}/>
-          </div>
-        </div>}
+            </Field>
+            <Field label="Fond hero (gradient / couleur)">
+              <ColorInput k="heroBg" state={cfg.landing} setter={setLand}/>
+            </Field>
+          </Card>
 
-        {/* === COULEURS APP === */}
-        {sec==="couleurs"&&<div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfa8 Palette de l'application</div>
-          {[["T","Principale (terracotta)"],["S","Secondaire (mauve)"],["G","Vert (succ\u00e8s)"],["R","Rouge/Rose (alertes)"],["c","Fond g\u00e9n\u00e9ral"],["w","Fond cartes"],["b","Texte principal"]].map(([k,l])=>
-            <ColPicker key={k}label={l}k={k}state={cfg.cols}setter={setCol}/>
-          )}
-        </div>}
+          <Card title="Textes du hero" icon="📝">
+            <Field label="Badge (bandeau jaune)"><TextInput k="heroBadge" state={cfg.txts} setter={setTxt}/></Field>
+            <Field label="Titre principal"><TextInput k="heroTitle" state={cfg.txts} setter={setTxt}/></Field>
+            <Field label="Sous-titre (grand)"><TextInput k="heroSub" state={cfg.txts} setter={setTxt}/></Field>
+            <Field label="Description sous titre" hint="Utilise \\n pour un retour à la ligne"><TextInput k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/></Field>
+            <Field label="Tags (séparés par virgule)"><TextInput k="heroTags" state={cfg.txts} setter={setTxt}/></Field>
+          </Card>
 
-        {/* === SECTIONS === */}
-        {sec==="sections"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <Card title="Couleurs du hero" icon="🎨">
+            <Field label="Couleur titre"><ColorInput k="heroTitleColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur sous-titre"><ColorInput k="heroSubColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur description"><ColorInput k="heroSubDescColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur badge (texte)"><ColorInput k="heroBadgeColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Fond badge"><ColorInput k="heroBadgeBg" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur tags"><ColorInput k="heroTagsColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur stats (chiffres)"><ColorInput k="heroStatsColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur labels stats"><ColorInput k="heroStatsLabelColor" state={cfg.landing} setter={setLand}/></Field>
+            <Field label="Couleur d\'accent (italique)"><ColorInput k="accentColor" state={cfg.landing} setter={setLand}/></Field>
+          </Card>
+        </>}
+
+        {/* ====================== SECTIONS ====================== */}
+        {sec==="sections"&&<>
           {[
-            {id:"s1",title:"Section 1 \u2014 Probl\u00e8matique",fields:[{k:"s1Title",l:"Titre"},{k:"s1Desc",l:"Description",multi:true},{k:"s1Quote",l:"Citation",multi:true},{k:"section1Bg",l:"Fond (gradient/couleur)"}]},
-            {id:"s2",title:"Section 2 \u2014 D\u00e9mo",fields:[{k:"s2Title",l:"Titre"},{k:"s2Desc",l:"Description"}]},
-            {id:"s3",title:"Section 3 \u2014 Transformation",fields:[{k:"s3Title",l:"Titre"},{k:"section3Bg",l:"Fond"}]},
-            {id:"s4",title:"Section 4 \u2014 Chiffres",fields:[{k:"s4Title",l:"Titre"},{k:"s4Sub",l:"Sous-titre"},{k:"section4Bg",l:"Fond"}]},
-            {id:"s5",title:"Section 5 \u2014 T\u00e9moignages",fields:[{k:"s5Title",l:"Titre"},{k:"section5Bg",l:"Fond"}]},
-            {id:"s6",title:"Section 6 \u2014 Tarifs",fields:[{k:"s6Title",l:"Titre"},{k:"section6Bg",l:"Fond"},{k:"prixMensuel",l:"Prix mensuel",isTxt:true},{k:"prixEssai",l:"Dur\u00e9e essai",isTxt:true}]},
-            {id:"cta",title:"CTA Final",fields:[{k:"ctaTitle",l:"Titre (avant accent)",multi:true},{k:"ctaTitleAccent",l:"Texte accent"},{k:"ctaSubTitle",l:"Sous-titre"},{k:"ctaBg",l:"Fond"}]},
-          ].map(section=><div key={section.id}className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>{section.title}</div>
-            {section.fields.map(f=><TxtField key={f.k}label={f.l}k={f.k}state={f.isTxt?cfg.txts:cfg.landing}setter={f.isTxt?setTxt:setLand}multi={f.multi}/>)}
-          </div>)}
-        </div>}
+            {key:"s1",titre:"Section 1 - Problématique",icon:"🔥",fields:[
+              {k:"s1Title",l:"Titre",type:"txt"},{k:"s1Desc",l:"Description",type:"txt",multi:true},{k:"s1Quote",l:"Citation finale",type:"txt",multi:true},
+              {k:"section1Bg",l:"Fond section",type:"col"},{k:"s1TitleColor",l:"Couleur titre",type:"col"},{k:"s1DescColor",l:"Couleur description",type:"col"},
+              {k:"s1CardBg",l:"Fond des cards",type:"col"},{k:"s1CardTitleColor",l:"Couleur titre cards",type:"col"},{k:"s1CardDescColor",l:"Couleur texte cards",type:"col"},
+              {k:"s1QuoteBg",l:"Fond citation",type:"col"},{k:"s1QuoteColor",l:"Couleur citation",type:"col"},
+            ]},
+            {key:"s2",titre:"Section 2 - Démo interactive",icon:"🎬",fields:[
+              {k:"s2Title",l:"Titre",type:"txt"},{k:"s2Desc",l:"Description",type:"txt"},
+              {k:"section2Bg",l:"Fond section",type:"col"},{k:"s2TitleColor",l:"Couleur titre",type:"col"},{k:"s2DescColor",l:"Couleur description",type:"col"},
+            ]},
+            {key:"s3",titre:"Section 3 - Transformation",icon:"🔄",fields:[
+              {k:"s3Title",l:"Titre",type:"txt"},
+              {k:"s3LabelBefore",l:"Label \"Avant\"",type:"txt"},{k:"s3LabelAfter",l:"Label \"Avec TiMat\"",type:"txt"},{k:"s3LabelResult",l:"Label \"Résultat\"",type:"txt"},
+              {k:"section3Bg",l:"Fond section",type:"col"},{k:"s3TitleColor",l:"Couleur titre",type:"col"},
+              {k:"s3RowBg1",l:"Fond rangée 1",type:"col"},{k:"s3RowBg2",l:"Fond rangée 2",type:"col"},
+              {k:"s3LabelBeforeColor",l:"Couleur label Avant",type:"col"},{k:"s3LabelAfterColor",l:"Couleur label Avec TiMat",type:"col"},{k:"s3LabelResultColor",l:"Couleur label Résultat",type:"col"},
+              {k:"s3TextColor",l:"Couleur texte",type:"col"},{k:"s3ResultColor",l:"Couleur texte résultat",type:"col"},
+            ]},
+            {key:"s4",titre:"Section 4 - Statistiques",icon:"📊",fields:[
+              {k:"s4Title",l:"Titre",type:"txt"},{k:"s4Sub",l:"Sous-titre",type:"txt"},
+              {k:"section4Bg",l:"Fond section",type:"col"},{k:"s4TitleColor",l:"Couleur titre",type:"col"},{k:"s4SubColor",l:"Couleur sous-titre",type:"col"},
+              {k:"s4StatColor",l:"Couleur chiffres",type:"col"},{k:"s4StatLabelColor",l:"Couleur labels",type:"col"},{k:"s4StatDescColor",l:"Couleur descriptions",type:"col"},
+            ]},
+            {key:"s5",titre:"Section 5 - Témoignages",icon:"⭐",fields:[
+              {k:"s5Title",l:"Titre",type:"txt"},
+              {k:"section5Bg",l:"Fond section",type:"col"},{k:"s5TitleColor",l:"Couleur titre",type:"col"},
+              {k:"testimonialBg",l:"Fond cards témoignages",type:"col"},{k:"testimonialNameColor",l:"Couleur nom",type:"col"},
+              {k:"testimonialCityColor",l:"Couleur ville",type:"col"},{k:"testimonialBeforeColor",l:"Couleur citation \"avant\"",type:"col"},
+              {k:"testimonialAfterColor",l:"Couleur citation \"après\"",type:"col"},{k:"testimonialStarColor",l:"Couleur étoiles",type:"col"},
+            ]},
+            {key:"s6",titre:"Section 6 - Tarifs",icon:"💰",fields:[
+              {k:"s6Title",l:"Titre",type:"txt"},
+              {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
+              {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
+              {k:"freeLabel",l:"Label Gratuit",type:"txt",inTxts:true},
+              {k:"section6Bg",l:"Fond section",type:"col"},{k:"s6TitleColor",l:"Couleur titre",type:"col"},
+              {k:"freeBg",l:"Fond card Gratuit",type:"col"},{k:"freeLabelColor",l:"Couleur label Gratuit",type:"col"},
+              {k:"freePriceColor",l:"Couleur prix Gratuit",type:"col"},{k:"freeDescColor",l:"Couleur description Gratuit",type:"col"},
+              {k:"proBg",l:"Fond card Pro",type:"col"},{k:"proBorderColor",l:"Bordure Pro",type:"col"},
+              {k:"proLabelColor",l:"Couleur label Pro",type:"col"},{k:"proPriceColor",l:"Couleur prix Pro",type:"col"},
+              {k:"proSubColor",l:"Couleur texte sous prix",type:"col"},{k:"proDescColor",l:"Couleur description Pro",type:"col"},
+            ]},
+            {key:"cta",titre:"CTA Final",icon:"🎯",fields:[
+              {k:"ctaTitle",l:"Titre (avec \\n)",type:"txt",multi:true},{k:"ctaTitleAccent",l:"Accent (italique)",type:"txt"},{k:"ctaSubTitle",l:"Sous-titre",type:"txt"},
+              {k:"ctaSub",l:"Texte descriptif",type:"txt",inTxts:true},{k:"ctaBtnTxt",l:"Texte bouton",type:"txt",inTxts:true},{k:"ctaFooter",l:"Footer",type:"txt",inTxts:true},
+              {k:"ctaBg",l:"Fond section",type:"col"},{k:"ctaTitleColor",l:"Couleur titre",type:"col"},
+              {k:"ctaSubTitleColor",l:"Couleur sous-titre",type:"col"},{k:"ctaSubColor",l:"Couleur descriptif",type:"col"},{k:"ctaFooterColor",l:"Couleur footer",type:"col"},
+            ]},
+          ].filter(s=>matches(s.titre)||s.fields.some(f=>matches(f.l))).map(s=>
+            <Card key={s.key} title={s.titre} icon={s.icon}>
+              {s.fields.filter(f=>!search||matches(f.l)).map(f=>
+                <Field key={f.k} label={f.l}>
+                  {f.type==="col"?<ColorInput k={f.k} state={cfg.landing} setter={setLand}/>
+                  :<TextInput k={f.k} state={f.inTxts?cfg.txts:cfg.landing} setter={f.inTxts?setTxt:setLand} multi={f.multi}/>}
+                </Field>
+              )}
+            </Card>
+          )}
+        </>}
 
-        {/* === TEMOIGNAGES === */}
-        {sec==="temoignages"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {(cfg.testimonials||[]).map((t,i)=><div key={i}className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:12,marginBottom:8,color:"var(--b)"}}>\u2b50 T\u00e9moignage {i+1}</div>
-            {[["nom","Nom"],["ville","Ville"],["avant","Avant (citation)"],["apres","Apr\u00e8s (t\u00e9moignage)"]].map(([k,l])=>
-              <div key={k}style={{marginBottom:8}}>
-                <div style={{fontSize:11,fontWeight:600,color:"var(--m)",marginBottom:3}}>{l}</div>
-                {k==="apres"?<textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>
-                  :<input className="inp"style={{fontSize:11,padding:"5px 8px"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>}
-              </div>
+        {/* ====================== TEXTES (tous) ====================== */}
+        {sec==="textes"&&<>
+          <Card title="Hero" icon="🏠">
+            {[["heroBadge","Badge"],["heroTitle","Titre"],["heroSub","Sous-titre"],["heroSubDesc","Description",true],["heroTags","Tags (séparés par ,)"],["heroBtnPrimTxt","Texte bouton principal"],["heroBtnSecTxt","Texte bouton secondaire"],["heroBtnNavTxt","Texte bouton nav"]].filter(([,l])=>matches(l)).map(([k,l,m])=>
+              <Field key={k} label={l}><TextInput k={k} state={cfg.txts} setter={setTxt} multi={m}/></Field>
             )}
-          </div>)}
-        </div>}
+          </Card>
+          <Card title="Sections" icon="📝">
+            {[["s1Title","Section 1 - Titre"],["s1Desc","Section 1 - Description",true],["s1Quote","Section 1 - Citation",true],
+              ["s2Title","Section 2 - Titre"],["s2Desc","Section 2 - Description"],
+              ["s3Title","Section 3 - Titre"],["s3LabelBefore","Section 3 - Label Avant"],["s3LabelAfter","Section 3 - Label Avec TiMat"],["s3LabelResult","Section 3 - Label Résultat"],
+              ["s4Title","Section 4 - Titre"],["s4Sub","Section 4 - Sous-titre"],
+              ["s5Title","Section 5 - Titre"],["s6Title","Section 6 - Titre"],
+              ["ctaTitle","CTA - Titre (\\n pour saut)",true],["ctaTitleAccent","CTA - Texte accent"],["ctaSubTitle","CTA - Sous-titre"]
+            ].filter(([,l])=>matches(l)).map(([k,l,m])=>
+              <Field key={k} label={l}><TextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></Field>
+            )}
+          </Card>
+          <Card title="Tarifs et CTA" icon="💰">
+            {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <Field key={k} label={l}><TextInput k={k} state={cfg.txts} setter={setTxt}/></Field>
+            )}
+          </Card>
+        </>}
 
-        {/* === STATS EDIT === */}
-        {sec==="stats_edit"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udcca Stats du hero (bandeau haut)</div>
-            {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"60px 40px 1fr",gap:6,marginBottom:6}}>
+        {/* ====================== COULEURS (globales + par élément) ====================== */}
+        {sec==="couleurs"&&<>
+          <Card title="Palette de l\'application" icon="🎨">
+            {[["T","Principale (terracotta)"],["S","Secondaire (mauve)"],["G","Vert (succès)"],["R","Rouge/Rose (alertes)"],["c","Fond général"],["w","Fond cartes"],["b","Texte principal"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <Field key={k} label={l}><ColorInput k={k} state={cfg.cols} setter={setCol}/></Field>
+            )}
+          </Card>
+          <Card title="Fonds de sections landing" icon="🖼️">
+            {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","Section 1 (problème)"],["section2Bg","Section 2 (démo)"],["section3Bg","Section 3 (transfo)"],["section4Bg","Section 4 (stats)"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section 6 (tarifs)"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <Field key={k} label={l}><ColorInput k={k} state={cfg.landing} setter={setLand}/></Field>
+            )}
+          </Card>
+          <Card title="Couleur d\'accent globale" icon="✨">
+            <Field label="Couleur accent (stats, italique, étoiles par défaut)"><ColorInput k="accentColor" state={cfg.landing} setter={setLand}/></Field>
+          </Card>
+          <Card title="Hero - couleurs de texte" icon="🏠">
+            {[["heroTitleColor","Titre hero"],["heroSubColor","Sous-titre"],["heroSubDescColor","Description"],["heroBadgeColor","Badge - texte"],["heroBadgeBg","Badge - fond"],["heroTagsColor","Tags"],["heroStatsColor","Stats (chiffres)"],["heroStatsLabelColor","Stats (labels)"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <Field key={k} label={l}><ColorInput k={k} state={cfg.landing} setter={setLand}/></Field>
+            )}
+          </Card>
+          <Card title="Sections 1 à 6 - couleurs texte" icon="📑">
+            {[["s1TitleColor","S1 - Titre"],["s1DescColor","S1 - Description"],["s1CardBg","S1 - Fond cards"],["s1CardTitleColor","S1 - Titre cards"],["s1CardDescColor","S1 - Texte cards"],["s1QuoteBg","S1 - Fond citation"],["s1QuoteColor","S1 - Citation"],
+              ["s2TitleColor","S2 - Titre"],["s2DescColor","S2 - Description"],
+              ["s3TitleColor","S3 - Titre"],["s3RowBg1","S3 - Fond rangée 1"],["s3RowBg2","S3 - Fond rangée 2"],["s3LabelBeforeColor","S3 - Label Avant"],["s3LabelAfterColor","S3 - Label Avec TiMat"],["s3LabelResultColor","S3 - Label Résultat"],["s3TextColor","S3 - Texte"],["s3ResultColor","S3 - Texte résultat"],
+              ["s4TitleColor","S4 - Titre"],["s4SubColor","S4 - Sous-titre"],["s4StatColor","S4 - Chiffres"],["s4StatLabelColor","S4 - Labels stats"],["s4StatDescColor","S4 - Descriptions"],
+              ["s5TitleColor","S5 - Titre"],["testimonialBg","S5 - Fond cards"],["testimonialNameColor","S5 - Nom"],["testimonialCityColor","S5 - Ville"],["testimonialBeforeColor","S5 - Texte avant"],["testimonialAfterColor","S5 - Texte après"],["testimonialStarColor","S5 - Étoiles"],
+              ["s6TitleColor","S6 - Titre"],["freeBg","S6 - Fond Gratuit"],["freeLabelColor","S6 - Label Gratuit"],["freePriceColor","S6 - Prix Gratuit"],["freeDescColor","S6 - Description Gratuit"],["proBg","S6 - Fond Pro"],["proBorderColor","S6 - Bordure Pro"],["proLabelColor","S6 - Label Pro"],["proPriceColor","S6 - Prix Pro"],["proSubColor","S6 - Sous-prix Pro"],["proDescColor","S6 - Description Pro"],
+              ["ctaTitleColor","CTA - Titre"],["ctaSubTitleColor","CTA - Sous-titre"],["ctaSubColor","CTA - Descriptif"],["ctaFooterColor","CTA - Footer"]
+            ].filter(([,l])=>matches(l)).map(([k,l])=>
+              <Field key={k} label={l}><ColorInput k={k} state={cfg.landing} setter={setLand}/></Field>
+            )}
+          </Card>
+        </>}
+
+        {/* ====================== BOUTONS ====================== */}
+        {sec==="boutons"&&<>
+          {[
+            {titre:"Bouton NAV \"Commencer\"",icon:"🔸",fields:[["heroBtnNavTxt","Texte",true],["heroBtnNavBg","Fond",false],["heroBtnNavColor","Couleur texte",false]]},
+            {titre:"Bouton NAV \"Tarifs\"",icon:"🔸",fields:[["heroBtnTarifsBg","Fond",false],["heroBtnTarifsColor","Couleur texte",false]]},
+            {titre:"Bouton NAV \"Connexion\"",icon:"🔸",fields:[["heroBtnConnexionBg","Fond",false],["heroBtnConnexionColor","Couleur texte",false]]},
+            {titre:"Bouton HERO principal",icon:"🔸",fields:[["heroBtnPrimTxt","Texte",true],["heroBtnPrimBg","Fond",false],["heroBtnPrimColor","Couleur texte",false]]},
+            {titre:"Bouton HERO secondaire",icon:"🔸",fields:[["heroBtnSecTxt","Texte",true],["heroBtnSecBg","Fond",false],["heroBtnSecColor","Couleur texte",false]]},
+            {titre:"Bouton TARIFS Gratuit",icon:"🔸",fields:[["freeBtnTxt","Texte",true],["freeBtnBg","Fond",false],["freeBtnColor","Couleur texte",false]]},
+            {titre:"Bouton TARIFS Pro",icon:"🔸",fields:[["proBtnTxt","Texte",true],["proBtnBg","Fond",false],["proBtnColor","Couleur texte",false]]},
+            {titre:"Bouton CTA final",icon:"🎯",fields:[["ctaBtnTxt","Texte",true],["ctaBtnBg","Fond",false],["ctaBtnColor","Couleur texte",false]]},
+          ].filter(b=>matches(b.titre)).map(btn=>
+            <Card key={btn.titre} title={btn.titre} icon={btn.icon}>
+              {btn.fields.map(([k,l,isTxt])=>
+                <Field key={k} label={l}>
+                  {isTxt
+                    ?<TextInput k={k} state={cfg.txts} setter={setTxt}/>
+                    :<ColorInput k={k} state={cfg.landing} setter={setLand}/>}
+                </Field>
+              )}
+              {/* Preview */}
+              <div style={{marginTop:8,padding:8,background:"#f0f0f0",borderRadius:8}}>
+                <div style={{fontSize:9,color:"var(--l)",marginBottom:4,textTransform:"uppercase"}}>Aperçu</div>
+                <button style={{
+                  background:cfg.landing[btn.fields.find(f=>f[0].endsWith("Bg"))?.[0]]||"#ccc",
+                  color:cfg.landing[btn.fields.find(f=>f[0].endsWith("Color"))?.[0]]||"#000",
+                  border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"default",width:"100%"
+                }}>{cfg.txts[btn.fields.find(f=>f[2])?.[0]]||"Exemple"}</button>
+              </div>
+            </Card>
+          )}
+        </>}
+
+        {/* ====================== POLICES ====================== */}
+        {sec==="polices"&&<>
+          <Card title="Presets de polices" icon="🎨">
+            <div style={{fontSize:11,color:"var(--m)",marginBottom:10}}>Clique pour appliquer un preset complet</div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {FONT_PRESETS.map(p=><button key={p.name} onClick={()=>applyFontPreset(p)}
+                style={{padding:"10px 12px",background:"var(--c)",border:"1px solid var(--br)",borderRadius:10,cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"all .15s"}}
+                onMouseEnter={e=>e.currentTarget.style.background="var(--Sp)"}
+                onMouseLeave={e=>e.currentTarget.style.background="var(--c)"}>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:2}}>{p.name}</div>
+                <div style={{fontSize:10,color:"var(--l)",fontFamily:p.title}}>Titre ({p.title.split(",")[0].replace(/\'/g,"")})</div>
+                <div style={{fontSize:10,color:"var(--l)",fontFamily:p.body}}>Corps ({p.body.split(",")[0].replace(/\'/g,"")})</div>
+              </button>)}
+            </div>
+          </Card>
+          <Card title="Polices personnalisées" icon="𝐓">
+            <Field label="Police des titres" hint="Ex: \'Playfair Display\', serif">
+              <TextInput k="fontTitle" state={cfg.landing} setter={setLand}/>
+            </Field>
+            <Field label="Police du corps" hint="Ex: \'Inter\', sans-serif">
+              <TextInput k="fontBody" state={cfg.landing} setter={setLand}/>
+            </Field>
+            <Field label="URL Google Fonts" hint="Colle ici l\'URL complète de Google Fonts">
+              <TextInput k="googleFontsUrl" state={cfg.landing} setter={setLand} multi/>
+            </Field>
+            <div style={{padding:10,background:"var(--c)",borderRadius:8,marginTop:6,fontSize:11,color:"var(--m)",lineHeight:1.5}}>
+              💡 Pour ajouter une police :<br/>
+              1. Va sur <strong>fonts.google.com</strong><br/>
+              2. Choisis tes polices<br/>
+              3. Copie l\'URL de &lt;link href=\"...\"&gt;<br/>
+              4. Colle-la ci-dessus + édite fontTitle / fontBody
+            </div>
+          </Card>
+          <Card title="Aperçu des polices" icon="👁">
+            <div style={{padding:12,background:"#fff",borderRadius:8,border:"1px solid var(--br)"}}>
+              <div style={{fontFamily:cfg.landing.fontTitle,fontSize:24,fontWeight:700,marginBottom:8}}>Titre exemple</div>
+              <div style={{fontFamily:cfg.landing.fontBody,fontSize:14,lineHeight:1.6}}>Corps de texte en police normale. Le lorem ipsum est un faux texte qui permet de visualiser la mise en page.</div>
+            </div>
+          </Card>
+        </>}
+
+        {/* ====================== CONTENU (items) ====================== */}
+        {sec==="contenu"&&<>
+          <Card title="Stats du hero (bandeau)" icon="📊">
+            {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsHero",i,"suf",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsHero",i,"label",e.target.value)}/>
             </div>)}
-          </div>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udcca Stats section chiffres</div>
-            {(cfg.statsSection||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"60px 40px 1fr 1fr",gap:6,marginBottom:6}}>
+          </Card>
+          <Card title="Stats section chiffres" icon="📊">
+            {(cfg.statsSection||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsSection",i,"n",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsSection",i,"suf",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsSection",i,"label",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.desc||""}onChange={e=>setStat("statsSection",i,"desc",e.target.value)}/>
             </div>)}
-          </div>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udd25 Pain points (section 1)</div>
+          </Card>
+          <Card title="Pain points (section 1)" icon="🔥">
             {(cfg.painPoints||[]).map((p,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
-              <div style={{display:"flex",gap:6,marginBottom:4}}>
-                <input className="inp"style={{width:40,fontSize:11,padding:"4px 6px",textAlign:"center"}}value={p.ic}onChange={e=>setPain(i,"ic",e.target.value)}/>
+              <div style={{display:"flex",gap:4,marginBottom:4}}>
+                <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={p.ic}onChange={e=>setPain(i,"ic",e.target.value)}/>
                 <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={p.titre}onChange={e=>setPain(i,"titre",e.target.value)}placeholder="Titre"/>
+                <button onClick={()=>removePain(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#c00"}}>✕</button>
               </div>
               <textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={p.desc}onChange={e=>setPain(i,"desc",e.target.value)}/>
             </div>)}
-          </div>
-        </div>}
+            <button onClick={addPain}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%"}}>+ Ajouter un pain point</button>
+          </Card>
+          <Card title="Transformations (section 3)" icon="🔄">
+            {(cfg.transformations||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
+              <div style={{display:"flex",gap:4,marginBottom:4}}>
+                <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={t[0]}onChange={e=>setTransfo(i,0,e.target.value)}/>
+                <span style={{fontSize:11,color:"var(--l)",alignSelf:"center"}}>icône</span>
+              </div>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px",marginBottom:3,width:"100%",boxSizing:"border-box"}}value={t[1]}onChange={e=>setTransfo(i,1,e.target.value)}placeholder="Aujourd\'hui..."/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px",marginBottom:3,width:"100%",boxSizing:"border-box"}}value={t[2]}onChange={e=>setTransfo(i,2,e.target.value)}placeholder="Avec TiMat..."/>
+              <input className="inp"style={{fontSize:11,padding:"4px 6px",width:"100%",boxSizing:"border-box"}}value={t[3]}onChange={e=>setTransfo(i,3,e.target.value)}placeholder="Résultat..."/>
+            </div>)}
+          </Card>
+          <Card title="Témoignages (section 5)" icon="⭐">
+            {(cfg.testimonials||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--b)"}}>⭐ Témoignage {i+1}</div>
+                <button onClick={()=>removeTesti(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 8px",color:"#c00"}}>✕</button>
+              </div>
+              {[["nom","Nom"],["ville","Ville"],["avant","Avant (citation)"],["apres","Après (témoignage)"]].map(([k,l])=>
+                <div key={k}style={{marginBottom:5}}>
+                  <div style={{fontSize:10,fontWeight:600,color:"var(--m)",marginBottom:2}}>{l}</div>
+                  {k==="apres"?<textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>
+                    :<input className="inp"style={{fontSize:11,padding:"5px 8px",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>}
+                </div>
+              )}
+            </div>)}
+            <button onClick={addTesti}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%"}}>+ Ajouter un témoignage</button>
+          </Card>
+        </>}
 
-        {/* === BOUTONS === */}
-        {sec==="boutons"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83d\udd18 Textes des boutons</div>
-            <TxtField label="Bouton nav (topbar)" k="heroBtnNavTxt" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Bouton principal hero" k="heroBtnPrimTxt" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Bouton secondaire hero" k="heroBtnSecTxt" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Bouton CTA final" k="ctaBtnTxt" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Texte sous CTA" k="ctaSub" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Footer CTA" k="ctaFooter" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Bouton Pro" k="proBtnTxt" state={cfg.txts} setter={setTxt}/>
-            <TxtField label="Bouton Gratuit" k="freeBtnTxt" state={cfg.txts} setter={setTxt}/>
-          </div>
-          <div className="card"style={{padding:14}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>\ud83c\udfa8 Styles des boutons</div>
-            <TxtField label="Fond bouton principal (gradient)" k="heroBtnPrimBg" state={cfg.landing} setter={setLand}/>
-            <ColPicker label="Couleur texte principal" k="heroBtnPrimColor" state={cfg.landing} setter={setLand}/>
-            <TxtField label="Fond bouton secondaire" k="heroBtnSecBg" state={cfg.landing} setter={setLand}/>
-            <ColPicker label="Couleur texte secondaire" k="heroBtnSecColor" state={cfg.landing} setter={setLand}/>
-            <TxtField label="Fond bouton nav" k="heroBtnNavBg" state={cfg.landing} setter={setLand}/>
-          </div>
-        </div>}
-
-        {/* === MODULES === */}
-        {sec==="modules"&&<div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>\u2699\ufe0f Activer / D\u00e9sactiver</div>
-          {[
-            {k:"parrainage",l:"Parrainage",ic:"\ud83c\udf81"},
-            {k:"forum",l:"Forum communaut\u00e9",ic:"\ud83d\udcac"},
-            {k:"pmi",l:"Communication PMI",ic:"\ud83c\udfdb\ufe0f"},
-            {k:"periscolaire",l:"Planning p\u00e9riscolaire",ic:"\ud83d\ude8c"},
-            {k:"rappelsVaccins",l:"Rappels vaccins",ic:"\ud83d\udc89"},
-          ].map(({k,l,ic})=><div key={k}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
-            <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{ic} {l}</span>
-            <div onClick={()=>setFeat(k,!cfg.feats[k])}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:cfg.feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"}}>
-              <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-            </div>
-          </div>)}
-          {/* Admin stats */}
-          <div style={{marginTop:16,padding:12,background:"var(--c)",borderRadius:10}}>
-            <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:8}}>STATS EN DIRECT</div>
+        {/* ====================== APP (modules + stats) ====================== */}
+        {sec==="app"&&<>
+          <Card title="Modules activables" icon="⚙️">
+            {[
+              {k:"parrainage",l:"Parrainage",ic:"🎁"},
+              {k:"forum",l:"Forum communauté",ic:"💬"},
+              {k:"pmi",l:"Communication PMI",ic:"🏛️"},
+              {k:"periscolaire",l:"Planning périscolaire",ic:"🚌"},
+              {k:"rappelsVaccins",l:"Rappels vaccins",ic:"💉"},
+            ].map(({k,l,ic})=><div key={k}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
+              <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{ic} {l}</span>
+              <div onClick={()=>setFeat(k,!cfg.feats[k])}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:cfg.feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"}}>
+                <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
+              </div>
+            </div>)}
+          </Card>
+          <Card title="Statistiques" icon="📊">
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
               {[{v:stats.users,l:"Inscrits",c:"var(--T)"},{v:stats.pro,l:"Pro",c:"var(--S)"},{v:stats.enfants,l:"Enfants",c:"var(--G)"}].map(s=>
-                <div key={s.l}><div style={{fontSize:20,fontWeight:700,color:s.c}}>{s.v}</div><div style={{fontSize:10,color:"var(--l)"}}>{s.l}</div></div>
+                <div key={s.l}style={{padding:10,background:"var(--c)",borderRadius:8}}>
+                  <div style={{fontSize:22,fontWeight:700,color:s.c}}>{s.v}</div>
+                  <div style={{fontSize:10,color:"var(--l)"}}>{s.l}</div>
+                </div>
               )}
             </div>
-          </div>
-        </div>}
+          </Card>
+          <Card title="Table Supabase" icon="🗄️">
+            <div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>À exécuter dans Supabase SQL Editor :</div>
+            <div style={{fontSize:10,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
+              CREATE TABLE app_config (<br/>
+              &nbsp;&nbsp;id TEXT PRIMARY KEY,<br/>
+              &nbsp;&nbsp;config JSONB,<br/>
+              &nbsp;&nbsp;updated_at TIMESTAMPTZ<br/>
+              );<br/>
+              ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;<br/>
+              CREATE POLICY \"admin_all\" ON app_config USING (true);
+            </div>
+          </Card>
+        </>}
 
       </div>
 
-      {/* RIGHT: Live Preview */}
+      {/* RIGHT PANEL: Live Preview */}
       {showPreview&&<div style={{flex:1,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
-        <div style={{position:"absolute",top:8,left:8,zIndex:10,fontSize:10,fontWeight:700,color:"#fff",background:"var(--S)",padding:"3px 10px",borderRadius:8,opacity:.8}}>APER\u00c7U LIVE</div>
-        <div style={{width:"1200px",height:"100%",transform:"scale("+Math.min(1,(typeof window!=="undefined"?(window.innerWidth-440)/1200:0.6))+")",transformOrigin:"top left",overflow:"auto",background:"#fff"}}>
+        <div style={{position:"absolute",top:8,left:8,zIndex:10,fontSize:10,fontWeight:700,color:"#fff",background:"var(--S)",padding:"3px 10px",borderRadius:8,opacity:.85}}>👁 APERÇU LIVE</div>
+        <div style={{width:"1200px",height:"100%",transform:"scale("+Math.min(1,(typeof window!=="undefined"?(window.innerWidth-480)/1200:0.6))+")",transformOrigin:"top left",overflow:"auto",background:"#fff"}}>
           <LandingPage onLogin={()=>{}}dark={false}setDark={()=>{}}config={cfg}/>
         </div>
       </div>}
@@ -7029,25 +7273,25 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 const DEFAULT_CONFIG = {
   cols: {T:"#C4714A",S:"#9B6BAA",G:"#4A8B6E",R:"#C44A6A",c:"#FDF5F8",w:"#FFFFFF",b:"#1A1118"},
   txts: {
-    heroTitle:"Le syst\u00e8me vous a transform\u00e9e en comptable.",
-    heroSub:"TiMat vous rend votre vrai r\u00f4le.",
-    heroBtn:"Commencer gratuitement \u2192",
+    heroTitle:"Le système vous a transformée en comptable.",
+    heroSub:"TiMat vous rend votre vrai rôle.",
+    heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     heroDesc:"",
-    heroBadge:"\ud83d\udc9b POUR LES ASSISTANTES MATERNELLES DE FRANCE",
-    heroSubDesc:"Vous g\u00e9rez seule ce que les cr\u00e8ches font \u00e0 5 personnes.\nContrats, salaires, bilans, PMI, suivi des enfants - tout \u00e7a, sans formation, sans aide, souvent le soir.",
-    heroBtnPrimTxt:"2 mois gratuits, sans CB \u2192",
-    heroBtnSecTxt:"Voir la d\u00e9mo \u2193",
-    heroBtnNavTxt:"Commencer gratuitement \u2192",
-    heroTags:"\ud83d\udd12 Donn\u00e9es en France,\ud83d\udcf1 Web & Mobile,\u26a1 2 min pour d\u00e9marrer,\ud83d\udcb3 Sans carte bancaire",
-    ctaBtnTxt:"Je commence - 2 mois gratuits \u2192",
-    ctaSub:"TiMat s'occupe de \u00e7a. Pour que vous puissiez vous occuper des enfants.",
-    ctaFooter:"D\u00e9j\u00e0 847 assistantes maternelles nous font confiance \u00b7 Donn\u00e9es h\u00e9berg\u00e9es en France \ud83c\uddeb\ud83c\uddf7",
-    proLabel:"\u2b50 TOUT INCLUS",
-    proSubtxt:"soit 0,33\u20ac/jour - moins qu'un caf\u00e9",
-    proDesc:"La solution compl\u00e8te. Tout est inclus.",
-    proBtnTxt:"2 mois gratuits, sans CB \u2192",
+    heroBadge:"💛 POUR LES ASSISTANTES MATERNELLES DE FRANCE",
+    heroSubDesc:"Vous gérez seule ce que les crèches font à 5 personnes.\nContrats, salaires, bilans, PMI, suivi des enfants - tout ça, sans formation, sans aide, souvent le soir.",
+    heroBtnPrimTxt:"2 mois gratuits, sans CB →",
+    heroBtnSecTxt:"Voir la démo ↓",
+    heroBtnNavTxt:"Commencer gratuitement →",
+    heroTags:"🔒 Données en France,📱 Web & Mobile,⚡ 2 min pour démarrer,💳 Sans carte bancaire",
+    ctaBtnTxt:"Je commence - 2 mois gratuits →",
+    ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
+    ctaFooter:"Déjà 847 assistantes maternelles nous font confiance · Données hébergées en France 🇫🇷",
+    proLabel:"⭐ TOUT INCLUS",
+    proSubtxt:"soit 0,33€/jour - moins qu'un café",
+    proDesc:"La solution complète. Tout est inclus.",
+    proBtnTxt:"2 mois gratuits, sans CB →",
     freeLabel:"Gratuit",
     freeBtnTxt:"Commencer gratuitement",
   },
@@ -7063,60 +7307,137 @@ const DEFAULT_CONFIG = {
     section6Bg:"#F5EBF8",
     ctaBg:"linear-gradient(135deg,#5C3370,#9B6BAA)",
     statsBg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
+    // ----- BOUTONS HERO -----
     heroBtnPrimBg:"linear-gradient(135deg,#C4714A,#9A4020)",
     heroBtnPrimColor:"#fff",
     heroBtnSecBg:"rgba(255,255,255,.07)",
     heroBtnSecColor:"#fff",
     heroBtnNavBg:"linear-gradient(135deg,#9B6BAA,#B87CC8)",
+    heroBtnNavColor:"#fff",
+    heroBtnTarifsBg:"rgba(255,255,255,.12)",
+    heroBtnTarifsColor:"rgba(255,255,255,.85)",
+    heroBtnConnexionBg:"rgba(255,255,255,.18)",
+    heroBtnConnexionColor:"#fff",
+    // ----- BOUTONS TARIFS -----
+    proBtnBg:"linear-gradient(135deg,#C4714A,#9A4020)",
+    proBtnColor:"#fff",
+    freeBtnBg:"#0D1B2A",
+    freeBtnColor:"#fff",
+    // ----- BOUTON CTA FINAL -----
+    ctaBtnBg:"linear-gradient(135deg,#C4714A,#9A4020)",
+    ctaBtnColor:"#fff",
+    // ----- COULEURS -----
     accentColor:"#E8A84A",
+    // Couleurs de texte par section
+    heroTitleColor:"#fff",
+    heroSubColor:"rgba(255,255,255,.75)",
+    heroSubDescColor:"rgba(255,255,255,.6)",
+    heroBadgeColor:"#E8C87A",
+    heroBadgeBg:"rgba(232,168,74,.12)",
+    heroTagsColor:"rgba(255,255,255,.4)",
+    heroStatsColor:"#E8A84A",
+    heroStatsLabelColor:"rgba(255,255,255,.45)",
+    s1TitleColor:"#fff",
+    s1DescColor:"rgba(255,255,255,.5)",
+    s1CardBg:"rgba(255,255,255,.04)",
+    s1CardTitleColor:"#fff",
+    s1CardDescColor:"rgba(255,255,255,.5)",
+    s1QuoteBg:"rgba(232,168,74,.08)",
+    s1QuoteColor:"#E8A84A",
+    s2TitleColor:"#0D1B2A",
+    s2DescColor:"#6B4F3A",
+    s3TitleColor:"#0D1B2A",
+    s3RowBg1:"#F8F0FC",
+    s3RowBg2:"#FDF5FB",
+    s3LabelBeforeColor:"#B84060",
+    s3LabelAfterColor:"#2E5F8A",
+    s3LabelResultColor:"#3D6B50",
+    s3TextColor:"#6B4F3A",
+    s3ResultColor:"#3D6B50",
+    s4TitleColor:"#fff",
+    s4SubColor:"rgba(255,255,255,.4)",
+    s4StatColor:"#E8A84A",
+    s4StatLabelColor:"#fff",
+    s4StatDescColor:"rgba(255,255,255,.4)",
+    s5TitleColor:"#0D1B2A",
+    testimonialBg:"#fff",
+    testimonialNameColor:"#2C1F14",
+    testimonialCityColor:"#A68970",
+    testimonialBeforeColor:"#A68970",
+    testimonialAfterColor:"#2C1F14",
+    testimonialStarColor:"#E8A84A",
+    s6TitleColor:"#0D1B2A",
+    freeBg:"#fff",
+    freeLabelColor:"#A68970",
+    freePriceColor:"#0D1B2A",
+    freeDescColor:"#6B4F3A",
+    proBg:"#FDF5FB",
+    proBorderColor:"#B8622F",
+    proLabelColor:"#B8622F",
+    proPriceColor:"#B8622F",
+    proSubColor:"#A68970",
+    proDescColor:"#6B4F3A",
+    ctaTitleColor:"#fff",
+    ctaSubTitleColor:"rgba(255,255,255,.6)",
+    ctaSubColor:"rgba(255,255,255,.5)",
+    ctaFooterColor:"rgba(255,255,255,.35)",
+    pageBg:"#FDF5F8",
+    // ----- POLICES -----
     fontTitle:"'Fraunces', Georgia, serif",
     fontBody:"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",
-    s1Title:"La r\u00e9alit\u00e9 du m\u00e9tier, personne n'en parle.",
-    s1Desc:"\u00catre assistante maternelle agr\u00e9\u00e9e, c'est exercer un m\u00e9tier de soin exigeant\ntout en g\u00e9rant une TPE sans formation ni support.",
-    s1Quote:"TiMat n'ajoute pas une appli \u00e0 votre vie.\nIl retire tout ce qui n'aurait jamais d\u00fb s'y trouver.",
-    s2Title:"D\u00e9couvrez TiMat en direct",
-    s2Desc:"Cliquez sur un onglet pour explorer les fonctionnalit\u00e9s.",
-    s3Title:"Ce que TiMat change concr\u00e8tement",
+    fontTitleWeight:"700",
+    fontBodyWeight:"400",
+    googleFontsUrl:"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap",
+    // ----- TEXTES SECTIONS -----
+    s1Title:"La réalité du métier, personne n'en parle.",
+    s1Desc:"Être assistante maternelle agréée, c'est exercer un métier de soin exigeant\ntout en gérant une TPE sans formation ni support.",
+    s1Quote:"TiMat n'ajoute pas une appli à votre vie.\nIl retire tout ce qui n'aurait jamais dû s'y trouver.",
+    s2Title:"Découvrez TiMat en direct",
+    s2Desc:"Cliquez sur un onglet pour explorer les fonctionnalités.",
+    s3Title:"Ce que TiMat change concrètement",
+    s3LabelBefore:"Aujourd'hui",
+    s3LabelAfter:"Avec TiMat",
+    s3LabelResult:"Ce que ça change",
     s4Title:"Ce que disent les chiffres",
-    s4Sub:"Donn\u00e9es internes TiMat \u00b7 Mars 2026",
-    s5Title:"Devenez l'assistante maternelle dont les parents parlent \u00e0 leurs amis.",
+    s4Sub:"Données internes TiMat · Mars 2026",
+    s5Title:"Devenez l'assistante maternelle dont les parents parlent à leurs amis.",
     s6Title:"Un forfait fixe. Pas de surprise.",
-    ctaTitle:"Vous n'avez pas eu de formation\nen comptabilit\u00e9.",
-    ctaTitleAccent:"en comptabilit\u00e9.",
+    ctaTitle:"Vous n'avez pas eu de formation\nen comptabilité.",
+    ctaTitleAccent:"en comptabilité.",
     ctaSubTitle:"Pourtant vous en faites tous les mois.",
   },
   painPoints:[
-    {ic:"\ud83e\uddee",titre:"Comptable sans dipl\u00f4me",desc:"Mensualisation, heures major\u00e9es, cotisations, r\u00e9gularisations... Des calculs que m\u00eame les comptables trouvent complexes. Vous les faites seule, chaque mois."},
-    {ic:"\u2696\ufe0f",titre:"Juriste sans formation",desc:"Contrats CCN, avenants, courriers de rupture, litiges prud'homaux... Vous portez seule la responsabilit\u00e9 juridique d'un employeur."},
-    {ic:"\ud83c\udfdb\ufe0f",titre:"Secr\u00e9taire de la PMI",desc:"Dossiers de renouvellement, comptes-rendus de visite, suivi de l'agr\u00e9ment... Des d\u00e9marches chronophages qui ne sont jamais finies."},
-    {ic:"\ud83d\udcf1",titre:"Community manager des parents",desc:"R\u00e9pondre aux messages \u00e0 toute heure, documenter la journ\u00e9e, rassurer les parents... Une relation qui d\u00e9borde souvent sur votre vie priv\u00e9e."},
-    {ic:"\ud83c\udf19",titre:"Administratrice le soir",desc:"Apr\u00e8s 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soir\u00e9e n'existe plus."},
-    {ic:"\ud83d\udd07",titre:"Seule face aux probl\u00e8mes",desc:"Pas de coll\u00e8gue \u00e0 qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le m\u00eame probl\u00e8me."},
+    {ic:"🧮",titre:"Comptable sans diplôme",desc:"Mensualisation, heures majorées, cotisations, régularisations... Des calculs que même les comptables trouvent complexes. Vous les faites seule, chaque mois."},
+    {ic:"⚖️",titre:"Juriste sans formation",desc:"Contrats CCN, avenants, courriers de rupture, litiges prud'homaux... Vous portez seule la responsabilité juridique d'un employeur."},
+    {ic:"🏛️",titre:"Secrétaire de la PMI",desc:"Dossiers de renouvellement, comptes-rendus de visite, suivi de l'agrément... Des démarches chronophages qui ne sont jamais finies."},
+    {ic:"📱",titre:"Community manager des parents",desc:"Répondre aux messages à toute heure, documenter la journée, rassurer les parents... Une relation qui déborde souvent sur votre vie privée."},
+    {ic:"🌙",titre:"Administratrice le soir",desc:"Après 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soirée n'existe plus."},
+    {ic:"🔇",titre:"Seule face aux problèmes",desc:"Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème."},
   ],
   transformations:[
-    ["\ud83e\uddee","Pajemploi vous prend 2h par mois","R\u00e9cap pr\u00eat en 5 minutes","Z\u00e9ro erreur. Z\u00e9ro stress."],
-    ["\ud83d\udcc4","Vos contrats sont dans un tiroir","Mod\u00e8les guid\u00e9s, avenants en 2 clics","Solide juridiquement si \u00e7a tourne mal."],
-    ["\u23f0","Les retards de parents cr\u00e9ent des conflits","Pointage horodat\u00e9, sign\u00e9 par les deux","Vous discutez de faits. Plus de tensions."],
-    ["\ud83d\uddc2\ufe0f","Un document important est introuvable","Tout centralis\u00e9, dat\u00e9, cherchable","En cas de contr\u00f4le PMI, tout est l\u00e0."],
-    ["\ud83c\udf19","Vos soir\u00e9es servent \u00e0 l'administratif","5 minutes le matin suffisent","Vos soir\u00e9es vous appartiennent."],
+    ["🧮","Pajemploi vous prend 2h par mois","Récap prêt en 5 minutes","Zéro erreur. Zéro stress."],
+    ["📄","Vos contrats sont dans un tiroir","Modèles guidés, avenants en 2 clics","Solide juridiquement si ça tourne mal."],
+    ["⏰","Les retards de parents créent des conflits","Pointage horodaté, signé par les deux","Vous discutez de faits. Plus de tensions."],
+    ["🗂️","Un document important est introuvable","Tout centralisé, daté, cherchable","En cas de contrôle PMI, tout est là."],
+    ["🌙","Vos soirées servent à l'administratif","5 minutes le matin suffisent","Vos soirées vous appartiennent."],
   ],
   statsHero:[
     {n:847,suf:"+",label:"assmats actives"},
-    {n:12400,suf:"+",label:"bilans g\u00e9n\u00e9r\u00e9s"},
-    {n:4,suf:".7\u2605",label:"note moyenne"},
+    {n:12400,suf:"+",label:"bilans générés"},
+    {n:4,suf:".7★",label:"note moyenne"},
     {n:96,suf:"%",label:"taux de satisfaction"},
   ],
   statsSection:[
-    {n:847,suf:"+",label:"assmats actives",desc:"Font confiance \u00e0 TiMat"},
-    {n:94,suf:"%",label:"satisfaites",desc:"Recommandent TiMat \u00e0 une coll\u00e8gue"},
-    {n:4,suf:"h",label:"\u00e9conomis\u00e9es",desc:"Par mois en admin en moyenne"},
+    {n:847,suf:"+",label:"assmats actives",desc:"Font confiance à TiMat"},
+    {n:94,suf:"%",label:"satisfaites",desc:"Recommandent TiMat à une collègue"},
+    {n:4,suf:"h",label:"économisées",desc:"Par mois en admin en moyenne"},
     {n:2,suf:" mois",label:"d'essai gratuit",desc:"Sans carte bancaire"},
   ],
   testimonials:[
-    {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soir\u00e9es sur Excel.",apres:"Mon r\u00e9cap Pajemploi est pr\u00eat en 5 minutes. Je ne sais m\u00eame plus pourquoi j'attendais de changer."},
-    {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contr\u00f4le PMI.",apres:"Tout est archiv\u00e9, dat\u00e9, accessible. L'inspectrice a \u00e9t\u00e9 impressionn\u00e9e par mon suivi."},
-    {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contest\u00e9 des heures.",apres:"Le pointage horodat\u00e9 a tout r\u00e9gl\u00e9 en 30 secondes. Je ne travaillerai plus sans TiMat."},
-    {nom:"Fatima A.",ville:"Marseille",avant:"Je me r\u00e9veillais la nuit \u00e0 stresser.",apres:"TiMat me pr\u00e9vient avant chaque \u00e9ch\u00e9ance. Je dors mieux. C'est b\u00eate mais c'est vrai."},
+    {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soirées sur Excel.",apres:"Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
+    {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contrôle PMI.",apres:"Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi."},
+    {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contesté des heures.",apres:"Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat."},
+    {nom:"Fatima A.",ville:"Marseille",avant:"Je me réveillais la nuit à stresser.",apres:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai."},
   ],
   feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
 };
