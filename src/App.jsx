@@ -5981,7 +5981,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div style={{ background: L.section1Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "60px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s1Title}</div>
               <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.5)", lineHeight: 1.7, whiteSpace:"pre-line" }}>{L.s1Desc}</div>
             </div>
@@ -5998,7 +5998,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
           <FadeIn delay={400}>
-            <div style={{ marginTop: 40, textAlign: "center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
+            <div style={{ marginTop: 40, textAlign: L.s1Align||"center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: L.s1QuoteColor||accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>"{L.s1Quote}"</div>
             </div>
           </FadeIn>
@@ -6009,7 +6009,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div id="demo" style={{ background: L.section2Bg||"#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
               <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
@@ -6040,7 +6040,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div style={{ background: L.section3Bg||"#F8F0FC", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <div style={{ textAlign: L.s3Align||"center", marginBottom: 56 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s3TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title}</div>
             </div>
           </FadeIn>
@@ -6063,7 +6063,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div style={{ background: L.section4Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s4TitleColor||"#fff", fontWeight: 700, marginBottom: 6 }}>{L.s4Title}</div>
               <div style={{ fontSize: 13, color: L.s4SubColor||"rgba(255,255,255,.4)" }}>{L.s4Sub}</div>
             </div>
