@@ -7753,42 +7753,61 @@ export default function App(){
 
   // Vérifier session Supabase au démarrage -
   useEffect(()=>{
-    // Listener FIRST (Supabase recommended pattern to avoid lock race)
-    const{data:{subscription}}=supabase.auth.onAuthStateChange(async(event,session)=>{
+    // Stores the minimal user from auth; profile enrichment happens in a separate effect
+    const handleAuthUser=(session)=>{
+      if(!session?.user)return;
+      const u=session.user;
+      // Set minimal user immediately (no DB query to avoid lock race)
+      setUser(prev=>{
+        // If we already have a profile loaded with more info, keep it
+        if(prev?.id===u.id && prev.prenom && prev.prenom!=="Utilisateur")return prev;
+        return {
+          id:u.id,
+          email:u.email,
+          prenom:u.user_metadata?.prenom||"Utilisateur",
+          nom:u.user_metadata?.nom||"",
+          role:u.user_metadata?.role||"asmat",
+          couleur:u.user_metadata?.role==="parent"?"#2E5F8A":"#C4714A",
+          subscription_status:"free",
+          _needsProfileFetch:true
+        };
+      });
+    };
+
+    const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{
       if(event==="INITIAL_SESSION"){
-        // Initial session loaded
-        if(session?.user){
-          try{
-            const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
-            if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
-            else setUser({
-              id:session.user.id,email:session.user.email,
-              prenom:session.user.user_metadata?.prenom||"Utilisateur",
-              nom:session.user.user_metadata?.nom||"",
-              role:session.user.user_metadata?.role||"asmat",
-              couleur:"#C4714A",subscription_status:"free"
-            });
-          }catch(e){console.log("Profil load error:",e.message);}
-        }
+        handleAuthUser(session);
         setLoading(false);
       }
       if(event==="SIGNED_IN"&&session?.user){
-        try{
-          const{data:profil}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
-          if(profil)setUser({...profil,id:session.user.id,email:session.user.email});
-          else setUser({id:session.user.id,email:session.user.email,
-            prenom:session.user.user_metadata?.prenom||"Utilisateur",
-            nom:session.user.user_metadata?.nom||"",
-            role:session.user.user_metadata?.role||"asmat",
-            couleur:"#C4714A",subscription_status:"free"});
-        }catch(e){console.log("Profil load error:",e.message);}
+        handleAuthUser(session);
       }
       if(event==="SIGNED_OUT"){setUser(null);setPage("accueil");}
     });
-    // Fallback: if INITIAL_SESSION never fires after 3s, stop loading
     const fallback=setTimeout(()=>setLoading(false),3000);
     return()=>{subscription.unsubscribe();clearTimeout(fallback);};
   },[]);
+
+  // Enrich user with profile from DB (separate effect to avoid auth lock race)
+  useEffect(()=>{
+    if(!user?.id||!user._needsProfileFetch)return;
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data:profil}=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle();
+        if(cancelled)return;
+        if(profil){
+          setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false}));
+        }else{
+          setUser(u=>({...u,_needsProfileFetch:false}));
+        }
+      }catch(e){
+        console.log("Profile fetch error:",e.message);
+        if(!cancelled)setUser(u=>({...u,_needsProfileFetch:false}));
+      }
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,user?._needsProfileFetch]);
 
   // Écouter navigation depuis modale
   useEffect(()=>{
