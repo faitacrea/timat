@@ -5858,7 +5858,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     if (document.getElementById(id)) return;
     const link = document.createElement('link');
     link.id = id; link.rel = 'stylesheet';
-    link.href = config.landing.googleFontsUrl || 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap';
+    link.href = config.landing.googleFontsUrl || 'https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap';
     document.head.appendChild(link);
   }, []);
 
@@ -5959,7 +5959,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           ))}
         </div>
         {/* Hero content */}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: L.heroAlign||"center" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.15, marginBottom: 20 }}>
             {T.heroTitle}<br/>
@@ -6086,7 +6086,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div style={{ background: L.section5Bg||"#FDF5FB", padding: "72px 24px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48, fontStyle: "italic" }}>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
               {L.s5Title}
             </div>
           </FadeIn>
@@ -6112,7 +6112,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div id="tarifs" style={{ background: L.section6Bg||"#F5EBF8", padding: "72px 24px" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: "center", marginBottom: 48 }}>{L.s6Title}</div>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
             {/* Gratuit */}
@@ -6156,7 +6156,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* CTA FINAL */}
-      <div style={{ background: L.ctaBg||"linear-gradient(135deg,#5C3370,#9B6BAA)", padding: "72px 24px", textAlign: "center" }}>
+      <div style={{ background: L.ctaBg||"linear-gradient(135deg,#264653,#2A6F6A)", padding: "72px 24px", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
@@ -6799,6 +6799,51 @@ function Login({onLogin}){
 // Accessible uniquement à sophie@faitacreas.fr (ou l'email admin configuré)
 const ADMIN_EMAIL = "faitacreapro@gmail.com";
 
+// --- Backoffice reusable components (outside to avoid re-mount on state change) ---
+const BOField=({label,children,hint})=>(
+  <div style={{marginBottom:10}}>
+    <div style={{fontSize:10,fontWeight:700,color:"var(--m)",marginBottom:3,textTransform:"uppercase",letterSpacing:".4px"}}>{label}</div>
+    {children}
+    {hint&&<div style={{fontSize:10,color:"var(--l)",marginTop:3,fontStyle:"italic"}}>{hint}</div>}
+  </div>
+);
+
+const BOColorInput=({k,state,setter})=>{
+  const v=state[k]||"";
+  const isSolid=/^#[0-9a-fA-F]{3,8}$/.test(v);
+  return (
+    <div style={{display:"flex",gap:4,alignItems:"center"}}>
+      {isSolid&&<input type="color"value={v.slice(0,7)}onChange={e=>setter(k,e.target.value)} style={{width:32,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1,flexShrink:0}}/>}
+      <input className="inp"style={{flex:1,fontSize:10,padding:"5px 7px",minWidth:0}}value={v}onChange={e=>setter(k,e.target.value)}placeholder="#rrggbb ou rgba(...) ou gradient"/>
+      <div style={{width:20,height:20,borderRadius:4,background:v||"transparent",border:"1px solid var(--br)",flexShrink:0}}/>
+    </div>
+  );
+};
+
+const BOTextInput=({k,state,setter,multi,placeholder})=>(
+  multi
+    ?<textarea className="inp"rows={3}style={{fontSize:11,padding:"6px 8px",resize:"vertical",width:"100%",boxSizing:"border-box",fontFamily:"inherit"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
+    :<input className="inp"style={{fontSize:11,padding:"6px 8px",width:"100%",boxSizing:"border-box"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
+);
+
+const BOAlignInput=({k,state,setter})=>(
+  <div style={{display:"flex",gap:2}}>
+    {["left","center","right"].map(a=><button key={a}onClick={()=>setter(k,a)}style={{
+      flex:1,padding:"5px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:600,
+      background:state[k]===a?"var(--S)":"var(--c)",color:state[k]===a?"#fff":"var(--m)",transition:"all .15s"
+    }}>{a==="left"?"◁ Gauche":a==="center"?"⊡ Centre":"▷ Droite"}</button>)}
+  </div>
+);
+
+const BOCard=({title,icon,children})=>(
+  <div className="card"style={{padding:14,marginBottom:10}}>
+    {title&&<div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"var(--b)",display:"flex",alignItems:"center",gap:6,paddingBottom:8,borderBottom:"1px solid var(--br)"}}>
+      {icon&&<span style={{fontSize:14}}>{icon}</span>}{title}
+    </div>}
+    {children}
+  </div>
+);
+
 function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [sec,setSec]=useState("hero");
   const [subSec,setSubSec]=useState("textes");
@@ -6972,44 +7017,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   };
 
   // --- Reusable components ---
-  const Field=({label,children,hint})=>(
-    <div style={{marginBottom:10}}>
-      <div style={{fontSize:10,fontWeight:700,color:"var(--m)",marginBottom:3,textTransform:"uppercase",letterSpacing:".4px"}}>{label}</div>
-      {children}
-      {hint&&<div style={{fontSize:10,color:"var(--l)",marginTop:3,fontStyle:"italic"}}>{hint}</div>}
-    </div>
-  );
 
-  const ColorInput=({k,state,setter})=>{
-    const v=state[k]||"";
-    const isSolid=/^#[0-9a-fA-F]{3,8}$/.test(v);
-    return (
-      <div style={{display:"flex",gap:4,alignItems:"center"}}>
-        {isSolid&&<input type="color"value={v.slice(0,7)}onChange={e=>setter(k,e.target.value)} style={{width:32,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1,flexShrink:0}}/>}
-        <input className="inp"style={{flex:1,fontSize:10,padding:"5px 7px",minWidth:0}}value={v}onChange={e=>setter(k,e.target.value)}placeholder="#rrggbb ou rgba(...) ou gradient"/>
-        <div style={{width:20,height:20,borderRadius:4,background:v||"transparent",border:"1px solid var(--br)",flexShrink:0}}/>
-      </div>
-    );
-  };
-
-  const TextInput=({k,state,setter,multi,placeholder})=>(
-    multi
-      ?<textarea className="inp"rows={3}style={{fontSize:11,padding:"6px 8px",resize:"vertical",width:"100%",boxSizing:"border-box",fontFamily:"inherit"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
-      :<input className="inp"style={{fontSize:11,padding:"6px 8px",width:"100%",boxSizing:"border-box"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
-  );
-
-  const NumInput=({k,state,setter,min,max,step})=>(
-    <input type="number"className="inp"min={min}max={max}step={step}style={{fontSize:11,padding:"6px 8px",width:"100%",boxSizing:"border-box"}}value={state[k]||0}onChange={e=>setter(k,parseFloat(e.target.value))}/>
-  );
-
-  const Card=({title,icon,children})=>(
-    <div className="card"style={{padding:14,marginBottom:10}}>
-      {title&&<div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"var(--b)",display:"flex",alignItems:"center",gap:6,paddingBottom:8,borderBottom:"1px solid var(--br)"}}>
-        {icon&&<span style={{fontSize:14}}>{icon}</span>}{title}
-      </div>}
-      {children}
-    </div>
-  );
 
   // Helper to filter by search
   const matches=(txt)=>!search||txt.toLowerCase().includes(search.toLowerCase());
@@ -7059,54 +7067,58 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 
         {/* ====================== HERO ====================== */}
         {sec==="hero"&&<>
-          <Card title="Image de fond" icon="📸">
-            <Field label="URL de l\'image">
-              <TextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="/hero-enfants.jpg ou https://..."/>
-            </Field>
-            <Field label={`Opacité (${Math.round((cfg.landing.heroImgOpacity||0.2)*100)}%)`}>
+          <BOCard title="Image de fond" icon="📸">
+            <BOField label="URL de l\'image">
+              <BOTextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="/hero-enfants.jpg ou https://..."/>
+            </BOField>
+            <BOField label={`Opacité (${Math.round((cfg.landing.heroImgOpacity||0.2)*100)}%)`}>
               <input type="range"min="0"max="1"step="0.05"value={cfg.landing.heroImgOpacity||0.2} onChange={e=>setLand("heroImgOpacity",parseFloat(e.target.value))} style={{width:"100%"}}/>
-            </Field>
-            <Field label="Fond hero (gradient / couleur)">
-              <ColorInput k="heroBg" state={cfg.landing} setter={setLand}/>
-            </Field>
-          </Card>
+            </BOField>
+            <BOField label="Fond hero (gradient / couleur)">
+              <BOColorInput k="heroBg" state={cfg.landing} setter={setLand}/>
+            </BOField>
+          </BOCard>
 
-          <Card title="Textes du hero" icon="📝">
-            <Field label="Badge (bandeau jaune)"><TextInput k="heroBadge" state={cfg.txts} setter={setTxt}/></Field>
-            <Field label="Titre principal"><TextInput k="heroTitle" state={cfg.txts} setter={setTxt}/></Field>
-            <Field label="Accent du titre (en italique doré)" hint="Laisser vide pour masquer"><TextInput k="heroTitleAccent" state={cfg.txts} setter={setTxt}/></Field>
-            <Field label="Sous-titre (grand)"><TextInput k="heroSub" state={cfg.txts} setter={setTxt}/></Field>
-            <Field label="Description sous titre" hint="Utilise \\n pour un retour à la ligne"><TextInput k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/></Field>
-            <Field label="Tags (séparés par virgule)"><TextInput k="heroTags" state={cfg.txts} setter={setTxt}/></Field>
-          </Card>
+          <BOCard title="Textes du hero" icon="📝">
+            <BOField label="Badge (bandeau jaune)"><BOTextInput k="heroBadge" state={cfg.txts} setter={setTxt}/></BOField>
+            <BOField label="Titre principal"><BOTextInput k="heroTitle" state={cfg.txts} setter={setTxt}/></BOField>
+            <BOField label="Accent du titre (en italique doré)" hint="Laisser vide pour masquer"><BOTextInput k="heroTitleAccent" state={cfg.txts} setter={setTxt}/></BOField>
+            <BOField label="Alignement du hero"><BOAlignInput k="heroAlign" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Sous-titre (grand)"><BOTextInput k="heroSub" state={cfg.txts} setter={setTxt}/></BOField>
+            <BOField label="Description sous titre" hint="Utilise \\n pour un retour à la ligne"><BOTextInput k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/></BOField>
+            <BOField label="Tags (séparés par virgule)"><BOTextInput k="heroTags" state={cfg.txts} setter={setTxt}/></BOField>
+          </BOCard>
 
-          <Card title="Couleurs du hero" icon="🎨">
-            <Field label="Couleur titre"><ColorInput k="heroTitleColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur sous-titre"><ColorInput k="heroSubColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur description"><ColorInput k="heroSubDescColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur badge (texte)"><ColorInput k="heroBadgeColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Fond badge"><ColorInput k="heroBadgeBg" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur tags"><ColorInput k="heroTagsColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur stats (chiffres)"><ColorInput k="heroStatsColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur labels stats"><ColorInput k="heroStatsLabelColor" state={cfg.landing} setter={setLand}/></Field>
-            <Field label="Couleur d\'accent (italique)"><ColorInput k="accentColor" state={cfg.landing} setter={setLand}/></Field>
-          </Card>
+          <BOCard title="Couleurs du hero" icon="🎨">
+            <BOField label="Couleur titre"><BOColorInput k="heroTitleColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur sous-titre"><BOColorInput k="heroSubColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur description"><BOColorInput k="heroSubDescColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur badge (texte)"><BOColorInput k="heroBadgeColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Fond badge"><BOColorInput k="heroBadgeBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur tags"><BOColorInput k="heroTagsColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur stats (chiffres)"><BOColorInput k="heroStatsColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur labels stats"><BOColorInput k="heroStatsLabelColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur d\'accent (italique)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
+          </BOCard>
         </>}
 
         {/* ====================== SECTIONS ====================== */}
         {sec==="sections"&&<>
           {[
             {key:"s1",titre:"Section 1 - Problématique",icon:"🔥",fields:[
+              {k:"s1Align",l:"Alignement du texte",type:"align"},
               {k:"s1Title",l:"Titre",type:"txt"},{k:"s1Desc",l:"Description",type:"txt",multi:true},{k:"s1Quote",l:"Citation finale",type:"txt",multi:true},
               {k:"section1Bg",l:"Fond section",type:"col"},{k:"s1TitleColor",l:"Couleur titre",type:"col"},{k:"s1DescColor",l:"Couleur description",type:"col"},
               {k:"s1CardBg",l:"Fond des cards",type:"col"},{k:"s1CardTitleColor",l:"Couleur titre cards",type:"col"},{k:"s1CardDescColor",l:"Couleur texte cards",type:"col"},
               {k:"s1QuoteBg",l:"Fond citation",type:"col"},{k:"s1QuoteColor",l:"Couleur citation",type:"col"},
             ]},
             {key:"s2",titre:"Section 2 - Démo interactive",icon:"🎬",fields:[
+              {k:"s2Align",l:"Alignement du texte",type:"align"},
               {k:"s2Title",l:"Titre",type:"txt"},{k:"s2Desc",l:"Description",type:"txt"},
               {k:"section2Bg",l:"Fond section",type:"col"},{k:"s2TitleColor",l:"Couleur titre",type:"col"},{k:"s2DescColor",l:"Couleur description",type:"col"},
             ]},
             {key:"s3",titre:"Section 3 - Transformation",icon:"🔄",fields:[
+              {k:"s3Align",l:"Alignement du texte",type:"align"},
               {k:"s3Title",l:"Titre",type:"txt"},
               {k:"s3LabelBefore",l:"Label \"Avant\"",type:"txt"},{k:"s3LabelAfter",l:"Label \"Avec TiMat\"",type:"txt"},{k:"s3LabelResult",l:"Label \"Résultat\"",type:"txt"},
               {k:"section3Bg",l:"Fond section",type:"col"},{k:"s3TitleColor",l:"Couleur titre",type:"col"},
@@ -7115,11 +7127,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {k:"s3TextColor",l:"Couleur texte",type:"col"},{k:"s3ResultColor",l:"Couleur texte résultat",type:"col"},
             ]},
             {key:"s4",titre:"Section 4 - Statistiques",icon:"📊",fields:[
+              {k:"s4Align",l:"Alignement du texte",type:"align"},
               {k:"s4Title",l:"Titre",type:"txt"},{k:"s4Sub",l:"Sous-titre",type:"txt"},
               {k:"section4Bg",l:"Fond section",type:"col"},{k:"s4TitleColor",l:"Couleur titre",type:"col"},{k:"s4SubColor",l:"Couleur sous-titre",type:"col"},
               {k:"s4StatColor",l:"Couleur chiffres",type:"col"},{k:"s4StatLabelColor",l:"Couleur labels",type:"col"},{k:"s4StatDescColor",l:"Couleur descriptions",type:"col"},
             ]},
             {key:"s5",titre:"Section 5 - Témoignages",icon:"⭐",fields:[
+              {k:"s5Align",l:"Alignement du texte",type:"align"},
               {k:"s5Title",l:"Titre",type:"txt"},
               {k:"section5Bg",l:"Fond section",type:"col"},{k:"s5TitleColor",l:"Couleur titre",type:"col"},
               {k:"testimonialBg",l:"Fond cards témoignages",type:"col"},{k:"testimonialNameColor",l:"Couleur nom",type:"col"},
@@ -7127,6 +7141,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {k:"testimonialAfterColor",l:"Couleur citation \"après\"",type:"col"},{k:"testimonialStarColor",l:"Couleur étoiles",type:"col"},
             ]},
             {key:"s6",titre:"Section 6 - Tarifs",icon:"💰",fields:[
+              {k:"s6Align",l:"Alignement du texte",type:"align"},
               {k:"s6Title",l:"Titre",type:"txt"},
               {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
               {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
@@ -7139,31 +7154,33 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {k:"proSubColor",l:"Couleur texte sous prix",type:"col"},{k:"proDescColor",l:"Couleur description Pro",type:"col"},
             ]},
             {key:"cta",titre:"CTA Final",icon:"🎯",fields:[
+              {k:"ctaAlign",l:"Alignement du texte",type:"align"},
               {k:"ctaTitle",l:"Titre (avec \\n)",type:"txt",multi:true},{k:"ctaTitleAccent",l:"Accent (italique)",type:"txt"},{k:"ctaSubTitle",l:"Sous-titre",type:"txt"},
               {k:"ctaSub",l:"Texte descriptif",type:"txt",inTxts:true},{k:"ctaBtnTxt",l:"Texte bouton",type:"txt",inTxts:true},{k:"ctaFooter",l:"Footer",type:"txt",inTxts:true},
               {k:"ctaBg",l:"Fond section",type:"col"},{k:"ctaTitleColor",l:"Couleur titre",type:"col"},
               {k:"ctaSubTitleColor",l:"Couleur sous-titre",type:"col"},{k:"ctaSubColor",l:"Couleur descriptif",type:"col"},{k:"ctaFooterColor",l:"Couleur footer",type:"col"},
             ]},
           ].filter(s=>matches(s.titre)||s.fields.some(f=>matches(f.l))).map(s=>
-            <Card key={s.key} title={s.titre} icon={s.icon}>
+            <BOCard key={s.key} title={s.titre} icon={s.icon}>
               {s.fields.filter(f=>!search||matches(f.l)).map(f=>
-                <Field key={f.k} label={f.l}>
-                  {f.type==="col"?<ColorInput k={f.k} state={cfg.landing} setter={setLand}/>
-                  :<TextInput k={f.k} state={f.inTxts?cfg.txts:cfg.landing} setter={f.inTxts?setTxt:setLand} multi={f.multi}/>}
-                </Field>
+                <BOField key={f.k} label={f.l}>
+                  {f.type==="align"?<BOAlignInput k={f.k} state={cfg.landing} setter={setLand}/>
+                  :f.type==="col"?<BOColorInput k={f.k} state={cfg.landing} setter={setLand}/>
+                  :<BOTextInput k={f.k} state={f.inTxts?cfg.txts:cfg.landing} setter={f.inTxts?setTxt:setLand} multi={f.multi}/>}
+                </BOField>
               )}
-            </Card>
+            </BOCard>
           )}
         </>}
 
         {/* ====================== TEXTES (tous) ====================== */}
         {sec==="textes"&&<>
-          <Card title="Hero" icon="🏠">
+          <BOCard title="Hero" icon="🏠">
             {[["heroBadge","Badge"],["heroTitle","Titre"],["heroTitleAccent","Titre - accent italique"],["heroSub","Sous-titre"],["heroSubDesc","Description",true],["heroTags","Tags (séparés par ,)"],["heroBtnPrimTxt","Texte bouton principal"],["heroBtnSecTxt","Texte bouton secondaire"],["heroBtnNavTxt","Texte bouton nav"]].filter(([,l])=>matches(l)).map(([k,l,m])=>
-              <Field key={k} label={l}><TextInput k={k} state={cfg.txts} setter={setTxt} multi={m}/></Field>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.txts} setter={setTxt} multi={m}/></BOField>
             )}
-          </Card>
-          <Card title="Sections" icon="📝">
+          </BOCard>
+          <BOCard title="Sections" icon="📝">
             {[["s1Title","Section 1 - Titre"],["s1Desc","Section 1 - Description",true],["s1Quote","Section 1 - Citation",true],
               ["s2Title","Section 2 - Titre"],["s2Desc","Section 2 - Description"],
               ["s3Title","Section 3 - Titre"],["s3LabelBefore","Section 3 - Label Avant"],["s3LabelAfter","Section 3 - Label Avec TiMat"],["s3LabelResult","Section 3 - Label Résultat"],
@@ -7171,37 +7188,37 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               ["s5Title","Section 5 - Titre"],["s6Title","Section 6 - Titre"],
               ["ctaTitle","CTA - Titre (\\n pour saut)",true],["ctaTitleAccent","CTA - Texte accent"],["ctaSubTitle","CTA - Sous-titre"]
             ].filter(([,l])=>matches(l)).map(([k,l,m])=>
-              <Field key={k} label={l}><TextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></Field>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
             )}
-          </Card>
-          <Card title="Tarifs et CTA" icon="💰">
+          </BOCard>
+          <BOCard title="Tarifs et CTA" icon="💰">
             {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freePrice","Gratuit - prix (ex: 0€)"],["freeDesc","Gratuit - description"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <Field key={k} label={l}><TextInput k={k} state={cfg.txts} setter={setTxt}/></Field>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.txts} setter={setTxt}/></BOField>
             )}
-          </Card>
+          </BOCard>
         </>}
 
         {/* ====================== COULEURS (globales + par élément) ====================== */}
         {sec==="couleurs"&&<>
-          <Card title="Palette de l\'application" icon="🎨">
+          <BOCard title="Palette de l\'application" icon="🎨">
             {[["T","Principale (terracotta)"],["S","Secondaire (mauve)"],["G","Vert (succès)"],["R","Rouge/Rose (alertes)"],["c","Fond général"],["w","Fond cartes"],["b","Texte principal"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <Field key={k} label={l}><ColorInput k={k} state={cfg.cols} setter={setCol}/></Field>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.cols} setter={setCol}/></BOField>
             )}
-          </Card>
-          <Card title="Fonds de sections landing" icon="🖼️">
+          </BOCard>
+          <BOCard title="Fonds de sections landing" icon="🖼️">
             {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","Section 1 (problème)"],["section2Bg","Section 2 (démo)"],["section3Bg","Section 3 (transfo)"],["section4Bg","Section 4 (stats)"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section 6 (tarifs)"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <Field key={k} label={l}><ColorInput k={k} state={cfg.landing} setter={setLand}/></Field>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
-          </Card>
-          <Card title="Couleur d\'accent globale" icon="✨">
-            <Field label="Couleur accent (stats, italique, étoiles par défaut)"><ColorInput k="accentColor" state={cfg.landing} setter={setLand}/></Field>
-          </Card>
-          <Card title="Hero - couleurs de texte" icon="🏠">
+          </BOCard>
+          <BOCard title="Couleur d\'accent globale" icon="✨">
+            <BOField label="Couleur accent (stats, italique, étoiles par défaut)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
+          </BOCard>
+          <BOCard title="Hero - couleurs de texte" icon="🏠">
             {[["heroTitleColor","Titre hero"],["heroSubColor","Sous-titre"],["heroSubDescColor","Description"],["heroBadgeColor","Badge - texte"],["heroBadgeBg","Badge - fond"],["heroTagsColor","Tags"],["heroStatsColor","Stats (chiffres)"],["heroStatsLabelColor","Stats (labels)"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <Field key={k} label={l}><ColorInput k={k} state={cfg.landing} setter={setLand}/></Field>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
-          </Card>
-          <Card title="Sections 1 à 6 - couleurs texte" icon="📑">
+          </BOCard>
+          <BOCard title="Sections 1 à 6 - couleurs texte" icon="📑">
             {[["s1TitleColor","S1 - Titre"],["s1DescColor","S1 - Description"],["s1CardBg","S1 - Fond cards"],["s1CardTitleColor","S1 - Titre cards"],["s1CardDescColor","S1 - Texte cards"],["s1QuoteBg","S1 - Fond citation"],["s1QuoteColor","S1 - Citation"],
               ["s2TitleColor","S2 - Titre"],["s2DescColor","S2 - Description"],
               ["s3TitleColor","S3 - Titre"],["s3RowBg1","S3 - Fond rangée 1"],["s3RowBg2","S3 - Fond rangée 2"],["s3LabelBeforeColor","S3 - Label Avant"],["s3LabelAfterColor","S3 - Label Avec TiMat"],["s3LabelResultColor","S3 - Label Résultat"],["s3TextColor","S3 - Texte"],["s3ResultColor","S3 - Texte résultat"],
@@ -7210,9 +7227,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               ["s6TitleColor","S6 - Titre"],["freeBg","S6 - Fond Gratuit"],["freeLabelColor","S6 - Label Gratuit"],["freePriceColor","S6 - Prix Gratuit"],["freeDescColor","S6 - Description Gratuit"],["proBg","S6 - Fond Pro"],["proBorderColor","S6 - Bordure Pro"],["proLabelColor","S6 - Label Pro"],["proPriceColor","S6 - Prix Pro"],["proSubColor","S6 - Sous-prix Pro"],["proDescColor","S6 - Description Pro"],
               ["ctaTitleColor","CTA - Titre"],["ctaSubTitleColor","CTA - Sous-titre"],["ctaSubColor","CTA - Descriptif"],["ctaFooterColor","CTA - Footer"]
             ].filter(([,l])=>matches(l)).map(([k,l])=>
-              <Field key={k} label={l}><ColorInput k={k} state={cfg.landing} setter={setLand}/></Field>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
-          </Card>
+          </BOCard>
         </>}
 
         {/* ====================== BOUTONS ====================== */}
@@ -7227,13 +7244,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             {titre:"Bouton TARIFS Pro",icon:"🔸",fields:[["proBtnTxt","Texte",true],["proBtnBg","Fond",false],["proBtnColor","Couleur texte",false]]},
             {titre:"Bouton CTA final",icon:"🎯",fields:[["ctaBtnTxt","Texte",true],["ctaBtnBg","Fond",false],["ctaBtnColor","Couleur texte",false]]},
           ].filter(b=>matches(b.titre)).map(btn=>
-            <Card key={btn.titre} title={btn.titre} icon={btn.icon}>
+            <BOCard key={btn.titre} title={btn.titre} icon={btn.icon}>
               {btn.fields.map(([k,l,isTxt])=>
-                <Field key={k} label={l}>
+                <BOField key={k} label={l}>
                   {isTxt
-                    ?<TextInput k={k} state={cfg.txts} setter={setTxt}/>
-                    :<ColorInput k={k} state={cfg.landing} setter={setLand}/>}
-                </Field>
+                    ?<BOTextInput k={k} state={cfg.txts} setter={setTxt}/>
+                    :<BOColorInput k={k} state={cfg.landing} setter={setLand}/>}
+                </BOField>
               )}
               {/* Preview */}
               <div style={{marginTop:8,padding:8,background:"#f0f0f0",borderRadius:8}}>
@@ -7244,13 +7261,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                   border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"default",width:"100%"
                 }}>{cfg.txts[btn.fields.find(f=>f[2])?.[0]]||"Exemple"}</button>
               </div>
-            </Card>
+            </BOCard>
           )}
         </>}
 
         {/* ====================== POLICES ====================== */}
         {sec==="polices"&&<>
-          <Card title="Presets de polices" icon="🎨">
+          <BOCard title="Presets de polices" icon="🎨">
             <div style={{fontSize:11,color:"var(--m)",marginBottom:10}}>Clique pour appliquer un preset complet</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {FONT_PRESETS.map(p=><button key={p.name} onClick={()=>applyFontPreset(p)}
@@ -7262,17 +7279,17 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                 <div style={{fontSize:10,color:"var(--l)",fontFamily:p.body}}>Corps ({p.body.split(",")[0].replace(/\'/g,"")})</div>
               </button>)}
             </div>
-          </Card>
-          <Card title="Polices personnalisées" icon="𝐓">
-            <Field label="Police des titres" hint="Ex: \'Playfair Display\', serif">
-              <TextInput k="fontTitle" state={cfg.landing} setter={setLand}/>
-            </Field>
-            <Field label="Police du corps" hint="Ex: \'Inter\', sans-serif">
-              <TextInput k="fontBody" state={cfg.landing} setter={setLand}/>
-            </Field>
-            <Field label="URL Google Fonts" hint="Colle ici l\'URL complète de Google Fonts">
-              <TextInput k="googleFontsUrl" state={cfg.landing} setter={setLand} multi/>
-            </Field>
+          </BOCard>
+          <BOCard title="Polices personnalisées" icon="𝐓">
+            <BOField label="Police des titres" hint="Ex: \'Playfair Display\', serif">
+              <BOTextInput k="fontTitle" state={cfg.landing} setter={setLand}/>
+            </BOField>
+            <BOField label="Police du corps" hint="Ex: \'Inter\', sans-serif">
+              <BOTextInput k="fontBody" state={cfg.landing} setter={setLand}/>
+            </BOField>
+            <BOField label="URL Google Fonts" hint="Colle ici l\'URL complète de Google Fonts">
+              <BOTextInput k="googleFontsUrl" state={cfg.landing} setter={setLand} multi/>
+            </BOField>
             <div style={{padding:10,background:"var(--c)",borderRadius:8,marginTop:6,fontSize:11,color:"var(--m)",lineHeight:1.5}}>
               💡 Pour ajouter une police :<br/>
               1. Va sur <strong>fonts.google.com</strong><br/>
@@ -7280,33 +7297,33 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               3. Copie l\'URL de &lt;link href=\"...\"&gt;<br/>
               4. Colle-la ci-dessus + édite fontTitle / fontBody
             </div>
-          </Card>
-          <Card title="Aperçu des polices" icon="👁">
+          </BOCard>
+          <BOCard title="Aperçu des polices" icon="👁">
             <div style={{padding:12,background:"#fff",borderRadius:8,border:"1px solid var(--br)"}}>
               <div style={{fontFamily:cfg.landing.fontTitle,fontSize:24,fontWeight:700,marginBottom:8}}>Titre exemple</div>
               <div style={{fontFamily:cfg.landing.fontBody,fontSize:14,lineHeight:1.6}}>Corps de texte en police normale. Le lorem ipsum est un faux texte qui permet de visualiser la mise en page.</div>
             </div>
-          </Card>
+          </BOCard>
         </>}
 
         {/* ====================== CONTENU (items) ====================== */}
         {sec==="contenu"&&<>
-          <Card title="Stats du hero (bandeau)" icon="📊">
+          <BOCard title="Stats du hero (bandeau)" icon="📊">
             {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsHero",i,"suf",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsHero",i,"label",e.target.value)}/>
             </div>)}
-          </Card>
-          <Card title="Stats section chiffres" icon="📊">
+          </BOCard>
+          <BOCard title="Stats section chiffres" icon="📊">
             {(cfg.statsSection||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsSection",i,"n",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsSection",i,"suf",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsSection",i,"label",e.target.value)}/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.desc||""}onChange={e=>setStat("statsSection",i,"desc",e.target.value)}/>
             </div>)}
-          </Card>
-          <Card title="Pain points (section 1)" icon="🔥">
+          </BOCard>
+          <BOCard title="Pain points (section 1)" icon="🔥">
             {(cfg.painPoints||[]).map((p,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",gap:4,marginBottom:4}}>
                 <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={p.ic}onChange={e=>setPain(i,"ic",e.target.value)}/>
@@ -7316,8 +7333,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={p.desc}onChange={e=>setPain(i,"desc",e.target.value)}/>
             </div>)}
             <button onClick={addPain}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%"}}>+ Ajouter un pain point</button>
-          </Card>
-          <Card title="Transformations (section 3)" icon="🔄">
+          </BOCard>
+          <BOCard title="Transformations (section 3)" icon="🔄">
             {(cfg.transformations||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",gap:4,marginBottom:4}}>
                 <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={t[0]}onChange={e=>setTransfo(i,0,e.target.value)}/>
@@ -7327,8 +7344,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <input className="inp"style={{fontSize:11,padding:"4px 6px",marginBottom:3,width:"100%",boxSizing:"border-box"}}value={t[2]}onChange={e=>setTransfo(i,2,e.target.value)}placeholder="Avec TiMat..."/>
               <input className="inp"style={{fontSize:11,padding:"4px 6px",width:"100%",boxSizing:"border-box"}}value={t[3]}onChange={e=>setTransfo(i,3,e.target.value)}placeholder="Résultat..."/>
             </div>)}
-          </Card>
-          <Card title="Témoignages (section 5)" icon="⭐">
+          </BOCard>
+          <BOCard title="Témoignages (section 5)" icon="⭐">
             {(cfg.testimonials||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontSize:11,fontWeight:700,color:"var(--b)"}}>⭐ Témoignage {i+1}</div>
@@ -7343,9 +7360,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               )}
             </div>)}
             <button onClick={addTesti}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%"}}>+ Ajouter un témoignage</button>
-          </Card>
+          </BOCard>
 
-          <Card title="Plan Gratuit - Fonctionnalités" icon="🆓">
+          <BOCard title="Plan Gratuit - Fonctionnalités" icon="🆓">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Coche = inclus, décoche = barré (non inclus)</div>
             {(cfg.freeItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input type="checkbox"checked={item[0]}onChange={e=>setFreeItem(i,0,e.target.checked)}style={{width:16,height:16,cursor:"pointer",flexShrink:0}}/>
@@ -7353,30 +7370,30 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <button onClick={()=>removeFreeItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
             <button onClick={addFreeItem}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
-          </Card>
+          </BOCard>
 
-          <Card title="Plan Pro - Fonctionnalités" icon="⭐">
+          <BOCard title="Plan Pro - Fonctionnalités" icon="⭐">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Emoji + texte sur une ligne. Les 3 premières sont en gras automatiquement.</div>
             {(cfg.proItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setProItem(i,e.target.value)}placeholder="✨ Emoji + description"/>
               <button onClick={()=>removeProItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
             <button onClick={addProItem}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
-          </Card>
+          </BOCard>
 
-          <Card title="Garanties (sous tarifs)" icon="✅">
+          <BOCard title="Garanties (sous tarifs)" icon="✅">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Les petits points de réassurance affichés sous les tarifs.</div>
             {(cfg.guarantees||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setGuarantee(i,e.target.value)}placeholder="✅ Texte garantie"/>
               <button onClick={()=>removeGuarantee(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
             <button onClick={addGuarantee}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une garantie</button>
-          </Card>
+          </BOCard>
         </>}
 
         {/* ====================== APP (modules + stats) ====================== */}
         {sec==="app"&&<>
-          <Card title="Modules activables" icon="⚙️">
+          <BOCard title="Modules activables" icon="⚙️">
             {[
               {k:"parrainage",l:"Parrainage",ic:"🎁"},
               {k:"forum",l:"Forum communauté",ic:"💬"},
@@ -7389,8 +7406,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                 <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
               </div>
             </div>)}
-          </Card>
-          <Card title="Statistiques" icon="📊">
+          </BOCard>
+          <BOCard title="Statistiques" icon="📊">
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
               {[{v:stats.users,l:"Inscrits",c:"var(--T)"},{v:stats.pro,l:"Pro",c:"var(--S)"},{v:stats.enfants,l:"Enfants",c:"var(--G)"}].map(s=>
                 <div key={s.l}style={{padding:10,background:"var(--c)",borderRadius:8}}>
@@ -7399,8 +7416,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                 </div>
               )}
             </div>
-          </Card>
-          <Card title="Table Supabase" icon="🗄️">
+          </BOCard>
+          <BOCard title="Table Supabase" icon="🗄️">
             <div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>À exécuter dans Supabase SQL Editor :</div>
             <div style={{fontSize:10,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
               CREATE TABLE app_config (<br/>
@@ -7411,7 +7428,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;<br/>
               CREATE POLICY \"admin_all\" ON app_config USING (true);
             </div>
-          </Card>
+          </BOCard>
         </>}
 
       </div>
@@ -7428,17 +7445,17 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 }
 
 const DEFAULT_CONFIG = {
-  cols: {T:"#C4714A",S:"#9B6BAA",G:"#4A8B6E",R:"#C44A6A",c:"#FDF5F8",w:"#FFFFFF",b:"#1A1118"},
+  cols: {T:"#FF9F63",S:"#2A9D8F",G:"#2A9D8F",R:"#E76F51",c:"#FDFBF8",w:"#FFFFFF",b:"#264653"},
   txts: {
-    heroTitle:"Le système vous a transformée",
-    heroTitleAccent:"en comptable.",
-    heroSub:"TiMat vous rend votre vrai rôle.",
+    heroTitle:"Moins de paperasse,",
+    heroTitleAccent:"plus de câlins.",
+    heroSub:"L'app tout-en-un des assistantes maternelles.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     heroDesc:"",
-    heroBadge:"💛 POUR LES ASSISTANTES MATERNELLES DE FRANCE",
-    heroSubDesc:"Vous gérez seule ce que les crèches font à 5 personnes.\nContrats, salaires, bilans, PMI, suivi des enfants - tout ça, sans formation, sans aide, souvent le soir.",
+    heroBadge:"🧸 CONÇUE PAR UNE ASSMAT, POUR LES ASSMATS",
+    heroSubDesc:"Contrats, salaires, pointages, transmissions, Pajemploi...\nTiMat automatise tout pour que vous puissiez vous concentrer sur les enfants.",
     heroBtnPrimTxt:"2 mois gratuits, sans CB →",
     heroBtnSecTxt:"Voir la démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
@@ -7456,38 +7473,38 @@ const DEFAULT_CONFIG = {
     freePrice:"0€",
   },
   landing: {
-    heroBg:"linear-gradient(160deg, #6B3D5A 0%, #7A4A68 35%, #6B3D5A 65%, #582E4A 100%)",
+    heroBg:"linear-gradient(160deg, #264653 0%, #2A6F6A 40%, #264653 70%, #1B3540 100%)",
     heroImg:"/hero-enfants.jpg",
     heroImgOpacity:0.20,
-    section1Bg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
+    section1Bg:"linear-gradient(135deg,#264653,#2A6F6A)",
     section2Bg:"#FDF5FB",
     section3Bg:"#F8F0FC",
-    section4Bg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
+    section4Bg:"linear-gradient(135deg,#264653,#2A9D8F)",
     section5Bg:"#FDF5FB",
     section6Bg:"#F5EBF8",
-    ctaBg:"linear-gradient(135deg,#5C3370,#9B6BAA)",
+    ctaBg:"linear-gradient(135deg,#264653,#2A6F6A)",
     statsBg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
     // ----- BOUTONS HERO -----
-    heroBtnPrimBg:"linear-gradient(135deg,#C4714A,#9A4020)",
+    heroBtnPrimBg:"linear-gradient(135deg,#FF9F63,#E76F51)",
     heroBtnPrimColor:"#fff",
     heroBtnSecBg:"rgba(255,255,255,.07)",
     heroBtnSecColor:"#fff",
-    heroBtnNavBg:"linear-gradient(135deg,#9B6BAA,#B87CC8)",
+    heroBtnNavBg:"linear-gradient(135deg,#2A9D8F,#264653)",
     heroBtnNavColor:"#fff",
     heroBtnTarifsBg:"rgba(255,255,255,.12)",
     heroBtnTarifsColor:"rgba(255,255,255,.85)",
     heroBtnConnexionBg:"rgba(255,255,255,.18)",
     heroBtnConnexionColor:"#fff",
     // ----- BOUTONS TARIFS -----
-    proBtnBg:"linear-gradient(135deg,#C4714A,#9A4020)",
+    proBtnBg:"linear-gradient(135deg,#FF9F63,#E76F51)",
     proBtnColor:"#fff",
     freeBtnBg:"#0D1B2A",
     freeBtnColor:"#fff",
     // ----- BOUTON CTA FINAL -----
-    ctaBtnBg:"linear-gradient(135deg,#C4714A,#9A4020)",
+    ctaBtnBg:"linear-gradient(135deg,#FF9F63,#E76F51)",
     ctaBtnColor:"#fff",
     // ----- COULEURS -----
-    accentColor:"#E8A84A",
+    accentColor:"#FF9F63",
     // Couleurs de texte par section
     heroTitleColor:"#fff",
     heroSubColor:"rgba(255,255,255,.75)",
@@ -7543,11 +7560,11 @@ const DEFAULT_CONFIG = {
     ctaFooterColor:"rgba(255,255,255,.35)",
     pageBg:"#FDF5F8",
     // ----- POLICES -----
-    fontTitle:"'Fraunces', Georgia, serif",
-    fontBody:"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",
+    fontTitle:"'Quicksand', sans-serif",
+    fontBody:"'Outfit', sans-serif",
     fontTitleWeight:"700",
     fontBodyWeight:"400",
-    googleFontsUrl:"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap",
+    googleFontsUrl:"https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap",
     // ----- TEXTES SECTIONS -----
     s1Title:"La réalité du métier, personne n'en parle.",
     s1Desc:"Être assistante maternelle agréée, c'est exercer un métier de soin exigeant\ntout en gérant une TPE sans formation ni support.",
@@ -7565,6 +7582,15 @@ const DEFAULT_CONFIG = {
     ctaTitle:"Vous n'avez pas eu de formation\nen comptabilité.",
     ctaTitleAccent:"en comptabilité.",
     ctaSubTitle:"Pourtant vous en faites tous les mois.",
+    // Alignements (left, center, right)
+    heroAlign:"center",
+    s1Align:"center",
+    s2Align:"center",
+    s3Align:"center",
+    s4Align:"center",
+    s5Align:"center",
+    s6Align:"center",
+    ctaAlign:"center",
   },
   painPoints:[
     {ic:"🧮",titre:"Comptable sans diplôme",desc:"Mensualisation, heures majorées, cotisations, régularisations... Des calculs que même les comptables trouvent complexes. Vous les faites seule, chaque mois."},
