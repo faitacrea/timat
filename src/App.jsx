@@ -5952,7 +5952,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.15, marginBottom: 20 }}>
             {T.heroTitle}<br/>
-            <span style={{ color: accent, fontStyle: "italic" }}>en comptable.</span><br/>
+            {T.heroTitleAccent&&<><span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span><br/></>}
             <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: L.heroSubColor||"rgba(255,255,255,.75)", fontStyle: "normal" }}>{T.heroSub}</span>
           </div>
           <div style={{ fontSize: "clamp(14px,2vw,17px)", color: L.heroSubDescColor||"rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
@@ -6108,12 +6108,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <div style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.freePriceColor||"#0D1B2A" }}>0€</span>
+                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.freePriceColor||"#0D1B2A" }}>{T.freePrice||"0€"}</span>
               </div>
-              <div style={{ fontSize: 13, color: L.freeDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>Pour découvrir TiMat.</div>
+              <div style={{ fontSize: 13, color: L.freeDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.freeDesc||"Pour découvrir TiMat."}</div>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.freeBtnBg||"#0D1B2A", color: L.freeBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>{T.freeBtnTxt||"Commencer gratuitement"}</button>
-              {[[true, "1 enfant accueilli"], [true, "Journal quotidien"], [true, "Pointage & Repas"], [true, "Messagerie parents"], [true, "Calendrier"], [false, "Bilans & Bulletins de salaire"], [false, "Pajemploi export"], [false, "PMI & Documents"], [false, "Enfants illimités"]].map(([ok, t], i) => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 8 ? "1px solid #DDD5C8" : "none" }}>
+              {(config.freeItems||DEFAULT_CONFIG.freeItems).map(([ok, t], i, arr) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid #DDD5C8" : "none" }}>
                   <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
                   <span style={{ color: ok ? "#2C1F14" : "#A68970" }}>{t}</span>
                 </div>
@@ -6130,8 +6130,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
               <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
-              {["✨ Bilans de journée automatiques", "📜 Bulletins de salaire complets", "🏛️ Export Pajemploi en 1 clic", "📑 Attestation fiscale", "📸 Photos illimitées", "🏥 Communication PMI", "🗂️ Documents illimités (5 Go)", "👶 Enfants illimités", "📋 Solde de tout compte", "✉️ Courriers types", "❓ Centre d'aide prioritaire"].map((t, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < 10 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
+              {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
                   <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
                   <span style={{ color: "#2C1F14", fontWeight: i < 3 ? 700 : 400 }}>{t}</span>
                 </div>
@@ -6139,7 +6139,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </div>
           <div style={{ textAlign: "center", marginTop: 24, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "#A68970" }}>
-            <span>✅ 2 mois d'essai sans CB</span><span>✅ Résiliable en 1 clic</span><span>✅ Données en France 🇫🇷</span>
+            {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
         </div>
       </div>
@@ -6809,6 +6809,16 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const removePain=(idx)=>setCfg(c=>({...c,painPoints:(c.painPoints||[]).filter((_,i)=>i!==idx)}));
   const addTesti=()=>setCfg(c=>({...c,testimonials:[...(c.testimonials||[]),{nom:"Nouveau",ville:"Ville",avant:"Avant...",apres:"Après..."}]}));
   const removeTesti=(idx)=>setCfg(c=>({...c,testimonials:(c.testimonials||[]).filter((_,i)=>i!==idx)}));
+  // Free/Pro/Guarantees
+  const setFreeItem=(idx,pos,v)=>setCfg(c=>{const items=[...(c.freeItems||[])];const row=[...items[idx]];row[pos]=v;items[idx]=row;return{...c,freeItems:items};});
+  const addFreeItem=()=>setCfg(c=>({...c,freeItems:[...(c.freeItems||[]),[true,"Nouvelle fonctionnalité"]]}));
+  const removeFreeItem=(idx)=>setCfg(c=>({...c,freeItems:(c.freeItems||[]).filter((_,i)=>i!==idx)}));
+  const setProItem=(idx,v)=>setCfg(c=>{const items=[...(c.proItems||[])];items[idx]=v;return{...c,proItems:items};});
+  const addProItem=()=>setCfg(c=>({...c,proItems:[...(c.proItems||[]),"✨ Nouvelle fonctionnalité"]}));
+  const removeProItem=(idx)=>setCfg(c=>({...c,proItems:(c.proItems||[]).filter((_,i)=>i!==idx)}));
+  const setGuarantee=(idx,v)=>setCfg(c=>{const items=[...(c.guarantees||[])];items[idx]=v;return{...c,guarantees:items};});
+  const addGuarantee=()=>setCfg(c=>({...c,guarantees:[...(c.guarantees||[]),"✅ Nouvelle garantie"]}));
+  const removeGuarantee=(idx)=>setCfg(c=>({...c,guarantees:(c.guarantees||[]).filter((_,i)=>i!==idx)}));
 
   const sauvegarder=async()=>{
     setSaving(true);
@@ -7035,6 +7045,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           <Card title="Textes du hero" icon="📝">
             <Field label="Badge (bandeau jaune)"><TextInput k="heroBadge" state={cfg.txts} setter={setTxt}/></Field>
             <Field label="Titre principal"><TextInput k="heroTitle" state={cfg.txts} setter={setTxt}/></Field>
+            <Field label="Accent du titre (en italique doré)" hint="Laisser vide pour masquer"><TextInput k="heroTitleAccent" state={cfg.txts} setter={setTxt}/></Field>
             <Field label="Sous-titre (grand)"><TextInput k="heroSub" state={cfg.txts} setter={setTxt}/></Field>
             <Field label="Description sous titre" hint="Utilise \\n pour un retour à la ligne"><TextInput k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/></Field>
             <Field label="Tags (séparés par virgule)"><TextInput k="heroTags" state={cfg.txts} setter={setTxt}/></Field>
@@ -7119,7 +7130,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
         {/* ====================== TEXTES (tous) ====================== */}
         {sec==="textes"&&<>
           <Card title="Hero" icon="🏠">
-            {[["heroBadge","Badge"],["heroTitle","Titre"],["heroSub","Sous-titre"],["heroSubDesc","Description",true],["heroTags","Tags (séparés par ,)"],["heroBtnPrimTxt","Texte bouton principal"],["heroBtnSecTxt","Texte bouton secondaire"],["heroBtnNavTxt","Texte bouton nav"]].filter(([,l])=>matches(l)).map(([k,l,m])=>
+            {[["heroBadge","Badge"],["heroTitle","Titre"],["heroTitleAccent","Titre - accent italique"],["heroSub","Sous-titre"],["heroSubDesc","Description",true],["heroTags","Tags (séparés par ,)"],["heroBtnPrimTxt","Texte bouton principal"],["heroBtnSecTxt","Texte bouton secondaire"],["heroBtnNavTxt","Texte bouton nav"]].filter(([,l])=>matches(l)).map(([k,l,m])=>
               <Field key={k} label={l}><TextInput k={k} state={cfg.txts} setter={setTxt} multi={m}/></Field>
             )}
           </Card>
@@ -7135,7 +7146,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             )}
           </Card>
           <Card title="Tarifs et CTA" icon="💰">
-            {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freePrice","Gratuit - prix (ex: 0€)"],["freeDesc","Gratuit - description"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <Field key={k} label={l}><TextInput k={k} state={cfg.txts} setter={setTxt}/></Field>
             )}
           </Card>
@@ -7304,6 +7315,34 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             </div>)}
             <button onClick={addTesti}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%"}}>+ Ajouter un témoignage</button>
           </Card>
+
+          <Card title="Plan Gratuit - Fonctionnalités" icon="🆓">
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Coche = inclus, décoche = barré (non inclus)</div>
+            {(cfg.freeItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
+              <input type="checkbox"checked={item[0]}onChange={e=>setFreeItem(i,0,e.target.checked)}style={{width:16,height:16,cursor:"pointer",flexShrink:0}}/>
+              <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item[1]}onChange={e=>setFreeItem(i,1,e.target.value)}/>
+              <button onClick={()=>removeFreeItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
+            </div>)}
+            <button onClick={addFreeItem}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
+          </Card>
+
+          <Card title="Plan Pro - Fonctionnalités" icon="⭐">
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Emoji + texte sur une ligne. Les 3 premières sont en gras automatiquement.</div>
+            {(cfg.proItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
+              <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setProItem(i,e.target.value)}placeholder="✨ Emoji + description"/>
+              <button onClick={()=>removeProItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
+            </div>)}
+            <button onClick={addProItem}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
+          </Card>
+
+          <Card title="Garanties (sous tarifs)" icon="✅">
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Les petits points de réassurance affichés sous les tarifs.</div>
+            {(cfg.guarantees||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
+              <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setGuarantee(i,e.target.value)}placeholder="✅ Texte garantie"/>
+              <button onClick={()=>removeGuarantee(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
+            </div>)}
+            <button onClick={addGuarantee}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une garantie</button>
+          </Card>
         </>}
 
         {/* ====================== APP (modules + stats) ====================== */}
@@ -7362,7 +7401,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 const DEFAULT_CONFIG = {
   cols: {T:"#C4714A",S:"#9B6BAA",G:"#4A8B6E",R:"#C44A6A",c:"#FDF5F8",w:"#FFFFFF",b:"#1A1118"},
   txts: {
-    heroTitle:"Le système vous a transformée en comptable.",
+    heroTitle:"Le système vous a transformée",
+    heroTitleAccent:"en comptable.",
     heroSub:"TiMat vous rend votre vrai rôle.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
@@ -7383,6 +7423,8 @@ const DEFAULT_CONFIG = {
     proBtnTxt:"2 mois gratuits, sans CB →",
     freeLabel:"Gratuit",
     freeBtnTxt:"Commencer gratuitement",
+    freeDesc:"Pour découvrir TiMat.",
+    freePrice:"0€",
   },
   landing: {
     heroBg:"linear-gradient(160deg, #6B3D5A 0%, #7A4A68 35%, #6B3D5A 65%, #582E4A 100%)",
@@ -7528,6 +7570,35 @@ const DEFAULT_CONFIG = {
     {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contesté des heures.",apres:"Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat."},
     {nom:"Fatima A.",ville:"Marseille",avant:"Je me réveillais la nuit à stresser.",apres:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai."},
   ],
+  freeItems:[
+    [true, "1 enfant accueilli"],
+    [true, "Journal quotidien"],
+    [true, "Pointage & Repas"],
+    [true, "Messagerie parents"],
+    [true, "Calendrier"],
+    [false, "Bilans & Bulletins de salaire"],
+    [false, "Pajemploi export"],
+    [false, "PMI & Documents"],
+    [false, "Enfants illimités"],
+  ],
+  proItems:[
+    "✨ Bilans de journée automatiques",
+    "📜 Bulletins de salaire complets",
+    "🏛️ Export Pajemploi en 1 clic",
+    "📑 Attestation fiscale",
+    "📸 Photos illimitées",
+    "🏥 Communication PMI",
+    "🗂️ Documents illimités (5 Go)",
+    "👶 Enfants illimités",
+    "📋 Solde de tout compte",
+    "✉️ Courriers types",
+    "❓ Centre d'aide prioritaire",
+  ],
+  guarantees:[
+    "✅ 2 mois d'essai sans CB",
+    "✅ Résiliable en 1 clic",
+    "✅ Données en France 🇫🇷",
+  ],
   feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
@@ -7563,6 +7634,9 @@ const loadConfig = async () => {
         statsHero: saved.statsHero||DEFAULT_CONFIG.statsHero,
         statsSection: saved.statsSection||DEFAULT_CONFIG.statsSection,
         testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
+        freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
+        proItems: saved.proItems||DEFAULT_CONFIG.proItems,
+        guarantees: saved.guarantees||DEFAULT_CONFIG.guarantees,
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
