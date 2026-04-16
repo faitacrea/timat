@@ -6826,6 +6826,33 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     setToast("🔄 Config réinitialisée (cliquer Sauvegarder pour valider)");
   };
 
+  const rechargerDepuisSupabase=async()=>{
+    setSaving(true);
+    await loadConfig();
+    const fromDb=JSON.parse(JSON.stringify(G));
+    setCfg(fromDb);
+    setAppConfig(fromDb);
+    setToast("🔄 Config rechargée depuis Supabase");
+    setSaving(false);
+  };
+
+  const diagnostiquer=async()=>{
+    const {data,error}=await supabase.from('app_config').select('*').eq('id','main').single();
+    if(error){
+      alert("❌ Erreur Supabase : "+error.message+"\\n\\nVérifie que la table app_config existe et que les policies RLS permettent l\\'accès.");
+      return;
+    }
+    if(!data){
+      alert("⚠️ Aucune config en base. Clique Sauvegarder pour créer.");
+      return;
+    }
+    const parsed=typeof data.config==='string'?JSON.parse(data.config):data.config;
+    const keys=Object.keys(parsed).join(", ");
+    const landingKeys=parsed.landing?Object.keys(parsed.landing).length:0;
+    const txtsKeys=parsed.txts?Object.keys(parsed.txts).length:0;
+    alert("✅ Config trouvée en base\\n\\nDernière maj : "+data.updated_at+"\\n\\nClés : "+keys+"\\n\\nlanding : "+landingKeys+" champs\\ntxts : "+txtsKeys+" champs\\n\\nTaille : "+JSON.stringify(parsed).length+" octets");
+  };
+
   // Google Fonts presets
   const FONT_PRESETS=[
     {name:"Fraunces + Jakarta (défaut)",title:"\'Fraunces\', Georgia, serif",body:"\'Plus Jakarta Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap"},
@@ -6910,7 +6937,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
         <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>🔧 Backoffice</span>
         <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
       </div>
-      <div style={{display:"flex",gap:6}}>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
+        <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
         <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
         <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={reset}>↺ Reset</button>
         <button className="btn bT"style={{fontSize:11,padding:"5px 14px"}}onClick={sauvegarder}disabled={saving}>{saving?"⏳":"💾 Sauvegarder"}</button>
@@ -7450,24 +7479,58 @@ const applyColsToDOM = (cols) => {
 
 const loadConfig = async () => {
   try {
-    const {data} = await supabase.from('app_config').select('config').eq('id','main').single();
+    const {data,error} = await supabase.from('app_config').select('config').eq('id','main').single();
+    if (error) {
+      console.log('[TiMat config] Pas de config en base ou erreur:', error.message);
+      return;
+    }
     if (data?.config) {
-      const saved = JSON.parse(data.config);
-      G = {...DEFAULT_CONFIG, ...saved,
+      const saved = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
+      console.log('[TiMat config] Config chargée depuis Supabase:', Object.keys(saved));
+      G = {
+        ...DEFAULT_CONFIG,
+        ...saved,
         cols:{...DEFAULT_CONFIG.cols,...(saved.cols||{})},
         txts:{...DEFAULT_CONFIG.txts,...(saved.txts||{})},
         landing:{...DEFAULT_CONFIG.landing,...(saved.landing||{})},
+        feats:{...DEFAULT_CONFIG.feats,...(saved.feats||{})},
+        // Arrays: use saved if present, else default
+        painPoints: saved.painPoints||DEFAULT_CONFIG.painPoints,
+        transformations: saved.transformations||DEFAULT_CONFIG.transformations,
+        statsHero: saved.statsHero||DEFAULT_CONFIG.statsHero,
+        statsSection: saved.statsSection||DEFAULT_CONFIG.statsSection,
+        testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
       };
       applyColsToDOM(G.cols);
+      // Inject custom Google Fonts URL if configured
+      if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
+        const existing = document.getElementById('timat-fonts');
+        if (existing) existing.href = G.landing.googleFontsUrl;
+      }
     }
-  } catch(e) { /* table doesn't exist yet - use defaults */ }
+  } catch(e) {
+    console.log('[TiMat config] Erreur chargement:', e.message);
+  }
 };
 
 const saveConfig = async () => {
   try {
-    await supabase.from('app_config').upsert({id:'main',config:JSON.stringify(G),updated_at:new Date().toISOString()});
+    const payload = JSON.stringify(G);
+    const {error} = await supabase.from('app_config').upsert({
+      id:'main',
+      config: payload,
+      updated_at: new Date().toISOString()
+    });
+    if (error) {
+      console.error('[TiMat config] Erreur sauvegarde:', error.message);
+      return false;
+    }
+    console.log('[TiMat config] Sauvegardé ('+payload.length+' octets)');
     return true;
-  } catch(e) { return false; }
+  } catch(e) {
+    console.error('[TiMat config] Exception sauvegarde:', e);
+    return false;
+  }
 };
 
 
@@ -7505,7 +7568,10 @@ export default function App(){
 
   // Charger config backoffice au démarrage -
   useEffect(()=>{
-    loadConfig().then(()=>setAppConfig(JSON.parse(JSON.stringify(G))));
+    loadConfig().then(()=>{
+      setAppConfig(JSON.parse(JSON.stringify(G)));
+      console.log('[TiMat config] appConfig synchronisé');
+    });
   },[]);
 
   // Vérifier session Supabase au démarrage -
