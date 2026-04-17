@@ -2137,15 +2137,33 @@ const CATS={
   agrement:{l:"Agréments & Pro",ic:"🏛️",c:"#2E5F8A",bg:"#E6F0F8"},
 };
 
-function DocumentsComplet({enfants,role,pEId,user})
+function Documents({enfants,role,pEId,user}){
   const [annee,setAnnee]=useState("2024");
   const [cat,setCat]=useState("tous");
   const [eId,setEId]=useState("tous");
-  const [docs,setDocs]=useState(enfants.every(e=>["e1","e2","e3"].includes(e.id))?DOCS_DEMO:[]);
+  const isDemoMode=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const [docs,setDocs]=useState(isDemoMode?DOCS_DEMO:[]);
   const [toast,setToast]=useState("");
   const [apercu,setApercu]=useState(null);
   const [showUpload,setShowUpload]=useState(false);
+  const [uploading,setUploading]=useState(false);
   const [newDoc,setNewDoc]=useState({nom:"",cat:"medical",sous:"",eId:enfants[0]?.id||""});
+  const [newFile,setNewFile]=useState(null);
+  const uploadRef=useRef(null);
+
+  // Load documents from Supabase on mount
+  useEffect(()=>{
+    if(isDemoMode||!user?.id)return;
+    (async()=>{
+      const{data,error}=await supabase.from('documents_meta').select('*').eq('asmat_id',user.id).order('created_at',{ascending:false});
+      if(!error&&data)setDocs(data.map(d=>({
+        id:d.id,eId:d.enfant_id,cat:d.categorie||'admin',sous:d.sous_type||'',
+        nom:d.nom,date:d.created_at?.slice(0,10)||TODAY_STR,annee:(d.created_at||'').slice(0,4),
+        taille:d.taille||'-',icone:CATS[d.categorie]?.ic||'📄',partage:d.partage!==false,
+        url:d.storage_url||null,storagePath:d.storage_path||null
+      })));
+    })();
+  },[user?.id,isDemoMode]);
 
   const annees=["2024","2023","2022","2021"];
   const liste=role==="parent"
@@ -2164,27 +2182,84 @@ function DocumentsComplet({enfants,role,pEId,user})
     count:filtres.filter(d=>d.cat===k).length
   })).filter(c=>c.count>0);
 
-  const simulerTelechargement=(doc)=>{
-    setToast("Téléchargement de "+doc.nom+" ✓");
+  const telechargerDoc=(doc)=>{
+    if(doc.url){
+      window.open(doc.url,'_blank');
+    }else{
+      setToast("Aperçu de "+doc.nom+" ✓");
+    }
   };
-  const simulerImpression=(doc)=>{
-    setToast("Envoi à l'imprimante : "+doc.nom+" ✓");
+
+  const supprimerDoc=async(doc)=>{
+    if(!window.confirm("Supprimer "+doc.nom+" ?"))return;
+    if(doc.storagePath&&!isDemoMode){
+      await supabase.storage.from('documents').remove([doc.storagePath]);
+      await supabase.from('documents_meta').delete().eq('id',doc.id);
+    }
+    setDocs(p=>p.filter(d=>d.id!==doc.id));
+    setToast("Document supprimé ✓");
   };
-  const ajouterDoc=()=>{
-    if(!newDoc.nom.trim())return;
-    setDocs(p=>[...p,{
-      id:"dn"+Date.now(),
-      eId:newDoc.eId||null,
-      cat:newDoc.cat,
-      sous:newDoc.sous||CATS[newDoc.cat]?.l,
-      nom:newDoc.nom+(newDoc.nom.endsWith(".pdf")?"":".pdf"),
-      date:TODAY_STR,annee:"2024",
-      taille:"-",icone:CATS[newDoc.cat]?.ic||"📄",
-      partage:true,
-    }]);
+
+  const ajouterDoc=async()=>{
+    if(!newDoc.nom.trim()){setToast("Donne un nom au document");return;}
+    setUploading(true);
+
+    if(isDemoMode||!user?.id||!newFile){
+      // Demo mode or no file: just add to local state
+      setDocs(p=>[...p,{
+        id:"dn"+Date.now(),eId:newDoc.eId||null,cat:newDoc.cat,
+        sous:newDoc.sous||CATS[newDoc.cat]?.l,
+        nom:newDoc.nom+(newDoc.nom.endsWith(".pdf")?"":".pdf"),
+        date:TODAY_STR,annee:new Date().getFullYear().toString(),
+        taille:newFile?(newFile.size>1024*1024?(newFile.size/1024/1024).toFixed(1)+" Mo":(newFile.size/1024).toFixed(0)+" Ko"):"-",
+        icone:CATS[newDoc.cat]?.ic||"📄",partage:true,url:null
+      }]);
+      setToast("Document ajouté ✓"+(newFile?"":" (sans fichier - ajoutez un fichier pour le stockage permanent)"));
+    }else{
+      // Real upload to Supabase Storage
+      const ext=newFile.name.split('.').pop()||'pdf';
+      const fileName=`${Date.now()}_${newDoc.nom.replace(/[^a-zA-Z0-9]/g,'_')}.${ext}`;
+      const path=`${user.id}/${newDoc.eId||'general'}/${fileName}`;
+
+      const{error:upErr}=await supabase.storage.from('documents').upload(path,newFile,{upsert:false});
+      if(upErr){
+        console.error('Upload doc:',upErr.message);
+        setToast("❌ Erreur upload: "+upErr.message);
+        setUploading(false);return;
+      }
+
+      const{data:urlData}=supabase.storage.from('documents').getPublicUrl(path);
+      const taille=newFile.size>1024*1024?(newFile.size/1024/1024).toFixed(1)+" Mo":(newFile.size/1024).toFixed(0)+" Ko";
+
+      // Save metadata
+      const meta={
+        asmat_id:user.id,
+        enfant_id:newDoc.eId||null,
+        categorie:newDoc.cat,
+        sous_type:newDoc.sous||CATS[newDoc.cat]?.l,
+        nom:newDoc.nom+(newDoc.nom.includes('.')?'':'.'+ext),
+        taille:taille,
+        storage_path:path,
+        storage_url:urlData.publicUrl,
+        partage:true,
+      };
+      const{data:inserted,error:metaErr}=await supabase.from('documents_meta').insert(meta).select().single();
+      if(metaErr)console.error('Meta insert:',metaErr.message);
+
+      setDocs(p=>[{
+        id:inserted?.id||"dn"+Date.now(),eId:newDoc.eId||null,cat:newDoc.cat,
+        sous:newDoc.sous||CATS[newDoc.cat]?.l,
+        nom:meta.nom,date:TODAY_STR,annee:new Date().getFullYear().toString(),
+        taille,icone:CATS[newDoc.cat]?.ic||"📄",partage:true,
+        url:urlData.publicUrl,storagePath:path
+      },...p]);
+      setToast("✅ Document uploadé et sauvegardé");
+    }
+
     setNewDoc({nom:"",cat:"medical",sous:"",eId:enfants[0]?.id||""});
+    setNewFile(null);
     setShowUpload(false);
-    setToast("Document ajouté ✓");
+    setUploading(false);
   };
 
   return <div className="fi">
@@ -2220,8 +2295,17 @@ function DocumentsComplet({enfants,role,pEId,user})
         </div>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button className="btn bG"onClick={()=>setShowUpload(false)}>Annuler</button>
-        <button className="btn bT"onClick={ajouterDoc}>Enregistrer</button>
+        <button className="btn bG"onClick={()=>{setShowUpload(false);setNewFile(null);}}>Annuler</button>
+        <button className="btn bT"onClick={ajouterDoc}disabled={uploading}>{uploading?"⏳ Upload...":"Enregistrer"}</button>
+      </div>
+      {/* File picker */}
+      <div style={{marginTop:10,padding:12,border:"2px dashed var(--br)",borderRadius:10,textAlign:"center",cursor:"pointer",background:"var(--c)"}}
+        onClick={()=>uploadRef.current?.click()}>
+        <input ref={uploadRef}type="file"accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"style={{display:"none"}}
+          onChange={e=>{const f=e.target.files?.[0];if(f){setNewFile(f);if(!newDoc.nom.trim())setNewDoc(p=>({...p,nom:f.name.replace(/\.[^.]+$/,'')}));}}}/>
+        {newFile
+          ?<div style={{fontSize:12,color:"var(--S)"}}>📎 {newFile.name} ({(newFile.size/1024).toFixed(0)} Ko) <span style={{color:"var(--l)"}}>— cliquer pour changer</span></div>
+          :<div style={{fontSize:12,color:"var(--l)"}}>📁 Cliquer pour sélectionner un fichier (PDF, image, doc…)</div>}
       </div>
     </div>}
 
@@ -2306,11 +2390,14 @@ function DocumentsComplet({enfants,role,pEId,user})
                   onClick={()=>setApercu(apercu===doc.id?null:doc.id)}
                   title="Aperçu">👁️</button>
                 <button className="btn bG"style={{padding:"6px 10px",fontSize:12}}
-                  onClick={()=>simulerTelechargement(doc)}
+                  onClick={()=>telechargerDoc(doc)}
                   title="Télécharger">⬇️</button>
                 <button className="btn bG"style={{padding:"6px 10px",fontSize:12}}
-                  onClick={()=>simulerImpression(doc)}
+                  onClick={()=>{if(doc.url)window.open(doc.url);else setToast("Impression: "+doc.nom);}}
                   title="Imprimer">🖨️</button>
+                {role==="asmat"&&<button className="btn bG"style={{padding:"6px 10px",fontSize:12,color:"var(--R)"}}
+                  onClick={()=>supprimerDoc(doc)}
+                  title="Supprimer">🗑️</button>}
               </div>
             </div>;
           })}
@@ -2337,8 +2424,8 @@ function DocumentsComplet({enfants,role,pEId,user})
               <div style={{fontSize:11,color:"var(--l)"}}>Dans la version finale, le PDF s'affiche ici</div>
             </div>
             <div style={{display:"flex",gap:8,marginTop:16,justifyContent:"flex-end"}}>
-              <button className="btn bG"onClick={()=>simulerImpression(doc)}>🖨️ Imprimer</button>
-              <button className="btn bT"onClick={()=>simulerTelechargement(doc)}>⬇️ Télécharger</button>
+              <button className="btn bG"onClick={()=>{if(doc.url)window.open(doc.url);else window.print();}}>🖨️ Imprimer</button>
+              <button className="btn bT"onClick={()=>telechargerDoc(doc)}>⬇️ Télécharger</button>
             </div>
           </div>
         </div>;
@@ -3005,14 +3092,58 @@ function TransmissionsContent({enfant,role,user}){
   const [msg,setMsg]=useState("");
   const [mood,setMood]=useState("😊");
   const [txs,setTxs]=useState(D.transmissions);
-  const [photos,setPhotos]=useState({
-    // Demo photos par enfant
-    "e1":["https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=300&q=80","https://images.unsplash.com/photo-1533483595632-c5f0e57a1936?w=300&q=80"],
-    "e2":["https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=300&q=80"],
-    "e3":["https://images.unsplash.com/photo-1489913905888-58a7d5eddfa0?w=300&q=80","https://images.unsplash.com/photo-1518611012118-696072aa579a?w=300&q=80","https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?w=300&q=80"],
-  });
+  const [photos,setPhotos]=useState({});
+  const [photosLoading,setPhotosLoading]=useState(false);
   const [photoGrande,setPhotoGrande]=useState(null);
   const fileRef=useRef(null);
+
+  // Load photos from Supabase Storage on mount
+  useEffect(()=>{
+    if(!enfant?.id||["e1","e2","e3"].includes(enfant.id))return;
+    const loadPhotos=async()=>{
+      setPhotosLoading(true);
+      try{
+        const today=new Date().toISOString().slice(0,10);
+        const path=`${user?.id||'anon'}/${enfant.id}/${today}`;
+        const{data:files,error}=await supabase.storage.from('photos').list(path,{limit:50});
+        if(!error&&files?.length>0){
+          const urls=files.filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>{
+            const{data}=supabase.storage.from('photos').getPublicUrl(`${path}/${f.name}`);
+            return data.publicUrl;
+          });
+          setPhotos(p=>({...p,[enfant.id]:urls}));
+        }
+      }catch(e){console.log('Photos load:',e.message);}
+      setPhotosLoading(false);
+    };
+    loadPhotos();
+  },[enfant?.id]);
+
+  const ajouterPhoto=async(e)=>{
+    const file=e.target.files?.[0];
+    if(!file)return;
+    // For demo users, use local URL
+    if(["e1","e2","e3"].includes(enfant?.id)){
+      const url=URL.createObjectURL(file);
+      setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),url]}));
+      return;
+    }
+    // Upload to Supabase Storage
+    const today=new Date().toISOString().slice(0,10);
+    const ext=file.name.split('.').pop()||'jpg';
+    const fileName=`${Date.now()}.${ext}`;
+    const path=`${user?.id||'anon'}/${enfant.id}/${today}/${fileName}`;
+    const{error}=await supabase.storage.from('photos').upload(path,file,{upsert:false});
+    if(error){
+      console.error('Upload photo:',error.message);
+      // Fallback local
+      const url=URL.createObjectURL(file);
+      setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),url]}));
+      return;
+    }
+    const{data:urlData}=supabase.storage.from('photos').getPublicUrl(path);
+    setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),urlData.publicUrl]}));
+  };
 
   const bilansRecus=role==="parent"?[
     {id:"br1",type:"bilan",date:fmt(TODAY_STR),txt:BILANS[enfant?.id]?.[0]||""},
@@ -3025,13 +3156,6 @@ function TransmissionsContent({enfant,role,user}){
   const send=()=>{if(!msg.trim())return;
     setTxs(p=>[...p,{id:"tn"+Date.now(),eId:enfant.id,auteur:role,date:TODAY_STR,h:TODAY_H,txt:msg,mood}]);
     setMsg("");};
-
-  const ajouterPhoto=(e)=>{
-    const file=e.target.files?.[0];
-    if(!file)return;
-    const url=URL.createObjectURL(file);
-    setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),url]}));
-  };
 
   return <div>
     {/* Photos - galerie cliquable */}
@@ -4299,7 +4423,7 @@ function EveilComplet({enfants,role,pEId}){
 }
 
 //
-function DocumentsComplet({enfants,role,pEId,user})
+function DocumentsComplet({enfants,role,pEId,user}){
   const [sec,setSec]=useState("documents");
   return <div className="fi">
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)"}}>
@@ -4313,7 +4437,7 @@ function DocumentsComplet({enfants,role,pEId,user})
         }}><span>{s.ic}</span><span>{s.l}</span></button>
       )}
     </div>
-    {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}user={user}/>
+    {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {sec==="export"&&<ExportDonnees enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
