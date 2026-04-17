@@ -5999,7 +5999,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           <FadeIn delay={400}>
             <div style={{ marginTop: 40, textAlign: L.s1Align||"center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: L.s1QuoteColor||accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>"{L.s1Quote}"</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: L.s1QuoteColor||accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>{L.s1Quote}</div>
             </div>
           </FadeIn>
         </div>
