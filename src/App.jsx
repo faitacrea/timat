@@ -4299,7 +4299,7 @@ function EveilComplet({enfants,role,pEId}){
 }
 
 //
-function DocumentsComplet({enfants,role,pEId}){
+function DocumentsComplet({enfants,role,pEId,user})
   const [sec,setSec]=useState("documents");
   return <div className="fi">
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)"}}>
