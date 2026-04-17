@@ -2137,7 +2137,7 @@ const CATS={
   agrement:{l:"Agréments & Pro",ic:"🏛️",c:"#2E5F8A",bg:"#E6F0F8"},
 };
 
-function Documents({enfants,role,pEId}){
+function DocumentsComplet({enfants,role,pEId,user})
   const [annee,setAnnee]=useState("2024");
   const [cat,setCat]=useState("tous");
   const [eId,setEId]=useState("tous");
