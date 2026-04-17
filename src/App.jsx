@@ -4313,7 +4313,7 @@ function DocumentsComplet({enfants,role,pEId,user})
         }}><span>{s.ic}</span><span>{s.l}</span></button>
       )}
     </div>
-    {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}/>}
+    {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}user={user}/>
     {sec==="export"&&<ExportDonnees enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
