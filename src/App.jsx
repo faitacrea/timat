@@ -1480,7 +1480,62 @@ function Facturation({enfants,role,pEId}){
   const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||4.05)*contrat?.indemniteAbsence),0);
   const totalBrut=salBrut+indemAbs;
 
-  const exportPajemploi=()=>{setToast("Export Pajemploi préparé - données copiées ✓");};
+  const exportPajemploi=()=>{
+    const w=window.open('','_blank');
+    if(!w){setToast('Autorisez les popups');return;}
+    const mois=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    const hMens=Math.round((contrat?.heuresHebdo||40)*52/12);
+    const salNet=(totalBrut*0.78).toFixed(2);
+    const joursTrav=Math.round(h.real/((contrat?.heuresHebdo||40)/5));
+    const htmlPaj=[
+      '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Récap Pajemploi - '+mois+'</title>',
+      '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:800px;margin:30px auto;padding:20px;color:#222;font-size:12px}',
+      'h1{font-size:16px;text-align:center;color:#264653;margin-bottom:4px}',
+      '.sub{text-align:center;font-size:11px;color:#888;margin-bottom:20px}',
+      '.box{border:1.5px solid #2A9D8F;border-radius:10px;padding:16px;margin-bottom:16px}',
+      '.box h2{font-size:13px;color:#2A9D8F;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e0e0e0}',
+      'table{width:100%;border-collapse:collapse}td{padding:6px 10px;border-bottom:1px solid #f0f0f0}',
+      'td:first-child{font-weight:600;color:#264653;width:55%}td:last-child{text-align:right}',
+      '.hl{background:#FFF8F3;font-weight:700;font-size:13px}.hl td{border-bottom:2px solid #FF9F63}',
+      '.note{background:#F4F7FA;border-radius:8px;padding:12px;margin-top:16px;font-size:10px;color:#666;line-height:1.6}',
+      '.steps{margin-top:20px;padding:16px;border:1px dashed #2A9D8F;border-radius:8px}',
+      '.steps h3{font-size:12px;color:#2A9D8F;margin-bottom:10px}',
+      '.steps ol{padding-left:20px;font-size:11px;line-height:2}',
+      '@media print{.noprint{display:none}}</style></head><body>',
+      '<h1>🏛️ Récapitulatif Pajemploi</h1>',
+      '<div class="sub">'+mois+' — À reporter sur pajemploi.urssaf.fr</div>',
+      '<div class="box"><h2>👩‍👧 Assistante maternelle</h2>',
+      '<table><tr><td>Nom</td><td>'+((enfant?.prenomAsmat||"")+" "+(enfant?.nomAsmat||"")).trim()||'[Votre nom]'+'</td></tr>',
+      '<tr><td>Enfant gardé</td><td>'+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'</td></tr>',
+      '<tr><td>Période</td><td>'+mois+'</td></tr></table></div>',
+      '<div class="box"><h2>⏰ Heures à déclarer</h2>',
+      '<table><tr><td>Heures mensualisées (contrat)</td><td>'+hMens+' h</td></tr>',
+      '<tr><td>Heures réellement effectuées</td><td>'+h.real+' h</td></tr>',
+      '<tr><td>Heures complémentaires / supplémentaires</td><td>'+Math.max(0,h.real-hMens)+' h</td></tr>',
+      '<tr><td>Jours d\'activité</td><td>'+joursTrav+' jours</td></tr>',
+      '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table></div>',
+      '<div class="box"><h2>💰 Salaire à déclarer</h2>',
+      '<table><tr><td>Salaire net horaire</td><td>'+(totalBrut*0.78/h.real).toFixed(4)+' €/h</td></tr>',
+      '<tr><td>Salaire net total</td><td>'+salNet+' €</td></tr>',
+      '<tr><td>Indemnité d\'entretien</td><td>'+(h.real/5*contrat.entretien).toFixed(2)+' €</td></tr>',
+      '<tr><td>Indemnité de repas</td><td>0,00 €</td></tr>',
+      '<tr class="hl"><td>💶 TOTAL NET À DÉCLARER</td><td>'+salNet+' €</td></tr></table></div>',
+      '<div class="steps"><h3>📝 Comment déclarer sur Pajemploi :</h3>',
+      '<ol><li>Connectez-vous sur <strong>pajemploi.urssaf.fr</strong></li>',
+      '<li>Cliquez sur <strong>"Déclarer"</strong> > sélectionnez votre assistante maternelle</li>',
+      '<li>Entrez le nombre d\'heures : <strong>'+h.real+'h</strong></li>',
+      '<li>Entrez le nombre de jours d\'activité : <strong>'+joursTrav+'</strong></li>',
+      '<li>Entrez le salaire net total : <strong>'+salNet+' €</strong></li>',
+      '<li>Entrez l\'indemnité d\'entretien : <strong>'+(h.real/5*contrat.entretien).toFixed(2)+' €</strong></li>',
+      '<li>Validez la déclaration</li></ol></div>',
+      '<div class="note">📌 Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
+      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+      '</body></html>'
+    ].join('');
+    w.document.write(htmlPaj);
+    w.document.close();
+    setToast('Récap Pajemploi ouvert ✓');
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -5459,18 +5514,60 @@ function FAQ({role}){
 }
 
 //
-function Support({role}){
+function Support({role,user}){
   const [msg,setMsg]=useState("");
   const [sujet,setSujet]=useState("Question générale");
   const [envoye,setEnvoye]=useState(false);
-  const sujets=["Question générale","Problème technique","Facturation / abonnement","Calcul de salaire","Contrat / avenant","PMI / agrément","Autre"];
+  const [sending,setSending]=useState(false);
+  const [erreur,setErreur]=useState("");
+  const sujets=["Question générale","Problème technique","Facturation / abonnement","Calcul de salaire","Contrat / avenant","PMI / agrément","Suggestion","Autre"];
+  const isPro=user?.subscription_status==="pro";
+
+  const envoyer=async()=>{
+    if(!msg.trim()){setErreur("Écrivez votre message avant d'envoyer.");return;}
+    setSending(true);setErreur("");
+    try{
+      const res=await fetch('/api/support',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          email:user?.email||'inconnu',
+          prenom:user?.prenom||'',
+          nom:user?.nom||'',
+          role:role||'asmat',
+          sujet:sujet,
+          message:msg,
+          prioritaire:isPro,
+          timestamp:new Date().toISOString(),
+        })
+      });
+      if(res.ok){
+        setEnvoye(true);
+      }else{
+        // Fallback: mailto si l'API n'existe pas encore
+        const mailto=`mailto:support@timat.app?subject=${encodeURIComponent((isPro?"[PRO] ":"")+"["+sujet+"] "+user?.prenom)}&body=${encodeURIComponent(msg+"\n\n---\n"+user?.email+" · "+role)}`;
+        window.open(mailto);
+        setEnvoye(true);
+      }
+    }catch(e){
+      // Fallback mailto
+      const mailto=`mailto:support@timat.app?subject=${encodeURIComponent((isPro?"[PRO] ":"")+"["+sujet+"] "+user?.prenom)}&body=${encodeURIComponent(msg+"\n\n---\n"+user?.email+" · "+role)}`;
+      window.open(mailto);
+      setEnvoye(true);
+    }
+    setSending(false);
+  };
 
   return <div className="fi">
-    <PageHeader icon="💬" title="Support TiMat" sub="Notre équipe répond sous 24h, du lundi au vendredi"/>
+    <PageHeader icon="💬" title="Support TiMat" sub={isPro?"Support prioritaire — réponse sous 12h":"Notre équipe répond sous 24h, du lundi au vendredi"}/>
+    {isPro&&<div style={{background:"linear-gradient(135deg,#FFF8F3,#FFF0E6)",border:"1.5px solid #FF9F63",borderRadius:12,padding:"10px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:10,fontSize:12,color:"#E76F51",fontWeight:600}}>
+      ⭐ Vous bénéficiez du support prioritaire Pro — traitement en priorité
+    </div>}
     {envoye?<div style={{textAlign:"center",padding:40}}>
       <div style={{fontSize:60,marginBottom:16}}>✅</div>
       <div className="pf"style={{fontSize:22,fontWeight:600,color:"var(--S)",marginBottom:8}}>Message envoyé !</div>
-      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>Nous vous répondons par email sous 24h (jours ouvrés).<br/>En attendant, consultez notre <span style={{color:"var(--T)",cursor:"pointer",textDecoration:"underline"}}onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"faq"}))}>Centre d'aide</span>.</div>
+      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>Nous vous répondrons par email à <strong>{user?.email||"votre adresse"}</strong>{isPro?" sous 12h":" sous 24h"} (jours ouvrés).<br/>En attendant, consultez notre <span style={{color:"var(--T)",cursor:"pointer",textDecoration:"underline"}}onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"faq"}))}>Centre d'aide</span>.</div>
+      <button className="btn bG"style={{marginTop:20}}onClick={()=>{setEnvoye(false);setMsg("");}}>Envoyer un autre message</button>
     </div>:<div style={{maxWidth:560,margin:"0 auto"}}>
       <div className="card"style={{padding:24}}>
         <div style={{marginBottom:14}}>
@@ -5485,16 +5582,17 @@ function Support({role}){
             placeholder="Décrivez votre problème ou question le plus précisément possible…"
             style={{width:"100%",minHeight:120,resize:"vertical"}}/>
         </div>
+        {erreur&&<div style={{color:"var(--R)",fontSize:12,marginBottom:12,padding:"8px 12px",background:"#FEF2F2",borderRadius:8}}>{erreur}</div>}
         <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,padding:"10px 14px",background:"var(--Bp)",borderRadius:10}}>
           <span style={{fontSize:18}}>📧</span>
-          <div style={{fontSize:12,color:"var(--B)"}}>Notre réponse sera envoyée à <strong>{user?.email||D.asmat.email||"votre email"}</strong> - réponse en moins de 24h.</div>
+          <div style={{fontSize:12,color:"var(--B)"}}>Réponse envoyée à <strong>{user?.email||"votre email"}</strong>{isPro?" — délai prioritaire : 12h":" — délai : 24h max"}.</div>
         </div>
-        <button className="btn bT"style={{width:"100%"}}onClick={()=>{if(!msg.trim())return;setEnvoye(true);}}>
-          📤 Envoyer mon message
+        <button className="btn bT"style={{width:"100%"}}onClick={envoyer}disabled={sending}>
+          {sending?"⏳ Envoi en cours...":"📤 Envoyer mon message"}
         </button>
       </div>
       <div style={{marginTop:14,display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
-        {[["📧","support@timat.app"],["💬","Chat disponible 9h-18h"],["📚","Centre d'aide 24/7"]].map(([ic,t])=>
+        {[["📧","support@timat.app"],["⏱️",isPro?"Réponse < 12h":"Réponse < 24h"],["📚","Centre d'aide 24/7"]].map(([ic,t])=>
           <div key={t}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:10,padding:"10px 16px",fontSize:12,color:"var(--m)",display:"flex",gap:8,alignItems:"center"}}>
             <span>{ic}</span><span>{t}</span>
           </div>)}
@@ -5523,6 +5621,7 @@ const GROUPS_AM={
     {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
+    {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
     {id:"parrainage",l:"Parrainage",ic:"🎁"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
@@ -5545,6 +5644,7 @@ const GROUPS_P={
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
+    {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
@@ -6580,6 +6680,134 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
             L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l&#39;asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
           </div>
         </div>
+      </div>
+    </div>
+  </div>;
+}
+
+function AttestationFiscale({enfants,role,pEId,user}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [annee,setAnnee]=useState(new Date().getFullYear()-1);
+  const [gen,setGen]=useState(false);
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
+  const contrat=enfant.contrat||{};
+
+  // Calcul annuel estimé
+  const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
+  const salMensBrut=hMens*(contrat.tauxHoraire||4.05);
+  const entretienMens=(contrat.entretien||3.80)*Math.round(hMens/8);
+  const moisTravailles=12; // Estimation année complète
+  const totalSalNet=(salMensBrut*0.78*moisTravailles);
+  const totalEntretien=entretienMens*moisTravailles;
+  const totalRepas=0;
+
+  const generer=()=>{
+    setGen(true);
+    setTimeout(()=>{
+      setGen(false);
+      const w=window.open("","_blank");
+      if(!w){setToast("Autorisez les popups");return;}
+      const html=[
+        '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Attestation fiscale '+annee+' - '+(enfant.prenom||'')+'</title>',
+        '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;font-size:12px;line-height:1.6}',
+        'h1{font-size:15px;text-align:center;color:#264653;border-bottom:2px solid #2A9D8F;padding-bottom:10px;margin-bottom:20px}',
+        '.header{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;padding:16px;background:#F4F7FA;border-radius:8px}',
+        '.header h3{font-size:11px;color:#2A9D8F;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}',
+        'table{width:100%;border-collapse:collapse;margin:10px 0}td{padding:8px 12px;border:1px solid #e0e0e0}',
+        'td:first-child{width:60%;background:#FDFBF8;font-weight:600;color:#264653}',
+        '.total{background:#2A9D8F;color:#fff;font-weight:700;font-size:13px}.total td{border-color:#2A9D8F}',
+        '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:10px;color:#666}',
+        '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px}',
+        '.sig-box{border-top:1px solid #264653;padding-top:10px;font-size:11px}',
+        '@media print{.noprint{display:none}}</style></head><body>',
+        '<h1>📑 ATTESTATION FISCALE<br/><span style="font-size:12px;font-weight:400;color:#666">Année '+annee+' — Garde d\'enfant à domicile (crédit d\'impôt)</span></h1>',
+        '<div class="header">',
+        '<div><h3>Assistante maternelle agréée</h3>',
+        '<strong>'+(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'</strong><br/>',
+        'Email : '+(user?.email||'[email]')+'<br/>',
+        'N° agrément : [À compléter]</div>',
+        '<div><h3>Parent employeur</h3>',
+        '<strong>'+(enfant?.prenomParent||'Parent')+' '+(enfant?.nomParent||'')+'</strong><br/>',
+        'Enfant gardé : '+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'<br/>',
+        'Né(e) le : '+(enfant?.naissance||'[Date]')+'</div></div>',
+        '<h3 style="font-size:12px;color:#264653;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+'</h3>',
+        '<table>',
+        '<tr><td>Salaires nets versés (12 mois)</td><td style="text-align:right">'+totalSalNet.toFixed(2)+' €</td></tr>',
+        '<tr><td>Indemnités d\'entretien</td><td style="text-align:right">'+totalEntretien.toFixed(2)+' €</td></tr>',
+        '<tr><td>Indemnités de repas</td><td style="text-align:right">'+totalRepas.toFixed(2)+' €</td></tr>',
+        '<tr class="total"><td>TOTAL DES SOMMES VERSÉES</td><td style="text-align:right">'+(totalSalNet+totalEntretien+totalRepas).toFixed(2)+' €</td></tr>',
+        '</table>',
+        '<h3 style="font-size:12px;color:#264653;margin:16px 0 8px;padding-left:4px">📊 Détail du calcul</h3>',
+        '<table>',
+        '<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>',
+        '<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||4.05)+' €/h</td></tr>',
+        '<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+salMensBrut.toFixed(2)+' €</td></tr>',
+        '<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+(salMensBrut*0.78).toFixed(2)+' €</td></tr>',
+        '<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>',
+        '</table>',
+        '<div class="note">',
+        '<strong>📌 Informations importantes :</strong><br/>',
+        '• Ce document est destiné à la déclaration de revenus du parent employeur (crédit d\'impôt pour frais de garde).<br/>',
+        '• Le parent peut déduire les sommes versées (salaires + cotisations) dans la limite du plafond fiscal en vigueur.<br/>',
+        '• Les indemnités d\'entretien et de repas ne sont pas déductibles.<br/>',
+        '• Conservez ce document avec votre déclaration de revenus.',
+        '</div>',
+        '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#264653">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
+        '<div class="sig">',
+        '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :</div>',
+        '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
+        '<p style="font-size:9px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
+        '<div style="text-align:center;margin-top:12px"><button class="noprint" onclick="window.print()" style="background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+        '</body></html>'
+      ].join('');
+      w.document.write(html);
+      w.document.close();
+      setToast("Attestation fiscale générée ✓");
+    },800);
+  };
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📑" title="Attestation fiscale" sub="Pour le crédit d'impôt des parents — à fournir chaque année"/>
+    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+    </div>}
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📑 Attestation pour {enfant.prenom||"-"}</div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Année fiscale</label>
+            <select className="sel"value={annee}onChange={e=>setAnnee(Number(e.target.value))}>
+              {[new Date().getFullYear()-1,new Date().getFullYear()-2,new Date().getFullYear()].map(a=>
+                <option key={a}value={a}>{a}</option>
+              )}
+            </select>
+          </div>
+          <div style={{padding:12,background:"var(--c)",borderRadius:10,marginBottom:14,fontSize:12,lineHeight:1.7}}>
+            <div style={{fontWeight:700,marginBottom:6,color:"var(--b)"}}>Récapitulatif {annee}</div>
+            <div style={{display:"flex",justifyContent:"space-between"}}><span>Salaires nets</span><strong>{totalSalNet.toFixed(2)} €</strong></div>
+            <div style={{display:"flex",justifyContent:"space-between"}}><span>Indemnités entretien</span><strong>{totalEntretien.toFixed(2)} €</strong></div>
+            <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid var(--br)",paddingTop:6,marginTop:6,fontWeight:700,color:"var(--S)"}}><span>Total</span><span>{(totalSalNet+totalEntretien).toFixed(2)} €</span></div>
+          </div>
+          <button className="btn bT"style={{width:"100%"}}onClick={generer}disabled={gen}>
+            {gen?"⏳ Génération...":"📑 Générer l'attestation fiscale "+annee}
+          </button>
+        </div>
+        <div style={{padding:12,background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)",lineHeight:1.6}}>
+          💡 Cette attestation permet aux parents de bénéficier du crédit d'impôt pour frais de garde. À remettre en début d'année suivante pour leur déclaration de revenus.
+        </div>
+      </div>
+      <div className="card"style={{padding:18}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Contrat en cours</div>
+        {contrat.debut?<div style={{fontSize:12,lineHeight:2}}>
+          <div>Début : <strong>{contrat.debut}</strong></div>
+          <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
+          <div>Taux horaire : <strong>{contrat.tauxHoraire||4.05} €</strong></div>
+          <div>Entretien : <strong>{contrat.entretien||3.80} €/jour</strong></div>
+        </div>:<div style={{fontSize:12,color:"var(--l)"}}>Aucun contrat trouvé pour cet enfant.</div>}
       </div>
     </div>
   </div>;
@@ -8008,9 +8236,10 @@ export default function App(){
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
       case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId}/>;
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
-      case "support": return <Support role={role}/>;
+      case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "journal": return <JournalComplet {...P}/>;
