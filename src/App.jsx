@@ -6092,6 +6092,7 @@ const DEMO_SCREENS=[
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [activeDemo, setActiveDemo] = useState("journal");
   const [showModal, setShowModal] = useState(false);
+  const [showLegal, setShowLegal] = useState(null); // null, "mentions", "cgu", "confidentialite"
   const [role, setRole] = useState("asmat");
   const [modeAuth, setModeAuth] = useState("inscription");
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
@@ -6524,7 +6525,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
               {[["Mentions légales","mentions"],["Conditions générales d'utilisation","cgu"],["Politique de confidentialité","confidentialite"]].map(([label,id])=>
-                <div key={id} onClick={()=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth"});}} style={{ fontSize: 12, color: "rgba(255,255,255,.6)", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
+                <div key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 12, color: "rgba(255,255,255,.6)", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
                   onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</div>
               )}
             </div>
@@ -6553,13 +6554,201 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur Sophie · SIRET : [À compléter]</div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
-                <span key={id} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
+                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
                   onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.4)"}>{l}</span>
               )}
             </div>
           </div>
         </div>
       </footer>
+
+      {/* PAGES JURIDIQUES */}
+      {showLegal&&<div onClick={e=>e.target===e.currentTarget&&setShowLegal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
+        <div style={{background:"#fff",borderRadius:20,width:"100%",maxWidth:700,maxHeight:"90vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,.3)",display:"flex",flexDirection:"column"}}>
+          {/* Header */}
+          <div style={{padding:"20px 24px",borderBottom:"1px solid #E8E4E0",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+            <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#264653"}}>
+              {showLegal==="mentions"&&"📋 Mentions légales"}
+              {showLegal==="cgu"&&"📜 Conditions générales d'utilisation"}
+              {showLegal==="confidentialite"&&"🔒 Politique de confidentialité"}
+            </div>
+            <button onClick={()=>setShowLegal(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#264653",fontWeight:700}}>✕</button>
+          </div>
+          {/* Contenu scrollable */}
+          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#264653",lineHeight:1.8}}>
+
+            {/* =================== MENTIONS LÉGALES =================== */}
+            {showLegal==="mentions"&&<div>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Éditeur du site</h3>
+              <p>Le site <strong>timat.app</strong> (ci-après "TiMat") est édité par :</p>
+              <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
+                <strong>Sophie [Nom]</strong><br/>
+                Auto-entrepreneur<br/>
+                SIRET : [À compléter]<br/>
+                Adresse : Île-de-France, France<br/>
+                Email : support@timat.app<br/>
+                Directrice de la publication : Sophie [Nom]
+              </div>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Hébergement</h3>
+              <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
+                <strong>Site web :</strong> Vercel Inc. — 340 S Lemon Ave #4133, Walnut, CA 91789, USA<br/>
+                <strong>Base de données :</strong> Supabase — Région Europe (Paris, France)<br/>
+                <strong>Paiement :</strong> Stripe — Certifié PCI-DSS Level 1
+              </div>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>3. Propriété intellectuelle</h3>
+              <p>L'ensemble du contenu du site TiMat (textes, graphismes, logos, icônes, images, logiciels) est la propriété exclusive de l'éditeur, sauf mentions contraires. Toute reproduction, représentation, modification ou distribution, même partielle, est interdite sans autorisation écrite préalable.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>4. Données personnelles</h3>
+              <p>TiMat collecte et traite des données personnelles dans le respect du Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679). Pour plus de détails, consultez notre <span style={{color:"#FF9F63",cursor:"pointer",textDecoration:"underline"}}onClick={()=>setShowLegal("confidentialite")}>Politique de confidentialité</span>.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>5. Cookies</h3>
+              <p>TiMat utilise uniquement des cookies techniques nécessaires au fonctionnement de l'application (authentification, session). Aucun cookie publicitaire ou de traçage n'est utilisé. Aucun cookie tiers n'est déposé à des fins commerciales.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>6. Limitation de responsabilité</h3>
+              <p>Les calculs de salaire, récapitulatifs Pajemploi, attestations fiscales et bulletins de paie générés par TiMat sont fournis <strong>à titre indicatif</strong>. L'utilisateur reste seul responsable de la vérification des montants auprès des organismes compétents (URSSAF, Pajemploi, Administration fiscale). TiMat ne saurait être tenu responsable d'erreurs dans les déclarations effectuées par l'utilisateur.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>7. Contact</h3>
+              <p>Pour toute question : <strong>support@timat.app</strong></p>
+
+              <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
+                Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
+              </div>
+            </div>}
+
+            {/* =================== CGU =================== */}
+            {showLegal==="cgu"&&<div>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Objet</h3>
+              <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application TiMat. En créant un compte, l'utilisateur accepte sans réserve les présentes CGU.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Description du service</h3>
+              <p>TiMat est une application de gestion administrative destinée aux assistantes maternelles agréées et aux parents employeurs. Elle propose notamment : la gestion des contrats d'accueil, le calcul automatique des salaires, le pointage des heures, les transmissions quotidiennes, la génération de documents (bulletins de salaire, attestations), et la communication avec les parents.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>3. Inscription et comptes</h3>
+              <p>L'utilisateur doit fournir des informations exactes lors de son inscription. Chaque compte est personnel et ne peut être partagé. L'utilisateur est responsable de la confidentialité de ses identifiants. En cas d'utilisation frauduleuse, l'éditeur se réserve le droit de suspendre le compte.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>4. Formules et tarification</h3>
+              <p><strong>Formule Gratuite :</strong> accès limité (1 enfant, fonctionnalités de base).</p>
+              <p><strong>Formule Pro :</strong> 9,99€/mois TTC, avec un essai gratuit de 2 mois sans carte bancaire. L'abonnement est mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
+              <p>L'utilisateur reste propriétaire de toutes les données qu'il saisit dans TiMat (informations sur les enfants, contrats, pointages, transmissions, documents). TiMat ne revendique aucun droit de propriété sur ces données. L'utilisateur peut exporter ou supprimer ses données à tout moment.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>6. Protection des données des mineurs</h3>
+              <p>TiMat traite des données relatives à des enfants (prénoms, dates de naissance, informations de santé). Ces données sont traitées conformément au RGPD avec une attention particulière :</p>
+              <ul style={{paddingLeft:20,margin:"8px 0"}}>
+                <li>Collecte limitée au strict nécessaire pour le service</li>
+                <li>Accès restreint aux seuls parents et assistantes maternelles concernés</li>
+                <li>Aucune utilisation commerciale ou publicitaire</li>
+                <li>Suppression à la fin du contrat d'accueil ou sur demande</li>
+              </ul>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>7. Limitation de responsabilité</h3>
+              <p>TiMat est un outil d'aide à la gestion. Les calculs, documents et informations fournis le sont <strong>à titre indicatif</strong> et ne constituent pas un conseil juridique, fiscal ou comptable. L'utilisateur reste seul responsable de ses déclarations auprès des organismes officiels.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>8. Résiliation</h3>
+              <p>L'utilisateur peut résilier son abonnement Pro à tout moment depuis son espace, sans frais. Les données restent accessibles pendant 30 jours après résiliation. Passé ce délai, elles sont supprimées définitivement. L'éditeur se réserve le droit de suspendre un compte en cas de non-respect des CGU.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>9. Disponibilité du service</h3>
+              <p>TiMat s'engage à fournir un service disponible 24h/24, 7j/7. Toutefois, des interruptions pour maintenance ou mise à jour peuvent survenir. L'éditeur ne saurait être tenu responsable des conséquences d'une interruption temporaire du service.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>10. Droit applicable et litiges</h3>
+              <p>Les présentes CGU sont soumises au droit français. En cas de litige, une solution amiable sera privilégiée. À défaut, les tribunaux compétents du ressort du siège de l'éditeur seront saisis.</p>
+
+              <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
+                Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
+              </div>
+            </div>}
+
+            {/* =================== POLITIQUE DE CONFIDENTIALITÉ =================== */}
+            {showLegal==="confidentialite"&&<div>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Responsable du traitement</h3>
+              <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
+                Sophie [Nom] — Auto-entrepreneur<br/>
+                Email : support@timat.app<br/>
+                SIRET : [À compléter]
+              </div>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Données collectées</h3>
+              <p>TiMat collecte les données suivantes :</p>
+              <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
+                <p><strong>Données d'identification :</strong> prénom, nom, adresse email, mot de passe (chiffré)</p>
+                <p style={{marginTop:8}}><strong>Données professionnelles :</strong> numéro d'agrément, adresse, informations contractuelles</p>
+                <p style={{marginTop:8}}><strong>Données relatives aux enfants :</strong> prénom, date de naissance, informations de santé (allergies, vaccins), suivi quotidien (repas, sommeil, activités)</p>
+                <p style={{marginTop:8}}><strong>Données de facturation :</strong> heures d'accueil, salaires calculés (les données bancaires sont gérées exclusivement par Stripe)</p>
+                <p style={{marginTop:8}}><strong>Données techniques :</strong> adresse IP, type de navigateur, pages visitées (à des fins de maintenance uniquement)</p>
+              </div>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>3. Finalités du traitement</h3>
+              <ul style={{paddingLeft:20,margin:"8px 0"}}>
+                <li>Fourniture du service de gestion administrative pour assistantes maternelles</li>
+                <li>Calcul automatique des salaires et génération de documents</li>
+                <li>Communication entre assistantes maternelles et parents</li>
+                <li>Support utilisateur</li>
+                <li>Amélioration du service</li>
+              </ul>
+              <p style={{marginTop:8}}><strong>Base légale :</strong> exécution du contrat (Art. 6.1.b RGPD) et consentement explicite pour les données des mineurs.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>4. Hébergement et sécurité</h3>
+              <div style={{background:"#F0FAF4",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
+                🔒 Base de données : <strong>Supabase</strong> — Région Europe, Paris (France)<br/>
+                🌐 Site web : <strong>Vercel</strong> — CDN mondial, données en Europe<br/>
+                💳 Paiement : <strong>Stripe</strong> — Certifié PCI-DSS Level 1<br/>
+                🛡️ Chiffrement : TLS 1.3 en transit, AES-256 au repos<br/>
+                🔑 Mots de passe : hachés avec bcrypt (irréversible)<br/>
+                📋 Row Level Security (RLS) : chaque utilisateur n'accède qu'à ses propres données
+              </div>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>5. Durée de conservation</h3>
+              <ul style={{paddingLeft:20,margin:"8px 0"}}>
+                <li><strong>Données de compte :</strong> conservées tant que le compte est actif, supprimées 30 jours après résiliation</li>
+                <li><strong>Données des enfants :</strong> conservées pendant la durée du contrat d'accueil, supprimées à la fin du contrat ou sur demande</li>
+                <li><strong>Données de facturation :</strong> conservées 5 ans (obligation légale)</li>
+                <li><strong>Données de support :</strong> conservées 2 ans</li>
+              </ul>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
+              <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8,margin:"12px 0"}}>
+                {[["📋","Droit d'accès","Obtenir une copie de vos données"],["✏️","Droit de rectification","Corriger vos informations"],["🗑️","Droit à l'effacement","Supprimer votre compte et vos données"],["📦","Droit à la portabilité","Exporter vos données au format standard"],["🚫","Droit d'opposition","Vous opposer à certains traitements"],["⏸️","Droit à la limitation","Limiter temporairement le traitement"]].map(([ic,titre,desc])=>
+                  <div key={titre}style={{background:"#F4F7FA",borderRadius:10,padding:12}}>
+                    <div style={{fontSize:16,marginBottom:4}}>{ic}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>{titre}</div>
+                    <div style={{fontSize:11,color:"#5F7A86"}}>{desc}</div>
+                  </div>
+                )}
+              </div>
+              <p style={{marginTop:8}}>Pour exercer vos droits : <strong>support@timat.app</strong>. Réponse sous 30 jours maximum.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>7. Sous-traitants</h3>
+              <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,fontSize:11}}>
+                  <div><strong>Sous-traitant</strong></div><div><strong>Finalité</strong></div><div><strong>Localisation</strong></div>
+                  <div>Supabase</div><div>Base de données</div><div>🇫🇷 Paris, France</div>
+                  <div>Vercel</div><div>Hébergement web</div><div>🇪🇺 Europe (CDN)</div>
+                  <div>Stripe</div><div>Paiement</div><div>🇪🇺 Europe (Dublin)</div>
+                </div>
+              </div>
+              <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>8. Transferts hors UE</h3>
+              <p>Les données sont hébergées en France et en Europe. En cas de transfert vers les États-Unis (CDN Vercel), celui-ci est encadré par les clauses contractuelles types de la Commission européenne.</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>9. Cookies</h3>
+              <p>TiMat utilise uniquement des cookies techniques strictement nécessaires (authentification, session). Aucun cookie publicitaire, analytique ou de traçage n'est utilisé. Aucun consentement spécifique n'est requis pour ces cookies (Art. 82 de la loi Informatique et Libertés).</p>
+
+              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>10. Réclamation</h3>
+              <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (Commission Nationale de l'Informatique et des Libertés) : <strong>www.cnil.fr</strong></p>
+
+              <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
+                Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
+              </div>
+            </div>}
+
+          </div>
+        </div>
+      </div>}
 
       {/* MODALE AUTH */}
       {showModal && (
