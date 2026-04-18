@@ -5976,7 +5976,7 @@ function FadeIn({children,delay=0,className=""}){
 //
 const DEMO_SCREENS=[
   {
-    id:"journal",label:"Journal quotidien",icon:"📋",color:"#B8622F",
+    id:"journal",label:"Journal quotidien",icon:"📋",color:"#2A9D8F",
     preview:()=>(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>📋 Journal du jour - Léo 🦁</div>
@@ -5996,7 +5996,7 @@ const DEMO_SCREENS=[
     ),
   },
   {
-    id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#B8892A",
+    id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#FF9F63",
     preview:()=>(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>💰 Salaire Mars 2024 - Léo</div>
@@ -6014,7 +6014,7 @@ const DEMO_SCREENS=[
     ),
   },
   {
-    id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#2E5F8A",
+    id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#264653",
     preview:()=>(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>📅 Mars 2024</div>
@@ -6035,7 +6035,7 @@ const DEMO_SCREENS=[
     ),
   },
   {
-    id:"parent",label:"Espace parent",icon:"👪",color:"#6A3F88",
+    id:"parent",label:"Espace parent",icon:"👪",color:"#E76F51",
     preview:()=>(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>👪 Sophie - Léo 🦁</div>
