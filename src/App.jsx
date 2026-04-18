@@ -5977,81 +5977,113 @@ function FadeIn({children,delay=0,className=""}){
 const DEMO_SCREENS=[
   {
     id:"journal",label:"Journal quotidien",icon:"📋",color:"#2A9D8F",
-    preview:()=>(
+    preview:()=>{
+      const [mood,setMood]=useState("😊");
+      const [liked,setLiked]=useState(false);
+      return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>📋 Journal du jour - Léo 🦁</div>
-        <div style={{background:"#FBF0E8",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #B8622F"}}>
-          <div style={{fontSize:10,color:"#B8622F",fontWeight:700,marginBottom:3}}>👩‍👧 Marie · 11h30</div>
-          <div style={{fontSize:12,color:"#2C1F14",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>📋 Journal du jour — Léo 🦁</div>
+        <div style={{background:"#F0FAF4",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #2A9D8F"}}>
+          <div style={{fontSize:10,color:"#2A9D8F",fontWeight:700,marginBottom:3}}>👩‍👧 Marie · 11h30</div>
+          <div style={{fontSize:12,color:"#264653",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
+          <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
+            <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}>{liked?"❤️":"🤍"}</button>
+          </div>
         </div>
-        <div style={{background:"#EAF4EE",borderRadius:10,padding:12,borderLeft:"3px solid #3D6B50"}}>
-          <div style={{fontSize:10,color:"#3D6B50",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
-          <div style={{fontSize:12,color:"#2C1F14"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
+        <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #FF9F63"}}>
+          <div style={{fontSize:10,color:"#FF9F63",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
+          <div style={{fontSize:12,color:"#264653"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
         </div>
-        <div style={{marginTop:12,display:"flex",gap:6}}>
-          <div style={{background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#166534"}}>😊 Joyeux</div>
-          <div style={{background:"#F0FDF4",border:"1px solid #86EFAC",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#166534"}}>💤 Sieste 1h20</div>
+        <div style={{marginTop:12,display:"flex",gap:6,alignItems:"center"}}>
+          <span style={{fontSize:10,color:"#8FA3AD"}}>Humeur :</span>
+          {["😊","😴","🤗","😢"].map(m=><button key={m}onClick={()=>setMood(m)}style={{
+            fontSize:18,background:mood===m?"#F0FAF4":"transparent",border:mood===m?"1.5px solid #2A9D8F":"1.5px solid transparent",
+            borderRadius:8,padding:"2px 6px",cursor:"pointer",transition:"all .15s"
+          }}>{m}</button>)}
         </div>
-      </div>
-    ),
+      </div>);
+    },
   },
   {
     id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#FF9F63",
-    preview:()=>(
+    preview:()=>{
+      const [mois,setMois]=useState("Mars");
+      const data={Mars:{h:160,supp:8,ent:20},Fev:{h:152,supp:4,ent:19},Jan:{h:168,supp:12,ent:21}};
+      const m=data[mois]||data.Mars;
+      const brut=(m.h*4.05+m.supp*5.06+m.ent*3.80);
+      return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>💰 Salaire Mars 2024 - Léo</div>
-        {[["Heures réalisées","160h × 4,05€","648,00€"],["Indemnité entretien","20j × 3,80€","76,00€"],["Heures majorées","8h × 5,06€","40,50€"]].map(([l,d,v])=>(
-          <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #DDD5C8",fontSize:12}}>
-            <div><div style={{fontWeight:600,color:"#2C1F14"}}>{l}</div><div style={{fontSize:10,color:"#A68970"}}>{d}</div></div>
-            <div style={{fontWeight:700,color:"#3D6B50"}}>{v}</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>💰 Salaire — Léo 🦁</div>
+        <div style={{display:"flex",gap:4,marginBottom:12}}>
+          {["Jan","Fev","Mars"].map(mo=><button key={mo}onClick={()=>setMois(mo)}style={{
+            padding:"5px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,
+            background:mois===mo?"#FF9F63":"#F4F7FA",color:mois===mo?"#fff":"#264653",transition:"all .15s"
+          }}>{mo} 2024</button>)}
+        </div>
+        {[["Heures réalisées",m.h+"h × 4,05€",(m.h*4.05).toFixed(2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",(m.ent*3.80).toFixed(2)+"€"],["Heures majorées",m.supp+"h × 5,06€",(m.supp*5.06).toFixed(2)+"€"]].map(([l,d,v])=>(
+          <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
+            <div><div style={{fontWeight:600,color:"#264653"}}>{l}</div><div style={{fontSize:10,color:"#8FA3AD"}}>{d}</div></div>
+            <div style={{fontWeight:700,color:"#2A9D8F"}}>{v}</div>
           </div>
         ))}
-        <div style={{marginTop:10,padding:"10px 12px",background:"#FBF0E8",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:13,fontWeight:700,color:"#2C1F14"}}>Total brut mensuel</span>
-          <span style={{fontSize:20,fontWeight:700,color:"#B8622F",fontFamily:"Georgia,serif"}}>764,50 €</span>
+        <div style={{marginTop:10,padding:"10px 12px",background:"#FFF8F3",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:13,fontWeight:700,color:"#264653"}}>Total brut</span>
+          <span style={{fontSize:20,fontWeight:700,color:"#FF9F63"}}>{brut.toFixed(2)} €</span>
         </div>
-      </div>
-    ),
+      </div>);
+    },
   },
   {
     id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#264653",
-    preview:()=>(
+    preview:()=>{
+      const [selDay,setSelDay]=useState(15);
+      return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>📅 Mars 2024</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:10}}>
-          {["Lu","Ma","Me","Je","Ve","Sa","Di"].map(j=><div key={j}style={{textAlign:"center",fontSize:9,color:"#A68970",fontWeight:700,padding:"3px 0"}}>{j}</div>)}
-          {[null,null,null,null,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map((d,i)=>(
-            <div key={i}style={{textAlign:"center",fontSize:10,padding:"4px 2px",borderRadius:5,
-              background:d===11?"#B8622F":d&&[4,5,6,7,11,12,13,14,18,19,20,21,25,26,27,28].includes(d)?"#EAF4EE":"transparent",
-              color:d===11?"#fff":"#2C1F14",fontWeight:d===11?700:400}}>{d||""}</div>
-          ))}
+        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>📅 Mars 2024</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:12}}>
+          {["L","M","Me","J","V","S","D"].map(j=><div key={j}style={{textAlign:"center",fontSize:9,fontWeight:700,color:"#8FA3AD",padding:4}}>{j}</div>)}
+          {Array.from({length:31},(_,i)=>i+1).map(d=>{
+            const isWork=d%7!==0&&d%7!==6;
+            return <div key={d}onClick={()=>setSelDay(d)}style={{
+              textAlign:"center",fontSize:11,padding:"6px 0",borderRadius:8,cursor:"pointer",fontWeight:selDay===d?700:400,
+              background:selDay===d?"#264653":isWork?"#F0FAF4":"transparent",
+              color:selDay===d?"#fff":isWork?"#264653":"#B0BEC5",
+              border:d===15?"2px solid #FF9F63":"2px solid transparent",transition:"all .15s"
+            }}>{d}</div>;
+          })}
         </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {[["🟢","Léo accueilli"],["🔵","Vacances"],["🔴","Absence"]].map(([ic,l])=>(
-            <div key={l}style={{fontSize:10,color:"#6B4F3A",display:"flex",gap:4,alignItems:"center"}}><span>{ic}</span><span>{l}</span></div>
-          ))}
-        </div>
-      </div>
-    ),
+        {selDay&&<div style={{background:"#F4F7FA",borderRadius:10,padding:10,fontSize:11,color:"#264653"}}>
+          <div style={{fontWeight:700,marginBottom:4}}>📌 {selDay} mars</div>
+          <div>🦁 Léo : 07h30 — 17h30 {selDay%7!==0&&selDay%7!==6?"✅":"🔴 Repos"}</div>
+          {selDay%3===0&&<div>🌸 Emma : 08h00 — 16h30 ✅</div>}
+        </div>}
+      </div>);
+    },
   },
   {
     id:"parent",label:"Espace parent",icon:"👪",color:"#E76F51",
-    preview:()=>(
+    preview:()=>{
+      const [valide,setValide]=useState(false);
+      return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2C1F14",marginBottom:12}}>👪 Sophie - Léo 🦁</div>
-        <div style={{background:"#F2EAF8",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #C4A0DC"}}>
-          <div style={{fontSize:10,color:"#6A3F88",fontWeight:700,marginBottom:4}}>⏰ Pointage</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>👪 Sophie — Léo 🦁</div>
+        <div style={{background:"#FFF8F3",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #FFD6B3"}}>
+          <div style={{fontSize:10,color:"#E76F51",fontWeight:700,marginBottom:4}}>⏰ Pointage du jour</div>
           <div style={{display:"flex",gap:16}}>
-            {[["Arrivée","07h35","#3D6B50"],["Départ","17h20","#B8622F"],["Total","9h45","#2C1F14"]].map(([l,v,c])=>(
-              <div key={l}style={{textAlign:"center"}}><div style={{fontSize:9,color:"#A68970"}}>{l}</div><div style={{fontSize:16,fontWeight:700,color:c}}>{v}</div></div>
+            {[["Arrivée","07h35","#2A9D8F"],["Départ","17h20","#E76F51"],["Total","9h45","#264653"]].map(([l,v,c])=>(
+              <div key={l}style={{textAlign:"center"}}><div style={{fontSize:9,color:"#8FA3AD"}}>{l}</div><div style={{fontSize:16,fontWeight:700,color:c}}>{v}</div></div>
             ))}
           </div>
+          <button onClick={()=>setValide(!valide)}style={{
+            marginTop:8,width:"100%",padding:"7px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:700,
+            background:valide?"#2A9D8F":"#F4F7FA",color:valide?"#fff":"#264653",transition:"all .2s"
+          }}>{valide?"✅ Pointage validé":"Valider le pointage"}</button>
         </div>
-        <div style={{background:"#FBF0E8",borderRadius:10,padding:10,fontSize:12,color:"#2C1F14",lineHeight:1.5}}>
-          📋 Léo a peint un tableau et l'a offert à sa maman !
+        <div style={{background:"#F0FAF4",borderRadius:10,padding:10,fontSize:12,color:"#264653",lineHeight:1.5}}>
+          📋 Léo a peint un tableau et l'a offert à sa maman ! 🎨
         </div>
-      </div>
-    ),
+      </div>);
+    },
   },
 ];
 
@@ -6441,6 +6473,93 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
         </FadeIn>
       </div>
+
+      {/* FAQ */}
+      <div className="lp-section" style={{ background: "#F4F7FA" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#264653", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
+              <div style={{ fontSize: 15, color: "#5F7A86" }}>Tout ce que vous devez savoir avant de commencer.</div>
+            </div>
+          </FadeIn>
+          {[
+            {q:"C'est quoi TiMat exactement ?",a:"TiMat est une application web conçue spécifiquement pour les assistantes maternelles agréées. Elle centralise la gestion des contrats, des pointages, des salaires, des transmissions aux parents et de tous les documents administratifs liés à votre métier."},
+            {q:"Est-ce que mes données sont en sécurité ?",a:"Oui. Toutes vos données sont hébergées en France (Paris) via Supabase, un service conforme au RGPD. Vos informations sont chiffrées en transit et au repos. Vous pouvez demander la suppression de vos données à tout moment."},
+            {q:"TiMat remplace-t-il Pajemploi ?",a:"Non. TiMat est un complément à Pajemploi. L'application calcule automatiquement les montants et génère un récapitulatif prêt à reporter sur pajemploi.urssaf.fr. Vous gardez le contrôle de votre déclaration officielle."},
+            {q:"Comment fonctionne l'essai gratuit ?",a:"Vous créez votre compte en 2 minutes, sans carte bancaire. Vous avez accès aux fonctionnalités de base gratuitement, et vous pouvez essayer le forfait Pro pendant 2 mois sans engagement. Si vous ne souhaitez pas continuer, vous ne payez rien."},
+            {q:"Puis-je utiliser TiMat sur mon téléphone ?",a:"Oui. TiMat est une application web responsive qui fonctionne sur téléphone, tablette et ordinateur. Pas besoin de télécharger quoi que ce soit — vous y accédez directement depuis votre navigateur."},
+            {q:"Les parents peuvent-ils accéder à TiMat ?",a:"Oui. Chaque parent reçoit une invitation par email et accède à son propre espace : il peut consulter le journal de son enfant, valider les pointages et échanger avec vous via la messagerie intégrée."},
+            {q:"Que se passe-t-il si je résilie ?",a:"Vous pouvez résilier à tout moment en un clic depuis votre espace. Vos données restent accessibles pendant 30 jours après la résiliation, puis sont supprimées conformément au RGPD. Aucun frais de résiliation."},
+            {q:"Comment sont calculés les salaires ?",a:"TiMat applique les règles de la Convention Collective Nationale des particuliers employeurs : mensualisation, heures complémentaires majorées à 25%, indemnités d'entretien, congés payés. Les taux de cotisations sont mis à jour régulièrement."},
+          ].map(({q,a},i)=>(
+            <FadeIn key={i} delay={i*50}>
+              <details style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
+                <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#264653", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  {q}
+                  <span style={{ fontSize: 18, color: "#FF9F63", flexShrink: 0, marginLeft: 12 }}>+</span>
+                </summary>
+                <div style={{ padding: "0 20px 16px", fontSize: 13, color: "#5F7A86", lineHeight: 1.8 }}>{a}</div>
+              </details>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <footer style={{ background: "#264653", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
+            {/* Logo + description */}
+            <div>
+              <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
+                <span style={{ color: "#fff" }}>Ti</span><span style={{ color: accent }}>Mat</span>
+                <div className="lp-logo-dot" style={{ background: accent }} />
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
+                L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.
+              </div>
+            </div>
+            {/* Liens */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
+              {[["Mentions légales","mentions"],["Conditions générales d'utilisation","cgu"],["Politique de confidentialité","confidentialite"]].map(([label,id])=>
+                <div key={id} onClick={()=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth"});}} style={{ fontSize: 12, color: "rgba(255,255,255,.6)", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</div>
+              )}
+            </div>
+            {/* Contact */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Contact</div>
+              <div style={{ fontSize: 12, lineHeight: 2, color: "rgba(255,255,255,.6)" }}>
+                📧 support@timat.app<br/>
+                🌐 timat.app<br/>
+                📍 Île-de-France, France
+              </div>
+            </div>
+            {/* RGPD */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
+              <div style={{ fontSize: 11, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
+                🔒 Données hébergées en France (Paris)<br/>
+                🛡️ Chiffrement en transit et au repos<br/>
+                📋 Conforme RGPD<br/>
+                🗑️ Droit à l'effacement garanti
+              </div>
+            </div>
+          </div>
+          {/* Séparateur */}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur Sophie · SIRET : [À compléter]</div>
+            <div style={{ display: "flex", gap: 16 }}>
+              {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
+                <span key={id} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.4)"}>{l}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* MODALE AUTH */}
       {showModal && (
