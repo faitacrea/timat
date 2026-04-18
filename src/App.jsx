@@ -6155,26 +6155,75 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
   return (
     <div style={{ fontFamily: fBody, overflowX: "hidden", background: L.pageBg||"#FDF5F8" }}>
-      {/* HERO */}
-      <div style={{ background: L.heroBg, padding: "0 24px 80px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:"url("+(L.heroImg||"/hero-enfants.jpg")+")", backgroundSize:"cover", backgroundPosition:"center 30%", opacity:L.heroImgOpacity||0.20 }}/>
+      {/* Responsive CSS */}
+      <style>{`
+        .lp-nav-btns{display:flex;gap:8px;align-items:center}
+        .lp-nav-full{display:flex;gap:8px;align-items:center}
+        .lp-nav-mobile{display:none}
+        .lp-hero-stats{display:flex;gap:32px;flex-wrap:wrap;justify-content:center}
+        .lp-demo-grid{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start}
+        .lp-demo-tabs{display:flex;flex-direction:column;gap:6px}
+        .lp-transfo-row{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;align-items:center}
+        .lp-tarifs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+        .lp-logo{font-size:28px;font-weight:700;font-style:italic;display:flex;align-items:center;gap:6px}
+        .lp-logo-dot{width:8px;height:8px;border-radius:50%}
+        .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+        .lp-hero-ctas button{white-space:nowrap}
+        .lp-hero{padding:0 24px 80px;position:relative;overflow:hidden}
+        .lp-section{padding:72px 24px}
+        .lp-guarantees{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;text-align:center;margin-top:24px;font-size:13px}
+        @media(max-width:768px){
+          .lp-nav-full{display:none!important}
+          .lp-nav-mobile{display:flex!important;gap:6px;align-items:center}
+          .lp-hero-stats{gap:16px}
+          .lp-hero-stats>div{min-width:60px}
+          .lp-demo-grid{grid-template-columns:1fr!important;gap:16px}
+          .lp-demo-tabs{flex-direction:row;flex-wrap:wrap;gap:4px}
+          .lp-demo-tabs button{padding:8px 12px!important;font-size:12px!important;flex:0 0 auto}
+          .lp-transfo-row{grid-template-columns:1fr!important;gap:8px;padding:14px!important}
+          .lp-transfo-row>div:first-child{display:none}
+          .lp-tarifs-grid{grid-template-columns:1fr!important;gap:16px}
+          .lp-logo{font-size:24px}
+          .lp-section{padding:48px 16px}
+          .lp-hero{padding:0 16px 50px}
+          .lp-hero-ctas{flex-direction:column;align-items:center;gap:10px}
+          .lp-hero-ctas button{width:100%;max-width:320px;text-align:center}
+          .lp-guarantees{flex-direction:column;gap:8px;font-size:12px}
+        }
+        @media(max-width:480px){
+          .lp-hero-stats{gap:10px}
+          .lp-hero-stats>div{min-width:50px}
+          .lp-demo-tabs button{padding:6px 8px!important;font-size:11px!important}
+          .lp-section{padding:40px 12px}
+          .lp-hero{padding:0 12px 40px}
+          .lp-logo{font-size:22px}
+        }
+      `}</style>
+      <div className="lp-hero" style={{ background: L.heroBg }}>
+        <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:"url("+(L.heroImg||"/hero-enfants.jpg")+")", backgroundSize:"cover", backgroundPosition:"center 30%", opacity:L.heroImgOpacity||0.12, filter:"blur(2px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,200,255,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontFamily: fTitle, fontSize: 26, fontWeight: 700, color: "#fff", fontStyle: "italic" }}>TiMat</div>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: accent }} />
+          <div className="lp-logo" style={{ fontFamily: fTitle }}>
+            <span style={{ color: "#fff" }}>Ti</span><span style={{ color: accent }}>Mat</span>
+            <div className="lp-logo-dot" style={{ background: accent }} />
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Desktop nav */}
+          <div className="lp-nav-full">
             <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnTarifsBg||"rgba(255,255,255,.12)", color: L.heroBtnTarifsColor||"rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Tarifs</button>
             <button onClick={() => setShowModal(true)} style={{ background: L.heroBtnConnexionBg||"rgba(255,255,255,.18)", color: L.heroBtnConnexionColor||"#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Connexion</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
           </div>
+          {/* Mobile nav */}
+          <div className="lp-nav-mobile">
+            <button onClick={() => setShowModal(true)} style={{ background: L.heroBtnConnexionBg||"rgba(255,255,255,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 10, padding: "7px 14px", cursor: "pointer", fontSize: 12, fontWeight: 500 }}>Connexion</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{T.heroBtnNavTxt||"Commencer →"}</button>
+          </div>
         </div>
         {/* Hero stats */}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px", display: "flex", gap: 32, flexWrap: "wrap", justifyContent: "center" }}>
+        <div className="lp-hero-stats" style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px" }}>
           {statsHero.map(({ n, suf, label }) => (
             <div key={label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
@@ -6191,7 +6240,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: L.heroSubColor||"rgba(255,255,255,.75)", fontStyle: "normal" }}>{T.heroSub}</span>
           </div>
           <div style={{ fontSize: "clamp(14px,2vw,17px)", color: L.heroSubDescColor||"rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
+          <div className="lp-hero-ctas">
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
@@ -6202,7 +6251,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 1 - PROBLEME */}
-      <div style={{ background: L.section1Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "60px 24px" }}>
+      <div className="lp-section" style={{ background: L.section1Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
@@ -6230,7 +6279,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 2 - DEMO */}
-      <div id="demo" style={{ background: L.section2Bg||"#FDF5FB", padding: "72px 24px" }}>
+      <div id="demo" className="lp-section" style={{ background: L.section2Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
@@ -6238,8 +6287,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24, alignItems: "start" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="lp-demo-grid">
+            <div className="lp-demo-tabs">
               {DEMO_SCREENS.map(s => (
                 <button key={s.id} onClick={() => setActiveDemo(s.id)} style={{
                   display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
@@ -6261,7 +6310,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 3 - TRANSFORMATION */}
-      <div style={{ background: L.section3Bg||"#F8F0FC", padding: "72px 24px" }}>
+      <div className="lp-section" style={{ background: L.section3Bg||"#F8F0FC" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s3Align||"center", marginBottom: 56 }}>
@@ -6271,7 +6320,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{ display: "grid", gap: 3 }}>
             {transformations.map(([ic, pb, sol, res], i) => (
               <FadeIn key={pb} delay={i * 60}>
-                <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 1fr 1fr", gap: 20, alignItems: "center", padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F8F0FC") : (L.s3RowBg2||"#FDF5FB"), border: "1px solid #DDD5C8" }}>
+                <div className="lp-transfo-row" style={{ padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F8F0FC") : (L.s3RowBg2||"#FDF5FB"), border: "1px solid #DDD5C8" }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
                   <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
                   <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
@@ -6284,7 +6333,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 4 - CHIFFRES */}
-      <div style={{ background: L.section4Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)", padding: "72px 24px" }}>
+      <div className="lp-section" style={{ background: L.section4Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
@@ -6307,7 +6356,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      <div style={{ background: L.section5Bg||"#FDF5FB", padding: "72px 24px" }}>
+      <div className="lp-section" style={{ background: L.section5Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6333,12 +6382,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 6 - TARIFS */}
-      <div id="tarifs" style={{ background: L.section6Bg||"#F5EBF8", padding: "72px 24px" }}>
+      <div id="tarifs" className="lp-section" style={{ background: L.section6Bg||"#F5EBF8" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+          <div className="lp-tarifs-grid">
             {/* Gratuit */}
             <div style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
@@ -6373,14 +6422,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               ))}
             </div>
           </div>
-          <div style={{ textAlign: "center", marginTop: 24, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "#A68970" }}>
+          <div className="lp-guarantees">
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
         </div>
       </div>
 
       {/* CTA FINAL */}
-      <div style={{ background: L.ctaBg||"linear-gradient(135deg,#264653,#2A6F6A)", padding: "72px 24px", textAlign: L.ctaAlign||"center" }}>
+      <div className="lp-section" style={{ background: L.ctaBg||"linear-gradient(135deg,#264653,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
@@ -7827,7 +7876,7 @@ const DEFAULT_CONFIG = {
   landing: {
     heroBg:"linear-gradient(160deg, #264653 0%, #2A6F6A 40%, #264653 70%, #1B3540 100%)",
     heroImg:"/hero-enfants.jpg",
-    heroImgOpacity:0.20,
+    heroImgOpacity:0.12,
     section1Bg:"linear-gradient(135deg,#264653,#2A6F6A)",
     section2Bg:"#FDF5FB",
     section3Bg:"#F8F0FC",
