@@ -6198,8 +6198,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         .lp-demo-tabs{display:flex;flex-direction:column;gap:6px}
         .lp-transfo-row{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;align-items:center}
         .lp-tarifs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
-        .lp-logo{font-size:28px;font-weight:700;font-style:italic;display:flex;align-items:center;gap:6px}
-        .lp-logo-dot{width:8px;height:8px;border-radius:50%}
+        .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
+        .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
         .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
         .lp-hero-ctas button{white-space:nowrap}
         .lp-hero{padding:0 24px 80px;position:relative;overflow:hidden}
@@ -6216,7 +6216,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           .lp-transfo-row{grid-template-columns:1fr!important;gap:8px;padding:14px!important}
           .lp-transfo-row>div:first-child{display:none}
           .lp-tarifs-grid{grid-template-columns:1fr!important;gap:16px}
-          .lp-logo{font-size:24px}
+          .lp-logo{font-size:22px}
+          .lp-logo-icon{width:28px;height:28px;font-size:15px}
           .lp-section{padding:48px 16px}
           .lp-hero{padding:0 16px 50px}
           .lp-hero-ctas{flex-direction:column;align-items:center;gap:10px}
@@ -6229,19 +6230,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           .lp-demo-tabs button{padding:6px 8px!important;font-size:11px!important}
           .lp-section{padding:40px 12px}
           .lp-hero{padding:0 12px 40px}
-          .lp-logo{font-size:22px}
+          .lp-logo{font-size:20px}
+          .lp-logo-icon{width:24px;height:24px;font-size:13px}
         }
       `}</style>
       <div className="lp-hero" style={{ background: L.heroBg }}>
-        <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:"url("+(L.heroImg||"/hero-enfants.jpg")+")", backgroundSize:"cover", backgroundPosition:"center 30%", opacity:L.heroImgOpacity||0.12, filter:"blur(2px)" }}/>
+        <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:L.heroImg?"url("+L.heroImg+")":"none", backgroundSize:"cover", backgroundPosition:L.heroImgPosition||"center center", opacity:L.heroImgOpacity||0.12, filter:"blur("+(L.heroImgBlur||2)+"px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,200,255,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <span style={{ color: "#fff" }}>Ti</span><span style={{ color: accent }}>Mat</span>
-            <div className="lp-logo-dot" style={{ background: accent }} />
+            <div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.15)" }}>🌿</div>
+            <span style={{ color: "#fff" }}>TiMat</span>
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
@@ -6514,8 +6516,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <span style={{ color: "#fff" }}>Ti</span><span style={{ color: accent }}>Mat</span>
-                <div className="lp-logo-dot" style={{ background: accent }} />
+                <div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.1)" }}>🌿</div>
+                <span style={{ color: "#fff" }}>TiMat</span>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.
@@ -6551,7 +6553,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           {/* Séparateur */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur Sophie · SIRET : [À compléter]</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}</div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
                 <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
@@ -6582,12 +6584,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Éditeur du site</h3>
               <p>Le site <strong>timat.app</strong> (ci-après "TiMat") est édité par :</p>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
-                <strong>Sophie [Nom]</strong><br/>
+                <strong>{config.legal?.nom}</strong><br/>
                 Auto-entrepreneur<br/>
-                SIRET : [À compléter]<br/>
-                Adresse : Île-de-France, France<br/>
-                Email : support@timat.app<br/>
-                Directrice de la publication : Sophie [Nom]
+                SIRET : {config.legal?.siret}<br/>
+                Adresse : {config.legal?.adresse}<br/>
+                Email : {config.legal?.email}<br/>
+                Directrice de la publication : {config.legal?.nom}
               </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Hébergement</h3>
@@ -6665,9 +6667,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {showLegal==="confidentialite"&&<div>
               <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Responsable du traitement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
-                Sophie [Nom] — Auto-entrepreneur<br/>
-                Email : support@timat.app<br/>
-                SIRET : [À compléter]
+                {config.legal?.nom} — Auto-entrepreneur<br/>
+                Email : {config.legal?.email}<br/>
+                SIRET : {config.legal?.siret}
               </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Données collectées</h3>
@@ -7777,12 +7779,37 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
         {/* ====================== HERO ====================== */}
         {sec==="hero"&&<>
           <BOCard title="Image de fond" icon="📸">
-            <BOField label="URL de l\'image">
-              <BOTextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="/hero-enfants.jpg ou https://..."/>
+            <BOField label="URL de l'image" hint="Laisser vide = pas d'image de fond">
+              <div style={{display:"flex",gap:4}}>
+                <BOTextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="https://... ou vide pour supprimer"/>
+                {cfg.landing.heroImg&&<button onClick={()=>setLand("heroImg","")}style={{background:"#FEE",border:"1px solid #FCC",borderRadius:6,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#C00",flexShrink:0}}>🗑️</button>}
+              </div>
             </BOField>
-            <BOField label={`Opacité (${Math.round((cfg.landing.heroImgOpacity||0.2)*100)}%)`}>
-              <input type="range"min="0"max="1"step="0.05"value={cfg.landing.heroImgOpacity||0.2} onChange={e=>setLand("heroImgOpacity",parseFloat(e.target.value))} style={{width:"100%"}}/>
-            </BOField>
+            {cfg.landing.heroImg&&<>
+              <BOField label={`Opacité (${Math.round((cfg.landing.heroImgOpacity||0.12)*100)}%)`}>
+                <input type="range"min="0"max="1"step="0.05"value={cfg.landing.heroImgOpacity||0.12} onChange={e=>setLand("heroImgOpacity",parseFloat(e.target.value))} style={{width:"100%"}}/>
+              </BOField>
+              <BOField label={`Flou (${cfg.landing.heroImgBlur||2}px)`}>
+                <input type="range"min="0"max="10"step="1"value={cfg.landing.heroImgBlur||2} onChange={e=>setLand("heroImgBlur",parseInt(e.target.value))} style={{width:"100%"}}/>
+              </BOField>
+              <BOField label="Position de l'image">
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:3}}>
+                  {[["top left","↖"],["top center","↑"],["top right","↗"],["center left","←"],["center center","⊡"],["center right","→"],["bottom left","↙"],["bottom center","↓"],["bottom right","↘"]].map(([pos,icon])=>
+                    <button key={pos}onClick={()=>setLand("heroImgPosition",pos)}style={{
+                      padding:"8px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:12,
+                      background:(cfg.landing.heroImgPosition||"center center")===pos?"var(--S)":"var(--c)",
+                      color:(cfg.landing.heroImgPosition||"center center")===pos?"#fff":"var(--m)",transition:"all .15s"
+                    }}>{icon}</button>
+                  )}
+                </div>
+              </BOField>
+              {/* Aperçu miniature */}
+              <div style={{height:80,borderRadius:8,overflow:"hidden",border:"1px solid var(--br)",marginTop:6,position:"relative"}}>
+                <div style={{position:"absolute",inset:0,backgroundImage:"url("+cfg.landing.heroImg+")",backgroundSize:"cover",backgroundPosition:cfg.landing.heroImgPosition||"center center",opacity:cfg.landing.heroImgOpacity||0.12,filter:"blur("+(cfg.landing.heroImgBlur||2)+"px)"}}/>
+                <div style={{position:"absolute",inset:0,background:cfg.landing.heroBg||"#264653",opacity:.7}}/>
+                <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",height:"100%",fontSize:10,color:"#fff",fontWeight:600}}>Aperçu du hero</div>
+              </div>
+            </>}
             <BOField label="Fond hero (gradient / couleur)">
               <BOColorInput k="heroBg" state={cfg.landing} setter={setLand}/>
             </BOField>
@@ -8126,6 +8153,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               )}
             </div>
           </BOCard>
+          <BOCard title="Informations légales" icon="📋">
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Ces informations apparaissent dans les mentions légales, CGU et politique de confidentialité.</div>
+            <BOField label="Nom complet"><BOTextInput k="nom" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
+            <BOField label="SIRET"><BOTextInput k="siret" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
+            <BOField label="Adresse"><BOTextInput k="adresse" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
+            <BOField label="Email de contact"><BOTextInput k="email" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
+          </BOCard>
           <BOCard title="Table Supabase" icon="🗄️">
             <div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>À exécuter dans Supabase SQL Editor :</div>
             <div style={{fontSize:10,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
@@ -8183,8 +8217,10 @@ const DEFAULT_CONFIG = {
   },
   landing: {
     heroBg:"linear-gradient(160deg, #264653 0%, #2A6F6A 40%, #264653 70%, #1B3540 100%)",
-    heroImg:"/hero-enfants.jpg",
+    heroImg:"",
     heroImgOpacity:0.12,
+    heroImgPosition:"center center",
+    heroImgBlur:2,
     section1Bg:"linear-gradient(135deg,#264653,#2A6F6A)",
     section2Bg:"#FDF5FB",
     section3Bg:"#F8F0FC",
@@ -8364,6 +8400,12 @@ const DEFAULT_CONFIG = {
     "✅ Données en France 🇫🇷",
   ],
   feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
+  legal:{
+    nom:"Sophie [Votre nom]",
+    siret:"[Votre SIRET]",
+    adresse:"Île-de-France, France",
+    email:"support@timat.app",
+  },
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -8401,6 +8443,7 @@ const loadConfig = async () => {
         freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
         proItems: saved.proItems||DEFAULT_CONFIG.proItems,
         guarantees: saved.guarantees||DEFAULT_CONFIG.guarantees,
+        legal:{...DEFAULT_CONFIG.legal,...(saved.legal||{})},
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
