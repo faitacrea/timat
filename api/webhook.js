@@ -1,138 +1,106 @@
-// api/webhook.js
-// Vercel Serverless Function — reçoit les événements Stripe
-// ⚠️ Ce endpoint doit recevoir le body RAW (pas JSON parsé)
-
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { buffer } from 'micro';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Client Supabase avec la clé SERVICE (pas la clé publique)
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY // À ajouter dans Vercel env vars
+  process.env.SUPABASE_SERVICE_KEY
 );
 
-// Vercel : désactiver le body parser pour recevoir le raw body
+// Disable body parsing — Stripe needs raw body for signature verification
 export const config = { api: { bodyParser: false } };
 
-// Lire le raw body
-async function getRawBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
-  });
-}
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Méthode non autorisée' });
-  }
+  if (req.method !== 'POST') return res.status(405).end();
 
-  const rawBody = await getRawBody(req);
-  const signature = req.headers['stripe-signature'];
+  const sig = req.headers['stripe-signature'];
+  const buf = await buffer(req);
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('Webhook signature invalide:', err.message);
-    return res.status(400).json({ error: `Webhook error: ${err.message}` });
+    event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (e) {
+    console.error('Webhook signature verification failed:', e.message);
+    return res.status(400).json({ error: `Webhook Error: ${e.message}` });
   }
-
-  console.log('Stripe event reçu:', event.type);
 
   try {
     switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        const userId = session.metadata?.userId;
+        const customerId = session.customer;
 
-      // ── Essai démarré ou abonnement activé ──────────────────────────────
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object;
-        const userId = subscription.metadata?.supabase_user_id;
-        if (!userId) break;
-
-        const isActive = ['active', 'trialing'].includes(subscription.status);
-        await supabase.from('profiles').update({
-          subscription_status: isActive ? 'pro' : 'free',
-          stripe_customer_id: subscription.customer,
-          stripe_subscription_id: subscription.id,
-          subscription_end_date: subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
-            : null,
-        }).eq('id', userId);
-
-        console.log(`✅ Profil ${userId} → ${isActive ? 'pro' : 'free'}`);
-        break;
-      }
-
-      // ── Paiement réussi ─────────────────────────────────────────────────
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object;
-        const userId = invoice.subscription_details?.metadata?.supabase_user_id;
         if (userId) {
           await supabase.from('profiles').update({
             subscription_status: 'pro',
-            last_payment_date: new Date().toISOString(),
+            stripe_customer_id: customerId,
+            subscription_updated_at: new Date().toISOString(),
           }).eq('id', userId);
+
+          console.log(`[Stripe] ✅ User ${userId} upgraded to Pro`);
         }
         break;
       }
 
-      // ── Paiement échoué ─────────────────────────────────────────────────
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        const userId = invoice.subscription_details?.metadata?.supabase_user_id;
-        if (userId) {
-          await supabase.from('profiles').update({
-            subscription_status: 'past_due',
-          }).eq('id', userId);
-        }
-        break;
-      }
-
-      // ── Abonnement annulé ───────────────────────────────────────────────
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
-        const userId = subscription.metadata?.supabase_user_id;
-        if (userId) {
+        const customerId = subscription.customer;
+
+        // Find user by stripe_customer_id
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .maybeSingle();
+
+        if (profile) {
           await supabase.from('profiles').update({
             subscription_status: 'free',
-            stripe_subscription_id: null,
-          }).eq('id', userId);
-          console.log(`❌ Profil ${userId} → free (annulation)`);
+            subscription_updated_at: new Date().toISOString(),
+          }).eq('id', profile.id);
+
+          console.log(`[Stripe] ❌ User ${profile.id} downgraded to Free`);
         }
         break;
       }
 
-      // ── Checkout complété ───────────────────────────────────────────────
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-        const userId = session.metadata?.supabase_user_id;
-        if (userId && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription);
-          const isTrialing = subscription.status === 'trialing';
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        const status = subscription.status; // 'active', 'past_due', 'canceled', 'trialing'
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .maybeSingle();
+
+        if (profile) {
+          const subStatus = ['active', 'trialing'].includes(status) ? 'pro' : 'free';
           await supabase.from('profiles').update({
-            subscription_status: isTrialing ? 'trialing' : 'pro',
-            stripe_customer_id: session.customer,
-            stripe_subscription_id: session.subscription,
-          }).eq('id', userId);
+            subscription_status: subStatus,
+            subscription_updated_at: new Date().toISOString(),
+          }).eq('id', profile.id);
+
+          console.log(`[Stripe] 🔄 User ${profile.id} subscription: ${status} → ${subStatus}`);
         }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        console.log(`[Stripe] ⚠️ Payment failed for customer ${invoice.customer}`);
         break;
       }
 
       default:
-        console.log(`Événement ignoré: ${event.type}`);
+        console.log(`[Stripe] Unhandled event: ${event.type}`);
     }
-  } catch (dbError) {
-    console.error('Erreur Supabase:', dbError);
-    // On répond quand même 200 pour que Stripe ne réessaie pas
+  } catch (e) {
+    console.error('Webhook processing error:', e.message);
+    return res.status(500).json({ error: e.message });
   }
 
   return res.status(200).json({ received: true });
