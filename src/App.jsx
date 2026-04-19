@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+aaimport { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // DATES
@@ -295,7 +295,7 @@ function AccueilAssMat({enfants,setPage,user}){
         {enfants.map(e=>{
           const p=pt.find(x=>x.eId===e.id);
           const t=tx.filter(x=>x.eId===e.id).slice(-1)[0];
-          const msg=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
+          const msg=enfants.every(e=>["e1","e2","e3"].includes(e.id))?D.messages.filter(m=>m.eId===e.id&&!m.lu).length:0;
           const rep=D.repas?.find(r=>r.eId===e.id&&r.date===TODAY_STR)||null;
           const couleur=e.couleur||"#B8622F";
           const allergies=e.allergies||[];
@@ -1400,19 +1400,73 @@ function Calendrier({enfants,role,pEId}){
     </div>
   </div>;
 }
-function Messagerie({enfants,role,pEId}){
+function Messagerie({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [msgs,setMsgs]=useState(D.messages);
+  const isDemoMode=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const [msgs,setMsgs]=useState(isDemoMode?D.messages:[]);
   const [txt,setTxt]=useState("");
+  const [loadingMsgs,setLoadingMsgs]=useState(false);
   const endRef=useRef(null);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
-  const conv=msgs.filter(m=>m.eId===enfant?.id).sort((a,b)=>a.id>b.id?1:-1);
+  const conv=msgs.filter(m=>(m.eId||m.enfant_id)===enfant?.id).sort((a,b)=>(a.created_at||a.id)>(b.created_at||b.id)?1:-1);
 
-  const send=()=>{if(!txt.trim())return;
-    setMsgs(p=>[...p,{id:"mn"+Date.now(),eId:enfant.id,de:role==="asmat"?"asmat":"parent",h:TODAY_H,txt,lu:true}]);
+  // Load messages from Supabase
+  useEffect(()=>{
+    if(isDemoMode||!user?.id)return;
+    const load=async()=>{
+      setLoadingMsgs(true);
+      const enfantIds=liste.map(e=>e.id);
+      const{data,error}=await supabase.from('messages').select('*').in('enfant_id',enfantIds).order('created_at',{ascending:true}).limit(200);
+      if(!error&&data){
+        setMsgs(data.map(m=>({...m,eId:m.enfant_id,de:m.auteur_role,h:m.heure||new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})})));
+      }
+      setLoadingMsgs(false);
+    };
+    load();
+  },[user?.id,isDemoMode]);
+
+  // Realtime subscription
+  useEffect(()=>{
+    if(isDemoMode||!user?.id)return;
+    const enfantIds=liste.map(e=>e.id);
+    const channel=supabase.channel('messages-realtime').on('postgres_changes',
+      {event:'INSERT',schema:'public',table:'messages'},
+      (payload)=>{
+        const m=payload.new;
+        if(enfantIds.includes(m.enfant_id)){
+          setMsgs(prev=>{
+            if(prev.find(p=>p.id===m.id))return prev;
+            return[...prev,{...m,eId:m.enfant_id,de:m.auteur_role,h:m.heure||new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}];
+          });
+          setTimeout(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),100);
+        }
+      }
+    ).subscribe();
+    return()=>{supabase.removeChannel(channel);};
+  },[user?.id,isDemoMode]);
+
+  const send=async()=>{
+    if(!txt.trim()||!enfant?.id)return;
+    const heure=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    if(isDemoMode){
+      setMsgs(p=>[...p,{id:"mn"+Date.now(),eId:enfant.id,de:role==="asmat"?"asmat":"parent",h:heure,txt,lu:true}]);
+    }else{
+      const{error}=await supabase.from('messages').insert({
+        enfant_id:enfant.id,
+        auteur_id:user.id,
+        auteur_role:role==="asmat"?"asmat":"parent",
+        texte:txt,
+        heure:heure,
+        lu:false,
+      });
+      if(error)console.error('Message send error:',error.message);
+      // Realtime will pick it up — but also add locally for instant feedback
+      setMsgs(p=>[...p,{id:"mn"+Date.now(),eId:enfant.id,de:role,h:heure,txt,lu:true,enfant_id:enfant.id}]);
+    }
     setTxt("");
-    setTimeout(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),50);};
+    setTimeout(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),50);
+  };
 
   return <div className="fi">
     <PageHeader icon="💬" title="Messagerie instantanée" sub="Communication en temps réel"/>
@@ -1427,7 +1481,7 @@ function Messagerie({enfants,role,pEId}){
         </div>
         <div className="msgs">
           {conv.map(m=><div key={m.id}className={(m.de==="asmat"?"msg msg-me":"msg msg-ot")}>
-            <div>{m.txt}</div>
+            <div>{m.txt||m.texte}</div>
             <div style={{fontSize:10,opacity:.7,marginTop:3,textAlign:"right"}}>{m.h}</div>
           </div>)}
           <div ref={endRef}/>
@@ -1467,17 +1521,26 @@ function Messagerie({enfants,role,pEId}){
 }
 
 //
-function Facturation({enfants,role,pEId}){
+function Facturation({enfants,role,pEId,user,pointagesDB}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [abs,setAbs]=useState(D.absences);
+  const [abs,setAbs]=useState(enfants.every(e=>["e1","e2","e3"].includes(e.id))?D.absences:[]);
   const [toast,setToast]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
-  const h=D.heures[enfant?.id]||{real:0,prev:Math.round((enfant?.contrat?.heuresHebdo||40)*52/12)};
+  const isDemoFact=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  // Calculate hours from real pointages or fallback to demo
+  const calcHeures=()=>{
+    if(isDemoFact)return D.heures[enfant?.id]||{real:0,prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
+    if(!pointagesDB||!enfant?.id)return{real:0,prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
+    const moisPointages=pointagesDB.filter(p=>p.enfant_id===enfant.id);
+    const totalMin=moisPointages.reduce((s,p)=>s+(p.total_minutes||0),0);
+    return{real:Math.round(totalMin/60),prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
+  };
+  const h=calcHeures();
   const salBrut=contrat?(h.real*contrat.tauxHoraire+(h.real/5*contrat.entretien)):0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
-  const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||4.05)*contrat?.indemniteAbsence),0);
+  const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||4.05)*(contrat?.indemniteAbsence||0.5)),0);
   const totalBrut=salBrut+indemAbs;
 
   const exportPajemploi=()=>{
@@ -1943,7 +2006,8 @@ function Recap({enfants,role,pEId}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
-  const h=D.heures[enfant?.id]||{real:0,prev:Math.round((enfant?.contrat?.heuresHebdo||40)*52/12)};
+  const isDemoRecap=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const h=isDemoRecap?(D.heures[enfant?.id]||{real:0,prev:0}):{real:0,prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
   const rep=D.repas.filter(r=>r.eId===enfant?.id);
   const ms=D.milestones[enfant?.id]||[];
 
@@ -2454,7 +2518,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat||{};
-  const h=D.heures[enfant?.id]||{real:160,prev:174};
+  const isDemoBull=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
+  const h=isDemoBull?(D.heures[enfant?.id]||{real:160,prev:174}):{real:hMens,prev:hMens};
   const tauxH=contrat.tauxHoraire||4.05;
   const heuresNorm=Math.min(h.real,45*4);
   const hSupp=Math.max(0,h.real-heuresNorm);
@@ -3024,7 +3090,7 @@ function Parrainage({user}){
 }
 
 //
-function AdminFinances({enfants,role,pEId,user}){
+function AdminFinances({enfants,role,pEId,user,pointagesDB}){
   const [section,setSection]=useState(role==="asmat"?"facturation":"contrats");
   const sousOnglets=role==="asmat"
     ?[
@@ -3048,7 +3114,7 @@ function AdminFinances({enfants,role,pEId,user}){
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
-    {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<Contrats enfants={enfants}role={role}pEId={pEId}/>}
     {section==="avenants"&&<DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>}
@@ -3402,8 +3468,9 @@ function TableauDeBord({enfants,role,pEId,setPage}){
 
   const ptAuj=D.pointages.filter(p=>p.date===TODAY_STR);
   const presents=ptAuj.filter(p=>!p.dep).length;
-  const msgsNonLus=D.messages.filter(m=>!m.lu).length;
-  const totalH=enfants.reduce((a,e)=>{const h=D.heures[e.id];return a+(h?h.real:0);},0);
+  const isDemoTDB=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const msgsNonLus=isDemoTDB?D.messages.filter(m=>!m.lu).length:0;
+  const totalH=isDemoTDB?enfants.reduce((a,e)=>{const h=D.heures[e.id];return a+(h?h.real:0);},0):0;
 
   // Humeurs historique
   const hist=D.moodHistory[enfant?.id]||[];
@@ -6242,7 +6309,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.15)" }}>🌿</div>
+            {L.logoUrl
+              ?<img src={L.logoUrl} alt="TiMat" style={{height:32,borderRadius:8,objectFit:"contain"}}/>
+              :<div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.15)" }}>{L.logoEmoji||"🌿"}</div>}
             <span style={{ color: "#fff" }}>TiMat</span>
           </div>
           {/* Desktop nav */}
@@ -6516,7 +6585,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.1)" }}>🌿</div>
+                {L.logoUrl
+                  ?<img src={L.logoUrl} alt="TiMat" style={{height:32,borderRadius:8,objectFit:"contain"}}/>
+                  :<div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.1)" }}>{L.logoEmoji||"🌿"}</div>}
                 <span style={{ color: "#fff" }}>TiMat</span>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
@@ -7815,6 +7886,22 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             </BOField>
           </BOCard>
 
+          <BOCard title="Logo" icon="🌿">
+            <BOField label="Image du logo (URL)" hint="Laisse vide pour utiliser l'emoji">
+              <BOTextInput k="logoUrl" state={cfg.landing} setter={setLand} placeholder="https://... logo.png ou .svg"/>
+            </BOField>
+            <BOField label="Emoji du logo (si pas d'image)">
+              <BOTextInput k="logoEmoji" state={cfg.landing} setter={setLand} placeholder="🌿"/>
+            </BOField>
+            <div style={{marginTop:8,padding:10,background:"#264653",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
+              {cfg.landing.logoUrl
+                ?<img src={cfg.landing.logoUrl}alt="logo"style={{height:28,borderRadius:6,objectFit:"contain"}}onError={e=>{e.target.style.display="none"}}/>
+                :<div style={{width:28,height:28,borderRadius:8,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{cfg.landing.logoEmoji||"🌿"}</div>}
+              <span style={{color:"#fff",fontSize:16,fontWeight:700,fontFamily:cfg.landing.fontTitle}}>TiMat</span>
+              <span style={{fontSize:10,color:"rgba(255,255,255,.4)",marginLeft:"auto"}}>Aperçu</span>
+            </div>
+          </BOCard>
+
           <BOCard title="Textes du hero" icon="📝">
             <BOField label="Badge (bandeau jaune)"><BOTextInput k="heroBadge" state={cfg.txts} setter={setTxt}/></BOField>
             <BOField label="Titre principal"><BOTextInput k="heroTitle" state={cfg.txts} setter={setTxt}/></BOField>
@@ -8221,6 +8308,8 @@ const DEFAULT_CONFIG = {
     heroImgOpacity:0.12,
     heroImgPosition:"center center",
     heroImgBlur:2,
+    logoUrl:"",
+    logoEmoji:"🌿",
     section1Bg:"linear-gradient(135deg,#264653,#2A6F6A)",
     section2Bg:"#FDF5FB",
     section3Bg:"#F8F0FC",
@@ -8735,7 +8824,7 @@ export default function App(){
   })());
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
-  const P={enfants,role,pEId,user};
+  const P={enfants,role,pEId,user,pointagesDB};
 
   const renderPage=()=>{
     switch(page){
