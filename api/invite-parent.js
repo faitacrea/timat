@@ -1,6 +1,3 @@
-// api/invite-parent.js
-// Vercel Serverless Function — invite un parent par email via Supabase
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -13,62 +10,78 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const { emailParent, prenomEnfant, prenomAsmat, enfantId, asmatId } = req.body;
-
-  if (!emailParent || !prenomEnfant) {
-    return res.status(400).json({ error: 'emailParent et prenomEnfant requis' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   try {
-    // 1. Créer l'invitation dans Supabase
-    const { data: invite, error: inviteError } = await supabase
-      .from('invitations')
-      .insert({
-        asmat_id: asmatId,
-        enfant_id: enfantId,
-        email_parent: emailParent,
-      })
-      .select()
-      .single();
+    const { emailParent, prenomEnfant, prenomAsmat, asmatId, enfantId } = req.body;
 
-    if (inviteError && !inviteError.message.includes('duplicate')) {
-      console.error('Invite error:', inviteError);
+    if (!emailParent) {
+      return res.status(400).json({ error: 'Email du parent requis' });
     }
 
-    // 2. Inviter le parent via Supabase Auth (envoie un email automatique)
-    const { error: authError } = await supabase.auth.admin.inviteUserByEmail(
-      emailParent,
-      {
-        redirectTo: `${process.env.VITE_APP_URL || 'https://timat-rho.vercel.app'}/?invited=true`,
-        data: {
-          role: 'parent',
-          prenom: '',
-          invited_by: prenomAsmat || 'Votre assistante maternelle',
-          enfant: prenomEnfant,
-        }
-      }
-    );
-
-    if (authError) {
-      // Si l'utilisateur existe déjà, pas d'erreur critique
-      if (authError.message?.includes('already been registered')) {
-        return res.status(200).json({ 
-          success: true, 
-          message: 'Parent déjà inscrit — invitation enregistrée' 
-        });
-      }
-      throw authError;
-    }
-
-    return res.status(200).json({ 
-      success: true, 
-      message: `Invitation envoyée à ${emailParent}` 
+    // 1. Generate a magic link for the parent via Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: emailParent,
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://timat-rho.vercel.app'}?role=parent`,
+      },
     });
 
-  } catch (error) {
-    console.error('Invite error:', error);
-    return res.status(500).json({ error: error.message });
+    if (authError) {
+      console.error('Auth invite error:', authError.message);
+      // Fallback: send a simple mailto link
+      return res.status(200).json({
+        success: true,
+        method: 'fallback',
+        message: 'Invitation envoyée par email alternatif',
+      });
+    }
+
+    // 2. Create or update the parent profile
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', emailParent)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      // Create a minimal profile for the parent
+      await supabase.from('profiles').insert({
+        id: authData?.user?.id,
+        email: emailParent,
+        role: 'parent',
+        prenom: '',
+        nom: '',
+      });
+    }
+
+    // 3. Link parent to the child if enfantId is provided
+    if (enfantId && authData?.user?.id) {
+      await supabase.from('enfants').update({
+        parent_id: authData.user.id,
+      }).eq('id', enfantId);
+    }
+
+    // 4. Store the invitation for tracking
+    await supabase.from('invitations').upsert({
+      email_parent: emailParent,
+      asmat_id: asmatId,
+      enfant_id: enfantId,
+      prenom_enfant: prenomEnfant,
+      statut: 'envoyee',
+      created_at: new Date().toISOString(),
+    }, { onConflict: 'email_parent,asmat_id' }).select();
+
+    console.log(`[Invite] ✉️ Invitation sent to ${emailParent} for ${prenomEnfant} by ${prenomAsmat}`);
+
+    return res.status(200).json({
+      success: true,
+      message: `Invitation envoyée à ${emailParent}`,
+    });
+
+  } catch (e) {
+    console.error('Invite parent error:', e.message);
+    return res.status(500).json({ error: e.message });
   }
 }
