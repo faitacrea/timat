@@ -1,4 +1,4 @@
-aaimport { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // DATES
@@ -940,6 +940,38 @@ function Pointage({enfants,role,pEId}){
             <button className="btn bS"style={{width:"100%"}}onClick={save}disabled={saving}>
               {saving?"⏳ Sauvegarde…":"Enregistrer le pointage"}
             </button>
+            {/* QR Code pour le parent */}
+            <details style={{marginTop:12,background:"var(--c)",borderRadius:10,overflow:"hidden"}}>
+              <summary style={{padding:"10px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:"var(--B)",listStyle:"none",display:"flex",alignItems:"center",gap:8}}>
+                <span>📱</span> QR Code pointage — {enfant?.prenom}
+              </summary>
+              <div style={{padding:"12px 14px",textAlign:"center"}}>
+                <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.6}}>
+                  Le parent scanne ce QR code pour valider l'arrivée ou le départ de {enfant?.prenom}.
+                </div>
+                <img
+                  src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
+                    (window.location.origin||"https://timat-rho.vercel.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
+                  )}
+                  alt="QR Pointage"
+                  style={{width:180,height:180,borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
+                />
+                <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
+                  <button className="btn bG"style={{fontSize:11}}onClick={()=>{
+                    navigator.clipboard?.writeText(
+                      (window.location.origin||"https://timat-rho.vercel.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
+                    );
+                    setToast("Lien copié ✓");
+                  }}>📋 Copier le lien</button>
+                  <button className="btn bG"style={{fontSize:11}}onClick={()=>{
+                    window.print();
+                  }}>🖨️ Imprimer</button>
+                </div>
+                <div style={{fontSize:10,color:"var(--l)",marginTop:8}}>
+                  🔒 Ce QR est unique à {enfant?.prenom} et valable aujourd'hui uniquement.
+                </div>
+              </div>
+            </details>
           </div>}
         </div>
       </div>
@@ -6160,6 +6192,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [activeDemo, setActiveDemo] = useState("journal");
   const [showModal, setShowModal] = useState(false);
   const [showLegal, setShowLegal] = useState(null); // null, "mentions", "cgu", "confidentialite"
+  const [showBlog, setShowBlog] = useState(null); // null or article id
   const [role, setRole] = useState("asmat");
   const [modeAuth, setModeAuth] = useState("inscription");
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
@@ -6402,12 +6435,32 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 }}><span>{s.icon}</span><span>{s.label}</span></button>
               ))}
             </div>
-            <div style={{ background: "#fff", borderRadius: 16, border: "2px solid", borderColor: demo?.color || "#DDD5C8", overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,.1)", transition: "border-color .3s" }}>
-              <div style={{ background: demo?.color, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ display: "flex", gap: 5 }}>{["#ff5f57", "#febc2e", "#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", fontWeight: 600 }}>{demo?.icon} {demo?.label}</div>
+            {/* Phone frame */}
+            <div style={{ maxWidth: 320, margin: "0 auto", background: "#1a1a1a", borderRadius: 36, padding: "12px 8px", boxShadow: "0 20px 60px rgba(0,0,0,.25), inset 0 1px 2px rgba(255,255,255,.1)" }}>
+              {/* Notch */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
+                <div style={{ width: 80, height: 22, background: "#1a1a1a", borderRadius: "0 0 14px 14px", position: "relative", zIndex: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#333" }} />
+                </div>
               </div>
-              {demo && <demo.preview />}
+              {/* Screen */}
+              <div style={{ background: "#fff", borderRadius: 24, overflow: "hidden", minHeight: 420 }}>
+                {/* Status bar */}
+                <div style={{ background: demo?.color, padding: "8px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,.9)", fontWeight: 600 }}>{demo?.icon} {demo?.label}</div>
+                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,.6)" }}>📶 🔋</div>
+                  </div>
+                </div>
+                {/* Content */}
+                <div style={{ maxHeight: 360, overflowY: "auto" }}>
+                  {demo && <demo.preview />}
+                </div>
+              </div>
+              {/* Home indicator */}
+              <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
+                <div style={{ width: 100, height: 4, background: "rgba(255,255,255,.3)", borderRadius: 2 }} />
+              </div>
             </div>
           </div>
         </div>
@@ -6577,6 +6630,218 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           ))}
         </div>
       </div>
+
+      {/* BLOG */}
+      <div className="lp-section" style={{ background: "#FDFBF8" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#264653", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
+              <div style={{ fontSize: 15, color: "#5F7A86" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
+            </div>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+            {[
+              {id:"mensualisation",cat:"Administratif",catColor:"#FF9F63",emoji:"🧮",title:"Mensualisation : le guide complet pour ne plus se tromper",excerpt:"Heures mensualisées, régularisation, année complète ou incomplète… Tout ce qu'il faut savoir pour calculer correctement."},
+              {id:"maladies",cat:"Santé",catColor:"#E76F51",emoji:"🩺",title:"Les 5 maladies les plus fréquentes chez les tout-petits",excerpt:"Bronchiolite, gastro, pieds-mains-bouche… Comment les reconnaître et quand garder l'enfant à la maison."},
+              {id:"agrement",cat:"PMI & Agrément",catColor:"#2A9D8F",emoji:"🏛️",title:"Renouvellement d'agrément : la checklist complète",excerpt:"Les documents à préparer, les délais à respecter et les erreurs à éviter pour un renouvellement serein."},
+              {id:"attachement",cat:"Pédagogie",catColor:"#264653",emoji:"🤱",title:"L'attachement sécure : pourquoi c'est fondamental en accueil individuel",excerpt:"Comment créer un lien de confiance avec l'enfant accueilli, et pourquoi c'est votre plus grande force."},
+            ].map((art,i)=>(
+              <FadeIn key={art.id} delay={i*80}>
+                <div onClick={()=>setShowBlog(art.id)} style={{
+                  background:"#fff",borderRadius:16,overflow:"hidden",cursor:"pointer",
+                  border:"1px solid #E8E4E0",transition:"all .2s",boxShadow:"0 2px 12px rgba(0,0,0,.04)"
+                }}
+                  onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 12px 32px rgba(0,0,0,.1)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,.04)";}}>
+                  <div style={{height:120,background:"linear-gradient(135deg,"+art.catColor+"15,"+art.catColor+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{art.emoji}</div>
+                  <div style={{padding:"16px 20px"}}>
+                    <div style={{fontSize:10,fontWeight:700,color:art.catColor,textTransform:"uppercase",letterSpacing:".8px",marginBottom:8}}>{art.cat}</div>
+                    <div style={{fontSize:15,fontWeight:700,color:"#264653",lineHeight:1.4,marginBottom:8}}>{art.title}</div>
+                    <div style={{fontSize:12,color:"#5F7A86",lineHeight:1.6}}>{art.excerpt}</div>
+                    <div style={{marginTop:12,fontSize:12,color:accent,fontWeight:600}}>Lire l'article →</div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* BLOG ARTICLE MODAL */}
+      {showBlog&&<div onClick={e=>e.target===e.currentTarget&&setShowBlog(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
+        <div style={{background:"#fff",borderRadius:20,width:"100%",maxWidth:700,maxHeight:"90vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,.3)",display:"flex",flexDirection:"column"}}>
+          <div style={{padding:"20px 24px",borderBottom:"1px solid #E8E4E0",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+            <div style={{fontFamily:fTitle,fontSize:16,fontWeight:700,color:"#264653"}}>📝 Blog TiMat</div>
+            <button onClick={()=>setShowBlog(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#264653",fontWeight:700}}>✕</button>
+          </div>
+          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#264653",lineHeight:1.9}}>
+
+            {showBlog==="mensualisation"&&<div>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🧮 Mensualisation : le guide complet pour ne plus se tromper</h2>
+              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 8 min de lecture</div>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Pourquoi mensualiser ?</h3>
+              <p>La mensualisation est obligatoire pour les assistantes maternelles depuis la Convention Collective Nationale. Son objectif est simple : lisser votre salaire sur l'année pour que vous receviez la même somme chaque mois, même si les semaines d'accueil varient.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Année complète ou incomplète ?</h3>
+              <p><strong>Année complète (47 semaines et plus)</strong> — Le calcul est le plus courant. L'enfant est accueilli au moins 47 semaines par an. Votre salaire mensuel est : <em>heures hebdo × 52 / 12 × taux horaire</em>. Les congés payés sont inclus dans ce calcul.</p>
+              <p style={{marginTop:8}}><strong>Année incomplète (moins de 47 semaines)</strong> — Utilisé quand les parents prennent plus de 5 semaines de vacances ou pour un accueil périscolaire. Le calcul : <em>heures hebdo × nombre de semaines / 12 × taux horaire</em>. Les congés payés sont versés séparément (10% du total).</p>
+
+              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #B7E4C7"}}>
+                <div style={{fontWeight:700,color:"#2A9D8F",marginBottom:6}}>💡 Exemple concret</div>
+                <div style={{fontSize:12}}>
+                  Marie accueille Léo 40h/semaine, 47 semaines/an, à 4,05€/h brut.<br/>
+                  Salaire mensualisé = 40 × 52 / 12 × 4,05 = <strong>702 € brut/mois</strong><br/>
+                  Soit environ <strong>547,56 € net/mois</strong> (après cotisations ~22%).
+                </div>
+              </div>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>La régularisation de fin d'année</h3>
+              <p>En fin d'année (ou de contrat), il faut comparer les heures réellement effectuées avec les heures payées. Si l'assmat a travaillé plus que prévu, le parent doit compléter. Si elle a travaillé moins, en année complète le salaire reste acquis (c'est le principe de la mensualisation).</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les heures complémentaires et majorées</h3>
+              <p>Au-delà de 45 heures par semaine, les heures sont majorées d'au moins 25% (ou plus selon accord). Entre le nombre contractuel et 45h, ce sont des heures complémentaires, rémunérées au taux normal sauf accord contraire.</p>
+
+              <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
+                <div style={{fontWeight:700,color:"#FF9F63",marginBottom:6}}>🔧 TiMat calcule tout automatiquement</div>
+                <div style={{fontSize:12}}>Plus besoin de faire ces calculs à la main. TiMat applique les règles de la CCN et génère votre bulletin de salaire chaque mois.</div>
+              </div>
+            </div>}
+
+            {showBlog==="maladies"&&<div>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🩺 Les 5 maladies les plus fréquentes chez les tout-petits</h2>
+              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Santé · 6 min de lecture</div>
+
+              <p>En accueil collectif ou individuel, les enfants tombent malades. C'est normal et même nécessaire pour construire leur immunité. Voici les 5 maladies les plus fréquentes et ce que vous devez savoir.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>1. La bronchiolite</h3>
+              <p><strong>Quoi :</strong> infection virale des bronchioles, très courante chez les moins de 2 ans, surtout en hiver (octobre à mars).</p>
+              <p><strong>Signes :</strong> toux, respiration sifflante, difficulté à s'alimenter, tirage intercostal.</p>
+              <p><strong>Conduite :</strong> nettoyer le nez (DRP), fractionner les repas, surélever légèrement la tête du lit. Consulter si détresse respiratoire. L'enfant peut revenir chez l'assmat après la phase aiguë (2-3 jours), si pas de fièvre et alimentation correcte.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>2. La gastro-entérite</h3>
+              <p><strong>Quoi :</strong> inflammation de l'estomac et des intestins, virale dans 90% des cas (rotavirus).</p>
+              <p><strong>Signes :</strong> vomissements, diarrhée, fièvre possible, risque de déshydratation.</p>
+              <p><strong>Conduite :</strong> soluté de réhydratation orale (SRO), régime adapté. Exclure l'enfant 24h après le dernier vomissement. Hygiène des mains renforcée pour éviter la contagion aux autres enfants.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>3. Le syndrome pieds-mains-bouche</h3>
+              <p><strong>Quoi :</strong> infection virale (coxsackie) très contagieuse, fréquente l'été-automne.</p>
+              <p><strong>Signes :</strong> petites vésicules sur les mains, les pieds et dans la bouche, fièvre modérée, refus de manger.</p>
+              <p><strong>Conduite :</strong> pas de traitement spécifique, guérison en 7-10 jours. L'éviction n'est pas obligatoire (avis du médecin). Proposer des aliments froids et mous si la bouche est douloureuse.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>4. L'otite moyenne aiguë</h3>
+              <p><strong>Quoi :</strong> infection de l'oreille moyenne, souvent consécutive à un rhume. Très fréquente avant 3 ans.</p>
+              <p><strong>Signes :</strong> douleur à l'oreille (l'enfant se tire l'oreille), fièvre, pleurs inhabituels, troubles du sommeil.</p>
+              <p><strong>Conduite :</strong> consultation médicale nécessaire (possible antibiotiques). L'enfant peut revenir 24h après le début du traitement si état général correct.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>5. La conjonctivite</h3>
+              <p><strong>Quoi :</strong> inflammation de la membrane qui recouvre l'oeil, souvent bactérienne chez les petits.</p>
+              <p><strong>Signes :</strong> oeil rouge, sécrétions jaune-vertes, paupières collées au réveil.</p>
+              <p><strong>Conduite :</strong> lavage au sérum physiologique, collyre prescrit par le médecin. Très contagieux — se laver les mains après chaque soin. Retour possible après 24h de traitement.</p>
+
+              <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"20px 0"}}>
+                <div style={{fontWeight:700,color:"#264653",marginBottom:8}}>📋 À retenir</div>
+                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2}}>
+                  <li>Exiger systématiquement une ordonnance médicale avant d'administrer un médicament</li>
+                  <li>Tenir un registre des maladies et traitements dans le carnet de l'enfant</li>
+                  <li>Prévenir les parents dès les premiers symptômes</li>
+                  <li>Renforcer l'hygiène des mains (avant/après chaque change, repas, mouchage)</li>
+                </ul>
+              </div>
+            </div>}
+
+            {showBlog==="agrement"&&<div>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🏛️ Renouvellement d'agrément : la checklist complète</h2>
+              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>PMI & Agrément · 7 min de lecture</div>
+
+              <p>Votre agrément doit être renouvelé tous les 5 ans (10 ans avec le CAP AEPE). La demande doit être envoyée au moins 3 mois avant l'expiration. Voici tout ce qu'il faut préparer.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>📅 Le calendrier</h3>
+              <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"8px 12px",fontSize:12,margin:"10px 0"}}>
+                <strong>6 mois avant :</strong><span>Commencer à rassembler les documents</span>
+                <strong>3 mois avant :</strong><span>Envoyer le dossier complet au Conseil départemental</span>
+                <strong>2 mois avant :</strong><span>Visite de la puéricultrice PMI à domicile</span>
+                <strong>Jour J :</strong><span>Réponse du Conseil départemental (silence = accord)</span>
+              </div>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>📋 Documents à fournir</h3>
+              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"10px 0"}}>
+                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
+                  <li>Formulaire CERFA de renouvellement (disponible sur service-public.fr)</li>
+                  <li>Copie de votre pièce d'identité</li>
+                  <li>Justificatif de domicile de moins de 3 mois</li>
+                  <li>Certificat médical attestant votre aptitude à accueillir des enfants</li>
+                  <li>Extrait de casier judiciaire (bulletin n°2 — demandé automatiquement par la PMI)</li>
+                  <li>Attestation d'assurance responsabilité civile professionnelle</li>
+                  <li>Attestation de formation continue (120h obligatoires)</li>
+                  <li>Votre projet d'accueil mis à jour</li>
+                </ul>
+              </div>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>🏠 La visite PMI : à quoi s'attendre</h3>
+              <p>La puéricultrice viendra évaluer votre domicile et votre pratique. Elle regardera notamment :</p>
+              <ul style={{paddingLeft:20,fontSize:12,lineHeight:2}}>
+                <li>La sécurité du logement (barrières, prises, escaliers, produits dangereux)</li>
+                <li>L'espace dédié à l'accueil (coin repos, coin repas, coin jeu)</li>
+                <li>Votre organisation quotidienne et vos pratiques éducatives</li>
+                <li>Votre capacité à travailler avec les parents</li>
+                <li>Votre connaissance des gestes de premiers secours</li>
+              </ul>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>⚠️ Les erreurs à éviter</h3>
+              <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"10px 0",border:"1px solid #FECACA"}}>
+                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#E76F51"}}>
+                  <li>Envoyer le dossier en retard (moins de 3 mois avant expiration)</li>
+                  <li>Oublier la formation continue obligatoire</li>
+                  <li>Ne pas mettre à jour son projet d'accueil</li>
+                  <li>Négliger la sécurité du domicile avant la visite</li>
+                </ul>
+              </div>
+            </div>}
+
+            {showBlog==="attachement"&&<div>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🤱 L'attachement sécure : pourquoi c'est fondamental en accueil individuel</h2>
+              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Pédagogie · 5 min de lecture</div>
+
+              <p>En tant qu'assistante maternelle, vous êtes une figure d'attachement secondaire pour les enfants que vous accueillez. Ce rôle est essentiel pour leur développement émotionnel et cognitif.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Qu'est-ce que l'attachement sécure ?</h3>
+              <p>La théorie de l'attachement, développée par John Bowlby et Mary Ainsworth, montre que chaque enfant a besoin d'au moins une figure d'attachement stable et disponible pour se développer sereinement. Quand l'enfant se sent en sécurité avec un adulte, il ose explorer le monde, gérer ses émotions et développer sa confiance en lui.</p>
+
+              <p style={{marginTop:8}}>En accueil individuel, vous avez un avantage énorme sur les structures collectives : <strong>un ratio faible</strong> (1 adulte pour 3-4 enfants maximum) qui permet de créer un vrai lien personnalisé.</p>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les 4 piliers au quotidien</h3>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,margin:"12px 0"}}>
+                {[["🎯","Disponibilité","Être physiquement et émotionnellement présente. Poser son téléphone. Être à hauteur de l'enfant. Répondre quand il vous sollicite."],
+                  ["🤗","Réactivité","Répondre rapidement et de manière adaptée aux signaux de l'enfant. Un pleur, un geste, un regard — chaque signal mérite une réponse."],
+                  ["🔄","Prévisibilité","Des routines stables (repas, sieste, activités). L'enfant sait ce qui va se passer, et ça le rassure profondément."],
+                  ["💛","Sensibilité","Comprendre l'émotion derrière le comportement. Un enfant qui tape n'est pas méchant — il est submergé par une émotion qu'il ne sait pas exprimer."]
+                ].map(([ic,titre,desc])=>
+                  <div key={titre}style={{background:"#F4F7FA",borderRadius:12,padding:14}}>
+                    <div style={{fontSize:24,marginBottom:6}}>{ic}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:4}}>{titre}</div>
+                    <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.6}}>{desc}</div>
+                  </div>
+                )}
+              </div>
+
+              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>L'adaptation : le moment clé</h3>
+              <p>La période d'adaptation n'est pas une formalité — c'est le fondement de la relation. Un enfant qui vit une séparation brutale avec ses parents peut développer un attachement insécure qui affectera son comportement pendant des mois.</p>
+              <p style={{marginTop:8}}>Une bonne adaptation est progressive : d'abord avec le parent présent, puis des séparations courtes qui s'allongent, toujours avec un objet transitionnel (doudou, tissu avec l'odeur du parent). L'enfant doit comprendre que ses parents reviennent toujours.</p>
+
+              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
+                <div style={{fontWeight:700,color:"#2A9D8F",marginBottom:6}}>💡 Votre force d'assmat</div>
+                <div style={{fontSize:12}}>
+                  En crèche, le turnover du personnel et les ratios élevés rendent l'attachement individualisé difficile.
+                  Chez vous, l'enfant retrouve <strong>le même visage chaque matin</strong>, dans <strong>le même environnement</strong>, avec <strong>les mêmes rituels</strong>. C'est une stabilité que les parents recherchent — et c'est ce qui fait la valeur de votre métier.
+                </div>
+              </div>
+            </div>}
+
+          </div>
+        </div>
+      </div>}
 
       {/* FOOTER */}
       <footer style={{ background: "#264653", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
