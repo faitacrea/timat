@@ -5843,9 +5843,11 @@ const GROUPS_AM={
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
+    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
+    {id:"boutique",l:"Boutique",ic:"🛒"},
     {id:"parrainage",l:"Parrainage",ic:"🎁"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
@@ -5866,9 +5868,11 @@ const GROUPS_P={
     {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
+    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
+    {id:"boutique",l:"Boutique",ic:"🛒"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
 };
@@ -8020,6 +8024,224 @@ function AttestationFiscale({enfants,role,pEId,user}){
   </div>;
 }
 
+// ========== FICHE D'URGENCE (dans l'app) ==========
+function FicheUrgence({enfants,role,pEId,user}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
+  const contrat=enfant.contrat||{};
+  const [form,setForm]=useState({
+    asmatNom:(user?.prenom||"")+" "+(user?.nom||""),asmatTel:user?.tel||"",asmatAgrement:user?.agrement||"",
+    nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",sexe:"",adresse:"",
+    mereNom:"",mereTel:"",mereTravail:"",mereEmail:"",mereEmployeur:"",
+    pereNom:"",pereTel:"",pereTravail:"",pereEmail:"",pereEmployeur:"",
+    p1Nom:"",p1Lien:"",p1Tel:"",p2Nom:"",p2Lien:"",p2Tel:"",p3Nom:"",p3Lien:"",p3Tel:"",
+    medecin:"",medecinTel:"",groupe:"",vaccins:"Oui",pai:"Non",
+    allergies:enfant.allergies?.join(", ")||"",traitements:"",particularites:"",
+    authUrgences:true,authParacetamol:false,authSorties:true,authVoiture:true,authPhotos:false,
+  });
+  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+
+  // Re-fill when enfant changes
+  useEffect(()=>{
+    if(!enfant?.id)return;
+    setForm(p=>({...p,nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",
+      allergies:enfant.allergies?.join(", ")||p.allergies}));
+  },[enfant?.id]);
+
+  const genererPDF=()=>{
+    const w=window.open("","_blank");
+    if(!w){setToast("Autorisez les popups");return;}
+    const f=form;
+    const authLines=[
+      ["Emmener aux urgences",f.authUrgences],["Paracetamol (ordonnance jointe)",f.authParacetamol],
+      ["Sorties exterieures",f.authSorties],["Transport en voiture",f.authVoiture],["Photos (usage interne)",f.authPhotos]
+    ].map(([l,v])=>"<div style='margin:6px 0;font-size:13px'><span style='color:"+(v?"#2A9D8F":"#E76F51")+";font-weight:700'>"+(v?"[X] Oui  [ ] Non":"[ ] Oui  [X] Non")+"</span>  "+l+"</div>").join("");
+    const html=[
+      "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Fiche urgence - "+f.prenom+"</title>",
+      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#264653;font-size:13px;line-height:1.8}",
+      "h1{font-size:22px;text-align:center;letter-spacing:3px;color:#264653;margin-bottom:2px}",
+      ".sub{text-align:center;color:#2A9D8F;font-size:14px;margin-bottom:4px}",
+      ".note{text-align:center;color:#bbb;font-size:11px;margin-bottom:20px;font-style:italic}",
+      ".sh{font-size:14px;font-weight:700;color:#264653;letter-spacing:2px;border-bottom:3px solid #2A9D8F;padding-bottom:6px;margin:24px 0 12px;text-transform:uppercase}",
+      ".stt{font-weight:700;color:#2A9D8F;font-size:13px;margin:14px 0 6px}",
+      ".line{border-bottom:1px solid #d0d0d0;padding:6px 0;margin:4px 0}",
+      ".line b{color:#264653}",
+      ".urg{background:#FEF2F2;padding:8px 14px;margin:4px 0;border-radius:6px}",
+      ".urg span{color:#E76F51;font-weight:700;font-size:18px}",
+      "@media print{.noprint{display:none}}</style></head><body>",
+      "<h1>FICHE D'URGENCE</h1>",
+      "<div class='sub'>Assistante maternelle agreee</div>",
+      "<div class='note'>A remettre des le debut de l'accueil | A mettre a jour chaque annee</div>",
+      "<div class='line'><b>Assistante maternelle :</b> "+f.asmatNom+"</div>",
+      "<div class='line'><b>Telephone :</b> "+f.asmatTel+"</div>",
+      "<div class='line'><b>N. d'agrement :</b> "+f.asmatAgrement+"</div>",
+      "<div class='sh'>01  Identite de l'enfant</div>",
+      "<div class='line'><b>Nom :</b> "+f.nom+"</div>",
+      "<div class='line'><b>Prenom :</b> "+f.prenom+"</div>",
+      "<div class='line'><b>Date de naissance :</b> "+f.naissance+"</div>",
+      "<div class='line'><b>Sexe :</b> "+f.sexe+"</div>",
+      "<div class='line'><b>Adresse :</b> "+f.adresse+"</div>",
+      "<div class='sh'>02  Coordonnees des parents</div>",
+      "<div class='stt'>Mere</div>",
+      "<div class='line'><b>Nom et prenom :</b> "+f.mereNom+"</div>",
+      "<div class='line'><b>Telephone :</b> "+f.mereTel+"</div>",
+      "<div class='line'><b>Email :</b> "+f.mereEmail+"</div>",
+      "<div class='line'><b>Employeur :</b> "+f.mereEmployeur+"</div>",
+      "<div class='stt'>Pere</div>",
+      "<div class='line'><b>Nom et prenom :</b> "+f.pereNom+"</div>",
+      "<div class='line'><b>Telephone :</b> "+f.pereTel+"</div>",
+      "<div class='line'><b>Email :</b> "+f.pereEmail+"</div>",
+      "<div class='line'><b>Employeur :</b> "+f.pereEmployeur+"</div>",
+      "<div class='sh'>03  Personnes autorisees</div>",
+      ...[1,2,3].map(n=>"<div class='stt'>Personne "+n+"</div><div class='line'><b>Nom :</b> "+f["p"+n+"Nom"]+"</div><div class='line'><b>Lien :</b> "+f["p"+n+"Lien"]+"</div><div class='line'><b>Tel :</b> "+f["p"+n+"Tel"]+"</div>"),
+      "<div class='sh'>04  Informations medicales</div>",
+      "<div class='line'><b>Medecin :</b> "+f.medecin+"</div>",
+      "<div class='line'><b>Tel medecin :</b> "+f.medecinTel+"</div>",
+      "<div class='line'><b>Groupe sanguin :</b> "+f.groupe+"</div>",
+      "<div class='line'><b>Vaccins a jour :</b> "+f.vaccins+"</div>",
+      "<div class='line'><b>PAI :</b> "+f.pai+"</div>",
+      "<div class='line'><b>Allergies :</b> "+f.allergies+"</div>",
+      "<div class='line'><b>Traitements :</b> "+f.traitements+"</div>",
+      "<div class='line'><b>Particularites :</b> "+f.particularites+"</div>",
+      "<div class='sh'>05  Numeros d'urgence</div>",
+      "<div class='urg'>SAMU : <span>15</span></div>",
+      "<div class='urg'>Pompiers : <span>18</span></div>",
+      "<div class='urg'>Urgences europeennes : <span>112</span></div>",
+      "<div class='urg'>Centre anti-poison : <span>01 40 05 48 48</span></div>",
+      "<div class='sh'>06  Autorisations parentales</div>",
+      authLines,
+      "<div class='sh'>07  Signatures</div>",
+      "<p style='margin-bottom:16px'>Je soussigne(e), certifie l'exactitude des renseignements ci-dessus.</p>",
+      "<div class='line'><b>Fait a :</b></div><div class='line'><b>Le :</b></div>",
+      "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px'>",
+      "<div><div style='font-weight:700;margin-bottom:60px'>Signature parent :</div></div>",
+      "<div><div style='font-weight:700;margin-bottom:60px'>Signature assmat :</div></div></div>",
+      "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:20px'>Genere par TiMat - timat.app</p>",
+      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
+      "</body></html>"
+    ].join("");
+    w.document.write(html);w.document.close();
+    setToast("Fiche generee ✓");
+  };
+
+  const inp=(label,key,ph)=><div style={{marginBottom:10}}>
+    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
+    <input className="inp"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
+  </div>;
+  const ta=(label,key,ph)=><div style={{marginBottom:10}}>
+    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
+    <textarea className="ta"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:60,resize:"vertical"}}/>
+  </div>;
+  const chk=(label,key)=><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,cursor:"pointer"}}onClick={()=>set(key,!form[key])}>
+    <div style={{width:20,height:20,borderRadius:6,border:"2px solid "+(form[key]?"var(--S)":"var(--br)"),background:form[key]?"var(--S)":"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",transition:"all .15s"}}>{form[key]?"✓":""}</div>
+    <span style={{fontSize:12,color:"var(--b)"}}>{label}</span>
+  </div>;
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="🚨" title="Fiche d'urgence" sub="Pre-remplie avec les donnees de l'enfant — generez le PDF en 1 clic"/>
+    {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👶 Enfant</div>
+          {inp("Nom","nom")}{inp("Prenom","prenom")}{inp("Date de naissance","naissance","JJ/MM/AAAA")}{inp("Sexe","sexe","F / M")}{inp("Adresse","adresse")}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👪 Mere</div>
+          {inp("Nom et prenom","mereNom")}{inp("Telephone","mereTel")}{inp("Email","mereEmail")}{inp("Employeur","mereEmployeur")}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👪 Pere</div>
+          {inp("Nom et prenom","pereNom")}{inp("Telephone","pereTel")}{inp("Email","pereEmail")}{inp("Employeur","pereEmployeur")}
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🔑 Personnes autorisees</div>
+          {[1,2,3].map(n=><div key={n}style={{marginBottom:10,padding:10,background:"var(--c)",borderRadius:8}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6}}>Personne {n}</div>
+            {inp("Nom","p"+n+"Nom")}{inp("Lien","p"+n+"Lien","Grand-parent, oncle...")}{inp("Tel","p"+n+"Tel")}
+          </div>)}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🩺 Medical</div>
+          {inp("Medecin traitant","medecin")}{inp("Tel medecin","medecinTel")}{inp("Groupe sanguin","groupe")}{inp("Vaccins a jour","vaccins","Oui / Non")}{inp("PAI","pai","Oui / Non")}
+          {ta("Allergies","allergies","Aucune connue")}{ta("Traitements","traitements","Aucun")}{ta("Particularites","particularites")}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>✅ Autorisations</div>
+          {chk("Emmener aux urgences","authUrgences")}
+          {chk("Paracetamol (ordonnance jointe)","authParacetamol")}
+          {chk("Sorties exterieures","authSorties")}
+          {chk("Transport en voiture","authVoiture")}
+          {chk("Photos (usage interne)","authPhotos")}
+        </div>
+        <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>
+          🚨 Generer la fiche d'urgence PDF
+        </button>
+      </div>
+    </div>
+  </div>;
+}
+
+// ========== BOUTIQUE ==========
+function Boutique({user}){
+  const [toast,setToast]=useState("");
+  const isPro=user?.subscription_status==="pro";
+  const products=[
+    {id:"kit_sheets",name:"Kit Google Sheets Assmat",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel, planning, indemnites, facture.",icon:"📊",color:"#2A9D8F"},
+    {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences, autorisations.",icon:"🚨",color:"#E76F51"},
+    {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections : presentation, valeurs, journee type, alimentation, sommeil, activites, sante, parents.",icon:"🌿",color:"#264653"},
+    {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis. Economisez 4,80 EUR par rapport a l'achat separe.",icon:"🎁",color:"#FF9F63",badge:"-16%"},
+  ];
+
+  const acheter=async(product)=>{
+    try{
+      const res=await fetch('/api/create-checkout-session',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({userId:user?.id,email:user?.email,prenom:user?.prenom,productId:product.id,productName:product.name,productPrice:product.price}),
+      });
+      const data=await res.json();
+      if(data.url)window.location.href=data.url;
+      else setToast("Erreur de paiement — reessayez");
+    }catch(e){setToast("Erreur reseau");}
+  };
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="🛒" title="Boutique TiMat" sub="Templates et outils pour simplifier votre quotidien d'assmat"/>
+    {isPro&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:10,padding:"10px 16px",marginBottom:16,fontSize:12,color:"var(--S)",fontWeight:600}}>
+      ⭐ En tant qu'abonnee Pro, vous beneficiez de -20% sur tous les produits de la boutique.
+    </div>}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>
+      {products.map(p=><div key={p.id}className="card"style={{padding:0,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+        <div style={{height:80,background:"linear-gradient(135deg,"+p.color+"20,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,position:"relative"}}>
+          {p.icon}
+          {p.badge&&<div style={{position:"absolute",top:8,right:8,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:10,fontWeight:700}}>{p.badge}</div>}
+        </div>
+        <div style={{padding:16,flex:1,display:"flex",flexDirection:"column"}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{p.name}</div>
+          <div style={{fontSize:12,color:"var(--l)",lineHeight:1.6,flex:1,marginBottom:12}}>{p.desc}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              {isPro&&<span style={{fontSize:11,color:"var(--l)",textDecoration:"line-through",marginRight:6}}>{p.price} EUR</span>}
+              <span style={{fontSize:18,fontWeight:700,color:p.color}}>{isPro?(parseFloat(p.price.replace(",","."))*0.8).toFixed(2).replace(".",","):p.price} EUR</span>
+            </div>
+            <button className="btn bT"style={{fontSize:12,padding:"8px 16px"}}onClick={()=>acheter(p)}>Acheter</button>
+          </div>
+        </div>
+      </div>)}
+    </div>
+    <div style={{marginTop:20,textAlign:"center",fontSize:12,color:"var(--l)"}}>
+      Paiement securise par Stripe. Telechargement immediat apres achat.
+    </div>
+  </div>;
+}
+
 //
 const ONBOARD_STEPS=[
   {
@@ -9503,6 +9725,8 @@ export default function App(){
       case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId}/>;
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "boutique": return <Boutique user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
       case "support": return <Support role={role} user={user}/>;
