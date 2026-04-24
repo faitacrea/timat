@@ -1,3 +1,6 @@
+console.log("API STRIPE HIT");
+console.log("BODY:", req.body);
+console.log("ENV KEY:", !!process.env.STRIPE_SECRET_KEY);
 import Stripe from 'stripe';
 
 if (!process.env.STRIPE_SECRET_KEY) {
