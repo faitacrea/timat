@@ -5844,6 +5844,7 @@ const GROUPS_AM={
     {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
@@ -5869,6 +5870,7 @@ const GROUPS_P={
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents",ic:"🗂️"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
@@ -8188,6 +8190,182 @@ function FicheUrgence({enfants,role,pEId,user}){
   </div>;
 }
 
+// ========== PROJET D'ACCUEIL (dans l'app) ==========
+function ProjetAccueil({user}){
+  const [toast,setToast]=useState("");
+  const [form,setForm]=useState({
+    nom:(user?.prenom||"")+" "+(user?.nom||""),adresse:"",tel:user?.tel||"",email:user?.email||"",agrement:"",
+    intro:"",parcours:"",agrementDetail:"",domicile:"",
+    valeursPerso:"",
+    horaires:[
+      {h:"7h30 - 9h00",d:"Accueil echelonne, jeu libre, transmissions"},
+      {h:"9h00 - 9h30",d:"Collation du matin"},
+      {h:"9h30 - 11h00",d:"Activites d'eveil, sorties"},
+      {h:"11h30 - 12h30",d:"Repas"},
+      {h:"12h30 - 15h00",d:"Sieste"},
+      {h:"15h00 - 15h30",d:"Reveil, gouter"},
+      {h:"15h30 - 17h00",d:"Activites, motricite"},
+      {h:"17h00 - 18h30",d:"Jeu libre, retrouvailles, transmissions"},
+    ],
+    alimentationPerso:"",sommeilPerso:"",activitesPerso:"",communicationPerso:"",conclusion:"",
+  });
+  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const setHoraire=(i,field,v)=>setForm(p=>{const h=[...p.horaires];h[i]={...h[i],[field]:v};return{...p,horaires:h};});
+
+  const inp=(label,key,ph)=><div style={{marginBottom:10}}>
+    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
+    <input className="inp"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
+  </div>;
+  const ta=(label,key,ph,rows)=><div style={{marginBottom:10}}>
+    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
+    <textarea className="ta"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:(rows||3)*28,resize:"vertical"}}/>
+  </div>;
+
+  const genererPDF=()=>{
+    const w=window.open("","_blank");
+    if(!w){setToast("Autorisez les popups");return;}
+    const f=form;
+    const horairesHTML=f.horaires.map(h=>"<tr><td style='background:#F4F7FA;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>"+h.h+"</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>"+h.d+"</td></tr>").join("");
+    const html=[
+      "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Projet d'accueil</title>",
+      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:780px;margin:0 auto;padding:30px;color:#264653;font-size:13px;line-height:1.9}",
+      "h1{font-size:28px;text-align:center;letter-spacing:4px;color:#264653;margin-bottom:4px}",
+      ".sub{text-align:center;color:#2A9D8F;font-size:15px;margin-bottom:20px}",
+      ".info{text-align:center;color:#aaa;font-size:12px;margin-bottom:4px}",
+      ".sh{font-size:15px;font-weight:700;color:#264653;letter-spacing:2px;border-bottom:3px solid #2A9D8F;padding-bottom:6px;margin:30px 0 14px;text-transform:uppercase}",
+      ".stt{font-weight:700;color:#2A9D8F;font-size:14px;margin:18px 0 8px}",
+      "p{margin:6px 0}ul{padding-left:22px;margin:6px 0}li{margin:4px 0}",
+      "table{width:100%;border-collapse:collapse;margin:12px 0}",
+      ".cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;text-align:center}",
+      ".cover h1{font-size:36px;letter-spacing:8px;margin-bottom:8px}",
+      ".cover .line{border-bottom:1px solid #d0d0d0;width:300px;margin:8px auto;padding:8px 0;font-size:15px;color:#264653}",
+      ".cover .label{color:#aaa;font-size:11px;margin-top:16px}",
+      "@media print{.noprint{display:none}.cover{min-height:100vh}}</style></head><body>",
+      // PAGE DE GARDE
+      "<div class='cover'>",
+      "<h1>PROJET D'ACCUEIL</h1>",
+      "<div class='sub'>Assistante maternelle agreee</div>",
+      "<div style='border-top:3px solid #2A9D8F;border-bottom:3px solid #2A9D8F;padding:16px 0;margin:40px 0'>",
+      "<div class='line' style='font-weight:700;font-size:18px'>"+f.nom+"</div>",
+      "<div class='label'>Adresse</div><div class='line'>"+f.adresse+"</div>",
+      "<div class='label'>Telephone</div><div class='line'>"+f.tel+"</div>",
+      "<div class='label'>Email</div><div class='line'>"+f.email+"</div>",
+      "<div class='label'>Agrement</div><div class='line'>"+f.agrement+"</div>",
+      "</div>",
+      "<div style='color:#2A9D8F;font-size:16px;font-weight:700'>"+new Date().getFullYear()+"</div>",
+      "</div>",
+      // CONTENU
+      "<div class='sh'>01  Introduction</div>",
+      "<p>Ce projet d'accueil a pour objectif de vous presenter ma pratique professionnelle, mes valeurs educatives et l'organisation quotidienne de l'accueil de votre enfant a mon domicile.</p>",
+      f.intro?"<p>"+f.intro.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>02  Presentation</div>",
+      "<div class='stt'>Mon parcours</div>",
+      f.parcours?"<p>"+f.parcours.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='stt'>Mon agrement</div>",
+      f.agrementDetail?"<p>"+f.agrementDetail.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='stt'>Mon domicile</div>",
+      f.domicile?"<p>"+f.domicile.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>03  Valeurs educatives</div>",
+      "<div class='stt'>Bienveillance et respect du rythme</div>",
+      "<p>Chaque enfant est unique et se developpe a son propre rythme. Je m'engage a respecter ses besoins sans forcer ni comparer.</p>",
+      "<div class='stt'>Autonomie progressive</div>",
+      "<p>J'encourage l'enfant a faire par lui-meme dans un cadre securise.</p>",
+      "<div class='stt'>Attachement securise</div>",
+      "<p>Je m'engage a etre presente, reactive et previsible pour que l'enfant se sente en securite.</p>",
+      "<div class='stt'>Communication bienveillante</div>",
+      "<p>Face a un comportement difficile, je mets des mots sur les emotions et je pose des limites claires.</p>",
+      f.valeursPerso?"<div class='stt'>Mes valeurs complementaires</div><p>"+f.valeursPerso.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>04  Organisation de la journee</div>",
+      "<table>"+horairesHTML+"</table>",
+      "<div class='sh'>05  Alimentation</div>",
+      "<ul><li>Repas faits maison avec des produits frais et de saison</li><li>Respect des regimes alimentaires et allergies</li><li>Introduction alimentaire progressive</li><li>Ambiance calme et bienveillante a table</li></ul>",
+      f.alimentationPerso?"<p>"+f.alimentationPerso.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>06  Sommeil et repos</div>",
+      "<ul><li>Espace calme, securise et personnel</li><li>Rituel d'endormissement individualise</li><li>Surveillance reguliere pendant le sommeil</li><li>Pas de reveil impose</li></ul>",
+      f.sommeilPerso?"<p>"+f.sommeilPerso.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>07  Activites et eveil</div>",
+      "<ul><li>Motricite globale : parcours, danse, ballon, jardin</li><li>Motricite fine : gommettes, pate a modeler, dessin</li><li>Eveil sensoriel : jeux d'eau, bacs sensoriels, peinture</li><li>Eveil musical : comptines, instruments</li><li>Langage : albums, imagiers, jeux de doigts</li><li>Sorties : parc, bibliotheque, RAM</li></ul>",
+      f.activitesPerso?"<p>"+f.activitesPerso.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>08  Sante et securite</div>",
+      "<ul><li>Domicile securise selon les recommandations de la PMI</li><li>Formee aux gestes de premiers secours</li><li>En cas de maladie : parents prevenus, ordonnance obligatoire</li><li>En cas d'urgence : appel du 15 et parents prevenus</li></ul>",
+      "<div class='sh'>09  Partenariat avec les parents</div>",
+      "<ul><li>Transmissions quotidiennes : repas, sommeil, activites, humeur</li><li>Disponible pour les questions, joignable en cas d'urgence</li><li>Respect mutuel des choix educatifs</li></ul>",
+      f.communicationPerso?"<p>"+f.communicationPerso.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div class='sh'>10  Periode d'adaptation</div>",
+      "<p>L'adaptation dure generalement 1 a 2 semaines.</p>",
+      "<table>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Jour 1</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h avec le parent present</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Jour 2-3</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h sans le parent, separation courte</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Jour 4-5</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>2-3h, premier repas</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Semaine 2</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>Demi-journees puis journees completes</td></tr>",
+      "</table>",
+      "<div class='sh'>Pour conclure</div>",
+      "<p>Ce projet d'accueil est un document vivant. N'hesitez pas a en discuter avec moi a tout moment.</p>",
+      f.conclusion?"<p>"+f.conclusion.replace(/\n/g,"<br/>")+"</p>":"",
+      "<div style='margin-top:30px'><p><b>Fait a :</b> ________________________   <b>Le :</b> ________________________</p></div>",
+      "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px'>",
+      "<div><p style='font-weight:700'>L'assistante maternelle :</p><div style='height:80px'></div></div>",
+      "<div><p style='font-weight:700'>Les parents :</p><div style='height:80px'></div></div></div>",
+      "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:30px'>Genere par TiMat - timat.app</p>",
+      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
+      "</body></html>"
+    ].join("");
+    w.document.write(html);w.document.close();
+    setToast("Projet d'accueil genere ✓");
+  };
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="🌿" title="Projet d'accueil" sub="Redigez et generez votre projet d'accueil personnalise"/>
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👩 Mes informations</div>
+          {inp("Nom et prenom","nom")}{inp("Adresse","adresse")}{inp("Telephone","tel")}{inp("Email","email")}{inp("Numero d'agrement","agrement")}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>📝 Mon introduction</div>
+          {ta("Pourquoi j'aime ce metier, ce qui me motive","intro","Depuis X ans, j'exerce le metier d'assistante maternelle avec passion...",4)}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🎓 Ma presentation</div>
+          {ta("Mon parcours et mes formations","parcours","CAP AEPE, formations IPERIA, experiences professionnelles...",4)}
+          {ta("Mon agrement en detail","agrementDetail","Agree pour X enfants, de X mois a X ans, depuis le...",3)}
+          {ta("Mon domicile et ses amenagements","domicile","Maison avec jardin, espace de jeu dedie, chambre de repos...",4)}
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>💛 Mes valeurs</div>
+          <div style={{fontSize:11,color:"var(--l)",marginBottom:8,lineHeight:1.6}}>Les valeurs de base (bienveillance, autonomie, attachement, CNV) sont deja incluses. Ajoutez les votres ci-dessous.</div>
+          {ta("Mes valeurs complementaires","valeursPerso","Motricite libre, pedagogie Montessori, lien avec la nature...",3)}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>📋 Ma journee type</div>
+          {form.horaires.map((h,i)=><div key={i}style={{display:"flex",gap:6,marginBottom:4}}>
+            <input className="inp"style={{width:110,flexShrink:0,fontSize:11}}value={h.h}onChange={e=>setHoraire(i,"h",e.target.value)}/>
+            <input className="inp"style={{flex:1,fontSize:11}}value={h.d}onChange={e=>setHoraire(i,"d",e.target.value)}/>
+          </div>)}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🍽️ Mes specificites</div>
+          {ta("Alimentation","alimentationPerso","Bio, potager, menus de la semaine...",2)}
+          {ta("Sommeil","sommeilPerso","Piece dediee, babyphone, gigoteuse...",2)}
+          {ta("Activites","activitesPerso","Yoga enfant, jardinage, sorties nature...",2)}
+          {ta("Communication avec les parents","communicationPerso","Application TiMat, cahier de liaison...",2)}
+        </div>
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🌿 Conclusion</div>
+          {ta("Mon mot de conclusion","conclusion","Ce projet d'accueil est le reflet de mon engagement...",3)}
+        </div>
+        <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>
+          🌿 Generer mon projet d'accueil PDF
+        </button>
+      </div>
+    </div>
+  </div>;
+}
+
 // ========== BOUTIQUE ==========
 function Boutique({user}){
   const [toast,setToast]=useState("");
@@ -9726,6 +9904,7 @@ export default function App(){
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "projet_accueil": return <ProjetAccueil user={user}/>;
       case "boutique": return <Boutique user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
