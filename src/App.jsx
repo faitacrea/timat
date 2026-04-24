@@ -5831,26 +5831,24 @@ const GROUPS_AM={
     {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"journal_complet",l:"Journal",ic:"📋"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
+    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
-    {id:"periscolaire",l:"Périscolaire",ic:"🚌"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
-    {id:"forum",l:"Communauté",ic:"💬"},
-    {id:"liste_attente",l:"Demandes",ic:"📬"},
-    {id:"pmi",l:"PMI",ic:"🏛️"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
-    {id:"rapport_annuel",l:"Rapport annuel",ic:"📊"},
-    {id:"documents_complet",l:"Documents",ic:"🗂️"},
-    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
-    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
+    {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
+    {id:"rapport_annuel",l:"Bilans & Exports",ic:"📊"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
-    {id:"boutique",l:"Boutique",ic:"🛒"},
-    {id:"parrainage",l:"Parrainage",ic:"🎁"},
+  ]},
+  outils:{l:"Outils Pro",ic:"⭐",color:"#FF9F63",subs:[
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
+    {id:"pmi",l:"PMI",ic:"🏛️"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
+    {id:"support",l:"Support",ic:"💬"},
   ]},
 };
 const GROUPS_P={
@@ -5860,6 +5858,7 @@ const GROUPS_P={
     {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"journal_complet",l:"Journal",ic:"📋"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
+    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
@@ -5868,13 +5867,10 @@ const GROUPS_P={
     {id:"kit_cmg",l:"Aide CMG",ic:"💶"},
     {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
-    {id:"documents_complet",l:"Documents",ic:"🗂️"},
-    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
-    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
+    {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
     {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
     {id:"export_donnees",l:"Export données",ic:"📦"},
-    {id:"boutique",l:"Boutique",ic:"🛒"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
 };
@@ -6199,6 +6195,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [showModal, setShowModal] = useState(false);
   const [showLegal, setShowLegal] = useState(null); // null, "mentions", "cgu", "confidentialite"
   const [showBlog, setShowBlog] = useState(null); // null or article id
+  const [showBoutique, setShowBoutique] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState("asmat");
   const [modeAuth, setModeAuth] = useState("inscription");
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
@@ -6232,7 +6230,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
       if (error) {
         const demo = demos.find(d => d.email === form.email.trim().toLowerCase());
-        if (demo) { onLogin(demo); return; }
+        if (demo) { onLogin({...demo, isDemo: true}); return; }
         setErr("Email ou mot de passe incorrect.");
       } else if (data?.user) {
         // Pass minimal user data - auth listener will enrich with profile from DB
@@ -6355,16 +6353,29 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
-            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnTarifsBg||"rgba(255,255,255,.12)", color: L.heroBtnTarifsColor||"rgba(255,255,255,.85)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Tarifs</button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "transparent", color: "rgba(255,255,255,.8)", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, padding: "7px 12px" }}>Fonctionnalités</button>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "transparent", color: "rgba(255,255,255,.8)", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, padding: "7px 12px" }}>Tarifs</button>
+            <button onClick={() => setShowBoutique(true)} style={{ background: "transparent", color: "rgba(255,255,255,.8)", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, padding: "7px 12px" }}>Boutique</button>
             <button onClick={() => setShowModal(true)} style={{ background: L.heroBtnConnexionBg||"rgba(255,255,255,.18)", color: L.heroBtnConnexionColor||"#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Connexion</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(155,107,170,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
           </div>
           {/* Mobile nav */}
           <div className="lp-nav-mobile">
-            <button onClick={() => setShowModal(true)} style={{ background: L.heroBtnConnexionBg||"rgba(255,255,255,.18)", color: "#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 10, padding: "7px 14px", cursor: "pointer", fontSize: 12, fontWeight: 500 }}>Connexion</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#9B6BAA,#B87CC8)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{T.heroBtnNavTxt||"Commencer →"}</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.2)", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 16 }}>☰</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
+        {/* Mobile dropdown menu */}
+        {menuOpen&&<div style={{ position: "relative", zIndex: 10, maxWidth: 1000, margin: "0 auto", padding: "0 0 16px" }}>
+          <div style={{ background: "rgba(255,255,255,.1)", backdropFilter: "blur(20px)", borderRadius: 12, padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+            {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Blog","blog"],["Boutique","boutique"]].map(([label,target])=>
+              <button key={target} onClick={()=>{setMenuOpen(false);if(target==="boutique")setShowBoutique(true);else if(target==="blog"){const el=document.querySelector('[class*="lp-section"]:nth-of-type(8)');el?.scrollIntoView({behavior:"smooth"});}else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+                style={{ background: "transparent", color: "rgba(255,255,255,.9)", border: "none", padding: "10px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500, textAlign: "left", borderRadius: 8 }}
+                onMouseEnter={e=>e.target.style.background="rgba(255,255,255,.1)"} onMouseLeave={e=>e.target.style.background="transparent"}>{label}</button>
+            )}
+            <button onClick={()=>{setMenuOpen(false);setShowModal(true);}} style={{ background: "rgba(255,255,255,.15)", color: "#fff", border: "none", padding: "10px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600, textAlign: "left", borderRadius: 8, marginTop: 4 }}>Connexion</button>
+          </div>
+        </div>}
         {/* Hero stats */}
         <div className="lp-hero-stats" style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px" }}>
           {statsHero.map(({ n, suf, label }) => (
@@ -7237,6 +7248,38 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
       </div>}
 
+      {/* BOUTIQUE MODAL */}
+      {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
+        <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#264653"}}>🛒 Boutique TiMat</div>
+            <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#264653",fontWeight:700}}>✕</button>
+          </div>
+          <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
+            {[
+              {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#2A9D8F"},
+              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir et imprimer. Document obligatoire.",icon:"🚨",color:"#E76F51"},
+              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections personnalisables. Pret a l'emploi.",icon:"🌿",color:"#264653"},
+              {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis (-16%).",icon:"🎁",color:"#FF9F63",badge:"-16%"},
+            ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
+              <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
+                {p.icon}
+                {p.badge&&<div style={{position:"absolute",top:6,right:6,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:10,fontWeight:700}}>{p.badge}</div>}
+              </div>
+              <div style={{padding:14,flex:1,display:"flex",flexDirection:"column"}}>
+                <div style={{fontWeight:700,fontSize:13,color:"#264653",marginBottom:4}}>{p.name}</div>
+                <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.5,flex:1,marginBottom:10}}>{p.desc}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} EUR</span>
+                  <button onClick={()=>{setShowBoutique(false);setShowModal(true);}}style={{background:p.color,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:11,fontWeight:700}}>Acheter</button>
+                </div>
+              </div>
+            </div>)}
+          </div>
+        </div>
+      </div>}
+
       {/* FOOTER */}
       <footer style={{ background: "#264653", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
@@ -7621,6 +7664,15 @@ function OnboardingWizard({user,onFinish}){
     };
 
     try{
+      // Skip Supabase for demo users
+      const isDemo=user?.id?.startsWith?.("demo-");
+      if(isDemo){
+        setToast("Mode demo - données non sauvegardées");
+        setSaving(false);
+        onFinish();
+        return;
+      }
+
       // 1. S'assurer que le profil existe dans Supabase
       const{data:profil}=await withRetry(()=>supabase.from('profiles').select('id').eq('id',user.id).maybeSingle());
       if(!profil){
