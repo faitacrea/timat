@@ -28,16 +28,25 @@ function Styles(){return(
       --r:18px;--r2:14px;--r3:10px
     }
     .dark{
-      --c:#160E14;--w:#1E1420;--b:#F5EDF2;--m:#C4A0B8;--l:#8A6880;--br:#3A2838;
-      --Tp:#3A2018;--Sp:#221830;--Gp:#182818;--Bp:#182030;--Rp:#301420;--Pp:#22183A;
-      --T:#E08858;--S:#B888CC;--G:#60B888;--B:#6898D8;--R:#E06888;--P:#B888CC;
-      --sh:0 1px 4px rgba(0,0,0,.4),0 4px 20px rgba(0,0,0,.5);
-      --sh2:0 2px 12px rgba(0,0,0,.5),0 16px 48px rgba(0,0,0,.6);
+      --c:#0D1B1E;--w:#132428;--b:#F0F5F3;--m:#B0CCC6;--l:#7FA8A0;--br:#1E3A34;
+      --Tp:#2A1810;--Sp:#0D2A28;--Gp:#0D2A1A;--Bp:#0D1A2A;--Rp:#2A1418;--Pp:#1A1830;
+      --T:#FF9F63;--S:#3DBDAD;--G:#3DBDAD;--B:#7AAAE0;--R:#F08060;--P:#C898DC;
+      --Sl:#1A4A42;--Bl:#1A3050;--Rl:#3A1820;
+      --sh:0 1px 4px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.6);
+      --sh2:0 2px 12px rgba(0,0,0,.6),0 16px 48px rgba(0,0,0,.7);
     }
-    .dark .topbar,.dark .nav-main{background:rgba(22,14,20,.97)!important}
-    .dark .card{border-color:#3A2838}
-    .dark .inp,.dark .ta,.dark .sel{background:#2A1828;border-color:#3A2838;color:#F5EDF2}
-    .dark .lbl{color:#A880A0}
+    .dark .topbar,.dark .nav-main{background:rgba(13,27,30,.97)!important;border-color:#1E3A34!important}
+    .dark .card{border-color:#1E3A34;background:rgba(19,36,40,.9)}
+    .dark .inp,.dark .ta,.dark .sel{background:#0D1B1E;border-color:#2A4A44;color:#F0F5F3}
+    .dark .lbl{color:#7FA8A0}
+    .dark .btn{border-color:#2A4A44}
+    .dark .pf{color:#F0F5F3}
+    .dark h1,.dark h2,.dark h3,.dark h4{color:#F0F5F3}
+    .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
+    .dark .msg-ot{background:#132428!important;color:#E0EBE8!important}
+    .dark details{background:#132428!important;border-color:#1E3A34!important}
+    .dark details summary{color:#F0F5F3!important}
+    .dark select option{background:#0D1B1E;color:#F0F5F3}
     .app{min-height:100vh;background:var(--c);display:flex;flex-direction:column;width:100%;position:relative}
     .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
     .card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:var(--r);border:1px solid rgba(234,224,232,.8);box-shadow:var(--sh);position:relative;z-index:1}
@@ -178,7 +187,7 @@ const D = {
     {id:"ab3",eId:"e3",date:"2024-02-28",motif:"Congés parents",indemnise:false,heures:9},
   ],
   evenements:[
-    {id:"ev1",date:"2024-03-15",type:"conge",txt:"Congés de Marie",},
+    {id:"ev1",date:"2024-03-15",type:"conge",txt:"Congés assmat",},
     {id:"ev2",date:"2024-03-20",type:"rdv",txt:"Réunion parents Emma"},
     {id:"ev3",date:"2024-03-25",type:"hol",txt:"Sortie Printemps"},
     {id:"ev4",date:"2024-04-01",type:"abs",txt:"Absent - Léo"},
@@ -417,7 +426,7 @@ function AccueilParent({enfant,setPage}){
     // Ne pas modifier D.evenements (données démo globales)
     setAbsEnvoyee(true);
     setShowAbsence(false);
-    setToast("Absence déclarée - Marie a été notifiée ✓");
+    setToast("Absence déclarée - "+(enfant?.prenomAsmat||"l'assmat")+" a été notifiée ✓");
   };
 
   return <div className="fi">
@@ -441,7 +450,7 @@ function AccueilParent({enfant,setPage}){
           <button onClick={()=>setShowAbsence(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
         </div>
         <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)"}}>
-          📢 Marie sera notifiée immédiatement. L'absence sera notée dans le calendrier et prise en compte dans le décompte des heures.
+          📢 {enfant?.prenomAsmat||"L'assmat"} sera notifiée immédiatement. L'absence sera notée dans le calendrier et prise en compte dans le décompte des heures.
         </div>
         <div style={{display:"grid",gap:12}}>
           <div>
@@ -472,7 +481,7 @@ function AccueilParent({enfant,setPage}){
         <div style={{display:"flex",gap:8,marginTop:20}}>
           <button className="btn bG"style={{flex:1}}onClick={()=>setShowAbsence(false)}>Annuler</button>
           <button className="btn bR"style={{flex:2}}onClick={declarerAbsence}>
-            📢 Notifier Marie
+            📢 Notifier {enfant?.prenomAsmat||"l'assmat"}
           </button>
         </div>
       </div>
@@ -612,7 +621,7 @@ function Transmissions({enfants,role,pEId,user}){
   };
 
   return <div className="fi">
-    <PageHeader icon="📋" title="Journal" sub="Échanges quotidiens avec Marie"/>
+    <PageHeader icon="📋" title="Journal" sub={"Échanges quotidiens avec "+(enfant?.prenomAsmat||"votre assmat")}/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
@@ -620,7 +629,7 @@ function Transmissions({enfants,role,pEId,user}){
     {role==="parent"&&bilansRecus.length>0&&<div className="card"style={{padding:16,marginBottom:14,border:"1.5px solid var(--P)"}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
         <div style={{width:28,height:28,borderRadius:"50%",background:"var(--Pp)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>✨</div>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Documents reçus de Marie</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Documents reçus de {enfant?.prenomAsmat||"l'assmat"}</div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {bilansRecus.map(b=><div key={b.id}>
@@ -630,7 +639,7 @@ function Transmissions({enfants,role,pEId,user}){
               <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>
                 {b.type==="bilan"?"✨ Bilan de journée du "+b.date:"📝 CR Trimestriel - "+b.trim}
               </div>
-              <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Par Marie Dupont · Cliquer pour lire</div>
+              <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Par {enfant?.prenomAsmat||"votre assmat"} · Cliquer pour lire</div>
             </div>
             <span style={{fontSize:16,color:"var(--P)"}}>{docOuvert===b.id?"▲":"▼"}</span>
           </div>
@@ -924,7 +933,7 @@ function Pointage({enfants,role,pEId}){
           </div>
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📍 Aujourd&#39;hui</div>
+          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📍 Aujourd'hui</div>
           {ptJ?<div style={{background:"var(--Sp)",borderRadius:10,padding:12,border:"1px solid var(--Sl)",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               {[["Arrivée",ptJ.arr,"var(--S)"],["→","","var(--l)"],["Départ",ptJ.dep||"En cours","var(--T)"],["Total",ptJ.tot||"-","var(--b)"]].map(([l,v,c])=>
@@ -1169,7 +1178,7 @@ function Calendrier({enfants,role,pEId}){
   // Filtrage selon le rôle
   const evsFiltres=role==="parent"
     ? evs.filter(e=>{
-        // Parent voit : ses propres absences + congés de Marie (cng) + fériés
+        // Parent voit : ses propres absences + congés de l'assmat (cng) + fériés
         if(e.type==="cng")return true; // Mes congés → toujours visible
         if(e.type==="abs"&&enfants.some(en=>e.txt&&e.txt.includes(en.prenom)))return true;
         if(e.type==="abs"&&pEId&&e.eId===pEId)return true;
@@ -1200,7 +1209,7 @@ function Calendrier({enfants,role,pEId}){
     setEvs(p=>[...p,{id:"abs"+Date.now(),date:absForm.date,type:"abs",eId:absForm.eId,txt:"Absent - "+(enfant?.prenom||"")+" ("+absForm.motif+")"}]);
     D.absences.push({id:"abn"+Date.now(),eId:absForm.eId,date:absForm.date,motif:absForm.motif,indemnise:absForm.indemnise,heures:parseFloat(absForm.heures)||8});
     setShowAbsenceModal(false);
-    setToast("Absence déclarée - Marie a été notifiée ✓");
+    setToast("Absence déclarée - "+(enfant?.prenomAsmat||"l'assmat")+" a été notifiée ✓");
   };
 
   // Événements du mois filtrés pour le panneau latéral
@@ -1218,7 +1227,7 @@ function Calendrier({enfants,role,pEId}){
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📅"
       title={role==="parent"?"Mon calendrier":"Calendrier"}
-      sub={role==="parent"?"Jours d'accueil, congés de Marie et jours fériés":"Accueil, congés, anniversaires, vacances scolaires Zone C"}
+      sub={role==="parent"?"Jours d'accueil, congés et jours fériés":"Accueil, congés, anniversaires, vacances scolaires Zone C"}
       action={role==="parent"&&<button className="btn bR"style={{fontSize:13,padding:"10px 18px",fontWeight:700}}
         onClick={()=>{setAbsForm(f=>({...f,date:ds(todayDate.getDate())}));setShowAbsenceModal(true);}}>
         🤒 Déclarer une absence
@@ -1234,7 +1243,7 @@ function Calendrier({enfants,role,pEId}){
           <button onClick={()=>setShowAbsenceModal(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
         </div>
         <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)",lineHeight:1.5}}>
-          📢 Marie sera notifiée immédiatement. L'absence sera notée dans votre calendrier et dans le décompte des heures.
+          📢 Votre assmat sera notifiée immédiatement. L'absence sera notée dans votre calendrier et dans le décompte des heures.
         </div>
         <div style={{display:"grid",gap:12}}>
           {enfants.length>1&&<div>
@@ -1267,7 +1276,7 @@ function Calendrier({enfants,role,pEId}){
         <div style={{display:"flex",gap:8,marginTop:20}}>
           <button className="btn bG"style={{flex:1}}onClick={()=>setShowAbsenceModal(false)}>Annuler</button>
           <button className="btn bR"style={{flex:2}}onClick={declarerAbsence}disabled={!absForm.date||!absForm.heures}>
-            📢 Notifier Marie
+            📢 Notifier l'assmat
           </button>
         </div>
       </div>
@@ -1367,7 +1376,7 @@ function Calendrier({enfants,role,pEId}){
             <select className="sel"value={newEv.type}onChange={e=>setNewEv(p=>({...p,type:e.target.value}))}>
               <option value="rdv">📌 Rendez-vous</option>
               <option value="abs">🔴 Absence enfant</option>
-              <option value="cng">🟡 Congé Marie</option>
+              <option value="cng">🟡 Congé assmat</option>
               <option value="hol">🔵 Sortie / activité</option>
             </select>
           </div>
@@ -2073,7 +2082,7 @@ function Recap({enfants,role,pEId}){
       <div className="pdf-preview">
         <div style={{borderBottom:"2px solid #C4714A",paddingBottom:12,marginBottom:16,display:"flex",justifyContent:"space-between"}}>
           <div><h2 style={{color:"#C4714A",fontFamily:"Georgia",fontSize:18}}>🌿 TiMat</h2>
-            <div style={{fontSize:11,color:"#888"}}>Marie Dupont · Assistante Maternelle agréée</div></div>
+            <div style={{fontSize:11,color:"#888"}}>{user?.prenom||"Assmat"} {user?.nom||""} · Assistante Maternelle agréée</div></div>
           <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
             <div><strong>Récapitulatif mensuel</strong></div>
             <div>Mars 2024</div>
@@ -2221,7 +2230,7 @@ const DOCS_DEMO=[
   {id:"d10",eId:"e1",cat:"peda",sous:"CR Trimestriel",nom:"CR_T1_2024_Léo.pdf",date:TODAY_STR,annee:"2024",taille:"280 Ko",icone:"📝",partage:true},
   {id:"d11",eId:"e2",cat:"peda",sous:"CR Trimestriel",nom:"CR_T4_2023_Emma.pdf",date:"2023-12-20",annee:"2023",taille:"265 Ko",icone:"📝",partage:true},
   {id:"d12",eId:"e1",cat:"peda",sous:"Bilan de journée",nom:"Bilan_11Mars2024_Léo.pdf",date:TODAY_STR,annee:"2024",taille:"120 Ko",icone:"✨",partage:true},
-  // Agréments Marie
+  // Agréments assmat
   {id:"d13",eId:null,cat:"agrement",sous:"Agrément PMI",nom:"Agrement_PMI_2024.pdf",date:"2024-01-01",annee:"2024",taille:"450 Ko",icone:"🏛️",partage:false},
   {id:"d14",eId:null,cat:"agrement",sous:"Assurance",nom:"Assurance_RC_Pro_2024.pdf",date:"2024-01-01",annee:"2024",taille:"380 Ko",icone:"🛡️",partage:false},
 ];
@@ -2431,7 +2440,7 @@ function Documents({enfants,role,pEId,user}){
       {role==="asmat"&&<select value={eId}onChange={e=>setEId(e.target.value)}className="sel"style={{width:"auto",padding:"5px 10px",fontSize:12}}>
         <option value="tous">Tous les enfants</option>
         {enfants.map(e=><option key={e.id}value={e.id}>{e.emoji} {e.prenom}</option>)}
-        <option value="">Général / Marie</option>
+        <option value="">Général</option>
       </select>}
     </div>
 
@@ -2750,7 +2759,7 @@ const MODELES_CONTRATS=[
    champs:["Contrat concerné","Nouveaux horaires","Date d'effet","Motif"],avenant:true},
   {id:"ct5",titre:"Avenant - Revalorisation salaire",desc:"Augmenter le taux horaire suite SMIC ou accord.",
    champs:["Contrat concerné","Nouveau taux horaire","Date d'effet","Motif"],avenant:true},
-  {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d&#39;un commun accord avec solde tout compte.",
+  {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d'un commun accord avec solde tout compte.",
    champs:["Contrat concerné","Date de fin","Motif","Congés payés restants"],avenant:true},
 ];
 
@@ -2775,7 +2784,7 @@ function DemandesAvenants({enfants,role,pEId}){
       prenomEnfant:enfant?.prenom||"Enfant",
     },...p]);
     setForm({type:"Modification d'horaires",detail:"",dateEffet:""});
-    setToast("Demande d&#39;avenant envoyée ✓ - l&#39;asmat sera notifiée");
+    setToast("Demande d'avenant envoyée ✓ - l'asmat sera notifiée");
   };
 
   const statutColor={
@@ -2784,12 +2793,12 @@ function DemandesAvenants({enfants,role,pEId}){
 
   return <div>
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="✏️" title="Demandes d&#39;avenants"
+    <PageHeader icon="✏️" title="Demandes d'avenants"
       sub="Toute modification du contrat doit faire l'objet d'un avenant signé"/>
 
     <div className="card"style={{padding:20,marginBottom:16}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>
-        ➕ Nouvelle demande d&#39;avenant
+        ➕ Nouvelle demande d'avenant
       </div>
       <div style={{display:"grid",gap:12}}>
         <div>
@@ -2838,7 +2847,7 @@ function DemandesAvenants({enfants,role,pEId}){
           </button>
           <button className="btn bT"style={{fontSize:11,flex:1,justifyContent:"center"}}
             onClick={()=>setDemandes(p=>p.map(x=>x.id===d.id?{...x,statut:"Acceptée"}:x))}>
-            ✓ Accepter et créer l&#39;avenant
+            ✓ Accepter et créer l'avenant
           </button>
         </div>}
       </div>)}
@@ -2846,7 +2855,7 @@ function DemandesAvenants({enfants,role,pEId}){
 
     {demandes.length===0&&<div className="card"style={{padding:24,textAlign:"center"}}>
       <div style={{fontSize:36,marginBottom:8}}>✏️</div>
-      <div style={{fontSize:13,color:"var(--m)"}}>Aucune demande d&#39;avenant en cours</div>
+      <div style={{fontSize:13,color:"var(--m)"}}>Aucune demande d'avenant en cours</div>
       <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Les demandes soumises apparaîtront ici</div>
     </div>}
   </div>;
@@ -2914,8 +2923,8 @@ const COURRIERS_DATA=[
    contenu:"Objet : Compte-rendu de la visite du [Date]\n\nSuite à la visite de [Nom puéricultrice] le [Date], je vous adresse ce compte-rendu.\n\nPoints abordés : conditions d'accueil, suivi des enfants, documentation administrative.\n\nObservations : [Observations]\nActions engagées : [Actions]\n\nCordialement,\n[Votre nom] - Asmat agréée n° [Numéro agrément]"},
   {id:"r5",cat:"Congés",ic:"🏖️",titre:"Déclaration de congés annuels",
    contenu:"Madame, Monsieur,\n\nJe vous informe que je prendrai mes congés du [Date début] au [Date fin] inclus.\n\nDurant cette période, je ne pourrai pas assurer l'accueil de [Prénom].\n\nCordialement,\n[Votre nom]"},
-  {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d&#39;avenant aux horaires",
-   contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l&#39;avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
+  {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d'avenant aux horaires",
+   contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l'avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
   {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
    contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
 ];
@@ -3129,7 +3138,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB}){
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
       {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
-      {id:"avenants",l:"Demandes d&#39;avenants",ic:"✏️"},
+      {id:"avenants",l:"Demandes d'avenants",ic:"✏️"},
       {id:"contrats_types",l:"Modèles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
       {id:"recap",l:"Récap mensuel PDF",ic:"📊"},
@@ -3298,7 +3307,7 @@ function TransmissionsContent({enfant,role,user}){
     {role==="parent"&&bilansRecus.length>0&&<div className="card"style={{padding:16,marginBottom:14,border:"1.5px solid var(--P)"}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
         <div style={{width:28,height:28,borderRadius:"50%",background:"var(--Pp)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>✨</div>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>Documents reçus de Marie</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>Documents reçus de votre assmat</div>
       </div>
       {bilansRecus.map(b=><div key={b.id}style={{marginBottom:8}}>
         <div onClick={()=>setDocOuvert(docOuvert===b.id?null:b.id)}
@@ -4525,10 +4534,11 @@ function EveilComplet({enfants,role,pEId}){
 function DocumentsComplet({enfants,role,pEId,user}){
   const [sec,setSec]=useState("documents");
   return <div className="fi">
-    <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"export",l:"Export dossier",ic:"📦"}].map(s=>
+    <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
+    <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. Pole Emploi",ic:"📋"},{id:"attestation_fiscale",l:"Att. fiscale",ic:"📑"},{id:"export",l:"Export dossier",ic:"📦"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
-          padding:"7px 16px",border:"none",background:"none",cursor:"pointer",
+          padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
           color:sec===s.id?"var(--G)":"var(--l)",
           borderBottom:sec===s.id?"2px solid var(--G)":"2px solid transparent",
@@ -4537,6 +4547,8 @@ function DocumentsComplet({enfants,role,pEId,user}){
       )}
     </div>
     {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {sec==="attestation_pe"&&<AttestationPoleEmploi enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {sec==="attestation_fiscale"&&<AttestationFiscale enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {sec==="export"&&<ExportDonnees enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
@@ -4935,7 +4947,7 @@ function SignatureContratParent({enfants,pEId}){
   const valider=()=>{
     if(!lu||!hasSig)return;
     setSigne(true);
-    setToast("Contrat signé électroniquement ✓ - Marie a été notifiée");
+    setToast("Contrat signé électroniquement ✓ - L'assmat a été notifiée");
   };
 
   if(signe)return <div style={{textAlign:"center",padding:40}}>
@@ -4943,7 +4955,7 @@ function SignatureContratParent({enfants,pEId}){
     <div className="pf"style={{fontSize:22,fontWeight:600,color:"var(--S)",marginBottom:8}}>Contrat signé !</div>
     <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>
       Votre signature électronique a été enregistrée.<br/>
-      Marie a été notifiée. Le contrat signé est disponible dans Documents.
+      L'assistante maternelle a été notifiée. Le contrat signé est disponible dans Documents.
     </div>
   </div>;
 
@@ -5266,9 +5278,9 @@ function RapportAnnuel({enfants,role,pEId,user}){
         +'<h2>Récapitulatif financier</h2>'
         +'<table><tr><th>Poste</th><th>Montant</th></tr>'
         +'<tr><td>Salaire net annuel estimé</td><td>'+salaireAnnuel+'€</td></tr>'
-        +"<tr><td>Indemnités d&#39;entretien</td><td>"+entretienAnnuel+"€</td></tr>"
+        +"<tr><td>Indemnités d'entretien</td><td>"+entretienAnnuel+"€</td></tr>"
         +'<tr class="total"><td>Total versé</td><td>'+totalAnnuel+'€</td></tr>'
-        +'<tr><td>Crédit d&#39;impôt estimé (50%)</td><td>'+creditImpot+'€</td></tr>'
+        +"<tr><td>Crédit d'impôt estimé (50%)</td><td>"+creditImpot+"€</td></tr>"
         +'</table>'
         +'<p style="font-size:12px;color:#888;">Généré par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'<button onclick="window.print()">🖨️ Imprimer / PDF</button>'
@@ -5663,6 +5675,28 @@ function ExportDonnees({enfants,user,role}){
   </div>;
 }
 
+// ========== BILANS & EXPORTS ==========
+function BilansExports({enfants,role,pEId,user,pointagesDB}){
+  const [sec,setSec]=useState("rapport");
+  return <div className="fi">
+    <PageHeader icon="📊" title="Bilans & Exports" sub="Rapports, recapitulatifs et exports de vos donnees"/>
+    <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
+      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Recap mensuel PDF",ic:"📄"},{id:"export",l:"Export donnees",ic:"📦"}].map(s=>
+        <button key={s.id}onClick={()=>setSec(s.id)}style={{
+          padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
+          fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
+          color:sec===s.id?"var(--G)":"var(--l)",
+          borderBottom:sec===s.id?"2px solid var(--G)":"2px solid transparent",
+          marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
+        }}><span>{s.ic}</span><span>{s.l}</span></button>
+      )}
+    </div>
+    {sec==="rapport"&&<RapportAnnuel enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {sec==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
+    {sec==="export"&&<ExportDonnees enfants={enfants}role={role}user={user}/>}
+  </div>;
+}
+
 //
 const FAQ_DATA=[
   {cat:"Pajemploi",q:"Comment exporter mes données vers Pajemploi ?",
@@ -5839,10 +5873,7 @@ const GROUPS_AM={
     {id:"messagerie",l:"Messagerie",ic:"💬"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
-    {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
-    {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
-    {id:"rapport_annuel",l:"Bilans & Exports",ic:"📊"},
-    {id:"export_donnees",l:"Export données",ic:"📦"},
+    {id:"bilans_exports",l:"Bilans & Exports",ic:"📊"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",color:"#FF9F63",subs:[
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
@@ -5868,9 +5899,6 @@ const GROUPS_P={
     {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
     {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
-    {id:"attestation_pe",l:"Attestation Pôle Emploi",ic:"📋"},
-    {id:"attestation_fiscale",l:"Attestation fiscale",ic:"📑"},
-    {id:"export_donnees",l:"Export données",ic:"📦"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
 };
@@ -7887,7 +7915,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
         +'@media print{button{display:none}}</style></head>'
         +'<body>'
         +'<h1>Attestation destinée à Pôle Emploi<br/><span style="font-size:11px;font-weight:400">(Articles R.1234-9 à R.1234-12 du Code du travail)</span></h1>'
-        +'<h2>L&#39;employeur</h2>'
+        +"<h2>L'employeur</h2>"
         +'<table><tr><td>Nom et prénom</td><td>'+parent.prenom+' '+parent.nom+'</td></tr>'
         +'<tr><td>Email</td><td>'+(parent.email||'[À compléter]')+'</td></tr>'
         +'<tr><td>N° Pajemploi</td><td>PAJ-[À compléter]</td></tr></table>'
@@ -7896,7 +7924,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
         +'<tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>'
         +'<tr><td>Enfant gardé</td><td>'+(enfant.prenom||'')+' '+(enfant.nom||'')+'</td></tr></table>'
         +'<h2>Contrat de travail</h2>'
-        +'<table><tr><td>Date d&#39;embauche</td><td>'+(contrat.debut||'[À compléter]')+'</td></tr>'
+        +"<table><tr><td>Date d'embauche</td><td>"+(contrat.debut||"[À compléter]")+"</td></tr>"
         +'<tr><td>Date de fin</td><td>'+dateFin+'</td></tr>'
         +'<tr><td>Motif</td><td>'+motif+'</td></tr>'
         +'<tr><td>Heures hebdo</td><td>'+(contrat.heuresHebdo||40)+'h/semaine</td></tr>'
@@ -7905,7 +7933,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
         +'<table><tr><td>Salaire du dernier mois</td><td>[À compléter]€</td></tr>'
         +'<tr><td>ICCP</td><td>[À compléter]€</td></tr>'
         +'<tr><td>Indemnité de préavis</td><td>[À compléter]€</td></tr></table>'
-        +'<p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">Je certifie sur l&#39;honneur l&#39;exactitude des renseignements portés sur cette attestation.</p>'
+        +'<p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">Je certifie sur l\'honneur l\'exactitude des renseignements portes sur cette attestation.</p>'
         +'<div class="sig">'
         +'<div class="sig-box">Fait à ___, le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature employeur:<br/><br/>'+parent.prenom+' '+parent.nom+'</div>'
         +'<div class="sig-box">Remis le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature asmat:<br/><br/>'+(user?.prenom||D.asmat.prenom)+' '+(user?.nom||D.asmat.nom)+'</div>'
@@ -7942,7 +7970,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
         <div className="card"style={{padding:14,background:"var(--Rp)",border:"1px solid var(--R)"}}>
           <div style={{fontWeight:700,fontSize:12,color:"var(--R)",marginBottom:6}}>⚠️ Obligation légale</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
-            L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l&#39;asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
+            L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l'asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
           </div>
         </div>
       </div>
@@ -9887,17 +9915,28 @@ export default function App(){
 
   // //  Lancer le checkout Stripe
   const lancerCheckout=async()=>{
+    if(user?.id?.startsWith?.("demo-")){
+      alert("Le paiement n'est pas disponible en mode demo. Creez un compte pour continuer.");
+      return;
+    }
     try{
       const res=await fetch('/api/create-checkout-session',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
       });
+      if(!res.ok){
+        const txt=await res.text();
+        console.error('Stripe error:', res.status, txt);
+        alert("Erreur serveur ("+res.status+"). Verifiez que Stripe est configure dans Vercel.");
+        return;
+      }
       const data=await res.json();
       if(data.url)window.location.href=data.url;
-      else alert("Erreur lors de la création de la session de paiement.");
+      else alert("Erreur: "+JSON.stringify(data));
     }catch(e){
-      alert("Erreur réseau. Vérifiez votre connexion.");
+      console.error('Stripe fetch error:', e);
+      alert("Erreur reseau. Verifiez que :\n1. npm install stripe est fait\n2. STRIPE_SECRET_KEY est dans les variables Vercel\n3. L'API /api/create-checkout-session est deployee");
     }
   };
 
@@ -9938,6 +9977,7 @@ export default function App(){
       case "sante_complet": return <SanteComplete {...P}/>;
       case "eveil_complet": return <EveilComplet {...P}/>;
       case "documents_complet": return <DocumentsComplet {...P}/>;
+      case "bilans_exports": return <BilansExports {...P}/>;
       case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
