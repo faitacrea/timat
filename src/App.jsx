@@ -7287,10 +7287,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
-              {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#2A9D8F"},
-              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir et imprimer. Document obligatoire.",icon:"🚨",color:"#E76F51"},
-              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections personnalisables. Pret a l'emploi.",icon:"🌿",color:"#264653"},
-              {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis (-16%).",icon:"🎁",color:"#FF9F63",badge:"-16%"},
+              {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#2A9D8F",link:config.boutique?.linkSheets},
+              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir et imprimer. Document obligatoire.",icon:"🚨",color:"#E76F51",link:config.boutique?.linkFiche},
+              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections personnalisables. Pret a l'emploi.",icon:"🌿",color:"#264653",link:config.boutique?.linkProjet},
+              {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis (-16%).",icon:"🎁",color:"#FF9F63",badge:"-16%",link:config.boutique?.linkPack},
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
                 {p.icon}
@@ -7300,12 +7300,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{fontWeight:700,fontSize:13,color:"#264653",marginBottom:4}}>{p.name}</div>
                 <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.5,flex:1,marginBottom:10}}>{p.desc}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} EUR</span>
-                  <button onClick={()=>{setShowBoutique(false);setShowModal(true);setRole("asmat");}}style={{background:p.color,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:11,fontWeight:700}}>Commencer →</button>
+                  <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} €</span>
+                  <button onClick={()=>{if(p.link){window.open(p.link,"_blank");}else{alert("Lien de paiement non configure. Allez dans le Backoffice > App > Boutique pour ajouter vos liens Stripe.");}}}style={{background:p.color,color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>Acheter →</button>
                 </div>
               </div>
             </div>)}
           </div>
+          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}>🔒 Paiement securise par Stripe · Telechargement immediat apres achat</div>
         </div>
       </div>}
 
@@ -9428,6 +9429,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             <BOField label="Adresse"><BOTextInput k="adresse" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
             <BOField label="Email de contact"><BOTextInput k="email" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
           </BOCard>
+          <BOCard title="Boutique — Liens de paiement Stripe" icon="🛒">
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Collez ici vos liens Stripe. Dashboard Stripe → Produits → Liens de paiement.</div>
+            <BOField label="Kit Google Sheets"><BOTextInput k="linkSheets" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+            <BOField label="Fiche d'urgence"><BOTextInput k="linkFiche" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+            <BOField label="Projet d'accueil"><BOTextInput k="linkProjet" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+            <BOField label="Pack Complet"><BOTextInput k="linkPack" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+          </BOCard>
           <BOCard title="Table Supabase" icon="🗄️">
             <div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>À exécuter dans Supabase SQL Editor :</div>
             <div style={{fontSize:10,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
@@ -9676,6 +9684,12 @@ const DEFAULT_CONFIG = {
     adresse:"Île-de-France, France",
     email:"support@timat.app",
   },
+  boutique:{
+    linkSheets:"",
+    linkFiche:"",
+    linkProjet:"",
+    linkPack:"",
+  },
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -9714,6 +9728,7 @@ const loadConfig = async () => {
         proItems: saved.proItems||DEFAULT_CONFIG.proItems,
         guarantees: saved.guarantees||DEFAULT_CONFIG.guarantees,
         legal:{...DEFAULT_CONFIG.legal,...(saved.legal||{})},
+        boutique:{...DEFAULT_CONFIG.boutique,...(saved.boutique||{})},
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
