@@ -3138,30 +3138,31 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB}){
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
       {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
-      {id:"avenants",l:"Demandes d'avenants",ic:"✏️"},
-      {id:"contrats_types",l:"Modèles & Templates",ic:"📋"},
+      {id:"contrats_types",l:"Modeles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
-      {id:"recap",l:"Récap mensuel PDF",ic:"📊"},
       {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
     ]
-    :[{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"},{id:"recap",l:"Récap mensuel",ic:"📊"}];
+    :[{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}];
   return <div className="fi">
     <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
         padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",
-        color:section===s.id?"var(--G)":"var(--l)",
-        borderBottom:section===s.id?"2px solid var(--G)":"2px solid transparent",
+        color:section===s.id?"var(--T)":"var(--b)",
+        borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {section==="contrats"&&<Contrats enfants={enfants}role={role}pEId={pEId}/>}
-    {section==="avenants"&&<DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>}
+    {section==="contrats"&&<div>
+      <Contrats enfants={enfants}role={role}pEId={pEId}/>
+      <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
+        <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
+      </div>
+    </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {section==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
     {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}/>}
     {section==="solde_contrat"&&<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
@@ -4398,7 +4399,7 @@ function JournalComplet({enfants,role,pEId,user}){
       {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
         padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,whiteSpace:"nowrap",flexShrink:0,
-        color:sec===s.id?"var(--T)":"var(--l)",
+        color:sec===s.id?"var(--T)":"var(--b)",
         borderBottom:sec===s.id?"2px solid var(--T)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
@@ -4447,7 +4448,7 @@ function SanteComplete({enfants,role,pEId}){
       {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
         padding:"7px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,position:"relative",
-        color:sec===s.id?"var(--R)":"var(--l)",
+        color:sec===s.id?"var(--R)":"var(--b)",
         borderBottom:sec===s.id?"2px solid var(--R)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}>
@@ -4519,7 +4520,7 @@ function EveilComplet({enfants,role,pEId}){
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 16px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
-          color:sec===s.id?"var(--S)":"var(--l)",
+          color:sec===s.id?"var(--S)":"var(--b)",
           borderBottom:sec===s.id?"2px solid var(--S)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
         }}><span>{s.ic}</span><span>{s.l}</span></button>
@@ -4540,7 +4541,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
-          color:sec===s.id?"var(--G)":"var(--l)",
+          color:sec===s.id?"var(--T)":"var(--b)",
           borderBottom:sec===s.id?"2px solid var(--G)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
         }}><span>{s.ic}</span><span>{s.l}</span></button>
@@ -5685,7 +5686,7 @@ function BilansExports({enfants,role,pEId,user,pointagesDB}){
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
-          color:sec===s.id?"var(--G)":"var(--l)",
+          color:sec===s.id?"var(--T)":"var(--b)",
           borderBottom:sec===s.id?"2px solid var(--G)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
         }}><span>{s.ic}</span><span>{s.l}</span></button>
@@ -5890,6 +5891,7 @@ const GROUPS_P={
     {id:"journal_complet",l:"Journal",ic:"📋"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
@@ -6381,16 +6383,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
-            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "transparent", color: "rgba(255,255,255,.8)", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, padding: "7px 12px" }}>Fonctionnalités</button>
-            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "transparent", color: "rgba(255,255,255,.8)", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, padding: "7px 12px" }}>Tarifs</button>
-            <button onClick={() => setShowBoutique(true)} style={{ background: "transparent", color: "rgba(255,255,255,.8)", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, padding: "7px 12px" }}>Boutique</button>
-            <button onClick={() => setShowModal(true)} style={{ background: L.heroBtnConnexionBg||"rgba(255,255,255,.18)", color: L.heroBtnConnexionColor||"#fff", border: "1px solid rgba(255,255,255,.3)", borderRadius: 20, padding: "7px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Connexion</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.25)", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.25)", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
+            <button onClick={() => setShowBoutique(true)} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.25)", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
+            <button onClick={() => setShowModal(true)} style={{ background: "rgba(255,255,255,.22)", color: "#fff", border: "1px solid rgba(255,255,255,.35)", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Connexion</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#FF9F63,#E76F51)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
           </div>
           {/* Mobile nav */}
           <div className="lp-nav-mobile">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.2)", borderRadius: 8, padding: "7px 10px", cursor: "pointer", fontSize: 16 }}>☰</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnNavBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.heroBtnNavColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "rgba(255,255,255,.2)", color: "#fff", border: "2px solid rgba(255,255,255,.4)", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>☰</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#FF9F63,#E76F51)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
         {/* Mobile dropdown menu */}
@@ -8208,6 +8210,26 @@ function FicheUrgence({enfants,role,pEId,user}){
     setToast("Fiche generee ✓");
   };
 
+  // Parent: read-only view
+  if(role==="parent"){
+    const f=form;
+    const line=(label,val)=>val?<div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+      <span style={{fontWeight:600,color:"var(--b)"}}>{label}</span><span style={{color:"var(--m)"}}>{val||"-"}</span>
+    </div>:null;
+    return <div className="fi">
+      <PageHeader icon="🚨" title="Fiche d'urgence" sub={"Fiche de "+(enfant.prenom||"votre enfant")}/>
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:14}}>👶 {enfant.prenom||"Enfant"} {enfant.emoji||""}</div>
+        {line("Nom",f.nom)}{line("Prenom",f.prenom)}{line("Date de naissance",f.naissance)}{line("Allergies",f.allergies||"Aucune connue")}
+        <div style={{fontWeight:700,fontSize:14,color:"var(--T)",margin:"18px 0 10px"}}>🩺 Medical</div>
+        {line("Medecin",f.medecin||"A completer")}{line("Telephone medecin",f.medecinTel)}{line("Vaccins a jour",f.vaccins)}
+        <div style={{fontWeight:700,fontSize:14,color:"var(--T)",margin:"18px 0 10px"}}>🚨 Numeros d'urgence</div>
+        {line("SAMU","15")}{line("Pompiers","18")}{line("Urgences","112")}{line("Centre anti-poison","01 40 05 48 48")}
+        <button className="btn bT"style={{width:"100%",marginTop:14}}onClick={genererPDF}>📄 Telecharger la fiche PDF</button>
+      </div>
+    </div>;
+  }
+
   const inp=(label,key,ph)=><div style={{marginBottom:10}}>
     <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
     <input className="inp"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
@@ -8271,8 +8293,26 @@ function FicheUrgence({enfants,role,pEId,user}){
 }
 
 // ========== PROJET D'ACCUEIL (dans l'app) ==========
-function ProjetAccueil({user}){
+function ProjetAccueil({user,role}){
   const [toast,setToast]=useState("");
+
+  // Parent: read-only view
+  if(role==="parent"){
+    return <div className="fi">
+      <PageHeader icon="🌿" title="Projet d'accueil" sub="Le projet d'accueil de votre assistante maternelle"/>
+      <div className="card"style={{padding:20,textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:16}}>🌿</div>
+        <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Projet d'accueil</div>
+        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>
+          Le projet d'accueil est un document redige par votre assistante maternelle. Il decrit ses valeurs educatives, l'organisation de la journee, les activites proposees et ses pratiques.
+        </div>
+        <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}>
+          💡 Demandez a votre assistante maternelle de vous transmettre son projet d'accueil via TiMat ou en version imprimee lors de votre premiere rencontre.
+        </div>
+      </div>
+    </div>;
+  }
+
   const [form,setForm]=useState({
     nom:(user?.prenom||"")+" "+(user?.nom||""),adresse:"",tel:user?.tel||"",email:user?.email||"",agrement:"",
     intro:"",parcours:"",agrementDetail:"",domicile:"",
@@ -9996,7 +10036,7 @@ export default function App(){
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
-      case "projet_accueil": return <ProjetAccueil user={user}/>;
+      case "projet_accueil": return <ProjetAccueil user={user} role={role}/>;
       case "boutique": return <Boutique user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
