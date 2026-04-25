@@ -1,6 +1,6 @@
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
-import { buffer } from 'micro';
+const Stripe = require('stripe');
+const { createClient } = require('@supabase/supabase-js');
+const { buffer } = require('micro');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
@@ -9,9 +9,9 @@ const supabase = createClient(
 );
 
 // Disable body parsing — Stripe needs raw body for signature verification
-export const config = { api: { bodyParser: false } };
+const config = { api: { bodyParser: false } };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const sig = req.headers['stripe-signature'];
