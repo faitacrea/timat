@@ -6383,27 +6383,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
-            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.25)", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
-            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.25)", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
-            <button onClick={() => setShowBoutique(true)} style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "1px solid rgba(255,255,255,.25)", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
-            <button onClick={() => setShowModal(true)} style={{ background: "rgba(255,255,255,.22)", color: "#fff", border: "1px solid rgba(255,255,255,.35)", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Connexion</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#FF9F63,#E76F51)", color: "#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
+            <button onClick={() => setShowBoutique(true)} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
+            <button onClick={() => setShowModal(true)} style={{ background: L.navConnexionBg||"rgba(255,255,255,.22)", color: L.navBtnColor||"#fff", border: "1px solid rgba(255,255,255,.35)", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Connexion</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
           </div>
-          {/* Mobile nav */}
+          {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "rgba(255,255,255,.2)", color: "#fff", border: "2px solid rgba(255,255,255,.4)", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>☰</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "rgba(255,255,255,.2)", color: "#fff", border: "2px solid rgba(255,255,255,.4)", borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>☰</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#FF9F63,#E76F51)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
-        {/* Mobile dropdown menu */}
+        {/* Dropdown menu (mobile) */}
         {menuOpen&&<div style={{ position: "relative", zIndex: 10, maxWidth: 1000, margin: "0 auto", padding: "0 0 16px" }}>
-          <div style={{ background: "rgba(255,255,255,.1)", backdropFilter: "blur(20px)", borderRadius: 12, padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
-            {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Blog","blog"],["Boutique","boutique"]].map(([label,target])=>
-              <button key={target} onClick={()=>{setMenuOpen(false);if(target==="boutique")setShowBoutique(true);else if(target==="blog"){const el=document.querySelector('[class*="lp-section"]:nth-of-type(8)');el?.scrollIntoView({behavior:"smooth"});}else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
-                style={{ background: "transparent", color: "rgba(255,255,255,.9)", border: "none", padding: "10px 16px", cursor: "pointer", fontSize: 13, fontWeight: 500, textAlign: "left", borderRadius: 8 }}
-                onMouseEnter={e=>e.target.style.background="rgba(255,255,255,.1)"} onMouseLeave={e=>e.target.style.background="transparent"}>{label}</button>
+          <div style={{ background: "rgba(0,0,0,.4)", backdropFilter: "blur(20px)", borderRadius: 12, padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
+            {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Blog","blog-section"],["Boutique","boutique"],["Connexion","login"]].map(([label,target])=>
+              <button key={target} onClick={()=>{setMenuOpen(false);if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+                style={{ background: "transparent", color: "#fff", border: "none", padding: "12px 16px", cursor: "pointer", fontSize: 14, fontWeight: 600, textAlign: "left", borderRadius: 8 }}
+                onMouseEnter={e=>e.target.style.background="rgba(255,255,255,.15)"} onMouseLeave={e=>e.target.style.background="transparent"}>{label}</button>
             )}
-            <button onClick={()=>{setMenuOpen(false);setShowModal(true);}} style={{ background: "rgba(255,255,255,.15)", color: "#fff", border: "none", padding: "10px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600, textAlign: "left", borderRadius: 8, marginTop: 4 }}>Connexion</button>
           </div>
         </div>}
         {/* Hero stats */}
@@ -7302,7 +7301,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.5,flex:1,marginBottom:10}}>{p.desc}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} EUR</span>
-                  <button onClick={()=>{setShowBoutique(false);setShowModal(true);}}style={{background:p.color,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:11,fontWeight:700}}>Acheter</button>
+                  <button onClick={()=>{setShowBoutique(false);setShowModal(true);setRole("asmat");}}style={{background:p.color,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",cursor:"pointer",fontSize:11,fontWeight:700}}>Commencer →</button>
                 </div>
               </div>
             </div>)}
@@ -9073,6 +9072,15 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <span style={{color:"#fff",fontSize:16,fontWeight:700,fontFamily:cfg.landing.fontTitle}}>TiMat</span>
               <span style={{fontSize:10,color:"rgba(255,255,255,.4)",marginLeft:"auto"}}>Aperçu</span>
             </div>
+          </BOCard>
+
+          <BOCard title="Navigation" icon="🧭">
+            <BOField label="Fond boutons nav"><BOColorInput k="navBtnBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur texte boutons"><BOColorInput k="navBtnColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Bordure boutons"><BOColorInput k="navBtnBorder" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Fond bouton Connexion"><BOColorInput k="navConnexionBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Fond bouton CTA (Commencer)"><BOColorInput k="navCtaBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur texte CTA"><BOColorInput k="navCtaColor" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
 
           <BOCard title="Textes du hero" icon="📝">
