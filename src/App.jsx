@@ -6537,10 +6537,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <div style={{position:"relative"}}>
-                      <span style={{ fontSize: 14 }}>&#128276;</span>
+                      <span style={{ fontSize: 14 }}>🔔</span>
                       <div style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#E76F51"}}/>
                     </div>
-                    <span style={{ fontSize: 14 }}>&#127769;</span>
+                    <span style={{ fontSize: 14 }}>🌙</span>
                     <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#C4714A,#9B6BAA)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
                   </div>
                 </div>
@@ -6548,18 +6548,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {/* Sous-onglets */}
                 {demoGroup!=="accueil"&&<div style={{ background: "#fff", borderBottom: "1px solid #F0EBF4", padding: "6px 8px", display: "flex", gap: 4, overflowX: "auto", flexShrink: 0 }}>
                   {(demoGroup==="enfant"?[
-                    {id:"journal",l:"&#128203; Journal",ok:true},{id:"pointage",l:"&#9201; Pointage",ok:true},
-                    {id:"sante",l:"&#127973; Sante",ok:false},{id:"urgence",l:"&#128680; Urgence",ok:false},{id:"eveil",l:"&#127807; Eveil",ok:false}
+                    {id:"journal",l:"📋 Journal",ok:true},{id:"pointage",l:"⏰ Pointage",ok:true},
+                    {id:"sante",l:"🏥 Sante",ok:false},{id:"urgence",l:"🚨 Urgence",ok:false},{id:"eveil",l:"🌱 Eveil",ok:false}
                   ]:demoGroup==="admin"?[
-                    {id:"messagerie",l:"&#128172; Messages",ok:true},{id:"facturation",l:"&#128176; Salaire",ok:true},
-                    {id:"calendrier",l:"&#128197; Calendrier",ok:false},{id:"documents",l:"&#128194; Documents",ok:false},{id:"bilans",l:"&#128202; Bilans",ok:false}
+                    {id:"messagerie",l:"💬 Messages",ok:true},{id:"facturation",l:"💰 Salaire",ok:true},
+                    {id:"calendrier",l:"📅 Calendrier",ok:false},{id:"documents",l:"📂 Documents",ok:false},{id:"bilans",l:"📊 Bilans",ok:false}
                   ]:[
-                    {id:"projet",l:"&#128196; Projet",ok:false},{id:"pmi",l:"&#127963; PMI",ok:false},{id:"support",l:"&#10067; Support",ok:false}
+                    {id:"projet",l:"📄 Projet",ok:false},{id:"pmi",l:"🏛️ PMI",ok:false},{id:"support",l:"❓ Support",ok:false}
                   ]).map(s=><div key={s.id} onClick={s.ok?()=>setDemoPage(s.id):undefined} style={{
                     whiteSpace:"nowrap",padding:"4px 10px",borderRadius:8,fontSize:9,fontWeight:600,cursor:s.ok?"pointer":"not-allowed",flexShrink:0,transition:"all .15s",
                     background:demoPage===s.id?"linear-gradient(135deg,#C4714A,#D4824A)":s.ok?"#F8F3FF":"#F4F4F4",
                     color:demoPage===s.id?"#fff":s.ok?"#9B6BAA":"#C0B8C8",opacity:s.ok?1:.6,
-                  }}>{s.l}{!s.ok&&" &#128274;"}</div>)}
+                  }}>{s.l}{!s.ok&&" 🔒"}</div>)}
                 </div>}
 
                 {/* Contenu */}
@@ -6567,14 +6567,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* ACCUEIL */}
                   {demoPage==="accueil"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour Marie &#128075;</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour Marie 👋</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
                       {[{v:D.enfants.length,l:"Enfants",c:"#C4714A"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},{v:"152h",l:"Ce mois",c:"#264653"},{v:"98%",l:"Presence",c:"#2A9D8F"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:15,fontWeight:700,color:k.c}}>{k.v}</div>
                         <div style={{fontSize:9,color:"#9B6BAA",marginTop:1}}>{k.l}</div>
                       </div>)}
                     </div>
-                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>&#128118; Mes enfants aujourd'hui</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
                     {D.enfants.map(e=>{
                       const estPresent=!!demoArrivee[e.id];
                       return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #2A9D8F":"1.5px solid transparent",transition:"all .2s"}}>
@@ -6587,16 +6587,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       </div>;
                     })}
                     <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>&#128203; A faire aujourd'hui</div>
+                      <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>📋 A faire aujourd'hui</div>
                       <div style={{fontSize:9,color:"#264653",lineHeight:1.9}}>Journal de {D.enfants[0].prenom}<br/>Declarer Pajemploi (J-3)<br/>Renouveler ordonnance Emma</div>
                     </div>
                   </div>}
 
                   {/* JOURNAL */}
                   {demoPage==="journal"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>&#128203; Journal — {D.enfants[0].prenom}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>📋 Journal — {D.enfants[0].prenom}</div>
                     {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id} style={{background:t.auteur==="asmat"?"#F8F3FF":"#FFF8F3",borderRadius:10,padding:8,marginBottom:5,borderLeft:"3px solid "+(t.auteur==="asmat"?"#9B6BAA":"#C4714A")}}>
-                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"&#128105;&#128103; Marie":"&#128106; Parent"} · {t.h}</div>
+                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩👧 Marie":"👪 Parent"} · {t.h}</div>
                       <div style={{fontSize:10,color:"#264653",lineHeight:1.5}}>{t.txt}</div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                         <div style={{fontSize:13}}>{t.mood}</div>
@@ -6614,7 +6614,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* POINTAGE */}
                   {demoPage==="pointage"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>&#9201; Pointage</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>⏰ Pointage</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
                       {[{l:"Prevues",v:"174h",c:"#264653"},{l:"Realisees",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#E76F51"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
@@ -6633,7 +6633,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* MESSAGERIE */}
                   {demoPage==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>&#128172; Messagerie</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>💬 Messagerie</div>
                     <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto"}}>
                       {D.enfants.map(e=>{const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;return <div key={e.id} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative",flexShrink:0}}>
                         <span style={{fontSize:13}}>{e.emoji}</span><span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#264653"}}>{e.prenom}</span>
@@ -6654,7 +6654,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* SALAIRE */}
                   {demoPage==="facturation"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>&#128176; Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>💰 Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
                     <div style={{display:"flex",gap:4,marginBottom:10}}>
                       {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===demoMois?"#fff":"#264653"}}>{m}</div>)}
                     </div>
@@ -6667,14 +6667,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>{["764,50 EUR","708,05 EUR","820,95 EUR"][demoMois]}</span>
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>&#128229; Bulletin PDF</span></div>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>&#127963; Pajemploi</span></div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span></div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span></div>
                     </div>
                   </div>}
 
                   {/* OUTILS grise */}
                   {demoPage==="outils"&&<div style={{padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,textAlign:"center"}}>
-                    <div style={{fontSize:32}}>&#11088;</div>
+                    <div style={{fontSize:32}}>⭐</div>
                     <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>Outils Pro</div>
                     <div style={{fontSize:10,color:"#9B6BAA",lineHeight:1.6}}>Projet d'accueil, PMI, FAQ et Support disponibles dans l'application complete</div>
                     <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:10,padding:"8px 16px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:8}}>Acceder a l'app</div>
@@ -6684,7 +6684,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                 {/* Bottom Nav */}
                 <div style={{ display: "flex", justifyContent: "space-around", padding: "4px 4px 6px", borderTop: "1px solid rgba(196,113,74,.1)", background: "rgba(255,255,255,.98)", flexShrink: 0 }}>
-                  {[{g:"accueil",ic:"&#127968;",l:"Accueil"},{g:"enfant",ic:"&#128118;",l:"Enfant"},{g:"admin",ic:"&#128193;",l:"Admin"},{g:"outils",ic:"&#11088;",l:"Outils"}].map(t=><div key={t.g} onClick={()=>{setDemoGroup(t.g);if(t.g==="accueil")setDemoPage("accueil");else if(t.g==="enfant")setDemoPage("journal");else if(t.g==="admin")setDemoPage("messagerie");else setDemoPage("outils");}} style={{textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:demoGroup===t.g?"rgba(196,113,74,.1)":"transparent",flex:1}}>
+                  {[{g:"accueil",ic:"🏠",l:"Accueil"},{g:"enfant",ic:"👶",l:"Enfant"},{g:"admin",ic:"🗂️",l:"Admin"},{g:"outils",ic:"⭐",l:"Outils"}].map(t=><div key={t.g} onClick={()=>{setDemoGroup(t.g);if(t.g==="accueil")setDemoPage("accueil");else if(t.g==="enfant")setDemoPage("journal");else if(t.g==="admin")setDemoPage("messagerie");else setDemoPage("outils");}} style={{textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:demoGroup===t.g?"rgba(196,113,74,.1)":"transparent",flex:1}}>
                     <div style={{fontSize:17}} dangerouslySetInnerHTML={{__html:t.ic}}/>
                     <div style={{fontSize:7,fontWeight:demoGroup===t.g?700:400,color:demoGroup===t.g?"#C4714A":"#9B6BAA"}}>{t.l}</div>
                   </div>)}
@@ -6704,7 +6704,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
             <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#9B6BAA"}}>
               <div style={{width:10,height:10,borderRadius:3,background:"#D0C8D8"}}/>
-              &#128274; Disponible dans l'application
+              🔒 Disponible dans l'application
             </div>
           </div>
         </div>
