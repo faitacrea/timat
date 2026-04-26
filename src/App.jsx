@@ -6259,10 +6259,11 @@ const DEMO_SCREENS=[
 //
 
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
-  const [activeDemo, setActiveDemo] = useState("accueil");
+  const [demoGroup, setDemoGroup] = useState("accueil");
+  const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
-  const [showLegal, setShowLegal] = useState(null); // null, "mentions", "cgu", "confidentialite"
-  const [showBlog, setShowBlog] = useState(null); // null or article id
+  const [showLegal, setShowLegal] = useState(null);
+  const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState("asmat");
@@ -6272,7 +6273,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
-  const demo = DEMO_SCREENS.find(s => s.id === activeDemo);
+  const [demoMsg, setDemoMsg] = useState("");
+  const [demoMood, setDemoMood] = useState("😊");
+  const [demoMois, setDemoMois] = useState(2);
+  const [demoLiked, setDemoLiked] = useState(false);
+  const [demoMsgs, setDemoMsgs] = useState(D.messages);
+  const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   const L = config.landing;
   const T = config.txts;
 
@@ -6424,8 +6430,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navFonctionBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
             <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navTarifsBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
             <button onClick={() => setShowBoutique(true)} style={{ background: L.navBoutiqueBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
-            <button onClick={() => setShowModal(true)} style={{ background: L.navConnexionBg||"rgba(255,255,255,.22)", color: L.navBtnColor||"#fff", border: "1px solid rgba(255,255,255,.35)", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Connexion</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>Se connecter / S'inscrire →</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
@@ -6508,218 +6513,198 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "flex", gap: 32, justifyContent: "center", alignItems: "flex-start", flexWrap: "wrap" }}>
-            {/* Tabs gauche */}
-            <div className="lp-demo-tabs" style={{ paddingTop: 16 }}>
-              {[
-                {id:"accueil",ic:"🏠",l:"Accueil"},
-                {id:"journal",ic:"📋",l:"Journal"},
-                {id:"pointage",ic:"⏰",l:"Pointage"},
-                {id:"messagerie",ic:"💬",l:"Messagerie"},
-                {id:"salaire",ic:"💰",l:"Salaire"},
-              ].map(t=><button key={t.id} onClick={()=>setActiveDemo(t.id)} style={{
-                display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:12,border:"none",
-                cursor:"pointer",fontFamily:"inherit",fontSize:13,fontWeight:activeDemo===t.id?700:500,
-                background:activeDemo===t.id?"linear-gradient(135deg,#C4714A,#D4824A)":"rgba(196,113,74,.08)",
-                color:activeDemo===t.id?"#fff":"#6B4F3A",transition:"all .18s",textAlign:"left",
-                boxShadow:activeDemo===t.id?"0 4px 14px rgba(196,113,74,.3)":"none",
-              }}>
-                <span style={{fontSize:18}}>{t.ic}</span>{t.l}
-              </button>)}
-            </div>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
 
-            {/* Phone frame */}
-            <div style={{ width: 300, flexShrink: 0, background: "#1a1a2e", borderRadius: 40, padding: "14px 10px 10px", boxShadow: "0 28px 90px rgba(0,0,0,.35), inset 0 1px 2px rgba(255,255,255,.08)", position:"relative" }}>
+            {/* Phone frame — vraie UI de l'app */}
+            <div style={{ width: 340, flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 32px 100px rgba(0,0,0,.4), inset 0 1px 2px rgba(255,255,255,.08)" }}>
               {/* Notch */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-                <div style={{ width: 100, height: 22, background: "#1a1a2e", borderRadius: "0 0 18px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <div style={{ width: 110, height: 24, background: "#1a1a2e", borderRadius: "0 0 18px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2a2a4e" }} />
-                  <div style={{ width: 44, height: 4, borderRadius: 2, background: "#2a2a4e" }} />
+                  <div style={{ width: 48, height: 4, borderRadius: 2, background: "#2a2a4e" }} />
                 </div>
               </div>
               {/* Screen */}
-              <div style={{ background: "#FDFBF8", borderRadius: 28, overflow: "hidden", height: 540, display: "flex", flexDirection: "column" }}>
+              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 580, display: "flex", flexDirection: "column", position: "relative" }}>
+                {/* Badge DEMO */}
+                <div style={{position:"absolute",top:8,right:8,zIndex:10,background:"rgba(155,107,170,.85)",color:"#fff",fontSize:7,fontWeight:700,padding:"2px 6px",borderRadius:4,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
+
                 {/* TopBar */}
-                <div style={{ background: "rgba(255,255,255,.96)", borderBottom: "1px solid rgba(196,113,74,.15)", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+                <div style={{ background: "rgba(255,255,255,.98)", borderBottom: "1px solid rgba(196,113,74,.12)", padding: "7px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C4714A", fontStyle: "italic" }}>TiMat</span>
-                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#9B6BAA", marginTop: 2 }} />
                     <span style={{ fontSize: 8, color: "#aaa", letterSpacing: 1 }}>v3</span>
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <span style={{ fontSize: 13 }}>🔔</span>
-                    <span style={{ fontSize: 13 }}>🌙</span>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#C4714A,#D4824A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
+                    <div style={{position:"relative"}}>
+                      <span style={{ fontSize: 14 }}>&#128276;</span>
+                      <div style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#E76F51"}}/>
+                    </div>
+                    <span style={{ fontSize: 14 }}>&#127769;</span>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#C4714A,#9B6BAA)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
                   </div>
                 </div>
 
-                {/* Content */}
+                {/* Sous-onglets */}
+                {demoGroup!=="accueil"&&<div style={{ background: "#fff", borderBottom: "1px solid #F0EBF4", padding: "6px 8px", display: "flex", gap: 4, overflowX: "auto", flexShrink: 0 }}>
+                  {(demoGroup==="enfant"?[
+                    {id:"journal",l:"&#128203; Journal",ok:true},{id:"pointage",l:"&#9201; Pointage",ok:true},
+                    {id:"sante",l:"&#127973; Sante",ok:false},{id:"urgence",l:"&#128680; Urgence",ok:false},{id:"eveil",l:"&#127807; Eveil",ok:false}
+                  ]:demoGroup==="admin"?[
+                    {id:"messagerie",l:"&#128172; Messages",ok:true},{id:"facturation",l:"&#128176; Salaire",ok:true},
+                    {id:"calendrier",l:"&#128197; Calendrier",ok:false},{id:"documents",l:"&#128194; Documents",ok:false},{id:"bilans",l:"&#128202; Bilans",ok:false}
+                  ]:[
+                    {id:"projet",l:"&#128196; Projet",ok:false},{id:"pmi",l:"&#127963; PMI",ok:false},{id:"support",l:"&#10067; Support",ok:false}
+                  ]).map(s=><div key={s.id} onClick={s.ok?()=>setDemoPage(s.id):undefined} style={{
+                    whiteSpace:"nowrap",padding:"4px 10px",borderRadius:8,fontSize:9,fontWeight:600,cursor:s.ok?"pointer":"not-allowed",flexShrink:0,transition:"all .15s",
+                    background:demoPage===s.id?"linear-gradient(135deg,#C4714A,#D4824A)":s.ok?"#F8F3FF":"#F4F4F4",
+                    color:demoPage===s.id?"#fff":s.ok?"#9B6BAA":"#C0B8C8",opacity:s.ok?1:.6,
+                  }}>{s.l}{!s.ok&&" &#128274;"}</div>)}
+                </div>}
+
+                {/* Contenu */}
                 <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
                   {/* ACCUEIL */}
-                  {activeDemo==="accueil"&&<div style={{padding:10}}>
-                    <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour {D.asmat.prenom} 👋</div>
+                  {demoPage==="accueil"&&<div style={{padding:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour Marie &#128075;</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
-                      {[
-                        {v:D.enfants.length,l:"Enfants",c:"#C4714A"},
-                        {v:D.messages.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},
-                        {v:"152h",l:"Ce mois",c:"#264653"},
-                        {v:"98%",l:"Présence",c:"#2A9D8F"},
-                      ].map(k=><div key={k.l}style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                      {[{v:D.enfants.length,l:"Enfants",c:"#C4714A"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},{v:"152h",l:"Ce mois",c:"#264653"},{v:"98%",l:"Presence",c:"#2A9D8F"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:15,fontWeight:700,color:k.c}}>{k.v}</div>
                         <div style={{fontSize:9,color:"#9B6BAA",marginTop:1}}>{k.l}</div>
                       </div>)}
                     </div>
-                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>&#128118; Mes enfants aujourd'hui</div>
                     {D.enfants.map(e=>{
-                      const pt=D.pointages.find(p=>p.eId===e.id&&p.date===TODAY_STR);
-                      return <div key={e.id}style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8}}>
+                      const estPresent=!!demoArrivee[e.id];
+                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #2A9D8F":"1.5px solid transparent",transition:"all .2s"}}>
                         <span style={{fontSize:20}}>{e.emoji}</span>
                         <div style={{flex:1}}>
                           <div style={{fontSize:11,fontWeight:700,color:"#264653"}}>{e.prenom}</div>
-                          <div style={{fontSize:9,color:"#9B6BAA"}}>{pt?.arr?`Arrivé à ${pt.arr}`:"En attente"}</div>
+                          <div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive a "+demoArrivee[e.id]:"Appuyer pour pointer"}</div>
                         </div>
-                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:pt?.arr?"#F0FAF4":"#F9F3FF",color:pt?.arr?"#2A9D8F":"#9B6BAA",fontWeight:700}}>{pt?.arr?"Présent":"Attendu"}</div>
+                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F9F3FF",color:estPresent?"#2A9D8F":"#9B6BAA",fontWeight:700}}>{estPresent?"Present":"Attendu"}</div>
                       </div>;
                     })}
                     <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>📋 À faire aujourd'hui</div>
-                      <div style={{fontSize:9,color:"#264653",lineHeight:1.9}}>
-                        Transmettre le journal de {D.enfants[0].prenom}<br/>
-                        Déclarer Pajemploi (J-3)<br/>
-                        Renouveler l'ordonnance d'Emma
-                      </div>
+                      <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>&#128203; A faire aujourd'hui</div>
+                      <div style={{fontSize:9,color:"#264653",lineHeight:1.9}}>Journal de {D.enfants[0].prenom}<br/>Declarer Pajemploi (J-3)<br/>Renouveler ordonnance Emma</div>
                     </div>
                   </div>}
 
                   {/* JOURNAL */}
-                  {activeDemo==="journal"&&<div style={{padding:10}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                      <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>📋 Journal</div>
-                      <div style={{display:"flex",gap:4}}>
-                        {D.enfants.map(e=><div key={e.id}style={{width:24,height:24,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",border:e.id==="e1"?"none":"1px solid #DDD5E8",cursor:"pointer"}}>{e.emoji}</div>)}
-                      </div>
-                    </div>
-                    {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id}style={{
-                      background:t.auteur==="asmat"?"#F8F3FF":"#FFF8F3",
-                      borderRadius:10,padding:8,marginBottom:5,
-                      borderLeft:`3px solid ${t.auteur==="asmat"?"#9B6BAA":"#C4714A"}`
-                    }}>
-                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩 Marie":"👪 Parent"} · {t.h}</div>
+                  {demoPage==="journal"&&<div style={{padding:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>&#128203; Journal — {D.enfants[0].prenom}</div>
+                    {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id} style={{background:t.auteur==="asmat"?"#F8F3FF":"#FFF8F3",borderRadius:10,padding:8,marginBottom:5,borderLeft:"3px solid "+(t.auteur==="asmat"?"#9B6BAA":"#C4714A")}}>
+                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"&#128105;&#128103; Marie":"&#128106; Parent"} · {t.h}</div>
                       <div style={{fontSize:10,color:"#264653",lineHeight:1.5}}>{t.txt}</div>
-                      <div style={{fontSize:14,marginTop:3}}>{t.mood}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                        <div style={{fontSize:13}}>{t.mood}</div>
+                        <button onClick={()=>setDemoLiked(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,transform:demoLiked?"scale(1.3)":"scale(1)",transition:"transform .2s"}}>{demoLiked?"❤️":"🤍"}</button>
+                      </div>
                     </div>)}
                     <div style={{display:"flex",gap:4,marginBottom:6}}>
-                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m}style={{padding:"3px 6px",borderRadius:6,background:m==="😊"?"#F8F3FF":"#F4F0FB",border:m==="😊"?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:13,cursor:"pointer"}}>{m}</div>)}
+                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m} onClick={()=>setDemoMood(m)} style={{padding:"3px 6px",borderRadius:6,background:m===demoMood?"#F8F3FF":"#F4F0FB",border:m===demoMood?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:12,cursor:"pointer"}}>{m}</div>)}
                     </div>
                     <div style={{display:"flex",gap:5}}>
-                      <input readOnly placeholder="Écrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#264653"}}/>
-                      <div style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} placeholder="Ecrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#264653"}}/>
+                      <div onClick={()=>{if(demoMsg.trim())setDemoMsg("");}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>OK</div>
                     </div>
                   </div>}
 
                   {/* POINTAGE */}
-                  {activeDemo==="pointage"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>⏰ Pointage</div>
+                  {demoPage==="pointage"&&<div style={{padding:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>&#9201; Pointage</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{l:"Prévues",v:"174h",c:"#264653"},{l:"Réalisées",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#E76F51"}].map(k=>
-                        <div key={k.l}style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
-                          <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
-                          <div style={{fontSize:8,color:"#9B6BAA"}}>{k.l}</div>
-                        </div>
-                      )}
+                      {[{l:"Prevues",v:"174h",c:"#264653"},{l:"Realisees",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#E76F51"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                        <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
+                        <div style={{fontSize:8,color:"#9B6BAA"}}>{k.l}</div>
+                      </div>)}
                     </div>
-                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:5}}>📍 Aujourd'hui</div>
-                    {D.pointages.filter(p=>p.date===TODAY_STR).map(p=>{
-                      const e=D.enfants.find(e=>e.id===p.eId);
-                      return <div key={p.id}style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{fontSize:16}}>{e?.emoji}</span>
-                        <div style={{flex:1}}>
-                          <div style={{fontSize:10,fontWeight:700,color:"#264653"}}>{e?.prenom}</div>
-                          <div style={{fontSize:9,color:"#9B6BAA"}}>↗ {p.arr} {p.dep?`→ ↘ ${p.dep}`:""}</div>
-                        </div>
-                        <div style={{fontSize:10,fontWeight:700,color:p.tot?"#C4714A":"#ccc"}}>{p.tot||"—"}</div>
+                    {D.enfants.map(e=>{
+                      const estPresent=!!demoArrivee[e.id];
+                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #2A9D8F":"1.5px solid transparent",transition:"all .2s"}}>
+                        <span style={{fontSize:16}}>{e.emoji}</span>
+                        <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#264653"}}>{e.prenom}</div><div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive "+demoArrivee[e.id]:"Pas encore pointe"}</div></div>
+                        <div style={{fontSize:9,fontWeight:700,background:estPresent?"#F0FAF4":"#F4F0FB",color:estPresent?"#2A9D8F":"#9B6BAA",padding:"2px 7px",borderRadius:6}}>{estPresent?"Pointe":"Pointer"}</div>
                       </div>;
                     })}
-                    <div style={{background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:10,padding:"8px 0",textAlign:"center",marginTop:8,cursor:"pointer"}}>
-                      <span style={{color:"#fff",fontSize:10,fontWeight:700}}>📱 Scanner QR Code parent</span>
-                    </div>
                   </div>}
 
                   {/* MESSAGERIE */}
-                  {activeDemo==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>💬 Messagerie</div>
-                    <div style={{display:"flex",gap:5,marginBottom:8}}>
-                      {D.enfants.map(e=>{
-                        const unread=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
-                        return <div key={e.id}style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative"}}>
-                          <span style={{fontSize:13}}>{e.emoji}</span>
-                          <span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#264653"}}>{e.prenom}</span>
-                          {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#E76F51",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
-                        </div>;
-                      })}
+                  {demoPage==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>&#128172; Messagerie</div>
+                    <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto"}}>
+                      {D.enfants.map(e=>{const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;return <div key={e.id} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative",flexShrink:0}}>
+                        <span style={{fontSize:13}}>{e.emoji}</span><span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#264653"}}>{e.prenom}</span>
+                        {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#E76F51",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
+                      </div>;})}
                     </div>
-                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto"}}>
-                      {D.messages.filter(m=>m.eId==="e1").map(m=><div key={m.id}style={{
-                        alignSelf:m.de==="parent"?"flex-start":"flex-end",
-                        background:m.de==="parent"?"#F4F0FB":"linear-gradient(135deg,#C4714A,#D4824A)",
-                        borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",
-                        padding:"7px 10px",maxWidth:"78%"
-                      }}>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto",minHeight:150}}>
+                      {demoMsgs.filter(m=>m.eId==="e1").map(m=><div key={m.id} style={{alignSelf:m.de==="parent"?"flex-start":"flex-end",background:m.de==="parent"?"#F4F0FB":"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",padding:"7px 10px",maxWidth:"78%"}}>
                         <div style={{fontSize:9,color:m.de==="parent"?"#264653":"#fff",lineHeight:1.5}}>{m.txt}</div>
                         <div style={{fontSize:7,color:m.de==="parent"?"#9B6BAA":"rgba(255,255,255,.6)",textAlign:"right",marginTop:2}}>{m.h}</div>
                       </div>)}
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <input readOnly placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
-                      <div style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
+                      <div onClick={()=>{if(demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
                     </div>
                   </div>}
 
                   {/* SALAIRE */}
-                  {activeDemo==="salaire"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>💰 Salaire — {new Date().toLocaleString("fr-FR",{month:"long",year:"numeric"})}</div>
+                  {demoPage==="facturation"&&<div style={{padding:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>&#128176; Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
                     <div style={{display:"flex",gap:4,marginBottom:10}}>
-                      {["Janv.","Fév.","Mars"].map((m,i)=><div key={m}style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,background:i===2?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===2?"#fff":"#264653",cursor:"pointer"}}>{m}</div>)}
+                      {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===demoMois?"#fff":"#264653"}}>{m}</div>)}
                     </div>
-                    {[
-                      {l:"Salaire de base",d:"160h × 4,05€",v:"648,00 €"},
-                      {l:"Ind. entretien",d:"20j × 3,80€",v:"76,00 €"},
-                      {l:"Heures majorées",d:"8h × 5,06€",v:"40,50 €"},
-                    ].map(r=><div key={r.l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
-                      <div><div style={{fontWeight:600,color:"#264653"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d}</div></div>
-                      <div style={{fontWeight:700,color:"#C4714A"}}>{r.v}</div>
+                    {[{l:"Salaire de base",d:[{h:"160h x 4,05EUR",v:"648,00 EUR"},{h:"152h x 4,05EUR",v:"615,60 EUR"},{h:"168h x 4,05EUR",v:"680,40 EUR"}][demoMois]},{l:"Ind. entretien",d:[{h:"20j x 3,80EUR",v:"76,00 EUR"},{h:"19j x 3,80EUR",v:"72,20 EUR"},{h:"21j x 3,80EUR",v:"79,80 EUR"}][demoMois]},{l:"Heures majorees",d:[{h:"8h x 5,06EUR",v:"40,50 EUR"},{h:"4h x 5,06EUR",v:"20,25 EUR"},{h:"12h x 5,06EUR",v:"60,75 EUR"}][demoMois]}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
+                      <div><div style={{fontWeight:600,color:"#264653"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d.h}</div></div>
+                      <div style={{fontWeight:700,color:"#C4714A"}}>{r.d.v}</div>
                     </div>)}
                     <div style={{marginTop:8,padding:10,background:"linear-gradient(135deg,rgba(196,113,74,.08),rgba(155,107,170,.08))",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid rgba(196,113,74,.2)"}}>
                       <span style={{fontSize:11,fontWeight:700,color:"#264653"}}>Total brut</span>
-                      <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>764,50 €</span>
+                      <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>{["764,50 EUR","708,05 EUR","820,95 EUR"][demoMois]}</span>
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}>
-                        <span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span>
-                      </div>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}>
-                        <span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span>
-                      </div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>&#128229; Bulletin PDF</span></div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>&#127963; Pajemploi</span></div>
                     </div>
+                  </div>}
+
+                  {/* OUTILS grise */}
+                  {demoPage==="outils"&&<div style={{padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,textAlign:"center"}}>
+                    <div style={{fontSize:32}}>&#11088;</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>Outils Pro</div>
+                    <div style={{fontSize:10,color:"#9B6BAA",lineHeight:1.6}}>Projet d'accueil, PMI, FAQ et Support disponibles dans l'application complete</div>
+                    <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:10,padding:"8px 16px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:8}}>Acceder a l'app</div>
                   </div>}
 
                 </div>
 
-                {/* Bottom Nav dans le téléphone */}
-                <div style={{ display: "flex", justifyContent: "space-around", padding: "4px 4px 6px", borderTop: "1px solid rgba(196,113,74,.12)", background: "rgba(255,255,255,.98)", flexShrink: 0 }}>
-                  {[{id:"accueil",ic:"🏠",l:"Accueil"},{id:"journal",ic:"📋",l:"Journal"},{id:"pointage",ic:"⏰",l:"Pointage"},{id:"messagerie",ic:"💬",l:"Messages"},{id:"salaire",ic:"💰",l:"Salaire"}].map(t=>
-                    <div key={t.id} onClick={()=>setActiveDemo(t.id)} style={{ textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:activeDemo===t.id?"rgba(196,113,74,.1)":"transparent",flex:1 }}>
-                      <div style={{fontSize:17}}>{t.ic}</div>
-                      <div style={{fontSize:7,fontWeight:activeDemo===t.id?700:400,color:activeDemo===t.id?"#C4714A":"#9B6BAA"}}>{t.l}</div>
-                    </div>
-                  )}
+                {/* Bottom Nav */}
+                <div style={{ display: "flex", justifyContent: "space-around", padding: "4px 4px 6px", borderTop: "1px solid rgba(196,113,74,.1)", background: "rgba(255,255,255,.98)", flexShrink: 0 }}>
+                  {[{g:"accueil",ic:"&#127968;",l:"Accueil"},{g:"enfant",ic:"&#128118;",l:"Enfant"},{g:"admin",ic:"&#128193;",l:"Admin"},{g:"outils",ic:"&#11088;",l:"Outils"}].map(t=><div key={t.g} onClick={()=>{setDemoGroup(t.g);if(t.g==="accueil")setDemoPage("accueil");else if(t.g==="enfant")setDemoPage("journal");else if(t.g==="admin")setDemoPage("messagerie");else setDemoPage("outils");}} style={{textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:demoGroup===t.g?"rgba(196,113,74,.1)":"transparent",flex:1}}>
+                    <div style={{fontSize:17}} dangerouslySetInnerHTML={{__html:t.ic}}/>
+                    <div style={{fontSize:7,fontWeight:demoGroup===t.g?700:400,color:demoGroup===t.g?"#C4714A":"#9B6BAA"}}>{t.l}</div>
+                  </div>)}
                 </div>
               </div>
               {/* Home indicator */}
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
                 <div style={{ width: 90, height: 4, background: "rgba(255,255,255,.25)", borderRadius: 2 }} />
               </div>
+            </div>
+          </div>
+          {/* Legende */}
+          <div style={{display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#6B4F3A"}}>
+              <div style={{width:10,height:10,borderRadius:3,background:"linear-gradient(135deg,#C4714A,#D4824A)"}}/>
+              Onglet navigable dans la demo
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#9B6BAA"}}>
+              <div style={{width:10,height:10,borderRadius:3,background:"#D0C8D8"}}/>
+              &#128274; Disponible dans l'application
             </div>
           </div>
         </div>
