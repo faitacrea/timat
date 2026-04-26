@@ -6605,7 +6605,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       borderRadius:10,padding:8,marginBottom:5,
                       borderLeft:`3px solid ${t.auteur==="asmat"?"#9B6BAA":"#C4714A"}`
                     }}>
-                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩 Marie":"👨‍👩‍👦 Parent"} · {t.h}</div>
+                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩 Marie":"👪 Parent"} · {t.h}</div>
                       <div style={{fontSize:10,color:"#264653",lineHeight:1.5}}>{t.txt}</div>
                       <div style={{fontSize:14,marginTop:3}}>{t.mood}</div>
                     </div>)}
