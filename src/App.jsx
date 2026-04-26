@@ -6391,8 +6391,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "rgba(255,255,255,.2)", color: "#fff", border: "2px solid rgba(255,255,255,.4)", borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>☰</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#FF9F63,#E76F51)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navBtnBg||"rgba(255,255,255,.2)", color: L.navBtnColor||"#fff", border: "2px solid "+(L.navBtnBorder||"rgba(255,255,255,.4)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>☰</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
         {/* Dropdown menu (mobile) */}
