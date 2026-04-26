@@ -117,7 +117,7 @@ function Styles(){return(
     .photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     @media(max-width:640px){.photo-grid{grid-template-columns:repeat(3,1fr)}}
     /* - NAV TABS - */
-    .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--l);transition:all .15s}
+    .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--b);transition:all .15s}
     .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
   `}</style>
 );}
@@ -3185,7 +3185,7 @@ function Journal({enfants,role,pEId,user}){
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSousOnglet(s.id)}style={{
         padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
-        color:sousOnglet===s.id?"var(--T)":"var(--l)",
+        color:sousOnglet===s.id?"var(--T)":"var(--b)",
         borderBottom:sousOnglet===s.id?"2px solid var(--T)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
@@ -6042,7 +6042,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           fontFamily:"'DM Sans',sans-serif",fontSize:12,
           cursor:"pointer",transition:"all .15s",flexShrink:0,whiteSpace:"nowrap",
           background:isSubActive?"rgba(155,107,170,.12)":"transparent",
-          color:isSubActive?"var(--S)":"var(--l)",
+          color:isSubActive?"var(--S)":"var(--b)",
           fontWeight:isSubActive?700:500,
           boxShadow:isSubActive?"inset 0 0 0 1.5px rgba(155,107,170,.3)":"none",
           position:"relative",
