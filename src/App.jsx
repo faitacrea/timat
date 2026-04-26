@@ -100,7 +100,25 @@ function Styles(){return(
     .sec-h-line{flex:1;height:1px;background:linear-gradient(90deg,var(--br),transparent)}
     #bandeau-hl{display:none;background:linear-gradient(90deg,var(--T),var(--S));color:#fff;font-size:11px;text-align:center;padding:4px;font-weight:600}
     .offline #bandeau-hl{display:block}
-    @media(max-width:640px){.content{padding:0}.fi{padding:14px}.topbar{height:50px;padding:0 14px}.logo{font-size:20px}.btn{padding:8px 14px;font-size:12px}.nav-main button{padding:6px 12px!important;font-size:12px!important}}
+    @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    @media(max-width:768px){
+      .nav-main{display:none!important}
+      .content{padding-bottom:72px!important}
+      .fi{padding:12px!important;max-width:100%!important}
+      .topbar{height:50px!important;padding:0 12px!important}
+      .logo{font-size:19px!important}
+      .btn{padding:8px 13px;font-size:12px}
+      .card{border-radius:14px!important}
+    }
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(234,224,232,.7);box-shadow:0 -4px 20px rgba(0,0,0,.08);height:64px;align-items:stretch;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
+    .dark .bottom-nav{background:rgba(13,27,30,.97)!important;border-top-color:#1E3A34!important}
+    .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:12px;transition:all .18s;font-family:inherit;min-width:0}
+    .bnav-btn.active{background:rgba(155,107,170,.12)}
+    .bnav-btn .bnav-ic{font-size:22px;line-height:1;transition:transform .18s}
+    .bnav-btn.active .bnav-ic{transform:scale(1.12)}
+    .bnav-btn .bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s}
+    .bnav-btn.active .bnav-lbl{color:var(--S)}
+    @media(max-width:768px){.bottom-nav{display:flex}}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
     /* - CALENDRIER - */
     .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -5859,6 +5877,26 @@ function Support({role,user}){
   </div>;
 }
 
+function BottomNav({groups,page,setPage,pmiNonLus}){
+  const activeGroup=findGroup(groups,page);
+  return <nav className="bottom-nav" role="navigation" aria-label="Navigation principale">
+    {Object.entries(groups).map(([key,g])=>{
+      const isActive=activeGroup===key;
+      const hasBadge=key==="admin"&&pmiNonLus>0;
+      return <button key={key} className={"bnav-btn"+(isActive?" active":"")} onClick={()=>{
+        if(g.subs){setPage(g.subs[0].id);}else{setPage(key);}
+      }}>
+        <span className="bnav-ic" style={{position:"relative",display:"inline-block"}}>
+          {g.ic}
+          {hasBadge&&<span style={{position:"absolute",top:-4,right:-6,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pmiNonLus}</span>}
+        </span>
+        <span className="bnav-lbl">{g.l}</span>
+      </button>;
+    })}
+  </nav>;
+}
+
+
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
@@ -6383,15 +6421,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
-            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
-            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
-            <button onClick={() => setShowBoutique(true)} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navFonctionBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
+            <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navTarifsBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
+            <button onClick={() => setShowBoutique(true)} style={{ background: L.navBoutiqueBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
             <button onClick={() => setShowModal(true)} style={{ background: L.navConnexionBg||"rgba(255,255,255,.22)", color: L.navBtnColor||"#fff", border: "1px solid rgba(255,255,255,.35)", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Connexion</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>{T.heroBtnNavTxt||"Commencer gratuitement →"}</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navBtnBg||"rgba(255,255,255,.2)", color: L.navBtnColor||"#fff", border: "2px solid "+(L.navBtnBorder||"rgba(255,255,255,.4)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>☰</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(255,255,255,.2)", color: L.navHamburgerColor||L.navBtnColor||"#fff", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(255,255,255,.4)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>☰</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
@@ -6470,197 +6508,220 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            {/* Phone frame - Real App Demo */}
-            <div style={{ maxWidth: 340, width: "100%", background: "#1a1a1a", borderRadius: 40, padding: "14px 10px", boxShadow: "0 24px 80px rgba(0,0,0,.3), inset 0 1px 2px rgba(255,255,255,.1)" }}>
+          <div style={{ display: "flex", gap: 32, justifyContent: "center", alignItems: "flex-start", flexWrap: "wrap" }}>
+            {/* Tabs gauche */}
+            <div className="lp-demo-tabs" style={{ paddingTop: 16 }}>
+              {[
+                {id:"accueil",ic:"🏠",l:"Accueil"},
+                {id:"journal",ic:"📋",l:"Journal"},
+                {id:"pointage",ic:"⏰",l:"Pointage"},
+                {id:"messagerie",ic:"💬",l:"Messagerie"},
+                {id:"salaire",ic:"💰",l:"Salaire"},
+              ].map(t=><button key={t.id} onClick={()=>setActiveDemo(t.id)} style={{
+                display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:12,border:"none",
+                cursor:"pointer",fontFamily:"inherit",fontSize:13,fontWeight:activeDemo===t.id?700:500,
+                background:activeDemo===t.id?"linear-gradient(135deg,#C4714A,#D4824A)":"rgba(196,113,74,.08)",
+                color:activeDemo===t.id?"#fff":"#6B4F3A",transition:"all .18s",textAlign:"left",
+                boxShadow:activeDemo===t.id?"0 4px 14px rgba(196,113,74,.3)":"none",
+              }}>
+                <span style={{fontSize:18}}>{t.ic}</span>{t.l}
+              </button>)}
+            </div>
+
+            {/* Phone frame */}
+            <div style={{ width: 300, flexShrink: 0, background: "#1a1a2e", borderRadius: 40, padding: "14px 10px 10px", boxShadow: "0 28px 90px rgba(0,0,0,.35), inset 0 1px 2px rgba(255,255,255,.08)", position:"relative" }}>
               {/* Notch */}
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
-                <div style={{ width: 90, height: 24, background: "#1a1a1a", borderRadius: "0 0 16px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#333" }} />
-                  <div style={{ width: 40, height: 4, borderRadius: 2, background: "#333" }} />
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+                <div style={{ width: 100, height: 22, background: "#1a1a2e", borderRadius: "0 0 18px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2a2a4e" }} />
+                  <div style={{ width: 44, height: 4, borderRadius: 2, background: "#2a2a4e" }} />
                 </div>
               </div>
               {/* Screen */}
-              <div style={{ background: "#FDFBF8", borderRadius: 26, overflow: "hidden", height: 520 , display: "flex", flexDirection: "column" }}>
-                {/* App header */}
-                <div style={{ background: "linear-gradient(135deg,#264653,#2A6F6A)", padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+              <div style={{ background: "#FDFBF8", borderRadius: 28, overflow: "hidden", height: 540, display: "flex", flexDirection: "column" }}>
+                {/* TopBar */}
+                <div style={{ background: "rgba(255,255,255,.96)", borderBottom: "1px solid rgba(196,113,74,.15)", padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 14 }}>🌿</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>TiMat</span>
+                    <span style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C4714A", fontStyle: "italic" }}>TiMat</span>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#9B6BAA", marginTop: 2 }} />
+                    <span style={{ fontSize: 8, color: "#aaa", letterSpacing: 1 }}>v3</span>
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,.6)" }}>Marie Dupont</div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <span style={{ fontSize: 13 }}>🔔</span>
+                    <span style={{ fontSize: 13 }}>🌙</span>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#C4714A,#D4824A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
+                  </div>
                 </div>
-                {/* App content */}
-                <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
-                  {/* Accueil */}
-                  {activeDemo==="accueil"&&<div>
-                    <div style={{fontSize:14,fontWeight:700,color:"#264653",marginBottom:10}}>Bonjour Marie 👋</div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>
-                      {[["3","Enfants","#2A9D8F"],["0","Messages","#FF9F63"],["152h","Ce mois","#264653"],["98%","Presence","#2A9D8F"]].map(([v,l,co])=>
-                        <div key={l}style={{background:"#fff",borderRadius:10,padding:"8px 10px",textAlign:"center",border:"1px solid #E8E4E0"}}>
-                          <div style={{fontSize:16,fontWeight:700,color:co}}>{v}</div>
-                          <div style={{fontSize:9,color:"#8FA3AD"}}>{l}</div>
-                        </div>
-                      )}
+
+                {/* Content */}
+                <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+
+                  {/* ACCUEIL */}
+                  {activeDemo==="accueil"&&<div style={{padding:10}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour {D.asmat.prenom} 👋</div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
+                      {[
+                        {v:D.enfants.length,l:"Enfants",c:"#C4714A"},
+                        {v:D.messages.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},
+                        {v:"152h",l:"Ce mois",c:"#264653"},
+                        {v:"98%",l:"Présence",c:"#2A9D8F"},
+                      ].map(k=><div key={k.l}style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                        <div style={{fontSize:15,fontWeight:700,color:k.c}}>{k.v}</div>
+                        <div style={{fontSize:9,color:"#9B6BAA",marginTop:1}}>{k.l}</div>
+                      </div>)}
                     </div>
-                    {[{nom:"Leo",emoji:"🦁",couleur:"#2A9D8F",h:"07h35",stat:"Present"},
-                      {nom:"Emma",emoji:"🌸",couleur:"#FF9F63",h:"08h10",stat:"Present"},
-                      {nom:"Lucas",emoji:"🐻",couleur:"#264653",h:"-",stat:"Attendu"}
-                    ].map(e=>
-                      <div key={e.nom}style={{background:"#fff",borderRadius:10,padding:10,marginBottom:6,border:"1px solid #E8E4E0",display:"flex",alignItems:"center",gap:10}}>
-                        <span style={{fontSize:22}}>{e.emoji}</span>
+                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
+                    {D.enfants.map(e=>{
+                      const pt=D.pointages.find(p=>p.eId===e.id&&p.date===TODAY_STR);
+                      return <div key={e.id}style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:20}}>{e.emoji}</span>
                         <div style={{flex:1}}>
-                          <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>{e.nom}</div>
-                          <div style={{fontSize:10,color:"#8FA3AD"}}>{e.h=== "-"?"Pas encore arrive":"Arrive a "+e.h}</div>
+                          <div style={{fontSize:11,fontWeight:700,color:"#264653"}}>{e.prenom}</div>
+                          <div style={{fontSize:9,color:"#9B6BAA"}}>{pt?.arr?`Arrivé à ${pt.arr}`:"En attente"}</div>
                         </div>
-                        <div style={{fontSize:9,padding:"3px 8px",borderRadius:6,background:e.stat==="Present"?"#F0FAF4":"#F4F7FA",color:e.stat==="Present"?"#2A9D8F":"#8FA3AD",fontWeight:600}}>{e.stat}</div>
-                      </div>
-                    )}
-                    <div style={{background:"#FFF8F3",borderRadius:10,padding:10,marginTop:8,border:"1px solid #FFD6B3"}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#FF9F63",marginBottom:4}}>📋 A faire aujourd'hui</div>
-                      <div style={{fontSize:10,color:"#264653",lineHeight:1.8}}>
-                        Transmettre le journal de Leo<br/>
-                        Declarer Pajemploi (J-3)<br/>
+                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:pt?.arr?"#F0FAF4":"#F9F3FF",color:pt?.arr?"#2A9D8F":"#9B6BAA",fontWeight:700}}>{pt?.arr?"Présent":"Attendu"}</div>
+                      </div>;
+                    })}
+                    <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>📋 À faire aujourd'hui</div>
+                      <div style={{fontSize:9,color:"#264653",lineHeight:1.9}}>
+                        Transmettre le journal de {D.enfants[0].prenom}<br/>
+                        Déclarer Pajemploi (J-3)<br/>
                         Renouveler l'ordonnance d'Emma
                       </div>
                     </div>
                   </div>}
 
-                  {/* Journal */}
-                  {activeDemo==="journal"&&<div>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                      <div style={{fontSize:14,fontWeight:700,color:"#264653"}}>📋 Journal</div>
+                  {/* JOURNAL */}
+                  {activeDemo==="journal"&&<div style={{padding:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                      <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>📋 Journal</div>
                       <div style={{display:"flex",gap:4}}>
-                        {["🦁","🌸","🐻"].map((e,i)=><div key={i}onClick={()=>{}}style={{width:26,height:26,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,background:i===0?"#2A9D8F":"#F4F7FA",cursor:"pointer",border:i===0?"none":"1px solid #E8E4E0"}}>{e}</div>)}
+                        {D.enfants.map(e=><div key={e.id}style={{width:24,height:24,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",border:e.id==="e1"?"none":"1px solid #DDD5E8",cursor:"pointer"}}>{e.emoji}</div>)}
                       </div>
                     </div>
-                    <div style={{background:"#F0FAF4",borderRadius:10,padding:10,marginBottom:6,borderLeft:"3px solid #2A9D8F"}}>
-                      <div style={{fontSize:9,color:"#2A9D8F",fontWeight:700}}>👩👧 Marie - 11h30</div>
-                      <div style={{fontSize:11,color:"#264653",lineHeight:1.5,marginTop:4}}>Leo a decouvert la peinture avec les doigts ce matin ! Il a realise un tableau qu'il a voulu offrir a sa maman. 🎨</div>
+                    {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id}style={{
+                      background:t.auteur==="asmat"?"#F8F3FF":"#FFF8F3",
+                      borderRadius:10,padding:8,marginBottom:5,
+                      borderLeft:`3px solid ${t.auteur==="asmat"?"#9B6BAA":"#C4714A"}`
+                    }}>
+                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩 Marie":"👨‍👩‍👦 Parent"} · {t.h}</div>
+                      <div style={{fontSize:10,color:"#264653",lineHeight:1.5}}>{t.txt}</div>
+                      <div style={{fontSize:14,marginTop:3}}>{t.mood}</div>
+                    </div>)}
+                    <div style={{display:"flex",gap:4,marginBottom:6}}>
+                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m}style={{padding:"3px 6px",borderRadius:6,background:m==="😊"?"#F8F3FF":"#F4F0FB",border:m==="😊"?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:13,cursor:"pointer"}}>{m}</div>)}
                     </div>
-                    <div style={{background:"#FFF8F3",borderRadius:10,padding:10,marginBottom:6,borderLeft:"3px solid #FF9F63"}}>
-                      <div style={{fontSize:9,color:"#FF9F63",fontWeight:700}}>🍽️ Repas - 12h00</div>
-                      <div style={{fontSize:11,color:"#264653"}}>Puree de courgettes + jambon. Bon appetit ! Compote de pommes en dessert.</div>
-                    </div>
-                    <div style={{background:"#F4F7FA",borderRadius:10,padding:10,marginBottom:6,borderLeft:"3px solid #264653"}}>
-                      <div style={{fontSize:9,color:"#264653",fontWeight:700}}>💤 Sieste - 13h00</div>
-                      <div style={{fontSize:11,color:"#264653"}}>Endormissement rapide. Sieste de 1h30. Reveil en douceur.</div>
-                    </div>
-                    <div style={{display:"flex",gap:4,marginBottom:8}}>
-                      {["😊","😴","🤗","😢"].map(m=><div key={m}style={{padding:"4px 8px",borderRadius:6,background:m==="😊"?"#F0FAF4":"#F4F7FA",border:m==="😊"?"1.5px solid #2A9D8F":"1.5px solid transparent",fontSize:16,cursor:"pointer"}}>{m}</div>)}
-                    </div>
-                    <div style={{display:"flex",gap:6}}>
-                      <input readOnly placeholder="Ecrire une observation..." style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid #E8E4E0",fontSize:10,background:"#fff",color:"#264653"}}/>
-                      <div style={{background:"#2A9D8F",color:"#fff",borderRadius:8,padding:"8px 12px",fontSize:10,fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                    <div style={{display:"flex",gap:5}}>
+                      <input readOnly placeholder="Écrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#264653"}}/>
+                      <div style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>Envoyer</div>
                     </div>
                   </div>}
 
-                  {/* Pointage */}
-                  {activeDemo==="pointage"&&<div>
-                    <div style={{fontSize:14,fontWeight:700,color:"#264653",marginBottom:10}}>⏰ Pointage</div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:12}}>
-                      {[["Prevues","174h","#264653"],["Realisees","152h30","#2A9D8F"],["Solde","-21h30","#E76F51"]].map(([l,v,co])=>
-                        <div key={l}style={{background:"#fff",borderRadius:10,padding:8,textAlign:"center",border:"1px solid #E8E4E0"}}>
-                          <div style={{fontSize:14,fontWeight:700,color:co}}>{v}</div>
-                          <div style={{fontSize:9,color:"#8FA3AD"}}>{l}</div>
+                  {/* POINTAGE */}
+                  {activeDemo==="pointage"&&<div style={{padding:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>⏰ Pointage</div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
+                      {[{l:"Prévues",v:"174h",c:"#264653"},{l:"Réalisées",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#E76F51"}].map(k=>
+                        <div key={k.l}style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                          <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
+                          <div style={{fontSize:8,color:"#9B6BAA"}}>{k.l}</div>
                         </div>
                       )}
                     </div>
-                    <div style={{background:"#F0FAF4",borderRadius:10,padding:10,marginBottom:8,border:"1px solid #B7E4C7"}}>
-                      <div style={{fontSize:11,fontWeight:700,color:"#2A9D8F",marginBottom:6}}>📍 Aujourd'hui — Leo 🦁</div>
-                      <div style={{display:"flex",justifyContent:"space-around"}}>
-                        {[["Arrivee","07h35","#2A9D8F"],["Depart","—","#8FA3AD"],["Total","—","#264653"]].map(([l,v,co])=>
-                          <div key={l}style={{textAlign:"center"}}><div style={{fontSize:9,color:"#8FA3AD"}}>{l}</div><div style={{fontSize:14,fontWeight:700,color:co}}>{v}</div></div>
-                        )}
-                      </div>
-                    </div>
-                    {[{j:"Lun 14",a:"07h35",d:"17h20",t:"9h45",v:true},{j:"Ven 11",a:"07h30",d:"17h00",t:"9h30",v:true},{j:"Jeu 10",a:"08h00",d:"16h30",t:"8h30",v:false}].map(p=>
-                      <div key={p.j}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 8px",borderRadius:8,background:p.v?"#F0FAF4":"#FFF8F3",marginBottom:4,fontSize:10}}>
-                        <span style={{fontWeight:600,color:"#264653"}}>{p.j}</span>
-                        <span style={{color:"#2A9D8F"}}>↗{p.a}</span>
-                        <span style={{color:"#E76F51"}}>↘{p.d}</span>
-                        <span style={{fontWeight:700,color:"#264653"}}>{p.t}</span>
-                        <span>{p.v?"✅":"⏳"}</span>
-                      </div>
-                    )}
-                    <div style={{background:"#264653",borderRadius:8,padding:"8px 0",textAlign:"center",marginTop:8,cursor:"pointer"}}>
-                      <span style={{color:"#fff",fontSize:11,fontWeight:700}}>📱 QR Code pointage</span>
+                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:5}}>📍 Aujourd'hui</div>
+                    {D.pointages.filter(p=>p.date===TODAY_STR).map(p=>{
+                      const e=D.enfants.find(e=>e.id===p.eId);
+                      return <div key={p.id}style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:16}}>{e?.emoji}</span>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:10,fontWeight:700,color:"#264653"}}>{e?.prenom}</div>
+                          <div style={{fontSize:9,color:"#9B6BAA"}}>↗ {p.arr} {p.dep?`→ ↘ ${p.dep}`:""}</div>
+                        </div>
+                        <div style={{fontSize:10,fontWeight:700,color:p.tot?"#C4714A":"#ccc"}}>{p.tot||"—"}</div>
+                      </div>;
+                    })}
+                    <div style={{background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:10,padding:"8px 0",textAlign:"center",marginTop:8,cursor:"pointer"}}>
+                      <span style={{color:"#fff",fontSize:10,fontWeight:700}}>📱 Scanner QR Code parent</span>
                     </div>
                   </div>}
 
-                  {/* Salaire */}
-                  {activeDemo==="salaire"&&<div>
-                    <div style={{fontSize:14,fontWeight:700,color:"#264653",marginBottom:10}}>💰 Salaire — Mars 2024</div>
+                  {/* MESSAGERIE */}
+                  {activeDemo==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>💬 Messagerie</div>
+                    <div style={{display:"flex",gap:5,marginBottom:8}}>
+                      {D.enfants.map(e=>{
+                        const unread=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
+                        return <div key={e.id}style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative"}}>
+                          <span style={{fontSize:13}}>{e.emoji}</span>
+                          <span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#264653"}}>{e.prenom}</span>
+                          {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#E76F51",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
+                        </div>;
+                      })}
+                    </div>
+                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto"}}>
+                      {D.messages.filter(m=>m.eId==="e1").map(m=><div key={m.id}style={{
+                        alignSelf:m.de==="parent"?"flex-start":"flex-end",
+                        background:m.de==="parent"?"#F4F0FB":"linear-gradient(135deg,#C4714A,#D4824A)",
+                        borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",
+                        padding:"7px 10px",maxWidth:"78%"
+                      }}>
+                        <div style={{fontSize:9,color:m.de==="parent"?"#264653":"#fff",lineHeight:1.5}}>{m.txt}</div>
+                        <div style={{fontSize:7,color:m.de==="parent"?"#9B6BAA":"rgba(255,255,255,.6)",textAlign:"right",marginTop:2}}>{m.h}</div>
+                      </div>)}
+                    </div>
+                    <div style={{display:"flex",gap:5,marginTop:8}}>
+                      <input readOnly placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
+                      <div style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                    </div>
+                  </div>}
+
+                  {/* SALAIRE */}
+                  {activeDemo==="salaire"&&<div style={{padding:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>💰 Salaire — {new Date().toLocaleString("fr-FR",{month:"long",year:"numeric"})}</div>
                     <div style={{display:"flex",gap:4,marginBottom:10}}>
-                      {["Jan","Fev","Mars"].map((m,i)=><div key={m}style={{padding:"4px 10px",borderRadius:6,fontSize:10,fontWeight:600,background:i===2?"#FF9F63":"#F4F7FA",color:i===2?"#fff":"#264653",cursor:"pointer"}}>{m}</div>)}
+                      {["Janv.","Fév.","Mars"].map((m,i)=><div key={m}style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,background:i===2?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===2?"#fff":"#264653",cursor:"pointer"}}>{m}</div>)}
                     </div>
-                    {[["Salaire de base","160h x 4,05","648,00 EUR"],["Indemnite entretien","20j x 3,80","76,00 EUR"],["Heures majorees","8h x 5,06","40,50 EUR"]].map(([l,d,v])=>
-                      <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #E8E4E0",fontSize:11}}>
-                        <div><div style={{fontWeight:600,color:"#264653"}}>{l}</div><div style={{fontSize:9,color:"#8FA3AD"}}>{d}</div></div>
-                        <div style={{fontWeight:700,color:"#2A9D8F"}}>{v}</div>
+                    {[
+                      {l:"Salaire de base",d:"160h × 4,05€",v:"648,00 €"},
+                      {l:"Ind. entretien",d:"20j × 3,80€",v:"76,00 €"},
+                      {l:"Heures majorées",d:"8h × 5,06€",v:"40,50 €"},
+                    ].map(r=><div key={r.l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
+                      <div><div style={{fontWeight:600,color:"#264653"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d}</div></div>
+                      <div style={{fontWeight:700,color:"#C4714A"}}>{r.v}</div>
+                    </div>)}
+                    <div style={{marginTop:8,padding:10,background:"linear-gradient(135deg,rgba(196,113,74,.08),rgba(155,107,170,.08))",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid rgba(196,113,74,.2)"}}>
+                      <span style={{fontSize:11,fontWeight:700,color:"#264653"}}>Total brut</span>
+                      <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>764,50 €</span>
+                    </div>
+                    <div style={{display:"flex",gap:5,marginTop:8}}>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}>
+                        <span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span>
                       </div>
-                    )}
-                    <div style={{marginTop:8,padding:10,background:"#FFF8F3",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:12,fontWeight:700,color:"#264653"}}>Total brut</span>
-                      <span style={{fontSize:18,fontWeight:700,color:"#FF9F63"}}>764,50 EUR</span>
-                    </div>
-                    <div style={{display:"flex",gap:6,marginTop:8}}>
-                      <div style={{flex:1,background:"#264653",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:10,fontWeight:700}}>📥 Bulletin PDF</span></div>
-                      <div style={{flex:1,background:"#2A9D8F",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:10,fontWeight:700}}>🏛️ Export Pajemploi</span></div>
-                    </div>
-                  </div>}
-
-                  {/* Messagerie */}
-                  {activeDemo==="messagerie"&&<div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-                    <div style={{fontSize:14,fontWeight:700,color:"#264653",marginBottom:8}}>💬 Messagerie</div>
-                    <div style={{display:"flex",gap:6,marginBottom:10}}>
-                      {[{n:"Leo",e:"🦁",u:2},{n:"Emma",e:"🌸",u:0},{n:"Lucas",e:"🐻",u:1}].map(c=>
-                        <div key={c.n}style={{display:"flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:8,background:c.n==="Leo"?"#264653":"#F4F7FA",cursor:"pointer",position:"relative"}}>
-                          <span style={{fontSize:14}}>{c.e}</span>
-                          <span style={{fontSize:10,fontWeight:600,color:c.n==="Leo"?"#fff":"#264653"}}>{c.n}</span>
-                          {c.u>0&&<div style={{position:"absolute",top:-4,right:-4,width:14,height:14,borderRadius:7,background:"#E76F51",color:"#fff",fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{c.u}</div>}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:6}}>
-                      <div style={{alignSelf:"flex-start",background:"#F4F7FA",borderRadius:"12px 12px 12px 4px",padding:"8px 12px",maxWidth:"75%"}}>
-                        <div style={{fontSize:10,color:"#264653"}}>Bonjour Marie, est-ce que Leo a bien dormi ?</div>
-                        <div style={{fontSize:8,color:"#8FA3AD",textAlign:"right",marginTop:2}}>09h15</div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}>
+                        <span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span>
                       </div>
-                      <div style={{alignSelf:"flex-end",background:"#264653",borderRadius:"12px 12px 4px 12px",padding:"8px 12px",maxWidth:"75%"}}>
-                        <div style={{fontSize:10,color:"#fff"}}>Oui, sieste de 1h30, reveil en douceur 😊</div>
-                        <div style={{fontSize:8,color:"rgba(255,255,255,.5)",textAlign:"right",marginTop:2}}>11h45</div>
-                      </div>
-                      <div style={{alignSelf:"flex-start",background:"#F4F7FA",borderRadius:"12px 12px 12px 4px",padding:"8px 12px",maxWidth:"75%"}}>
-                        <div style={{fontSize:10,color:"#264653"}}>Super, merci ! A ce soir. 🙏</div>
-                        <div style={{fontSize:8,color:"#8FA3AD",textAlign:"right",marginTop:2}}>11h48</div>
-                      </div>
-                    </div>
-                    <div style={{display:"flex",gap:6,marginTop:8}}>
-                      <input readOnly placeholder="Votre message..." style={{flex:1,padding:"7px 10px",borderRadius:8,border:"1px solid #E8E4E0",fontSize:10,background:"#fff"}}/>
-                      <div style={{background:"#2A9D8F",borderRadius:8,padding:"7px 12px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
                     </div>
                   </div>}
 
                 </div>
-                {/* Bottom Navigation */}
-                <div style={{ display: "flex", justifyContent: "space-around", padding: "6px 0", borderTop: "1px solid #E8E4E0", background: "#fff", flexShrink: 0 }}>
-                  {[{id:"accueil",ic:"🏠",l:"Accueil"},{id:"journal",ic:"📋",l:"Journal"},{id:"pointage",ic:"⏰",l:"Pointage"},{id:"salaire",ic:"💰",l:"Salaire"},{id:"messagerie",ic:"💬",l:"Messages"}].map(t=>
-                    <div key={t.id}onClick={()=>setActiveDemo(t.id)}style={{
-                      textAlign:"center",cursor:"pointer",padding:"2px 6px",borderRadius:8,transition:"all .15s",
-                      background:activeDemo===t.id?"#F0FAF4":"transparent"
-                    }}>
-                      <div style={{fontSize:16}}>{t.ic}</div>
-                      <div style={{fontSize:8,fontWeight:activeDemo===t.id?700:400,color:activeDemo===t.id?"#2A9D8F":"#8FA3AD"}}>{t.l}</div>
+
+                {/* Bottom Nav dans le téléphone */}
+                <div style={{ display: "flex", justifyContent: "space-around", padding: "4px 4px 6px", borderTop: "1px solid rgba(196,113,74,.12)", background: "rgba(255,255,255,.98)", flexShrink: 0 }}>
+                  {[{id:"accueil",ic:"🏠",l:"Accueil"},{id:"journal",ic:"📋",l:"Journal"},{id:"pointage",ic:"⏰",l:"Pointage"},{id:"messagerie",ic:"💬",l:"Messages"},{id:"salaire",ic:"💰",l:"Salaire"}].map(t=>
+                    <div key={t.id} onClick={()=>setActiveDemo(t.id)} style={{ textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:activeDemo===t.id?"rgba(196,113,74,.1)":"transparent",flex:1 }}>
+                      <div style={{fontSize:17}}>{t.ic}</div>
+                      <div style={{fontSize:7,fontWeight:activeDemo===t.id?700:400,color:activeDemo===t.id?"#C4714A":"#9B6BAA"}}>{t.l}</div>
                     </div>
                   )}
                 </div>
               </div>
               {/* Home indicator */}
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
-                <div style={{ width: 100, height: 4, background: "rgba(255,255,255,.3)", borderRadius: 2 }} />
+                <div style={{ width: 90, height: 4, background: "rgba(255,255,255,.25)", borderRadius: 2 }} />
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -9076,12 +9137,22 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
 
           <BOCard title="Navigation" icon="🧭">
-            <BOField label="Fond boutons nav"><BOColorInput k="navBtnBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur texte boutons"><BOColorInput k="navBtnColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Bordure boutons"><BOColorInput k="navBtnBorder" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond bouton Connexion"><BOColorInput k="navConnexionBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond bouton CTA (Commencer)"><BOColorInput k="navCtaBg" state={cfg.landing} setter={setLand}/></BOField>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Boutons desktop (défauts partagés)</div>
+            <BOField label="Fond par défaut (tous boutons)"><BOColorInput k="navBtnBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur texte (tous boutons)"><BOColorInput k="navBtnColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Bordure (tous boutons)"><BOColorInput k="navBtnBorder" state={cfg.landing} setter={setLand}/></BOField>
+            <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Boutons individuels (écrase le défaut)</div>
+            <BOField label="Fond — Fonctionnalités"><BOColorInput k="navFonctionBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Fond — Tarifs"><BOColorInput k="navTarifsBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Fond — Boutique"><BOColorInput k="navBoutiqueBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Fond — Connexion"><BOColorInput k="navConnexionBg" state={cfg.landing} setter={setLand}/></BOField>
+            <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Bouton CTA (Commencer)</div>
+            <BOField label="Fond CTA"><BOColorInput k="navCtaBg" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Couleur texte CTA"><BOColorInput k="navCtaColor" state={cfg.landing} setter={setLand}/></BOField>
+            <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Hamburger mobile</div>
+            <BOField label="Fond hamburger"><BOColorInput k="navHamburgerBg" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur icone hamburger"><BOColorInput k="navHamburgerColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Bordure hamburger"><BOColorInput k="navHamburgerBorder" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
 
           <BOCard title="Textes du hero" icon="📝">
@@ -10099,6 +10170,7 @@ export default function App(){
           showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
         <BandeauHorsLigne/>
         <div className="content">{renderPage()}</div>
+        <BottomNav groups={groups} page={page} setPage={setPage} pmiNonLus={role==="parent"?0:pmiNonLus}/>
       </div>
     </>
   );
