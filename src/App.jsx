@@ -6272,6 +6272,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
+  const [demoMsg, setDemoMsg] = useState("");
+  const [demoMood, setDemoMood] = useState("😊");
+  const [demoMois, setDemoMois] = useState(2);
+  const [demoLiked, setDemoLiked] = useState(false);
+  const [demoMsgs, setDemoMsgs] = useState(D.messages);
+  const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   const demo = DEMO_SCREENS.find(s => s.id === activeDemo);
   const L = config.landing;
   const T = config.txts;
@@ -6508,9 +6514,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "flex", gap: 32, justifyContent: "center", alignItems: "flex-start", flexWrap: "wrap" }}>
-            {/* Tabs gauche */}
-            <div className="lp-demo-tabs" style={{ paddingTop: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
+            {/* Pills de navigation au-dessus du téléphone */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
               {[
                 {id:"accueil",ic:"🏠",l:"Accueil"},
                 {id:"journal",ic:"📋",l:"Journal"},
@@ -6518,13 +6524,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {id:"messagerie",ic:"💬",l:"Messagerie"},
                 {id:"salaire",ic:"💰",l:"Salaire"},
               ].map(t=><button key={t.id} onClick={()=>setActiveDemo(t.id)} style={{
-                display:"flex",alignItems:"center",gap:8,padding:"10px 16px",borderRadius:12,border:"none",
+                display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:20,border:"none",
                 cursor:"pointer",fontFamily:"inherit",fontSize:13,fontWeight:activeDemo===t.id?700:500,
                 background:activeDemo===t.id?"linear-gradient(135deg,#C4714A,#D4824A)":"rgba(196,113,74,.08)",
-                color:activeDemo===t.id?"#fff":"#6B4F3A",transition:"all .18s",textAlign:"left",
+                color:activeDemo===t.id?"#fff":"#6B4F3A",transition:"all .18s",
                 boxShadow:activeDemo===t.id?"0 4px 14px rgba(196,113,74,.3)":"none",
               }}>
-                <span style={{fontSize:18}}>{t.ic}</span>{t.l}
+                <span style={{fontSize:15}}>{t.ic}</span>{t.l}
               </button>)}
             </div>
 
@@ -6558,11 +6564,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* ACCUEIL */}
                   {activeDemo==="accueil"&&<div style={{padding:10}}>
-                    <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour {D.asmat.prenom} 👋</div>
+                    <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour Marie 👋</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
                       {[
                         {v:D.enfants.length,l:"Enfants",c:"#C4714A"},
-                        {v:D.messages.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},
+                        {v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},
                         {v:"152h",l:"Ce mois",c:"#264653"},
                         {v:"98%",l:"Présence",c:"#2A9D8F"},
                       ].map(k=><div key={k.l}style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
@@ -6572,14 +6578,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     </div>
                     <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
                     {D.enfants.map(e=>{
-                      const pt=D.pointages.find(p=>p.eId===e.id&&p.date===TODAY_STR);
-                      return <div key={e.id}style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8}}>
+                      const estPresent = !!demoArrivee[e.id];
+                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #2A9D8F":"1.5px solid transparent",transition:"all .2s"}}>
                         <span style={{fontSize:20}}>{e.emoji}</span>
                         <div style={{flex:1}}>
                           <div style={{fontSize:11,fontWeight:700,color:"#264653"}}>{e.prenom}</div>
-                          <div style={{fontSize:9,color:"#9B6BAA"}}>{pt?.arr?`Arrivé à ${pt.arr}`:"En attente"}</div>
+                          <div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?`Arrivé à ${demoArrivee[e.id]}`:"Appuyer pour pointer"}</div>
                         </div>
-                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:pt?.arr?"#F0FAF4":"#F9F3FF",color:pt?.arr?"#2A9D8F":"#9B6BAA",fontWeight:700}}>{pt?.arr?"Présent":"Attendu"}</div>
+                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F9F3FF",color:estPresent?"#2A9D8F":"#9B6BAA",fontWeight:700,transition:"all .2s"}}>{estPresent?"Présent ✓":"Attendu"}</div>
                       </div>;
                     })}
                     <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
@@ -6607,14 +6613,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     }}>
                       <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩 Marie":"👪 Parent"} · {t.h}</div>
                       <div style={{fontSize:10,color:"#264653",lineHeight:1.5}}>{t.txt}</div>
-                      <div style={{fontSize:14,marginTop:3}}>{t.mood}</div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                        <div style={{fontSize:14}}>{t.mood}</div>
+                        <button onClick={()=>setDemoLiked(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",fontSize:15,transition:"transform .2s",transform:demoLiked?"scale(1.3)":"scale(1)"}}>{demoLiked?"❤️":"🤍"}</button>
+                      </div>
                     </div>)}
                     <div style={{display:"flex",gap:4,marginBottom:6}}>
-                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m}style={{padding:"3px 6px",borderRadius:6,background:m==="😊"?"#F8F3FF":"#F4F0FB",border:m==="😊"?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:13,cursor:"pointer"}}>{m}</div>)}
+                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m} onClick={()=>setDemoMood(m)} style={{padding:"3px 6px",borderRadius:6,background:m===demoMood?"#F8F3FF":"#F4F0FB",border:m===demoMood?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:13,cursor:"pointer",transition:"all .15s"}}>{m}</div>)}
                     </div>
+                    <div style={{fontSize:8,color:"#9B6BAA",marginBottom:4,textAlign:"center"}}>Humeur sélectionnée : {demoMood}</div>
                     <div style={{display:"flex",gap:5}}>
-                      <input readOnly placeholder="Écrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#264653"}}/>
-                      <div style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} placeholder="Écrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#264653"}}/>
+                      <div onClick={()=>{if(demoMsg.trim()){setDemoMsg("");}}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>Envoyer</div>
                     </div>
                   </div>}
 
@@ -6651,7 +6661,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>💬 Messagerie</div>
                     <div style={{display:"flex",gap:5,marginBottom:8}}>
                       {D.enfants.map(e=>{
-                        const unread=D.messages.filter(m=>m.eId===e.id&&!m.lu).length;
+                        const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;
                         return <div key={e.id}style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative"}}>
                           <span style={{fontSize:13}}>{e.emoji}</span>
                           <span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#264653"}}>{e.prenom}</span>
@@ -6660,7 +6670,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       })}
                     </div>
                     <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto"}}>
-                      {D.messages.filter(m=>m.eId==="e1").map(m=><div key={m.id}style={{
+                      {demoMsgs.filter(m=>m.eId==="e1").map(m=><div key={m.id}style={{
                         alignSelf:m.de==="parent"?"flex-start":"flex-end",
                         background:m.de==="parent"?"#F4F0FB":"linear-gradient(135deg,#C4714A,#D4824A)",
                         borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",
@@ -6671,28 +6681,28 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       </div>)}
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <input readOnly placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
-                      <div style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
+                      <div onClick={()=>{if(demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
                     </div>
                   </div>}
 
                   {/* SALAIRE */}
                   {activeDemo==="salaire"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>💰 Salaire — {new Date().toLocaleString("fr-FR",{month:"long",year:"numeric"})}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>💰 Salaire — {["Janvier","Février","Mars"][demoMois]} {new Date().getFullYear()}</div>
                     <div style={{display:"flex",gap:4,marginBottom:10}}>
-                      {["Janv.","Fév.","Mars"].map((m,i)=><div key={m}style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,background:i===2?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===2?"#fff":"#264653",cursor:"pointer"}}>{m}</div>)}
+                      {["Janv.","Fév.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,background:i===demoMois?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===demoMois?"#fff":"#264653",cursor:"pointer",transition:"all .15s"}}>{m}</div>)}
                     </div>
                     {[
-                      {l:"Salaire de base",d:"160h × 4,05€",v:"648,00 €"},
-                      {l:"Ind. entretien",d:"20j × 3,80€",v:"76,00 €"},
-                      {l:"Heures majorées",d:"8h × 5,06€",v:"40,50 €"},
+                      {l:"Salaire de base",d:[{h:"160h × 4,05€",v:"648,00 €"},{h:"152h × 4,05€",v:"615,60 €"},{h:"168h × 4,05€",v:"680,40 €"}][demoMois]},
+                      {l:"Ind. entretien",d:[{h:"20j × 3,80€",v:"76,00 €"},{h:"19j × 3,80€",v:"72,20 €"},{h:"21j × 3,80€",v:"79,80 €"}][demoMois]},
+                      {l:"Heures majorées",d:[{h:"8h × 5,06€",v:"40,50 €"},{h:"4h × 5,06€",v:"20,25 €"},{h:"12h × 5,06€",v:"60,75 €"}][demoMois]},
                     ].map(r=><div key={r.l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
-                      <div><div style={{fontWeight:600,color:"#264653"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d}</div></div>
-                      <div style={{fontWeight:700,color:"#C4714A"}}>{r.v}</div>
+                      <div><div style={{fontWeight:600,color:"#264653"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d.h}</div></div>
+                      <div style={{fontWeight:700,color:"#C4714A"}}>{r.d.v}</div>
                     </div>)}
                     <div style={{marginTop:8,padding:10,background:"linear-gradient(135deg,rgba(196,113,74,.08),rgba(155,107,170,.08))",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid rgba(196,113,74,.2)"}}>
                       <span style={{fontSize:11,fontWeight:700,color:"#264653"}}>Total brut</span>
-                      <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>764,50 €</span>
+                      <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>{["764,50 €","708,05 €","820,95 €"][demoMois]}</span>
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
                       <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}>
@@ -6722,8 +6732,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
             </div>
           </div>
-          </div>
         </div>
+      </div>
 
       {/* SECTION 3 - TRANSFORMATION */}
       <div className="lp-section" style={{ background: L.section3Bg||"#F8F0FC" }}>
