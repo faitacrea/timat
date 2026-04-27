@@ -1715,12 +1715,13 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
         </div>
         <div className="card"style={{padding:14}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>🧾 Historique factures</div>
-          {[["Février 2024","Émise","672.40€"],["Janvier 2024","Payée","698.10€"],["Décembre 2023","Payée","654.80€"]].map(([m,s,v])=>
+          {isDemoFact?[["Février 2024","Émise","672.40€"],["Janvier 2024","Payée","698.10€"],["Décembre 2023","Payée","654.80€"]].map(([m,s,v])=>
             <div key={m}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
               <span style={{fontSize:13,color:"var(--b)",fontWeight:600}}>{m}</span>
               <span className="badge"style={{background:s==="Payée"?"var(--Sp)":"var(--Gp)",color:s==="Payée"?"var(--S)":"var(--G)"}}>{s}</span>
               <span style={{fontWeight:700,color:"var(--b)"}}>{v}</span>
-            </div>)}
+            </div>)
+          :<div style={{fontSize:12,color:"var(--l)",textAlign:"center",padding:"16px 0"}}>L'historique apparaîtra ici au fil des mois.</div>}
         </div>
       </div>
     </div>}
@@ -6016,6 +6017,7 @@ const GROUPS_AM={
     {id:"bilans_exports",l:"Bilans & Exports",ic:"📊"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",color:"#FF9F63",subs:[
+    {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
@@ -8633,6 +8635,133 @@ function ProjetAccueil({user,role}){
 }
 
 // ========== BOUTIQUE ==========
+function InviterParent({enfants,user}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [email,setEmail]=useState("");
+  const [sending,setSending]=useState(false);
+  const [sent,setSent]=useState(false);
+  const [err,setErr]=useState("");
+  const [toast,setToast]=useState("");
+  const [invitations,setInvitations]=useState([]);
+  const enfant=enfants.find(e=>e.id===selId)||enfants[0];
+
+  // Charger invitations existantes
+  useEffect(()=>{
+    if(!user?.id)return;
+    supabase.from('invitations').select('*').eq('asmat_id',user.id).order('created_at',{ascending:false})
+      .then(({data})=>{if(data)setInvitations(data);});
+  },[user?.id]);
+
+  const envoyer=async()=>{
+    if(!email.trim()||!enfant){setErr("Email et enfant requis.");return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr("Email invalide.");return;}
+    setSending(true);setErr("");
+    try{
+      const res=await fetch('/api/invite-parent',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          emailParent:email.trim(),
+          prenomEnfant:enfant.prenom,
+          prenomAsmat:user?.prenom||"Votre assistante maternelle",
+          asmatId:user?.id,
+          enfantId:enfant.id,
+        })
+      });
+      const data=await res.json();
+      if(data.success||res.ok){
+        setSent(true);
+        setToast("Invitation envoyée à "+email+" ✓");
+        setInvitations(prev=>[{id:"inv"+Date.now(),email_parent:email,prenom_enfant:enfant.prenom,statut:"envoyée",created_at:new Date().toISOString()},...prev]);
+        setEmail("");
+      }else{
+        setErr("Erreur : "+(data.error||"Réessayez."));
+      }
+    }catch(e){setErr("Erreur réseau.");}
+    setSending(false);
+  };
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
+    <PageHeader icon="👪" title="Inviter un parent" sub="Le parent reçoit un email et crée son espace famille"/>
+
+    {/* Sélecteur d'enfant */}
+    {enfants.length>1&&<div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+      {enfants.map(e=><CPill key={e.id} e={e} sel={selId===e.id} onClick={()=>setSelId(e.id)}/>)}
+    </div>}
+
+    <div className="g2">
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {/* Formulaire */}
+        <div className="card" style={{padding:20}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>
+            ✉️ Inviter le parent de {enfant?.prenom}
+          </div>
+          <div style={{fontSize:12,color:"var(--l)",marginBottom:16,lineHeight:1.6}}>
+            Le parent recevra un email avec un lien pour créer son compte et accéder au journal, aux pointages et à la messagerie.
+          </div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Email du parent *</label>
+            <input className="inp" type="email" value={email}
+              onChange={e=>{setEmail(e.target.value);setErr("");setSent(false);}}
+              placeholder="parent@email.fr"
+              onKeyDown={e=>e.key==="Enter"&&envoyer()}/>
+          </div>
+          {err&&<div style={{color:"var(--R)",fontSize:12,marginBottom:10,padding:"8px 12px",background:"var(--Rp)",borderRadius:8}}>{err}</div>}
+          {sent&&<div style={{color:"var(--S)",fontSize:12,marginBottom:10,padding:"8px 12px",background:"var(--Sp)",borderRadius:8,fontWeight:600}}>
+            ✅ Invitation envoyée ! Le parent a reçu un email.
+          </div>}
+          <button className="btn bT" style={{width:"100%",justifyContent:"center"}}
+            onClick={envoyer} disabled={sending||!email.trim()}>
+            {sending?"⏳ Envoi en cours...":"📧 Envoyer l'invitation"}
+          </button>
+        </div>
+
+        {/* Lien direct (backup) */}
+        <div className="card" style={{padding:16,background:"var(--Bp)",border:"1px solid var(--B)"}}>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:8}}>🔗 Ou partagez ce lien directement</div>
+          <div style={{fontSize:11,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
+            Envoyez ce lien par SMS, WhatsApp ou autre. Le parent n'a qu'à créer son compte.
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <div style={{flex:1,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              {window.location.origin}/?invite={user?.id?.slice(0,8)}
+            </div>
+            <button className="btn bG" style={{fontSize:11,padding:"6px 10px",flexShrink:0}}
+              onClick={()=>{navigator.clipboard?.writeText(window.location.origin+"/?invite="+user?.id?.slice(0,8));setToast("Lien copié ✓");}}>
+              📋 Copier
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Historique invitations */}
+      <div className="card" style={{padding:16}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Invitations envoyées</div>
+        {invitations.length===0
+          ?<div style={{textAlign:"center",padding:"24px 0",color:"var(--l)"}}>
+            <div style={{fontSize:32,marginBottom:8}}>📭</div>
+            <div style={{fontSize:13}}>Aucune invitation envoyée pour le moment</div>
+          </div>
+          :<div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {invitations.map((inv,i)=><div key={inv.id||i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
+              <div>
+                <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{inv.email_parent||inv.email}</div>
+                <div style={{fontSize:11,color:"var(--l)"}}>
+                  Pour {inv.prenom_enfant||enfant?.prenom} · {new Date(inv.created_at).toLocaleDateString("fr-FR")}
+                </div>
+              </div>
+              <span className="badge" style={{
+                background:inv.statut==="acceptée"?"var(--Sp)":"var(--Gp)",
+                color:inv.statut==="acceptée"?"var(--S)":"var(--G)",fontSize:11
+              }}>{inv.statut==="acceptée"?"✅ Acceptée":"⏳ En attente"}</span>
+            </div>)}
+          </div>}
+      </div>
+    </div>
+  </div>;
+}
+
 function Boutique({user}){
   const [toast,setToast]=useState("");
   const isPro=user?.subscription_status==="pro";
@@ -10174,17 +10303,17 @@ export default function App(){
     }catch(e){alert("Erreur lors de l'ouverture du portail.");}
   };
 
- // //  Utiliser donnes relles si disponibles sinon dmo
+ // Utiliser données réelles si disponibles, sinon démo
+  // Ne pas afficher les données démo pendant le chargement (évite le flash)
+  const isDemo=user?.id?.startsWith?.("demo-")||user?.isDemo;
   const hasRealData=enfantsDB.length>0;
-  // Pour les démos, parentId="p1/p2/p3" correspond à user.id
-  // Pour les vrais comptes Supabase, fallback sur l'email
-  const enfants=hasRealData?enfantsDB:(role==="asmat"?D.enfants:(()=>{
+  const enfants=dbLoading&&!isDemo?[]:(hasRealData?enfantsDB:(isDemo||role==="asmat"?D.enfants:(()=>{
     const byId=D.enfants.filter(e=>e.parentId===user.id);
     if(byId.length>0)return byId;
     const parentDemo=D.parents.find(p=>p.email===user.email);
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
     return [];
-  })());
+  })()));
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
@@ -10219,6 +10348,7 @@ export default function App(){
       case "boutique": return <Boutique user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <FAQ role={role}/>;
+      case "inviter_parent": return <InviterParent enfants={enfants} user={user}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
