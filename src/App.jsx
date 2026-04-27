@@ -4024,6 +4024,108 @@ function CommunicationPMI({role,user,hasRealData}){
 }
 
 //
+function BandeauInstall(){
+  const [show,setShow]=useState(false);
+  const [isIOS,setIsIOS]=useState(false);
+  const [showGuide,setShowGuide]=useState(false);
+  const [deferredPrompt,setDeferredPrompt]=useState(null);
+
+  useEffect(()=>{
+    // Déjà installée ? Ne pas afficher
+    if(window.matchMedia('(display-mode: standalone)').matches)return;
+    const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    setIsIOS(ios);
+    if(ios){
+      // Sur iOS, afficher après 3s
+      const t=setTimeout(()=>setShow(true),3000);
+      return()=>clearTimeout(t);
+    }
+    // Sur Android/Chrome, écouter l'événement
+    const handler=(e)=>{e.preventDefault();setDeferredPrompt(e);setShow(true);};
+    window.addEventListener('beforeinstallprompt',handler);
+    return()=>window.removeEventListener('beforeinstallprompt',handler);
+  },[]);
+
+  const installer=async()=>{
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      const{outcome}=await deferredPrompt.userChoice;
+      if(outcome==='accepted')setShow(false);
+      setDeferredPrompt(null);
+    }else{
+      setShowGuide(true);
+    }
+  };
+
+  if(!show)return null;
+
+  return <>
+    {/* Bandeau */}
+    <div style={{
+      background:"linear-gradient(135deg,var(--T),var(--S))",
+      padding:"8px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0,
+      position:"relative",zIndex:50,
+    }}>
+      <span style={{fontSize:20}}>📲</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>Installer TiMat sur votre téléphone</div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,.75)"}}>Accès rapide depuis votre écran d'accueil</div>
+      </div>
+      <button onClick={installer} style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:700,color:"#fff",flexShrink:0}}>
+        Installer
+      </button>
+      <button onClick={()=>setShow(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.7)",cursor:"pointer",fontSize:16,padding:4,flexShrink:0}}>✕</button>
+    </div>
+
+    {/* Guide iOS */}
+    {showGuide&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:300,padding:16}}
+      onClick={e=>e.target===e.currentTarget&&setShowGuide(false)}>
+      <div style={{background:"var(--w)",borderRadius:"20px 20px 0 0",padding:"24px 20px 32px",width:"100%",maxWidth:480}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:36,marginBottom:8}}>📲</div>
+          <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:4}}>Installer TiMat</div>
+          <div style={{fontSize:13,color:"var(--l)"}}>Ajoutez l'icône sur votre écran d'accueil</div>
+        </div>
+        {isIOS?<>
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+            {[
+              ["1","Appuyez sur le bouton Partager","📤","En bas de Safari (icône carré avec flèche)"],
+              ["2","Faites défiler vers le bas","👆","Dans le menu qui s'ouvre"],
+              ["3","Appuyez sur \"Sur l'écran d'accueil\"","➕","L'icône TiMat apparaîtra sur votre écran"],
+            ].map(([n,t,ic,desc])=><div key={n} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"10px 14px",background:"var(--c)",borderRadius:12}}>
+              <div style={{width:28,height:28,borderRadius:"50%",background:"var(--T)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>{n}</div>
+              <div>
+                <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{ic} {t}</div>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{desc}</div>
+              </div>
+            </div>)}
+          </div>
+          <div style={{padding:"10px 14px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)",marginBottom:16}}>
+            💡 Fonctionne uniquement sur <strong>Safari</strong>. Si vous utilisez Chrome ou Firefox sur iPhone, ouvrez d'abord ce lien dans Safari.
+          </div>
+        </>:<>
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+            {[
+              ["1","Appuyez sur les 3 points ⋮","En haut à droite de Chrome"],
+              ["2","Appuyez sur \"Ajouter à l'écran d'accueil\"","Dans le menu déroulant"],
+              ["3","Confirmez en appuyant sur \"Ajouter\"","L'icône TiMat apparaîtra"],
+            ].map(([n,t,desc])=><div key={n} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"10px 14px",background:"var(--c)",borderRadius:12}}>
+              <div style={{width:28,height:28,borderRadius:"50%",background:"var(--T)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>{n}</div>
+              <div>
+                <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{desc}</div>
+              </div>
+            </div>)}
+          </div>
+        </>}
+        <button onClick={()=>setShowGuide(false)} style={{width:"100%",background:"var(--T)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"inherit"}}>
+          Compris ! ✓
+        </button>
+      </div>
+    </div>}
+  </>;
+}
+
 function BandeauHorsLigne(){
   const [online,setOnline]=useState(true);
   const [syncing,setSyncing]=useState(false);
@@ -10152,6 +10254,7 @@ export default function App(){
           notifNonLus={notifs.filter(n=>(!n.roles||n.roles.includes(role))&&!n.lu).length} notifs={notifs} setNotifs={setNotifs}
           showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
         <BandeauHorsLigne/>
+        <BandeauInstall/>
         <div className="content">{renderPage()}</div>
         <BottomNav groups={groups} page={page} setPage={setPage} pmiNonLus={role==="parent"?0:pmiNonLus}/>
       </div>
