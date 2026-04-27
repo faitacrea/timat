@@ -4555,7 +4555,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
   return <div className="fi">
     <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. Pole Emploi",ic:"📋"},{id:"attestation_fiscale",l:"Att. fiscale",ic:"📑"},{id:"export",l:"Export dossier",ic:"📦"}].map(s=>
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. Pole Emploi",ic:"📋"},{id:"attestation_fiscale",l:"Att. fiscale",ic:"📑"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -4568,7 +4568,6 @@ function DocumentsComplet({enfants,role,pEId,user}){
     {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {sec==="attestation_pe"&&<AttestationPoleEmploi enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {sec==="attestation_fiscale"&&<AttestationFiscale enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {sec==="export"&&<ExportDonnees enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
 
