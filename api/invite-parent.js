@@ -16,29 +16,29 @@ export default async function handler(req, res) {
 
   try {
     const { emailParent, prenomEnfant, prenomAsmat, asmatId, enfantId } = req.body;
+    if (!emailParent) return res.status(400).json({ error: "Email requis" });
 
-    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(emailParent, {
+    await supabase.auth.admin.inviteUserByEmail(emailParent, {
       redirectTo: "https://timat-rho.vercel.app?role=parent",
       data: { role: "parent", prenom_enfant: prenomEnfant, asmat_id: asmatId, enfant_id: enfantId }
     });
 
-      return res.status(500).json({ error: inviteError.message });
-    }
+    const html = [
+      "<h2>Bienvenue sur TiMat</h2>",
+      "<p>" + (prenomAsmat || "Votre assistante maternelle") + " vous invite a suivre le quotidien de " + (prenomEnfant || "votre enfant") + " sur TiMat.</p>",
+      "<p><a href='https://timat-rho.vercel.app?role=parent' style='background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;'>Acceder a mon espace parent</a></p>"
+    ].join("");
 
     const { error: emailError } = await resend.emails.send({
       from: "TiMat <onboarding@resend.dev>",
       to: emailParent,
       subject: "Votre assistante maternelle vous invite sur TiMat",
-      html: "<h2>Bienvenue sur TiMat 🌿</h2><p>" + (prenomAsmat || "Votre assistante maternelle") + " vous invite a suivre le quotidien de " + (prenomEnfant || "votre enfant") + " sur TiMat.</p><p><a href="https://timat-rho.vercel.app?role=parent" style="background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">Acceder a mon espace parent</a></p>"
+      html: html
     });
 
     if (emailError) {
       console.error("Resend error:", emailError);
       return res.status(500).json({ error: emailError.message });
-    }
-
-    if (enfantId && inviteData?.user?.id) {
-      await supabase.from("enfants").update({ parent_id: inviteData.user.id }).eq("id", enfantId);
     }
 
     await supabase.from("invitations").upsert({
