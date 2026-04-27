@@ -31,7 +31,10 @@ function useSupabaseData(table, enfantId, isDemo, defaultData){
 
 // DATES
 var _D=new Date();
-var TODAY_STR=_D.getFullYear()+"-"+String(_D.getMonth()+1).padStart(2,"0")+"-"+String(_D.getDate()).padStart(2,"0");
+var _y=_D.getFullYear();
+var _mo=String(_D.getMonth()+1).padStart(2,"0");
+var _da=String(_D.getDate()).padStart(2,"0");
+var TODAY_STR=_y+"-"+_mo+"-"+_da;
 var TODAY_H=String(_D.getHours()).padStart(2,"0")+"h"+String(_D.getMinutes()).padStart(2,"0");
 var TODAY_MONTH=String(_D.getMonth()+1).padStart(2,"0");
 var TODAY_YEAR=String(_D.getFullYear());
