@@ -1758,7 +1758,19 @@ function Contrats({enfants,role,pEId}){
     setHasSig(true);};
   const endDraw=()=>setDrawing(false);
   const clearSig=()=>{const c=canvasRef.current;c.getContext("2d").clearRect(0,0,c.width,c.height);setHasSig(false);};
-  const signer=()=>{if(!hasSig)return;setSignes(p=>({...p,[enfant.id]:true}));setToast("Contrat signé électroniquement ✓");};
+  const signer=async()=>{
+    if(!hasSig)return;
+    // Sauvegarder la signature dans Supabase
+    const canvas=canvasRef.current;
+    const sigData=canvas?.toDataURL("image/png");
+    await supabase.from("contrats").update({
+      signe_asmat:true,
+      date_signature_asmat:new Date().toISOString(),
+      signature_asmat_data:sigData||null,
+    }).eq("enfant_id",enfant.id);
+    setSignes(p=>({...p,[enfant.id]:true}));
+    setToast("Contrat signé et enregistré ✓");
+  };
   const addMod=()=>{if(!modDet.detail.trim())return;
     setMods(p=>({...p,[enfant.id]:[{date:TODAY_STR,...modDet,statut:"En attente"},...(p[enfant.id]||[])]}));
     setModDet({type:"Horaire",detail:""});setShowModale(false);};
@@ -2616,8 +2628,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
           </div>
           <div style={{textAlign:"right",fontSize:11}}>
             <div style={{fontWeight:700,color:"var(--b)"}}>Employeur</div>
-            <div style={{color:"var(--m)"}}>{enfant?.prenomParent||"Sophie Martin"}</div>
-            <div style={{color:"var(--l)"}}>N° Pajemploi : PAJ-2024-75015</div>
+            <div style={{color:"var(--m)"}}>{D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent"} {D.parents.find(p=>p.id===enfant?.parentId)?.nom||""}</div>
+            <div style={{color:"var(--l)"}}>N° Pajemploi : à renseigner sur pajemploi.fr</div>
           </div>
         </div>
         <div style={{marginTop:10,display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,fontSize:11}}>
@@ -4025,105 +4037,107 @@ function CommunicationPMI({role,user,hasRealData}){
 }
 
 //
-function BandeauInstall(){
-  const [show,setShow]=useState(false);
-  const [isIOS,setIsIOS]=useState(false);
-  const [showGuide,setShowGuide]=useState(false);
+// Logique d'installation PWA partagée
+function useInstallPWA(){
   const [deferredPrompt,setDeferredPrompt]=useState(null);
+  const [isInstalled,setIsInstalled]=useState(false);
+  const [isIOS]=useState(()=>/iphone|ipad|ipod/i.test(navigator.userAgent));
 
   useEffect(()=>{
-    // Déjà installée ? Ne pas afficher
-    if(window.matchMedia('(display-mode: standalone)').matches)return;
-    const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    setIsIOS(ios);
-    if(ios){
-      // Sur iOS, afficher après 3s
-      const t=setTimeout(()=>setShow(true),3000);
-      return()=>clearTimeout(t);
-    }
-    // Sur Android/Chrome, écouter l'événement
-    const handler=(e)=>{e.preventDefault();setDeferredPrompt(e);setShow(true);};
+    if(window.matchMedia('(display-mode: standalone)').matches){setIsInstalled(true);return;}
+    const handler=(e)=>{e.preventDefault();setDeferredPrompt(e);};
     window.addEventListener('beforeinstallprompt',handler);
     return()=>window.removeEventListener('beforeinstallprompt',handler);
   },[]);
 
-  const installer=async()=>{
+  const install=async(cb)=>{
     if(deferredPrompt){
       deferredPrompt.prompt();
       const{outcome}=await deferredPrompt.userChoice;
-      if(outcome==='accepted')setShow(false);
-      setDeferredPrompt(null);
-    }else{
-      setShowGuide(true);
+      if(outcome==='accepted'){setIsInstalled(true);setDeferredPrompt(null);}
     }
+    cb&&cb();
   };
 
-  if(!show)return null;
+  return{deferredPrompt,isInstalled,isIOS,install};
+}
+
+function InstallButton(){
+  const {deferredPrompt,isInstalled,isIOS,install}=useInstallPWA();
+  const [showGuide,setShowGuide]=useState(false);
+
+  if(isInstalled)return <div style={{fontSize:12,color:"var(--S)",fontWeight:600}}>✅ TiMat est déjà installé sur votre appareil</div>;
 
   return <>
-    {/* Bandeau */}
-    <div style={{
-      background:"linear-gradient(135deg,var(--T),var(--S))",
-      padding:"8px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0,
-      position:"relative",zIndex:50,
-    }}>
-      <span style={{fontSize:20}}>📲</span>
-      <div style={{flex:1}}>
-        <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>Installer TiMat sur votre téléphone</div>
-        <div style={{fontSize:10,color:"rgba(255,255,255,.75)"}}>Accès rapide depuis votre écran d'accueil</div>
+    <button className="btn bT" style={{width:"100%",justifyContent:"center"}}
+      onClick={()=>install(()=>{if(!deferredPrompt)setShowGuide(true);})}>
+      📲 Installer TiMat sur cet appareil
+    </button>
+    {showGuide&&<InstallGuide isIOS={isIOS} onClose={()=>setShowGuide(false)}/>}
+  </>;
+}
+
+function InstallGuide({isIOS,onClose}){
+  return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:300,padding:16}}
+    onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={{background:"var(--w)",borderRadius:"20px 20px 0 0",padding:"24px 20px 32px",width:"100%",maxWidth:480}}>
+      <div style={{textAlign:"center",marginBottom:20}}>
+        <div style={{fontSize:36,marginBottom:8}}>📲</div>
+        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:4}}>Installer TiMat</div>
+        <div style={{fontSize:13,color:"var(--l)"}}>Ajoutez l'icône sur votre écran d'accueil</div>
       </div>
-      <button onClick={installer} style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:700,color:"#fff",flexShrink:0}}>
+      {isIOS?<div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+        {[["1","📤 Appuyez sur Partager","En bas de Safari"],["2","👆 Faites défiler","Dans le menu"],["3","➕ Sur l'écran d'accueil","L'icône TiMat apparaîtra"]].map(([n,t,d])=>
+          <div key={n} style={{display:"flex",gap:12,padding:"10px 14px",background:"var(--c)",borderRadius:12}}>
+            <div style={{width:28,height:28,borderRadius:"50%",background:"var(--T)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,flexShrink:0}}>{n}</div>
+            <div><div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div><div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
+          </div>)}
+        <div style={{padding:"10px 14px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)"}}>
+          💡 Fonctionne uniquement sur <strong>Safari</strong>
+        </div>
+      </div>:<div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+        {[["1","⋮ Appuyez sur les 3 points","En haut à droite de Chrome"],["2","Ajouter à l'écran d'accueil","Dans le menu"],["3","Confirmer","L'icône TiMat apparaîtra"]].map(([n,t,d])=>
+          <div key={n} style={{display:"flex",gap:12,padding:"10px 14px",background:"var(--c)",borderRadius:12}}>
+            <div style={{width:28,height:28,borderRadius:"50%",background:"var(--T)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,flexShrink:0}}>{n}</div>
+            <div><div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div><div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
+          </div>)}
+      </div>}
+      <button onClick={onClose} style={{width:"100%",background:"var(--T)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"inherit"}}>Compris ✓</button>
+    </div>
+  </div>;
+}
+
+function BandeauInstall(){
+  const {deferredPrompt,isInstalled,isIOS,install}=useInstallPWA();
+  const [show,setShow]=useState(false);
+  const [showGuide,setShowGuide]=useState(false);
+
+  useEffect(()=>{
+    if(isInstalled)return;
+    // Afficher sur iOS après 5s, sur Android quand le prompt est disponible
+    if(isIOS){const t=setTimeout(()=>setShow(true),5000);return()=>clearTimeout(t);}
+  },[isInstalled,isIOS]);
+
+  useEffect(()=>{
+    if(deferredPrompt)setShow(true);
+  },[deferredPrompt]);
+
+  if(!show||isInstalled)return null;
+
+  return <>
+    <div style={{background:"linear-gradient(135deg,var(--T),var(--S))",padding:"8px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0,zIndex:50}}>
+      <span style={{fontSize:18}}>📲</span>
+      <div style={{flex:1}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>Installer TiMat sur votre écran d'accueil</div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,.75)"}}>Accès rapide comme une vraie app</div>
+      </div>
+      <button onClick={()=>install(()=>{if(!deferredPrompt)setShowGuide(true);})}
+        style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:700,color:"#fff",flexShrink:0}}>
         Installer
       </button>
-      <button onClick={()=>setShow(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.7)",cursor:"pointer",fontSize:16,padding:4,flexShrink:0}}>✕</button>
+      <button onClick={()=>setShow(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.7)",cursor:"pointer",fontSize:16,padding:4}}>✕</button>
     </div>
-
-    {/* Guide iOS */}
-    {showGuide&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:300,padding:16}}
-      onClick={e=>e.target===e.currentTarget&&setShowGuide(false)}>
-      <div style={{background:"var(--w)",borderRadius:"20px 20px 0 0",padding:"24px 20px 32px",width:"100%",maxWidth:480}}>
-        <div style={{textAlign:"center",marginBottom:20}}>
-          <div style={{fontSize:36,marginBottom:8}}>📲</div>
-          <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:4}}>Installer TiMat</div>
-          <div style={{fontSize:13,color:"var(--l)"}}>Ajoutez l'icône sur votre écran d'accueil</div>
-        </div>
-        {isIOS?<>
-          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
-            {[
-              ["1","Appuyez sur le bouton Partager","📤","En bas de Safari (icône carré avec flèche)"],
-              ["2","Faites défiler vers le bas","👆","Dans le menu qui s'ouvre"],
-              ["3","Appuyez sur \"Sur l'écran d'accueil\"","➕","L'icône TiMat apparaîtra sur votre écran"],
-            ].map(([n,t,ic,desc])=><div key={n} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"10px 14px",background:"var(--c)",borderRadius:12}}>
-              <div style={{width:28,height:28,borderRadius:"50%",background:"var(--T)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>{n}</div>
-              <div>
-                <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{ic} {t}</div>
-                <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{desc}</div>
-              </div>
-            </div>)}
-          </div>
-          <div style={{padding:"10px 14px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)",marginBottom:16}}>
-            💡 Fonctionne uniquement sur <strong>Safari</strong>. Si vous utilisez Chrome ou Firefox sur iPhone, ouvrez d'abord ce lien dans Safari.
-          </div>
-        </>:<>
-          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
-            {[
-              ["1","Appuyez sur les 3 points ⋮","En haut à droite de Chrome"],
-              ["2","Appuyez sur \"Ajouter à l'écran d'accueil\"","Dans le menu déroulant"],
-              ["3","Confirmez en appuyant sur \"Ajouter\"","L'icône TiMat apparaîtra"],
-            ].map(([n,t,desc])=><div key={n} style={{display:"flex",gap:12,alignItems:"flex-start",padding:"10px 14px",background:"var(--c)",borderRadius:12}}>
-              <div style={{width:28,height:28,borderRadius:"50%",background:"var(--T)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>{n}</div>
-              <div>
-                <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div>
-                <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{desc}</div>
-              </div>
-            </div>)}
-          </div>
-        </>}
-        <button onClick={()=>setShowGuide(false)} style={{width:"100%",background:"var(--T)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"inherit"}}>
-          Compris ! ✓
-        </button>
-      </div>
-    </div>}
+    {showGuide&&<InstallGuide isIOS={isIOS} onClose={()=>setShowGuide(false)}/>}
   </>;
 }
 
@@ -4317,9 +4331,30 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           <span style={{color:"var(--l)"}}>{l}</span>
           <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
         </div>)}
+        {/* Code postal — nécessaire pour détecter la PMI */}
+        {user?.role==="asmat"&&<div style={{marginTop:12}}>
+          <label className="lbl">Code postal (pour votre PMI)</label>
+          <div style={{display:"flex",gap:8}}>
+            <input className="inp" defaultValue={user?.code_postal||""} id="cp-input" placeholder="ex: 94230" style={{flex:1}}/>
+            <button className="btn bT" style={{fontSize:12}} onClick={async()=>{
+              const cp=document.getElementById("cp-input")?.value?.trim();
+              if(!cp)return;
+              await supabase.from("profiles").update({code_postal:cp}).eq("id",user.id);
+              setToast("Code postal enregistré ✓ — PMI mise à jour");
+            }}>Sauvegarder</button>
+          </div>
+          {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>✅ Code postal actuel : {user.code_postal}</div>}
+        </div>}
       </div>
 
-      {/* Pages légales */}
+      {/* Installation PWA */}
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>📲 Installer TiMat sur votre téléphone</div>
+        <div style={{fontSize:12,color:"var(--l)",marginBottom:12,lineHeight:1.6}}>
+          Ajoutez TiMat sur votre écran d'accueil pour y accéder comme une vraie application, sans passer par le navigateur.
+        </div>
+        <InstallButton/>
+      </div>
       <div className="card"style={{padding:20}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Légal & RGPD</div>
         {[
@@ -4555,6 +4590,34 @@ function SanteComplete({enfants,role,pEId}){
   const ageActuel=enfant?Math.round((new Date()-new Date(enfant.naissance))/2592000000):12;
   const prochainsVaccins=VACCINS_CALENDRIER.filter(v=>!v.fait&&v.age_mois<=ageActuel+3);
 
+  // Charger vaccins depuis Supabase
+  useEffect(()=>{
+    if(!enfant?.id||!isRealEnfant)return;
+    supabase.from("vaccins").select("*").eq("enfant_id",enfant.id).then(({data})=>{
+      if(data&&data.length>0){
+        setVacsState(VAC_BASE.map(v=>{
+          const saved=data.find(d=>d.nom===v.nom);
+          return saved?{...v,fait:saved.fait}:v;
+        }));
+      }
+    });
+  },[enfant?.id]);
+
+  const toggleVaccin=async(i)=>{
+    const updated=[...VACCINS_CALENDRIER];
+    updated[i]={...updated[i],fait:!updated[i].fait};
+    setVacsState(updated);
+    if(isRealEnfant&&enfant?.id){
+      await supabase.from("vaccins").upsert({
+        enfant_id:enfant.id,
+        nom:updated[i].nom,
+        age_mois:updated[i].age_mois,
+        fait:updated[i].fait,
+        updated_at:new Date().toISOString(),
+      },{onConflict:"enfant_id,nom"});
+    }
+  };
+
   const secs=[
     {id:"sante",l:"Santé",ic:"🏥"},
     {id:"vaccins",l:"Vaccins",ic:"💉",badge:prochainsVaccins.length},
@@ -4603,10 +4666,7 @@ function SanteComplete({enfants,role,pEId}){
             background:v.fait?"var(--Sp)":enRetard?"var(--Rp)":proche?"var(--Gp)":"var(--c)",
             border:(v.fait?"1px solid var(--Sl)":enRetard?"1px solid var(--R)":proche?"1px solid var(--G)":"1px solid var(--br)"),
             cursor:"pointer",transition:"all .2s",
-          }}onClick={()=>{
-            const updated=[...VACCINS_CALENDRIER];
-            updated[i]={...updated[i],fait:!updated[i].fait};
-            setVacsState(updated);
+          }}onClick={()=>toggleVaccin(i)}>
           }}>
             <span style={{fontSize:20,flexShrink:0}}>{v.fait?"✅":enRetard?"❌":proche?"⏰":"⏳"}</span>
             <div style={{flex:1}}>
