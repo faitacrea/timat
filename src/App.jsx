@@ -10463,7 +10463,7 @@ export default function App(){
   // Ne pas afficher les données démo pendant le chargement (évite le flash)
   const isDemo=user?.id?.startsWith?.("demo-")||user?.isDemo;
   const hasRealData=enfantsDB.length>0;
-  const enfants=dbLoading&&!isDemo?[]:(hasRealData?enfantsDB:(isDemo||role==="asmat"?D.enfants:(()=>{
+  const enfants=dbLoading&&!isDemo?[]:(hasRealData?enfantsDB:(isDemo?D.enfants:(()=>{
     const byId=D.enfants.filter(e=>e.parentId===user.id);
     if(byId.length>0)return byId;
     const parentDemo=D.parents.find(p=>p.email===user.email);
