@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // DATES
@@ -2585,12 +2585,28 @@ const TAUX_COTISATIONS={
 
 function BulletinSalaire({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [moisSel,setMoisSel]=useState("Mars 2024");
   const [toast,setToast]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat||{};
   const isDemoBull=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+
+  // Générer les mois depuis le début de contrat jusqu'à aujourd'hui
+  const moisDisponibles=useMemo(()=>{
+    const debut=contrat.debut?new Date(contrat.debut):new Date(new Date().getFullYear(),0,1);
+    const now=new Date();
+    const mois=[];
+    const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    let d=new Date(debut.getFullYear(),debut.getMonth(),1);
+    while(d<=now){
+      mois.push(noms[d.getMonth()]+" "+d.getFullYear());
+      d.setMonth(d.getMonth()+1);
+    }
+    return mois.reverse(); // Plus récent en premier
+  },[contrat.debut]);
+
+  const [moisSel,setMoisSel]=useState(()=>moisDisponibles[0]||"");
+
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
   const h=isDemoBull?(D.heures[enfant?.id]||{real:160,prev:174}):{real:hMens,prev:hMens};
   const tauxH=contrat.tauxHoraire||4.05;
@@ -2610,10 +2626,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📜" title="Bulletin de salaire" sub="Bulletin officiel conforme à la convention collective"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);}}/>)}
     </div>}
     <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-      {["Janvier 2024","Février 2024","Mars 2024"].map(m=><button key={m}onClick={()=>setMoisSel(m)}style={{
+      {moisDisponibles.slice(0,6).map(m=><button key={m}onClick={()=>setMoisSel(m)}style={{
         padding:"6px 14px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
         background:moisSel===m?"var(--b)":"transparent",color:moisSel===m?"#fff":"var(--m)",
         borderColor:moisSel===m?"var(--b)":"var(--br)"}}>{m}</button>)}
@@ -4261,7 +4277,7 @@ function SupprimerCompte({onDeleted}){
 }
 
 //
-function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail}){
+function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser}){
   const [toast,setToast]=useState("");
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -4340,10 +4356,16 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
               const cp=document.getElementById("cp-input")?.value?.trim();
               if(!cp)return;
               await supabase.from("profiles").update({code_postal:cp}).eq("id",user.id);
-              setToast("Code postal enregistré ✓ — PMI mise à jour");
+              setUser&&setUser(u=>({...u,code_postal:cp}));
+              // Forcer rechargement page PMI
+              const dep=cp.slice(0,2);
+              const pmi={"75":"PMI Paris 75","92":"PMI Hauts-de-Seine 92","93":"PMI Seine-Saint-Denis 93","94":"PMI Val-de-Marne 94 (L'Haÿ-les-Roses)","91":"PMI Essonne 91","95":"PMI Val-d'Oise 95","77":"PMI Seine-et-Marne 77","78":"PMI Yvelines 78","69":"PMI Métropole de Lyon 69","13":"PMI Bouches-du-Rhône 13","31":"PMI Haute-Garonne 31","33":"PMI Gironde 33","67":"PMI Bas-Rhin 67","59":"PMI Nord 59"}[dep]||"PMI détectée selon département "+dep;
+              setToast("✅ Code postal "+cp+" enregistré — "+pmi+" — Allez dans Outils Pro → PMI pour voir les contacts");
             }}>Sauvegarder</button>
           </div>
-          {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>✅ Code postal actuel : {user.code_postal}</div>}
+          {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
+            ✅ Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
+          </div>}
         </div>}
       </div>
 
@@ -4667,7 +4689,6 @@ function SanteComplete({enfants,role,pEId}){
             border:(v.fait?"1px solid var(--Sl)":enRetard?"1px solid var(--R)":proche?"1px solid var(--G)":"1px solid var(--br)"),
             cursor:"pointer",transition:"all .2s",
           }}onClick={()=>toggleVaccin(i)}>
-          }}>
             <span style={{fontSize:20,flexShrink:0}}>{v.fait?"✅":enRetard?"❌":proche?"⏰":"⏳"}</span>
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
@@ -10392,7 +10413,7 @@ export default function App(){
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
-      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail}/>;
+      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser}/>;
       case "backoffice": return user?.email===ADMIN_EMAIL?<Backoffice user={user} setPage={setPage} appConfig={appConfig} setAppConfig={setAppConfig}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
