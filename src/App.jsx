@@ -161,7 +161,7 @@ function Styles(){return(
     .cday.hol{background:var(--Bp);color:var(--B)}
     /* - TOAST - */
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--b);color:#fff;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;max-width:min(360px,calc(100vw - 32px));animation:toast-in .3s ease;white-space:normal;word-break:break-word}
-    @media(max-width:768px){.toast{bottom:80px;font-size:12px;padding:10px 16px;border-radius:12px}}
+    @media(max-width:768px){.toast{bottom:calc(80px + env(safe-area-inset-bottom, 0px));font-size:12px;padding:10px 16px;border-radius:12px}}
     @keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
     /* - PHOTO GRID - */
     .photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
