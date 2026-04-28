@@ -1880,6 +1880,9 @@ function Contrats({enfants,role,pEId,user}){
     setSignes(p=>({...p,[enfant.id]:true}));
     setDatesSignature(p=>({...p,[enfant.id]:nowIso}));
     setToast("Contrat signé et enregistré ✓");
+    // FIX: Trigger un refresh global pour que enfants[].contrat.signe_asmat soit a jour
+    // (sinon un re-render parent + useEffect [enfants] reecraserait signes a partir de la donnee stale)
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const addMod=()=>{if(!modDet.detail.trim())return;
     setMods(p=>({...p,[enfant.id]:[{date:TODAY_STR,...modDet,statut:"En attente"},...(p[enfant.id]||[])]}));
@@ -10818,13 +10821,18 @@ export default function App(){
   // Ne pas afficher les données démo pendant le chargement (évite le flash)
   const isDemo=user?.id?.startsWith?.("demo-")||user?.isDemo;
   const hasRealData=enfantsDB.length>0;
-  const enfants=dbLoading&&!isDemo?[]:(hasRealData?enfantsDB:(isDemo?D.enfants:(()=>{
-    const byId=D.enfants.filter(e=>e.parentId===user.id);
+  // FIX: useMemo pour eviter de creer une nouvelle reference d'array a chaque render parent
+  // (sinon les useEffect [enfants] dans les composants enfants re-triggent inutilement et ecrasent les states locaux)
+  const enfants=useMemo(()=>{
+    if(dbLoading&&!isDemo)return [];
+    if(hasRealData)return enfantsDB;
+    if(isDemo)return D.enfants;
+    const byId=D.enfants.filter(e=>e.parentId===user?.id);
     if(byId.length>0)return byId;
-    const parentDemo=D.parents.find(p=>p.email===user.email);
+    const parentDemo=D.parents.find(p=>p.email===user?.email);
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
     return [];
-  })()));
+  },[dbLoading,isDemo,hasRealData,enfantsDB,user?.id,user?.email]);
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
