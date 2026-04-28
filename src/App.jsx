@@ -285,8 +285,8 @@ const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"�
 
 //
 function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,background:c+"22",color:c,fontSize:s*.34,minWidth:s}}>{t}</div>}
-function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9,position:"relative"}}>
-  <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div>{badge&&<span style={{position:"absolute",top:-6,right:-6}}>{badge}</span>}</div>}
+function CPill({e,sel,onClick}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9}}>
+  <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div></div>}
 
 function Toast({msg,onClose}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
   return <div className="toast"><span>✅</span>{msg}</div>}
@@ -297,7 +297,6 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
 
 //
 function AccueilAssMat({enfants,setPage,user}){
-  const [showAjout,setShowAjout]=useState(false);
   const pt=D.pointages.filter(p=>p.date===TODAY_STR);
   const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
@@ -312,16 +311,12 @@ function AccueilAssMat({enfants,setPage,user}){
   ];
 
   return <div className="fi">
-    {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
-    <div style={{marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
-      <div>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:4,fontFamily:"'DM Mono',monospace",letterSpacing:".5px"}}>
-          {todayStr().toUpperCase()}
-        </div>
-        <div className="pf"style={{fontSize:26,fontWeight:600,color:"var(--b)",lineHeight:1.2}}>Bonjour {user?.prenom||"Marie"} 👋</div>
-        <div style={{fontSize:13,color:"var(--m)",marginTop:4}}>Votre espace professionnel</div>
+    <div style={{marginBottom:18}}>
+      <div style={{fontSize:11,color:"var(--l)",marginBottom:4,fontFamily:"'DM Mono',monospace",letterSpacing:".5px"}}>
+        {todayStr().toUpperCase()}
       </div>
-      {user&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
+      <div className="pf"style={{fontSize:26,fontWeight:600,color:"var(--b)",lineHeight:1.2}}>Bonjour {user?.prenom||"Marie"} 👋</div>
+      <div style={{fontSize:13,color:"var(--m)",marginTop:4}}>Votre espace professionnel</div>
     </div>
 
     {/* Alerte contrats */}
@@ -1796,16 +1791,13 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
 }
 
 //
-function Contrats({enfants,role,pEId,user}){
+function Contrats({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  // FIX: state hydraté depuis les props (qui viennent de Supabase) au lieu de D.enfants
-  const [signes,setSignes]=useState({});
-  const [datesSignature,setDatesSignature]=useState({});
+  const [signes,setSignes]=useState(()=>Object.fromEntries(D.enfants.map(e=>[e.id,e.signe])));
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
-  const [mods,setMods]=useState({});
+  const [mods,setMods]=useState(()=>Object.fromEntries(D.enfants.map(e=>[e.id,[]])));
   const [showModale,setShowModale]=useState(false);
-  const [showAjout,setShowAjout]=useState(false);
   const [modDet,setModDet]=useState({type:"Horaire",detail:""});
   const [toast,setToast]=useState("");
   const canvasRef=useRef(null);
@@ -1813,76 +1805,33 @@ function Contrats({enfants,role,pEId,user}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
 
-  // FIX: Synchroniser signes/datesSignature avec les données réelles à chaque changement de la liste enfants
-  useEffect(()=>{
-    const sigMap={};
-    const dateMap={};
-    enfants.forEach(e=>{
-      if(e.contrat?.signe_asmat){
-        sigMap[e.id]=true;
-        dateMap[e.id]=e.contrat.date_signature_asmat;
-      }
-    });
-    setSignes(sigMap);
-    setDatesSignature(dateMap);
-  },[enfants]);
-
-  // FIX: S'assurer que selId pointe vers un enfant existant
-  useEffect(()=>{
-    if(!liste.length)return;
-    if(!liste.find(e=>e.id===selId))setSelId(liste[0].id);
-  },[liste,selId]);
-
-  // Helper: récupère la position du pointeur (souris OU tactile) dans le canvas, avec scaling
-  const getPos=(e)=>{
-    const c=canvasRef.current;
-    if(!c)return{x:0,y:0};
-    const r=c.getBoundingClientRect();
-    const pt=e.touches?.[0]||e.changedTouches?.[0]||e;
-    const sx=c.width/r.width;
-    const sy=c.height/r.height;
-    return{x:(pt.clientX-r.left)*sx,y:(pt.clientY-r.top)*sy};
-  };
-
   const startDraw=(e)=>{
-    e.preventDefault?.();
     setDrawing(true);
-    const c=canvasRef.current;if(!c)return;
+    const c=canvasRef.current;const r=c.getBoundingClientRect();
     const ctx=c.getContext("2d");
-    const{x,y}=getPos(e);
     ctx.strokeStyle="#3A2820";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";
-    ctx.beginPath();ctx.moveTo(x,y);};
+    ctx.beginPath();ctx.moveTo(e.clientX-r.left,e.clientY-r.top);};
   const draw=(e)=>{if(!drawing)return;
-    e.preventDefault?.();
-    const c=canvasRef.current;if(!c)return;
+    const c=canvasRef.current;const r=c.getBoundingClientRect();
     const ctx=c.getContext("2d");
-    const{x,y}=getPos(e);
-    ctx.lineTo(x,y);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(x,y);
+    ctx.strokeStyle="#3A2820";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";
+    ctx.lineTo(e.clientX-r.left,e.clientY-r.top);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(e.clientX-r.left,e.clientY-r.top);
     setHasSig(true);};
-  const endDraw=(e)=>{e?.preventDefault?.();setDrawing(false);};
+  const endDraw=()=>setDrawing(false);
   const clearSig=()=>{const c=canvasRef.current;c.getContext("2d").clearRect(0,0,c.width,c.height);setHasSig(false);};
   const signer=async()=>{
     if(!hasSig)return;
     // Sauvegarder la signature dans Supabase
     const canvas=canvasRef.current;
     const sigData=canvas?.toDataURL("image/png");
-    const nowIso=new Date().toISOString();
-    const{error}=await supabase.from("contrats").update({
+    await supabase.from("contrats").update({
       signe_asmat:true,
-      date_signature_asmat:nowIso,
+      date_signature_asmat:new Date().toISOString(),
       signature_asmat_data:sigData||null,
     }).eq("enfant_id",enfant.id);
-    if(error){
-      setToast("Erreur enregistrement : "+error.message);
-      return;
-    }
     setSignes(p=>({...p,[enfant.id]:true}));
-    setDatesSignature(p=>({...p,[enfant.id]:nowIso}));
     setToast("Contrat signé et enregistré ✓");
-    // FIX: Trigger un refresh global pour que enfants[].contrat.signe_asmat soit a jour
-    // (sinon un re-render parent + useEffect [enfants] reecraserait signes a partir de la donnee stale)
-    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const addMod=()=>{if(!modDet.detail.trim())return;
     setMods(p=>({...p,[enfant.id]:[{date:TODAY_STR,...modDet,statut:"En attente"},...(p[enfant.id]||[])]}));
@@ -1890,15 +1839,9 @@ function Contrats({enfants,role,pEId,user}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
-    <PageHeader icon="📄" title="Contrats & Signatures" sub="Signature électronique légale"
-      action={role==="asmat"&&user?<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>:null}/>
+    <PageHeader icon="📄" title="Contrats & Signatures" sub="Signature électronique légale"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}
-        badge={signes[e.id]
-          ?<span title="Contrat signé" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:22,height:22,borderRadius:"50%",background:"var(--G)",color:"#fff",fontSize:12,fontWeight:700,boxShadow:"0 2px 6px rgba(0,0,0,.15)"}}>✓</span>
-          :<span title="En attente de signature" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:22,height:22,borderRadius:"50%",background:"var(--T)",color:"#fff",fontSize:11,boxShadow:"0 2px 6px rgba(0,0,0,.15)"}}>⏳</span>
-        }/>)}</div>}
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
     {contrat&&<div className="g2">
       <div>
@@ -1925,9 +1868,8 @@ function Contrats({enfants,role,pEId,user}){
           <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:4}}>✍️ Signature électronique</div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:12}}>Signez dans la zone ci-dessous pour valider le contrat</div>
           <canvas ref={canvasRef}className="sig-c"width={340}height={100}
-            style={{width:"100%",maxWidth:340,touchAction:"none"}}
-            onMouseDown={startDraw}onMouseMove={draw}onMouseUp={endDraw}onMouseLeave={endDraw}
-            onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={endDraw}onTouchCancel={endDraw}/>
+            style={{width:"100%",maxWidth:340}}
+            onMouseDown={startDraw}onMouseMove={draw}onMouseUp={endDraw}onMouseLeave={endDraw}/>
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <button className="btn bG"onClick={clearSig}>Effacer</button>
             <button className="btn bP"style={{flex:1,justifyContent:"center"}}onClick={signer}disabled={!hasSig}>
@@ -1941,7 +1883,7 @@ function Contrats({enfants,role,pEId,user}){
         {signes[enfant?.id]&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:12,padding:14,textAlign:"center"}}>
           <div style={{fontSize:24,marginBottom:4}}>✅</div>
           <div style={{fontWeight:700,color:"var(--S)"}}>Contrat signé électroniquement</div>
-          <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · Conforme eIDAS</div>
+          <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le 11/03/2024 · Conforme eIDAS</div>
         </div>}
       </div>
 
@@ -3323,7 +3265,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB}){
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<div>
-      <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
+      <Contrats enfants={enfants}role={role}pEId={pEId}/>
       <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
         <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
       </div>
@@ -8235,290 +8177,6 @@ function OnboardingWizard({user,onFinish}){
 }
 
 //
-// Bouton reutilisable pour ouvrir la modale d'ajout d'enfant
-function BoutonAjouterEnfant({onClick,compact}){
-  return <button className="btn bT" onClick={onClick}
-    style={compact?{padding:"8px 14px",fontSize:12}:{padding:"10px 18px",fontSize:13}}>
-    <span style={{fontSize:15,marginRight:2}}>+</span> Ajouter un enfant
-  </button>;
-}
-
-//
-// Modale d'ajout d'un nouvel enfant (apres l'onboarding initial)
-// 3 etapes : Enfant, Contrat, Parent (invitation), puis confirmation
-function AjouterEnfantModale({user,onClose}){
-  const [step,setStep]=useState(0);
-  const [enfant,setEnfant]=useState({prenom:"",nom:"",naissance:"",emoji:"🦁"});
-  const [contrat,setContrat]=useState({
-    debut:new Date().toISOString().slice(0,10),
-    fin:"",
-    heuresHebdo:40,
-    tauxHoraire:4.05,
-    entretien:3.80,
-    jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
-    horaires:"07h30–17h30",
-  });
-  const [parentInfo,setParentInfo]=useState({prenom:"",nom:"",email:""});
-  const [saving,setSaving]=useState(false);
-  const [toast,setToast]=useState("");
-  const [enfantCreeId,setEnfantCreeId]=useState(null);
-  const EMOJIS=["🦁","🌸","⭐","🐻","🦋","🌈","🐸","🦊","🐼","🌻","🦄","🐝"];
-  const JOURS_SEM=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
-  const toggleJour=(j)=>setContrat(c=>({...c,jours:c.jours.includes(j)?c.jours.filter(x=>x!==j):[...c.jours,j]}));
-
-  const valideEtape0=()=>enfant.prenom.trim()&&enfant.naissance;
-  const valideEtape1=()=>contrat.debut&&contrat.heuresHebdo>0&&contrat.tauxHoraire>0&&contrat.jours.length>0;
-
-  const sauvegarder=async()=>{
-    if(!valideEtape0()||!valideEtape1()){
-      setToast("Donnees incompletes");
-      return;
-    }
-    setSaving(true);
-    try{
-      // 1. Creer l'enfant
-      const{data:enfantData,error:errEnfant}=await supabase.from("enfants").insert({
-        prenom:enfant.prenom.trim(),
-        nom:enfant.nom.trim()||null,
-        emoji:enfant.emoji||"👶",
-        naissance:enfant.naissance,
-        asmat_id:user.id,
-        actif:true,
-      }).select().single();
-      if(errEnfant){
-        setToast("Erreur creation enfant : "+errEnfant.message);
-        setSaving(false);
-        return;
-      }
-      setEnfantCreeId(enfantData.id);
-
-      // 2. Creer le contrat lie
-      const{error:errContrat}=await supabase.from("contrats").insert({
-        enfant_id:enfantData.id,
-        asmat_id:user.id,
-        debut:contrat.debut,
-        fin:contrat.fin||null,
-        heures_hebdo:Number(contrat.heuresHebdo)||40,
-        taux_horaire:Number(contrat.tauxHoraire)||4.05,
-        entretien:Number(contrat.entretien)||3.80,
-        jours:contrat.jours,
-        horaires:contrat.horaires||"07h30–17h30",
-        actif:true,
-      });
-      if(errContrat){
-        setToast("Enfant cree mais erreur contrat : "+errContrat.message);
-        // On continue quand meme - l'enfant est cree
-      }
-
-      // 3. Inviter le parent (optionnel, seulement si email fourni)
-      if(parentInfo.email.trim()){
-        try{
-          const res=await fetch("/api/invite-parent",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({
-              emailParent:parentInfo.email.trim(),
-              prenomParent:parentInfo.prenom.trim()||null,
-              nomParent:parentInfo.nom.trim()||null,
-              prenomEnfant:enfant.prenom.trim(),
-              prenomAsmat:user?.prenom||"Votre assistante maternelle",
-              asmatId:user.id,
-              enfantId:enfantData.id,
-            }),
-          });
-          const d=await res.json().catch(()=>({}));
-          if(!d.success){
-            console.warn("Invitation parent : ",d.error||"erreur inconnue");
-          }
-        }catch(e){
-          console.warn("Invitation parent (reseau) : ",e.message);
-        }
-      }
-
-      // 4. Trigger le refresh global des donnees
-      window.dispatchEvent(new CustomEvent("timat:refresh-data"));
-      setStep(3);
-    }catch(e){
-      setToast("Erreur : "+e.message);
-    }
-    setSaving(false);
-  };
-
-  const titres=[
-    {t:"L'enfant",s:"Informations de base"},
-    {t:"Le contrat",s:"Conditions d'accueil"},
-    {t:"Le parent",s:"Pour l'inviter (optionnel)"},
-    {t:"Termine !",s:""},
-  ];
-  const cur=titres[step];
-
-  return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(20,15,18,.55)",backdropFilter:"blur(4px)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"40px 16px",overflowY:"auto"}}>
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:520,background:"#fff",borderRadius:20,boxShadow:"0 20px 80px rgba(0,0,0,.3)",overflow:"hidden",position:"relative"}}>
-      {/* Bouton fermer */}
-      <button onClick={onClose} aria-label="Fermer"
-        style={{position:"absolute",top:14,right:14,zIndex:2,width:32,height:32,borderRadius:"50%",border:"none",background:"rgba(255,255,255,.9)",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>×</button>
-
-      {/* Header gradient */}
-      <div style={{background:"linear-gradient(135deg,var(--T),#D4824A)",padding:"22px 24px 18px"}}>
-        <div className="pf" style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:4}}>
-          {step===3?"🌿 ":"➕ "}Ajouter un enfant - {cur.t}
-        </div>
-        {cur.s&&<div style={{fontSize:12,color:"rgba(255,255,255,.85)"}}>{cur.s}</div>}
-      </div>
-
-      {/* Barre de progression */}
-      <div style={{display:"flex",gap:4,padding:"0 24px",marginTop:14}}>
-        {titres.map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=step?"var(--T)":"rgba(0,0,0,.08)",transition:"background .3s"}}/>)}
-      </div>
-
-      <div style={{padding:"22px 24px 24px"}}>
-        {/* ETAPE 0 - Enfant */}
-        {step===0&&<>
-          <div style={{marginBottom:14}}>
-            <label className="lbl">Prenom *</label>
-            <input className="inp" placeholder="Leo, Emma, Noah..." value={enfant.prenom}
-              onChange={e=>setEnfant(f=>({...f,prenom:e.target.value}))}/>
-          </div>
-          <div style={{marginBottom:14}}>
-            <label className="lbl">Nom (optionnel)</label>
-            <input className="inp" placeholder="Nom de famille" value={enfant.nom}
-              onChange={e=>setEnfant(f=>({...f,nom:e.target.value}))}/>
-          </div>
-          <div style={{marginBottom:14}}>
-            <label className="lbl">Date de naissance *</label>
-            <input type="date" className="inp" value={enfant.naissance}
-              onChange={e=>setEnfant(f=>({...f,naissance:e.target.value}))}/>
-          </div>
-          <div style={{marginBottom:18}}>
-            <label className="lbl">Emoji</label>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {EMOJIS.map(em=><button key={em} onClick={()=>setEnfant(f=>({...f,emoji:em}))}
-                style={{width:42,height:42,borderRadius:12,border:enfant.emoji===em?"2px solid var(--T)":"1.5px solid var(--br)",background:enfant.emoji===em?"var(--Tp)":"#fff",fontSize:22,cursor:"pointer"}}>{em}</button>)}
-            </div>
-          </div>
-          <button className="btn bT" disabled={!valideEtape0()}
-            onClick={()=>setStep(1)}
-            style={{width:"100%",justifyContent:"center",padding:"12px",fontSize:14,opacity:valideEtape0()?1:.5}}>
-            Suivant - Contrat →
-          </button>
-        </>}
-
-        {/* ETAPE 1 - Contrat */}
-        {step===1&&<>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-            <div>
-              <label className="lbl">Debut *</label>
-              <input type="date" className="inp" value={contrat.debut}
-                onChange={e=>setContrat(c=>({...c,debut:e.target.value}))}/>
-            </div>
-            <div>
-              <label className="lbl">Fin (optionnel)</label>
-              <input type="date" className="inp" value={contrat.fin}
-                onChange={e=>setContrat(c=>({...c,fin:e.target.value}))}/>
-            </div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-            <div>
-              <label className="lbl">Heures / semaine *</label>
-              <input type="number" className="inp" min="1" max="50" value={contrat.heuresHebdo}
-                onChange={e=>setContrat(c=>({...c,heuresHebdo:e.target.value}))}/>
-            </div>
-            <div>
-              <label className="lbl">Taux horaire (€) *</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.tauxHoraire}
-                onChange={e=>setContrat(c=>({...c,tauxHoraire:e.target.value}))}/>
-            </div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-            <div>
-              <label className="lbl">Indemnite entretien (€/jour)</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.entretien}
-                onChange={e=>setContrat(c=>({...c,entretien:e.target.value}))}/>
-            </div>
-            <div>
-              <label className="lbl">Horaires (texte)</label>
-              <input className="inp" placeholder="07h30-17h30" value={contrat.horaires}
-                onChange={e=>setContrat(c=>({...c,horaires:e.target.value}))}/>
-            </div>
-          </div>
-          <div style={{marginBottom:18}}>
-            <label className="lbl">Jours d'accueil *</label>
-            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-              {JOURS_SEM.map(j=><button key={j} onClick={()=>toggleJour(j)}
-                style={{padding:"7px 11px",borderRadius:10,border:contrat.jours.includes(j)?"2px solid var(--T)":"1.5px solid var(--br)",background:contrat.jours.includes(j)?"var(--Tp)":"#fff",color:contrat.jours.includes(j)?"var(--T)":"var(--m)",fontSize:12,fontWeight:600,cursor:"pointer"}}>{j.slice(0,3)}</button>)}
-            </div>
-          </div>
-          {/* Apercu salaire */}
-          {valideEtape1()&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--G)"}}>
-            <strong>Salaire mensuel brut estime :</strong> {Math.round(Number(contrat.heuresHebdo)*Number(contrat.tauxHoraire)*52/12)} € / mois
-          </div>}
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn" onClick={()=>setStep(0)}
-              style={{flex:1,justifyContent:"center",padding:"12px",background:"var(--c)",color:"var(--m)"}}>← Retour</button>
-            <button className="btn bT" disabled={!valideEtape1()}
-              onClick={()=>setStep(2)}
-              style={{flex:2,justifyContent:"center",padding:"12px",fontSize:14,opacity:valideEtape1()?1:.5}}>
-              Suivant - Parent →
-            </button>
-          </div>
-        </>}
-
-        {/* ETAPE 2 - Parent */}
-        {step===2&&<>
-          <div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:12,color:"var(--S)"}}>
-            Le parent recevra un email d'invitation pour creer son compte et acceder a l'espace de son enfant. Vous pouvez aussi sauter cette etape et l'inviter plus tard.
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-            <div>
-              <label className="lbl">Prenom du parent</label>
-              <input className="inp" value={parentInfo.prenom}
-                onChange={e=>setParentInfo(p=>({...p,prenom:e.target.value}))}/>
-            </div>
-            <div>
-              <label className="lbl">Nom du parent</label>
-              <input className="inp" value={parentInfo.nom}
-                onChange={e=>setParentInfo(p=>({...p,nom:e.target.value}))}/>
-            </div>
-          </div>
-          <div style={{marginBottom:18}}>
-            <label className="lbl">Email du parent</label>
-            <input type="email" className="inp" placeholder="parent@email.fr" value={parentInfo.email}
-              onChange={e=>setParentInfo(p=>({...p,email:e.target.value}))}/>
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn" onClick={()=>setStep(1)} disabled={saving}
-              style={{flex:1,justifyContent:"center",padding:"12px",background:"var(--c)",color:"var(--m)"}}>← Retour</button>
-            <button className="btn bT" onClick={sauvegarder} disabled={saving}
-              style={{flex:2,justifyContent:"center",padding:"12px",fontSize:14}}>
-              {saving?"⏳ Enregistrement...":(parentInfo.email.trim()?"✓ Creer + Inviter parent":"✓ Creer (sans parent)")}
-            </button>
-          </div>
-        </>}
-
-        {/* ETAPE 3 - Confirmation */}
-        {step===3&&<div style={{textAlign:"center",padding:"10px 0"}}>
-          <div style={{fontSize:64,marginBottom:14}}>{enfant.emoji}</div>
-          <div className="pf" style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:8}}>
-            {enfant.prenom} a ete ajoute !
-          </div>
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:18}}>
-            Le contrat est cree et actif.<br/>
-            {parentInfo.email.trim()
-              ?<>Le parent va recevoir un email d'invitation a <strong>{parentInfo.email}</strong>.</>
-              :<>Vous pourrez inviter le parent plus tard depuis la page parametres.</>}
-          </div>
-          <button className="btn bT" onClick={onClose}
-            style={{width:"100%",justifyContent:"center",padding:"12px",fontSize:14}}>
-            Terminer
-          </button>
-        </div>}
-      </div>
-    </div>
-  </div>;
-}
-
-//
 function AttestationPoleEmploi({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [dateFin,setDateFin]=useState("");
@@ -10565,8 +10223,6 @@ export default function App(){
   const [pointagesDB,setPointagesDB]=useState([]);
   const [transmissionsDB,setTransmissionsDB]=useState([]);
   const [dbLoading,setDbLoading]=useState(false);
-  // Cle pour forcer le refresh complet des donnees Supabase (incrementee sur l'event timat:refresh-data)
-  const [dataRefreshKey,setDataRefreshKey]=useState(0);
   const [appConfig,setAppConfig]=useState(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
 
   // //  Dsactiver le service worker bloqu
@@ -10703,28 +10359,21 @@ export default function App(){
             .in("enfant_id",enfantIds).eq("actif",true);
           setContratsDB(c||[]);
           // Mapper les contrats sur les enfants
-          const enfantsAvecContrat=e.map(enf=>{
-            const ct=c?.find(x=>x.enfant_id===enf.id);
-            return {
-              ...enf,
-              parentId:enf.parent_id,
-              naissance:enf.naissance,
-              contrat:ct?{
-                id:ct.id,
-                debut:ct.debut,
-                fin:ct.fin,
-                heuresHebdo:ct.heures_hebdo,
-                tauxHoraire:ct.taux_horaire,
-                entretien:ct.entretien,
-                jours:ct.jours||["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
-                horaires:ct.horaires||"07h30–17h30",
-                indemniteAbsence:0.5,
-                signe_asmat:!!ct.signe_asmat,
-                date_signature_asmat:ct.date_signature_asmat||null,
-                signature_asmat_data:ct.signature_asmat_data||null,
-              }:null,
-            };
-          });
+          const enfantsAvecContrat=e.map(enf=>({
+            ...enf,
+            parentId:enf.parent_id,
+            naissance:enf.naissance,
+            contrat:c?.find(ct=>ct.enfant_id===enf.id)?{
+              debut:c.find(ct=>ct.enfant_id===enf.id).debut,
+              fin:c.find(ct=>ct.enfant_id===enf.id).fin,
+              heuresHebdo:c.find(ct=>ct.enfant_id===enf.id).heures_hebdo,
+              tauxHoraire:c.find(ct=>ct.enfant_id===enf.id).taux_horaire,
+              entretien:c.find(ct=>ct.enfant_id===enf.id).entretien,
+              jours:c.find(ct=>ct.enfant_id===enf.id).jours||["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
+              horaires:c.find(ct=>ct.enfant_id===enf.id).horaires||"07h30–17h30",
+              indemniteAbsence:0.5,
+            }:null,
+          }));
           setEnfantsDB(enfantsAvecContrat);
           // Charger pointages du mois
           const debut=new Date();debut.setDate(1);
@@ -10744,14 +10393,7 @@ export default function App(){
       finally{setDbLoading(false);}
     };
     charger();
-  },[user?.id,dataRefreshKey]);
-
-  // Ecouter l'event timat:refresh-data pour rafraichir les donnees Supabase (declenche apres ajout d'un enfant par exemple)
-  useEffect(()=>{
-    const handler=()=>setDataRefreshKey(k=>k+1);
-    window.addEventListener("timat:refresh-data",handler);
-    return()=>window.removeEventListener("timat:refresh-data",handler);
-  },[]);
+  },[user?.id]);
 
   if(loading)return(
     <><Styles/>
@@ -10821,18 +10463,13 @@ export default function App(){
   // Ne pas afficher les données démo pendant le chargement (évite le flash)
   const isDemo=user?.id?.startsWith?.("demo-")||user?.isDemo;
   const hasRealData=enfantsDB.length>0;
-  // FIX: useMemo pour eviter de creer une nouvelle reference d'array a chaque render parent
-  // (sinon les useEffect [enfants] dans les composants enfants re-triggent inutilement et ecrasent les states locaux)
-  const enfants=useMemo(()=>{
-    if(dbLoading&&!isDemo)return [];
-    if(hasRealData)return enfantsDB;
-    if(isDemo)return D.enfants;
-    const byId=D.enfants.filter(e=>e.parentId===user?.id);
+  const enfants=dbLoading&&!isDemo?[]:(hasRealData?enfantsDB:(isDemo?D.enfants:(()=>{
+    const byId=D.enfants.filter(e=>e.parentId===user.id);
     if(byId.length>0)return byId;
-    const parentDemo=D.parents.find(p=>p.email===user?.email);
+    const parentDemo=D.parents.find(p=>p.email===user.email);
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
     return [];
-  },[dbLoading,isDemo,hasRealData,enfantsDB,user?.id,user?.email]);
+  })()));
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
