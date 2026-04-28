@@ -1793,10 +1793,12 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
 //
 function Contrats({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [signes,setSignes]=useState(()=>Object.fromEntries(D.enfants.map(e=>[e.id,e.signe])));
+  // FIX: state hydraté depuis les props (qui viennent de Supabase) au lieu de D.enfants
+  const [signes,setSignes]=useState({});
+  const [datesSignature,setDatesSignature]=useState({});
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
-  const [mods,setMods]=useState(()=>Object.fromEntries(D.enfants.map(e=>[e.id,[]])));
+  const [mods,setMods]=useState({});
   const [showModale,setShowModale]=useState(false);
   const [modDet,setModDet]=useState({type:"Horaire",detail:""});
   const [toast,setToast]=useState("");
@@ -1805,32 +1807,72 @@ function Contrats({enfants,role,pEId}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
 
+  // FIX: Synchroniser signes/datesSignature avec les données réelles à chaque changement de la liste enfants
+  useEffect(()=>{
+    const sigMap={};
+    const dateMap={};
+    enfants.forEach(e=>{
+      if(e.contrat?.signe_asmat){
+        sigMap[e.id]=true;
+        dateMap[e.id]=e.contrat.date_signature_asmat;
+      }
+    });
+    setSignes(sigMap);
+    setDatesSignature(dateMap);
+  },[enfants]);
+
+  // FIX: S'assurer que selId pointe vers un enfant existant
+  useEffect(()=>{
+    if(!liste.length)return;
+    if(!liste.find(e=>e.id===selId))setSelId(liste[0].id);
+  },[liste,selId]);
+
+  // Helper: récupère la position du pointeur (souris OU tactile) dans le canvas, avec scaling
+  const getPos=(e)=>{
+    const c=canvasRef.current;
+    if(!c)return{x:0,y:0};
+    const r=c.getBoundingClientRect();
+    const pt=e.touches?.[0]||e.changedTouches?.[0]||e;
+    const sx=c.width/r.width;
+    const sy=c.height/r.height;
+    return{x:(pt.clientX-r.left)*sx,y:(pt.clientY-r.top)*sy};
+  };
+
   const startDraw=(e)=>{
+    e.preventDefault?.();
     setDrawing(true);
-    const c=canvasRef.current;const r=c.getBoundingClientRect();
+    const c=canvasRef.current;if(!c)return;
     const ctx=c.getContext("2d");
+    const{x,y}=getPos(e);
     ctx.strokeStyle="#3A2820";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";
-    ctx.beginPath();ctx.moveTo(e.clientX-r.left,e.clientY-r.top);};
+    ctx.beginPath();ctx.moveTo(x,y);};
   const draw=(e)=>{if(!drawing)return;
-    const c=canvasRef.current;const r=c.getBoundingClientRect();
+    e.preventDefault?.();
+    const c=canvasRef.current;if(!c)return;
     const ctx=c.getContext("2d");
-    ctx.strokeStyle="#3A2820";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";
-    ctx.lineTo(e.clientX-r.left,e.clientY-r.top);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(e.clientX-r.left,e.clientY-r.top);
+    const{x,y}=getPos(e);
+    ctx.lineTo(x,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,y);
     setHasSig(true);};
-  const endDraw=()=>setDrawing(false);
+  const endDraw=(e)=>{e?.preventDefault?.();setDrawing(false);};
   const clearSig=()=>{const c=canvasRef.current;c.getContext("2d").clearRect(0,0,c.width,c.height);setHasSig(false);};
   const signer=async()=>{
     if(!hasSig)return;
     // Sauvegarder la signature dans Supabase
     const canvas=canvasRef.current;
     const sigData=canvas?.toDataURL("image/png");
-    await supabase.from("contrats").update({
+    const nowIso=new Date().toISOString();
+    const{error}=await supabase.from("contrats").update({
       signe_asmat:true,
-      date_signature_asmat:new Date().toISOString(),
+      date_signature_asmat:nowIso,
       signature_asmat_data:sigData||null,
     }).eq("enfant_id",enfant.id);
+    if(error){
+      setToast("Erreur enregistrement : "+error.message);
+      return;
+    }
     setSignes(p=>({...p,[enfant.id]:true}));
+    setDatesSignature(p=>({...p,[enfant.id]:nowIso}));
     setToast("Contrat signé et enregistré ✓");
   };
   const addMod=()=>{if(!modDet.detail.trim())return;
@@ -1868,8 +1910,9 @@ function Contrats({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:4}}>✍️ Signature électronique</div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:12}}>Signez dans la zone ci-dessous pour valider le contrat</div>
           <canvas ref={canvasRef}className="sig-c"width={340}height={100}
-            style={{width:"100%",maxWidth:340}}
-            onMouseDown={startDraw}onMouseMove={draw}onMouseUp={endDraw}onMouseLeave={endDraw}/>
+            style={{width:"100%",maxWidth:340,touchAction:"none"}}
+            onMouseDown={startDraw}onMouseMove={draw}onMouseUp={endDraw}onMouseLeave={endDraw}
+            onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={endDraw}onTouchCancel={endDraw}/>
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <button className="btn bG"onClick={clearSig}>Effacer</button>
             <button className="btn bP"style={{flex:1,justifyContent:"center"}}onClick={signer}disabled={!hasSig}>
@@ -1883,7 +1926,7 @@ function Contrats({enfants,role,pEId}){
         {signes[enfant?.id]&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:12,padding:14,textAlign:"center"}}>
           <div style={{fontSize:24,marginBottom:4}}>✅</div>
           <div style={{fontWeight:700,color:"var(--S)"}}>Contrat signé électroniquement</div>
-          <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le 11/03/2024 · Conforme eIDAS</div>
+          <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · Conforme eIDAS</div>
         </div>}
       </div>
 
@@ -10359,21 +10402,28 @@ export default function App(){
             .in("enfant_id",enfantIds).eq("actif",true);
           setContratsDB(c||[]);
           // Mapper les contrats sur les enfants
-          const enfantsAvecContrat=e.map(enf=>({
-            ...enf,
-            parentId:enf.parent_id,
-            naissance:enf.naissance,
-            contrat:c?.find(ct=>ct.enfant_id===enf.id)?{
-              debut:c.find(ct=>ct.enfant_id===enf.id).debut,
-              fin:c.find(ct=>ct.enfant_id===enf.id).fin,
-              heuresHebdo:c.find(ct=>ct.enfant_id===enf.id).heures_hebdo,
-              tauxHoraire:c.find(ct=>ct.enfant_id===enf.id).taux_horaire,
-              entretien:c.find(ct=>ct.enfant_id===enf.id).entretien,
-              jours:c.find(ct=>ct.enfant_id===enf.id).jours||["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
-              horaires:c.find(ct=>ct.enfant_id===enf.id).horaires||"07h30–17h30",
-              indemniteAbsence:0.5,
-            }:null,
-          }));
+          const enfantsAvecContrat=e.map(enf=>{
+            const ct=c?.find(x=>x.enfant_id===enf.id);
+            return {
+              ...enf,
+              parentId:enf.parent_id,
+              naissance:enf.naissance,
+              contrat:ct?{
+                id:ct.id,
+                debut:ct.debut,
+                fin:ct.fin,
+                heuresHebdo:ct.heures_hebdo,
+                tauxHoraire:ct.taux_horaire,
+                entretien:ct.entretien,
+                jours:ct.jours||["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
+                horaires:ct.horaires||"07h30–17h30",
+                indemniteAbsence:0.5,
+                signe_asmat:!!ct.signe_asmat,
+                date_signature_asmat:ct.date_signature_asmat||null,
+                signature_asmat_data:ct.signature_asmat_data||null,
+              }:null,
+            };
+          });
           setEnfantsDB(enfantsAvecContrat);
           // Charger pointages du mois
           const debut=new Date();debut.setDate(1);
