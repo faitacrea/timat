@@ -1900,20 +1900,16 @@ function Contrats({enfants,role,pEId,user}){
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const addMod=async()=>{
-    console.log("[avenant] addMod start - role=",role,"contrat?.id=",contrat?.id,"enfant?.id=",enfant?.id,"detail=",modDet.detail);
-    if(!modDet.detail.trim()){console.log("[avenant] STOP: detail vide");return;}
-    if(!contrat?.id){console.log("[avenant] STOP: pas de contrat.id");setToast("Aucun contrat actif pour cet enfant");return;}
+    if(!modDet.detail.trim()){return;}
+    if(!contrat?.id){setToast("Aucun contrat actif pour cet enfant");return;}
     const payload={
       contrat_id:contrat.id,
       type:modDet.type,
       detail:modDet.detail.trim(),
       propose_par:role,
     };
-    console.log("[avenant] payload =",payload);
     const{data,error,status}=await supabase.from("modifications_contrat").insert(payload).select().single();
-    console.log("[avenant] response status=",status,"error=",error,"data=",data);
     if(error){
-      console.error("[avenant] INSERT FAIL:",error);
       setToast("Erreur : "+(error.message||error.code||"inconnue"));
       return;
     }
