@@ -1833,6 +1833,21 @@ function Contrats({enfants,role,pEId,user}){
     if(!liste.find(e=>e.id===selId))setSelId(liste[0].id);
   },[liste,selId]);
 
+  // AVENANTS: Charger les demandes de modification depuis Supabase quand le contrat change
+  useEffect(()=>{
+    if(!contrat?.id||!enfant?.id)return;
+    let cancelled=false;
+    (async()=>{
+      const{data,error}=await supabase.from("modifications_contrat")
+        .select("*").eq("contrat_id",contrat.id)
+        .order("date_proposition",{ascending:false});
+      if(cancelled)return;
+      if(error){console.error("Erreur chargement avenants:",error);return;}
+      setMods(p=>({...p,[enfant.id]:data||[]}));
+    })();
+    return()=>{cancelled=true;};
+  },[contrat?.id,enfant?.id]);
+
   // Helper: récupère la position du pointeur (souris OU tactile) dans le canvas, avec scaling
   const getPos=(e)=>{
     const c=canvasRef.current;
@@ -1884,9 +1899,44 @@ function Contrats({enfants,role,pEId,user}){
     // (sinon un re-render parent + useEffect [enfants] reecraserait signes a partir de la donnee stale)
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
-  const addMod=()=>{if(!modDet.detail.trim())return;
-    setMods(p=>({...p,[enfant.id]:[{date:TODAY_STR,...modDet,statut:"En attente"},...(p[enfant.id]||[])]}));
-    setModDet({type:"Horaire",detail:""});setShowModale(false);};
+  const addMod=async()=>{
+    console.log("[avenant] addMod start - role=",role,"contrat?.id=",contrat?.id,"enfant?.id=",enfant?.id,"detail=",modDet.detail);
+    if(!modDet.detail.trim()){console.log("[avenant] STOP: detail vide");return;}
+    if(!contrat?.id){console.log("[avenant] STOP: pas de contrat.id");setToast("Aucun contrat actif pour cet enfant");return;}
+    const payload={
+      contrat_id:contrat.id,
+      type:modDet.type,
+      detail:modDet.detail.trim(),
+      propose_par:role,
+    };
+    console.log("[avenant] payload =",payload);
+    const{data,error,status}=await supabase.from("modifications_contrat").insert(payload).select().single();
+    console.log("[avenant] response status=",status,"error=",error,"data=",data);
+    if(error){
+      console.error("[avenant] INSERT FAIL:",error);
+      setToast("Erreur : "+(error.message||error.code||"inconnue"));
+      return;
+    }
+    setMods(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
+    setModDet({type:"Horaire",detail:""});
+    setShowModale(false);
+    setToast("Demande envoyee");
+  };
+  const repondre=async(modId,accepte)=>{
+    const{data,error}=await supabase.from("modifications_contrat")
+      .update({accepte,date_decision:new Date().toISOString()})
+      .eq("id",modId).select().single();
+    if(error){setToast("Erreur : "+error.message);return;}
+    setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).map(m=>m.id===modId?data:m)}));
+    setToast(accepte?"Demande acceptee":"Demande refusee");
+  };
+  const supprimerMod=async(modId)=>{
+    if(!window.confirm("Supprimer cette demande ?"))return;
+    const{error}=await supabase.from("modifications_contrat").delete().eq("id",modId);
+    if(error){setToast("Erreur : "+error.message);return;}
+    setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(m=>m.id!==modId)}));
+    setToast("Demande supprimee");
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -1953,19 +2003,39 @@ function Contrats({enfants,role,pEId,user}){
         {(mods[enfant?.id]||[]).length===0&&<div className="card"style={{padding:14}}>
           <div style={{fontSize:13,color:"var(--l)"}}>Aucune modification demandée.</div>
         </div>}
-        {(mods[enfant?.id]||[]).map((m,i)=><div key={i}className="card"style={{padding:12}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}>{m.type}</span>
-            <span className="badge"style={{background:m.statut==="Accepté"?"var(--Sp)":m.statut==="Refusé"?"var(--Rp)":"var(--Gp)",
-              color:m.statut==="Accepté"?"var(--S)":m.statut==="Refusé"?"var(--R)":"var(--G)"}}>{m.statut}</span>
-          </div>
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.5,marginBottom:4}}>{m.detail}</div>
-          <div style={{fontSize:11,color:"var(--l)"}}>{fmt(m.date)}</div>
-          {role==="asmat"&&m.statut==="En attente"&&<div style={{display:"flex",gap:6,marginTop:8}}>
-            <button className="btn bS"style={{fontSize:11,padding:"5px 10px"}}onClick={()=>setMods(p=>({...p,[enfant.id]:p[enfant.id].map((x,j)=>j===i?{...x,statut:"Accepté"}:x)}))}>✅</button>
-            <button className="btn bG"style={{fontSize:11,padding:"5px 10px",color:"var(--R)"}}onClick={()=>setMods(p=>({...p,[enfant.id]:p[enfant.id].map((x,j)=>j===i?{...x,statut:"Refusé"}:x)}))}>❌</button>
-          </div>}
-        </div>)}
+        {(mods[enfant?.id]||[]).map((m)=>{
+          const enAttente=m.accepte===null||m.accepte===undefined;
+          const statutTxt=enAttente?"En attente":(m.accepte?"Accepté":"Refusé");
+          const statutCol=enAttente?"var(--G)":(m.accepte?"var(--S)":"var(--R)");
+          const statutBg=enAttente?"var(--Gp)":(m.accepte?"var(--Sp)":"var(--Rp)");
+          // FIX defensif: ne montrer les boutons que si role est bien "asmat" ou "parent"
+          // ET que propose_par est bien rempli (sinon valeur stale d'une ancienne logique).
+          const validRole=role==="asmat"||role==="parent";
+          const validProp=m.propose_par==="asmat"||m.propose_par==="parent";
+          const peutRepondre=enAttente&&validRole&&validProp&&m.propose_par!==role;
+          const peutSupprimer=enAttente&&validRole&&validProp&&m.propose_par===role;
+          const datePropo=m.date_proposition||m.created_at||m.date;
+          const proposeurLabel=m.propose_par==="asmat"?"asmat":m.propose_par==="parent"?"parent":"";
+          return <div key={m.id||m.detail}className="card"style={{padding:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,gap:6,flexWrap:"wrap"}}>
+              <span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}>{m.type}</span>
+              <span className="badge"style={{background:statutBg,color:statutCol}}>{statutTxt}</span>
+            </div>
+            <div style={{fontSize:13,color:"var(--m)",lineHeight:1.5,marginBottom:4}}>{m.detail}</div>
+            <div style={{fontSize:11,color:"var(--l)"}}>
+              {datePropo?fmt(typeof datePropo==="string"?datePropo.slice(0,10):datePropo):""}
+              {proposeurLabel?" · proposé par "+proposeurLabel:""}
+              {m.date_decision?" · décidé le "+fmt(m.date_decision.slice(0,10)):""}
+            </div>
+            {peutRepondre&&<div style={{display:"flex",gap:6,marginTop:8}}>
+              <button className="btn bS"style={{fontSize:11,padding:"5px 10px"}}onClick={()=>repondre(m.id,true)}>✅ Accepter</button>
+              <button className="btn bG"style={{fontSize:11,padding:"5px 10px",color:"var(--R)"}}onClick={()=>repondre(m.id,false)}>❌ Refuser</button>
+            </div>}
+            {peutSupprimer&&<div style={{display:"flex",gap:6,marginTop:8}}>
+              <button className="btn bG"style={{fontSize:11,padding:"5px 10px",color:"var(--R)"}}onClick={()=>supprimerMod(m.id)}>🗑️ Supprimer</button>
+            </div>}
+          </div>;
+        })}
       </div>
     </div>}
 
@@ -10601,7 +10671,11 @@ export default function App(){
         return;
       }
       localStorage.setItem('timat_last_login',String(now));
+      // FIX retour-onglet: ne forcer la navigation accueil QUE si user etait null avant.
+      // Sinon (INITIAL_SESSION rejoue au retour d'onglet, refresh token...), garder la page courante.
+      let isFirstLogin=false;
       setUser(prev=>{
+        if(!prev)isFirstLogin=true;
         if(prev?.id===u.id && prev.prenom && prev.prenom!=="Utilisateur")return prev;
         return {
           id:u.id,
@@ -10614,8 +10688,7 @@ export default function App(){
           _needsProfileFetch:true
         };
       });
-      // Ouvrir directement sur l'app si déjà connecté
-      setPage("accueil");
+      if(isFirstLogin)setPage("accueil");
     };
 
     const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{
@@ -10821,18 +10894,13 @@ export default function App(){
   // Ne pas afficher les données démo pendant le chargement (évite le flash)
   const isDemo=user?.id?.startsWith?.("demo-")||user?.isDemo;
   const hasRealData=enfantsDB.length>0;
-  // FIX: useMemo pour eviter de creer une nouvelle reference d'array a chaque render parent
-  // (sinon les useEffect [enfants] dans les composants enfants re-triggent inutilement et ecrasent les states locaux)
-  const enfants=useMemo(()=>{
-    if(dbLoading&&!isDemo)return [];
-    if(hasRealData)return enfantsDB;
-    if(isDemo)return D.enfants;
-    const byId=D.enfants.filter(e=>e.parentId===user?.id);
+  const enfants=dbLoading&&!isDemo?[]:(hasRealData?enfantsDB:(isDemo?D.enfants:(()=>{
+    const byId=D.enfants.filter(e=>e.parentId===user.id);
     if(byId.length>0)return byId;
-    const parentDemo=D.parents.find(p=>p.email===user?.email);
+    const parentDemo=D.parents.find(p=>p.email===user.email);
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
     return [];
-  },[dbLoading,isDemo,hasRealData,enfantsDB,user?.id,user?.email]);
+  })()));
   const pEId=enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
