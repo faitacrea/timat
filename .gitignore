@@ -1,0 +1,51 @@
+# === Dépendances ===
+node_modules/
+.pnp
+.pnp.js
+
+# === Build ===
+dist/
+build/
+.vite/
+.vercel/
+
+# === Variables d'environnement (NE JAMAIS COMMIT) ===
+.env
+.env.local
+.env.*.local
+
+# === Logs ===
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Editeur ===
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Sauvegardes locales App.jsx (Git fait le job) ===
+*.backup
+*.backup-*
+*.before-*
+src/App.jsx.avant-*
+
+# === Dossiers perso hors repo (docs, recaps, assets marketing) ===
+images/
+recap session/
+Dcument butique /
+timat update 4 /
+
+# === Récaps JSON de sessions ===
+timat-recap-session-*.json
+
+# === Scripts de déploiement locaux ===
+*.command
