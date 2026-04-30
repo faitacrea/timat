@@ -3684,22 +3684,66 @@ const SOMMEIL_DEMO={
 
 function Sommeil({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [sommeils,setSommeils]=useState(SOMMEIL_DEMO);
+  const [sommeils,setSommeils]=useState({});
   const [nS,setNS]=useState({debut:"",fin:"",qualite:"bien"});
   const [toast,setToast]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const enfantIdsKey=liste.map(e=>e.id).sort().join(",");
   const hist=sommeils[enfant?.id]||[];
   const auj=hist.find(s=>s.date===TODAY_STR);
 
-  const ajout=()=>{
-    if(!nS.debut||!nS.fin)return;
+  // SOMMEIL P3: charger depuis Supabase au montage et au changement de liste enfants
+  useEffect(()=>{
+    if(!enfantIdsKey)return;
+    const ids=enfantIdsKey.split(",");
+    let cancelled=false;
+    (async()=>{
+      const{data,error}=await supabase.from("sommeil")
+        .select("*").in("enfant_id",ids)
+        .order("date",{ascending:false})
+        .order("created_at",{ascending:false});
+      if(cancelled)return;
+      if(error){console.error("Erreur chargement sommeil:",error);return;}
+      const grouped={};
+      (data||[]).forEach(s=>{
+        if(!grouped[s.enfant_id])grouped[s.enfant_id]=[];
+        grouped[s.enfant_id].push(s);
+      });
+      setSommeils(grouped);
+    })();
+    return()=>{cancelled=true;};
+  },[enfantIdsKey]);
+
+  const ajout=async()=>{
+    if(!nS.debut||!nS.fin||!enfant)return;
     const[h1,m1]=nS.debut.split(":").map(Number);
     const[h2,m2]=nS.fin.split(":").map(Number);
     const d=(h2*60+m2)-(h1*60+m1);
+    if(d<=0){setToast("L'heure de fin doit etre apres le debut");return;}
     const duree=Math.floor(d/60)+"h"+String(d%60).padStart(2,"0");
-    setSommeils(p=>({...p,[enfant.id]:[{id:"sn"+Date.now(),date:TODAY_STR,debut:nS.debut.replace(":","h"),fin:nS.fin.replace(":","h"),duree,qualite:nS.qualite},...(p[enfant.id]||[])]}));
-    setNS({debut:"",fin:"",qualite:"bien"});setToast("Sieste enregistrée ✓");
+    const payload={
+      enfant_id:enfant.id,
+      date:TODAY_STR,
+      debut:nS.debut.replace(":","h"),
+      fin:nS.fin.replace(":","h"),
+      duree,
+      qualite:nS.qualite,
+    };
+    const{data,error}=await supabase.from("sommeil").insert(payload).select().single();
+    if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    setSommeils(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
+    setNS({debut:"",fin:"",qualite:"bien"});
+    setToast("Sieste enregistrée ✓");
+  };
+
+  const supprimer=async(id)=>{
+    if(!enfant)return;
+    if(!window.confirm("Supprimer cette sieste ?"))return;
+    const{error}=await supabase.from("sommeil").delete().eq("id",id);
+    if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    setSommeils(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(s=>s.id!==id)}));
+    setToast("Sieste supprimée ✓");
   };
 
   const qColor={bien:"var(--S)",agite:"var(--G)",court:"var(--R)"};
@@ -3755,6 +3799,7 @@ function Sommeil({enfants,role,pEId}){
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
             <div className="pf"style={{fontSize:16,fontWeight:700,color:"var(--T)"}}>{s.duree}</div>
             <span className="badge"style={{background:qColor[s.qualite]+"22",color:qColor[s.qualite],fontSize:10}}>{s.qualite}</span>
+            {role==="asmat"&&<button className="btn bG"style={{fontSize:10,padding:"3px 8px",color:"var(--R)"}}onClick={()=>supprimer(s.id)}title="Supprimer">🗑️</button>}
           </div>
         </div>)}
         {/* Sparkline durées */}
