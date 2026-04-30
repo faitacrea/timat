@@ -2128,17 +2128,55 @@ function Sante({enfants,role,pEId}){
 function Portfolio({enfants,role,pEId}){
   const [selId,setSelId]=useState(null);
   const [showForm,setShowForm]=useState(false);
-  const [pfs,setPfs]=useState(D.portfolio);
+  const [pfs,setPfs]=useState([]);
   const [nf,setNf]=useState({titre:"",desc:"",emoji:"🎨",competences:""});
   const [toast,setToast]=useState("");
   const listeEnfants=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const filtres=selId?pfs.filter(p=>p.eId===selId):pfs.filter(p=>listeEnfants.some(e=>e.id===p.eId));
+  const enfantIdsKey=listeEnfants.map(e=>e.id).sort().join(",");
+  const filtres=selId?pfs.filter(p=>p.enfant_id===selId):pfs.filter(p=>listeEnfants.some(e=>e.id===p.enfant_id));
   const emojis=["🎨","🌱","🎵","🧩","🏃","📚","🍳","🌍","🎭","🔬"];
 
-  const add=()=>{
+  // PORTFOLIO P3: Charger les activites depuis Supabase au montage et quand la liste d'enfants change
+  useEffect(()=>{
+    if(!enfantIdsKey)return;
+    const ids=enfantIdsKey.split(",");
+    let cancelled=false;
+    (async()=>{
+      const{data,error}=await supabase.from("portfolio")
+        .select("*").in("enfant_id",ids)
+        .order("date",{ascending:false});
+      if(cancelled)return;
+      if(error){console.error("Erreur chargement portfolio:",error);return;}
+      setPfs(data||[]);
+    })();
+    return()=>{cancelled=true;};
+  },[enfantIdsKey]);
+
+  const add=async()=>{
     const e=listeEnfants[0];if(!e||!nf.titre)return;
-    setPfs(p=>[{id:"pf"+Date.now(),eId:selId||e.id,date:TODAY_STR,...nf,competences:nf.competences.split(",").map(s=>s.trim()).filter(Boolean)},...p]);
-    setNf({titre:"",desc:"",emoji:"🎨",competences:""});setShowForm(false);setToast("Activité ajoutée ✓");};
+    const payload={
+      enfant_id:selId||e.id,
+      titre:nf.titre,
+      description:nf.desc||null,
+      emoji:nf.emoji,
+      competences:nf.competences.split(",").map(s=>s.trim()).filter(Boolean),
+      date:TODAY_STR,
+    };
+    const{data,error}=await supabase.from("portfolio").insert(payload).select().single();
+    if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    setPfs(p=>[data,...p]);
+    setNf({titre:"",desc:"",emoji:"🎨",competences:""});
+    setShowForm(false);
+    setToast("Activité ajoutée ✓");
+  };
+
+  const supprimer=async(id)=>{
+    if(!window.confirm("Supprimer cette activité ?"))return;
+    const{error}=await supabase.from("portfolio").delete().eq("id",id);
+    if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    setPfs(p=>p.filter(x=>x.id!==id));
+    setToast("Activité supprimée ✓");
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2164,7 +2202,7 @@ function Portfolio({enfants,role,pEId}){
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
       {filtres.map(pf=>{
-        const e=enfants.find(x=>x.id===pf.eId);
+        const e=enfants.find(x=>x.id===pf.enfant_id);
         return <div key={pf.id}className="card"style={{padding:14,display:"flex",flexDirection:"column",gap:8}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div style={{fontSize:36}}>{pf.emoji}</div>
@@ -2174,10 +2212,11 @@ function Portfolio({enfants,role,pEId}){
             </div>
           </div>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{pf.titre}</div>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}>{pf.desc}</div>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}>{pf.description}</div>
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-            {pf.competences.map(c=><span key={c}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:10}}>{c}</span>)}
+            {(pf.competences||[]).map(c=><span key={c}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:10}}>{c}</span>)}
           </div>
+          {role==="asmat"&&<button className="btn bG"style={{fontSize:11,padding:"5px 10px",color:"var(--R)",alignSelf:"flex-start",marginTop:4}}onClick={()=>supprimer(pf.id)}>🗑️ Supprimer</button>}
         </div>;})}
     </div>
   </div>;
