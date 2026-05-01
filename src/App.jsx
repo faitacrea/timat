@@ -2056,8 +2056,27 @@ function Contrats({enfants,role,pEId,user}){
 //
 function Sante({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
+  const [newAllergie,setNewAllergie]=useState(""); // ALLERGIES P6
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const addAllergie=async()=>{ // ALLERGIES P6
+    const v=newAllergie.trim();
+    if(!v||!enfant?.id)return;
+    const current=enfant.allergies||[];
+    if(current.includes(v)){alert("Cette allergie est deja listee");setNewAllergie("");return;}
+    const{error}=await supabase.rpc("update_allergies",{p_enfant_id:enfant.id,p_allergies:[...current,v]});
+    if(error){alert("Erreur : "+error.message);return;}
+    setNewAllergie("");
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
+  const delAllergie=async(a)=>{ // ALLERGIES P6
+    if(!enfant?.id)return;
+    if(!window.confirm("Supprimer l'allergie \""+a+"\" ?"))return;
+    const updated=(enfant.allergies||[]).filter(x=>x!==a);
+    const{error}=await supabase.rpc("update_allergies",{p_enfant_id:enfant.id,p_allergies:updated});
+    if(error){alert("Erreur : "+error.message);return;}
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
   const isRealChild=!["e1","e2","e3"].includes(enfant?.id);
   const vacs=isRealChild?[]:(enfant?.vaccins||[]);
 
@@ -2078,18 +2097,18 @@ function Sante({enfants,role,pEId}){
             </div>)}
         </div>
 
-        {/* Allergies */}
+        {/* Allergies ALLERGIES P6 */}
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>⚠️ Allergies</div>
-          {enfant.allergies.length===0
+          {(enfant.allergies||[]).length===0
             ?<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>✅ Aucune allergie connue</span>
             :<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {enfant.allergies.map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,padding:"5px 12px"}}>⚠️ {a}</span>)}
+              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,padding:"5px 12px",display:"inline-flex",alignItems:"center",gap:6}}>⚠️ {a}<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span></span>)}
             </div>}
-          {role==="parent"&&<div style={{marginTop:12,display:"flex",gap:8}}>
-            <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}/>
-            <button className="btn bT"style={{fontSize:12}}>+</button>
-          </div>}
+          <div style={{marginTop:12,display:"flex",gap:8}}>
+            <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
+            <button className="btn bT"style={{fontSize:12}}onClick={addAllergie}>+</button>
+          </div>
         </div>
 
         {/* Urgences */}
