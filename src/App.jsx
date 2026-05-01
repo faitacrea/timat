@@ -2543,8 +2543,20 @@ function Documents({enfants,role,pEId,user}){
     count:filtres.filter(d=>d.cat===k).length
   })).filter(c=>c.count>0);
 
-  const telechargerDoc=(doc)=>{
-    if(doc.url){
+  // BUCKETS PRIVES P3: helper pour generer une signed URL valide 1h
+  const getSignedUrl=async(storagePath)=>{
+    if(!storagePath)return null;
+    const{data,error}=await supabase.storage.from('documents').createSignedUrl(storagePath,3600);
+    if(error){console.error('Signed URL doc:',error.message);return null;}
+    return data?.signedUrl||null;
+  };
+
+  const telechargerDoc=async(doc)=>{
+    if(doc.storagePath){
+      const url=await getSignedUrl(doc.storagePath);
+      if(url)window.open(url,'_blank');
+      else setToast("❌ Erreur ouverture du document");
+    }else if(doc.url){
       window.open(doc.url,'_blank');
     }else{
       setToast("Aperçu de "+doc.nom+" ✓");
@@ -2589,7 +2601,8 @@ function Documents({enfants,role,pEId,user}){
         setUploading(false);return;
       }
 
-      const{data:urlData}=supabase.storage.from('documents').getPublicUrl(path);
+      // BUCKETS PRIVES P3: ne pas stocker d'URL en DB (signed URL = expire)
+      // L'URL sera regeneree a la demande via getSignedUrl(storagePath)
       const taille=newFile.size>1024*1024?(newFile.size/1024/1024).toFixed(1)+" Mo":(newFile.size/1024).toFixed(0)+" Ko";
 
       // Save metadata
@@ -2601,18 +2614,21 @@ function Documents({enfants,role,pEId,user}){
         nom:newDoc.nom+(newDoc.nom.includes('.')?'':'.'+ext),
         taille:taille,
         storage_path:path,
-        storage_url:urlData.publicUrl,
+        storage_url:null,
         partage:true,
       };
       const{data:inserted,error:metaErr}=await supabase.from('documents_meta').insert(meta).select().single();
       if(metaErr)console.error('Meta insert:',metaErr.message);
+
+      // Genere une signed URL temporaire pour l'affichage immediat
+      const signedUrl=await getSignedUrl(path);
 
       setDocs(p=>[{
         id:inserted?.id||"dn"+Date.now(),eId:newDoc.eId||null,cat:newDoc.cat,
         sous:newDoc.sous||CATS[newDoc.cat]?.l,
         nom:meta.nom,date:TODAY_STR,annee:new Date().getFullYear().toString(),
         taille,icone:CATS[newDoc.cat]?.ic||"📄",partage:true,
-        url:urlData.publicUrl,storagePath:path
+        url:signedUrl,storagePath:path
       },...p]);
       setToast("✅ Document uploadé et sauvegardé");
     }
@@ -2754,7 +2770,7 @@ function Documents({enfants,role,pEId,user}){
                   onClick={()=>telechargerDoc(doc)}
                   title="Télécharger">⬇️</button>
                 <button className="btn bG"style={{padding:"6px 10px",fontSize:12}}
-                  onClick={()=>{if(doc.url)window.open(doc.url);else setToast("Impression: "+doc.nom);}}
+                  onClick={()=>{if(doc.storagePath||doc.url)telechargerDoc(doc);else setToast("Impression: "+doc.nom);}}
                   title="Imprimer">🖨️</button>
                 {role==="asmat"&&<button className="btn bG"style={{padding:"6px 10px",fontSize:12,color:"var(--R)"}}
                   onClick={()=>supprimerDoc(doc)}
@@ -2785,7 +2801,7 @@ function Documents({enfants,role,pEId,user}){
               <div style={{fontSize:11,color:"var(--l)"}}>Dans la version finale, le PDF s'affiche ici</div>
             </div>
             <div style={{display:"flex",gap:8,marginTop:16,justifyContent:"flex-end"}}>
-              <button className="btn bG"onClick={()=>{if(doc.url)window.open(doc.url);else window.print();}}>🖨️ Imprimer</button>
+              <button className="btn bG"onClick={()=>{if(doc.storagePath||doc.url)telechargerDoc(doc);else window.print();}}>🖨️ Imprimer</button>
               <button className="btn bT"onClick={()=>telechargerDoc(doc)}>⬇️ Télécharger</button>
             </div>
           </div>
@@ -3487,10 +3503,12 @@ function TransmissionsContent({enfant,role,user}){
         const path=`${user?.id||'anon'}/${enfant.id}/${today}`;
         const{data:files,error}=await supabase.storage.from('photos').list(path,{limit:50});
         if(!error&&files?.length>0){
-          const urls=files.filter(f=>f.name!=='.emptyFolderPlaceholder').map(f=>{
-            const{data}=supabase.storage.from('photos').getPublicUrl(`${path}/${f.name}`);
-            return data.publicUrl;
-          });
+          // BUCKETS PRIVES P3: signed URLs (expirent 1h) au lieu de getPublicUrl
+          const validFiles=files.filter(f=>f.name!=='.emptyFolderPlaceholder');
+          const filePaths=validFiles.map(f=>`${path}/${f.name}`);
+          const{data:signed,error:signErr}=await supabase.storage.from('photos').createSignedUrls(filePaths,3600);
+          if(signErr){console.error('Signed URLs photos:',signErr.message);setPhotosLoading(false);return;}
+          const urls=(signed||[]).map(s=>s.signedUrl).filter(Boolean);
           setPhotos(p=>({...p,[enfant.id]:urls}));
         }
       }catch(e){console.log('Photos load:',e.message);}
@@ -3521,8 +3539,14 @@ function TransmissionsContent({enfant,role,user}){
       setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),url]}));
       return;
     }
-    const{data:urlData}=supabase.storage.from('photos').getPublicUrl(path);
-    setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),urlData.publicUrl]}));
+    const{data:urlData,error:signErr}=await supabase.storage.from('photos').createSignedUrl(path,3600);
+    if(signErr||!urlData?.signedUrl){
+      console.error('Signed URL photo:',signErr?.message);
+      const url=URL.createObjectURL(file);
+      setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),url]}));
+      return;
+    }
+    setPhotos(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),urlData.signedUrl]}));
   };
 
   const bilansRecus=role==="parent"?[
