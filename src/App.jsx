@@ -2242,24 +2242,132 @@ function Portfolio({enfants,role,pEId}){
 }
 
 //
+// MILESTONES P3 - Référentiel des jalons (46) sourcés OMS + Carnet de santé FR 2025 + PNNS
+const JALONS_REF=[
+  // Motricité globale (OMS - WHO Multicentre Growth Reference Study 2006)
+  {categorie:"Motricité globale",texte:"S'assoit sans support",age_attendu:"4-9 mois",source:"OMS"},
+  {categorie:"Motricité globale",texte:"Se tient debout avec aide",age_attendu:"5-11 mois",source:"OMS"},
+  {categorie:"Motricité globale",texte:"Se déplace au sol (4 pattes ou autre)",age_attendu:"5-13 mois",source:"OMS"},
+  {categorie:"Motricité globale",texte:"Marche avec aide",age_attendu:"6-14 mois",source:"OMS"},
+  {categorie:"Motricité globale",texte:"Se tient debout seul",age_attendu:"7-17 mois",source:"OMS"},
+  {categorie:"Motricité globale",texte:"Marche seul",age_attendu:"8-18 mois",source:"OMS"},
+  // Motricité fine (Carnet de santé FR 2025 / Mpedia)
+  {categorie:"Motricité fine",texte:"Tient sa tête droite",age_attendu:"2-4 mois",source:"Carnet santé FR"},
+  {categorie:"Motricité fine",texte:"Attrape un objet volontairement",age_attendu:"3-5 mois",source:"Carnet santé FR"},
+  {categorie:"Motricité fine",texte:"Passe un objet d'une main à l'autre",age_attendu:"5-7 mois",source:"Carnet santé FR"},
+  {categorie:"Motricité fine",texte:"Pince pouce-index (préhension fine)",age_attendu:"8-12 mois",source:"Carnet santé FR"},
+  {categorie:"Motricité fine",texte:"Tourne les pages d'un livre",age_attendu:"12-18 mois",source:"Carnet santé FR"},
+  // Langage (Carnet santé / 1000 premiers jours)
+  {categorie:"Langage",texte:"Gazouille (vocalises de plaisir)",age_attendu:"2-3 mois",source:"Carnet santé FR"},
+  {categorie:"Langage",texte:"Babille en syllabes répétées (« bababa »)",age_attendu:"6-9 mois",source:"Carnet santé FR"},
+  {categorie:"Langage",texte:"Dit ses premiers mots (« maman », « papa »)",age_attendu:"10-14 mois",source:"Carnet santé FR"},
+  {categorie:"Langage",texte:"Comprend des consignes simples",age_attendu:"12-18 mois",source:"Carnet santé FR"},
+  {categorie:"Langage",texte:"Phrases de 2 mots",age_attendu:"18-24 mois",source:"Carnet santé FR"},
+  {categorie:"Langage",texte:"Phrases de 3 mots ou plus",age_attendu:"24-36 mois",source:"Carnet santé FR"},
+  // Social / Émotionnel (Carnet santé / 1000 premiers jours)
+  {categorie:"Social / Émotionnel",texte:"Sourit en réponse (sourire social)",age_attendu:"1-3 mois",source:"Carnet santé FR"},
+  {categorie:"Social / Émotionnel",texte:"Reconnaît les visages familiers",age_attendu:"3-6 mois",source:"Carnet santé FR"},
+  {categorie:"Social / Émotionnel",texte:"Joue à « coucou-caché »",age_attendu:"8-12 mois",source:"Carnet santé FR"},
+  {categorie:"Social / Émotionnel",texte:"Pointe du doigt pour montrer",age_attendu:"12-18 mois",source:"Carnet santé FR"},
+  {categorie:"Social / Émotionnel",texte:"Imite les gestes du quotidien",age_attendu:"15-24 mois",source:"Carnet santé FR"},
+  {categorie:"Social / Émotionnel",texte:"Joue à côté d'autres enfants",age_attendu:"24-36 mois",source:"Carnet santé FR"},
+  // Alimentation (PNNS / Santé publique France 2021 / HCSP 2020)
+  {categorie:"Alimentation",texte:"Lait exclusif (maternel ou infantile)",age_attendu:"0-4 mois",source:"PNNS"},
+  {categorie:"Alimentation",texte:"Début de la diversification alimentaire",age_attendu:"4-6 mois",source:"PNNS"},
+  {categorie:"Alimentation",texte:"Découvre les morceaux fondants",age_attendu:"6-10 mois",source:"PNNS"},
+  {categorie:"Alimentation",texte:"Mange seul à la cuillère",age_attendu:"12-24 mois",source:"Carnet santé FR"},
+  {categorie:"Alimentation",texte:"Boit au verre sans aide",age_attendu:"15-24 mois",source:"Carnet santé FR"},
+  {categorie:"Alimentation",texte:"Mange comme les grands à table",age_attendu:"24-36 mois",source:"PNNS"},
+  // Sommeil (Carnet santé / Mpedia / 1000 premiers jours - variable selon enfants)
+  {categorie:"Sommeil",texte:"Acquiert un rythme jour/nuit",age_attendu:"2-4 mois",source:"Carnet santé FR"},
+  {categorie:"Sommeil",texte:"Fait ses nuits (6h+ consécutives)",age_attendu:"3-9 mois",source:"Carnet santé FR"},
+  {categorie:"Sommeil",texte:"Réduit à 1 sieste par jour",age_attendu:"15-20 mois",source:"Carnet santé FR"},
+  {categorie:"Sommeil",texte:"Supprime la sieste de l'après-midi",age_attendu:"30-48 mois",source:"Carnet santé FR"},
+  // Autonomie (Carnet santé)
+  {categorie:"Autonomie",texte:"Enlève des vêtements simples",age_attendu:"18-30 mois",source:"Carnet santé FR"},
+  {categorie:"Autonomie",texte:"S'habille partiellement seul",age_attendu:"30-42 mois",source:"Carnet santé FR"},
+  // Jeu (Carnet santé / 1000 premiers jours)
+  {categorie:"Jeu",texte:"Manipule les objets, les met en bouche",age_attendu:"3-9 mois",source:"Carnet santé FR"},
+  {categorie:"Jeu",texte:"Joue à faire tomber, taper (cause à effet)",age_attendu:"9-15 mois",source:"Carnet santé FR"},
+  {categorie:"Jeu",texte:"Empile 2-3 cubes / encastrements simples",age_attendu:"15-24 mois",source:"Carnet santé FR"},
+  {categorie:"Jeu",texte:"Jeu symbolique (« fait semblant »)",age_attendu:"18-30 mois",source:"Carnet santé FR"},
+  {categorie:"Jeu",texte:"Joue à des jeux de règles simples",age_attendu:"30-42 mois",source:"Carnet santé FR"},
+  // Propreté (HAS / Carnet santé - respect du rythme de l'enfant, énurésie nocturne avant 5 ans non pathologique)
+  {categorie:"Propreté",texte:"Demande pour aller aux toilettes",age_attendu:"24-36 mois",source:"Carnet santé FR"},
+  {categorie:"Propreté",texte:"Continence diurne acquise",age_attendu:"30-42 mois",source:"Carnet santé FR"},
+  {categorie:"Propreté",texte:"Continence nocturne acquise",age_attendu:"36-60 mois",source:"Carnet santé FR"},
+  // Santé / Dentition (MSD / Carnet santé / INSPQ)
+  {categorie:"Santé / Dentition",texte:"Sortie de la première dent",age_attendu:"4-12 mois",source:"Carnet santé FR"},
+  {categorie:"Santé / Dentition",texte:"Première visite chez le dentiste",age_attendu:"12-24 mois",source:"HAS / UFSBD"},
+  {categorie:"Santé / Dentition",texte:"Dentition de lait complète (20 dents)",age_attendu:"24-36 mois",source:"MSD"},
+];
+
+// MILESTONES P3 - persistance Supabase + seed automatique au premier accès asmat
 function Developpement({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [ms,setMs]=useState(D.milestones);
+  const [ms,setMs]=useState({});
+  const [loading,setLoading]=useState(true);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const idsKey=liste.map(e=>e.id).filter(Boolean).join(",");
+
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      const ids=idsKey.split(",").filter(Boolean);
+      if(ids.length===0){setLoading(false);return;}
+      const {data,error}=await supabase.from("jalons").select("*").in("enfant_id",ids);
+      if(error){console.error("[MILESTONES P3] fetch",error);if(!cancelled)setLoading(false);return;}
+      if(cancelled)return;
+      const grouped={};
+      ids.forEach(id=>grouped[id]=[]);
+      (data||[]).forEach(r=>{if(!grouped[r.enfant_id])grouped[r.enfant_id]=[];grouped[r.enfant_id].push(r);});
+      // Seed au premier accès (asmat uniquement, RLS bloque le parent en INSERT)
+      if(role==="asmat"){
+        const aSeeder=ids.filter(id=>grouped[id].length===0);
+        for(const eid of aSeeder){
+          const rows=JALONS_REF.map(j=>({...j,enfant_id:eid,acquis:false}));
+          const {data:inserted,error:errI}=await supabase.from("jalons").insert(rows).select();
+          if(errI){console.error("[MILESTONES P3] seed",errI);continue;}
+          grouped[eid]=inserted||[];
+        }
+      }
+      if(!cancelled){setMs(grouped);setLoading(false);}
+    })();
+    return()=>{cancelled=true;};
+  },[idsKey,role]);
+
   const items=ms[enfant?.id]||[];
-  const cats=[...new Set(items.map(m=>m.cat))];
-  const done=items.filter(m=>m.ok).length;
+  const cats=[...new Set(items.map(m=>m.categorie))];
+  const done=items.filter(m=>m.acquis).length;
   const pct=items.length?Math.round(done/items.length*100):0;
 
-  const toggle=(id)=>setMs(p=>({...p,[enfant.id]:p[enfant.id].map(m=>m.id===id?{...m,ok:!m.ok}:m)}));
+  const toggle=async(id)=>{
+    if(role!=="asmat")return;
+    const row=items.find(m=>m.id===id);
+    if(!row)return;
+    const newAcquis=!row.acquis;
+    const newAcquisAt=newAcquis?new Date().toISOString().slice(0,10):null;
+    setMs(p=>({...p,[enfant.id]:p[enfant.id].map(m=>m.id===id?{...m,acquis:newAcquis,acquis_at:newAcquisAt}:m)}));
+    const {error}=await supabase.from("jalons").update({acquis:newAcquis,acquis_at:newAcquisAt}).eq("id",id);
+    if(error){
+      console.error("[MILESTONES P3] toggle",error);
+      setMs(p=>({...p,[enfant.id]:p[enfant.id].map(m=>m.id===id?{...m,acquis:row.acquis,acquis_at:row.acquis_at}:m)}));
+    }
+  };
 
   return <div className="fi">
-    <PageHeader icon="🌱" title="Suivi du développement" sub="Jalons OMS - étapes clés de l'enfant"/>
+    <PageHeader icon="🌱" title="Suivi du développement" sub="Jalons OMS + Carnet de santé 2025"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
-    {enfant&&<div className="g2">
+    {loading&&<div className="card"style={{padding:16,textAlign:"center",color:"var(--l)"}}>Chargement des jalons...</div>}
+
+    {!loading&&enfant&&items.length===0&&<div className="card"style={{padding:16,textAlign:"center",color:"var(--l)"}}>
+      {role==="asmat"?"Aucun jalon initialisé. Rechargez la page pour générer la liste.":"Les jalons n'ont pas encore été initialisés par l'assistant·e maternel·le."}
+    </div>}
+
+    {!loading&&enfant&&items.length>0&&<div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {/* Score global */}
         <div className="card"style={{padding:16}}>
@@ -2282,8 +2390,8 @@ function Developpement({enfants,role,pEId}){
 
         {/* Par catégorie */}
         {cats.map(cat=>{
-          const citems=items.filter(m=>m.cat===cat);
-          const cpct=Math.round(citems.filter(m=>m.ok).length/citems.length*100);
+          const citems=items.filter(m=>m.categorie===cat);
+          const cpct=citems.length?Math.round(citems.filter(m=>m.acquis).length/citems.length*100):0;
           return <div key={cat}className="card"style={{padding:12}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
               <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{cat}</span>
@@ -2299,13 +2407,13 @@ function Developpement({enfants,role,pEId}){
         <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>Toutes les étapes</div>
         {cats.map(cat=><div key={cat}style={{marginBottom:14}}>
           <div style={{fontSize:12,fontWeight:700,color:"var(--m)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:6}}>{cat}</div>
-          {items.filter(m=>m.cat===cat).map(m=><div key={m.id}className="ms"onClick={()=>role==="asmat"&&toggle(m.id)}>
-            <div className={"msc "+(m.ok?"ok":"")+""}>{m.ok?"✓":""}</div>
+          {items.filter(m=>m.categorie===cat).map(m=><div key={m.id}className="ms"onClick={()=>role==="asmat"&&toggle(m.id)}>
+            <div className={"msc "+(m.acquis?"ok":"")+""}>{m.acquis?"✓":""}</div>
             <div style={{flex:1}}>
-              <div style={{fontSize:13,color:"var(--b)",fontWeight:m.ok?700:400,textDecoration:m.ok?"none":"none"}}>{m.txt}</div>
+              <div style={{fontSize:13,color:"var(--b)",fontWeight:m.acquis?700:400}}>{m.texte}</div>
               <div style={{fontSize:11,color:"var(--l)"}}>{m.age_attendu}</div>
             </div>
-            {!m.ok&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)",fontSize:10}}>En cours</span>}
+            {!m.acquis&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)",fontSize:10}}>En cours</span>}
           </div>)}
         </div>)}
         {role==="asmat"&&<div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Cliquez sur une étape pour valider</div>}
