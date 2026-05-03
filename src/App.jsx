@@ -29,6 +29,41 @@ function useSupabaseData(table, enfantId, isDemo, defaultData){
   return[data,setDataState,saveRow,deleteRow,loaded];
 }
 
+// ========== AUDIT LOG + CONSENT P8 ==========
+// Helpers RGPD : logAction (audit_log append-only) et logConsent (consentements RGPD)
+// Tous les appels sont non-bloquants : si l'INSERT échoue, on warn en console mais l'app continue.
+async function logAction(action, opts={}){
+  try{
+    const { table_name=null, record_id=null, user_id=null } = opts;
+    let uid = user_id;
+    if(!uid){
+      try{
+        const { data:{user} } = await supabase.auth.getUser();
+        uid = user?.id || null;
+      } catch{}
+    }
+    await supabase.from('audit_log').insert({
+      user_id: uid,
+      action,
+      table_name,
+      record_id: record_id ? String(record_id) : null,
+    });
+  } catch(e){ console.warn('[audit_log] insert failed:', e?.message); }
+}
+
+async function logConsent(user_id, consents={}){
+  try{
+    await supabase.from('consentements').insert({
+      user_id,
+      version_politique: '1.0',
+      consent_politique_confidentialite: !!consents.politique,
+      consent_mentions_legales: !!consents.cgu,
+      consent_newsletter: !!consents.newsletter,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    });
+  } catch(e){ console.warn('[consentements] insert failed:', e?.message); }
+}
+
 // DATES
 var _D=new Date();
 var _y=_D.getFullYear();
@@ -2067,6 +2102,7 @@ function Sante({enfants,role,pEId}){
     const{error}=await supabase.rpc("update_allergies",{p_enfant_id:enfant.id,p_allergies:[...current,v]});
     if(error){alert("Erreur : "+error.message);return;}
     setNewAllergie("");
+    logAction('add_allergie', {table_name:'enfants', record_id:enfant.id}); // AUDIT LOG P8
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const delAllergie=async(a)=>{ // ALLERGIES P6
@@ -2075,6 +2111,7 @@ function Sante({enfants,role,pEId}){
     const updated=(enfant.allergies||[]).filter(x=>x!==a);
     const{error}=await supabase.rpc("update_allergies",{p_enfant_id:enfant.id,p_allergies:updated});
     if(error){alert("Erreur : "+error.message);return;}
+    logAction('delete_allergie', {table_name:'enfants', record_id:enfant.id}); // AUDIT LOG P8
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const isRealChild=!["e1","e2","e3"].includes(enfant?.id);
@@ -4621,6 +4658,8 @@ function SupprimerCompte({onDeleted}){
       if(!user)throw new Error("Non connecté");
       const{error}=await supabase.rpc("delete_user_account",{user_id:user.id});
       if(error)throw error;
+      // AUDIT LOG P8 : trace de suppression de compte (avant signOut, user_id explicite car user supprimé en DB)
+      await logAction('delete_account', {table_name:'profiles', record_id:user.id, user_id:user.id});
       await supabase.auth.signOut();
       setEtape("done");
       setTimeout(()=>onDeleted?.(),2000);
@@ -6955,6 +6994,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           }catch(e){console.log('Profile upsert:', e);}
         },500);
         onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
+        // AUDIT LOG + CONSENT P8 : preuve RGPD du consentement + trace de la création de compte
+        logConsent(data.user.id, consent);
+        logAction('signup', {table_name:'profiles', record_id:data.user.id, user_id:data.user.id});
       }
     } catch(e) { setErr("Erreur lors de l'inscription."); }
     setLoading(false);
@@ -8500,6 +8542,7 @@ function OnboardingWizard({user,onFinish}){
                     });
                     const d=await res.json();
                     setToast(d.success?"✉️ Invitation envoyée - le parent recevra un email":"Erreur: "+d.error);
+                    if(d.success) logAction('invitation_parent', {table_name:'invitations'}); // AUDIT LOG P8
                   }catch(e){setToast("Erreur réseau");}
                   setSaving(false);setStep(3);
                 }}>
@@ -8628,6 +8671,7 @@ function AjouterEnfantModale({user,onClose}){
             }),
           });
           const d=await res.json().catch(()=>({}));
+          if(d.success) logAction('invitation_parent', {table_name:'invitations', record_id:enfantData.id}); // AUDIT LOG P8
           if(!d.success){
             console.warn("Invitation parent : ",d.error||"erreur inconnue");
           }
@@ -9456,6 +9500,7 @@ function InviterParent({enfants,user}){
       });
       const data=await res.json();
       if(data.success||res.ok){
+        logAction('invitation_parent', {table_name:'invitations', record_id:enfant.id}); // AUDIT LOG P8
         setSent(true);
         setToast("Invitation envoyée à "+email+" ✓");
         setInvitations(prev=>[{id:"inv"+Date.now(),email_parent:email,prenom_enfant:enfant.prenom,statut:"envoyée",created_at:new Date().toISOString()},...prev]);
