@@ -2340,13 +2340,45 @@ const JALONS_REF=[
 ];
 
 // MILESTONES P3 - persistance Supabase + seed automatique au premier accès asmat
+// FILTRE AGE P8 - helpers pour parser "X-Y mois" et calculer l'âge en mois
+function parseAgeAttendu(str){ // FILTRE AGE P8
+  if(!str) return {min:0, max:36};
+  const m=String(str).match(/(\d+)\s*-\s*(\d+)/);
+  return m ? {min:parseInt(m[1],10), max:parseInt(m[2],10)} : {min:0, max:36};
+}
+function ageEnMois(naissance){ // FILTRE AGE P8
+  if(!naissance) return null;
+  const d=new Date(naissance);
+  if(isNaN(d.getTime())) return null;
+  const now=new Date();
+  const months=(now.getFullYear()-d.getFullYear())*12 + (now.getMonth()-d.getMonth());
+  return Math.max(0, months);
+}
 function Developpement({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [ms,setMs]=useState({});
   const [loading,setLoading]=useState(true);
+  const [filterAge,setFilterAge]=useState(36); // FILTRE AGE P8
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const idsKey=liste.map(e=>e.id).filter(Boolean).join(",");
+
+  // FILTRE AGE P8 - init filterAge depuis localStorage (ou âge enfant +3 par défaut)
+  useEffect(()=>{
+    if(!enfant?.id) return;
+    try{
+      const stored=localStorage.getItem(`timat:milestones:filterAge:${enfant.id}`);
+      if(stored){setFilterAge(parseInt(stored,10));return;}
+    }catch{}
+    const m=ageEnMois(enfant.naissance);
+    setFilterAge(m!==null ? Math.min(36, m+3) : 36);
+  },[enfant?.id, enfant?.naissance]);
+
+  // FILTRE AGE P8 - persister filterAge à chaque changement
+  useEffect(()=>{
+    if(!enfant?.id) return;
+    try{ localStorage.setItem(`timat:milestones:filterAge:${enfant.id}`, String(filterAge)); }catch{}
+  },[filterAge, enfant?.id]);
 
   useEffect(()=>{
     let cancelled=false;
@@ -2378,6 +2410,9 @@ function Developpement({enfants,role,pEId}){
   const cats=[...new Set(items.map(m=>m.categorie))];
   const done=items.filter(m=>m.acquis).length;
   const pct=items.length?Math.round(done/items.length*100):0;
+  // FILTRE AGE P8 - liste filtrée par âge max (n'affecte que la liste de droite, pas les stats globales)
+  const filteredItems=items.filter(m=>parseAgeAttendu(m.age_attendu).max<=filterAge);
+  const filteredCats=[...new Set(filteredItems.map(m=>m.categorie))];
 
   const toggle=async(id)=>{
     if(role!=="asmat")return;
@@ -2442,9 +2477,25 @@ function Developpement({enfants,role,pEId}){
 
       <div className="card"style={{padding:16}}>
         <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>Toutes les étapes</div>
-        {cats.map(cat=><div key={cat}style={{marginBottom:14}}>
+        {/* FILTRE AGE P8 - slider */}
+        <div style={{marginBottom:14,padding:10,background:"var(--Sp)",borderRadius:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+            <span style={{fontSize:12,fontWeight:700,color:"var(--m)"}}>Filtre par âge</span>
+            <span style={{fontSize:11,color:"var(--l)"}}>{filteredItems.length} / {items.length} jalons</span>
+          </div>
+          <input type="range" min="0" max="36" value={filterAge}
+            onChange={e=>setFilterAge(parseInt(e.target.value,10))}
+            style={{width:"100%",accentColor:"var(--S)",cursor:"pointer"}}/>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:2}}>
+            <span>0 mois</span>
+            <span style={{fontWeight:700,color:"var(--S)"}}>Jusqu'à {filterAge} mois</span>
+            <span>36 mois</span>
+          </div>
+        </div>
+        {filteredCats.length===0 && <div style={{fontSize:13,color:"var(--l)",textAlign:"center",padding:20}}>Aucun jalon dans cette tranche d'âge.<br/>Augmente le filtre pour voir plus d'étapes.</div>}
+        {filteredCats.map(cat=><div key={cat}style={{marginBottom:14}}>
           <div style={{fontSize:12,fontWeight:700,color:"var(--m)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:6}}>{cat}</div>
-          {items.filter(m=>m.categorie===cat).map(m=><div key={m.id}className="ms"onClick={()=>role==="asmat"&&toggle(m.id)}>
+          {filteredItems.filter(m=>m.categorie===cat).map(m=><div key={m.id}className="ms"onClick={()=>role==="asmat"&&toggle(m.id)}>
             <div className={"msc "+(m.acquis?"ok":"")+""}>{m.acquis?"✓":""}</div>
             <div style={{flex:1}}>
               <div style={{fontSize:13,color:"var(--b)",fontWeight:m.acquis?700:400}}>{m.texte}</div>
