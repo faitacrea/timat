@@ -343,7 +343,7 @@ function AccueilAssMat({enfants,setPage,user}){
     {icon:"👶",val:nbEnfants>0?nbEnfants+" enfant"+(nbEnfants>1?"s":""):"Aucun",lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
     {icon:"💬",val:"0",lbl:"Messages non lus",c:"var(--B)",page:"messagerie",hint:"→ Messagerie"},
     {icon:"📋",val:nbEnfants>0?"Actif":"-",lbl:"Journal du jour",c:"var(--S)",page:"journal_complet",hint:"→ Journal"},
-    {icon:"🧾",val:nbEnfants,lbl:"Contrat"+(nbEnfants>1?"s":"")+" actif"+(nbEnfants>1?"s":""),c:"var(--G)",page:"admin_finances",hint:"→ Facturation"},
+    {icon:"🧾",val:nbEnfants,lbl:"Contrat"+(nbEnfants>1?"s":"")+" actif"+(nbEnfants>1?"s":""),c:"var(--G)",page:"admin_finances",hint:"→ Paie & Contrats"}, // RENAME NAV P9
   ];
 
   return <div className="fi">
@@ -6740,7 +6740,7 @@ function ExportDonnees({enfants,user,role}){
 function BilansExports({enfants,role,pEId,user,pointagesDB}){
   const [sec,setSec]=useState("rapport");
   return <div className="fi">
-    <PageHeader icon="📊" title="Bilans & Exports" sub="Rapports, recapitulatifs et exports de vos donnees"/>
+    <PageHeader icon="📊" title="Rapports & Exports" sub="Rapports, recapitulatifs et exports de vos donnees"/> {/* RENAME NAV P9 */}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
       {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Recap mensuel PDF",ic:"📄"},{id:"export",l:"Export donnees",ic:"📦"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
@@ -6761,17 +6761,17 @@ function BilansExports({enfants,role,pEId,user,pointagesDB}){
 //
 const FAQ_DATA=[
   {cat:"Pajemploi",q:"Comment exporter mes données vers Pajemploi ?",
-   r:"Dans Facturation & Bilans, cliquez sur 'Exporter vers Pajemploi'. TiMat génère un récapitulatif avec toutes les données nécessaires (heures, salaire net, indemnités) prêtes à saisir sur pajemploi.urssaf.fr entre le 25 et le 5 du mois suivant."},
+   r:"Dans Paie & Contrats > Facturation & Pajemploi, cliquez sur 'Exporter vers Pajemploi'. TiMat génère un récapitulatif avec toutes les données nécessaires (heures, salaire net, indemnités) prêtes à saisir sur pajemploi.urssaf.fr entre le 25 et le 5 du mois suivant."}, // RENAME NAV P9
   {cat:"Pajemploi",q:"Mon calcul de salaire est-il conforme à la convention collective ?",
    r:"Oui. TiMat applique automatiquement les règles de la CCN des particuliers employeurs : mensualisation, heures complémentaires, majorées au-delà de 45h/semaine, indemnités d'entretien selon le barème URSSAF 2025."},
   {cat:"Contrats",q:"Puis-je modifier un contrat en cours ?",
-   r:"Oui, via un avenant. Dans Facturation → Contrats & Avenants, choisissez 'Avenant - Modification d'horaires' ou 'Avenant - Revalorisation salaire'. L'avenant est daté et tracé automatiquement."},
+   r:"Oui, via un avenant. Dans Paie & Contrats > Contrats & Avenants, choisissez 'Avenant - Modification d'horaires' ou 'Avenant - Revalorisation salaire'. L'avenant est daté et tracé automatiquement."}, // RENAME NAV P9
   {cat:"Contrats",q:"Que se passe-t-il si un parent ne signe pas le contrat ?",
    r:"Relancez via la messagerie TiMat. Sans signature, le contrat n'a pas de valeur légale. TiMat vous alerte si un contrat reste non signé plus de 7 jours."},
   {cat:"PMI",q:"Comment préparer ma visite de renouvellement d'agrément ?",
    r:"Dans Documents, exportez votre 'Dossier PMI complet' : il contient l'historique des enfants accueillis, les bilans trimestriels, le planning périscolaire et vos échanges avec la PMI. Tout est daté et structuré."},
   {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
-   r:"Dans Facturation → Solde de tout compte. Saisissez la date de fin et le motif. TiMat calcule automatiquement l'ICCP (indemnité compensatrice de congés payés) et l'indemnité de préavis selon la CCN."},
+   r:"Dans Paie & Contrats > Solde de tout compte. Saisissez la date de fin et le motif. TiMat calcule automatiquement l'ICCP (indemnité compensatrice de congés payés) et l'indemnité de préavis selon la CCN."}, // RENAME NAV P9
   {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
    r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive. Toutes vos données sont effacées de nos serveurs conformément au RGPD (droit à l'effacement, article 17)."},
   {cat:"RGPD",q:"Où sont stockées mes données ?",
@@ -6953,9 +6953,9 @@ const GROUPS_AM={
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
-    {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
+    {id:"admin_finances",l:"Paie & Contrats",ic:"🧾"}, // RENAME NAV P9 (côté asmat - couvre paie + contrats + courriers)
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
-    {id:"bilans_exports",l:"Bilans & Exports",ic:"📊"},
+    {id:"bilans_exports",l:"Rapports & Exports",ic:"📊"}, // RENAME NAV P9 (id interne conservé pour pas casser le routing)
   ]},
   outils:{l:"Outils Pro",ic:"⭐",color:"#FF9F63",subs:[
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
@@ -6982,7 +6982,7 @@ const GROUPS_P={
     {id:"messagerie",l:"Messagerie",ic:"💬"},
     {id:"kit_cmg",l:"Aide CMG",ic:"💶"},
     {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
-    {id:"admin_finances",l:"Facturation & Bilans",ic:"🧾"},
+    {id:"admin_finances",l:"Mon contrat",ic:"🧾"}, // RENAME NAV P9 (côté parent - contenu réduit à Mon contrat & Signature)
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
