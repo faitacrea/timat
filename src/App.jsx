@@ -2511,6 +2511,324 @@ function Developpement({enfants,role,pEId}){
 }
 
 //
+// BILANS P8 - Composant complet pour créer/visualiser/éditer des bilans périodiques
+function Bilans({enfants,role,pEId}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [bilans,setBilans]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [editor,setEditor]=useState(null);
+  const [viewing,setViewing]=useState(null);
+  const [autoFilling,setAutoFilling]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const [toast,setToast]=useState("");
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const isRealChild=enfant && !["e1","e2","e3"].includes(enfant.id);
+
+  useEffect(()=>{
+    if(!enfant?.id||!isRealChild){setBilans([]);setLoading(false);return;}
+    let cancelled=false;
+    (async()=>{
+      setLoading(true);
+      const{data,error}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
+      if(cancelled)return;
+      if(error){console.error("[BILANS P8] fetch",error);setBilans([]);}
+      else setBilans(data||[]);
+      setLoading(false);
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,isRealChild]);
+
+  const parseContenu=(c)=>{try{const o=JSON.parse(c);return o&&typeof o==="object"?o:null;}catch{return null;}};
+
+  const getDefaultDates=(type)=>{
+    const today=new Date();
+    if(type==="mensuel"){
+      const s=new Date(today.getFullYear(),today.getMonth(),1);
+      const e=new Date(today.getFullYear(),today.getMonth()+1,0);
+      return{date_debut:s.toISOString().slice(0,10),date_fin:e.toISOString().slice(0,10)};
+    }
+    if(type==="trimestriel"){
+      const tStart=Math.floor(today.getMonth()/3)*3;
+      const s=new Date(today.getFullYear(),tStart,1);
+      const e=new Date(today.getFullYear(),tStart+3,0);
+      return{date_debut:s.toISOString().slice(0,10),date_fin:e.toISOString().slice(0,10)};
+    }
+    const s=new Date(today);s.setMonth(today.getMonth()-3);
+    return{date_debut:s.toISOString().slice(0,10),date_fin:today.toISOString().slice(0,10)};
+  };
+
+  const emptySections=()=>({
+    notes:{observations:"",axes:""},
+    alimentation_sommeil:{commentaire:"",stats:null},
+    croissance:{commentaire:"",mesures:[]},
+    jalons:{commentaire:"",acquis:[]},
+  });
+
+  const newBilan=()=>{
+    const t="trimestriel";const d=getDefaultDates(t);
+    setEditor({type:t,date_debut:d.date_debut,date_fin:d.date_fin,sections:emptySections()});
+  };
+
+  const editBilan=(b)=>{
+    const p=parseContenu(b.contenu);
+    setEditor({
+      id:b.id,
+      type:b.type||"trimestriel",
+      date_debut:p?.date_debut||b.date,
+      date_fin:p?.date_fin||b.date,
+      sections:p?.sections||{...emptySections(),notes:{observations:b.contenu||"",axes:""}},
+    });
+  };
+
+  const changeType=(t)=>{
+    const d=getDefaultDates(t);
+    setEditor(p=>({...p,type:t,date_debut:d.date_debut,date_fin:d.date_fin}));
+  };
+
+  const autoFill=async()=>{
+    if(!editor||!enfant)return;
+    setAutoFilling(true);
+    const{date_debut,date_fin}=editor;
+    try{
+      const[jR,cR,rR,sR]=await Promise.all([
+        supabase.from("jalons").select("*").eq("enfant_id",enfant.id).eq("acquis",true).gte("acquis_at",date_debut).lte("acquis_at",date_fin),
+        supabase.from("croissance").select("*").eq("enfant_id",enfant.id).gte("date",date_debut).lte("date",date_fin).order("date",{ascending:true}),
+        supabase.from("repas").select("*").eq("enfant_id",enfant.id).gte("date",date_debut).lte("date",date_fin),
+        supabase.from("sommeil").select("*").eq("enfant_id",enfant.id).gte("date",date_debut).lte("date",date_fin),
+      ]);
+      const acquis=(jR.data||[]).map(j=>({categorie:j.categorie,texte:j.texte,date:j.acquis_at}));
+      const mesures=(cR.data||[]).map(m=>({date:m.date,poids:m.poids,taille:m.taille,age_mois:m.age_mois}));
+      const repasCount=rR.data?.length||0;
+      const sommeilCount=sR.data?.length||0;
+      const isGood=q=>q&&(String(q).toLowerCase().includes("bonne")||String(q).toLowerCase().includes("excellent"));
+      const repasGood=(rR.data||[]).filter(r=>isGood(r.qualite)).length;
+      const sommeilGood=(sR.data||[]).filter(s=>isGood(s.qualite)).length;
+      setEditor(p=>({...p,sections:{...p.sections,
+        alimentation_sommeil:{...p.sections.alimentation_sommeil,stats:{
+          repasCount,sommeilCount,
+          repasQualitePct:repasCount?Math.round(repasGood/repasCount*100):null,
+          sommeilQualitePct:sommeilCount?Math.round(sommeilGood/sommeilCount*100):null,
+        }},
+        croissance:{...p.sections.croissance,mesures},
+        jalons:{...p.sections.jalons,acquis},
+      }}));
+      setToast("✨ Données auto-remplies sur la période");
+    }catch(e){console.error("[BILANS P8] autoFill",e);setToast("Erreur : "+e.message);}
+    finally{setAutoFilling(false);}
+  };
+
+  const saveBilan=async()=>{
+    if(!editor||!enfant)return;
+    setSaving(true);
+    const contenu=JSON.stringify({date_debut:editor.date_debut,date_fin:editor.date_fin,sections:editor.sections});
+    const d0=new Date(editor.date_debut);
+    const trimestre=editor.type==="trimestriel"?`T${Math.floor(d0.getMonth()/3)+1} ${d0.getFullYear()}`:null;
+    const payload={enfant_id:enfant.id,date:editor.date_fin,type:editor.type,trimestre,contenu};
+    try{
+      if(editor.id){
+        const{error}=await supabase.from("bilans").update(payload).eq("id",editor.id);
+        if(error)throw error;
+      } else {
+        const{error}=await supabase.from("bilans").insert(payload);
+        if(error)throw error;
+      }
+      const{data}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
+      setBilans(data||[]);
+      setEditor(null);
+      setToast(editor.id?"✓ Bilan modifié":"✓ Bilan enregistré (brouillon)");
+    }catch(e){console.error("[BILANS P8] save",e);setToast("Erreur : "+e.message);}
+    finally{setSaving(false);}
+  };
+
+  const deleteBilan=async(id)=>{
+    if(!window.confirm("Supprimer ce bilan ?"))return;
+    const{error}=await supabase.from("bilans").delete().eq("id",id);
+    if(error){alert("Erreur : "+error.message);return;}
+    setBilans(p=>p.filter(b=>b.id!==id));
+    setToast("Bilan supprimé");
+  };
+
+  // ===== ÉDITEUR =====
+  if(editor){
+    const s=editor.sections;
+    const updS=(key,upd)=>setEditor(p=>({...p,sections:{...p.sections,[key]:{...p.sections[key],...upd}}}));
+    return <div className="fi">
+      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+      <PageHeader icon="✨" title={editor.id?"Modifier le bilan":"Nouveau bilan"} sub={enfant?.prenom||""}
+        action={<button className="btn"onClick={()=>setEditor(null)}>← Retour</button>}/>
+
+      {/* Périodicité + dates */}
+      <div className="card"style={{padding:16,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>Période du bilan</div>
+        <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+          {[["mensuel","📅 Mensuel"],["trimestriel","📊 Trimestriel"],["libre","✏️ Période libre"]].map(([id,lbl])=>
+            <button key={id}onClick={()=>changeType(id)}style={{
+              padding:"7px 14px",borderRadius:18,border:"none",cursor:"pointer",
+              fontWeight:600,fontSize:12,
+              background:editor.type===id?"var(--T)":"var(--Sp)",
+              color:editor.type===id?"#fff":"var(--m)",
+            }}>{lbl}</button>)}
+        </div>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          <label style={{flex:1,minWidth:140}}>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:3}}>Du</div>
+            <input type="date"className="inp"value={editor.date_debut}
+              onChange={e=>setEditor(p=>({...p,date_debut:e.target.value}))}/>
+          </label>
+          <label style={{flex:1,minWidth:140}}>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:3}}>Au</div>
+            <input type="date"className="inp"value={editor.date_fin}
+              onChange={e=>setEditor(p=>({...p,date_fin:e.target.value}))}/>
+          </label>
+        </div>
+        <button className="btn bT"style={{marginTop:12,width:"100%"}}
+          onClick={autoFill}disabled={autoFilling}>
+          {autoFilling?"Chargement…":"✨ Auto-remplir avec les données"}
+        </button>
+      </div>
+
+      {/* Section 1 : Notes libres */}
+      <div className="card"style={{padding:16,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>📝 Observations & axes à travailler</div>
+        <div style={{fontSize:11,color:"var(--l)",marginBottom:4}}>Vos observations sur la période</div>
+        <textarea className="inp"rows={4}placeholder="Comportement, humeur, intégration, points forts, progrès remarqués..."
+          value={s.notes.observations}onChange={e=>updS("notes",{observations:e.target.value})}
+          style={{marginBottom:10,resize:"vertical"}}/>
+        <div style={{fontSize:11,color:"var(--l)",marginBottom:4}}>Axes à travailler le prochain trimestre</div>
+        <textarea className="inp"rows={3}placeholder="Pistes pédagogiques pour la suite..."
+          value={s.notes.axes}onChange={e=>updS("notes",{axes:e.target.value})}
+          style={{resize:"vertical"}}/>
+      </div>
+
+      {/* Section 2 : Alimentation & sommeil */}
+      <div className="card"style={{padding:16,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>🍽️ Alimentation & sommeil</div>
+        {s.alimentation_sommeil.stats?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
+          <div><b>{s.alimentation_sommeil.stats.repasCount}</b> jours de repas suivis{s.alimentation_sommeil.stats.repasQualitePct!==null?` · qualité bonne ${s.alimentation_sommeil.stats.repasQualitePct}%`:""}</div>
+          <div><b>{s.alimentation_sommeil.stats.sommeilCount}</b> siestes enregistrées{s.alimentation_sommeil.stats.sommeilQualitePct!==null?` · qualité bonne ${s.alimentation_sommeil.stats.sommeilQualitePct}%`:""}</div>
+        </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Cliquez sur "Auto-remplir" pour récupérer les statistiques</div>}
+        <textarea className="inp"rows={3}placeholder="Commentaire sur l'alimentation et le sommeil..."
+          value={s.alimentation_sommeil.commentaire}onChange={e=>updS("alimentation_sommeil",{commentaire:e.target.value})}
+          style={{resize:"vertical"}}/>
+      </div>
+
+      {/* Section 3 : Croissance */}
+      <div className="card"style={{padding:16,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>📏 Croissance</div>
+        {s.croissance.mesures.length>0?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
+          {s.croissance.mesures.map((m,i)=><div key={i}>{m.date} : {m.poids?`${m.poids} kg`:""}{m.poids&&m.taille?" · ":""}{m.taille?`${m.taille} cm`:""}{m.age_mois?` (${m.age_mois} mois)`:""}</div>)}
+        </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Aucune mesure sur la période. Cliquez sur "Auto-remplir" si des mesures existent.</div>}
+        <textarea className="inp"rows={2}placeholder="Commentaire sur la croissance..."
+          value={s.croissance.commentaire}onChange={e=>updS("croissance",{commentaire:e.target.value})}
+          style={{resize:"vertical"}}/>
+      </div>
+
+      {/* Section 4 : Jalons */}
+      <div className="card"style={{padding:16,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>🌱 Jalons acquis sur la période</div>
+        {s.jalons.acquis.length>0?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12,maxHeight:200,overflowY:"auto"}}>
+          {s.jalons.acquis.map((j,i)=><div key={i}style={{marginBottom:3}}>✓ <b>{j.categorie}</b> — {j.texte} <span style={{color:"var(--l)"}}>({j.date})</span></div>)}
+          <div style={{marginTop:6,fontWeight:700,color:"var(--T)"}}>{s.jalons.acquis.length} jalon{s.jalons.acquis.length>1?"s":""} acquis</div>
+        </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Aucun jalon acquis sur cette période. Cliquez sur "Auto-remplir" pour vérifier.</div>}
+        <textarea className="inp"rows={2}placeholder="Commentaire sur les acquisitions..."
+          value={s.jalons.commentaire}onChange={e=>updS("jalons",{commentaire:e.target.value})}
+          style={{resize:"vertical"}}/>
+      </div>
+
+      <div style={{display:"flex",gap:8,marginBottom:30}}>
+        <button className="btn"style={{flex:1}}onClick={()=>setEditor(null)}disabled={saving}>Annuler</button>
+        <button className="btn bT"style={{flex:2}}onClick={saveBilan}disabled={saving}>
+          {saving?"Enregistrement…":"💾 Enregistrer brouillon"}
+        </button>
+      </div>
+    </div>;
+  }
+
+  // ===== VIEWER (lecture seule) =====
+  if(viewing){
+    const p=parseContenu(viewing.contenu);
+    const sec=p?.sections;
+    return <div className="fi">
+      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+      <PageHeader icon="✨" title={viewing.trimestre||(viewing.type==="mensuel"?"Bilan mensuel":"Bilan")} sub={(p?.date_debut||"")+(p?.date_fin?" → "+p.date_fin:"")}
+        action={<button className="btn"onClick={()=>setViewing(null)}>← Retour</button>}/>
+      {!p&&<div className="card"style={{padding:14}}>{viewing.contenu}</div>}
+      {sec&&<>
+        <div className="card"style={{padding:16,marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>📝 Observations</div>
+          <div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.notes?.observations||<i>(vide)</i>}</div>
+          {sec.notes?.axes&&<><div style={{fontWeight:700,fontSize:12,marginTop:12,color:"var(--b)"}}>Axes à travailler</div>
+            <div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.notes.axes}</div></>}
+        </div>
+        <div className="card"style={{padding:16,marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>🍽️ Alimentation & sommeil</div>
+          {sec.alimentation_sommeil?.stats&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
+            <div><b>{sec.alimentation_sommeil.stats.repasCount}</b> jours suivis · qualité bonne {sec.alimentation_sommeil.stats.repasQualitePct||0}%</div>
+            <div><b>{sec.alimentation_sommeil.stats.sommeilCount}</b> siestes · qualité bonne {sec.alimentation_sommeil.stats.sommeilQualitePct||0}%</div>
+          </div>}
+          {sec.alimentation_sommeil?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.alimentation_sommeil.commentaire}</div>}
+        </div>
+        <div className="card"style={{padding:16,marginBottom:14}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>📏 Croissance</div>
+          {sec.croissance?.mesures?.length>0&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
+            {sec.croissance.mesures.map((m,i)=><div key={i}>{m.date} : {m.poids?`${m.poids} kg`:""}{m.poids&&m.taille?" · ":""}{m.taille?`${m.taille} cm`:""}</div>)}
+          </div>}
+          {sec.croissance?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.croissance.commentaire}</div>}
+        </div>
+        <div className="card"style={{padding:16,marginBottom:30}}>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>🌱 Jalons acquis ({sec.jalons?.acquis?.length||0})</div>
+          {sec.jalons?.acquis?.length>0&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12,maxHeight:240,overflowY:"auto"}}>
+            {sec.jalons.acquis.map((j,i)=><div key={i}>✓ <b>{j.categorie}</b> — {j.texte}</div>)}
+          </div>}
+          {sec.jalons?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.jalons.commentaire}</div>}
+        </div>
+      </>}
+    </div>;
+  }
+
+  // ===== LISTE =====
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="✨" title="Bilans périodiques" sub="Synthèses pour les parents"
+      action={role==="asmat"&&isRealChild?<button className="btn bT"onClick={newBilan}>+ Nouveau bilan</button>:null}/>
+    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
+
+    {!isRealChild&&<div className="card"style={{padding:16,textAlign:"center",color:"var(--l)"}}>
+      Les bilans sont disponibles pour les enfants réels. Sélectionne un enfant que tu accueilles.
+    </div>}
+    {isRealChild&&loading&&<div className="card"style={{padding:16,textAlign:"center",color:"var(--l)"}}>Chargement…</div>}
+    {isRealChild&&!loading&&bilans.length===0&&<div className="card"style={{padding:24,textAlign:"center"}}>
+      <div style={{fontSize:42,marginBottom:8}}>✨</div>
+      <div style={{fontWeight:700,color:"var(--b)",marginBottom:6}}>Aucun bilan pour {enfant?.prenom}</div>
+      <div style={{fontSize:13,color:"var(--l)",marginBottom:14}}>Crée un premier bilan pour synthétiser le développement de l'enfant et le partager aux parents.</div>
+      {role==="asmat"&&<button className="btn bT"onClick={newBilan}>+ Créer un bilan</button>}
+    </div>}
+    {isRealChild&&!loading&&bilans.map(b=>{
+      const p=parseContenu(b.contenu);
+      const periode=p?(p.date_debut+" → "+p.date_fin):b.date;
+      const titre=b.trimestre||(b.type==="mensuel"?"Bilan mensuel":b.type==="libre"?"Bilan libre":"Bilan");
+      return <div key={b.id}className="card"style={{padding:14,marginBottom:10,display:"flex",gap:12,alignItems:"center"}}>
+        <div style={{fontSize:28}}>{b.envoye?"✅":"✏️"}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{titre}</div>
+          <div style={{fontSize:12,color:"var(--l)"}}>{periode}</div>
+          <div style={{fontSize:11,color:b.envoye?"var(--G)":"var(--O)",marginTop:2,fontWeight:600}}>
+            {b.envoye?"Envoyé au parent":"Brouillon"}
+          </div>
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>setViewing(b)}>👁️ Voir</button>
+          {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
+          {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12,color:"#c00"}}onClick={()=>deleteBilan(b.id)}>🗑️</button>}
+        </div>
+      </div>;
+    })}
+  </div>;
+}
+
+//
 function Recap({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [showPrev,setShowPrev]=useState(false);
@@ -6600,6 +6918,7 @@ const GROUPS_AM={
     {id:"sante_complet",l:"Santé",ic:"🏥"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
+    {id:"bilans",l:"Bilans périodiques",ic:"✨"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
@@ -6626,6 +6945,7 @@ const GROUPS_P={
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
+    {id:"bilans",l:"Bilans reçus",ic:"✨"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
@@ -11237,6 +11557,7 @@ export default function App(){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
+      case "bilans": return <Bilans {...P}/>;
       case "eveil_complet": return <EveilComplet {...P}/>;
       case "documents_complet": return <DocumentsComplet {...P}/>;
       case "bilans_exports": return <BilansExports {...P}/>;
