@@ -2618,25 +2618,31 @@ function Bilans({enfants,role,pEId}){
     finally{setAutoFilling(false);}
   };
 
-  const saveBilan=async()=>{
+  const saveBilan=async(opts={})=>{
     if(!editor||!enfant)return;
+    const send=opts.send===true; // SEND BILAN P9
+    if(send&&!window.confirm("Envoyer ce bilan au parent ?\n\nUne fois envoyé, tu ne pourras plus le modifier ni le supprimer."))return; // SEND BILAN P9
     setSaving(true);
     const contenu=JSON.stringify({date_debut:editor.date_debut,date_fin:editor.date_fin,sections:editor.sections});
     const d0=new Date(editor.date_debut);
     const trimestre=editor.type==="trimestriel"?`T${Math.floor(d0.getMonth()/3)+1} ${d0.getFullYear()}`:null;
     const payload={enfant_id:enfant.id,date:editor.date_fin,type:editor.type,trimestre,contenu};
+    if(send){payload.envoye=true;payload.envoye_at=new Date().toISOString();} // SEND BILAN P9
     try{
+      let bilanId=editor.id;
       if(editor.id){
         const{error}=await supabase.from("bilans").update(payload).eq("id",editor.id);
         if(error)throw error;
       } else {
-        const{error}=await supabase.from("bilans").insert(payload);
+        const{data:ins,error}=await supabase.from("bilans").insert(payload).select().single(); // SEND BILAN P9 (.select().single() pour récupérer l'id en cas d'envoi)
         if(error)throw error;
+        bilanId=ins?.id;
       }
+      if(send&&bilanId)logAction("send_bilan",{table_name:"bilans",record_id:bilanId}); // SEND BILAN P9
       const{data}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
       setBilans(data||[]);
       setEditor(null);
-      setToast(editor.id?"✓ Bilan modifié":"✓ Bilan enregistré (brouillon)");
+      setToast(send?"✅ Bilan envoyé au parent":(editor.id?"✓ Bilan modifié":"✓ Bilan enregistré (brouillon)")); // SEND BILAN P9
     }catch(e){console.error("[BILANS P8] save",e);setToast("Erreur : "+e.message);}
     finally{setSaving(false);}
   };
@@ -2647,6 +2653,18 @@ function Bilans({enfants,role,pEId}){
     if(error){alert("Erreur : "+error.message);return;}
     setBilans(p=>p.filter(b=>b.id!==id));
     setToast("Bilan supprimé");
+  };
+
+  // SEND BILAN P9 - envoi d'un bilan brouillon directement depuis la liste
+  const sendBilan=async(b)=>{
+    if(b.envoye)return; // safety : déjà envoyé
+    if(!window.confirm("Envoyer ce bilan au parent ?\n\nUne fois envoyé, tu ne pourras plus le modifier ni le supprimer."))return;
+    const now=new Date().toISOString();
+    const{error}=await supabase.from("bilans").update({envoye:true,envoye_at:now}).eq("id",b.id);
+    if(error){alert("Erreur : "+error.message);return;}
+    logAction("send_bilan",{table_name:"bilans",record_id:b.id});
+    setBilans(p=>p.map(x=>x.id===b.id?{...x,envoye:true,envoye_at:now}:x));
+    setToast("✅ Bilan envoyé au parent");
   };
 
   // ===== ÉDITEUR =====
@@ -2736,10 +2754,17 @@ function Bilans({enfants,role,pEId}){
           style={{resize:"vertical"}}/>
       </div>
 
-      <div style={{display:"flex",gap:8,marginBottom:30}}>
-        <button className="btn"style={{flex:1}}onClick={()=>setEditor(null)}disabled={saving}>Annuler</button>
-        <button className="btn bT"style={{flex:2}}onClick={saveBilan}disabled={saving}>
-          {saving?"Enregistrement…":"💾 Enregistrer brouillon"}
+      <div style={{display:"flex",gap:8,marginBottom:30,flexWrap:"wrap"}}>
+        <button className="btn"style={{flex:"1 1 90px"}}onClick={()=>setEditor(null)}disabled={saving}>Annuler</button>
+        <button className="btn bT"style={{flex:"1 1 140px"}}onClick={()=>saveBilan()}disabled={saving}>
+          {saving?"Enregistrement…":"💾 Brouillon"}
+        </button>
+        {/* SEND BILAN P9 - bouton d'envoi direct depuis l'éditeur */}
+        <button onClick={()=>saveBilan({send:true})}disabled={saving}style={{
+          flex:"2 1 180px",padding:"10px 14px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",
+          fontWeight:700,fontSize:13,background:"var(--G)",color:"#fff",opacity:saving?.6:1,
+        }}>
+          {saving?"Envoi…":"📤 Enregistrer & envoyer au parent"}
         </button>
       </div>
     </div>;
@@ -2814,13 +2839,18 @@ function Bilans({enfants,role,pEId}){
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{titre}</div>
           <div style={{fontSize:12,color:"var(--l)"}}>{periode}</div>
-          <div style={{fontSize:11,color:b.envoye?"var(--G)":"var(--O)",marginTop:2,fontWeight:600}}>
+          <div style={{fontSize:11,color:b.envoye?"var(--G)":"var(--T)",marginTop:2,fontWeight:600}}>
             {b.envoye?"Envoyé au parent":"Brouillon"}
           </div>
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>setViewing(b)}>👁️ Voir</button>
           {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
+          {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
+          {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
+            padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",
+            fontWeight:700,background:"var(--G)",color:"#fff",
+          }}>📤 Envoyer</button>}
           {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12,color:"#c00"}}onClick={()=>deleteBilan(b.id)}>🗑️</button>}
         </div>
       </div>;
