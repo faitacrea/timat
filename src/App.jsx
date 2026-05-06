@@ -2512,7 +2512,7 @@ function Developpement({enfants,role,pEId}){
 
 //
 // BILANS P8 - Composant complet pour créer/visualiser/éditer des bilans périodiques
-function Bilans({enfants,role,pEId}){
+function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [bilans,setBilans]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -2667,6 +2667,102 @@ function Bilans({enfants,role,pEId}){
     setToast("✅ Bilan envoyé au parent");
   };
 
+  // PDF BILAN P9 - export PDF via window.print (cohérent avec les 8 autres PDFs du projet)
+  const exporterBilanPDF=(bilan)=>{
+    if(!bilan||!enfant){setToast("Erreur : bilan ou enfant introuvable");return;}
+    const esc=(s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    const fmtDate=(iso)=>{if(!iso)return"—";const d=new Date(iso);return isNaN(d)?esc(iso):d.toLocaleDateString("fr-FR");};
+    const p=parseContenu(bilan.contenu);
+    const sec=p?.sections;
+    const titre=bilan.trimestre||(bilan.type==="mensuel"?"Bilan mensuel":bilan.type==="libre"?"Bilan libre":"Bilan");
+    const periode=p?(fmtDate(p.date_debut)+" → "+fmtDate(p.date_fin)):fmtDate(bilan.date);
+    const ageDeb=p?.date_debut&&enfant.naissance?ageEnMois(enfant.naissance):null;
+    const ageFin=p?.date_fin&&enfant.naissance?(()=>{const d=new Date(p.date_fin),n=new Date(enfant.naissance);return Math.max(0,(d.getFullYear()-n.getFullYear())*12+(d.getMonth()-n.getMonth()));})():null;
+    const ageStr=ageDeb!=null&&ageFin!=null?(ageDeb===ageFin?ageDeb+" mois":ageDeb+" → "+ageFin+" mois"):"";
+    const w=window.open("","_blank");
+    if(!w){setToast("Autorisez les popups pour exporter");return;}
+    const observations=esc(sec?.notes?.observations||"");
+    const axes=esc(sec?.notes?.axes||"");
+    const alimCom=esc(sec?.alimentation_sommeil?.commentaire||"");
+    const alimStats=sec?.alimentation_sommeil?.stats;
+    const croisCom=esc(sec?.croissance?.commentaire||"");
+    const croisMes=sec?.croissance?.mesures||[];
+    const jalCom=esc(sec?.jalons?.commentaire||"");
+    const jalAcquis=sec?.jalons?.acquis||[];
+    // Grouper jalons par catégorie
+    const jalParCat={};
+    jalAcquis.forEach(j=>{const c=j.categorie||"Divers";if(!jalParCat[c])jalParCat[c]=[];jalParCat[c].push(j);});
+    const html=[
+      '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>',
+      '<title>'+esc(titre)+' — '+esc(enfant.prenom||"")+'</title>',
+      '<style>',
+      '*{box-sizing:border-box;margin:0;padding:0}',
+      'body{font-family:Arial,sans-serif;max-width:800px;margin:30px auto;padding:24px;color:#333;font-size:12px;line-height:1.55}',
+      'h1{font-size:18px;color:#B8622F;border-bottom:2px solid #B8622F;padding-bottom:10px;margin-bottom:6px}',
+      '.sub{font-size:11px;color:#888;margin-bottom:16px}',
+      '.meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;padding:14px 18px;background:#FDFBF8;border:1px solid #F0E5D6;border-radius:8px;font-size:11px}',
+      '.meta strong{color:#5C3A22;display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.6px;font-weight:700}',
+      'h2{font-size:13px;color:#5C3A22;margin:18px 0 8px;padding:7px 12px;background:#FFF3E8;border-left:3px solid #FF9F63;font-weight:700}',
+      '.text{white-space:pre-wrap;font-size:12px;padding:6px 12px;color:#444;min-height:18px}',
+      '.empty{font-style:italic;color:#aaa;font-size:11px;padding:6px 12px}',
+      '.axes-label{font-size:10px;color:#5C3A22;margin-top:10px;padding-left:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}',
+      '.axes{background:#FBF6F0;border-left:2px solid #C4A57B;padding:8px 12px;font-style:italic;color:#5C3A22;margin-top:4px;white-space:pre-wrap}',
+      '.stats{background:#F4F7FA;padding:10px 14px;border-radius:6px;margin:6px 0;font-size:11px;color:#264653}',
+      '.stats b{color:#B8622F;font-size:13px}',
+      'table{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0}',
+      'th,td{padding:6px 10px;border:1px solid #e0e0e0;text-align:left}',
+      'th{background:#F8F4EE;font-weight:700;color:#5C3A22;font-size:10px;text-transform:uppercase;letter-spacing:.4px}',
+      '.jal-cat{font-weight:700;color:#B8622F;margin:10px 0 4px;padding:4px 10px;background:#FFF8F0;border-radius:4px;font-size:11px}',
+      '.jal{padding:3px 14px;font-size:11px;color:#444;border-bottom:1px dotted #f0e8e0}',
+      '.jal-date{color:#999;font-size:10px;margin-left:6px}',
+      '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px}',
+      '.sig-box{border-top:1px solid #5C3A22;padding-top:8px;font-size:10px;color:#5C3A22;line-height:2}',
+      '.footer{font-size:9px;color:#aaa;margin-top:24px;text-align:center;padding-top:12px;border-top:1px solid #eee}',
+      '.status{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;margin-left:8px;vertical-align:middle}',
+      '.status-sent{background:#E8F4EC;color:#2A7A50}',
+      '.status-draft{background:#FFF3E8;color:#B8622F}',
+      '@media print{.noprint{display:none}body{margin:0;padding:14px}}',
+      '</style></head><body>',
+      '<h1>✨ '+esc(titre)+'<span class="status '+(bilan.envoye?'status-sent':'status-draft')+'">'+(bilan.envoye?'Envoyé':'Brouillon')+'</span></h1>',
+      '<div class="sub">Période : '+esc(periode)+(ageStr?' · Âge enfant : '+esc(ageStr):'')+'</div>',
+      '<div class="meta">',
+      '<div><strong>Assistante maternelle</strong>'+esc((user?.prenom||"")+" "+(user?.nom||"")||"—")+'</div>',
+      '<div><strong>Enfant</strong>'+esc(enfant.prenom||"—")+(enfant.naissance?' (né(e) le '+fmtDate(enfant.naissance)+')':'')+'</div>',
+      '<div><strong>Date du bilan</strong>'+fmtDate(bilan.date)+'</div>',
+      '<div><strong>Type</strong>'+esc(bilan.type==="trimestriel"?"Trimestriel":bilan.type==="mensuel"?"Mensuel":"Période libre")+'</div>',
+      '</div>',
+      // Section 1 : Observations
+      '<h2>📝 Observations &amp; axes à travailler</h2>',
+      observations?'<div class="text">'+observations+'</div>':'<div class="empty">(aucune observation renseignée)</div>',
+      axes?'<div class="axes-label">Axes à travailler</div><div class="axes">'+axes+'</div>':'',
+      // Section 2 : Alimentation & sommeil
+      '<h2>🍽️ Alimentation &amp; sommeil</h2>',
+      alimStats?'<div class="stats"><div><b>'+(alimStats.repasCount||0)+'</b> jours de repas suivis'+(alimStats.repasQualitePct!=null?' · qualité bonne <b>'+alimStats.repasQualitePct+'%</b>':'')+'</div><div><b>'+(alimStats.sommeilCount||0)+'</b> siestes enregistrées'+(alimStats.sommeilQualitePct!=null?' · qualité bonne <b>'+alimStats.sommeilQualitePct+'%</b>':'')+'</div></div>':'',
+      alimCom?'<div class="text">'+alimCom+'</div>':(alimStats?'':'<div class="empty">(aucune donnée sur la période)</div>'),
+      // Section 3 : Croissance
+      '<h2>📏 Croissance</h2>',
+      croisMes.length>0?'<table><thead><tr><th>Date</th><th>Poids</th><th>Taille</th><th>Âge</th></tr></thead><tbody>'+
+        croisMes.map(m=>'<tr><td>'+fmtDate(m.date)+'</td><td>'+(m.poids?esc(m.poids)+' kg':'—')+'</td><td>'+(m.taille?esc(m.taille)+' cm':'—')+'</td><td>'+(m.age_mois?esc(m.age_mois)+' mois':'—')+'</td></tr>').join('')+
+        '</tbody></table>':'<div class="empty">(aucune mesure sur la période)</div>',
+      croisCom?'<div class="text">'+croisCom+'</div>':'',
+      // Section 4 : Jalons
+      '<h2>🌱 Jalons acquis ('+jalAcquis.length+')</h2>',
+      jalAcquis.length>0?Object.entries(jalParCat).map(([cat,items])=>'<div class="jal-cat">'+esc(cat)+' ('+items.length+')</div>'+items.map(j=>'<div class="jal">✓ '+esc(j.texte||"")+'<span class="jal-date">'+fmtDate(j.date)+'</span></div>').join('')).join(''):'<div class="empty">(aucun jalon acquis sur la période)</div>',
+      jalCom?'<div class="text" style="margin-top:8px">'+jalCom+'</div>':'',
+      // Signatures
+      '<div class="sig">',
+      '<div class="sig-box">Fait à __________________<br/>Le '+new Date().toLocaleDateString("fr-FR")+'<br/><br/><br/>Signature de l\'assistante maternelle :</div>',
+      '<div class="sig-box">Reçu par le parent<br/>Le __________________<br/><br/><br/>Signature du parent :</div>',
+      '</div>',
+      '<div class="footer">Bilan généré par TiMat — timat.app — '+new Date().toLocaleDateString("fr-FR")+' à '+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+'</div>',
+      '<div style="text-align:center;margin-top:18px"><button class="noprint" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:12px 32px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+      '</body></html>',
+    ].join("");
+    w.document.write(html);
+    w.document.close();
+    setToast("📥 PDF prêt — utilise 'Imprimer' ou 'Enregistrer en PDF'");
+  };
+
   // ===== ÉDITEUR =====
   if(editor){
     const s=editor.sections;
@@ -2777,7 +2873,11 @@ function Bilans({enfants,role,pEId}){
     return <div className="fi">
       {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
       <PageHeader icon="✨" title={viewing.trimestre||(viewing.type==="mensuel"?"Bilan mensuel":"Bilan")} sub={(p?.date_debut||"")+(p?.date_fin?" → "+p.date_fin:"")}
-        action={<button className="btn"onClick={()=>setViewing(null)}>← Retour</button>}/>
+        action={<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {/* PDF BILAN P9 - bouton export PDF */}
+          <button className="btn" style={{background:"var(--T)",color:"#fff",border:"none"}} onClick={()=>exporterBilanPDF(viewing)}>📥 PDF</button>
+          <button className="btn" onClick={()=>setViewing(null)}>← Retour</button>
+        </div>}/>
       {!p&&<div className="card"style={{padding:14}}>{viewing.contenu}</div>}
       {sec&&<>
         <div className="card"style={{padding:16,marginBottom:14}}>
@@ -2845,6 +2945,8 @@ function Bilans({enfants,role,pEId}){
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>setViewing(b)}>👁️ Voir</button>
+          {/* PDF BILAN P9 - export PDF rapide depuis la liste, sur bilans envoyés uniquement */}
+          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,background:"var(--T)",color:"#fff"}}>📥 PDF</button>}
           {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
           {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
           {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
