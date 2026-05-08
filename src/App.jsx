@@ -2692,6 +2692,9 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
     // Grouper jalons par catégorie
     const jalParCat={};
     jalAcquis.forEach(j=>{const c=j.categorie||"Divers";if(!jalParCat[c])jalParCat[c]=[];jalParCat[c].push(j);});
+    // PDF BILAN P9 - slug pour nom de fichier propre (sans accents ni caractères spéciaux)
+    const slug=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase();
+    const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||new Date().toISOString().slice(0,10))+".pdf";
     const html=[
       '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>',
       '<title>'+esc(titre)+' — '+esc(enfant.prenom||"")+'</title>',
@@ -2723,6 +2726,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       '.status-draft{background:#FFF3E8;color:#B8622F}',
       '@media print{.noprint{display:none}body{margin:0;padding:14px}}',
       '</style></head><body>',
+      '<div id="pdf-content">', // PDF BILAN P9 - wrapper pour cibler ce qui va dans le téléchargement PDF
       '<h1>✨ '+esc(titre)+'<span class="status '+(bilan.envoye?'status-sent':'status-draft')+'">'+(bilan.envoye?'Envoyé':'Brouillon')+'</span></h1>',
       '<div class="sub">Période : '+esc(periode)+(ageStr?' · Âge enfant : '+esc(ageStr):'')+'</div>',
       '<div class="meta">',
@@ -2755,12 +2759,27 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       '<div class="sig-box">Reçu par le parent<br/>Le __________________<br/><br/><br/>Signature du parent :</div>',
       '</div>',
       '<div class="footer">Bilan généré par TiMat — timat.app — '+new Date().toLocaleDateString("fr-FR")+' à '+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+'</div>',
-      '<div style="text-align:center;margin-top:18px"><button class="noprint" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:12px 32px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+      '</div>', // PDF BILAN P9 - fin de #pdf-content (wrapper pour téléchargement)
+      '<div class="noprint" style="text-align:center;margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">',
+      '<button id="btn-pdf-download" style="background:#B8622F;color:#fff;border:none;padding:12px 32px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">📥 Télécharger en PDF</button>',
+      '<button onclick="window.print()" style="background:#fff;color:#5C3A22;border:1px solid #C4A57B;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">🖨️ Imprimer</button>',
+      '</div>',
+      // PDF BILAN P9 - chargement html2pdf via CDN cdnjs (avec integrity hash) + handler téléchargement direct
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"><\/script>',
+      '<script>',
+      'document.getElementById("btn-pdf-download").addEventListener("click",function(){',
+      '  if(typeof html2pdf==="undefined"){alert("Erreur : la bibliothèque PDF n\'a pas pu être chargée. Vérifiez votre connexion internet.");return;}',
+      '  var btn=this;var orig=btn.textContent;btn.disabled=true;btn.textContent="⏳ Génération du PDF…";btn.style.opacity="0.6";',
+      '  var element=document.getElementById("pdf-content");',
+      '  var opt={margin:[10,10,10,10],filename:'+JSON.stringify(filename)+',image:{type:"jpeg",quality:0.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["avoid-all","css","legacy"]}};',
+      '  html2pdf().set(opt).from(element).save().then(function(){btn.disabled=false;btn.textContent=orig;btn.style.opacity="1";}).catch(function(err){btn.disabled=false;btn.textContent=orig;btn.style.opacity="1";alert("Erreur lors de la génération du PDF : "+err.message);});',
+      '});',
+      '<\/script>',
       '</body></html>',
     ].join("");
     w.document.write(html);
     w.document.close();
-    setToast("📥 PDF prêt — utilise 'Imprimer' ou 'Enregistrer en PDF'");
+    setToast("📥 Bilan ouvert — clique sur 'Télécharger en PDF' ou 'Imprimer'");
   };
 
   // ===== ÉDITEUR =====
