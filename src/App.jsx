@@ -2668,118 +2668,235 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
   };
 
   // PDF BILAN P9 - export PDF via window.print (cohérent avec les 8 autres PDFs du projet)
-  const exporterBilanPDF=(bilan)=>{
+  // PDF BILAN P9 - Refacto jsPDF natif (Phase 1) : rendu identique cross-browser, texte sélectionnable, fichier léger
+  const exporterBilanPDF=async(bilan)=>{
     if(!bilan||!enfant){setToast("Erreur : bilan ou enfant introuvable");return;}
-    const esc=(s)=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-    const fmtDate=(iso)=>{if(!iso)return"—";const d=new Date(iso);return isNaN(d)?esc(iso):d.toLocaleDateString("fr-FR");};
-    const p=parseContenu(bilan.contenu);
-    const sec=p?.sections;
-    const titre=bilan.trimestre||(bilan.type==="mensuel"?"Bilan mensuel":bilan.type==="libre"?"Bilan libre":"Bilan");
-    const periode=p?(fmtDate(p.date_debut)+" → "+fmtDate(p.date_fin)):fmtDate(bilan.date);
-    const ageDeb=p?.date_debut&&enfant.naissance?ageEnMois(enfant.naissance):null;
-    const ageFin=p?.date_fin&&enfant.naissance?(()=>{const d=new Date(p.date_fin),n=new Date(enfant.naissance);return Math.max(0,(d.getFullYear()-n.getFullYear())*12+(d.getMonth()-n.getMonth()));})():null;
-    const ageStr=ageDeb!=null&&ageFin!=null?(ageDeb===ageFin?ageDeb+" mois":ageDeb+" → "+ageFin+" mois"):"";
-    const w=window.open("","_blank");
-    if(!w){setToast("Autorisez les popups pour exporter");return;}
-    const observations=esc(sec?.notes?.observations||"");
-    const axes=esc(sec?.notes?.axes||"");
-    const alimCom=esc(sec?.alimentation_sommeil?.commentaire||"");
-    const alimStats=sec?.alimentation_sommeil?.stats;
-    const croisCom=esc(sec?.croissance?.commentaire||"");
-    const croisMes=sec?.croissance?.mesures||[];
-    const jalCom=esc(sec?.jalons?.commentaire||"");
-    const jalAcquis=sec?.jalons?.acquis||[];
-    // Grouper jalons par catégorie
-    const jalParCat={};
-    jalAcquis.forEach(j=>{const c=j.categorie||"Divers";if(!jalParCat[c])jalParCat[c]=[];jalParCat[c].push(j);});
-    // PDF BILAN P9 - slug pour nom de fichier propre (sans accents ni caractères spéciaux)
-    const slug=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase();
-    const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||new Date().toISOString().slice(0,10))+".pdf";
-    const html=[
-      '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>',
-      '<title>'+esc(titre)+' — '+esc(enfant.prenom||"")+'</title>',
-      '<style>',
-      '*{box-sizing:border-box;margin:0;padding:0}',
-      'body{font-family:Arial,sans-serif;max-width:800px;margin:30px auto;padding:24px;color:#333;font-size:12px;line-height:1.55}',
-      'h1{font-size:18px;color:#B8622F;border-bottom:2px solid #B8622F;padding-bottom:10px;margin-bottom:6px}',
-      '.sub{font-size:11px;color:#888;margin-bottom:16px}',
-      '.meta{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;padding:14px 18px;background:#FDFBF8;border:1px solid #F0E5D6;border-radius:8px;font-size:11px}',
-      '.meta strong{color:#5C3A22;display:block;margin-bottom:3px;font-size:9px;text-transform:uppercase;letter-spacing:.6px;font-weight:700}',
-      'h2{font-size:13px;color:#5C3A22;margin:18px 0 8px;padding:7px 12px;background:#FFF3E8;border-left:3px solid #FF9F63;font-weight:700}',
-      '.text{white-space:pre-wrap;font-size:12px;padding:6px 12px;color:#444;min-height:18px}',
-      '.empty{font-style:italic;color:#aaa;font-size:11px;padding:6px 12px}',
-      '.axes-label{font-size:10px;color:#5C3A22;margin-top:10px;padding-left:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}',
-      '.axes{background:#FBF6F0;border-left:2px solid #C4A57B;padding:8px 12px;font-style:italic;color:#5C3A22;margin-top:4px;white-space:pre-wrap}',
-      '.stats{background:#F4F7FA;padding:10px 14px;border-radius:6px;margin:6px 0;font-size:11px;color:#264653}',
-      '.stats b{color:#B8622F;font-size:13px}',
-      'table{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0}',
-      'th,td{padding:6px 10px;border:1px solid #e0e0e0;text-align:left}',
-      'th{background:#F8F4EE;font-weight:700;color:#5C3A22;font-size:10px;text-transform:uppercase;letter-spacing:.4px}',
-      '.jal-cat{font-weight:700;color:#B8622F;margin:10px 0 4px;padding:4px 10px;background:#FFF8F0;border-radius:4px;font-size:11px}',
-      '.jal{padding:3px 14px;font-size:11px;color:#444;border-bottom:1px dotted #f0e8e0}',
-      '.jal-date{color:#999;font-size:10px;margin-left:6px}',
-      '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px}',
-      '.sig-box{border-top:1px solid #5C3A22;padding-top:8px;font-size:10px;color:#5C3A22;line-height:2}',
-      '.footer{font-size:9px;color:#aaa;margin-top:24px;text-align:center;padding-top:12px;border-top:1px solid #eee}',
-      '.status{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;margin-left:8px;vertical-align:middle}',
-      '.status-sent{background:#E8F4EC;color:#2A7A50}',
-      '.status-draft{background:#FFF3E8;color:#B8622F}',
-      '@media print{.noprint{display:none}body{margin:0;padding:14px}}',
-      '</style></head><body>',
-      '<div id="pdf-content">', // PDF BILAN P9 - wrapper pour cibler ce qui va dans le téléchargement PDF
-      '<h1>✨ '+esc(titre)+'<span class="status '+(bilan.envoye?'status-sent':'status-draft')+'">'+(bilan.envoye?'Envoyé':'Brouillon')+'</span></h1>',
-      '<div class="sub">Période : '+esc(periode)+(ageStr?' · Âge enfant : '+esc(ageStr):'')+'</div>',
-      '<div class="meta">',
-      '<div><strong>Assistante maternelle</strong>'+esc((user?.prenom||"")+" "+(user?.nom||"")||"—")+'</div>',
-      '<div><strong>Enfant</strong>'+esc(enfant.prenom||"—")+(enfant.naissance?' (né(e) le '+fmtDate(enfant.naissance)+')':'')+'</div>',
-      '<div><strong>Date du bilan</strong>'+fmtDate(bilan.date)+'</div>',
-      '<div><strong>Type</strong>'+esc(bilan.type==="trimestriel"?"Trimestriel":bilan.type==="mensuel"?"Mensuel":"Période libre")+'</div>',
-      '</div>',
-      // Section 1 : Observations
-      '<h2>📝 Observations &amp; axes à travailler</h2>',
-      observations?'<div class="text">'+observations+'</div>':'<div class="empty">(aucune observation renseignée)</div>',
-      axes?'<div class="axes-label">Axes à travailler</div><div class="axes">'+axes+'</div>':'',
-      // Section 2 : Alimentation & sommeil
-      '<h2>🍽️ Alimentation &amp; sommeil</h2>',
-      alimStats?'<div class="stats"><div><b>'+(alimStats.repasCount||0)+'</b> jours de repas suivis'+(alimStats.repasQualitePct!=null?' · qualité bonne <b>'+alimStats.repasQualitePct+'%</b>':'')+'</div><div><b>'+(alimStats.sommeilCount||0)+'</b> siestes enregistrées'+(alimStats.sommeilQualitePct!=null?' · qualité bonne <b>'+alimStats.sommeilQualitePct+'%</b>':'')+'</div></div>':'',
-      alimCom?'<div class="text">'+alimCom+'</div>':(alimStats?'':'<div class="empty">(aucune donnée sur la période)</div>'),
-      // Section 3 : Croissance
-      '<h2>📏 Croissance</h2>',
-      croisMes.length>0?'<table><thead><tr><th>Date</th><th>Poids</th><th>Taille</th><th>Âge</th></tr></thead><tbody>'+
-        croisMes.map(m=>'<tr><td>'+fmtDate(m.date)+'</td><td>'+(m.poids?esc(m.poids)+' kg':'—')+'</td><td>'+(m.taille?esc(m.taille)+' cm':'—')+'</td><td>'+(m.age_mois?esc(m.age_mois)+' mois':'—')+'</td></tr>').join('')+
-        '</tbody></table>':'<div class="empty">(aucune mesure sur la période)</div>',
-      croisCom?'<div class="text">'+croisCom+'</div>':'',
-      // Section 4 : Jalons
-      '<h2>🌱 Jalons acquis ('+jalAcquis.length+')</h2>',
-      jalAcquis.length>0?Object.entries(jalParCat).map(([cat,items])=>'<div class="jal-cat">'+esc(cat)+' ('+items.length+')</div>'+items.map(j=>'<div class="jal">✓ '+esc(j.texte||"")+'<span class="jal-date">'+fmtDate(j.date)+'</span></div>').join('')).join(''):'<div class="empty">(aucun jalon acquis sur la période)</div>',
-      jalCom?'<div class="text" style="margin-top:8px">'+jalCom+'</div>':'',
-      // Signatures
-      '<div class="sig">',
-      '<div class="sig-box">Fait à __________________<br/>Le '+new Date().toLocaleDateString("fr-FR")+'<br/><br/><br/>Signature de l\'assistante maternelle :</div>',
-      '<div class="sig-box">Reçu par le parent<br/>Le __________________<br/><br/><br/>Signature du parent :</div>',
-      '</div>',
-      '<div class="footer">Bilan généré par TiMat — timat.app — '+new Date().toLocaleDateString("fr-FR")+' à '+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+'</div>',
-      '</div>', // PDF BILAN P9 - fin de #pdf-content (wrapper pour téléchargement)
-      '<div class="noprint" style="text-align:center;margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">',
-      '<button id="btn-pdf-download" style="background:#B8622F;color:#fff;border:none;padding:12px 32px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">📥 Télécharger en PDF</button>',
-      '<button onclick="window.print()" style="background:#fff;color:#5C3A22;border:1px solid #C4A57B;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">🖨️ Imprimer</button>',
-      '</div>',
-      // PDF BILAN P9 - chargement html2pdf via CDN cdnjs (avec integrity hash) + handler téléchargement direct
-      '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"><\/script>',
-      '<script>',
-      'document.getElementById("btn-pdf-download").addEventListener("click",function(){',
-      '  if(typeof html2pdf==="undefined"){alert("Erreur : la bibliothèque PDF n\'a pas pu être chargée. Vérifiez votre connexion internet.");return;}',
-      '  var btn=this;var orig=btn.textContent;btn.disabled=true;btn.textContent="⏳ Génération du PDF…";btn.style.opacity="0.6";',
-      '  var element=document.getElementById("pdf-content");',
-      '  var opt={margin:[10,10,10,10],filename:'+JSON.stringify(filename)+',image:{type:"jpeg",quality:0.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["avoid-all","css","legacy"]}};',
-      '  html2pdf().set(opt).from(element).save().then(function(){btn.disabled=false;btn.textContent=orig;btn.style.opacity="1";}).catch(function(err){btn.disabled=false;btn.textContent=orig;btn.style.opacity="1";alert("Erreur lors de la génération du PDF : "+err.message);});',
-      '});',
-      '<\/script>',
-      '</body></html>',
-    ].join("");
-    w.document.write(html);
-    w.document.close();
-    setToast("📥 Bilan ouvert — clique sur 'Télécharger en PDF' ou 'Imprimer'");
+    setToast("⏳ Génération du PDF…");
+    try{
+      // Charger jsPDF dynamiquement via CDN si pas déjà fait (lazy load)
+      if(!window.jspdf){
+        await new Promise((res,rej)=>{
+          const s=document.createElement("script");
+          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload=res;
+          s.onerror=()=>rej(new Error("Chargement jsPDF échoué — vérifie ta connexion"));
+          document.head.appendChild(s);
+        });
+      }
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      // === Constantes layout ===
+      const PW=210,PH=297,MX=18,MTOP=15,MBOT=20;
+      const CW=PW-2*MX; // largeur contenu = 174mm
+      let y=MTOP;
+      // === Données ===
+      const p=parseContenu(bilan.contenu);
+      const sec=p?.sections;
+      const titre=bilan.trimestre||(bilan.type==="mensuel"?"Bilan mensuel":bilan.type==="libre"?"Bilan libre":"Bilan");
+      const fmtDate=(iso)=>{if(!iso)return"—";const d=new Date(iso);return isNaN(d)?String(iso):d.toLocaleDateString("fr-FR");};
+      const periode=p?(fmtDate(p.date_debut)+" → "+fmtDate(p.date_fin)):fmtDate(bilan.date);
+      const ageDeb=p?.date_debut&&enfant.naissance?ageEnMois(enfant.naissance):null;
+      const ageFin=p?.date_fin&&enfant.naissance?(()=>{const d=new Date(p.date_fin),n=new Date(enfant.naissance);return Math.max(0,(d.getFullYear()-n.getFullYear())*12+(d.getMonth()-n.getMonth()));})():null;
+      const ageStr=ageDeb!=null&&ageFin!=null?(ageDeb===ageFin?ageDeb+" mois":ageDeb+" → "+ageFin+" mois"):"";
+      // === Helpers couleurs (hex → RGB) ===
+      const rgb=(hex)=>{const h=hex.replace("#","");return[parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];};
+      const C={terra:rgb("B8622F"),brun:rgb("5C3A22"),mauve:rgb("FBF6F0"),beige:rgb("F0E5D6"),mauveD:rgb("FDFBF8"),vertBg:rgb("E8F4EC"),vert:rgb("2A7A50"),orangeBg:rgb("FFF3E8"),txt:rgb("444444"),gris:rgb("999999"),grisL:rgb("CCCCCC"),hdrTbl:rgb("F8F4EE"),sablesBg:rgb("FAFAFA"),lin:rgb("EEEEEE")};
+      // === Helpers de mise en page ===
+      const setFill=(c)=>doc.setFillColor(c[0],c[1],c[2]);
+      const setText=(c)=>doc.setTextColor(c[0],c[1],c[2]);
+      const setDraw=(c)=>doc.setDrawColor(c[0],c[1],c[2]);
+      const ensureSpace=(h)=>{if(y+h>PH-MBOT){doc.addPage();y=MTOP;}};
+      const sectionHeader=(num,title)=>{
+        ensureSpace(14);
+        setFill(C.terra);doc.rect(MX,y,2,7,"F");
+        doc.setFontSize(12);doc.setFont("helvetica","bold");setText(C.brun);
+        doc.text(num+". "+title,MX+5,y+5);
+        y+=11;
+      };
+      const paragraph=(text,opts)=>{
+        opts=opts||{};
+        const empty=!text||String(text).trim()==="";
+        const t=empty?"(non renseigné)":String(text);
+        doc.setFontSize(opts.size||10);
+        doc.setFont("helvetica",opts.italic||empty?"italic":"normal");
+        setText(empty?C.gris:C.txt);
+        const lines=doc.splitTextToSize(t,opts.width||CW);
+        ensureSpace(lines.length*5+3);
+        doc.text(lines,opts.x||MX,y);
+        y+=lines.length*5+3;
+      };
+      const labeledLine=(label,value,x,w)=>{
+        doc.setFontSize(7);doc.setFont("helvetica","bold");setText(C.brun);
+        doc.text(label.toUpperCase(),x,y);
+        doc.setFontSize(10);doc.setFont("helvetica","normal");setText(C.txt);
+        const v=value||"—";
+        const lines=doc.splitTextToSize(v,w);
+        doc.text(lines[0],x,y+4.5); // 1 seule ligne pour la valeur (cellule meta)
+      };
+      // === HEADER : titre + pastille statut ===
+      doc.setFontSize(18);doc.setFont("helvetica","bold");setText(C.terra);
+      doc.text(titre,MX,y+5);
+      // Pastille statut
+      const statusW=24,statusH=6;
+      const statusX=PW-MX-statusW;
+      if(bilan.envoye){setFill(C.vertBg);}else{setFill(C.orangeBg);}
+      doc.roundedRect(statusX,y-1,statusW,statusH+1,1.5,1.5,"F");
+      doc.setFontSize(8);doc.setFont("helvetica","bold");
+      if(bilan.envoye){setText(C.vert);}else{setText(C.terra);}
+      doc.text(bilan.envoye?"ENVOYÉ":"BROUILLON",statusX+statusW/2,y+3,{align:"center"});
+      y+=8;
+      // Ligne sous titre
+      setDraw(C.terra);doc.setLineWidth(0.7);
+      doc.line(MX,y,PW-MX,y);
+      y+=6;
+      // Sous-titre période + âge
+      doc.setFontSize(9);doc.setFont("helvetica","normal");setText(C.gris);
+      doc.text("Période : "+periode+(ageStr?"  ·  Âge enfant : "+ageStr:""),MX,y);
+      y+=8;
+      // === BLOC META ===
+      const metaH=24;
+      setFill(C.mauveD);setDraw(C.beige);doc.setLineWidth(0.3);
+      doc.roundedRect(MX,y,CW,metaH,2,2,"FD");
+      const colW=CW/2-8;
+      labeledLine("Assistante maternelle",((user?.prenom||"")+" "+(user?.nom||"")).trim()||"—",MX+4,colW);
+      labeledLine("Enfant",(enfant.prenom||"—")+(enfant.naissance?" (né(e) le "+fmtDate(enfant.naissance)+")":""),MX+4+CW/2,colW);
+      y+=11;
+      labeledLine("Date du bilan",fmtDate(bilan.date),MX+4,colW);
+      labeledLine("Type",bilan.type==="trimestriel"?"Trimestriel":bilan.type==="mensuel"?"Mensuel":"Période libre",MX+4+CW/2,colW);
+      y+=15;
+      // === SECTION 1 : Observations ===
+      sectionHeader(1,"Observations & axes à travailler");
+      paragraph(sec?.notes?.observations);
+      if(sec?.notes?.axes){
+        doc.setFontSize(8);doc.setFont("helvetica","bold");setText(C.brun);
+        doc.text("AXES À TRAVAILLER",MX,y);
+        y+=4;
+        doc.setFontSize(10);doc.setFont("helvetica","italic");setText(C.brun);
+        const lines=doc.splitTextToSize(String(sec.notes.axes),CW-8);
+        const blockH=lines.length*5+4;
+        ensureSpace(blockH);
+        setFill(C.mauve);doc.rect(MX,y,CW,blockH,"F");
+        setFill(C.terra);doc.rect(MX,y,1.5,blockH,"F"); // barre verticale gauche
+        doc.text(lines,MX+5,y+4);
+        y+=blockH+5;
+      }
+      // === SECTION 2 : Alimentation & sommeil ===
+      sectionHeader(2,"Alimentation & sommeil");
+      const alimStats=sec?.alimentation_sommeil?.stats;
+      if(alimStats){
+        const sH=12;
+        ensureSpace(sH+3);
+        setFill(rgb("F4F7FA"));doc.rect(MX,y,CW,sH,"F");
+        doc.setFontSize(9);doc.setFont("helvetica","normal");setText(rgb("264653"));
+        const l1=(alimStats.repasCount||0)+" jours de repas suivis"+(alimStats.repasQualitePct!=null?" · qualité bonne "+alimStats.repasQualitePct+"%":"");
+        const l2=(alimStats.sommeilCount||0)+" siestes enregistrées"+(alimStats.sommeilQualitePct!=null?" · qualité bonne "+alimStats.sommeilQualitePct+"%":"");
+        doc.text(l1,MX+3,y+4.5);
+        doc.text(l2,MX+3,y+9);
+        y+=sH+3;
+      }
+      paragraph(sec?.alimentation_sommeil?.commentaire);
+      // === SECTION 3 : Croissance ===
+      sectionHeader(3,"Croissance");
+      const croisMes=sec?.croissance?.mesures||[];
+      if(croisMes.length>0){
+        const colX=[MX,MX+45,MX+85,MX+125];
+        const rowH=6;
+        ensureSpace(rowH);
+        setFill(C.hdrTbl);doc.rect(MX,y,CW,rowH,"F");
+        doc.setFontSize(7);doc.setFont("helvetica","bold");setText(C.brun);
+        doc.text("DATE",colX[0]+2,y+4);doc.text("POIDS",colX[1]+2,y+4);
+        doc.text("TAILLE",colX[2]+2,y+4);doc.text("ÂGE",colX[3]+2,y+4);
+        y+=rowH;
+        doc.setFontSize(9);doc.setFont("helvetica","normal");setText(C.txt);
+        croisMes.forEach((m,i)=>{
+          ensureSpace(rowH);
+          if(i%2===0){setFill(C.sablesBg);doc.rect(MX,y,CW,rowH,"F");}
+          doc.text(fmtDate(m.date),colX[0]+2,y+4);
+          doc.text(m.poids?String(m.poids)+" kg":"—",colX[1]+2,y+4);
+          doc.text(m.taille?String(m.taille)+" cm":"—",colX[2]+2,y+4);
+          doc.text(m.age_mois?String(m.age_mois)+" mois":"—",colX[3]+2,y+4);
+          y+=rowH;
+        });
+        y+=4;
+      } else {
+        paragraph("",{italic:true});
+      }
+      if(sec?.croissance?.commentaire){paragraph(sec.croissance.commentaire);}
+      // === SECTION 4 : Jalons ===
+      const jalAcquis=sec?.jalons?.acquis||[];
+      sectionHeader(4,"Jalons acquis ("+jalAcquis.length+")");
+      if(jalAcquis.length>0){
+        const jalParCat={};
+        jalAcquis.forEach(j=>{const c=j.categorie||"Divers";if(!jalParCat[c])jalParCat[c]=[];jalParCat[c].push(j);});
+        Object.entries(jalParCat).forEach(([cat,items])=>{
+          ensureSpace(8);
+          doc.setFontSize(10);doc.setFont("helvetica","bold");setText(C.terra);
+          doc.text("▸ "+cat+" ("+items.length+")",MX,y);
+          y+=5;
+          doc.setFontSize(9);doc.setFont("helvetica","normal");
+          items.forEach(j=>{
+            ensureSpace(5);
+            setText(C.txt);
+            doc.text("✓ "+(j.texte||""),MX+6,y);
+            setText(C.gris);doc.setFontSize(8);
+            doc.text(fmtDate(j.date),PW-MX-2,y,{align:"right"});
+            doc.setFontSize(9);
+            y+=5;
+          });
+          y+=2;
+        });
+        y+=2;
+      } else {
+        paragraph("",{italic:true});
+      }
+      if(sec?.jalons?.commentaire){paragraph(sec.jalons.commentaire);}
+      // === SIGNATURES ===
+      ensureSpace(35);
+      y+=4;
+      setDraw(C.brun);doc.setLineWidth(0.3);
+      doc.line(MX,y,PW-MX,y);
+      y+=5;
+      doc.setFontSize(9);doc.setFont("helvetica","normal");setText(C.brun);
+      const sigW=(CW-10)/2;
+      const sigBoxX1=MX,sigBoxX2=MX+sigW+10;
+      // Asmat
+      doc.text("Fait à ____________________",sigBoxX1,y);
+      doc.text("Le "+new Date().toLocaleDateString("fr-FR"),sigBoxX1,y+5);
+      doc.text("Signature de l'assistante maternelle :",sigBoxX1,y+12);
+      setDraw(C.grisL);doc.setLineWidth(0.2);
+      doc.line(sigBoxX1,y+24,sigBoxX1+sigW-5,y+24);
+      // Parent
+      doc.text("Reçu par le parent",sigBoxX2,y);
+      doc.text("Le ____________________",sigBoxX2,y+5);
+      doc.text("Signature du parent :",sigBoxX2,y+12);
+      doc.line(sigBoxX2,y+24,PW-MX,y+24);
+      y+=30;
+      // === FOOTER ===
+      ensureSpace(8);
+      setDraw(C.lin);doc.setLineWidth(0.2);
+      doc.line(MX,y,PW-MX,y);
+      y+=4;
+      doc.setFontSize(8);setText(rgb("AAAAAA"));doc.setFont("helvetica","italic");
+      const dateGen=new Date().toLocaleDateString("fr-FR")+" à "+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+      doc.text("Bilan généré par TiMat — timat.app — "+dateGen,PW/2,y,{align:"center"});
+      // === PAGINATION (si plusieurs pages) ===
+      const pageCount=doc.internal.getNumberOfPages();
+      if(pageCount>1){
+        for(let i=1;i<=pageCount;i++){
+          doc.setPage(i);
+          doc.setFontSize(8);setText(rgb("AAAAAA"));doc.setFont("helvetica","normal");
+          doc.text("Page "+i+" / "+pageCount,PW-MX,PH-8,{align:"right"});
+        }
+      }
+      // === SAUVEGARDE ===
+      const slug=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase();
+      const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||new Date().toISOString().slice(0,10))+".pdf";
+      doc.save(filename);
+      setToast("✅ PDF téléchargé");
+    }catch(err){
+      console.error("[PDF BILAN P9]",err);
+      setToast("Erreur PDF : "+(err?.message||"inconnue"));
+    }
   };
 
   // ===== ÉDITEUR =====
