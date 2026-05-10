@@ -6436,7 +6436,8 @@ function SignatureContratParent({enfants,pEId,user}){
     };
     img.src=sigStandard;
   };
-  // SIGNATURE PARENT P10 - validation persistante en base
+  // SIGNATURE PARENT P10 - validation persistante en base via RPC SECURITY DEFINER
+  // (la RLS UPDATE de contrats est restreinte a asmat_id, donc on passe par une fonction)
   const valider=async()=>{
     if(!lu||!hasSig)return;
     if(!contrat?.id){
@@ -6445,19 +6446,21 @@ function SignatureContratParent({enfants,pEId,user}){
     }
     const canvas=canvasRef.current;
     const sigData=canvas?.toDataURL("image/png");
-    const nowIso=new Date().toISOString();
-    const{error}=await supabase.from("contrats").update({
-      signe_parent:true,
-      date_signature_parent:nowIso,
-      signature_parent_data:sigData||null,
-    }).eq("id",contrat.id);
+    const{data,error}=await supabase.rpc("sign_contract_as_parent",{
+      p_contrat_id:contrat.id,
+      p_signature:sigData||null,
+    });
     if(error){
       setToast("Erreur enregistrement : "+error.message);
       return;
     }
+    if(!data?.success){
+      setToast("Erreur : "+(data?.error||"echec inconnu"));
+      return;
+    }
     await logAction("sign_contract_parent",{table_name:"contrats",record_id:contrat.id});
     setSigne(true);
-    setDateSignature(nowIso);
+    setDateSignature(data.date||new Date().toISOString());
     setToast("Contrat signé électroniquement ✓ - L'assistante maternelle a été notifiée");
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
