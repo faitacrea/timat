@@ -1843,6 +1843,8 @@ function Contrats({enfants,role,pEId,user}){
   const [showAjout,setShowAjout]=useState(false);
   const [modDet,setModDet]=useState({type:"Horaire",detail:""});
   const [toast,setToast]=useState("");
+  // SIGNATURE STANDARD ASMAT P10 - signature de reference du profil (chargee depuis profiles.signature_base64)
+  const [sigStandard,setSigStandard]=useState(user?.signature_base64||null);
   const canvasRef=useRef(null);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
@@ -1912,6 +1914,18 @@ function Contrats({enfants,role,pEId,user}){
     setHasSig(true);};
   const endDraw=(e)=>{e?.preventDefault?.();setDrawing(false);};
   const clearSig=()=>{const c=canvasRef.current;c.getContext("2d").clearRect(0,0,c.width,c.height);setHasSig(false);};
+  // SIGNATURE STANDARD ASMAT P10 - charger la signature de reference dans le canvas en 1 clic
+  const useStandardSig=()=>{
+    const c=canvasRef.current;if(!c||!sigStandard)return;
+    const ctx=c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    const img=new Image();
+    img.onload=()=>{
+      ctx.drawImage(img,0,0,c.width,c.height);
+      setHasSig(true);
+    };
+    img.src=sigStandard;
+  };
   const signer=async()=>{
     if(!hasSig)return;
     // Sauvegarder la signature dans Supabase
@@ -2009,6 +2023,15 @@ function Contrats({enfants,role,pEId,user}){
             style={{width:"100%",maxWidth:340,touchAction:"none"}}
             onMouseDown={startDraw}onMouseMove={draw}onMouseUp={endDraw}onMouseLeave={endDraw}
             onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={endDraw}onTouchCancel={endDraw}/>
+          {/* SIGNATURE STANDARD ASMAT P10 - bouton de pre-remplissage si signature de reference existe */}
+          {role==="asmat"&&sigStandard&&<div style={{marginTop:8}}>
+            <button className="btn bG" style={{fontSize:12,width:"100%",justifyContent:"center"}} onClick={useStandardSig}>
+              📋 Utiliser ma signature enregistrée
+            </button>
+          </div>}
+          {role==="asmat"&&!sigStandard&&<div style={{marginTop:8,fontSize:11,color:"var(--l)",textAlign:"center"}}>
+            💡 Astuce : enregistrez une signature standard dans Paramètres pour la réutiliser en 1 clic.
+          </div>}
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <button className="btn bG"onClick={clearSig}>Effacer</button>
             <button className="btn bP"style={{flex:1,justifyContent:"center"}}onClick={signer}disabled={!hasSig}>
@@ -5373,9 +5396,98 @@ function SupprimerCompte({onDeleted}){
   );
 }
 
+// SIGNATURE STANDARD ASMAT P10 - composant reutilisable de capture de signature
+// Utilise dans Parametres (signature de reference du profil) et dans Contrats (pre-remplissage)
+function SignaturePad({initialValue,onSave,onCancel}){
+  const canvasRef=useRef(null);
+  const [drawing,setDrawing]=useState(false);
+  const [hasDrawn,setHasDrawn]=useState(false);
+
+  useEffect(()=>{
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    ctx.fillStyle="#FDFAF6";
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle="#3A2820";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";
+    if(initialValue){
+      const img=new Image();
+      img.onload=()=>{ctx.drawImage(img,0,0,c.width,c.height);setHasDrawn(true);};
+      img.src=initialValue;
+    }
+  },[initialValue]);
+
+  const getPos=(e)=>{
+    const c=canvasRef.current;if(!c)return{x:0,y:0};
+    const r=c.getBoundingClientRect();
+    const pt=e.touches?.[0]||e.changedTouches?.[0]||e;
+    const sx=c.width/r.width;const sy=c.height/r.height;
+    return{x:(pt.clientX-r.left)*sx,y:(pt.clientY-r.top)*sy};
+  };
+  const startDraw=(e)=>{
+    e.preventDefault?.();
+    setDrawing(true);
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    const{x,y}=getPos(e);
+    ctx.beginPath();ctx.moveTo(x,y);
+  };
+  const draw=(e)=>{
+    if(!drawing)return;
+    e.preventDefault?.();
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    const{x,y}=getPos(e);
+    ctx.lineTo(x,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,y);
+    setHasDrawn(true);
+  };
+  const endDraw=(e)=>{e?.preventDefault?.();setDrawing(false);};
+  const clear=()=>{
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    ctx.fillStyle="#FDFAF6";
+    ctx.fillRect(0,0,c.width,c.height);
+    setHasDrawn(false);
+  };
+  const save=()=>{
+    if(!hasDrawn)return;
+    const dataUrl=canvasRef.current.toDataURL("image/png");
+    onSave(dataUrl);
+  };
+
+  return <div style={{padding:16}}>
+    <div style={{fontSize:12,color:"var(--m)",marginBottom:10}}>
+      Signez avec votre souris ou votre doigt sur tablette.
+    </div>
+    <canvas ref={canvasRef} width={600} height={200}
+      style={{width:"100%",height:200,display:"block",border:"2px dashed var(--br)",borderRadius:10,background:"#FDFAF6",touchAction:"none",cursor:"crosshair"}}
+      onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw}
+      onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={endDraw} onTouchCancel={endDraw}/>
+    <div style={{display:"flex",gap:8,marginTop:12,justifyContent:"flex-end",flexWrap:"wrap"}}>
+      <button className="btn bG" onClick={clear}>Effacer</button>
+      <button className="btn bG" onClick={onCancel}>Annuler</button>
+      <button className="btn bT" onClick={save} disabled={!hasDrawn}
+        style={{opacity:hasDrawn?1:.5}}>
+        Enregistrer
+      </button>
+    </div>
+  </div>;
+}
+
+async function saveAsmatSignature(userId,base64){
+  const{error}=await supabase.from("profiles").update({signature_base64:base64}).eq("id",userId);
+  if(error)throw error;
+  await logAction("update_signature",{table_name:"profiles",record_id:userId,user_id:userId});
+  return true;
+}
+
 //
 function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser}){
   const [toast,setToast]=useState("");
+  // SIGNATURE STANDARD ASMAT P10 - state pour gestion signature de reference
+  const [showSigPad,setShowSigPad]=useState(false);
+  const [currentSig,setCurrentSig]=useState(user?.signature_base64||null);
+  useEffect(()=>{setCurrentSig(user?.signature_base64||null);},[user?.signature_base64]);
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="⚙️" title="Paramètres" sub="Votre compte et vos données"/>
@@ -5464,7 +5576,53 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             ✅ Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
           </div>}
         </div>}
+
+        {/* SIGNATURE STANDARD ASMAT P10 - section signature electronique */}
+        {user?.role==="asmat"&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
+          <label className="lbl">✍️ Ma signature électronique</label>
+          <div style={{fontSize:12,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>
+            Dessinez-la une fois ici. Elle sera proposée automatiquement à chaque signature de contrat ou bulletin.
+          </div>
+          {currentSig?<div>
+            <div style={{display:"inline-block",border:"1px solid var(--br)",borderRadius:8,padding:8,background:"#FDFAF6",marginBottom:8}}>
+              <img src={currentSig} alt="Ma signature" style={{maxWidth:280,maxHeight:80,display:"block"}}/>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button className="btn bG" style={{fontSize:12}} onClick={()=>setShowSigPad(true)}>Modifier</button>
+              <button className="btn bG" style={{fontSize:12,color:"var(--R)"}} onClick={async()=>{
+                if(!window.confirm("Supprimer votre signature enregistrée ?"))return;
+                try{
+                  await saveAsmatSignature(user.id,null);
+                  setCurrentSig(null);
+                  setUser&&setUser(u=>({...u,signature_base64:null}));
+                  setToast("Signature supprimée");
+                }catch(e){setToast("Erreur : "+e.message);}
+              }}>Supprimer</button>
+            </div>
+          </div>:<div>
+            <div style={{fontSize:12,color:"var(--l)",fontStyle:"italic",marginBottom:8}}>Aucune signature enregistrée pour le moment.</div>
+            <button className="btn bT" style={{fontSize:12}} onClick={()=>setShowSigPad(true)}>+ Créer ma signature</button>
+          </div>}
+        </div>}
       </div>
+
+      {/* SIGNATURE STANDARD ASMAT P10 - modale de capture */}
+      {showSigPad&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+        <div className="card" style={{padding:0,maxWidth:700,width:"100%",maxHeight:"90vh",overflow:"auto"}}>
+          <div style={{padding:"16px 20px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:15,color:"var(--b)"}}>
+            ✍️ Ma signature électronique
+          </div>
+          <SignaturePad initialValue={currentSig} onCancel={()=>setShowSigPad(false)} onSave={async(dataUrl)=>{
+            try{
+              await saveAsmatSignature(user.id,dataUrl);
+              setCurrentSig(dataUrl);
+              setUser&&setUser(u=>({...u,signature_base64:dataUrl}));
+              setShowSigPad(false);
+              setToast("Signature enregistrée ✓");
+            }catch(e){setToast("Erreur : "+e.message);}
+          }}/>
+        </div>
+      </div>}
 
       {/* Installation PWA */}
       <div className="card"style={{padding:20}}>
