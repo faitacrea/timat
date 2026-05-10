@@ -3800,7 +3800,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ".ni{background:#EAF4EE;font-weight:700;color:#3D6B50}",
           ".ce{background:#F5F0FF;font-weight:700}",
           ".sz{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}",
-          ".sb{border:1px solid #ddd;height:60px;border-radius:4px;padding:8px;font-size:9px;color:#aaa}",
+          ".sb{border:1px solid #ddd;height:80px;border-radius:4px;padding:8px;font-size:9px;color:#aaa;display:flex;align-items:center;justify-content:center}",
+          ".sb img{max-height:60px;max-width:100%;object-fit:contain}",
           "@media print{.nb{display:none}}",
           "</style></head><body>",
           "<div style=\"text-align:center;margin-bottom:8px\">",
@@ -3838,7 +3839,12 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "</table>",
           "<div class=\"sz\">",
           "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
-          "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de la salariee</div><div class=\"sb\">Date: ________________</div></div>",
+          // SIGNATURE STANDARD ASMAT P10 - injection signature dans bulletin de salaire
+          "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de la salariee</div>",
+          (user?.signature_base64
+            ?"<div class=\"sb\"><img src=\""+user.signature_base64+"\" alt=\"Signature\"/></div><div style=\"font-size:9px;color:#888;text-align:center;margin-top:4px\">Le "+new Date().toLocaleDateString("fr-FR")+"</div>"
+            :"<div class=\"sb\">Date: ________________</div>"),
+          "</div>",
           "</div>",
           "<p style=\"margin-top:16px;font-size:9px;color:#888;line-height:1.8\">",
           "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN Particuliers Employeurs (IDCC 2395) | A conserver 5 ans",
@@ -4275,7 +4281,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB}){
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}/>}
+    {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>}
     {section==="solde_contrat"&&<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
@@ -6366,45 +6372,94 @@ function KitCMG({enfants,role,pEId,user}){
 }
 
 //
-function SignatureContratParent({enfants,pEId}){
+function SignatureContratParent({enfants,pEId,user}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
   const contrat=enfant?.contrat||{};
-  const [signe,setSigne]=useState(false);
+  // SIGNATURE PARENT P10 - state initialise depuis le contrat persiste
+  const [signe,setSigne]=useState(!!contrat.signe_parent);
+  const [dateSignature,setDateSignature]=useState(contrat.date_signature_parent||null);
   const [lu,setLu]=useState(false);
   const [toast,setToast]=useState("");
   const canvasRef=useRef(null);
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
+  // SIGNATURE PARENT P10 - signature standard du parent (si dejaa enregistree dans son profil)
+  const sigStandard=user?.signature_base64||null;
+  // SIGNATURE PARENT P10 - sync avec le contrat reel quand il change
+  useEffect(()=>{
+    setSigne(!!contrat.signe_parent);
+    setDateSignature(contrat.date_signature_parent||null);
+  },[contrat.signe_parent,contrat.date_signature_parent]);
 
+  // Helper position pointeur avec scaling correct
+  const getPos=(e)=>{
+    const c=canvasRef.current;if(!c)return{x:0,y:0};
+    const r=c.getBoundingClientRect();
+    const pt=e.touches?.[0]||e.changedTouches?.[0]||e;
+    const sx=c.width/r.width;const sy=c.height/r.height;
+    return{x:(pt.clientX-r.left)*sx,y:(pt.clientY-r.top)*sy};
+  };
   const startDraw=(e)=>{
+    e.preventDefault?.();
     setDrawing(true);
-    const canvas=canvasRef.current;
-    const ctx=canvas.getContext("2d");
-    const rect=canvas.getBoundingClientRect();
-    const x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
-    const y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    const{x,y}=getPos(e);
+    ctx.strokeStyle="#3A2820";ctx.lineWidth=2;ctx.lineCap="round";ctx.lineJoin="round";
     ctx.beginPath();ctx.moveTo(x,y);
   };
   const draw=(e)=>{
     if(!drawing)return;
-    e.preventDefault();
-    const canvas=canvasRef.current;
-    const ctx=canvas.getContext("2d");
-    const rect=canvas.getBoundingClientRect();
-    const x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
-    const y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
-    ctx.lineTo(x,y);ctx.strokeStyle="var(--b)";ctx.lineWidth=2;ctx.stroke();
+    e.preventDefault?.();
+    const c=canvasRef.current;if(!c)return;
+    const ctx=c.getContext("2d");
+    const{x,y}=getPos(e);
+    ctx.lineTo(x,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,y);
     setHasSig(true);
   };
+  const endDraw=()=>setDrawing(false);
   const clearSig=()=>{
-    const canvas=canvasRef.current;
-    canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+    const c=canvasRef.current;if(!c)return;
+    c.getContext("2d").clearRect(0,0,c.width,c.height);
     setHasSig(false);
   };
-  const valider=()=>{
+  // SIGNATURE PARENT P10 - charger la signature standard du parent en 1 clic
+  const useStandardSig=()=>{
+    const c=canvasRef.current;if(!c||!sigStandard)return;
+    const ctx=c.getContext("2d");
+    ctx.clearRect(0,0,c.width,c.height);
+    const img=new Image();
+    img.onload=()=>{
+      ctx.drawImage(img,0,0,c.width,c.height);
+      setHasSig(true);
+    };
+    img.src=sigStandard;
+  };
+  // SIGNATURE PARENT P10 - validation persistante en base
+  const valider=async()=>{
     if(!lu||!hasSig)return;
+    if(!contrat?.id){
+      setToast("Aucun contrat actif a signer");
+      return;
+    }
+    const canvas=canvasRef.current;
+    const sigData=canvas?.toDataURL("image/png");
+    const nowIso=new Date().toISOString();
+    const{error}=await supabase.from("contrats").update({
+      signe_parent:true,
+      date_signature_parent:nowIso,
+      signature_parent_data:sigData||null,
+    }).eq("id",contrat.id);
+    if(error){
+      setToast("Erreur enregistrement : "+error.message);
+      return;
+    }
+    await logAction("sign_contract_parent",{table_name:"contrats",record_id:contrat.id});
     setSigne(true);
-    setToast("Contrat signé électroniquement ✓ - L'assmat a été notifiée");
+    setDateSignature(nowIso);
+    setToast("Contrat signé électroniquement ✓ - L'assistante maternelle a été notifiée");
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
 
   if(signe)return <div style={{textAlign:"center",padding:40}}>
@@ -6413,6 +6468,7 @@ function SignatureContratParent({enfants,pEId}){
     <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>
       Votre signature électronique a été enregistrée.<br/>
       L'assistante maternelle a été notifiée. Le contrat signé est disponible dans Documents.
+      {dateSignature&&<><br/><span style={{fontSize:11,color:"var(--l)",marginTop:4,display:"inline-block"}}>Le {fmt(dateSignature.slice(0,10))} - Conforme eIDAS</span></>}
     </div>
   </div>;
 
@@ -6425,13 +6481,13 @@ function SignatureContratParent({enfants,pEId}){
     <div className="card"style={{padding:18,marginBottom:16}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Contrat d'accueil - {enfant?.prenom}</div>
       {[
-        ["Assistante maternelle","Marie Dupont"],
         ["Enfant",(enfant?.prenom||"-")+" "+(enfant?.nom||"")],
-        ["Début du contrat",fmt(contrat.debut||"2023-09-04")],
+        ["Début du contrat",fmt(contrat.debut||"")],
         ["Jours d'accueil",(contrat.jours||[]).join(", ")],
-        ["Horaires",contrat.horaires||"07h30–17h30"],
-        ["Taux horaire net",(contrat.tauxHoraire||4.05).toFixed(2)+"€/h"],
-        ["Indemnité entretien",(contrat.entretien||3.80).toFixed(2)+"€/jour"],
+        ["Horaires",contrat.horaires||"-"],
+        ["Taux horaire net",(contrat.tauxHoraire||0).toFixed(2)+"€/h"],
+        ["Indemnité entretien",(contrat.entretien||0).toFixed(2)+"€/jour"],
+        ["Statut signature asmat",contrat.signe_asmat?"✅ Signé le "+(contrat.date_signature_asmat?fmt(contrat.date_signature_asmat.slice(0,10)):"-"):"⏳ En attente"],
       ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
         <span style={{color:"var(--l)"}}>{l}</span>
         <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
@@ -6455,8 +6511,14 @@ function SignatureContratParent({enfants,pEId}){
       <canvas ref={canvasRef}width={400}height={120}
         style={{width:"100%",height:120,border:"2px dashed var(--br)",borderRadius:10,
           cursor:"crosshair",background:"#FDFAF6",touchAction:"none"}}
-        onMouseDown={startDraw}onMouseMove={draw}onMouseUp={()=>setDrawing(false)}
-        onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={()=>setDrawing(false)}/>
+        onMouseDown={startDraw}onMouseMove={draw}onMouseUp={endDraw}onMouseLeave={endDraw}
+        onTouchStart={startDraw}onTouchMove={draw}onTouchEnd={endDraw}onTouchCancel={endDraw}/>
+      {/* SIGNATURE PARENT P10 - bouton signature standard si parent en a une */}
+      {sigStandard&&<div style={{marginTop:8}}>
+        <button className="btn bG" style={{fontSize:12,width:"100%",justifyContent:"center"}} onClick={useStandardSig}>
+          📋 Utiliser ma signature enregistrée
+        </button>
+      </div>}
       <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
         <div style={{fontSize:11,color:"var(--l)"}}>
           {hasSig?"✅ Signature dessinée":"Tracez votre signature ci-dessus"}
