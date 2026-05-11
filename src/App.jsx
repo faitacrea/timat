@@ -333,11 +333,35 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
 //
 function AccueilAssMat({enfants,setPage,user}){
   const [showAjout,setShowAjout]=useState(false);
+  // TABLEAU SIGNATURES P11 - state pour le mini-dashboard
+  const [genPdf,setGenPdf]=useState({}); // {[contratId]: 'pending'|'done'|'error'}
+  const [tabToast,setTabToast]=useState("");
   const pt=D.pointages.filter(p=>p.date===TODAY_STR);
   const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
   const nbEnfants=enfants.length;
   const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+
+  // TABLEAU SIGNATURES P11 - regrouper les contrats par statut
+  const sigStats=useMemo(()=>{
+    const result={asmat:[],parent:[],both:[],none:[]};
+    enfants?.forEach(e=>{
+      const ct=e.contrat;
+      if(!ct)return;
+      if(ct.signe_asmat&&ct.signe_parent)result.both.push({enfant:e,contrat:ct});
+      else if(ct.signe_asmat)result.asmat.push({enfant:e,contrat:ct});
+      else if(ct.signe_parent)result.parent.push({enfant:e,contrat:ct});
+      else result.none.push({enfant:e,contrat:ct});
+    });
+    return result;
+  },[enfants]);
+
+  const regenererPDF=async(contratId)=>{
+    setGenPdf(p=>({...p,[contratId]:"pending"}));
+    const r=await generateAndStoreContratPDF(contratId);
+    setGenPdf(p=>({...p,[contratId]:r.success?"done":"error"}));
+    setTabToast(r.success?"PDF du contrat regenere ✓":"Erreur : "+r.error);
+  };
 
   const kpis=[
     {icon:"👶",val:nbEnfants>0?nbEnfants+" enfant"+(nbEnfants>1?"s":""):"Aucun",lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
@@ -347,6 +371,7 @@ function AccueilAssMat({enfants,setPage,user}){
   ];
 
   return <div className="fi">
+    {tabToast&&<Toast msg={tabToast}onClose={()=>setTabToast("")}/>}
     {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
     <div style={{marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
       <div>
@@ -381,6 +406,52 @@ function AccueilAssMat({enfants,setPage,user}){
         <div style={{fontSize:10,color:k.c,marginTop:6,fontWeight:600,opacity:.7}}>{k.hint}</div>
       </div>)}
     </div>
+
+    {/* TABLEAU SIGNATURES P11 - vue d'ensemble du statut signatures des contrats */}
+    {!isDemoUser&&nbEnfants>0&&<div className="card"style={{padding:18,marginBottom:14}}>
+      <div style={{fontWeight:600,fontSize:14,color:"var(--b)",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+        ✍️ Statut des signatures
+        <span style={{fontSize:10,color:"var(--l)",fontWeight:400}}>({nbEnfants} contrat{nbEnfants>1?"s":""})</span>
+      </div>
+      <div className="g4"style={{marginBottom:14,gap:8}}>
+        {[
+          {l:"✅ Signés (2/2)",c:"var(--S)",n:sigStats.both.length,bg:"var(--Sp)"},
+          {l:"⏳ Attente parent",c:"#B8892A",n:sigStats.asmat.length,bg:"#FFF8E6"},
+          {l:"⏳ Attente asmat",c:"var(--B)",n:sigStats.parent.length,bg:"var(--Bp)"},
+          {l:"❌ Non signés",c:"var(--R)",n:sigStats.none.length,bg:"var(--Rp)"},
+        ].map(s=><div key={s.l}style={{padding:10,borderRadius:10,background:s.bg,textAlign:"center"}}>
+          <div className="pf"style={{fontSize:22,fontWeight:600,color:s.c,lineHeight:1}}>{s.n}</div>
+          <div style={{fontSize:10,color:s.c,marginTop:4}}>{s.l}</div>
+        </div>)}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {enfants.map(e=>{
+          const ct=e.contrat;if(!ct)return null;
+          const both=ct.signe_asmat&&ct.signe_parent;
+          const onlyA=ct.signe_asmat&&!ct.signe_parent;
+          const onlyP=!ct.signe_asmat&&ct.signe_parent;
+          const none=!ct.signe_asmat&&!ct.signe_parent;
+          const status=both?{ic:"✅",l:"Signé (asmat + parent)",c:"var(--S)"}
+            :onlyA?{ic:"⏳",l:"En attente du parent",c:"#B8892A"}
+            :onlyP?{ic:"⏳",l:"En attente de votre signature",c:"var(--B)"}
+            :{ic:"❌",l:"Non signé",c:"var(--R)"};
+          const genState=genPdf[ct.id];
+          return <div key={e.id}style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderBottom:"1px solid var(--br)",fontSize:12,flexWrap:"wrap"}}>
+            <span style={{fontSize:18}}>{e.emoji||"👶"}</span>
+            <span style={{fontWeight:600,color:"var(--b)",minWidth:80}}>{e.prenom}</span>
+            <span style={{color:status.c,fontWeight:600,flex:1,minWidth:140}}>{status.ic} {status.l}</span>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {none&&<button className="btn bP"style={{fontSize:11,padding:"4px 10px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
+              {onlyA&&<span style={{fontSize:10,color:"var(--l)",fontStyle:"italic"}}>(rappel email - bientôt)</span>}
+              {(both||onlyA)&&<button className="btn bG"style={{fontSize:10,padding:"4px 8px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
+                {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}
+              </button>}
+              {both&&<button className="btn bT"style={{fontSize:10,padding:"4px 8px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>}
 
     {/* Enfants du jour - TOUT cliquable */}
     <div className="card"style={{padding:18,marginBottom:14}}>
@@ -1944,6 +2015,12 @@ function Contrats({enfants,role,pEId,user}){
     setSignes(p=>({...p,[enfant.id]:true}));
     setDatesSignature(p=>({...p,[enfant.id]:nowIso}));
     setToast("Contrat signé et enregistré ✓");
+    // PDF CONTRAT COMBINE P11 - generer et stocker le PDF dans Documents apres signature asmat
+    if(contrat?.id){
+      generateAndStoreContratPDF(contrat.id).then(r=>{
+        if(!r.success)console.log("PDF gen warn:",r.error);
+      });
+    }
     // FIX: Trigger un refresh global pour que enfants[].contrat.signe_asmat soit a jour
     // (sinon un re-render parent + useEffect [enfants] reecraserait signes a partir de la donnee stale)
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
@@ -3323,7 +3400,22 @@ const CATS={
 };
 
 function Documents({enfants,role,pEId,user}){
-  const [annee,setAnnee]=useState("2024");
+  // ANNEES DYNAMIQUES P11 - annee courante par defaut, liste calculee depuis les contrats
+  const anneesDispo=useMemo(()=>{
+    const max=new Date().getFullYear();
+    let min=max;
+    enfants?.forEach(e=>{
+      const d=e?.contrat?.debut;
+      if(d){
+        const y=parseInt(d.slice(0,4),10);
+        if(!isNaN(y)&&y<min)min=y;
+      }
+    });
+    const list=[];
+    for(let y=max;y>=min;y--)list.push(String(y));
+    return list.length?list:[String(max)];
+  },[enfants]);
+  const [annee,setAnnee]=useState(String(new Date().getFullYear()));
   const [cat,setCat]=useState("tous");
   const [eId,setEId]=useState("tous");
   const isDemoMode=enfants.every(e=>["e1","e2","e3"].includes(e.id));
@@ -3350,7 +3442,7 @@ function Documents({enfants,role,pEId,user}){
     })();
   },[user?.id,isDemoMode]);
 
-  const annees=["2024","2023","2022","2021"];
+  const annees=anneesDispo;
   const liste=role==="parent"
     ? docs.filter(d=>d.partage&&enfants.some(e=>e.id===d.eId))
     : docs;
@@ -5487,6 +5579,155 @@ async function saveAsmatSignature(userId,base64){
   return true;
 }
 
+// PDF CONTRAT COMBINE P11 - genere le PDF du contrat avec les 2 signatures (asmat + parent si presente)
+// puis le stocke dans Supabase Storage et insere une ligne dans documents_meta.
+// Appele apres chaque signature de contrat. Idempotent (remplace si deja existant).
+async function generateAndStoreContratPDF(contratId){
+  try{
+    // 1. Recuperer toutes les donnees necessaires
+    const{data:ct,error:eCt}=await supabase.from("contrats").select("*").eq("id",contratId).single();
+    if(eCt||!ct)return{success:false,error:"Contrat introuvable"};
+    const{data:enfant}=await supabase.from("enfants").select("*").eq("id",ct.enfant_id).single();
+    if(!enfant)return{success:false,error:"Enfant introuvable"};
+    const{data:asmatProfile}=await supabase.from("profiles").select("prenom,nom,email,telephone,numero_agrement").eq("id",ct.asmat_id).maybeSingle();
+    const{data:parentProfile}=ct.parent_id?await supabase.from("profiles").select("prenom,nom,email,telephone").eq("id",ct.parent_id).maybeSingle():{data:null};
+
+    // 2. Charger jsPDF si pas deja charge
+    if(!window.jspdf){
+      await new Promise((res,rej)=>{
+        const s=document.createElement("script");
+        s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+        s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF echoue"));
+        document.head.appendChild(s);
+      });
+    }
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+
+    // 3. Genenrer le PDF
+    let y=20;
+    doc.setFontSize(16);doc.setFont("helvetica","bold");
+    doc.text("CONTRAT DE TRAVAIL",105,y,{align:"center"});y+=6;
+    doc.setFontSize(10);doc.setFont("helvetica","normal");
+    doc.text("Assistante maternelle agreee - CCN 3239",105,y,{align:"center"});y+=12;
+
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text("EMPLOYEUR (Particulier)",20,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(10);
+    doc.text((parentProfile?.prenom||"")+" "+(parentProfile?.nom||""),20,y);y+=5;
+    if(parentProfile?.email)doc.text("Email : "+parentProfile.email,20,y),y+=5;
+    if(parentProfile?.telephone)doc.text("Tel : "+parentProfile.telephone,20,y),y+=5;
+    y+=4;
+
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text("SALARIEE (Assistante maternelle)",20,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(10);
+    doc.text((asmatProfile?.prenom||"")+" "+(asmatProfile?.nom||""),20,y);y+=5;
+    if(asmatProfile?.numero_agrement)doc.text("N agrement : "+asmatProfile.numero_agrement,20,y),y+=5;
+    if(asmatProfile?.email)doc.text("Email : "+asmatProfile.email,20,y),y+=5;
+    if(asmatProfile?.telephone)doc.text("Tel : "+asmatProfile.telephone,20,y),y+=5;
+    y+=4;
+
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text("ENFANT ACCUEILLI",20,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(10);
+    doc.text("Prenom : "+(enfant.prenom||"-"),20,y);y+=5;
+    if(enfant.naissance)doc.text("Date de naissance : "+enfant.naissance,20,y),y+=5;
+    y+=4;
+
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text("CONDITIONS D'ACCUEIL",20,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(10);
+    if(ct.debut)doc.text("Debut du contrat : "+ct.debut,20,y),y+=5;
+    if(ct.fin)doc.text("Fin du contrat : "+ct.fin,20,y),y+=5;
+    doc.text("Heures hebdomadaires : "+(ct.heures_hebdo||0)+" h",20,y);y+=5;
+    doc.text("Jours d'accueil : "+(Array.isArray(ct.jours)?ct.jours.join(", "):(ct.jours||"-")),20,y);y+=5;
+    doc.text("Horaires : "+(ct.horaires||"-"),20,y);y+=5;
+    doc.text("Taux horaire net : "+(ct.taux_horaire||0).toFixed(2)+" euros/h",20,y);y+=5;
+    doc.text("Indemnite d'entretien : "+(ct.entretien||0).toFixed(2)+" euros/jour",20,y);y+=5;
+    y+=8;
+
+    doc.setFontSize(9);doc.setFont("helvetica","italic");
+    doc.text("Contrat conforme a la convention collective nationale des particuliers employeurs (IDCC 2395).",20,y);y+=4;
+    doc.text("A conserver 5 ans minimum. Valeur legale identique au papier.",20,y);y+=10;
+
+    // Zone signatures
+    doc.setFontSize(11);doc.setFont("helvetica","bold");
+    doc.text("SIGNATURES",20,y);y+=6;
+    doc.setFont("helvetica","normal");doc.setFontSize(9);
+
+    const sigY=y;
+    const sigBoxW=80;const sigBoxH=30;
+
+    // Signature asmat (gauche)
+    doc.rect(20,sigY,sigBoxW,sigBoxH);
+    doc.text("Assistante maternelle",22,sigY-1);
+    if(ct.signature_asmat_data){
+      try{doc.addImage(ct.signature_asmat_data,"PNG",22,sigY+2,sigBoxW-4,sigBoxH-10);}catch(e){}
+      doc.setFontSize(8);
+      doc.text("Le "+(ct.date_signature_asmat?ct.date_signature_asmat.slice(0,10):"-"),22,sigY+sigBoxH-2);
+    }else{
+      doc.setFontSize(8);doc.text("Non signe",22,sigY+sigBoxH/2);
+    }
+
+    // Signature parent (droite)
+    doc.rect(110,sigY,sigBoxW,sigBoxH);
+    doc.setFontSize(9);doc.text("Parent employeur",112,sigY-1);
+    if(ct.signature_parent_data){
+      try{doc.addImage(ct.signature_parent_data,"PNG",112,sigY+2,sigBoxW-4,sigBoxH-10);}catch(e){}
+      doc.setFontSize(8);
+      doc.text("Le "+(ct.date_signature_parent?ct.date_signature_parent.slice(0,10):"-"),112,sigY+sigBoxH-2);
+    }else{
+      doc.setFontSize(8);doc.text("En attente de signature",112,sigY+sigBoxH/2);
+    }
+
+    // 4. Convertir en blob et uploader
+    const blob=doc.output("blob");
+    const fileName="contrat_"+contratId+".pdf";
+    const path=ct.asmat_id+"/contrats/"+fileName;
+    const{error:eUp}=await supabase.storage.from("documents").upload(path,blob,{
+      contentType:"application/pdf",
+      upsert:true,
+    });
+    if(eUp)return{success:false,error:"Upload : "+eUp.message};
+
+    // 5. Update contrat avec le path
+    const nowIso=new Date().toISOString();
+    await supabase.from("contrats").update({
+      pdf_storage_path:path,
+      pdf_generated_at:nowIso,
+    }).eq("id",contratId);
+
+    // 6. Inserer/update dans documents_meta (idempotent via upsert sur cle storage_path)
+    const metaId="contrat_"+contratId; // id stable pour upsert
+    const nomDoc="Contrat_"+(enfant.prenom||"enfant")+"_"+(ct.debut?.slice(0,7)||"")+".pdf";
+    const{data:existing}=await supabase.from("documents_meta").select("id").eq("storage_path",path).maybeSingle();
+    if(existing){
+      await supabase.from("documents_meta").update({
+        nom:nomDoc,
+        categorie:"admin",
+        sous_type:"Contrat signe",
+      }).eq("id",existing.id);
+    }else{
+      await supabase.from("documents_meta").insert({
+        asmat_id:ct.asmat_id,
+        enfant_id:ct.enfant_id,
+        nom:nomDoc,
+        categorie:"admin",
+        sous_type:"Contrat signe",
+        storage_path:path,
+        partage:true,
+        taille:Math.round(blob.size/1024)+" Ko",
+      });
+    }
+
+    await logAction("generate_contract_pdf",{table_name:"contrats",record_id:contratId});
+    return{success:true,path};
+  }catch(e){
+    return{success:false,error:e.message};
+  }
+}
+
 //
 function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser}){
   const [toast,setToast]=useState("");
@@ -6459,6 +6700,10 @@ function SignatureContratParent({enfants,pEId,user}){
       return;
     }
     await logAction("sign_contract_parent",{table_name:"contrats",record_id:contrat.id});
+    // PDF CONTRAT COMBINE P11 - regenerer le PDF avec les 2 signatures (asmat + parent)
+    generateAndStoreContratPDF(contrat.id).then(r=>{
+      if(!r.success)console.log("PDF gen warn:",r.error);
+    });
     setSigne(true);
     setDateSignature(data.date||new Date().toISOString());
     setToast("Contrat signé électroniquement ✓ - L'assistante maternelle a été notifiée");
