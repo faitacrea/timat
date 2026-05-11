@@ -11933,6 +11933,10 @@ export default function App(){
                 signe_asmat:!!ct.signe_asmat,
                 date_signature_asmat:ct.date_signature_asmat||null,
                 signature_asmat_data:ct.signature_asmat_data||null,
+                // SIGNATURE PARENT P10 - exposer les colonnes parent au front
+                signe_parent:!!ct.signe_parent,
+                date_signature_parent:ct.date_signature_parent||null,
+                signature_parent_data:ct.signature_parent_data||null,
               }:null,
             };
           });
