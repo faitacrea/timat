@@ -7013,19 +7013,61 @@ function ForumCommunaute({role}){
 //
 function RapportAnnuel({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [annee,setAnnee]=useState(2024);
+  // ANNEES DYNAMIQUES P12 - liste calculee depuis les contrats
+  const annees=useMemo(()=>{
+    const max=new Date().getFullYear();
+    let min=max;
+    enfants?.forEach(e=>{
+      const d=e?.contrat?.debut;
+      if(d){
+        const y=parseInt(d.slice(0,4),10);
+        if(!isNaN(y)&&y<min)min=y;
+      }
+    });
+    const list=[];for(let y=max;y>=min;y--)list.push(y);
+    return list.length?list:[max];
+  },[enfants]);
+  const [annee,setAnnee]=useState(new Date().getFullYear()-1); // annee precedente par defaut
   const [gen,setGen]=useState(false);
   const [toast,setToast]=useState("");
+  const [realStats,setRealStats]=useState(null);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat||{};
 
+  // RAPPORT REEL P12 - charger les pointages reels et paiements de l'annee
+  useEffect(()=>{
+    if(!enfant?.id||!annee)return;
+    let cancelled=false;
+    (async()=>{
+      const debut=annee+"-01-01";const fin=annee+"-12-31";
+      const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      const{data:paie}=contrat?.id?await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin):{data:[]};
+      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date_debut",debut).lte("date_debut",fin);
+      if(cancelled)return;
+      // Sommer heures reelles
+      let heuresReelles=0;
+      (pts||[]).forEach(p=>{
+        if(p.heure_arrivee&&p.heure_depart){
+          const a=new Date("2000-01-01T"+p.heure_arrivee);
+          const d=new Date("2000-01-01T"+p.heure_depart);
+          heuresReelles+=(d-a)/3600000;
+        }
+      });
+      const paiementsReels=(paie||[]).reduce((s,p)=>s+(parseFloat(p.montant)||0),0);
+      setRealStats({heures:Math.round(heuresReelles),paiements:Math.round(paiementsReels),nbPointages:pts?.length||0,nbAbsences:abs?.length||0});
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,annee,contrat?.id]);
+
+  // Calculs estimatifs (fallback si pas de donnees reelles)
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
   const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||4.05)*1.1*10)/10;
-  const salaireAnnuel=Math.round(salaireNet*12);
+  const salaireAnnuel=realStats?.paiements||Math.round(salaireNet*12);
   const entretienAnnuel=Math.round((contrat.entretien||3.80)*heuresMois/5*12);
   const totalAnnuel=salaireAnnuel+entretienAnnuel;
   const creditImpot=Math.min(Math.round(totalAnnuel*0.5),3500);
+  const heuresAnnuelles=realStats?.heures||(heuresMois*12);
 
   const generer=()=>{
     setGen(true);
@@ -7040,16 +7082,22 @@ function RapportAnnuel({enfants,role,pEId,user}){
         +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}'
         +'.total{font-weight:bold;}@media print{button{display:none}}</style></head>'
         +'<body><h1>Rapport annuel '+annee+'</h1>'
-        +'<p><strong>Assistante maternelle:</strong> Marie Dupont</p>'
+        +'<p><strong>Assistante maternelle:</strong> '+(user?.prenom||"")+' '+(user?.nom||"")+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
-        +'<h2>Récapitulatif financier</h2>'
-        +'<table><tr><th>Poste</th><th>Montant</th></tr>'
-        +'<tr><td>Salaire net annuel estimé</td><td>'+salaireAnnuel+'€</td></tr>'
-        +"<tr><td>Indemnités d'entretien</td><td>"+entretienAnnuel+"€</td></tr>"
-        +'<tr class="total"><td>Total versé</td><td>'+totalAnnuel+'€</td></tr>'
-        +"<tr><td>Crédit d'impôt estimé (50%)</td><td>"+creditImpot+"€</td></tr>"
+        +'<h2>Heures travaillees '+annee+'</h2>'
+        +'<table><tr><th>Indicateur</th><th>Valeur</th></tr>'
+        +'<tr><td>Heures reelles pointees</td><td>'+heuresAnnuelles+' h</td></tr>'
+        +'<tr><td>Nb de jours pointes</td><td>'+(realStats?.nbPointages||"-")+'</td></tr>'
+        +'<tr><td>Nb d absences</td><td>'+(realStats?.nbAbsences||"-")+'</td></tr>'
         +'</table>'
-        +'<p style="font-size:12px;color:#888;">Généré par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
+        +'<h2>Recapitulatif financier</h2>'
+        +'<table><tr><th>Poste</th><th>Montant</th></tr>'
+        +'<tr><td>Salaire net annuel'+(realStats?.paiements?" (donnees reelles)":" (estime)")+'</td><td>'+salaireAnnuel+'€</td></tr>'
+        +"<tr><td>Indemnites d'entretien (estimees)</td><td>"+entretienAnnuel+"€</td></tr>"
+        +'<tr class="total"><td>Total verse</td><td>'+totalAnnuel+'€</td></tr>'
+        +"<tr><td>Credit d'impot estime (50%)</td><td>"+creditImpot+"€</td></tr>"
+        +'</table>'
+        +'<p style="font-size:12px;color:#888;">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'<button onclick="window.print()">🖨️ Imprimer / PDF</button>'
         +'</body></html>';
       w.document.write(htmlRapport);
@@ -7067,9 +7115,9 @@ function RapportAnnuel({enfants,role,pEId,user}){
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
     </div>}
 
-    <div style={{display:"flex",gap:10,marginBottom:20,alignItems:"center"}}>
+    <div style={{display:"flex",gap:10,marginBottom:20,alignItems:"center",flexWrap:"wrap"}}>
       <label className="lbl"style={{marginBottom:0}}>Année :</label>
-      {[2023,2024,2025].map(y=><button key={y}onClick={()=>setAnnee(y)}style={{
+      {annees.map(y=><button key={y}onClick={()=>setAnnee(y)}style={{
         padding:"6px 14px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:600,
         background:annee===y?"var(--b)":"transparent",
         color:annee===y?"#fff":"var(--m)",
@@ -7355,31 +7403,170 @@ function SoldeDeCompte({enfants,role,pEId}){
 function ExportDonnees({enfants,user,role}){
   const [selEnfant,setSelEnfant]=useState("tous");
   const [periode,setPeriode]=useState("annee");
-  const [format,setFormat]=useState("pdf");
+  const [format,setFormat]=useState("json");
   const [exporting,setExporting]=useState(false);
   const [toast,setToast]=useState("");
 
-  const exporter=()=>{
+  // EXPORT RGPD P12 - modules sont des couples table/cle pour generer le vrai export
+  const modulesConfig=useMemo(()=>[
+    {id:"profil",l:"Profil et informations personnelles",checked:true,table:"profiles",field:"id",scope:"user"},
+    {id:"enfants",l:"Fiches des enfants accueillis",checked:true,table:"enfants",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"contrats",l:"Contrats et avenants",checked:true,table:"contrats",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"modifications_contrat",l:"Demandes d'avenants",checked:true,table:"modifications_contrat",field:"contrat_id",scope:"enfant_via_contrat"},
+    {id:"pointages",l:"Historique des pointages",checked:true,table:"pointages",field:"enfant_id",scope:"enfant"},
+    {id:"transmissions",l:"Journal et transmissions",checked:true,table:"transmissions",field:"enfant_id",scope:"enfant"},
+    {id:"bilans",l:"Bilans periodiques",checked:true,table:"bilans",field:"enfant_id",scope:"enfant"},
+    {id:"absences",l:"Historique des absences",checked:true,table:"absences",field:"enfant_id",scope:"enfant"},
+    {id:"sante",l:"Vaccins",checked:true,table:"vaccins",field:"enfant_id",scope:"enfant"},
+    {id:"croissance",l:"Donnees de croissance",checked:false,table:"croissance",field:"enfant_id",scope:"enfant"},
+    {id:"sommeil",l:"Donnees de sommeil",checked:false,table:"sommeil",field:"enfant_id",scope:"enfant"},
+    {id:"repas",l:"Historique des repas",checked:false,table:"repas",field:"enfant_id",scope:"enfant"},
+    {id:"changes",l:"Historique des changes",checked:false,table:"changes_couches",field:"enfant_id",scope:"enfant"},
+    {id:"portfolio",l:"Portfolio",checked:false,table:"portfolio",field:"enfant_id",scope:"enfant"},
+    {id:"jalons",l:"Jalons de developpement",checked:false,table:"jalons",field:"enfant_id",scope:"enfant"},
+    {id:"paiements",l:"Historique des paiements",checked:true,table:"paiements",field:"contrat_id",scope:"enfant_via_contrat"},
+    {id:"messages",l:"Messages",checked:false,table:"messages",field:"enfant_id",scope:"enfant"},
+    {id:"documents",l:"Metadonnees des documents",checked:false,table:"documents_meta",field:role==="asmat"?"asmat_id":"enfant_id",scope:role==="asmat"?"user":"enfant"},
+    {id:"audit_log",l:"Journal des actions (audit)",checked:false,table:"audit_log",field:"user_id",scope:"user"},
+  ],[role]);
+
+  const [sel,setSel]=useState(()=>Object.fromEntries(modulesConfig.map(m=>[m.id,m.checked])));
+
+  // Filtre temporel
+  const dateBornes=useMemo(()=>{
+    const now=new Date();
+    const year=now.getFullYear();
+    if(periode==="mois")return{debut:new Date(year,now.getMonth(),1),fin:now};
+    if(periode==="trimestre")return{debut:new Date(year,now.getMonth()-2,1),fin:now};
+    if(periode==="annee")return{debut:new Date(year,0,1),fin:now};
+    return{debut:null,fin:null}; // tout
+  },[periode]);
+
+  const exporter=async()=>{
     setExporting(true);
-    setTimeout(()=>{
-      setExporting(false);
-      setToast("Export "+format.toUpperCase()+" généré et prêt à télécharger ✓");
-    },2000);
+    try{
+      // 1. Determiner les enfants concernes
+      const enfantIds=selEnfant==="tous"?enfants.map(e=>e.id):[selEnfant];
+      // 2. Determiner les contrats concernes (pour les tables liees au contrat)
+      const contratIds=enfants.filter(e=>selEnfant==="tous"||e.id===selEnfant).map(e=>e.contrat?.id).filter(Boolean);
+
+      // 3. Pour chaque module selectionne, recuperer les donnees
+      const exportData={
+        _meta:{
+          exporte_le:new Date().toISOString(),
+          exporte_par:user?.email||"-",
+          user_id:user?.id||"-",
+          role:role,
+          periode:periode,
+          enfant_filtre:selEnfant,
+          modules_selectionnes:Object.entries(sel).filter(([k,v])=>v).map(([k])=>k),
+          rgpd:"Export realise dans le cadre du droit a la portabilite (article 20 RGPD)",
+        },
+      };
+
+      const modulesActifs=modulesConfig.filter(m=>sel[m.id]);
+      for(const m of modulesActifs){
+        let q=supabase.from(m.table).select("*");
+        if(m.scope==="user"){
+          // ex: profiles WHERE id = user.id
+          if(m.table==="profiles") q=q.eq("id",user.id);
+          else q=q.eq(m.field,user.id);
+        }else if(m.scope==="enfant"){
+          if(!enfantIds.length){exportData[m.id]=[];continue;}
+          q=q.in(m.field,enfantIds);
+        }else if(m.scope==="enfant_via_contrat"){
+          if(!contratIds.length){exportData[m.id]=[];continue;}
+          q=q.in(m.field,contratIds);
+        }
+        // Filtre temporel quand pertinent (sur created_at ou date)
+        if(dateBornes.debut){
+          // tester si la table a une colonne date ou created_at
+          const colsDate=["date","created_at"];
+          for(const c of colsDate){
+            // Try, mais ne pas casser si la colonne n existe pas — on laisse Supabase ignorer
+          }
+          if(["pointages","transmissions","bilans","absences","croissance","sommeil","repas","changes_couches","portfolio","jalons","paiements","messages","audit_log"].includes(m.table)){
+            q=q.gte("created_at",dateBornes.debut.toISOString());
+          }
+        }
+        const{data,error}=await q;
+        if(error){
+          exportData[m.id]={erreur:error.message};
+        }else{
+          exportData[m.id]=data||[];
+        }
+      }
+
+      // 4. Generer le fichier
+      const fileName="export-timat-"+(user?.email||"user").replace(/[^a-z0-9]/gi,"_")+"-"+new Date().toISOString().slice(0,10)+"."+format;
+
+      if(format==="json"){
+        const blob=new Blob([JSON.stringify(exportData,null,2)],{type:"application/json"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");a.href=url;a.download=fileName;a.click();URL.revokeObjectURL(url);
+      }else if(format==="csv"){
+        // CSV : un fichier par table, concatenes avec separateurs
+        let csv="";
+        for(const[key,rows]of Object.entries(exportData)){
+          if(key==="_meta"){
+            csv+="=== METADONNEES ===\n";
+            for(const[k,v]of Object.entries(rows))csv+=k+","+(Array.isArray(v)?v.join(";"):v)+"\n";
+            csv+="\n";
+            continue;
+          }
+          if(!Array.isArray(rows)||!rows.length){csv+="=== "+key.toUpperCase()+" (vide) ===\n\n";continue;}
+          csv+="=== "+key.toUpperCase()+" ===\n";
+          const headers=Object.keys(rows[0]);
+          csv+=headers.join(",")+"\n";
+          rows.forEach(r=>{
+            csv+=headers.map(h=>{
+              let v=r[h];
+              if(v===null||v===undefined)return"";
+              if(typeof v==="object")v=JSON.stringify(v);
+              v=String(v).replace(/"/g,'""');
+              return v.includes(",")||v.includes("\n")||v.includes('"')?'"'+v+'"':v;
+            }).join(",")+"\n";
+          });
+          csv+="\n";
+        }
+        const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");a.href=url;a.download=fileName;a.click();URL.revokeObjectURL(url);
+      }else{
+        // PDF : version resume imprimable
+        const w=window.open("","_blank");
+        if(!w){setToast("Autorisez les popups pour le PDF");setExporting(false);return;}
+        const summary=Object.entries(exportData).filter(([k])=>k!=="_meta").map(([k,v])=>{
+          const n=Array.isArray(v)?v.length:(v?.erreur?"erreur":"-");
+          return"<tr><td>"+k+"</td><td>"+n+"</td></tr>";
+        }).join("");
+        const html='<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Export RGPD</title><style>'
+          +'body{font-family:Arial,sans-serif;max-width:800px;margin:30px auto;color:#222}'
+          +'h1{color:#B8622F}table{width:100%;border-collapse:collapse;margin:14px 0}'
+          +'td,th{padding:8px;border:1px solid #ddd;text-align:left;font-size:12px}'
+          +'th{background:#f5f5f5}@media print{.nb{display:none}}</style></head><body>'
+          +'<h1>Export RGPD - Synthese</h1>'
+          +'<p>Exporte le : '+new Date().toLocaleString("fr-FR")+'</p>'
+          +'<p>Utilisateur : '+(user?.email||"-")+'</p>'
+          +'<p>Periode : '+periode+'</p>'
+          +'<p>Enfants : '+selEnfant+'</p>'
+          +'<h2>Donnees exportees</h2>'
+          +'<table><tr><th>Module</th><th>Nombre d enregistrements</th></tr>'+summary+'</table>'
+          +'<p style="font-size:11px;color:#888;margin-top:20px">Le PDF est un resume. Pour les donnees brutes, utilisez l export JSON ou CSV.</p>'
+          +'<div style="text-align:center;margin-top:20px"><button class="nb" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Imprimer / PDF</button></div>'
+          +'</body></html>';
+        w.document.write(html);w.document.close();
+      }
+
+      await logAction("export_data_rgpd",{table_name:"profiles",record_id:user?.id,user_id:user?.id});
+      setToast("Export "+format.toUpperCase()+" telecharge ✓");
+    }catch(e){
+      setToast("Erreur export : "+e.message);
+    }
+    setExporting(false);
   };
 
-  const modules=[
-    {id:"profil",l:"Profil et informations personnelles",checked:true},
-    {id:"enfants",l:"Fiches des enfants accueillis",checked:true},
-    {id:"contrats",l:"Contrats et avenants",checked:true},
-    {id:"pointages",l:"Historique des pointages",checked:true},
-    {id:"transmissions",l:"Journal et transmissions",checked:true},
-    {id:"salaires",l:"Récapitulatifs salaires et bulletins",checked:true},
-    {id:"absences",l:"Historique des absences",checked:true},
-    {id:"sante",l:"Données de santé et vaccins",checked:true},
-    {id:"photos",l:"Photos du journal",checked:false},
-    {id:"documents",l:"Documents stockés",checked:false},
-  ];
-  const [sel,setSel]=useState(Object.fromEntries(modules.map(m=>[m.id,m.checked])));
+  const modules=modulesConfig;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -7394,6 +7581,10 @@ function ExportDonnees({enfants,user,role}){
               style={{width:15,height:15,accentColor:"var(--T)",flexShrink:0}}/>
             <span style={{fontSize:13,color:"var(--b)"}}>{m.l}</span>
           </label>)}
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button className="btn bG"style={{fontSize:11,padding:"6px 10px"}}onClick={()=>setSel(Object.fromEntries(modules.map(m=>[m.id,true])))}>Tout cocher</button>
+            <button className="btn bG"style={{fontSize:11,padding:"6px 10px"}}onClick={()=>setSel(Object.fromEntries(modules.map(m=>[m.id,false])))}>Tout decocher</button>
+          </div>
         </div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -7418,14 +7609,14 @@ function ExportDonnees({enfants,user,role}){
           <div style={{marginBottom:16}}>
             <label className="lbl">Format</label>
             <div style={{display:"flex",gap:8}}>
-              {[["pdf","📄 PDF"],["csv","📊 CSV"],["json","🔧 JSON"]].map(([v,l])=><button key={v}onClick={()=>setFormat(v)}style={{
+              {[["json","🔧 JSON"],["csv","📊 CSV"],["pdf","📄 PDF résumé"]].map(([v,l])=><button key={v}onClick={()=>setFormat(v)}style={{
                 flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
                 background:format===v?"var(--b)":"transparent",color:format===v?"#fff":"var(--m)",
                 borderColor:format===v?"var(--b)":"var(--br)"}}>{l}</button>)}
             </div>
           </div>
           <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 12px",marginBottom:14,fontSize:12,color:"var(--B)"}}>
-            🔒 Export conforme RGPD (article 20 - droit à la portabilité). Fichier chiffré, téléchargé directement sur votre appareil. Aucune copie conservée.
+            🔒 Export conforme RGPD (article 20 - droit à la portabilité). Fichier téléchargé directement sur votre appareil. Aucune copie conservée sur nos serveurs.
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exporter}disabled={exporting}>
             {exporting?"⏳ Génération en cours...":"📥 Exporter mes données"}
@@ -10070,16 +10261,32 @@ function AttestationFiscale({enfants,role,pEId,user}){
   const [annee,setAnnee]=useState(new Date().getFullYear()-1);
   const [gen,setGen]=useState(false);
   const [toast,setToast]=useState("");
+  // ATTESTATION FISCALE P12 - paiements reels
+  const [paiementsReels,setPaiementsReels]=useState(null);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
   const contrat=enfant.contrat||{};
 
-  // Calcul annuel estimé
+  // ATTESTATION FISCALE P12 - charger les paiements de l'annee depuis Supabase
+  useEffect(()=>{
+    if(!contrat?.id||!annee){setPaiementsReels(null);return;}
+    let cancelled=false;
+    (async()=>{
+      const debut=annee+"-01-01";const fin=annee+"-12-31";
+      const{data}=await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin);
+      if(cancelled)return;
+      const total=(data||[]).reduce((s,p)=>s+(parseFloat(p.montant)||0),0);
+      setPaiementsReels({total:Math.round(total*100)/100,count:data?.length||0});
+    })();
+    return()=>{cancelled=true;};
+  },[contrat?.id,annee]);
+
+  // Calcul annuel estimé (fallback)
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
   const salMensBrut=hMens*(contrat.tauxHoraire||4.05);
   const entretienMens=(contrat.entretien||3.80)*Math.round(hMens/8);
-  const moisTravailles=12; // Estimation année complète
-  const totalSalNet=(salMensBrut*0.78*moisTravailles);
+  const moisTravailles=12;
+  const totalSalNet=paiementsReels?.total||(salMensBrut*0.78*moisTravailles);
   const totalEntretien=entretienMens*moisTravailles;
   const totalRepas=0;
 
@@ -10107,12 +10314,12 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<div><h3>Assistante maternelle agréée</h3>',
         '<strong>'+(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'</strong><br/>',
         'Email : '+(user?.email||'[email]')+'<br/>',
-        'N° agrément : [À compléter]</div>',
+        'N° agrément : '+(user?.numero_agrement||"[À renseigner dans Paramètres]")+'</div>',
         '<div><h3>Parent employeur</h3>',
         '<strong>'+(enfant?.prenomParent||'Parent')+' '+(enfant?.nomParent||'')+'</strong><br/>',
         'Enfant gardé : '+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'<br/>',
         'Né(e) le : '+(enfant?.naissance||'[Date]')+'</div></div>',
-        '<h3 style="font-size:12px;color:#264653;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+'</h3>',
+        '<h3 style="font-size:12px;color:#264653;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+(paiementsReels?.count?' (donnees reelles)':' (estimees)')+'</h3>',
         '<table>',
         '<tr><td>Salaires nets versés (12 mois)</td><td style="text-align:right">'+totalSalNet.toFixed(2)+' €</td></tr>',
         '<tr><td>Indemnités d\'entretien</td><td style="text-align:right">'+totalEntretien.toFixed(2)+' €</td></tr>',
