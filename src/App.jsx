@@ -7226,8 +7226,11 @@ function RapportAnnuel({enfants,role,pEId,user}){
       const w=window.open("","_blank");
       if(!w){setToast("Autorisez les popups pour télécharger le PDF");return;}
       const htmlRapport='<!DOCTYPE html><html><head><title>Rapport annuel '+annee+' - '+(enfant?.prenom||'')+'</title>'
-        +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;padding:20px}'
-        +'h1{color:#B8622F;}table{width:100%;border-collapse:collapse;margin:20px 0;page-break-inside:avoid}'
+        +'<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;background:#f5f5f5}'
+        +'#doc{max-width:780px;margin:0 auto;padding:30px;background:#fff;box-sizing:border-box}'
+        +'h1{color:#B8622F;margin:0 0 16px 0}'
+        +'h2{margin:24px 0 8px 0;font-size:16px}'
+        +'table{width:100%;border-collapse:collapse;margin:12px 0;page-break-inside:avoid}'
         +'tr{page-break-inside:avoid}'
         +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}'
         +'.total{font-weight:bold;}'
@@ -7235,7 +7238,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
         +'.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}'
         +'.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}'
         +'.btn-print{background:#264653;color:#fff}.btn-pdf{background:#B8622F;color:#fff}'
-        +'@media print{.actions{display:none!important}}</style>'
+        +'@media print{.actions{display:none!important}body{background:#fff}#doc{box-shadow:none}}</style>'
         +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>'
         +'</head>'
         +'<body>'
@@ -7265,7 +7268,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
           :'<div class="sig-block" style="padding:14px;border:1px dashed #ddd;border-radius:6px;font-size:10px;color:#999;font-style:italic">Aucune signature enregistree. Allez dans Parametres pour en creer une.</div>')
         +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'</div>'
-        +'<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[12,10,12,10],filename:"rapport-annuel-'+annee+'-'+(enfant?.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:1.5,useCORS:true,logging:false,windowWidth:el.scrollWidth},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>'
+        +'<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"rapport-annuel-'+annee+'-'+(enfant?.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>'
         +'</body></html>';
       w.document.write(htmlRapport);
       w.document.close();
@@ -10625,20 +10628,23 @@ function AttestationFiscale({enfants,role,pEId,user}){
       if(!w){setToast("Autorisez les popups");return;}
       const html=[
         '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Attestation fiscale '+annee+' - '+(enfant.prenom||'')+'</title>',
-        '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;font-size:12px;line-height:1.6}',
+        '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;font-size:12px;line-height:1.6;background:#f5f5f5}',
+        '#doc{max-width:780px;margin:0 auto;padding:30px;background:#fff}',
         'h1{font-size:15px;text-align:center;color:#264653;border-bottom:2px solid #2A9D8F;padding-bottom:10px;margin-bottom:20px}',
         '.header{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;padding:16px;background:#F4F7FA;border-radius:8px}',
         '.header h3{font-size:11px;color:#2A9D8F;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}',
-        'table{width:100%;border-collapse:collapse;margin:10px 0}td{padding:8px 12px;border:1px solid #e0e0e0}',
+        'table{width:100%;border-collapse:collapse;margin:10px 0;page-break-inside:avoid}',
+        'tr{page-break-inside:avoid}',
+        'td{padding:8px 12px;border:1px solid #e0e0e0}',
         'td:first-child{width:60%;background:#FDFBF8;font-weight:600;color:#264653}',
         '.total{background:#2A9D8F;color:#fff;font-weight:700;font-size:13px}.total td{border-color:#2A9D8F}',
-        '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:10px;color:#666}',
-        '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px}',
+        '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:10px;color:#666;page-break-inside:avoid}',
+        '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px;page-break-inside:avoid}',
         '.sig-box{border-top:1px solid #264653;padding-top:10px;font-size:11px}',
         '.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}',
         '.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}',
         '.btn-print{background:#264653;color:#fff}.btn-pdf{background:#2A9D8F;color:#fff}',
-        '@media print{.actions{display:none!important}.noprint{display:none}}</style>',
+        '@media print{.actions{display:none!important}body{background:#fff}.noprint{display:none}}</style>',
         // Chargement de html2pdf pour vraie generation PDF
         '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>',
         '</head><body>',
@@ -10687,7 +10693,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:9px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
         '</div>',
-        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[15,10,15,10],filename:"attestation-fiscale-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:1},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:el.scrollWidth},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["avoid-all","css","legacy"],before:".pageBefore",avoid:[".sig",".note","table","tr"]}};html2pdf().from(el).set(opt).save();}</script>',
+        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"attestation-fiscale-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>',
         '</body></html>'
       ].join('');
       w.document.write(html);
