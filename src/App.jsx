@@ -7212,6 +7212,112 @@ function RapportAnnuel({enfants,role,pEId,user}){
   const creditImpot=Math.min(Math.round(totalAnnuel*0.5),3500);
   const sourceLabel=realStats?.paiements>0?"(données réelles)":"(estimées)";
 
+  // RAPPORT P14B - Helper PDF jsPDF natif (rendu identique cross-browser, pas de troncature)
+  const telechargerPDF=async()=>{
+    setGen(true);
+    try{
+      // re-fetch signature pour avoir la derniere version
+      let userSig=user?.signature_base64;
+      if(user?.id){
+        const{data:fresh}=await supabase.from("profiles").select("signature_base64").eq("id",user.id).maybeSingle();
+        if(fresh?.signature_base64)userSig=fresh.signature_base64;
+      }
+      // Charger jsPDF si pas deja charge
+      if(!window.jspdf){
+        await new Promise((res,rej)=>{
+          const s=document.createElement("script");
+          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF echoue"));
+          document.head.appendChild(s);
+        });
+      }
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const PW=210,MX=18;let y=20;
+      // Couleurs
+      const orange=[184,98,47];const noir=[40,40,40];const gris=[120,120,120];
+      // Titre
+      doc.setFontSize(20);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
+      doc.text("Rapport annuel "+annee,MX,y);y+=10;
+      // Asmat + enfant
+      doc.setFontSize(11);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      doc.text("Assistante maternelle : "+(user?.prenom||"")+" "+(user?.nom||""),MX,y);y+=6;
+      doc.text("Enfant : "+(enfant?.prenom||"")+" "+(enfant?.nom||""),MX,y);y+=6;
+      if(user?.numero_agrement){doc.text("N agrement : "+user.numero_agrement,MX,y);y+=6;}
+      y+=4;
+      // Section 1 : Heures
+      doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
+      doc.text("Heures travaillees "+annee,MX,y);y+=8;
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      const tbl1=[
+        ["Heures reelles pointees",heuresAnnuelles+" h"],
+        ["Nb de jours pointes",String(realStats?.nbPointages||"-")],
+        ["Nb d absences",String(realStats?.nbAbsences||"-")],
+      ];
+      // Header tableau
+      doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,8,"F");
+      doc.setFont("helvetica","bold");
+      doc.text("Indicateur",MX+2,y+5.5);
+      doc.text("Valeur",PW-MX-30,y+5.5);
+      y+=8;
+      doc.setFont("helvetica","normal");
+      tbl1.forEach(([l,v])=>{
+        doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,8);
+        doc.text(l,MX+2,y+5.5);
+        doc.text(v,PW-MX-30,y+5.5);
+        y+=8;
+      });
+      y+=8;
+      // Section 2 : Financier
+      doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
+      doc.text("Recapitulatif financier",MX,y);y+=8;
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      const tbl2=[
+        ["Salaire net annuel"+(realStats?.paiements?" (donnees reelles)":" (estime)"),salaireAnnuel+" euros"],
+        ["Indemnites d entretien (estimees)",entretienAnnuel+" euros"],
+        ["Total verse",totalAnnuel+" euros"],
+        ["Credit d impot estime (50%)",creditImpot+" euros"],
+      ];
+      doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,8,"F");
+      doc.setFont("helvetica","bold");
+      doc.text("Poste",MX+2,y+5.5);
+      doc.text("Montant",PW-MX-30,y+5.5);
+      y+=8;
+      tbl2.forEach(([l,v],i)=>{
+        const isTotal=i===2;
+        if(isTotal){doc.setFillColor(255,243,232);doc.rect(MX,y,PW-2*MX,8,"F");}
+        doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,8);
+        doc.setFont("helvetica",isTotal?"bold":"normal");
+        doc.text(l,MX+2,y+5.5);
+        doc.text(v,PW-MX-30,y+5.5);
+        y+=8;
+      });
+      y+=10;
+      // Signature
+      doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,30);
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
+      doc.text("Signature de l assistante maternelle",MX+3,y+5);
+      if(userSig){
+        try{doc.addImage(userSig,"PNG",MX+3,y+7,60,18);}catch(e){console.warn("addImage err",e);}
+        doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
+        doc.text("Le "+new Date().toLocaleDateString("fr-FR")+" - "+(user?.prenom||"")+" "+(user?.nom||""),MX+3,y+28);
+      }else{
+        doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
+        doc.text("Aucune signature enregistree. Voir Parametres.",MX+3,y+18);
+      }
+      y+=36;
+      // Footer
+      doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
+      doc.text("Genere par TiMat - "+new Date().toLocaleDateString("fr-FR"),MX,y);
+      // Save
+      doc.save("rapport-annuel-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
+      setToast("Rapport telecharge ✓");
+    }catch(e){
+      setToast("Erreur generation PDF : "+e.message);
+    }
+    setGen(false);
+  };
+
   const generer=async()=>{
     setGen(true);
     // RAPPORT REEL P14 - re-fetch signature pour s'assurer qu'on a la derniere version
@@ -7226,27 +7332,19 @@ function RapportAnnuel({enfants,role,pEId,user}){
       const w=window.open("","_blank");
       if(!w){setToast("Autorisez les popups pour télécharger le PDF");return;}
       const htmlRapport='<!DOCTYPE html><html><head><title>Rapport annuel '+annee+' - '+(enfant?.prenom||'')+'</title>'
-        +'<style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;background:#f5f5f5}'
-        +'#doc{max-width:780px;margin:0 auto;padding:30px;background:#fff;box-sizing:border-box}'
+        +'<style>body{font-family:Arial,sans-serif;margin:0;padding:30px;color:#222;max-width:780px;margin:0 auto}'
         +'h1{color:#B8622F;margin:0 0 16px 0}'
         +'h2{margin:24px 0 8px 0;font-size:16px}'
-        +'table{width:100%;border-collapse:collapse;margin:12px 0;page-break-inside:avoid}'
-        +'tr{page-break-inside:avoid}'
+        +'table{width:100%;border-collapse:collapse;margin:12px 0}'
         +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}'
-        +'.total{font-weight:bold;}'
-        +'.sig-block{page-break-inside:avoid;margin-top:24px}'
-        +'.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}'
+        +'.total{font-weight:bold;background:#FFF3E8}'
+        +'.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px}'
         +'.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}'
-        +'.btn-print{background:#264653;color:#fff}.btn-pdf{background:#B8622F;color:#fff}'
-        +'@media print{.actions{display:none!important}body{background:#fff}#doc{box-shadow:none}}</style>'
-        +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>'
+        +'.btn-print{background:#264653;color:#fff}'
+        +'@media print{.actions{display:none!important}}</style>'
         +'</head>'
         +'<body>'
-        +'<div class="actions">'
-          +'<button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>'
-          +'<button class="btn-pdf" onclick="dlPdf()">📥 Telecharger PDF</button>'
-        +'</div>'
-        +'<div id="doc">'
+        +'<div class="actions"><button class="btn-print" onclick="window.print()">🖨️ Imprimer</button></div>'
         +'<h1>Rapport annuel '+annee+'</h1>'
         +'<p><strong>Assistante maternelle:</strong> '+(user?.prenom||"")+' '+(user?.nom||"")+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
@@ -7264,15 +7362,13 @@ function RapportAnnuel({enfants,role,pEId,user}){
         +"<tr><td>Credit d'impot estime (50%)</td><td>"+creditImpot+"€</td></tr>"
         +'</table>'
         +(userSig
-          ?'<div class="sig-block" style="padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:10px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
-          :'<div class="sig-block" style="padding:14px;border:1px dashed #ddd;border-radius:6px;font-size:10px;color:#999;font-style:italic">Aucune signature enregistree. Allez dans Parametres pour en creer une.</div>')
+          ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:10px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
+          :'')
         +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
-        +'</div>'
-        +'<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"rapport-annuel-'+annee+'-'+(enfant?.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>'
         +'</body></html>';
       w.document.write(htmlRapport);
       w.document.close();
-      setToast("Rapport ouvert dans un nouvel onglet ✓");
+      setToast("Aperçu ouvert. Pour PDF, utilisez le bouton Telecharger PDF dans l'app.");
     },1000);
   };
 
@@ -7355,9 +7451,14 @@ function RapportAnnuel({enfants,role,pEId,user}){
             Pour {enfant?.prenom} {enfant?.nom}<br/>
             Inclut l'attestation fiscale
           </div>
-          <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={generer}disabled={gen}>
-            {gen?"⏳ Génération en cours...":"📥 Générer et télécharger le PDF"}
-          </button>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={telechargerPDF}disabled={gen}>
+              {gen?"⏳ Génération...":"📥 Télécharger en PDF"}
+            </button>
+            <button className="btn bG"style={{width:"100%",justifyContent:"center",fontSize:12}}onClick={generer}disabled={gen}>
+              🖨️ Aperçu / Imprimer
+            </button>
+          </div>
         </div>
 
         {/* Partage parent */}
@@ -10610,6 +10711,129 @@ function AttestationFiscale({enfants,role,pEId,user}){
   const entretienMens=entretienJour*Math.round(hMens/8);
   const paiementsReels=hasReal?{count:realStats.nbPaiements,total:realStats.paiements}:null;
 
+  // ATTESTATION P14B - PDF jsPDF natif (rendu fiable, pas de troncature)
+  const telechargerPDF=async()=>{
+    setGen(true);
+    try{
+      let userSig=user?.signature_base64;
+      let userAgrement=user?.numero_agrement;
+      if(user?.id){
+        const{data:fresh}=await supabase.from("profiles").select("signature_base64,numero_agrement").eq("id",user.id).maybeSingle();
+        if(fresh){userSig=fresh.signature_base64||userSig;userAgrement=fresh.numero_agrement||userAgrement;}
+      }
+      if(!window.jspdf){
+        await new Promise((res,rej)=>{
+          const s=document.createElement("script");
+          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF echoue"));
+          document.head.appendChild(s);
+        });
+      }
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const PW=210,MX=18;let y=20;
+      const vert=[42,157,143];const noir=[40,40,40];const gris=[120,120,120];const bleuFonce=[38,70,83];
+      // Titre
+      doc.setFontSize(16);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
+      doc.text("ATTESTATION FISCALE",PW/2,y,{align:"center"});y+=6;
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
+      doc.text("Annee "+annee+" - Garde d enfant a domicile (credit d impot)",PW/2,y,{align:"center"});y+=4;
+      doc.setDrawColor(...vert);doc.setLineWidth(0.5);doc.line(MX,y,PW-MX,y);y+=10;
+      // Header asmat + parent
+      doc.setFillColor(244,247,250);doc.rect(MX,y,PW-2*MX,30,"F");
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(...vert);
+      doc.text("ASSISTANTE MATERNELLE AGREEE",MX+3,y+5);
+      doc.text("PARENT EMPLOYEUR",MX+(PW-2*MX)/2+3,y+5);
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      doc.text((user?.prenom||"")+" "+(user?.nom||""),MX+3,y+11);
+      doc.text((enfant?.prenomParent||"Parent")+" "+(enfant?.nomParent||""),MX+(PW-2*MX)/2+3,y+11);
+      doc.setFontSize(8);
+      if(user?.email)doc.text("Email : "+user.email,MX+3,y+16);
+      doc.text("N agrement : "+(userAgrement||"[A renseigner dans Parametres]"),MX+3,y+21);
+      doc.text("Enfant garde : "+(enfant?.prenom||"-"),MX+(PW-2*MX)/2+3,y+16);
+      if(enfant?.naissance)doc.text("Ne(e) le : "+enfant.naissance,MX+(PW-2*MX)/2+3,y+21);
+      y+=36;
+      // Sommes versees
+      doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
+      doc.text("Sommes versees en "+annee+(paiementsReels?.count?" (donnees reelles)":" (estimees)"),MX,y);y+=7;
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      const ligne=(l,v,isTotal)=>{
+        if(isTotal){doc.setFillColor(...vert);doc.rect(MX,y,PW-2*MX,8,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");}
+        else{doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,8);doc.setTextColor(...noir);doc.setFont("helvetica","normal");}
+        doc.text(l,MX+3,y+5.5);
+        doc.text(v,PW-MX-3,y+5.5,{align:"right"});
+        y+=8;
+      };
+      ligne("Salaires nets verses (12 mois)",totalSalNet.toFixed(2)+" euros");
+      ligne("Indemnites d entretien",totalEntretien.toFixed(2)+" euros");
+      ligne("Indemnites de repas","0.00 euros");
+      ligne("TOTAL DES SOMMES VERSEES",(totalSalNet+totalEntretien+totalRepas).toFixed(2)+" euros",true);
+      y+=8;
+      // Detail
+      doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
+      doc.text("Detail du calcul",MX,y);y+=7;
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      const ligneSimple=(l,v)=>{
+        doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,8);
+        doc.text(l,MX+3,y+5.5);
+        doc.text(v,PW-MX-3,y+5.5,{align:"right"});
+        y+=8;
+      };
+      ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
+      ligneSimple("Taux horaire brut",(contrat.tauxHoraire||4.05)+" euros/h");
+      ligneSimple("Salaire mensuel brut estime",salMensBrut.toFixed(2)+" euros");
+      ligneSimple("Salaire mensuel net estime",(salMensBrut*0.78).toFixed(2)+" euros");
+      ligneSimple("Mois travailles","12 mois");
+      y+=8;
+      // Verifier qu'on a la place sinon nouvelle page
+      if(y>240){doc.addPage();y=20;}
+      // Note
+      doc.setFillColor(255,248,243);doc.rect(MX,y,PW-2*MX,28,"F");
+      doc.setDrawColor(255,214,179);doc.rect(MX,y,PW-2*MX,28);
+      doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
+      doc.text("Informations importantes :",MX+3,y+5);
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
+      doc.text("Ce document est destine a la declaration de revenus du parent employeur.",MX+3,y+11);
+      doc.text("Le parent peut deduire les sommes versees dans la limite du plafond fiscal.",MX+3,y+16);
+      doc.text("Les indemnites d entretien et de repas ne sont pas deductibles.",MX+3,y+21);
+      doc.text("Conservez ce document avec votre declaration de revenus.",MX+3,y+26);
+      y+=34;
+      // Signature
+      if(y>250){doc.addPage();y=20;}
+      doc.setFontSize(9);doc.setFont("helvetica","italic");doc.setTextColor(...noir);
+      doc.text("Je soussigne(e), "+(user?.prenom||"")+" "+(user?.nom||"")+", assistante maternelle agreee,",MX,y);y+=4;
+      doc.text("certifie exacts les renseignements ci-dessus.",MX,y);y+=8;
+      // 2 zones signature
+      const sigW=(PW-2*MX-10)/2;
+      doc.setDrawColor(...bleuFonce);doc.setLineWidth(0.3);
+      doc.line(MX,y,MX+sigW,y);
+      doc.line(MX+sigW+10,y,PW-MX,y);
+      y+=4;
+      doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      doc.text("Fait a ____________",MX,y);
+      doc.text("Remis au parent le :",MX+sigW+10,y);y+=4;
+      doc.text("Le "+new Date().toLocaleDateString("fr-FR"),MX,y);
+      doc.text("____________",MX+sigW+10,y);y+=6;
+      doc.setFont("helvetica","bold");
+      doc.text("Signature :",MX,y);
+      doc.text("Signature parent :",MX+sigW+10,y);y+=4;
+      if(userSig){
+        try{doc.addImage(userSig,"PNG",MX,y,50,15);}catch(e){console.warn("addImage",e);}
+      }else{
+        doc.setFont("helvetica","italic");doc.setTextColor(...gris);
+        doc.text("(Aucune signature - voir Parametres)",MX,y+8);
+      }
+      // Footer
+      doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
+      doc.text("Genere par TiMat - "+new Date().toLocaleDateString("fr-FR"),PW/2,280,{align:"center"});
+      doc.save("attestation-fiscale-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
+      setToast("Attestation telechargee ✓");
+    }catch(e){
+      setToast("Erreur generation PDF : "+e.message);
+    }
+    setGen(false);
+  };
+
   const generer=async()=>{
     setGen(true);
     // ATTESTATION REELLE P14 - re-fetch signature pour s'assurer qu'on a la derniere version
@@ -10732,9 +10956,14 @@ function AttestationFiscale({enfants,role,pEId,user}){
             <div style={{display:"flex",justifyContent:"space-between"}}><span>Indemnités entretien</span><strong>{totalEntretien.toFixed(2)} €</strong></div>
             <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid var(--br)",paddingTop:6,marginTop:6,fontWeight:700,color:"var(--S)"}}><span>Total</span><span>{(totalSalNet+totalEntretien).toFixed(2)} €</span></div>
           </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={generer}disabled={gen}>
-            {gen?"⏳ Génération...":"📑 Générer l'attestation fiscale "+annee}
-          </button>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <button className="btn bT"style={{width:"100%"}}onClick={telechargerPDF}disabled={gen}>
+              {gen?"⏳ Génération...":"📥 Télécharger l'attestation "+annee+" en PDF"}
+            </button>
+            <button className="btn bG"style={{width:"100%",fontSize:12}}onClick={generer}disabled={gen}>
+              🖨️ Aperçu / Imprimer
+            </button>
+          </div>
         </div>
         <div style={{padding:12,background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)",lineHeight:1.6}}>
           💡 Cette attestation permet aux parents de bénéficier du crédit d'impôt pour frais de garde. À remettre en début d'année suivante pour leur déclaration de revenus.
