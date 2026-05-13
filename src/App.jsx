@@ -7233,7 +7233,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
           :'<div style="margin-top:24px;padding:14px;border:1px dashed #ddd;border-radius:6px;font-size:10px;color:#999;font-style:italic">Aucune signature enregistree. Allez dans Parametres pour en creer une.</div>')
         +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'</div>'
-        +'<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[10,10,10,10],filename:"rapport-annuel-'+annee+'-'+(enfant?.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}};html2pdf().from(el).set(opt).save();}</script>'
+        +'<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[15,10,15,10],filename:"rapport-annuel-'+annee+'-'+(enfant?.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:1},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:el.scrollWidth},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["avoid-all","css","legacy"],avoid:["table","tr"]}};html2pdf().from(el).set(opt).save();}</script>'
         +'</body></html>';
       w.document.write(htmlRapport);
       w.document.close();
@@ -10655,7 +10655,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:9px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
         '</div>',
-        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[10,10,10,10],filename:"attestation-fiscale-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}};html2pdf().from(el).set(opt).save();}</script>',
+        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[15,10,15,10],filename:"attestation-fiscale-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:1},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:el.scrollWidth},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["avoid-all","css","legacy"],before:".pageBefore",avoid:[".sig",".note","table","tr"]}};html2pdf().from(el).set(opt).save();}</script>',
         '</body></html>'
       ].join('');
       w.document.write(html);
