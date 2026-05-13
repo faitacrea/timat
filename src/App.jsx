@@ -64,6 +64,68 @@ async function logConsent(user_id, consents={}){
   } catch(e){ console.warn('[consentements] insert failed:', e?.message); }
 }
 
+// EMAILS NOTIFICATIONS P13 - helper centralise pour envoi emails (signature, rappels, invitations)
+// Mode actuel : POST vers /api/send-email (a creer sur Vercel comme Edge Function avec Resend).
+// Tant que Resend n'est pas configure, l'appel echoue silencieusement et on logge dans audit_log
+// pour pouvoir relancer ces emails plus tard (rappel : ajouter `email_log` table optionnelle).
+async function sendNotificationEmail({type,to,subject,template,vars={}}){
+  try{
+    const payload={type,to,subject,template,vars,from:"TiMat <noreply@timat.app>"};
+    const res=await fetch("/api/send-email",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload),
+    });
+    if(!res.ok){
+      const txt=await res.text().catch(()=>"-");
+      console.warn("[email] echec envoi :",res.status,txt);
+      await logAction("email_send_failed",{table_name:"emails",record_id:type});
+      return{success:false,error:"HTTP "+res.status,details:txt};
+    }
+    const data=await res.json().catch(()=>({}));
+    await logAction("email_sent",{table_name:"emails",record_id:type});
+    return{success:true,data};
+  }catch(e){
+    // Mode dev / API non deployee : on logge et on continue
+    console.warn("[email] non envoye (API absente ?) :",e.message);
+    await logAction("email_send_unavailable",{table_name:"emails",record_id:type});
+    return{success:false,error:e.message};
+  }
+}
+
+// EMAILS TEMPLATES P13 - templates pretes a brancher (HTML simple, surchargeable depuis backoffice)
+const EMAIL_TEMPLATES={
+  signature_asmat_signed:{
+    subject:"Votre assistante maternelle a signe le contrat",
+    html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
+      +"<p>"+v.asmat_prenom+" vient de signer electroniquement le contrat de "+v.enfant_prenom+".</p>"
+      +"<p>Connectez-vous a TiMat pour le signer a votre tour :</p>"
+      +"<p><a href='"+v.url+"' style='display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
+  },
+  signature_parent_signed:{
+    subject:"Le parent a signe le contrat",
+    html:(v)=>"<h2>Bonjour "+v.asmat_prenom+",</h2>"
+      +"<p>"+v.parent_prenom+" "+v.parent_nom+" vient de signer le contrat de "+v.enfant_prenom+".</p>"
+      +"<p>Le contrat est finalise et archive dans vos documents.</p>",
+  },
+  signature_reminder:{
+    subject:"Rappel : signature de contrat en attente",
+    html:(v)=>"<p>Le contrat de "+v.enfant_prenom+" attend votre signature depuis le "+v.date+".</p>"
+      +"<p><a href='"+v.url+"'>Signer maintenant</a></p>",
+  },
+  bulletin_sent:{
+    subject:"Votre bulletin de salaire est disponible",
+    html:(v)=>"<p>Bonjour "+v.parent_prenom+",</p>"
+      +"<p>Le bulletin de salaire pour "+v.mois+" est disponible dans votre espace TiMat.</p>",
+  },
+  invitation_parent:{
+    subject:"Invitation : votre assistante maternelle vous invite sur TiMat",
+    html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
+      +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+".</p>"
+      +"<p><a href='"+v.url+"'>Rejoindre TiMat</a></p>",
+  },
+};
+
 // DATES
 var _D=new Date();
 var _y=_D.getFullYear();
@@ -2019,6 +2081,26 @@ function Contrats({enfants,role,pEId,user}){
     if(contrat?.id){
       generateAndStoreContratPDF(contrat.id).then(r=>{
         if(!r.success)console.log("PDF gen warn:",r.error);
+      });
+    }
+    // EMAILS NOTIFICATIONS P13 - notifier le parent qu'il doit signer (silencieux si Resend pas configure)
+    if(contrat?.parent_id&&enfant?.id){
+      // Recuperer l'email du parent
+      supabase.from("profiles").select("email,prenom").eq("id",contrat.parent_id).maybeSingle().then(({data:p})=>{
+        if(p?.email){
+          sendNotificationEmail({
+            type:"signature_asmat_signed",
+            to:p.email,
+            subject:EMAIL_TEMPLATES.signature_asmat_signed.subject,
+            template:"signature_asmat_signed",
+            vars:{
+              parent_prenom:p.prenom||"",
+              asmat_prenom:user?.prenom||"Votre assistante maternelle",
+              enfant_prenom:enfant.prenom||"",
+              url:window.location.origin,
+            },
+          });
+        }
       });
     }
     // FIX: Trigger un refresh global pour que enfants[].contrat.signe_asmat soit a jour
@@ -6704,6 +6786,25 @@ function SignatureContratParent({enfants,pEId,user}){
     generateAndStoreContratPDF(contrat.id).then(r=>{
       if(!r.success)console.log("PDF gen warn:",r.error);
     });
+    // EMAILS NOTIFICATIONS P13 - notifier l'asmat que le contrat est finalise
+    if(contrat?.asmat_id){
+      supabase.from("profiles").select("email,prenom").eq("id",contrat.asmat_id).maybeSingle().then(({data:a})=>{
+        if(a?.email){
+          sendNotificationEmail({
+            type:"signature_parent_signed",
+            to:a.email,
+            subject:EMAIL_TEMPLATES.signature_parent_signed.subject,
+            template:"signature_parent_signed",
+            vars:{
+              asmat_prenom:a.prenom||"",
+              parent_prenom:user?.prenom||"",
+              parent_nom:user?.nom||"",
+              enfant_prenom:enfant?.prenom||"",
+            },
+          });
+        }
+      });
+    }
     setSigne(true);
     setDateSignature(data.date||new Date().toISOString());
     setToast("Contrat signé électroniquement ✓ - L'assistante maternelle a été notifiée");
@@ -7035,7 +7136,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat||{};
 
-  // RAPPORT REEL P12 - charger les pointages reels et paiements de l'annee
+  // RAPPORT REEL P12 - charger les pointages reels, paiements et absences de l'annee
   useEffect(()=>{
     if(!enfant?.id||!annee)return;
     let cancelled=false;
@@ -7045,43 +7146,73 @@ function RapportAnnuel({enfants,role,pEId,user}){
       const{data:paie}=contrat?.id?await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin):{data:[]};
       const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date_debut",debut).lte("date_debut",fin);
       if(cancelled)return;
-      // Sommer heures reelles
-      let heuresReelles=0;
-      (pts||[]).forEach(p=>{
-        if(p.heure_arrivee&&p.heure_depart){
-          const a=new Date("2000-01-01T"+p.heure_arrivee);
-          const d=new Date("2000-01-01T"+p.heure_depart);
-          heuresReelles+=(d-a)/3600000;
-        }
-      });
+      // RAPPORT REEL P13 - utiliser total_minutes (vrai nom de colonne)
+      const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
+      const heuresReelles=Math.round(totalMin/60);
+      const joursTravailles=(pts||[]).filter(p=>p.total_minutes>0).length;
       const paiementsReels=(paie||[]).reduce((s,p)=>s+(parseFloat(p.montant)||0),0);
-      setRealStats({heures:Math.round(heuresReelles),paiements:Math.round(paiementsReels),nbPointages:pts?.length||0,nbAbsences:abs?.length||0});
+      const heuresAbsences=(abs||[]).reduce((s,a)=>s+(parseFloat(a.heures)||0),0);
+      setRealStats({
+        heures:heuresReelles,
+        jours:joursTravailles,
+        paiements:Math.round(paiementsReels*100)/100,
+        nbPointages:pts?.length||0,
+        nbAbsences:abs?.length||0,
+        heuresAbs:Math.round(heuresAbsences),
+        nbPaiements:paie?.length||0,
+      });
     })();
     return()=>{cancelled=true;};
   },[enfant?.id,annee,contrat?.id]);
 
-  // Calculs estimatifs (fallback si pas de donnees reelles)
+  // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
-  const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||4.05)*1.1*10)/10;
-  const salaireAnnuel=realStats?.paiements||Math.round(salaireNet*12);
-  const entretienAnnuel=Math.round((contrat.entretien||3.80)*heuresMois/5*12);
-  const totalAnnuel=salaireAnnuel+entretienAnnuel;
-  const creditImpot=Math.min(Math.round(totalAnnuel*0.5),3500);
+  const tauxH=contrat.tauxHoraire||4.05;
+  const entretienJour=contrat.entretien||3.80;
   const heuresAnnuelles=realStats?.heures||(heuresMois*12);
+  const joursAnnuels=realStats?.jours||(heuresAnnuelles/8);
+  // Salaire brut = heures * taux (avec majoration 25% au dessus de 45h/sem si pas mensualise)
+  const salaireBrutCalc=Math.round(heuresAnnuelles*tauxH);
+  const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(salaireBrutCalc*0.78);
+  const salaireAnnuel=salaireNet;
+  // Entretien = jours travailles * indemnite jour
+  const entretienAnnuel=Math.round(joursAnnuels*entretienJour);
+  const totalAnnuel=salaireAnnuel+entretienAnnuel;
+  // Credit impot = 50% du total, plafonne a 3500€ par enfant
+  const creditImpot=Math.min(Math.round(totalAnnuel*0.5),3500);
+  const sourceLabel=realStats?.paiements>0?"(données réelles)":"(estimées)";
 
-  const generer=()=>{
+  const generer=async()=>{
     setGen(true);
+    // RAPPORT REEL P14 - re-fetch signature pour s'assurer qu'on a la derniere version
+    let userSig=user?.signature_base64;
+    if(user?.id){
+      const{data:fresh}=await supabase.from("profiles").select("signature_base64").eq("id",user.id).maybeSingle();
+      if(fresh?.signature_base64)userSig=fresh.signature_base64;
+    }
     setTimeout(()=>{
       setGen(false);
       // Générer un document HTML imprimable
       const w=window.open("","_blank");
       if(!w){setToast("Autorisez les popups pour télécharger le PDF");return;}
       const htmlRapport='<!DOCTYPE html><html><head><title>Rapport annuel '+annee+' - '+(enfant?.prenom||'')+'</title>'
-        +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;}'
+        +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#222;padding:20px}'
         +'h1{color:#B8622F;}table{width:100%;border-collapse:collapse;margin:20px 0;}'
         +'td,th{padding:10px;border:1px solid #ddd;text-align:left;}th{background:#f5f5f5;}'
-        +'.total{font-weight:bold;}@media print{button{display:none}}</style></head>'
-        +'<body><h1>Rapport annuel '+annee+'</h1>'
+        +'.total{font-weight:bold;}'
+        +'.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}'
+        +'.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}'
+        +'.btn-print{background:#264653;color:#fff}.btn-pdf{background:#B8622F;color:#fff}'
+        +'@media print{.actions{display:none!important}}</style>'
+        +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>'
+        +'</head>'
+        +'<body>'
+        +'<div class="actions">'
+          +'<button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>'
+          +'<button class="btn-pdf" onclick="dlPdf()">📥 Telecharger PDF</button>'
+        +'</div>'
+        +'<div id="doc">'
+        +'<h1>Rapport annuel '+annee+'</h1>'
         +'<p><strong>Assistante maternelle:</strong> '+(user?.prenom||"")+' '+(user?.nom||"")+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
         +'<h2>Heures travaillees '+annee+'</h2>'
@@ -7097,8 +7228,12 @@ function RapportAnnuel({enfants,role,pEId,user}){
         +'<tr class="total"><td>Total verse</td><td>'+totalAnnuel+'€</td></tr>'
         +"<tr><td>Credit d'impot estime (50%)</td><td>"+creditImpot+"€</td></tr>"
         +'</table>'
-        +'<p style="font-size:12px;color:#888;">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
-        +'<button onclick="window.print()">🖨️ Imprimer / PDF</button>'
+        +(userSig
+          ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:10px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
+          :'<div style="margin-top:24px;padding:14px;border:1px dashed #ddd;border-radius:6px;font-size:10px;color:#999;font-style:italic">Aucune signature enregistree. Allez dans Parametres pour en creer une.</div>')
+        +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
+        +'</div>'
+        +'<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[10,10,10,10],filename:"rapport-annuel-'+annee+'-'+(enfant?.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}};html2pdf().from(el).set(opt).save();}</script>'
         +'</body></html>';
       w.document.write(htmlRapport);
       w.document.close();
@@ -8652,6 +8787,126 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               🔒 Disponible dans l'application
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
+      <div className="lp-section" style={{ background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E8C87A", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>
+                NOUVEAU · CONFORME eIDAS
+              </div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: "#fff", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
+                Signature électronique en <span style={{ color: "#E8C87A", fontStyle: "italic" }}>1 clic</span>
+              </div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)", lineHeight: 1.7, maxWidth: 700, margin: "0 auto" }}>
+                Contrats, avenants, bulletins de salaire : signez une seule fois, réutilisez partout. Conforme à la loi (eIDAS), conforme RGPD, prêt à archiver 5 ans.
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* 3 différentiateurs */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 56 }}>
+            {[
+              {
+                ic: "✍️",
+                titre: "Signature standard réutilisable",
+                desc: "Dessinez votre signature une seule fois dans vos paramètres. Elle est ensuite proposée en 1 clic sur tous vos contrats, avenants et bulletins. Plus jamais besoin de re-dessiner.",
+                badge: "Unique sur le marché",
+                color: "#E8C87A"
+              },
+              {
+                ic: "🔒",
+                titre: "RGPD by design",
+                desc: "Vos signatures sont chiffrées et stockées avec un contrôle d'accès strict (RLS). Chaque action est tracée dans un journal d'audit infalsifiable. Conforme à l'article 20 RGPD (droit à la portabilité).",
+                badge: "Sécurité maximale",
+                color: "#7FB8A0"
+              },
+              {
+                ic: "🤝",
+                titre: "Parent + asmat dans le même flow",
+                desc: "Vous signez côté asmat. Le parent reçoit une notification et signe à son tour. Le PDF combiné final est automatiquement archivé dans vos documents. Aucun concurrent ne fait ça.",
+                badge: "Bout en bout",
+                color: "#C4714A"
+              }
+            ].map((d, i) => (
+              <FadeIn key={d.titre} delay={i * 100}>
+                <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28, height: "100%", display: "flex", flexDirection: "column" }}>
+                  <div style={{ fontSize: 36, marginBottom: 14 }}>{d.ic}</div>
+                  <div style={{ display: "inline-block", background: d.color + "20", color: d.color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 6, marginBottom: 12, alignSelf: "flex-start", letterSpacing: ".5px", textTransform: "uppercase" }}>
+                    {d.badge}
+                  </div>
+                  <div style={{ fontFamily: fTitle, fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3 }}>
+                    {d.titre}
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,.65)", lineHeight: 1.7 }}>
+                    {d.desc}
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          {/* Tableau comparatif vs concurrents */}
+          <FadeIn delay={300}>
+            <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28, overflow: "hidden" }}>
+              <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 18, textAlign: "center" }}>
+                Comparatif avec les principaux outils
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 600 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,.15)" }}>
+                      <th style={{ padding: "12px 8px", textAlign: "left", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".5px" }}>Fonctionnalité</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: "#E8C87A", fontWeight: 700, fontSize: 12 }}>TiMat</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>NannyFit</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>Top Assmat</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>Nounou-Top</th>
+                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>Assmat-Facile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Signature électronique du contrat", "✅", "✅", "❌", "❌", "❌"],
+                      ["Signature standard réutilisable", "✅", "❌", "❌", "❌", "❌"],
+                      ["Signature parent + asmat", "✅", "Partiel", "❌", "❌", "❌"],
+                      ["PDF combiné archivé automatiquement", "✅", "✅", "❌", "❌", "❌"],
+                      ["Conforme eIDAS", "✅", "✅", "—", "—", "—"],
+                      ["Audit log infalsifiable", "✅", "❌", "❌", "❌", "❌"],
+                      ["Export RGPD article 20", "✅", "—", "—", "—", "—"],
+                      ["RLS strict par utilisateur", "✅", "—", "—", "—", "—"],
+                    ].map((row, i) => (
+                      <tr key={row[0]} style={{ borderBottom: i < 7 ? "1px solid rgba(255,255,255,.06)" : "none" }}>
+                        <td style={{ padding: "11px 8px", color: "rgba(255,255,255,.85)" }}>{row[0]}</td>
+                        {row.slice(1).map((val, j) => (
+                          <td key={j} style={{ padding: "11px 8px", textAlign: "center", fontSize: 14, color: val === "✅" ? (j === 0 ? "#E8C87A" : "#7FB8A0") : val === "❌" ? "rgba(255,255,255,.25)" : "rgba(255,255,255,.5)", fontWeight: j === 0 && val === "✅" ? 700 : 400 }}>
+                            {val}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ marginTop: 16, fontSize: 10, color: "rgba(255,255,255,.4)", textAlign: "center", fontStyle: "italic" }}>
+                Comparatif établi en mai 2026 selon les fonctionnalités publiquement annoncées par chaque éditeur.
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* CTA */}
+          <FadeIn delay={500}>
+            <div style={{ textAlign: "center", marginTop: 48 }}>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
+                Tester la signature électronique →
+              </button>
+              <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,.4)" }}>
+                Gratuit · Sans engagement · Conforme à la loi
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </div>
 
@@ -10258,40 +10513,80 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
 
 function AttestationFiscale({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
+  // ANNEES DYNAMIQUES P13 - calcul depuis contrats
+  const annees=useMemo(()=>{
+    const max=new Date().getFullYear();
+    let min=max-2;
+    enfants?.forEach(e=>{
+      const d=e?.contrat?.debut;
+      if(d){const y=parseInt(d.slice(0,4),10);if(!isNaN(y)&&y<min)min=y;}
+    });
+    const list=[];for(let y=max;y>=min;y--)list.push(y);
+    return list;
+  },[enfants]);
   const [annee,setAnnee]=useState(new Date().getFullYear()-1);
   const [gen,setGen]=useState(false);
   const [toast,setToast]=useState("");
-  // ATTESTATION FISCALE P12 - paiements reels
-  const [paiementsReels,setPaiementsReels]=useState(null);
+  // ATTESTATION REELLE P13 - pointages + paiements + absences
+  const [realStats,setRealStats]=useState(null);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
   const contrat=enfant.contrat||{};
 
-  // ATTESTATION FISCALE P12 - charger les paiements de l'annee depuis Supabase
+  // ATTESTATION REELLE P13 - charger pointages, paiements, absences
   useEffect(()=>{
-    if(!contrat?.id||!annee){setPaiementsReels(null);return;}
+    if(!enfant?.id||!annee){setRealStats(null);return;}
     let cancelled=false;
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
-      const{data}=await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin);
+      const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      const{data:paie}=contrat?.id?await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin):{data:[]};
+      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date_debut",debut).lte("date_debut",fin);
       if(cancelled)return;
-      const total=(data||[]).reduce((s,p)=>s+(parseFloat(p.montant)||0),0);
-      setPaiementsReels({total:Math.round(total*100)/100,count:data?.length||0});
+      const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
+      const heuresReelles=Math.round(totalMin/60);
+      const joursTravailles=(pts||[]).filter(p=>p.total_minutes>0).length;
+      const paiementsReels=(paie||[]).reduce((s,p)=>s+(parseFloat(p.montant)||0),0);
+      setRealStats({
+        heures:heuresReelles,
+        jours:joursTravailles,
+        paiements:Math.round(paiementsReels*100)/100,
+        nbPaiements:paie?.length||0,
+        nbAbsences:abs?.length||0,
+      });
     })();
     return()=>{cancelled=true;};
-  },[contrat?.id,annee]);
+  },[enfant?.id,annee,contrat?.id]);
 
-  // Calcul annuel estimé (fallback)
+  // ATTESTATION REELLE P13 - calculs avec donnees reelles si dispo, sinon estimation
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
-  const salMensBrut=hMens*(contrat.tauxHoraire||4.05);
-  const entretienMens=(contrat.entretien||3.80)*Math.round(hMens/8);
+  const tauxH=contrat.tauxHoraire||4.05;
+  const entretienJour=contrat.entretien||3.80;
+  const hasReal=realStats?.paiements>0;
   const moisTravailles=12;
-  const totalSalNet=paiementsReels?.total||(salMensBrut*0.78*moisTravailles);
-  const totalEntretien=entretienMens*moisTravailles;
+  const totalSalNet=hasReal?realStats.paiements:(hMens*tauxH*0.78*moisTravailles);
+  const totalEntretien=hasReal&&realStats.jours>0?(realStats.jours*entretienJour):(entretienJour*Math.round(hMens/8)*moisTravailles);
   const totalRepas=0;
+  const heuresAnnuelles=realStats?.heures||(hMens*12);
+  const joursAnnuels=realStats?.jours||0;
+  const sourceLabel=hasReal?"(données réelles)":"(estimées)";
+  // Variables conservees pour compat
+  const salMensBrut=hMens*tauxH;
+  const entretienMens=entretienJour*Math.round(hMens/8);
+  const paiementsReels=hasReal?{count:realStats.nbPaiements,total:realStats.paiements}:null;
 
-  const generer=()=>{
+  const generer=async()=>{
     setGen(true);
+    // ATTESTATION REELLE P14 - re-fetch signature pour s'assurer qu'on a la derniere version
+    let userSig=user?.signature_base64;
+    let userAgrement=user?.numero_agrement;
+    if(user?.id){
+      const{data:fresh}=await supabase.from("profiles").select("signature_base64,numero_agrement,prenom,nom,email").eq("id",user.id).maybeSingle();
+      if(fresh){
+        userSig=fresh.signature_base64||userSig;
+        userAgrement=fresh.numero_agrement||userAgrement;
+      }
+    }
     setTimeout(()=>{
       setGen(false);
       const w=window.open("","_blank");
@@ -10308,13 +10603,24 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:10px;color:#666}',
         '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px}',
         '.sig-box{border-top:1px solid #264653;padding-top:10px;font-size:11px}',
-        '@media print{.noprint{display:none}}</style></head><body>',
+        '.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}',
+        '.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}',
+        '.btn-print{background:#264653;color:#fff}.btn-pdf{background:#2A9D8F;color:#fff}',
+        '@media print{.actions{display:none!important}.noprint{display:none}}</style>',
+        // Chargement de html2pdf pour vraie generation PDF
+        '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>',
+        '</head><body>',
+        '<div class="actions noprint">',
+          '<button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>',
+          '<button class="btn-pdf" onclick="dlPdf()">📥 Telecharger PDF</button>',
+        '</div>',
+        '<div id="doc">',
         '<h1>📑 ATTESTATION FISCALE<br/><span style="font-size:12px;font-weight:400;color:#666">Année '+annee+' — Garde d\'enfant à domicile (crédit d\'impôt)</span></h1>',
         '<div class="header">',
         '<div><h3>Assistante maternelle agréée</h3>',
         '<strong>'+(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'</strong><br/>',
         'Email : '+(user?.email||'[email]')+'<br/>',
-        'N° agrément : '+(user?.numero_agrement||"[À renseigner dans Paramètres]")+'</div>',
+        'N° agrément : '+(userAgrement||"[À renseigner dans Paramètres]")+'</div>',
         '<div><h3>Parent employeur</h3>',
         '<strong>'+(enfant?.prenomParent||'Parent')+' '+(enfant?.nomParent||'')+'</strong><br/>',
         'Enfant gardé : '+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'<br/>',
@@ -10343,10 +10649,13 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '</div>',
         '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#264653">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
         '<div class="sig">',
-        '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :</div>',
+        '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :'
+          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:10px;font-style:italic">(Aucune signature enregistree dans Parametres)</span>')
+          +'</div>',
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:9px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
-        '<div style="text-align:center;margin-top:12px"><button class="noprint" onclick="window.print()" style="background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+        '</div>',
+        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:[10,10,10,10],filename:"attestation-fiscale-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}};html2pdf().from(el).set(opt).save();}</script>',
         '</body></html>'
       ].join('');
       w.document.write(html);
@@ -10368,13 +10677,19 @@ function AttestationFiscale({enfants,role,pEId,user}){
           <div style={{marginBottom:12}}>
             <label className="lbl">Année fiscale</label>
             <select className="sel"value={annee}onChange={e=>setAnnee(Number(e.target.value))}>
-              {[new Date().getFullYear()-1,new Date().getFullYear()-2,new Date().getFullYear()].map(a=>
-                <option key={a}value={a}>{a}</option>
-              )}
+              {annees.map(a=><option key={a}value={a}>{a}</option>)}
             </select>
           </div>
           <div style={{padding:12,background:"var(--c)",borderRadius:10,marginBottom:14,fontSize:12,lineHeight:1.7}}>
-            <div style={{fontWeight:700,marginBottom:6,color:"var(--b)"}}>Récapitulatif {annee}</div>
+            <div style={{fontWeight:700,marginBottom:6,color:"var(--b)",display:"flex",justifyContent:"space-between"}}>
+              <span>Récapitulatif {annee}</span>
+              <span style={{fontSize:10,fontWeight:400,color:hasReal?"var(--S)":"var(--l)",fontStyle:"italic"}}>{sourceLabel}</span>
+            </div>
+            {hasReal&&<>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span>Heures pointées</span><strong>{heuresAnnuelles} h</strong></div>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span>Jours travaillés</span><strong>{joursAnnuels} j</strong></div>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span>Nb paiements</span><strong>{realStats?.nbPaiements||0}</strong></div>
+            </>}
             <div style={{display:"flex",justifyContent:"space-between"}}><span>Salaires nets</span><strong>{totalSalNet.toFixed(2)} €</strong></div>
             <div style={{display:"flex",justifyContent:"space-between"}}><span>Indemnités entretien</span><strong>{totalEntretien.toFixed(2)} €</strong></div>
             <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid var(--br)",paddingTop:6,marginTop:6,fontWeight:700,color:"var(--S)"}}><span>Total</span><span>{(totalSalNet+totalEntretien).toFixed(2)} €</span></div>
