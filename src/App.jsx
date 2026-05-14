@@ -1186,6 +1186,7 @@ function Pointage({enfants,role,pEId,user}){
           valide:true,valide_parent:p.valide_parent,
           mode_pointage:p.mode_pointage||"asmat",
           date_validation:p.date_validation_parent,
+          modified_by_parent:!!p.modified_by_parent_at,
         })));
       }else{
         setPts(D.pointages.filter(p=>p.eId===enfant?.id));
@@ -1298,11 +1299,13 @@ function Pointage({enfants,role,pEId,user}){
     setSaving(false);
   };
 
+  // POINTAGE WORKFLOW P14G - validation avec auto-signature si dispo
   const validerPointage=async(ptId,signature)=>{
-    // POINTAGE WORKFLOW P14E - via RPC SECURITY DEFINER car RLS UPDATE = asmat seule
+    // Si pas de signature passee, utiliser la signature standard du parent (si elle existe)
+    const sigFinale=signature||user?.signature_base64||null;
     const{data,error}=await supabase.rpc("validate_pointage_as_parent",{
       p_pointage_id:ptId,
-      p_signature:signature||null,
+      p_signature:sigFinale,
     });
     if(error){
       setToast("Erreur : "+error.message);
@@ -1313,30 +1316,72 @@ function Pointage({enfants,role,pEId,user}){
       return;
     }
     setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true,date_validation:data.date||new Date().toISOString()}:x));
-    setToast(signature?"Pointage valide avec signature ✓":"Pointage validé ✓");
+    setToast(sigFinale?"Pointage validé avec signature ✓":"Pointage validé ✓");
     await logAction("valide_pointage",{table_name:"pointages",record_id:ptId});
   };
 
-  // POINTAGE WORKFLOW P14E - state pour modale signature parent
-  const [signParent,setSignParent]=useState(null); // pointage en cours de signature
+  // POINTAGE WORKFLOW P14G - state pour modale modification + validation parent
+  const [modifParent,setModifParent]=useState(null); // {ptId, arr, dep}
+
+  // POINTAGE WORKFLOW P14G - modifier ET valider en une fois (parent)
+  const modifierEtValider=async()=>{
+    if(!modifParent?.id||!modifParent.arr)return;
+    const sigFinale=user?.signature_base64||null;
+    const{data,error}=await supabase.rpc("modify_and_validate_pointage_as_parent",{
+      p_pointage_id:modifParent.id,
+      p_arrivee:modifParent.arr,
+      p_depart:modifParent.dep||null,
+      p_signature:sigFinale,
+    });
+    if(error){setToast("Erreur : "+error.message);return;}
+    if(!data?.success){setToast("Erreur : "+(data?.error||"echec"));return;}
+    const totMin=data.total_minutes;
+    const totStr=totMin?Math.floor(totMin/60)+"h"+String(totMin%60).padStart(2,"0"):null;
+    setPts(p=>p.map(x=>x.id===modifParent.id?{
+      ...x,arr:modifParent.arr,dep:modifParent.dep,arr_raw:modifParent.arr,dep_raw:modifParent.dep,
+      tot:totStr,totMin:totMin,valide_parent:true,date_validation:data.date,
+      modified_by_parent:true,
+    }:x));
+    setToast("Heures corrigées et pointage validé ✓");
+    setModifParent(null);
+    await logAction("modify_validate_pointage",{table_name:"pointages",record_id:modifParent.id});
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    {/* POINTAGE WORKFLOW P14E - modale signature parent */}
-    {signParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
-      <div className="card" style={{padding:0,maxWidth:700,width:"100%",maxHeight:"90vh",overflow:"auto"}}>
+    {/* POINTAGE WORKFLOW P14G - modale modification heures parent */}
+    {modifParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+      <div className="card" style={{padding:0,maxWidth:480,width:"100%"}}>
         <div style={{padding:"14px 18px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:14,color:"var(--b)"}}>
-          ✍️ Signer le pointage du {new Date(signParent.date).toLocaleDateString("fr-FR")}
-          <div style={{fontSize:11,color:"var(--l)",fontWeight:400,marginTop:2}}>
-            Arrivée {signParent.arr} · Départ {signParent.dep} · Total {signParent.tot}
+          ✏️ Corriger les heures du {new Date(modifParent.date).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
+          <div style={{fontSize:11,color:"var(--l)",fontWeight:400,marginTop:4}}>
+            Vous pouvez ajuster les heures saisies par l'assistante maternelle si elles sont incorrectes.
           </div>
         </div>
-        <SignaturePad initialValue={user?.signature_base64}
-          onCancel={()=>setSignParent(null)}
-          onSave={async(dataUrl)=>{
-            await validerPointage(signParent.id,dataUrl);
-            setSignParent(null);
-          }}/>
+        <div style={{padding:18}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+            <div>
+              <label className="lbl">Arrivée</label>
+              <input type="time" className="inp" value={modifParent.arr}
+                onChange={e=>setModifParent(m=>({...m,arr:e.target.value}))}/>
+            </div>
+            <div>
+              <label className="lbl">Départ</label>
+              <input type="time" className="inp" value={modifParent.dep}
+                onChange={e=>setModifParent(m=>({...m,dep:e.target.value}))}/>
+            </div>
+          </div>
+          <div style={{padding:"10px 12px",background:"var(--Bp)",borderRadius:8,fontSize:11,color:"var(--B)",lineHeight:1.5,marginBottom:14}}>
+            ℹ️ En enregistrant, vous validez le pointage avec ces nouvelles heures.
+            {user?.signature_base64?" Votre signature sera apposée automatiquement.":" Aucune signature ne sera apposée (vous pouvez en créer une dans Paramètres)."}
+          </div>
+          <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+            <button className="btn bG" onClick={()=>setModifParent(null)}>Annuler</button>
+            <button className="btn bT" onClick={modifierEtValider} disabled={!modifParent.arr}>
+              ✅ Enregistrer et valider
+            </button>
+          </div>
+        </div>
       </div>
     </div>}
     <PageHeader icon="⏰" title="Pointage des heures" sub="Suivi quotidien et bilan mensuel"/>
@@ -1446,7 +1491,7 @@ function Pointage({enfants,role,pEId,user}){
       <div className="card"style={{padding:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontWeight:700,color:"var(--b)"}}>📅 Historique récent</div>
-          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>✅ Valider ou ✍️ Signer</div>}
+          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>✅ Valider · ✏️ Modifier</div>}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {ptH.slice(0,10).map(p=>{
@@ -1478,13 +1523,14 @@ function Pointage({enfants,role,pEId,user}){
                   style={{flex:1,background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
                   ✅ Je valide
                 </button>
-                <button onClick={()=>setSignParent(p)}
-                  style={{flex:1,background:"transparent",color:"var(--G)",border:"1px solid var(--G)",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
-                  ✍️ Signer
+                <button onClick={()=>setModifParent({id:p.id,date:p.date,arr:p.arr_raw||p.arr||"",dep:p.dep_raw||p.dep||""})}
+                  style={{flex:1,background:"transparent",color:"var(--T)",border:"1px solid var(--T)",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
+                  ✏️ Modifier
                 </button>
               </div>}
               {p.valide_parent&&p.date_validation&&<div style={{fontSize:10,color:"var(--S)",fontStyle:"italic"}}>
                 ✅ Validé le {new Date(p.date_validation).toLocaleDateString("fr-FR")}
+                {p.modified_by_parent&&<span style={{marginLeft:6,color:"var(--T)"}}>· ✏️ heures corrigées</span>}
               </div>}
             </div>;
           })}
