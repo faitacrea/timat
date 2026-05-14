@@ -124,6 +124,22 @@ const EMAIL_TEMPLATES={
       +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+".</p>"
       +"<p><a href='"+v.url+"'>Rejoindre TiMat</a></p>",
   },
+  // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
+  pointage_a_valider:{
+    subject:"Un pointage attend votre validation",
+    html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
+      +"<p>L'assistante maternelle a enregistre le pointage de "+v.enfant_prenom+" du "+v.date+".</p>"
+      +"<p>Duree d'accueil : <strong>"+v.duree+"</strong></p>"
+      +"<p>Merci de valider ce pointage dans votre application :</p>"
+      +"<p><a href='"+v.url+"' style='display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
+      +"<p style='font-size:11px;color:#888;margin-top:24px'>Si vous oubliez, un rappel automatique sera envoye sous 3 jours.</p>",
+  },
+  pointage_rappel:{
+    subject:"Rappel : pointage en attente de validation depuis 3 jours",
+    html:(v)=>"<p>Bonjour "+v.parent_prenom+",</p>"
+      +"<p>Un pointage de "+v.enfant_prenom+" est en attente de votre validation depuis le "+v.date+".</p>"
+      +"<p><a href='"+v.url+"'>Valider maintenant</a></p>",
+  },
 };
 
 // DATES
@@ -1282,18 +1298,40 @@ function Pointage({enfants,role,pEId,user}){
     setSaving(false);
   };
 
-  const validerPointage=async(ptId)=>{
-    await supabase.from("pointages").update({
+  const validerPointage=async(ptId,signature)=>{
+    const payload={
       valide_parent:true,
       date_validation_parent:new Date().toISOString(),
-    }).eq("id",ptId);
+    };
+    if(signature)payload.signature_validation_parent=signature;
+    await supabase.from("pointages").update(payload).eq("id",ptId);
     setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true,date_validation:new Date().toISOString()}:x));
-    setToast("Pointage validé ✓");
+    setToast(signature?"Pointage valide avec signature ✓":"Pointage validé ✓");
     await logAction("valide_pointage",{table_name:"pointages",record_id:ptId});
   };
 
+  // POINTAGE WORKFLOW P14E - state pour modale signature parent
+  const [signParent,setSignParent]=useState(null); // pointage en cours de signature
+
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    {/* POINTAGE WORKFLOW P14E - modale signature parent */}
+    {signParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+      <div className="card" style={{padding:0,maxWidth:700,width:"100%",maxHeight:"90vh",overflow:"auto"}}>
+        <div style={{padding:"14px 18px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:14,color:"var(--b)"}}>
+          ✍️ Signer le pointage du {new Date(signParent.date).toLocaleDateString("fr-FR")}
+          <div style={{fontSize:11,color:"var(--l)",fontWeight:400,marginTop:2}}>
+            Arrivée {signParent.arr} · Départ {signParent.dep} · Total {signParent.tot}
+          </div>
+        </div>
+        <SignaturePad initialValue={user?.signature_base64}
+          onCancel={()=>setSignParent(null)}
+          onSave={async(dataUrl)=>{
+            await validerPointage(signParent.id,dataUrl);
+            setSignParent(null);
+          }}/>
+      </div>
+    </div>}
     <PageHeader icon="⏰" title="Pointage des heures" sub="Suivi quotidien et bilan mensuel"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
@@ -1401,32 +1439,48 @@ function Pointage({enfants,role,pEId,user}){
       <div className="card"style={{padding:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div style={{fontWeight:700,color:"var(--b)"}}>📅 Historique récent</div>
-          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>Tapez ✅ pour valider</div>}
+          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>✅ Valider ou ✍️ Signer</div>}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {ptH.slice(0,10).map(p=><div key={p.id}style={{
-            display:"flex",justifyContent:"space-between",alignItems:"center",
-            padding:"8px 10px",borderRadius:9,
-            background:p.valide_parent?"var(--Sp)":role==="parent"?"var(--Gp)":"var(--c)",
-            border:role==="parent"&&!p.valide_parent?"1px solid var(--G)":"1px solid transparent"
-          }}>
-            <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>
-              {new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}
-            </div>
-            <div style={{display:"flex",gap:10,fontSize:12}}>
-              <span style={{color:"var(--S)"}}>{p.arr?"↗"+p.arr:""}</span>
-              <span style={{color:"var(--T)"}}>{p.dep?"↘"+p.dep:""}</span>
-              <span style={{fontWeight:700,color:"var(--b)"}}>{p.tot||"-"}</span>
-            </div>
-            {role==="parent"&&!p.valide_parent
-              ?<button onClick={()=>validerPointage(p.id)}
-                style={{background:"var(--G)",color:"#fff",border:"none",borderRadius:6,
-                  padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>Valider</button>
-              :<span style={{fontSize:13,color:p.valide_parent?"var(--S)":"var(--l)"}}>
-                {p.valide_parent?"✅":"⏳"}
-              </span>
-            }
-          </div>)}
+          {ptH.slice(0,10).map(p=>{
+            // POINTAGE WORKFLOW P14E - calcul anciennete pour indicateur visuel
+            const ageJours=Math.floor((new Date()-new Date(p.date))/(1000*60*60*24));
+            const enRetard=role==="parent"&&!p.valide_parent&&ageJours>=3;
+            return <div key={p.id}style={{
+              display:"flex",flexDirection:"column",gap:6,
+              padding:"10px 12px",borderRadius:9,
+              background:p.valide_parent?"var(--Sp)":(enRetard?"#FFE8E8":(role==="parent"?"var(--Gp)":"var(--c)")),
+              border:enRetard?"1.5px solid var(--R)":(role==="parent"&&!p.valide_parent?"1px solid var(--G)":"1px solid transparent")
+            }}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>
+                  {new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}
+                  {enRetard&&<span style={{marginLeft:8,fontSize:10,color:"var(--R)",fontWeight:700}}>⚠️ Depuis {ageJours} jours</span>}
+                </div>
+                <div style={{display:"flex",gap:10,fontSize:12}}>
+                  <span style={{color:"var(--S)"}}>{p.arr?"↗"+p.arr:""}</span>
+                  <span style={{color:"var(--T)"}}>{p.dep?"↘"+p.dep:""}</span>
+                  <span style={{fontWeight:700,color:"var(--b)"}}>{p.tot||"-"}</span>
+                </div>
+                {role!=="parent"&&<span style={{fontSize:13,color:p.valide_parent?"var(--S)":"var(--l)"}}>
+                  {p.valide_parent?"✅":"⏳"}
+                </span>}
+              </div>
+              {role==="parent"&&!p.valide_parent&&<div style={{display:"flex",gap:6}}>
+                <button onClick={()=>validerPointage(p.id)}
+                  style={{flex:1,background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
+                  ✅ Je valide
+                </button>
+                <button onClick={()=>setSignParent(p)}
+                  style={{flex:1,background:"transparent",color:"var(--G)",border:"1px solid var(--G)",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
+                  ✍️ Signer
+                </button>
+              </div>}
+              {p.valide_parent&&p.date_validation&&<div style={{fontSize:10,color:"var(--S)",fontStyle:"italic"}}>
+                ✅ Validé le {new Date(p.date_validation).toLocaleDateString("fr-FR")}
+              </div>}
+            </div>;
+          })}
           {ptH.length===0&&<div style={{fontSize:13,color:"var(--l)",textAlign:"center",padding:20}}>
             Aucun pointage enregistré pour le moment.
           </div>}

@@ -45,6 +45,22 @@ const TEMPLATES = {
       <p>${v.asmat_prenom} vous invite a rejoindre TiMat pour suivre ${v.enfant_prenom}.</p>
       <p><a href="${v.url}">Rejoindre TiMat</a></p>`,
   },
+  // P14E - notifications pointage
+  pointage_a_valider: {
+    subject: "Un pointage attend votre validation",
+    html: (v) => `<h2>Bonjour ${v.parent_prenom},</h2>
+      <p>L'assistante maternelle a enregistre le pointage de ${v.enfant_prenom} du ${v.date}.</p>
+      <p>Duree d'accueil : <strong>${v.duree}</strong></p>
+      <p>Merci de valider ce pointage dans votre application :</p>
+      <p><a href="${v.url}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Valider le pointage</a></p>
+      <p style="font-size:11px;color:#888;margin-top:24px">Si vous oubliez, un rappel automatique sera envoye sous 3 jours.</p>`,
+  },
+  pointage_rappel: {
+    subject: "Rappel : pointage en attente de validation depuis 3 jours",
+    html: (v) => `<p>Bonjour ${v.parent_prenom},</p>
+      <p>Un pointage de ${v.enfant_prenom} est en attente de votre validation depuis le ${v.date}.</p>
+      <p><a href="${v.url}">Valider maintenant</a></p>`,
+  },
 };
 
 export default async function handler(req, res) {
