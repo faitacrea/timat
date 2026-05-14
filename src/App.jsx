@@ -1299,13 +1299,20 @@ function Pointage({enfants,role,pEId,user}){
   };
 
   const validerPointage=async(ptId,signature)=>{
-    const payload={
-      valide_parent:true,
-      date_validation_parent:new Date().toISOString(),
-    };
-    if(signature)payload.signature_validation_parent=signature;
-    await supabase.from("pointages").update(payload).eq("id",ptId);
-    setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true,date_validation:new Date().toISOString()}:x));
+    // POINTAGE WORKFLOW P14E - via RPC SECURITY DEFINER car RLS UPDATE = asmat seule
+    const{data,error}=await supabase.rpc("validate_pointage_as_parent",{
+      p_pointage_id:ptId,
+      p_signature:signature||null,
+    });
+    if(error){
+      setToast("Erreur : "+error.message);
+      return;
+    }
+    if(!data?.success){
+      setToast("Erreur : "+(data?.error||"echec validation"));
+      return;
+    }
+    setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true,date_validation:data.date||new Date().toISOString()}:x));
     setToast(signature?"Pointage valide avec signature ✓":"Pointage validé ✓");
     await logAction("valide_pointage",{table_name:"pointages",record_id:ptId});
   };
