@@ -3829,6 +3829,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat||{};
   const isDemoBull=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  // BULLETIN HISTORIQUE P14C - vraies heures + historique persistant
+  const [heuresMoisReel,setHeuresMoisReel]=useState(null);
+  const [bulletinsEnvoyes,setBulletinsEnvoyes]=useState({});
+  const [envoyer,setEnvoyer]=useState(false);
 
   // Générer les mois depuis le début de contrat jusqu'à aujourd'hui
   const moisDisponibles=useMemo(()=>{
@@ -3838,28 +3842,271 @@ function BulletinSalaire({enfants,role,pEId,user}){
     const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
     let d=new Date(debut.getFullYear(),debut.getMonth(),1);
     while(d<=now){
-      mois.push(noms[d.getMonth()]+" "+d.getFullYear());
+      mois.push({label:noms[d.getMonth()]+" "+d.getFullYear(),key:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")});
       d.setMonth(d.getMonth()+1);
     }
-    return mois.reverse(); // Plus récent en premier
+    return mois.reverse();
   },[contrat.debut]);
 
-  const [moisSel,setMoisSel]=useState(()=>moisDisponibles[0]||"");
+  const [moisSel,setMoisSel]=useState(()=>moisDisponibles[0]?.label||"");
+  const moisSelKey=moisDisponibles.find(m=>m.label===moisSel)?.key;
+
+  // BULLETIN HISTORIQUE P14C - charger les heures reelles du mois selectionne
+  useEffect(()=>{
+    if(!enfant?.id||!moisSelKey||isDemoBull){setHeuresMoisReel(null);return;}
+    let cancelled=false;
+    (async()=>{
+      const debut=moisSelKey+"-01";
+      const[year,month]=moisSelKey.split("-").map(Number);
+      const finDate=new Date(year,month,0); // dernier jour du mois
+      const fin=finDate.toISOString().slice(0,10);
+      const{data:pts}=await supabase.from("pointages").select("total_minutes,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      if(cancelled)return;
+      const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
+      const jours=(pts||[]).filter(p=>p.total_minutes>0).length;
+      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,nbPointages:pts?.length||0});
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,moisSelKey,isDemoBull]);
+
+  // BULLETIN HISTORIQUE P14C - charger l'historique des bulletins envoyes pour ce contrat
+  useEffect(()=>{
+    if(!contrat?.id||isDemoBull){setBulletinsEnvoyes({});return;}
+    let cancelled=false;
+    (async()=>{
+      const{data}=await supabase.from("bulletins").select("mois,envoye_au_parent,date_envoi,pdf_storage_path").eq("contrat_id",contrat.id);
+      if(cancelled)return;
+      const map={};
+      (data||[]).forEach(b=>{map[b.mois]=b;});
+      setBulletinsEnvoyes(map);
+    })();
+    return()=>{cancelled=true;};
+  },[contrat?.id,isDemoBull]);
 
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
-  const h=isDemoBull?(D.heures[enfant?.id]||{real:160,prev:174}):{real:hMens,prev:hMens};
+  // Si heures reelles disponibles : utiliser. Sinon : estimation contrat
+  const useRealHours=heuresMoisReel&&heuresMoisReel.heures>0;
+  const h=isDemoBull
+    ?(D.heures[enfant?.id]||{real:160,prev:174})
+    :{real:useRealHours?heuresMoisReel.heures:hMens,prev:hMens};
   const tauxH=contrat.tauxHoraire||4.05;
   const heuresNorm=Math.min(h.real,45*4);
   const hSupp=Math.max(0,h.real-heuresNorm);
   const salBase=heuresNorm*tauxH;
   const salSupp=hSupp*tauxH*1.25;
   const brut=salBase+salSupp;
-  const entretien=(contrat.entretien||3.80)*Math.round(h.real/8);
+  const joursTravailles=useRealHours?heuresMoisReel.jours:Math.round(h.real/8);
+  const entretien=(contrat.entretien||3.80)*joursTravailles;
   const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*t.sal/100:0),0);
   const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*t.pat/100:0),0);
   const netImposable=brut-totalCotSal*0.68;
   const netPaye=brut-totalCotSal;
   const coutEmployeur=brut+totalCotPat;
+
+  // BULLETIN HISTORIQUE P14C - generer et stocker le bulletin (PDF + DB + email)
+  const envoyerAuParent=async()=>{
+    if(!contrat?.id||!enfant?.id||!moisSelKey){setToast("Contrat ou enfant manquant");return;}
+    setEnvoyer(true);
+    try{
+      // 1. Generer le PDF en jsPDF natif
+      if(!window.jspdf){
+        await new Promise((res,rej)=>{
+          const s=document.createElement("script");
+          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF"));
+          document.head.appendChild(s);
+        });
+      }
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const PW=210,MX=15;let y=15;
+      const orange=[184,98,47];const noir=[40,40,40];const gris=[120,120,120];const vert=[42,157,143];
+      // re-fetch signature
+      let userSig=user?.signature_base64;
+      const{data:fresh}=await supabase.from("profiles").select("signature_base64,numero_agrement").eq("id",user.id).maybeSingle();
+      if(fresh?.signature_base64)userSig=fresh.signature_base64;
+      // Header
+      doc.setFontSize(8);doc.setTextColor(...gris);doc.setFont("helvetica","normal");
+      doc.text("Convention Collective Nationale - Particuliers Employeurs (IDCC 2395)",PW/2,y,{align:"center"});y+=5;
+      doc.setFontSize(16);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
+      doc.text("BULLETIN DE PAIE",PW/2,y,{align:"center"});y+=6;
+      doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
+      doc.text(moisSel,PW/2,y,{align:"center"});y+=8;
+      // Employeur / Salarie
+      const parentP=enfant?.parent;
+      const prenomEmp=parentP?.prenom?(parentP.prenom+" "+(parentP.nom||"")):"Parent employeur";
+      doc.setFillColor(248,248,248);doc.rect(MX,y,PW-2*MX,22,"F");
+      doc.setFontSize(9);doc.setFont("helvetica","bold");
+      doc.text("EMPLOYEUR (Particulier)",MX+2,y+5);
+      doc.text("SALARIEE (Asmat agreee)",MX+(PW-2*MX)/2+2,y+5);
+      doc.setFont("helvetica","normal");doc.setFontSize(9);
+      doc.text(prenomEmp,MX+2,y+11);
+      doc.text((user?.prenom||"")+" "+(user?.nom||""),MX+(PW-2*MX)/2+2,y+11);
+      doc.setFontSize(8);
+      doc.text("Code APE : 8891A",MX+2,y+16);
+      if(fresh?.numero_agrement)doc.text("N agrement : "+fresh.numero_agrement,MX+(PW-2*MX)/2+2,y+16);
+      doc.text("Entree le : "+(contrat.debut||"-")+" - CDI",MX+(PW-2*MX)/2+2,y+20);
+      y+=28;
+      // Section : Remuneration
+      const section=(t)=>{
+        doc.setFillColor(...orange);doc.rect(MX,y,PW-2*MX,6,"F");
+        doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
+        doc.text(t,MX+2,y+4);
+        y+=8;
+        doc.setTextColor(...noir);
+      };
+      const ligne=(l,col2,col3,col4,bold)=>{
+        doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,6);
+        doc.setFontSize(8);doc.setFont("helvetica",bold?"bold":"normal");
+        doc.text(l,MX+2,y+4);
+        if(col2)doc.text(col2,MX+95,y+4);
+        if(col3)doc.text(col3,MX+130,y+4);
+        if(col4)doc.text(col4,PW-MX-2,y+4,{align:"right"});
+        y+=6;
+      };
+      section("REMUNERATION");
+      ligne("Salaire de base (heures normales)",heuresNorm+" h",tauxH.toFixed(4)+" euros/h",salBase.toFixed(2)+" euros");
+      if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",(tauxH*1.25).toFixed(4)+" euros/h",salSupp.toFixed(2)+" euros");
+      ligne("Indemnite d entretien",joursTravailles+" jours",(contrat.entretien||3.80).toFixed(2)+" euros/j",entretien.toFixed(2)+" euros");
+      doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(9);
+      doc.text("SALAIRE BRUT MENSUEL",MX+2,y+5);
+      doc.text(brut.toFixed(2)+" euros",PW-MX-2,y+5,{align:"right"});
+      y+=10;
+      // Section : Cotisations
+      section("COTISATIONS SOCIALES");
+      Object.entries(TAUX_COTISATIONS).forEach(([nom,t])=>{
+        if(t.sal>0||t.pat>0){
+          const cs=brut*t.sal/100;
+          const cp=brut*t.pat/100;
+          ligne(nom,t.sal>0?"-"+cs.toFixed(2):"",t.pat>0?cp.toFixed(2):"","");
+        }
+      });
+      doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,7,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(9);
+      doc.text("TOTAL COTISATIONS",MX+2,y+5);
+      doc.setTextColor(196,74,106);
+      doc.text("-"+totalCotSal.toFixed(2)+" euros",MX+95,y+5);
+      doc.setTextColor(...noir);
+      doc.text(totalCotPat.toFixed(2)+" euros",MX+130,y+5);
+      y+=10;
+      // Section : Recap net
+      if(y>240){doc.addPage();y=15;}
+      section("RECAPITULATIF NET");
+      ligne("Salaire brut","","",brut.toFixed(2)+" euros");
+      doc.setTextColor(196,74,106);
+      ligne("Cotisations salariales","","","- "+totalCotSal.toFixed(2)+" euros");
+      doc.setTextColor(...noir);
+      doc.setFillColor(...orange);doc.rect(MX,y,PW-2*MX,8,"F");
+      doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(11);
+      doc.text("NET A PAYER",MX+2,y+5.5);
+      doc.text(netPaye.toFixed(2)+" euros",PW-MX-2,y+5.5,{align:"right"});
+      y+=10;
+      doc.setTextColor(...noir);doc.setFontSize(8);
+      doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
+      doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
+      doc.text("Net imposable (abattement fiscal asmat)",MX+2,y+4);
+      doc.text(netImposable.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      y+=7;
+      doc.setTextColor(...noir);doc.setFont("helvetica","normal");
+      ligne("Indemnite entretien (non imposable)","","",entretien.toFixed(2)+" euros");
+      doc.setFillColor(245,240,255);doc.rect(MX,y,PW-2*MX,6,"F");
+      doc.setFont("helvetica","bold");
+      doc.text("Cout total employeur",MX+2,y+4);
+      doc.text((coutEmployeur+entretien).toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      y+=12;
+      // Signature
+      if(y>250){doc.addPage();y=15;}
+      const sigW=(PW-2*MX-5)/2;
+      doc.setDrawColor(220,220,220);
+      doc.rect(MX,y,sigW,25);
+      doc.rect(MX+sigW+5,y,sigW,25);
+      doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
+      doc.text("Signature de l employeur",MX+2,y+4);
+      doc.text("Signature de la salariee",MX+sigW+7,y+4);
+      doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
+      doc.text("Date : __________",MX+2,y+22);
+      if(userSig){
+        try{doc.addImage(userSig,"PNG",MX+sigW+7,y+6,40,12);}catch(e){}
+        doc.text("Le "+new Date().toLocaleDateString("fr-FR"),MX+sigW+7,y+22);
+      }else{
+        doc.text("Date : __________",MX+sigW+7,y+22);
+      }
+      y+=30;
+      // Footer
+      doc.setFontSize(7);doc.setTextColor(...gris);
+      doc.text("Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN IDCC 2395 | A conserver 5 ans",PW/2,y,{align:"center"});
+
+      // 2. Convertir en blob
+      const blob=doc.output("blob");
+      const fileName="bulletin_"+contrat.id+"_"+moisSelKey+".pdf";
+      const path=user.id+"/bulletins/"+fileName;
+      // 3. Upload
+      const{error:eUp}=await supabase.storage.from("documents").upload(path,blob,{
+        contentType:"application/pdf",upsert:true,
+      });
+      if(eUp){setToast("Erreur upload : "+eUp.message);setEnvoyer(false);return;}
+      // 4. Upsert dans bulletins
+      const annee=parseInt(moisSelKey.split("-")[0],10);
+      const{error:eIns}=await supabase.from("bulletins").upsert({
+        contrat_id:contrat.id,
+        enfant_id:enfant.id,
+        asmat_id:user.id,
+        parent_id:contrat.parent_id||null,
+        mois:moisSelKey,
+        annee,
+        heures_reelles:h.real,
+        jours_travailles:joursTravailles,
+        salaire_brut:Math.round(brut*100)/100,
+        salaire_net:Math.round(netPaye*100)/100,
+        net_imposable:Math.round(netImposable*100)/100,
+        cotisations_salariales:Math.round(totalCotSal*100)/100,
+        cotisations_patronales:Math.round(totalCotPat*100)/100,
+        entretien:Math.round(entretien*100)/100,
+        cout_employeur:Math.round((coutEmployeur+entretien)*100)/100,
+        pdf_storage_path:path,
+        envoye_au_parent:true,
+        date_envoi:new Date().toISOString(),
+      },{onConflict:"contrat_id,mois"});
+      if(eIns){setToast("Erreur DB : "+eIns.message);setEnvoyer(false);return;}
+      // 5. Upsert dans documents_meta
+      const{data:existing}=await supabase.from("documents_meta").select("id").eq("storage_path",path).maybeSingle();
+      const nomDoc="Bulletin_"+(enfant.prenom||"enfant")+"_"+moisSelKey+".pdf";
+      if(existing){
+        await supabase.from("documents_meta").update({
+          nom:nomDoc,categorie:"admin",sous_type:"Bulletin de salaire",
+        }).eq("id",existing.id);
+      }else{
+        await supabase.from("documents_meta").insert({
+          asmat_id:user.id,enfant_id:enfant.id,
+          nom:nomDoc,categorie:"admin",sous_type:"Bulletin de salaire",
+          storage_path:path,partage:true,
+          taille:Math.round(blob.size/1024)+" Ko",
+        });
+      }
+      await logAction("send_bulletin",{table_name:"bulletins",record_id:contrat.id});
+      // 6. Email parent (silencieux si Resend pas configure)
+      if(contrat.parent_id){
+        supabase.from("profiles").select("email,prenom").eq("id",contrat.parent_id).maybeSingle().then(({data:p})=>{
+          if(p?.email){
+            sendNotificationEmail({
+              type:"bulletin_sent",
+              to:p.email,
+              subject:EMAIL_TEMPLATES.bulletin_sent.subject,
+              template:"bulletin_sent",
+              vars:{parent_prenom:p.prenom||"",mois:moisSel},
+            });
+          }
+        });
+      }
+      // 7. Refresh local
+      setBulletinsEnvoyes(b=>({...b,[moisSelKey]:{mois:moisSelKey,envoye_au_parent:true,date_envoi:new Date().toISOString(),pdf_storage_path:path}}));
+      setToast("Bulletin envoyé au parent ✓ et archivé dans Documents");
+    }catch(e){
+      setToast("Erreur : "+e.message);
+    }
+    setEnvoyer(false);
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -3868,11 +4115,27 @@ function BulletinSalaire({enfants,role,pEId,user}){
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);}}/>)}
     </div>}
     <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-      {moisDisponibles.slice(0,6).map(m=><button key={m}onClick={()=>setMoisSel(m)}style={{
-        padding:"6px 14px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-        background:moisSel===m?"var(--b)":"transparent",color:moisSel===m?"#fff":"var(--m)",
-        borderColor:moisSel===m?"var(--b)":"var(--br)"}}>{m}</button>)}
+      {moisDisponibles.slice(0,8).map(m=>{
+        const env=bulletinsEnvoyes[m.key];
+        return <button key={m.label}onClick={()=>setMoisSel(m.label)}style={{
+          padding:"6px 14px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+          background:moisSel===m.label?"var(--b)":"transparent",color:moisSel===m.label?"#fff":"var(--m)",
+          borderColor:moisSel===m.label?"var(--b)":(env?.envoye_au_parent?"var(--S)":"var(--br)"),
+          position:"relative"}}>
+          {m.label}
+          {env?.envoye_au_parent&&<span style={{position:"absolute",top:-6,right:-6,fontSize:11,background:"var(--S)",color:"#fff",borderRadius:"50%",width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span>}
+        </button>;
+      })}
     </div>
+    {/* BULLETIN HISTORIQUE P14C - statut du mois selectionne */}
+    {moisSelKey&&bulletinsEnvoyes[moisSelKey]?.envoye_au_parent&&<div style={{padding:"10px 14px",background:"var(--Sp)",border:"1px solid var(--S)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--S)",display:"flex",alignItems:"center",gap:8}}>
+      ✅ <strong>Bulletin envoyé au parent</strong> le {new Date(bulletinsEnvoyes[moisSelKey].date_envoi).toLocaleDateString("fr-FR")} — disponible dans Documents
+    </div>}
+    {moisSelKey&&!bulletinsEnvoyes[moisSelKey]&&!isDemoBull&&<div style={{padding:"10px 14px",background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--B)"}}>
+      ⏳ Bulletin non encore envoyé pour ce mois
+      {useRealHours?<span style={{marginLeft:8,fontSize:11,color:"var(--S)"}}>· {heuresMoisReel.heures} h pointées sur {heuresMoisReel.jours} j</span>
+        :<span style={{marginLeft:8,fontSize:11,color:"var(--l)",fontStyle:"italic"}}>· basé sur le contrat (aucun pointage)</span>}
+    </div>}
 
     <div className="card"style={{padding:24,border:"2px solid var(--br)"}}>
       <div style={{borderBottom:"2px solid var(--b)",paddingBottom:14,marginBottom:14}}>
@@ -4033,7 +4296,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
         w.document.close();
         setToast('Bulletin ouvert dans un nouvel onglet ✓');
       }}>📥 Télécharger PDF</button>
-        {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={()=>setToast("Bulletin envoyé au parent ✓")}>📧 Envoyer au parent</button>}
+        {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={envoyerAuParent}disabled={envoyer||isDemoBull}>
+          {envoyer?"⏳ Envoi en cours...":(bulletinsEnvoyes[moisSelKey]?.envoye_au_parent?"🔄 Renvoyer au parent":"📧 Envoyer au parent")}
+        </button>}
       </div>
     </div>
   </div>;
