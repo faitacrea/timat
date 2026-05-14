@@ -398,11 +398,76 @@ function AccueilAssMat({enfants,setPage,user}){
   // TABLEAU SIGNATURES P11 - state pour le mini-dashboard
   const [genPdf,setGenPdf]=useState({}); // {[contratId]: 'pending'|'done'|'error'}
   const [tabToast,setTabToast]=useState("");
-  const pt=D.pointages.filter(p=>p.date===TODAY_STR);
-  const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
-  const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
-  const nbEnfants=enfants.length;
+  // STATS TEMPS REEL P14D - vraies stats Supabase
+  const [stats,setStats]=useState({heuresSemaine:0,joursSemaine:0,revenuMois:0,heuresMois:0,messagesNonLus:0,presencesJour:[],loaded:false});
   const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const nbEnfants=enfants.length;
+  const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
+
+  // STATS TEMPS REEL P14D - charger les stats reelles
+  useEffect(()=>{
+    if(!user?.id||isDemoUser||nbEnfants===0){
+      setStats(s=>({...s,loaded:true}));
+      return;
+    }
+    let cancelled=false;
+    (async()=>{
+      try{
+        // Bornes temporelles
+        const now=new Date();
+        const todayIso=now.toISOString().slice(0,10);
+        // Lundi de la semaine (lundi = 1, dimanche = 0 → on calcule l'offset)
+        const dayOfWeek=now.getDay();
+        const offset=dayOfWeek===0?6:dayOfWeek-1;
+        const lundi=new Date(now);lundi.setDate(now.getDate()-offset);lundi.setHours(0,0,0,0);
+        const lundiIso=lundi.toISOString().slice(0,10);
+        // Debut du mois
+        const debutMois=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+        const enfantIds=enfants.map(e=>e.id);
+
+        // 1. Pointages de la semaine
+        const{data:ptsSemaine}=await supabase.from("pointages").select("total_minutes,date,enfant_id,heure_arrivee,heure_depart")
+          .in("enfant_id",enfantIds).gte("date",lundiIso).lte("date",todayIso);
+        const minSemaine=(ptsSemaine||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
+        const heuresSemaine=Math.round(minSemaine/60*10)/10;
+        const joursSemaineSet=new Set((ptsSemaine||[]).filter(p=>p.total_minutes>0).map(p=>p.date));
+        const joursSemaine=joursSemaineSet.size;
+
+        // 2. Pointages du mois pour revenu estime
+        const{data:ptsMois}=await supabase.from("pointages").select("total_minutes,enfant_id")
+          .in("enfant_id",enfantIds).gte("date",debutMois).lte("date",todayIso);
+        const minMois=(ptsMois||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
+        const heuresMois=Math.round(minMois/60*10)/10;
+        // Revenu estime : sommer (heures × taux) par enfant
+        let revenuMois=0;
+        enfants.forEach(e=>{
+          const taux=e.contrat?.tauxHoraire||0;
+          const minEnfant=(ptsMois||[]).filter(p=>p.enfant_id===e.id).reduce((s,p)=>s+(p.total_minutes||0),0);
+          revenuMois+=(minEnfant/60)*taux;
+        });
+        revenuMois=Math.round(revenuMois);
+
+        // 3. Presences en cours aujourd'hui (arrivee mais pas de depart)
+        const{data:ptsJour}=await supabase.from("pointages").select("enfant_id,heure_arrivee,heure_depart")
+          .in("enfant_id",enfantIds).eq("date",todayIso);
+        const presencesJour=(ptsJour||[]).filter(p=>p.heure_arrivee&&!p.heure_depart).map(p=>{
+          const e=enfants.find(en=>en.id===p.enfant_id);
+          return e?{...e,depuis:p.heure_arrivee}:null;
+        }).filter(Boolean);
+
+        // 4. Messages non lus
+        const{data:msgs}=await supabase.from("messages").select("id,read_at").eq("destinataire_id",user.id).is("read_at",null);
+        const messagesNonLus=msgs?.length||0;
+
+        if(cancelled)return;
+        setStats({heuresSemaine,joursSemaine,revenuMois,heuresMois,messagesNonLus,presencesJour,loaded:true});
+      }catch(e){
+        console.warn("[stats accueil]",e.message);
+        if(!cancelled)setStats(s=>({...s,loaded:true}));
+      }
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,nbEnfants,isDemoUser,enfants.map(e=>e.id).join(",")]);
 
   // TABLEAU SIGNATURES P11 - regrouper les contrats par statut
   const sigStats=useMemo(()=>{
@@ -425,11 +490,17 @@ function AccueilAssMat({enfants,setPage,user}){
     setTabToast(r.success?"PDF du contrat regenere ✓":"Erreur : "+r.error);
   };
 
-  const kpis=[
-    {icon:"👶",val:nbEnfants>0?nbEnfants+" enfant"+(nbEnfants>1?"s":""):"Aucun",lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
+  // STATS TEMPS REEL P14D - KPIs reels (heures semaine, revenu mois, presences jour, messages)
+  const kpis=isDemoUser?[
+    {icon:"👶",val:nbEnfants+" enfant"+(nbEnfants>1?"s":""),lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
     {icon:"💬",val:"0",lbl:"Messages non lus",c:"var(--B)",page:"messagerie",hint:"→ Messagerie"},
-    {icon:"📋",val:nbEnfants>0?"Actif":"-",lbl:"Journal du jour",c:"var(--S)",page:"journal_complet",hint:"→ Journal"},
-    {icon:"🧾",val:nbEnfants,lbl:"Contrat"+(nbEnfants>1?"s":"")+" actif"+(nbEnfants>1?"s":""),c:"var(--G)",page:"admin_finances",hint:"→ Paie & Contrats"}, // RENAME NAV P9
+    {icon:"📋",val:"Actif",lbl:"Journal du jour",c:"var(--S)",page:"journal_complet",hint:"→ Journal"},
+    {icon:"🧾",val:nbEnfants,lbl:"Contrats actifs",c:"var(--G)",page:"admin_finances",hint:"→ Paie & Contrats"},
+  ]:[
+    {icon:"⏱️",val:stats.heuresSemaine+" h",lbl:"Heures cette semaine",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
+    {icon:"💰",val:stats.revenuMois+" €",lbl:"Revenu estimé du mois",c:"var(--G)",page:"admin_finances",hint:"→ Paie"},
+    {icon:"🟢",val:stats.presencesJour.length+"/"+nbEnfants,lbl:"Présents maintenant",c:"var(--S)",page:"pointage",hint:"→ Pointage"},
+    {icon:"💬",val:stats.messagesNonLus,lbl:"Messages non lus",c:stats.messagesNonLus>0?"var(--R)":"var(--B)",page:"messagerie",hint:"→ Messagerie"},
   ];
 
   return <div className="fi">
@@ -445,6 +516,19 @@ function AccueilAssMat({enfants,setPage,user}){
       </div>
       {user&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
     </div>
+
+    {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
+    {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"12px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D6EBD9)",border:"1.5px solid var(--S)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <span style={{fontSize:18}}>🟢</span>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--S)"}}>Actuellement en accueil</div>
+          <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>
+            {stats.presencesJour.map(p=>(p.emoji||"👶")+" "+p.prenom+" (depuis "+p.depuis?.slice(0,5)+")").join(" · ")}
+          </div>
+        </div>
+      </div>
+    </div>}
 
     {/* Alerte contrats */}
     {nonSigne.length>0&&<div onClick={()=>setPage("admin_finances")}
