@@ -6453,11 +6453,13 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           </div>}
         </div>}
 
-        {/* SIGNATURE STANDARD ASMAT P10 - section signature electronique */}
-        {user?.role==="asmat"&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
+        {/* SIGNATURE ELECTRONIQUE P14F - section accessible asmat ET parent */}
+        <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
           <label className="lbl">✍️ Ma signature électronique</label>
           <div style={{fontSize:12,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>
-            Dessinez-la une fois ici. Elle sera proposée automatiquement à chaque signature de contrat ou bulletin.
+            {user?.role==="asmat"
+              ?"Dessinez-la une fois ici. Elle sera proposée automatiquement sur les contrats, bulletins et attestations."
+              :"Dessinez-la une fois ici. Elle sera utilisée pour signer le contrat et valider les pointages."}
           </div>
           {currentSig?<div>
             <div style={{display:"inline-block",border:"1px solid var(--br)",borderRadius:8,padding:8,background:"#FDFAF6",marginBottom:8}}>
@@ -6479,7 +6481,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             <div style={{fontSize:12,color:"var(--l)",fontStyle:"italic",marginBottom:8}}>Aucune signature enregistrée pour le moment.</div>
             <button className="btn bT" style={{fontSize:12}} onClick={()=>setShowSigPad(true)}>+ Créer ma signature</button>
           </div>}
-        </div>}
+        </div>
       </div>
 
       {/* SIGNATURE STANDARD ASMAT P10 - modale de capture */}
