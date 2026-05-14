@@ -403,6 +403,9 @@ function AccueilAssMat({enfants,setPage,user}){
   const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const nbEnfants=enfants.length;
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
+  // FIX P14D - garder pt et tx pour la liste des enfants plus bas (mock D pour l'instant)
+  const pt=D.pointages.filter(p=>p.date===TODAY_STR);
+  const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
 
   // STATS TEMPS REEL P14D - charger les stats reelles
   useEffect(()=>{
@@ -456,7 +459,7 @@ function AccueilAssMat({enfants,setPage,user}){
         }).filter(Boolean);
 
         // 4. Messages non lus
-        const{data:msgs}=await supabase.from("messages").select("id,read_at").eq("destinataire_id",user.id).is("read_at",null);
+        const{data:msgs}=await supabase.from("messages").select("id,lu").eq("destinataire_id",user.id).eq("lu",false);
         const messagesNonLus=msgs?.length||0;
 
         if(cancelled)return;
