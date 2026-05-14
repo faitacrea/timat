@@ -1140,13 +1140,16 @@ function RecitIA({enfants,role,pEId}){
 }
 
 //
-function Pointage({enfants,role,pEId}){
+function Pointage({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [pts,setPts]=useState([]);
-  const [arr,setArr]=useState("");
-  const [dep,setDep]=useState("");
   const [toast,setToast]=useState("");
   const [saving,setSaving]=useState(false);
+  const [showQR,setShowQR]=useState(false);
+  // POINTAGE WORKFLOW P14E - mode edition manuelle si besoin (rectifier une heure)
+  const [editMode,setEditMode]=useState(false);
+  const [arrEdit,setArrEdit]=useState("");
+  const [depEdit,setDepEdit]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
 
@@ -1158,15 +1161,17 @@ function Pointage({enfants,role,pEId}){
         .select("*").eq("enfant_id",enfant.id)
         .order("date",{ascending:false}).limit(30);
       if(data&&data.length>0){
-        // Adapter au format attendu par l'UI
         setPts(data.map(p=>({
           id:p.id,eId:p.enfant_id,date:p.date,
           arr:p.arrivee,dep:p.depart,
+          arr_raw:p.arrivee,dep_raw:p.depart,
           tot:p.total_minutes?Math.floor(p.total_minutes/60)+"h"+String(p.total_minutes%60).padStart(2,"0"):null,
-          valide:true,valide_parent:p.valide_parent
+          totMin:p.total_minutes,
+          valide:true,valide_parent:p.valide_parent,
+          mode_pointage:p.mode_pointage||"asmat",
+          date_validation:p.date_validation_parent,
         })));
       }else{
-        // Fallback démo si pas de données réelles
         setPts(D.pointages.filter(p=>p.eId===enfant?.id));
       }
     };
@@ -1177,48 +1182,114 @@ function Pointage({enfants,role,pEId}){
   const ptH=pts.filter(p=>p.eId===enfant?.id).sort((a,b)=>b.date>a.date?-1:1);
 
   // Calcul bilan mensuel
-  const heuresMois=pts.filter(p=>p.eId===enfant?.id&&p.tot).reduce((s,p)=>{
-    if(!p.tot)return s;
-    const[h,m]=(p.tot||"0h0").replace("h",":").split(":").map(Number);
-    return s+(h*60+(m||0));
-  },0);
+  const heuresMois=pts.filter(p=>p.eId===enfant?.id&&p.totMin).reduce((s,p)=>s+(p.totMin||0),0);
   const heuresPrev=Math.round((enfant?.contrat?.heuresHebdo||40)*52/12);
-  const soldeMin=heuresMois-heuresPrev*60/60;
+  const soldeMin=heuresMois-heuresPrev*60;
 
-  const save=async()=>{
-    if(!arr||!enfant)return;
+  // POINTAGE WORKFLOW P14E - pointer l'arrivee maintenant (heure auto)
+  const pointerArrivee=async()=>{
+    if(!enfant)return;
     setSaving(true);
-    const[h1,m1]=arr.split(":").map(Number);
-    const totalMin=dep?(()=>{const[h2,m2]=dep.split(":").map(Number);return(h2*60+m2)-(h1*60+m1);})():null;
-    const totStr=totalMin?Math.floor(totalMin/60)+"h"+String(totalMin%60).padStart(2,"0"):null;
+    const now=new Date();
+    const heureArr=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+    const{error,data}=await supabase.from("pointages").upsert({
+      enfant_id:enfant.id,
+      asmat_id:user?.id||(await supabase.auth.getUser()).data.user?.id,
+      date:TODAY_STR,
+      arrivee:heureArr,
+      depart:null,
+      total_minutes:null,
+      valide_parent:false,
+      mode_pointage:"asmat",
+    },{onConflict:"enfant_id,date"}).select().single();
+    if(error){
+      setToast("Erreur : "+error.message);setSaving(false);return;
+    }
+    setPts(p=>{
+      const filtered=p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR));
+      return[{id:data?.id||"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,arr:heureArr,dep:null,arr_raw:heureArr,dep_raw:null,tot:null,totMin:null,valide:true,valide_parent:false,mode_pointage:"asmat"},...filtered];
+    });
+    await logAction("pointage_arrivee",{table_name:"pointages",record_id:data?.id});
+    setToast("✅ Arrivée pointée à "+heureArr);
+    setSaving(false);
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
 
-    // Sauvegarder dans Supabase
+  // POINTAGE WORKFLOW P14E - pointer le depart maintenant (heure auto, calcul total)
+  const pointerDepart=async()=>{
+    if(!enfant||!ptJ?.arr)return;
+    setSaving(true);
+    const now=new Date();
+    const heureDep=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+    // Calcul total minutes
+    const[h1,m1]=ptJ.arr.split(":").map(Number);
+    const[h2,m2]=heureDep.split(":").map(Number);
+    const totalMin=(h2*60+m2)-(h1*60+m1);
+    const{error}=await supabase.from("pointages").update({
+      depart:heureDep,
+      total_minutes:totalMin,
+    }).eq("enfant_id",enfant.id).eq("date",TODAY_STR);
+    if(error){
+      setToast("Erreur : "+error.message);setSaving(false);return;
+    }
+    const totStr=Math.floor(totalMin/60)+"h"+String(totalMin%60).padStart(2,"0");
+    setPts(p=>p.map(x=>(x.eId===enfant.id&&x.date===TODAY_STR)?{...x,dep:heureDep,dep_raw:heureDep,tot:totStr,totMin:totalMin}:x));
+    await logAction("pointage_depart",{table_name:"pointages",record_id:ptJ.id});
+    // EMAIL NOTIF P14E - notifier le parent qu'un pointage est en attente de validation
+    if(enfant?.contrat?.parent_id||enfant?.parent_id){
+      const parentId=enfant.contrat?.parent_id||enfant.parent_id;
+      supabase.from("profiles").select("email,prenom").eq("id",parentId).maybeSingle().then(({data:p})=>{
+        if(p?.email){
+          sendNotificationEmail({
+            type:"pointage_a_valider",
+            to:p.email,
+            subject:"Un pointage attend votre validation",
+            template:"pointage_a_valider",
+            vars:{parent_prenom:p.prenom||"",enfant_prenom:enfant.prenom||"",date:new Date().toLocaleDateString("fr-FR"),duree:totStr,url:window.location.origin},
+          });
+        }
+      });
+    }
+    setToast("✅ Départ pointé à "+heureDep+" — "+totStr);
+    setSaving(false);
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
+
+  // POINTAGE WORKFLOW P14E - edition manuelle (rectifier une heure mal saisie)
+  const sauverEdition=async()=>{
+    if(!arrEdit||!enfant)return;
+    setSaving(true);
+    const[h1,m1]=arrEdit.split(":").map(Number);
+    const totalMin=depEdit?(()=>{const[h2,m2]=depEdit.split(":").map(Number);return(h2*60+m2)-(h1*60+m1);})():null;
     const{error}=await supabase.from("pointages").upsert({
       enfant_id:enfant.id,
-      asmat_id:(await supabase.auth.getUser()).data.user?.id,
+      asmat_id:user?.id||(await supabase.auth.getUser()).data.user?.id,
       date:TODAY_STR,
-      arrivee:arr,
-      depart:dep||null,
+      arrivee:arrEdit,
+      depart:depEdit||null,
       total_minutes:totalMin,
       valide_parent:false,
+      mode_pointage:"asmat",
     },{onConflict:"enfant_id,date"});
-
-    if(!error){
-      setPts(p=>[...p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR)),
-        {id:"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,
-         arr:arr.replace(":","h"),dep:dep?dep.replace(":","h"):null,
-         tot:totStr,valide:true,valide_parent:false}]);
-      setArr("");setDep("");setToast("Pointage enregistré ✓");
-    }else{
-      setToast("Erreur - pointage sauvegardé localement");
-    }
+    if(error){setToast("Erreur : "+error.message);setSaving(false);return;}
+    const totStr=totalMin?Math.floor(totalMin/60)+"h"+String(totalMin%60).padStart(2,"0"):null;
+    setPts(p=>{
+      const filtered=p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR));
+      return[{id:"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,arr:arrEdit,dep:depEdit,arr_raw:arrEdit,dep_raw:depEdit,tot:totStr,totMin:totalMin,valide:true,valide_parent:false,mode_pointage:"asmat"},...filtered];
+    });
+    setArrEdit("");setDepEdit("");setEditMode(false);
+    setToast("Pointage corrigé ✓");
     setSaving(false);
   };
 
   const validerPointage=async(ptId)=>{
-    await supabase.from("pointages").update({valide_parent:true}).eq("id",ptId);
-    setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true}:x));
+    await supabase.from("pointages").update({
+      valide_parent:true,
+      date_validation_parent:new Date().toISOString(),
+    }).eq("id",ptId);
+    setPts(p=>p.map(x=>x.id===ptId?{...x,valide_parent:true,date_validation:new Date().toISOString()}:x));
     setToast("Pointage validé ✓");
+    await logAction("valide_pointage",{table_name:"pointages",record_id:ptId});
   };
 
   return <div className="fi">
@@ -1252,21 +1323,56 @@ function Pointage({enfants,role,pEId}){
             </div>
           </div>:<div style={{fontSize:13,color:"var(--l)",marginBottom:12}}>Pas encore pointé.</div>}
           {role==="asmat"&&<div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-              <div><label className="lbl">Arrivée</label><input type="time"className="inp"value={arr}onChange={e=>setArr(e.target.value)}/></div>
-              <div><label className="lbl">Départ</label><input type="time"className="inp"value={dep}onChange={e=>setDep(e.target.value)}/></div>
-            </div>
-            <button className="btn bS"style={{width:"100%"}}onClick={save}disabled={saving}>
-              {saving?"⏳ Sauvegarde...":"Enregistrer le pointage"}
-            </button>
-            {/* QR Code pour le parent */}
+            {/* POINTAGE WORKFLOW P14E - boutons d'action selon l'etat */}
+            {!ptJ?<div>
+              <div style={{fontSize:11,color:"var(--l)",marginBottom:8,textAlign:"center"}}>L'enfant arrive ?</div>
+              <button className="btn bS"style={{width:"100%",padding:"16px",fontSize:15,justifyContent:"center"}}onClick={pointerArrivee}disabled={saving}>
+                {saving?"⏳ ...":"📍 Pointer l'arrivée maintenant"}
+              </button>
+            </div>:!ptJ.dep?<div>
+              <div style={{fontSize:11,color:"var(--S)",marginBottom:8,textAlign:"center",fontWeight:600}}>
+                ✅ Arrivée pointée à {ptJ.arr} — Accueil en cours
+              </div>
+              <button className="btn bT"style={{width:"100%",padding:"16px",fontSize:15,justifyContent:"center"}}onClick={pointerDepart}disabled={saving}>
+                {saving?"⏳ ...":"🏁 Pointer le départ maintenant"}
+              </button>
+            </div>:<div style={{padding:"12px",background:"var(--Sp)",borderRadius:10,textAlign:"center",fontSize:13,color:"var(--S)",fontWeight:600}}>
+              ✅ Journée terminée — {ptJ.tot} d'accueil
+              {!ptJ.valide_parent&&<div style={{fontSize:11,color:"var(--l)",marginTop:4,fontWeight:400}}>En attente de validation du parent</div>}
+            </div>}
+
+            {/* POINTAGE WORKFLOW P14E - rectifier une heure manuellement (si oubli) */}
             <details style={{marginTop:12,background:"var(--c)",borderRadius:10,overflow:"hidden"}}>
+              <summary style={{padding:"10px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:"var(--m)",listStyle:"none",display:"flex",alignItems:"center",gap:8}}>
+                <span>✏️</span> Rectifier les heures (oubli, erreur)
+              </summary>
+              <div style={{padding:"12px 14px"}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                  <div><label className="lbl">Arrivée</label>
+                    <input type="time"className="inp"value={arrEdit||ptJ?.arr_raw||""}onChange={e=>setArrEdit(e.target.value)}/>
+                  </div>
+                  <div><label className="lbl">Départ</label>
+                    <input type="time"className="inp"value={depEdit||ptJ?.dep_raw||""}onChange={e=>setDepEdit(e.target.value)}/>
+                  </div>
+                </div>
+                <button className="btn bG"style={{width:"100%",fontSize:12}}onClick={sauverEdition}disabled={saving||!arrEdit}>
+                  {saving?"⏳ ...":"Enregistrer la correction"}
+                </button>
+                <div style={{fontSize:10,color:"var(--l)",marginTop:6}}>
+                  💡 Utile si tu as oublié de pointer en direct.
+                </div>
+              </div>
+            </details>
+
+            {/* QR Code pour le parent (si present physiquement) */}
+            <details style={{marginTop:10,background:"var(--c)",borderRadius:10,overflow:"hidden"}}>
               <summary style={{padding:"10px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:"var(--B)",listStyle:"none",display:"flex",alignItems:"center",gap:8}}>
-                <span>📱</span> QR Code pointage — {enfant?.prenom}
+                <span>📱</span> QR Code parent — {enfant?.prenom}
               </summary>
               <div style={{padding:"12px 14px",textAlign:"center"}}>
                 <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.6}}>
-                  Le parent scanne ce QR code pour valider l'arrivée ou le départ de {enfant?.prenom}.
+                  Le parent scanne ce QR avec son téléphone pour valider en direct.<br/>
+                  <strong>À utiliser uniquement si le parent est présent</strong> (matin ou soir).
                 </div>
                 <img
                   src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
@@ -1282,12 +1388,10 @@ function Pointage({enfants,role,pEId}){
                     );
                     setToast("Lien copié ✓");
                   }}>📋 Copier le lien</button>
-                  <button className="btn bG"style={{fontSize:11}}onClick={()=>{
-                    window.print();
-                  }}>🖨️ Imprimer</button>
+                  <button className="btn bG"style={{fontSize:11}}onClick={()=>window.print()}>🖨️ Imprimer</button>
                 </div>
                 <div style={{fontSize:10,color:"var(--l)",marginTop:8}}>
-                  🔒 Ce QR est unique à {enfant?.prenom} et valable aujourd'hui uniquement.
+                  🔒 QR unique à {enfant?.prenom} et valable aujourd'hui uniquement.
                 </div>
               </div>
             </details>
