@@ -1466,7 +1466,7 @@ function Pointage({enfants,role,pEId,user}){
                 </div>
                 <img
                   src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
-                    (window.location.origin||"https://timat-rho.vercel.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
+                    (window.location.origin||"https://timat.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
                   )}
                   alt="QR Pointage"
                   style={{width:180,height:180,borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
@@ -1474,7 +1474,7 @@ function Pointage({enfants,role,pEId,user}){
                 <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
                   <button className="btn bG"style={{fontSize:11}}onClick={()=>{
                     navigator.clipboard?.writeText(
-                      (window.location.origin||"https://timat-rho.vercel.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
+                      (window.location.origin||"https://timat.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
                     );
                     setToast("Lien copié ✓");
                   }}>📋 Copier le lien</button>

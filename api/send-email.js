@@ -103,9 +103,9 @@ function cleanupRateLimit() {
 export default async function handler(req) {
   // CORS - autoriser uniquement les requêtes depuis l'app
   const allowedOrigins = [
-    'https://timat-rho.vercel.app',
     'https://timat.app',
     'https://www.timat.app',
+    'https://timat-rho.vercel.app',
   ];
   const origin = req.headers.get('origin') || '';
   const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
