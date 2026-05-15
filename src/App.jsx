@@ -8746,8 +8746,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
     <div className="topbar">
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <div className="logo">TiMat</div>
-          <div className="logo-dot"/>
+          <img src="/logo.svg" alt="TiMat" style={{height:28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
           <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
         </div>
       </div>
@@ -9201,10 +9200,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            {L.logoUrl
-              ?<img src={L.logoUrl} alt="TiMat" style={{height:32,borderRadius:8,objectFit:"contain"}}/>
-              :<div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.15)" }}>{L.logoEmoji||"🌿"}</div>}
-            <span style={{ color: "#fff" }}>TiMat</span>
+            <img src={L.logoUrl || "/logo.svg"} alt="TiMat" style={{height:44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
@@ -10263,10 +10259,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                {L.logoUrl
-                  ?<img src={L.logoUrl} alt="TiMat" style={{height:32,borderRadius:8,objectFit:"contain"}}/>
-                  :<div className="lp-logo-icon" style={{ background: "rgba(255,255,255,.1)" }}>{L.logoEmoji||"🌿"}</div>}
-                <span style={{ color: "#fff" }}>TiMat</span>
+                <img src={L.logoUrl || "/logo.svg"} alt="TiMat" style={{height:40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.
@@ -12279,8 +12272,7 @@ function Login({onLogin}){
       <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
     <div style={{width:"100%",maxWidth:420}}>
       <div style={{textAlign:"center",marginBottom:32}}>
-        <div style={{fontSize:56,marginBottom:8}}>🌿</div>
-        <div className="pf"style={{fontSize:38,fontWeight:700,color:"var(--T)",fontStyle:"italic",letterSpacing:"-1px"}}>TiMat</div>
+        <img src="/logo.svg" alt="TiMat" style={{height:80,marginBottom:8,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div style="font-size:56px;margin-bottom:8px">🌿</div><div class="pf" style="font-size:38px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-1px">TiMat</div>'}}/>
         <div style={{fontSize:14,color:"var(--l)",marginTop:4}}>L'application qui réinvente l'assistante maternelle</div>
         <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:12,flexWrap:"wrap"}}>
           {["✨ Bilan de journée","📝 CR Trimestriel","🏛️ Pajemploi","📑 Attestation fiscale"].map(t=>
@@ -13385,6 +13377,20 @@ export default function App(){
     }
   },[]);
 
+  // Favicon dynamique selon role connecte (asmat=bleu marine, parent=terracotta)
+  useEffect(()=>{
+    const role=user?.role;
+    const iconHref=role==="parent"?"/parent.svg":"/assmat.svg";
+    let link=document.querySelector("link[rel~='icon']");
+    if(!link){
+      link=document.createElement("link");
+      link.rel="icon";
+      document.head.appendChild(link);
+    }
+    link.type="image/svg+xml";
+    link.href=iconHref;
+  },[user?.role]);
+
   // Charger config backoffice au démarrage -
   useEffect(()=>{
     loadConfig().then(()=>{
@@ -13573,7 +13579,7 @@ export default function App(){
   if(loading)return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div className="pf"style={{fontSize:36,color:"var(--T)",fontStyle:"italic"}}>TiMat</div>
+      <img src="/logo.svg" alt="TiMat" style={{height:64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
       <div style={{display:"flex",gap:6}}>
         <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
       </div>
