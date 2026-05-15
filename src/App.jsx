@@ -8746,7 +8746,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
     <div className="topbar">
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <img src="/logo.svg" alt="TiMat" style={{height:28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+          <img src="/logo.png" alt="TiMat" style={{height:(L.logoSizes&&L.logoSizes.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
           <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
         </div>
       </div>
@@ -9200,7 +9200,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L.logoUrl || "/logo.svg"} alt="TiMat" style={{height:44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L.logoSizes&&L.logoSizes.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
@@ -10259,7 +10259,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L.logoUrl || "/logo.svg"} alt="TiMat" style={{height:40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L.logoSizes&&L.logoSizes.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.
@@ -12272,7 +12272,7 @@ function Login({onLogin}){
       <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
     <div style={{width:"100%",maxWidth:420}}>
       <div style={{textAlign:"center",marginBottom:32}}>
-        <img src="/logo.svg" alt="TiMat" style={{height:80,marginBottom:8,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div style="font-size:56px;margin-bottom:8px">🌿</div><div class="pf" style="font-size:38px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-1px">TiMat</div>'}}/>
+        <img src="/logo.png" alt="TiMat" style={{height:(L.logoSizes&&L.logoSizes.login)||80,marginBottom:8,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div style="font-size:56px;margin-bottom:8px">🌿</div><div class="pf" style="font-size:38px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-1px">TiMat</div>'}}/>
         <div style={{fontSize:14,color:"var(--l)",marginTop:4}}>L'application qui réinvente l'assistante maternelle</div>
         <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:12,flexWrap:"wrap"}}>
           {["✨ Bilan de journée","📝 CR Trimestriel","🏛️ Pajemploi","📑 Attestation fiscale"].map(t=>
@@ -12631,6 +12631,27 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                 :<div style={{width:28,height:28,borderRadius:8,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{cfg.landing.logoEmoji||"🌿"}</div>}
               <span style={{color:"#fff",fontSize:16,fontWeight:700,fontFamily:cfg.landing.fontTitle}}>TiMat</span>
               <span style={{fontSize:10,color:"rgba(255,255,255,.4)",marginLeft:"auto"}}>Aperçu</span>
+            </div>
+            <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid var(--b)"}}>
+              <div style={{fontSize:11,color:"var(--l)",marginBottom:10,fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Tailles du logo (px)</div>
+              {[
+                {k:"topBar",label:"Barre du haut (app)",min:20,max:80,def:28},
+                {k:"landingHeader",label:"Landing — en-tête",min:20,max:120,def:44},
+                {k:"landingFooter",label:"Landing — pied de page",min:20,max:120,def:40},
+                {k:"login",label:"Page de connexion",min:40,max:200,def:80},
+                {k:"loading",label:"Écran de chargement",min:40,max:200,def:64},
+              ].map(({k,label,min,max,def})=>{
+                const sizes=cfg.landing.logoSizes||{};
+                const val=sizes[k]||def;
+                return(
+                  <div key={k}style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <span style={{fontSize:12,color:"var(--T)",minWidth:150,flexShrink:0}}>{label}</span>
+                    <input type="range"min={min}max={max}value={val}step="1"style={{flex:1}}onChange={e=>{const v=parseInt(e.target.value,10);setLand(l=>({...l,logoSizes:{...(l.logoSizes||{}),[k]:v}}));}}/>
+                    <span style={{fontSize:12,fontWeight:600,minWidth:44,textAlign:"right",color:"var(--T)"}}>{val}px</span>
+                  </div>
+                );
+              })}
+              <button type="button"onClick={()=>setLand(l=>({...l,logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64}}))}style={{marginTop:6,padding:"6px 12px",fontSize:11,background:"transparent",border:"1px solid var(--b)",borderRadius:6,color:"var(--l)",cursor:"pointer"}}>↺ Réinitialiser les tailles</button>
             </div>
           </BOCard>
 
@@ -13068,6 +13089,7 @@ const DEFAULT_CONFIG = {
     heroImgBlur:2,
     logoUrl:"",
     logoEmoji:"🌿",
+    logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
     section1Bg:"linear-gradient(135deg,#264653,#2A6F6A)",
     section2Bg:"#FDF5FB",
     section3Bg:"#F8F0FC",
@@ -13579,7 +13601,7 @@ export default function App(){
   if(loading)return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <img src="/logo.svg" alt="TiMat" style={{height:64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
+      <img src="/logo.png" alt="TiMat" style={{height:(L.logoSizes&&L.logoSizes.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
       <div style={{display:"flex",gap:6}}>
         <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
       </div>
