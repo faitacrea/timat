@@ -12646,12 +12646,12 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                 return(
                   <div key={k}style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
                     <span style={{fontSize:12,color:"var(--T)",minWidth:150,flexShrink:0}}>{label}</span>
-                    <input type="range"min={min}max={max}value={val}step="1"style={{flex:1}}onChange={e=>{const v=parseInt(e.target.value,10);setLand(l=>({...l,logoSizes:{...(l.logoSizes||{}),[k]:v}}));}}/>
+                    <input type="range"min={min}max={max}value={val}step="1"style={{flex:1}}onChange={e=>{const v=parseInt(e.target.value,10);const newSizes={...(cfg.landing.logoSizes||{}),[k]:v};setLand("logoSizes",newSizes);}}/>
                     <span style={{fontSize:12,fontWeight:600,minWidth:44,textAlign:"right",color:"var(--T)"}}>{val}px</span>
                   </div>
                 );
               })}
-              <button type="button"onClick={()=>setLand(l=>({...l,logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64}}))}style={{marginTop:6,padding:"6px 12px",fontSize:11,background:"transparent",border:"1px solid var(--b)",borderRadius:6,color:"var(--l)",cursor:"pointer"}}>↺ Réinitialiser les tailles</button>
+              <button type="button"onClick={()=>setLand("logoSizes",{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64})}style={{marginTop:6,padding:"6px 12px",fontSize:11,background:"transparent",border:"1px solid var(--b)",borderRadius:6,color:"var(--l)",cursor:"pointer"}}>↺ Réinitialiser les tailles</button>
             </div>
           </BOCard>
 
