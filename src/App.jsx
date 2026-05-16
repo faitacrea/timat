@@ -13389,6 +13389,7 @@ export default function App(){
   // Cle pour forcer le refresh complet des donnees Supabase (incrementee sur l'event timat:refresh-data)
   const [dataRefreshKey,setDataRefreshKey]=useState(0);
   const [appConfig,setAppConfig]=useState(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
+  const [configLoaded,setConfigLoaded]=useState(false); // ANTI-FLASH P16A
 
   // //  Dsactiver le service worker bloqu
   useEffect(()=>{
@@ -13413,12 +13414,22 @@ export default function App(){
     link.href=iconHref;
   },[user?.role]);
 
-  // Charger config backoffice au démarrage -
+  // Charger config backoffice au démarrage + ANTI-FLASH P16A
   useEffect(()=>{
+    let done=false;
     loadConfig().then(()=>{
       setAppConfig(JSON.parse(JSON.stringify(G)));
+      setConfigLoaded(true);
+      done=true;
       console.log('[TiMat config] appConfig synchronisé');
+    }).catch(e=>{
+      console.warn('[TiMat config] Echec chargement, on libère le loading screen:',e?.message);
+      setConfigLoaded(true);
+      done=true;
     });
+    // Sécurité : ne jamais bloquer plus de 3s si Supabase est down
+    const fb=setTimeout(()=>{if(!done)setConfigLoaded(true);},3000);
+    return()=>clearTimeout(fb);
   },[]);
 
   // Vérifier session Supabase au démarrage -
@@ -13598,7 +13609,7 @@ export default function App(){
     return()=>window.removeEventListener("timat:refresh-data",handler);
   },[]);
 
-  if(loading)return(
+  if(loading||!configLoaded||(user&&user._needsProfileFetch))return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
       <img src="/logo.png" alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
