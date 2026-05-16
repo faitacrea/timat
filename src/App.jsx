@@ -13462,7 +13462,8 @@ export default function App(){
           role:u.user_metadata?.role||"asmat",
           couleur:u.user_metadata?.role==="parent"?"#2E5F8A":"#C4714A",
           subscription_status:"free",
-          _needsProfileFetch:true
+          _needsProfileFetch:true,
+          _profileConfirmed:false // P16D anti-flash parent
         };
       });
       if(isFirstLogin)setPage("accueil");
@@ -13495,7 +13496,7 @@ export default function App(){
         const{data:profil}=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle();
         if(cancelled)return;
         if(profil){
-          setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false}));
+          setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true})); // P16D
         }else{
           setUser(u=>({...u,_needsProfileFetch:false}));
         }
@@ -13625,7 +13626,7 @@ export default function App(){
   // - Utiliser données réelles
   if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark} config={appConfig}/></div></>;
   // Afficher onboarding si asmat sans enfants (vérifié après chargement DB)
-  if(!onboarded&&user.role==="asmat"&&!dbLoading&&enfantsDB.length===0)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
+  if(!onboarded&&user.role==="asmat"&&user._profileConfirmed&&!dbLoading&&enfantsDB.length===0)return // P16D : exiger profil DB confirmé <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
   const role=user.role;
   // //  Statut abonnement
