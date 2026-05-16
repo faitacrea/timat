@@ -13624,7 +13624,7 @@ export default function App(){
 
 
   // - Utiliser données réelles
-  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser(u);setPage("accueil");}} dark={dark} setDark={setDark} config={appConfig}/></div></>;
+  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser({...u,_needsProfileFetch:true,_profileConfirmed:false});setPage("accueil");}} /* P16E: forcer fetch profil au login frais */ dark={dark} setDark={setDark} config={appConfig}/></div></>;
   // Afficher onboarding si asmat sans enfants (vérifié après chargement DB)
   if(!onboarded&&user.role==="asmat"&&user._profileConfirmed&&!dbLoading&&enfantsDB.length===0)return // P16D : exiger profil DB confirmé <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
