@@ -13386,6 +13386,7 @@ export default function App(){
   const [pointagesDB,setPointagesDB]=useState([]);
   const [transmissionsDB,setTransmissionsDB]=useState([]);
   const [dbLoading,setDbLoading]=useState(false);
+  const [dataFetched,setDataFetched]=useState(false); // ANTI-FLASH P16C
   // Cle pour forcer le refresh complet des donnees Supabase (incrementee sur l'event timat:refresh-data)
   const [dataRefreshKey,setDataRefreshKey]=useState(0);
   const [appConfig,setAppConfig]=useState(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
@@ -13597,7 +13598,7 @@ export default function App(){
           setEnfantsDB([]);
         }
       }catch(err){console.error("Erreur chargement données:",err);}
-      finally{setDbLoading(false);}
+      finally{setDbLoading(false);setDataFetched(true);} // P16C: signaler fin du fetch initial
     };
     charger();
   },[user?.id,user?.role,user?._needsProfileFetch,dataRefreshKey]);
@@ -13609,7 +13610,7 @@ export default function App(){
     return()=>window.removeEventListener("timat:refresh-data",handler);
   },[]);
 
-  if(loading||!configLoaded||(user&&user._needsProfileFetch))return(
+  if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
       <img src="/logo.png" alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
