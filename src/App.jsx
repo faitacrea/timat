@@ -174,7 +174,7 @@ function Styles(){return(
     .dark{
       --c:#0D1B1E;--w:#132428;--b:#F0F5F3;--m:#B0CCC6;--l:#7FA8A0;--br:#1E3A34;
       --Tp:#2A1810;--Sp:#0D2A28;--Gp:#0D2A1A;--Bp:#0D1A2A;--Rp:#2A1418;--Pp:#1A1830;
-      --T:#FF9F63;--S:#3DBDAD;--G:#3DBDAD;--B:#7AAAE0;--R:#F08060;--P:#C898DC;
+      --T:#E49178;--S:#3DBDAD;--G:#3DBDAD;--B:#7AAAE0;--R:#F08060;--P:#C898DC;
       --Sl:#1A4A42;--Bl:#1A3050;--Rl:#3A1820;
       --sh:0 1px 4px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.6);
       --sh2:0 2px 12px rgba(0,0,0,.6),0 16px 48px rgba(0,0,0,.7);
@@ -2145,16 +2145,16 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     const htmlPaj=[
       '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Récap Pajemploi - '+mois+'</title>',
       '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:800px;margin:30px auto;padding:20px;color:#222;font-size:12px}',
-      'h1{font-size:16px;text-align:center;color:#264653;margin-bottom:4px}',
+      'h1{font-size:16px;text-align:center;color:#2E4859;margin-bottom:4px}',
       '.sub{text-align:center;font-size:11px;color:#888;margin-bottom:20px}',
-      '.box{border:1.5px solid #2A9D8F;border-radius:10px;padding:16px;margin-bottom:16px}',
-      '.box h2{font-size:13px;color:#2A9D8F;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e0e0e0}',
+      '.box{border:1.5px solid #5DA9A1;border-radius:10px;padding:16px;margin-bottom:16px}',
+      '.box h2{font-size:13px;color:#5DA9A1;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e0e0e0}',
       'table{width:100%;border-collapse:collapse}td{padding:6px 10px;border-bottom:1px solid #f0f0f0}',
-      'td:first-child{font-weight:600;color:#264653;width:55%}td:last-child{text-align:right}',
-      '.hl{background:#FFF8F3;font-weight:700;font-size:13px}.hl td{border-bottom:2px solid #FF9F63}',
+      'td:first-child{font-weight:600;color:#2E4859;width:55%}td:last-child{text-align:right}',
+      '.hl{background:#FFF8F3;font-weight:700;font-size:13px}.hl td{border-bottom:2px solid #E49178}',
       '.note{background:#F4F7FA;border-radius:8px;padding:12px;margin-top:16px;font-size:10px;color:#666;line-height:1.6}',
-      '.steps{margin-top:20px;padding:16px;border:1px dashed #2A9D8F;border-radius:8px}',
-      '.steps h3{font-size:12px;color:#2A9D8F;margin-bottom:10px}',
+      '.steps{margin-top:20px;padding:16px;border:1px dashed #5DA9A1;border-radius:8px}',
+      '.steps h3{font-size:12px;color:#5DA9A1;margin-bottom:10px}',
       '.steps ol{padding-left:20px;font-size:11px;line-height:2}',
       '@media print{.noprint{display:none}}</style></head><body>',
       '<h1>🏛️ Récapitulatif Pajemploi</h1>',
@@ -2184,7 +2184,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<li>Entrez l\'indemnité d\'entretien : <strong>'+(h.real/5*contrat.entretien).toFixed(2)+' €</strong></li>',
       '<li>Validez la déclaration</li></ol></div>',
       '<div class="note">📌 Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
-      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
       '</body></html>'
     ].join('');
     w.document.write(htmlPaj);
@@ -7905,7 +7905,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
         +'.total{font-weight:bold;background:#FFF3E8}'
         +'.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px}'
         +'.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}'
-        +'.btn-print{background:#264653;color:#fff}'
+        +'.btn-print{background:#2E4859;color:#fff}'
         +'@media print{.actions{display:none!important}}</style>'
         +'</head>'
         +'<body>'
@@ -8611,7 +8611,7 @@ function Support({role,user}){
 
   return <div className="fi">
     <PageHeader icon="💬" title="Support TiMat" sub={isPro?"Support prioritaire — réponse sous 12h":"Notre équipe répond sous 24h, du lundi au vendredi"}/>
-    {isPro&&<div style={{background:"linear-gradient(135deg,#FFF8F3,#FFF0E6)",border:"1.5px solid #FF9F63",borderRadius:12,padding:"10px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:10,fontSize:12,color:"#E76F51",fontWeight:600}}>
+    {isPro&&<div style={{background:"linear-gradient(135deg,#FFF8F3,#FFF0E6)",border:"1.5px solid #E49178",borderRadius:12,padding:"10px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:10,fontSize:12,color:"#C84B31",fontWeight:600}}>
       ⭐ Vous bénéficiez du support prioritaire Pro — traitement en priorité
     </div>}
     {envoye?<div style={{textAlign:"center",padding:40}}>
@@ -8690,7 +8690,7 @@ const GROUPS_AM={
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"bilans_exports",l:"Rapports & Exports",ic:"📊"}, // RENAME NAV P9 (id interne conservé pour pas casser le routing)
   ]},
-  outils:{l:"Outils Pro",ic:"⭐",color:"#FF9F63",subs:[
+  outils:{l:"Outils Pro",ic:"⭐",color:"#E49178",subs:[
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
@@ -8922,28 +8922,28 @@ function FadeIn({children,delay=0,className=""}){
 //
 const DEMO_SCREENS=[
   {
-    id:"journal",label:"Journal quotidien",icon:"📋",color:"#2A9D8F",
+    id:"journal",label:"Journal quotidien",icon:"📋",color:"#5DA9A1",
     preview:()=>{
       const [mood,setMood]=useState("😊");
       const [liked,setLiked]=useState(false);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>📋 Journal du jour — Léo 🦁</div>
-        <div style={{background:"#F0FAF4",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #2A9D8F"}}>
-          <div style={{fontSize:10,color:"#2A9D8F",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
-          <div style={{fontSize:12,color:"#264653",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📋 Journal du jour — Léo 🦁</div>
+        <div style={{background:"#F0FAF4",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #5DA9A1"}}>
+          <div style={{fontSize:10,color:"#5DA9A1",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
+          <div style={{fontSize:12,color:"#2E4859",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
             <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}>{liked?"❤️":"🤍"}</button>
           </div>
         </div>
-        <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #FF9F63"}}>
-          <div style={{fontSize:10,color:"#FF9F63",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
-          <div style={{fontSize:12,color:"#264653"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
+        <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #E49178"}}>
+          <div style={{fontSize:10,color:"#E49178",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
+          <div style={{fontSize:12,color:"#2E4859"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
         </div>
         <div style={{marginTop:12,display:"flex",gap:6,alignItems:"center"}}>
           <span style={{fontSize:10,color:"#8FA3AD"}}>Humeur :</span>
           {["😊","😴","🤗","😢"].map(m=><button key={m}onClick={()=>setMood(m)}style={{
-            fontSize:18,background:mood===m?"#F0FAF4":"transparent",border:mood===m?"1.5px solid #2A9D8F":"1.5px solid transparent",
+            fontSize:18,background:mood===m?"#F0FAF4":"transparent",border:mood===m?"1.5px solid #5DA9A1":"1.5px solid transparent",
             borderRadius:8,padding:"2px 6px",cursor:"pointer",transition:"all .15s"
           }}>{m}</button>)}
         </div>
@@ -8951,7 +8951,7 @@ const DEMO_SCREENS=[
     },
   },
   {
-    id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#FF9F63",
+    id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#E49178",
     preview:()=>{
       const [mois,setMois]=useState("Mars");
       const data={Mars:{h:160,supp:8,ent:20},Fev:{h:152,supp:4,ent:19},Jan:{h:168,supp:12,ent:21}};
@@ -8959,46 +8959,46 @@ const DEMO_SCREENS=[
       const brut=(m.h*4.05+m.supp*5.06+m.ent*3.80);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>💰 Salaire — Léo 🦁</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>💰 Salaire — Léo 🦁</div>
         <div style={{display:"flex",gap:4,marginBottom:12}}>
           {["Jan","Fev","Mars"].map(mo=><button key={mo}onClick={()=>setMois(mo)}style={{
             padding:"5px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,
-            background:mois===mo?"#FF9F63":"#F4F7FA",color:mois===mo?"#fff":"#264653",transition:"all .15s"
+            background:mois===mo?"#E49178":"#F4F7FA",color:mois===mo?"#fff":"#2E4859",transition:"all .15s"
           }}>{mo} 2024</button>)}
         </div>
         {[["Heures réalisées",m.h+"h × 4,05€",(m.h*4.05).toFixed(2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",(m.ent*3.80).toFixed(2)+"€"],["Heures majorées",m.supp+"h × 5,06€",(m.supp*5.06).toFixed(2)+"€"]].map(([l,d,v])=>(
           <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
-            <div><div style={{fontWeight:600,color:"#264653"}}>{l}</div><div style={{fontSize:10,color:"#8FA3AD"}}>{d}</div></div>
-            <div style={{fontWeight:700,color:"#2A9D8F"}}>{v}</div>
+            <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:10,color:"#8FA3AD"}}>{d}</div></div>
+            <div style={{fontWeight:700,color:"#5DA9A1"}}>{v}</div>
           </div>
         ))}
         <div style={{marginTop:10,padding:"10px 12px",background:"#FFF8F3",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:13,fontWeight:700,color:"#264653"}}>Total brut</span>
-          <span style={{fontSize:20,fontWeight:700,color:"#FF9F63"}}>{brut.toFixed(2)} €</span>
+          <span style={{fontSize:13,fontWeight:700,color:"#2E4859"}}>Total brut</span>
+          <span style={{fontSize:20,fontWeight:700,color:"#E49178"}}>{brut.toFixed(2)} €</span>
         </div>
       </div>);
     },
   },
   {
-    id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#264653",
+    id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#2E4859",
     preview:()=>{
       const [selDay,setSelDay]=useState(15);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>📅 Mars 2024</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📅 Mars 2024</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:12}}>
           {["L","M","Me","J","V","S","D"].map(j=><div key={j}style={{textAlign:"center",fontSize:9,fontWeight:700,color:"#8FA3AD",padding:4}}>{j}</div>)}
           {Array.from({length:31},(_,i)=>i+1).map(d=>{
             const isWork=d%7!==0&&d%7!==6;
             return <div key={d}onClick={()=>setSelDay(d)}style={{
               textAlign:"center",fontSize:11,padding:"6px 0",borderRadius:8,cursor:"pointer",fontWeight:selDay===d?700:400,
-              background:selDay===d?"#264653":isWork?"#F0FAF4":"transparent",
-              color:selDay===d?"#fff":isWork?"#264653":"#B0BEC5",
-              border:d===15?"2px solid #FF9F63":"2px solid transparent",transition:"all .15s"
+              background:selDay===d?"#2E4859":isWork?"#F0FAF4":"transparent",
+              color:selDay===d?"#fff":isWork?"#2E4859":"#B0BEC5",
+              border:d===15?"2px solid #E49178":"2px solid transparent",transition:"all .15s"
             }}>{d}</div>;
           })}
         </div>
-        {selDay&&<div style={{background:"#F4F7FA",borderRadius:10,padding:10,fontSize:11,color:"#264653"}}>
+        {selDay&&<div style={{background:"#F4F7FA",borderRadius:10,padding:10,fontSize:11,color:"#2E4859"}}>
           <div style={{fontWeight:700,marginBottom:4}}>📌 {selDay} mars</div>
           <div>🦁 Léo : 07h30 — 17h30 {selDay%7!==0&&selDay%7!==6?"✅":"🔴 Repos"}</div>
           {selDay%3===0&&<div>🌸 Emma : 08h00 — 16h30 ✅</div>}
@@ -9007,25 +9007,25 @@ const DEMO_SCREENS=[
     },
   },
   {
-    id:"parent",label:"Espace parent",icon:"👪",color:"#E76F51",
+    id:"parent",label:"Espace parent",icon:"👪",color:"#C84B31",
     preview:()=>{
       const [valide,setValide]=useState(false);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:12}}>👪 Sophie — Léo 🦁</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>👪 Sophie — Léo 🦁</div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #FFD6B3"}}>
-          <div style={{fontSize:10,color:"#E76F51",fontWeight:700,marginBottom:4}}>⏰ Pointage du jour</div>
+          <div style={{fontSize:10,color:"#C84B31",fontWeight:700,marginBottom:4}}>⏰ Pointage du jour</div>
           <div style={{display:"flex",gap:16}}>
-            {[["Arrivée","07h35","#2A9D8F"],["Départ","17h20","#E76F51"],["Total","9h45","#264653"]].map(([l,v,c])=>(
+            {[["Arrivée","07h35","#5DA9A1"],["Départ","17h20","#C84B31"],["Total","9h45","#2E4859"]].map(([l,v,c])=>(
               <div key={l}style={{textAlign:"center"}}><div style={{fontSize:9,color:"#8FA3AD"}}>{l}</div><div style={{fontSize:16,fontWeight:700,color:c}}>{v}</div></div>
             ))}
           </div>
           <button onClick={()=>setValide(!valide)}style={{
             marginTop:8,width:"100%",padding:"7px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:700,
-            background:valide?"#2A9D8F":"#F4F7FA",color:valide?"#fff":"#264653",transition:"all .2s"
+            background:valide?"#5DA9A1":"#F4F7FA",color:valide?"#fff":"#2E4859",transition:"all .2s"
           }}>{valide?"✅ Pointage validé":"Valider le pointage"}</button>
         </div>
-        <div style={{background:"#F0FAF4",borderRadius:10,padding:10,fontSize:12,color:"#264653",lineHeight:1.5}}>
+        <div style={{background:"#F0FAF4",borderRadius:10,padding:10,fontSize:12,color:"#2E4859",lineHeight:1.5}}>
           📋 Léo a peint un tableau et l'a offert à sa maman ! 🎨
         </div>
       </div>);
@@ -9207,12 +9207,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navFonctionBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
             <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navTarifsBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
             <button onClick={() => setShowBoutique(true)} style={{ background: L.navBoutiqueBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>Se connecter / S'inscrire →</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>Se connecter / S'inscrire →</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(255,255,255,.2)", color: L.navHamburgerColor||L.navBtnColor||"#fff", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(255,255,255,.4)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>☰</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#FF9F63,#E76F51)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
         {/* Dropdown menu (mobile) */}
@@ -9315,7 +9315,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <div style={{position:"relative"}}>
                       <span style={{ fontSize: 14 }}>🔔</span>
-                      <div style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#E76F51"}}/>
+                      <div style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#C84B31"}}/>
                     </div>
                     <span style={{ fontSize: 14 }}>🌙</span>
                     <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#C4714A,#9B6BAA)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
@@ -9344,37 +9344,37 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* ACCUEIL */}
                   {demoPage==="accueil"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>Bonjour Marie 👋</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>Bonjour Marie 👋</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{v:D.enfants.length,l:"Enfants",c:"#C4714A"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},{v:"152h",l:"Ce mois",c:"#264653"},{v:"98%",l:"Presence",c:"#2A9D8F"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                      {[{v:D.enfants.length,l:"Enfants",c:"#C4714A"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},{v:"152h",l:"Ce mois",c:"#2E4859"},{v:"98%",l:"Presence",c:"#5DA9A1"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:15,fontWeight:700,color:k.c}}>{k.v}</div>
                         <div style={{fontSize:9,color:"#9B6BAA",marginTop:1}}>{k.l}</div>
                       </div>)}
                     </div>
-                    <div style={{fontSize:10,fontWeight:700,color:"#264653",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"#2E4859",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
                     {D.enfants.map(e=>{
                       const estPresent=!!demoArrivee[e.id];
-                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #2A9D8F":"1.5px solid transparent",transition:"all .2s"}}>
+                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #5DA9A1":"1.5px solid transparent",transition:"all .2s"}}>
                         <span style={{fontSize:20}}>{e.emoji}</span>
                         <div style={{flex:1}}>
-                          <div style={{fontSize:11,fontWeight:700,color:"#264653"}}>{e.prenom}</div>
+                          <div style={{fontSize:11,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div>
                           <div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive a "+demoArrivee[e.id]:"Appuyer pour pointer"}</div>
                         </div>
-                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F9F3FF",color:estPresent?"#2A9D8F":"#9B6BAA",fontWeight:700}}>{estPresent?"Present":"Attendu"}</div>
+                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F9F3FF",color:estPresent?"#5DA9A1":"#9B6BAA",fontWeight:700}}>{estPresent?"Present":"Attendu"}</div>
                       </div>;
                     })}
                     <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
                       <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>📋 A faire aujourd'hui</div>
-                      <div style={{fontSize:9,color:"#264653",lineHeight:1.9}}>Journal de {D.enfants[0].prenom}<br/>Declarer Pajemploi (J-3)<br/>Renouveler ordonnance Emma</div>
+                      <div style={{fontSize:9,color:"#2E4859",lineHeight:1.9}}>Journal de {D.enfants[0].prenom}<br/>Declarer Pajemploi (J-3)<br/>Renouveler ordonnance Emma</div>
                     </div>
                   </div>}
 
                   {/* JOURNAL */}
                   {demoPage==="journal"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>📋 Journal — {D.enfants[0].prenom}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 Journal — {D.enfants[0].prenom}</div>
                     {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id} style={{background:t.auteur==="asmat"?"#F8F3FF":"#FFF8F3",borderRadius:10,padding:8,marginBottom:5,borderLeft:"3px solid "+(t.auteur==="asmat"?"#9B6BAA":"#C4714A")}}>
                       <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩👧 Marie":"👪 Parent"} · {t.h}</div>
-                      <div style={{fontSize:10,color:"#264653",lineHeight:1.5}}>{t.txt}</div>
+                      <div style={{fontSize:10,color:"#2E4859",lineHeight:1.5}}>{t.txt}</div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                         <div style={{fontSize:13}}>{t.mood}</div>
                         <button onClick={()=>setDemoLiked(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,transform:demoLiked?"scale(1.3)":"scale(1)",transition:"transform .2s"}}>{demoLiked?"❤️":"🤍"}</button>
@@ -9384,42 +9384,42 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m} onClick={()=>setDemoMood(m)} style={{padding:"3px 6px",borderRadius:6,background:m===demoMood?"#F8F3FF":"#F4F0FB",border:m===demoMood?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:12,cursor:"pointer"}}>{m}</div>)}
                     </div>
                     <div style={{display:"flex",gap:5}}>
-                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} placeholder="Ecrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#264653"}}/>
+                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} placeholder="Ecrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#2E4859"}}/>
                       <div onClick={()=>{if(demoMsg.trim())setDemoMsg("");}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>OK</div>
                     </div>
                   </div>}
 
                   {/* POINTAGE */}
                   {demoPage==="pointage"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>⏰ Pointage</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>⏰ Pointage</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{l:"Prevues",v:"174h",c:"#264653"},{l:"Realisees",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#E76F51"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                      {[{l:"Prevues",v:"174h",c:"#2E4859"},{l:"Realisees",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#C84B31"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
                         <div style={{fontSize:8,color:"#9B6BAA"}}>{k.l}</div>
                       </div>)}
                     </div>
                     {D.enfants.map(e=>{
                       const estPresent=!!demoArrivee[e.id];
-                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #2A9D8F":"1.5px solid transparent",transition:"all .2s"}}>
+                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #5DA9A1":"1.5px solid transparent",transition:"all .2s"}}>
                         <span style={{fontSize:16}}>{e.emoji}</span>
-                        <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#264653"}}>{e.prenom}</div><div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive "+demoArrivee[e.id]:"Pas encore pointe"}</div></div>
-                        <div style={{fontSize:9,fontWeight:700,background:estPresent?"#F0FAF4":"#F4F0FB",color:estPresent?"#2A9D8F":"#9B6BAA",padding:"2px 7px",borderRadius:6}}>{estPresent?"Pointe":"Pointer"}</div>
+                        <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div><div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive "+demoArrivee[e.id]:"Pas encore pointe"}</div></div>
+                        <div style={{fontSize:9,fontWeight:700,background:estPresent?"#F0FAF4":"#F4F0FB",color:estPresent?"#5DA9A1":"#9B6BAA",padding:"2px 7px",borderRadius:6}}>{estPresent?"Pointe":"Pointer"}</div>
                       </div>;
                     })}
                   </div>}
 
                   {/* MESSAGERIE */}
                   {demoPage==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:6}}>💬 Messagerie</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:6}}>💬 Messagerie</div>
                     <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto"}}>
                       {D.enfants.map(e=>{const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;return <div key={e.id} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative",flexShrink:0}}>
-                        <span style={{fontSize:13}}>{e.emoji}</span><span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#264653"}}>{e.prenom}</span>
-                        {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#E76F51",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
+                        <span style={{fontSize:13}}>{e.emoji}</span><span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#2E4859"}}>{e.prenom}</span>
+                        {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#C84B31",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
                       </div>;})}
                     </div>
                     <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto",minHeight:150}}>
                       {demoMsgs.filter(m=>m.eId==="e1").map(m=><div key={m.id} style={{alignSelf:m.de==="parent"?"flex-start":"flex-end",background:m.de==="parent"?"#F4F0FB":"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",padding:"7px 10px",maxWidth:"78%"}}>
-                        <div style={{fontSize:9,color:m.de==="parent"?"#264653":"#fff",lineHeight:1.5}}>{m.txt}</div>
+                        <div style={{fontSize:9,color:m.de==="parent"?"#2E4859":"#fff",lineHeight:1.5}}>{m.txt}</div>
                         <div style={{fontSize:7,color:m.de==="parent"?"#9B6BAA":"rgba(255,255,255,.6)",textAlign:"right",marginTop:2}}>{m.h}</div>
                       </div>)}
                     </div>
@@ -9431,20 +9431,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* SALAIRE */}
                   {demoPage==="facturation"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653",marginBottom:8}}>💰 Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>💰 Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
                     <div style={{display:"flex",gap:4,marginBottom:10}}>
-                      {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===demoMois?"#fff":"#264653"}}>{m}</div>)}
+                      {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===demoMois?"#fff":"#2E4859"}}>{m}</div>)}
                     </div>
                     {[{l:"Salaire de base",d:[{h:"160h x 4,05EUR",v:"648,00 EUR"},{h:"152h x 4,05EUR",v:"615,60 EUR"},{h:"168h x 4,05EUR",v:"680,40 EUR"}][demoMois]},{l:"Ind. entretien",d:[{h:"20j x 3,80EUR",v:"76,00 EUR"},{h:"19j x 3,80EUR",v:"72,20 EUR"},{h:"21j x 3,80EUR",v:"79,80 EUR"}][demoMois]},{l:"Heures majorees",d:[{h:"8h x 5,06EUR",v:"40,50 EUR"},{h:"4h x 5,06EUR",v:"20,25 EUR"},{h:"12h x 5,06EUR",v:"60,75 EUR"}][demoMois]}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
-                      <div><div style={{fontWeight:600,color:"#264653"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d.h}</div></div>
+                      <div><div style={{fontWeight:600,color:"#2E4859"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d.h}</div></div>
                       <div style={{fontWeight:700,color:"#C4714A"}}>{r.d.v}</div>
                     </div>)}
                     <div style={{marginTop:8,padding:10,background:"linear-gradient(135deg,rgba(196,113,74,.08),rgba(155,107,170,.08))",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid rgba(196,113,74,.2)"}}>
-                      <span style={{fontSize:11,fontWeight:700,color:"#264653"}}>Total brut</span>
+                      <span style={{fontSize:11,fontWeight:700,color:"#2E4859"}}>Total brut</span>
                       <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>{["764,50 EUR","708,05 EUR","820,95 EUR"][demoMois]}</span>
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#264653,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span></div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#2E4859,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span></div>
                       <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span></div>
                     </div>
                   </div>}
@@ -9452,7 +9452,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {/* OUTILS grise */}
                   {demoPage==="outils"&&<div style={{padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,textAlign:"center"}}>
                     <div style={{fontSize:32}}>⭐</div>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>Outils Pro</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>Outils Pro</div>
                     <div style={{fontSize:10,color:"#9B6BAA",lineHeight:1.6}}>Projet d'accueil, PMI, FAQ et Support disponibles dans l'application complete</div>
                     <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:10,padding:"8px 16px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:8}}>Acceder a l'app</div>
                   </div>}
@@ -9727,7 +9727,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* CTA FINAL */}
-      <div className="lp-section" style={{ background: L.ctaBg||"linear-gradient(135deg,#264653,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
+      <div className="lp-section" style={{ background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
@@ -9745,7 +9745,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#264653", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#2E4859", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
               <div style={{ fontSize: 15, color: "#5F7A86" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
@@ -9761,9 +9761,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           ].map(({q,a},i)=>(
             <FadeIn key={i} delay={i*50}>
               <details style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
-                <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#264653", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#2E4859", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   {q}
-                  <span style={{ fontSize: 18, color: "#FF9F63", flexShrink: 0, marginLeft: 12 }}>+</span>
+                  <span style={{ fontSize: 18, color: "#E49178", flexShrink: 0, marginLeft: 12 }}>+</span>
                 </summary>
                 <div style={{ padding: "0 20px 16px", fontSize: 13, color: "#5F7A86", lineHeight: 1.8 }}>{a}</div>
               </details>
@@ -9777,26 +9777,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#264653", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#2E4859", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
               <div style={{ fontSize: 15, color: "#5F7A86" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {[
-              {id:"mensualisation",cat:"Administratif",catColor:"#FF9F63",emoji:"🧮",title:"Mensualisation : le guide complet pour ne plus se tromper",excerpt:"Heures mensualisées, régularisation, année complète ou incomplète... Tout ce qu'il faut savoir pour calculer correctement."},
-              {id:"maladies",cat:"Santé",catColor:"#E76F51",emoji:"🩺",title:"Les 5 maladies les plus fréquentes chez les tout-petits",excerpt:"Bronchiolite, gastro, pieds-mains-bouche... Comment les reconnaître et quand garder l'enfant à la maison."},
-              {id:"agrement",cat:"PMI & Agrément",catColor:"#2A9D8F",emoji:"🏛️",title:"Renouvellement d'agrément : la checklist complète",excerpt:"Les documents à préparer, les délais à respecter et les erreurs à éviter pour un renouvellement serein."},
-              {id:"attachement",cat:"Pédagogie",catColor:"#264653",emoji:"🤱",title:"L'attachement sécure : pourquoi c'est fondamental en accueil individuel",excerpt:"Comment créer un lien de confiance avec l'enfant accueilli, et pourquoi c'est votre plus grande force."},
-              {id:"pajemploi",cat:"Administratif",catColor:"#FF9F63",emoji:"🏛️",title:"Pajemploi pas à pas : le guide pour les parents employeurs",excerpt:"De l'inscription à la déclaration mensuelle, toutes les étapes pour ne pas se perdre sur pajemploi.urssaf.fr."},
-              {id:"bulletin",cat:"Administratif",catColor:"#FF9F63",emoji:"📜",title:"Comprendre son bulletin de salaire d'assistante maternelle",excerpt:"Brut, net, cotisations, indemnités d'entretien... Décryptage ligne par ligne de votre fiche de paie."},
-              {id:"trousse",cat:"Santé",catColor:"#E76F51",emoji:"🧳",title:"Les indispensables de la trousse de secours",excerpt:"Tout ce que doit contenir votre trousse pour être prête en cas de bobo ou d'urgence chez l'assmat."},
-              {id:"tarif",cat:"Administratif",catColor:"#FF9F63",emoji:"💶",title:"Comment fixer son tarif horaire d'assistante maternelle",excerpt:"SMIC, marché local, expérience, charges : tous les critères pour trouver le bon prix."},
-              {id:"motricite",cat:"Pédagogie",catColor:"#264653",emoji:"🧸",title:"Les étapes du développement moteur de 0 à 3 ans",excerpt:"Retournement, quatre pattes, premiers pas... Les grandes étapes et comment les accompagner au quotidien."},
-              {id:"droits",cat:"Juridique",catColor:"#2A9D8F",emoji:"⚖️",title:"Droits et devoirs de l'assistante maternelle",excerpt:"Congés, formation, agrément, rupture de contrat : tout ce que vous devez savoir pour exercer sereinement."},
-              {id:"pajemploi",cat:"Administratif",catColor:"#FF9F63",emoji:"🏛️",title:"Pajemploi pas à pas : le guide pour déclarer sans stress",excerpt:"Chaque étape de la déclaration Pajemploi expliquée simplement, avec les erreurs les plus courantes à éviter."},
-              {id:"bulletin",cat:"Administratif",catColor:"#FF9F63",emoji:"📜",title:"Comprendre son bulletin de salaire ligne par ligne",excerpt:"Brut, net, cotisations, abattement fiscal spécifique... Chaque ligne de votre bulletin décryptée."},
-              {id:"secours",cat:"Santé",catColor:"#E76F51",emoji:"🩹",title:"Trousse de secours : les indispensables de l'assistante maternelle",excerpt:"Ce que la PMI attend dans votre trousse, les gestes de premiers secours et les numéros à afficher."},
-              {id:"tarif",cat:"Administratif",catColor:"#FF9F63",emoji:"💶",title:"Comment fixer son tarif horaire en tant qu'assistante maternelle",excerpt:"SMIC horaire, moyenne départementale, indemnités... Comment calculer un tarif juste pour vous et les parents."},
+              {id:"mensualisation",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide complet pour ne plus se tromper",excerpt:"Heures mensualisées, régularisation, année complète ou incomplète... Tout ce qu'il faut savoir pour calculer correctement."},
+              {id:"maladies",cat:"Santé",catColor:"#C84B31",emoji:"🩺",title:"Les 5 maladies les plus fréquentes chez les tout-petits",excerpt:"Bronchiolite, gastro, pieds-mains-bouche... Comment les reconnaître et quand garder l'enfant à la maison."},
+              {id:"agrement",cat:"PMI & Agrément",catColor:"#5DA9A1",emoji:"🏛️",title:"Renouvellement d'agrément : la checklist complète",excerpt:"Les documents à préparer, les délais à respecter et les erreurs à éviter pour un renouvellement serein."},
+              {id:"attachement",cat:"Pédagogie",catColor:"#2E4859",emoji:"🤱",title:"L'attachement sécure : pourquoi c'est fondamental en accueil individuel",excerpt:"Comment créer un lien de confiance avec l'enfant accueilli, et pourquoi c'est votre plus grande force."},
+              {id:"pajemploi",cat:"Administratif",catColor:"#E49178",emoji:"🏛️",title:"Pajemploi pas à pas : le guide pour les parents employeurs",excerpt:"De l'inscription à la déclaration mensuelle, toutes les étapes pour ne pas se perdre sur pajemploi.urssaf.fr."},
+              {id:"bulletin",cat:"Administratif",catColor:"#E49178",emoji:"📜",title:"Comprendre son bulletin de salaire d'assistante maternelle",excerpt:"Brut, net, cotisations, indemnités d'entretien... Décryptage ligne par ligne de votre fiche de paie."},
+              {id:"trousse",cat:"Santé",catColor:"#C84B31",emoji:"🧳",title:"Les indispensables de la trousse de secours",excerpt:"Tout ce que doit contenir votre trousse pour être prête en cas de bobo ou d'urgence chez l'assmat."},
+              {id:"tarif",cat:"Administratif",catColor:"#E49178",emoji:"💶",title:"Comment fixer son tarif horaire d'assistante maternelle",excerpt:"SMIC, marché local, expérience, charges : tous les critères pour trouver le bon prix."},
+              {id:"motricite",cat:"Pédagogie",catColor:"#2E4859",emoji:"🧸",title:"Les étapes du développement moteur de 0 à 3 ans",excerpt:"Retournement, quatre pattes, premiers pas... Les grandes étapes et comment les accompagner au quotidien."},
+              {id:"droits",cat:"Juridique",catColor:"#5DA9A1",emoji:"⚖️",title:"Droits et devoirs de l'assistante maternelle",excerpt:"Congés, formation, agrément, rupture de contrat : tout ce que vous devez savoir pour exercer sereinement."},
+              {id:"pajemploi",cat:"Administratif",catColor:"#E49178",emoji:"🏛️",title:"Pajemploi pas à pas : le guide pour déclarer sans stress",excerpt:"Chaque étape de la déclaration Pajemploi expliquée simplement, avec les erreurs les plus courantes à éviter."},
+              {id:"bulletin",cat:"Administratif",catColor:"#E49178",emoji:"📜",title:"Comprendre son bulletin de salaire ligne par ligne",excerpt:"Brut, net, cotisations, abattement fiscal spécifique... Chaque ligne de votre bulletin décryptée."},
+              {id:"secours",cat:"Santé",catColor:"#C84B31",emoji:"🩹",title:"Trousse de secours : les indispensables de l'assistante maternelle",excerpt:"Ce que la PMI attend dans votre trousse, les gestes de premiers secours et les numéros à afficher."},
+              {id:"tarif",cat:"Administratif",catColor:"#E49178",emoji:"💶",title:"Comment fixer son tarif horaire en tant qu'assistante maternelle",excerpt:"SMIC horaire, moyenne départementale, indemnités... Comment calculer un tarif juste pour vous et les parents."},
             ].map((art,i)=>(
               <FadeIn key={art.id} delay={i*80}>
                 <div onClick={()=>setShowBlog(art.id)} style={{
@@ -9808,7 +9808,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   <div style={{height:120,background:"linear-gradient(135deg,"+art.catColor+"15,"+art.catColor+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{art.emoji}</div>
                   <div style={{padding:"16px 20px"}}>
                     <div style={{fontSize:10,fontWeight:700,color:art.catColor,textTransform:"uppercase",letterSpacing:".8px",marginBottom:8}}>{art.cat}</div>
-                    <div style={{fontSize:15,fontWeight:700,color:"#264653",lineHeight:1.4,marginBottom:8}}>{art.title}</div>
+                    <div style={{fontSize:15,fontWeight:700,color:"#2E4859",lineHeight:1.4,marginBottom:8}}>{art.title}</div>
                     <div style={{fontSize:12,color:"#5F7A86",lineHeight:1.6}}>{art.excerpt}</div>
                     <div style={{marginTop:12,fontSize:12,color:accent,fontWeight:600}}>Lire l'article →</div>
                   </div>
@@ -9823,24 +9823,24 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       {showBlog&&<div onClick={e=>e.target===e.currentTarget&&setShowBlog(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#fff",borderRadius:20,width:"100%",maxWidth:700,maxHeight:"90vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,.3)",display:"flex",flexDirection:"column"}}>
           <div style={{padding:"20px 24px",borderBottom:"1px solid #E8E4E0",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-            <div style={{fontFamily:fTitle,fontSize:16,fontWeight:700,color:"#264653"}}>📝 Blog TiMat</div>
-            <button onClick={()=>setShowBlog(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#264653",fontWeight:700}}>✕</button>
+            <div style={{fontFamily:fTitle,fontSize:16,fontWeight:700,color:"#2E4859"}}>📝 Blog TiMat</div>
+            <button onClick={()=>setShowBlog(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
-          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#264653",lineHeight:1.9}}>
+          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#2E4859",lineHeight:1.9}}>
 
             {showBlog==="mensualisation"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🧮 Mensualisation : le guide complet pour ne plus se tromper</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🧮 Mensualisation : le guide complet pour ne plus se tromper</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 8 min de lecture</div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Pourquoi mensualiser ?</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Pourquoi mensualiser ?</h3>
               <p>La mensualisation est obligatoire pour les assistantes maternelles depuis la Convention Collective Nationale. Son objectif est simple : lisser votre salaire sur l'année pour que vous receviez la même somme chaque mois, même si les semaines d'accueil varient.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Année complète ou incomplète ?</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Année complète ou incomplète ?</h3>
               <p><strong>Année complète (47 semaines et plus)</strong> — Le calcul est le plus courant. L'enfant est accueilli au moins 47 semaines par an. Votre salaire mensuel est : <em>heures hebdo × 52 / 12 × taux horaire</em>. Les congés payés sont inclus dans ce calcul.</p>
               <p style={{marginTop:8}}><strong>Année incomplète (moins de 47 semaines)</strong> — Utilisé quand les parents prennent plus de 5 semaines de vacances ou pour un accueil périscolaire. Le calcul : <em>heures hebdo × nombre de semaines / 12 × taux horaire</em>. Les congés payés sont versés séparément (10% du total).</p>
 
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#2A9D8F",marginBottom:6}}>💡 Exemple concret</div>
+                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>💡 Exemple concret</div>
                 <div style={{fontSize:12}}>
                   Marie accueille Léo 40h/semaine, 47 semaines/an, à 4,05€/h brut.<br/>
                   Salaire mensualisé = 40 × 52 / 12 × 4,05 = <strong>702 € brut/mois</strong><br/>
@@ -9848,51 +9848,51 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>La régularisation de fin d'année</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>La régularisation de fin d'année</h3>
               <p>En fin d'année (ou de contrat), il faut comparer les heures réellement effectuées avec les heures payées. Si l'assmat a travaillé plus que prévu, le parent doit compléter. Si elle a travaillé moins, en année complète le salaire reste acquis (c'est le principe de la mensualisation).</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les heures complémentaires et majorées</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les heures complémentaires et majorées</h3>
               <p>Au-delà de 45 heures par semaine, les heures sont majorées d'au moins 25% (ou plus selon accord). Entre le nombre contractuel et 45h, ce sont des heures complémentaires, rémunérées au taux normal sauf accord contraire.</p>
 
               <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
-                <div style={{fontWeight:700,color:"#FF9F63",marginBottom:6}}>🔧 TiMat calcule tout automatiquement</div>
+                <div style={{fontWeight:700,color:"#E49178",marginBottom:6}}>🔧 TiMat calcule tout automatiquement</div>
                 <div style={{fontSize:12}}>Plus besoin de faire ces calculs à la main. TiMat applique les règles de la CCN et génère votre bulletin de salaire chaque mois.</div>
               </div>
             </div>}
 
             {showBlog==="maladies"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🩺 Les 5 maladies les plus fréquentes chez les tout-petits</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🩺 Les 5 maladies les plus fréquentes chez les tout-petits</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Santé · 6 min de lecture</div>
 
               <p>En accueil collectif ou individuel, les enfants tombent malades. C'est normal et même nécessaire pour construire leur immunité. Voici les 5 maladies les plus fréquentes et ce que vous devez savoir.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>1. La bronchiolite</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>1. La bronchiolite</h3>
               <p><strong>Quoi :</strong> infection virale des bronchioles, très courante chez les moins de 2 ans, surtout en hiver (octobre à mars).</p>
               <p><strong>Signes :</strong> toux, respiration sifflante, difficulté à s'alimenter, tirage intercostal.</p>
               <p><strong>Conduite :</strong> nettoyer le nez (DRP), fractionner les repas, surélever légèrement la tête du lit. Consulter si détresse respiratoire. L'enfant peut revenir chez l'assmat après la phase aiguë (2-3 jours), si pas de fièvre et alimentation correcte.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>2. La gastro-entérite</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>2. La gastro-entérite</h3>
               <p><strong>Quoi :</strong> inflammation de l'estomac et des intestins, virale dans 90% des cas (rotavirus).</p>
               <p><strong>Signes :</strong> vomissements, diarrhée, fièvre possible, risque de déshydratation.</p>
               <p><strong>Conduite :</strong> soluté de réhydratation orale (SRO), régime adapté. Exclure l'enfant 24h après le dernier vomissement. Hygiène des mains renforcée pour éviter la contagion aux autres enfants.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>3. Le syndrome pieds-mains-bouche</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>3. Le syndrome pieds-mains-bouche</h3>
               <p><strong>Quoi :</strong> infection virale (coxsackie) très contagieuse, fréquente l'été-automne.</p>
               <p><strong>Signes :</strong> petites vésicules sur les mains, les pieds et dans la bouche, fièvre modérée, refus de manger.</p>
               <p><strong>Conduite :</strong> pas de traitement spécifique, guérison en 7-10 jours. L'éviction n'est pas obligatoire (avis du médecin). Proposer des aliments froids et mous si la bouche est douloureuse.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>4. L'otite moyenne aiguë</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>4. L'otite moyenne aiguë</h3>
               <p><strong>Quoi :</strong> infection de l'oreille moyenne, souvent consécutive à un rhume. Très fréquente avant 3 ans.</p>
               <p><strong>Signes :</strong> douleur à l'oreille (l'enfant se tire l'oreille), fièvre, pleurs inhabituels, troubles du sommeil.</p>
               <p><strong>Conduite :</strong> consultation médicale nécessaire (possible antibiotiques). L'enfant peut revenir 24h après le début du traitement si état général correct.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>5. La conjonctivite</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>5. La conjonctivite</h3>
               <p><strong>Quoi :</strong> inflammation de la membrane qui recouvre l'oeil, souvent bactérienne chez les petits.</p>
               <p><strong>Signes :</strong> oeil rouge, sécrétions jaune-vertes, paupières collées au réveil.</p>
               <p><strong>Conduite :</strong> lavage au sérum physiologique, collyre prescrit par le médecin. Très contagieux — se laver les mains après chaque soin. Retour possible après 24h de traitement.</p>
 
               <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"20px 0"}}>
-                <div style={{fontWeight:700,color:"#264653",marginBottom:8}}>📋 À retenir</div>
+                <div style={{fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 À retenir</div>
                 <ul style={{paddingLeft:20,fontSize:12,lineHeight:2}}>
                   <li>Exiger systématiquement une ordonnance médicale avant d'administrer un médicament</li>
                   <li>Tenir un registre des maladies et traitements dans le carnet de l'enfant</li>
@@ -9903,12 +9903,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>}
 
             {showBlog==="agrement"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🏛️ Renouvellement d'agrément : la checklist complète</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🏛️ Renouvellement d'agrément : la checklist complète</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>PMI & Agrément · 7 min de lecture</div>
 
               <p>Votre agrément doit être renouvelé tous les 5 ans (10 ans avec le CAP AEPE). La demande doit être envoyée au moins 3 mois avant l'expiration. Voici tout ce qu'il faut préparer.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>📅 Le calendrier</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>📅 Le calendrier</h3>
               <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"8px 12px",fontSize:12,margin:"10px 0"}}>
                 <strong>6 mois avant :</strong><span>Commencer à rassembler les documents</span>
                 <strong>3 mois avant :</strong><span>Envoyer le dossier complet au Conseil départemental</span>
@@ -9916,7 +9916,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <strong>Jour J :</strong><span>Réponse du Conseil départemental (silence = accord)</span>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>📋 Documents à fournir</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>📋 Documents à fournir</h3>
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"10px 0"}}>
                 <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
                   <li>Formulaire CERFA de renouvellement (disponible sur service-public.fr)</li>
@@ -9930,7 +9930,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </ul>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>🏠 La visite PMI : à quoi s'attendre</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>🏠 La visite PMI : à quoi s'attendre</h3>
               <p>La puéricultrice viendra évaluer votre domicile et votre pratique. Elle regardera notamment :</p>
               <ul style={{paddingLeft:20,fontSize:12,lineHeight:2}}>
                 <li>La sécurité du logement (barrières, prises, escaliers, produits dangereux)</li>
@@ -9940,9 +9940,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <li>Votre connaissance des gestes de premiers secours</li>
               </ul>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>⚠️ Les erreurs à éviter</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>⚠️ Les erreurs à éviter</h3>
               <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"10px 0",border:"1px solid #FECACA"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#E76F51"}}>
+                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#C84B31"}}>
                   <li>Envoyer le dossier en retard (moins de 3 mois avant expiration)</li>
                   <li>Oublier la formation continue obligatoire</li>
                   <li>Ne pas mettre à jour son projet d'accueil</li>
@@ -9952,17 +9952,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>}
 
             {showBlog==="attachement"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🤱 L'attachement sécure : pourquoi c'est fondamental en accueil individuel</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🤱 L'attachement sécure : pourquoi c'est fondamental en accueil individuel</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Pédagogie · 5 min de lecture</div>
 
               <p>En tant qu'assistante maternelle, vous êtes une figure d'attachement secondaire pour les enfants que vous accueillez. Ce rôle est essentiel pour leur développement émotionnel et cognitif.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Qu'est-ce que l'attachement sécure ?</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Qu'est-ce que l'attachement sécure ?</h3>
               <p>La théorie de l'attachement, développée par John Bowlby et Mary Ainsworth, montre que chaque enfant a besoin d'au moins une figure d'attachement stable et disponible pour se développer sereinement. Quand l'enfant se sent en sécurité avec un adulte, il ose explorer le monde, gérer ses émotions et développer sa confiance en lui.</p>
 
               <p style={{marginTop:8}}>En accueil individuel, vous avez un avantage énorme sur les structures collectives : <strong>un ratio faible</strong> (1 adulte pour 3-4 enfants maximum) qui permet de créer un vrai lien personnalisé.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les 4 piliers au quotidien</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les 4 piliers au quotidien</h3>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,margin:"12px 0"}}>
                 {[["🎯","Disponibilité","Être physiquement et émotionnellement présente. Poser son téléphone. Être à hauteur de l'enfant. Répondre quand il vous sollicite."],
                   ["🤗","Réactivité","Répondre rapidement et de manière adaptée aux signaux de l'enfant. Un pleur, un geste, un regard — chaque signal mérite une réponse."],
@@ -9971,18 +9971,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 ].map(([ic,titre,desc])=>
                   <div key={titre}style={{background:"#F4F7FA",borderRadius:12,padding:14}}>
                     <div style={{fontSize:24,marginBottom:6}}>{ic}</div>
-                    <div style={{fontSize:13,fontWeight:700,color:"#264653",marginBottom:4}}>{titre}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:4}}>{titre}</div>
                     <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.6}}>{desc}</div>
                   </div>
                 )}
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>L'adaptation : le moment clé</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>L'adaptation : le moment clé</h3>
               <p>La période d'adaptation n'est pas une formalité — c'est le fondement de la relation. Un enfant qui vit une séparation brutale avec ses parents peut développer un attachement insécure qui affectera son comportement pendant des mois.</p>
               <p style={{marginTop:8}}>Une bonne adaptation est progressive : d'abord avec le parent présent, puis des séparations courtes qui s'allongent, toujours avec un objet transitionnel (doudou, tissu avec l'odeur du parent). L'enfant doit comprendre que ses parents reviennent toujours.</p>
 
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#2A9D8F",marginBottom:6}}>💡 Votre force d'assmat</div>
+                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>💡 Votre force d'assmat</div>
                 <div style={{fontSize:12}}>
                   En crèche, le turnover du personnel et les ratios élevés rendent l'attachement individualisé difficile.
                   Chez vous, l'enfant retrouve <strong>le même visage chaque matin</strong>, dans <strong>le même environnement</strong>, avec <strong>les mêmes rituels</strong>. C'est une stabilité que les parents recherchent — et c'est ce qui fait la valeur de votre métier.
@@ -9991,15 +9991,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>}
 
             {showBlog==="pajemploi"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🏛️ Pajemploi pas à pas : le guide pour déclarer sans stress</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🏛️ Pajemploi pas à pas : le guide pour déclarer sans stress</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 7 min de lecture</div>
 
               <p>Pajemploi est le service de l'URSSAF dédié aux particuliers employeurs d'assistantes maternelles. C'est par ce site que les parents déclarent votre salaire et paient vos cotisations. Voici comment ça fonctionne, étape par étape.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Étape 1 : Créer son compte</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Étape 1 : Créer son compte</h3>
               <p>Le <strong>parent employeur</strong> crée son compte sur <em>pajemploi.urssaf.fr</em> dès l'embauche. Il a besoin de : son numéro de Sécurité sociale, un RIB, et les informations de l'assistante maternelle (numéro de Sécu, adresse, numéro d'agrément). L'assmat n'a pas de compte à créer — elle est déclarée par le parent.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Étape 2 : La déclaration mensuelle</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Étape 2 : La déclaration mensuelle</h3>
               <p>Chaque mois, le parent se connecte et remplit la déclaration :</p>
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"12px 0"}}>
                 <ol style={{paddingLeft:20,fontSize:12,lineHeight:2.4}}>
@@ -10014,12 +10014,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </ol>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Étape 3 : Le prélèvement et le bulletin</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Étape 3 : Le prélèvement et le bulletin</h3>
               <p>Après validation, Pajemploi prélève les cotisations sur le compte du parent et génère un bulletin de salaire dématérialisé. L'assmat reçoit son salaire directement du parent (virement, chèque ou CESU).</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les erreurs les plus fréquentes</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les erreurs les plus fréquentes</h3>
               <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"12px 0",border:"1px solid #FECACA"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#E76F51"}}>
+                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#C84B31"}}>
                   <li><strong>Confondre brut et net</strong> — Pajemploi demande le net, pas le brut</li>
                   <li><strong>Oublier les indemnités d'entretien</strong> — elles doivent être déclarées séparément</li>
                   <li><strong>Déclarer en retard</strong> — la déclaration doit être faite avant le 5 du mois suivant</li>
@@ -10028,18 +10028,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
 
               <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
-                <div style={{fontWeight:700,color:"#FF9F63",marginBottom:6}}>🔧 TiMat vous simplifie la vie</div>
+                <div style={{fontWeight:700,color:"#E49178",marginBottom:6}}>🔧 TiMat vous simplifie la vie</div>
                 <div style={{fontSize:12}}>TiMat génère chaque mois un récapitulatif prêt à reporter sur Pajemploi : heures, jours, salaire net, indemnités. Le parent n'a plus qu'à copier les chiffres.</div>
               </div>
             </div>}
 
             {showBlog==="bulletin"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>📜 Comprendre son bulletin de salaire ligne par ligne</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>📜 Comprendre son bulletin de salaire ligne par ligne</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 8 min de lecture</div>
 
               <p>Le bulletin de salaire d'une assistante maternelle peut sembler complexe. Pourtant, une fois qu'on comprend chaque ligne, tout s'éclaire. Décryptage complet.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>La rémunération brute</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>La rémunération brute</h3>
               <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"6px 16px",fontSize:12,margin:"12px 0",background:"#F4F7FA",borderRadius:12,padding:16}}>
                 <strong>Salaire de base</strong><span>Heures mensualisées × taux horaire brut. C'est la ligne principale.</span>
                 <strong>Heures complémentaires</strong><span>Heures entre votre horaire contractuel et 45h/semaine. Même taux horaire (sauf accord contraire).</span>
@@ -10048,7 +10048,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <strong>Indemnité de repas</strong><span>Si vous fournissez les repas. Montant fixé dans le contrat. Non soumise à cotisations.</span>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les cotisations sociales</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les cotisations sociales</h3>
               <p>Les cotisations sont calculées sur le salaire brut (hors indemnités). Elles se divisent en part salariale (payée par l'assmat) et part patronale (payée par le parent).</p>
               <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"12px 0",fontSize:11}}>
                 <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:4,fontWeight:700,paddingBottom:8,borderBottom:"1px solid #E8E4E0"}}>
@@ -10056,12 +10056,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
                 {[["Maladie, maternité","—","7,30%"],["Vieillesse plafonnée","6,90%","8,55%"],["Vieillesse déplafonnée","0,40%","2,02%"],["Allocations familiales","—","3,45%"],["CSG déductible","6,80%","—"],["CSG non déductible + CRDS","2,90%","—"],["Chômage","—","4,05%"],["Retraite complémentaire","~3,15%","~4,72%"]].map(([n,s,p])=>
                   <div key={n}style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:4,padding:"4px 0",borderBottom:"1px dotted #E8E4E0"}}>
-                    <span>{n}</span><span style={{color:s!=="—"?"#E76F51":"#B0BEC5"}}>{s}</span><span>{p}</span>
+                    <span>{n}</span><span style={{color:s!=="—"?"#C84B31":"#B0BEC5"}}>{s}</span><span>{p}</span>
                   </div>
                 )}
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Du brut au net</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Du brut au net</h3>
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"12px 0",border:"1px solid #B7E4C7"}}>
                 <div style={{fontSize:12,lineHeight:2}}>
                   <strong>Salaire brut</strong> − cotisations salariales (~22%) = <strong>Salaire net</strong><br/>
@@ -10070,17 +10070,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>L'abattement fiscal spécifique</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>L'abattement fiscal spécifique</h3>
               <p>Les assistantes maternelles bénéficient d'un abattement fiscal unique : vous pouvez déduire 3 fois le SMIC horaire par jour et par enfant gardé de votre revenu imposable. Cet abattement réduit considérablement votre impôt sur le revenu — c'est un avantage fiscal majeur du métier.</p>
             </div>}
 
             {showBlog==="secours"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🩹 Trousse de secours : les indispensables de l'assistante maternelle</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🩹 Trousse de secours : les indispensables de l'assistante maternelle</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Santé · 5 min de lecture</div>
 
               <p>La PMI vérifie votre trousse de secours lors de chaque visite. Elle doit être complète, accessible (mais hors de portée des enfants), et régulièrement vérifiée. Voici ce qu'elle doit contenir.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>Le contenu obligatoire</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>Le contenu obligatoire</h3>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,margin:"12px 0"}}>
                 {[
                   ["🩹","Pansements et compresses","Pansements hypoallergéniques de plusieurs tailles, compresses stériles, sparadrap microporeux"],
@@ -10092,15 +10092,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 ].map(([ic,titre,desc])=>
                   <div key={titre}style={{background:"#FEF2F2",borderRadius:12,padding:14,border:"1px solid #FECACA"}}>
                     <div style={{fontSize:20,marginBottom:6}}>{ic}</div>
-                    <div style={{fontSize:12,fontWeight:700,color:"#E76F51",marginBottom:4}}>{titre}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#C84B31",marginBottom:4}}>{titre}</div>
                     <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.6}}>{desc}</div>
                   </div>
                 )}
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>Ce qui NE doit PAS être dans la trousse</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>Ce qui NE doit PAS être dans la trousse</h3>
               <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"12px 0"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#E76F51"}}>
+                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#C84B31"}}>
                   <li><strong>Aucun médicament</strong> sans ordonnance nominative et autorisation écrite des parents</li>
                   <li>Pas de Doliprane, pas d'Advil — même si les parents vous disent "c'est bon"</li>
                   <li>Pas de crème solaire sans accord parental écrit</li>
@@ -10108,7 +10108,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </ul>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#E76F51",margin:"20px 0 10px"}}>Les gestes de premiers secours à connaître</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>Les gestes de premiers secours à connaître</h3>
               <p>Votre formation initiale de 120h inclut le PSC1 (Prévention et Secours Civiques). Voici les situations les plus fréquentes :</p>
               <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
                 <li><strong>Chute :</strong> vérifier la conscience, mettre du froid, surveiller 24h, appeler le 15 si perte de conscience même brève</li>
@@ -10118,7 +10118,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </ul>
 
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#2A9D8F",marginBottom:6}}>📋 Rappel PMI</div>
+                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>📋 Rappel PMI</div>
                 <div style={{fontSize:12}}>
                   La trousse doit être dans un endroit connu de tous mais inaccessible aux enfants. Vérifiez les dates de péremption tous les 6 mois. Gardez un double des PAI (Projets d'Accueil Individualisés) pour les enfants allergiques à côté de la trousse.
                 </div>
@@ -10126,26 +10126,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>}
 
             {showBlog==="tarif"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>💶 Comment fixer son tarif horaire en tant qu'assistante maternelle</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>💶 Comment fixer son tarif horaire en tant qu'assistante maternelle</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 6 min de lecture</div>
 
               <p>Fixer son tarif est l'une des décisions les plus importantes — et les plus stressantes — quand on débute. Trop bas, vous vous épuisez. Trop haut, les parents vont ailleurs. Voici comment trouver le juste milieu.</p>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Le cadre légal</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Le cadre légal</h3>
               <p>Le <strong>minimum légal</strong> est fixé à 0,281 fois le SMIC horaire, soit environ <strong>3,27€ brut/h</strong> (valeur 2024). Mais dans la pratique, la plupart des assmats facturent entre <strong>3,50€ et 5,50€ brut/h</strong> selon la région et les services proposés.</p>
 
               <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"16px 0"}}>
-                <div style={{fontWeight:700,color:"#264653",marginBottom:8}}>📊 Moyennes par zone (2024)</div>
+                <div style={{fontWeight:700,color:"#2E4859",marginBottom:8}}>📊 Moyennes par zone (2024)</div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:12}}>
                   {[["Paris / Île-de-France","4,50€ - 5,50€"],["Grandes villes (Lyon, Marseille)","4,00€ - 5,00€"],["Villes moyennes","3,80€ - 4,50€"],["Zone rurale","3,50€ - 4,00€"]].map(([zone,prix])=>
                     <div key={zone}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px dotted #E8E4E0"}}>
-                      <span style={{color:"#5F7A86"}}>{zone}</span><strong style={{color:"#264653"}}>{prix}</strong>
+                      <span style={{color:"#5F7A86"}}>{zone}</span><strong style={{color:"#2E4859"}}>{prix}</strong>
                     </div>
                   )}
                 </div>
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les critères qui justifient un tarif plus élevé</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les critères qui justifient un tarif plus élevé</h3>
               <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
                 <li><strong>Votre expérience</strong> — plus d'années d'agrément = plus de légitimité</li>
                 <li><strong>Vos formations</strong> — CAP AEPE, Montessori, Snoezelen, Langue des signes bébé</li>
@@ -10155,7 +10155,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <li><strong>Votre logement</strong> — jardin, salle de jeux dédiée, espace aménagé</li>
               </ul>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Les indemnités en plus du salaire</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les indemnités en plus du salaire</h3>
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"12px 0",border:"1px solid #B7E4C7",fontSize:12,lineHeight:2}}>
                 <strong>Indemnité d'entretien :</strong> minimum 3,69€/jour (2024). Couvre l'eau, l'électricité, les produits ménagers, l'usure du matériel. Vous pouvez négocier plus.<br/>
                 <strong>Indemnité de repas :</strong> si vous fournissez les repas. Généralement entre 3€ et 6€ par repas + goûter.<br/>
@@ -10163,54 +10163,54 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <strong>Aucune de ces indemnités n'est soumise à cotisations</strong> — c'est du net.
               </div>
 
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>Comment l'annoncer aux parents</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Comment l'annoncer aux parents</h3>
               <p>Ne vous justifiez pas. Présentez votre tarif avec assurance et expliquez ce qu'il inclut. Un parent qui négocie fortement à la baisse n'est généralement pas le parent avec qui vous aurez la meilleure relation de travail. Rappelez que le crédit d'impôt couvre 50% des frais de garde — votre tarif réel pour le parent est donc divisé par deux.</p>
 
               <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
-                <div style={{fontWeight:700,color:"#FF9F63",marginBottom:6}}>🧮 TiMat inclut un simulateur</div>
+                <div style={{fontWeight:700,color:"#E49178",marginBottom:6}}>🧮 TiMat inclut un simulateur</div>
                 <div style={{fontSize:12}}>Le simulateur de coût TiMat permet aux parents de voir exactement ce que la garde leur coûtera après crédit d'impôt et CMG. Ça facilite la discussion sur le tarif.</div>
               </div>
             </div>}
 
             {showBlog==="motricite"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>🧸 Les étapes du développement moteur de 0 à 3 ans</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🧸 Les étapes du développement moteur de 0 à 3 ans</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Pédagogie · 6 min de lecture</div>
               <p>Chaque enfant se développe à son rythme. Les âges ci-dessous sont des repères moyens, pas des normes.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>0-4 mois : les réflexes</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>0-4 mois : les réflexes</h3>
               <p>Le bébé découvre son corps. Il tourne la tête vers les sons, suit des yeux, attrape instinctivement. Sur le ventre, il relève la tête.</p>
               <p style={{marginTop:8}}><strong>Votre rôle :</strong> varier les positions (dos, ventre, côté sur tapis ferme), proposer des mobiles contrastés, parler et chanter.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>4-8 mois : retournement et préhension</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>4-8 mois : retournement et préhension</h3>
               <p>L'enfant se retourne seul, attrape les objets volontairement, les porte à la bouche, commence à tenir assis avec appui. Il passe un objet d'une main à l'autre.</p>
               <p style={{marginTop:8}}><strong>Votre rôle :</strong> proposer des objets variés (textures, tailles), laisser explorer au sol, ne pas mettre assis un bébé qui ne le fait pas seul.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>8-12 mois : le déplacement</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>8-12 mois : le déplacement</h3>
               <p>Rampé, quatre pattes, se hisse debout, premiers pas tenus. La pince pouce-index apparaît.</p>
               <p style={{marginTop:8}}><strong>Votre rôle :</strong> sécuriser l'espace, proposer des parcours moteurs simples, encourager sans aider systématiquement.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>12-18 mois : la marche</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>12-18 mois : la marche</h3>
               <p>Premiers pas vers 12-15 mois. L'enfant monte les marches à quatre pattes, empile 2-3 cubes, gribouille, essaie la cuillère.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#264653",margin:"20px 0 10px"}}>18-36 mois : l'autonomie</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>18-36 mois : l'autonomie</h3>
               <p>L'enfant court, saute, pédale, monte les escaliers. Il dessine des cercles, enfile des perles, découpe, s'habille partiellement seul.</p>
               <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#2A9D8F",marginBottom:6}}>💡 Motricité libre (Pikler)</div>
+                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>💡 Motricité libre (Pikler)</div>
                 <div style={{fontSize:12}}>Ne pas mettre un enfant dans une position qu'il n'a pas acquise seul. Pas de trotteur, pas de transat prolongé. L'enfant apprend mieux quand il découvre par lui-même.</div>
               </div>
             </div>}
 
             {showBlog==="droits"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#264653",marginBottom:16}}>⚖️ Droits et devoirs de l'assistante maternelle</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>⚖️ Droits et devoirs de l'assistante maternelle</h2>
               <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Juridique · 8 min de lecture</div>
               <p>L'assistante maternelle est une salariée du particulier employeur, encadrée par la Convention Collective Nationale.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>Vos droits</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>Vos droits</h3>
               <p><strong>Rémunération :</strong> minimum conventionnel (~3,49€ brut/h). Heures au-delà de 45h/semaine majorées de 25%. Indemnité d'entretien minimum 3,65€/jour.</p>
               <p style={{marginTop:8}}><strong>Congés payés :</strong> 2,5 jours ouvrables/mois, soit 5 semaines/an. En année complète, inclus dans la mensualisation.</p>
               <p style={{marginTop:8}}><strong>Formation :</strong> 120h en 5 ans (80h avant le 1er accueil). Formations gratuites, rémunérées. Organisme : IPERIA.</p>
               <p style={{marginTop:8}}><strong>Protection sociale :</strong> maladie, maternité, retraite, chômage, accidents du travail.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2A9D8F",margin:"20px 0 10px"}}>Vos devoirs</h3>
+              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>Vos devoirs</h3>
               <p><strong>Agrément :</strong> obligatoire, délivré par le Conseil départemental. Respecter le nombre et l'âge des enfants autorisés. Signaler tout changement.</p>
               <p style={{marginTop:8}}><strong>Assurance :</strong> RC professionnelle obligatoire, attestation annuelle aux parents.</p>
               <p style={{marginTop:8}}><strong>Secret professionnel :</strong> ne pas partager d'informations sur les familles. Pas de photos sans autorisation écrite.</p>
               <p style={{marginTop:8}}><strong>Rupture :</strong> préavis de 15 jours (moins d'1 an) ou 1 mois (au-delà). Le retrait d'enfant = licenciement avec indemnités.</p>
               <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"20px 0"}}>
-                <div style={{fontWeight:700,color:"#264653",marginBottom:8}}>📋 Documents indispensables</div>
+                <div style={{fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 Documents indispensables</div>
                 <div style={{fontSize:12}}>Contrat signé, avenants, bulletins de salaire, attestation fiscale, certificat médical, attestation RC Pro, agrément valide, projet d'accueil.</div>
               </div>
             </div>}
@@ -10223,23 +10223,23 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#264653"}}>🛒 Boutique TiMat</div>
-            <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#264653",fontWeight:700}}>✕</button>
+            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}>🛒 Boutique TiMat</div>
+            <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
-              {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#2A9D8F",link:config.boutique?.linkSheets},
-              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir et imprimer. Document obligatoire.",icon:"🚨",color:"#E76F51",link:config.boutique?.linkFiche},
-              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections personnalisables. Pret a l'emploi.",icon:"🌿",color:"#264653",link:config.boutique?.linkProjet},
-              {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis (-16%).",icon:"🎁",color:"#FF9F63",badge:"-16%",link:config.boutique?.linkPack},
+              {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
+              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir et imprimer. Document obligatoire.",icon:"🚨",color:"#C84B31",link:config.boutique?.linkFiche},
+              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections personnalisables. Pret a l'emploi.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
+              {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis (-16%).",icon:"🎁",color:"#E49178",badge:"-16%",link:config.boutique?.linkPack},
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
                 {p.icon}
                 {p.badge&&<div style={{position:"absolute",top:6,right:6,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:10,fontWeight:700}}>{p.badge}</div>}
               </div>
               <div style={{padding:14,flex:1,display:"flex",flexDirection:"column"}}>
-                <div style={{fontWeight:700,fontSize:13,color:"#264653",marginBottom:4}}>{p.name}</div>
+                <div style={{fontWeight:700,fontSize:13,color:"#2E4859",marginBottom:4}}>{p.name}</div>
                 <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.5,flex:1,marginBottom:10}}>{p.desc}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} €</span>
@@ -10253,7 +10253,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#264653", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
+      <footer style={{ background: "#2E4859", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
@@ -10311,19 +10311,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{background:"#fff",borderRadius:20,width:"100%",maxWidth:700,maxHeight:"90vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,.3)",display:"flex",flexDirection:"column"}}>
           {/* Header */}
           <div style={{padding:"20px 24px",borderBottom:"1px solid #E8E4E0",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-            <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#264653"}}>
+            <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#2E4859"}}>
               {showLegal==="mentions"&&"📋 Mentions légales"}
               {showLegal==="cgu"&&"📜 Conditions générales d'utilisation"}
               {showLegal==="confidentialite"&&"🔒 Politique de confidentialité"}
             </div>
-            <button onClick={()=>setShowLegal(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#264653",fontWeight:700}}>✕</button>
+            <button onClick={()=>setShowLegal(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           {/* Contenu scrollable */}
-          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#264653",lineHeight:1.8}}>
+          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#2E4859",lineHeight:1.8}}>
 
             {/* =================== MENTIONS LÉGALES =================== */}
             {showLegal==="mentions"&&<div>
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Éditeur du site</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",marginBottom:12}}>1. Éditeur du site</h3>
               <p>Le site <strong>timat.app</strong> (ci-après "TiMat") est édité par :</p>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 <strong>{config.legal?.nom}</strong><br/>
@@ -10334,26 +10334,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 Directrice de la publication : {config.legal?.nom}
               </div>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Hébergement</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>2. Hébergement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 <strong>Site web :</strong> Vercel Inc. — 340 S Lemon Ave #4133, Walnut, CA 91789, USA<br/>
                 <strong>Base de données :</strong> Supabase — Région Europe (Paris, France)<br/>
                 <strong>Paiement :</strong> Stripe — Certifié PCI-DSS Level 1
               </div>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>3. Propriété intellectuelle</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>3. Propriété intellectuelle</h3>
               <p>L'ensemble du contenu du site TiMat (textes, graphismes, logos, icônes, images, logiciels) est la propriété exclusive de l'éditeur, sauf mentions contraires. Toute reproduction, représentation, modification ou distribution, même partielle, est interdite sans autorisation écrite préalable.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>4. Données personnelles</h3>
-              <p>TiMat collecte et traite des données personnelles dans le respect du Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679). Pour plus de détails, consultez notre <span style={{color:"#FF9F63",cursor:"pointer",textDecoration:"underline"}}onClick={()=>setShowLegal("confidentialite")}>Politique de confidentialité</span>.</p>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Données personnelles</h3>
+              <p>TiMat collecte et traite des données personnelles dans le respect du Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679). Pour plus de détails, consultez notre <span style={{color:"#E49178",cursor:"pointer",textDecoration:"underline"}}onClick={()=>setShowLegal("confidentialite")}>Politique de confidentialité</span>.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>5. Cookies</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Cookies</h3>
               <p>TiMat utilise uniquement des cookies techniques nécessaires au fonctionnement de l'application (authentification, session). Aucun cookie publicitaire ou de traçage n'est utilisé. Aucun cookie tiers n'est déposé à des fins commerciales.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>6. Limitation de responsabilité</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Limitation de responsabilité</h3>
               <p>Les calculs de salaire, récapitulatifs Pajemploi, attestations fiscales et bulletins de paie générés par TiMat sont fournis <strong>à titre indicatif</strong>. L'utilisateur reste seul responsable de la vérification des montants auprès des organismes compétents (URSSAF, Pajemploi, Administration fiscale). TiMat ne saurait être tenu responsable d'erreurs dans les déclarations effectuées par l'utilisateur.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>7. Contact</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Contact</h3>
               <p>Pour toute question : <strong>support@timat.app</strong></p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
@@ -10363,23 +10363,23 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
             {/* =================== CGU =================== */}
             {showLegal==="cgu"&&<div>
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Objet</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",marginBottom:12}}>1. Objet</h3>
               <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application TiMat. En créant un compte, l'utilisateur accepte sans réserve les présentes CGU.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Description du service</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>2. Description du service</h3>
               <p>TiMat est une application de gestion administrative destinée aux assistantes maternelles agréées et aux parents employeurs. Elle propose notamment : la gestion des contrats d'accueil, le calcul automatique des salaires, le pointage des heures, les transmissions quotidiennes, la génération de documents (bulletins de salaire, attestations), et la communication avec les parents.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>3. Inscription et comptes</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>3. Inscription et comptes</h3>
               <p>L'utilisateur doit fournir des informations exactes lors de son inscription. Chaque compte est personnel et ne peut être partagé. L'utilisateur est responsable de la confidentialité de ses identifiants. En cas d'utilisation frauduleuse, l'éditeur se réserve le droit de suspendre le compte.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>4. Formules et tarification</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Formules et tarification</h3>
               <p><strong>Formule Gratuite :</strong> accès limité (1 enfant, fonctionnalités de base).</p>
               <p><strong>Formule Pro :</strong> 9,99€/mois TTC, avec un essai gratuit de 2 mois sans carte bancaire. L'abonnement est mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
               <p>L'utilisateur reste propriétaire de toutes les données qu'il saisit dans TiMat (informations sur les enfants, contrats, pointages, transmissions, documents). TiMat ne revendique aucun droit de propriété sur ces données. L'utilisateur peut exporter ou supprimer ses données à tout moment.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>6. Protection des données des mineurs</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Protection des données des mineurs</h3>
               <p>TiMat traite des données relatives à des enfants (prénoms, dates de naissance, informations de santé). Ces données sont traitées conformément au RGPD avec une attention particulière :</p>
               <ul style={{paddingLeft:20,margin:"8px 0"}}>
                 <li>Collecte limitée au strict nécessaire pour le service</li>
@@ -10388,16 +10388,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <li>Suppression à la fin du contrat d'accueil ou sur demande</li>
               </ul>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>7. Limitation de responsabilité</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Limitation de responsabilité</h3>
               <p>TiMat est un outil d'aide à la gestion. Les calculs, documents et informations fournis le sont <strong>à titre indicatif</strong> et ne constituent pas un conseil juridique, fiscal ou comptable. L'utilisateur reste seul responsable de ses déclarations auprès des organismes officiels.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>8. Résiliation</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>8. Résiliation</h3>
               <p>L'utilisateur peut résilier son abonnement Pro à tout moment depuis son espace, sans frais. Les données restent accessibles pendant 30 jours après résiliation. Passé ce délai, elles sont supprimées définitivement. L'éditeur se réserve le droit de suspendre un compte en cas de non-respect des CGU.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>9. Disponibilité du service</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>9. Disponibilité du service</h3>
               <p>TiMat s'engage à fournir un service disponible 24h/24, 7j/7. Toutefois, des interruptions pour maintenance ou mise à jour peuvent survenir. L'éditeur ne saurait être tenu responsable des conséquences d'une interruption temporaire du service.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>10. Droit applicable et litiges</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>10. Droit applicable et litiges</h3>
               <p>Les présentes CGU sont soumises au droit français. En cas de litige, une solution amiable sera privilégiée. À défaut, les tribunaux compétents du ressort du siège de l'éditeur seront saisis.</p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
@@ -10407,14 +10407,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
             {/* =================== POLITIQUE DE CONFIDENTIALITÉ =================== */}
             {showLegal==="confidentialite"&&<div>
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",marginBottom:12}}>1. Responsable du traitement</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",marginBottom:12}}>1. Responsable du traitement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 {config.legal?.nom} — Auto-entrepreneur<br/>
                 Email : {config.legal?.email}<br/>
                 SIRET : {config.legal?.siret}
               </div>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>2. Données collectées</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>2. Données collectées</h3>
               <p>TiMat collecte les données suivantes :</p>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
                 <p><strong>Données d'identification :</strong> prénom, nom, adresse email, mot de passe (chiffré)</p>
@@ -10424,7 +10424,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <p style={{marginTop:8}}><strong>Données techniques :</strong> adresse IP, type de navigateur, pages visitées (à des fins de maintenance uniquement)</p>
               </div>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>3. Finalités du traitement</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>3. Finalités du traitement</h3>
               <ul style={{paddingLeft:20,margin:"8px 0"}}>
                 <li>Fourniture du service de gestion administrative pour assistantes maternelles</li>
                 <li>Calcul automatique des salaires et génération de documents</li>
@@ -10434,7 +10434,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </ul>
               <p style={{marginTop:8}}><strong>Base légale :</strong> exécution du contrat (Art. 6.1.b RGPD) et consentement explicite pour les données des mineurs.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>4. Hébergement et sécurité</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Hébergement et sécurité</h3>
               <div style={{background:"#F0FAF4",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 🔒 Base de données : <strong>Supabase</strong> — Région Europe, Paris (France)<br/>
                 🌐 Site web : <strong>Vercel</strong> — CDN mondial, données en Europe<br/>
@@ -10444,7 +10444,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 📋 Row Level Security (RLS) : chaque utilisateur n'accède qu'à ses propres données
               </div>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>5. Durée de conservation</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Durée de conservation</h3>
               <ul style={{paddingLeft:20,margin:"8px 0"}}>
                 <li><strong>Données de compte :</strong> conservées tant que le compte est actif, supprimées 30 jours après résiliation</li>
                 <li><strong>Données des enfants :</strong> conservées pendant la durée du contrat d'accueil, supprimées à la fin du contrat ou sur demande</li>
@@ -10452,20 +10452,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <li><strong>Données de support :</strong> conservées 2 ans</li>
               </ul>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
               <p>Conformément au RGPD, vous disposez des droits suivants :</p>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8,margin:"12px 0"}}>
                 {[["📋","Droit d'accès","Obtenir une copie de vos données"],["✏️","Droit de rectification","Corriger vos informations"],["🗑️","Droit à l'effacement","Supprimer votre compte et vos données"],["📦","Droit à la portabilité","Exporter vos données au format standard"],["🚫","Droit d'opposition","Vous opposer à certains traitements"],["⏸️","Droit à la limitation","Limiter temporairement le traitement"]].map(([ic,titre,desc])=>
                   <div key={titre}style={{background:"#F4F7FA",borderRadius:10,padding:12}}>
                     <div style={{fontSize:16,marginBottom:4}}>{ic}</div>
-                    <div style={{fontSize:12,fontWeight:700,color:"#264653"}}>{titre}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>{titre}</div>
                     <div style={{fontSize:11,color:"#5F7A86"}}>{desc}</div>
                   </div>
                 )}
               </div>
               <p style={{marginTop:8}}>Pour exercer vos droits : <strong>support@timat.app</strong>. Réponse sous 30 jours maximum.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>7. Sous-traitants</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Sous-traitants</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,fontSize:11}}>
                   <div><strong>Sous-traitant</strong></div><div><strong>Finalité</strong></div><div><strong>Localisation</strong></div>
@@ -10476,13 +10476,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
               <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>8. Transferts hors UE</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>8. Transferts hors UE</h3>
               <p>Les données sont hébergées en France et en Europe. En cas de transfert vers les États-Unis (CDN Vercel), celui-ci est encadré par les clauses contractuelles types de la Commission européenne.</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>9. Cookies</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>9. Cookies</h3>
               <p>TiMat utilise uniquement des cookies techniques strictement nécessaires (authentification, session). Aucun cookie publicitaire, analytique ou de traçage n'est utilisé. Aucun consentement spécifique n'est requis pour ces cookies (Art. 82 de la loi Informatique et Libertés).</p>
 
-              <h3 style={{fontSize:15,fontWeight:700,color:"#264653",margin:"20px 0 12px"}}>10. Réclamation</h3>
+              <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>10. Réclamation</h3>
               <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (Commission Nationale de l'Informatique et des Libertés) : <strong>www.cnil.fr</strong></p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
@@ -11412,20 +11412,20 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Attestation fiscale '+annee+' - '+(enfant.prenom||'')+'</title>',
         '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;font-size:12px;line-height:1.6;background:#f5f5f5}',
         '#doc{max-width:780px;margin:0 auto;padding:30px;background:#fff}',
-        'h1{font-size:15px;text-align:center;color:#264653;border-bottom:2px solid #2A9D8F;padding-bottom:10px;margin-bottom:20px}',
+        'h1{font-size:15px;text-align:center;color:#2E4859;border-bottom:2px solid #5DA9A1;padding-bottom:10px;margin-bottom:20px}',
         '.header{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;padding:16px;background:#F4F7FA;border-radius:8px}',
-        '.header h3{font-size:11px;color:#2A9D8F;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}',
+        '.header h3{font-size:11px;color:#5DA9A1;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}',
         'table{width:100%;border-collapse:collapse;margin:10px 0;page-break-inside:avoid}',
         'tr{page-break-inside:avoid}',
         'td{padding:8px 12px;border:1px solid #e0e0e0}',
-        'td:first-child{width:60%;background:#FDFBF8;font-weight:600;color:#264653}',
-        '.total{background:#2A9D8F;color:#fff;font-weight:700;font-size:13px}.total td{border-color:#2A9D8F}',
+        'td:first-child{width:60%;background:#FDFBF8;font-weight:600;color:#2E4859}',
+        '.total{background:#5DA9A1;color:#fff;font-weight:700;font-size:13px}.total td{border-color:#5DA9A1}',
         '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:10px;color:#666;page-break-inside:avoid}',
         '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px;page-break-inside:avoid}',
-        '.sig-box{border-top:1px solid #264653;padding-top:10px;font-size:11px}',
+        '.sig-box{border-top:1px solid #2E4859;padding-top:10px;font-size:11px}',
         '.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}',
         '.actions button{border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}',
-        '.btn-print{background:#264653;color:#fff}.btn-pdf{background:#2A9D8F;color:#fff}',
+        '.btn-print{background:#2E4859;color:#fff}.btn-pdf{background:#5DA9A1;color:#fff}',
         '@media print{.actions{display:none!important}body{background:#fff}.noprint{display:none}}</style>',
         // Chargement de html2pdf pour vraie generation PDF
         '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>',
@@ -11445,14 +11445,14 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<strong>'+(enfant?.prenomParent||'Parent')+' '+(enfant?.nomParent||'')+'</strong><br/>',
         'Enfant gardé : '+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'<br/>',
         'Né(e) le : '+(enfant?.naissance||'[Date]')+'</div></div>',
-        '<h3 style="font-size:12px;color:#264653;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+(paiementsReels?.count?' (donnees reelles)':' (estimees)')+'</h3>',
+        '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+(paiementsReels?.count?' (donnees reelles)':' (estimees)')+'</h3>',
         '<table>',
         '<tr><td>Salaires nets versés (12 mois)</td><td style="text-align:right">'+totalSalNet.toFixed(2)+' €</td></tr>',
         '<tr><td>Indemnités d\'entretien</td><td style="text-align:right">'+totalEntretien.toFixed(2)+' €</td></tr>',
         '<tr><td>Indemnités de repas</td><td style="text-align:right">'+totalRepas.toFixed(2)+' €</td></tr>',
         '<tr class="total"><td>TOTAL DES SOMMES VERSÉES</td><td style="text-align:right">'+(totalSalNet+totalEntretien+totalRepas).toFixed(2)+' €</td></tr>',
         '</table>',
-        '<h3 style="font-size:12px;color:#264653;margin:16px 0 8px;padding-left:4px">📊 Détail du calcul</h3>',
+        '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Détail du calcul</h3>',
         '<table>',
         '<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>',
         '<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||4.05)+' €/h</td></tr>',
@@ -11467,7 +11467,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '• Les indemnités d\'entretien et de repas ne sont pas déductibles.<br/>',
         '• Conservez ce document avec votre déclaration de revenus.',
         '</div>',
-        '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#264653">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
+        '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#2E4859">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
         '<div class="sig">',
         '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :'
           +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:10px;font-style:italic">(Aucune signature enregistree dans Parametres)</span>')
@@ -11573,19 +11573,19 @@ function FicheUrgence({enfants,role,pEId,user}){
     const authLines=[
       ["Emmener aux urgences",f.authUrgences],["Paracetamol (ordonnance jointe)",f.authParacetamol],
       ["Sorties exterieures",f.authSorties],["Transport en voiture",f.authVoiture],["Photos (usage interne)",f.authPhotos]
-    ].map(([l,v])=>"<div style='margin:6px 0;font-size:13px'><span style='color:"+(v?"#2A9D8F":"#E76F51")+";font-weight:700'>"+(v?"[X] Oui  [ ] Non":"[ ] Oui  [X] Non")+"</span>  "+l+"</div>").join("");
+    ].map(([l,v])=>"<div style='margin:6px 0;font-size:13px'><span style='color:"+(v?"#5DA9A1":"#C84B31")+";font-weight:700'>"+(v?"[X] Oui  [ ] Non":"[ ] Oui  [X] Non")+"</span>  "+l+"</div>").join("");
     const html=[
       "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Fiche urgence - "+f.prenom+"</title>",
-      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#264653;font-size:13px;line-height:1.8}",
-      "h1{font-size:22px;text-align:center;letter-spacing:3px;color:#264653;margin-bottom:2px}",
-      ".sub{text-align:center;color:#2A9D8F;font-size:14px;margin-bottom:4px}",
+      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#2E4859;font-size:13px;line-height:1.8}",
+      "h1{font-size:22px;text-align:center;letter-spacing:3px;color:#2E4859;margin-bottom:2px}",
+      ".sub{text-align:center;color:#5DA9A1;font-size:14px;margin-bottom:4px}",
       ".note{text-align:center;color:#bbb;font-size:11px;margin-bottom:20px;font-style:italic}",
-      ".sh{font-size:14px;font-weight:700;color:#264653;letter-spacing:2px;border-bottom:3px solid #2A9D8F;padding-bottom:6px;margin:24px 0 12px;text-transform:uppercase}",
-      ".stt{font-weight:700;color:#2A9D8F;font-size:13px;margin:14px 0 6px}",
+      ".sh{font-size:14px;font-weight:700;color:#2E4859;letter-spacing:2px;border-bottom:3px solid #5DA9A1;padding-bottom:6px;margin:24px 0 12px;text-transform:uppercase}",
+      ".stt{font-weight:700;color:#5DA9A1;font-size:13px;margin:14px 0 6px}",
       ".line{border-bottom:1px solid #d0d0d0;padding:6px 0;margin:4px 0}",
-      ".line b{color:#264653}",
+      ".line b{color:#2E4859}",
       ".urg{background:#FEF2F2;padding:8px 14px;margin:4px 0;border-radius:6px}",
-      ".urg span{color:#E76F51;font-weight:700;font-size:18px}",
+      ".urg span{color:#C84B31;font-weight:700;font-size:18px}",
       "@media print{.noprint{display:none}}</style></head><body>",
       "<h1>FICHE D'URGENCE</h1>",
       "<div class='sub'>Assistante maternelle agreee</div>",
@@ -11635,7 +11635,7 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature parent :</div></div>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature assmat :</div></div></div>",
       "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:20px'>Genere par TiMat - timat.app</p>",
-      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
+      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
     w.document.write(html);w.document.close();
@@ -11777,34 +11777,34 @@ function ProjetAccueil({user,role}){
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les popups");return;}
     const f=form;
-    const horairesHTML=f.horaires.map(h=>"<tr><td style='background:#F4F7FA;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>"+h.h+"</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>"+h.d+"</td></tr>").join("");
+    const horairesHTML=f.horaires.map(h=>"<tr><td style='background:#F4F7FA;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>"+h.h+"</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>"+h.d+"</td></tr>").join("");
     const html=[
       "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Projet d'accueil</title>",
-      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:780px;margin:0 auto;padding:30px;color:#264653;font-size:13px;line-height:1.9}",
-      "h1{font-size:28px;text-align:center;letter-spacing:4px;color:#264653;margin-bottom:4px}",
-      ".sub{text-align:center;color:#2A9D8F;font-size:15px;margin-bottom:20px}",
+      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:780px;margin:0 auto;padding:30px;color:#2E4859;font-size:13px;line-height:1.9}",
+      "h1{font-size:28px;text-align:center;letter-spacing:4px;color:#2E4859;margin-bottom:4px}",
+      ".sub{text-align:center;color:#5DA9A1;font-size:15px;margin-bottom:20px}",
       ".info{text-align:center;color:#aaa;font-size:12px;margin-bottom:4px}",
-      ".sh{font-size:15px;font-weight:700;color:#264653;letter-spacing:2px;border-bottom:3px solid #2A9D8F;padding-bottom:6px;margin:30px 0 14px;text-transform:uppercase}",
-      ".stt{font-weight:700;color:#2A9D8F;font-size:14px;margin:18px 0 8px}",
+      ".sh{font-size:15px;font-weight:700;color:#2E4859;letter-spacing:2px;border-bottom:3px solid #5DA9A1;padding-bottom:6px;margin:30px 0 14px;text-transform:uppercase}",
+      ".stt{font-weight:700;color:#5DA9A1;font-size:14px;margin:18px 0 8px}",
       "p{margin:6px 0}ul{padding-left:22px;margin:6px 0}li{margin:4px 0}",
       "table{width:100%;border-collapse:collapse;margin:12px 0}",
       ".cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;text-align:center}",
       ".cover h1{font-size:36px;letter-spacing:8px;margin-bottom:8px}",
-      ".cover .line{border-bottom:1px solid #d0d0d0;width:300px;margin:8px auto;padding:8px 0;font-size:15px;color:#264653}",
+      ".cover .line{border-bottom:1px solid #d0d0d0;width:300px;margin:8px auto;padding:8px 0;font-size:15px;color:#2E4859}",
       ".cover .label{color:#aaa;font-size:11px;margin-top:16px}",
       "@media print{.noprint{display:none}.cover{min-height:100vh}}</style></head><body>",
       // PAGE DE GARDE
       "<div class='cover'>",
       "<h1>PROJET D'ACCUEIL</h1>",
       "<div class='sub'>Assistante maternelle agreee</div>",
-      "<div style='border-top:3px solid #2A9D8F;border-bottom:3px solid #2A9D8F;padding:16px 0;margin:40px 0'>",
+      "<div style='border-top:3px solid #5DA9A1;border-bottom:3px solid #5DA9A1;padding:16px 0;margin:40px 0'>",
       "<div class='line' style='font-weight:700;font-size:18px'>"+f.nom+"</div>",
       "<div class='label'>Adresse</div><div class='line'>"+f.adresse+"</div>",
       "<div class='label'>Telephone</div><div class='line'>"+f.tel+"</div>",
       "<div class='label'>Email</div><div class='line'>"+f.email+"</div>",
       "<div class='label'>Agrement</div><div class='line'>"+f.agrement+"</div>",
       "</div>",
-      "<div style='color:#2A9D8F;font-size:16px;font-weight:700'>"+new Date().getFullYear()+"</div>",
+      "<div style='color:#5DA9A1;font-size:16px;font-weight:700'>"+new Date().getFullYear()+"</div>",
       "</div>",
       // CONTENU
       "<div class='sh'>01  Introduction</div>",
@@ -11846,10 +11846,10 @@ function ProjetAccueil({user,role}){
       "<div class='sh'>10  Periode d'adaptation</div>",
       "<p>L'adaptation dure generalement 1 a 2 semaines.</p>",
       "<table>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Jour 1</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h avec le parent present</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Jour 2-3</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h sans le parent, separation courte</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Jour 4-5</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>2-3h, premier repas</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#2A9D8F;width:140px;border:1px solid #e0e0e0'>Semaine 2</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>Demi-journees puis journees completes</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 1</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h avec le parent present</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 2-3</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h sans le parent, separation courte</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 4-5</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>2-3h, premier repas</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Semaine 2</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>Demi-journees puis journees completes</td></tr>",
       "</table>",
       "<div class='sh'>Pour conclure</div>",
       "<p>Ce projet d'accueil est un document vivant. N'hesitez pas a en discuter avec moi a tout moment.</p>",
@@ -11859,7 +11859,7 @@ function ProjetAccueil({user,role}){
       "<div><p style='font-weight:700'>L'assistante maternelle :</p><div style='height:80px'></div></div>",
       "<div><p style='font-weight:700'>Les parents :</p><div style='height:80px'></div></div></div>",
       "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:30px'>Genere par TiMat - timat.app</p>",
-      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#2A9D8F;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
+      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
     w.document.write(html);w.document.close();
@@ -12051,10 +12051,10 @@ function Boutique({user}){
   const [toast,setToast]=useState("");
   const isPro=user?.subscription_status==="pro";
   const products=[
-    {id:"kit_sheets",name:"Kit Google Sheets Assmat",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel, planning, indemnites, facture.",icon:"📊",color:"#2A9D8F"},
-    {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences, autorisations.",icon:"🚨",color:"#E76F51"},
-    {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections : presentation, valeurs, journee type, alimentation, sommeil, activites, sante, parents.",icon:"🌿",color:"#264653"},
-    {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis. Economisez 4,80 EUR par rapport a l'achat separe.",icon:"🎁",color:"#FF9F63",badge:"-16%"},
+    {id:"kit_sheets",name:"Kit Google Sheets Assmat",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel, planning, indemnites, facture.",icon:"📊",color:"#5DA9A1"},
+    {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences, autorisations.",icon:"🚨",color:"#C84B31"},
+    {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections : presentation, valeurs, journee type, alimentation, sommeil, activites, sante, parents.",icon:"🌿",color:"#2E4859"},
+    {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis. Economisez 4,80 EUR par rapport a l'achat separe.",icon:"🎁",color:"#E49178",badge:"-16%"},
   ];
 
   const acheter=async(product)=>{
@@ -12609,7 +12609,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {/* Aperçu miniature */}
               <div style={{height:80,borderRadius:8,overflow:"hidden",border:"1px solid var(--br)",marginTop:6,position:"relative"}}>
                 <div style={{position:"absolute",inset:0,backgroundImage:"url("+cfg.landing.heroImg+")",backgroundSize:"cover",backgroundPosition:cfg.landing.heroImgPosition||"center center",opacity:cfg.landing.heroImgOpacity||0.12,filter:"blur("+(cfg.landing.heroImgBlur||2)+"px)"}}/>
-                <div style={{position:"absolute",inset:0,background:cfg.landing.heroBg||"#264653",opacity:.7}}/>
+                <div style={{position:"absolute",inset:0,background:cfg.landing.heroBg||"#2E4859",opacity:.7}}/>
                 <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",height:"100%",fontSize:10,color:"#fff",fontWeight:600}}>Aperçu du hero</div>
               </div>
             </>}
@@ -12625,7 +12625,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             <BOField label="Emoji du logo (si pas d'image)">
               <BOTextInput k="logoEmoji" state={cfg.landing} setter={setLand} placeholder="🌿"/>
             </BOField>
-            <div style={{marginTop:8,padding:10,background:"#264653",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
+            <div style={{marginTop:8,padding:10,background:"#2E4859",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
               {cfg.landing.logoUrl
                 ?<img src={cfg.landing.logoUrl}alt="logo"style={{height:28,borderRadius:6,objectFit:"contain"}}onError={e=>{e.target.style.display="none"}}/>
                 :<div style={{width:28,height:28,borderRadius:8,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{cfg.landing.logoEmoji||"🌿"}</div>}
@@ -13089,7 +13089,7 @@ const DEFAULT_CONFIG = {
     freePrice:"0€",
   },
   landing: {
-    heroBg:"linear-gradient(160deg, #264653 0%, #2A6F6A 40%, #264653 70%, #1B3540 100%)",
+    heroBg:"linear-gradient(160deg, #2E4859 0%, #2A6F6A 40%, #2E4859 70%, #1B3540 100%)",
     heroImg:"",
     heroImgOpacity:0.12,
     heroImgPosition:"center center",
@@ -13097,35 +13097,35 @@ const DEFAULT_CONFIG = {
     logoUrl:"",
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
-    section1Bg:"linear-gradient(135deg,#264653,#2A6F6A)",
+    section1Bg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
     section2Bg:"#FDF5FB",
     section3Bg:"#F8F0FC",
-    section4Bg:"linear-gradient(135deg,#264653,#2A9D8F)",
+    section4Bg:"linear-gradient(135deg,#2E4859,#5DA9A1)",
     section5Bg:"#FDF5FB",
     section6Bg:"#F5EBF8",
-    ctaBg:"linear-gradient(135deg,#264653,#2A6F6A)",
+    ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
     statsBg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
     // ----- BOUTONS HERO -----
-    heroBtnPrimBg:"linear-gradient(135deg,#FF9F63,#E76F51)",
+    heroBtnPrimBg:"linear-gradient(135deg,#E49178,#C84B31)",
     heroBtnPrimColor:"#fff",
     heroBtnSecBg:"rgba(255,255,255,.07)",
     heroBtnSecColor:"#fff",
-    heroBtnNavBg:"linear-gradient(135deg,#2A9D8F,#264653)",
+    heroBtnNavBg:"linear-gradient(135deg,#5DA9A1,#2E4859)",
     heroBtnNavColor:"#fff",
     heroBtnTarifsBg:"rgba(255,255,255,.12)",
     heroBtnTarifsColor:"rgba(255,255,255,.85)",
     heroBtnConnexionBg:"rgba(255,255,255,.18)",
     heroBtnConnexionColor:"#fff",
     // ----- BOUTONS TARIFS -----
-    proBtnBg:"linear-gradient(135deg,#FF9F63,#E76F51)",
+    proBtnBg:"linear-gradient(135deg,#E49178,#C84B31)",
     proBtnColor:"#fff",
     freeBtnBg:"#0D1B2A",
     freeBtnColor:"#fff",
     // ----- BOUTON CTA FINAL -----
-    ctaBtnBg:"linear-gradient(135deg,#FF9F63,#E76F51)",
+    ctaBtnBg:"linear-gradient(135deg,#E49178,#C84B31)",
     ctaBtnColor:"#fff",
     // ----- COULEURS -----
-    accentColor:"#FF9F63",
+    accentColor:"#E49178",
     // Couleurs de texte par section
     heroTitleColor:"#fff",
     heroSubColor:"rgba(255,255,255,.75)",
