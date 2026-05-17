@@ -8746,7 +8746,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
     <div className="topbar">
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <img src="/logo.png" alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+          <img src={logoForRole(user?.role)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
           <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
         </div>
       </div>
@@ -13053,8 +13053,15 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   </div>;
 }
 
+// P19: helper logo selon le role
+const logoForRole = (role) => {
+  if(role === "parent") return "/logo-parent.png";
+  if(role === "mam" || role === "creche") return "/logo-mam.png";
+  return "/logo.png";
+};
+
 const DEFAULT_CONFIG = {
-  cols: {T:"#FF9F63",S:"#2A9D8F",G:"#2A9D8F",R:"#E76F51",c:"#FDFBF8",w:"#FFFFFF",b:"#264653"},
+  cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
     heroTitle:"Moins de paperasse,",
     heroTitleAccent:"plus de câlins.",
@@ -13614,7 +13621,7 @@ export default function App(){
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <img src="/logo.png" alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
+      <img src={logoForRole(user?.role)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
       <div style={{display:"flex",gap:6}}>
         <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
       </div>
