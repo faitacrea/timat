@@ -12380,6 +12380,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     const timer = setTimeout(async () => {
       setSaveStatus("saving");
       try {
+        // P21b : synchroniser G (config globale) avec cfg AVANT de sauver
+        Object.assign(G, JSON.parse(JSON.stringify(cfg)));
         const result = await saveConfig();
         const ok = !result || result?.success !== false;
         setSaveStatus(ok ? "saved" : "error");
