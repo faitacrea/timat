@@ -12371,6 +12371,49 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [search,setSearch]=useState("");
 
   const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
+  // P21 AUTOSAVE option B : 3s apres derniere modif + indicateur visuel
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const _p21FirstRender = useRef(true);
+  useEffect(() => {
+    if (_p21FirstRender.current) { _p21FirstRender.current = false; return; }
+    setSaveStatus("pending");
+    const timer = setTimeout(async () => {
+      setSaveStatus("saving");
+      try {
+        const result = await saveConfig();
+        const ok = !result || result?.success !== false;
+        setSaveStatus(ok ? "saved" : "error");
+        setTimeout(() => setSaveStatus("idle"), 2500);
+      } catch(e) {
+        console.warn("[P21 autosave]", e);
+        setSaveStatus("error");
+        setTimeout(() => setSaveStatus("idle"), 4000);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [cfg]);
+  useEffect(() => {
+    let el = document.getElementById("p21-save-indicator");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "p21-save-indicator";
+      el.style.cssText = "position:fixed;top:20px;right:20px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;transition:all .3s;font-family:system-ui;box-shadow:0 4px 12px rgba(0,0,0,0.15);opacity:0";
+      document.body.appendChild(el);
+    }
+    const map = {
+      idle:    { txt:"", show:false, bg:"transparent", col:"transparent" },
+      pending: { txt:"Modifications en cours...", bg:"#E5E7EB", col:"#374151", show:true },
+      saving:  { txt:"Sauvegarde...",              bg:"#DBEAFE", col:"#1E40AF", show:true },
+      saved:   { txt:"Sauvegarde",                 bg:"#D1FAE5", col:"#065F46", show:true },
+      error:   { txt:"Erreur de sauvegarde",       bg:"#FEE2E2", col:"#991B1B", show:true },
+    };
+    const s = map[saveStatus] || map.idle;
+    el.textContent = s.txt;
+    el.style.background = s.bg;
+    el.style.color = s.col;
+    el.style.opacity = s.show ? "1" : "0";
+    el.style.pointerEvents = s.show ? "auto" : "none";
+  }, [saveStatus]);
 
   useEffect(()=>{
     const load=async()=>{
