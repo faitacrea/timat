@@ -9750,6 +9750,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </FadeIn>
           {[
+            {q:"Qui a créé TiMat ?",a:"TiMat a été créée par Sophie, assistante maternelle agréée en Île-de-France. En préparant son agrément, elle a découvert la montagne administrative qui attend chaque assmat et a décidé de créer l'outil qu'elle aurait voulu avoir. TiMat est conçue par une assmat, pour les assmats — chaque fonctionnalité répond à un besoin réel du métier."},
             {q:"C'est quoi TiMat exactement ?",a:"TiMat est une application web conçue spécifiquement pour les assistantes maternelles agréées. Elle centralise la gestion des contrats, des pointages, des salaires, des transmissions aux parents et de tous les documents administratifs liés à votre métier."},
             {q:"Est-ce que mes données sont en sécurité ?",a:"Oui. Toutes vos données sont hébergées en France (Paris) via Supabase, un service conforme au RGPD. Vos informations sont chiffrées en transit et au repos. Vous pouvez demander la suppression de vos données à tout moment."},
             {q:"TiMat remplace-t-il Pajemploi ?",a:"Non. TiMat est un complément à Pajemploi. L'application calcule automatiquement les montants et génère un récapitulatif prêt à reporter sur pajemploi.urssaf.fr. Vous gardez le contrôle de votre déclaration officielle."},
@@ -9758,6 +9759,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {q:"Les parents peuvent-ils accéder à TiMat ?",a:"Oui. Chaque parent reçoit une invitation par email et accède à son propre espace : il peut consulter le journal de son enfant, valider les pointages et échanger avec vous via la messagerie intégrée."},
             {q:"Que se passe-t-il si je résilie ?",a:"Vous pouvez résilier à tout moment en un clic depuis votre espace. Vos données restent accessibles pendant 30 jours après la résiliation, puis sont supprimées conformément au RGPD. Aucun frais de résiliation."},
             {q:"Comment sont calculés les salaires ?",a:"TiMat applique les règles de la Convention Collective Nationale des particuliers employeurs : mensualisation, heures complémentaires majorées à 25%, indemnités d'entretien, congés payés. Les taux de cotisations sont mis à jour régulièrement."},
+            {q:"Combien de temps faut-il pour démarrer ?",a:"Inscription en 2 minutes, premier contrat créé en 5 minutes. TiMat fonctionne sans formation préalable — chaque écran est guidé. Si vous bloquez, le support répond sous 24h."},
+            {q:"Que se passe-t-il lors d'un contrôle PMI ?",a:"Tous vos documents (contrats, attestations, journal de bord, photos, suivi des enfants) sont centralisés et exportables en un clic. Vous présentez TiMat à votre conseiller PMI — c'est la traçabilité la plus complète qu'une assmat puisse avoir."},
           ].map(({q,a},i)=>(
             <FadeIn key={i} delay={i*50}>
               <details style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
