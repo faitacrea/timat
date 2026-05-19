@@ -3733,8 +3733,8 @@ function CompteRenduTrimestriel({enfants,role,pEId}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(--P)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}>💡 Unique sur le marché</div>
-          <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>Un compte-rendu trimestriel professionnel que les parents peuvent glisser dans le dossier scolaire. <strong>Aucune autre app ne génère ce document.</strong></div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}>💡 Pensé pour la transmission PMI</div>
+          <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>Un compte-rendu trimestriel professionnel que les parents peuvent glisser dans le dossier scolaire et présenter à la PMI lors du renouvellement d'agrément.</div>
         </div>
         <div className="card"style={{padding:14}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📊 Données utilisées</div>
