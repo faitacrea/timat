@@ -9511,20 +9511,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 ic: "✍️",
                 titre: "Signature standard réutilisable",
                 desc: "Dessinez votre signature une seule fois dans vos paramètres. Elle est ensuite proposée en 1 clic sur tous vos contrats, avenants et bulletins. Plus jamais besoin de re-dessiner.",
-                badge: "Unique sur le marché",
+                badge: "Conforme eIDAS",
                 color: "#E8C87A"
               },
               {
                 ic: "🔒",
                 titre: "RGPD by design",
-                desc: "Vos signatures sont chiffrées et stockées avec un contrôle d'accès strict (RLS). Chaque action est tracée dans un journal d'audit infalsifiable. Conforme à l'article 20 RGPD (droit à la portabilité).",
+                desc: "Vos signatures sont chiffrées et hébergées en France (Supabase Paris). Chaque action est tracée dans un journal d'audit. Conforme à l'article 20 RGPD (droit à la portabilité).",
                 badge: "Sécurité maximale",
                 color: "#7FB8A0"
               },
               {
                 ic: "🤝",
                 titre: "Parent + asmat dans le même flow",
-                desc: "Vous signez côté asmat. Le parent reçoit une notification et signe à son tour. Le PDF combiné final est automatiquement archivé dans vos documents. Aucun concurrent ne fait ça.",
+                desc: "Vous signez côté asmat. Le parent reçoit une notification et signe à son tour. Le PDF combiné final est automatiquement archivé dans vos documents pendant 5 ans (durée légale de conservation des contrats de travail).",
                 badge: "Bout en bout",
                 color: "#C4714A"
               }
@@ -9546,49 +9546,31 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
 
-          {/* Tableau comparatif vs concurrents */}
+          {/* Parcours signature en 4 etapes - remplace tableau comparatif (P22-SIG) */}
           <FadeIn delay={300}>
-            <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28, overflow: "hidden" }}>
-              <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 18, textAlign: "center" }}>
-                Comparatif avec les principaux outils
+            <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28 }}>
+              <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 28, textAlign: "center" }}>
+                Comment ça marche
               </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 600 }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,.15)" }}>
-                      <th style={{ padding: "12px 8px", textAlign: "left", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".5px" }}>Fonctionnalité</th>
-                      <th style={{ padding: "12px 8px", textAlign: "center", color: "#E8C87A", fontWeight: 700, fontSize: 12 }}>TiMat</th>
-                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>NannyFit</th>
-                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>Top Assmat</th>
-                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>Nounou-Top</th>
-                      <th style={{ padding: "12px 8px", textAlign: "center", color: "rgba(255,255,255,.5)", fontWeight: 600, fontSize: 11 }}>Assmat-Facile</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      ["Signature électronique du contrat", "✅", "✅", "❌", "❌", "❌"],
-                      ["Signature standard réutilisable", "✅", "❌", "❌", "❌", "❌"],
-                      ["Signature parent + asmat", "✅", "Partiel", "❌", "❌", "❌"],
-                      ["PDF combiné archivé automatiquement", "✅", "✅", "❌", "❌", "❌"],
-                      ["Conforme eIDAS", "✅", "✅", "—", "—", "—"],
-                      ["Audit log infalsifiable", "✅", "❌", "❌", "❌", "❌"],
-                      ["Export RGPD article 20", "✅", "—", "—", "—", "—"],
-                      ["RLS strict par utilisateur", "✅", "—", "—", "—", "—"],
-                    ].map((row, i) => (
-                      <tr key={row[0]} style={{ borderBottom: i < 7 ? "1px solid rgba(255,255,255,.06)" : "none" }}>
-                        <td style={{ padding: "11px 8px", color: "rgba(255,255,255,.85)" }}>{row[0]}</td>
-                        {row.slice(1).map((val, j) => (
-                          <td key={j} style={{ padding: "11px 8px", textAlign: "center", fontSize: 14, color: val === "✅" ? (j === 0 ? "#E8C87A" : "#7FB8A0") : val === "❌" ? "rgba(255,255,255,.25)" : "rgba(255,255,255,.5)", fontWeight: j === 0 && val === "✅" ? 700 : 400 }}>
-                            {val}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div style={{ marginTop: 16, fontSize: 10, color: "rgba(255,255,255,.4)", textAlign: "center", fontStyle: "italic" }}>
-                Comparatif établi en mai 2026 selon les fonctionnalités publiquement annoncées par chaque éditeur.
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+                {[
+                  { n: "1", t: "Vous signez en 1 clic", d: "Votre signature standard, déjà enregistrée, s'appose automatiquement sur le contrat." },
+                  { n: "2", t: "Le parent est notifié", d: "Il reçoit un email sécurisé avec un lien unique pour accéder au document." },
+                  { n: "3", t: "Le parent signe à son tour", d: "Sur mobile, tablette ou ordinateur, en quelques secondes." },
+                  { n: "4", t: "PDF archivé 5 ans", d: "Stockage chiffré, hébergement France. Durée légale de conservation respectée." }
+                ].map((s) => (
+                  <div key={s.n} style={{ position: "relative", padding: "24px 16px 16px", background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)" }}>
+                    <div style={{ position: "absolute", top: -14, left: 16, width: 28, height: 28, borderRadius: "50%", background: "#E8C87A", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {s.n}
+                    </div>
+                    <div style={{ fontFamily: fTitle, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 8, marginTop: 4 }}>
+                      {s.t}
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>
+                      {s.d}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </FadeIn>
