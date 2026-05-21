@@ -100,7 +100,7 @@ const EMAIL_TEMPLATES={
     html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
       +"<p>"+v.asmat_prenom+" vient de signer electroniquement le contrat de "+v.enfant_prenom+".</p>"
       +"<p>Connectez-vous a TiMat pour le signer a votre tour :</p>"
-      +"<p><a href='"+v.url+"' style='display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
+      +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
   },
   signature_parent_signed:{
     subject:"Le parent a signe le contrat",
@@ -131,7 +131,7 @@ const EMAIL_TEMPLATES={
       +"<p>L'assistante maternelle a enregistre le pointage de "+v.enfant_prenom+" du "+v.date+".</p>"
       +"<p>Duree d'accueil : <strong>"+v.duree+"</strong></p>"
       +"<p>Merci de valider ce pointage dans votre application :</p>"
-      +"<p><a href='"+v.url+"' style='display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
+      +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
       +"<p style='font-size:11px;color:#888;margin-top:24px'>Si vous oubliez, un rappel automatique sera envoye sous 3 jours.</p>",
   },
   pointage_rappel:{
@@ -159,23 +159,23 @@ function Styles(){return(
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
     :root{
-      --c:#FDF5F8;--w:#FFFFFF;--b:#1A1118;--m:#6B4F5A;--l:#A8909A;--br:#EAE0E8;
-      --T:#C4714A;--Tp:#FBF0EB;--Tl:#E8B8A0;
-      --S:#9B6BAA;--Sp:#F4EFF8;--Sl:#C4A8D8;
-      --G:#4A8B6E;--Gp:#EBF5F0;
+      --c:#FDFBF8;--w:#FFFFFF;--b:#2E4A5A;--m:#6B4F5A;--l:#A8909A;--br:#EAE0E8;
+      --T:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
+      --S:#90A093;--Sp:#F6F7F6;--Sl:#CDD4CE;
+      --G:#5DA9A1;--Gp:#F2F8F7;
       --B:#5A7AB8;--Bp:#EBF0F8;
-      --R:#C44A6A;--Rp:#FAECF0;
+      --R:#C84B31;--Rp:#FBF1EF;
       --P:#7B5A9A;--Pp:#F0EAF8;
-      --sh:0 1px 4px rgba(26,17,24,.05),0 4px 20px rgba(26,17,24,.07);
-      --sh2:0 2px 12px rgba(26,17,24,.08),0 16px 48px rgba(26,17,24,.12);
-      --sh3:0 0 0 3px rgba(155,107,170,.2);
+      --sh:0 1px 4px rgba(46,74,90,.05),0 4px 20px rgba(46,74,90,.07);
+      --sh2:0 2px 12px rgba(46,74,90,.08),0 16px 48px rgba(46,74,90,.12);
+      --sh3:0 0 0 3px rgba(144,160,147,.2);
       --r:18px;--r2:14px;--r3:10px
     }
     .dark{
-      --c:#0D1B1E;--w:#132428;--b:#F0F5F3;--m:#B0CCC6;--l:#7FA8A0;--br:#1E3A34;
-      --Tp:#2A1810;--Sp:#0D2A28;--Gp:#0D2A1A;--Bp:#0D1A2A;--Rp:#2A1418;--Pp:#1A1830;
-      --T:#E49178;--S:#3DBDAD;--G:#3DBDAD;--B:#7AAAE0;--R:#F08060;--P:#C898DC;
-      --Sl:#1A4A42;--Bl:#1A3050;--Rl:#3A1820;
+      --c:#1A2530;--w:#243140;--b:#E8EEF0;--m:#9FAEB5;--l:#7A8993;--br:#34424E;
+      --Tp:#3A2218;--Sp:#1F2A22;--Gp:#0F2A26;--Bp:#0D1A2A;--Rp:#2E1610;--Pp:#1A1830;
+      --T:#E49178;--S:#A8B5A8;--G:#7FC4BC;--B:#7AAAE0;--R:#E26B4F;--P:#C898DC;
+      --Tl:#5A3A2C;--Sl:#384038;--Gl:#1F4A44;--Bl:#1A3050;--Rl:#4A1F12;
       --sh:0 1px 4px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.6);
       --sh2:0 2px 12px rgba(0,0,0,.6),0 16px 48px rgba(0,0,0,.7);
     }
@@ -208,9 +208,9 @@ function Styles(){return(
     .sel{width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;background:#fff;color:var(--b)}
     .lbl{display:block;font-size:11.5px;font-weight:600;color:var(--l);margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase}
     .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.1px}
-    .bT{background:linear-gradient(135deg,#C4714A,#D4824A);color:#fff;box-shadow:0 2px 10px rgba(196,113,74,.3)}
+    .bT{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
-    .bS{background:linear-gradient(135deg,#9B6BAA,#B87CC8);color:#fff;box-shadow:0 2px 10px rgba(155,107,170,.3)}
+    .bS{background:linear-gradient(135deg,#90A093,#A8B5A8);color:#fff;box-shadow:0 2px 10px rgba(144,160,147,.3)}
     .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(155,107,170,.4)}
     .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
     .bG:hover{background:rgba(26,17,24,.1)}
@@ -268,7 +268,7 @@ function Styles(){return(
     .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
     .cday{min-height:38px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;cursor:pointer;transition:all .15s;font-size:12px;color:var(--b);position:relative;background:transparent}
     .cday:hover{background:var(--Sp)}
-    .cday.tod{background:linear-gradient(135deg,var(--T),var(--S));color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(155,107,170,.3)}
+    .cday.tod{background:linear-gradient(135deg,var(--T),var(--S));color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(144,160,147,.3)}
     .cday.abs{background:var(--Rp);color:var(--R)}
     .cday.cng{background:var(--Gp);color:var(--G)}
     .cday.hol{background:var(--Bp);color:var(--B)}
@@ -287,7 +287,7 @@ function Styles(){return(
 
 
 const D = {
-  asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-2019-0042",couleur:"#C4714A"},
+  asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-2019-0042",couleur:"#E49178"},
   parents:[
     {id:"p1",role:"parent",prenom:"Sophie",nom:"Martin",email:"sophie.martin@mail.fr",couleur:"#3A72A8"},
     {id:"p2",role:"parent",prenom:"Thomas",nom:"Bernard",email:"thomas.bernard@mail.fr",couleur:"#4E7A5C"},
@@ -3617,8 +3617,8 @@ function Recap({enfants,role,pEId}){
         </div>
       </div>
       <div className="pdf-preview">
-        <div style={{borderBottom:"2px solid #C4714A",paddingBottom:12,marginBottom:16,display:"flex",justifyContent:"space-between"}}>
-          <div><h2 style={{color:"#C4714A",fontFamily:"Georgia",fontSize:18}}>🌿 TiMat</h2>
+        <div style={{borderBottom:"2px solid #E49178",paddingBottom:12,marginBottom:16,display:"flex",justifyContent:"space-between"}}>
+          <div><h2 style={{color:"#E49178",fontFamily:"Georgia",fontSize:18}}>🌿 TiMat</h2>
             <div style={{fontSize:11,color:"#888"}}>{user?.prenom||"Assmat"} {user?.nom||""} · Assistante Maternelle agréée</div></div>
           <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
             <div><strong>Récapitulatif mensuel</strong></div>
@@ -4082,7 +4082,7 @@ function Documents({enfants,role,pEId,user}){
     {apercu&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
       {(()=>{const doc=docs.find(d=>d.id===apercu);if(!doc)return null;
         return <div style={{background:"var(--w)",borderRadius:16,padding:0,width:"100%",maxWidth:520,overflow:"hidden",boxShadow:"var(--sh2)"}}>
-          <div style={{background:"linear-gradient(135deg,var(--T),#8A3A20)",padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{background:"linear-gradient(135deg,var(--T),#B85838)",padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{color:"#fff"}}>
               <div style={{fontWeight:700,fontSize:15}}>{doc.icone} {doc.nom}</div>
               <div style={{fontSize:11,opacity:.8,marginTop:2}}>{doc.sous} · {doc.date.split("-").reverse().join("/")} · {doc.taille}</div>
@@ -8822,7 +8822,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           flexShrink:0,whiteSpace:"nowrap",
           background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",
           color:isActive?"#fff":"var(--m)",
-          boxShadow:isActive?"0 4px 16px rgba(155,107,170,.3)":"none",
+          boxShadow:isActive?"0 4px 16px rgba(144,160,147,.3)":"none",
           transform:isActive?"scale(1.03)":"scale(1)",
           letterSpacing:".1px",position:"relative",
         }}>
@@ -8859,7 +8859,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           background:isSubActive?"rgba(155,107,170,.12)":"transparent",
           color:isSubActive?"var(--S)":"var(--b)",
           fontWeight:isSubActive?700:500,
-          boxShadow:isSubActive?"inset 0 0 0 1.5px rgba(155,107,170,.3)":"none",
+          boxShadow:isSubActive?"inset 0 0 0 1.5px rgba(144,160,147,.3)":"none",
           position:"relative",
         }}>
           <span>{s.ic}</span>
@@ -9091,7 +9091,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           prenom: data.user.user_metadata?.prenom || "Utilisateur",
           nom: data.user.user_metadata?.nom || "",
           role: data.user.user_metadata?.role || "asmat",
-          couleur: "#C4714A",
+          couleur: "#E49178",
           subscription_status: "free"
         });
       }
@@ -9145,7 +9145,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
 
   return (
-    <div style={{ fontFamily: fBody, overflowX: "hidden", background: L.pageBg||"#FDF5F8" }}>
+    <div style={{ fontFamily: fBody, overflowX: "hidden", background: L.pageBg||"#FDFBF8" }}>
       {/* Responsive CSS */}
       <style>{`
         .lp-nav-btns{display:flex;gap:8px;align-items:center}
@@ -9244,7 +9244,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
           <div style={{ fontSize: "clamp(14px,2vw,17px)", color: L.heroSubDescColor||"rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
           <div className="lp-hero-ctas">
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
@@ -9254,7 +9254,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 1 - PROBLEME */}
-      <div className="lp-section" style={{ background: L.section1Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)" }}>
+      <div className="lp-section" style={{ background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
@@ -9309,7 +9309,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {/* TopBar */}
                 <div style={{ background: "rgba(255,255,255,.98)", borderBottom: "1px solid rgba(196,113,74,.12)", padding: "7px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#C4714A", fontStyle: "italic" }}>TiMat</span>
+                    <span style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#E49178", fontStyle: "italic" }}>TiMat</span>
                     <span style={{ fontSize: 8, color: "#aaa", letterSpacing: 1 }}>v3</span>
                   </div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -9318,7 +9318,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       <div style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#C84B31"}}/>
                     </div>
                     <span style={{ fontSize: 14 }}>🌙</span>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#C4714A,#9B6BAA)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#E49178,#90A093)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
                   </div>
                 </div>
 
@@ -9334,8 +9334,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     {id:"projet",l:"📄 Projet",ok:false},{id:"pmi",l:"🏛️ PMI",ok:false},{id:"support",l:"❓ Support",ok:false}
                   ]).map(s=><div key={s.id} onClick={s.ok?()=>setDemoPage(s.id):undefined} style={{
                     whiteSpace:"nowrap",padding:"4px 10px",borderRadius:8,fontSize:9,fontWeight:600,cursor:s.ok?"pointer":"not-allowed",flexShrink:0,transition:"all .15s",
-                    background:demoPage===s.id?"linear-gradient(135deg,#C4714A,#D4824A)":s.ok?"#F8F3FF":"#F4F4F4",
-                    color:demoPage===s.id?"#fff":s.ok?"#9B6BAA":"#C0B8C8",opacity:s.ok?1:.6,
+                    background:demoPage===s.id?"linear-gradient(135deg,#E49178,#C76754)":s.ok?"#F6F7F6":"#F4F4F4",
+                    color:demoPage===s.id?"#fff":s.ok?"#90A093":"#CDD4CE",opacity:s.ok?1:.6,
                   }}>{s.l}{!s.ok&&" 🔒"}</div>)}
                 </div>}
 
@@ -9346,9 +9346,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {demoPage==="accueil"&&<div style={{padding:10}}>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>Bonjour Marie 👋</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{v:D.enfants.length,l:"Enfants",c:"#C4714A"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#9B6BAA"},{v:"152h",l:"Ce mois",c:"#2E4859"},{v:"98%",l:"Presence",c:"#5DA9A1"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                      {[{v:D.enfants.length,l:"Enfants",c:"#E49178"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#90A093"},{v:"152h",l:"Ce mois",c:"#2E4859"},{v:"98%",l:"Presence",c:"#5DA9A1"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:15,fontWeight:700,color:k.c}}>{k.v}</div>
-                        <div style={{fontSize:9,color:"#9B6BAA",marginTop:1}}>{k.l}</div>
+                        <div style={{fontSize:9,color:"#90A093",marginTop:1}}>{k.l}</div>
                       </div>)}
                     </div>
                     <div style={{fontSize:10,fontWeight:700,color:"#2E4859",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
@@ -9358,13 +9358,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                         <span style={{fontSize:20}}>{e.emoji}</span>
                         <div style={{flex:1}}>
                           <div style={{fontSize:11,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div>
-                          <div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive a "+demoArrivee[e.id]:"Appuyer pour pointer"}</div>
+                          <div style={{fontSize:9,color:"#90A093"}}>{estPresent?"Arrive a "+demoArrivee[e.id]:"Appuyer pour pointer"}</div>
                         </div>
-                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F9F3FF",color:estPresent?"#5DA9A1":"#9B6BAA",fontWeight:700}}>{estPresent?"Present":"Attendu"}</div>
+                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F6F7F6",color:estPresent?"#5DA9A1":"#90A093",fontWeight:700}}>{estPresent?"Present":"Attendu"}</div>
                       </div>;
                     })}
                     <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#C4714A",marginBottom:3}}>📋 A faire aujourd'hui</div>
+                      <div style={{fontSize:9,fontWeight:700,color:"#E49178",marginBottom:3}}>📋 A faire aujourd'hui</div>
                       <div style={{fontSize:9,color:"#2E4859",lineHeight:1.9}}>Journal de {D.enfants[0].prenom}<br/>Declarer Pajemploi (J-3)<br/>Renouveler ordonnance Emma</div>
                     </div>
                   </div>}
@@ -9372,8 +9372,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {/* JOURNAL */}
                   {demoPage==="journal"&&<div style={{padding:10}}>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 Journal — {D.enfants[0].prenom}</div>
-                    {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id} style={{background:t.auteur==="asmat"?"#F8F3FF":"#FFF8F3",borderRadius:10,padding:8,marginBottom:5,borderLeft:"3px solid "+(t.auteur==="asmat"?"#9B6BAA":"#C4714A")}}>
-                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#9B6BAA":"#C4714A",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩👧 Marie":"👪 Parent"} · {t.h}</div>
+                    {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id} style={{background:t.auteur==="asmat"?"#F6F7F6":"#FFF8F3",borderRadius:10,padding:8,marginBottom:5,borderLeft:"3px solid "+(t.auteur==="asmat"?"#90A093":"#E49178")}}>
+                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#90A093":"#E49178",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩👧 Marie":"👪 Parent"} · {t.h}</div>
                       <div style={{fontSize:10,color:"#2E4859",lineHeight:1.5}}>{t.txt}</div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                         <div style={{fontSize:13}}>{t.mood}</div>
@@ -9381,11 +9381,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                       </div>
                     </div>)}
                     <div style={{display:"flex",gap:4,marginBottom:6}}>
-                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m} onClick={()=>setDemoMood(m)} style={{padding:"3px 6px",borderRadius:6,background:m===demoMood?"#F8F3FF":"#F4F0FB",border:m===demoMood?"1.5px solid #9B6BAA":"1.5px solid transparent",fontSize:12,cursor:"pointer"}}>{m}</div>)}
+                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m} onClick={()=>setDemoMood(m)} style={{padding:"3px 6px",borderRadius:6,background:m===demoMood?"#F6F7F6":"#F6F7F6",border:m===demoMood?"1.5px solid #90A093":"1.5px solid transparent",fontSize:12,cursor:"pointer"}}>{m}</div>)}
                     </div>
                     <div style={{display:"flex",gap:5}}>
                       <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} placeholder="Ecrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#2E4859"}}/>
-                      <div onClick={()=>{if(demoMsg.trim())setDemoMsg("");}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>OK</div>
+                      <div onClick={()=>{if(demoMsg.trim())setDemoMsg("");}} style={{background:"linear-gradient(135deg,#90A093,#A8B5A8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>OK</div>
                     </div>
                   </div>}
 
@@ -9393,17 +9393,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {demoPage==="pointage"&&<div style={{padding:10}}>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>⏰ Pointage</div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{l:"Prevues",v:"174h",c:"#2E4859"},{l:"Realisees",v:"152h30",c:"#C4714A"},{l:"Solde",v:"-21h30",c:"#C84B31"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
+                      {[{l:"Prevues",v:"174h",c:"#2E4859"},{l:"Realisees",v:"152h30",c:"#E49178"},{l:"Solde",v:"-21h30",c:"#C84B31"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
                         <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
-                        <div style={{fontSize:8,color:"#9B6BAA"}}>{k.l}</div>
+                        <div style={{fontSize:8,color:"#90A093"}}>{k.l}</div>
                       </div>)}
                     </div>
                     {D.enfants.map(e=>{
                       const estPresent=!!demoArrivee[e.id];
                       return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #5DA9A1":"1.5px solid transparent",transition:"all .2s"}}>
                         <span style={{fontSize:16}}>{e.emoji}</span>
-                        <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div><div style={{fontSize:9,color:"#9B6BAA"}}>{estPresent?"Arrive "+demoArrivee[e.id]:"Pas encore pointe"}</div></div>
-                        <div style={{fontSize:9,fontWeight:700,background:estPresent?"#F0FAF4":"#F4F0FB",color:estPresent?"#5DA9A1":"#9B6BAA",padding:"2px 7px",borderRadius:6}}>{estPresent?"Pointe":"Pointer"}</div>
+                        <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div><div style={{fontSize:9,color:"#90A093"}}>{estPresent?"Arrive "+demoArrivee[e.id]:"Pas encore pointe"}</div></div>
+                        <div style={{fontSize:9,fontWeight:700,background:estPresent?"#F0FAF4":"#F6F7F6",color:estPresent?"#5DA9A1":"#90A093",padding:"2px 7px",borderRadius:6}}>{estPresent?"Pointe":"Pointer"}</div>
                       </div>;
                     })}
                   </div>}
@@ -9412,20 +9412,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {demoPage==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:6}}>💬 Messagerie</div>
                     <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto"}}>
-                      {D.enfants.map(e=>{const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;return <div key={e.id} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",cursor:"pointer",position:"relative",flexShrink:0}}>
+                      {D.enfants.map(e=>{const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;return <div key={e.id} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#E49178,#C76754)":"#F6F7F6",cursor:"pointer",position:"relative",flexShrink:0}}>
                         <span style={{fontSize:13}}>{e.emoji}</span><span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#2E4859"}}>{e.prenom}</span>
                         {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#C84B31",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
                       </div>;})}
                     </div>
                     <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto",minHeight:150}}>
-                      {demoMsgs.filter(m=>m.eId==="e1").map(m=><div key={m.id} style={{alignSelf:m.de==="parent"?"flex-start":"flex-end",background:m.de==="parent"?"#F4F0FB":"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",padding:"7px 10px",maxWidth:"78%"}}>
+                      {demoMsgs.filter(m=>m.eId==="e1").map(m=><div key={m.id} style={{alignSelf:m.de==="parent"?"flex-start":"flex-end",background:m.de==="parent"?"#F6F7F6":"linear-gradient(135deg,#E49178,#C76754)",borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",padding:"7px 10px",maxWidth:"78%"}}>
                         <div style={{fontSize:9,color:m.de==="parent"?"#2E4859":"#fff",lineHeight:1.5}}>{m.txt}</div>
-                        <div style={{fontSize:7,color:m.de==="parent"?"#9B6BAA":"rgba(255,255,255,.6)",textAlign:"right",marginTop:2}}>{m.h}</div>
+                        <div style={{fontSize:7,color:m.de==="parent"?"#90A093":"rgba(255,255,255,.6)",textAlign:"right",marginTop:2}}>{m.h}</div>
                       </div>)}
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
                       <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
-                      <div onClick={()=>{if(demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
+                      <div onClick={()=>{if(demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} style={{background:"linear-gradient(135deg,#90A093,#A8B5A8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
                     </div>
                   </div>}
 
@@ -9433,19 +9433,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {demoPage==="facturation"&&<div style={{padding:10}}>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>💰 Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
                     <div style={{display:"flex",gap:4,marginBottom:10}}>
-                      {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#C4714A,#D4824A)":"#F4F0FB",color:i===demoMois?"#fff":"#2E4859"}}>{m}</div>)}
+                      {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#E49178,#C76754)":"#F6F7F6",color:i===demoMois?"#fff":"#2E4859"}}>{m}</div>)}
                     </div>
                     {[{l:"Salaire de base",d:[{h:"160h x 4,05EUR",v:"648,00 EUR"},{h:"152h x 4,05EUR",v:"615,60 EUR"},{h:"168h x 4,05EUR",v:"680,40 EUR"}][demoMois]},{l:"Ind. entretien",d:[{h:"20j x 3,80EUR",v:"76,00 EUR"},{h:"19j x 3,80EUR",v:"72,20 EUR"},{h:"21j x 3,80EUR",v:"79,80 EUR"}][demoMois]},{l:"Heures majorees",d:[{h:"8h x 5,06EUR",v:"40,50 EUR"},{h:"4h x 5,06EUR",v:"20,25 EUR"},{h:"12h x 5,06EUR",v:"60,75 EUR"}][demoMois]}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
-                      <div><div style={{fontWeight:600,color:"#2E4859"}}>{r.l}</div><div style={{fontSize:8,color:"#9B6BAA"}}>{r.d.h}</div></div>
-                      <div style={{fontWeight:700,color:"#C4714A"}}>{r.d.v}</div>
+                      <div><div style={{fontWeight:600,color:"#2E4859"}}>{r.l}</div><div style={{fontSize:8,color:"#90A093"}}>{r.d.h}</div></div>
+                      <div style={{fontWeight:700,color:"#E49178"}}>{r.d.v}</div>
                     </div>)}
                     <div style={{marginTop:8,padding:10,background:"linear-gradient(135deg,rgba(196,113,74,.08),rgba(155,107,170,.08))",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid rgba(196,113,74,.2)"}}>
                       <span style={{fontSize:11,fontWeight:700,color:"#2E4859"}}>Total brut</span>
-                      <span style={{fontSize:17,fontWeight:700,color:"#C4714A"}}>{["764,50 EUR","708,05 EUR","820,95 EUR"][demoMois]}</span>
+                      <span style={{fontSize:17,fontWeight:700,color:"#E49178"}}>{["764,50 EUR","708,05 EUR","820,95 EUR"][demoMois]}</span>
                     </div>
                     <div style={{display:"flex",gap:5,marginTop:8}}>
                       <div style={{flex:1,background:"linear-gradient(135deg,#2E4859,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span></div>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#C4714A,#D4824A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span></div>
+                      <div style={{flex:1,background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span></div>
                     </div>
                   </div>}
 
@@ -9453,8 +9453,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   {demoPage==="outils"&&<div style={{padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,textAlign:"center"}}>
                     <div style={{fontSize:32}}>⭐</div>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>Outils Pro</div>
-                    <div style={{fontSize:10,color:"#9B6BAA",lineHeight:1.6}}>Projet d'accueil, PMI, FAQ et Support disponibles dans l'application complete</div>
-                    <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#9B6BAA,#B87CC8)",borderRadius:10,padding:"8px 16px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:8}}>Acceder a l'app</div>
+                    <div style={{fontSize:10,color:"#90A093",lineHeight:1.6}}>Projet d'accueil, PMI, FAQ et Support disponibles dans l'application complete</div>
+                    <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#90A093,#A8B5A8)",borderRadius:10,padding:"8px 16px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:8}}>Acceder a l'app</div>
                   </div>}
 
                 </div>
@@ -9463,7 +9463,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{ display: "flex", justifyContent: "space-around", padding: "4px 4px 6px", borderTop: "1px solid rgba(196,113,74,.1)", background: "rgba(255,255,255,.98)", flexShrink: 0 }}>
                   {[{g:"accueil",ic:"🏠",l:"Accueil"},{g:"enfant",ic:"👶",l:"Enfant"},{g:"admin",ic:"🗂️",l:"Admin"},{g:"outils",ic:"⭐",l:"Outils"}].map(t=><div key={t.g} onClick={()=>{setDemoGroup(t.g);if(t.g==="accueil")setDemoPage("accueil");else if(t.g==="enfant")setDemoPage("journal");else if(t.g==="admin")setDemoPage("messagerie");else setDemoPage("outils");}} style={{textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:demoGroup===t.g?"rgba(196,113,74,.1)":"transparent",flex:1}}>
                     <div style={{fontSize:17}} dangerouslySetInnerHTML={{__html:t.ic}}/>
-                    <div style={{fontSize:7,fontWeight:demoGroup===t.g?700:400,color:demoGroup===t.g?"#C4714A":"#9B6BAA"}}>{t.l}</div>
+                    <div style={{fontSize:7,fontWeight:demoGroup===t.g?700:400,color:demoGroup===t.g?"#E49178":"#90A093"}}>{t.l}</div>
                   </div>)}
                 </div>
               </div>
@@ -9476,10 +9476,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           {/* Legende */}
           <div style={{display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>
             <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#6B4F3A"}}>
-              <div style={{width:10,height:10,borderRadius:3,background:"linear-gradient(135deg,#C4714A,#D4824A)"}}/>
+              <div style={{width:10,height:10,borderRadius:3,background:"linear-gradient(135deg,#E49178,#C76754)"}}/>
               Onglet navigable dans la demo
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#9B6BAA"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#90A093"}}>
               <div style={{width:10,height:10,borderRadius:3,background:"#D0C8D8"}}/>
               🔒 Disponible dans l'application
             </div>
@@ -9526,7 +9526,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 titre: "Parent + asmat dans le même flow",
                 desc: "Vous signez côté asmat. Le parent reçoit une notification et signe à son tour. Le PDF combiné final est automatiquement archivé dans vos documents pendant 5 ans (durée légale de conservation des contrats de travail).",
                 badge: "Bout en bout",
-                color: "#C4714A"
+                color: "#E49178"
               }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 100}>
@@ -9578,7 +9578,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           {/* CTA */}
           <FadeIn delay={500}>
             <div style={{ textAlign: "center", marginTop: 48 }}>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#C4714A,#9A4020)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#E49178,#C76754)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
                 Tester la signature électronique →
               </button>
               <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,.4)" }}>
@@ -9613,7 +9613,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 4 - CHIFFRES */}
-      <div className="lp-section" style={{ background: L.section4Bg||"linear-gradient(135deg,#7B4A8A,#9B6BAA)" }}>
+      <div className="lp-section" style={{ background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
@@ -9685,7 +9685,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
             {/* Pro */}
             <div style={{ background: L.proBg||"#FDF5FB", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
-              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#C4714A,#8A3A20)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>{T.proLabel}</div>
+              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#E49178,#B85838)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>{T.proLabel}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
@@ -9693,7 +9693,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
               <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
               <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
               {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
                   <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
@@ -9717,7 +9717,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
           </div>
           <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
-          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#C4714A,#9A4020)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
+          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
           <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
         </FadeIn>
       </div>
@@ -10499,7 +10499,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
                 <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
               </div>
-              <div style={{ display:"flex", marginBottom:16, background:"#F4EFF8", borderRadius:10, padding:3 }}>
+              <div style={{ display:"flex", marginBottom:16, background:"#F6F7F6", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
                   <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
@@ -10524,7 +10524,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
                 <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
-              {modeAuth === "inscription" && <div style={{ background:"#F4EFF8", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
+              {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
                 {[{k:"politique", l:"J'accepte la politique de confidentialité", req:true},{k:"cgu", l:"J'accepte les conditions générales d'utilisation", req:true},{k:"newsletter", l:"Recevoir les actualités TiMat (optionnel)", req:false}].map(({k,l,req}) => (
                   <label key={k} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer", marginBottom:7 }}>
@@ -10534,8 +10534,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 ))}
                 <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
-              {err && <div style={{ color:"#C44A6A", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
-              <button onClick={modeAuth==="connexion" ? connexion : inscription} disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#C4714A,#9A4020)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              {err && <div style={{ color:"#C84B31", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
+              <button onClick={modeAuth==="connexion" ? connexion : inscription} disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
@@ -10937,7 +10937,7 @@ function AjouterEnfantModale({user,onClose}){
         style={{position:"absolute",top:14,right:14,zIndex:2,width:32,height:32,borderRadius:"50%",border:"none",background:"rgba(255,255,255,.9)",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>×</button>
 
       {/* Header gradient */}
-      <div style={{background:"linear-gradient(135deg,var(--T),#D4824A)",padding:"22px 24px 18px"}}>
+      <div style={{background:"linear-gradient(135deg,var(--T),#C76754)",padding:"22px 24px 18px"}}>
         <div className="pf" style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:4}}>
           {step===3?"🌿 ":"➕ "}Ajouter un enfant - {cur.t}
         </div>
@@ -12099,7 +12099,7 @@ const ONBOARD_STEPS=[
   },
   {
     emoji:"📋",
-    color:"#C4714A",
+    color:"#E49178",
     bg:"linear-gradient(135deg,#FEF6F0,#FFF8F4)",
     titre:"Le journal du quotidien",
     sousTitre:"Ce que vous faites chaque jour, simplifié.",
@@ -12826,7 +12826,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
         {/* ====================== COULEURS (globales + par élément) ====================== */}
         {sec==="couleurs"&&<>
           <BOCard title="Palette de l\'application" icon="🎨">
-            {[["T","Principale (terracotta)"],["S","Secondaire (mauve)"],["G","Vert (succès)"],["R","Rouge/Rose (alertes)"],["c","Fond général"],["w","Fond cartes"],["b","Texte principal"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["T","Principale (terracotta)"],["S","Secondaire (sauge)"],["G","Vert d'eau (succès)"],["R","Rouge alerte (terracotta foncé)"],["c","Fond général (crème)"],["w","Fond cartes (blanc)"],["b","Texte principal (bleu nuit)"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.cols} setter={setCol}/></BOField>
             )}
           </BOCard>
@@ -13134,7 +13134,7 @@ const DEFAULT_CONFIG = {
     section5Bg:"#FDF5FB",
     section6Bg:"#F5EBF8",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
-    statsBg:"linear-gradient(135deg,#7B4A8A,#9B6BAA)",
+    statsBg:"linear-gradient(135deg,#2E4A5A,#5DA9A1)",
     // ----- BOUTONS HERO -----
     heroBtnPrimBg:"linear-gradient(135deg,#E49178,#C84B31)",
     heroBtnPrimColor:"#fff",
@@ -13209,7 +13209,7 @@ const DEFAULT_CONFIG = {
     ctaSubTitleColor:"rgba(255,255,255,.6)",
     ctaSubColor:"rgba(255,255,255,.5)",
     ctaFooterColor:"rgba(255,255,255,.35)",
-    pageBg:"#FDF5F8",
+    pageBg:"#FDFBF8",
     // ----- POLICES -----
     fontTitle:"'Quicksand', sans-serif",
     fontBody:"'Outfit', sans-serif",
@@ -13497,7 +13497,7 @@ export default function App(){
           prenom:u.user_metadata?.prenom||"Utilisateur",
           nom:u.user_metadata?.nom||"",
           role:u.user_metadata?.role||"asmat",
-          couleur:u.user_metadata?.role==="parent"?"#2E5F8A":"#C4714A",
+          couleur:u.user_metadata?.role==="parent"?"#2E5F8A":"#E49178",
           subscription_status:"free",
           _needsProfileFetch:true,
           _profileConfirmed:false // P16D anti-flash parent
