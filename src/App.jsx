@@ -165,7 +165,7 @@ function Styles(){return(
       --G:#5DA9A1;--Gp:#F2F8F7;
       --B:#5A7AB8;--Bp:#EBF0F8;
       --R:#C84B31;--Rp:#FBF1EF;
-      --P:#7B5A9A;--Pp:#F0EAF8;
+      --P:#B8924D;--Pp:#F8F2E4;
       --sh:0 1px 4px rgba(46,74,90,.05),0 4px 20px rgba(46,74,90,.07);
       --sh2:0 2px 12px rgba(46,74,90,.08),0 16px 48px rgba(46,74,90,.12);
       --sh3:0 0 0 3px rgba(144,160,147,.2);
@@ -173,8 +173,8 @@ function Styles(){return(
     }
     .dark{
       --c:#1A2530;--w:#243140;--b:#E8EEF0;--m:#9FAEB5;--l:#7A8993;--br:#34424E;
-      --Tp:#3A2218;--Sp:#1F2A22;--Gp:#0F2A26;--Bp:#0D1A2A;--Rp:#2E1610;--Pp:#1A1830;
-      --T:#E49178;--S:#A8B5A8;--G:#7FC4BC;--B:#7AAAE0;--R:#E26B4F;--P:#C898DC;
+      --Tp:#3A2218;--Sp:#1F2A22;--Gp:#0F2A26;--Bp:#0D1A2A;--Rp:#2E1610;--Pp:#2E2418;
+      --T:#E49178;--S:#A8B5A8;--G:#7FC4BC;--B:#7AAAE0;--R:#E26B4F;--P:#D4B068;
       --Tl:#5A3A2C;--Sl:#384038;--Gl:#1F4A44;--Bl:#1A3050;--Rl:#4A1F12;
       --sh:0 1px 4px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.6);
       --sh2:0 2px 12px rgba(0,0,0,.6),0 16px 48px rgba(0,0,0,.7);
@@ -720,7 +720,7 @@ function AccueilAssMat({enfants,setPage,user}){
 }
 
 //
-function AccueilParent({enfant,setPage}){
+function AccueilParent({enfant,setPage,user}){
   // ⚠️ Tous les hooks AVANT le return conditionnel (règle React)
   const [showAbsence,setShowAbsence]=useState(false);
   const [absence,setAbsence]=useState({date:TODAY_STR,motif:"Maladie",heures:"",indemnise:true});
@@ -8746,7 +8746,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
     <div className="topbar">
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <img src={logoForRole(user?.role)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+          <img src={logoForRole(user?.role, dark)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
           <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
         </div>
       </div>
@@ -9200,7 +9200,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrl || logoForRole(null, dark)} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
@@ -10244,7 +10244,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L?.logoUrl || logoForRole(null, dark)} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.
@@ -13083,11 +13083,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   </div>;
 }
 
-// P19: helper logo selon le role
-const logoForRole = (role) => {
-  if(role === "parent") return "/logo-parent.png";
-  if(role === "mam" || role === "creche") return "/logo-mam.png";
-  return "/logo.png";
+// P19 + P24: helper logo selon le role et mode dark
+const logoForRole = (role, dark) => {
+  const s = dark ? "-dark" : "";
+  if(role === "parent") return `/logo${s}-parent.png`;
+  if(role === "mam") return `/logo${s}-mam.png`;
+  if(role === "creche") return `/logo${s}-creche.png`;
+  return `/logo${s}.png`;
 };
 
 const DEFAULT_CONFIG = {
@@ -13651,7 +13653,7 @@ export default function App(){
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <img src={logoForRole(user?.role)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
+      <img src={logoForRole(user?.role, dark)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
       <div style={{display:"flex",gap:6}}>
         <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
       </div>
@@ -13729,7 +13731,7 @@ export default function App(){
 
   const renderPage=()=>{
     switch(page){
-      case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
+      case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
       case "bilans": return <Bilans {...P}/>;
@@ -13780,7 +13782,7 @@ export default function App(){
       case "contrats": return <AdminFinances {...P} user={user}/>;
       case "recap": return <AdminFinances {...P} user={user}/>;
       case "dashboard": return <TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>;
-      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage}/>;
+      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
     }
   };
 

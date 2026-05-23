@@ -53,3 +53,7 @@ timat-recap-session-*.json
 # Fichiers téléchargés/temporaires à la racine (pas du code)
 /App*.jsx
 /*.pdf
+
+# P24 cleanup (session du 23 mai 2026)
+_archive_vercel_deploy/
+loogo Timat/
