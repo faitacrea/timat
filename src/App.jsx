@@ -9245,7 +9245,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{ fontSize: "clamp(14px,2vw,17px)", color: L.heroSubDescColor||"rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
           <div className="lp-hero-ctas">
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
-            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid rgba(255,255,255,.18)", borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
             {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
