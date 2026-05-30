@@ -12351,30 +12351,20 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [stats,setStats]=useState({users:0,pro:0,enfants:0});
   const [showPreview,setShowPreview]=useState(true);
   const [search,setSearch]=useState("");
+  // P30C : modale de confirmation Reset (saisie "RESET" obligatoire)
+  const [showResetModal,setShowResetModal]=useState(false);
+  const [resetInput,setResetInput]=useState("");
+  const [resetting,setResetting]=useState(false);
 
   const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
-  // P21 AUTOSAVE option B : 3s apres derniere modif + indicateur visuel
+  // P30C : AUTOSAVE DÉSACTIVÉ (cause de l'incident Reset→écrasement prod).
+  // L'indicateur signale désormais "modifications non sauvegardées" et invite
+  // à cliquer Sauvegarder manuellement, mais N'ÉCRIT PLUS automatiquement en prod.
   const [saveStatus, setSaveStatus] = useState("idle");
   const _p21FirstRender = useRef(true);
   useEffect(() => {
     if (_p21FirstRender.current) { _p21FirstRender.current = false; return; }
-    setSaveStatus("pending");
-    const timer = setTimeout(async () => {
-      setSaveStatus("saving");
-      try {
-        // P21b : synchroniser G (config globale) avec cfg AVANT de sauver
-        Object.assign(G, JSON.parse(JSON.stringify(cfg)));
-        const result = await saveConfig();
-        const ok = !result || result?.success !== false;
-        setSaveStatus(ok ? "saved" : "error");
-        setTimeout(() => setSaveStatus("idle"), 2500);
-      } catch(e) {
-        console.warn("[P21 autosave]", e);
-        setSaveStatus("error");
-        setTimeout(() => setSaveStatus("idle"), 4000);
-      }
-    }, 3000);
-    return () => clearTimeout(timer);
+    setSaveStatus("dirty");
   }, [cfg]);
   useEffect(() => {
     let el = document.getElementById("p21-save-indicator");
@@ -12386,9 +12376,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     }
     const map = {
       idle:    { txt:"", show:false, bg:"transparent", col:"transparent" },
-      pending: { txt:"Modifications en cours...", bg:"#E5E7EB", col:"#374151", show:true },
+      dirty:   { txt:"⚠️ Modifications non sauvegardées — clique 💾", bg:"#FEF3C7", col:"#92400E", show:true },
       saving:  { txt:"Sauvegarde...",              bg:"#DBEAFE", col:"#1E40AF", show:true },
-      saved:   { txt:"Sauvegarde",                 bg:"#D1FAE5", col:"#065F46", show:true },
+      saved:   { txt:"✅ Sauvegardé",              bg:"#D1FAE5", col:"#065F46", show:true },
       error:   { txt:"Erreur de sauvegarde",       bg:"#FEE2E2", col:"#991B1B", show:true },
     };
     const s = map[saveStatus] || map.idle;
@@ -12440,23 +12430,52 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 
   const sauvegarder=async()=>{
     setSaving(true);
+    setSaveStatus("saving");
     Object.assign(G, JSON.parse(JSON.stringify(cfg)));
     applyColsToDOM(cfg.cols);
     setAppConfig(JSON.parse(JSON.stringify(cfg)));
     const result=await saveConfig();
     if(result.ok){
-      setToast("✅ Sauvegardé ! Changements en ligne.");
+      if(result.backupOk===false){
+        setToast("✅ Sauvegardé — ⚠️ backup de sécurité échoué (voir console)");
+        console.warn("Backup échoué:", result.backupError);
+      }else{
+        setToast("✅ Sauvegardé ! Changements en ligne.");
+      }
+      setSaveStatus("saved");
+      setTimeout(()=>setSaveStatus("idle"),2500);
     }else{
       setToast("❌ Échec : "+result.error);
       console.error("Échec sauvegarde:", result.error);
+      setSaveStatus("error");
+      setTimeout(()=>setSaveStatus("idle"),4000);
     }
     setSaving(false);
   };
 
   const reset=()=>{
-    if(!window.confirm("Réinitialiser toute la config ? Les modifications non sauvegardées seront perdues."))return;
+    setResetInput("");
+    setShowResetModal(true);
+  };
+
+  // P30C : exécuté quand l'utilisateur a tapé "RESET" et confirmé
+  const confirmReset=async()=>{
+    setResetting(true);
+    // 1. Backup explicite de la config actuelle AVANT réinitialisation
+    const backupRes=await backupCurrentConfig('before_reset');
+    if(backupRes.ok===false){
+      // Backup échoué : on alerte mais on NE réinitialise PAS (sécurité)
+      setToast("⚠️ Backup avant reset échoué — réinitialisation annulée (voir console)");
+      console.warn("Backup before_reset échoué:", backupRes.error);
+      setResetting(false);
+      setShowResetModal(false);
+      return;
+    }
+    // 2. Réinitialisation locale (n'écrit PAS en prod ; il faudra cliquer Sauvegarder)
     setCfg(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
-    setToast("🔄 Config réinitialisée (cliquer Sauvegarder pour valider)");
+    setToast("🔄 Config réinitialisée localement — clique 💾 Sauvegarder pour publier");
+    setResetting(false);
+    setShowResetModal(false);
   };
 
   const rechargerDepuisSupabase=async()=>{
@@ -12580,6 +12599,42 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 
   return <div className="fi" style={{maxWidth:"100%",padding:0}}>
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+
+    {/* P30C : Modale de confirmation Reset (saisie "RESET" obligatoire) */}
+    {showResetModal&&<div onClick={()=>!resetting&&setShowResetModal(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"var(--w)",borderRadius:18,padding:24,maxWidth:420,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.25)",fontFamily:"inherit"}}>
+        <div style={{fontSize:34,textAlign:"center",marginBottom:8}}>⚠️</div>
+        <h3 style={{margin:"0 0 10px",fontSize:18,fontWeight:800,color:"var(--b)",textAlign:"center"}}>Réinitialiser toute la configuration ?</h3>
+        <p style={{fontSize:13,lineHeight:1.5,color:"var(--m)",margin:"0 0 16px",textAlign:"center"}}>
+          Cette action remet <b>tous les réglages du backoffice</b> à leurs valeurs par défaut (couleurs, textes, landing, tarifs…). Une sauvegarde de sécurité sera créée automatiquement avant.
+        </p>
+        <p style={{fontSize:12,color:"var(--m)",margin:"0 0 6px",fontWeight:600}}>Pour confirmer, tape <span style={{color:"var(--T)",fontWeight:800}}>RESET</span> ci-dessous :</p>
+        <input
+          autoFocus
+          className="inp"
+          value={resetInput}
+          onChange={e=>setResetInput(e.target.value)}
+          onKeyDown={e=>{if(e.key==="Enter"&&resetInput.trim().toUpperCase()==="RESET"&&!resetting)confirmReset();}}
+          placeholder="Tape RESET"
+          style={{width:"100%",fontSize:14,padding:"8px 12px",marginBottom:16,boxSizing:"border-box",textAlign:"center",letterSpacing:1}}
+        />
+        <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+          <button
+            onClick={()=>!resetting&&setShowResetModal(false)}
+            disabled={resetting}
+            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}
+          >Annuler</button>
+          <button
+            onClick={confirmReset}
+            disabled={resetInput.trim().toUpperCase()!=="RESET"||resetting}
+            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"none",
+              background:(resetInput.trim().toUpperCase()==="RESET"&&!resetting)?"#DC2626":"#FCA5A5",
+              color:"#fff",fontWeight:700,fontSize:14,
+              cursor:(resetInput.trim().toUpperCase()==="RESET"&&!resetting)?"pointer":"not-allowed",fontFamily:"inherit"}}
+          >{resetting?"⏳ …":"Réinitialiser"}</button>
+        </div>
+      </div>
+    </div>}
 
     {/* Top bar */}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid var(--br)",background:"var(--w)",flexWrap:"wrap",gap:8}}>
@@ -13371,8 +13426,48 @@ const loadConfig = async () => {
   }
 };
 
-const saveConfig = async () => {
+// P30B : sauvegarde de sécurité de la config en base AVANT tout écrasement.
+// Best-effort : ne bloque jamais le Save. Retourne {ok, error?, skipped?}.
+const backupCurrentConfig = async (reason) => {
+  try {
+    const {data, error} = await supabase
+      .from('app_config').select('config').eq('id','main').maybeSingle();
+    if (error) {
+      console.warn('[TiMat backup] Lecture config échouée, backup ignoré:', error.message);
+      return {ok:false, error:error.message};
+    }
+    if (!data || data.config == null) {
+      console.log('[TiMat backup] Aucune config existante à sauvegarder (1ère fois ?)');
+      return {ok:true, skipped:true};
+    }
+    // config peut être un objet (JSONB) ou une string (fallback TEXT historique)
+    let cfgObj = data.config;
+    if (typeof cfgObj === 'string') {
+      try { cfgObj = JSON.parse(cfgObj); }
+      catch(e) {
+        console.warn('[TiMat backup] config en string non parsable, backup ignoré');
+        return {ok:false, error:'config string non parsable'};
+      }
+    }
+    const {data:{user}={}} = await supabase.auth.getUser();
+    const {error: insErr} = await supabase
+      .from('app_config_backup').insert({config: cfgObj, reason, created_by: user?.id ?? null});
+    if (insErr) {
+      console.warn('[TiMat backup] Insertion backup échouée (Save continue):', insErr.message);
+      return {ok:false, error:insErr.message};
+    }
+    console.log('[TiMat backup] ✅ Backup créé (reason='+reason+')');
+    return {ok:true};
+  } catch(e) {
+    console.warn('[TiMat backup] Exception backup (Save continue):', e.message);
+    return {ok:false, error:e.message||'exception inconnue'};
+  }
+};
+
+const saveConfig = async (backupReason='before_save') => {
   const configStr = JSON.stringify(G);
+  // P30B : backup de sécurité best-effort avant écrasement (ne bloque jamais)
+  const backupRes = await backupCurrentConfig(backupReason);
   // Try JSONB first (object), then TEXT fallback (string)
   try {
     const {error: errObj} = await supabase.from('app_config').upsert({
@@ -13382,7 +13477,7 @@ const saveConfig = async () => {
     });
     if (!errObj) {
       console.log('[TiMat config] Sauvegardé en JSONB ('+configStr.length+' octets)');
-      return {ok:true};
+      return {ok:true, backupOk:backupRes.ok, backupError:backupRes.error};
     }
     console.warn('[TiMat config] JSONB a échoué, tentative TEXT:', errObj.message);
     // Fallback: string
@@ -13393,7 +13488,7 @@ const saveConfig = async () => {
     });
     if (!errStr) {
       console.log('[TiMat config] Sauvegardé en TEXT ('+configStr.length+' octets)');
-      return {ok:true};
+      return {ok:true, backupOk:backupRes.ok, backupError:backupRes.error};
     }
     console.error('[TiMat config] Les deux formats ont échoué. JSONB:', errObj.message, 'TEXT:', errStr.message);
     return {ok:false, error: errObj.message + ' | ' + errStr.message};
