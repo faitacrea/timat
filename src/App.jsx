@@ -12355,6 +12355,11 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [showResetModal,setShowResetModal]=useState(false);
   const [resetInput,setResetInput]=useState("");
   const [resetting,setResetting]=useState(false);
+  // P30D : historique des backups + restauration 1-clic
+  const [backupList,setBackupList]=useState([]);
+  const [loadingBackups,setLoadingBackups]=useState(false);
+  const [restoringId,setRestoringId]=useState(null);
+  const [showRestoreModal,setShowRestoreModal]=useState(null);
 
   const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
   // P30C : AUTOSAVE DÉSACTIVÉ (cause de l'incident Reset→écrasement prod).
@@ -12478,6 +12483,67 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     setShowResetModal(false);
   };
 
+  // P30D : charger les 20 derniers backups depuis Supabase
+  const loadBackups=async()=>{
+    setLoadingBackups(true);
+    const {data,error}=await supabase
+      .from('app_config_backup')
+      .select('id,reason,created_at,created_by,config')
+      .order('created_at',{ascending:false})
+      .limit(20);
+    if(error){
+      setToast("❌ Erreur chargement historique : "+error.message);
+      console.error("[TiMat historique]",error);
+      setBackupList([]);
+    }else{
+      setBackupList(data||[]);
+    }
+    setLoadingBackups(false);
+  };
+
+  // P30D : restaurer un backup (crée un filet de sécurité 'manual' avant)
+  const restoreBackup=async(backup)=>{
+    setRestoringId(backup.id);
+    // 1. Filet : backup de la config ACTUELLE avant restauration
+    const safetyRes=await backupCurrentConfig('manual');
+    if(safetyRes.ok===false){
+      setToast("⚠️ Backup de sécurité échoué — restauration annulée (voir console)");
+      console.warn("[TiMat restauration] Safety backup échoué:",safetyRes.error);
+      setRestoringId(null);
+      setShowRestoreModal(null);
+      return;
+    }
+    // 2. UPDATE app_config avec le contenu du backup
+    const {error}=await supabase.from('app_config').upsert({
+      id:'main',
+      config:backup.config,
+      updated_at:new Date().toISOString()
+    });
+    if(error){
+      setToast("❌ Erreur restauration : "+error.message);
+      console.error("[TiMat restauration]",error);
+      setRestoringId(null);
+      setShowRestoreModal(null);
+      return;
+    }
+    // 3. Sync des states locaux pour refléter la restauration
+    const restored=JSON.parse(JSON.stringify(backup.config));
+    Object.assign(G,restored);
+    setCfg(restored);
+    setAppConfig(JSON.parse(JSON.stringify(restored)));
+    try{ applyColsToDOM(restored.cols); }catch(e){ console.warn(e); }
+    setSaveStatus("idle");
+    setToast("✅ Configuration restaurée depuis le "+new Date(backup.created_at).toLocaleString('fr-FR'));
+    console.log("[TiMat restauration] ✅ Config restaurée depuis backup",backup.id);
+    // 4. Recharger la liste (le filet 'manual' apparaîtra)
+    await loadBackups();
+    setRestoringId(null);
+    setShowRestoreModal(null);
+  };
+
+  // P30D : auto-charger l'historique quand on active l'onglet
+  useEffect(()=>{ if(sec==="historique") loadBackups(); },[sec]);
+
   const rechargerDepuisSupabase=async()=>{
     setSaving(true);
     await loadConfig();
@@ -12595,6 +12661,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     {id:"polices",l:"Polices",ic:"𝐓"},
     {id:"contenu",l:"Contenu",ic:"📋"},
     {id:"app",l:"App",ic:"⚙️"},
+    {id:"historique",l:"Historique",ic:"🕐"},
   ];
 
   return <div className="fi" style={{maxWidth:"100%",padding:0}}>
@@ -12632,6 +12699,34 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               color:"#fff",fontWeight:700,fontSize:14,
               cursor:(resetInput.trim().toUpperCase()==="RESET"&&!resetting)?"pointer":"not-allowed",fontFamily:"inherit"}}
           >{resetting?"⏳ …":"Réinitialiser"}</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* P30D : Modale de confirmation Restauration */}
+    {showRestoreModal&&<div onClick={()=>!restoringId&&setShowRestoreModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"var(--w)",borderRadius:18,padding:24,maxWidth:440,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.25)",fontFamily:"inherit"}}>
+        <div style={{fontSize:34,textAlign:"center",marginBottom:8}}>🕐</div>
+        <h3 style={{margin:"0 0 10px",fontSize:18,fontWeight:800,color:"var(--b)",textAlign:"center"}}>Restaurer cette version ?</h3>
+        <p style={{fontSize:13,lineHeight:1.5,color:"var(--m)",margin:"0 0 8px",textAlign:"center"}}>
+          La configuration du<br/>
+          <b style={{color:"var(--b)"}}>{new Date(showRestoreModal.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</b><br/>
+          remplacera la configuration actuelle.
+        </p>
+        <p style={{fontSize:11,lineHeight:1.5,color:"var(--m)",margin:"0 0 16px",textAlign:"center",fontStyle:"italic"}}>
+          🛡️ Un filet de sécurité de la configuration actuelle sera créé automatiquement — vous pourrez donc revenir en arrière si besoin.
+        </p>
+        <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+          <button
+            onClick={()=>!restoringId&&setShowRestoreModal(null)}
+            disabled={restoringId!==null}
+            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:14,cursor:restoringId?"not-allowed":"pointer",fontFamily:"inherit"}}
+          >Annuler</button>
+          <button
+            onClick={()=>restoreBackup(showRestoreModal)}
+            disabled={restoringId!==null}
+            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"none",background:restoringId?"var(--br)":"var(--T)",color:"#fff",fontWeight:700,fontSize:14,cursor:restoringId?"not-allowed":"pointer",fontFamily:"inherit"}}
+          >{restoringId?"⏳ Restauration…":"↺ Restaurer"}</button>
         </div>
       </div>
     </div>}
@@ -13122,6 +13217,45 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;<br/>
               CREATE POLICY \"admin_all\" ON app_config USING (true);
             </div>
+          </BOCard>
+        </>}
+
+        {/* ====================== HISTORIQUE (P30D : backups + restauration) ====================== */}
+        {sec==="historique"&&<>
+          <BOCard title="Historique des configurations" icon="🕐">
+            <div style={{fontSize:11,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
+              Les 20 dernières sauvegardes automatiques de votre configuration. Cliquez sur <b>Restaurer</b> pour revenir à une version antérieure (la config actuelle sera automatiquement sauvegardée avant).
+            </div>
+            <button onClick={loadBackups} disabled={loadingBackups} style={{padding:"6px 14px",fontSize:11,fontWeight:600,borderRadius:8,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",cursor:loadingBackups?"wait":"pointer",marginBottom:12,fontFamily:"inherit"}}>
+              {loadingBackups?"⏳ Chargement…":"↻ Rafraîchir"}
+            </button>
+            {!loadingBackups&&backupList.length===0&&
+              <div style={{textAlign:"center",padding:30,color:"var(--m)",fontSize:12,background:"var(--c)",borderRadius:8}}>Aucune sauvegarde pour l'instant.</div>
+            }
+            {backupList.map(b=>{
+              const reasonInfo={
+                before_save:  {ic:"💾",l:"Avant sauvegarde",col:"#1E40AF",bg:"#DBEAFE"},
+                before_reset: {ic:"⚠️",l:"Avant réinitialisation",col:"#92400E",bg:"#FEF3C7"},
+                manual:       {ic:"🛡️",l:"Filet de sécurité (avant restauration)",col:"#065F46",bg:"#D1FAE5"},
+              }[b.reason]||{ic:"📦",l:b.reason,col:"var(--m)",bg:"var(--c)"};
+              const dt=new Date(b.created_at);
+              const dateStr=dt.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+              const sizeKo=b.config?Math.round(JSON.stringify(b.config).length/1024):"?";
+              return <div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,padding:"12px 14px",border:"1px solid var(--br)",borderRadius:10,marginBottom:8,background:"var(--w)"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
+                    <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:6,background:reasonInfo.bg,color:reasonInfo.col}}>{reasonInfo.ic} {reasonInfo.l}</span>
+                    <span style={{fontSize:10,color:"var(--l)"}}>{sizeKo} ko</span>
+                  </div>
+                  <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{dateStr}</div>
+                </div>
+                <button
+                  onClick={()=>setShowRestoreModal(b)}
+                  disabled={restoringId!==null}
+                  style={{padding:"7px 14px",fontSize:11,fontWeight:700,borderRadius:8,border:"none",background:restoringId===b.id?"var(--br)":"var(--T)",color:"#fff",cursor:restoringId!==null?"not-allowed":"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}
+                >{restoringId===b.id?"⏳ …":"↺ Restaurer"}</button>
+              </div>;
+            })}
           </BOCard>
         </>}
 
