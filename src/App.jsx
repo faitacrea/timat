@@ -9195,8 +9195,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       <div className="lp-hero" style={{ background: L.heroBg }}>
         <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:L.heroImg?"url("+L.heroImg+")":"none", backgroundSize:"cover", backgroundPosition:L.heroImgPosition||"center center", opacity:L.heroImgOpacity||0.12, filter:"blur("+(L.heroImgBlur||2)+"px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", top: -120, right: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,200,255,.25) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(196,113,74,.20) 0%, transparent 70%)", pointerEvents: "none" }} />
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
@@ -9264,7 +9262,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
             {painPoints.map((item, i) => (
-              <FadeIn key={item.titre} delay={i * 80}>
+              <FadeIn key={i} delay={i * 80}>
                 <div style={{ background: L.s1CardBg||"rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, padding: 20 }}>
                   <div style={{ fontSize: 28, marginBottom: 10 }}>{item.ic}</div>
                   <div style={{ fontWeight: 700, fontSize: 14, color: L.s1CardTitleColor||"#fff", marginBottom: 6 }}>{item.titre}</div>
@@ -9645,7 +9643,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
             {testimonials.map((t, i) => (
-              <FadeIn key={t.nom} delay={i * 80}>
+              <FadeIn key={i} delay={i * 80}>
                 <div style={{ background: L.testimonialBg||"#fff", borderRadius: 16, padding: 22, border: "1px solid #DDD5C8", boxShadow: "0 2px 16px rgba(44,31,20,.06)" }}>
                   <div style={{ color: L.testimonialStarColor||accent, fontSize: 13, marginBottom: 10 }}>⭐⭐⭐⭐⭐</div>
                   <div style={{ fontSize: 12, color: L.testimonialBeforeColor||"#A68970", fontStyle: "italic", marginBottom: 8 }}>"{t.avant}"</div>
@@ -10500,25 +10498,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#B8622F":"#2E5F8A") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
               </div>
+              <form onSubmit={e=>{e.preventDefault(); if(loading||(modeAuth==="inscription"&&!consentValide))return; modeAuth==="connexion"?connexion():inscription();}}>
               {modeAuth === "inscription" && <>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
                   <div>
                     <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Prénom *</div>
-                    <input value={form.prenom} onChange={e=>setForm(f=>({...f,prenom:e.target.value}))} placeholder={role==="asmat"?"Marie":"Sophie"} style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                    <input name="prenom" autoComplete="given-name" value={form.prenom} onChange={e=>setForm(f=>({...f,prenom:e.target.value}))} placeholder={role==="asmat"?"Marie":"Sophie"} style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
                   </div>
                   <div>
                     <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Nom</div>
-                    <input value={form.nom} onChange={e=>setForm(f=>({...f,nom:e.target.value}))} placeholder="Dupont" style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                    <input name="nom" autoComplete="family-name" value={form.nom} onChange={e=>setForm(f=>({...f,nom:e.target.value}))} placeholder="Dupont" style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
                   </div>
                 </div>
               </>}
               <div style={{ marginBottom:10 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Email *</div>
-                <input type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="email" name="email" autoComplete="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder={role === "asmat" ? "marie@email.fr" : "parent@email.fr"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} onKeyDown={e=>e.key==="Enter"&&(modeAuth==="connexion"?connexion():inscription())} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
@@ -10531,9 +10530,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               {err && <div style={{ color:"#C84B31", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
-              <button onClick={modeAuth==="connexion" ? connexion : inscription} disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3D75A8,#1E4A6E)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
+              </form>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
                 <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou démo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
               </div>
