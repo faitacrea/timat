@@ -9337,10 +9337,30 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
-                {/* Vraie TopBar de l'app (mode démo) */}
-                <TopBar role="asmat" groups={GROUPS_AM} page={demoPage} setPage={setDemoPage} user={D.asmat}
-                  onLogout={()=>{}} pmiNonLus={0} dark={false} setDark={()=>{}}
-                  notifNonLus={0} notifs={[]} setNotifs={()=>{}} showNotifs={false} setShowNotifs={()=>{}} setPage2={setDemoPage}/>
+                {/* TopBar démo allégée (vrai logo, style identique, sans actions perso) */}
+                <div className="topbar">
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <img src={logoForRole("asmat",false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+                    <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:18,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
+                    <span style={{fontSize:16}}>🌙</span>
+                    <Av t={ini(D.asmat.prenom,D.asmat.nom)} c={D.asmat.couleur} s={28}/>
+                  </div>
+                </div>
+
+                {/* Barre principale - vrais onglets (depuis TopBar) */}
+                <div className="nav-main" style={{background:"rgba(255,255,255,.95)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(234,224,232,.6)",display:"flex",gap:6,padding:"0 20px",height:52,alignItems:"center",overflowX:"auto",scrollbarWidth:"none"}}>
+                  {Object.entries(GROUPS_AM).map(([key,g])=>{
+                    const isActive=findGroup(GROUPS_AM,demoPage)===key;
+                    return <button key={key} onClick={()=>{const gg=GROUPS_AM[key];setDemoPage(gg.subs?gg.subs[0].id:key);}} style={{display:"flex",alignItems:"center",gap:7,padding:"8px 18px",borderRadius:24,border:"none",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",flexShrink:0,whiteSpace:"nowrap",background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",color:isActive?"#fff":"var(--m)",boxShadow:isActive?"0 4px 16px rgba(144,160,147,.3)":"none",transform:isActive?"scale(1.03)":"scale(1)",letterSpacing:".1px"}}>
+                      <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
+                      <span>{g.l}</span>
+                      {g.subs&&<span style={{fontSize:9,opacity:.5,marginLeft:2,transform:isActive?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
+                    </button>;
+                  })}
+                </div>
 
                 {/* Contenu : vrai écran si câblé, sinon écran "bientôt" */}
                 <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
