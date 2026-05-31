@@ -9059,6 +9059,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const L = config.landing;
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
+  const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
 
   const demos=[
     {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
@@ -10230,7 +10231,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <img src={L?.logoUrl || "/logo-dark.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
-                L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.
+                {F.description}
               </div>
             </div>
             {/* Liens */}
@@ -10245,19 +10246,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Contact</div>
               <div style={{ fontSize: 12, lineHeight: 2, color: "rgba(255,255,255,.6)" }}>
-                📧 support@timat.app<br/>
-                🌐 timat.app<br/>
-                📍 Île-de-France, France
+                📧 {F.contactEmail}<br/>
+                🌐 {F.contactWeb}<br/>
+                📍 {F.contactLieu}
               </div>
             </div>
             {/* RGPD */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
               <div style={{ fontSize: 11, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
-                🔒 Données hébergées en France (Paris)<br/>
-                🛡️ Chiffrement en transit et au repos<br/>
-                📋 Conforme RGPD<br/>
-                🗑️ Droit à l'effacement garanti
+                {(F.rgpd||[]).map((line,i)=><span key={i} style={{display:"block"}}>{line}</span>)}
               </div>
             </div>
           </div>
@@ -12422,6 +12420,10 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setFaqL=(idx,field,v)=>setCfg(c=>{const ff=[...(c.faqLanding||[])];ff[idx]={...ff[idx],[field]:v};return{...c,faqLanding:ff};});
   const addFaqL=()=>setCfg(c=>({...c,faqLanding:[...(c.faqLanding||[]),{q:"Nouvelle question ?",a:"Réponse à compléter."}]}));
   const removeFaqL=(idx)=>setCfg(c=>({...c,faqLanding:(c.faqLanding||[]).filter((_,i)=>i!==idx)}));
+  const setFooter=(k,v)=>setCfg(c=>({...c,footer:{...(c.footer||{}),[k]:v}}));
+  const setFooterRgpd=(idx,v)=>setCfg(c=>{const r=[...((c.footer||{}).rgpd||[])];r[idx]=v;return{...c,footer:{...(c.footer||{}),rgpd:r}};});
+  const addFooterRgpd=()=>setCfg(c=>({...c,footer:{...(c.footer||{}),rgpd:[...((c.footer||{}).rgpd||[]),"✅ Nouvelle ligne"]}}));
+  const removeFooterRgpd=(idx)=>setCfg(c=>({...c,footer:{...(c.footer||{}),rgpd:((c.footer||{}).rgpd||[]).filter((_,i)=>i!==idx)}}));
 
   const sauvegarder=async()=>{
     setSaving(true);
@@ -13106,6 +13108,23 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             ))}
             <button onClick={addFaqL}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter une question</button>
           </BOCard>
+          <BOCard title="Footer (pied de page)" icon="🦶">
+            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Description (sous le logo)</div>
+            <textarea value={(cfg.footer||{}).description||""}onChange={e=>setFooter("description",e.target.value)}rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5,marginBottom:14}}/>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Contact</div>
+            <input value={(cfg.footer||{}).contactEmail||""}onChange={e=>setFooter("contactEmail",e.target.value)}placeholder="Email (ex: support@timat.app)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
+            <input value={(cfg.footer||{}).contactWeb||""}onChange={e=>setFooter("contactWeb",e.target.value)}placeholder="Site (ex: timat.app)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
+            <input value={(cfg.footer||{}).contactLieu||""}onChange={e=>setFooter("contactLieu",e.target.value)}placeholder="Lieu (ex: Île-de-France, France)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:14}}/>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Données & RGPD (une ligne par puce)</div>
+            {((cfg.footer||{}).rgpd||[]).map((line,i)=>(
+              <div key={i}style={{display:"flex",gap:6,marginBottom:6}}>
+                <input value={line}onChange={e=>setFooterRgpd(i,e.target.value)}style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                <button onClick={()=>removeFooterRgpd(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"0 10px",fontSize:13,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
+              </div>
+            ))}
+            <button onClick={addFooterRgpd}style={{width:"100%",padding:"8px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginTop:2}}>+ Ajouter une ligne RGPD</button>
+            <div style={{fontSize:11,color:"var(--m)",marginTop:10,lineHeight:1.5}}>Le copyright (nom auto-entrepreneur · SIRET) se modifie dans l'onglet dédié aux infos légales. Les liens Mentions/CGU/Confidentialité ouvrent les pages juridiques.</div>
+          </BOCard>
           <BOCard title="Stats du hero (bandeau)" icon="📊">
             {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
@@ -13587,6 +13606,18 @@ const DEFAULT_CONFIG = {
     chiffres:true, temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
   },
   faqLanding: FAQ_LANDING_DEFAULT,
+  footer:{
+    description:"L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.",
+    contactEmail:"support@timat.app",
+    contactWeb:"timat.app",
+    contactLieu:"Île-de-France, France",
+    rgpd:[
+      "🔒 Données hébergées en France (Paris)",
+      "🛡️ Chiffrement en transit et au repos",
+      "📋 Conforme RGPD",
+      "🗑️ Droit à l'effacement garanti",
+    ],
+  },
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -13628,6 +13659,7 @@ const loadConfig = async () => {
         boutique:{...DEFAULT_CONFIG.boutique,...(saved.boutique||{})},
         sectionsVisibles:{...DEFAULT_CONFIG.sectionsVisibles,...(saved.sectionsVisibles||{})},
         faqLanding: saved.faqLanding||DEFAULT_CONFIG.faqLanding,
+        footer:{...DEFAULT_CONFIG.footer,...(saved.footer||{})},
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
