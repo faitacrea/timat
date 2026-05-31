@@ -9755,18 +9755,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-            {[
-              {id:"mensualisation",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide complet pour ne plus se tromper",excerpt:"Heures mensualisées, régularisation, année complète ou incomplète... Tout ce qu'il faut savoir pour calculer correctement."},
-              {id:"maladies",cat:"Santé",catColor:"#C84B31",emoji:"🩺",title:"Les 5 maladies les plus fréquentes chez les tout-petits",excerpt:"Bronchiolite, gastro, pieds-mains-bouche... Comment les reconnaître et quand garder l'enfant à la maison."},
-              {id:"agrement",cat:"PMI & Agrément",catColor:"#5DA9A1",emoji:"🏛️",title:"Renouvellement d'agrément : la checklist complète",excerpt:"Les documents à préparer, les délais à respecter et les erreurs à éviter pour un renouvellement serein."},
-              {id:"attachement",cat:"Pédagogie",catColor:"#2E4859",emoji:"🤱",title:"L'attachement sécure : pourquoi c'est fondamental en accueil individuel",excerpt:"Comment créer un lien de confiance avec l'enfant accueilli, et pourquoi c'est votre plus grande force."},
-              {id:"pajemploi",cat:"Administratif",catColor:"#E49178",emoji:"🏛️",title:"Pajemploi pas à pas : le guide pour les parents employeurs",excerpt:"De l'inscription à la déclaration mensuelle, toutes les étapes pour ne pas se perdre sur pajemploi.urssaf.fr."},
-              {id:"bulletin",cat:"Administratif",catColor:"#E49178",emoji:"📜",title:"Comprendre son bulletin de salaire d'assistante maternelle",excerpt:"Brut, net, cotisations, indemnités d'entretien... Décryptage ligne par ligne de votre fiche de paie."},
-              {id:"tarif",cat:"Administratif",catColor:"#E49178",emoji:"💶",title:"Comment fixer son tarif horaire d'assistante maternelle",excerpt:"SMIC, marché local, expérience, charges : tous les critères pour trouver le bon prix."},
-              {id:"motricite",cat:"Pédagogie",catColor:"#2E4859",emoji:"🧸",title:"Les étapes du développement moteur de 0 à 3 ans",excerpt:"Retournement, quatre pattes, premiers pas... Les grandes étapes et comment les accompagner au quotidien."},
-              {id:"droits",cat:"Juridique",catColor:"#5DA9A1",emoji:"⚖️",title:"Droits et devoirs de l'assistante maternelle",excerpt:"Congés, formation, agrément, rupture de contrat : tout ce que vous devez savoir pour exercer sereinement."},
-              {id:"secours",cat:"Santé",catColor:"#C84B31",emoji:"🩹",title:"Trousse de secours : les indispensables de l'assistante maternelle",excerpt:"Ce que la PMI attend dans votre trousse, les gestes de premiers secours et les numéros à afficher."},
-            ].map((art,i)=>(
+            {(config.blog||DEFAULT_CONFIG.blog).map((art,i)=>(
               <FadeIn key={art.id} delay={i*80}>
                 <div onClick={()=>setShowBlog(art.id)} style={{
                   background:"#fff",borderRadius:16,overflow:"hidden",cursor:"pointer",
@@ -10183,6 +10172,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{fontSize:12}}>Contrat signé, avenants, bulletins de salaire, attestation fiscale, certificat médical, attestation RC Pro, agrément valide, projet d'accueil.</div>
               </div>
             </div>}
+            {showBlog&&!["mensualisation","maladies","agrement","attachement","pajemploi","bulletin","secours","tarif","motricite","droits"].includes(showBlog)&&(()=>{const a=(config.blog||DEFAULT_CONFIG.blog).find(x=>x.id===showBlog)||{};return <div>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:8}}>{a.emoji} {a.title}</h2>
+              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>{a.cat}</div>
+              <p>{a.excerpt}</p>
+              <p style={{marginTop:16,color:"#8FA3AD",fontStyle:"italic"}}>📝 Le contenu complet de cet article sera bientôt disponible.</p>
+            </div>;})()}
 
           </div>
         </div>
@@ -12424,6 +12419,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setFooterRgpd=(idx,v)=>setCfg(c=>{const r=[...((c.footer||{}).rgpd||[])];r[idx]=v;return{...c,footer:{...(c.footer||{}),rgpd:r}};});
   const addFooterRgpd=()=>setCfg(c=>({...c,footer:{...(c.footer||{}),rgpd:[...((c.footer||{}).rgpd||[]),"✅ Nouvelle ligne"]}}));
   const removeFooterRgpd=(idx)=>setCfg(c=>({...c,footer:{...(c.footer||{}),rgpd:((c.footer||{}).rgpd||[]).filter((_,i)=>i!==idx)}}));
+  const setBlog=(idx,field,v)=>setCfg(c=>{const b=[...(c.blog||[])];b[idx]={...b[idx],[field]:v};return{...c,blog:b};});
+  const addBlog=()=>setCfg(c=>({...c,blog:[...(c.blog||[]),{id:"article-"+Date.now(),cat:"Administratif",catColor:"#E49178",emoji:"📝",title:"Nouvel article",excerpt:"Court résumé de l'article."}]}));
+  const removeBlog=(idx)=>setCfg(c=>({...c,blog:(c.blog||[]).filter((_,i)=>i!==idx)}));
 
   const sauvegarder=async()=>{
     setSaving(true);
@@ -13125,6 +13123,25 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             <button onClick={addFooterRgpd}style={{width:"100%",padding:"8px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginTop:2}}>+ Ajouter une ligne RGPD</button>
             <div style={{fontSize:11,color:"var(--m)",marginTop:10,lineHeight:1.5}}>Le copyright (nom auto-entrepreneur · SIRET) se modifie dans l'onglet dédié aux infos légales. Les liens Mentions/CGU/Confidentialité ouvrent les pages juridiques.</div>
           </BOCard>
+          <BOCard title="Articles du blog (cartes)" icon="📰">
+            <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Cartes affichées dans la section « Ressources ». Vous pouvez éditer, ajouter ou supprimer un article. Le contenu détaillé des articles existants reste affiché ; pour un nouvel article, le contenu complet sera éditable dans une prochaine étape.</div>
+            {(cfg.blog||[]).map((art,i)=>(
+              <div key={i}style={{marginBottom:14,paddingBottom:14,borderBottom:"1px solid var(--br)"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                  <span style={{fontSize:11,fontWeight:700,color:"var(--m)"}}>Article {i+1}</span>
+                  <button onClick={()=>removeBlog(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
+                </div>
+                <div style={{display:"flex",gap:6,marginBottom:6}}>
+                  <input value={art.emoji||""}onChange={e=>setBlog(i,"emoji",e.target.value)}placeholder="🧮"style={{width:52,textAlign:"center",padding:"8px 6px",borderRadius:8,border:"1px solid var(--br)",fontSize:18,boxSizing:"border-box",fontFamily:"inherit"}}/>
+                  <input value={art.cat||""}onChange={e=>setBlog(i,"cat",e.target.value)}placeholder="Catégorie"style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                  <input type="color"value={art.catColor||"#E49178"}onChange={e=>setBlog(i,"catColor",e.target.value)}title="Couleur de la catégorie"style={{width:42,height:38,padding:2,borderRadius:8,border:"1px solid var(--br)",cursor:"pointer",flexShrink:0}}/>
+                </div>
+                <input value={art.title||""}onChange={e=>setBlog(i,"title",e.target.value)}placeholder="Titre de l'article"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                <textarea value={art.excerpt||""}onChange={e=>setBlog(i,"excerpt",e.target.value)}placeholder="Extrait (résumé court)"rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
+              </div>
+            ))}
+            <button onClick={addBlog}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter un article</button>
+          </BOCard>
           <BOCard title="Stats du hero (bandeau)" icon="📊">
             {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
@@ -13373,6 +13390,18 @@ const FAQ_LANDING_DEFAULT=[
             {q:"Combien de temps faut-il pour démarrer ?",a:"Inscription en 2 minutes, premier contrat créé en 5 minutes. TiMat fonctionne sans formation préalable — chaque écran est guidé. Si vous bloquez, le support répond sous 24h."},
             {q:"Que se passe-t-il lors d'un contrôle PMI ?",a:"Tous vos documents (contrats, attestations, journal de bord, photos, suivi des enfants) sont centralisés et exportables en un clic. Vous présentez TiMat à votre conseiller PMI — c'est la traçabilité la plus complète qu'une assmat puisse avoir."},
           ];
+const BLOG_DEFAULT=[
+              {id:"mensualisation",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide complet pour ne plus se tromper",excerpt:"Heures mensualisées, régularisation, année complète ou incomplète... Tout ce qu'il faut savoir pour calculer correctement."},
+              {id:"maladies",cat:"Santé",catColor:"#C84B31",emoji:"🩺",title:"Les 5 maladies les plus fréquentes chez les tout-petits",excerpt:"Bronchiolite, gastro, pieds-mains-bouche... Comment les reconnaître et quand garder l'enfant à la maison."},
+              {id:"agrement",cat:"PMI & Agrément",catColor:"#5DA9A1",emoji:"🏛️",title:"Renouvellement d'agrément : la checklist complète",excerpt:"Les documents à préparer, les délais à respecter et les erreurs à éviter pour un renouvellement serein."},
+              {id:"attachement",cat:"Pédagogie",catColor:"#2E4859",emoji:"🤱",title:"L'attachement sécure : pourquoi c'est fondamental en accueil individuel",excerpt:"Comment créer un lien de confiance avec l'enfant accueilli, et pourquoi c'est votre plus grande force."},
+              {id:"pajemploi",cat:"Administratif",catColor:"#E49178",emoji:"🏛️",title:"Pajemploi pas à pas : le guide pour les parents employeurs",excerpt:"De l'inscription à la déclaration mensuelle, toutes les étapes pour ne pas se perdre sur pajemploi.urssaf.fr."},
+              {id:"bulletin",cat:"Administratif",catColor:"#E49178",emoji:"📜",title:"Comprendre son bulletin de salaire d'assistante maternelle",excerpt:"Brut, net, cotisations, indemnités d'entretien... Décryptage ligne par ligne de votre fiche de paie."},
+              {id:"tarif",cat:"Administratif",catColor:"#E49178",emoji:"💶",title:"Comment fixer son tarif horaire d'assistante maternelle",excerpt:"SMIC, marché local, expérience, charges : tous les critères pour trouver le bon prix."},
+              {id:"motricite",cat:"Pédagogie",catColor:"#2E4859",emoji:"🧸",title:"Les étapes du développement moteur de 0 à 3 ans",excerpt:"Retournement, quatre pattes, premiers pas... Les grandes étapes et comment les accompagner au quotidien."},
+              {id:"droits",cat:"Juridique",catColor:"#5DA9A1",emoji:"⚖️",title:"Droits et devoirs de l'assistante maternelle",excerpt:"Congés, formation, agrément, rupture de contrat : tout ce que vous devez savoir pour exercer sereinement."},
+              {id:"secours",cat:"Santé",catColor:"#C84B31",emoji:"🩹",title:"Trousse de secours : les indispensables de l'assistante maternelle",excerpt:"Ce que la PMI attend dans votre trousse, les gestes de premiers secours et les numéros à afficher."},
+            ];
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
@@ -13618,6 +13647,7 @@ const DEFAULT_CONFIG = {
       "🗑️ Droit à l'effacement garanti",
     ],
   },
+  blog: BLOG_DEFAULT,
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -13660,6 +13690,7 @@ const loadConfig = async () => {
         sectionsVisibles:{...DEFAULT_CONFIG.sectionsVisibles,...(saved.sectionsVisibles||{})},
         faqLanding: saved.faqLanding||DEFAULT_CONFIG.faqLanding,
         footer:{...DEFAULT_CONFIG.footer,...(saved.footer||{})},
+        blog: saved.blog||DEFAULT_CONFIG.blog,
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
