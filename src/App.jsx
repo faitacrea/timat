@@ -9058,6 +9058,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   const L = config.landing;
   const T = config.txts;
+  const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
 
   const demos=[
     {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
@@ -9252,7 +9253,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>
 
       {/* SECTION 1 - PROBLEME */}
-      <div className="lp-section" style={{ background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {SV.probleme!==false&&<div className="lp-section" style={{ background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
@@ -9277,10 +9278,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </FadeIn>
         </div>
-      </div>
+      </div>}
 
       {/* SECTION 2 - DEMO */}
-      <div id="demo" className="lp-section" style={{ background: L.section2Bg||"#FDF5FB" }}>
+      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ background: L.section2Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
@@ -9483,10 +9484,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
-      <div className="lp-section" style={{ background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
+      {SV.signature!==false&&<div className="lp-section" style={{ background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -9585,10 +9586,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </FadeIn>
         </div>
-      </div>
+      </div>}
 
       {/* SECTION 3 - TRANSFORMATION */}
-      <div className="lp-section" style={{ background: L.section3Bg||"#F8F0FC" }}>
+      {SV.transformation!==false&&<div className="lp-section" style={{ background: L.section3Bg||"#F8F0FC" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s3Align||"center", marginBottom: 56 }}>
@@ -9608,10 +9609,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* SECTION 4 - CHIFFRES */}
-      <div className="lp-section" style={{ background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {SV.chiffres!==false&&<div className="lp-section" style={{ background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
@@ -9631,10 +9632,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      <div className="lp-section" style={{ background: L.section5Bg||"#FDF5FB" }}>
+      {SV.temoignages!==false&&<div className="lp-section" style={{ background: L.section5Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -9657,10 +9658,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* SECTION 6 - TARIFS */}
-      <div id="tarifs" className="lp-section" style={{ background: L.section6Bg||"#F5EBF8" }}>
+      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ background: L.section6Bg||"#F5EBF8" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
@@ -9704,10 +9705,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* CTA FINAL */}
-      <div className="lp-section" style={{ background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
+      {SV.ctaFinal!==false&&<div className="lp-section" style={{ background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
@@ -9718,10 +9719,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
           <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
         </FadeIn>
-      </div>
+      </div>}
 
       {/* FAQ */}
-      <div className="lp-section" style={{ background: "#F4F7FA" }}>
+      {SV.faq!==false&&<div className="lp-section" style={{ background: "#F4F7FA" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -9753,10 +9754,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </FadeIn>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* BLOG */}
-      <div className="lp-section" style={{ background: "#FDFBF8" }}>
+      {SV.blog!==false&&<div className="lp-section" style={{ background: "#FDFBF8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -9796,7 +9797,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* BLOG ARTICLE MODAL */}
       {showBlog&&<div onClick={e=>e.target===e.currentTarget&&setShowBlog(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
@@ -12411,6 +12412,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setTxt=(k,v)=>setCfg(c=>({...c,txts:{...c.txts,[k]:v}}));
   const setLand=(k,v)=>setCfg(c=>({...c,landing:{...c.landing,[k]:v}}));
   const setFeat=(k,v)=>setCfg(c=>({...c,feats:{...c.feats,[k]:v}}));
+  const setSV=(k,v)=>setCfg(c=>({...c,sectionsVisibles:{...(c.sectionsVisibles||{}),[k]:v}}));
   const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
   const setTransfo=(idx,pos,v)=>setCfg(c=>{const tt=[...(c.transformations||[])];const row=[...tt[idx]];row[pos]=v;tt[idx]=row;return{...c,transformations:tt};});
   const setTesti=(idx,field,v)=>setCfg(c=>{const tt=[...(c.testimonials||[])];tt[idx]={...tt[idx],[field]:v};return{...c,testimonials:tt};});
@@ -12658,6 +12660,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
     {id:"polices",l:"Polices",ic:"𝐓"},
     {id:"contenu",l:"Contenu",ic:"📋"},
     {id:"app",l:"App",ic:"⚙️"},
+    {id:"sectionsvis",l:"Sections visibles",ic:"👁"},
     {id:"historique",l:"Historique",ic:"🕐"},
   ];
 
@@ -13235,6 +13238,36 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
         </>}
 
+        {/* ====================== SECTIONS VISIBLES (P32 Palier 1 : afficher/masquer) ====================== */}
+        {sec==="sectionsvis"&&<>
+          <BOCard title="Afficher / masquer les sections de la landing" icon="👁">
+            <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Décochez une section pour la masquer de la page d'accueil. Le contenu n'est pas supprimé — vous pouvez la réafficher à tout moment. Le Hero et le Footer restent toujours visibles.</div>
+            {[
+              {k:"probleme",l:"La réalité du métier",d:"Section « problème » (cartes des difficultés)"},
+              {k:"demo",l:"Découvrez TiMat en direct",d:"Démo interactive (cadre téléphone)"},
+              {k:"signature",l:"Signature électronique",d:"Section sombre eIDAS / RGPD"},
+              {k:"transformation",l:"Ce que TiMat change",d:"Tableau avant / après"},
+              {k:"chiffres",l:"Ce que disent les chiffres",d:"Statistiques clés"},
+              {k:"temoignages",l:"Témoignages",d:"Avis des utilisatrices"},
+              {k:"tarifs",l:"Tarifs",d:"Forfaits Gratuit / Pro"},
+              {k:"ctaFinal",l:"Appel à l'action final",d:"Bloc « Je commence »"},
+              {k:"faq",l:"Questions fréquentes",d:"FAQ de la landing"},
+              {k:"blog",l:"Ressources / Blog",d:"Cartes d'articles"},
+            ].map(({k,l,d})=>{
+              const on=(cfg.sectionsVisibles||{})[k]!==false;
+              return <div key={k}style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{l}</div>
+                  <div style={{fontSize:11,color:"var(--m)",marginTop:2}}>{d}</div>
+                </div>
+                <div onClick={()=>setSV(k,!on)}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
+                  <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
+                </div>
+              </div>;
+            })}
+          </BOCard>
+        </>}
+
         {/* ====================== HISTORIQUE (P30D : backups + restauration) ====================== */}
         {sec==="historique"&&<>
           <BOCard title="Historique des configurations" icon="🕐">
@@ -13531,6 +13564,10 @@ const DEFAULT_CONFIG = {
     linkProjet:"",
     linkPack:"",
   },
+  sectionsVisibles:{
+    probleme:true, demo:true, signature:true, transformation:true,
+    chiffres:true, temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
+  },
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -13570,6 +13607,7 @@ const loadConfig = async () => {
         guarantees: saved.guarantees||DEFAULT_CONFIG.guarantees,
         legal:{...DEFAULT_CONFIG.legal,...(saved.legal||{})},
         boutique:{...DEFAULT_CONFIG.boutique,...(saved.boutique||{})},
+        sectionsVisibles:{...DEFAULT_CONFIG.sectionsVisibles,...(saved.sectionsVisibles||{})},
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
