@@ -409,13 +409,13 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
   {sub&&<div style={{fontSize:12,color:"var(--l)"}}>{sub}</div>}</div>{action}</div>}
 
 //
-function AccueilAssMat({enfants,setPage,user}){
+function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [showAjout,setShowAjout]=useState(false);
   // TABLEAU SIGNATURES P11 - state pour le mini-dashboard
   const [genPdf,setGenPdf]=useState({}); // {[contratId]: 'pending'|'done'|'error'}
   const [tabToast,setTabToast]=useState("");
-  // STATS TEMPS REEL P14D - vraies stats Supabase
-  const [stats,setStats]=useState({heuresSemaine:0,joursSemaine:0,revenuMois:0,heuresMois:0,messagesNonLus:0,presencesJour:[],loaded:false});
+  // STATS TEMPS REEL P14D - vraies stats Supabase (ou stats de démo injectées)
+  const [stats,setStats]=useState(demoStats||{heuresSemaine:0,joursSemaine:0,revenuMois:0,heuresMois:0,messagesNonLus:0,presencesJour:[],loaded:false});
   const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const nbEnfants=enfants.length;
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
@@ -425,6 +425,7 @@ function AccueilAssMat({enfants,setPage,user}){
 
   // STATS TEMPS REEL P14D - charger les stats reelles
   useEffect(()=>{
+    if(demoStats){return;}
     if(!user?.id||isDemoUser||nbEnfants===0){
       setStats(s=>({...s,loaded:true}));
       return;
@@ -486,7 +487,7 @@ function AccueilAssMat({enfants,setPage,user}){
       }
     })();
     return()=>{cancelled=true;};
-  },[user?.id,nbEnfants,isDemoUser,enfants.map(e=>e.id).join(",")]);
+  },[user?.id,nbEnfants,isDemoUser,demoStats,enfants.map(e=>e.id).join(",")]);
 
   // TABLEAU SIGNATURES P11 - regrouper les contrats par statut
   const sigStats=useMemo(()=>{
@@ -503,6 +504,7 @@ function AccueilAssMat({enfants,setPage,user}){
   },[enfants]);
 
   const regenererPDF=async(contratId)=>{
+    if(demoStats){setTabToast("Démo : action désactivée");setTimeout(()=>setTabToast(""),1500);return;}
     setGenPdf(p=>({...p,[contratId]:"pending"}));
     const r=await generateAndStoreContratPDF(contratId);
     setGenPdf(p=>({...p,[contratId]:r.success?"done":"error"}));
@@ -533,7 +535,7 @@ function AccueilAssMat({enfants,setPage,user}){
         <div className="pf"style={{fontSize:26,fontWeight:600,color:"var(--b)",lineHeight:1.2}}>Bonjour {user?.prenom||"Marie"} 👋</div>
         <div style={{fontSize:13,color:"var(--m)",marginTop:4}}>Votre espace professionnel</div>
       </div>
-      {user&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
+      {user&&!demoStats&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
     </div>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
@@ -9078,6 +9080,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [demoLiked, setDemoLiked] = useState(false);
   const [demoMsgs, setDemoMsgs] = useState(D.messages);
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
+  // Démo : enfants enrichis (signatures dérivées) + stats fictives pour le vrai écran Accueil
+  const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
+  const demoAccueilStats = {heuresSemaine:38.5,joursSemaine:5,revenuMois:1620,heuresMois:152,messagesNonLus:D.messages.filter(m=>!m.lu).length,presencesJour:demoEnfants.filter(e=>demoArrivee[e.id]).map(e=>({...e,depuis:demoArrivee[e.id]})),loaded:true};
   const L = config.landing;
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
@@ -9162,7 +9167,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     setLoading(false);
   };
 
-  const accent = L.accentColor||"#E8A84A";
+  const accent = L.accentColor||"#E49178";
   const fTitle = L.fontTitle||"'Fraunces', Georgia, serif";
   const fBody = L.fontBody||"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
@@ -9261,7 +9266,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
         {/* Hero content */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: L.heroAlign||"center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E8C87A", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E49178", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.15, marginBottom: 20 }}>
             {T.heroTitle}<br/>
             {T.heroTitleAccent&&<><span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span><br/></>}
@@ -9300,7 +9305,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             ))}
           </div>
           <FadeIn delay={400}>
-            <div style={{ marginTop: 40, textAlign: L.s1Align||"center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(232,168,74,.08)", border: "1px solid rgba(232,168,74,.2)", borderRadius: 20 }}>
+            <div style={{ marginTop: 40, textAlign: L.s1Align||"center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(228,145,120,.08)", border: "1px solid rgba(228,145,120,.2)", borderRadius: 20 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: L.s1QuoteColor||accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>{L.s1Quote}</div>
             </div>
           </FadeIn>
@@ -9319,7 +9324,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
 
             {/* Phone frame — vraie UI de l'app */}
-            <div style={{ width: 340, flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 32px 100px rgba(0,0,0,.4), inset 0 1px 2px rgba(255,255,255,.08)" }}>
+            <div style={{ width: 390, flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 32px 100px rgba(0,0,0,.4), inset 0 1px 2px rgba(255,255,255,.08)" }}>
               {/* Notch */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
                 <div style={{ width: 110, height: 24, background: "#1a1a2e", borderRadius: "0 0 18px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
@@ -9328,7 +9333,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
               </div>
               {/* Screen */}
-              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 580, display: "flex", flexDirection: "column", position: "relative" }}>
+              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 720, display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:8,right:8,zIndex:10,background:"rgba(155,107,170,.85)",color:"#fff",fontSize:7,fontWeight:700,padding:"2px 6px",borderRadius:4,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
@@ -9370,29 +9375,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                   {/* ACCUEIL */}
                   {demoPage==="accueil"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>Bonjour Marie 👋</div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{v:D.enfants.length,l:"Enfants",c:"#E49178"},{v:demoMsgs.filter(m=>!m.lu).length,l:"Messages",c:"#90A093"},{v:"152h",l:"Ce mois",c:"#2E4859"},{v:"98%",l:"Presence",c:"#5DA9A1"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"8px 6px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
-                        <div style={{fontSize:15,fontWeight:700,color:k.c}}>{k.v}</div>
-                        <div style={{fontSize:9,color:"#90A093",marginTop:1}}>{k.l}</div>
-                      </div>)}
-                    </div>
-                    <div style={{fontSize:10,fontWeight:700,color:"#2E4859",marginBottom:6}}>👶 Mes enfants aujourd'hui</div>
-                    {D.enfants.map(e=>{
-                      const estPresent=!!demoArrivee[e.id];
-                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:5,boxShadow:"0 1px 6px rgba(0,0,0,.06)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #5DA9A1":"1.5px solid transparent",transition:"all .2s"}}>
-                        <span style={{fontSize:20}}>{e.emoji}</span>
-                        <div style={{flex:1}}>
-                          <div style={{fontSize:11,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div>
-                          <div style={{fontSize:9,color:"#90A093"}}>{estPresent?"Arrive a "+demoArrivee[e.id]:"Appuyer pour pointer"}</div>
-                        </div>
-                        <div style={{fontSize:8,padding:"2px 7px",borderRadius:6,background:estPresent?"#F0FAF4":"#F6F7F6",color:estPresent?"#5DA9A1":"#90A093",fontWeight:700}}>{estPresent?"Present":"Attendu"}</div>
-                      </div>;
-                    })}
-                    <div style={{background:"#FFF8F3",borderRadius:10,padding:8,marginTop:6,border:"1px solid #FFD6B3"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"#E49178",marginBottom:3}}>📋 A faire aujourd'hui</div>
-                      <div style={{fontSize:9,color:"#2E4859",lineHeight:1.9}}>Journal de {D.enfants[0].prenom}<br/>Declarer Pajemploi (J-3)<br/>Renouveler ordonnance Emma</div>
-                    </div>
+                    <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={()=>{}} demoStats={demoAccueilStats}/>
                   </div>}
 
                   {/* JOURNAL */}
@@ -13571,10 +13554,10 @@ const DEFAULT_CONFIG = {
     heroTitleColor:"#fff",
     heroSubColor:"rgba(255,255,255,.75)",
     heroSubDescColor:"rgba(255,255,255,.6)",
-    heroBadgeColor:"#E8C87A",
-    heroBadgeBg:"rgba(232,168,74,.12)",
+    heroBadgeColor:"#E49178",
+    heroBadgeBg:"rgba(228,145,120,.12)",
     heroTagsColor:"rgba(255,255,255,.4)",
-    heroStatsColor:"#E8A84A",
+    heroStatsColor:"#E49178",
     heroStatsLabelColor:"rgba(255,255,255,.45)",
     s1TitleColor:"#fff",
     s1DescColor:"rgba(255,255,255,.5)",
