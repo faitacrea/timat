@@ -9518,11 +9518,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(232,168,74,.12)", border: "1px solid rgba(232,168,74,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E8C87A", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E49178", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>
                 NOUVEAU · CONFORME eIDAS
               </div>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: "#fff", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                Signature électronique en <span style={{ color: "#E8C87A", fontStyle: "italic" }}>1 clic</span>
+                Signature électronique en <span style={{ color: "#E49178", fontStyle: "italic" }}>1 clic</span>
               </div>
               <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)", lineHeight: 1.7, maxWidth: 700, margin: "0 auto" }}>
                 Contrats, avenants, bulletins de salaire : signez une seule fois, réutilisez partout. Conforme à la loi (eIDAS), conforme RGPD, prêt à archiver 5 ans.
@@ -9538,14 +9538,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 titre: "Signature standard réutilisable",
                 desc: "Dessinez votre signature une seule fois dans vos paramètres. Elle est ensuite proposée en 1 clic sur tous vos contrats, avenants et bulletins. Plus jamais besoin de re-dessiner.",
                 badge: "Conforme eIDAS",
-                color: "#E8C87A"
+                color: "#E49178"
               },
               {
                 ic: "🔒",
                 titre: "RGPD by design",
                 desc: "Vos signatures sont chiffrées et hébergées en France (Supabase Paris). Chaque action est tracée dans un journal d'audit. Conforme à l'article 20 RGPD (droit à la portabilité).",
                 badge: "Sécurité maximale",
-                color: "#7FB8A0"
+                color: "#E49178"
               },
               {
                 ic: "🤝",
@@ -9586,7 +9586,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   { n: "4", t: "PDF archivé 5 ans", d: "Stockage chiffré, hébergement France. Durée légale de conservation respectée." }
                 ].map((s) => (
                   <div key={s.n} style={{ position: "relative", padding: "24px 16px 16px", background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)" }}>
-                    <div style={{ position: "absolute", top: -14, left: 16, width: 28, height: 28, borderRadius: "50%", background: "#E8C87A", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ position: "absolute", top: -14, left: 16, width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {s.n}
                     </div>
                     <div style={{ fontFamily: fTitle, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 8, marginTop: 4 }}>
