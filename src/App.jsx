@@ -8798,7 +8798,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
         }} title={dark?"Mode clair":"Mode sombre"}>{dark?"☀️":"🌙"}</button>
         {/* Paramètres */}
         <button onClick={()=>setPage2&&setPage2("parametres")}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4}}title="Paramètres">⚙️</button>
-        {user?.email===ADMIN_EMAIL&&<button onClick={()=>setPage2&&setPage2("backoffice")}style={{background:"linear-gradient(135deg,var(--T),var(--S))",border:"none",cursor:"pointer",fontSize:11,padding:"3px 8px",borderRadius:8,color:"#fff",fontWeight:700}}title="Admin">🔧 Admin</button>}
+        {user?.is_admin===true&&<button onClick={()=>setPage2&&setPage2("backoffice")}style={{background:"linear-gradient(135deg,var(--T),var(--S))",border:"none",cursor:"pointer",fontSize:11,padding:"3px 8px",borderRadius:8,color:"#fff",fontWeight:700}}title="Admin">🔧 Admin</button>}
         <Av t={ini(user.prenom,user.nom)}c={user.couleur}s={30}/>
         <span style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{user.prenom}</span>
         <button onClick={onLogout}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,marginLeft:4}}title="Déconnexion">🚪</button>
@@ -12296,7 +12296,6 @@ function Login({onLogin}){
 //
 //
 // Accessible uniquement à sophie@faitacreas.fr (ou l'email admin configuré)
-const ADMIN_EMAIL = "faitacreapro@gmail.com";
 
 // --- Backoffice reusable components (outside to avoid re-mount on state change) ---
 const BOField=({label,children,hint})=>(
@@ -13974,7 +13973,7 @@ export default function App(){
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser}/>;
-      case "backoffice": return user?.email===ADMIN_EMAIL?<Backoffice user={user} setPage={setPage} appConfig={appConfig} setAppConfig={setAppConfig}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
+      case "backoffice": return user?.is_admin===true?<Backoffice user={user} setPage={setPage} appConfig={appConfig} setAppConfig={setAppConfig}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
