@@ -9730,19 +9730,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 15, color: "#5F7A86" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
-          {[
-            {q:"Qui a créé TiMat ?",a:"TiMat a été créée par Sophie, assistante maternelle agréée en Île-de-France. En préparant son agrément, elle a découvert la montagne administrative qui attend chaque assmat et a décidé de créer l'outil qu'elle aurait voulu avoir. TiMat est conçue par une assmat, pour les assmats — chaque fonctionnalité répond à un besoin réel du métier."},
-            {q:"C'est quoi TiMat exactement ?",a:"TiMat est une application web conçue spécifiquement pour les assistantes maternelles agréées. Elle centralise la gestion des contrats, des pointages, des salaires, des transmissions aux parents et de tous les documents administratifs liés à votre métier."},
-            {q:"Est-ce que mes données sont en sécurité ?",a:"Oui. Toutes vos données sont hébergées en France (Paris) via Supabase, un service conforme au RGPD. Vos informations sont chiffrées en transit et au repos. Vous pouvez demander la suppression de vos données à tout moment."},
-            {q:"TiMat remplace-t-il Pajemploi ?",a:"Non. TiMat est un complément à Pajemploi. L'application calcule automatiquement les montants et génère un récapitulatif prêt à reporter sur pajemploi.urssaf.fr. Vous gardez le contrôle de votre déclaration officielle."},
-            {q:"Comment fonctionne l'essai gratuit ?",a:"Vous créez votre compte en 2 minutes, sans carte bancaire. Vous avez accès aux fonctionnalités de base gratuitement, et vous pouvez essayer le forfait Pro pendant 2 mois sans engagement. Si vous ne souhaitez pas continuer, vous ne payez rien."},
-            {q:"Puis-je utiliser TiMat sur mon téléphone ?",a:"Oui. TiMat est une application web responsive qui fonctionne sur téléphone, tablette et ordinateur. Pas besoin de télécharger quoi que ce soit — vous y accédez directement depuis votre navigateur."},
-            {q:"Les parents peuvent-ils accéder à TiMat ?",a:"Oui. Chaque parent reçoit une invitation par email et accède à son propre espace : il peut consulter le journal de son enfant, valider les pointages et échanger avec vous via la messagerie intégrée."},
-            {q:"Que se passe-t-il si je résilie ?",a:"Vous pouvez résilier à tout moment en un clic depuis votre espace. Vos données restent accessibles pendant 30 jours après la résiliation, puis sont supprimées conformément au RGPD. Aucun frais de résiliation."},
-            {q:"Comment sont calculés les salaires ?",a:"TiMat applique les règles de la Convention Collective Nationale des particuliers employeurs : mensualisation, heures complémentaires majorées à 25%, indemnités d'entretien, congés payés. Les taux de cotisations sont mis à jour régulièrement."},
-            {q:"Combien de temps faut-il pour démarrer ?",a:"Inscription en 2 minutes, premier contrat créé en 5 minutes. TiMat fonctionne sans formation préalable — chaque écran est guidé. Si vous bloquez, le support répond sous 24h."},
-            {q:"Que se passe-t-il lors d'un contrôle PMI ?",a:"Tous vos documents (contrats, attestations, journal de bord, photos, suivi des enfants) sont centralisés et exportables en un clic. Vous présentez TiMat à votre conseiller PMI — c'est la traçabilité la plus complète qu'une assmat puisse avoir."},
-          ].map(({q,a},i)=>(
+          {(config.faqLanding||DEFAULT_CONFIG.faqLanding).map(({q,a},i)=>(
             <FadeIn key={i} delay={i*50}>
               <details style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
                 <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#2E4859", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -12431,6 +12419,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setGuarantee=(idx,v)=>setCfg(c=>{const items=[...(c.guarantees||[])];items[idx]=v;return{...c,guarantees:items};});
   const addGuarantee=()=>setCfg(c=>({...c,guarantees:[...(c.guarantees||[]),"✅ Nouvelle garantie"]}));
   const removeGuarantee=(idx)=>setCfg(c=>({...c,guarantees:(c.guarantees||[]).filter((_,i)=>i!==idx)}));
+  const setFaqL=(idx,field,v)=>setCfg(c=>{const ff=[...(c.faqLanding||[])];ff[idx]={...ff[idx],[field]:v};return{...c,faqLanding:ff};});
+  const addFaqL=()=>setCfg(c=>({...c,faqLanding:[...(c.faqLanding||[]),{q:"Nouvelle question ?",a:"Réponse à compléter."}]}));
+  const removeFaqL=(idx)=>setCfg(c=>({...c,faqLanding:(c.faqLanding||[]).filter((_,i)=>i!==idx)}));
 
   const sauvegarder=async()=>{
     setSaving(true);
@@ -13101,6 +13092,20 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 
         {/* ====================== CONTENU (items) ====================== */}
         {sec==="contenu"&&<>
+          <BOCard title="FAQ de la landing" icon="❓">
+            <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Questions/réponses affichées dans la section « Questions fréquentes » de la page d'accueil.</div>
+            {(cfg.faqLanding||[]).map((item,i)=>(
+              <div key={i}style={{marginBottom:12,paddingBottom:12,borderBottom:"1px solid var(--br)"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                  <span style={{fontSize:11,fontWeight:700,color:"var(--m)"}}>Question {i+1}</span>
+                  <button onClick={()=>removeFaqL(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
+                </div>
+                <input value={item.q}onChange={e=>setFaqL(i,"q",e.target.value)}placeholder="Question"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                <textarea value={item.a}onChange={e=>setFaqL(i,"a",e.target.value)}placeholder="Réponse"rows={3}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
+              </div>
+            ))}
+            <button onClick={addFaqL}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter une question</button>
+          </BOCard>
           <BOCard title="Stats du hero (bandeau)" icon="📊">
             {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
@@ -13336,6 +13341,19 @@ const logoForRole = (role, dark) => {
   return `/logo${s}.png`;
 };
 
+const FAQ_LANDING_DEFAULT=[
+            {q:"Qui a créé TiMat ?",a:"TiMat a été créée par Sophie, assistante maternelle agréée en Île-de-France. En préparant son agrément, elle a découvert la montagne administrative qui attend chaque assmat et a décidé de créer l'outil qu'elle aurait voulu avoir. TiMat est conçue par une assmat, pour les assmats — chaque fonctionnalité répond à un besoin réel du métier."},
+            {q:"C'est quoi TiMat exactement ?",a:"TiMat est une application web conçue spécifiquement pour les assistantes maternelles agréées. Elle centralise la gestion des contrats, des pointages, des salaires, des transmissions aux parents et de tous les documents administratifs liés à votre métier."},
+            {q:"Est-ce que mes données sont en sécurité ?",a:"Oui. Toutes vos données sont hébergées en France (Paris) via Supabase, un service conforme au RGPD. Vos informations sont chiffrées en transit et au repos. Vous pouvez demander la suppression de vos données à tout moment."},
+            {q:"TiMat remplace-t-il Pajemploi ?",a:"Non. TiMat est un complément à Pajemploi. L'application calcule automatiquement les montants et génère un récapitulatif prêt à reporter sur pajemploi.urssaf.fr. Vous gardez le contrôle de votre déclaration officielle."},
+            {q:"Comment fonctionne l'essai gratuit ?",a:"Vous créez votre compte en 2 minutes, sans carte bancaire. Vous avez accès aux fonctionnalités de base gratuitement, et vous pouvez essayer le forfait Pro pendant 2 mois sans engagement. Si vous ne souhaitez pas continuer, vous ne payez rien."},
+            {q:"Puis-je utiliser TiMat sur mon téléphone ?",a:"Oui. TiMat est une application web responsive qui fonctionne sur téléphone, tablette et ordinateur. Pas besoin de télécharger quoi que ce soit — vous y accédez directement depuis votre navigateur."},
+            {q:"Les parents peuvent-ils accéder à TiMat ?",a:"Oui. Chaque parent reçoit une invitation par email et accède à son propre espace : il peut consulter le journal de son enfant, valider les pointages et échanger avec vous via la messagerie intégrée."},
+            {q:"Que se passe-t-il si je résilie ?",a:"Vous pouvez résilier à tout moment en un clic depuis votre espace. Vos données restent accessibles pendant 30 jours après la résiliation, puis sont supprimées conformément au RGPD. Aucun frais de résiliation."},
+            {q:"Comment sont calculés les salaires ?",a:"TiMat applique les règles de la Convention Collective Nationale des particuliers employeurs : mensualisation, heures complémentaires majorées à 25%, indemnités d'entretien, congés payés. Les taux de cotisations sont mis à jour régulièrement."},
+            {q:"Combien de temps faut-il pour démarrer ?",a:"Inscription en 2 minutes, premier contrat créé en 5 minutes. TiMat fonctionne sans formation préalable — chaque écran est guidé. Si vous bloquez, le support répond sous 24h."},
+            {q:"Que se passe-t-il lors d'un contrôle PMI ?",a:"Tous vos documents (contrats, attestations, journal de bord, photos, suivi des enfants) sont centralisés et exportables en un clic. Vous présentez TiMat à votre conseiller PMI — c'est la traçabilité la plus complète qu'une assmat puisse avoir."},
+          ];
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
@@ -13568,6 +13586,7 @@ const DEFAULT_CONFIG = {
     probleme:true, demo:true, signature:true, transformation:true,
     chiffres:true, temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
   },
+  faqLanding: FAQ_LANDING_DEFAULT,
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -13608,6 +13627,7 @@ const loadConfig = async () => {
         legal:{...DEFAULT_CONFIG.legal,...(saved.legal||{})},
         boutique:{...DEFAULT_CONFIG.boutique,...(saved.boutique||{})},
         sectionsVisibles:{...DEFAULT_CONFIG.sectionsVisibles,...(saved.sectionsVisibles||{})},
+        faqLanding: saved.faqLanding||DEFAULT_CONFIG.faqLanding,
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
