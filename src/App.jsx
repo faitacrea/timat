@@ -9035,6 +9035,28 @@ const DEMO_SCREENS=[
 
 //
 
+// P32-3b : rendu du corps d'article par blocs structurés
+function fmtInline(text){
+  if(text==null) return null;
+  const parts=[]; let rest=String(text); let key=0; const re=/(\*\*([^*]+)\*\*|\*([^*]+)\*)/;
+  let m;
+  while((m=re.exec(rest))){
+    if(m.index>0) parts.push(rest.slice(0,m.index));
+    if(m[2]!==undefined) parts.push(<strong key={key++}>{m[2]}</strong>);
+    else parts.push(<em key={key++}>{m[3]}</em>);
+    rest=rest.slice(m.index+m[0].length);
+  }
+  if(rest) parts.push(rest);
+  return parts;
+}
+function RenderArticleBlocks({blocks}){
+  return <div>{(blocks||[]).map((b,i)=>{
+    if(b.type==="h3") return <h3 key={i} style={{fontSize:16,fontWeight:700,color:b.color||"#2E4859",margin:"20px 0 10px"}}>{b.text}</h3>;
+    if(b.type==="callout"){const col=b.color||"#5DA9A1"; return <div key={i} style={{background:col+"14",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid "+col+"40"}}><div style={{fontWeight:700,color:col,marginBottom:6}}>{b.title}</div><div style={{fontSize:12}}>{fmtInline(b.text)}</div></div>;}
+    if(b.type==="list") return <ul key={i} style={{paddingLeft:20,fontSize:13,lineHeight:1.9}}>{(b.items||[]).map((it,j)=><li key={j}>{fmtInline(it)}</li>)}</ul>;
+    return <p key={i} style={{marginBottom:8}}>{fmtInline(b.text)}</p>;
+  })}</div>;
+}
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [demoGroup, setDemoGroup] = useState("accueil");
   const [demoPage, setDemoPage] = useState("accueil");
@@ -9785,6 +9807,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={()=>setShowBlog(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#2E4859",lineHeight:1.9}}>
+            {(()=>{ const _art=(config.blog||DEFAULT_CONFIG.blog).find(x=>x.id===showBlog)||{}; if(_art.blocks&&_art.blocks.length) return <div><h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:8}}>{_art.emoji} {_art.title}</h2><div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>{_art.cat}</div><RenderArticleBlocks blocks={_art.blocks}/></div>; return (<>
 
             {showBlog==="mensualisation"&&<div>
               <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🧮 Mensualisation : le guide complet pour ne plus se tromper</h2>
@@ -10178,6 +10201,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <p>{a.excerpt}</p>
               <p style={{marginTop:16,color:"#8FA3AD",fontStyle:"italic"}}>📝 Le contenu complet de cet article sera bientôt disponible.</p>
             </div>;})()}
+            </>);})()}
 
           </div>
         </div>
@@ -12323,6 +12347,7 @@ const BOCard=({title,icon,children})=>(
 function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [sec,setSec]=useState("hero");
   const [subSec,setSubSec]=useState("textes");
+  const [openBlocks,setOpenBlocks]=useState(null); // P32-3b : index de l'article dont l'éditeur de blocs est ouvert
   const [saving,setSaving]=useState(false);
   const [toast,setToast]=useState("");
   const [stats,setStats]=useState({users:0,pro:0,enfants:0});
@@ -12422,6 +12447,14 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setBlog=(idx,field,v)=>setCfg(c=>{const b=[...(c.blog||[])];b[idx]={...b[idx],[field]:v};return{...c,blog:b};});
   const addBlog=()=>setCfg(c=>({...c,blog:[...(c.blog||[]),{id:"article-"+Date.now(),cat:"Administratif",catColor:"#E49178",emoji:"📝",title:"Nouvel article",excerpt:"Court résumé de l'article."}]}));
   const removeBlog=(idx)=>setCfg(c=>({...c,blog:(c.blog||[]).filter((_,i)=>i!==idx)}));
+  const _newBlk=(type)=>type==="h3"?{type:"h3",text:"Titre de section",color:"#2E4859"}:type==="callout"?{type:"callout",title:"💡 À savoir",text:"Texte de l'encadré.",color:"#5DA9A1"}:type==="list"?{type:"list",items:["Premier point"]}:{type:"p",text:"Votre paragraphe. Utilisez **gras** ou *italique*."};
+  const setBlk=(ai,bi,field,v)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];arr[bi]={...arr[bi],[field]:v};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
+  const addBlk=(ai,type)=>setCfg(c=>{const bl=[...(c.blog||[])];bl[ai]={...bl[ai],blocks:[...(bl[ai].blocks||[]),_newBlk(type)]};return{...c,blog:bl};});
+  const removeBlk=(ai,bi)=>setCfg(c=>{const bl=[...(c.blog||[])];bl[ai]={...bl[ai],blocks:(bl[ai].blocks||[]).filter((_,i)=>i!==bi)};return{...c,blog:bl};});
+  const moveBlk=(ai,bi,dir)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];const ni=bi+dir;if(ni<0||ni>=arr.length)return c;[arr[bi],arr[ni]]=[arr[ni],arr[bi]];bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
+  const setBlkItem=(ai,bi,ii,v)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];const items=[...(arr[bi].items||[])];items[ii]=v;arr[bi]={...arr[bi],items};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
+  const addBlkItem=(ai,bi)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];arr[bi]={...arr[bi],items:[...(arr[bi].items||[]),"Nouveau point"]};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
+  const removeBlkItem=(ai,bi,ii)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];arr[bi]={...arr[bi],items:(arr[bi].items||[]).filter((_,i)=>i!==ii)};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
 
   const sauvegarder=async()=>{
     setSaving(true);
@@ -13138,6 +13171,48 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                 </div>
                 <input value={art.title||""}onChange={e=>setBlog(i,"title",e.target.value)}placeholder="Titre de l'article"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
                 <textarea value={art.excerpt||""}onChange={e=>setBlog(i,"excerpt",e.target.value)}placeholder="Extrait (résumé court)"rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
+                <button onClick={()=>setOpenBlocks(openBlocks===i?null:i)}style={{marginTop:6,width:"100%",padding:"7px",borderRadius:8,border:"1px solid var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📝 Contenu de l'article ({(art.blocks||[]).length} bloc{(art.blocks||[]).length>1?"s":""}) {openBlocks===i?"▲":"▼"}</button>
+                {openBlocks===i&&<div style={{marginTop:8,padding:10,background:"var(--c)",borderRadius:10}}>
+                  {(art.blocks||[]).length===0&&<div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>Aucun bloc : cet article affiche son contenu d'origine. Dès que vous ajoutez un bloc, le contenu par blocs remplace l'original.</div>}
+                  {(art.blocks||[]).map((b,bi)=>(
+                    <div key={bi}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:8,padding:8,marginBottom:8}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                        <span style={{fontSize:10,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px"}}>{b.type==="h3"?"Titre":b.type==="callout"?"Encadré":b.type==="list"?"Liste":"Paragraphe"}</span>
+                        <div style={{display:"flex",gap:4}}>
+                          <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
+                          <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
+                          <button onClick={()=>removeBlk(i,bi)}title="Supprimer"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,color:"#C84B31",fontFamily:"inherit"}}>🗑</button>
+                        </div>
+                      </div>
+                      {b.type==="h3"&&<div style={{display:"flex",gap:6}}>
+                        <input value={b.text||""}onChange={e=>setBlk(i,bi,"text",e.target.value)}placeholder="Titre de section"style={{flex:1,padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,fontWeight:600,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                        <input type="color"value={b.color||"#2E4859"}onChange={e=>setBlk(i,bi,"color",e.target.value)}title="Couleur du titre"style={{width:38,height:34,padding:2,borderRadius:7,border:"1px solid var(--br)",cursor:"pointer",flexShrink:0}}/>
+                      </div>}
+                      {b.type==="p"&&<textarea value={b.text||""}onChange={e=>setBlk(i,bi,"text",e.target.value)}placeholder="Paragraphe — **gras**, *italique*"rows={3}style={{width:"100%",padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>}
+                      {b.type==="callout"&&<div>
+                        <div style={{display:"flex",gap:6,marginBottom:6}}>
+                          <input value={b.title||""}onChange={e=>setBlk(i,bi,"title",e.target.value)}placeholder="Titre de l'encadré"style={{flex:1,padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,fontWeight:600,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                          <input type="color"value={b.color||"#5DA9A1"}onChange={e=>setBlk(i,bi,"color",e.target.value)}title="Couleur de l'encadré"style={{width:38,height:34,padding:2,borderRadius:7,border:"1px solid var(--br)",cursor:"pointer",flexShrink:0}}/>
+                        </div>
+                        <textarea value={b.text||""}onChange={e=>setBlk(i,bi,"text",e.target.value)}placeholder="Texte de l'encadré"rows={2}style={{width:"100%",padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
+                      </div>}
+                      {b.type==="list"&&<div>
+                        {(b.items||[]).map((it,ii)=>(
+                          <div key={ii}style={{display:"flex",gap:6,marginBottom:5}}>
+                            <input value={it}onChange={e=>setBlkItem(i,bi,ii,e.target.value)}placeholder="Point de liste"style={{flex:1,padding:"6px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
+                            <button onClick={()=>removeBlkItem(i,bi,ii)}style={{background:"none",border:"1px solid var(--br)",borderRadius:7,padding:"0 9px",fontSize:12,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
+                          </div>
+                        ))}
+                        <button onClick={()=>addBlkItem(i,bi)}style={{fontSize:11,padding:"5px 10px",borderRadius:7,border:"1px dashed var(--br)",background:"var(--c)",color:"var(--b)",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>+ point</button>
+                      </div>}
+                    </div>
+                  ))}
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:4}}>
+                    {[["h3","+ Titre"],["p","+ Paragraphe"],["callout","+ Encadré"],["list","+ Liste"]].map(([t,l])=>
+                      <button key={t}onClick={()=>addBlk(i,t)}style={{flex:"1 1 45%",padding:"7px",borderRadius:8,border:"1.5px dashed var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+                    )}
+                  </div>
+                </div>}
               </div>
             ))}
             <button onClick={addBlog}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter un article</button>
