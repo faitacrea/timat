@@ -9335,146 +9335,27 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               {/* Screen */}
               <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 720, display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
-                <div style={{position:"absolute",top:8,right:8,zIndex:10,background:"rgba(155,107,170,.85)",color:"#fff",fontSize:7,fontWeight:700,padding:"2px 6px",borderRadius:4,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
+                <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
-                {/* TopBar */}
-                <div style={{ background: "rgba(255,255,255,.98)", borderBottom: "1px solid rgba(196,113,74,.12)", padding: "7px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontFamily: "Georgia,serif", fontSize: 16, fontWeight: 700, color: "#E49178", fontStyle: "italic" }}>TiMat</span>
-                    <span style={{ fontSize: 8, color: "#aaa", letterSpacing: 1 }}>v3</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <div style={{position:"relative"}}>
-                      <span style={{ fontSize: 14 }}>🔔</span>
-                      <div style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#C84B31"}}/>
-                    </div>
-                    <span style={{ fontSize: 14 }}>🌙</span>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#E49178,#90A093)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>M</div>
-                  </div>
-                </div>
+                {/* Vraie TopBar de l'app (mode démo) */}
+                <TopBar role="asmat" groups={GROUPS_AM} page={demoPage} setPage={setDemoPage} user={D.asmat}
+                  onLogout={()=>{}} pmiNonLus={0} dark={false} setDark={()=>{}}
+                  notifNonLus={0} notifs={[]} setNotifs={()=>{}} showNotifs={false} setShowNotifs={()=>{}} setPage2={setDemoPage}/>
 
-                {/* Sous-onglets */}
-                {demoGroup!=="accueil"&&<div style={{ background: "#fff", borderBottom: "1px solid #F0EBF4", padding: "6px 8px", display: "flex", gap: 4, overflowX: "auto", flexShrink: 0 }}>
-                  {(demoGroup==="enfant"?[
-                    {id:"journal",l:"📋 Journal",ok:true},{id:"pointage",l:"⏰ Pointage",ok:true},
-                    {id:"sante",l:"🏥 Sante",ok:false},{id:"urgence",l:"🚨 Urgence",ok:false},{id:"eveil",l:"🌱 Eveil",ok:false}
-                  ]:demoGroup==="admin"?[
-                    {id:"messagerie",l:"💬 Messages",ok:true},{id:"facturation",l:"💰 Salaire",ok:true},
-                    {id:"calendrier",l:"📅 Calendrier",ok:false},{id:"documents",l:"📂 Documents",ok:false},{id:"bilans",l:"📊 Bilans",ok:false}
-                  ]:[
-                    {id:"projet",l:"📄 Projet",ok:false},{id:"pmi",l:"🏛️ PMI",ok:false},{id:"support",l:"❓ Support",ok:false}
-                  ]).map(s=><div key={s.id} onClick={s.ok?()=>setDemoPage(s.id):undefined} style={{
-                    whiteSpace:"nowrap",padding:"4px 10px",borderRadius:8,fontSize:9,fontWeight:600,cursor:s.ok?"pointer":"not-allowed",flexShrink:0,transition:"all .15s",
-                    background:demoPage===s.id?"linear-gradient(135deg,#E49178,#C76754)":s.ok?"#F6F7F6":"#F4F4F4",
-                    color:demoPage===s.id?"#fff":s.ok?"#90A093":"#CDD4CE",opacity:s.ok?1:.6,
-                  }}>{s.l}{!s.ok&&" 🔒"}</div>)}
-                </div>}
-
-                {/* Contenu */}
+                {/* Contenu : vrai écran si câblé, sinon écran "bientôt" */}
                 <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-
-                  {/* ACCUEIL */}
-                  {demoPage==="accueil"&&<div style={{padding:10}}>
-                    <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={()=>{}} demoStats={demoAccueilStats}/>
-                  </div>}
-
-                  {/* JOURNAL */}
-                  {demoPage==="journal"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 Journal — {D.enfants[0].prenom}</div>
-                    {D.transmissions.filter(t=>t.eId==="e1").map(t=><div key={t.id} style={{background:t.auteur==="asmat"?"#F6F7F6":"#FFF8F3",borderRadius:10,padding:8,marginBottom:5,borderLeft:"3px solid "+(t.auteur==="asmat"?"#90A093":"#E49178")}}>
-                      <div style={{fontSize:8,color:t.auteur==="asmat"?"#90A093":"#E49178",fontWeight:700,marginBottom:2}}>{t.auteur==="asmat"?"👩👧 Marie":"👪 Parent"} · {t.h}</div>
-                      <div style={{fontSize:10,color:"#2E4859",lineHeight:1.5}}>{t.txt}</div>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
-                        <div style={{fontSize:13}}>{t.mood}</div>
-                        <button onClick={()=>setDemoLiked(v=>!v)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,transform:demoLiked?"scale(1.3)":"scale(1)",transition:"transform .2s"}}>{demoLiked?"❤️":"🤍"}</button>
-                      </div>
-                    </div>)}
-                    <div style={{display:"flex",gap:4,marginBottom:6}}>
-                      {["😊","😴","🤗","😢","🤒","🥰"].map(m=><div key={m} onClick={()=>setDemoMood(m)} style={{padding:"3px 6px",borderRadius:6,background:m===demoMood?"#F6F7F6":"#F6F7F6",border:m===demoMood?"1.5px solid #90A093":"1.5px solid transparent",fontSize:12,cursor:"pointer"}}>{m}</div>)}
-                    </div>
-                    <div style={{display:"flex",gap:5}}>
-                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} placeholder="Ecrire une observation..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff",color:"#2E4859"}}/>
-                      <div onClick={()=>{if(demoMsg.trim())setDemoMsg("");}} style={{background:"linear-gradient(135deg,#90A093,#A8B5A8)",color:"#fff",borderRadius:8,padding:"7px 10px",fontSize:9,fontWeight:700,cursor:"pointer"}}>OK</div>
-                    </div>
-                  </div>}
-
-                  {/* POINTAGE */}
-                  {demoPage==="pointage"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>⏰ Pointage</div>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:5,marginBottom:10}}>
-                      {[{l:"Prevues",v:"174h",c:"#2E4859"},{l:"Realisees",v:"152h30",c:"#E49178"},{l:"Solde",v:"-21h30",c:"#C84B31"}].map(k=><div key={k.l} style={{background:"#fff",borderRadius:10,padding:"7px 4px",textAlign:"center",boxShadow:"0 1px 6px rgba(0,0,0,.06)"}}>
-                        <div style={{fontSize:11,fontWeight:700,color:k.c}}>{k.v}</div>
-                        <div style={{fontSize:8,color:"#90A093"}}>{k.l}</div>
-                      </div>)}
-                    </div>
-                    {D.enfants.map(e=>{
-                      const estPresent=!!demoArrivee[e.id];
-                      return <div key={e.id} onClick={()=>setDemoArrivee(prev=>({...prev,[e.id]:prev[e.id]?null:(new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0"))}))} style={{background:"#fff",borderRadius:10,padding:"8px 10px",marginBottom:4,boxShadow:"0 1px 5px rgba(0,0,0,.05)",display:"flex",alignItems:"center",gap:8,cursor:"pointer",border:estPresent?"1.5px solid #5DA9A1":"1.5px solid transparent",transition:"all .2s"}}>
-                        <span style={{fontSize:16}}>{e.emoji}</span>
-                        <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#2E4859"}}>{e.prenom}</div><div style={{fontSize:9,color:"#90A093"}}>{estPresent?"Arrive "+demoArrivee[e.id]:"Pas encore pointe"}</div></div>
-                        <div style={{fontSize:9,fontWeight:700,background:estPresent?"#F0FAF4":"#F6F7F6",color:estPresent?"#5DA9A1":"#90A093",padding:"2px 7px",borderRadius:6}}>{estPresent?"Pointe":"Pointer"}</div>
-                      </div>;
-                    })}
-                  </div>}
-
-                  {/* MESSAGERIE */}
-                  {demoPage==="messagerie"&&<div style={{padding:10,display:"flex",flexDirection:"column",height:"100%"}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:6}}>💬 Messagerie</div>
-                    <div style={{display:"flex",gap:5,marginBottom:8,overflowX:"auto"}}>
-                      {D.enfants.map(e=>{const unread=demoMsgs.filter(m=>m.eId===e.id&&!m.lu).length;return <div key={e.id} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 9px",borderRadius:8,background:e.id==="e1"?"linear-gradient(135deg,#E49178,#C76754)":"#F6F7F6",cursor:"pointer",position:"relative",flexShrink:0}}>
-                        <span style={{fontSize:13}}>{e.emoji}</span><span style={{fontSize:9,fontWeight:600,color:e.id==="e1"?"#fff":"#2E4859"}}>{e.prenom}</span>
-                        {unread>0&&<div style={{position:"absolute",top:-4,right:-4,width:13,height:13,borderRadius:"50%",background:"#C84B31",color:"#fff",fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{unread}</div>}
-                      </div>;})}
-                    </div>
-                    <div style={{flex:1,display:"flex",flexDirection:"column",gap:5,overflowY:"auto",minHeight:150}}>
-                      {demoMsgs.filter(m=>m.eId==="e1").map(m=><div key={m.id} style={{alignSelf:m.de==="parent"?"flex-start":"flex-end",background:m.de==="parent"?"#F6F7F6":"linear-gradient(135deg,#E49178,#C76754)",borderRadius:m.de==="parent"?"12px 12px 12px 4px":"12px 12px 4px 12px",padding:"7px 10px",maxWidth:"78%"}}>
-                        <div style={{fontSize:9,color:m.de==="parent"?"#2E4859":"#fff",lineHeight:1.5}}>{m.txt}</div>
-                        <div style={{fontSize:7,color:m.de==="parent"?"#90A093":"rgba(255,255,255,.6)",textAlign:"right",marginTop:2}}>{m.h}</div>
-                      </div>)}
-                    </div>
-                    <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <input value={demoMsg} onChange={e=>setDemoMsg(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} placeholder="Votre message..." style={{flex:1,padding:"7px 9px",borderRadius:8,border:"1.5px solid #DDD5E8",fontSize:9,background:"#fff"}}/>
-                      <div onClick={()=>{if(demoMsg.trim()){const h=new Date().getHours()+"h"+String(new Date().getMinutes()).padStart(2,"0");setDemoMsgs(prev=>[...prev,{id:"dm"+Date.now(),eId:"e1",de:"asmat",txt:demoMsg.trim(),h,lu:true}]);setDemoMsg("");}}} style={{background:"linear-gradient(135deg,#90A093,#A8B5A8)",borderRadius:8,padding:"7px 10px",fontSize:9,color:"#fff",fontWeight:700,cursor:"pointer"}}>Envoyer</div>
-                    </div>
-                  </div>}
-
-                  {/* SALAIRE */}
-                  {demoPage==="facturation"&&<div style={{padding:10}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859",marginBottom:8}}>💰 Salaire — {["Janvier","Fevrier","Mars"][demoMois]}</div>
-                    <div style={{display:"flex",gap:4,marginBottom:10}}>
-                      {["Janv.","Fev.","Mars"].map((m,i)=><div key={m} onClick={()=>setDemoMois(i)} style={{padding:"3px 9px",borderRadius:6,fontSize:9,fontWeight:600,cursor:"pointer",background:i===demoMois?"linear-gradient(135deg,#E49178,#C76754)":"#F6F7F6",color:i===demoMois?"#fff":"#2E4859"}}>{m}</div>)}
-                    </div>
-                    {[{l:"Salaire de base",d:[{h:"160h x 4,05EUR",v:"648,00 EUR"},{h:"152h x 4,05EUR",v:"615,60 EUR"},{h:"168h x 4,05EUR",v:"680,40 EUR"}][demoMois]},{l:"Ind. entretien",d:[{h:"20j x 3,80EUR",v:"76,00 EUR"},{h:"19j x 3,80EUR",v:"72,20 EUR"},{h:"21j x 3,80EUR",v:"79,80 EUR"}][demoMois]},{l:"Heures majorees",d:[{h:"8h x 5,06EUR",v:"40,50 EUR"},{h:"4h x 5,06EUR",v:"20,25 EUR"},{h:"12h x 5,06EUR",v:"60,75 EUR"}][demoMois]}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EBF4",fontSize:10}}>
-                      <div><div style={{fontWeight:600,color:"#2E4859"}}>{r.l}</div><div style={{fontSize:8,color:"#90A093"}}>{r.d.h}</div></div>
-                      <div style={{fontWeight:700,color:"#E49178"}}>{r.d.v}</div>
-                    </div>)}
-                    <div style={{marginTop:8,padding:10,background:"linear-gradient(135deg,rgba(196,113,74,.08),rgba(155,107,170,.08))",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid rgba(196,113,74,.2)"}}>
-                      <span style={{fontSize:11,fontWeight:700,color:"#2E4859"}}>Total brut</span>
-                      <span style={{fontSize:17,fontWeight:700,color:"#E49178"}}>{["764,50 EUR","708,05 EUR","820,95 EUR"][demoMois]}</span>
-                    </div>
-                    <div style={{display:"flex",gap:5,marginTop:8}}>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#2E4859,#2A6F6A)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>📥 Bulletin PDF</span></div>
-                      <div style={{flex:1,background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:8,padding:"7px 0",textAlign:"center",cursor:"pointer"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>🏛️ Pajemploi</span></div>
-                    </div>
-                  </div>}
-
-                  {/* OUTILS grise */}
-                  {demoPage==="outils"&&<div style={{padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:12,textAlign:"center"}}>
-                    <div style={{fontSize:32}}>⭐</div>
-                    <div style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>Outils Pro</div>
-                    <div style={{fontSize:10,color:"#90A093",lineHeight:1.6}}>Projet d'accueil, PMI, FAQ et Support disponibles dans l'application complete</div>
-                    <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#90A093,#A8B5A8)",borderRadius:10,padding:"8px 16px",fontSize:10,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:8}}>Acceder a l'app</div>
-                  </div>}
-
+                  {demoPage==="accueil"
+                    ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
+                    : <div style={{padding:24,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:14,textAlign:"center"}}>
+                        <div style={{fontSize:40}}>🚧</div>
+                        <div style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Bientôt dans la démo</div>
+                        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:240}}>Cet écran est disponible dans l'application complète. La démo interactive s'enrichit progressivement.</div>
+                        <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:10,padding:"9px 18px",fontSize:12,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:4}}>Accéder à l'app →</div>
+                      </div>}
                 </div>
 
-                {/* Bottom Nav */}
-                <div style={{ display: "flex", justifyContent: "space-around", padding: "4px 4px 6px", borderTop: "1px solid rgba(196,113,74,.1)", background: "rgba(255,255,255,.98)", flexShrink: 0 }}>
-                  {[{g:"accueil",ic:"🏠",l:"Accueil"},{g:"enfant",ic:"👶",l:"Enfant"},{g:"admin",ic:"🗂️",l:"Admin"},{g:"outils",ic:"⭐",l:"Outils"}].map(t=><div key={t.g} onClick={()=>{setDemoGroup(t.g);if(t.g==="accueil")setDemoPage("accueil");else if(t.g==="enfant")setDemoPage("journal");else if(t.g==="admin")setDemoPage("messagerie");else setDemoPage("outils");}} style={{textAlign:"center",cursor:"pointer",padding:"4px 6px",borderRadius:10,transition:"all .15s",background:demoGroup===t.g?"rgba(196,113,74,.1)":"transparent",flex:1}}>
-                    <div style={{fontSize:17}} dangerouslySetInnerHTML={{__html:t.ic}}/>
-                    <div style={{fontSize:7,fontWeight:demoGroup===t.g?700:400,color:demoGroup===t.g?"#E49178":"#90A093"}}>{t.l}</div>
-                  </div>)}
-                </div>
+                {/* Vraie BottomNav de l'app */}
+                <BottomNav groups={GROUPS_AM} page={demoPage} setPage={setDemoPage} pmiNonLus={0}/>
               </div>
               {/* Home indicator */}
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
