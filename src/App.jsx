@@ -9082,6 +9082,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
+  const SECTIONS_ORDER_DEFAULT=["probleme","demo","signature","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
+  const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
   const demos=[
     {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
@@ -9275,8 +9278,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
       </div>
 
+      <div style={{display:"flex",flexDirection:"column"}}>
       {/* SECTION 1 - PROBLEME */}
-      {SV.probleme!==false&&<div className="lp-section" style={{ background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
@@ -9304,7 +9308,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 2 - DEMO */}
-      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ background: L.section2Bg||"#FDF5FB" }}>
+      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
@@ -9510,7 +9514,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
-      {SV.signature!==false&&<div className="lp-section" style={{ background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
+      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -9612,7 +9616,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 3 - TRANSFORMATION */}
-      {SV.transformation!==false&&<div className="lp-section" style={{ background: L.section3Bg||"#F8F0FC" }}>
+      {SV.transformation!==false&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s3Align||"center", marginBottom: 56 }}>
@@ -9635,7 +9639,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 4 - CHIFFRES */}
-      {SV.chiffres!==false&&<div className="lp-section" style={{ background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {SV.chiffres!==false&&<div className="lp-section" style={{ order:ord("chiffres"), background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
@@ -9658,7 +9662,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      {SV.temoignages!==false&&<div className="lp-section" style={{ background: L.section5Bg||"#FDF5FB" }}>
+      {SV.temoignages!==false&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -9684,7 +9688,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 6 - TARIFS */}
-      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ background: L.section6Bg||"#F5EBF8" }}>
+      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#F5EBF8" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
@@ -9731,7 +9735,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* CTA FINAL */}
-      {SV.ctaFinal!==false&&<div className="lp-section" style={{ background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
+      {SV.ctaFinal!==false&&<div className="lp-section" style={{ order:ord("ctaFinal"), background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
@@ -9745,7 +9749,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* FAQ */}
-      {SV.faq!==false&&<div className="lp-section" style={{ background: "#F4F7FA" }}>
+      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: "#F4F7FA" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -9768,7 +9772,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* BLOG */}
-      {SV.blog!==false&&<div className="lp-section" style={{ background: "#FDFBF8" }}>
+      {SV.blog!==false&&<div className="lp-section" style={{ order:ord("blog"), background: "#FDFBF8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -9798,6 +9802,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </div>
         </div>
       </div>}
+      </div>
 
       {/* BLOG ARTICLE MODAL */}
       {showBlog&&<div onClick={e=>e.target===e.currentTarget&&setShowBlog(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
@@ -12348,6 +12353,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [sec,setSec]=useState("hero");
   const [subSec,setSubSec]=useState("textes");
   const [openBlocks,setOpenBlocks]=useState(null); // P32-3b : index de l'article dont l'éditeur de blocs est ouvert
+  const [dragSec,setDragSec]=useState(null); // P32-4 : index de section en cours de drag
   const [saving,setSaving]=useState(false);
   const [toast,setToast]=useState("");
   const [stats,setStats]=useState({users:0,pro:0,enfants:0});
@@ -12419,6 +12425,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setLand=(k,v)=>setCfg(c=>({...c,landing:{...c.landing,[k]:v}}));
   const setFeat=(k,v)=>setCfg(c=>({...c,feats:{...c.feats,[k]:v}}));
   const setSV=(k,v)=>setCfg(c=>({...c,sectionsVisibles:{...(c.sectionsVisibles||{}),[k]:v}}));
+  const moveSectionAt=(from,to)=>setCfg(c=>{const base=(c.sectionsOrder&&c.sectionsOrder.length)?c.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;const arr=[...base];if(from<0||from>=arr.length||to<0||to>=arr.length)return c;const[x]=arr.splice(from,1);arr.splice(to,0,x);return{...c,sectionsOrder:arr};});
   const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
   const setTransfo=(idx,pos,v)=>setCfg(c=>{const tt=[...(c.transformations||[])];const row=[...tt[idx]];row[pos]=v;tt[idx]=row;return{...c,transformations:tt};});
   const setTesti=(idx,field,v)=>setCfg(c=>{const tt=[...(c.testimonials||[])];tt[idx]={...tt[idx],[field]:v};return{...c,testimonials:tt};});
@@ -13382,6 +13389,23 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               </div>;
             })}
           </BOCard>
+          <BOCard title="Ordre des sections" icon="↕️">
+            <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Glissez-déposez une section pour la déplacer, ou utilisez les flèches. L'ordre s'applique à la page d'accueil (le Hero et le Footer restent à leurs extrémités).</div>
+            {(()=>{const labels={probleme:"La réalité du métier",demo:"Découvrez TiMat en direct",signature:"Signature électronique",transformation:"Ce que TiMat change",chiffres:"Ce que disent les chiffres",temoignages:"Témoignages",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
+              <div key={id}
+                draggable
+                onDragStart={()=>setDragSec(i)}
+                onDragOver={e=>e.preventDefault()}
+                onDrop={()=>{if(dragSec!==null&&dragSec!==i)moveSectionAt(dragSec,i);setDragSec(null);}}
+                onDragEnd={()=>setDragSec(null)}
+                style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:6,background:dragSec===i?"var(--c)":"var(--w)",border:"1px solid var(--br)",borderRadius:10,cursor:"grab",opacity:dragSec===i?.5:1,transition:"opacity .15s"}}>
+                <span style={{fontSize:15,color:"var(--m)"}}>⠿</span>
+                <span style={{flex:1,fontSize:13,fontWeight:600,color:"var(--b)"}}>{i+1}. {labels[id]||id}</span>
+                <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:7,padding:"3px 9px",cursor:i===0?"not-allowed":"pointer",fontSize:12,opacity:i===0?.3:1,fontFamily:"inherit"}}>↑</button>
+                <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:7,padding:"3px 9px",cursor:i===order.length-1?"not-allowed":"pointer",fontSize:12,opacity:i===order.length-1?.3:1,fontFamily:"inherit"}}>↓</button>
+              </div>
+            ));})()}
+          </BOCard>
         </>}
 
         {/* ====================== HISTORIQUE (P30D : backups + restauration) ====================== */}
@@ -13723,6 +13747,7 @@ const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
+  sectionsOrder:["probleme","demo","signature","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"],
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -13766,6 +13791,7 @@ const loadConfig = async () => {
         faqLanding: saved.faqLanding||DEFAULT_CONFIG.faqLanding,
         footer:{...DEFAULT_CONFIG.footer,...(saved.footer||{})},
         blog: saved.blog||DEFAULT_CONFIG.blog,
+        sectionsOrder:(saved.sectionsOrder&&saved.sectionsOrder.length)?saved.sectionsOrder:DEFAULT_CONFIG.sectionsOrder,
       };
       applyColsToDOM(G.cols);
       if (G.landing.googleFontsUrl && typeof document !== 'undefined') {
