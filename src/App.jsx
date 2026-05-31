@@ -12355,6 +12355,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [loadingBackups,setLoadingBackups]=useState(false);
   const [restoringId,setRestoringId]=useState(null);
   const [showRestoreModal,setShowRestoreModal]=useState(null);
+  const [showJsonModal,setShowJsonModal]=useState(null); // P31D : aperçu JSON d'une sauvegarde
+  const prettyConfig=(c)=>{ try{ return JSON.stringify(typeof c==="string"?JSON.parse(c):c,null,2); }catch(e){ return String(c); } };
 
   const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
   // P30C : AUTOSAVE DÉSACTIVÉ (cause de l'incident Reset→écrasement prod).
@@ -12722,6 +12724,24 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             disabled={restoringId!==null}
             style={{flex:1,padding:"10px 16px",borderRadius:10,border:"none",background:restoringId?"var(--br)":"var(--T)",color:"#fff",fontWeight:700,fontSize:14,cursor:restoringId?"not-allowed":"pointer",fontFamily:"inherit"}}
           >{restoringId?"⏳ Restauration…":"↺ Restaurer"}</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* P31D : Modale aperçu JSON d'une sauvegarde */}
+    {showJsonModal&&<div onClick={()=>setShowJsonModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"var(--w)",borderRadius:18,maxWidth:640,width:"100%",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 12px 40px rgba(0,0,0,.25)",fontFamily:"inherit",overflow:"hidden"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:"1px solid var(--br)",flexShrink:0}}>
+          <div>
+            <div style={{fontSize:15,fontWeight:800,color:"var(--b)"}}>👁 Contenu de la sauvegarde</div>
+            <div style={{fontSize:11,color:"var(--m)",marginTop:2}}>{new Date(showJsonModal.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <button onClick={()=>setShowJsonModal(null)} style={{background:"var(--c)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"var(--b)",fontWeight:700,fontFamily:"inherit"}}>✕</button>
+        </div>
+        <pre style={{margin:0,padding:"16px 20px",overflow:"auto",fontSize:11,lineHeight:1.5,color:"var(--b)",background:"var(--c)",whiteSpace:"pre-wrap",wordBreak:"break-word",flex:1,fontFamily:"ui-monospace,Menlo,monospace"}}>{prettyConfig(showJsonModal.config)}</pre>
+        <div style={{display:"flex",gap:8,justifyContent:"flex-end",padding:"12px 20px",borderTop:"1px solid var(--br)",flexShrink:0}}>
+          <button onClick={()=>{navigator.clipboard?.writeText(prettyConfig(showJsonModal.config)).then(()=>setToast("✅ JSON copié")).catch(()=>setToast("❌ Copie impossible"));}} style={{padding:"9px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>📋 Copier</button>
+          <button onClick={()=>setShowJsonModal(null)} style={{padding:"9px 16px",borderRadius:10,border:"none",background:"var(--T)",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Fermer</button>
         </div>
       </div>
     </div>}
@@ -13244,11 +13264,18 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
                   </div>
                   <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{dateStr}</div>
                 </div>
-                <button
-                  onClick={()=>setShowRestoreModal(b)}
-                  disabled={restoringId!==null}
-                  style={{padding:"7px 14px",fontSize:11,fontWeight:700,borderRadius:8,border:"none",background:restoringId===b.id?"var(--br)":"var(--T)",color:"#fff",cursor:restoringId!==null?"not-allowed":"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}
-                >{restoringId===b.id?"⏳ …":"↺ Restaurer"}</button>
+                <div style={{display:"flex",gap:6,flexShrink:0}}>
+                  <button
+                    onClick={()=>setShowJsonModal(b)}
+                    title="Voir le contenu JSON de cette sauvegarde"
+                    style={{padding:"7px 12px",fontSize:11,fontWeight:700,borderRadius:8,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}
+                  >👁 Voir</button>
+                  <button
+                    onClick={()=>setShowRestoreModal(b)}
+                    disabled={restoringId!==null}
+                    style={{padding:"7px 14px",fontSize:11,fontWeight:700,borderRadius:8,border:"none",background:restoringId===b.id?"var(--br)":"var(--T)",color:"#fff",cursor:restoringId!==null?"not-allowed":"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}
+                  >{restoringId===b.id?"⏳ …":"↺ Restaurer"}</button>
+                </div>
               </div>;
             })}
           </BOCard>
