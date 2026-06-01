@@ -5037,22 +5037,10 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
             </div>
             <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:12}}>Exemple — calculé automatiquement à partir des pointages dans l'app réelle.</div>
           </div>
-        : <div style={{position:"relative",minHeight:340}}>
-            <div style={{filter:"blur(3px)",opacity:.85,pointerEvents:"none"}} aria-hidden="true">
-              <div className="card"style={{padding:18,maxWidth:420,margin:"0 auto"}}>
-                <div style={{textAlign:"center",borderBottom:"2px solid var(--br)",paddingBottom:10,marginBottom:12}}>
-                  <div style={{fontWeight:800,fontSize:15,color:"var(--b)"}}>Document TiMat</div>
-                  <div style={{fontSize:11,color:"var(--m)",marginTop:2}}>Marie Dupont · Mai 2026</div>
-                </div>
-                {[["Heures normales","151h67"],["Taux horaire net","3,80 €"],["Indemnités entretien","+ 92,40 €"],["Indemnités repas","+ 63,00 €"]].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:9}}><span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:600,color:"var(--b)"}}>{v}</span></div>)}
-                <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid var(--br)",paddingTop:10,fontSize:15}}><span style={{fontWeight:700,color:"var(--b)"}}>Net à payer</span><span style={{fontWeight:800,color:"var(--T)"}}>1 731,75 €</span></div>
-              </div>
-            </div>
-            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,textAlign:"center",padding:24,background:"rgba(253,251,248,.55)"}}>
-              <div style={{fontSize:30}}>🔒</div>
-              <div style={{fontSize:14,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
-              <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:230}}>Cette section fait partie de TiMat.</div>
-            </div>
+        : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:300,gap:10,textAlign:"center",padding:24}}>
+            <div style={{fontSize:34}}>🔒</div>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
+            <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:230}}>Cette section fait partie de TiMat.</div>
           </div>}
     </div>;
   }
@@ -9440,18 +9428,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     ? <div style={{padding:10}}><InviterParent enfants={demoEnfants} user={D.asmat} demoMode={true}/></div>
                     : demoPage==="admin_finances"
                     ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
-                    : <div style={{position:"relative",minHeight:"100%"}}>
-                        {/* Brise-vue : vrai écran TiMat (Accueil) flouté en fond */}
-                        <div style={{filter:"blur(3px)",opacity:.85,pointerEvents:"none",transform:"scale(1.01)",transformOrigin:"top center"}} aria-hidden="true">
-                          <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={()=>{}} demoStats={demoAccueilStats}/>
-                        </div>
-                        {/* Note par-dessus */}
-                        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,textAlign:"center",padding:24,background:"rgba(253,251,248,.55)"}}>
-                          <div style={{fontSize:34}}>🔒</div>
-                          <div style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
-                          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:240}}>Cette fonctionnalité fait partie de TiMat. Créez votre espace pour en profiter.</div>
-                          <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:10,padding:"9px 18px",fontSize:12,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:4}}>Créer mon espace →</div>
-                        </div>
+                    : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100%",gap:14,textAlign:"center",padding:24}}>
+                        <div style={{fontSize:40}}>🔒</div>
+                        <div style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
+                        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:250}}>Cette fonctionnalité fait partie de TiMat. Créez votre espace pour en profiter.</div>
+                        <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:10,padding:"10px 20px",fontSize:13,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:4}}>Créer mon espace →</div>
                       </div>}
                 </div>
 
