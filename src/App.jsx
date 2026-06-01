@@ -9104,7 +9104,6 @@ function RenderArticleBlocks({blocks}){
   })}</div>;
 }
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
-  const [demoGroup, setDemoGroup] = useState("accueil");
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
   const [showLegal, setShowLegal] = useState(null);
@@ -9118,11 +9117,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
-  const [demoMsg, setDemoMsg] = useState("");
-  const [demoMood, setDemoMood] = useState("😊");
-  const [demoMois, setDemoMois] = useState(2);
-  const [demoLiked, setDemoLiked] = useState(false);
-  const [demoMsgs, setDemoMsgs] = useState(D.messages);
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   // Démo : enfants enrichis (signatures dérivées) + stats fictives pour le vrai écran Accueil
   const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
