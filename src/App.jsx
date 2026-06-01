@@ -1,5 +1,4 @@
--
-¨£***************************££££££££££££££££££*£mport { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // Hook générique : charge depuis Supabase, fallback local, sauvegarde auto
@@ -5039,11 +5038,11 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
             <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:12}}>Exemple — calculé automatiquement à partir des pointages dans l'app réelle.</div>
           </div>
         : <div style={{position:"relative",minHeight:300}}>
-            <div style={{filter:"blur(2.5px)",opacity:.7,pointerEvents:"none"}} aria-hidden="true">
-              <div style={{height:90,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
-              <div style={{height:140,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)"}}/>
+            <div style={{filter:"blur(1.5px)",opacity:.8,pointerEvents:"none"}} aria-hidden="true">
+              <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",padding:14,marginBottom:12}}><div style={{height:11,width:"45%",background:"var(--br)",borderRadius:5,marginBottom:12}}/><div style={{height:9,width:"90%",background:"var(--c)",borderRadius:4,marginBottom:7}}/><div style={{height:9,width:"78%",background:"var(--c)",borderRadius:4,marginBottom:7}}/><div style={{height:9,width:"85%",background:"var(--c)",borderRadius:4}}/></div>
+              <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",padding:14}}><div style={{height:11,width:"38%",background:"var(--br)",borderRadius:5,marginBottom:12}}/><div style={{height:9,width:"82%",background:"var(--c)",borderRadius:4,marginBottom:7}}/><div style={{height:9,width:"66%",background:"var(--c)",borderRadius:4}}/></div>
             </div>
-            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,textAlign:"center",padding:24}}>
+            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,textAlign:"center",padding:24,background:"rgba(253,251,248,.35)"}}>
               <div style={{fontSize:30}}>🔒</div>
               <div style={{fontSize:14,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
               <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:230}}>Cette section fait partie de TiMat.</div>
@@ -9436,15 +9435,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     : demoPage==="admin_finances"
                     ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
                     : <div style={{position:"relative",minHeight:"100%"}}>
-                        {/* Aperçu flouté (placeholder visuel) */}
-                        <div style={{filter:"blur(2.5px)",opacity:.7,pointerEvents:"none",padding:16}} aria-hidden="true">
-                          <div style={{height:18,width:"55%",background:"var(--br)",borderRadius:6,marginBottom:14}}/>
-                          <div style={{height:90,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
-                          <div style={{height:120,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
-                          <div style={{height:120,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)"}}/>
+                        {/* Aperçu maquette (brise-vue : voile léger) */}
+                        <div style={{filter:"blur(1.5px)",opacity:.8,pointerEvents:"none",padding:16}} aria-hidden="true">
+                          <div style={{height:16,width:"50%",background:"var(--br)",borderRadius:6,marginBottom:4}}/>
+                          <div style={{height:11,width:"70%",background:"var(--c)",borderRadius:5,marginBottom:16}}/>
+                          <div style={{display:"flex",gap:8,marginBottom:12}}>
+                            <div style={{flex:1,height:74,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",padding:12,boxSizing:"border-box"}}><div style={{height:22,width:22,borderRadius:6,background:"var(--c)",marginBottom:8}}/><div style={{height:9,width:"80%",background:"var(--br)",borderRadius:4,marginBottom:5}}/><div style={{height:8,width:"55%",background:"var(--c)",borderRadius:4}}/></div>
+                            <div style={{flex:1,height:74,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",padding:12,boxSizing:"border-box"}}><div style={{height:22,width:22,borderRadius:6,background:"var(--c)",marginBottom:8}}/><div style={{height:9,width:"80%",background:"var(--br)",borderRadius:4,marginBottom:5}}/><div style={{height:8,width:"55%",background:"var(--c)",borderRadius:4}}/></div>
+                          </div>
+                          <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",padding:14,marginBottom:12}}><div style={{height:11,width:"40%",background:"var(--br)",borderRadius:5,marginBottom:12}}/><div style={{height:9,width:"90%",background:"var(--c)",borderRadius:4,marginBottom:7}}/><div style={{height:9,width:"75%",background:"var(--c)",borderRadius:4,marginBottom:7}}/><div style={{height:9,width:"82%",background:"var(--c)",borderRadius:4}}/></div>
+                          <div style={{background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",padding:14}}><div style={{height:11,width:"45%",background:"var(--br)",borderRadius:5,marginBottom:12}}/><div style={{height:9,width:"88%",background:"var(--c)",borderRadius:4,marginBottom:7}}/><div style={{height:9,width:"70%",background:"var(--c)",borderRadius:4}}/></div>
                         </div>
                         {/* Note par-dessus */}
-                        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,textAlign:"center",padding:24}}>
+                        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,textAlign:"center",padding:24,background:"rgba(253,251,248,.35)"}}>
                           <div style={{fontSize:34}}>🔒</div>
                           <div style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
                           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:240}}>Cette fonctionnalité fait partie de TiMat. Créez votre espace pour en profiter.</div>
