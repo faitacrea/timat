@@ -9122,7 +9122,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
   const demoAccueilStats = {heuresSemaine:38.5,joursSemaine:5,revenuMois:1620,heuresMois:152,messagesNonLus:D.messages.filter(m=>!m.lu).length,presencesJour:demoEnfants.filter(e=>demoArrivee[e.id]).map(e=>({...e,depuis:demoArrivee[e.id]})),loaded:true};
   // Démo : sous-onglets déverrouillés (vrais écrans) ; tout le reste = aperçu verrouillé
-  const DEMO_UNLOCKED = ["accueil","pointage","admin_finances","inviter_parent"];
+  const DEMO_UNLOCKED = ["accueil","pointage","admin_finances","inviter_parent","calendrier","messagerie","sante_complet"];
   const demoActiveGroup = findGroup(GROUPS_AM, demoPage) || "accueil";
   const L = config.landing;
   const T = config.txts;
@@ -9422,6 +9422,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     ? <div style={{padding:10}}><InviterParent enfants={demoEnfants} user={D.asmat} demoMode={true}/></div>
                     : demoPage==="admin_finances"
                     ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
+                    : demoPage==="calendrier"
+                    ? <div style={{padding:10}}><Calendrier enfants={demoEnfants} role="asmat" pEId={null}/></div>
+                    : demoPage==="messagerie"
+                    ? <div style={{padding:10}}><Messagerie enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat}/></div>
+                    : demoPage==="sante_complet"
+                    ? <div style={{padding:10}}><SanteComplete enfants={demoEnfants} role="asmat" pEId={null}/></div>
                     : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100%",gap:14,textAlign:"center",padding:24}}>
                         <div style={{fontSize:40}}>🔒</div>
                         <div style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
