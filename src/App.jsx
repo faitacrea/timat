@@ -8817,7 +8817,8 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           {showNotifs&&<div style={{
             position:"absolute",right:0,top:"100%",marginTop:8,
             background:"var(--w)",borderRadius:14,boxShadow:"var(--sh2)",
-            border:"1px solid var(--br)",width:280,zIndex:200,overflow:"hidden"
+            border:"1px solid var(--br)",width:"min(280px,calc(100vw - 120px))",maxWidth:280,zIndex:200,
+            overflow:"hidden",maxHeight:"min(70vh,420px)",overflowY:"auto"
           }}>
             <div style={{padding:"12px 16px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:13,color:"var(--b)"}}>
               🔔 Notifications
@@ -9723,7 +9724,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* BLOG */}
-      {SV.blog!==false&&<div className="lp-section" style={{ order:ord("blog"), background: "#FDFBF8" }}>
+      {SV.blog!==false&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: "#FDFBF8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
