@@ -9346,7 +9346,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{fontSize:18,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
                     <span style={{fontSize:16}}>🌙</span>
-                    <Av t={ini(D.asmat.prenom,D.asmat.nom)} c={D.asmat.couleur} s={28}/>
+                    <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:D.asmat.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(D.asmat.prenom,D.asmat.nom)}</div>
                   </div>
                 </div>
 
