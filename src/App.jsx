@@ -222,6 +222,10 @@ function Styles(){return(
     .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
     @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
     @media(max-width:400px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    .demo-screen .g2{grid-template-columns:1fr!important}
+    .demo-screen .g3{grid-template-columns:1fr 1fr!important}
+    .demo-screen .g4{grid-template-columns:1fr 1fr!important}
+    .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
     .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
@@ -9369,7 +9373,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
 
                 {/* Contenu : vrai écran si câblé, sinon écran "bientôt" */}
-                <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+                <div className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
                   {demoPage==="accueil"
                     ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
                     : demoPage==="pointage"
