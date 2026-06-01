@@ -1158,7 +1158,7 @@ function RecitIA({enfants,role,pEId}){
 }
 
 //
-function Pointage({enfants,role,pEId,user}){
+function Pointage({enfants,role,pEId,user,demoMode=false}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [pts,setPts]=useState([]);
   const [toast,setToast]=useState("");
@@ -1174,6 +1174,7 @@ function Pointage({enfants,role,pEId,user}){
   // Charger les pointages depuis Supabase
   useEffect(()=>{
     if(!enfant?.id)return;
+    if(demoMode){setPts(D.pointages.filter(p=>p.eId===enfant?.id));return;}
     const charger=async()=>{
       const{data}=await supabase.from("pointages")
         .select("*").eq("enfant_id",enfant.id)
@@ -1195,7 +1196,7 @@ function Pointage({enfants,role,pEId,user}){
       }
     };
     charger();
-  },[enfant?.id]);
+  },[enfant?.id,demoMode]);
 
   const ptJ=pts.find(p=>p.eId===enfant?.id&&p.date===TODAY_STR);
   const ptH=pts.filter(p=>p.eId===enfant?.id).sort((a,b)=>b.date>a.date?-1:1);
@@ -1207,6 +1208,7 @@ function Pointage({enfants,role,pEId,user}){
 
   // POINTAGE WORKFLOW P14E - pointer l'arrivee maintenant (heure auto)
   const pointerArrivee=async()=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
     if(!enfant)return;
     setSaving(true);
     const now=new Date();
@@ -1236,6 +1238,7 @@ function Pointage({enfants,role,pEId,user}){
 
   // POINTAGE WORKFLOW P14E - pointer le depart maintenant (heure auto, calcul total)
   const pointerDepart=async()=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
     if(!enfant||!ptJ?.arr)return;
     setSaving(true);
     const now=new Date();
@@ -1276,6 +1279,7 @@ function Pointage({enfants,role,pEId,user}){
 
   // POINTAGE WORKFLOW P14E - edition manuelle (rectifier une heure mal saisie)
   const sauverEdition=async()=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
     if(!arrEdit||!enfant)return;
     setSaving(true);
     const[h1,m1]=arrEdit.split(":").map(Number);
@@ -1303,6 +1307,7 @@ function Pointage({enfants,role,pEId,user}){
 
   // POINTAGE WORKFLOW P14G - validation avec auto-signature si dispo
   const validerPointage=async(ptId,signature)=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
     // Si pas de signature passee, utiliser la signature standard du parent (si elle existe)
     const sigFinale=signature||user?.signature_base64||null;
     const{data,error}=await supabase.rpc("validate_pointage_as_parent",{
@@ -1327,6 +1332,7 @@ function Pointage({enfants,role,pEId,user}){
 
   // POINTAGE WORKFLOW P14G - modifier ET valider en une fois (parent)
   const modifierEtValider=async()=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
     if(!modifParent?.id||!modifParent.arr)return;
     const sigFinale=user?.signature_base64||null;
     const{data,error}=await supabase.rpc("modify_and_validate_pointage_as_parent",{
@@ -9366,6 +9372,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
                   {demoPage==="accueil"
                     ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
+                    : demoPage==="pointage"
+                    ? <div style={{padding:10}}><Pointage enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} demoMode={true}/></div>
                     : <div style={{padding:24,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:14,textAlign:"center"}}>
                         <div style={{fontSize:40}}>🚧</div>
                         <div style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Bientôt dans la démo</div>
