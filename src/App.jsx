@@ -4998,8 +4998,8 @@ function Parrainage({user}){
 }
 
 //
-function AdminFinances({enfants,role,pEId,user,pointagesDB}){
-  const [section,setSection]=useState(role==="asmat"?"facturation":"contrats");
+function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
+  const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?"facturation":"contrats"));
   const sousOnglets=role==="asmat"
     ?[
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
@@ -5010,6 +5010,46 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB}){
       {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
     ]
     :[{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}];
+  if(demoMode){
+    const demoUnlockedSection="bulletin";
+    return <div className="fi">
+      <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
+        {sousOnglets.map(s=>{const unlocked=s.id===demoUnlockedSection;return <button key={s.id}onClick={()=>setSection(s.id)}style={{padding:"8px 16px",border:"none",background:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",color:section===s.id?"var(--T)":(unlocked?"var(--b)":"var(--l)"),borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6,opacity:unlocked?1:.7}}><span>{s.ic}</span><span>{s.l}</span>{!unlocked&&<span style={{fontSize:11}}>🔒</span>}</button>;})}
+      </div>
+      {section==="bulletin"
+        ? <div>
+            <div className="card"style={{padding:20,maxWidth:420,margin:"0 auto"}}>
+              <div style={{textAlign:"center",borderBottom:"2px solid var(--br)",paddingBottom:12,marginBottom:14}}>
+                <div style={{fontWeight:800,fontSize:16,color:"var(--b)"}}>Bulletin de salaire</div>
+                <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>Mai 2026 · Assistante maternelle</div>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Salarié</span><span style={{fontWeight:600,color:"var(--b)"}}>Marie Dupont</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Enfant accueilli</span><span style={{fontWeight:600,color:"var(--b)"}}>Léo</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Heures normales</span><span style={{fontWeight:600,color:"var(--b)"}}>151h67</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Taux horaire net</span><span style={{fontWeight:600,color:"var(--b)"}}>3,80 €</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Indemnités entretien</span><span style={{fontWeight:600,color:"var(--b)"}}>+ 92,40 €</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:12}}><span style={{color:"var(--m)"}}>Indemnités repas</span><span style={{fontWeight:600,color:"var(--b)"}}>+ 63,00 €</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid var(--br)",paddingTop:12,fontSize:15}}><span style={{fontWeight:700,color:"var(--b)"}}>Net à payer</span><span style={{fontWeight:800,color:"var(--T)"}}>1 731,75 €</span></div>
+              <div style={{display:"flex",gap:8,marginTop:16}}>
+                <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>📄 Aperçu PDF</div>
+                <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>⬇️ Télécharger</div>
+              </div>
+            </div>
+            <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:12}}>Exemple — calculé automatiquement à partir des pointages dans l'app réelle.</div>
+          </div>
+        : <div style={{position:"relative",minHeight:300}}>
+            <div style={{filter:"blur(5px)",opacity:.55,pointerEvents:"none"}} aria-hidden="true">
+              <div style={{height:90,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
+              <div style={{height:140,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)"}}/>
+            </div>
+            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,textAlign:"center",padding:24}}>
+              <div style={{fontSize:30}}>🔒</div>
+              <div style={{fontSize:14,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
+              <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:230}}>Cette section fait partie de TiMat.</div>
+            </div>
+          </div>}
+    </div>;
+  }
   return <div className="fi">
     <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
@@ -9093,6 +9133,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   // Démo : enfants enrichis (signatures dérivées) + stats fictives pour le vrai écran Accueil
   const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
   const demoAccueilStats = {heuresSemaine:38.5,joursSemaine:5,revenuMois:1620,heuresMois:152,messagesNonLus:D.messages.filter(m=>!m.lu).length,presencesJour:demoEnfants.filter(e=>demoArrivee[e.id]).map(e=>({...e,depuis:demoArrivee[e.id]})),loaded:true};
+  // Démo : sous-onglets déverrouillés (vrais écrans) ; tout le reste = aperçu verrouillé
+  const DEMO_UNLOCKED = ["accueil","pointage","admin_finances","inviter_parent"];
+  const demoActiveGroup = findGroup(GROUPS_AM, demoPage) || "accueil";
   const L = config.landing;
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
@@ -9360,29 +9403,52 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   </div>
                 </div>
 
-                {/* Barre principale - vrais onglets (depuis TopBar) */}
+                {/* Barre principale - vrais onglets */}
                 <div className="nav-main" style={{background:"rgba(255,255,255,.95)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(234,224,232,.6)",display:"flex",gap:6,padding:"0 20px",height:52,alignItems:"center",overflowX:"auto",scrollbarWidth:"none"}}>
                   {Object.entries(GROUPS_AM).map(([key,g])=>{
-                    const isActive=findGroup(GROUPS_AM,demoPage)===key;
-                    return <button key={key} onClick={()=>{const gg=GROUPS_AM[key];const target=key==="enfant"?"pointage":(gg.subs?gg.subs[0].id:key);setDemoPage(target);}} style={{display:"flex",alignItems:"center",gap:7,padding:"8px 18px",borderRadius:24,border:"none",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",flexShrink:0,whiteSpace:"nowrap",background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",color:isActive?"#fff":"var(--m)",boxShadow:isActive?"0 4px 16px rgba(144,160,147,.3)":"none",transform:isActive?"scale(1.03)":"scale(1)",letterSpacing:".1px"}}>
+                    const isActive=demoActiveGroup===key;
+                    // ouvre le 1er sous-onglet déverrouillé du groupe, sinon le 1er
+                    const subs=g.subs||[{id:key,l:g.l,ic:g.ic}];
+                    const firstUnlocked=subs.find(s=>DEMO_UNLOCKED.includes(s.id))||subs[0];
+                    return <button key={key} onClick={()=>setDemoPage(firstUnlocked.id)} style={{display:"flex",alignItems:"center",gap:7,padding:"8px 18px",borderRadius:24,border:"none",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",flexShrink:0,whiteSpace:"nowrap",background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",color:isActive?"#fff":"var(--m)",boxShadow:isActive?"0 4px 16px rgba(144,160,147,.3)":"none",transform:isActive?"scale(1.03)":"scale(1)",letterSpacing:".1px"}}>
                       <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
                       <span>{g.l}</span>
-                      {g.subs&&<span style={{fontSize:9,opacity:.5,marginLeft:2,transform:isActive?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
                     </button>;
                   })}
                 </div>
 
-                {/* Contenu : vrai écran si câblé, sinon écran "bientôt" */}
-                <div className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+                {/* Barre de sous-onglets du groupe actif (tous visibles, cadenas si verrouillé) */}
+                {(()=>{const g=GROUPS_AM[demoActiveGroup];const subs=g&&g.subs?g.subs:null;if(!subs)return null;return <div style={{display:"flex",gap:6,padding:"8px 16px",overflowX:"auto",scrollbarWidth:"none",borderBottom:"1px solid rgba(234,224,232,.5)",background:"#fff"}}>
+                  {subs.map(s=>{const unlocked=DEMO_UNLOCKED.includes(s.id);const active=demoPage===s.id;return <button key={s.id} onClick={()=>setDemoPage(s.id)} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:18,border:"none",fontFamily:"inherit",fontWeight:600,fontSize:12,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap",background:active?"var(--T)":"rgba(0,0,0,.04)",color:active?"#fff":(unlocked?"var(--b)":"var(--l)"),opacity:unlocked?1:.7}}>
+                    <span style={{fontSize:13}}>{s.ic}</span><span>{s.l}</span>{!unlocked&&<span style={{fontSize:10}}>🔒</span>}
+                  </button>;})}
+                </div>;})()}
+
+                {/* Contenu : vrai écran si déverrouillé, sinon aperçu flouté verrouillé */}
+                <div className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
                   {demoPage==="accueil"
                     ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
                     : demoPage==="pointage"
                     ? <div style={{padding:10}}><Pointage enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} demoMode={true}/></div>
-                    : <div style={{padding:24,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:14,textAlign:"center"}}>
-                        <div style={{fontSize:40}}>🚧</div>
-                        <div style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Bientôt dans la démo</div>
-                        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:240}}>Cet écran est disponible dans l'application complète. La démo interactive s'enrichit progressivement.</div>
-                        <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:10,padding:"9px 18px",fontSize:12,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:4}}>Accéder à l'app →</div>
+                    : demoPage==="inviter_parent"
+                    ? <div style={{padding:10}}><InviterParent enfants={demoEnfants} user={D.asmat} demoMode={true}/></div>
+                    : demoPage==="admin_finances"
+                    ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
+                    : <div style={{position:"relative",minHeight:"100%"}}>
+                        {/* Aperçu flouté (placeholder visuel) */}
+                        <div style={{filter:"blur(5px)",opacity:.55,pointerEvents:"none",padding:16}} aria-hidden="true">
+                          <div style={{height:18,width:"55%",background:"var(--br)",borderRadius:6,marginBottom:14}}/>
+                          <div style={{height:90,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
+                          <div style={{height:120,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
+                          <div style={{height:120,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)"}}/>
+                        </div>
+                        {/* Note par-dessus */}
+                        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,textAlign:"center",padding:24}}>
+                          <div style={{fontSize:34}}>🔒</div>
+                          <div style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
+                          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:240}}>Cette fonctionnalité fait partie de TiMat. Créez votre espace pour en profiter.</div>
+                          <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:10,padding:"9px 18px",fontSize:12,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:4}}>Créer mon espace →</div>
+                        </div>
                       </div>}
                 </div>
 
@@ -11807,24 +11873,25 @@ function ProjetAccueil({user,role}){
 }
 
 // ========== BOUTIQUE ==========
-function InviterParent({enfants,user}){
+function InviterParent({enfants,user,demoMode=false}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [email,setEmail]=useState("");
   const [sending,setSending]=useState(false);
   const [sent,setSent]=useState(false);
   const [err,setErr]=useState("");
   const [toast,setToast]=useState("");
-  const [invitations,setInvitations]=useState([]);
+  const [invitations,setInvitations]=useState(demoMode?[{id:"inv_demo",email_parent:"parent.leo@email.fr",prenom_enfant:"Léo",statut:"envoyée",created_at:new Date().toISOString()}]:[]);
   const enfant=enfants.find(e=>e.id===selId)||enfants[0];
 
   // Charger invitations existantes
   useEffect(()=>{
-    if(!user?.id)return;
+    if(demoMode||!user?.id)return;
     supabase.from('invitations').select('*').eq('asmat_id',user.id).order('created_at',{ascending:false})
       .then(({data})=>{if(data)setInvitations(data);});
-  },[user?.id]);
+  },[user?.id,demoMode]);
 
   const envoyer=async()=>{
+    if(demoMode){setToast("Démo : invitation non envoyée");return;}
     if(!email.trim()||!enfant){setErr("Email et enfant requis.");return;}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr("Email invalide.");return;}
     setSending(true);setErr("");
