@@ -272,6 +272,7 @@ function Styles(){return(
     .bnav-btn .bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s}
     .bnav-btn.active .bnav-lbl{color:var(--S)}
     @media(max-width:768px){.bottom-nav{display:flex}}
+    .demo-bnav .bottom-nav{position:static!important;display:flex!important;box-shadow:none;z-index:auto;padding-bottom:0}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
     /* - CALENDRIER - */
     .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
@@ -8803,7 +8804,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
       </div>
       <div style={{display:"flex",alignItems:"center",gap:6}}>
         {/* Cloche notifications */}
-        <div style={{position:"relative"}}>
+        <div>
           <button onClick={()=>setShowNotifs&&setShowNotifs(p=>!p)}style={{
             background:"none",border:"none",cursor:"pointer",fontSize:18,padding:4,
             position:"relative",display:"flex",alignItems:"center"
@@ -8815,9 +8816,9 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
             }}>{notifNonLus}</span>}
           </button>
           {showNotifs&&<div style={{
-            position:"absolute",right:0,top:"100%",marginTop:8,
+            position:"absolute",right:12,top:"100%",marginTop:8,
             background:"var(--w)",borderRadius:14,boxShadow:"var(--sh2)",
-            border:"1px solid var(--br)",width:"min(280px,calc(100vw - 120px))",maxWidth:280,zIndex:200,
+            border:"1px solid var(--br)",width:"min(280px,calc(100vw - 24px))",maxWidth:280,zIndex:200,
             overflow:"hidden",maxHeight:"min(70vh,420px)",overflowY:"auto"
           }}>
             <div style={{padding:"12px 16px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:13,color:"var(--b)"}}>
@@ -9443,7 +9444,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
 
                 {/* Vraie BottomNav de l'app */}
-                <BottomNav groups={GROUPS_AM} page={demoPage} setPage={setDemoPage} pmiNonLus={0}/>
+                <div className="demo-bnav"><BottomNav groups={GROUPS_AM} page={demoPage} setPage={setDemoPage} pmiNonLus={0}/></div>
               </div>
               {/* Home indicator */}
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
