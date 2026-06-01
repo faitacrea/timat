@@ -455,7 +455,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         const enfantIds=enfants.map(e=>e.id);
 
         // 1. Pointages de la semaine
-        const{data:ptsSemaine}=await supabase.from("pointages").select("total_minutes,date,enfant_id,heure_arrivee,heure_depart")
+        const{data:ptsSemaine}=await supabase.from("pointages").select("total_minutes,date,enfant_id")
           .in("enfant_id",enfantIds).gte("date",lundiIso).lte("date",todayIso);
         const minSemaine=(ptsSemaine||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
         const heuresSemaine=Math.round(minSemaine/60*10)/10;
@@ -477,11 +477,11 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         revenuMois=Math.round(revenuMois);
 
         // 3. Presences en cours aujourd'hui (arrivee mais pas de depart)
-        const{data:ptsJour}=await supabase.from("pointages").select("enfant_id,heure_arrivee,heure_depart")
+        const{data:ptsJour}=await supabase.from("pointages").select("enfant_id,arrivee,depart")
           .in("enfant_id",enfantIds).eq("date",todayIso);
-        const presencesJour=(ptsJour||[]).filter(p=>p.heure_arrivee&&!p.heure_depart).map(p=>{
+        const presencesJour=(ptsJour||[]).filter(p=>p.arrivee&&!p.depart).map(p=>{
           const e=enfants.find(en=>en.id===p.enfant_id);
-          return e?{...e,depuis:p.heure_arrivee}:null;
+          return e?{...e,depuis:p.arrivee}:null;
         }).filter(Boolean);
 
         // 4. Messages non lus
