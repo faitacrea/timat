@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+-
+¨£***************************££££££££££££££££££*£mport { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // Hook générique : charge depuis Supabase, fallback local, sauvegarde auto
@@ -5038,7 +5039,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
             <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:12}}>Exemple — calculé automatiquement à partir des pointages dans l'app réelle.</div>
           </div>
         : <div style={{position:"relative",minHeight:300}}>
-            <div style={{filter:"blur(5px)",opacity:.55,pointerEvents:"none"}} aria-hidden="true">
+            <div style={{filter:"blur(2.5px)",opacity:.7,pointerEvents:"none"}} aria-hidden="true">
               <div style={{height:90,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
               <div style={{height:140,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)"}}/>
             </div>
@@ -9436,7 +9437,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
                     : <div style={{position:"relative",minHeight:"100%"}}>
                         {/* Aperçu flouté (placeholder visuel) */}
-                        <div style={{filter:"blur(5px)",opacity:.55,pointerEvents:"none",padding:16}} aria-hidden="true">
+                        <div style={{filter:"blur(2.5px)",opacity:.7,pointerEvents:"none",padding:16}} aria-hidden="true">
                           <div style={{height:18,width:"55%",background:"var(--br)",borderRadius:6,marginBottom:14}}/>
                           <div style={{height:90,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
                           <div style={{height:120,background:"#fff",borderRadius:14,boxShadow:"0 1px 8px rgba(0,0,0,.06)",marginBottom:12}}/>
