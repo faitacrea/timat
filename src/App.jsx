@@ -222,9 +222,10 @@ function Styles(){return(
     .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
     @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
     @media(max-width:400px){.g2,.g3,.g4{grid-template-columns:1fr}}
-    .demo-screen .g2{grid-template-columns:1fr!important}
-    .demo-screen .g3{grid-template-columns:1fr 1fr!important}
-    .demo-screen .g4{grid-template-columns:1fr 1fr!important}
+    .demo-screen .g2{grid-template-columns:minmax(0,1fr)!important}
+    .demo-screen .g3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+    .demo-screen .g4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+    .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
