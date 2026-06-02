@@ -7790,8 +7790,10 @@ function RapportAnnuel({enfants,role,pEId,user}){
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
       const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      const{data:paie}=contrat?.id?await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin):{data:[]};
-      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date_debut",debut).lte("date_debut",fin);
+      // P33 - la table "paiements" est dediee aux abonnements Stripe (pas aux salaires verses).
+      // Aucune table de versements reels parents->assmat n'existe : on s'appuie sur l'estimation salariale.
+      const paie=[];
+      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
       // RAPPORT REEL P13 - utiliser total_minutes (vrai nom de colonne)
       const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
@@ -11179,8 +11181,9 @@ function AttestationFiscale({enfants,role,pEId,user}){
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
       const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      const{data:paie}=contrat?.id?await supabase.from("paiements").select("*").eq("contrat_id",contrat.id).gte("date",debut).lte("date",fin):{data:[]};
-      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date_debut",debut).lte("date_debut",fin);
+      // P33 - "paiements" = abonnements Stripe, pas les salaires. Pas de versements reels stockes -> estimation.
+      const paie=[];
+      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
       const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
       const heuresReelles=Math.round(totalMin/60);
