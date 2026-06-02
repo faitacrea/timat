@@ -5054,8 +5054,9 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
     if(!enfant?.id){setToast("Aucun enfant sélectionné");setTimeout(()=>setToast(""),2500);return;}
     if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
     if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
+    const asmatId=contrat.asmat_id||(role!=="parent"?user?.id:null);
+    if(!asmatId){setToast("Aucun contrat actif relié à une assistante maternelle");setTimeout(()=>setToast(""),3500);return;}
     setSaving(true);
-    const asmatId=contrat.asmat_id||user?.id||null;
     const{error}=await supabase.from("versements").insert({
       asmat_id:asmatId,
       contrat_id:contrat.id||null,
@@ -5083,8 +5084,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 
   return <div className="fi">
     <div style={{marginBottom:14}}>
-      <div style={{fontWeight:800,fontSize:17,color:"var(--b)"}}>💶 Versements reçus</div>
-      <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>Suivi des sommes réellement versées par les parents — pour des attestations fiscales exactes.</div>
+      <div style={{fontWeight:800,fontSize:17,color:"var(--b)"}}>{role==="parent"?"💶 Mes versements":"💶 Versements reçus"}</div>
+      <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>{role==="parent"?"Suivi des sommes que vous avez versées à votre assistante maternelle.":"Suivi des sommes réellement versées par les parents — pour des attestations fiscales exactes."}</div>
     </div>
 
     {/* Selecteur d'enfant */}
@@ -5173,7 +5174,10 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"courriers",l:"Courriers types",ic:"✉️"},
       {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
     ]
-    :[{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}];
+    :[
+      {id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"},
+      {id:"versements",l:"Mes versements",ic:"💶"},
+    ];
   if(demoMode){
     const demoUnlockedSection="bulletin";
     return <div className="fi">
@@ -14193,6 +14197,7 @@ export default function App(){
               naissance:enf.naissance,
               contrat:ct?{
                 id:ct.id,
+                asmat_id:ct.asmat_id,
                 debut:ct.debut,
                 fin:ct.fin,
                 heuresHebdo:ct.heures_hebdo,
