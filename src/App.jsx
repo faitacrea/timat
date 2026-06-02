@@ -51,6 +51,18 @@ async function logAction(action, opts={}){
   } catch(e){ console.warn('[audit_log] insert failed:', e?.message); }
 }
 
+// NOTIFICATIONS - helper generique reutilisable pour TOUT evenement (versement, signature, bulletin, pointage...).
+// Insert inter-comptes (un parent notifie son assmat et inversement) via la RPC SECURITY DEFINER
+// public.create_notification, qui verifie le lien parent<->assmat avant d'inserer. Echoue en silence.
+async function createNotification({userId,type="info",titre="",page="accueil",meta=null}){
+  if(!userId)return;
+  try{
+    await supabase.rpc("create_notification",{
+      p_user_id:userId, p_type:type, p_titre:titre, p_page:page, p_meta:meta,
+    });
+  }catch(e){ console.warn('[notification] non creee:', e?.message); }
+}
+
 async function logConsent(user_id, consents={}){
   try{
     await supabase.from('consentements').insert({
@@ -139,6 +151,13 @@ const EMAIL_TEMPLATES={
     html:(v)=>"<p>Bonjour "+v.parent_prenom+",</p>"
       +"<p>Un pointage de "+v.enfant_prenom+" est en attente de votre validation depuis le "+v.date+".</p>"
       +"<p><a href='"+v.url+"'>Valider maintenant</a></p>",
+  },
+  // VERSEMENTS P34 - notification d'un versement enregistre (parent->assmat ou assmat->parent)
+  versement_recu:{
+    subject:"Nouveau versement enregistre sur TiMat",
+    html:(v)=>"<h2>Bonjour "+v.prenom+",</h2>"
+      +"<p>"+v.qui+" a enregistre un versement de <strong>"+v.montant+"</strong>"+(v.enfant_prenom?(" pour "+v.enfant_prenom):"")+" le "+v.date+".</p>"
+      +"<p>Retrouvez le detail dans l'onglet Versements de votre espace TiMat.</p>",
   },
 };
 
@@ -1270,6 +1289,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     // EMAIL NOTIF P14E - notifier le parent qu'un pointage est en attente de validation
     if(enfant?.contrat?.parent_id||enfant?.parent_id){
       const parentId=enfant.contrat?.parent_id||enfant.parent_id;
+      createNotification({userId:parentId,type:"pointage_a_valider",titre:"Un pointage attend votre validation"+(enfant?.prenom?(" — "+enfant.prenom):""),page:"pointage"});
       supabase.from("profiles").select("email,prenom").eq("id",parentId).maybeSingle().then(({data:p})=>{
         if(p?.email){
           sendNotificationEmail({
@@ -2401,6 +2421,7 @@ function Contrats({enfants,role,pEId,user}){
     }
     // EMAILS NOTIFICATIONS P13 - notifier le parent qu'il doit signer (silencieux si Resend pas configure)
     if(contrat?.parent_id&&enfant?.id){
+      createNotification({userId:contrat.parent_id,type:"signature_asmat_signed",titre:"Votre contrat est prêt à signer"+(enfant?.prenom?(" — "+enfant.prenom):""),page:"admin_finances"});
       // Recuperer l'email du parent
       supabase.from("profiles").select("email,prenom").eq("id",contrat.parent_id).maybeSingle().then(({data:p})=>{
         if(p?.email){
@@ -4403,6 +4424,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       await logAction("send_bulletin",{table_name:"bulletins",record_id:contrat.id});
       // 6. Email parent (silencieux si Resend pas configure)
       if(contrat.parent_id){
+        createNotification({userId:contrat.parent_id,type:"bulletin_sent",titre:"Nouveau bulletin de salaire disponible"+(moisSel?(" — "+moisSel):""),page:"admin_finances"});
         supabase.from("profiles").select("email,prenom").eq("id",contrat.parent_id).maybeSingle().then(({data:p})=>{
           if(p?.email){
             sendNotificationEmail({
@@ -5071,6 +5093,21 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
     setSaving(false);
     if(error){setToast("Erreur : "+(error.message||"enregistrement impossible"));setTimeout(()=>setToast(""),3500);return;}
     await logAction("create",{table_name:"versements",record_id:enfant.id});
+    // Notifier la contrepartie : cloche (RPC) + mail. Parent verse -> notifie l'assmat ; assmat saisit -> notifie le parent.
+    const destId=role==="parent"?asmatId:(enfant.parentId||null);
+    if(destId){
+      const libelle=(role==="parent"?"Nouveau versement reçu":"Versement enregistré")+(enfant?.prenom?(" pour "+enfant.prenom):"")+" : "+fmtEur(montant);
+      createNotification({userId:destId,type:"versement",titre:libelle,page:"admin_finances",meta:{enfant_id:enfant.id}});
+      supabase.from("profiles").select("email,prenom").eq("id",destId).maybeSingle().then(({data:d})=>{
+        if(d?.email){
+          sendNotificationEmail({
+            type:"versement_recu",to:d.email,
+            subject:EMAIL_TEMPLATES.versement_recu.subject,template:"versement_recu",
+            vars:{prenom:d.prenom||"",enfant_prenom:enfant?.prenom||"",montant:fmtEur(montant),date:fmtDate(fDate),qui:(role==="parent"?(user?.prenom||"Un parent"):"Votre assistante maternelle")},
+          });
+        }
+      });
+    }
     resetForm();setShowForm(false);
     setToast("✓ Versement enregistré");setTimeout(()=>setToast(""),2500);
     await chargerVersements();
@@ -7598,6 +7635,7 @@ function SignatureContratParent({enfants,pEId,user}){
     });
     // EMAILS NOTIFICATIONS P13 - notifier l'asmat que le contrat est finalise
     if(contrat?.asmat_id){
+      createNotification({userId:contrat.asmat_id,type:"signature_parent_signed",titre:"Le parent a signé le contrat"+(enfant?.prenom?(" — "+enfant.prenom):""),page:"admin_finances"});
       supabase.from("profiles").select("email,prenom").eq("id",contrat.asmat_id).maybeSingle().then(({data:a})=>{
         if(a?.email){
           sendNotificationEmail({
@@ -8991,6 +9029,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
             </div>
             {notifs.filter(n=>!n.roles||n.roles.includes(role)).map(n=><div key={n.id}onClick={()=>{
               setNotifs&&setNotifs(p=>p.map(x=>x.id===n.id?{...x,lu:true}:x));
+              if(!n.lu)supabase.from("notifications").update({lu:true}).eq("id",n.id).then(()=>{}).catch(()=>{});
               setPage2&&setPage2(n.page);
               setShowNotifs&&setShowNotifs(false);
             }}style={{
@@ -14003,12 +14042,7 @@ export default function App(){
   const [dark,setDark]=useState(false);
   const [loading,setLoading]=useState(true);
   const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length);
-  const [notifs,setNotifs]=useState([
-    {id:"n1",ic:"📬",txt:"Nouveau message de la PMI",date:TODAY_STR,lu:false,page:"pmi",roles:["asmat"]},
-    {id:"n2",ic:"✍️",txt:"Contrat en attente de signature",date:TODAY_STR,lu:false,page:"admin_finances",roles:["asmat"]},
-
-    {id:"n4",ic:"📋",txt:"Nouveau journal disponible",date:TODAY_STR,lu:false,page:"journal_complet",roles:["parent"]},
-  ]);
+  const [notifs,setNotifs]=useState([]);
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
 
@@ -14243,6 +14277,21 @@ export default function App(){
     window.addEventListener("timat:refresh-data",handler);
     return()=>window.removeEventListener("timat:refresh-data",handler);
   },[]);
+
+  // NOTIFICATIONS - charger la cloche depuis Supabase (au login + a chaque refresh-data)
+  useEffect(()=>{
+    if(!user?.id){setNotifs([]);return;}
+    let cancelled=false;
+    (async()=>{
+      const{data,error}=await supabase.from("notifications")
+        .select("*").eq("user_id",user.id)
+        .order("created_at",{ascending:false}).limit(50);
+      if(cancelled||error)return;
+      const ICONS={versement:"💶",pointage_a_valider:"⏱️",signature_asmat_signed:"✍️",signature_parent_signed:"✍️",bulletin_sent:"📜",message:"📬",info:"🔔"};
+      setNotifs((data||[]).map(n=>({id:n.id,ic:ICONS[n.type]||"🔔",txt:n.titre,date:n.created_at,lu:!!n.lu,page:n.page||"accueil"})));
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,dataRefreshKey]);
 
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
