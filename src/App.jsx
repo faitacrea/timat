@@ -5004,7 +5004,7 @@ function Parrainage({user}){
 }
 
 //
-// VERSEMENTS P34 - Suivi des paiements reels recus (palier 1 : lecture seule)
+// VERSEMENTS P34 - Suivi des paiements reels recus (palier 2 : lecture + saisie)
 // Le PARENT verse, l'ASSMAT recoit. Saisie + gestion par les deux (RLS table versements).
 const VERSEMENT_MODES={virement:"Virement",cheque:"Chèque",especes:"Espèces",cesu:"CESU",autre:"Autre"};
 function Versements({enfants,role,pEId,user,demoMode=false}){
@@ -5015,24 +5015,71 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
   const isDemo=demoMode||enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const [versements,setVersements]=useState([]);
   const [loading,setLoading]=useState(false);
+  const [toast,setToast]=useState("");
+  const [showForm,setShowForm]=useState(false);
+  const [saving,setSaving]=useState(false);
+
+  // Champs du formulaire
+  const todayStr=new Date().toISOString().slice(0,10);
+  const [fDate,setFDate]=useState(todayStr);
+  const [fMontant,setFMontant]=useState("");
+  const [fMode,setFMode]=useState("virement");
+  const [fPeriode,setFPeriode]=useState("");
+  const [fNote,setFNote]=useState("");
+
+  // Mois disponibles depuis le debut du contrat (meme logique que BulletinSalaire)
+  const moisDisponibles=useMemo(()=>{
+    const debut=contrat.debut?new Date(contrat.debut):new Date(new Date().getFullYear(),0,1);
+    const now=new Date();const mois=[];
+    const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    let d=new Date(debut.getFullYear(),debut.getMonth(),1);
+    while(d<=now){mois.push({label:noms[d.getMonth()]+" "+d.getFullYear(),key:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")});d.setMonth(d.getMonth()+1);}
+    return mois.reverse();
+  },[contrat.debut]);
 
   // Charger les versements de l'enfant selectionne
-  useEffect(()=>{
+  const chargerVersements=async()=>{
     if(!enfant?.id||isDemo){setVersements([]);return;}
-    let cancelled=false;
     setLoading(true);
-    (async()=>{
-      const{data,error}=await supabase.from("versements").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
-      if(cancelled)return;
-      if(error){setVersements([]);}else{setVersements(data||[]);}
-      setLoading(false);
-    })();
-    return()=>{cancelled=true;};
-  },[enfant?.id,isDemo]);
+    const{data,error}=await supabase.from("versements").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
+    if(error){setVersements([]);}else{setVersements(data||[]);}
+    setLoading(false);
+  };
+  useEffect(()=>{let cancelled=false;(async()=>{if(cancelled)return;await chargerVersements();})();return()=>{cancelled=true;};},[enfant?.id,isDemo]);
+
+  const resetForm=()=>{setFDate(todayStr);setFMontant("");setFMode("virement");setFPeriode("");setFNote("");};
+
+  const ajouterVersement=async()=>{
+    const montant=parseFloat(String(fMontant).replace(",","."));
+    if(!enfant?.id){setToast("Aucun enfant sélectionné");setTimeout(()=>setToast(""),2500);return;}
+    if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
+    if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
+    setSaving(true);
+    const asmatId=contrat.asmat_id||user?.id||null;
+    const{error}=await supabase.from("versements").insert({
+      asmat_id:asmatId,
+      contrat_id:contrat.id||null,
+      enfant_id:enfant.id,
+      date:fDate,
+      montant:montant,
+      mode:fMode,
+      periode:fPeriode||null,
+      note:fNote||null,
+      saisi_par:user?.id||null
+    });
+    setSaving(false);
+    if(error){setToast("Erreur : "+(error.message||"enregistrement impossible"));setTimeout(()=>setToast(""),3500);return;}
+    await logAction("create",{table_name:"versements",record_id:enfant.id});
+    resetForm();setShowForm(false);
+    setToast("✓ Versement enregistré");setTimeout(()=>setToast(""),2500);
+    await chargerVersements();
+  };
 
   const totalVerse=versements.reduce((s,v)=>s+(Number(v.montant)||0),0);
   const fmtDate=d=>{try{return new Date(d).toLocaleDateString("fr-FR");}catch{return d;}};
   const fmtEur=n=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+  const inputStyle={width:"100%",padding:"9px 11px",borderRadius:9,border:"1.5px solid var(--br)",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"var(--b)",background:"#fff",boxSizing:"border-box"};
+  const labelStyle={fontSize:12,fontWeight:700,color:"var(--m)",marginBottom:4,display:"block"};
 
   return <div className="fi">
     <div style={{marginBottom:14}}>
@@ -5042,17 +5089,53 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 
     {/* Selecteur d'enfant */}
     {liste.length>1&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
-      {liste.map(e=><button key={e.id}onClick={()=>setSelId(e.id)}style={{padding:"6px 14px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:e.id===enfant?.id?"var(--T)":"var(--c)",color:e.id===enfant?.id?"#fff":"var(--m)"}}>{e.prenom||"Enfant"}</button>)}
+      {liste.map(e=><button key={e.id}onClick={()=>{setSelId(e.id);setShowForm(false);}}style={{padding:"6px 14px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:e.id===enfant?.id?"var(--T)":"var(--c)",color:e.id===enfant?.id?"#fff":"var(--m)"}}>{e.prenom||"Enfant"}</button>)}
     </div>}
 
     {isDemo
       ? <div className="card"style={{padding:20,textAlign:"center",color:"var(--m)",fontSize:13}}>Exemple — disponible dans l'application réelle.</div>
       : <div>
-          {/* Total */}
-          <div className="card"style={{padding:16,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:13,color:"var(--m)"}}>Total versé{enfant?.prenom?(" pour "+enfant.prenom):""}</span>
-            <span style={{fontSize:18,fontWeight:800,color:"var(--T)"}}>{fmtEur(totalVerse)}</span>
+          {/* Total + bouton ajouter */}
+          <div className="card"style={{padding:16,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+            <div>
+              <div style={{fontSize:13,color:"var(--m)"}}>Total versé{enfant?.prenom?(" pour "+enfant.prenom):""}</div>
+              <div style={{fontSize:18,fontWeight:800,color:"var(--T)"}}>{fmtEur(totalVerse)}</div>
+            </div>
+            <button onClick={()=>setShowForm(s=>!s)}style={{padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"var(--c)":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>
           </div>
+
+          {/* Formulaire de saisie */}
+          {showForm&&<div className="card"style={{padding:18,marginBottom:14}}>
+            <div style={{fontWeight:800,fontSize:14,color:"var(--b)",marginBottom:14}}>Nouveau versement</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+              <div>
+                <label style={labelStyle}>Date du versement</label>
+                <input type="date"value={fDate}onChange={e=>setFDate(e.target.value)}style={inputStyle}/>
+              </div>
+              <div>
+                <label style={labelStyle}>Montant (€)</label>
+                <input type="number"inputMode="decimal"step="0.01"min="0"placeholder="0,00"value={fMontant}onChange={e=>setFMontant(e.target.value)}style={inputStyle}/>
+              </div>
+              <div>
+                <label style={labelStyle}>Mode de paiement</label>
+                <select value={fMode}onChange={e=>setFMode(e.target.value)}style={inputStyle}>
+                  {Object.entries(VERSEMENT_MODES).map(([k,l])=><option key={k}value={k}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Période concernée</label>
+                <select value={fPeriode}onChange={e=>setFPeriode(e.target.value)}style={inputStyle}>
+                  <option value="">—</option>
+                  {moisDisponibles.map(m=><option key={m.key}value={m.key}>{m.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{marginBottom:14}}>
+              <label style={labelStyle}>Note (optionnel)</label>
+              <input type="text"placeholder="ex. virement reçu en retard"value={fNote}onChange={e=>setFNote(e.target.value)}style={inputStyle}/>
+            </div>
+            <button onClick={ajouterVersement}disabled={saving}style={{width:"100%",padding:"11px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,background:saving?"var(--c)":"var(--T)",color:saving?"var(--m)":"#fff"}}>{saving?"Enregistrement…":"Enregistrer le versement"}</button>
+          </div>}
 
           {/* Liste */}
           {loading
@@ -5073,6 +5156,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                   </div>)}
                 </div>}
         </div>}
+
+    {toast&&<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"var(--b)",color:"#fff",padding:"11px 20px",borderRadius:12,fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 4px 16px rgba(0,0,0,.2)"}}>{toast}</div>}
   </div>;
 }
 
