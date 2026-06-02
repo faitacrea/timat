@@ -5004,12 +5004,85 @@ function Parrainage({user}){
 }
 
 //
+// VERSEMENTS P34 - Suivi des paiements reels recus (palier 1 : lecture seule)
+// Le PARENT verse, l'ASSMAT recoit. Saisie + gestion par les deux (RLS table versements).
+const VERSEMENT_MODES={virement:"Virement",cheque:"Chèque",especes:"Espèces",cesu:"CESU",autre:"Autre"};
+function Versements({enfants,role,pEId,user,demoMode=false}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const contrat=enfant?.contrat||{};
+  const isDemo=demoMode||enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const [versements,setVersements]=useState([]);
+  const [loading,setLoading]=useState(false);
+
+  // Charger les versements de l'enfant selectionne
+  useEffect(()=>{
+    if(!enfant?.id||isDemo){setVersements([]);return;}
+    let cancelled=false;
+    setLoading(true);
+    (async()=>{
+      const{data,error}=await supabase.from("versements").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
+      if(cancelled)return;
+      if(error){setVersements([]);}else{setVersements(data||[]);}
+      setLoading(false);
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,isDemo]);
+
+  const totalVerse=versements.reduce((s,v)=>s+(Number(v.montant)||0),0);
+  const fmtDate=d=>{try{return new Date(d).toLocaleDateString("fr-FR");}catch{return d;}};
+  const fmtEur=n=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+
+  return <div className="fi">
+    <div style={{marginBottom:14}}>
+      <div style={{fontWeight:800,fontSize:17,color:"var(--b)"}}>💶 Versements reçus</div>
+      <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>Suivi des sommes réellement versées par les parents — pour des attestations fiscales exactes.</div>
+    </div>
+
+    {/* Selecteur d'enfant */}
+    {liste.length>1&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+      {liste.map(e=><button key={e.id}onClick={()=>setSelId(e.id)}style={{padding:"6px 14px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:e.id===enfant?.id?"var(--T)":"var(--c)",color:e.id===enfant?.id?"#fff":"var(--m)"}}>{e.prenom||"Enfant"}</button>)}
+    </div>}
+
+    {isDemo
+      ? <div className="card"style={{padding:20,textAlign:"center",color:"var(--m)",fontSize:13}}>Exemple — disponible dans l'application réelle.</div>
+      : <div>
+          {/* Total */}
+          <div className="card"style={{padding:16,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,color:"var(--m)"}}>Total versé{enfant?.prenom?(" pour "+enfant.prenom):""}</span>
+            <span style={{fontSize:18,fontWeight:800,color:"var(--T)"}}>{fmtEur(totalVerse)}</span>
+          </div>
+
+          {/* Liste */}
+          {loading
+            ? <div style={{textAlign:"center",padding:20,color:"var(--l)",fontSize:13}}>Chargement…</div>
+            : versements.length===0
+              ? <div className="card"style={{padding:24,textAlign:"center"}}>
+                  <div style={{fontSize:30,marginBottom:8}}>📭</div>
+                  <div style={{fontSize:14,fontWeight:700,color:"var(--b)"}}>Aucun versement enregistré</div>
+                  <div style={{fontSize:12,color:"var(--m)",marginTop:4}}>Les versements saisis apparaîtront ici.</div>
+                </div>
+              : <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {versements.map(v=><div key={v.id}className="card"style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{fmtEur(v.montant)}</div>
+                      <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>{fmtDate(v.date)} · {VERSEMENT_MODES[v.mode]||v.mode}{v.periode?(" · "+v.periode):""}</div>
+                      {v.note&&<div style={{fontSize:12,color:"var(--l)",marginTop:2,fontStyle:"italic"}}>{v.note}</div>}
+                    </div>
+                  </div>)}
+                </div>}
+        </div>}
+  </div>;
+}
+
 function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
   const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?"facturation":"contrats"));
   const sousOnglets=role==="asmat"
     ?[
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
       {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
+      {id:"versements",l:"Versements reçus",ic:"💶"},
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
       {id:"contrats_types",l:"Modeles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
@@ -5062,6 +5135,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     </div>
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<div>
       <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
       <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
