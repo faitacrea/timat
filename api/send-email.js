@@ -54,6 +54,12 @@ const EMAIL_TEMPLATES = {
 <p>Un pointage de ${esc(v.enfant_prenom)} est en attente de votre validation depuis le ${esc(v.date)}.</p>
 <p><a href="${esc(v.url)}">Valider maintenant</a></p>`,
   },
+  versement_recu: {
+    subject: "Nouveau versement enregistré sur TiMat",
+    html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
+<p>${esc(v.qui)} a enregistré un versement de <strong>${esc(v.montant)}</strong>${v.enfant_prenom ? ' pour ' + esc(v.enfant_prenom) : ''} le ${esc(v.date)}.</p>
+<p>Retrouvez le détail dans l'onglet Versements de votre espace TiMat.</p>`,
+  },
 };
 
 // Protection XSS basique - échappe les vars utilisateur dans le HTML
