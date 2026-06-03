@@ -8070,8 +8070,6 @@ function RapportAnnuel({enfants,role,pEId,user}){
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
       const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      // P33 - la table "paiements" est dediee aux abonnements Stripe (pas aux salaires verses).
-      // Aucune table de versements reels parents->assmat n'existe : on s'appuie sur l'estimation salariale.
       const{data:paie}=await supabase.from("versements").select("montant,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
@@ -11462,7 +11460,6 @@ function AttestationFiscale({enfants,role,pEId,user}){
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
       const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      // P33 - "paiements" = abonnements Stripe, pas les salaires. Pas de versements reels stockes -> estimation.
       const{data:paie}=await supabase.from("versements").select("montant,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
