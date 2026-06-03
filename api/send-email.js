@@ -7,8 +7,6 @@ export const config = {
   runtime: 'edge',
 };
 
-// Templates email - DOIT correspondre à EMAIL_TEMPLATES dans App.jsx
-// Note : on duplique ici pour que l'API soit autonome et ne dépende pas du front
 const EMAIL_TEMPLATES = {
   signature_asmat_signed: {
     subject: "Votre assistante maternelle a signé le contrat",
@@ -62,7 +60,6 @@ const EMAIL_TEMPLATES = {
   },
 };
 
-// Protection XSS basique - échappe les vars utilisateur dans le HTML
 function esc(s) {
   if (s === null || s === undefined) return '';
   return String(s)
@@ -73,18 +70,14 @@ function esc(s) {
     .replace(/'/g, '&#39;');
 }
 
-// Valide une adresse email simple
 function isValidEmail(email) {
   if (typeof email !== 'string' || email.length > 254) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
 
-// Rate limit simple en mémoire (par IP)
-// Note : sur Edge runtime, c'est par-instance. Pour rate limit cross-instance,
-// utiliser Upstash Redis. Suffisant pour MVP.
 const rateLimitMap = new Map();
-const RATE_LIMIT = 10; // max emails par fenêtre
-const RATE_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60 * 1000;
 
 function checkRateLimit(ip) {
   const now = Date.now();
@@ -98,7 +91,6 @@ function checkRateLimit(ip) {
   return true;
 }
 
-// Nettoyage périodique de la Map (évite les fuites mémoire)
 function cleanupRateLimit() {
   const now = Date.now();
   for (const [ip, record] of rateLimitMap.entries()) {
@@ -107,7 +99,6 @@ function cleanupRateLimit() {
 }
 
 export default async function handler(req) {
-  // CORS - autoriser uniquement les requêtes depuis l'app
   const allowedOrigins = [
     'https://timat.app',
     'https://www.timat.app',
@@ -122,7 +113,6 @@ export default async function handler(req) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Preflight CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
@@ -134,7 +124,6 @@ export default async function handler(req) {
     });
   }
 
-  // Vérifier que la clé API est configurée
   if (!process.env.RESEND_API_KEY) {
     console.error('[send-email] RESEND_API_KEY non configurée dans Vercel');
     return new Response(JSON.stringify({ error: 'Email service not configured' }), {
@@ -143,7 +132,6 @@ export default async function handler(req) {
     });
   }
 
-  // Rate limit par IP
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (!checkRateLimit(ip)) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded (max 10 emails/min)' }), {
@@ -151,10 +139,8 @@ export default async function handler(req) {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
-  // Nettoyage opportuniste
   if (Math.random() < 0.1) cleanupRateLimit();
 
-  // Parser le body
   let body;
   try {
     body = await req.json();
@@ -167,7 +153,6 @@ export default async function handler(req) {
 
   const { type, to, subject, template, vars = {}, from } = body;
 
-  // Validations
   if (!type || typeof type !== 'string') {
     return new Response(JSON.stringify({ error: 'Missing or invalid type' }), {
       status: 400,
@@ -181,7 +166,6 @@ export default async function handler(req) {
     });
   }
 
-  // Récupère le template
   const tpl = EMAIL_TEMPLATES[type];
   if (!tpl) {
     return new Response(JSON.stringify({ error: 'Unknown template type: ' + type }), {
@@ -190,7 +174,6 @@ export default async function handler(req) {
     });
   }
 
-  // Compose subject et HTML
   const finalSubject = subject || tpl.subject;
   let finalHtml;
   try {
@@ -203,12 +186,10 @@ export default async function handler(req) {
     });
   }
 
-  // From par défaut sécurisé (impose le domaine timat.app)
   const finalFrom = from && /<[^>]+@timat\.app>/.test(from)
     ? from
     : 'TiMat <noreply@timat.app>';
 
-  // Appel API Resend
   try {
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
