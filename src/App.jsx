@@ -5098,7 +5098,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
     // Notifier la contrepartie : cloche (RPC) + mail. Parent verse -> notifie l'assmat ; assmat saisit -> notifie le parent.
     const destId=role==="parent"?asmatId:(enfant.parentId||null);
     if(destId){
-      const libelle=(role==="parent"?"Nouveau versement reçu":"Versement enregistré")+(enfant?.prenom?(" pour "+enfant.prenom):"")+" : "+fmtEur(montant);
+      const libelle=(role==="parent"?"Nouveau versement reçu":"Versement enregistré")+(enfant?.prenom?(" pour "+enfant.prenom):"");
       createNotification({userId:destId,type:"versement",titre:libelle,page:"admin_finances",meta:{enfant_id:enfant.id}});
       supabase.rpc("get_recipient_email",{p_user_id:destId}).then(({data:d})=>{
         if(d?.email){
