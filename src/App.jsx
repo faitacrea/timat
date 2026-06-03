@@ -5040,6 +5040,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
   const [toast,setToast]=useState("");
   const [showForm,setShowForm]=useState(false);
   const [saving,setSaving]=useState(false);
+  const [editId,setEditId]=useState(null);
+  const [savingEdit,setSavingEdit]=useState(false);
 
   // Champs du formulaire
   const todayStr=new Date().toISOString().slice(0,10);
@@ -5113,6 +5115,42 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
     await chargerVersements();
   };
 
+  // PALIER 3 - le PARENT seul peut modifier/supprimer ses versements (correction d'erreur).
+  // Aucune notification cloche/mail : seule la creation initiale notifie l'assmat.
+  const openEdit=(v)=>{
+    setEditId(v.id);
+    setFDate(v.date||todayStr);
+    setFMontant(v.montant!=null?String(v.montant):"");
+    setFMode(v.mode||"virement");
+    setFPeriode(v.periode||"");
+    setFNote(v.note||"");
+    setShowForm(false);
+  };
+  const modifierVersement=async()=>{
+    const montant=parseFloat(String(fMontant).replace(",","."));
+    if(!editId)return;
+    if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
+    if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
+    setSavingEdit(true);
+    const{error}=await supabase.from("versements").update({
+      date:fDate,montant:montant,mode:fMode,periode:fPeriode||null,note:fNote||null
+    }).eq("id",editId);
+    setSavingEdit(false);
+    if(error){setToast("Erreur : "+(error.message||"modification impossible"));setTimeout(()=>setToast(""),3500);return;}
+    await logAction("update",{table_name:"versements",record_id:editId});
+    setEditId(null);resetForm();
+    setToast("✓ Versement modifié");setTimeout(()=>setToast(""),2500);
+    await chargerVersements();
+  };
+  const supprimerVersement=async(id)=>{
+    if(!window.confirm("Supprimer ce versement ? Cette action est définitive."))return;
+    const{error}=await supabase.from("versements").delete().eq("id",id);
+    if(error){setToast("Erreur : "+(error.message||"suppression impossible"));setTimeout(()=>setToast(""),3500);return;}
+    await logAction("delete",{table_name:"versements",record_id:id});
+    setToast("✓ Versement supprimé");setTimeout(()=>setToast(""),2500);
+    await chargerVersements();
+  };
+
   const totalVerse=versements.reduce((s,v)=>s+(Number(v.montant)||0),0);
   const fmtDate=d=>{try{return new Date(d).toLocaleDateString("fr-FR");}catch{return d;}};
   const fmtEur=n=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
@@ -5139,11 +5177,11 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
               <div style={{fontSize:13,color:"var(--m)"}}>Total versé{enfant?.prenom?(" pour "+enfant.prenom):""}</div>
               <div style={{fontSize:18,fontWeight:800,color:"var(--T)"}}>{fmtEur(totalVerse)}</div>
             </div>
-            <button onClick={()=>setShowForm(s=>!s)}style={{padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"var(--c)":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>
+            {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"var(--c)":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
           </div>
 
           {/* Formulaire de saisie */}
-          {showForm&&<div className="card"style={{padding:18,marginBottom:14}}>
+          {role==="parent"&&showForm&&<div className="card"style={{padding:18,marginBottom:14}}>
             <div style={{fontWeight:800,fontSize:14,color:"var(--b)",marginBottom:14}}>Nouveau versement</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
               <div>
@@ -5191,9 +5229,50 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                       <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>{fmtDate(v.date)} · {VERSEMENT_MODES[v.mode]||v.mode}{v.periode?(" · "+v.periode):""}</div>
                       {v.note&&<div style={{fontSize:12,color:"var(--l)",marginTop:2,fontStyle:"italic"}}>{v.note}</div>}
                     </div>
+                    {role==="parent"&&<div style={{display:"flex",gap:6,flexShrink:0}}>
+                      <button onClick={()=>openEdit(v)}style={{padding:"6px 10px",borderRadius:8,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:"var(--m)"}}>Modifier</button>
+                      <button onClick={()=>supprimerVersement(v.id)}style={{padding:"6px 10px",borderRadius:8,border:"1.5px solid #E3B7B2",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:"#B5524A"}}>Supprimer</button>
+                    </div>}
                   </div>)}
                 </div>}
         </div>}
+
+    {editId!==null&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9998,padding:16}}onClick={()=>{setEditId(null);resetForm();}}>
+      <div className="card"style={{padding:20,maxWidth:380,width:"100%",background:"#fff",maxHeight:"90vh",overflowY:"auto"}}onClick={e=>e.stopPropagation()}>
+        <div style={{fontWeight:800,fontSize:16,color:"var(--b)",marginBottom:14}}>Modifier le versement</div>
+        <div style={{marginBottom:12}}>
+          <label style={labelStyle}>Date du versement</label>
+          <input type="date"value={fDate}onChange={e=>setFDate(e.target.value)}style={inputStyle}/>
+        </div>
+        <div style={{marginBottom:12}}>
+          <label style={labelStyle}>Montant (€)</label>
+          <input type="number"inputMode="decimal"step="0.01"min="0"placeholder="0,00"value={fMontant}onChange={e=>setFMontant(e.target.value)}style={inputStyle}/>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+          <div>
+            <label style={labelStyle}>Mode de paiement</label>
+            <select value={fMode}onChange={e=>setFMode(e.target.value)}style={inputStyle}>
+              {Object.entries(VERSEMENT_MODES).map(([k,l])=><option key={k}value={k}>{l}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Période concernée</label>
+            <select value={fPeriode}onChange={e=>setFPeriode(e.target.value)}style={inputStyle}>
+              <option value="">—</option>
+              {moisDisponibles.map(m=><option key={m.key}value={m.key}>{m.label}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{marginBottom:16}}>
+          <label style={labelStyle}>Note (optionnel)</label>
+          <input type="text"value={fNote}onChange={e=>setFNote(e.target.value)}style={inputStyle}/>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={()=>{setEditId(null);resetForm();}}style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,color:"var(--m)"}}>Annuler</button>
+          <button onClick={modifierVersement}disabled={savingEdit}style={{flex:1,padding:"11px",borderRadius:10,border:"none",cursor:savingEdit?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,background:savingEdit?"var(--c)":"var(--T)",color:savingEdit?"var(--m)":"#fff"}}>{savingEdit?"Enregistrement…":"Enregistrer"}</button>
+        </div>
+      </div>
+    </div>}
 
     {toast&&<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:"var(--b)",color:"#fff",padding:"11px 20px",borderRadius:12,fontSize:13,fontWeight:600,zIndex:9999,boxShadow:"0 4px 16px rgba(0,0,0,.2)"}}>{toast}</div>}
   </div>;
