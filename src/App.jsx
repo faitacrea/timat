@@ -7249,7 +7249,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
   return <div className="fi">
     <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. Pole Emploi",ic:"📋"},{id:"attestation_fiscale",l:"Att. fiscale",ic:"📑"}].map(s=>
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. Pole Emploi",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -11460,7 +11460,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
       const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      const{data:paie}=await supabase.from("versements").select("montant,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      const{data:paie}=await supabase.from("versements").select("montant,date,mode,periode,note").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin).order("date");
       const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
       const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
@@ -11473,27 +11473,33 @@ function AttestationFiscale({enfants,role,pEId,user}){
         paiements:Math.round(paiementsReels*100)/100,
         nbPaiements:paie?.length||0,
         nbAbsences:abs?.length||0,
+        versements:(paie||[]),
       });
     })();
     return()=>{cancelled=true;};
   },[enfant?.id,annee,contrat?.id]);
 
-  // ATTESTATION REELLE P13 - calculs avec donnees reelles si dispo, sinon estimation
+  // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
   const tauxH=contrat.tauxHoraire||4.05;
   const entretienJour=contrat.entretien||3.80;
   const hasReal=realStats?.paiements>0;
   const moisTravailles=12;
-  const totalSalNet=hasReal?realStats.paiements:(hMens*tauxH*0.78*moisTravailles);
-  const totalEntretien=hasReal&&realStats.jours>0?(realStats.jours*entretienJour):(entretienJour*Math.round(hMens/8)*moisTravailles);
-  const totalRepas=0;
+  const versementsList=realStats?.versements||[];
+  // Estimation indicative (à défaut de versements réels)
+  const estSalNet=hMens*tauxH*0.78*moisTravailles;
+  const estEntretien=entretienJour*Math.round(hMens/8)*moisTravailles;
+  // En mode réel : total = somme RÉELLEMENT versée (on ne rajoute PAS d'entretien estimé -> pas de double comptage)
+  const totalReel=hasReal?realStats.paiements:0;
+  const totalEstime=estSalNet+estEntretien;
+  const totalAffiche=hasReal?totalReel:totalEstime;
   const heuresAnnuelles=realStats?.heures||(hMens*12);
   const joursAnnuels=realStats?.jours||0;
-  const sourceLabel=hasReal?"(données réelles)":"(estimées)";
-  // Variables conservees pour compat
+  const sourceLabel=hasReal?"(données réelles)":"(estimation indicative)";
   const salMensBrut=hMens*tauxH;
-  const entretienMens=entretienJour*Math.round(hMens/8);
-  const paiementsReels=hasReal?{count:realStats.nbPaiements,total:realStats.paiements}:null;
+  const MODE_LBL={virement:"Virement",cheque:"Chèque",especes:"Espèces",cesu:"CESU",autre:"Autre"};
+  const fmtD=d=>{try{return new Date(d).toLocaleDateString("fr-FR");}catch{return d||"";}};
+  const fmtE=n=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
 
   // ATTESTATION P14B - PDF jsPDF natif (rendu fiable, pas de troncature)
   const telechargerPDF=async()=>{
@@ -11519,9 +11525,9 @@ function AttestationFiscale({enfants,role,pEId,user}){
       const vert=[42,157,143];const noir=[40,40,40];const gris=[120,120,120];const bleuFonce=[38,70,83];
       // Titre
       doc.setFontSize(16);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
-      doc.text("ATTESTATION FISCALE",PW/2,y,{align:"center"});y+=6;
+      doc.text("RECAPITULATIF DES VERSEMENTS",PW/2,y,{align:"center"});y+=6;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
-      doc.text("Annee "+annee+" - Garde d enfant a domicile (credit d impot)",PW/2,y,{align:"center"});y+=4;
+      doc.text("Annee "+annee+" - Sommes versees a l assistante maternelle (justificatif indicatif)",PW/2,y,{align:"center"});y+=4;
       doc.setDrawColor(...vert);doc.setLineWidth(0.5);doc.line(MX,y,PW-MX,y);y+=10;
       // Header asmat + parent
       doc.setFillColor(244,247,250);doc.rect(MX,y,PW-2*MX,30,"F");
@@ -11539,7 +11545,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
       y+=36;
       // Sommes versees
       doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
-      doc.text("Sommes versees en "+annee+(paiementsReels?.count?" (donnees reelles)":" (estimees)"),MX,y);y+=7;
+      doc.text("Sommes versees en "+annee+" "+(hasReal?"(donnees reelles)":"(estimation indicative)"),MX,y);y+=7;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       const ligne=(l,v,isTotal)=>{
         if(isTotal){doc.setFillColor(...vert);doc.rect(MX,y,PW-2*MX,8,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");}
@@ -11548,40 +11554,60 @@ function AttestationFiscale({enfants,role,pEId,user}){
         doc.text(v,PW-MX-3,y+5.5,{align:"right"});
         y+=8;
       };
-      ligne("Salaires nets verses (12 mois)",totalSalNet.toFixed(2)+" euros");
-      ligne("Indemnites d entretien",totalEntretien.toFixed(2)+" euros");
-      ligne("Indemnites de repas","0.00 euros");
-      ligne("TOTAL DES SOMMES VERSEES",(totalSalNet+totalEntretien+totalRepas).toFixed(2)+" euros",true);
+      if(hasReal){
+        ligne("Nombre de versements",String(versementsList.length));
+        ligne("TOTAL REELLEMENT VERSE EN "+annee,totalReel.toFixed(2)+" euros",true);
+      }else{
+        ligne("Salaire net estime (12 mois)",estSalNet.toFixed(2)+" euros");
+        ligne("Indemnites d entretien estimees",estEntretien.toFixed(2)+" euros");
+        ligne("TOTAL ESTIME",totalEstime.toFixed(2)+" euros",true);
+      }
       y+=8;
-      // Detail
+      // Detail des versements (mode reel) ou elements du contrat (estimation)
       doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
-      doc.text("Detail du calcul",MX,y);y+=7;
-      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
-      const ligneSimple=(l,v)=>{
-        doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,8);
-        doc.text(l,MX+3,y+5.5);
-        doc.text(v,PW-MX-3,y+5.5,{align:"right"});
+      doc.text(hasReal?"Detail des versements":"Elements du contrat (base d estimation)",MX,y);y+=7;
+      doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      if(hasReal){
+        doc.setFillColor(244,247,250);doc.rect(MX,y,PW-2*MX,7,"F");
+        doc.setFont("helvetica","bold");
+        doc.text("Date",MX+3,y+5);doc.text("Mode",MX+42,y+5);doc.text("Periode",MX+85,y+5);doc.text("Montant",PW-MX-3,y+5,{align:"right"});
+        y+=7;doc.setFont("helvetica","normal");
+        versementsList.forEach(v=>{
+          if(y>262){doc.addPage();y=20;}
+          doc.setDrawColor(230,230,230);doc.line(MX,y+6.5,PW-MX,y+6.5);
+          doc.text(fmtD(v.date),MX+3,y+5);
+          doc.text(String(MODE_LBL[v.mode]||v.mode||"-"),MX+42,y+5);
+          doc.text(String(v.periode||"-").slice(0,24),MX+85,y+5);
+          doc.text((parseFloat(v.montant)||0).toFixed(2)+" euros",PW-MX-3,y+5,{align:"right"});
+          y+=7;
+        });
+        y+=6;
+      }else{
+        const ligneSimple=(l,v)=>{
+          doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,8);
+          doc.text(l,MX+3,y+5.5);doc.text(v,PW-MX-3,y+5.5,{align:"right"});
+          y+=8;
+        };
+        ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
+        ligneSimple("Taux horaire brut",(contrat.tauxHoraire||4.05)+" euros/h");
+        ligneSimple("Salaire mensuel brut estime",salMensBrut.toFixed(2)+" euros");
+        ligneSimple("Salaire mensuel net estime",(salMensBrut*0.78).toFixed(2)+" euros");
+        ligneSimple("Mois travailles","12 mois");
         y+=8;
-      };
-      ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
-      ligneSimple("Taux horaire brut",(contrat.tauxHoraire||4.05)+" euros/h");
-      ligneSimple("Salaire mensuel brut estime",salMensBrut.toFixed(2)+" euros");
-      ligneSimple("Salaire mensuel net estime",(salMensBrut*0.78).toFixed(2)+" euros");
-      ligneSimple("Mois travailles","12 mois");
-      y+=8;
+      }
       // Verifier qu'on a la place sinon nouvelle page
-      if(y>240){doc.addPage();y=20;}
+      if(y>232){doc.addPage();y=20;}
       // Note
-      doc.setFillColor(255,248,243);doc.rect(MX,y,PW-2*MX,28,"F");
-      doc.setDrawColor(255,214,179);doc.rect(MX,y,PW-2*MX,28);
+      doc.setFillColor(255,248,243);doc.rect(MX,y,PW-2*MX,34,"F");
+      doc.setDrawColor(255,214,179);doc.rect(MX,y,PW-2*MX,34);
       doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
-      doc.text("Informations importantes :",MX+3,y+5);
+      doc.text("Document indicatif - ne remplace pas l attestation Pajemploi :",MX+3,y+5);
       doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
-      doc.text("Ce document est destine a la declaration de revenus du parent employeur.",MX+3,y+11);
-      doc.text("Le parent peut deduire les sommes versees dans la limite du plafond fiscal.",MX+3,y+16);
-      doc.text("Les indemnites d entretien et de repas ne sont pas deductibles.",MX+3,y+21);
-      doc.text("Conservez ce document avec votre declaration de revenus.",MX+3,y+26);
-      y+=34;
+      doc.text("Ce recapitulatif est un justificatif des sommes versees, fourni a titre indicatif.",MX+3,y+11);
+      doc.text("L attestation fiscale officielle est delivree par l Urssaf - service Pajemploi (espace en ligne du parent).",MX+3,y+16);
+      doc.text("Montant a reporter en case 7GA du formulaire 2042 RICI - la CMG y est deja deduite.",MX+3,y+21);
+      doc.text("Conservez ce document avec vos justificatifs.",MX+3,y+26);
+      y+=40;
       // Signature
       if(y>250){doc.addPage();y=20;}
       doc.setFontSize(9);doc.setFont("helvetica","italic");doc.setTextColor(...noir);
@@ -11610,8 +11636,8 @@ function AttestationFiscale({enfants,role,pEId,user}){
       // Footer
       doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
       doc.text("Genere par TiMat - "+new Date().toLocaleDateString("fr-FR"),PW/2,280,{align:"center"});
-      doc.save("attestation-fiscale-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
-      setToast("Attestation telechargee ✓");
+      doc.save("recapitulatif-versements-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
+      setToast("Recapitulatif telecharge ✓");
     }catch(e){
       setToast("Erreur generation PDF : "+e.message);
     }
@@ -11635,7 +11661,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
       const w=window.open("","_blank");
       if(!w){setToast("Autorisez les popups");return;}
       const html=[
-        '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Attestation fiscale '+annee+' - '+(enfant.prenom||'')+'</title>',
+        '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Récapitulatif des versements '+annee+' - '+(enfant.prenom||'')+'</title>',
         '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;margin:0;padding:0;color:#222;font-size:12px;line-height:1.6;background:#f5f5f5}',
         '#doc{max-width:780px;margin:0 auto;padding:30px;background:#fff}',
         'h1{font-size:15px;text-align:center;color:#2E4859;border-bottom:2px solid #5DA9A1;padding-bottom:10px;margin-bottom:20px}',
@@ -11661,7 +11687,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
           '<button class="btn-pdf" onclick="dlPdf()">📥 Telecharger PDF</button>',
         '</div>',
         '<div id="doc">',
-        '<h1>📑 ATTESTATION FISCALE<br/><span style="font-size:12px;font-weight:400;color:#666">Année '+annee+' — Garde d\'enfant à domicile (crédit d\'impôt)</span></h1>',
+        '<h1>📋 RÉCAPITULATIF DES VERSEMENTS<br/><span style="font-size:12px;font-weight:400;color:#666">Année '+annee+' — Sommes versées à l\'assistante maternelle (justificatif indicatif)</span></h1>',
         '<div class="header">',
         '<div><h3>Assistante maternelle agréée</h3>',
         '<strong>'+(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'</strong><br/>',
@@ -11671,27 +11697,34 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<strong>'+(enfant?.prenomParent||'Parent')+' '+(enfant?.nomParent||'')+'</strong><br/>',
         'Enfant gardé : '+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'<br/>',
         'Né(e) le : '+(enfant?.naissance||'[Date]')+'</div></div>',
-        '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+(paiementsReels?.count?' (donnees reelles)':' (estimees)')+'</h3>',
+        '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">💶 Sommes versées en '+annee+(hasReal?' (données réelles)':' (estimation indicative)')+'</h3>',
         '<table>',
-        '<tr><td>Salaires nets versés (12 mois)</td><td style="text-align:right">'+totalSalNet.toFixed(2)+' €</td></tr>',
-        '<tr><td>Indemnités d\'entretien</td><td style="text-align:right">'+totalEntretien.toFixed(2)+' €</td></tr>',
-        '<tr><td>Indemnités de repas</td><td style="text-align:right">'+totalRepas.toFixed(2)+' €</td></tr>',
-        '<tr class="total"><td>TOTAL DES SOMMES VERSÉES</td><td style="text-align:right">'+(totalSalNet+totalEntretien+totalRepas).toFixed(2)+' €</td></tr>',
+        (hasReal
+          ? '<tr><td>Nombre de versements</td><td style="text-align:right">'+versementsList.length+'</td></tr>'
+            +'<tr class="total"><td>TOTAL RÉELLEMENT VERSÉ EN '+annee+'</td><td style="text-align:right">'+totalReel.toFixed(2)+' €</td></tr>'
+          : '<tr><td>Salaire net estimé (12 mois)</td><td style="text-align:right">'+estSalNet.toFixed(2)+' €</td></tr>'
+            +'<tr><td>Indemnités d\'entretien estimées</td><td style="text-align:right">'+estEntretien.toFixed(2)+' €</td></tr>'
+            +'<tr class="total"><td>TOTAL ESTIMÉ</td><td style="text-align:right">'+totalEstime.toFixed(2)+' €</td></tr>'),
         '</table>',
-        '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Détail du calcul</h3>',
-        '<table>',
-        '<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>',
-        '<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||4.05)+' €/h</td></tr>',
-        '<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+salMensBrut.toFixed(2)+' €</td></tr>',
-        '<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+(salMensBrut*0.78).toFixed(2)+' €</td></tr>',
-        '<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>',
-        '</table>',
+        (hasReal
+          ? '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📋 Détail des versements</h3>'
+            +'<table><tr><td style="background:#F4F7FA">Date</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Mode</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Période</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859;text-align:right">Montant</td></tr>'
+            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+(parseFloat(v.montant)||0).toFixed(2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:10px">↳ '+v.note+'</td></tr>':'');}).join('')
+            +'</table>'
+          : '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Éléments du contrat (base d\'estimation)</h3>'
+            +'<table>'
+            +'<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>'
+            +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||4.05)+' €/h</td></tr>'
+            +'<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+salMensBrut.toFixed(2)+' €</td></tr>'
+            +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+(salMensBrut*0.78).toFixed(2)+' €</td></tr>'
+            +'<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>'
+            +'</table>'),
         '<div class="note">',
-        '<strong>📌 Informations importantes :</strong><br/>',
-        '• Ce document est destiné à la déclaration de revenus du parent employeur (crédit d\'impôt pour frais de garde).<br/>',
-        '• Le parent peut déduire les sommes versées (salaires + cotisations) dans la limite du plafond fiscal en vigueur.<br/>',
-        '• Les indemnités d\'entretien et de repas ne sont pas déductibles.<br/>',
-        '• Conservez ce document avec votre déclaration de revenus.',
+        '<strong>📌 Document indicatif — ne remplace pas l\'attestation Pajemploi :</strong><br/>',
+        '• Ce récapitulatif est un justificatif des sommes versées, fourni à titre indicatif.<br/>',
+        '• L\'attestation fiscale officielle est délivrée par l\'Urssaf — service Pajemploi, sur l\'espace en ligne du parent.<br/>',
+        '• Montant à reporter en case 7GA du formulaire 2042 RICI — la CMG y est déjà déduite.<br/>',
+        '• Conservez ce document avec vos justificatifs.',
         '</div>',
         '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#2E4859">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
         '<div class="sig">',
@@ -11701,7 +11734,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:9px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
         '</div>',
-        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"attestation-fiscale-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>',
+        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"recapitulatif-versements-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>',
         '</body></html>'
       ].join('');
       w.document.write(html);
@@ -11712,16 +11745,16 @@ function AttestationFiscale({enfants,role,pEId,user}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="📑" title="Attestation fiscale" sub="Pour le crédit d'impôt des parents — à fournir chaque année"/>
+    <PageHeader icon="💶" title="Récapitulatif des versements" sub="Justificatif des sommes versées — complément de l'attestation Pajemploi"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
     </div>}
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📑 Attestation pour {enfant.prenom||"-"}</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>💶 Récapitulatif pour {enfant.prenom||"-"}</div>
           <div style={{marginBottom:12}}>
-            <label className="lbl">Année fiscale</label>
+            <label className="lbl">Année</label>
             <select className="sel"value={annee}onChange={e=>setAnnee(Number(e.target.value))}>
               {annees.map(a=><option key={a}value={a}>{a}</option>)}
             </select>
@@ -11731,18 +11764,24 @@ function AttestationFiscale({enfants,role,pEId,user}){
               <span>Récapitulatif {annee}</span>
               <span style={{fontSize:10,fontWeight:400,color:hasReal?"var(--S)":"var(--l)",fontStyle:"italic"}}>{sourceLabel}</span>
             </div>
-            {hasReal&&<>
-              <div style={{display:"flex",justifyContent:"space-between"}}><span>Heures pointées</span><strong>{heuresAnnuelles} h</strong></div>
-              <div style={{display:"flex",justifyContent:"space-between"}}><span>Jours travaillés</span><strong>{joursAnnuels} j</strong></div>
-              <div style={{display:"flex",justifyContent:"space-between"}}><span>Nb paiements</span><strong>{realStats?.nbPaiements||0}</strong></div>
+            {hasReal?<>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span>Nombre de versements</span><strong>{versementsList.length}</strong></div>
+              <div style={{marginTop:8,marginBottom:4,fontWeight:700,color:"var(--b)"}}>Détail des versements</div>
+              {versementsList.map((v,i)=><div key={i}style={{display:"flex",justifyContent:"space-between",borderBottom:"1px solid var(--br)",padding:"4px 0",gap:8}}>
+                <span>{fmtD(v.date)} · {MODE_LBL[v.mode]||v.mode||"—"}{v.periode?(" · "+v.periode):""}</span>
+                <strong style={{whiteSpace:"nowrap"}}>{fmtE(v.montant)}</strong>
+              </div>)}
+              <div style={{display:"flex",justifyContent:"space-between",paddingTop:8,marginTop:4,fontWeight:700,color:"var(--S)",borderTop:"2px solid var(--br)"}}><span>Total réellement versé</span><span>{fmtE(totalReel)}</span></div>
+            </>:<>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span>Salaire net estimé</span><strong>{fmtE(estSalNet)}</strong></div>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span>Indemnités entretien (est.)</span><strong>{fmtE(estEntretien)}</strong></div>
+              <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid var(--br)",paddingTop:6,marginTop:6,fontWeight:700,color:"var(--l)"}}><span>Total estimé</span><span>{fmtE(totalEstime)}</span></div>
+              <div style={{marginTop:8,fontSize:11,color:"var(--l)",fontStyle:"italic"}}>Aucun versement enregistré pour {annee} — estimation indicative. Saisis les versements dans l'onglet « Versements » pour un récapitulatif réel.</div>
             </>}
-            <div style={{display:"flex",justifyContent:"space-between"}}><span>Salaires nets</span><strong>{totalSalNet.toFixed(2)} €</strong></div>
-            <div style={{display:"flex",justifyContent:"space-between"}}><span>Indemnités entretien</span><strong>{totalEntretien.toFixed(2)} €</strong></div>
-            <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid var(--br)",paddingTop:6,marginTop:6,fontWeight:700,color:"var(--S)"}}><span>Total</span><span>{(totalSalNet+totalEntretien).toFixed(2)} €</span></div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button className="btn bT"style={{width:"100%"}}onClick={telechargerPDF}disabled={gen}>
-              {gen?"⏳ Génération...":"📥 Télécharger l'attestation "+annee+" en PDF"}
+              {gen?"⏳ Génération...":"📥 Télécharger le récapitulatif "+annee+" en PDF"}
             </button>
             <button className="btn bG"style={{width:"100%",fontSize:12}}onClick={generer}disabled={gen}>
               🖨️ Aperçu / Imprimer
@@ -11750,7 +11789,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
           </div>
         </div>
         <div style={{padding:12,background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)",lineHeight:1.6}}>
-          💡 Cette attestation permet aux parents de bénéficier du crédit d'impôt pour frais de garde. À remettre en début d'année suivante pour leur déclaration de revenus.
+          💡 Récapitulatif indicatif des sommes versées. <strong>Il ne remplace pas l'attestation fiscale officielle de Pajemploi</strong> (espace en ligne du parent), à reporter en case 7GA du formulaire 2042 RICI — la CMG y est déjà déduite.
         </div>
       </div>
       <div className="card"style={{padding:18}}>
