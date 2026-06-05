@@ -250,6 +250,9 @@ function Styles(){return(
     .demo-screen .g4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
     .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
+    .demo-phone{width:340px}
+    @media(max-width:768px){.demo-phone{width:300px}}
+    @media(max-width:480px){.demo-phone{width:min(300px,90vw)}}
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
     .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
@@ -9653,7 +9656,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
 
             {/* Phone frame — vraie UI de l'app */}
-            <div style={{ width: 390, flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 32px 100px rgba(0,0,0,.4), inset 0 1px 2px rgba(255,255,255,.08)" }}>
+            <div className="demo-phone" style={{ flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 18px 55px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08)" }}>
               {/* Notch */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
                 <div style={{ width: 110, height: 24, background: "#1a1a2e", borderRadius: "0 0 18px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
@@ -9662,7 +9665,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
               </div>
               {/* Screen */}
-              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 720, display: "flex", flexDirection: "column", position: "relative" }}>
+              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 560, display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
