@@ -10489,7 +10489,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#2d4859", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
+      <footer style={{ background: "#1d3a4c", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
@@ -11818,11 +11818,15 @@ function AttestationFiscale({enfants,role,pEId,user}){
 function FicheUrgence({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [toast,setToast]=useState("");
+  const [editing,setEditing]=useState(false);
+  const [loaded,setLoaded]=useState(false);
+  const [hasData,setHasData]=useState(false);
+  const [saving,setSaving]=useState(false);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
   const contrat=enfant.contrat||{};
   const [form,setForm]=useState({
-    asmatNom:(user?.prenom||"")+" "+(user?.nom||""),asmatTel:user?.tel||"",asmatAgrement:user?.agrement||"",
+    asmatNom:role==="asmat"?((user?.prenom||"")+" "+(user?.nom||"")).trim():"",asmatTel:role==="asmat"?(user?.tel||""):"",asmatAgrement:role==="asmat"?(user?.agrement||""):"",
     nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",sexe:"",adresse:"",
     mereNom:"",mereTel:"",mereTravail:"",mereEmail:"",mereEmployeur:"",
     pereNom:"",pereTel:"",pereTravail:"",pereEmail:"",pereEmployeur:"",
@@ -11832,13 +11836,32 @@ function FicheUrgence({enfants,role,pEId,user}){
     authUrgences:true,authParacetamol:false,authSorties:true,authVoiture:true,authPhotos:false,
   });
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const ro=role==="asmat"||!editing;
 
-  // Re-fill when enfant changes
+  // Charger la fiche enregistree (par enfant) + pre-remplir depuis l'enfant
   useEffect(()=>{
-    if(!enfant?.id)return;
-    setForm(p=>({...p,nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",
-      allergies:enfant.allergies?.join(", ")||p.allergies}));
-  },[enfant?.id]);
+    if(!enfant?.id){setLoaded(true);return;}
+    let cancelled=false;setLoaded(false);
+    const base={nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",allergies:enfant.allergies?.join(", ")||""};
+    (async()=>{
+      try{
+        const{data}=await supabase.from("fiche_urgence").select("data").eq("enfant_id",enfant.id).maybeSingle();
+        if(cancelled)return;
+        if(data&&data.data&&Object.keys(data.data).length){setForm(f=>({...f,...base,...data.data}));setHasData(true);setEditing(false);}
+        else{setForm(f=>({...f,...base}));setHasData(false);setEditing(role==="parent");}
+      }catch(e){console.warn("fiche_urgence load",e);if(!cancelled){setForm(f=>({...f,...base}));setHasData(false);}}
+      if(!cancelled)setLoaded(true);
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,role]);
+  const sauvegarder=async()=>{
+    if(role!=="parent"||!enfant?.id)return;
+    setSaving(true);
+    const{error}=await supabase.from("fiche_urgence").upsert({enfant_id:enfant.id,data:form,updated_by:user?.id||null,updated_at:new Date().toISOString()});
+    setSaving(false);
+    if(error){setToast("❌ Erreur : "+error.message);return;}
+    setHasData(true);setEditing(false);setToast("✅ Fiche d'urgence enregistrée");
+  };
 
   const genererPDF=()=>{
     const w=window.open("","_blank");
@@ -11916,45 +11939,34 @@ function FicheUrgence({enfants,role,pEId,user}){
     setToast("Fiche generee ✓");
   };
 
-  // Parent: read-only view
-  if(role==="parent"){
-    const f=form;
-    const line=(label,val)=>val?<div style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-      <span style={{fontWeight:600,color:"var(--b)"}}>{label}</span><span style={{color:"var(--m)"}}>{val||"-"}</span>
-    </div>:null;
-    return <div className="fi">
-      <PageHeader icon="🚨" title="Fiche d'urgence" sub={"Fiche de "+(enfant.prenom||"votre enfant")}/>
-      <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:14}}>👶 {enfant.prenom||"Enfant"} {enfant.emoji||""}</div>
-        {line("Nom",f.nom)}{line("Prenom",f.prenom)}{line("Date de naissance",f.naissance)}{line("Allergies",f.allergies||"Aucune connue")}
-        <div style={{fontWeight:700,fontSize:14,color:"var(--T)",margin:"18px 0 10px"}}>🩺 Medical</div>
-        {line("Medecin",f.medecin||"A completer")}{line("Telephone medecin",f.medecinTel)}{line("Vaccins a jour",f.vaccins)}
-        <div style={{fontWeight:700,fontSize:14,color:"var(--T)",margin:"18px 0 10px"}}>🚨 Numeros d'urgence</div>
-        {line("SAMU","15")}{line("Pompiers","18")}{line("Urgences","112")}{line("Centre anti-poison","01 40 05 48 48")}
-        <button className="btn bT"style={{width:"100%",marginTop:14}}onClick={genererPDF}>📄 Telecharger la fiche PDF</button>
-      </div>
-    </div>;
-  }
+  // (Parent edite la fiche ; assmat en lecture seule -> rendu unifie ci-dessous)
 
   const inp=(label,key,ph)=><div style={{marginBottom:10}}>
     <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
-    <input className="inp"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
+    <input className="inp"disabled={ro}value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
   </div>;
   const ta=(label,key,ph)=><div style={{marginBottom:10}}>
     <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
-    <textarea className="ta"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:60,resize:"vertical"}}/>
+    <textarea className="ta"disabled={ro}value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:60,resize:"vertical"}}/>
   </div>;
-  const chk=(label,key)=><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,cursor:"pointer"}}onClick={()=>set(key,!form[key])}>
+  const chk=(label,key)=><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,cursor:ro?"default":"pointer"}}onClick={()=>{if(!ro)set(key,!form[key]);}}>
     <div style={{width:20,height:20,borderRadius:6,border:"2px solid "+(form[key]?"var(--S)":"var(--br)"),background:form[key]?"var(--S)":"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",transition:"all .15s"}}>{form[key]?"✓":""}</div>
     <span style={{fontSize:12,color:"var(--b)"}}>{label}</span>
   </div>;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🚨" title="Fiche d'urgence" sub="Pre-remplie avec les donnees de l'enfant — generez le PDF en 1 clic"/>
+    <PageHeader icon="🚨" title="Fiche d'urgence" sub={role==="parent"?(editing?"Remplissez la fiche d'urgence de votre enfant":"Fiche enregistrée · Modifier pour mettre à jour"):"Remplie par le parent — vous êtes en lecture seule"}/>
     {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
-    <div className="g2">
+    {role==="asmat"&&loaded&&!hasData
+      ? <div className="card"style={{padding:20,textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:16}}>🚨</div>
+          <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Fiche pas encore remplie</div>
+          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>Le parent de {enfant.prenom||"cet enfant"} n'a pas encore rempli la fiche d'urgence dans TiMat.</div>
+          <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}>💡 Vous la consulterez ici dès qu'il l'aura enregistrée.</div>
+        </div>
+      : <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👶 Enfant</div>
@@ -11990,11 +12002,14 @@ function FicheUrgence({enfants,role,pEId,user}){
           {chk("Transport en voiture","authVoiture")}
           {chk("Photos (usage interne)","authPhotos")}
         </div>
-        <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>
-          🚨 Generer la fiche d'urgence PDF
-        </button>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {role==="parent"&&(editing
+            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px",fontSize:14}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
+            : <button className="btn bG"style={{width:"100%",padding:"14px",fontSize:14}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
+          <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>📥 Télécharger la fiche PDF</button>
+        </div>
       </div>
-    </div>
+    </div>}
   </div>;
 }
 
