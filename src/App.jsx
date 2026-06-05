@@ -10489,7 +10489,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#20323E", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
+      <footer style={{ background: "#2d4859", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
@@ -12001,24 +12001,10 @@ function FicheUrgence({enfants,role,pEId,user}){
 // ========== PROJET D'ACCUEIL (dans l'app) ==========
 function ProjetAccueil({user,role}){
   const [toast,setToast]=useState("");
-
-  // Parent: read-only view
-  if(role==="parent"){
-    return <div className="fi">
-      <PageHeader icon="🌿" title="Projet d'accueil" sub="Le projet d'accueil de votre assistante maternelle"/>
-      <div className="card"style={{padding:20,textAlign:"center"}}>
-        <div style={{fontSize:48,marginBottom:16}}>🌿</div>
-        <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Projet d'accueil</div>
-        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>
-          Le projet d'accueil est un document redige par votre assistante maternelle. Il decrit ses valeurs educatives, l'organisation de la journee, les activites proposees et ses pratiques.
-        </div>
-        <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}>
-          💡 Demandez a votre assistante maternelle de vous transmettre son projet d'accueil via TiMat ou en version imprimee lors de votre premiere rencontre.
-        </div>
-      </div>
-    </div>;
-  }
-
+  const [editing,setEditing]=useState(false);
+  const [loaded,setLoaded]=useState(false);
+  const [hasData,setHasData]=useState(false);
+  const [saving,setSaving]=useState(false);
   const [form,setForm]=useState({
     nom:(user?.prenom||"")+" "+(user?.nom||""),adresse:"",tel:user?.tel||"",email:user?.email||"",agrement:"",
     intro:"",parcours:"",agrementDetail:"",domicile:"",
@@ -12035,16 +12021,46 @@ function ProjetAccueil({user,role}){
     ],
     alimentationPerso:"",sommeilPerso:"",activitesPerso:"",communicationPerso:"",conclusion:"",
   });
+  // Charger le projet enregistre (assmat = le sien ; parent = celui de son assmat via RLS)
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      try{
+        let row=null;
+        if(role==="parent"){
+          const{data}=await supabase.from("projet_accueil").select("data").limit(1).maybeSingle();
+          row=data;
+        }else if(user?.id){
+          const{data}=await supabase.from("projet_accueil").select("data").eq("asmat_id",user.id).maybeSingle();
+          row=data;
+        }
+        if(cancelled)return;
+        if(row&&row.data&&Object.keys(row.data).length){setForm(f=>({...f,...row.data}));setHasData(true);setEditing(false);}
+        else{setHasData(false);if(role!=="parent")setEditing(true);}
+      }catch(e){console.warn("projet_accueil load",e);}
+      if(!cancelled)setLoaded(true);
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,role]);
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
   const setHoraire=(i,field,v)=>setForm(p=>{const h=[...p.horaires];h[i]={...h[i],[field]:v};return{...p,horaires:h};});
+  const ro=role==="parent"||!editing;
+  const sauvegarder=async()=>{
+    if(!user?.id)return;
+    setSaving(true);
+    const{error}=await supabase.from("projet_accueil").upsert({asmat_id:user.id,data:form,updated_at:new Date().toISOString()});
+    setSaving(false);
+    if(error){setToast("❌ Erreur enregistrement : "+error.message);return;}
+    setHasData(true);setEditing(false);setToast("✅ Projet d'accueil enregistré");
+  };
 
   const inp=(label,key,ph)=><div style={{marginBottom:10}}>
     <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
-    <input className="inp"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
+    <input className="inp"disabled={ro}value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
   </div>;
   const ta=(label,key,ph,rows)=><div style={{marginBottom:10}}>
     <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
-    <textarea className="ta"value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:(rows||3)*28,resize:"vertical"}}/>
+    <textarea className="ta"disabled={ro}value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:(rows||3)*28,resize:"vertical"}}/>
   </div>;
 
   const genererPDF=()=>{
@@ -12140,9 +12156,27 @@ function ProjetAccueil({user,role}){
     setToast("Projet d'accueil genere ✓");
   };
 
+  // Parent sans projet encore publie -> message d'attente
+  if(role==="parent"&&loaded&&!hasData){
+    return <div className="fi">
+      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+      <PageHeader icon="🌿" title="Projet d'accueil" sub="Le projet d'accueil de votre assistante maternelle"/>
+      <div className="card"style={{padding:20,textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:16}}>🌿</div>
+        <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Pas encore disponible</div>
+        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>
+          Votre assistante maternelle n'a pas encore publié son projet d'accueil dans TiMat. Il décrit ses valeurs éducatives, l'organisation de la journée et ses pratiques.
+        </div>
+        <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}>
+          💡 Demandez-lui de le compléter et de l'enregistrer — il apparaîtra ici automatiquement.
+        </div>
+      </div>
+    </div>;
+  }
+
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🌿" title="Projet d'accueil" sub="Redigez et generez votre projet d'accueil personnalise"/>
+    <PageHeader icon="🌿" title="Projet d'accueil" sub={role==="parent"?"Le projet d'accueil de votre assistante maternelle":(editing?"Rédigez et enregistrez votre projet d'accueil":"Cliquez Modifier pour l'éditer · Télécharger pour le PDF")}/>
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
@@ -12169,8 +12203,8 @@ function ProjetAccueil({user,role}){
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>📋 Ma journee type</div>
           {form.horaires.map((h,i)=><div key={i}style={{display:"flex",gap:6,marginBottom:4}}>
-            <input className="inp"style={{width:110,flexShrink:0,fontSize:11}}value={h.h}onChange={e=>setHoraire(i,"h",e.target.value)}/>
-            <input className="inp"style={{flex:1,fontSize:11}}value={h.d}onChange={e=>setHoraire(i,"d",e.target.value)}/>
+            <input className="inp"disabled={ro}style={{width:110,flexShrink:0,fontSize:11}}value={h.h}onChange={e=>setHoraire(i,"h",e.target.value)}/>
+            <input className="inp"disabled={ro}style={{flex:1,fontSize:11}}value={h.d}onChange={e=>setHoraire(i,"d",e.target.value)}/>
           </div>)}
         </div>
         <div className="card"style={{padding:16}}>
@@ -12184,9 +12218,12 @@ function ProjetAccueil({user,role}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🌿 Conclusion</div>
           {ta("Mon mot de conclusion","conclusion","Ce projet d'accueil est le reflet de mon engagement...",3)}
         </div>
-        <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>
-          🌿 Generer mon projet d'accueil PDF
-        </button>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {role!=="parent"&&(editing
+            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px",fontSize:14}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
+            : <button className="btn bG"style={{width:"100%",padding:"14px",fontSize:14}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
+          <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>📥 Télécharger le PDF</button>
+        </div>
       </div>
     </div>
   </div>;
