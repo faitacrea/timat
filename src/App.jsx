@@ -8549,7 +8549,7 @@ function SimulateurCout({enfants,pEId}){
 }
 
 //
-function SoldeDeCompte({enfants,role,pEId}){
+function SoldeDeCompte({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [dateFin,setDateFin]=useState("");
   const [motif,setMotif]=useState("Démission du parent");
