@@ -5412,7 +5412,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-        {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"📋 Solde de tout compte"}].map(t=>
+        {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"🏁 Fin de contrat"}].map(t=>
           <button key={t.id}onClick={()=>setContratTab(t.id)}style={{padding:"6px 14px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:contratTab===t.id?"var(--T)":"transparent",color:contratTab===t.id?"#fff":"var(--m)",borderColor:contratTab===t.id?"var(--T)":"var(--br)"}}>{t.l}</button>)}
       </div>
       {contratTab==="contrats"?<div>
@@ -5420,7 +5420,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
         <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
           <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
         </div>
-      </div>:<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
+      </div>:<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}user={user}/>}
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
@@ -8574,9 +8574,22 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   const indemPreavis=(preavis/30)*salMensuel;
   const total=iccp+indemPreavis;
 
+  const today=new Date().toLocaleDateString("fr-FR");
+  const asmatNom=((user?.prenom||"")+" "+(user?.nom||"")).trim()||"[Assistante maternelle]";
+  const agr=user?.agrement||"[N° d'agrément]";
+  const printDoc=(titre,corps)=>{
+    const w=window.open("","_blank");
+    if(!w){setToast("Autorisez les pop-ups pour générer le document");return;}
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
+    w.document.close();setToast(titre+" généré ✓");
+  };
+  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${enfant?.prenom||"[Prénom]"}</b>, pour le motif suivant : <b>${motif}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
+  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${enfant?.prenom||"[Prénom]"}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${enfant?.prenom||"[Prénom]"}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${total.toFixed(2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${iccp.toFixed(2)} € + indemnité de préavis ${indemPreavis.toFixed(2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature de la salariée</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="📋" title="Solde de tout compte" sub="Calcul automatique à la fin d'un contrat"/>
+    <PageHeader icon="🏁" title="Fin de contrat" sub="Rupture, certificat de travail, solde de tout compte & congés payés"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);setCalcule(false);}}/>)}
     </div>}
@@ -8609,6 +8622,15 @@ function SoldeDeCompte({enfants,role,pEId,user}){
             🧮 Calculer le solde de tout compte
           </button>
         </div>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Documents de fin de contrat</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <button className="btn bG"style={{width:"100%"}}onClick={genRupture}>✉️ Lettre de rupture</button>
+            <button className="btn bG"style={{width:"100%"}}onClick={genCertificat}>📜 Certificat de travail</button>
+            <button className="btn bG"style={{width:"100%"}}onClick={genRecu}>🧾 Reçu pour solde de tout compte</button>
+          </div>
+          <div style={{fontSize:11,color:"var(--l)",marginTop:10,lineHeight:1.5}}>L'attestation France Travail officielle se génère sur Pajemploi (espace en ligne du parent).</div>
+        </div>
       </div>
 
       {calcule&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -8633,7 +8655,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
           </div>
         </div>
         <div style={{display:"flex",gap:8}}>
-          <button className="btn bG"style={{flex:1}}onClick={()=>setToast("Document PDF généré ✓")}>📥 Télécharger le reçu</button>
+          <button className="btn bG"style={{flex:1}}onClick={genRecu}>📥 Télécharger le reçu</button>
           <button className="btn bT"style={{flex:1}}onClick={()=>setToast("Envoyé au parent ✓")}>📧 Envoyer au parent</button>
         </div>
       </div>}
@@ -14643,7 +14665,7 @@ export default function App(){
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
-      case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId}/>;
+      case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
