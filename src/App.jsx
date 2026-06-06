@@ -7345,7 +7345,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
   return <div className="fi">
     <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. Pole Emploi",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"}].map(s=>
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -11464,94 +11464,98 @@ function AjouterEnfantModale({user,onClose}){
 //
 function AttestationPoleEmploi({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [dateFin,setDateFin]=useState("");
-  const [motif,setMotif]=useState("Fin de contrat");
-  const [gen,setGen]=useState(false);
   const [toast,setToast]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
   const contrat=enfant.contrat||{};
-  const motifs=["Fin de contrat","Démission","Licenciement","Rupture conventionnelle","Retraite","Autre"];
-
+  const motifs=["Fin de contrat","Démission du parent","Retrait de l'enfant","Rupture conventionnelle","Retraite","Autre"];
+  const parent=(D.parents||[]).find(p=>p.id===enfant.parentId)||{};
+  const salRef=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||4.05));
+  const [form,setForm]=useState({});
+  useEffect(()=>{
+    setForm({
+      empNom:((parent.prenom||"")+" "+(parent.nom||"")).trim(),empAdresse:"",empEmail:parent.email||"",empPajemploi:"",
+      salNom:role==="asmat"?(((user?.prenom||"")+" "+(user?.nom||"")).trim()):"",
+      salAgrement:role==="asmat"?(user?.agrement||""):"",
+      enfantNom:((enfant.prenom||"")+" "+(enfant.nom||"")).trim(),
+      dateEmbauche:contrat.debut||"",dateFin:"",motif:"Fin de contrat",
+      heuresHebdo:contrat.heuresHebdo?String(contrat.heuresHebdo):"",
+      dernierSalaire:salRef?String(salRef):"",
+      salDernierMois:"",iccp:"",indemPreavis:"",
+    });
+  },[selId,role]);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const ro=role==="asmat";
+  const inp=(label,key,type)=><div style={{marginBottom:10}}>
+    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
+    <input className="inp"type={type||"text"}disabled={ro}value={form[key]||""}onChange={e=>set(key,e.target.value)}/>
+  </div>;
   const generer=()=>{
-    if(!dateFin)return;
-    setGen(true);
-    setTimeout(()=>{
-      setGen(false);
-      const w=window.open("","_blank");
-      if(!w){setToast("Autorisez les popups pour générer le PDF");return;}
-      const parent=D.parents.find(p=>p.id===enfant.parentId)||{prenom:"Parent",nom:"",email:""};
-      const salaireMensuel=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||4.05)*1.1);
-      const htmlAttest='<!DOCTYPE html><html lang="fr"><head><title>Attestation Pôle Emploi - '+(enfant.prenom||'')+'</title>'
-        +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#222;font-size:13px;}'
-        +'h1{font-size:15px;text-align:center;border:2px solid #000;padding:10px;margin-bottom:20px;text-transform:uppercase;}'
-        +'h2{font-size:13px;background:#f0f0f0;padding:6px 8px;margin-top:20px;border-left:3px solid #3D6B50;}'
-        +'table{width:100%;border-collapse:collapse;margin:8px 0;}'
-        +'td{padding:7px 10px;border:1px solid #ddd;}td:first-child{width:45%;background:#fafafa;font-weight:600;}'
-        +'.sig{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}'
-        +'.sig-box{border-top:1px solid #000;padding-top:8px;font-size:12px;}'
-        +'@media print{button{display:none}}</style></head>'
-        +'<body>'
-        +'<h1>Attestation destinée à Pôle Emploi<br/><span style="font-size:11px;font-weight:400">(Articles R.1234-9 à R.1234-12 du Code du travail)</span></h1>'
-        +"<h2>L'employeur</h2>"
-        +'<table><tr><td>Nom et prénom</td><td>'+parent.prenom+' '+parent.nom+'</td></tr>'
-        +'<tr><td>Email</td><td>'+(parent.email||'[À compléter]')+'</td></tr>'
-        +'<tr><td>N° Pajemploi</td><td>PAJ-[À compléter]</td></tr></table>'
-        +'<h2>Le salarié</h2>'
-        +'<table><tr><td>Nom et prénom</td><td>'+(user?.prenom||D.asmat.prenom)+' '+(user?.nom||D.asmat.nom)+'</td></tr>'
-        +'<tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>'
-        +'<tr><td>Enfant gardé</td><td>'+(enfant.prenom||'')+' '+(enfant.nom||'')+'</td></tr></table>'
-        +'<h2>Contrat de travail</h2>'
-        +"<table><tr><td>Date d'embauche</td><td>"+(contrat.debut||"[À compléter]")+"</td></tr>"
-        +'<tr><td>Date de fin</td><td>'+dateFin+'</td></tr>'
-        +'<tr><td>Motif</td><td>'+motif+'</td></tr>'
-        +'<tr><td>Heures hebdo</td><td>'+(contrat.heuresHebdo||40)+'h/semaine</td></tr>'
-        +'<tr><td>Dernier salaire brut</td><td>'+salaireMensuel+'€</td></tr></table>'
-        +'<h2>Indemnités versées</h2>'
-        +'<table><tr><td>Salaire du dernier mois</td><td>[À compléter]€</td></tr>'
-        +'<tr><td>ICCP</td><td>[À compléter]€</td></tr>'
-        +'<tr><td>Indemnité de préavis</td><td>[À compléter]€</td></tr></table>'
-        +'<p style="margin-top:20px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd;">Je certifie sur l\'honneur l\'exactitude des renseignements portes sur cette attestation.</p>'
-        +'<div class="sig">'
-        +'<div class="sig-box">Fait à ___, le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature employeur:<br/><br/>'+parent.prenom+' '+parent.nom+'</div>'
-        +'<div class="sig-box">Remis le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature asmat:<br/><br/>'+(user?.prenom||D.asmat.prenom)+' '+(user?.nom||D.asmat.nom)+'</div>'
-        +'</div>'
-        +'<p style="font-size:10px;color:#999;margin-top:20px;">Généré par TiMat - timat.app</p>'
-        +'<button onclick="window.print()" style="margin-top:10px;background:#3D6B50;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;">🖨️ Imprimer / PDF</button>'
-        +'</body></html>';
-      w.document.write(htmlAttest);
-      w.document.close();
-      setToast("Attestation générée ✓");
-    },1000);
+    const w=window.open("","_blank");
+    if(!w){setToast("Autorisez les pop-ups pour générer le document");return;}
+    const g=x=>x&&String(x).trim()?String(x).trim():"________________";
+    const today=new Date().toLocaleDateString("fr-FR");
+    const html='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Attestation France Travail - '+(enfant.prenom||'')+'</title>'
+      +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:36px auto;padding:20px;color:#222;font-size:13px}'
+      +'h1{font-size:15px;text-align:center;border:2px solid #000;padding:10px;margin-bottom:20px;text-transform:uppercase}'
+      +'h2{font-size:13px;background:#f0f0f0;padding:6px 8px;margin-top:18px;border-left:3px solid #2E4859}'
+      +'table{width:100%;border-collapse:collapse;margin:8px 0}td{padding:7px 10px;border:1px solid #ddd}td:first-child{width:46%;background:#fafafa;font-weight:600}'
+      +'.sig{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:40px}.sig-box{border-top:1px solid #000;padding-top:8px;font-size:12px}'
+      +'.note{font-size:11px;color:#555;background:#fff8f3;border:1px solid #ffd6b3;padding:10px;margin-top:18px;line-height:1.6}'
+      +'@media print{button{display:none}}</style></head><body>'
+      +'<h1>Attestation d\'employeur destinée à France Travail<br/><span style="font-size:11px;font-weight:400">(Articles R.1234-9 et suivants du Code du travail)</span></h1>'
+      +"<h2>L'employeur (particulier employeur)</h2>"
+      +'<table><tr><td>Nom et prénom</td><td>'+g(form.empNom)+'</td></tr>'
+      +'<tr><td>Adresse</td><td>'+g(form.empAdresse)+'</td></tr>'
+      +'<tr><td>Email</td><td>'+g(form.empEmail)+'</td></tr>'
+      +'<tr><td>N° Pajemploi</td><td>'+g(form.empPajemploi)+'</td></tr></table>'
+      +'<h2>La salariée</h2>'
+      +'<table><tr><td>Nom et prénom</td><td>'+g(form.salNom)+'</td></tr>'
+      +'<tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>'
+      +'<tr><td>N° d\'agrément</td><td>'+g(form.salAgrement)+'</td></tr>'
+      +'<tr><td>Enfant accueilli</td><td>'+g(form.enfantNom)+'</td></tr></table>'
+      +'<h2>Contrat de travail</h2>'
+      +"<table><tr><td>Date d'embauche</td><td>"+g(form.dateEmbauche)+"</td></tr>"
+      +'<tr><td>Date de fin du contrat</td><td>'+g(form.dateFin)+'</td></tr>'
+      +'<tr><td>Motif de la rupture</td><td>'+g(form.motif)+'</td></tr>'
+      +'<tr><td>Heures par semaine</td><td>'+g(form.heuresHebdo)+(form.heuresHebdo?' h':'')+'</td></tr>'
+      +'<tr><td>Dernier salaire mensuel</td><td>'+g(form.dernierSalaire)+(form.dernierSalaire?' €':'')+'</td></tr></table>'
+      +'<h2>Sommes versées à la rupture</h2>'
+      +'<table><tr><td>Salaire du dernier mois</td><td>'+g(form.salDernierMois)+(form.salDernierMois?' €':'')+'</td></tr>'
+      +'<tr><td>Indemnité compensatrice de congés payés</td><td>'+g(form.iccp)+(form.iccp?' €':'')+'</td></tr>'
+      +'<tr><td>Indemnité de préavis</td><td>'+g(form.indemPreavis)+(form.indemPreavis?' €':'')+'</td></tr></table>'
+      +'<p style="margin-top:18px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd">Je soussigné(e) certifie sur l\'honneur l\'exactitude des renseignements portés sur cette attestation.</p>'
+      +'<div class="sig"><div class="sig-box">Fait à ___________, le '+today+'<br/><br/><br/>Signature de l\'employeur</div>'
+      +'<div class="sig-box">Reçu le '+today+'<br/><br/><br/>Signature de la salariée</div></div>'
+      +'<div class="note"><b>Document indicatif.</b> L\'attestation officielle prise en compte par France Travail est en général <b>télétransmise via Pajemploi</b> (findecontrat-pajemploi.urssaf.fr) par le parent employeur — de nombreuses agences refusent les versions papier. Ce document sert de brouillon pré-rempli et de justificatif.</div>'
+      +'<button onclick="window.print()" style="margin-top:14px;background:#C76754;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimer / PDF</button>'
+      +'</body></html>';
+    w.document.write(html);w.document.close();setToast("Attestation générée ✓");
   };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="📋" title="Attestation Pôle Emploi" sub="Générée en 1 clic - obligatoire dans les 15 jours suivant la fin du contrat"/>
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+    <PageHeader icon="📋" title="Attestation France Travail" sub={role==="parent"?"À remplir par vous (employeur) à la fin du contrat":"Remplie par le parent employeur — lecture seule"}/>
+    {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
     </div>}
-    <div className="g2">
-      <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Fin de contrat - {enfant.prenom||"-"}</div>
-          <div style={{marginBottom:12}}><label className="lbl">Date de fin *</label>
-            <input type="date"className="inp"value={dateFin}onChange={e=>setDateFin(e.target.value)}/></div>
-          <div style={{marginBottom:16}}><label className="lbl">Motif</label>
-            <select className="sel"value={motif}onChange={e=>setMotif(e.target.value)}>
-              {motifs.map(m=><option key={m}>{m}</option>)}
-            </select></div>
-          <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={generer}disabled={gen||!dateFin}>
-            {gen?"⏳ Génération...":"📥 Générer l'attestation PDF"}
-          </button>
-        </div>
-        <div className="card"style={{padding:14,background:"var(--Rp)",border:"1px solid var(--R)"}}>
-          <div style={{fontWeight:700,fontSize:12,color:"var(--R)",marginBottom:6}}>⚠️ Obligation légale</div>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
-            L'attestation Pôle Emploi est obligatoire dès la fin du contrat. Sans ce document, l'asmat ne peut pas percevoir ses allocations chômage. Délai légal : 15 jours après la fin du contrat.
-          </div>
-        </div>
-      </div>
+    <div className="card"style={{padding:18,marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>👤 Employeur (parent)</div>
+      {inp("Nom et prénom","empNom")}{inp("Adresse","empAdresse")}{inp("Email","empEmail")}{inp("N° Pajemploi","empPajemploi")}
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}>👩 Salariée (assistante maternelle)</div>
+      {inp("Nom et prénom","salNom")}{inp("N° d'agrément","salAgrement")}{inp("Enfant accueilli","enfantNom")}
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}>📄 Contrat</div>
+      {inp("Date d'embauche","dateEmbauche","date")}{inp("Date de fin du contrat","dateFin","date")}
+      <div style={{marginBottom:10}}><label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>Motif de la rupture</label>
+        <select className="sel"disabled={ro}value={form.motif||"Fin de contrat"}onChange={e=>set("motif",e.target.value)}>{motifs.map(m=><option key={m}>{m}</option>)}</select></div>
+      {inp("Heures par semaine","heuresHebdo")}{inp("Dernier salaire mensuel (€)","dernierSalaire")}
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}>💶 Sommes versées à la rupture</div>
+      {inp("Salaire du dernier mois (€)","salDernierMois")}{inp("Indemnité congés payés (€)","iccp")}{inp("Indemnité de préavis (€)","indemPreavis")}
+    </div>
+    <button className={"btn "+(role==="parent"?"bT":"bG")}style={{width:"100%",marginBottom:14}}onClick={generer}>📥 {role==="parent"?"Générer l'attestation":"Voir / télécharger l'attestation"}</button>
+    <div className="card"style={{padding:14,background:"var(--Bp)"}}>
+      <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}>ℹ️ Important</div>
+      <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>L'attestation <b>officielle</b> prise en compte par France Travail est en général <b>télétransmise via Pajemploi</b> (espace du parent → fin de contrat). De nombreuses agences refusent le papier. Ce formulaire sert de <b>brouillon pré-rempli</b> et de justificatif ; c'est le <b>parent employeur</b> qui l'établit et le signe.</div>
     </div>
   </div>;
 }
