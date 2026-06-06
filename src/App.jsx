@@ -5078,6 +5078,32 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
     return mois.reverse();
   },[contrat.debut]);
 
+  // #5 - Suivi du / verse par mois (mensualisation de reference)
+  const suivi=useMemo(()=>{
+    const hMens=Math.round((contrat.heuresHebdo||0)*52/12);
+    const tx=contrat.tauxHoraire||0;
+    const joursSem=(contrat.jours&&contrat.jours.length)||5;
+    const joursMois=Math.round(joursSem*52/12);
+    const duMensuel=Math.round((hMens*tx+joursMois*(contrat.entretien||0))*100)/100;
+    if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0};
+    const lignes=moisDisponibles.map(m=>{
+      const verse=versements.filter(v=>(v.date||"").slice(0,7)===m.key).reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
+      const ecart=Math.round((duMensuel-verse)*100)/100;
+      const statut=verse<=0?"impaye":(ecart>1?"partiel":"paye");
+      return{...m,du:duMensuel,verse:Math.round(verse*100)/100,ecart,statut};
+    });
+    const totalDu=duMensuel*moisDisponibles.length;
+    const totalVerse=versements.reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
+    return{lignes,duMensuel,ecart:Math.round((totalDu-totalVerse)*100)/100};
+  },[contrat.heuresHebdo,contrat.tauxHoraire,contrat.entretien,contrat.jours,moisDisponibles,versements]);
+  const relancer=async(m)=>{
+    if(!enfant?.parent_id){setToast("Parent non lié à cet enfant");return;}
+    try{
+      await createNotification({userId:enfant.parent_id,type:"relance",titre:"Rappel : versement en attente pour "+m.label,page:"admin_finances",meta:{enfant_id:enfant.id,mois:m.key}});
+      setToast("Relance envoyée au parent ✓");
+    }catch(e){setToast("Erreur lors de la relance");}
+  };
+
   // Charger les versements de l'enfant selectionne
   const chargerVersements=async()=>{
     if(!enfant?.id||isDemo){setVersements([]);return;}
@@ -5196,6 +5222,24 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
             </div>
             {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"var(--c)":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
           </div>
+
+          {/* #5 - Suivi du / verse (cote assmat) */}
+          {role==="asmat"&&suivi.duMensuel>0&&<div className="card"style={{padding:16,marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,flexWrap:"wrap",gap:8}}>
+              <div style={{fontWeight:800,fontSize:14,color:"var(--b)"}}>📊 Suivi dû / versé</div>
+              <div style={{fontSize:12,fontWeight:700,color:suivi.ecart>1?"#C84B31":"#5DA9A1"}}>{suivi.ecart>1?("Reste dû : "+fmtEur(suivi.ecart)):"À jour ✓"}</div>
+            </div>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:12,lineHeight:1.5}}>Mensualisation de référence : {fmtEur(suivi.duMensuel)}/mois (heures lissées × taux net + entretien estimé). Rapproché par mois de versement — hors heures complémentaires et régularisations.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {suivi.lignes.map(m=><div key={m.key}style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"8px 10px",borderRadius:8,background:m.statut==="impaye"?"#FDECEC":m.statut==="partiel"?"#FFF6E9":"var(--c)"}}>
+                <div style={{minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{m.statut==="paye"?"✅":m.statut==="partiel"?"🟠":"🔴"} {m.label}</div>
+                  <div style={{fontSize:11,color:"var(--m)"}}>Dû {fmtEur(m.du)} · Versé {fmtEur(m.verse)}{m.ecart>1?(" · reste "+fmtEur(m.ecart)):""}</div>
+                </div>
+                {m.statut!=="paye"&&<button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>Relancer</button>}
+              </div>)}
+            </div>
+          </div>}
 
           {/* Formulaire de saisie */}
           {role==="parent"&&showForm&&<div className="card"style={{padding:18,marginBottom:14}}>
