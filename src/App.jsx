@@ -5103,6 +5103,12 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
       setToast("Relance envoyée au parent ✓");
     }catch(e){setToast("Erreur lors de la relance");}
   };
+  const prefillVersement=(m)=>{
+    setFPeriode(m.label);
+    setFMontant(String(m.ecart>1?m.ecart:m.du));
+    setFDate(todayStr);
+    setShowForm(true);
+  };
 
   // Charger les versements de l'enfant selectionne
   const chargerVersements=async()=>{
@@ -5223,11 +5229,11 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
             {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"var(--c)":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
           </div>
 
-          {/* #5 - Suivi du / verse (cote assmat) */}
-          {role==="asmat"&&suivi.duMensuel>0&&<div className="card"style={{padding:16,marginBottom:14}}>
+          {/* #5 - Suivi du / verse (assmat: relance ; parent: enregistrer) */}
+          {suivi.duMensuel>0&&<div className="card"style={{padding:16,marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,flexWrap:"wrap",gap:8}}>
-              <div style={{fontWeight:800,fontSize:14,color:"var(--b)"}}>📊 Suivi dû / versé</div>
-              <div style={{fontSize:12,fontWeight:700,color:suivi.ecart>1?"#C84B31":"#5DA9A1"}}>{suivi.ecart>1?("Reste dû : "+fmtEur(suivi.ecart)):"À jour ✓"}</div>
+              <div style={{fontWeight:800,fontSize:14,color:"var(--b)"}}>{role==="parent"?"📊 Suivi de mes versements":"📊 Suivi dû / versé"}</div>
+              <div style={{fontSize:12,fontWeight:700,color:suivi.ecart>1?"#C84B31":"#5DA9A1"}}>{suivi.ecart>1?((role==="parent"?"Reste à verser : ":"Reste dû : ")+fmtEur(suivi.ecart)):"À jour ✓"}</div>
             </div>
             <div style={{fontSize:11,color:"var(--l)",marginBottom:12,lineHeight:1.5}}>Mensualisation de référence : {fmtEur(suivi.duMensuel)}/mois (heures lissées × taux net + entretien estimé). Rapproché par mois de versement — hors heures complémentaires et régularisations.</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
@@ -5236,7 +5242,9 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                   <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{m.statut==="paye"?"✅":m.statut==="partiel"?"🟠":"🔴"} {m.label}</div>
                   <div style={{fontSize:11,color:"var(--m)"}}>Dû {fmtEur(m.du)} · Versé {fmtEur(m.verse)}{m.ecart>1?(" · reste "+fmtEur(m.ecart)):""}</div>
                 </div>
-                {m.statut!=="paye"&&<button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>Relancer</button>}
+                {m.statut!=="paye"&&(role==="parent"
+                  ? <button onClick={()=>prefillVersement(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>+ Enregistrer</button>
+                  : <button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>Relancer</button>)}
               </div>)}
             </div>
           </div>}
