@@ -4834,11 +4834,22 @@ function CourriersTypes({enfants,pEId,user}){
   const [selId,setSelId]=useState(null);
   const [filtreCat,setFiltreCat]=useState("Tous");
   const [toast,setToast]=useState("");
+  const [draft,setDraft]=useState("");
   const cats=["Tous","Contrat","Financier","Congés","Avenant","PMI"];
   const filtres=filtreCat==="Tous"?COURRIERS_DATA:COURRIERS_DATA.filter(c=>c.cat===filtreCat);
   const sel=COURRIERS_DATA.find(c=>c.id===selId);
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
-  const texte=sel?sel.contenu.replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]").replace(/\[Votre nom\]/g,(user?.prenom||D.asmat.prenom)+" "+(user?.nom||D.asmat.nom)):"";
+  const monNom=((user?.prenom||D.asmat.prenom)+" "+(user?.nom||D.asmat.nom)).trim();
+  // Remplit le modele choisi avec le contexte connu, recalcule a CHAQUE changement de modele
+  useEffect(()=>{
+    if(!sel){setDraft("");return;}
+    setDraft(sel.contenu
+      .replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]")
+      .replace(/\[Votre nom\]/g,monNom)
+      .replace(/\[Numéro agrément\]/g,user?.agrement||"[Numéro agrément]")
+      .replace(/\[Numéro\]/g,user?.agrement||"[Numéro]")
+      .replace(/\[Adresse\]/g,user?.adresse||"[Adresse]"));
+  },[selId]);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -4868,10 +4879,10 @@ function CourriersTypes({enfants,pEId,user}){
       </div>
       {sel?<div className="card"style={{padding:18}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>{sel.ic} {sel.titre}</div>
-        <textarea className="ta"defaultValue={texte}
+        <textarea className="ta"value={draft}onChange={e=>setDraft(e.target.value)}
           style={{width:"100%",minHeight:260,resize:"vertical",fontSize:13,lineHeight:1.7,marginBottom:12}}/>
         <div style={{display:"flex",gap:8}}>
-          <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(texte).catch(()=>{});setToast("Copié ✓");}}>📋 Copier</button>
+          <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(draft).catch(()=>{});setToast("Copié ✓");}}>📋 Copier</button>
           <button className="btn bT"style={{flex:1}}onClick={()=>setToast("PDF généré ✓")}>📥 PDF</button>
         </div>
       </div>
@@ -5286,6 +5297,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 
 function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
   const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?"facturation":"contrats"));
+  const [contratTab,setContratTab]=useState("contrats");
   const sousOnglets=role==="asmat"
     ?[
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
@@ -5294,7 +5306,6 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
       {id:"contrats_types",l:"Modeles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
-      {id:"solde_contrat",l:"Solde de tout compte",ic:"📋"},
     ]
     :[
       {id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"},
@@ -5348,15 +5359,20 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="contrats"&&<div>
-      <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
-      <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
-        <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"📋 Solde de tout compte"}].map(t=>
+          <button key={t.id}onClick={()=>setContratTab(t.id)}style={{padding:"6px 14px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:contratTab===t.id?"var(--T)":"transparent",color:contratTab===t.id?"#fff":"var(--m)",borderColor:contratTab===t.id?"var(--T)":"var(--br)"}}>{t.l}</button>)}
       </div>
+      {contratTab==="contrats"?<div>
+        <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
+        <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
+          <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
+        </div>
+      </div>:<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>}
-    {section==="solde_contrat"&&<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}/>}
   </div>;
 }
 
