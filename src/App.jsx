@@ -1,4 +1,4 @@
- wc -l ~/Downloads/App.jsimport { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // Hook générique : charge depuis Supabase, fallback local, sauvegarde auto
