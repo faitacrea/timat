@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+ wc -l ~/Downloads/App.jsimport { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 
 // Hook générique : charge depuis Supabase, fallback local, sauvegarde auto
@@ -4834,63 +4834,85 @@ function CourriersTypes({enfants,pEId,user}){
   const [selId,setSelId]=useState(null);
   const [filtreCat,setFiltreCat]=useState("Tous");
   const [toast,setToast]=useState("");
-  const [draft,setDraft]=useState("");
+  const [fields,setFields]=useState({});
   const cats=["Tous","Contrat","Financier","Congés","Avenant","PMI"];
   const filtres=filtreCat==="Tous"?COURRIERS_DATA:COURRIERS_DATA.filter(c=>c.cat===filtreCat);
   const sel=COURRIERS_DATA.find(c=>c.id===selId);
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
   const monNom=((user?.prenom||D.asmat.prenom)+" "+(user?.nom||D.asmat.nom)).trim();
-  // Remplit le modele choisi avec le contexte connu, recalcule a CHAQUE changement de modele
-  useEffect(()=>{
-    if(!sel){setDraft("");return;}
-    setDraft(sel.contenu
-      .replace(/\[Prénom\]/g,enfant?.prenom||"[Prénom]")
-      .replace(/\[Votre nom\]/g,monNom)
-      .replace(/\[Numéro agrément\]/g,user?.agrement||"[Numéro agrément]")
-      .replace(/\[Numéro\]/g,user?.agrement||"[Numéro]")
-      .replace(/\[Adresse\]/g,user?.adresse||"[Adresse]"));
+  // Valeurs injectees automatiquement depuis le contexte connu
+  const AUTO={"Prénom":enfant?.prenom||"","Votre nom":monNom,"Numéro agrément":user?.agrement||"","Numéro":user?.agrement||"","Adresse":user?.adresse||""};
+  // Champs a completer = crochets du modele non remplis automatiquement
+  const placeholders=useMemo(()=>{
+    if(!sel)return[];
+    const found=[...sel.contenu.matchAll(/\[([^\]]+)\]/g)].map(m=>m[1]);
+    return [...new Set(found)].filter(p=>!AUTO[p]);
   },[selId]);
+  useEffect(()=>{setFields({});},[selId]);
+  const buildText=()=>{
+    if(!sel)return"";
+    let t=sel.contenu;
+    Object.entries(AUTO).forEach(([k,v])=>{if(v)t=t.split("["+k+"]").join(v);});
+    placeholders.forEach(p=>{const v=fields[p];if(v&&v.trim())t=t.split("["+p+"]").join(v.trim());});
+    return t;
+  };
+  const texte=buildText();
+  const reste=placeholders.filter(p=>!(fields[p]&&fields[p].trim())).length;
+  const genPDF=()=>{
+    if(!sel)return;
+    const w=window.open("","_blank");
+    if(!w){setToast("Autorisez les pop-ups pour le PDF");return;}
+    const corps=texte.split("\n").map(l=>l.trim()?("<p>"+l.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>"):"<br/>").join("");
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${sel.titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
+    w.document.close();setToast("PDF généré ✓");
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="✉️" title="Courriers types"
-      sub="Modèles prêts à personnaliser - conformes à la convention collective"/>
-    <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
-      {cats.map(c=><button key={c}onClick={()=>{setFiltreCat(c);setSelId(null);}}style={{
-        padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-        background:filtreCat===c?"var(--b)":"transparent",color:filtreCat===c?"#fff":"var(--m)",
-        borderColor:filtreCat===c?"var(--b)":"var(--br)"}}>{c}</button>)}
-    </div>
-    <div className="g2">
+    <PageHeader icon="✉️" title="Courriers types" sub="Modèles prêts à personnaliser — conformes à la convention collective"/>
+    {!sel?<>
+      <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+        {cats.map(c=><button key={c}onClick={()=>setFiltreCat(c)}style={{padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:filtreCat===c?"var(--b)":"transparent",color:filtreCat===c?"#fff":"var(--m)",borderColor:filtreCat===c?"var(--b)":"var(--br)"}}>{c}</button>)}
+      </div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {filtres.map(c=><div key={c.id}className="card card-lift"
-          onClick={()=>setSelId(c.id===selId?null:c.id)}
-          style={{padding:14,cursor:"pointer",
-            borderLeft:(c.cat==="Financier"?"4px solid var(--R)":c.cat==="PMI"?"4px solid var(--B)":c.cat==="Congés"?"4px solid var(--G)":"4px solid var(--T)"),
-            boxShadow:selId===c.id?"var(--sh2)":"var(--sh)"}}>
-          <div style={{display:"flex",gap:10,alignItems:"center"}}>
-            <span style={{fontSize:18}}>{c.ic}</span>
-            <div>
-              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.titre}</div>
-              <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:9,marginTop:3}}>{c.cat}</span>
+        {filtres.map(c=><div key={c.id}className="card card-lift"onClick={()=>setSelId(c.id)}style={{padding:14,cursor:"pointer",borderLeft:(c.cat==="Financier"?"4px solid var(--R)":c.cat==="PMI"?"4px solid var(--B)":c.cat==="Congés"?"4px solid var(--G)":"4px solid var(--T)")}}>
+          <div style={{display:"flex",gap:10,alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",gap:10,alignItems:"center"}}>
+              <span style={{fontSize:18}}>{c.ic}</span>
+              <div>
+                <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.titre}</div>
+                <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:9,marginTop:3}}>{c.cat}</span>
+              </div>
             </div>
+            <span style={{color:"var(--l)",fontSize:18}}>›</span>
           </div>
         </div>)}
       </div>
-      {sel?<div className="card"style={{padding:18}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>{sel.ic} {sel.titre}</div>
-        <textarea className="ta"value={draft}onChange={e=>setDraft(e.target.value)}
-          style={{width:"100%",minHeight:260,resize:"vertical",fontSize:13,lineHeight:1.7,marginBottom:12}}/>
-        <div style={{display:"flex",gap:8}}>
-          <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(draft).catch(()=>{});setToast("Copié ✓");}}>📋 Copier</button>
-          <button className="btn bT"style={{flex:1}}onClick={()=>setToast("PDF généré ✓")}>📥 PDF</button>
-        </div>
+    </>:<>
+      <button onClick={()=>setSelId(null)}style={{background:"none",border:"none",cursor:"pointer",color:"var(--T)",fontWeight:700,fontSize:13,marginBottom:12,padding:0}}>← Retour aux modèles</button>
+      <div className="card"style={{padding:18,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{sel.ic} {sel.titre}</div>
+        <div style={{fontSize:11,color:"var(--l)"}}>{sel.cat} · contexte rempli automatiquement (nom, agrément, enfant)</div>
       </div>
-      :<div className="card"style={{padding:28,textAlign:"center",color:"var(--l)"}}>
-        <div style={{fontSize:36,marginBottom:8}}>✉️</div>
-        <div style={{fontSize:13}}>Sélectionnez un modèle pour le personnaliser</div>
+      {placeholders.length>0&&<div className="card"style={{padding:18,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>✏️ À compléter{reste>0&&<span style={{color:"var(--T)",fontSize:12,fontWeight:600}}> · {reste} restant{reste>1?"s":""}</span>}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {placeholders.map(p=><div key={p}>
+            <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{p}</label>
+            <input className="inp"value={fields[p]||""}onChange={e=>setFields(f=>({...f,[p]:e.target.value}))}placeholder={p}/>
+          </div>)}
+        </div>
       </div>}
-    </div>
+      <div className="card"style={{padding:18,marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>👁️ Aperçu</div>
+        <div style={{whiteSpace:"pre-wrap",fontSize:13,lineHeight:1.7,color:"var(--b)",background:"var(--c)",borderRadius:10,padding:14,maxHeight:340,overflowY:"auto"}}>{texte}</div>
+        {reste>0&&<div style={{fontSize:11,color:"var(--T)",marginTop:8}}>Les champs non remplis restent entre [crochets] dans le document.</div>}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(texte).catch(()=>{});setToast("Copié ✓");}}>📋 Copier le texte</button>
+        <button className="btn bT"style={{flex:1}}onClick={genPDF}>📥 Télécharger PDF</button>
+      </div>
+    </>}
   </div>;
 }
 
