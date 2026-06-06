@@ -9195,8 +9195,12 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
                 <div style={{fontSize:12,color:"var(--b)",fontWeight:n.lu?400:700,lineHeight:1.4}}>{n.txt}</div>
                 <div style={{fontSize:10,color:"var(--l)",marginTop:2}}>Aujourd'hui</div>
               </div>
-              {!n.lu&&<div style={{width:7,height:7,borderRadius:"50%",background:"var(--T)",flexShrink:0,marginTop:4}}/>}
+              <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,marginTop:2}}>
+                {!n.lu&&<div style={{width:7,height:7,borderRadius:"50%",background:"var(--T)"}}/>}
+                <button onClick={e=>{e.stopPropagation();setNotifs&&setNotifs(p=>p.filter(x=>x.id!==n.id));supabase.from("notifications").delete().eq("id",n.id).then(()=>{}).catch(()=>{});}}title="Supprimer"style={{background:"none",border:"none",cursor:"pointer",color:"var(--l)",fontSize:14,lineHeight:1,padding:2}}>✕</button>
+              </div>
             </div>)}
+            {notifs.filter(n=>!n.roles||n.roles.includes(role)).length>0&&<div onClick={()=>{const ids=notifs.map(x=>x.id);setNotifs&&setNotifs([]);supabase.from("notifications").delete().in("id",ids).then(()=>{}).catch(()=>{});}}style={{padding:"11px 16px",textAlign:"center",fontSize:12,fontWeight:700,color:"#C84B31",cursor:"pointer",borderTop:"1px solid var(--br)"}}>🗑️ Tout effacer</div>}
             {notifs.length===0&&<div style={{padding:16,fontSize:13,color:"var(--l)",textAlign:"center"}}>Aucune notification</div>}
           </div>}
         </div>
