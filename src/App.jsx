@@ -4245,6 +4245,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const netImposable=brut-totalCotSal*0.68;
   const netPaye=brut-totalCotSal;
   const coutEmployeur=brut+totalCotPat;
+  const netSocial=Math.round((brut-totalCotSal)*100)/100; // mention obligatoire (brut - cotisations salariales, hors indemnites)
+  const cpAcquis=2.5; // jours ouvrables acquis par mois travaille (CCN particuliers employeurs, 30j/an)
 
   // BULLETIN HISTORIQUE P14C - generer et stocker le bulletin (PDF + DB + email)
   const envoyerAuParent=async()=>{
@@ -4351,6 +4353,14 @@ function BulletinSalaire({enfants,role,pEId,user}){
       doc.text("Net imposable (abattement fiscal asmat)",MX+2,y+4);
       doc.text(netImposable.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
+      doc.setFillColor(232,240,247);doc.rect(MX,y,PW-2*MX,6,"F");
+      doc.setFont("helvetica","bold");doc.setTextColor(46,72,89);
+      doc.text("Montant net social",MX+2,y+4);
+      doc.text(netSocial.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      y+=7;
+      doc.setTextColor(...gris);doc.setFont("helvetica","normal");doc.setFontSize(7);
+      doc.text("Reference RSA / prime d activite (hors indemnites). Conges payes acquis ce mois : "+cpAcquis+" jours ouvrables.",MX+2,y+3);
+      y+=6;doc.setFontSize(8);
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");
       ligne("Indemnite entretien (non imposable)","","",entretien.toFixed(2)+" euros");
       doc.setFillColor(245,240,255);doc.rect(MX,y,PW-2*MX,6,"F");
@@ -4539,6 +4549,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
           ["NET À PAYER",netPaye.toFixed(2)+"€","var(--S)"],
           ["Net imposable (abattement fiscal assmat)",netImposable.toFixed(2)+"€","var(--B)"],
+          ["Montant net social",netSocial.toFixed(2)+"€","var(--B)"],
           ["Coût total pour l'employeur",(coutEmployeur+entretien).toFixed(2)+"€","var(--m)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
           borderBottom:"1px solid var(--br)",fontSize:l.includes("NET À")?14:12,fontWeight:l.includes("NET À")?700:400}}>
@@ -4547,7 +4558,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       </div>
 
       <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. Net imposable calculé avec abattement fiscal spécifique assmats (3× SMIC/jour/enfant). À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). Net imposable calculé avec abattement fiscal spécifique assmats. À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -4615,6 +4626,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
           "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Net imposable (abattement fiscal assmat)</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+netSocial.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Conges payes acquis ce mois</td><td class=\"right\">"+cpAcquis+" jours ouvrables</td></tr>",
           "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+(coutEmployeur+entretien).toFixed(2)+" euros</td></tr>",
           "</table>",
