@@ -4154,15 +4154,18 @@ function Documents({enfants,role,pEId,user}){
 
 //
 const TAUX_COTISATIONS={
-  "Maladie-maternité":{sal:0,pat:7},
-  "Retraite de base":{sal:6.9,pat:8.55},
+  "Maladie-maternité":{sal:0,pat:13},
+  "Vieillesse plafonnée":{sal:6.9,pat:8.55},
+  "Vieillesse déplafonnée":{sal:0.4,pat:2.11},
   "Retraite complémentaire ARRCO":{sal:3.15,pat:4.72},
+  "Contribution équilibre général (CEG)":{sal:0.86,pat:1.29},
   "Assurance chômage":{sal:0,pat:4.05},
-  "Formation professionnelle":{sal:0,pat:0.5},
+  "Allocations familiales":{sal:0,pat:5.25},
   "Accidents du travail":{sal:0,pat:1.5},
-  "Allocations familiales":{sal:0,pat:3.45},
-  "CSG déductible":{sal:6.8,pat:0},
-  "CSG/CRDS non déductible":{sal:2.9,pat:0},
+  "Formation professionnelle":{sal:0,pat:0.5},
+  "CSG déductible":{sal:6.8,pat:0,base:0.9825},
+  "CSG non déductible":{sal:2.4,pat:0,base:0.9825},
+  "CRDS":{sal:0.5,pat:0,base:0.9825},
 };
 
 function BulletinSalaire({enfants,role,pEId,user}){
@@ -4240,8 +4243,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const brut=salBase+salSupp;
   const joursTravailles=useRealHours?heuresMoisReel.jours:Math.round(h.real/8);
   const entretien=(contrat.entretien||3.80)*joursTravailles;
-  const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*t.sal/100:0),0);
-  const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*t.pat/100:0),0);
+  const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*(t.base||1)*t.sal/100:0),0);
+  const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*(t.base||1)*t.pat/100:0),0);
   const netImposable=brut-totalCotSal*0.68;
   const netPaye=brut-totalCotSal;
   const coutEmployeur=brut+totalCotPat;
@@ -4322,8 +4325,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
       section("COTISATIONS SOCIALES");
       Object.entries(TAUX_COTISATIONS).forEach(([nom,t])=>{
         if(t.sal>0||t.pat>0){
-          const cs=brut*t.sal/100;
-          const cp=brut*t.pat/100;
+          const cs=brut*(t.base||1)*t.sal/100;
+          const cp=brut*(t.base||1)*t.pat/100;
           ligne(nom,t.sal>0?"-"+cs.toFixed(2):"",t.pat>0?cp.toFixed(2):"","");
         }
       });
@@ -4335,6 +4338,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
       doc.setTextColor(...noir);
       doc.text(totalCotPat.toFixed(2)+" euros",MX+130,y+5);
       y+=10;
+      doc.setFont("helvetica","italic");doc.setFontSize(7);doc.setTextColor(...gris);
+      doc.text("\" - \" = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.",MX+2,y);
+      y+=5;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...noir);
       // Section : Recap net
       if(y>240){doc.addPage();y=15;}
       section("RECAPITULATIF NET");
@@ -4534,13 +4540,14 @@ function BulletinSalaire({enfants,role,pEId,user}){
           {["Libellé","Salarié","Employeur"].map(h2=><div key={h2}style={{fontWeight:700,color:"var(--l)",padding:"3px 0",borderBottom:"1px solid var(--br)"}}>{h2}</div>)}
           {Object.entries(TAUX_COTISATIONS).flatMap(([nom,t])=>[
             <div key={nom+"l"}style={{fontSize:10,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
-            <div key={nom+"s"}style={{fontSize:10,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?(brut*t.sal/100).toFixed(2)+"€":"-"}</div>,
-            <div key={nom+"p"}style={{fontSize:10,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?(brut*t.pat/100).toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"s"}style={{fontSize:10,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?(brut*(t.base||1)*t.sal/100).toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"p"}style={{fontSize:10,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?(brut*(t.base||1)*t.pat/100).toFixed(2)+"€":"-"}</div>,
           ])}
           <div style={{fontWeight:700,fontSize:11,padding:"4px 0",borderTop:"1px solid var(--b)"}}>TOTAL</div>
           <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotSal.toFixed(2)}€</div>
           <div style={{fontWeight:700,fontSize:11,textAlign:"right",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotPat.toFixed(2)}€</div>
         </div>
+        <div style={{fontSize:9,color:"var(--l)",marginTop:4,fontStyle:"italic"}}>« - » = pas de cotisation sur cette part. CSG/CRDS calculées sur 98,25 % du brut.</div>
       </div>
 
       {/* Net */}
@@ -4568,8 +4575,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
         const cotisDetails=Object.entries(TAUX_COTISATIONS).map(function(entry){
           var nom=entry[0],t=entry[1];
           return "<tr><td>"+nom+"</td>"
-            +"<td class=\"right\">"+(t.sal>0?(brut*t.sal/100).toFixed(2)+"€":"-")+"</td>"
-            +"<td class=\"right\">"+(t.pat>0?(brut*t.pat/100).toFixed(2)+"€":"-")+"</td></tr>";
+            +"<td class=\"right\">"+(t.sal>0?(brut*(t.base||1)*t.sal/100).toFixed(2)+"€":"-")+"</td>"
+            +"<td class=\"right\">"+(t.pat>0?(brut*(t.base||1)*t.pat/100).toFixed(2)+"€":"-")+"</td></tr>";
         }).join("");
         var hSuppRow=hSupp>0?"<tr><td>Heures compl. (maj. 25%)</td><td class=\"right\">"+hSupp+" h</td><td class=\"right\">"+(tauxH*1.25).toFixed(4)+" €/h</td><td class=\"right\">"+salSupp.toFixed(2)+" €</td></tr>":"";
         var htmlParts=[
@@ -4620,6 +4627,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           cotisDetails,
           "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+totalCotSal.toFixed(2)+" euros</td><td class=\"right\">"+totalCotPat.toFixed(2)+" euros</td></tr>",
           "</table>",
+          "<div style=\"font-size:10px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.</div>",
           "<div class=\"st\">RECAPITULATIF NET</div>",
           "<table>",
           "<tr><td>Salaire brut</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
