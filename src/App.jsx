@@ -4247,11 +4247,17 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const entretien=(contrat.entretien||3.80)*joursTravailles;
   const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*(t.base||1)*t.sal/100:0),0);
   const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*(t.base||1)*t.pat/100:0),0);
-  const netImposable=brut-totalCotSal*0.68;
   const netPaye=brut-totalCotSal;
+  const netImposable=Math.round((netPaye+brut*0.9825*0.029)*100)/100; // net fiscal = brut - cotisations deductibles (CSG ND + CRDS non deductibles, reintegrees)
   const coutEmployeur=brut+totalCotPat;
   const netSocial=Math.round((brut-totalCotSal)*100)/100; // mention obligatoire (brut - cotisations salariales, hors indemnites)
   const cpAcquis=2.5; // jours ouvrables acquis par mois travaille (CCN particuliers employeurs, 30j/an)
+  // Regime fiscal special assmat (CGI art. 80 sexies) : abattement 3 x SMIC horaire / jour / enfant (>=8h, sinon prorata)
+  const SMIC_H=11.88;
+  const heuresJour=(contrat.heuresHebdo||0)/(((contrat.jours&&contrat.jours.length))||5);
+  const abattementJour=heuresJour>=8?3*SMIC_H:(3*SMIC_H/8)*heuresJour;
+  const abattementMois=Math.round(abattementJour*joursTravailles*100)/100;
+  const netImpApresAbattement=Math.max(0,Math.round((netImposable+entretien-abattementMois)*100)/100);
 
   // BULLETIN HISTORIQUE P14C - generer et stocker le bulletin (PDF + DB + email)
   const envoyerAuParent=async()=>{
@@ -4358,8 +4364,15 @@ function BulletinSalaire({enfants,role,pEId,user}){
       doc.setTextColor(...noir);doc.setFontSize(8);
       doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
-      doc.text("Net imposable (abattement fiscal asmat)",MX+2,y+4);
+      doc.text("Net imposable",MX+2,y+4);
       doc.text(netImposable.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      y+=7;
+      doc.setTextColor(...noir);doc.setFont("helvetica","normal");doc.setFontSize(8);
+      ligne("Abattement regime special assmat (3 x SMIC x "+joursTravailles+" j)","","","- "+abattementMois.toFixed(2)+" euros");
+      doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
+      doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
+      doc.text("Net imposable apres abattement",MX+2,y+4);
+      doc.text(netImpApresAbattement.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setFillColor(232,240,247);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(46,72,89);
@@ -4557,7 +4570,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
         {[["Salaire brut",brut.toFixed(2)+"€","var(--b)"],
           ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
           ["NET À PAYER",netPaye.toFixed(2)+"€","var(--S)"],
-          ["Net imposable (abattement fiscal assmat)",netImposable.toFixed(2)+"€","var(--B)"],
+          ["Net imposable",netImposable.toFixed(2)+"€","var(--B)"],
+          ["Abattement régime spécifique (3×SMIC × "+joursTravailles+" j)","- "+abattementMois.toFixed(2)+"€","var(--m)"],
+          ["Net imposable après abattement",netImpApresAbattement.toFixed(2)+"€","var(--B)"],
           ["Montant net social",netSocial.toFixed(2)+"€","var(--B)"],
           ["Coût total pour l'employeur",(coutEmployeur+entretien).toFixed(2)+"€","var(--m)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
@@ -4567,7 +4582,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       </div>
 
       <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). Net imposable calculé avec abattement fiscal spécifique assmats. À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = 3 × SMIC horaire (11,88 €) par jour d'accueil ≥ 8 h, soit 35,64 €/j ; il couvre les frais et absorbe les indemnités (option à la déclaration). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -4635,7 +4650,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr><td>Salaire brut</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
           "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
           "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Net imposable (abattement fiscal assmat)</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Abattement regime special assmat (3 x SMIC x "+joursTravailles+" j)</td><td class=\"right\">- "+abattementMois.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+netImpApresAbattement.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+netSocial.toFixed(2)+" euros</td></tr>",
           "<tr><td>Conges payes acquis ce mois</td><td class=\"right\">"+cpAcquis+" jours ouvrables</td></tr>",
           "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
