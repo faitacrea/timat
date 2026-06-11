@@ -444,22 +444,46 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
   {sub&&<div style={{fontSize:12,color:"var(--l)"}}>{sub}</div>}</div>{action}</div>}
 
 // ECHEANCIER DECLARATION PAJEMPLOI - rappel mensuel par enfant (depuis janvier 2026 : declaration mensuelle obligatoire, une par enfant, avant le 5 du mois suivant)
-function EcheancierDeclaration({enfants,role}){
-  const list=(enfants||[]).filter(Boolean);
-  if(!list.length)return null;
+// Fenetres : parent visible du 25 au 5 (preparation + fenetre) ; assmat visible du 1er au 5 seulement.
+// Statut "declare ce mois" persiste dans declarations_pajemploi (unique enfant_id+mois). Le parent coche, l'assmat voit la pastille verte (lecture seule).
+function EcheancierDeclaration({enfants,role,user,demo}){
+  const [declared,setDeclared]=useState({}); // {enfantId:true}
+  const [busy,setBusy]=useState(null);
   const noms=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const now=new Date();
   const j=now.getDate();
-  const fenetreOuverte=j<=5; // fenetre de declaration du mois precedent : 1er au 5 du mois courant
-  let moisDecl,echeanceLabel,joursRestants,ouvreLabel;
+  const fenetreOuverte=j<=5;        // 1er au 5 : declaration du mois precedent
+  const enPreparation=j>=25;        // 25 a fin de mois : preparation (declarable le mois prochain)
+  const visible=role==="parent"?(fenetreOuverte||enPreparation):fenetreOuverte;
+  const list=(enfants||[]).filter(Boolean);
+  // Mois de salaire concerne (cle YYYY-MM) : mois precedent si fenetre ouverte, mois courant si preparation
+  const salaryDate=fenetreOuverte?new Date(now.getFullYear(),now.getMonth()-1,1):new Date(now.getFullYear(),now.getMonth(),1);
+  const moisKey=salaryDate.getFullYear()+"-"+String(salaryDate.getMonth()+1).padStart(2,"0");
+  const moisLabel=noms[salaryDate.getMonth()]+" "+salaryDate.getFullYear();
+  const idsKey=list.map(e=>e.id).join(",");
+
+  useEffect(()=>{
+    if(!visible||demo||!list.length)return;
+    let cancelled=false;
+    (async()=>{
+      const{data,error}=await supabase.from("declarations_pajemploi").select("enfant_id").eq("mois",moisKey).in("enfant_id",list.map(e=>e.id));
+      if(cancelled||error)return;
+      const map={};(data||[]).forEach(r=>{map[r.enfant_id]=true;});
+      setDeclared(map);
+    })();
+    return()=>{cancelled=true;};
+  },[visible,demo,moisKey,idsKey]);
+
+  if(!visible||!list.length)return null;
+
+  const allDeclared=list.every(e=>declared[e.id]);
+  if(role==="parent"&&allDeclared)return null; // tout declare -> on masque cote parent
+
+  let echeanceLabel,joursRestants,ouvreLabel;
   if(fenetreOuverte){
-    const d=new Date(now.getFullYear(),now.getMonth()-1,1);
-    moisDecl=noms[d.getMonth()]+" "+d.getFullYear();
     echeanceLabel="avant le 5 "+noms[now.getMonth()]+" "+now.getFullYear();
     joursRestants=5-j;
   }else{
-    const dCur=new Date(now.getFullYear(),now.getMonth(),1); // salaire du mois courant, declarable le mois prochain
-    moisDecl=noms[dCur.getMonth()]+" "+dCur.getFullYear();
     const nm=new Date(now.getFullYear(),now.getMonth()+1,1);
     ouvreLabel="ouvre le 1er "+noms[nm.getMonth()]+" "+nm.getFullYear();
     echeanceLabel="avant le 5 "+noms[nm.getMonth()]+" "+nm.getFullYear();
@@ -467,21 +491,46 @@ function EcheancierDeclaration({enfants,role}){
   const urgent=fenetreOuverte&&joursRestants<=2;
   const accent=urgent?"var(--R)":"var(--b)";
   const bg=urgent?"#FBEAE6":"var(--c)";
+
+  const toggleDeclare=async(enfantId)=>{
+    if(demo||role!=="parent"||!user?.id)return;
+    setBusy(enfantId);
+    try{
+      if(declared[enfantId]){
+        await supabase.from("declarations_pajemploi").delete().eq("enfant_id",enfantId).eq("mois",moisKey);
+        setDeclared(d=>{const n={...d};delete n[enfantId];return n;});
+      }else{
+        await supabase.from("declarations_pajemploi").upsert({parent_id:user.id,enfant_id:enfantId,mois:moisKey},{onConflict:"enfant_id,mois"});
+        setDeclared(d=>({...d,[enfantId]:true}));
+      }
+    }catch(e){/* silencieux */}
+    setBusy(null);
+  };
+
   return <div className="card" style={{padding:"14px 16px",marginBottom:14,border:"1.5px solid "+accent,background:bg}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}}>
-      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisDecl}</div>
+      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisLabel}</div>
       {fenetreOuverte
         ?<span style={{fontSize:12,fontWeight:700,color:accent,background:"#fff",border:"1px solid "+accent,borderRadius:20,padding:"3px 10px"}}>{joursRestants===0?"dernier jour !":joursRestants+" jour"+(joursRestants>1?"s":"")+" restant"+(joursRestants>1?"s":"")}</span>
         :<span style={{fontSize:11,color:"var(--l)",fontStyle:"italic"}}>{ouvreLabel}</span>}
     </div>
     <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:8}}>
       {role==="parent"
-        ?<>En tant qu'employeur, déclarez le salaire net versé <b>{echeanceLabel}</b> sur Pajemploi.</>
+        ?<>En tant qu'employeur, déclarez le salaire net versé <b>{echeanceLabel}</b> sur Pajemploi, puis cochez chaque enfant ci-dessous.</>
         :<>Le parent employeur doit déclarer le salaire net <b>{echeanceLabel}</b> sur Pajemploi.</>}
       {" "}Depuis janvier 2026, la déclaration est mensuelle et obligatoire, <b>une par enfant</b>.
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
-      {list.map(e=><span key={e.id} style={{fontSize:11,background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:"3px 9px",color:"var(--m)"}}>👶 {e.prenom||"Enfant"} · 1 déclaration</span>)}
+      {list.map(e=>{
+        const ok=!!declared[e.id];
+        const label=ok?("✓ "+(e.prenom||"Enfant")+" · déclaré"):((e.prenom||"Enfant")+" · à déclarer");
+        const base={fontSize:11,borderRadius:14,padding:"4px 10px",display:"inline-flex",alignItems:"center",gap:4,opacity:busy===e.id?0.5:1};
+        const okStyle={...base,background:"var(--Sp)",border:"1px solid var(--S)",color:"var(--S)",fontWeight:700};
+        const todoStyle={...base,background:"#fff",border:"1px solid var(--br)",color:"var(--m)"};
+        if(role==="parent")
+          return <button key={e.id} onClick={()=>toggleDeclare(e.id)} disabled={busy===e.id} style={{...(ok?okStyle:todoStyle),cursor:"pointer"}} title={ok?"Annuler":"Marquer comme déclaré"}>👶 {label}</button>;
+        return <span key={e.id} style={ok?okStyle:todoStyle}>👶 {label}</span>;
+      })}
     </div>
     <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
       <a href="https://www.pajemploi.urssaf.fr" target="_blank" rel="noopener noreferrer" className="btn bT" style={{fontSize:12,padding:"7px 14px",textDecoration:"none",display:"inline-block"}}>Ouvrir Pajemploi ↗</a>
@@ -621,7 +670,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     </div>
 
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
-    <EcheancierDeclaration enfants={enfants} role="asmat"/>
+    <EcheancierDeclaration enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
     {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"12px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D6EBD9)",border:"1.5px solid var(--S)"}}>
@@ -855,7 +904,7 @@ function AccueilParent({enfant,setPage,user}){
     </div>
 
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
-    <EcheancierDeclaration enfants={[enfant]} role="parent"/>
+    <EcheancierDeclaration enfants={[enfant]} role="parent" user={user} demo={user?.id?.startsWith?.("demo-")||user?.isDemo||["e1","e2","e3"].includes(enfant?.id)}/>
 
     {/* Modale absence */}
     {showAbsence&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
