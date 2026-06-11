@@ -443,6 +443,53 @@ function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14
   <div><div className="pf"style={{fontSize:17,fontWeight:700,color:"var(--b)",marginBottom:2}}>{icon} {title}</div>
   {sub&&<div style={{fontSize:12,color:"var(--l)"}}>{sub}</div>}</div>{action}</div>}
 
+// ECHEANCIER DECLARATION PAJEMPLOI - rappel mensuel par enfant (depuis janvier 2026 : declaration mensuelle obligatoire, une par enfant, avant le 5 du mois suivant)
+function EcheancierDeclaration({enfants,role}){
+  const list=(enfants||[]).filter(Boolean);
+  if(!list.length)return null;
+  const noms=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const now=new Date();
+  const j=now.getDate();
+  const fenetreOuverte=j<=5; // fenetre de declaration du mois precedent : 1er au 5 du mois courant
+  let moisDecl,echeanceLabel,joursRestants,ouvreLabel;
+  if(fenetreOuverte){
+    const d=new Date(now.getFullYear(),now.getMonth()-1,1);
+    moisDecl=noms[d.getMonth()]+" "+d.getFullYear();
+    echeanceLabel="avant le 5 "+noms[now.getMonth()]+" "+now.getFullYear();
+    joursRestants=5-j;
+  }else{
+    const dCur=new Date(now.getFullYear(),now.getMonth(),1); // salaire du mois courant, declarable le mois prochain
+    moisDecl=noms[dCur.getMonth()]+" "+dCur.getFullYear();
+    const nm=new Date(now.getFullYear(),now.getMonth()+1,1);
+    ouvreLabel="ouvre le 1er "+noms[nm.getMonth()]+" "+nm.getFullYear();
+    echeanceLabel="avant le 5 "+noms[nm.getMonth()]+" "+nm.getFullYear();
+  }
+  const urgent=fenetreOuverte&&joursRestants<=2;
+  const accent=urgent?"var(--R)":"var(--b)";
+  const bg=urgent?"#FBEAE6":"var(--c)";
+  return <div className="card" style={{padding:"14px 16px",marginBottom:14,border:"1.5px solid "+accent,background:bg}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}}>
+      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisDecl}</div>
+      {fenetreOuverte
+        ?<span style={{fontSize:12,fontWeight:700,color:accent,background:"#fff",border:"1px solid "+accent,borderRadius:20,padding:"3px 10px"}}>{joursRestants===0?"dernier jour !":joursRestants+" jour"+(joursRestants>1?"s":"")+" restant"+(joursRestants>1?"s":"")}</span>
+        :<span style={{fontSize:11,color:"var(--l)",fontStyle:"italic"}}>{ouvreLabel}</span>}
+    </div>
+    <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:8}}>
+      {role==="parent"
+        ?<>En tant qu'employeur, déclarez le salaire net versé <b>{echeanceLabel}</b> sur Pajemploi.</>
+        :<>Le parent employeur doit déclarer le salaire net <b>{echeanceLabel}</b> sur Pajemploi.</>}
+      {" "}Depuis janvier 2026, la déclaration est mensuelle et obligatoire, <b>une par enfant</b>.
+    </div>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+      {list.map(e=><span key={e.id} style={{fontSize:11,background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:"3px 9px",color:"var(--m)"}}>👶 {e.prenom||"Enfant"} · 1 déclaration</span>)}
+    </div>
+    <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+      <a href="https://www.pajemploi.urssaf.fr" target="_blank" rel="noopener noreferrer" className="btn bT" style={{fontSize:12,padding:"7px 14px",textDecoration:"none",display:"inline-block"}}>Ouvrir Pajemploi ↗</a>
+      <span style={{fontSize:10.5,color:"var(--l)",fontStyle:"italic"}}>TiMat ne déclare pas à votre place (pas encore tiers-déclarant) : la déclaration officielle se fait sur Pajemploi.</span>
+    </div>
+  </div>;
+}
+
 //
 function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [showAjout,setShowAjout]=useState(false);
@@ -572,6 +619,9 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       </div>
       {user&&!demoStats&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
     </div>
+
+    {/* ECHEANCIER DECLARATION PAJEMPLOI */}
+    <EcheancierDeclaration enfants={enfants} role="asmat"/>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
     {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"12px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D6EBD9)",border:"1.5px solid var(--S)"}}>
@@ -803,6 +853,9 @@ function AccueilParent({enfant,setPage,user}){
         🤒 Déclarer une absence
       </button>
     </div>
+
+    {/* ECHEANCIER DECLARATION PAJEMPLOI */}
+    <EcheancierDeclaration enfants={[enfant]} role="parent"/>
 
     {/* Modale absence */}
     {showAbsence&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
@@ -4181,6 +4234,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const [heuresMoisReel,setHeuresMoisReel]=useState(null);
   const [bulletinsEnvoyes,setBulletinsEnvoyes]=useState({});
   const [envoyer,setEnvoyer]=useState(false);
+  // BULLETIN #9b - affinages : AEEH (abattement 4xSMIC) + indemnite repas optionnelle
+  const [aeeh,setAeeh]=useState(false);
+  const [repasJour,setRepasJour]=useState(0);
 
   // Générer les mois depuis le début de contrat jusqu'à aujourd'hui
   const moisDisponibles=useMemo(()=>{
@@ -4231,6 +4287,13 @@ function BulletinSalaire({enfants,role,pEId,user}){
     return()=>{cancelled=true;};
   },[contrat?.id,isDemoBull]);
 
+  // BULLETIN #9b - pre-remplir AEEH / indemnite repas depuis le contrat au changement d'enfant
+  useEffect(()=>{
+    const c=enfant?.contrat||{};
+    setAeeh(!!c.aeeh);
+    setRepasJour(Number(c.repas||c.indemniteRepas||0)||0);
+  },[selId]);
+
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
   // Si heures reelles disponibles : utiliser. Sinon : estimation contrat
   const useRealHours=heuresMoisReel&&heuresMoisReel.heures>0;
@@ -4252,12 +4315,15 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const coutEmployeur=brut+totalCotPat;
   const netSocial=Math.round((brut-totalCotSal)*100)/100; // mention obligatoire (brut - cotisations salariales, hors indemnites)
   const cpAcquis=2.5; // jours ouvrables acquis par mois travaille (CCN particuliers employeurs, 30j/an)
-  // Regime fiscal special assmat (CGI art. 80 sexies) : abattement 3 x SMIC horaire / jour / enfant (>=8h, sinon prorata)
+  // Regime fiscal special assmat (CGI art. 80 sexies) : abattement 3 x SMIC horaire / jour / enfant (>=8h, sinon prorata) ; 4 x SMIC si enfant handicape (AEEH)
   const SMIC_H=11.88;
+  const smicMult=aeeh?4:3;
   const heuresJour=(contrat.heuresHebdo||0)/(((contrat.jours&&contrat.jours.length))||5);
-  const abattementJour=heuresJour>=8?3*SMIC_H:(3*SMIC_H/8)*heuresJour;
+  const abattementJour=heuresJour>=8?smicMult*SMIC_H:(smicMult*SMIC_H/8)*heuresJour;
   const abattementMois=Math.round(abattementJour*joursTravailles*100)/100;
-  const netImpApresAbattement=Math.max(0,Math.round((netImposable+entretien-abattementMois)*100)/100);
+  // Indemnite de repas optionnelle (non soumise a cotisations, hors brut/net social/net imposable)
+  const repasMois=Math.round((Number(repasJour)||0)*joursTravailles*100)/100;
+  const netImpApresAbattement=Math.max(0,Math.round((netImposable+entretien+repasMois-abattementMois)*100)/100);
 
   // BULLETIN HISTORIQUE P14C - generer et stocker le bulletin (PDF + DB + email)
   const envoyerAuParent=async()=>{
@@ -4324,6 +4390,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       ligne("Salaire de base (heures normales)",heuresNorm+" h",tauxH.toFixed(4)+" euros/h",salBase.toFixed(2)+" euros");
       if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",(tauxH*1.25).toFixed(4)+" euros/h",salSupp.toFixed(2)+" euros");
       ligne("Indemnite d entretien",joursTravailles+" jours",(contrat.entretien||3.80).toFixed(2)+" euros/j",entretien.toFixed(2)+" euros");
+      if(repasMois>0)ligne("Indemnite de repas",joursTravailles+" jours",(Number(repasJour)||0).toFixed(2)+" euros/j",repasMois.toFixed(2)+" euros");
       doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
       doc.text("SALAIRE BRUT MENSUEL",MX+2,y+5);
@@ -4368,7 +4435,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       doc.text(netImposable.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");doc.setFontSize(8);
-      ligne("Abattement regime special assmat (3 x SMIC x "+joursTravailles+" j)","","","- "+abattementMois.toFixed(2)+" euros");
+      ligne("Abattement regime special assmat ("+smicMult+" x SMIC x "+joursTravailles+" j)","","","- "+abattementMois.toFixed(2)+" euros");
       doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
       doc.text("Net imposable apres abattement",MX+2,y+4);
@@ -4384,10 +4451,11 @@ function BulletinSalaire({enfants,role,pEId,user}){
       y+=6;doc.setFontSize(8);
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");
       ligne("Indemnite entretien (non imposable)","","",entretien.toFixed(2)+" euros");
+      if(repasMois>0)ligne("Indemnite repas (non imposable)","","",repasMois.toFixed(2)+" euros");
       doc.setFillColor(245,240,255);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");
       doc.text("Cout total employeur",MX+2,y+4);
-      doc.text((coutEmployeur+entretien).toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text((coutEmployeur+entretien+repasMois).toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=12;
       // Signature
       if(y>250){doc.addPage();y=15;}
@@ -4437,7 +4505,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         cotisations_salariales:Math.round(totalCotSal*100)/100,
         cotisations_patronales:Math.round(totalCotPat*100)/100,
         entretien:Math.round(entretien*100)/100,
-        cout_employeur:Math.round((coutEmployeur+entretien)*100)/100,
+        cout_employeur:Math.round((coutEmployeur+entretien+repasMois)*100)/100,
         pdf_storage_path:path,
         envoye_au_parent:true,
         date_envoi:new Date().toISOString(),
@@ -4512,6 +4580,18 @@ function BulletinSalaire({enfants,role,pEId,user}){
         :<span style={{marginLeft:8,fontSize:11,color:"var(--l)",fontStyle:"italic"}}>· basé sur le contrat (aucun pointage)</span>}
     </div>}
 
+    {/* BULLETIN #9b - reglages abattement : AEEH + indemnite repas */}
+    <div style={{display:"flex",gap:16,flexWrap:"wrap",alignItems:"center",marginBottom:12,fontSize:12,padding:"10px 14px",background:"var(--c)",borderRadius:8,border:"1px solid var(--br)"}}>
+      <label style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",color:"var(--m)"}}>
+        <input type="checkbox" checked={aeeh} onChange={e=>setAeeh(e.target.checked)} style={{cursor:"pointer"}}/>
+        Enfant handicapé (AEEH) — abattement 4×SMIC
+      </label>
+      <label style={{display:"flex",alignItems:"center",gap:7,color:"var(--m)"}}>
+        Indemnité repas (€/jour)
+        <input type="number" step="0.01" min="0" value={repasJour} onChange={e=>setRepasJour(e.target.value)} style={{width:74,padding:"4px 7px",borderRadius:6,border:"1px solid var(--br)",fontSize:12}}/>
+      </label>
+    </div>
+
     <div className="card"style={{padding:24,border:"2px solid var(--br)"}}>
       <div style={{borderBottom:"2px solid var(--b)",paddingBottom:14,marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
@@ -4538,6 +4618,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
           ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.80)+"€",entretien.toFixed(2)+"€"],
+          ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+(Number(repasJour)||0).toFixed(2)+"€",repasMois.toFixed(2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
           <span style={{color:"var(--b)",flex:2}}>{l}</span>
           <span style={{color:"var(--l)",flex:2,textAlign:"center"}}>{d}</span>
@@ -4571,10 +4652,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
           ["NET À PAYER",netPaye.toFixed(2)+"€","var(--S)"],
           ["Net imposable",netImposable.toFixed(2)+"€","var(--B)"],
-          ["Abattement régime spécifique (3×SMIC × "+joursTravailles+" j)","- "+abattementMois.toFixed(2)+"€","var(--m)"],
+          ["Abattement régime spécifique ("+smicMult+"×SMIC × "+joursTravailles+" j)","- "+abattementMois.toFixed(2)+"€","var(--m)"],
           ["Net imposable après abattement",netImpApresAbattement.toFixed(2)+"€","var(--B)"],
           ["Montant net social",netSocial.toFixed(2)+"€","var(--B)"],
-          ["Coût total pour l'employeur",(coutEmployeur+entretien).toFixed(2)+"€","var(--m)"],
+          ["Coût total pour l'employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+"€","var(--m)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
           borderBottom:"1px solid var(--br)",fontSize:l.includes("NET À")?14:12,fontWeight:l.includes("NET À")?700:400}}>
           <span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:700,color:c}}>{v}</span>
@@ -4582,7 +4663,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       </div>
 
       <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = 3 × SMIC horaire (11,88 €) par jour d'accueil ≥ 8 h, soit 35,64 €/j ; il couvre les frais et absorbe les indemnités (option à la déclaration). À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {smicMult} × SMIC horaire (11,88 €) par jour d'accueil ≥ 8 h, soit {(smicMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -4637,6 +4718,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+tauxH.toFixed(4)+" euros/h</td><td class=\"right\">"+salBase.toFixed(2)+" euros</td></tr>",
           hSuppRow,
           "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+(contrat.entretien||3.80).toFixed(2)+" euros/j</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
+          (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+(Number(repasJour)||0).toFixed(2)+" euros/j</td><td class=\"right\">"+repasMois.toFixed(2)+" euros</td></tr>":""),
           "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
           "</table>",
           "<div class=\"st\">COTISATIONS SOCIALES</div>",
@@ -4651,12 +4733,13 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
           "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
-          "<tr><td>Abattement regime special assmat (3 x SMIC x "+joursTravailles+" j)</td><td class=\"right\">- "+abattementMois.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Abattement regime special assmat ("+smicMult+" x SMIC x "+joursTravailles+" j)</td><td class=\"right\">- "+abattementMois.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+netImpApresAbattement.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+netSocial.toFixed(2)+" euros</td></tr>",
           "<tr><td>Conges payes acquis ce mois</td><td class=\"right\">"+cpAcquis+" jours ouvrables</td></tr>",
           "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
-          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+(coutEmployeur+entretien).toFixed(2)+" euros</td></tr>",
+          (repasMois>0?"<tr><td>Indemnite repas (non imposable)</td><td class=\"right\">"+repasMois.toFixed(2)+" euros</td></tr>":""),
+          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+(coutEmployeur+entretien+repasMois).toFixed(2)+" euros</td></tr>",
           "</table>",
           "<div class=\"sz\">",
           "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
