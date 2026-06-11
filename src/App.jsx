@@ -4590,6 +4590,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
         Indemnité repas (€/jour)
         <input type="number" step="0.01" min="0" value={repasJour} onChange={e=>setRepasJour(e.target.value)} style={{width:74,padding:"4px 7px",borderRadius:6,border:"1px solid var(--br)",fontSize:12}}/>
       </label>
+      {!isDemoBull&&contrat?.id&&<button className="btn bG" style={{fontSize:11,padding:"6px 12px"}} onClick={async()=>{
+        const{error}=await supabase.from("contrats").update({aeeh:!!aeeh,repas:Number(repasJour)||0}).eq("id",contrat.id);
+        setToast(error?("Erreur : "+error.message):"Réglages enregistrés dans le contrat ✓");
+      }}>💾 Enregistrer dans le contrat</button>}
     </div>
 
     <div className="card"style={{padding:24,border:"2px solid var(--br)"}}>
@@ -11152,6 +11156,8 @@ function OnboardingWizard({user,onFinish}){
         entretien:contrat.entretien||3.80,
         jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
         horaires:contrat.horaires||'07h30–17h30',
+        aeeh:!!contrat.aeeh,
+        repas:Number(contrat.repas)||0,
         actif:true,
       }));
 
@@ -11218,6 +11224,14 @@ function OnboardingWizard({user,onFinish}){
                 <input type="number"step="0.05"className="inp"value={contrat.entretien}onChange={e=>setContrat(c=>({...c,entretien:parseFloat(e.target.value)||3.80}))}/></div>
               <div><label className="lbl">Date de début</label>
                 <input type="date"className="inp"value={contrat.debut}onChange={e=>setContrat(c=>({...c,debut:e.target.value}))}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12,alignItems:"end"}}>
+              <div><label className="lbl">Indemnité repas (€/j, optionnel)</label>
+                <input type="number"step="0.05"min="0"className="inp"value={contrat.repas||0}onChange={e=>setContrat(c=>({...c,repas:parseFloat(e.target.value)||0}))}/></div>
+              <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--m)",cursor:"pointer",paddingBottom:10}}>
+                <input type="checkbox"checked={!!contrat.aeeh}onChange={e=>setContrat(c=>({...c,aeeh:e.target.checked}))}/>
+                Enfant handicapé (AEEH) — abattement 4×SMIC
+              </label>
             </div>
             <div style={{marginBottom:14}}><label className="lbl">Jours d'accueil</label>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -11368,6 +11382,8 @@ function AjouterEnfantModale({user,onClose}){
         entretien:Number(contrat.entretien)||3.80,
         jours:contrat.jours,
         horaires:contrat.horaires||"07h30–17h30",
+        aeeh:!!contrat.aeeh,
+        repas:Number(contrat.repas)||0,
         actif:true,
       });
       if(errContrat){
@@ -11507,6 +11523,17 @@ function AjouterEnfantModale({user,onClose}){
               <input className="inp" placeholder="07h30-17h30" value={contrat.horaires}
                 onChange={e=>setContrat(c=>({...c,horaires:e.target.value}))}/>
             </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14,alignItems:"end"}}>
+            <div>
+              <label className="lbl">Indemnite repas (€/jour, optionnel)</label>
+              <input type="number" className="inp" step="0.01" min="0" value={contrat.repas||0}
+                onChange={e=>setContrat(c=>({...c,repas:e.target.value}))}/>
+            </div>
+            <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--m)",cursor:"pointer",paddingBottom:10}}>
+              <input type="checkbox" checked={!!contrat.aeeh} onChange={e=>setContrat(c=>({...c,aeeh:e.target.checked}))}/>
+              Enfant handicapé (AEEH) — 4×SMIC
+            </label>
           </div>
           <div style={{marginBottom:18}}>
             <label className="lbl">Jours d'accueil *</label>
@@ -14656,6 +14683,8 @@ export default function App(){
                 heuresHebdo:ct.heures_hebdo,
                 tauxHoraire:ct.taux_horaire,
                 entretien:ct.entretien,
+                aeeh:!!ct.aeeh,
+                repas:Number(ct.repas)||0,
                 jours:ct.jours||["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
                 horaires:ct.horaires||"07h30–17h30",
                 indemniteAbsence:0.5,
@@ -14706,11 +14735,32 @@ export default function App(){
         .select("*").eq("user_id",user.id)
         .order("created_at",{ascending:false}).limit(50);
       if(cancelled||error)return;
-      const ICONS={versement:"💶",pointage_a_valider:"⏱️",signature_asmat_signed:"✍️",signature_parent_signed:"✍️",bulletin_sent:"📜",message:"📬",info:"🔔"};
+      const ICONS={versement:"💶",pointage_a_valider:"⏱️",signature_asmat_signed:"✍️",signature_parent_signed:"✍️",bulletin_sent:"📜",message:"📬",declaration_rappel:"📅",info:"🔔"};
       setNotifs((data||[]).map(n=>({id:n.id,ic:ICONS[n.type]||"🔔",txt:n.titre,date:n.created_at,lu:!!n.lu,page:n.page||"accueil"})));
     })();
     return()=>{cancelled=true;};
   },[user?.id,dataRefreshKey]);
+
+  // RAPPEL DECLARATION PAJEMPLOI - notification in-app a l'ouverture de la fenetre (1er-5 du mois), 1 fois/mois, cote parent employeur
+  useEffect(()=>{
+    if(!user?.id||user.role!=="parent")return;
+    if(user?.id?.startsWith?.("demo-")||user?.isDemo)return;
+    if(!enfantsDB||enfantsDB.length===0)return;
+    const now=new Date();
+    if(now.getDate()>5)return; // fenetre de declaration fermee (1er au 5 du mois)
+    let cancelled=false;
+    (async()=>{
+      const debutMois=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+      const{data:exist,error}=await supabase.from("notifications").select("id")
+        .eq("user_id",user.id).eq("type","declaration_rappel").gte("created_at",debutMois).limit(1);
+      if(cancelled||error||(exist&&exist.length))return; // deja cree ce mois-ci
+      const noms=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+      const d=new Date(now.getFullYear(),now.getMonth()-1,1);
+      await createNotification({userId:user.id,type:"declaration_rappel",titre:"Déclaration Pajemploi de "+noms[d.getMonth()]+" "+d.getFullYear()+" à faire avant le 5 sur pajemploi.urssaf.fr",page:"accueil",meta:{kind:"declaration_rappel"}});
+      if(!cancelled)setDataRefreshKey(k=>k+1); // recharger la cloche
+    })();
+    return()=>{cancelled=true;};
+  },[user?.id,user?.role,enfantsDB.length]);
 
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
