@@ -450,11 +450,15 @@ function EcheancierDeclaration({enfants,role,user,demo}){
   const [declared,setDeclared]=useState({}); // {enfantId:true}
   const [busy,setBusy]=useState(null);
   const noms=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  // MODE APERCU : ?apercu=echeancier dans l'URL -> force l'affichage du bandeau hors fenetre (test visuel, sans ecriture Supabase)
+  const isPreview=(typeof window!=="undefined")&&new URLSearchParams(window.location.search).get("apercu")==="echeancier";
   const now=new Date();
   const j=now.getDate();
-  const fenetreOuverte=j<=5;        // 1er au 5 : declaration du mois precedent
+  const fenetreNaturelle=j<=5;      // 1er au 5 : declaration du mois precedent
   const enPreparation=j>=25;        // 25 a fin de mois : preparation (declarable le mois prochain)
-  const visible=role==="parent"?(fenetreOuverte||enPreparation):fenetreOuverte;
+  const fenetreOuverte=isPreview?true:fenetreNaturelle; // en apercu on simule la fenetre ouverte
+  const visibleNaturel=role==="parent"?(fenetreNaturelle||enPreparation):fenetreNaturelle;
+  const visible=isPreview?true:visibleNaturel;
   const list=(enfants||[]).filter(Boolean);
   // Mois de salaire concerne (cle YYYY-MM) : mois precedent si fenetre ouverte, mois courant si preparation
   const salaryDate=fenetreOuverte?new Date(now.getFullYear(),now.getMonth()-1,1):new Date(now.getFullYear(),now.getMonth(),1);
@@ -463,7 +467,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
   const idsKey=list.map(e=>e.id).join(",");
 
   useEffect(()=>{
-    if(!visible||demo||!list.length)return;
+    if(!visible||demo||isPreview||!list.length)return;
     let cancelled=false;
     (async()=>{
       const{data,error}=await supabase.from("declarations_pajemploi").select("enfant_id").eq("mois",moisKey).in("enfant_id",list.map(e=>e.id));
@@ -482,7 +486,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
   let echeanceLabel,joursRestants,ouvreLabel;
   if(fenetreOuverte){
     echeanceLabel="avant le 5 "+noms[now.getMonth()]+" "+now.getFullYear();
-    joursRestants=5-j;
+    joursRestants=fenetreNaturelle?(5-j):3; // en apercu hors fenetre : valeur representative
   }else{
     const nm=new Date(now.getFullYear(),now.getMonth()+1,1);
     ouvreLabel="ouvre le 1er "+noms[nm.getMonth()]+" "+nm.getFullYear();
@@ -493,7 +497,12 @@ function EcheancierDeclaration({enfants,role,user,demo}){
   const bg=urgent?"#FBEAE6":"var(--c)";
 
   const toggleDeclare=async(enfantId)=>{
-    if(demo||role!=="parent"||!user?.id)return;
+    if(role!=="parent")return;
+    if(isPreview){ // apercu : toggle purement local, aucune ecriture Supabase
+      setDeclared(d=>{const n={...d};if(n[enfantId])delete n[enfantId];else n[enfantId]=true;return n;});
+      return;
+    }
+    if(demo||!user?.id)return;
     setBusy(enfantId);
     try{
       if(declared[enfantId]){
@@ -509,7 +518,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
 
   return <div className="card" style={{padding:"14px 16px",marginBottom:14,border:"1.5px solid "+accent,background:bg}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}}>
-      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisLabel}</div>
+      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisLabel}{isPreview&&<span style={{marginLeft:8,fontSize:10,fontWeight:700,color:"#fff",background:"var(--T)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle"}}>APERÇU</span>}</div>
       {fenetreOuverte
         ?<span style={{fontSize:12,fontWeight:700,color:accent,background:"#fff",border:"1px solid "+accent,borderRadius:20,padding:"3px 10px"}}>{joursRestants===0?"dernier jour !":joursRestants+" jour"+(joursRestants>1?"s":"")+" restant"+(joursRestants>1?"s":"")}</span>
         :<span style={{fontSize:11,color:"var(--l)",fontStyle:"italic"}}>{ouvreLabel}</span>}
