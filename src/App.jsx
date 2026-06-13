@@ -549,6 +549,101 @@ function EcheancierDeclaration({enfants,role,user,demo}){
 }
 
 //
+function PointageQRJour({enfants,demo}){
+  const [open,setOpen]=useState(true);
+  const list=(enfants||[]).filter(Boolean);
+  if(demo||!list.length)return null;
+  const origin=(typeof window!=="undefined"&&window.location.origin)||"https://timat.app";
+  return <div className="card" style={{padding:"14px 16px",marginBottom:16,border:"1.5px solid var(--Bp)",background:"var(--c)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>setOpen(o=>!o)}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📱 Pointage QR du jour</div>
+      <span style={{fontSize:16,color:"var(--l)"}}>{open?"▾":"▸"}</span>
+    </div>
+    <div style={{fontSize:12,color:"var(--m)",marginTop:4,lineHeight:1.5}}>
+      Le parent flashe le QR de son enfant avec l'appareil photo : <b>1er scan = arrivée</b>, <b>2e scan = départ</b>. Le pointage s'enregistre sur les deux espaces. Imprimable une fois, réutilisable chaque jour.
+    </div>
+    {open&&<><div style={{display:"flex",gap:16,flexWrap:"wrap",marginTop:12,justifyContent:"center"}}>
+      {list.map(e=>{
+        const data=origin+"/?pointage=qr&enfant="+e.id;
+        return <div key={e.id} style={{textAlign:"center"}}>
+          <img alt={"QR "+(e.prenom||"")} src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="+encodeURIComponent(data)}
+            style={{width:130,height:130,borderRadius:12,border:"3px solid var(--br)",background:"#fff"}}/>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginTop:6}}>{e.emoji||"👶"} {e.prenom||"Enfant"}</div>
+        </div>;
+      })}
+    </div>
+    <div style={{textAlign:"center",marginTop:12}}>
+      <button className="btn bG" style={{fontSize:12}} onClick={()=>window.print()}>🖨️ Imprimer les QR</button>
+    </div></>}
+  </div>;
+}
+
+// POINTAGE RAPIDE - pointer arrivee/depart en 1 tap directement depuis l'espace (parent OU assmat),
+// via la meme RPC pointage_qr que le scan. Statut du jour en direct, sans chercher ni scanner.
+function PointageRapide({enfants,role,user,demo}){
+  const list=(enfants||[]).filter(Boolean);
+  const [status,setStatus]=useState({}); // {enfantId:{arrivee,depart}}
+  const [busy,setBusy]=useState(null);
+  const [toast,setToast]=useState("");
+  const ids=list.map(e=>e.id).join(",");
+  const hhmm=(t)=>{if(!t)return"";const s=String(t);return s.includes("T")?s.split("T")[1].slice(0,5):s.slice(0,5);};
+  const fetchStatus=async()=>{
+    if(demo||!user?.id||!list.length)return;
+    const{data,error}=await supabase.from("pointages").select("enfant_id,arrivee,depart,date").in("enfant_id",list.map(e=>e.id)).eq("date",TODAY_STR);
+    if(error)return;
+    const map={};(data||[]).forEach(p=>{map[p.enfant_id]={arrivee:p.arrivee,depart:p.depart};});
+    setStatus(map);
+  };
+  useEffect(()=>{fetchStatus();/* eslint-disable-next-line */},[ids,demo,user?.id]);
+  if(!list.length)return null;
+  const pointer=async(e)=>{
+    const st=status[e.id]||{};
+    if(st.arrivee&&st.depart)return; // journee terminee
+    if(demo){
+      setStatus(s=>{const n={...s};const cur=n[e.id]||{};const now=new Date().toTimeString().slice(0,5);if(!cur.arrivee)n[e.id]={arrivee:now};else n[e.id]={...cur,depart:now};return n;});
+      setToast("Démo : pointage simulé ✓");return;
+    }
+    setBusy(e.id);
+    try{
+      const{data,error}=await supabase.rpc("pointage_qr",{p_enfant_id:e.id});
+      if(error||data?.success===false)setToast("❌ "+(error?.message||data?.error||"Échec du pointage"));
+      else{setToast((data?.action==="depart"||status[e.id]?.arrivee)?"🏁 Départ enregistré ✓":"✅ Arrivée enregistrée ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}
+      await fetchStatus();
+    }catch(err){setToast("❌ Erreur pointage");}
+    setBusy(null);
+  };
+  return <div className="card" style={{padding:"14px 16px",marginBottom:16,border:"1.5px solid var(--Sp)",background:"var(--c)"}}>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:2}}>⏱️ Pointage du jour</div>
+    <div style={{fontSize:11.5,color:"var(--m)",marginBottom:10,lineHeight:1.5}}>
+      Un tap pour enregistrer {role==="parent"?"l'arrivée puis le départ de votre enfant":"l'arrivée puis le départ"} — synchronisé sur les deux espaces.{role==="parent"?" (Vous pouvez aussi flasher le QR affiché par l'assistante maternelle.)":""}
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {list.map(e=>{
+        const st=status[e.id]||{};
+        const fini=st.arrivee&&st.depart;
+        const enCours=st.arrivee&&!st.depart;
+        const label=fini?"Journée terminée":enCours?"🏁 Pointer le départ":"✅ Pointer l'arrivée";
+        return <div key={e.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",padding:"8px 10px",borderRadius:10,background:"#fff",border:"1px solid var(--br)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+            <span style={{fontSize:18}}>{e.emoji||"👶"}</span>
+            <div style={{minWidth:0}}>
+              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
+              <div style={{fontSize:11,color:"var(--l)"}}>
+                {st.arrivee?("Arrivé "+hhmm(st.arrivee)):"Pas encore arrivé"}{st.depart?(" · Parti "+hhmm(st.depart)):""}
+              </div>
+            </div>
+          </div>
+          <button className={fini?"btn bG":enCours?"btn bR":"btn bT"} disabled={fini||busy===e.id}
+            style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
+            onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+//
 function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [showAjout,setShowAjout]=useState(false);
   // TABLEAU SIGNATURES P11 - state pour le mini-dashboard
@@ -680,6 +775,8 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
 
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
     <EcheancierDeclaration enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
+    <PointageRapide enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
+    <PointageQRJour enfants={enfants} demo={isDemoUser}/>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
     {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"12px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D6EBD9)",border:"1.5px solid var(--S)"}}>
@@ -914,6 +1011,9 @@ function AccueilParent({enfant,setPage,user}){
 
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
     <EcheancierDeclaration enfants={[enfant]} role="parent" user={user} demo={user?.id?.startsWith?.("demo-")||user?.isDemo||["e1","e2","e3"].includes(enfant?.id)}/>
+
+    {/* POINTAGE RAPIDE - 1 tap arrivee/depart */}
+    <PointageRapide enfants={[enfant]} role="parent" user={user} demo={user?.id?.startsWith?.("demo-")||user?.isDemo||["e1","e2","e3"].includes(enfant?.id)}/>
 
     {/* Modale absence */}
     {showAbsence&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
@@ -1616,12 +1716,12 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
               </summary>
               <div style={{padding:"12px 14px",textAlign:"center"}}>
                 <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.6}}>
-                  Le parent scanne ce QR avec son téléphone pour valider en direct.<br/>
-                  <strong>À utiliser uniquement si le parent est présent</strong> (matin ou soir).
+                  Le parent flashe ce QR avec l'appareil photo de son téléphone : ça enregistre l'<strong>arrivée</strong>, puis le <strong>départ</strong> au second scan.<br/>
+                  Vous pouvez aussi le scanner vous-même.
                 </div>
                 <img
                   src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
-                    (window.location.origin||"https://timat.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
+                    (window.location.origin||"https://timat.app")+"/?pointage=qr&enfant="+enfant?.id
                   )}
                   alt="QR Pointage"
                   style={{width:180,height:180,borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
@@ -1629,14 +1729,14 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                 <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
                   <button className="btn bG"style={{fontSize:11}}onClick={()=>{
                     navigator.clipboard?.writeText(
-                      (window.location.origin||"https://timat.app")+"/api/pointage-qr?enfant="+enfant?.id+"&date="+TODAY_STR+"&type=scan"
+                      (window.location.origin||"https://timat.app")+"/?pointage=qr&enfant="+enfant?.id
                     );
                     setToast("Lien copié ✓");
                   }}>📋 Copier le lien</button>
                   <button className="btn bG"style={{fontSize:11}}onClick={()=>window.print()}>🖨️ Imprimer</button>
                 </div>
                 <div style={{fontSize:10,color:"var(--l)",marginTop:8}}>
-                  🔒 QR unique à {enfant?.prenom} et valable aujourd'hui uniquement.
+                  🔒 QR propre à {enfant?.prenom}. Imprimable une fois : il enregistre toujours le pointage du jour.
                 </div>
               </div>
             </details>
@@ -14631,6 +14731,9 @@ export default function App(){
   const [dataRefreshKey,setDataRefreshKey]=useState(0);
   const [appConfig,setAppConfig]=useState(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
   const [configLoaded,setConfigLoaded]=useState(false); // ANTI-FLASH P16A
+  // POINTAGE QR - resultat du scan (banniere de confirmation)
+  const [qrScan,setQrScan]=useState(null);
+  const qrScanHandled=useRef(false);
 
   // //  Dsactiver le service worker bloqu
   useEffect(()=>{
@@ -14856,6 +14959,28 @@ export default function App(){
     return()=>window.removeEventListener("timat:refresh-data",handler);
   },[]);
 
+  // POINTAGE QR - si l'app est ouverte via un QR (?pointage=qr&enfant=ID), enregistrer le pointage via la RPC pointage_qr.
+  // L'utilisateur connecte (parent OU assmat lie a l'enfant) declenche l'ecriture ; la RPC attribue le bon asmat_id et bascule arrivee->depart.
+  useEffect(()=>{
+    if(qrScanHandled.current)return;
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("pointage")!=="qr")return;
+    const enfantId=params.get("enfant");
+    if(!enfantId)return;
+    if(!user?.id)return; // attendre la connexion (le param reste dans l'URL jusqu'au login)
+    qrScanHandled.current=true;
+    (async()=>{
+      try{
+        const{data,error}=await supabase.rpc("pointage_qr",{p_enfant_id:enfantId});
+        if(error)setQrScan({success:false,error:error.message});
+        else setQrScan(data||{success:false,error:"reponse vide"});
+        setDataRefreshKey(k=>k+1);
+      }catch(e){setQrScan({success:false,error:e.message});}
+      // nettoyer l'URL pour eviter un re-declenchement au refresh
+      try{const u=new URL(window.location.href);u.searchParams.delete("pointage");u.searchParams.delete("enfant");window.history.replaceState({},"",u.pathname+(u.search||""));}catch(e){}
+    })();
+  },[user?.id]);
+
   // NOTIFICATIONS - charger la cloche depuis Supabase (au login + a chaque refresh-data)
   useEffect(()=>{
     if(!user?.id){setNotifs([]);return;}
@@ -15032,6 +15157,26 @@ export default function App(){
     <>
       <Styles/>
       <div className={"app"+(dark?" dark":"")+""}>
+        {qrScan&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setQrScan(null)}>
+          <div className="card" style={{maxWidth:360,width:"100%",padding:24,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+            {qrScan.success?<>
+              <div style={{fontSize:48,marginBottom:10}}>{qrScan.action==="depart"?"👋":"✅"}</div>
+              <div className="pf" style={{fontSize:18,fontWeight:600,color:"var(--S)",marginBottom:6}}>
+                {qrScan.action==="arrivee"?"Arrivée pointée":qrScan.action==="depart"?"Départ pointé":"Déjà pointé"}
+              </div>
+              <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+                {qrScan.action==="arrivee"&&("Arrivée enregistrée à "+(qrScan.heure||"")+".")}
+                {qrScan.action==="depart"&&("Départ enregistré à "+(qrScan.heure||"")+(qrScan.total!=null?(" — "+Math.floor(qrScan.total/60)+"h"+String(qrScan.total%60).padStart(2,"0")):"")+".")}
+                {qrScan.action==="complete"&&"Le pointage du jour est déjà complet (arrivée et départ enregistrés)."}
+              </div>
+            </>:<>
+              <div style={{fontSize:48,marginBottom:10}}>⚠️</div>
+              <div className="pf" style={{fontSize:18,fontWeight:600,color:"var(--R)",marginBottom:6}}>Pointage non enregistré</div>
+              <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6}}>{qrScan.error==="non autorise"?"Ce QR ne correspond pas à un enfant de votre espace.":(qrScan.error||"Une erreur est survenue.")}</div>
+            </>}
+            <button className="btn bT" style={{marginTop:18,width:"100%",justifyContent:"center"}} onClick={()=>setQrScan(null)}>Fermer</button>
+          </div>
+        </div>}
         <TopBar role={role} groups={groups} page={page} setPage={setPage} user={user}
           onLogout={handleLogout}
           pmiNonLus={role==="parent"?0:pmiNonLus} dark={dark} setDark={setDark}
