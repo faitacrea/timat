@@ -8967,15 +8967,29 @@ function SimulateurCout({enfants,pEId}){
   const [entretien,setEntretien]=useState(3.80);
   const [revenus,setRevenus]=useState(45000);
   const [enfants2,setEnfants2]=useState(1);
+  const [aeeh,setAeeh]=useState(0); // nb d'enfants beneficiaires AEEH (decale le taux d'effort d'une tranche)
 
   // Calculs
-  const salBrut=(heures*taux*semaines/12)*1.1; // brut mensuel estimé
+  const heuresMois=heures*semaines/12;
+  const salBrut=(heures*taux*semaines/12)*1.1; // brut mensuel estimé (taux net + ~10% CP)
   const cotPat=salBrut*0.275;
   const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
-  // CMG 2025 - barème simplifié selon revenus
-  const tauxCMG=revenus<25000?0.85:revenus<45000?0.70:revenus<75000?0.50:0.30;
-  const cmgMensuel=Math.min(salBrut*tauxCMG,salBrut*0.85);
-  const creditImpot=Math.min((coutTotal-cmgMensuel)*0.5*12/12,3500/12);
+  // CMG 2026 - REFORME 1er sept 2025 : calcul horaire par taux d'effort (barème PSU), parametres assmat 2026
+  const CHR_AM=4.91;        // cout horaire de reference assmat 2026
+  const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
+  const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
+  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000206,7:0.000206,8:0.000206}; // taux d'effort horaire (1-3 confirmes URSSAF, 4+ barème PSU)
+  const enfEff=Math.min(8,Math.max(1,enfants2+aeeh)); // AEEH = tranche inferieure (+1 enfant fictif par AEEH)
+  const TE=TE_BAREME[enfEff];
+  const tarifRetenu=Math.min(taux,PLAFOND_H);
+  const coutGardeCMG=tarifRetenu*heuresMois;
+  const cmgCapped=Math.min(taux,PLAFOND_H)<taux; // tarif au-dela du plafond -> surcout integral parent
+  let cmgMensuel=coutGardeCMG*(1-(Math.max(801,Math.min(revenus/12,8500))*TE/CHR_AM));
+  cmgMensuel=Math.max(0,Math.min(cmgMensuel,coutGardeCMG,CMG_MAX));
+  cmgMensuel=Math.round(cmgMensuel*100)/100;
+  const cmgPlafonne=cmgMensuel>=CMG_MAX-0.01;
+  // Credit d'impot : 50% des depenses (salaire+cotisations) nettes du CMG, plafond 3500€/an/enfant <6 ans
+  const creditImpot=Math.min((coutTotal-cmgMensuel)*0.5,3500/12);
   const resteCharge=Math.max(0,coutTotal-cmgMensuel-creditImpot);
 
   const fmt2=(n)=>Math.round(n).toLocaleString("fr-FR")+"€";
@@ -9013,11 +9027,21 @@ function SimulateurCout({enfants,pEId}){
           <div>
             <label className="lbl">Nombre d'enfants à charge</label>
             <div style={{display:"flex",gap:8}}>
-              {[1,2,3].map(n=><button key={n}onClick={()=>setEnfants2(n)}style={{
+              {[1,2,3,4].map(n=><button key={n}onClick={()=>setEnfants2(n)}style={{
                 flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,
                 background:enfants2===n?"var(--B)":"transparent",color:enfants2===n?"#fff":"var(--m)",
-                borderColor:enfants2===n?"var(--B)":"var(--br)"}}>{n}</button>)}
+                borderColor:enfants2===n?"var(--B)":"var(--br)"}}>{n===4?"4+":n}</button>)}
             </div>
+          </div>
+          <div style={{marginTop:14}}>
+            <label className="lbl">Enfant(s) bénéficiaire(s) de l'AEEH (handicap)</label>
+            <div style={{display:"flex",gap:8}}>
+              {[0,1,2].map(n=><button key={n}onClick={()=>setAeeh(n)}style={{
+                flex:1,padding:"8px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,
+                background:aeeh===n?"var(--S)":"transparent",color:aeeh===n?"#fff":"var(--m)",
+                borderColor:aeeh===n?"var(--S)":"var(--br)"}}>{n}</button>)}
+            </div>
+            <div style={{fontSize:10.5,color:"var(--l)",marginTop:4}}>Chaque enfant AEEH applique le taux d'effort de la tranche inférieure (CMG plus élevé).</div>
           </div>
         </div>
       </div>
@@ -9050,8 +9074,17 @@ function SimulateurCout({enfants,pEId}){
             <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
           </div>)}
         </div>
-        <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"10px 0"}}>
-          ⚠️ Simulation indicative. Le CMG exact dépend de vos ressources déclarées à la CAF. Simulateur basé sur la réforme CMG 2025.
+        {cmgPlafonne&&<div style={{fontSize:11,color:"var(--T)",background:"var(--Tp)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
+          ℹ️ CMG plafonné à {fmt2(CMG_MAX)}/mois (montant maximum assmat 2026).
+        </div>}
+        {cmgCapped&&<div style={{fontSize:11,color:"var(--m)",background:"var(--c)",border:"1px solid var(--br)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
+          ⚠️ Votre taux horaire dépasse le plafond CMG de {PLAFOND_H.toFixed(2)} €/h : le surcoût au-delà reste intégralement à votre charge.
+        </div>}
+        <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"6px 0"}}>
+          Calcul : CMG = (min(taux ; {PLAFOND_H.toFixed(2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {(TE*100).toFixed(4)} % ÷ {CHR_AM.toFixed(2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
+        </div>
+        <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"4px 0"}}>
+          ⚠️ <b>Estimation indicative</b> selon la réforme CMG du 1er septembre 2025 (calcul horaire par taux d'effort, barème PSU). Le montant exact dépend de vos ressources N-2 retenues par la CAF. Référez-vous au <b>simulateur officiel URSSAF</b> (« Évaluer votre reste à charge et votre CMG ») pour la valeur définitive.
         </div>
       </div>
     </div>
