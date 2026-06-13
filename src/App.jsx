@@ -8978,13 +8978,13 @@ function SimulateurCout({enfants,pEId}){
   const CHR_AM=4.91;        // cout horaire de reference assmat 2026
   const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
   const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
-  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000206,7:0.000206,8:0.000206}; // taux d'effort horaire (1-3 confirmes URSSAF, 4+ barème PSU)
+  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206}; // taux d'effort horaire CMG = bareme PSU accueil collectif (CNAF 2026) : 1->0,0619 ; 2->0,0516 ; 3->0,0413 ; 4-7->0,0310 ; 8+->0,0206
   const enfEff=Math.min(8,Math.max(1,enfants2+aeeh)); // AEEH = tranche inferieure (+1 enfant fictif par AEEH)
   const TE=TE_BAREME[enfEff];
   const tarifRetenu=Math.min(taux,PLAFOND_H);
   const coutGardeCMG=tarifRetenu*heuresMois;
   const cmgCapped=Math.min(taux,PLAFOND_H)<taux; // tarif au-dela du plafond -> surcout integral parent
-  let cmgMensuel=coutGardeCMG*(1-(Math.max(801,Math.min(revenus/12,8500))*TE/CHR_AM));
+  let cmgMensuel=coutGardeCMG*(1-(Math.max(814.62,Math.min(revenus/12,8500))*TE/CHR_AM)); // plancher 814,62 / plafond 8500 (ressources mensuelles 2026)
   cmgMensuel=Math.max(0,Math.min(cmgMensuel,coutGardeCMG,CMG_MAX));
   cmgMensuel=Math.round(cmgMensuel*100)/100;
   const cmgPlafonne=cmgMensuel>=CMG_MAX-0.01;
@@ -9084,7 +9084,7 @@ function SimulateurCout({enfants,pEId}){
           Calcul : CMG = (min(taux ; {PLAFOND_H.toFixed(2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {(TE*100).toFixed(4)} % ÷ {CHR_AM.toFixed(2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
         </div>
         <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"4px 0"}}>
-          ⚠️ <b>Estimation indicative</b> selon la réforme CMG du 1er septembre 2025 (calcul horaire par taux d'effort, barème PSU). Le montant exact dépend de vos ressources N-2 retenues par la CAF. Référez-vous au <b>simulateur officiel URSSAF</b> (« Évaluer votre reste à charge et votre CMG ») pour la valeur définitive.
+          ⚠️ <b>Estimation indicative</b> selon la réforme CMG du 1er septembre 2025 (calcul horaire par taux d'effort, barème CNAF 2026 : 1→0,0619 % · 2→0,0516 % · 3→0,0413 % · 4-7→0,0310 % · 8+→0,0206 %). Le montant exact dépend de vos ressources N-2 retenues par la CAF. Référez-vous au <b>simulateur officiel URSSAF</b> (« Évaluer votre reste à charge et votre CMG ») pour la valeur définitive.
         </div>
       </div>
     </div>
