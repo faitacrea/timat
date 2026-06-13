@@ -8826,6 +8826,139 @@ function RapportAnnuel({enfants,role,pEId,user}){
 
 //
 //
+// RECAP FISCAL ANNUEL ASSMAT - revenu imposable apres abattement (CGI art. 80 sexies), a reporter sur la 2042 C PRO.
+// Salaire imposable = somme des bulletins stockes (net_imposable + entretien). Abattement = recalcule jour par jour
+// depuis les pointages reels (prorata <8h, AEEH 4x, 24h 5x). AEEH non persiste -> toggle par enfant.
+function RecapFiscalAssmat({enfants,user}){
+  const SMIC_H=11.88;
+  const yNow=new Date().getFullYear();
+  const [annee,setAnnee]=useState(yNow-1); // on declare l'annee N-1
+  const [bulletins,setBulletins]=useState([]);
+  const [joursParEnfant,setJoursParEnfant]=useState({}); // {enfantId:[heures par journee]}
+  const [aeeh,setAeeh]=useState({});
+  const [loading,setLoading]=useState(true);
+  const demo=user?.id?.startsWith?.("demo-")||user?.isDemo;
+  const prenomMap={};(enfants||[]).forEach(e=>{prenomMap[e.id]=e.prenom||"Enfant";});
+
+  useEffect(()=>{
+    if(demo){
+      setBulletins([{enfant_id:"e1",net_imposable:9800,entretien:760,jours_travailles:210}]);
+      setJoursParEnfant({e1:Array(190).fill(9).concat(Array(20).fill(6))});
+      setLoading(false);return;
+    }
+    if(!user?.id){setLoading(false);return;}
+    let cancelled=false;setLoading(true);
+    (async()=>{
+      const{data:bs}=await supabase.from("bulletins")
+        .select("enfant_id,mois,net_imposable,entretien,jours_travailles")
+        .eq("asmat_id",user.id).eq("annee",annee);
+      if(cancelled)return;
+      setBulletins(bs||[]);
+      const ids=Array.from(new Set([...(enfants||[]).map(e=>e.id),...(bs||[]).map(b=>b.enfant_id)]));
+      const map={};
+      if(ids.length){
+        const{data:pts}=await supabase.from("pointages")
+          .select("enfant_id,total_minutes,date")
+          .in("enfant_id",ids).gte("date",annee+"-01-01").lte("date",annee+"-12-31");
+        const byEnfDate={};
+        (pts||[]).forEach(p=>{if((p.total_minutes||0)>0){const k=p.enfant_id+"|"+p.date;byEnfDate[k]=(byEnfDate[k]||0)+p.total_minutes;}});
+        Object.entries(byEnfDate).forEach(([k,min])=>{const eid=k.split("|")[0];(map[eid]=map[eid]||[]).push(min/60);});
+      }
+      if(cancelled)return;
+      setJoursParEnfant(map);setLoading(false);
+    })();
+    return()=>{cancelled=true;};
+  },[annee,user?.id,demo,(enfants||[]).map(e=>e.id).join(",")]);
+
+  // Agregation par enfant (recalcule a chaque toggle AEEH)
+  const lignes=useMemo(()=>{
+    const ids=Array.from(new Set([...bulletins.map(b=>b.enfant_id),...Object.keys(joursParEnfant)]));
+    return ids.map(eid=>{
+      const bs=bulletins.filter(b=>b.enfant_id===eid);
+      const salaireImp=Math.round(bs.reduce((s,b)=>s+(Number(b.net_imposable)||0),0)*100)/100;
+      const entretienTot=Math.round(bs.reduce((s,b)=>s+(Number(b.entretien)||0),0)*100)/100;
+      const moisCouverts=new Set(bs.map(b=>b.mois)).size;
+      const baseMult=aeeh[eid]?4:3;
+      const jh=joursParEnfant[eid]||[];
+      let abatt=0,jPlein=0,jPart=0,jNuit=0;
+      jh.forEach(h=>{if(h>=23.5){jNuit++;abatt+=(baseMult+1)*SMIC_H;}else if(h>=8){jPlein++;abatt+=baseMult*SMIC_H;}else{jPart++;abatt+=(baseMult*SMIC_H/8)*h;}});
+      abatt=Math.round(abatt*100)/100;
+      const baseImposable=salaireImp+entretienTot;
+      const netApres=Math.max(0,Math.round((baseImposable-abatt)*100)/100);
+      return{eid,prenom:prenomMap[eid]||"Enfant",salaireImp,entretienTot,baseImposable,abatt,netApres,moisCouverts,jours:jh.length,jPlein,jPart,jNuit};
+    });
+  },[bulletins,joursParEnfant,aeeh]);
+
+  const totalNet=Math.round(lignes.reduce((s,l)=>s+l.netApres,0)*100)/100;
+  const totalAbatt=Math.round(lignes.reduce((s,l)=>s+l.abatt,0)*100)/100;
+  const totalBase=Math.round(lignes.reduce((s,l)=>s+l.baseImposable,0)*100)/100;
+  const moisManquants=lignes.some(l=>l.moisCouverts>0&&l.moisCouverts<12);
+  const eur=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+
+  const imprimer=()=>{
+    const w=window.open("","_blank");if(!w)return;
+    const rows=lignes.map(l=>"<tr><td>"+l.prenom+"</td><td class=r>"+l.jours+"</td><td class=r>"+eur(l.baseImposable)+"</td><td class=r>- "+eur(l.abatt)+"</td><td class=r><b>"+eur(l.netApres)+"</b></td></tr>").join("");
+    w.document.write("<html><head><meta charset='utf-8'><title>Recap fiscal "+annee+"</title><style>body{font-family:Arial,sans-serif;color:#2E4A5A;padding:28px;font-size:13px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin:14px 0}th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}.r{text-align:right}thead{background:#f3efe9}.tot{background:#eef5f2;font-weight:700}.note{font-size:11px;color:#666;margin-top:16px;line-height:1.6}</style></head><body>"+
+      "<h1>Recap fiscal annuel "+annee+" — Assistante maternelle</h1>"+
+      "<p>Revenu imposable apres abattement (regime special, CGI art. 80 sexies), a reporter sur la <b>declaration 2042 C PRO</b> (rubrique traitements et salaires).</p>"+
+      "<table><thead><tr><th>Enfant</th><th class=r>Jours d'accueil</th><th class=r>Base imposable (salaires + entretien)</th><th class=r>Abattement</th><th class=r>Net imposable apres abattement</th></tr></thead><tbody>"+rows+
+      "<tr class=tot><td>TOTAL</td><td class=r></td><td class=r>"+eur(totalBase)+"</td><td class=r>- "+eur(totalAbatt)+"</td><td class=r>"+eur(totalNet)+"</td></tr></tbody></table>"+
+      "<p class=note>Recapitulatif indicatif calcule a partir des bulletins enregistres et des pointages reels. Il ne remplace pas l'attestation fiscale officielle de Pajemploi. La declaration pre-remplie affiche souvent le brut sans abattement : verifiez et corrigez le montant imposable dans les cases blanches. Indemnites de repas non incluses (a ajouter si facturees). Conservez vos justificatifs (registre de presence) 5 ans.</p>"+
+      "</body></html>");
+    w.document.close();w.focus();setTimeout(()=>{try{w.print();}catch(e){}},300);
+  };
+
+  return <div className="fi">
+    <PageHeader icon="📋" title="Récap fiscal annuel" sub="Revenu imposable après abattement, à reporter sur la 2042 C PRO"/>
+    <div className="card" style={{padding:"14px 16px",marginBottom:14,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+      <label className="lbl" style={{margin:0}}>Année des revenus</label>
+      <select className="sel" style={{maxWidth:140}} value={annee} onChange={e=>setAnnee(Number(e.target.value))}>
+        {[yNow,yNow-1,yNow-2].map(y=><option key={y} value={y}>{y}</option>)}
+      </select>
+      <span style={{fontSize:11.5,color:"var(--l)"}}>Déclaration {annee+1} sur les revenus {annee}</span>
+    </div>
+
+    {loading?<div className="card" style={{padding:24,textAlign:"center",color:"var(--l)"}}>Chargement…</div>:
+     lignes.length===0?<div className="card" style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Aucun bulletin enregistré pour {annee}. Émettez et envoyez vos bulletins de salaire pour alimenter ce récap.</div>:
+    <>
+      {lignes.map(l=><div key={l.eid} className="card" style={{padding:"14px 16px",marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:10}}>
+          <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>👶 {l.prenom}</div>
+          <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"var(--b)",cursor:"pointer"}}>
+            <input type="checkbox" checked={!!aeeh[l.eid]} onChange={e=>setAeeh(a=>({...a,[l.eid]:e.target.checked}))} style={{width:15,height:15,cursor:"pointer"}}/>
+            Enfant handicapé (AEEH) — abattement 4×SMIC
+          </label>
+        </div>
+        {[["Jours d'accueil ("+l.jPlein+" pleins"+(l.jPart?", "+l.jPart+" <8h":"")+(l.jNuit?", "+l.jNuit+" 24h":"")+")",l.jours,"var(--b)"],
+          ["Base imposable (salaires + entretien)",eur(l.baseImposable),"var(--b)"],
+          ["Abattement régime spécial","- "+eur(l.abatt),"var(--m)"],
+          ["Net imposable après abattement",eur(l.netApres),"var(--B)"]].map(([lab,val,col])=>
+          <div key={lab} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+            <span style={{color:"var(--l)"}}>{lab}</span><span style={{fontWeight:700,color:col}}>{val}</span>
+          </div>)}
+        {l.moisCouverts>0&&l.moisCouverts<12&&<div style={{marginTop:8,fontSize:11.5,color:"var(--R)"}}>⚠️ {l.moisCouverts}/12 mois de bulletins enregistrés — total incomplet tant que tous les bulletins ne sont pas émis.</div>}
+      </div>)}
+
+      <div className="card" style={{padding:"16px 18px",marginBottom:12,background:"var(--Bp)",border:"1.5px solid var(--Bp)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+          <div>
+            <div style={{fontSize:12,color:"var(--l)"}}>Total net imposable {annee} à déclarer</div>
+            <div style={{fontWeight:800,fontSize:24,color:"var(--B)"}}>{eur(totalNet)}</div>
+          </div>
+          <button className="btn bT" style={{fontSize:13}} onClick={imprimer}>🖨️ Version imprimable / PDF</button>
+        </div>
+        <div style={{fontSize:11.5,color:"var(--m)",marginTop:8,lineHeight:1.6}}>
+          À reporter sur la <b>déclaration 2042 C PRO</b> (rubrique « traitements et salaires », cases blanches de la famille <b>1GA</b> — vérifiez la case exacte sur votre déclaration). Sans la 2042 C PRO, le fisc applique l'abattement de 10 % par défaut, moins favorable.
+        </div>
+      </div>
+
+      <div className="card" style={{padding:"12px 16px",fontSize:11.5,color:"var(--m)",lineHeight:1.7}}>
+        ℹ️ Récap <b>indicatif</b> calculé depuis vos bulletins enregistrés (salaire imposable + entretien) et vos pointages réels (abattement jour par jour). <b>Il ne remplace pas l'attestation fiscale Pajemploi.</b> La déclaration pré-remplie affiche souvent le brut <b>sans</b> abattement : à corriger manuellement. Les indemnités de repas ne sont pas incluses (à ajouter si vous les facturez){moisManquants?". Certains enfants ont moins de 12 mois de bulletins.":""}.
+      </div>
+    </>}
+  </div>;
+}
+
 function SimulateurCout({enfants,pEId}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
   const [taux,setTaux]=useState(4.05);
@@ -9492,6 +9625,7 @@ const GROUPS_AM={
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
     {id:"admin_finances",l:"Paie & Contrats",ic:"🧾"}, // RENAME NAV P9 (côté asmat - couvre paie + contrats + courriers)
+    {id:"recap_fiscal",l:"Récap fiscal annuel",ic:"📋"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"bilans_exports",l:"Rapports & Exports",ic:"📊"}, // RENAME NAV P9 (id interne conservé pour pas casser le routing)
   ]},
@@ -15105,6 +15239,7 @@ export default function App(){
       case "eveil_complet": return <EveilComplet {...P}/>;
       case "documents_complet": return <DocumentsComplet {...P}/>;
       case "bilans_exports": return <BilansExports {...P}/>;
+      case "recap_fiscal": return <RecapFiscalAssmat enfants={enfants} user={user}/>;
       case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
