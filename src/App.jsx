@@ -3979,9 +3979,26 @@ function Documents({enfants,role,pEId,user}){
   },[user?.id,isDemoMode]);
 
   const annees=anneesDispo;
-  const liste=role==="parent"
+  // CONTRAT DANS DOCUMENTS - surfacer les PDF de contrat (depuis enfant.contrat.pdf_storage_path),
+  // independamment de documents_meta : garantit l'acces parent a son contrat dans la vue Documents.
+  const contratDocs=useMemo(()=>{
+    return (enfants||[]).filter(e=>e?.contrat?.pdf_storage_path).map(e=>{
+      const c=e.contrat;
+      const dateRef=String(c.pdf_generated_at||c.date_signature_parent||c.date_signature_asmat||c.debut||TODAY_STR);
+      return {
+        id:"ctrt_"+c.id, eId:e.id, cat:"admin",
+        sous:(c.signe_asmat&&c.signe_parent)?"Contrat signé":"Contrat",
+        nom:"Contrat_"+(e.prenom||"enfant")+(c.debut?("_"+c.debut.slice(0,7)):"")+".pdf",
+        date:dateRef.slice(0,10), annee:dateRef.slice(0,4)||String(new Date().getFullYear()),
+        taille:"PDF", icone:"📄", partage:true, url:null, storagePath:c.pdf_storage_path,
+      };
+    });
+  },[enfants]);
+  const baseList=role==="parent"
     ? docs.filter(d=>d.partage&&enfants.some(e=>e.id===d.eId))
     : docs;
+  const seenPaths=new Set(baseList.map(d=>d.storagePath).filter(Boolean));
+  const liste=[...baseList,...contratDocs.filter(d=>!seenPaths.has(d.storagePath))];
 
   const filtres=liste.filter(d=>{
     if(annee!=="tous"&&d.annee!==annee)return false;
@@ -4236,7 +4253,7 @@ function Documents({enfants,role,pEId,user}){
 
     {/* Aperçu simulé */}
     {apercu&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
-      {(()=>{const doc=docs.find(d=>d.id===apercu);if(!doc)return null;
+      {(()=>{const doc=liste.find(d=>d.id===apercu);if(!doc)return null;
         return <div style={{background:"var(--w)",borderRadius:16,padding:0,width:"100%",maxWidth:520,overflow:"hidden",boxShadow:"var(--sh2)"}}>
           <div style={{background:"linear-gradient(135deg,var(--T),#B85838)",padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{color:"#fff"}}>
@@ -4324,9 +4341,13 @@ function BulletinSalaire({enfants,role,pEId,user}){
       const fin=finDate.toISOString().slice(0,10);
       const{data:pts}=await supabase.from("pointages").select("total_minutes,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
-      const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
-      const jours=(pts||[]).filter(p=>p.total_minutes>0).length;
-      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,nbPointages:pts?.length||0});
+      // Regrouper par date : une "journee d'accueil" = somme des pointages du meme jour (matin+apres-midi)
+      const byDate={};
+      (pts||[]).forEach(p=>{if((p.total_minutes||0)>0){byDate[p.date]=(byDate[p.date]||0)+p.total_minutes;}});
+      const parJour=Object.values(byDate); // minutes par journee d'accueil reelle
+      const totalMin=parJour.reduce((s,m)=>s+m,0);
+      const jours=parJour.length;
+      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,parJour,nbPointages:pts?.length||0});
     })();
     return()=>{cancelled=true;};
   },[enfant?.id,moisSelKey,isDemoBull]);
@@ -4373,12 +4394,34 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const coutEmployeur=brut+totalCotPat;
   const netSocial=Math.round((brut-totalCotSal)*100)/100; // mention obligatoire (brut - cotisations salariales, hors indemnites)
   const cpAcquis=2.5; // jours ouvrables acquis par mois travaille (CCN particuliers employeurs, 30j/an)
-  // Regime fiscal special assmat (CGI art. 80 sexies) : abattement 3 x SMIC horaire / jour / enfant (>=8h, sinon prorata) ; 4 x SMIC si enfant handicape (AEEH)
+  // Regime fiscal special assmat (CGI art. 80 sexies / BOI-RSA-CHAMP-10-20-10) : abattement par jour et par enfant.
+  // Journee >=8h : 3 x SMIC horaire. Journee <8h : proratise = (3 x SMIC / 8) x heures reelles.
+  // Enfant handicape (AEEH) : base 3->4 sur toutes les journees. Journee de 24h consecutives : +1 SMIC (4x, ou 5x si AEEH).
+  // Calcul JOUR PAR JOUR a partir des pointages reels (gere les mois mixtes : journees pleines + journees courtes).
   const SMIC_H=11.88;
-  const smicMult=aeeh?4:3;
-  const heuresJour=(contrat.heuresHebdo||0)/(((contrat.jours&&contrat.jours.length))||5);
-  const abattementJour=heuresJour>=8?smicMult*SMIC_H:(smicMult*SMIC_H/8)*heuresJour;
-  const abattementMois=Math.round(abattementJour*joursTravailles*100)/100;
+  const baseMult=aeeh?4:3; // AEEH = +1 SMIC sur chaque journee
+  // Liste des heures par journee d'accueil : pointages reels si dispo, sinon estimation uniforme depuis le contrat
+  const heuresJourEst=(contrat.heuresHebdo||0)/(((contrat.jours&&contrat.jours.length))||5);
+  const joursHeures=(useRealHours&&Array.isArray(heuresMoisReel.parJour)&&heuresMoisReel.parJour.length)
+    ?heuresMoisReel.parJour.map(min=>min/60)
+    :Array(Math.max(0,joursTravailles)).fill(heuresJourEst);
+  let abMois=0,jPlein=0,jPart=0,jNuit=0;
+  joursHeures.forEach(hJ=>{
+    if(hJ>=23.5){jNuit++;abMois+=(baseMult+1)*SMIC_H;}          // 24h consecutives : forfait plein, +1 SMIC, pas de prorata
+    else if(hJ>=8){jPlein++;abMois+=baseMult*SMIC_H;}            // journee pleine
+    else{jPart++;abMois+=(baseMult*SMIC_H/8)*hJ;}               // journee courte : prorata
+  });
+  const abattementMois=Math.round(abMois*100)/100;
+  // Libelle dynamique honnete selon la composition du mois
+  let abLabel;
+  if(jPart===0&&jNuit===0){abLabel=baseMult+"×SMIC × "+jPlein+" j";}
+  else{
+    const parts=[];
+    if(jPlein)parts.push(jPlein+" j ≥8h ("+baseMult+"×SMIC)");
+    if(jPart)parts.push(jPart+" j <8h proratisés");
+    if(jNuit)parts.push(jNuit+" j 24h ("+(baseMult+1)+"×SMIC)");
+    abLabel=parts.join(" + ");
+  }
   // Indemnite de repas optionnelle (non soumise a cotisations, hors brut/net social/net imposable)
   const repasMois=Math.round((Number(repasJour)||0)*joursTravailles*100)/100;
   const netImpApresAbattement=Math.max(0,Math.round((netImposable+entretien+repasMois-abattementMois)*100)/100);
@@ -4493,7 +4536,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       doc.text(netImposable.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");doc.setFontSize(8);
-      ligne("Abattement regime special assmat ("+smicMult+" x SMIC x "+joursTravailles+" j)","","","- "+abattementMois.toFixed(2)+" euros");
+      ligne("Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")","","","- "+abattementMois.toFixed(2)+" euros");
       doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
       doc.text("Net imposable apres abattement",MX+2,y+4);
@@ -4714,7 +4757,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
           ["NET À PAYER",netPaye.toFixed(2)+"€","var(--S)"],
           ["Net imposable",netImposable.toFixed(2)+"€","var(--B)"],
-          ["Abattement régime spécifique ("+smicMult+"×SMIC × "+joursTravailles+" j)","- "+abattementMois.toFixed(2)+"€","var(--m)"],
+          ["Abattement régime spécifique ("+abLabel+")","- "+abattementMois.toFixed(2)+"€","var(--m)"],
           ["Net imposable après abattement",netImpApresAbattement.toFixed(2)+"€","var(--B)"],
           ["Montant net social",netSocial.toFixed(2)+"€","var(--B)"],
           ["Coût total pour l'employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+"€","var(--m)"],
@@ -4725,7 +4768,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       </div>
 
       <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {smicMult} × SMIC horaire (11,88 €) par jour d'accueil ≥ 8 h, soit {(smicMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire (11,88 €) par journée d'accueil ≥ 8 h, soit {(baseMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -4795,7 +4838,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
           "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
-          "<tr><td>Abattement regime special assmat ("+smicMult+" x SMIC x "+joursTravailles+" j)</td><td class=\"right\">- "+abattementMois.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")</td><td class=\"right\">- "+abattementMois.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+netImpApresAbattement.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+netSocial.toFixed(2)+" euros</td></tr>",
           "<tr><td>Conges payes acquis ce mois</td><td class=\"right\">"+cpAcquis+" jours ouvrables</td></tr>",
@@ -7902,6 +7945,26 @@ function KitCMG({enfants,role,pEId,user}){
 }
 
 //
+// CONTRAT PDF - bouton d'ouverture du PDF contrat depuis le storage (URL signee 1h). Reutilisable parent + assmat.
+function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon contrat (PDF)"}){
+  const [busy,setBusy]=useState(false);
+  const path=contrat?.pdf_storage_path;
+  if(!path)return null;
+  const ouvrir=async()=>{
+    setBusy(true);
+    try{
+      const{data,error}=await supabase.storage.from("documents").createSignedUrl(path,3600);
+      if(error||!data?.signedUrl){onErr?.("❌ Document indisponible (droits d'accès) — réessayez après signature ou contactez votre assistante maternelle.");}
+      else window.open(data.signedUrl,"_blank","noopener");
+    }catch(e){onErr?.("❌ Erreur ouverture du contrat");}
+    setBusy(false);
+  };
+  return <button className="btn bT" onClick={ouvrir} disabled={busy}
+    style={{fontSize:compact?12:13,padding:compact?"7px 14px":"9px 18px",display:"inline-flex",alignItems:"center",gap:6,opacity:busy?0.6:1}}>
+    📄 {busy?"Ouverture…":label}
+  </button>;
+}
+
 function SignatureContratParent({enfants,pEId,user}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
   const contrat=enfant?.contrat||{};
@@ -8020,12 +8083,16 @@ function SignatureContratParent({enfants,pEId,user}){
   };
 
   if(signe)return <div style={{textAlign:"center",padding:40}}>
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <div style={{fontSize:60,marginBottom:16}}>✅</div>
     <div className="pf"style={{fontSize:22,fontWeight:600,color:"var(--S)",marginBottom:8}}>Contrat signé !</div>
     <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7}}>
       Votre signature électronique a été enregistrée.<br/>
       L'assistante maternelle a été notifiée. Le contrat signé est disponible dans Documents.
       {dateSignature&&<><br/><span style={{fontSize:11,color:"var(--l)",marginTop:4,display:"inline-block"}}>Le {fmt(dateSignature.slice(0,10))} - Conforme eIDAS</span></>}
+    </div>
+    <div style={{marginTop:20}}>
+      <BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)}/>
     </div>
   </div>;
 
@@ -8049,6 +8116,9 @@ function SignatureContratParent({enfants,pEId,user}){
         <span style={{color:"var(--l)"}}>{l}</span>
         <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
       </div>)}
+      {contrat.pdf_storage_path&&<div style={{marginTop:12,textAlign:"center"}}>
+        <BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Voir le contrat (PDF)"/>
+      </div>}
     </div>
 
     {/* Case lecture */}
@@ -14753,6 +14823,8 @@ export default function App(){
                 signe_parent:!!ct.signe_parent,
                 date_signature_parent:ct.date_signature_parent||null,
                 signature_parent_data:ct.signature_parent_data||null,
+                pdf_storage_path:ct.pdf_storage_path||null,
+                pdf_generated_at:ct.pdf_generated_at||null,
               }:null,
             };
           });
