@@ -1015,6 +1015,23 @@ function AccueilParent({enfant,setPage,user}){
     {/* POINTAGE RAPIDE - 1 tap arrivee/depart */}
     <PointageRapide enfants={[enfant]} role="parent" user={user} demo={user?.id?.startsWith?.("demo-")||user?.isDemo||["e1","e2","e3"].includes(enfant?.id)}/>
 
+    {/* CAHIER DU JOUR - apercu */}
+    <div className="card"onClick={()=>setPage&&setPage("cahier_jour")}
+      style={{padding:16,marginBottom:12,cursor:"pointer",transition:"box-shadow .18s",borderLeft:"4px solid var(--P)"}}
+      onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
+      onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:26}}>📔</span>
+          <div>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Cahier du jour de {enfant.prenom}</div>
+            <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Repas, siestes, activités, photos et le mot du jour →</div>
+          </div>
+        </div>
+        <span style={{fontSize:18,color:"var(--P)"}}>→</span>
+      </div>
+    </div>
+
     {/* Modale absence */}
     {showAbsence&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}
       onClick={e=>e.target===e.currentTarget&&setShowAbsence(false)}>
@@ -7495,6 +7512,247 @@ function JournalAvecBilans({enfant,liste,role,pEId,user}){
 }
 
 //
+function CahierJour({enfants,role,pEId,user,pointagesDB}){
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const isDemo=enfants.every(e=>["e1","e2","e3"].includes(e.id));
+  const [selId,setSelId]=useState(liste[0]?.id);
+  const [dateSel,setDateSel]=useState(TODAY_STR);
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+
+  const [repas,setRepas]=useState(null);
+  const [changes,setChanges]=useState([]);
+  const [siestes,setSiestes]=useState([]);
+  const [activites,setActivites]=useState([]);
+  const [cahier,setCahier]=useState(null);
+  const [photos,setPhotos]=useState([]);
+  const [toast,setToast]=useState("");
+  const [mot,setMot]=useState("");
+  const [humeur,setHumeur]=useState("");
+  const [saving,setSaving]=useState(false);
+  const [photoLoading,setPhotoLoading]=useState(false);
+
+  const isToday=dateSel===TODAY_STR;
+  const DEMO_SOMMEIL={
+    e1:[{id:"s1",debut:"13h00",fin:"14h30",duree:"1h30",qualite:"bien"}],
+    e3:[{id:"s2",debut:"12h45",fin:"14h45",duree:"2h00",qualite:"bien"}],
+  };
+
+  const loadPhotos=async(eid)=>{
+    if(isDemo)return;
+    setPhotoLoading(true);
+    try{
+      const path=`${user?.id||'anon'}/${eid}/${dateSel}`;
+      const{data:files,error}=await supabase.storage.from('photos').list(path,{limit:50});
+      if(!error&&files?.length){
+        const valid=files.filter(f=>f.name!=='.emptyFolderPlaceholder');
+        const paths=valid.map(f=>`${path}/${f.name}`);
+        const{data:signed}=await supabase.storage.from('photos').createSignedUrls(paths,3600);
+        setPhotos((signed||[]).map(s=>s.signedUrl).filter(Boolean));
+      }else setPhotos([]);
+    }catch(e){setPhotos([]);}
+    setPhotoLoading(false);
+  };
+
+  useEffect(()=>{
+    if(!enfant?.id)return;
+    let cancelled=false;
+    (async()=>{
+      if(isDemo){
+        const r=D.repas.find(x=>x.eId===enfant.id&&x.date===dateSel)||null;
+        setRepas(r?{dej:r.dej,gou:r.gou,bib:r.bib,q:r.q,notes:r.notes}:null);
+        setChanges(D.changes.filter(x=>x.eId===enfant.id&&x.date===dateSel).map(x=>({id:x.id,heure:x.h,type:x.type,note:x.n})).sort((a,b)=>a.heure>b.heure?1:-1));
+        setSiestes(DEMO_SOMMEIL[enfant.id]||[]);
+        setActivites(D.portfolio.filter(x=>x.eId===enfant.id&&x.date===dateSel).map(x=>({id:x.id,titre:x.titre,description:x.desc,emoji:x.emoji,competences:x.competences})));
+        const tx=D.transmissions.filter(x=>x.eId===enfant.id&&x.date===dateSel&&x.auteur==="asmat").slice(-1)[0];
+        const c={mot_du_jour:tx?.txt||"",humeur:tx?.mood||""};
+        setCahier(c);setMot(c.mot_du_jour);setHumeur(c.humeur);setPhotos([]);
+        return;
+      }
+      const eid=enfant.id;
+      const[rRepas,rCh,rSo,rPf,rCa]=await Promise.all([
+        supabase.from("repas").select("*").eq("enfant_id",eid).eq("date",dateSel).maybeSingle(),
+        supabase.from("changes_couches").select("*").eq("enfant_id",eid).eq("date",dateSel),
+        supabase.from("sommeil").select("*").eq("enfant_id",eid).eq("date",dateSel).order("created_at",{ascending:true}),
+        supabase.from("portfolio").select("*").eq("enfant_id",eid).eq("date",dateSel).order("created_at",{ascending:true}),
+        supabase.from("cahier_jour").select("*").eq("enfant_id",eid).eq("date",dateSel).maybeSingle(),
+      ]);
+      if(cancelled)return;
+      const rp=rRepas.data;
+      setRepas(rp?{dej:rp.dejeuner,gou:rp.gouter,bib:rp.biberon,q:rp.qualite,notes:rp.notes}:null);
+      setChanges((rCh.data||[]).map(x=>({id:x.id,heure:x.heure,type:x.type,note:x.note})).sort((a,b)=>a.heure>b.heure?1:-1));
+      setSiestes(rSo.data||[]);
+      setActivites(rPf.data||[]);
+      const c=rCa.data||{mot_du_jour:"",humeur:""};
+      setCahier(c);setMot(c.mot_du_jour||"");setHumeur(c.humeur||"");
+      loadPhotos(eid);
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,dateSel,isDemo]);
+
+  const sauverMot=async()=>{
+    if(isDemo){setCahier({mot_du_jour:mot,humeur});setToast("Mot du jour enregistré ✓ (démo)");return;}
+    if(!enfant?.id)return;
+    setSaving(true);
+    const{error}=await supabase.from("cahier_jour").upsert({
+      enfant_id:enfant.id,asmat_id:user.id,date:dateSel,
+      mot_du_jour:mot||null,humeur:humeur||null,updated_at:new Date().toISOString()
+    },{onConflict:"enfant_id,date"});
+    setSaving(false);
+    if(error){setToast("Erreur : "+(error.message||"inconnue"));return;}
+    setCahier({mot_du_jour:mot,humeur});setToast("Mot du jour enregistré ✓");
+  };
+
+  const ajouterPhoto=async(ev)=>{
+    const file=ev.target.files?.[0];if(!file)return;
+    if(isDemo){setToast("Photo non enregistrée en démo");return;}
+    if(!enfant?.id)return;
+    setPhotoLoading(true);
+    const ext=file.name.split('.').pop()||'jpg';
+    const path=`${user?.id||'anon'}/${enfant.id}/${dateSel}/${Date.now()}.${ext}`;
+    const{error}=await supabase.storage.from('photos').upload(path,file,{upsert:false});
+    if(error){setToast("Erreur upload : "+error.message);setPhotoLoading(false);return;}
+    await loadPhotos(enfant.id);setToast("Photo ajoutée ✓");
+  };
+
+  const changeJour=(delta)=>{
+    const d=new Date(dateSel+"T12:00:00");d.setDate(d.getDate()+delta);
+    const ns=d.toISOString().slice(0,10);
+    if(ns>TODAY_STR)return;
+    setDateSel(ns);
+  };
+
+  const dateLabel=(()=>{try{return new Date(dateSel+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});}catch(e){return dateSel;}})();
+  const HUMEURS=["😄","😊","😐","😴","😢","🥰"];
+  const qLabel=(q)=>q==="bien"?"✅ Bon appétit":q==="peu"?"🟡 Peu mangé":q==="refus"?"🔴 Refus":"";
+  const qCol=(q)=>q==="bien"?"var(--S)":q==="peu"?"var(--G)":"var(--R)";
+  const nbChanges=changes.filter(c=>c.type==="Change").length;
+  const humeurAff=cahier?.humeur||(role==="asmat"?humeur:"");
+
+  if(!enfant)return <div className="fi"><PageHeader icon="📔" title="Cahier du jour" sub="Aucun enfant lié."/></div>;
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="📔" title="Cahier du jour" sub={role==="asmat"?"La journée de l'enfant, en un coup d'œil":"La journée de "+(enfant.prenom||"votre enfant")}/>
+
+    {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+    </div>}
+
+    {/* Navigation date */}
+    <div className="card"style={{padding:"10px 14px",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <button className="btn bG"style={{padding:"6px 12px"}}onClick={()=>changeJour(-1)}>◀</button>
+      <div style={{textAlign:"center"}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",textTransform:"capitalize"}}>{dateLabel}</div>
+        {isToday?<div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Aujourd'hui</div>
+          :<div onClick={()=>setDateSel(TODAY_STR)}style={{fontSize:11,color:"var(--T)",cursor:"pointer",marginTop:2}}>↩ Revenir à aujourd'hui</div>}
+      </div>
+      <button className="btn bG"style={{padding:"6px 12px",opacity:isToday?.4:1,cursor:isToday?"default":"pointer"}}disabled={isToday}onClick={()=>changeJour(1)}>▶</button>
+    </div>
+
+    {/* En-tete enfant + humeur */}
+    <div className="card"style={{padding:16,marginBottom:12,display:"flex",alignItems:"center",gap:14,borderTop:"4px solid "+(enfant.couleur||"var(--T)")}}>
+      <span style={{fontSize:44}}>{enfant.emoji||"👶"}</span>
+      <div style={{flex:1}}>
+        <div className="pf"style={{fontSize:19,fontWeight:700,color:"var(--b)"}}>{enfant.prenom}</div>
+        <div style={{fontSize:12,color:"var(--l)"}}>{humeurAff?"Humeur du jour":"Journée en cours"}</div>
+      </div>
+      {humeurAff&&<span style={{fontSize:36}}>{humeurAff}</span>}
+    </div>
+
+    {/* Photos */}
+    <div className="card"style={{padding:16,marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:photos.length?12:0}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📸 Photos du jour</div>
+        {role==="asmat"&&<label className="btn bT"style={{fontSize:12,padding:"6px 12px",cursor:"pointer",margin:0}}>
+          + Photo<input type="file"accept="image/*"style={{display:"none"}}onChange={ajouterPhoto}/></label>}
+      </div>
+      {photoLoading&&<div style={{fontSize:12,color:"var(--l)"}}>Chargement…</div>}
+      {!photoLoading&&photos.length===0&&<div style={{fontSize:13,color:"var(--l)",marginTop:8}}>{role==="asmat"?"Ajoutez une photo de la journée.":"Aucune photo partagée pour ce jour."}</div>}
+      {photos.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(90px,1fr))",gap:8}}>
+        {photos.map((u,i)=><img key={i}src={u}alt=""style={{width:"100%",aspectRatio:"1",objectFit:"cover",borderRadius:10}}/>)}
+      </div>}
+    </div>
+
+    {/* Mot du jour */}
+    <div className="card"style={{padding:16,marginBottom:12,border:"1.5px solid var(--P)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+        <span style={{fontSize:18}}>💬</span>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Le mot du jour</div>
+      </div>
+      {role==="asmat"?<div>
+        <div style={{marginBottom:10}}>
+          <label className="lbl">Humeur de la journée</label>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {HUMEURS.map(h=><button key={h}className={"moo "+(humeur===h?"on":"")}onClick={()=>setHumeur(humeur===h?"":h)}>{h}</button>)}
+          </div>
+        </div>
+        <textarea className="ta"value={mot}onChange={e=>setMot(e.target.value)}placeholder={"Un petit mot sur la journée de "+(enfant.prenom||"l'enfant")+"…"}style={{minHeight:70}}/>
+        <button className="btn bT"style={{width:"100%",marginTop:10}}onClick={sauverMot}disabled={saving}>{saving?"Enregistrement…":"Enregistrer le mot du jour"}</button>
+      </div>:(
+        cahier?.mot_du_jour?<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,lineHeight:1.7,color:"var(--b)",fontStyle:"italic",whiteSpace:"pre-wrap"}}>{cahier.mot_du_jour}</div>
+        :<div style={{fontSize:13,color:"var(--l)"}}>Pas encore de mot du jour.</div>
+      )}
+    </div>
+
+    {/* Repas + Siestes */}
+    <div className="g2">
+      <div className="card"style={{padding:16}}>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🍽️ Repas</div>
+        {repas&&(repas.dej||repas.gou||repas.bib)?<div>
+          {[["🥗","Déjeuner",repas.dej],["🍎","Goûter",repas.gou],["🍼","Biberon",repas.bib]].filter(r=>r[2]).map(([ic,l,v])=>
+            <div key={l}style={{display:"flex",gap:10,marginBottom:8,padding:"9px 12px",background:"var(--c)",borderRadius:9}}>
+              <span>{ic}</span><div><div style={{fontSize:11,color:"var(--l)",fontWeight:700}}>{l}</div>
+                <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{v}</div></div></div>)}
+          {repas.q&&<span className="badge"style={{background:qCol(repas.q)+"22",color:qCol(repas.q)}}>{qLabel(repas.q)}</span>}
+          {repas.notes&&<div style={{fontSize:12,color:"var(--m)",marginTop:6,fontStyle:"italic"}}>{repas.notes}</div>}
+        </div>:<div style={{fontSize:13,color:"var(--l)"}}>Non renseigné.</div>}
+      </div>
+      <div className="card"style={{padding:16}}>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>😴 Siestes</div>
+        {siestes.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucune sieste enregistrée.</div>
+          :siestes.map(s=><div key={s.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:"var(--c)",borderRadius:9,marginBottom:8}}>
+            <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{s.debut} → {s.fin}</span>
+            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}>{s.duree}</span>
+          </div>)}
+      </div>
+    </div>
+
+    {/* Changes */}
+    <div className="card"style={{padding:16,marginTop:12}}>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>👶 Changes {nbChanges>0&&<span style={{color:"var(--T)",fontSize:12}}>· {nbChanges} change{nbChanges>1?"s":""}</span>}</div>
+      {changes.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucun change.</div>
+        :<div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+          {changes.map(c=><div key={c.id}style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"var(--c)",borderRadius:9}}>
+            <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.heure}</span>
+            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":"var(--Gp)",color:c.type==="Propre"?"var(--S)":"var(--G)"}}>{c.type==="Propre"?"✅ Propre":"🔄 Change"}</span>
+            {c.note&&<span style={{fontSize:11,color:"var(--m)"}}>{c.note}</span>}
+          </div>)}
+        </div>}
+    </div>
+
+    {/* Activites */}
+    <div className="card"style={{padding:16,marginTop:12,marginBottom:8}}>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🎨 Activités</div>
+      {activites.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucune activité notée.</div>
+        :activites.map(a=><div key={a.id}style={{display:"flex",gap:12,marginBottom:10,padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
+          <span style={{fontSize:24}}>{a.emoji||"🎨"}</span>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{a.titre}</div>
+            {a.description&&<div style={{fontSize:12,color:"var(--m)",marginTop:2}}>{a.description}</div>}
+            {a.competences&&a.competences.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:6}}>
+              {a.competences.map((co,i)=><span key={i}className="badge"style={{background:"var(--Sp)",color:"var(--S)",fontSize:10}}>{co}</span>)}
+            </div>}
+          </div>
+        </div>)}
+    </div>
+
+    {role==="asmat"&&<div style={{fontSize:11,color:"var(--l)",textAlign:"center",padding:"4px 0 8px"}}>
+      Repas, siestes, changes et activités se saisissent dans leurs écrans dédiés (Journal → Repas &amp; Changes / Sommeil · Éveil → Portfolio). Ils s'affichent ici automatiquement.
+    </div>}
+  </div>;
+}
+
+//
 function JournalComplet({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sec,setSec]=useState("journal");
@@ -9646,6 +9904,7 @@ function BottomNav({groups,page,setPage,pmiNonLus}){
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
+    {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
     {id:"dashboard",l:"Tableau de bord",ic:"📊"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"journal_complet",l:"Journal",ic:"📋"},
@@ -9673,6 +9932,7 @@ const GROUPS_AM={
 const GROUPS_P={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"Mon enfant",ic:"👶",color:"#B8622F",subs:[
+    {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
     {id:"dashboard",l:"Tableau de bord",ic:"📊"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"journal_complet",l:"Journal",ic:"📋"},
@@ -15266,6 +15526,7 @@ export default function App(){
   const renderPage=()=>{
     switch(page){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
+      case "cahier_jour": return <CahierJour {...P}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
       case "bilans": return <Bilans {...P}/>;
