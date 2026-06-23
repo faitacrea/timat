@@ -585,6 +585,7 @@ function PointageRapide({enfants,role,user,demo}){
   const [status,setStatus]=useState({}); // {enfantId:{arrivee,depart}}
   const [busy,setBusy]=useState(null);
   const [toast,setToast]=useState("");
+  const [qrFor,setQrFor]=useState(null);
   const ids=list.map(e=>e.id).join(",");
   const hhmm=(t)=>{if(!t)return"";const s=String(t);return s.includes("T")?s.split("T")[1].slice(0,5):s.slice(0,5);};
   const fetchStatus=async()=>{
@@ -595,7 +596,6 @@ function PointageRapide({enfants,role,user,demo}){
     setStatus(map);
   };
   useEffect(()=>{fetchStatus();/* eslint-disable-next-line */},[ids,demo,user?.id]);
-  if(!list.length)return null;
   const pointer=async(e)=>{
     const st=status[e.id]||{};
     if(st.arrivee&&st.depart)return; // journee terminee
@@ -612,34 +612,56 @@ function PointageRapide({enfants,role,user,demo}){
     }catch(err){setToast("❌ Erreur pointage");}
     setBusy(null);
   };
+  if(!list.length)return null;
+  const origin=(typeof window!=="undefined"&&window.location.origin)||"https://timat.app";
+  const showQR=role==="asmat"&&!demo;
+  const qrUrl=(e,size)=>"https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&data="+encodeURIComponent(origin+"/?pointage=qr&enfant="+e.id);
+  const imprimerQR=(e)=>{
+    const w=window.open("","_blank","width=420,height=580");if(!w)return;
+    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2><img src='"+qrUrl(e,300)+"' style='width:300px;height:300px'/><p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
+    w.document.close();setTimeout(()=>{try{w.print();}catch(x){}},400);
+  };
   return <div className="card" style={{padding:"14px 16px",marginBottom:16,border:"1.5px solid var(--Sp)",background:"var(--c)"}}>
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:2}}>⏱️ Pointage du jour</div>
-    <div style={{fontSize:11.5,color:"var(--m)",marginBottom:10,lineHeight:1.5}}>
+    <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
       Un tap pour enregistrer {role==="parent"?"l'arrivée puis le départ de votre enfant":"l'arrivée puis le départ"} — synchronisé sur les deux espaces.{role==="parent"?" (Vous pouvez aussi flasher le QR affiché par l'assistante maternelle.)":""}
     </div>
-    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:10}}>
       {list.map(e=>{
         const st=status[e.id]||{};
         const fini=st.arrivee&&st.depart;
         const enCours=st.arrivee&&!st.depart;
-        const label=fini?"Journée terminée":enCours?"🏁 Pointer le départ":"✅ Pointer l'arrivée";
-        return <div key={e.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap",padding:"8px 10px",borderRadius:10,background:"#fff",border:"1px solid var(--br)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
-            <span style={{fontSize:18}}>{e.emoji||"👶"}</span>
-            <div style={{minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
-              <div style={{fontSize:11,color:"var(--l)"}}>
-                {st.arrivee?("Arrivé "+hhmm(st.arrivee)):"Pas encore arrivé"}{st.depart?(" · Parti "+hhmm(st.depart)):""}
-              </div>
-            </div>
+        const label=fini?"Journée terminée":enCours?"🏁 Départ":"✅ Arrivée";
+        const dotC=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
+        const dotT=fini?"Terminée":enCours?"Présent":"Absent";
+        return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:"14px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,textAlign:"center"}}>
+          <span style={{fontSize:30,lineHeight:1}}>{e.emoji||"👶"}</span>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
+          <div style={{display:"flex",alignItems:"center",gap:5,fontSize:10.5,color:"var(--m)"}}>
+            <span style={{width:7,height:7,borderRadius:7,background:dotC}}/>{dotT}
+          </div>
+          <div style={{fontSize:10.5,color:"var(--l)",minHeight:14}}>
+            {st.arrivee?("→ "+hhmm(st.arrivee)):""}{st.depart?(" · ← "+hhmm(st.depart)):""}
           </div>
           <button className={fini?"btn bG":enCours?"btn bR":"btn bT"} disabled={fini||busy===e.id}
-            style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
+            style={{width:"100%",fontSize:12,padding:"8px 6px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
             onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
+          {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}>📱 QR</button>}
         </div>;
       })}
     </div>
+    {qrFor&&<div onClick={ev=>{if(ev.target===ev.currentTarget)setQrFor(null);}} style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(20,30,40,.55)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="card" style={{maxWidth:320,width:"100%",padding:20,textAlign:"center"}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{qrFor.emoji||"👶"} QR de {qrFor.prenom||"l'enfant"}</div>
+        <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>Le parent le flashe avec l'appareil photo : <b>1er scan = arrivée</b>, <b>2e scan = départ</b>. Réutilisable chaque jour.</div>
+        <img alt="QR" src={qrUrl(qrFor,220)} style={{width:200,height:200,borderRadius:12,border:"3px solid var(--br)",background:"#fff"}}/>
+        <div style={{display:"flex",gap:8,marginTop:14}}>
+          <button className="btn bG" style={{flex:1,justifyContent:"center"}} onClick={()=>imprimerQR(qrFor)}>🖨️ Imprimer</button>
+          <button className="btn bT" style={{flex:1,justifyContent:"center"}} onClick={()=>setQrFor(null)}>Fermer</button>
+        </div>
+      </div>
+    </div>}
   </div>;
 }
 
@@ -778,7 +800,6 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
     <EcheancierDeclaration enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
     <PointageRapide enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
-    <PointageQRJour enfants={enfants} demo={isDemoUser}/>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
     {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"12px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D6EBD9)",border:"1.5px solid var(--S)"}}>
@@ -7537,6 +7558,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
   const [humeur,setHumeur]=useState("");
   const [saving,setSaving]=useState(false);
   const [photoLoading,setPhotoLoading]=useState(false);
+  const [echanges,setEchanges]=useState([]);
 
   const isToday=dateSel===TODAY_STR;
   const DEMO_SOMMEIL={
@@ -7573,15 +7595,17 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
         const tx=D.transmissions.filter(x=>x.eId===enfant.id&&x.date===dateSel&&x.auteur==="asmat").slice(-1)[0];
         const c={mot_du_jour:tx?.txt||"",humeur:tx?.mood||""};
         setCahier(c);setMot(c.mot_du_jour);setHumeur(c.humeur);setPhotos([]);
+        setEchanges(D.transmissions.filter(x=>x.eId===enfant.id&&x.date===dateSel).map((x,i)=>({id:x.id||("d"+i),auteur:x.auteur,heure:x.h,texte:x.txt,mood:x.mood})));
         return;
       }
       const eid=enfant.id;
-      const[rRepas,rCh,rSo,rPf,rCa]=await Promise.all([
+      const[rRepas,rCh,rSo,rPf,rCa,rTx]=await Promise.all([
         supabase.from("repas").select("*").eq("enfant_id",eid).eq("date",dateSel).maybeSingle(),
         supabase.from("changes_couches").select("*").eq("enfant_id",eid).eq("date",dateSel),
         supabase.from("sommeil").select("*").eq("enfant_id",eid).eq("date",dateSel).order("created_at",{ascending:true}),
         supabase.from("portfolio").select("*").eq("enfant_id",eid).eq("date",dateSel).order("created_at",{ascending:true}),
         supabase.from("cahier_jour").select("*").eq("enfant_id",eid).eq("date",dateSel).maybeSingle(),
+        supabase.from("transmissions").select("*").eq("enfant_id",eid).eq("date",dateSel).order("heure",{ascending:true}),
       ]);
       if(cancelled)return;
       const rp=rRepas.data;
@@ -7592,6 +7616,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
       const c=rCa.data||{mot_du_jour:"",humeur:""};
       setCahier(c);setMot(c.mot_du_jour||"");setHumeur(c.humeur||"");
       loadPhotos(eid);
+      setEchanges((rTx.data||[]).map(x=>({id:x.id,auteur:x.auteur_role,heure:x.heure,texte:x.texte,mood:x.mood})));
     })();
     return()=>{cancelled=true;};
   },[enfant?.id,dateSel,isDemo]);
@@ -7699,6 +7724,22 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
         cahier?.mot_du_jour?<div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,lineHeight:1.7,color:"var(--b)",fontStyle:"italic",whiteSpace:"pre-wrap"}}>{cahier.mot_du_jour}</div>
         :<div style={{fontSize:13,color:"var(--l)"}}>Pas encore de mot du jour.</div>
       )}
+    </div>
+
+    {/* Échanges du jour (transmissions parent + assmat) */}
+    <div className="card"style={{padding:16,marginBottom:12}}>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>💬 Échanges du jour</div>
+      {echanges.length===0
+        ?<div style={{fontSize:13,color:"var(--l)"}}>{role==="parent"?"Aucun message échangé aujourd'hui.":"Aucun message du parent aujourd'hui."}</div>
+        :<div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {echanges.map(t=>{const am=t.auteur==="asmat";return <div key={t.id}style={{display:"flex",gap:10}}>
+            <div style={{textAlign:"center",minWidth:34,flexShrink:0}}>{t.mood&&<div style={{fontSize:18}}>{t.mood}</div>}<div style={{fontSize:10,color:"var(--l)"}}>{t.heure?String(t.heure).slice(0,5):""}</div></div>
+            <div style={{flex:1,background:am?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"9px 13px",borderLeft:"3px solid "+(am?"var(--T)":"var(--B)")}}>
+              <div style={{fontSize:11,fontWeight:700,color:am?"var(--T)":"var(--B)",marginBottom:3}}>{am?(enfant?.prenomAsmat||"Assistante maternelle"):"Parent"}</div>
+              <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5,whiteSpace:"pre-wrap"}}>{t.texte}</div>
+            </div>
+          </div>;})}
+        </div>}
     </div>
 
     {/* Repas + Siestes */}
@@ -10517,8 +10558,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
-          <div style={{textAlign:"center",marginBottom:24}}>
-            <button onClick={()=>{const d=demos.find(x=>x.role==="asmat")||demos[0]; onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.92)",fontSize:13,fontWeight:600,textDecoration:"underline",fontFamily:"inherit"}}>🎭 Explorer la démo, sans inscription →</button>
+          <div style={{textAlign:"center",marginBottom:24,fontSize:13}}>
+            <span style={{color:"rgba(255,255,255,.7)"}}>🎭 Explorer la démo, sans inscription : </span>
+            <button onClick={()=>{const d=demos.find(x=>x.role==="asmat"); if(d)onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.95)",fontSize:13,fontWeight:700,textDecoration:"underline",fontFamily:"inherit"}}>assistante maternelle</button>
+            <span style={{color:"rgba(255,255,255,.5)"}}> · </span>
+            <button onClick={()=>{const d=demos.find(x=>x.role==="parent"); if(d)onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.95)",fontSize:13,fontWeight:700,textDecoration:"underline",fontFamily:"inherit"}}>parent</button>
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
             {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
