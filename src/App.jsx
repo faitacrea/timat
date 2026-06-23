@@ -773,6 +773,8 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       {user&&!demoStats&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
     </div>
 
+    <QuickActions role="asmat" setPage={setPage}/>
+
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
     <EcheancierDeclaration enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
     <PointageRapide enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
@@ -1008,6 +1010,8 @@ function AccueilParent({enfant,setPage,user}){
         🤒 Déclarer une absence
       </button>
     </div>
+
+    <QuickActions role="parent" setPage={setPage}/>
 
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
     <EcheancierDeclaration enfants={[enfant]} role="parent" user={user} demo={user?.id?.startsWith?.("demo-")||user?.isDemo||["e1","e2","e3"].includes(enfant?.id)}/>
@@ -15136,6 +15140,32 @@ const saveConfig = async (backupReason='before_save') => {
   }
 };
 
+
+function QuickActions({role,setPage}){
+  const A=role==="asmat"?[
+    {e:"⏰",l:"Pointer",p:"pointage",bg:"var(--Gp)",c:"var(--G)"},
+    {e:"📔",l:"Cahier du jour",p:"cahier_jour",bg:"var(--Pp)",c:"var(--P)"},
+    {e:"💶",l:"Paie",p:"admin_finances",bg:"var(--Tp)",c:"var(--T)"},
+    {e:"📅",l:"Planning",p:"calendrier",bg:"var(--Bp)",c:"var(--B)"},
+  ]:[
+    {e:"📔",l:"La journée",p:"cahier_jour",bg:"var(--Pp)",c:"var(--P)"},
+    {e:"⏰",l:"Pointer",p:"pointage",bg:"var(--Gp)",c:"var(--G)"},
+    {e:"💬",l:"Messages",p:"messagerie",bg:"var(--Tp)",c:"var(--T)"},
+    {e:"📄",l:"Documents",p:"documents_complet",bg:"var(--Bp)",c:"var(--B)"},
+  ];
+  return <div style={{marginBottom:16}}>
+    <div style={{fontSize:13,fontWeight:700,color:"var(--l)",marginBottom:9,paddingLeft:2}}>Que voulez-vous faire ?</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+      {A.map(a=><button key={a.p}onClick={()=>setPage&&setPage(a.p)}
+        style={{background:a.bg,border:"none",borderRadius:14,padding:"13px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:6,minHeight:78,transition:"transform .12s"}}
+        onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+        onMouseLeave={e=>e.currentTarget.style.transform="none"}>
+        <span style={{fontSize:24,lineHeight:1}}>{a.e}</span>
+        <span style={{fontSize:11,fontWeight:700,color:a.c,textAlign:"center",lineHeight:1.25}}>{a.l}</span>
+      </button>)}
+    </div>
+  </div>;
+}
 
 function EmptyState({emoji="✨",titre,texte,cta,onCta,compact=false}){
   return <div style={{textAlign:"center",padding:compact?"18px 14px":"28px 18px"}}>
