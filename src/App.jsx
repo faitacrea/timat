@@ -7146,7 +7146,7 @@ async function generateAndStoreContratPDF(contratId){
 }
 
 //
-function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser}){
+function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser,openWelcome}){
   const [toast,setToast]=useState("");
   // SIGNATURE STANDARD ASMAT P10 - state pour gestion signature de reference
   const [showSigPad,setShowSigPad]=useState(false);
@@ -7319,6 +7319,15 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           }}/>
         </div>
       </div>}
+
+      {/* Aide & prise en main */}
+      <div className="card"style={{padding:20}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>🎈 Aide & prise en main</div>
+        <div style={{fontSize:12,color:"var(--l)",marginBottom:12,lineHeight:1.6}}>
+          Un petit guide pour (re)découvrir l'essentiel de TiMat en quelques secondes.
+        </div>
+        <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={()=>openWelcome&&openWelcome()}>Revoir le guide de bienvenue</button>
+      </div>
 
       {/* Installation PWA */}
       <div className="card"style={{padding:20}}>
@@ -15137,9 +15146,53 @@ const saveConfig = async (backupReason='before_save') => {
 };
 
 
+function BienvenueOnboarding({role,user,setPage,onClose}){
+  const [step,setStep]=useState(0);
+  const steps=role==="asmat"?[
+    {e:"👋",t:"Bienvenue sur TiMat !",d:"Votre quotidien d'assistante maternelle, simplifié. Voici l'essentiel en quelques secondes.",c:"var(--T)"},
+    {e:"⏰",t:"Pointez en 1 tap",d:"Notez l'arrivée et le départ de chaque enfant d'un seul geste, directement depuis votre accueil.",c:"var(--G)"},
+    {e:"📔",t:"Le cahier du jour",d:"Repas, sieste, activités, photos et un petit mot : tout se partage en direct avec les parents.",c:"var(--P)"},
+    {e:"💶",t:"La paie, sans prise de tête",d:"Bulletins conformes, indemnités, suivi des versements et des impayés : l'application calcule pour vous.",c:"var(--B)"},
+  ]:[
+    {e:"👋",t:"Bienvenue sur TiMat !",d:"Suivez le quotidien de votre enfant et gérez l'administratif, en toute simplicité.",c:"var(--T)"},
+    {e:"📔",t:"La journée de votre enfant",d:"Repas, siestes, activités, photos et le mot du jour : tout en un coup d'œil, en temps réel.",c:"var(--P)"},
+    {e:"⏰",t:"Pointez & retrouvez tout",d:"Arrivée, départ, présences… et vos bulletins, contrats et documents réunis au même endroit.",c:"var(--G)"},
+    {e:"🤝",t:"Toujours en lien",d:"Échangez avec votre assistante maternelle et restez informé, sans rien oublier.",c:"var(--B)"},
+  ];
+  const last=step===steps.length-1;
+  const s=steps[step];
+  const finir=(dest)=>{ onClose&&onClose(); if(dest)setPage&&setPage(dest); };
+  return <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(20,30,40,.55)",backdropFilter:"blur(3px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}onClick={e=>{if(e.target===e.currentTarget)finir();}}>
+    <div style={{background:"var(--w)",width:"100%",maxWidth:440,borderRadius:"22px 22px 0 0",paddingBottom:24,boxShadow:"0 -8px 40px rgba(0,0,0,.25)",maxHeight:"92vh",overflowY:"auto"}}>
+      <div style={{background:s.c,borderRadius:"22px 22px 0 0",padding:"30px 24px 26px",textAlign:"center",position:"relative",transition:"background .4s"}}>
+        <button onClick={()=>finir()}style={{position:"absolute",top:14,right:16,background:"rgba(255,255,255,.25)",border:"none",color:"#fff",fontSize:12,fontWeight:600,padding:"5px 12px",borderRadius:20,cursor:"pointer"}}>Passer</button>
+        <div className="fi"key={step}style={{fontSize:60,lineHeight:1}}>{s.e}</div>
+      </div>
+      <div style={{padding:"22px 24px 0",textAlign:"center"}}>
+        <div className="pf"style={{fontSize:22,fontWeight:700,color:"var(--b)",marginBottom:10}}>{s.t}</div>
+        <div style={{fontSize:14,color:"var(--m)",lineHeight:1.65,minHeight:64}}>{s.d}</div>
+        <div style={{display:"flex",justifyContent:"center",gap:7,margin:"20px 0 22px"}}>
+          {steps.map((_,i)=><span key={i}onClick={()=>setStep(i)}style={{width:i===step?22:8,height:8,borderRadius:8,background:i===step?s.c:"var(--br)",cursor:"pointer",transition:"all .25s"}}/>)}
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          {step>0&&<button className="btn bG"style={{flex:"0 0 auto",padding:"12px 16px"}}onClick={()=>setStep(step-1)}>←</button>}
+          {!last?<button className="btn bT"style={{flex:1,justifyContent:"center",padding:"12px"}}onClick={()=>setStep(step+1)}>Suivant →</button>
+            :<button className="btn bT"style={{flex:1,justifyContent:"center",padding:"12px"}}onClick={()=>finir("cahier_jour")}>C'est parti ! 🎉</button>}
+        </div>
+        {last&&<div onClick={()=>finir()}style={{marginTop:12,fontSize:12,color:"var(--l)",cursor:"pointer"}}>Explorer par moi-même</div>}
+      </div>
+    </div>
+  </div>;
+}
+
 export default function App(){
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
+  const [showWelcome,setShowWelcome]=useState(false);
+  useEffect(()=>{
+    if(user?.id){ try{ if(!localStorage.getItem("timat:onboarding:seen:"+user.id)) setShowWelcome(true); }catch(e){} }
+  },[user?.id]);
+  const closeWelcome=()=>{ try{ if(user?.id)localStorage.setItem("timat:onboarding:seen:"+user.id,"1"); }catch(e){} setShowWelcome(false); };
   const [dark,setDark]=useState(false);
   const [loading,setLoading]=useState(true);
   const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length);
@@ -15540,7 +15593,7 @@ export default function App(){
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
-      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser}/>;
+      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)}/>;
       case "backoffice": return user?.is_admin===true?<Backoffice user={user} setPage={setPage} appConfig={appConfig} setAppConfig={setAppConfig}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
@@ -15615,6 +15668,7 @@ export default function App(){
         <BandeauInstall/>
         <div className="content">{renderPage()}</div>
         <BottomNav groups={groups} page={page} setPage={setPage} pmiNonLus={role==="parent"?0:pmiNonLus}/>
+        {showWelcome&&<BienvenueOnboarding role={role} user={user} setPage={setPage} onClose={closeWelcome}/>}
       </div>
     </>
   );
