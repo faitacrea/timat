@@ -1119,7 +1119,7 @@ function AccueilParent({enfant,setPage,user}){
       onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
       onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
       <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📋 Journal de la journée</div>
-      {txs.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucune transmission pour le moment.</div>
+      {txs.length===0?<EmptyState compact emoji="💬" titre="Pas encore de transmission" texte="Le journal du jour de votre enfant s'affichera ici dès que votre assistante maternelle écrira un mot." cta="Voir le cahier du jour" onCta={()=>setPage&&setPage("cahier_jour")}/>
         :txs.map(t=><div key={t.id}style={{display:"flex",gap:10,marginBottom:10}}>
           <div style={{fontSize:22}}>{t.mood}</div>
           <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
@@ -1806,9 +1806,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
               </div>}
             </div>;
           })}
-          {ptH.length===0&&<div style={{fontSize:13,color:"var(--l)",textAlign:"center",padding:20}}>
-            Aucun pointage enregistré pour le moment.
-          </div>}
+          {ptH.length===0&&<EmptyState emoji="⏰" titre="Aucun pointage pour le moment" texte={role==="asmat"?"Enregistrez l'arrivée d'un enfant (en 1 tap depuis l'accueil, ou via le QR code) : les journées pointées apparaîtront ici.":"Les arrivées et départs pointés s'afficheront ici, jour après jour."}/>}
         </div>
         {role==="parent"&&ptH.some(p=>!p.valide_parent)&&<div style={{
           marginTop:10,padding:"8px 12px",background:"var(--Gp)",borderRadius:8,
@@ -5653,11 +5651,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
           {loading
             ? <div style={{textAlign:"center",padding:20,color:"var(--l)",fontSize:13}}>Chargement…</div>
             : versements.length===0
-              ? <div className="card"style={{padding:24,textAlign:"center"}}>
-                  <div style={{fontSize:30,marginBottom:8}}>📭</div>
-                  <div style={{fontSize:14,fontWeight:700,color:"var(--b)"}}>Aucun versement enregistré</div>
-                  <div style={{fontSize:12,color:"var(--m)",marginTop:4}}>Les versements saisis apparaîtront ici.</div>
-                </div>
+              ? <div className="card"><EmptyState emoji="📭" titre="Aucun versement enregistré" texte="Les versements que vous saisissez apparaîtront ici, avec leur statut (à jour, en attente, impayé)."/></div>
               : <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {versements.map(v=><div key={v.id}className="card"style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div>
@@ -5964,7 +5958,7 @@ function TransmissionsContent({enfant,role,user}){
       <div className="card"style={{padding:16}}>
         <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>{enfant?.emoji} {enfant?.prenom} · Aujourd'hui</div>
         <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:400,overflowY:"auto"}}>
-          {msgs.length===0&&<div style={{fontSize:13,color:"var(--l)",textAlign:"center",padding:"20px 0"}}>Aucune transmission pour le moment.</div>}
+          {msgs.length===0&&<EmptyState compact emoji="💬" titre="Aucune transmission aujourd'hui" texte="Les petits mots échangés sur la journée de l'enfant apparaîtront ici."/>}
           {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
             <div style={{textAlign:"center",minWidth:38,flexShrink:0}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"10px 14px",borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
@@ -13285,10 +13279,7 @@ function InviterParent({enfants,user,demoMode=false}){
       <div className="card" style={{padding:16}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Invitations envoyées</div>
         {invitations.length===0
-          ?<div style={{textAlign:"center",padding:"24px 0",color:"var(--l)"}}>
-            <div style={{fontSize:32,marginBottom:8}}>📭</div>
-            <div style={{fontSize:13}}>Aucune invitation envoyée pour le moment</div>
-          </div>
+          ?<EmptyState emoji="📭" titre="Aucune invitation envoyée" texte="Invitez un parent pour partager l'espace de son enfant : les invitations envoyées apparaîtront ici."/>
           :<div style={{display:"flex",flexDirection:"column",gap:8}}>
             {invitations.map((inv,i)=><div key={inv.id||i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
               <div>
@@ -15145,6 +15136,15 @@ const saveConfig = async (backupReason='before_save') => {
   }
 };
 
+
+function EmptyState({emoji="✨",titre,texte,cta,onCta,compact=false}){
+  return <div style={{textAlign:"center",padding:compact?"18px 14px":"28px 18px"}}>
+    <div style={{fontSize:compact?30:42,marginBottom:8,lineHeight:1}}>{emoji}</div>
+    <div style={{fontSize:14,fontWeight:700,color:"var(--b)",marginBottom:5}}>{titre}</div>
+    {texte&&<div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,maxWidth:320,margin:"0 auto"}}>{texte}</div>}
+    {cta&&onCta&&<button className="btn bT"style={{marginTop:14,padding:"9px 18px"}}onClick={onCta}>{cta}</button>}
+  </div>;
+}
 
 function BienvenueOnboarding({role,user,setPage,onClose}){
   const [step,setStep]=useState(0);
