@@ -10517,6 +10517,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
+          <div style={{textAlign:"center",marginBottom:24}}>
+            <button onClick={()=>{const d=demos.find(x=>x.role==="asmat")||demos[0]; onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.92)",fontSize:13,fontWeight:600,textDecoration:"underline",fontFamily:"inherit"}}>🎭 Explorer la démo, sans inscription →</button>
+          </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
             {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
           </div>
@@ -11694,12 +11697,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </button>
               </form>
               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou démo rapide</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
+                <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou sans inscription</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
               </div>
-              <div style={{ background:"#F7F2EC", borderRadius:10, padding:10 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte asmat démo" : "Comptes parents démo"}</div>
+              <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
+                <div style={{ fontSize:13, fontWeight:700, color:role==="asmat"?"#C76754":"#2E4859", marginBottom:2 }}>🎭 Explorer la démo</div>
+                <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
-                  <button key={d.id} onClick={()=>onLogin(d)} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                  <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
                   </button>
