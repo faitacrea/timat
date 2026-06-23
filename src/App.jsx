@@ -4503,7 +4503,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const salSupp=hSupp*tauxH*1.25;
   const brut=salBase+salSupp;
   const joursTravailles=useRealHours?heuresMoisReel.jours:Math.round(h.real/8);
-  const entretien=(contrat.entretien||3.80)*joursTravailles;
+  const entretien=(contrat.entretien||3.92)*joursTravailles;
   const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*(t.base||1)*t.sal/100:0),0);
   const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*(t.base||1)*t.pat/100:0),0);
   const netPaye=brut-totalCotSal;
@@ -4607,7 +4607,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       section("REMUNERATION");
       ligne("Salaire de base (heures normales)",heuresNorm+" h",tauxH.toFixed(4)+" euros/h",salBase.toFixed(2)+" euros");
       if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",(tauxH*1.25).toFixed(4)+" euros/h",salSupp.toFixed(2)+" euros");
-      ligne("Indemnite d entretien",joursTravailles+" jours",(contrat.entretien||3.80).toFixed(2)+" euros/j",entretien.toFixed(2)+" euros");
+      ligne("Indemnite d entretien",joursTravailles+" jours",(contrat.entretien||3.92).toFixed(2)+" euros/j",entretien.toFixed(2)+" euros");
       if(repasMois>0)ligne("Indemnite de repas",joursTravailles+" jours",(Number(repasJour)||0).toFixed(2)+" euros/j",repasMois.toFixed(2)+" euros");
       doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
@@ -4839,7 +4839,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         <div style={{fontSize:10,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
-          ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.80)+"€",entretien.toFixed(2)+"€"],
+          ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.92)+"€",entretien.toFixed(2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+(Number(repasJour)||0).toFixed(2)+"€",repasMois.toFixed(2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
           <span style={{color:"var(--b)",flex:2}}>{l}</span>
@@ -4939,7 +4939,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<table><tr><th>Libellé</th><th>Heures / Jours</th><th>Taux</th><th class=\"right\">Montant brut</th></tr>",
           "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+tauxH.toFixed(4)+" euros/h</td><td class=\"right\">"+salBase.toFixed(2)+" euros</td></tr>",
           hSuppRow,
-          "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+(contrat.entretien||3.80).toFixed(2)+" euros/j</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+(contrat.entretien||3.92).toFixed(2)+" euros/j</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
           (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+(Number(repasJour)||0).toFixed(2)+" euros/j</td><td class=\"right\">"+repasMois.toFixed(2)+" euros</td></tr>":""),
           "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
           "</table>",
@@ -5267,7 +5267,7 @@ function ImportContrat({onFinish}){
   const [data,setData]=useState({
     prenomAsmat:"",emailAsmat:"",prenomEnfant:"",dateNaiss:"",
     prenomParent:"",emailParent:"",debut:"",jours:[],
-    heures:"",taux:"",entretien:"3.80",source:"Top-Assmat"
+    heures:"",taux:"",entretien:"3.92",source:"Top-Assmat"
   });
   const [toast,setToast]=useState("");
   const toggle=(j)=>setData(d=>({...d,jours:d.jours.includes(j)?d.jours.filter(x=>x!==j):[...d.jours,j]}));
@@ -8210,7 +8210,7 @@ function KitCMG({enfants,role,pEId,user}){
   // Calcul salaire net estimé
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
   const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||4.05)*1.1*10)/10;
-  const entretienMensuel=Math.round((contrat.entretien||3.80)*heuresMois/contrat.heuresHebdo*5)/10;
+  const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -8268,7 +8268,7 @@ function KitCMG({enfants,role,pEId,user}){
           </div>
           <InfoRow label="Taux horaire net" value={(contrat.tauxHoraire||4.05).toFixed(2)+"€/h"} copyKey="taux"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
-          <InfoRow label="Indemnité d'entretien/jour" value={(contrat.entretien||3.80).toFixed(2)+"€"} copyKey="entretien"/>
+          <InfoRow label="Indemnité d'entretien/jour" value={(contrat.entretien||3.92).toFixed(2)+"€"} copyKey="entretien"/>
           <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
             💡 Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
@@ -8804,7 +8804,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
   // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
   const tauxH=contrat.tauxHoraire||4.05;
-  const entretienJour=contrat.entretien||3.80;
+  const entretienJour=contrat.entretien||3.92;
   const heuresAnnuelles=realStats?.heures||(heuresMois*12);
   const joursAnnuels=realStats?.jours||(heuresAnnuelles/8);
   // Salaire brut = heures * taux (avec majoration 25% au dessus de 45h/sem si pas mensualise)
@@ -11808,7 +11808,7 @@ function OnboardingWizard({user,onFinish}){
         debut:contrat.debut||new Date().toISOString().slice(0,10),
         heures_hebdo:contrat.heuresHebdo||40,
         taux_horaire:contrat.tauxHoraire||4.05,
-        entretien:contrat.entretien||3.80,
+        entretien:contrat.entretien||3.92,
         jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
         horaires:contrat.horaires||'07h30–17h30',
         aeeh:!!contrat.aeeh,
@@ -12416,7 +12416,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
   // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
   const tauxH=contrat.tauxHoraire||4.05;
-  const entretienJour=contrat.entretien||3.80;
+  const entretienJour=contrat.entretien||3.92;
   const hasReal=realStats?.paiements>0;
   const moisTravailles=12;
   const versementsList=realStats?.versements||[];
@@ -12732,7 +12732,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
           <div>Début : <strong>{contrat.debut}</strong></div>
           <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
           <div>Taux horaire : <strong>{contrat.tauxHoraire||4.05} €</strong></div>
-          <div>Entretien : <strong>{contrat.entretien||3.80} €/jour</strong></div>
+          <div>Entretien : <strong>{contrat.entretien||3.92} €/jour</strong></div>
         </div>:<div style={{fontSize:12,color:"var(--l)"}}>Aucun contrat trouvé pour cet enfant.</div>}
       </div>
     </div>
