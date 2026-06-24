@@ -7652,6 +7652,20 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
   const nbChanges=changes.filter(c=>c.type==="Change").length;
   const humeurAff=cahier?.humeur||(role==="asmat"?humeur:"");
 
+  const hhm=(t)=>t?String(t).slice(0,5):"";
+  const moments=[];
+  if(repas){
+    if(repas.dej)moments.push({time:"12:00",ic:"🍽️",l:"Déjeuner",sub:repas.q?qLabel(repas.q):"",bg:"var(--Tp)"});
+    if(repas.gou)moments.push({time:"15:30",ic:"🍎",l:"Goûter",sub:"",bg:"var(--Tp)"});
+    if(repas.bib)moments.push({time:"",ic:"🍼",l:"Biberon",sub:"",bg:"var(--Tp)"});
+  }
+  siestes.forEach(s=>moments.push({time:hhm(s.debut),ic:"😴",l:"Sieste"+(s.duree?" · "+s.duree:""),sub:(s.debut&&s.fin)?(s.debut+" → "+s.fin):"",bg:"var(--Pp)"}));
+  changes.forEach(c=>moments.push({time:hhm(c.heure),ic:c.type==="Propre"?"✅":"👶",l:c.type==="Propre"?"Couche propre":"Change",sub:c.note||"",bg:"var(--Gp)"}));
+  activites.forEach(a=>moments.push({time:"",ic:a.emoji||"🎨",l:a.titre||"Activité",sub:a.description||"",bg:"var(--Sp)"}));
+  moments.sort((x,y)=>{if(x.time&&y.time)return x.time<y.time?-1:1;if(x.time&&!y.time)return -1;if(!x.time&&y.time)return 1;return 0;});
+  const remplis=[!!(repas&&(repas.dej||repas.gou||repas.bib)),siestes.length>0,activites.length>0,changes.length>0,!!(cahier&&cahier.mot_du_jour),photos.length>0];
+  const pctJour=Math.round(100*remplis.filter(Boolean).length/remplis.length);
+
   if(!enfant)return <div className="fi"><PageHeader icon="📔" title="Cahier du jour" sub="Aucun enfant lié."/></div>;
 
   return <div className="fi">
@@ -7695,6 +7709,32 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
       {photos.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(90px,1fr))",gap:8}}>
         {photos.map((u,i)=><img key={i}src={u}alt=""style={{width:"100%",aspectRatio:"1",objectFit:"cover",borderRadius:10}}/>)}
       </div>}
+    </div>
+
+    {/* La journée — frise + complétude (modernisation) */}
+    <div className="card"style={{padding:16,marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📔 La journée{role==="parent"?" de "+(enfant.prenom||""):""}</div>
+        <span style={{fontSize:12,fontWeight:700,color:"var(--T)"}}>journée remplie · {pctJour}%</span>
+      </div>
+      <div style={{height:8,borderRadius:99,background:"var(--c)",overflow:"hidden",marginBottom:16}}>
+        <div style={{width:pctJour+"%",height:"100%",background:"var(--T)",borderRadius:99,transition:"width .5s"}}/>
+      </div>
+      {moments.length===0
+        ?<div style={{fontSize:13,color:"var(--l)"}}>Rien d'enregistré pour ce jour pour le moment.</div>
+        :<div>
+          {moments.map((m,i)=><div key={i}style={{display:"flex",gap:12}}>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+              <div style={{width:34,height:34,borderRadius:"50%",background:m.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{m.ic}</div>
+              {i<moments.length-1&&<div style={{flex:1,width:2,background:"var(--br)",margin:"3px 0"}}/>}
+            </div>
+            <div style={{flex:1,paddingBottom:i<moments.length-1?14:2}}>
+              {m.time&&<div style={{fontSize:11,color:"var(--l)"}}>{m.time}</div>}
+              <div style={{fontSize:14,fontWeight:600,color:"var(--b)"}}>{m.l}</div>
+              {m.sub&&<div style={{fontSize:12,color:"var(--m)",marginTop:1}}>{m.sub}</div>}
+            </div>
+          </div>)}
+        </div>}
     </div>
 
     {/* Mot du jour */}
@@ -7742,60 +7782,8 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
       </div>
     </div>
 
-    {/* Repas + Siestes */}
-    <div className="g2">
-      <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🍽️ Repas</div>
-        {repas&&(repas.dej||repas.gou||repas.bib)?<div>
-          {[["🥗","Déjeuner",repas.dej],["🍎","Goûter",repas.gou],["🍼","Biberon",repas.bib]].filter(r=>r[2]).map(([ic,l,v])=>
-            <div key={l}style={{display:"flex",gap:10,marginBottom:8,padding:"9px 12px",background:"var(--c)",borderRadius:9}}>
-              <span>{ic}</span><div><div style={{fontSize:11,color:"var(--l)",fontWeight:700}}>{l}</div>
-                <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{v}</div></div></div>)}
-          {repas.q&&<span className="badge"style={{background:qCol(repas.q)+"22",color:qCol(repas.q)}}>{qLabel(repas.q)}</span>}
-          {repas.notes&&<div style={{fontSize:12,color:"var(--m)",marginTop:6,fontStyle:"italic"}}>{repas.notes}</div>}
-        </div>:<div style={{fontSize:13,color:"var(--l)"}}>Non renseigné.</div>}
-      </div>
-      <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>😴 Siestes</div>
-        {siestes.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucune sieste enregistrée.</div>
-          :siestes.map(s=><div key={s.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 12px",background:"var(--c)",borderRadius:9,marginBottom:8}}>
-            <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{s.debut} → {s.fin}</span>
-            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}>{s.duree}</span>
-          </div>)}
-      </div>
-    </div>
-
-    {/* Changes */}
-    <div className="card"style={{padding:16,marginTop:12}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>👶 Changes {nbChanges>0&&<span style={{color:"var(--T)",fontSize:12}}>· {nbChanges} change{nbChanges>1?"s":""}</span>}</div>
-      {changes.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucun change.</div>
-        :<div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-          {changes.map(c=><div key={c.id}style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"var(--c)",borderRadius:9}}>
-            <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.heure}</span>
-            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":"var(--Gp)",color:c.type==="Propre"?"var(--S)":"var(--G)"}}>{c.type==="Propre"?"✅ Propre":"🔄 Change"}</span>
-            {c.note&&<span style={{fontSize:11,color:"var(--m)"}}>{c.note}</span>}
-          </div>)}
-        </div>}
-    </div>
-
-    {/* Activites */}
-    <div className="card"style={{padding:16,marginTop:12,marginBottom:8}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🎨 Activités</div>
-      {activites.length===0?<div style={{fontSize:13,color:"var(--l)"}}>Aucune activité notée.</div>
-        :activites.map(a=><div key={a.id}style={{display:"flex",gap:12,marginBottom:10,padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
-          <span style={{fontSize:24}}>{a.emoji||"🎨"}</span>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{a.titre}</div>
-            {a.description&&<div style={{fontSize:12,color:"var(--m)",marginTop:2}}>{a.description}</div>}
-            {a.competences&&a.competences.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:6}}>
-              {a.competences.map((co,i)=><span key={i}className="badge"style={{background:"var(--Sp)",color:"var(--S)",fontSize:10}}>{co}</span>)}
-            </div>}
-          </div>
-        </div>)}
-    </div>
-
     {role==="asmat"&&<div style={{fontSize:11,color:"var(--l)",textAlign:"center",padding:"4px 0 8px"}}>
-      Repas, siestes, changes et activités se saisissent dans leurs écrans dédiés (Journal → Repas &amp; Changes / Sommeil · Éveil → Portfolio). Ils s'affichent ici automatiquement.
+      Repas, siestes, changes et activités se saisissent dans « Détail du jour » et « Éveil → Portfolio ». Ils s'affichent ici automatiquement, résumés dans la frise.
     </div>}
   </div>;
 }
