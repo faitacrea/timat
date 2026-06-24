@@ -9952,9 +9952,9 @@ const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
     {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
-    {id:"dashboard",l:"Tableau de bord",ic:"📊"},
-    {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"journal_complet",l:"Détail du jour",ic:"📋"},
+    {id:"pointage",l:"Pointage",ic:"⏰"},
+    {id:"dashboard",l:"Tableau de bord",ic:"📊"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
@@ -9980,9 +9980,9 @@ const GROUPS_P={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"Mon enfant",ic:"👶",color:"#B8622F",subs:[
     {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
-    {id:"dashboard",l:"Tableau de bord",ic:"📊"},
-    {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"journal_complet",l:"Détail du jour",ic:"📋"},
+    {id:"pointage",l:"Pointage",ic:"⏰"},
+    {id:"dashboard",l:"Tableau de bord",ic:"📊"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
@@ -11745,8 +11745,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
                 <div style={{ fontSize:13, fontWeight:700, color:role==="asmat"?"#C76754":"#2E4859", marginBottom:2 }}>🎭 Explorer la démo</div>
                 <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Comptes de démonstration</div>
-                {demos.map(d => (
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
+                {demos.filter(d=>d.role===role).map(d => (
                   <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
