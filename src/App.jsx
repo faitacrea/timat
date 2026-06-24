@@ -7661,7 +7661,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
   }
   siestes.forEach(s=>moments.push({time:hhm(s.debut),ic:"😴",l:"Sieste"+(s.duree?" · "+s.duree:""),sub:(s.debut&&s.fin)?(s.debut+" → "+s.fin):"",bg:"var(--Pp)"}));
   changes.forEach(c=>moments.push({time:hhm(c.heure),ic:c.type==="Propre"?"✅":"👶",l:c.type==="Propre"?"Couche propre":"Change",sub:c.note||"",bg:"var(--Gp)"}));
-  activites.forEach(a=>moments.push({time:"",ic:a.emoji||"🎨",l:a.titre||"Activité",sub:a.description||"",bg:"var(--Sp)"}));
+  activites.forEach(a=>moments.push({time:"",ic:a.emoji||"🎨",l:a.titre||"Activité",sub:a.description||"",comps:a.competences||[],bg:"var(--Sp)"}));
   moments.sort((x,y)=>{if(x.time&&y.time)return x.time<y.time?-1:1;if(x.time&&!y.time)return -1;if(!x.time&&y.time)return 1;return 0;});
   const remplis=[!!(repas&&(repas.dej||repas.gou||repas.bib)),siestes.length>0,activites.length>0,changes.length>0,!!(cahier&&cahier.mot_du_jour),photos.length>0];
   const pctJour=Math.round(100*remplis.filter(Boolean).length/remplis.length);
@@ -7732,6 +7732,9 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
               {m.time&&<div style={{fontSize:11,color:"var(--l)"}}>{m.time}</div>}
               <div style={{fontSize:14,fontWeight:600,color:"var(--b)"}}>{m.l}</div>
               {m.sub&&<div style={{fontSize:12,color:"var(--m)",marginTop:1}}>{m.sub}</div>}
+              {m.comps&&m.comps.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
+                {m.comps.map((co,j)=><span key={j}className="badge"style={{background:"var(--Sp)",color:"var(--S)",fontSize:10}}>{co}</span>)}
+              </div>}
             </div>
           </div>)}
         </div>}
@@ -7798,9 +7801,6 @@ function JournalComplet({enfants,role,pEId,user}){
     ?[{id:"repas",l:"Repas & Changes",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}]
     :[{id:"repas",l:"Repas",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}];
   return <div className="fi">
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);setSec("repas");}}/>)}
-    </div>}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
         padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
@@ -10546,10 +10546,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
           <div style={{textAlign:"center",marginBottom:24,fontSize:13}}>
-            <span style={{color:"rgba(255,255,255,.7)"}}>🎭 Explorer la démo, sans inscription : </span>
-            <button onClick={()=>{const d=demos.find(x=>x.role==="asmat"); if(d)onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.95)",fontSize:13,fontWeight:700,textDecoration:"underline",fontFamily:"inherit"}}>assistante maternelle</button>
-            <span style={{color:"rgba(255,255,255,.5)"}}> · </span>
-            <button onClick={()=>{const d=demos.find(x=>x.role==="parent"); if(d)onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.95)",fontSize:13,fontWeight:700,textDecoration:"underline",fontFamily:"inherit"}}>parent</button>
+            <button onClick={()=>{const d=demos.find(x=>x.role==="asmat"); if(d)onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.95)",fontSize:13,fontWeight:700,textDecoration:"underline",fontFamily:"inherit"}}>🎭 Explorer la démo assistante maternelle, sans inscription →</button>
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
             {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
@@ -11727,7 +11724,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
-              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+              {role==="asmat" && (<><div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
                 <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou sans inscription</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
               </div>
               <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
@@ -11740,7 +11737,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
                   </button>
                 ))}
-              </div>
+              </div></>)}
               <div style={{ marginTop:12, fontSize:11, color:"#A68970", textAlign:"center" }}>Données hébergées en France · Aucun engagement</div>
             </div>
           </div>
