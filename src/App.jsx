@@ -549,35 +549,6 @@ function EcheancierDeclaration({enfants,role,user,demo}){
 }
 
 //
-function PointageQRJour({enfants,demo}){
-  const [open,setOpen]=useState(true);
-  const list=(enfants||[]).filter(Boolean);
-  if(demo||!list.length)return null;
-  const origin=(typeof window!=="undefined"&&window.location.origin)||"https://timat.app";
-  return <div className="card" style={{padding:"14px 16px",marginBottom:16,border:"1.5px solid var(--Bp)",background:"var(--c)"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>setOpen(o=>!o)}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📱 Pointage QR du jour</div>
-      <span style={{fontSize:16,color:"var(--l)"}}>{open?"▾":"▸"}</span>
-    </div>
-    <div style={{fontSize:12,color:"var(--m)",marginTop:4,lineHeight:1.5}}>
-      Le parent flashe le QR de son enfant avec l'appareil photo : <b>1er scan = arrivée</b>, <b>2e scan = départ</b>. Le pointage s'enregistre sur les deux espaces. Imprimable une fois, réutilisable chaque jour.
-    </div>
-    {open&&<><div style={{display:"flex",gap:16,flexWrap:"wrap",marginTop:12,justifyContent:"center"}}>
-      {list.map(e=>{
-        const data=origin+"/?pointage=qr&enfant="+e.id;
-        return <div key={e.id} style={{textAlign:"center"}}>
-          <img alt={"QR "+(e.prenom||"")} src={"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="+encodeURIComponent(data)}
-            style={{width:130,height:130,borderRadius:12,border:"3px solid var(--br)",background:"#fff"}}/>
-          <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginTop:6}}>{e.emoji||"👶"} {e.prenom||"Enfant"}</div>
-        </div>;
-      })}
-    </div>
-    <div style={{textAlign:"center",marginTop:12}}>
-      <button className="btn bG" style={{fontSize:12}} onClick={()=>window.print()}>🖨️ Imprimer les QR</button>
-    </div></>}
-  </div>;
-}
-
 // POINTAGE RAPIDE - pointer arrivee/depart en 1 tap directement depuis l'espace (parent OU assmat),
 // via la meme RPC pointage_qr que le scan. Statut du jour en direct, sans chercher ni scanner.
 function PointageRapide({enfants,role,user,demo}){
@@ -772,7 +743,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const kpis=isDemoUser?[
     {icon:"👶",val:nbEnfants+" enfant"+(nbEnfants>1?"s":""),lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
     {icon:"💬",val:"0",lbl:"Messages non lus",c:"var(--B)",page:"messagerie",hint:"→ Messagerie"},
-    {icon:"📋",val:"Actif",lbl:"Journal du jour",c:"var(--S)",page:"journal_complet",hint:"→ Journal"},
+    {icon:"📋",val:"Actif",lbl:"Détail du jour",c:"var(--S)",page:"journal_complet",hint:"→ Saisie"},
     {icon:"🧾",val:nbEnfants,lbl:"Contrats actifs",c:"var(--G)",page:"admin_finances",hint:"→ Paie & Contrats"},
   ]:[
     {icon:"⏱️",val:stats.heuresSemaine+" h",lbl:"Heures cette semaine",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
@@ -7559,6 +7530,9 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
   const [saving,setSaving]=useState(false);
   const [photoLoading,setPhotoLoading]=useState(false);
   const [echanges,setEchanges]=useState([]);
+  const [msgTx,setMsgTx]=useState("");
+  const [moodTx,setMoodTx]=useState("");
+  const [sendingTx,setSendingTx]=useState(false);
 
   const isToday=dateSel===TODAY_STR;
   const DEMO_SOMMEIL={
@@ -7632,6 +7606,24 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     setSaving(false);
     if(error){setToast("Erreur : "+(error.message||"inconnue"));return;}
     setCahier({mot_du_jour:mot,humeur});setToast("Mot du jour enregistré ✓");
+  };
+
+  const envoyerMsg=async()=>{
+    if(!msgTx.trim()||!enfant?.id)return;
+    const h=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    if(isDemo){
+      setEchanges(p=>[...p,{id:"tn"+Date.now(),auteur:role,heure:h,texte:msgTx,mood:moodTx||""}]);
+      setMsgTx("");setMoodTx("");setToast("Message ajouté ✓ (démo)");return;
+    }
+    setSendingTx(true);
+    const{data,error}=await supabase.from("transmissions").insert({
+      enfant_id:enfant.id,auteur_id:user?.id,auteur_role:role,
+      date:dateSel,heure:h,texte:msgTx,mood:moodTx||null,
+    }).select().single();
+    setSendingTx(false);
+    if(error){setToast("Erreur : "+(error.message||"envoi impossible"));return;}
+    setEchanges(p=>[...p,{id:data?.id||("tn"+Date.now()),auteur:role,heure:h,texte:msgTx,mood:moodTx||""}]);
+    setMsgTx("");setMoodTx("");setToast("Message envoyé ✓");
   };
 
   const ajouterPhoto=async(ev)=>{
@@ -7740,6 +7732,14 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
             </div>
           </div>;})}
         </div>}
+      {/* Écrire dans le cahier (fusion Journal → Cahier) */}
+      <div style={{marginTop:14,borderTop:"1px solid var(--br)",paddingTop:12}}>
+        <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+          {["😊","😴","😋","😢","🤒","🎨"].map(m=><button key={m}onClick={()=>setMoodTx(moodTx===m?"":m)}className={"moo"+(moodTx===m?" on":"")}style={{fontSize:16}}>{m}</button>)}
+        </div>
+        <textarea className="ta" value={msgTx} onChange={e=>setMsgTx(e.target.value)} placeholder={role==="parent"?"Un mot pour l'assistante maternelle… (transmission du matin, info utile)":"Un mot pour les parents…"} rows={2} style={{width:"100%",boxSizing:"border-box",marginBottom:8}}/>
+        <button className="btn bT" disabled={sendingTx||!msgTx.trim()} style={{width:"100%",justifyContent:"center",opacity:(sendingTx||!msgTx.trim())?0.55:1}} onClick={envoyerMsg}>{sendingTx?"…":"Envoyer"}</button>
+      </div>
     </div>
 
     {/* Repas + Siestes */}
@@ -7803,15 +7803,15 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
 //
 function JournalComplet({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [sec,setSec]=useState("journal");
+  const [sec,setSec]=useState("repas");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const secs=role==="asmat"
-    ?[{id:"journal",l:"Journal & Bilans",ic:"📋"},{id:"repas",l:"Repas & Changes",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}]
-    :[{id:"journal",l:"Journal",ic:"📋"},{id:"repas",l:"Repas",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}];
+    ?[{id:"repas",l:"Repas & Changes",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}]
+    :[{id:"repas",l:"Repas",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}];
   return <div className="fi">
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);setSec("journal");}}/>)}
+      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);setSec("repas");}}/>)}
     </div>}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
@@ -7822,7 +7822,6 @@ function JournalComplet({enfants,role,pEId,user}){
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>
-    {sec==="journal"&&<JournalAvecBilans enfant={enfant}liste={liste}role={role}pEId={selId}user={user}/>}
     {sec==="repas"&&<RepasChanges enfants={liste}role={role}pEId={selId}/>}
     {sec==="sommeil"&&<Sommeil enfants={liste}role={role}pEId={selId}/>}
     {sec==="activites"&&<ActivitesSuggerees enfants={liste}role={role}pEId={selId}/>}
@@ -9955,7 +9954,7 @@ const GROUPS_AM={
     {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
     {id:"dashboard",l:"Tableau de bord",ic:"📊"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
-    {id:"journal_complet",l:"Journal",ic:"📋"},
+    {id:"journal_complet",l:"Détail du jour",ic:"📋"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
@@ -9983,7 +9982,7 @@ const GROUPS_P={
     {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
     {id:"dashboard",l:"Tableau de bord",ic:"📊"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
-    {id:"journal_complet",l:"Journal",ic:"📋"},
+    {id:"journal_complet",l:"Détail du jour",ic:"📋"},
     {id:"sante_complet",l:"Santé",ic:"🏥"},
     {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
@@ -11746,8 +11745,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
                 <div style={{ fontSize:13, fontWeight:700, color:role==="asmat"?"#C76754":"#2E4859", marginBottom:2 }}>🎭 Explorer la démo</div>
                 <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
-                {demos.filter(d=>d.role===role).map(d => (
+                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Comptes de démonstration</div>
+                {demos.map(d => (
                   <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
