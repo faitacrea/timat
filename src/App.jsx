@@ -11967,7 +11967,7 @@ function OnboardingWizard({user,onFinish}){
                         emailParent:parentEmail,
                         prenomEnfant:enfant.prenom,
                         prenomAsmat:user?.prenom||"Votre assistante maternelle",
-                        asmatId:user?.id,enfantId:null,
+                        asmatId:user?.id,enfantId:enfant?.id||null,
                       })
                     });
                     const d=await res.json();
