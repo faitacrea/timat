@@ -18,19 +18,32 @@ export default async function handler(req, res) {
     const { emailParent, prenomEnfant, prenomAsmat, asmatId, enfantId } = req.body;
     if (!emailParent) return res.status(400).json({ error: "Email requis" });
 
-    await supabase.auth.admin.inviteUserByEmail(emailParent, {
-      redirectTo: "https://timat-rho.vercel.app?role=parent",
-      data: { role: "parent", prenom_enfant: prenomEnfant, asmat_id: asmatId, enfant_id: enfantId }
-    });
+    // 1. ENREGISTRER L'INVITATION D'ABORD
+    // Ainsi le rattachement parent<->enfant fonctionne meme si l'email echoue.
+    // Colonnes reelles de la table : email_parent, asmat_id, enfant_id, acceptee (boolean).
+    const { error: dbError } = await supabase.from("invitations").upsert({
+      email_parent: emailParent,
+      asmat_id: asmatId,
+      enfant_id: enfantId || null,
+      acceptee: false,
+      created_at: new Date().toISOString()
+    }, { onConflict: "email_parent,asmat_id" });
 
+    if (dbError) {
+      console.error("Invitation DB error:", dbError);
+      return res.status(500).json({ error: "Enregistrement invitation : " + dbError.message });
+    }
+
+    // 2. ENVOYER L'EMAIL depuis le domaine verifie timat.app
     const html = [
       "<h2>Bienvenue sur TiMat</h2>",
       "<p>" + (prenomAsmat || "Votre assistante maternelle") + " vous invite a suivre le quotidien de " + (prenomEnfant || "votre enfant") + " sur TiMat.</p>",
-      "<p><a href='https://timat-rho.vercel.app?role=parent' style='background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;'>Acceder a mon espace parent</a></p>"
+      "<p>Creez votre compte avec <strong>cette adresse email</strong> pour acceder directement a l'espace de votre enfant.</p>",
+      "<p><a href='https://timat.app?role=parent' style='background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;'>Creer mon espace parent</a></p>"
     ].join("");
 
     const { error: emailError } = await resend.emails.send({
-      from: "TiMat <onboarding@resend.dev>",
+      from: "TiMat <noreply@timat.app>",
       to: emailParent,
       subject: "Votre assistante maternelle vous invite sur TiMat",
       html: html
@@ -38,13 +51,12 @@ export default async function handler(req, res) {
 
     if (emailError) {
       console.error("Resend error:", emailError);
-      return res.status(500).json({ error: emailError.message });
+      // L'invitation est deja enregistree : le rattachement se fera quand meme a l'inscription.
+      return res.status(200).json({
+        success: true,
+        warning: "Invitation enregistree, mais email non envoye : " + emailError.message
+      });
     }
-
-    await supabase.from("invitations").upsert({
-      email_parent: emailParent, asmat_id: asmatId, enfant_id: enfantId,
-      prenom_enfant: prenomEnfant, statut: "envoyee", created_at: new Date().toISOString()
-    }, { onConflict: "email_parent,asmat_id" });
 
     console.log("[Invite] Email envoye a", emailParent);
     return res.status(200).json({ success: true, message: "Invitation envoyee a " + emailParent });
