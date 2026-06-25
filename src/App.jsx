@@ -10345,6 +10345,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
+
+  // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
+  useEffect(()=>{
+    try{
+      const p=new URLSearchParams(window.location.search);
+      if(p.get("role")==="parent"||p.has("invite")){ setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
+      else if(p.get("role")==="asmat"){ setRole("asmat"); setShowModal(true); }
+    }catch(e){}
+  },[]);
   // Démo : enfants enrichis (signatures dérivées) + stats fictives pour le vrai écran Accueil
   const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
   const demoAccueilStats = {heuresSemaine:38.5,joursSemaine:5,revenuMois:1620,heuresMois:152,messagesNonLus:D.messages.filter(m=>!m.lu).length,presencesJour:demoEnfants.filter(e=>demoArrivee[e.id]).map(e=>({...e,depuis:demoArrivee[e.id]})),loaded:true};
@@ -13218,7 +13227,14 @@ function InviterParent({enfants,user,demoMode=false}){
   const [err,setErr]=useState("");
   const [toast,setToast]=useState("");
   const [invitations,setInvitations]=useState(demoMode?[{id:"inv_demo",email_parent:"parent.leo@email.fr",prenom_enfant:"Léo",statut:"envoyée",created_at:new Date().toISOString()}]:[]);
+  const [shareToken,setShareToken]=useState(null);
   const enfant=enfants.find(e=>e.id===selId)||enfants[0];
+  useEffect(()=>{
+    if(demoMode||!enfant?.id){setShareToken(null);return;}
+    let alive=true;
+    supabase.rpc("get_or_create_share_token",{p_enfant_id:enfant.id}).then(({data,error})=>{if(alive&&!error&&data)setShareToken(data);});
+    return()=>{alive=false;};
+  },[enfant?.id,demoMode]);
 
   // Charger invitations existantes
   useEffect(()=>{
@@ -13302,10 +13318,10 @@ function InviterParent({enfants,user,demoMode=false}){
           </div>
           <div style={{display:"flex",gap:8}}>
             <div style={{flex:1,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-              {window.location.origin}/?invite={user?.id?.slice(0,8)}
+              {shareToken?(window.location.origin+"/?invite="+shareToken):"Génération du lien…"}
             </div>
             <button className="btn bG" style={{fontSize:11,padding:"6px 10px",flexShrink:0}}
-              onClick={()=>{navigator.clipboard?.writeText(window.location.origin+"/?invite="+user?.id?.slice(0,8));setToast("Lien copié ✓");}}>
+              onClick={()=>{if(!shareToken)return;navigator.clipboard?.writeText(window.location.origin+"/?invite="+shareToken);setToast("Lien copié ✓");}}>
               📋 Copier
             </button>
           </div>
@@ -15432,7 +15448,13 @@ export default function App(){
       setDbLoading(true);
       try{
         // RATTACHEMENT INVITATION : relie le parent a son/ses enfant(s) par email avant le chargement
-        if(user.role==="parent"){ try{ await supabase.rpc("claim_invitations"); }catch(_e){} }
+        if(user.role==="parent"){
+          try{ await supabase.rpc("claim_invitations"); }catch(_e){}
+          try{
+            const tk=new URLSearchParams(window.location.search).get("invite");
+            if(tk&&tk.length>20){ await supabase.rpc("claim_invite_token",{p_token:tk}); }
+          }catch(_e){}
+        }
         // Enfants
         let q=supabase.from("enfants").select("*");
         if(user.role==="asmat") q=q.eq("asmat_id",user.id);
