@@ -10435,6 +10435,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             },{onConflict:'id'});
           }catch(e){console.log('Profile upsert:', e);}
         },500);
+        // RATTACHEMENT IMMEDIAT (session fraiche apres signUp) : lien token + invitations par email
+        try{
+          const tk=new URLSearchParams(window.location.search).get("invite")||(()=>{try{return localStorage.getItem("timat:invite");}catch(e){return null;}})();
+          if(tk&&tk.length>20){ await supabase.rpc("claim_invite_token",{p_token:tk}); try{localStorage.removeItem("timat:invite");}catch(e){} }
+          if(role==="parent"){ await supabase.rpc("claim_invitations"); }
+        }catch(e){console.log("claim:",e?.message);}
         onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
         // AUDIT LOG + CONSENT P8 : preuve RGPD du consentement + trace de la création de compte
         logConsent(data.user.id, consent);
@@ -13230,7 +13236,8 @@ function InviterParent({enfants,user,demoMode=false}){
   const [shareToken,setShareToken]=useState(null);
   const enfant=enfants.find(e=>e.id===selId)||enfants[0];
   useEffect(()=>{
-    if(demoMode||!enfant?.id){setShareToken(null);return;}
+    setShareToken(null);
+    if(demoMode||!enfant?.id){return;}
     let alive=true;
     supabase.rpc("get_or_create_share_token",{p_enfant_id:enfant.id}).then(({data,error})=>{if(alive&&!error&&data)setShareToken(data);});
     return()=>{alive=false;};
