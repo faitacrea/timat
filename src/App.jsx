@@ -6473,34 +6473,108 @@ function CourbeCroissance({enfants,role,pEId}){
 
 //
 const ACTIVITES_PAR_AGE=[
-  {age_min:0,age_max:6,cat:"Éveil",titre:"Hochets et mobiles",desc:"Stimulation visuelle et auditive. Mobiliser les sens dès les premières semaines.",competences:["Éveil sensoriel","Concentration"],duree:"10-15 min",materiel:"Hochet, mobile coloré"},
-  {age_min:3,age_max:12,cat:"Motricité",titre:"Tapis d'éveil",desc:"Découverte du corps, position sur le ventre, premiers mouvements de reptation.",competences:["Motricité globale","Tonus musculaire"],duree:"15-20 min",materiel:"Tapis d'éveil"},
-  {age_min:6,age_max:18,cat:"Langage",titre:"Comptines avec gestes",desc:"Apprendre la langue par le corps et la répétition. Favorise la mémoire.",competences:["Langage","Mémoire"],duree:"10 min",materiel:"Aucun"},
-  {age_min:12,age_max:24,cat:"Créatif",titre:"Peinture au doigt",desc:"Explorer les textures et les couleurs. Développe la motricité fine.",competences:["Motricité fine","Créativité"],duree:"20 min",materiel:"Peinture lavable, feuilles"},
-  {age_min:12,age_max:36,cat:"Langage",titre:"Lecture d'images",desc:"Montrer et nommer les objets dans des livres imagiers. Enrichit le vocabulaire.",competences:["Vocabulaire","Concentration"],duree:"10-15 min",materiel:"Livre imagier"},
-  {age_min:18,age_max:36,cat:"Sciences",titre:"Jardinage en pot",desc:"Planter des graines, arroser, observer la pousse. Sens de la responsabilité.",competences:["Sciences","Responsabilité"],duree:"20-30 min",materiel:"Pot, terre, graines"},
-  {age_min:18,age_max:36,cat:"Motricité",titre:"Parcours moteur",desc:"Obstacles à enjamber, tunnels à traverser, marcher sur une ligne.",competences:["Équilibre","Coordination"],duree:"20 min",materiel:"Coussins, cerceaux"},
-  {age_min:24,age_max:36,cat:"Social",titre:"Jeu symbolique",desc:"Jouer à faire semblant (dînette, docteur). Développe l'imaginaire et l'empathie.",competences:["Imagination","Empathie"],duree:"30 min",materiel:"Dînette, poupée"},
-  {age_min:24,age_max:36,cat:"Créatif",titre:"Collage libre",desc:"Découper et coller des formes. Travail de la main et de la concentration.",competences:["Motricité fine","Créativité"],duree:"25 min",materiel:"Revues, colle, ciseaux ronds"},
+  // 0-1 an (0-12 mois)
+  {age_min:0,age_max:6,cat:"Éveil",titre:"Hochets et mobiles",desc:"Stimulation visuelle et auditive dès les premières semaines.",competences:["Éveil sensoriel","Concentration"],duree:"10-15 min",materiel:"Hochet, mobile coloré"},
+  {age_min:0,age_max:12,cat:"Éveil",titre:"Massage bébé",desc:"Contact tactile structurant : sécurité affective et tonus musculaire.",competences:["Sécurité affective","Détente"],duree:"10 min",materiel:"Huile végétale, tapis"},
+  {age_min:2,age_max:8,cat:"Éveil",titre:"Miroir incassable",desc:"Découverte de son reflet : premiers pas vers la conscience de soi.",competences:["Conscience de soi","Éveil sensoriel"],duree:"10 min",materiel:"Miroir bébé incassable"},
+  {age_min:3,age_max:12,cat:"Motricité",titre:"Tapis d'éveil",desc:"Position sur le ventre, premiers mouvements de reptation.",competences:["Motricité globale","Tonus musculaire"],duree:"15-20 min",materiel:"Tapis d'éveil"},
+  {age_min:6,age_max:14,cat:"Éveil",titre:"Bac sensoriel doux",desc:"Toucher différentes textures (tissus, mousse) en sécurité.",competences:["Éveil sensoriel","Découverte"],duree:"15 min",materiel:"Bac, tissus variés"},
+  {age_min:6,age_max:16,cat:"Éveil",titre:"Jeux d'eau",desc:"Patouiller, transvaser, sentir l'eau. Idéal l'été.",competences:["Éveil sensoriel","Motricité fine"],duree:"15-20 min",materiel:"Bassine, gobelets"},
+  {age_min:9,age_max:18,cat:"Créatif",titre:"Peinture aux empreintes",desc:"Tremper mains et pieds dans la peinture lavable. Traces et couleurs.",competences:["Motricité fine","Créativité"],duree:"15 min",materiel:"Peinture lavable, grande feuille"},
+  // 1-2 ans (12-24 mois)
+  {age_min:6,age_max:18,cat:"Langage",titre:"Comptines avec gestes",desc:"Apprendre la langue par le corps et la répétition.",competences:["Langage","Mémoire"],duree:"10 min",materiel:"Aucun"},
+  {age_min:12,age_max:24,cat:"Créatif",titre:"Peinture au doigt",desc:"Explorer textures et couleurs, développer la motricité fine.",competences:["Motricité fine","Créativité"],duree:"20 min",materiel:"Peinture lavable, feuilles"},
+  {age_min:12,age_max:36,cat:"Langage",titre:"Lecture d'imagier",desc:"Montrer et nommer les objets. Enrichit le vocabulaire.",competences:["Vocabulaire","Concentration"],duree:"10-15 min",materiel:"Livre imagier"},
+  {age_min:12,age_max:30,cat:"Éveil",titre:"Transvasement",desc:"Verser graines ou eau d'un contenant à l'autre. Précision et patience.",competences:["Motricité fine","Concentration"],duree:"15 min",materiel:"Contenants, graines/eau"},
+  {age_min:12,age_max:28,cat:"Logique",titre:"Empiler et encastrer",desc:"Tours de cubes, boîtes à formes. Coordination et cause-effet.",competences:["Coordination","Logique"],duree:"15 min",materiel:"Cubes, encastrements"},
+  {age_min:15,age_max:36,cat:"Créatif",titre:"Gommettes",desc:"Décoller et coller des gommettes. Pince pouce-index.",competences:["Motricité fine","Concentration"],duree:"15 min",materiel:"Gommettes, feuille"},
+  // 2-3 ans (24-36 mois)
+  {age_min:18,age_max:36,cat:"Sciences",titre:"Jardinage en pot",desc:"Planter, arroser, observer la pousse. Sens des responsabilités.",competences:["Découverte du monde","Patience"],duree:"20-30 min",materiel:"Pot, terre, graines"},
+  {age_min:18,age_max:42,cat:"Motricité",titre:"Parcours moteur",desc:"Enjamber, traverser un tunnel, marcher sur une ligne.",competences:["Équilibre","Coordination"],duree:"20 min",materiel:"Coussins, cerceaux"},
+  {age_min:24,age_max:48,cat:"Créatif",titre:"Pâte à modeler",desc:"Malaxer, rouler, façonner. Renforce les muscles des mains.",competences:["Motricité fine","Créativité"],duree:"25 min",materiel:"Pâte à modeler"},
+  {age_min:24,age_max:36,cat:"Social",titre:"Jeu symbolique",desc:"Faire semblant (dînette, docteur). Imaginaire et empathie.",competences:["Imagination","Empathie"],duree:"30 min",materiel:"Dînette, poupée"},
+  {age_min:24,age_max:42,cat:"Logique",titre:"Tri par couleurs et formes",desc:"Classer des objets selon un critère. Premières notions logiques.",competences:["Logique","Observation"],duree:"15 min",materiel:"Objets colorés, bols"},
   {age_min:0,age_max:36,cat:"Musique",titre:"Maracas maison",desc:"Riz ou pâtes dans une bouteille. Découverte du son et du rythme.",competences:["Éveil musical","Créativité"],duree:"15 min",materiel:"Bouteille, riz"},
+  // 3-6 ans (36-72 mois)
+  {age_min:36,age_max:72,cat:"Créatif",titre:"Découpage aux ciseaux",desc:"Manier des ciseaux à bouts ronds en sécurité. Motricité fine.",competences:["Motricité fine","Concentration"],duree:"20 min",materiel:"Ciseaux ronds, papier"},
+  {age_min:36,age_max:72,cat:"Logique",titre:"Jeux de société simples",desc:"Loto, memory, premiers jeux de règles : attendre son tour.",competences:["Règles","Attention","Patience"],duree:"25 min",materiel:"Loto, memory"},
+  {age_min:36,age_max:72,cat:"Logique",titre:"Puzzles",desc:"Assembler des pièces. Logique, observation et persévérance.",competences:["Logique","Observation"],duree:"20 min",materiel:"Puzzles évolutifs"},
+  {age_min:36,age_max:72,cat:"Sciences",titre:"Atelier cuisine",desc:"Préparer une recette simple (verser, mélanger). Autonomie et langage.",competences:["Autonomie","Découverte du monde"],duree:"30-40 min",materiel:"Ingrédients, ustensiles"},
+  {age_min:36,age_max:72,cat:"Langage",titre:"Histoire et questions",desc:"Raconter une histoire puis échanger dessus. Compréhension et langage.",competences:["Langage","Imagination"],duree:"15-20 min",materiel:"Album jeunesse"},
+  {age_min:36,age_max:72,cat:"Motricité",titre:"Jeux moteurs collectifs",desc:"Course, ballon, danse, rondes. Coordination et vie en groupe.",competences:["Coordination","Socialisation"],duree:"20-30 min",materiel:"Ballon, espace dégagé"},
+  {age_min:36,age_max:72,cat:"Créatif",titre:"Dessin et coloriage",desc:"Tenir le crayon, respecter un contour, exprimer une idée.",competences:["Motricité fine","Expression"],duree:"20 min",materiel:"Crayons, feutres"},
+  {age_min:30,age_max:72,cat:"Sciences",titre:"Observation de la nature",desc:"Ramasser feuilles et cailloux, observer les insectes. Éveille la curiosité.",competences:["Découverte du monde","Observation"],duree:"20-30 min",materiel:"Loupe, sac de récolte"},
 ];
-const catColors={Éveil:"var(--P)",Motricité:"var(--S)",Langage:"var(--B)",Créatif:"var(--T)",Sciences:"var(--G)",Social:"var(--R)",Musique:"#8B4513"};
+const catColors={Éveil:"var(--P)",Motricité:"var(--S)",Langage:"var(--B)",Créatif:"var(--T)",Sciences:"var(--G)",Social:"var(--R)",Musique:"#8B4513",Logique:"#C77DAE"};
 
 function ActivitesSuggerees({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [catFilt,setCatFilt]=useState("tous");
+  const [perso,setPerso]=useState([]);
+  const [showForm,setShowForm]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const blankAct={titre:"",cat:"Éveil",desc:"",competences:"",duree:"",materiel:"",tranche:"1-2 ans"};
+  const [na,setNa]=useState(blankAct);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const asmatId=enfants[0]?.asmat_id;
+  const TRANCHES={"0-1 an":[0,12],"1-2 ans":[12,24],"2-3 ans":[24,36],"3-6 ans":[36,72],"Tous âges":[0,72]};
+  const inp={width:"100%",padding:"9px 11px",borderRadius:8,border:"1.5px solid var(--br)",fontSize:13,marginBottom:8,fontFamily:"inherit",boxSizing:"border-box",background:"var(--w)"};
+
+  const chargerPerso=async()=>{
+    if(role!=="asmat")return;
+    const{data}=await supabase.from("activites_perso").select("*").order("created_at",{ascending:false});
+    if(data)setPerso(data);
+  };
+  useEffect(()=>{chargerPerso();},[]);
 
   const _now=new Date();
   const moisAge=enfant?((_now.getFullYear()-new Date(enfant.naissance).getFullYear())*12+(_now.getMonth()-new Date(enfant.naissance).getMonth())):12;
-  const activites=ACTIVITES_PAR_AGE.filter(a=>moisAge>=a.age_min&&moisAge<=a.age_max&&(catFilt==="tous"||a.cat===catFilt));
-  const cats=["tous",...new Set(ACTIVITES_PAR_AGE.map(a=>a.cat))];
+  const toutes=[...ACTIVITES_PAR_AGE.map(a=>({...a,_perso:false})),...perso.map(a=>({...a,desc:a.description,_perso:true}))];
+  const activites=toutes.filter(a=>moisAge>=a.age_min&&moisAge<=a.age_max&&(catFilt==="tous"||a.cat===catFilt));
+  const cats=["tous",...new Set(toutes.map(a=>a.cat))];
+
+  const ajouter=async()=>{
+    if(!na.titre.trim()||!asmatId)return;
+    setSaving(true);
+    const[mn,mx]=TRANCHES[na.tranche]||[0,72];
+    const{error}=await supabase.from("activites_perso").insert({
+      asmat_id:asmatId,titre:na.titre.trim(),cat:na.cat,description:na.desc.trim(),
+      competences:na.competences.split(",").map(s=>s.trim()).filter(Boolean),
+      duree:na.duree.trim(),materiel:na.materiel.trim(),age_min:mn,age_max:mx
+    });
+    setSaving(false);
+    if(!error){setNa(blankAct);setShowForm(false);chargerPerso();}
+  };
+  const supprimer=async(id)=>{ await supabase.from("activites_perso").delete().eq("id",id); chargerPerso(); };
 
   return <div className="fi">
     <PageHeader icon="💡" title="Activités suggérées" sub={"Propositions pédagogiques adaptées à l'âge · "+age(enfant?.naissance||"")}/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
+
+    {role==="asmat"&&<div style={{marginBottom:14}}>
+      <button className="btn bT" onClick={()=>setShowForm(f=>!f)} style={{fontSize:13}}>{showForm?"✕ Annuler":"➕ Ajouter mon activité"}</button>
+    </div>}
+    {role==="asmat"&&showForm&&<div className="card" style={{padding:16,marginBottom:16,background:"var(--c)"}}>
+      <div style={{fontWeight:700,marginBottom:10,color:"var(--b)"}}>Nouvelle activité perso</div>
+      <input placeholder="Titre *" value={na.titre} onChange={e=>setNa({...na,titre:e.target.value})} style={inp}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <select value={na.cat} onChange={e=>setNa({...na,cat:e.target.value})} style={inp}>
+          {Object.keys(catColors).map(c=><option key={c}value={c}>{c}</option>)}
+        </select>
+        <select value={na.tranche} onChange={e=>setNa({...na,tranche:e.target.value})} style={inp}>
+          {Object.keys(TRANCHES).map(t=><option key={t}value={t}>{t}</option>)}
+        </select>
+      </div>
+      <textarea placeholder="Description" value={na.desc} onChange={e=>setNa({...na,desc:e.target.value})} style={{...inp,minHeight:60,resize:"vertical"}}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <input placeholder="Durée (ex. 20 min)" value={na.duree} onChange={e=>setNa({...na,duree:e.target.value})} style={inp}/>
+        <input placeholder="Matériel" value={na.materiel} onChange={e=>setNa({...na,materiel:e.target.value})} style={inp}/>
+      </div>
+      <input placeholder="Compétences (séparées par une virgule)" value={na.competences} onChange={e=>setNa({...na,competences:e.target.value})} style={inp}/>
+      <button className="btn bG" onClick={ajouter} disabled={saving||!na.titre.trim()} style={{marginTop:4}}>{saving?"…":"💾 Enregistrer"}</button>
+    </div>}
 
     <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
       {cats.map(c=><button key={c}onClick={()=>setCatFilt(c)}style={{
@@ -6516,17 +6590,21 @@ function ActivitesSuggerees({enfants,role,pEId}){
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
-      {activites.map((a,i)=><div key={i}className="card"style={{padding:16,borderTop:"3px solid "+(catColors[a.cat]||"var(--T)")}}>
+      {activites.map((a,i)=><div key={i}className="card"style={{padding:16,borderTop:"3px solid "+(catColors[a.cat]||"var(--T)"),position:"relative"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-          <span className="badge"style={{background:(catColors[a.cat]||"var(--T)")+"22",color:catColors[a.cat]||"var(--T)",fontSize:11}}>{a.cat}</span>
-          <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>⏱ {a.duree}</span>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+            <span className="badge"style={{background:(catColors[a.cat]||"var(--T)")+"22",color:catColors[a.cat]||"var(--T)",fontSize:11}}>{a.cat}</span>
+            {a._perso&&<span className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:10}}>✦ Perso</span>}
+          </div>
+          <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{a.duree?"⏱ "+a.duree:""}</span>
         </div>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{a.titre}</div>
-        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:8}}>{a.desc}</div>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:6}}>📦 {a.materiel}</div>
+        {a.desc&&<div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:8}}>{a.desc}</div>}
+        {a.materiel&&<div style={{fontSize:11,color:"var(--l)",marginBottom:6}}>📦 {a.materiel}</div>}
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {a.competences.map(c=><span key={c}className="badge"style={{background:"var(--c)",color:"var(--m)",fontSize:10}}>{c}</span>)}
+          {(a.competences||[]).map((c,j)=><span key={j}className="badge"style={{background:"var(--c)",color:"var(--m)",fontSize:10}}>{c}</span>)}
         </div>
+        {a._perso&&role==="asmat"&&<button onClick={()=>supprimer(a.id)} title="Supprimer" style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",cursor:"pointer",fontSize:14,opacity:.6}}>🗑️</button>}
       </div>)}
       {activites.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",padding:"30px 0",color:"var(--l)"}}>
         <div style={{fontSize:36,marginBottom:8}}>🎯</div>
