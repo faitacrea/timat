@@ -10350,7 +10350,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   useEffect(()=>{
     try{
       const p=new URLSearchParams(window.location.search);
-      if(p.get("role")==="parent"||p.has("invite")){ setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
+      if(p.get("role")==="parent"||p.has("invite")){ const tk=p.get("invite"); if(tk){try{localStorage.setItem("timat:invite",tk);}catch(e){}} setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
       else if(p.get("role")==="asmat"){ setRole("asmat"); setShowModal(true); }
     }catch(e){}
   },[]);
@@ -15451,8 +15451,8 @@ export default function App(){
         if(user.role==="parent"){
           try{ await supabase.rpc("claim_invitations"); }catch(_e){}
           try{
-            const tk=new URLSearchParams(window.location.search).get("invite");
-            if(tk&&tk.length>20){ await supabase.rpc("claim_invite_token",{p_token:tk}); }
+            const tk=new URLSearchParams(window.location.search).get("invite")||(()=>{try{return localStorage.getItem("timat:invite");}catch(e){return null;}})();
+            if(tk&&tk.length>20){ const{data}=await supabase.rpc("claim_invite_token",{p_token:tk}); if(data){try{localStorage.removeItem("timat:invite");}catch(e){}} }
           }catch(_e){}
         }
         // Enfants
