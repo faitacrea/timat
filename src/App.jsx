@@ -15431,6 +15431,8 @@ export default function App(){
     const charger=async()=>{
       setDbLoading(true);
       try{
+        // RATTACHEMENT INVITATION : relie le parent a son/ses enfant(s) par email avant le chargement
+        if(user.role==="parent"){ try{ await supabase.rpc("claim_invitations"); }catch(_e){} }
         // Enfants
         let q=supabase.from("enfants").select("*");
         if(user.role==="asmat") q=q.eq("asmat_id",user.id);
