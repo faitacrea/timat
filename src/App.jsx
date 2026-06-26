@@ -9541,8 +9541,9 @@ function SimulateurCout({enfants,pEId}){
         <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"6px 0"}}>
           Calcul : CMG = (min(taux ; {PLAFOND_H.toFixed(2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {(TE*100).toFixed(4)} % ÷ {CHR_AM.toFixed(2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
         </div>
-        <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"4px 0"}}>
-          ⚠️ <b>Estimation indicative</b> selon la réforme CMG du 1er septembre 2025 (calcul horaire par taux d'effort, barème CNAF 2026 : 1→0,0619 % · 2→0,0516 % · 3→0,0413 % · 4-7→0,0310 % · 8+→0,0206 %). Le montant exact dépend de vos ressources N-2 retenues par la CAF. Référez-vous au <b>simulateur officiel URSSAF</b> (« Évaluer votre reste à charge et votre CMG ») pour la valeur définitive.
+        <div style={{fontSize:13,color:"#7a3a00",lineHeight:1.65,padding:"16px 18px",marginTop:14,background:"#FFE7C2",border:"2.5px solid #E8943A",borderRadius:14,boxShadow:"0 4px 16px rgba(232,148,58,.28)"}}>
+          <div style={{fontWeight:800,marginBottom:8,fontSize:15.5,color:"#B45309",display:"flex",alignItems:"center",gap:8}}>⚠️ Ne vous fiez pas à ces chiffres</div>
+          Estimation indicative selon la réforme CMG du 1er septembre 2025 (calcul horaire par taux d'effort, barème CNAF 2026 : 1→0,0619 % · 2→0,0516 % · 3→0,0413 % · 4-7→0,0310 % · 8+→0,0206 %). <b>Le montant réel est calculé par la CAF</b> selon vos ressources N-2 ; ne vous fiez pas à ce chiffre pour vos décisions. Référez-vous au <b>simulateur officiel URSSAF</b> (« Évaluer votre reste à charge et votre CMG ») pour la valeur définitive.
         </div>
       </div>
     </div>
@@ -10546,9 +10547,9 @@ function ParentInvitationScreen({onLogin}){
 
   const inp={width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid rgba(255,255,255,.5)",fontSize:14,marginBottom:10,fontFamily:"inherit",boxSizing:"border-box",background:"rgba(255,255,255,.95)",color:"#2E4A5A"};
 
-  return <div style={{position:"fixed",inset:0,overflow:"auto",display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"linear-gradient(135deg,#E49178 0%,#90A093 50%,#2E4A5A 100%)"}}>
-    <div style={{position:"absolute",inset:0,backdropFilter:"blur(2px)",background:"radial-gradient(circle at 30% 20%,rgba(255,255,255,.25),transparent 42%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.16),transparent 42%)"}}/>
-    <div style={{position:"relative",width:"100%",maxWidth:420,background:"rgba(255,255,255,.16)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,.35)",borderRadius:24,padding:"30px 26px",boxShadow:"0 20px 60px rgba(0,0,0,.28)"}}>
+  return <div style={{position:"fixed",inset:0,overflow:"auto",display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"linear-gradient(135deg,#E49178 0%,#C84B31 60%,#F6C7A8 100%)"}}>
+    <div style={{position:"absolute",inset:0,backdropFilter:"blur(2px)",background:"radial-gradient(circle at 30% 20%,rgba(255,255,255,.25),transparent 42%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.14),transparent 42%)"}}/>
+    <div style={{position:"relative",width:"100%",maxWidth:420,background:"rgba(255,255,255,.2)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,.4)",borderRadius:24,padding:"30px 26px",boxShadow:"0 20px 60px rgba(0,0,0,.28)"}}>
       <div style={{textAlign:"center",marginBottom:18}}>
         <img src="/logo.png" alt="TiMat" style={{height:46,marginBottom:10}}/>
         <div style={{fontSize:21,fontWeight:700,color:"#fff",fontFamily:"'Fraunces',Georgia,serif"}}>Bienvenue sur TiMat</div>
@@ -10644,13 +10645,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         if (demo) { onLogin({...demo, isDemo: true}); return; }
         setErr("Email ou mot de passe incorrect.");
       } else if (data?.user) {
+        // GATING ROLE : un compte parent ne peut pas se connecter via la landing (espace assmat)
+        let _r=data.user.user_metadata?.role;
+        try{const{data:prof}=await supabase.from("profiles").select("role").eq("id",data.user.id).single(); if(prof?.role)_r=prof.role;}catch(e){}
+        if(_r==="parent"){ await supabase.auth.signOut(); setErr("Cet espace est réservé aux assistantes maternelles. Pour votre espace parent, connectez-vous via le lien d'invitation envoyé par votre assistante maternelle."); setLoading(false); return; }
         // Pass minimal user data - auth listener will enrich with profile from DB
         onLogin({
           id: data.user.id,
           email: data.user.email,
           prenom: data.user.user_metadata?.prenom || "Utilisateur",
           nom: data.user.user_metadata?.nom || "",
-          role: data.user.user_metadata?.role || "asmat",
+          role: _r || "asmat",
           couleur: "#E49178",
           subscription_status: "free"
         });
@@ -10811,9 +10816,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
           </div>
-          <div style={{textAlign:"center",marginBottom:24,fontSize:13}}>
-            <button onClick={()=>{const d=demos.find(x=>x.role==="asmat"); if(d)onLogin({...d,isDemo:true});}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.95)",fontSize:13,fontWeight:700,textDecoration:"underline",fontFamily:"inherit"}}>🎭 Explorer la démo assistante maternelle, sans inscription →</button>
-          </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
             {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
           </div>
@@ -10889,26 +10891,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                   </div>
                 </div>
 
-                {/* Barre principale - vrais onglets */}
-                <div className="nav-main" style={{background:"rgba(255,255,255,.95)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(234,224,232,.6)",display:"flex",gap:6,padding:"0 20px",height:52,alignItems:"center",overflowX:"auto",scrollbarWidth:"none"}}>
-                  {Object.entries(GROUPS_AM).map(([key,g])=>{
-                    const isActive=demoActiveGroup===key;
-                    // ouvre le 1er sous-onglet déverrouillé du groupe, sinon le 1er
-                    const subs=g.subs||[{id:key,l:g.l,ic:g.ic}];
-                    const firstUnlocked=subs.find(s=>DEMO_UNLOCKED.includes(s.id))||subs[0];
-                    return <button key={key} onClick={()=>setDemoPage(firstUnlocked.id)} style={{display:"flex",alignItems:"center",gap:7,padding:"8px 18px",borderRadius:24,border:"none",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",flexShrink:0,whiteSpace:"nowrap",background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",color:isActive?"#fff":"var(--m)",boxShadow:isActive?"0 4px 16px rgba(144,160,147,.3)":"none",transform:isActive?"scale(1.03)":"scale(1)",letterSpacing:".1px"}}>
-                      <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
-                      <span>{g.l}</span>
-                    </button>;
-                  })}
-                </div>
-
-                {/* Barre de sous-onglets du groupe actif (tous visibles, cadenas si verrouillé) */}
-                {(()=>{const g=GROUPS_AM[demoActiveGroup];const subs=g&&g.subs?g.subs:null;if(!subs)return null;return <div style={{display:"flex",gap:6,padding:"8px 16px",overflowX:"auto",scrollbarWidth:"none",borderBottom:"1px solid rgba(234,224,232,.5)",background:"#fff"}}>
-                  {subs.map(s=>{const unlocked=DEMO_UNLOCKED.includes(s.id);const active=demoPage===s.id;return <button key={s.id} onClick={()=>setDemoPage(s.id)} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:18,border:"none",fontFamily:"inherit",fontWeight:600,fontSize:12,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap",background:active?"var(--T)":"rgba(0,0,0,.04)",color:active?"#fff":(unlocked?"var(--b)":"var(--l)"),opacity:unlocked?1:.7}}>
-                    <span style={{fontSize:13}}>{s.ic}</span><span>{s.l}</span>{!unlocked&&<span style={{fontSize:10}}>🔒</span>}
-                  </button>;})}
-                </div>;})()}
+                {/* Navigation démo : uniquement la BottomNav (comme sur téléphone) */}
 
                 {/* Contenu : vrai écran si déverrouillé, sinon aperçu flouté verrouillé */}
                 <div className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
@@ -11982,7 +11965,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
-              {role==="asmat" && (<><div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+              {false && (<><div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
                 <div style={{ flex:1, height:1, background:"#DDD5C8" }}/><span style={{ fontSize:11, color:"#A68970" }}>ou sans inscription</span><div style={{ flex:1, height:1, background:"#DDD5C8" }}/>
               </div>
               <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
@@ -15529,6 +15512,28 @@ export default function App(){
   const [notifs,setNotifs]=useState([]);
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
+  const [gToast,setGToast]=useState("");
+  // LIEN INVITATION quand une session existe deja : parent connecte -> rattachement auto ; assmat -> message
+  useEffect(()=>{
+    if(!user?.id||!user?.role)return;
+    let tk=null,hasInvite=false;
+    try{const p=new URLSearchParams(window.location.search); tk=p.get("invite"); hasInvite=p.has("invite")||p.get("role")==="parent";}catch(e){}
+    if(!hasInvite)return;
+    (async()=>{
+      if(user.role==="parent"){
+        try{
+          if(tk&&tk.length>20)await supabase.rpc("claim_invite_token",{p_token:tk});
+          await supabase.rpc("claim_invitations");
+          setGToast("Enfant rattaché à votre espace ✓");
+          setDataRefreshKey(k=>k+1);
+        }catch(e){}
+      }else{
+        setGToast("Ce lien d'invitation est destiné aux parents. Ouvrez-le en navigation privée (ou déconnectez-vous) pour le tester.");
+      }
+      try{const u=new URL(window.location.href); u.searchParams.delete("invite"); u.searchParams.delete("role"); window.history.replaceState({},"",u.pathname+u.search);}catch(e){}
+      try{localStorage.removeItem("timat:invite");}catch(e){}
+    })();
+  },[user?.id,user?.role]);
 
   // //  tats donnes Supabase  AVANT tout return conditionnel
   const [enfantsDB,setEnfantsDB]=useState([]);
@@ -16013,6 +16018,7 @@ export default function App(){
         <div className="content">{renderPage()}</div>
         <BottomNav groups={groups} page={page} setPage={setPage} pmiNonLus={role==="parent"?0:pmiNonLus}/>
         {showWelcome&&<BienvenueOnboarding role={role} user={user} setPage={setPage} onClose={closeWelcome}/>}
+        {gToast&&<Toast msg={gToast} onClose={()=>setGToast("")}/>}
       </div>
     </>
   );
