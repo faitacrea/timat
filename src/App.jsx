@@ -845,28 +845,8 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     </div>}
 
 
-    {/* Accès rapide - tous cliquables */}
-    <div className="g2">
-      <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:600,fontSize:13,marginBottom:12,color:"var(--b)"}}>⚡ Accès rapide</div>
-        {[["✨","Bilan de journée","Générer pour un enfant","recit"],
-          ["🌱","Développement","Jalons OMS","developpement"],
-          ["📝","CR Trimestriel","Compte-rendu pro","cr"],
-          ["📊","Récap mensuel","Bilan mensuel","admin_finances"],
-          ["📅","Calendrier","Voir les événements","calendrier"],
-        ].map(([ic,ti,su,pg])=><div key={ti}onClick={()=>setPage(pg)}
-          style={{display:"flex",gap:10,padding:"8px 6px",borderBottom:"1px solid var(--br)",cursor:"pointer",borderRadius:8,transition:"background .15s"}}
-          onMouseEnter={ev=>ev.currentTarget.style.background="var(--c)"}
-          onMouseLeave={ev=>ev.currentTarget.style.background="transparent"}>
-          <span style={{fontSize:18}}>{ic}</span>
-          <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{ti}</div>
-            <div style={{fontSize:11,color:"var(--l)"}}>{su}</div>
-          </div>
-          <span style={{fontSize:13,color:"var(--l)",alignSelf:"center"}}>›</span>
-        </div>)}
-      </div>
-
+    {/* Prochains événements */}
+    <div>
       <div className="card"style={{padding:16}}>
         <div style={{fontWeight:600,fontSize:13,marginBottom:12,color:"var(--b)"}}>📅 Prochains événements</div>
         {isDemoUser&&D.evenements.slice(0,4).map(ev=><div key={ev.id}onClick={()=>setPage("calendrier")}
@@ -6443,6 +6423,9 @@ function ActivitesSuggerees({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [catFilt,setCatFilt]=useState("tous");
   const [ageFilt,setAgeFilt]=useState("tous");
+  const [faitFilt,setFaitFilt]=useState("tous");
+  const [jour,setJour]=useState(new Date().toISOString().slice(0,10));
+  const [faites,setFaites]=useState([]);
   const [perso,setPerso]=useState([]);
   const [showForm,setShowForm]=useState(false);
   const [saving,setSaving]=useState(false);
@@ -6461,12 +6444,27 @@ function ActivitesSuggerees({enfants,role,pEId}){
   };
   useEffect(()=>{chargerPerso();},[]);
 
+  const chargerFaites=async()=>{
+    if(!enfant?.id){setFaites([]);return;}
+    const{data}=await supabase.from("activites_faites").select("*").eq("enfant_id",enfant.id).eq("date",jour);
+    setFaites(data||[]);
+  };
+  useEffect(()=>{chargerFaites();},[enfant?.id,jour]);
+  const faitDe=(titre)=>faites.find(f=>f.activite_titre===titre);
+  const toggleFait=async(titre)=>{
+    if(role!=="asmat"||!enfant?.id||!asmatId)return;
+    const ex=faitDe(titre);
+    if(ex){ await supabase.from("activites_faites").delete().eq("id",ex.id); }
+    else{ await supabase.from("activites_faites").insert({asmat_id:asmatId,enfant_id:enfant.id,activite_titre:titre,date:jour}); }
+    chargerFaites();
+  };
+
   const BRACKETS={"tous":null,"0-1 an":[0,12],"1-2 ans":[12,24],"2-3 ans":[24,36],"3-6 ans":[36,72]};
   const _now=new Date();
   const moisAge=enfant?((_now.getFullYear()-new Date(enfant.naissance).getFullYear())*12+(_now.getMonth()-new Date(enfant.naissance).getMonth())):12;
   const toutes=[...ACTIVITES_PAR_AGE.map(a=>({...a,_perso:false})),...perso.map(a=>({...a,desc:a.description,_perso:true}))];
   const _br=BRACKETS[ageFilt];
-  const activites=toutes.filter(a=>(catFilt==="tous"||a.cat===catFilt)&&(!_br||(a.age_min<=_br[1]&&a.age_max>=_br[0])));
+  const activites=toutes.filter(a=>(catFilt==="tous"||a.cat===catFilt)&&(!_br||(a.age_min<=_br[1]&&a.age_max>=_br[0]))&&(faitFilt==="tous"||(faitFilt==="fait"?!!faitDe(a.titre):!faitDe(a.titre))));
   const cats=["tous",...new Set(toutes.map(a=>a.cat))];
 
   const ajouter=async()=>{
@@ -6527,6 +6525,15 @@ function ActivitesSuggerees({enfants,role,pEId}){
       }}>{c==="tous"?"🎯 Tout":c}</button>)}
     </div>
 
+    {enfant&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+      <span style={{fontSize:12,color:"var(--l)"}}>{enfant.prenom} ·</span>
+      <input type="date" value={jour} onChange={e=>setJour(e.target.value)} style={{padding:"5px 9px",borderRadius:8,border:"1.5px solid var(--br)",fontSize:12,fontFamily:"inherit",background:"var(--w)"}}/>
+      {[["tous","Toutes"],["pasfait","À sélectionner"],["fait","✓ Faites ce jour"]].map(([k,l])=><button key={k}onClick={()=>setFaitFilt(k)}style={{
+        padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+        background:faitFilt===k?"var(--G)":"transparent",color:faitFilt===k?"#fff":"var(--G)",borderColor:faitFilt===k?"var(--G)":"var(--Gp)",
+      }}>{l}</button>)}
+    </div>}
+
     <div style={{fontSize:12,color:"var(--l)",marginBottom:14,fontFamily:"'DM Mono',monospace"}}>
       {activites.length} activité{activites.length>1?"s":""}{ageFilt==="tous"?" · tous âges (0-6 ans)":" · "+ageFilt}
     </div>
@@ -6546,7 +6553,13 @@ function ActivitesSuggerees({enfants,role,pEId}){
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {(a.competences||[]).map((c,j)=><span key={j}className="badge"style={{background:"var(--c)",color:"var(--m)",fontSize:10}}>{c}</span>)}
         </div>
-        {a._perso&&role==="asmat"&&<button onClick={()=>supprimer(a.id)} title="Supprimer" style={{position:"absolute",bottom:10,right:10,background:"none",border:"none",cursor:"pointer",fontSize:14,opacity:.6}}>🗑️</button>}
+        {(()=>{const f=faitDe(a.titre);return <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid var(--br)",display:"flex",alignItems:"center",gap:8,justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            {role==="asmat"?<button onClick={()=>toggleFait(a.titre)} style={{fontSize:12,fontWeight:600,padding:"5px 11px",borderRadius:8,cursor:"pointer",background:f?"var(--G)":"transparent",color:f?"#fff":"var(--G)",border:"1.5px solid var(--G)"}}>{f?"✓ Faite ce jour":"Marquer faite"}</button>
+              :f?<span style={{fontSize:12,color:"var(--G)",fontWeight:700}}>✓ Faite ce jour</span>:<span style={{fontSize:12,color:"var(--l)"}}>—</span>}
+          </div>
+          {a._perso&&role==="asmat"&&<button onClick={()=>supprimer(a.id)} title="Supprimer activité perso" style={{background:"none",border:"none",cursor:"pointer",fontSize:14,opacity:.6}}>🗑️</button>}
+        </div>;})()}
       </div>)}
       {activites.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",padding:"30px 0",color:"var(--l)"}}>
         <div style={{fontSize:36,marginBottom:8}}>🎯</div>
@@ -10483,6 +10496,91 @@ function RenderArticleBlocks({blocks}){
     return <p key={i} style={{marginBottom:8}}>{fmtInline(b.text)}</p>;
   })}</div>;
 }
+function ParentInvitationScreen({onLogin}){
+  const [mode,setMode]=useState("inscription");
+  const [form,setForm]=useState({email:"",password:"",prenom:"",nom:""});
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const [consent,setConsent]=useState(false);
+
+  useEffect(()=>{ try{const tk=new URLSearchParams(window.location.search).get("invite"); if(tk)localStorage.setItem("timat:invite",tk);}catch(e){} },[]);
+
+  const claim=async()=>{
+    try{
+      const tk=new URLSearchParams(window.location.search).get("invite")||(()=>{try{return localStorage.getItem("timat:invite");}catch(e){return null;}})();
+      if(tk&&tk.length>20){ await supabase.rpc("claim_invite_token",{p_token:tk}); try{localStorage.removeItem("timat:invite");}catch(e){} }
+      await supabase.rpc("claim_invitations");
+    }catch(e){}
+  };
+
+  const connexion=async()=>{
+    if(!form.email||!form.password){setErr("Email et mot de passe requis.");return;}
+    setLoading(true);setErr("");
+    try{
+      const{data,error}=await supabase.auth.signInWithPassword({email:form.email,password:form.password});
+      if(error){setErr("Email ou mot de passe incorrect.");}
+      else if(data?.user){ await claim(); onLogin({id:data.user.id,email:data.user.email,prenom:data.user.user_metadata?.prenom||"Parent",nom:data.user.user_metadata?.nom||"",role:data.user.user_metadata?.role||"parent",couleur:"#2E5F8A",subscription_status:"free"}); }
+    }catch(e){setErr("Erreur réseau. Vérifiez votre connexion.");}
+    setLoading(false);
+  };
+
+  const inscription=async()=>{
+    if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs obligatoires.");return;}
+    if(form.password.length<6){setErr("Le mot de passe doit faire au moins 6 caractères.");return;}
+    if(!consent){setErr("Accepte la politique de confidentialité et les CGU pour continuer.");return;}
+    setLoading(true);setErr("");
+    try{
+      const{data,error}=await supabase.auth.signUp({email:form.email,password:form.password,options:{data:{prenom:form.prenom,nom:form.nom,role:"parent"}}});
+      if(error){
+        if(error.message?.includes('already registered'))setErr("Cet email est déjà utilisé. Connectez-vous ci-dessous.");
+        else setErr(error.message||"Erreur lors de l'inscription.");
+      }else if(data?.user){
+        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:"#2E5F8A",subscription_status:'free'},{onConflict:'id'});}catch(e){}},500);
+        await claim();
+        try{if(typeof logConsent==="function")logConsent(data.user.id,{politique:true,cgu:true,newsletter:false});}catch(e){}
+        onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:"#2E5F8A"});
+      }
+    }catch(e){setErr("Erreur lors de l'inscription.");}
+    setLoading(false);
+  };
+
+  const inp={width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid rgba(255,255,255,.5)",fontSize:14,marginBottom:10,fontFamily:"inherit",boxSizing:"border-box",background:"rgba(255,255,255,.95)",color:"#2E4A5A"};
+
+  return <div style={{position:"fixed",inset:0,overflow:"auto",display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"linear-gradient(135deg,#E49178 0%,#90A093 50%,#2E4A5A 100%)"}}>
+    <div style={{position:"absolute",inset:0,backdropFilter:"blur(2px)",background:"radial-gradient(circle at 30% 20%,rgba(255,255,255,.25),transparent 42%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.16),transparent 42%)"}}/>
+    <div style={{position:"relative",width:"100%",maxWidth:420,background:"rgba(255,255,255,.16)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,.35)",borderRadius:24,padding:"30px 26px",boxShadow:"0 20px 60px rgba(0,0,0,.28)"}}>
+      <div style={{textAlign:"center",marginBottom:18}}>
+        <img src="/logo.png" alt="TiMat" style={{height:46,marginBottom:10}}/>
+        <div style={{fontSize:21,fontWeight:700,color:"#fff",fontFamily:"'Fraunces',Georgia,serif"}}>Bienvenue sur TiMat</div>
+        <div style={{fontSize:13,color:"rgba(255,255,255,.92)",marginTop:6,lineHeight:1.5}}>{mode==="inscription"?"Votre assistante maternelle vous a invité·e. Créez votre espace parent pour suivre le quotidien de votre enfant.":"Connectez-vous à votre espace parent."}</div>
+      </div>
+
+      {mode==="inscription"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        <input placeholder="Prénom *" value={form.prenom} onChange={e=>setForm({...form,prenom:e.target.value})} style={inp}/>
+        <input placeholder="Nom" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} style={inp}/>
+      </div>}
+      <input type="email" placeholder="Email *" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} style={inp}/>
+      <input type="password" placeholder="Mot de passe *" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")(mode==="inscription"?inscription:connexion)();}} style={inp}/>
+
+      {mode==="inscription"&&<label style={{display:"flex",gap:8,alignItems:"flex-start",fontSize:11.5,color:"rgba(255,255,255,.92)",margin:"4px 0 12px",cursor:"pointer",lineHeight:1.5}}>
+        <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} style={{marginTop:2}}/>
+        <span>J'accepte la politique de confidentialité et les conditions générales d'utilisation.</span>
+      </label>}
+
+      {err&&<div style={{background:"rgba(200,75,49,.92)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12}}>{err}</div>}
+
+      <button onClick={mode==="inscription"?inscription:connexion} disabled={loading} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:"pointer",background:"#fff",color:"#2E4A5A",fontSize:15,fontWeight:700,fontFamily:"inherit",boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
+        {loading?"…":(mode==="inscription"?"Créer mon espace parent":"Se connecter")}
+      </button>
+
+      <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"rgba(255,255,255,.92)"}}>
+        {mode==="inscription"?<>Déjà un compte ? <button onClick={()=>{setMode("connexion");setErr("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Se connecter</button></>
+          :<>Pas encore de compte ? <button onClick={()=>{setMode("inscription");setErr("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>S'inscrire</button></>}
+      </div>
+    </div>
+  </div>;
+}
+
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
@@ -15758,7 +15856,12 @@ export default function App(){
 
 
   // - Utiliser données réelles
-  if(!user)return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={u=>{setUser({...u,_needsProfileFetch:true,_profileConfirmed:false});setPage("accueil");}} /* P16E: forcer fetch profil au login frais */ dark={dark} setDark={setDark} config={appConfig}/></div></>;
+  if(!user){
+    const _onLogin=u=>{setUser({...u,_needsProfileFetch:true,_profileConfirmed:false});setPage("accueil");};
+    let _isInvite=false; try{const _p=new URLSearchParams(window.location.search); _isInvite=_p.has("invite")||_p.get("role")==="parent";}catch(e){}
+    if(_isInvite)return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin}/></div></>;
+    return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={_onLogin} /* P16E: forcer fetch profil au login frais */ dark={dark} setDark={setDark} config={appConfig}/></div></>;
+  }
   // Afficher onboarding si asmat sans enfants (vérifié après chargement DB)
   if(!onboarded&&user.role==="asmat"&&user._profileConfirmed&&!dbLoading&&enfantsDB.length===0)return // P16D : exiger profil DB confirmé <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
