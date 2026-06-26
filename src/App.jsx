@@ -11933,14 +11933,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       {showModal && (
         <div onClick={e => e.target === e.currentTarget && setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#F3EBE3" }}>
-              {[{ r: "asmat", ic: "👩👧", l: "Assistante\nmaternelle", col: "#C76754" }, { r: "parent", ic: "👪", l: "Parent\nemployeur", col: "#2E4859" }].map(({ r, ic, l, col }) => (
-                <button key={r} onClick={() => { setRole(r); setErr(""); }} style={{ padding: "18px 12px", border: "none", cursor: "pointer", background: role === r ? col : "transparent", borderBottom: role !== r ? "3px solid "+col+"44" : "none", transition: "all .2s", fontFamily:"inherit" }}>
-                  <div style={{ fontSize: 24, marginBottom: 4 }}>{ic}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: role === r ? "#fff" : "rgba(0,0,0,.32)", whiteSpace: "pre-line", lineHeight: 1.3 }}>{l}</div>
-                </button>
-              ))}
-            </div>
             <div style={{ padding: 24, borderTop: role === "asmat" ? "4px solid #C76754" : "4px solid #2E4859" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
