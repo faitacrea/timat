@@ -238,7 +238,8 @@ function Styles(){return(
     .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
     .bG:hover{background:rgba(26,17,24,.1)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
-    .content{flex:1;overflow-y:auto;overflow-x:hidden}
+    .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw}
+    @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px}}
     .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -15859,7 +15860,22 @@ export default function App(){
     if(_isInvite)return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin}/></div></>;
     return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={_onLogin} /* P16E: forcer fetch profil au login frais */ dark={dark} setDark={setDark} config={appConfig}/></div></>;
   }
-  // Afficher onboarding si asmat sans enfants (vérifié après chargement DB)
+  // INVITATION PARENT ouverte alors qu'un compte est déjà connecté : proposer de basculer
+  let _invOpen=false; try{const _p=new URLSearchParams(window.location.search); _invOpen=_p.has("invite")||_p.get("role")==="parent";}catch(e){}
+  if(_invOpen){
+    return <><Styles/><div className={"app"+(dark?" dark":"")}>
+      <div style={{position:"fixed",inset:0,background:"linear-gradient(135deg,#E49178 0%,#90A093 50%,#2E4A5A 100%)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,zIndex:9999}}>
+        <div style={{background:"#fff",borderRadius:20,maxWidth:400,width:"100%",padding:"28px 24px",textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+          <div style={{fontSize:34,marginBottom:10}}>👋</div>
+          <div style={{fontSize:18,fontWeight:700,color:"#2E4A5A",marginBottom:8,fontFamily:"'Fraunces',Georgia,serif"}}>Invitation parent</div>
+          <div style={{fontSize:13.5,color:"#555",lineHeight:1.6,marginBottom:20}}>Vous avez ouvert un lien d'invitation parent, mais vous êtes déjà connecté{user.role==="asmat"?" en tant qu'assistante maternelle":""} ({user.email}). Pour rejoindre l'espace parent, déconnectez-vous puis continuez.</div>
+          <button onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} setUser(null);}} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#E49178,#C76754)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:10,fontFamily:"inherit"}}>Se déconnecter et continuer</button>
+          <button onClick={()=>{try{window.location.href=window.location.pathname;}catch(e){}}} style={{width:"100%",padding:"11px",borderRadius:12,border:"1.5px solid #DDD5C8",background:"transparent",color:"#777",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Ignorer et rester sur mon espace</button>
+        </div>
+      </div>
+    </div></>;
+  }
+
   if(!onboarded&&user.role==="asmat"&&user._profileConfirmed&&!dbLoading&&enfantsDB.length===0)return // P16D : exiger profil DB confirmé <><Styles/><div className={"app"+(dark?" dark":"")+""}><OnboardingWizard onFinish={()=>setOnboarded(true)} user={user}/></div></>;
 
   const role=user.role;
