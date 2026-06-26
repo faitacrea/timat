@@ -239,7 +239,7 @@ function Styles(){return(
     .bG:hover{background:rgba(26,17,24,.1)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
     .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw}
-    @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px}}
+    @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}}
     .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -505,6 +505,38 @@ function AvatarEditeur({enfant,onClose,onSaved}){
     </div>
   </div>;
 }
+function FichesEnfants({enfants,user,setPage}){
+  const [editAvatar,setEditAvatar]=useState(null);
+  const [showAjout,setShowAjout]=useState(false);
+  const [ov,setOv]=useState({});
+  const list=(enfants||[]).map(e=>({...e,...(ov[e.id]||{})}));
+  return <div className="fi">
+    <PageHeader icon="👧" title="Mes enfants" sub="Photo, emoji et informations de chaque enfant accueilli"/>
+    <div style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
+      <button className="btn bT" onClick={()=>setShowAjout(true)}>➕ Ajouter un enfant</button>
+    </div>
+    {list.length===0
+      ? <EmptyState emoji="👶" titre="Aucun enfant pour le moment" texte="Ajoutez un premier enfant pour commencer à suivre son quotidien." cta="➕ Ajouter un enfant" onCta={()=>setShowAjout(true)}/>
+      : <div className="g2">
+        {list.map(e=><div key={e.id} className="card" style={{padding:18,display:"flex",gap:14,alignItems:"center"}}>
+          <button type="button" onClick={()=>setEditAvatar(e)} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",flexShrink:0,lineHeight:0}}>
+            <AvatarEnfant e={e} size={76}/>
+            <span style={{position:"absolute",bottom:-2,right:-2,fontSize:12,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 4px rgba(0,0,0,.25)",width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center"}}>📷</span>
+          </button>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:16,color:"var(--b)"}}>{e.prenom} {e.nom||""}</div>
+            <div style={{fontSize:12.5,color:"var(--l)",marginTop:2}}>{e.naissance?age(e.naissance)+" · né(e) le "+new Date(e.naissance).toLocaleDateString("fr-FR"):"Date de naissance non renseignée"}</div>
+            <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
+              <button className="btn bG" style={{fontSize:11,padding:"5px 10px"}} onClick={()=>setEditAvatar(e)}>📷 Photo / emoji</button>
+              <button className="btn bT" style={{fontSize:11,padding:"5px 10px"}} onClick={()=>setPage&&setPage("admin_finances")}>🧾 Contrat & paie</button>
+            </div>
+          </div>
+        </div>)}
+      </div>}
+    {editAvatar&&<AvatarEditeur enfant={editAvatar} onClose={()=>setEditAvatar(null)} onSaved={(up)=>setOv(o=>({...o,[up.id]:{emoji:up.emoji,photo_url:up.photo_url}}))}/>}
+    {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
+  </div>;
+}
 const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
 
@@ -684,7 +716,7 @@ function PointageRapide({enfants,role,user,demo}){
         const dotC=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
         const dotT=fini?"Terminée":enCours?"Présent":"Absent";
         return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:"14px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,textAlign:"center"}}>
-          <AvatarEnfant e={e} size={32}/>
+          <AvatarEnfant e={e} size={46}/>
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
           <div style={{display:"flex",alignItems:"center",gap:5,fontSize:10.5,color:"var(--m)"}}>
             <span style={{width:7,height:7,borderRadius:7,background:dotC}}/>{dotT}
@@ -909,7 +941,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
           const genState=genPdf[ct.id];
           return <div key={e.id}style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderBottom:"1px solid var(--br)",fontSize:12,flexWrap:"wrap"}}>
             <button type="button" onClick={()=>setEditAvatar({...e,...(avatarOv[e.id]||{})})} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",lineHeight:0,flexShrink:0}}>
-              <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={26}/>
+              <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={34}/>
               <span style={{position:"absolute",bottom:-4,right:-5,fontSize:9,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 3px rgba(0,0,0,.2)",padding:"1px 2px"}}>📷</span>
             </button>
             <span style={{fontWeight:600,color:"var(--b)",minWidth:80}}>{e.prenom}</span>
@@ -1077,7 +1109,7 @@ function AccueilParent({enfant,setPage,user}){
       {/* Card enfant */}
       <div className="card"style={{padding:18,borderTop:"4px solid "+enfant.couleur}}>
         <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:12}}>
-          <AvatarEnfant e={enfant} size={56}/>
+          <AvatarEnfant e={enfant} size={84}/>
           <div><div className="pf"style={{fontSize:20,fontWeight:600,color:"var(--b)"}}>{enfant.prenom} {enfant.nom}</div>
             <div style={{fontSize:13,color:"var(--l)"}}>{age(enfant.naissance)}</div>
             {enfant.allergies.length>0&&<div style={{marginTop:6,cursor:"pointer"}}onClick={()=>setPage&&setPage("sante_complet")}>
@@ -10189,6 +10221,7 @@ function BottomNav({groups,page,setPage,pmiNonLus}){
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
+    {id:"fiches_enfants",l:"Mes enfants",ic:"👧"},
     {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
     {id:"journal_complet",l:"Détail du jour",ic:"📋"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
@@ -13628,8 +13661,8 @@ function InviterParent({enfants,user,demoMode=false}){
           <div style={{fontSize:11,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
             Envoyez ce lien par SMS, WhatsApp ou autre. Le parent n'a qu'à créer son compte.
           </div>
-          <div style={{display:"flex",gap:8}}>
-            <div style={{flex:1,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+          <div style={{display:"flex",gap:8,minWidth:0}}>
+            <div style={{flex:1,minWidth:0,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
               {shareToken?(window.location.origin+"/?invite="+shareToken):"Génération du lien…"}
             </div>
             <button className="btn bG" style={{fontSize:11,padding:"6px 10px",flexShrink:0}}
@@ -16022,6 +16055,7 @@ export default function App(){
     switch(page){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
       case "cahier_jour": return <CahierJour {...P}/>;
+      case "fiches_enfants": return <FichesEnfants enfants={enfants} user={user} setPage={setPage}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
       case "bilans": return <Bilans {...P}/>;
