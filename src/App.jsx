@@ -797,16 +797,6 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       <span style={{fontSize:12,color:"#B8892A",fontWeight:700}}>Signer →</span>
     </div>}
 
-    {/* KPIs cliquables */}
-    <div className="g4"style={{marginBottom:16}}>
-      {kpis.map(k=><div key={k.lbl}className="card card-lift"onClick={()=>setPage(k.page)}
-        style={{padding:16,textAlign:"center",cursor:"pointer"}}>
-        <div style={{fontSize:24,marginBottom:6}}>{k.icon}</div>
-        <div className="pf"style={{fontSize:26,fontWeight:600,color:k.c,lineHeight:1}}>{k.val}</div>
-        <div style={{fontSize:11,color:"var(--l)",marginTop:4,lineHeight:1.3}}>{k.lbl}</div>
-        <div style={{fontSize:10,color:k.c,marginTop:6,fontWeight:600,opacity:.7}}>{k.hint}</div>
-      </div>)}
-    </div>
 
     {/* TABLEAU SIGNATURES P11 - vue d'ensemble du statut signatures des contrats */}
     {!isDemoUser&&nbEnfants>0&&<div className="card"style={{padding:18,marginBottom:14}}>
@@ -854,64 +844,6 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       </div>
     </div>}
 
-    {/* Enfants du jour - TOUT cliquable */}
-    <div className="card"style={{padding:18,marginBottom:14}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div style={{fontWeight:600,fontSize:14,color:"var(--b)"}}>👶 Mes enfants aujourd'hui</div>
-        <button className="btn bG"style={{fontSize:11,padding:"5px 10px"}}onClick={()=>setPage("pointage")}>
-          ⏰ Pointer arrivée
-        </button>
-      </div>
-      <div className="g3">
-        {enfants.map(e=>{
-          const p=pt.find(x=>x.eId===e.id);
-          const t=tx.filter(x=>x.eId===e.id).slice(-1)[0];
-          const msg=enfants.every(e=>["e1","e2","e3"].includes(e.id))?D.messages.filter(m=>m.eId===e.id&&!m.lu).length:0;
-          const rep=D.repas?.find(r=>r.eId===e.id&&r.date===TODAY_STR)||null;
-          const couleur=e.couleur||"#B8622F";
-          const allergies=e.allergies||[];
-          return <div key={e.id} style={{background:"var(--c)",borderRadius:14,padding:14,border:"2px solid "+couleur+"20",transition:"all .2s"}}>
-            {/* En-tête enfant cliquable → journal */}
-            <div onClick={()=>setPage("journal_complet")}style={{display:"flex",gap:10,alignItems:"center",marginBottom:10,cursor:"pointer"}}>
-              <span style={{fontSize:28}}>{e.emoji||"👶"}</span>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{e.prenom}</div>
-                <div style={{fontSize:11,color:"var(--l)"}}>{e.naissance?age(e.naissance):""}</div>
-              </div>
-              {msg>0&&<span className="badge"onClick={ev=>{ev.stopPropagation();setPage("messagerie");}}
-                style={{background:"var(--Rp)",color:"var(--R)",cursor:"pointer",fontSize:12}}>
-                {msg} 💬
-              </span>}
-            </div>
-
-            {allergies.length>0&&<div onClick={()=>setPage("sante_complet")}
-              style={{fontSize:11,color:"var(--R)",fontWeight:700,marginBottom:8,cursor:"pointer",padding:"3px 6px",background:"#FFF0F4",borderRadius:6,display:"inline-block"}}>
-              ⚠️ {allergies.join(", ")}
-            </div>}
-
-            {p?<div onClick={()=>setPage("pointage")}
-              style={{fontSize:12,color:"var(--S)",fontWeight:600,cursor:"pointer",marginBottom:6}}>
-              ↗ {p.arr} {p.dep?"· ↘ "+p.dep:"· en cours ⏱"}
-            </div>:<div onClick={()=>setPage("pointage")}
-              style={{fontSize:12,color:"var(--l)",cursor:"pointer",marginBottom:6}}>
-              ⏰ Pas encore arrivé - pointer →
-            </div>}
-
-            {rep&&<div onClick={()=>setPage("journal_complet")}
-              style={{fontSize:11,cursor:"pointer",color:"var(--G)",fontWeight:600,marginBottom:6}}>
-              🍽 {rep.dej} · {rep.q==="bien"?"✅":"🟡"}
-            </div>}
-
-            {t&&<div onClick={()=>setPage("journal_complet")}
-              style={{fontSize:22,cursor:"pointer",display:"inline-block",transition:"transform .2s"}}
-              onMouseEnter={ev=>ev.currentTarget.style.transform="scale(1.25)"}
-              onMouseLeave={ev=>ev.currentTarget.style.transform="scale(1)"}>
-              {t.mood}
-            </div>}
-          </div>;
-        })}
-      </div>
-    </div>
 
     {/* Accès rapide - tous cliquables */}
     <div className="g2">
@@ -9340,6 +9272,138 @@ function RecapFiscalAssmat({enfants,user}){
   </div>;
 }
 
+const BAREME_KM_2026={3:0.529,4:0.606,5:0.636,6:0.665,7:0.697}; // voiture, <=5000 km/an, baremes 2026 (geles)
+
+function IndemnitesKilometriques({enfants,role,user}){
+  const asmatId=user?.id||enfants[0]?.asmat_id;
+  const [mois,setMois]=useState(new Date().toISOString().slice(0,7));
+  const [cv,setCv]=useState(5);
+  const [trajets,setTrajets]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const blank={date:new Date().toISOString().slice(0,10),enfant_id:enfants[0]?.id||"",km:"",motif:"",taux:BAREME_KM_2026[5]};
+  const [nt,setNt]=useState(blank);
+  const inp={width:"100%",padding:"9px 11px",borderRadius:8,border:"1.5px solid var(--br)",fontSize:13,fontFamily:"inherit",boxSizing:"border-box",background:"var(--w)"};
+
+  const charger=async()=>{
+    if(role!=="asmat"||!asmatId)return;
+    setLoading(true);
+    const debut=mois+"-01";
+    const d=new Date(mois+"-01"); d.setMonth(d.getMonth()+1);
+    const finExcl=d.toISOString().slice(0,10);
+    const{data}=await supabase.from("trajets").select("*").gte("date",debut).lt("date",finExcl).order("date",{ascending:true});
+    if(data)setTrajets(data);
+    setLoading(false);
+  };
+  useEffect(()=>{charger();},[mois]);
+  useEffect(()=>{setNt(n=>({...n,taux:BAREME_KM_2026[cv]}));},[cv]);
+
+  const ajouter=async()=>{
+    const kmN=parseFloat(String(nt.km).replace(",",".")); const tauxN=parseFloat(String(nt.taux).replace(",","."));
+    if(!kmN||!nt.date||!asmatId)return;
+    setSaving(true);
+    const{error}=await supabase.from("trajets").insert({asmat_id:asmatId,enfant_id:nt.enfant_id||null,date:nt.date,km:kmN,motif:(nt.motif||"").trim(),taux:tauxN||BAREME_KM_2026[cv]});
+    setSaving(false);
+    if(!error){setNt({...blank,taux:BAREME_KM_2026[cv]});charger();}
+  };
+  const supprimer=async(id)=>{await supabase.from("trajets").delete().eq("id",id);charger();};
+
+  const totalKm=trajets.reduce((s,t)=>s+(+t.km||0),0);
+  const totalEur=trajets.reduce((s,t)=>s+(+t.km||0)*(+t.taux||0),0);
+  const parEnfant={}; trajets.forEach(t=>{const k=t.enfant_id||"_";parEnfant[k]=(parEnfant[k]||0)+(+t.km||0)*(+t.taux||0);});
+  const enfNom=(id)=>enfants.find(e=>e.id===id)?.prenom||"Non affecté";
+  const moisLabel=new Date(mois+"-01").toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+
+  const imprimer=()=>{
+    const lignes=trajets.map(t=>"<tr><td>"+new Date(t.date).toLocaleDateString("fr-FR")+"</td><td>"+enfNom(t.enfant_id)+"</td><td>"+(t.motif||"")+"</td><td style='text-align:right'>"+(+t.km).toFixed(1)+"</td><td style='text-align:right'>"+(+t.taux).toFixed(3)+"</td><td style='text-align:right'>"+((+t.km)*(+t.taux)).toFixed(2)+" &euro;</td></tr>").join("");
+    const html="<html><head><meta charset='utf-8'><title>Feuille de route "+moisLabel+"</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#2E4A5A}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px}th{background:#f0ece4;text-align:left}tfoot td{font-weight:bold}</style></head><body><h1>Feuille de route kilom&eacute;trique &mdash; "+moisLabel+"</h1><p>Assistante maternelle : "+(user?.prenom||"")+" "+(user?.nom||"")+"</p><table><thead><tr><th>Date</th><th>Enfant</th><th>Motif</th><th>Km</th><th>Taux &euro;/km</th><th>Montant</th></tr></thead><tbody>"+lignes+"</tbody><tfoot><tr><td colspan='3'>Total</td><td style='text-align:right'>"+totalKm.toFixed(1)+" km</td><td></td><td style='text-align:right'>"+totalEur.toFixed(2)+" &euro;</td></tr></tfoot></table><p style='margin-top:16px;font-size:11px;color:#777'>Indemnit&eacute;s kilom&eacute;triques exon&eacute;r&eacute;es dans la limite du bar&egrave;me fiscal. &Agrave; reporter sur une ligne distincte de la d&eacute;claration Pajemploi. Bar&egrave;me 2026 (gel&eacute;) voiture, &le;5000 km/an.</p></body></html>";
+    const w=window.open("","_blank"); if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),300);}
+  };
+
+  if(role!=="asmat")return <div className="fi"><PageHeader icon="🚗" title="Frais kilométriques"/><div className="card"style={{padding:20,textAlign:"center",color:"var(--m)"}}>Section réservée à l'assistante maternelle.</div></div>;
+
+  return <div className="fi">
+    <PageHeader icon="🚗" title="Frais kilométriques (IK)" sub="Trajets, barème 2026 et feuille de route Pajemploi"/>
+
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+      <button className="btn" onClick={()=>{const d=new Date(mois+"-01");d.setMonth(d.getMonth()-1);setMois(d.toISOString().slice(0,7));}} style={{padding:"6px 12px"}}>←</button>
+      <div style={{fontWeight:700,color:"var(--b)",textTransform:"capitalize",minWidth:150,textAlign:"center"}}>{moisLabel}</div>
+      <button className="btn" onClick={()=>{const d=new Date(mois+"-01");d.setMonth(d.getMonth()+1);setMois(d.toISOString().slice(0,7));}} style={{padding:"6px 12px"}}>→</button>
+    </div>
+
+    <div className="g2" style={{marginBottom:14}}>
+      <div className="card" style={{padding:16,textAlign:"center"}}>
+        <div className="pf" style={{fontSize:24,fontWeight:600,color:"var(--T)"}}>{totalKm.toFixed(1)} km</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Total du mois</div>
+      </div>
+      <div className="card" style={{padding:16,textAlign:"center"}}>
+        <div className="pf" style={{fontSize:24,fontWeight:600,color:"var(--G)"}}>{totalEur.toFixed(2)} €</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Indemnité totale</div>
+      </div>
+    </div>
+
+    <div className="card" style={{padding:16,marginBottom:14}}>
+      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:8}}>🚙 Mon véhicule</div>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <span style={{fontSize:13,color:"var(--m)"}}>Puissance fiscale :</span>
+        <select value={cv} onChange={e=>setCv(+e.target.value)} style={{...inp,width:"auto"}}>
+          {[3,4,5,6,7].map(c=><option key={c}value={c}>{c===7?"7 CV et +":c+" CV"}</option>)}
+        </select>
+        <span style={{fontSize:13,color:"var(--G)",fontWeight:700}}>→ {BAREME_KM_2026[cv].toFixed(3)} €/km</span>
+      </div>
+      <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.5}}>Barème kilométrique 2026 (gelé) — voiture, tranche jusqu'à 5 000 km/an. Le taux pré-remplit chaque trajet ; tu peux l'ajuster.</div>
+    </div>
+
+    <div className="card" style={{padding:16,marginBottom:14}}>
+      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:10}}>➕ Ajouter un trajet</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+        <input type="date" value={nt.date} onChange={e=>setNt({...nt,date:e.target.value})} style={inp}/>
+        <select value={nt.enfant_id} onChange={e=>setNt({...nt,enfant_id:e.target.value})} style={inp}>
+          <option value="">— Enfant (famille) —</option>
+          {enfants.map(e=><option key={e.id}value={e.id}>{e.prenom}</option>)}
+        </select>
+      </div>
+      <input placeholder="Motif (sortie parc, RAM, médecin…)" value={nt.motif} onChange={e=>setNt({...nt,motif:e.target.value})} style={{...inp,marginBottom:8}}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:8,alignItems:"center"}}>
+        <input placeholder="Km" inputMode="decimal" value={nt.km} onChange={e=>setNt({...nt,km:e.target.value})} style={inp}/>
+        <input placeholder="Taux €/km" inputMode="decimal" value={nt.taux} onChange={e=>setNt({...nt,taux:e.target.value})} style={inp}/>
+        <button className="btn bG" onClick={ajouter} disabled={saving||!nt.km} style={{whiteSpace:"nowrap"}}>{saving?"…":"Ajouter"}</button>
+      </div>
+    </div>
+
+    <div className="card" style={{padding:16,marginBottom:14}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{fontSize:13,fontWeight:700,color:"var(--b)"}}>Trajets du mois</div>
+        {trajets.length>0&&<button className="btn bT" onClick={imprimer} style={{fontSize:12,padding:"5px 10px"}}>🖨️ Feuille de route</button>}
+      </div>
+      {loading?<div style={{color:"var(--l)",fontSize:13,padding:"10px 0"}}>Chargement…</div>
+       :trajets.length===0?<div style={{color:"var(--l)",fontSize:13,textAlign:"center",padding:"16px 0"}}>Aucun trajet ce mois-ci.</div>
+       :<div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {trajets.map(t=><div key={t.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13,flexWrap:"wrap"}}>
+          <span style={{color:"var(--m)",minWidth:54,fontFamily:"'DM Mono',monospace",fontSize:12}}>{new Date(t.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})}</span>
+          <span style={{fontWeight:600,color:"var(--b)",minWidth:54}}>{enfNom(t.enfant_id)}</span>
+          <span style={{color:"var(--m)",flex:1,minWidth:90}}>{t.motif||"—"}</span>
+          <span style={{color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{(+t.km).toFixed(1)} km</span>
+          <span style={{fontWeight:700,color:"var(--G)",minWidth:60,textAlign:"right"}}>{((+t.km)*(+t.taux)).toFixed(2)} €</span>
+          <button onClick={()=>supprimer(t.id)} style={{background:"none",border:"none",cursor:"pointer",opacity:.5}}>🗑️</button>
+        </div>)}
+      </div>}
+    </div>
+
+    {Object.keys(parEnfant).length>1&&<div className="card" style={{padding:16,marginBottom:14}}>
+      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:10}}>Répartition par famille</div>
+      {Object.entries(parEnfant).map(([k,v])=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
+        <span style={{color:"var(--b)",fontWeight:600}}>{enfNom(k==="_"?null:k)}</span>
+        <span style={{color:"var(--G)",fontWeight:700}}>{v.toFixed(2)} €</span>
+      </div>)}
+    </div>}
+
+    <div className="card" style={{padding:14,background:"var(--Bp)",fontSize:12,color:"var(--b)",lineHeight:1.6}}>
+      💡 Les indemnités kilométriques sont <b>exonérées</b> dans la limite du barème fiscal, à condition de tenir une <b>feuille de route</b> mensuelle (date, motif, km). Elles se déclarent sur une <b>ligne distincte</b> dans Pajemploi, en plus du salaire et de l'indemnité d'entretien, et se répartissent entre les familles concernées.
+    </div>
+  </div>;
+}
+
 function SimulateurCout({enfants,pEId}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
   const [taux,setTaux]=useState(4.05);
@@ -10040,6 +10104,7 @@ const GROUPS_AM={
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
     {id:"admin_finances",l:"Paie & Contrats",ic:"🧾"}, // RENAME NAV P9 (côté asmat - couvre paie + contrats + courriers)
+    {id:"ik",l:"Frais kilométriques",ic:"🚗"},
     {id:"recap_fiscal",l:"Récap fiscal annuel",ic:"📋"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"bilans_exports",l:"Rapports & Exports",ic:"📊"}, // RENAME NAV P9 (id interne conservé pour pas casser le routing)
@@ -15784,6 +15849,7 @@ export default function App(){
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
+      case "ik": return <IndemnitesKilometriques enfants={enfants} role={role} user={user}/>;
       case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
