@@ -6510,6 +6510,7 @@ const catColors={Éveil:"var(--P)",Motricité:"var(--S)",Langage:"var(--B)",Cré
 function ActivitesSuggerees({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [catFilt,setCatFilt]=useState("tous");
+  const [ageFilt,setAgeFilt]=useState("tous");
   const [perso,setPerso]=useState([]);
   const [showForm,setShowForm]=useState(false);
   const [saving,setSaving]=useState(false);
@@ -6528,10 +6529,12 @@ function ActivitesSuggerees({enfants,role,pEId}){
   };
   useEffect(()=>{chargerPerso();},[]);
 
+  const BRACKETS={"tous":null,"0-1 an":[0,12],"1-2 ans":[12,24],"2-3 ans":[24,36],"3-6 ans":[36,72]};
   const _now=new Date();
   const moisAge=enfant?((_now.getFullYear()-new Date(enfant.naissance).getFullYear())*12+(_now.getMonth()-new Date(enfant.naissance).getMonth())):12;
   const toutes=[...ACTIVITES_PAR_AGE.map(a=>({...a,_perso:false})),...perso.map(a=>({...a,desc:a.description,_perso:true}))];
-  const activites=toutes.filter(a=>moisAge>=a.age_min&&moisAge<=a.age_max&&(catFilt==="tous"||a.cat===catFilt));
+  const _br=BRACKETS[ageFilt];
+  const activites=toutes.filter(a=>(catFilt==="tous"||a.cat===catFilt)&&(!_br||(a.age_min<=_br[1]&&a.age_max>=_br[0])));
   const cats=["tous",...new Set(toutes.map(a=>a.cat))];
 
   const ajouter=async()=>{
@@ -6549,7 +6552,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
   const supprimer=async(id)=>{ await supabase.from("activites_perso").delete().eq("id",id); chargerPerso(); };
 
   return <div className="fi">
-    <PageHeader icon="💡" title="Activités suggérées" sub={"Propositions pédagogiques adaptées à l'âge · "+age(enfant?.naissance||"")}/>
+    <PageHeader icon="💡" title="Activités suggérées" sub="Bibliothèque d'éveil 0-6 ans · filtrez par âge et par domaine"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
@@ -6576,6 +6579,13 @@ function ActivitesSuggerees({enfants,role,pEId}){
       <button className="btn bG" onClick={ajouter} disabled={saving||!na.titre.trim()} style={{marginTop:4}}>{saving?"…":"💾 Enregistrer"}</button>
     </div>}
 
+    <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+      {Object.keys(BRACKETS).map(b=><button key={b}onClick={()=>setAgeFilt(b)}style={{
+        padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+        background:ageFilt===b?"var(--b)":"transparent",color:ageFilt===b?"#fff":"var(--m)",borderColor:ageFilt===b?"var(--b)":"var(--br)",
+      }}>{b==="tous"?"👶 Tous âges":b}</button>)}
+    </div>
+
     <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
       {cats.map(c=><button key={c}onClick={()=>setCatFilt(c)}style={{
         padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
@@ -6586,7 +6596,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
     </div>
 
     <div style={{fontSize:12,color:"var(--l)",marginBottom:14,fontFamily:"'DM Mono',monospace"}}>
-      {activites.length} activité{activites.length>1?"s":""} pour {enfant?.prenom} ({age(enfant?.naissance||"")})
+      {activites.length} activité{activites.length>1?"s":""}{ageFilt==="tous"?" · tous âges (0-6 ans)":" · "+ageFilt}
     </div>
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
@@ -15279,6 +15289,7 @@ function QuickActions({role,setPage}){
   const A=role==="asmat"?[
     {e:"⏰",l:"Pointer",p:"pointage",bg:"var(--Gp)",c:"var(--G)"},
     {e:"📔",l:"Cahier du jour",p:"cahier_jour",bg:"var(--Pp)",c:"var(--P)"},
+    {e:"💬",l:"Messages",p:"messagerie",bg:"var(--Sp)",c:"var(--S)"},
     {e:"💶",l:"Paie",p:"admin_finances",bg:"var(--Tp)",c:"var(--T)"},
     {e:"📅",l:"Planning",p:"calendrier",bg:"var(--Bp)",c:"var(--B)"},
   ]:[
@@ -15289,7 +15300,7 @@ function QuickActions({role,setPage}){
   ];
   return <div style={{marginBottom:16}}>
     <div style={{fontSize:13,fontWeight:700,color:"var(--l)",marginBottom:9,paddingLeft:2}}>Que voulez-vous faire ?</div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat("+A.length+",1fr)",gap:8}}>
       {A.map(a=><button key={a.p}onClick={()=>setPage&&setPage(a.p)}
         style={{background:a.bg,border:"none",borderRadius:14,padding:"13px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:6,minHeight:78,transition:"transform .12s"}}
         onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
@@ -15359,7 +15370,7 @@ export default function App(){
   const closeWelcome=()=>{ try{ if(user?.id)localStorage.setItem("timat:onboarding:seen:"+user.id,"1"); }catch(e){} setShowWelcome(false); };
   const [dark,setDark]=useState(false);
   const [loading,setLoading]=useState(true);
-  const [pmiNonLus,setPmiNonLus]=useState(PMI_MESSAGES.filter(m=>!m.lu&&m.de==="PMI").length);
+  const [pmiNonLus,setPmiNonLus]=useState(0);
   const [notifs,setNotifs]=useState([]);
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
