@@ -429,6 +429,82 @@ const D = {
 const age=(d)=>{const n=new Date(d),t=new Date(),m=(t.getFullYear()-n.getFullYear())*12+(t.getMonth()-n.getMonth());return m>=24?Math.floor(m/12)+" ans":m+" mois"};
 const fmt=(s)=>s?new Date(s).toLocaleDateString("fr-FR"):"-";
 const ini=(p,n)=>(p[0]+n[0]).toUpperCase();
+// ===== LOT C — Avatar enfant : emoji OU photo (miniature base64 stockée dans enfants.photo_url, protégée par RLS) =====
+function AvatarEnfant({e,size=24,style={}}){
+  if(e&&e.photo_url)return <img src={e.photo_url} alt={e?.prenom||""} style={{width:size,height:size,borderRadius:"50%",objectFit:"cover",flexShrink:0,verticalAlign:"middle",...style}}/>;
+  return <span style={{fontSize:Math.round(size*0.86),lineHeight:1,...style}}>{(e&&e.emoji)||"👶"}</span>;
+}
+async function resizePhotoEnfant(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const side=Math.min(img.width,img.height);
+      const s=Math.min(side,200);
+      const c=document.createElement("canvas");c.width=s;c.height=s;
+      const ctx=c.getContext("2d");
+      ctx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,s,s);
+      resolve(c.toDataURL("image/jpeg",0.82));
+    };
+    img.onerror=reject;
+    const fr=new FileReader();fr.onload=()=>{img.src=fr.result;};fr.onerror=reject;fr.readAsDataURL(file);
+  });
+}
+function AvatarPicker({emoji,photo,onEmoji,onPhoto}){
+  const EMOJIS=["🦁","🌸","⭐","🐻","🦋","🌈","🐸","🦊","🐼","🌻","🦄","🐝","🐰","🐧","🦉","🐳"];
+  const [busy,setBusy]=useState(false);
+  const fileRef=useRef(null);
+  const choisir=async(f)=>{
+    if(!f)return;
+    if(f.size>8*1024*1024){alert("Photo trop lourde (8 Mo max).");return;}
+    setBusy(true);
+    try{const b64=await resizePhotoEnfant(f);onPhoto(b64);}catch(e){alert("Impossible de lire cette image.");}
+    setBusy(false);
+  };
+  return <div>
+    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:photo?0:10}}>
+      <div style={{width:64,height:64,borderRadius:"50%",background:"var(--c)",border:"2px solid var(--br)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>
+        {photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:34}}>{emoji||"👶"}</span>}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-start"}}>
+        <button type="button" onClick={()=>fileRef.current&&fileRef.current.click()} disabled={busy} style={{padding:"7px 12px",borderRadius:9,border:"1.5px solid var(--T)",background:"var(--Tp)",color:"var(--T)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{busy?"…":(photo?"📷 Changer la photo":"📷 Ajouter une photo")}</button>
+        {photo&&<button type="button" onClick={()=>onPhoto(null)} style={{padding:"2px 4px",borderRadius:9,border:"none",background:"none",color:"var(--R)",fontSize:11.5,cursor:"pointer",fontFamily:"inherit"}}>Retirer la photo</button>}
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>choisir(e.target.files&&e.target.files[0])}/>
+    </div>
+    {!photo&&<div>
+      <div style={{fontSize:11,color:"var(--l)",margin:"2px 0 5px"}}>…ou choisissez un emoji :</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+        {EMOJIS.map(em=><button key={em} type="button" onClick={()=>onEmoji(em)} className={"moo "+(emoji===em?"on":"")} style={{fontSize:18,padding:"4px 7px"}}>{em}</button>)}
+      </div>
+    </div>}
+  </div>;
+}
+function AvatarEditeur({enfant,onClose,onSaved}){
+  const [emoji,setEmoji]=useState((enfant&&enfant.emoji)||"🦁");
+  const [photo,setPhoto]=useState((enfant&&enfant.photo_url)||null);
+  const [saving,setSaving]=useState(false);
+  const sauver=async()=>{
+    setSaving(true);
+    try{
+      const{error}=await supabase.from("enfants").update({emoji:emoji,photo_url:photo||null}).eq("id",enfant.id);
+      if(error){alert("Erreur : "+error.message);setSaving(false);return;}
+      onSaved&&onSaved({...enfant,emoji:emoji,photo_url:photo||null});
+      onClose&&onClose();
+    }catch(e){alert("Erreur réseau.");}
+    setSaving(false);
+  };
+  return <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:18}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:18,padding:22,maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+      <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:4}}>Photo de {enfant&&enfant.prenom}</div>
+      <div style={{fontSize:12,color:"var(--l)",marginBottom:16,lineHeight:1.5}}>Ajoutez une photo de l'enfant ou gardez un emoji. Le parent la verra aussi.</div>
+      <AvatarPicker emoji={emoji} photo={photo} onEmoji={setEmoji} onPhoto={setPhoto}/>
+      <div style={{display:"flex",gap:8,marginTop:18}}>
+        <button onClick={onClose} style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",color:"var(--m)",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
+        <button onClick={sauver} disabled={saving} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:"var(--T)",color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{saving?"…":"Enregistrer"}</button>
+      </div>
+    </div>
+  </div>;
+}
 const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
 
@@ -608,7 +684,7 @@ function PointageRapide({enfants,role,user,demo}){
         const dotC=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
         const dotT=fini?"Terminée":enCours?"Présent":"Absent";
         return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:"14px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,textAlign:"center"}}>
-          <span style={{fontSize:30,lineHeight:1}}>{e.emoji||"👶"}</span>
+          <AvatarEnfant e={e} size={32}/>
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
           <div style={{display:"flex",alignItems:"center",gap:5,fontSize:10.5,color:"var(--m)"}}>
             <span style={{width:7,height:7,borderRadius:7,background:dotC}}/>{dotT}
@@ -640,6 +716,8 @@ function PointageRapide({enfants,role,user,demo}){
 //
 function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [showAjout,setShowAjout]=useState(false);
+  const [editAvatar,setEditAvatar]=useState(null);
+  const [avatarOv,setAvatarOv]=useState({});
   // TABLEAU SIGNATURES P11 - state pour le mini-dashboard
   const [genPdf,setGenPdf]=useState({}); // {[contratId]: 'pending'|'done'|'error'}
   const [tabToast,setTabToast]=useState("");
@@ -756,6 +834,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   return <div className="fi">
     {tabToast&&<Toast msg={tabToast}onClose={()=>setTabToast("")}/>}
     {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
+    {editAvatar&&<AvatarEditeur enfant={editAvatar} onClose={()=>setEditAvatar(null)} onSaved={(up)=>setAvatarOv(o=>({...o,[up.id]:{emoji:up.emoji,photo_url:up.photo_url}}))}/>}
     <div style={{marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
       <div>
         <div style={{fontSize:11,color:"var(--l)",marginBottom:4,fontFamily:"'DM Mono',monospace",letterSpacing:".5px"}}>
@@ -829,7 +908,10 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             :{ic:"❌",l:"Non signé",c:"var(--R)"};
           const genState=genPdf[ct.id];
           return <div key={e.id}style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderBottom:"1px solid var(--br)",fontSize:12,flexWrap:"wrap"}}>
-            <span style={{fontSize:18}}>{e.emoji||"👶"}</span>
+            <button type="button" onClick={()=>setEditAvatar({...e,...(avatarOv[e.id]||{})})} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",lineHeight:0,flexShrink:0}}>
+              <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={26}/>
+              <span style={{position:"absolute",bottom:-4,right:-5,fontSize:9,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 3px rgba(0,0,0,.2)",padding:"1px 2px"}}>📷</span>
+            </button>
             <span style={{fontWeight:600,color:"var(--b)",minWidth:80}}>{e.prenom}</span>
             <span style={{color:status.c,fontWeight:600,flex:1,minWidth:140}}>{status.ic} {status.l}</span>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -995,7 +1077,7 @@ function AccueilParent({enfant,setPage,user}){
       {/* Card enfant */}
       <div className="card"style={{padding:18,borderTop:"4px solid "+enfant.couleur}}>
         <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:12}}>
-          <span style={{fontSize:52}}>{enfant.emoji}</span>
+          <AvatarEnfant e={enfant} size={56}/>
           <div><div className="pf"style={{fontSize:20,fontWeight:600,color:"var(--b)"}}>{enfant.prenom} {enfant.nom}</div>
             <div style={{fontSize:13,color:"var(--l)"}}>{age(enfant.naissance)}</div>
             {enfant.allergies.length>0&&<div style={{marginTop:6,cursor:"pointer"}}onClick={()=>setPage&&setPage("sante_complet")}>
@@ -9460,11 +9542,11 @@ function SimulateurCout({enfants,pEId}){
         <div className="card"style={{padding:18}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>⚙️ Les paramètres de garde</div>
           {[
-            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05},
+            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+(taux/0.7822).toFixed(2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
             {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
             {l:"Semaines d'accueil par an",v:semaines,set:setSemaines,min:30,max:52,step:1},
-            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05},
-          ].map(({l,v,set,min,max,step})=><div key={l}style={{marginBottom:14}}>
+            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Indemnité exonérée de cotisations : ni brut ni net, c'est un montant forfaitaire."},
+          ].map(({l,v,set,min,max,step,hint})=><div key={l}style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <label className="lbl"style={{marginBottom:0}}>{l}</label>
               <span style={{fontWeight:700,color:"var(--b)",fontSize:13}}>{v}</span>
@@ -9475,6 +9557,7 @@ function SimulateurCout({enfants,pEId}){
             <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)"}}>
               <span>{min}</span><span>{max}</span>
             </div>
+            {hint&&<div style={{fontSize:10.5,color:"var(--T)",marginTop:3,fontWeight:600,lineHeight:1.45}}>{hint}</div>}
           </div>)}
         </div>
         <div className="card"style={{padding:18}}>
@@ -12013,7 +12096,7 @@ async function demanderPush(userId){
 //
 function OnboardingWizard({user,onFinish}){
   const [step,setStep]=useState(0);
-  const [enfant,setEnfant]=useState({prenom:"",naissance:"",emoji:"🦁"});
+  const [enfant,setEnfant]=useState({prenom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
     heuresHebdo:40,tauxHoraire:4.05,entretien:3.80,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
@@ -12072,6 +12155,7 @@ function OnboardingWizard({user,onFinish}){
       const{data:enfantData,error:errEnfant}=await withRetry(()=>supabase.from('enfants').insert({
         prenom:enfant.prenom,
         emoji:enfant.emoji||'👶',
+        photo_url:enfant.photo||null,
         naissance:enfant.naissance,
         asmat_id:user.id,
         actif:true,
@@ -12135,13 +12219,9 @@ function OnboardingWizard({user,onFinish}){
               <input className="inp"placeholder="Léo, Emma, Noah..."value={enfant.prenom}onChange={e=>setEnfant(f=>({...f,prenom:e.target.value}))}/></div>
             <div style={{marginBottom:14}}><label className="lbl">Date de naissance *</label>
               <input type="date"className="inp"value={enfant.naissance}onChange={e=>setEnfant(f=>({...f,naissance:e.target.value}))}/></div>
-            <div style={{marginBottom:20}}><label className="lbl">Emoji</label>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                {EMOJIS.map(em=><button key={em}onClick={()=>setEnfant(f=>({...f,emoji:em}))}style={{
-                  width:42,height:42,borderRadius:10,border:"2px solid",fontSize:20,cursor:"pointer",
-                  background:enfant.emoji===em?"var(--Sp)":"#fff",borderColor:enfant.emoji===em?"var(--S)":"var(--br)"
-                }}>{em}</button>)}
-              </div></div>
+            <div style={{marginBottom:20}}><label className="lbl">Photo ou emoji</label>
+              <AvatarPicker emoji={enfant.emoji} photo={enfant.photo} onEmoji={em=>setEnfant(f=>({...f,emoji:em}))} onPhoto={ph=>setEnfant(f=>({...f,photo:ph}))}/>
+            </div>
             <button className="btn bS"style={{width:"100%",justifyContent:"center",padding:13}}
               onClick={()=>enfant.prenom&&enfant.naissance&&setStep(1)}
               disabled={!enfant.prenom||!enfant.naissance}>
@@ -12264,7 +12344,7 @@ function BoutonAjouterEnfant({onClick,compact}){
 // 3 etapes : Enfant, Contrat, Parent (invitation), puis confirmation
 function AjouterEnfantModale({user,onClose}){
   const [step,setStep]=useState(0);
-  const [enfant,setEnfant]=useState({prenom:"",nom:"",naissance:"",emoji:"🦁"});
+  const [enfant,setEnfant]=useState({prenom:"",nom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
     debut:new Date().toISOString().slice(0,10),
     fin:"",
@@ -12297,6 +12377,7 @@ function AjouterEnfantModale({user,onClose}){
         prenom:enfant.prenom.trim(),
         nom:enfant.nom.trim()||null,
         emoji:enfant.emoji||"👶",
+        photo_url:enfant.photo||null,
         naissance:enfant.naissance,
         asmat_id:user.id,
         actif:true,
@@ -12410,11 +12491,8 @@ function AjouterEnfantModale({user,onClose}){
               onChange={e=>setEnfant(f=>({...f,naissance:e.target.value}))}/>
           </div>
           <div style={{marginBottom:18}}>
-            <label className="lbl">Emoji</label>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {EMOJIS.map(em=><button key={em} onClick={()=>setEnfant(f=>({...f,emoji:em}))}
-                style={{width:42,height:42,borderRadius:12,border:enfant.emoji===em?"2px solid var(--T)":"1.5px solid var(--br)",background:enfant.emoji===em?"var(--Tp)":"#fff",fontSize:22,cursor:"pointer"}}>{em}</button>)}
-            </div>
+            <label className="lbl">Photo ou emoji</label>
+            <AvatarPicker emoji={enfant.emoji} photo={enfant.photo} onEmoji={em=>setEnfant(f=>({...f,emoji:em}))} onPhoto={ph=>setEnfant(f=>({...f,photo:ph}))}/>
           </div>
           <button className="btn bT" disabled={!valideEtape0()}
             onClick={()=>setStep(1)}
