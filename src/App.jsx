@@ -214,7 +214,7 @@ function Styles(){return(
     .dark details{background:#132428!important;border-color:#1E3A34!important}
     .dark details summary{color:#F0F5F3!important}
     .dark select option{background:#0D1B1E;color:#F0F5F3}
-    .app{min-height:100vh;background:var(--c);display:flex;flex-direction:column;width:100%;position:relative}
+    .app{min-height:100vh;background:var(--c);display:flex;flex-direction:column;width:100%;max-width:100vw;overflow-x:hidden;position:relative}
     .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
     .card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:var(--r);border:1px solid rgba(234,224,232,.8);box-shadow:var(--sh);position:relative;z-index:1}
     .card-lift{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease}
@@ -8017,13 +8017,21 @@ function SanteComplete({enfants,role,pEId}){
   // Rappels vaccins automatiques
   const isRealEnfant=!["e1","e2","e3"].includes(enfant?.id);
   const VAC_BASE=[
-    {nom:"DT-Polio-Coq-Hib-HB-Pneumo",age_mois:2,fait:isRealEnfant?false:true},
-    {nom:"DT-Polio-Coq-Hib-HB-Pneumo (2e)",age_mois:4,fait:isRealEnfant?false:true},
-    {nom:"DT-Polio-Coq-Hib-HB-Méningocoque",age_mois:5,fait:isRealEnfant?false:true},
-    {nom:"ROR + Pneumo + Méningocoque (2e)",age_mois:11,fait:isRealEnfant?false:true},
-    {nom:"ROR (2e dose)",age_mois:12,fait:false},
-    {nom:"DT-Polio-Coq rappel",age_mois:18,fait:false},
-    {nom:"Varicelle",age_mois:24,fait:false},
+    {nom:"Hexavalent : DTP-Coqueluche-Hib-Hépatite B (1ʳᵉ)",age_mois:2,quand:"2 mois",fait:isRealEnfant?false:true},
+    {nom:"Pneumocoque (1ʳᵉ)",age_mois:2,quand:"2 mois",fait:isRealEnfant?false:true},
+    {nom:"Rotavirus – par voie orale (recommandé)",age_mois:2,quand:"2 mois",reco:true,fait:false},
+    {nom:"Méningocoque B (1ʳᵉ)",age_mois:3,quand:"3 mois",fait:isRealEnfant?false:true},
+    {nom:"Hexavalent : DTP-Coqueluche-Hib-Hépatite B (2ᵉ)",age_mois:4,quand:"4 mois",fait:isRealEnfant?false:true},
+    {nom:"Pneumocoque (2ᵉ)",age_mois:4,quand:"4 mois",fait:isRealEnfant?false:true},
+    {nom:"Méningocoque B (2ᵉ)",age_mois:5,quand:"5 mois",fait:isRealEnfant?false:true},
+    {nom:"Méningocoque ACWY (1ʳᵉ)",age_mois:6,quand:"6 mois",fait:false},
+    {nom:"Hexavalent : DTP-Coqueluche-Hib-Hépatite B (rappel, 3ᵉ)",age_mois:11,quand:"11 mois",fait:false},
+    {nom:"Pneumocoque (rappel, 3ᵉ)",age_mois:11,quand:"11 mois",fait:false},
+    {nom:"ROR : Rougeole-Oreillons-Rubéole (1ʳᵉ)",age_mois:12,quand:"12 mois",fait:false},
+    {nom:"Méningocoque B (rappel, 3ᵉ)",age_mois:12,quand:"12 mois",fait:false},
+    {nom:"Méningocoque ACWY (rappel, 2ᵉ)",age_mois:12,quand:"12 mois",fait:false},
+    {nom:"ROR : Rougeole-Oreillons-Rubéole (2ᵉ)",age_mois:17,quand:"16-18 mois",fait:false},
+    {nom:"DTP-Coqueluche (rappel)",age_mois:72,quand:"6 ans",fait:false},
   ];
   const [vacsState,setVacsState]=useState(VAC_BASE);
   const VACCINS_CALENDRIER=vacsState;
@@ -8086,6 +8094,9 @@ function SanteComplete({enfants,role,pEId}){
     {sec==="croissance"&&<CourbeCroissance enfants={liste}role={role}pEId={selId}/>}
     {sec==="vaccins"&&<div>
       <PageHeader icon="💉" title="Suivi vaccinal" sub="Calendrier vaccinal officiel - rappels automatiques"/>
+      <div style={{background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"11px 14px",marginBottom:16,fontSize:11.5,color:"var(--m)",lineHeight:1.55}}>
+        Calendrier officiel français des <b>0-6 ans</b> (11 vaccins obligatoires depuis 2018, + <b>méningocoque B et ACWY obligatoires depuis 2025</b>). Cet outil aide au suivi mais ne remplace pas le carnet de santé ni l'avis du médecin. Cochez les vaccins faits.
+      </div>
 
       {prochainsVaccins.length>0&&<div style={{background:"var(--Rp)",border:"1.5px solid var(--R)",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
         <span style={{fontSize:20}}>⚠️</span>
@@ -8110,7 +8121,7 @@ function SanteComplete({enfants,role,pEId}){
             <span style={{fontSize:20,flexShrink:0}}>{v.fait?"✅":enRetard?"❌":proche?"⏰":"⏳"}</span>
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
-              <div style={{fontSize:11,color:"var(--l)"}}>À {v.age_mois} mois · {v.fait?"Fait ✓":enRetard?"En retard":proche?"À prévoir":"À venir"}</div>
+              <div style={{fontSize:11,color:"var(--l)"}}>{v.quand||(v.age_mois+" mois")} · {v.reco?"Recommandé":"Obligatoire"} · {v.fait?"Fait ✓":enRetard?"En retard":proche?"À prévoir":"À venir"}</div>
             </div>
             <div style={{width:22,height:22,borderRadius:6,border:"2px solid",
               borderColor:v.fait?"var(--G)":"var(--br)",
