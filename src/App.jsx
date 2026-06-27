@@ -537,6 +537,40 @@ function FichesEnfants({enfants,user,setPage}){
     {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
   </div>;
 }
+// ===== Regroupement de sous-onglets : barre segmentée + vues fusionnées =====
+function SegBar({v,setV,items}){
+  return <div style={{padding:"16px 20px 0",maxWidth:900,margin:"0 auto",width:"100%"}}>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      {items.map((it,i)=><button key={i} onClick={()=>setV(i)} style={{
+        padding:"9px 16px",borderRadius:22,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",
+        background:v===i?"var(--T)":"#fff",color:v===i?"#fff":"var(--T)",borderColor:v===i?"var(--T)":"var(--Tp)",
+        boxShadow:v===i?"0 2px 8px rgba(228,145,120,.35)":"none",transition:"all .15s"
+      }}>{it.ic} {it.l}</button>)}
+    </div>
+  </div>;
+}
+function VueJournee({enfants,role,pEId,user,pointagesDB}){
+  const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
+  return <><SegBar v={v} setV={setV} items={[{ic:"📔",l:"Cahier du jour"},{ic:"📋",l:"Détail du jour"}]}/>{v===0?<CahierJour {...P}/>:<JournalComplet {...P}/>}</>;
+}
+function VueSanteUrgence({enfants,role,pEId,user,pointagesDB}){
+  const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
+  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"}]}/>{v===0?<SanteComplete {...P}/>:<FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>}</>;
+}
+function VueSuiviProgres({enfants,role,pEId,user,pointagesDB,setPage}){
+  const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
+  return <><SegBar v={v} setV={setV} items={[{ic:"📊",l:"Tableau de bord"},{ic:"🌱",l:"Éveil & Progrès"}]}/>{v===0?<TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>:<EveilComplet {...P}/>}</>;
+}
+function VuePaieContrats({enfants,role,pEId,user,pointagesDB}){
+  const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
+  const items=[{ic:"🧾",l:"Paie & Contrats"},{ic:"🚗",l:"Frais km"}];
+  if(role==="asmat")items.push({ic:"📋",l:"Récap fiscal"});
+  return <><SegBar v={v} setV={setV} items={items}/>{v===0?<AdminFinances {...P} user={user}/>:v===1?<IndemnitesKilometriques enfants={enfants} role={role} user={user}/>:<RecapFiscalAssmat enfants={enfants} user={user}/>}</>;
+}
+function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
+  const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
+  return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"}]}/>{v===0?<DocumentsComplet {...P}/>:<BilansExports {...P}/>}</>;
+}
 const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
 
@@ -10230,23 +10264,17 @@ function BottomNav({groups,page,setPage,pmiNonLus}){
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
-    {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
-    {id:"journal_complet",l:"Détail du jour",ic:"📋"},
+    {id:"journee",l:"Journée",ic:"📔"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
-    {id:"dashboard",l:"Tableau de bord",ic:"📊"},
-    {id:"sante_complet",l:"Santé",ic:"🏥"},
-    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
-    {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
+    {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊"},
+    {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥"},
     {id:"bilans",l:"Bilans périodiques",ic:"✨"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
-    {id:"admin_finances",l:"Paie & Contrats",ic:"🧾"}, // RENAME NAV P9 (côté asmat - couvre paie + contrats + courriers)
-    {id:"ik",l:"Frais kilométriques",ic:"🚗"},
-    {id:"recap_fiscal",l:"Récap fiscal annuel",ic:"📋"},
-    {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
-    {id:"bilans_exports",l:"Rapports & Exports",ic:"📊"}, // RENAME NAV P9 (id interne conservé pour pas casser le routing)
+    {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾"},
+    {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",color:"#E49178",subs:[
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
@@ -10259,14 +10287,11 @@ const GROUPS_AM={
 const GROUPS_P={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"Mon enfant",ic:"👶",color:"#B8622F",subs:[
-    {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
-    {id:"journal_complet",l:"Détail du jour",ic:"📋"},
+    {id:"journee",l:"Journée",ic:"📔"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
-    {id:"dashboard",l:"Tableau de bord",ic:"📊"},
-    {id:"sante_complet",l:"Santé",ic:"🏥"},
-    {id:"fiche_urgence",l:"Fiche d'urgence",ic:"🚨"},
+    {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊"},
+    {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
-    {id:"eveil_complet",l:"Éveil & Progrès",ic:"🌱"},
     {id:"bilans",l:"Bilans reçus",ic:"✨"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
@@ -10280,11 +10305,14 @@ const GROUPS_P={
   ]},
 };
 
+// Alias : anciens ids de pages -> nouvel onglet regroupé (pour le surlignage du menu)
+const PAGE_ALIAS={cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports"};
 // Trouver à quel groupe appartient une page
 const findGroup=(groups,pageId)=>{
+  const pid=PAGE_ALIAS[pageId]||pageId;
   for(const[gKey,g]of Object.entries(groups)){
-    if(gKey===pageId)return gKey;
-    if(g.subs&&g.subs.find(s=>s.id===pageId))return gKey;
+    if(gKey===pid)return gKey;
+    if(g.subs&&g.subs.find(s=>s.id===pid))return gKey;
   }
   return "accueil";
 };
@@ -10414,7 +10442,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
       scrollbarWidth:"none",flexShrink:0,alignItems:"center",
     }}>
       {subs.map(s=>{
-        const isSubActive=page===s.id;
+        const isSubActive=(PAGE_ALIAS[page]||page)===s.id;
         const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
         return <button key={s.id}onClick={()=>setPage(s.id)}style={{
           display:"flex",alignItems:"center",gap:5,
@@ -16064,6 +16092,11 @@ export default function App(){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
       case "cahier_jour": return <CahierJour {...P}/>;
       case "fiches_enfants": return <FichesEnfants enfants={enfants} user={user} setPage={setPage}/>;
+      case "journee": return <VueJournee {...P}/>;
+      case "suivi_progres": return <VueSuiviProgres {...P} setPage={setPage}/>;
+      case "sante_urgence": return <VueSanteUrgence {...P}/>;
+      case "paie_contrats": return <VuePaieContrats {...P} user={user}/>;
+      case "documents_rapports": return <VueDocsRapports {...P}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
       case "bilans": return <Bilans {...P}/>;
