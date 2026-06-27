@@ -239,7 +239,7 @@ function Styles(){return(
     .bG:hover{background:rgba(26,17,24,.1)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
     .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw}
-    @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}}
+    @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}.inp,input,select,textarea{font-size:16px!important}}
     .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -666,6 +666,8 @@ function PointageRapide({enfants,role,user,demo}){
   const [busy,setBusy]=useState(null);
   const [toast,setToast]=useState("");
   const [qrFor,setQrFor]=useState(null);
+  const [editAvatar,setEditAvatar]=useState(null);
+  const [avatarOv,setAvatarOv]=useState({});
   const ids=list.map(e=>e.id).join(",");
   const hhmm=(t)=>{if(!t)return"";const s=String(t);return s.includes("T")?s.split("T")[1].slice(0,5):s.slice(0,5);};
   const fetchStatus=async()=>{
@@ -707,27 +709,33 @@ function PointageRapide({enfants,role,user,demo}){
     <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
       Un tap pour enregistrer {role==="parent"?"l'arrivée puis le départ de votre enfant":"l'arrivée puis le départ"} — synchronisé sur les deux espaces.{role==="parent"?" (Vous pouvez aussi flasher le QR affiché par l'assistante maternelle.)":""}
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:10}}>
-      {list.map(e=>{
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:12}}>
+      {list.map(e0=>{
+        const e={...e0,...(avatarOv[e0.id]||{})};
         const st=status[e.id]||{};
         const fini=st.arrivee&&st.depart;
         const enCours=st.arrivee&&!st.depart;
         const label=fini?"Journée terminée":enCours?"🏁 Départ":"✅ Arrivée";
         const dotC=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
         const dotT=fini?"Terminée":enCours?"Présent":"Absent";
-        return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:"14px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,textAlign:"center"}}>
-          <AvatarEnfant e={e} size={46}/>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
-          <div style={{display:"flex",alignItems:"center",gap:5,fontSize:10.5,color:"var(--m)"}}>
-            <span style={{width:7,height:7,borderRadius:7,background:dotC}}/>{dotT}
+        return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:16,padding:"14px",display:"flex",gap:12,alignItems:"center"}}>
+          {showQR?<button type="button" onClick={()=>setEditAvatar(e)} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",flexShrink:0,lineHeight:0}}>
+            <AvatarEnfant e={e} size={60}/>
+            <span style={{position:"absolute",bottom:-2,right:-3,fontSize:11,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 4px rgba(0,0,0,.25)",width:21,height:21,display:"flex",alignItems:"center",justifyContent:"center"}}>📷</span>
+          </button>:<div style={{flexShrink:0,lineHeight:0}}><AvatarEnfant e={e} size={60}/></div>}
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
+            <div style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"var(--m)",margin:"2px 0 4px"}}>
+              <span style={{width:7,height:7,borderRadius:7,background:dotC}}/>{dotT}
+              {(st.arrivee||st.depart)&&<span style={{color:"var(--l)"}}>· {st.arrivee?("→ "+hhmm(st.arrivee)):""}{st.depart?(" ← "+hhmm(st.depart)):""}</span>}
+            </div>
+            <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+              <button className={fini?"btn bG":enCours?"btn bR":"btn bT"} disabled={fini||busy===e.id}
+                style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
+                onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
+              {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}>📱 QR</button>}
+            </div>
           </div>
-          <div style={{fontSize:10.5,color:"var(--l)",minHeight:14}}>
-            {st.arrivee?("→ "+hhmm(st.arrivee)):""}{st.depart?(" · ← "+hhmm(st.depart)):""}
-          </div>
-          <button className={fini?"btn bG":enCours?"btn bR":"btn bT"} disabled={fini||busy===e.id}
-            style={{width:"100%",fontSize:12,padding:"8px 6px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
-            onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
-          {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}>📱 QR</button>}
         </div>;
       })}
     </div>
@@ -742,6 +750,7 @@ function PointageRapide({enfants,role,user,demo}){
         </div>
       </div>
     </div>}
+    {editAvatar&&<AvatarEditeur enfant={editAvatar} onClose={()=>setEditAvatar(null)} onSaved={(up)=>setAvatarOv(o=>({...o,[up.id]:{emoji:up.emoji,photo_url:up.photo_url}}))}/>}
   </div>;
 }
 
@@ -10221,7 +10230,6 @@ function BottomNav({groups,page,setPage,pmiNonLus}){
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
-    {id:"fiches_enfants",l:"Mes enfants",ic:"👧"},
     {id:"cahier_jour",l:"Cahier du jour",ic:"📔"},
     {id:"journal_complet",l:"Détail du jour",ic:"📋"},
     {id:"pointage",l:"Pointage",ic:"⏰"},
