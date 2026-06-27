@@ -302,10 +302,11 @@ function Styles(){return(
     .demo-bnav .bottom-nav{position:static!important;display:flex!important;box-shadow:none;z-index:auto;padding-bottom:0}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
     /* - CALENDRIER - */
-    .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-    .cday{min-height:38px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;cursor:pointer;transition:all .15s;font-size:12px;color:var(--b);position:relative;background:transparent}
-    .cday:hover{background:var(--Sp)}
-    .cday.tod{background:linear-gradient(135deg,var(--T),var(--S));color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(144,160,147,.3)}
+    .cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+    .cday{min-height:48px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:6px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--b);position:relative;background:transparent}
+    .cday:hover{background:rgba(0,0,0,.04)}
+    .cday.tod{background:transparent;color:var(--b);font-weight:400;box-shadow:none}
+    .cday.sel{background:var(--Tp);font-weight:700}
     .cday.abs{background:var(--Rp);color:var(--R)}
     .cday.cng{background:var(--Gp);color:var(--G)}
     .cday.hol{background:var(--Bp);color:var(--B)}
@@ -2244,16 +2245,17 @@ function Calendrier({enfants,role,pEId}){
               <div style={{fontSize:16,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:28,height:28,lineHeight:"28px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
             </div>;})}
             <div/>
-            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:16}}>
+            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:16}}>
               {ferie&&<div style={{fontSize:9,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
               {ev2.map(ev=><div key={ev.id} style={{fontSize:9,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
+              {sansH.map(e=>{const col=(e.couleur&&e.couleur[0]==="#")?e.couleur:"#E49178";return <div key={e.id} style={{fontSize:9,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom} · horaire ?</div>;})}
             </div>;})}
             <div style={{position:"relative",height:H}}>
               {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH-6,right:4,fontSize:9,color:"var(--l)"}}>{h}h</div>)}
             </div>
             {joursDeLaSemaine.map((jd,i)=>{
               const acc=accueilDuJour(jd);const n=acc.length||1;
-              return <div key={i} style={{position:"relative",height:H,borderRight:i<6?"1px solid var(--br)":"none",borderLeft:i===0?"1px solid var(--br)":"none"}}>
+              return <div key={i} style={{position:"relative",height:H,borderRight:"1px solid var(--br)",borderLeft:i===0?"1px solid var(--br)":"none",background:estAujourdhui(jd)?"rgba(228,145,120,.06)":i>=5?"rgba(0,0,0,.025)":"transparent"}}>
                 {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH,left:0,right:0,borderTop:"1px solid rgba(0,0,0,.05)"}}/>)}
                 {acc.map((e,ci)=>{
                   const hr=parseHoraire(e.contrat&&e.contrat.horaires);
@@ -2272,12 +2274,20 @@ function Calendrier({enfants,role,pEId}){
             })}
           </div>
         </div>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid var(--br)"}}>
+          <span style={{fontSize:10.5,color:"var(--l)",fontWeight:700}}>Enfants :</span>
+          {enfants.map(e=>{const col=(e.couleur&&e.couleur[0]==="#")?e.couleur:"#E49178";return <div key={e.id} style={{display:"flex",alignItems:"center",gap:5}}>
+            <span style={{width:11,height:11,borderRadius:3,background:col}}/>
+            <AvatarEnfant e={e} size={16}/>
+            <span style={{fontSize:11,color:"var(--m)",fontWeight:600}}>{e.prenom}</span>
+          </div>;})}
+        </div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:10,textAlign:"center"}}>Glissez horizontalement pour voir toute la semaine · « ➕ Événement » pour ajouter un rendez-vous</div>
       </div>;
     })()}
 
     {/* ===== VUE MOIS ===== */}
-    {vue==="mois"&&<div className="g2">
+    {vue==="mois"&&<div>
       <div className="card"style={{padding:18}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
           <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
@@ -2302,7 +2312,7 @@ function Calendrier({enfants,role,pEId}){
 
             let cls="cday";
             let bgStyle={};
-            if(isToday||isSel)cls+=" tod";
+            if(isSel&&!isToday)cls+=" sel";
             else if(ferie)cls+=" abs"; // Féries → rouge
             else if(uev?.type==="cng"){cls+=" cng";} // Mes congés → jaune/doré
             else if(vac)cls+=" hol"; // Vacances → bleu
@@ -2315,7 +2325,7 @@ function Calendrier({enfants,role,pEId}){
             return <div key={d}className={cls}style={{...bgStyle,position:"relative"}}
               onClick={()=>setSel(sel===d?null:d)}
               title={ferie||(accueil.length>0?accueil.map(e=>e.prenom).join(", "):"")}>
-              <span style={{fontSize:11,fontWeight:isToday?700:400}}>{d}</span>
+              <span style={isToday?{fontSize:13,fontWeight:700,background:"var(--T)",color:"#fff",width:25,height:25,lineHeight:"25px",borderRadius:"50%",textAlign:"center",display:"inline-block"}:{fontSize:13,fontWeight:400}}>{d}</span>
               {/* Indicateurs en bas du jour */}
               <div style={{position:"absolute",bottom:2,left:0,right:0,display:"flex",justifyContent:"center",gap:2}}>
                 {ferie&&!isToday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--R)"}}/>}
@@ -2411,29 +2421,34 @@ function Calendrier({enfants,role,pEId}){
             <div style={{fontSize:12,color:"var(--l)"}}>Aucun événement ce jour.</div>}
         </div>}
 
-        {/* Liste événements du mois */}
-        <div className="card"style={{padding:14}}>
-          <div style={{fontWeight:600,fontSize:13,marginBottom:10,color:"var(--b)"}}>📋 {noms[mois]} {an}</div>
-          {moisEvs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun événement.</div>}
-          {moisEvs.map(ev=><div key={ev.id}style={{display:"flex",gap:8,padding:"7px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
-            <span className="badge"style={{
-              background:ev.type==="ferie"?"var(--Rp)":ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":ev.type==="anniv"?"var(--Tp)":"var(--Bp)",
-              color:ev.type==="ferie"?"var(--R)":ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":ev.type==="anniv"?"var(--T)":"var(--B)",
-              whiteSpace:"nowrap",fontSize:10}}>
-              {ev.date.slice(8)} {noms[mois].slice(0,3).toLowerCase()}
-            </span>
-            <span style={{fontSize:11,color:"var(--m)",flex:1}}>{ev.txt}</span>
-          </div>)}
-        </div>
-
-        {/* Vacances ce mois */}
-        {VACANCES_2024.filter(v=>v.debut.startsWith(moisStr)||v.fin.startsWith(moisStr)||(v.debut<moisStr+"-99"&&v.fin>moisStr)).map(v=>
-          <div key={v.nom}className="card"style={{padding:12,background:"var(--Bp)",border:"1px solid rgba(46,95,138,.3)"}}>
-            <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}>🏖️ Vacances {v.nom} - Zone C</div>
-            <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(v.fin)}</div>
-          </div>)}
       </div>
     </div>}
+    {/* ===== Bloc événements du mois — sous le calendrier, pleine largeur (les deux vues) ===== */}
+    <div className="card" style={{padding:16,marginTop:14}}>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}>📋 Événements de {noms[mois]} {an}
+        <div style={{marginLeft:"auto",display:"flex",gap:4}}>
+          <button className="btn bG" style={{padding:"4px 9px",fontSize:13}} onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
+          <button className="btn bG" style={{padding:"4px 9px",fontSize:13}} onClick={()=>{if(mois===11){setMois(0);setAn(a=>a+1)}else setMois(m=>m+1)}}>›</button>
+        </div>
+      </div>
+      {moisEvs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun événement ce mois-ci.</div>}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:8}}>
+        {moisEvs.map(ev=><div key={ev.id}style={{display:"flex",gap:8,padding:"8px 10px",borderRadius:10,background:"var(--c)",alignItems:"center"}}>
+          <span className="badge"style={{
+            background:ev.type==="ferie"?"var(--Rp)":ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":ev.type==="anniv"?"var(--Tp)":"var(--Bp)",
+            color:ev.type==="ferie"?"var(--R)":ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":ev.type==="anniv"?"var(--T)":"var(--B)",
+            whiteSpace:"nowrap",fontSize:10}}>
+            {ev.date.slice(8)} {noms[mois].slice(0,3).toLowerCase()}
+          </span>
+          <span style={{fontSize:12,color:"var(--m)",flex:1}}>{ev.txt}</span>
+        </div>)}
+      </div>
+      {VACANCES_2024.filter(v=>v.debut.startsWith(moisStr)||v.fin.startsWith(moisStr)||(v.debut<moisStr+"-99"&&v.fin>moisStr)).map(v=>
+        <div key={v.nom} style={{marginTop:10,padding:12,background:"var(--Bp)",borderRadius:10,border:"1px solid rgba(46,95,138,.3)"}}>
+          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}>🏖️ Vacances {v.nom} - Zone C</div>
+          <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(v.fin)}</div>
+        </div>)}
+    </div>
   </div>;
 }
 function Messagerie({enfants,role,pEId,user}){
@@ -3039,6 +3054,29 @@ function Sante({enfants,role,pEId}){
     logAction('delete_allergie', {table_name:'enfants', record_id:enfant.id}); // AUDIT LOG P8
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
+  const [croissance,setCroissance]=useState([]);
+  const [mesForm,setMesForm]=useState({date:new Date().toISOString().slice(0,10),poids:"",taille:""});
+  useEffect(()=>{
+    if(!enfant?.id||["e1","e2","e3"].includes(enfant.id)){setCroissance([]);return;}
+    supabase.from("croissance").select("*").eq("enfant_id",enfant.id).order("date",{ascending:true}).then(({data})=>setCroissance(data||[]));
+  },[enfant?.id]);
+  const ageMois=(d)=>{if(!enfant?.naissance)return null;const n=new Date(enfant.naissance),x=new Date(d);return Math.max(0,Math.round((x-n)/(1000*60*60*24*30.44)));};
+  const rechargerCroissance=()=>{if(enfant?.id)supabase.from("croissance").select("*").eq("enfant_id",enfant.id).order("date",{ascending:true}).then(({data})=>setCroissance(data||[]));};
+  const addMesure=async()=>{
+    if(!enfant?.id)return;
+    const p=parseFloat(String(mesForm.poids).replace(",","."))||null;
+    const t=parseFloat(String(mesForm.taille).replace(",","."))||null;
+    if(!mesForm.date||(!p&&!t)){alert("Indiquez au moins le poids ou la taille.");return;}
+    const{error}=await supabase.from("croissance").insert({enfant_id:enfant.id,date:mesForm.date,poids:p,taille:t,age_mois:ageMois(mesForm.date)});
+    if(error){alert("Erreur : "+error.message);return;}
+    setMesForm({date:new Date().toISOString().slice(0,10),poids:"",taille:""});
+    rechargerCroissance();
+  };
+  const delMesure=async(id)=>{
+    if(!window.confirm("Supprimer cette mesure ?"))return;
+    await supabase.from("croissance").delete().eq("id",id);
+    setCroissance(c=>c.filter(m=>m.id!==id));
+  };
   const isRealChild=!["e1","e2","e3"].includes(enfant?.id);
   const vacs=isRealChild?[]:(enfant?.vaccins||[]);
 
@@ -3065,12 +3103,12 @@ function Sante({enfants,role,pEId}){
           {(enfant.allergies||[]).length===0
             ?<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>✅ Aucune allergie connue</span>
             :<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,padding:"5px 12px",display:"inline-flex",alignItems:"center",gap:6}}>⚠️ {a}<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span></span>)}
+              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,padding:"5px 12px",display:"inline-flex",alignItems:"center",gap:6}}>⚠️ {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
             </div>}
-          <div style={{marginTop:12,display:"flex",gap:8}}>
+          {role==="parent"?<div style={{marginTop:12,display:"flex",gap:8}}>
             <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
             <button className="btn bT"style={{fontSize:12}}onClick={addAllergie}>+</button>
-          </div>
+          </div>:<div style={{marginTop:10,fontSize:11,color:"var(--l)"}}>ℹ️ Allergies renseignées et tenues à jour par le parent.</div>}
         </div>
 
         {/* Urgences */}
@@ -3082,25 +3120,30 @@ function Sante({enfants,role,pEId}){
               <span style={{fontWeight:700,color:"#DC2626",fontSize:14}}>{v}</span>
             </div>)}
         </div>
-      </div>
 
-      {/* Vaccins */}
-      <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>💉 Carnet de vaccination</div>
-        {vacs.map((v,i)=><div key={i}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
-          <div>
-            <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
-            <div style={{fontSize:11,color:"var(--l)"}}>{fmt(v.date)}</div>
-          </div>
-          <span className="badge"style={{background:v.ok?"var(--Sp)":"var(--Rp)",color:v.ok?"var(--S)":"var(--R)",fontSize:12,padding:"5px 10px"}}>
-            {v.ok?"✅ À jour":"⚠️ À renouveler"}</span>
-        </div>)}
-        <div style={{marginTop:12,padding:"10px 14px",background:"var(--Gp)",borderRadius:10,border:"1px solid var(--G)"}}>
-          <div style={{fontSize:13,color:"#7A5500",lineHeight:1.5}}>
-            ⏰ Prochain rappel : <strong>ROR de {enfant.prenom}</strong> - à prévoir avant {age(enfant.naissance)}
-          </div>
+        {/* Croissance — tenue à jour par le parent */}
+        <div className="card"style={{padding:16}}>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:4,color:"var(--b)"}}>📏 Croissance</div>
+          <div style={{fontSize:11,color:"var(--l)",marginBottom:12}}>{role==="parent"?"Ajoutez le poids et la taille à chaque pesée ou visite.":"Mesures tenues à jour par le parent."}</div>
+          {croissance.length===0
+            ?<div style={{fontSize:12.5,color:"var(--l)"}}>Aucune mesure pour l'instant.</div>
+            :<div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {[...croissance].reverse().map(m=><div key={m.id} style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,padding:"6px 0",borderBottom:"1px solid var(--br)"}}>
+                <span style={{color:"var(--l)",minWidth:78}}>{fmt(m.date)}</span>
+                <span style={{fontWeight:700,color:"var(--b)"}}>{m.poids?m.poids+" kg":""}{m.poids&&m.taille?" · ":""}{m.taille?m.taille+" cm":""}</span>
+                {m.age_mois!=null&&<span style={{color:"var(--l)",fontSize:11}}>({m.age_mois} mois)</span>}
+                {role==="parent"&&<button onClick={()=>delMesure(m.id)} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",color:"var(--R)",fontSize:13,opacity:.7}}>✕</button>}
+              </div>)}
+            </div>}
+          {role==="parent"&&<div style={{marginTop:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-end"}}>
+            <div style={{flex:"1 1 110px"}}><label className="lbl" style={{fontSize:10}}>Date</label><input type="date" className="inp" value={mesForm.date} onChange={e=>setMesForm(f=>({...f,date:e.target.value}))}/></div>
+            <div style={{flex:"1 1 70px"}}><label className="lbl" style={{fontSize:10}}>Poids (kg)</label><input className="inp" inputMode="decimal" placeholder="9,2" value={mesForm.poids} onChange={e=>setMesForm(f=>({...f,poids:e.target.value}))}/></div>
+            <div style={{flex:"1 1 70px"}}><label className="lbl" style={{fontSize:10}}>Taille (cm)</label><input className="inp" inputMode="decimal" placeholder="74" value={mesForm.taille} onChange={e=>setMesForm(f=>({...f,taille:e.target.value}))}/></div>
+            <button className="btn bT" style={{flex:"0 0 auto"}} onClick={addMesure}>Ajouter</button>
+          </div>}
         </div>
       </div>
+
     </div>}
   </div>;
 }
