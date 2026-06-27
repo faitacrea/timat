@@ -224,7 +224,8 @@ function Styles(){return(
     .logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-.5px}
     .logo-dot{width:5px;height:5px;border-radius:50%;background:var(--S);margin-top:2px}
     .nav-main{background:rgba(255,255,255,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(234,224,232,.5);display:flex;gap:4px;padding:0 16px;height:46px;align-items:center}
-    .inp{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s;background:#fff;color:var(--b)}
+    .inp{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:16px;outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s;background:#fff;color:var(--b)}
+    input,select,textarea,.inp,.sel,.ta{font-size:16px!important}
     .inp:focus{border-color:var(--S);box-shadow:var(--sh3)}
     .ta{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;resize:vertical;min-height:80px;transition:border-color .15s;background:#fff;color:var(--b)}
     .ta:focus{border-color:var(--S);box-shadow:var(--sh3)}
@@ -2038,6 +2039,8 @@ function Calendrier({enfants,role,pEId}){
   const [sel,setSel]=useState(null);
   const [vue,setVue]=useState("semaine");
   const [semOffset,setSemOffset]=useState(0);
+  const [showEvModal,setShowEvModal]=useState(false);
+  const [evForm,setEvForm]=useState({date:"",type:"rdv",txt:""});
   const isDemoUser=enfants.length>0&&enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const [evs,setEvs]=useState([]);
   // Initialiser les événements après le chargement des enfants
@@ -2122,6 +2125,21 @@ function Calendrier({enfants,role,pEId}){
   const NOMS_JOURS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
   const labelSemaine=lundiSemaine.getDate()+" "+noms[lundiSemaine.getMonth()].slice(0,4)+". → "+joursDeLaSemaine[6].getDate()+" "+noms[joursDeLaSemaine[6].getMonth()].slice(0,4)+". "+joursDeLaSemaine[6].getFullYear();
   const estAujourdhui=(jd)=>{const t=new Date();return jd.getDate()===t.getDate()&&jd.getMonth()===t.getMonth()&&jd.getFullYear()===t.getFullYear();};
+  const parseHoraire=(str)=>{
+    if(!str)return null;
+    const m=String(str).replace(/[H:]/g,"h").match(/(\d{1,2})h?(\d{2})?\s*[–\-àa]+\s*(\d{1,2})h?(\d{2})?/);
+    if(!m)return null;
+    const s=parseInt(m[1])+(m[2]?parseInt(m[2])/60:0);
+    const e=parseInt(m[3])+(m[4]?parseInt(m[4])/60:0);
+    if(isNaN(s)||isNaN(e)||e<=s)return null;
+    return [s,e];
+  };
+  const addEvModal=()=>{
+    if(!evForm.date||!evForm.txt.trim())return;
+    setEvs(p=>[...p,{id:"ev"+Date.now(),date:evForm.date,type:evForm.type,txt:evForm.txt.trim()}]);
+    setShowEvModal(false);setEvForm({date:"",type:"rdv",txt:""});
+    setToast("Événement ajouté ✓");
+  };
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2182,47 +2200,85 @@ function Calendrier({enfants,role,pEId}){
       </div>
     </div>}
 
-    <div className="g2">
-      <div className="card"style={{padding:18}}>
-        {/* Bascule Semaine / Mois */}
-        <div style={{display:"flex",gap:6,marginBottom:14}}>
-          {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--T)":"#fff",color:vue===k?"#fff":"var(--T)",borderColor:vue===k?"var(--T)":"var(--Tp)"}}>{l}</button>)}
+    {showEvModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={e=>e.target===e.currentTarget&&setShowEvModal(false)}>
+      <div className="card" style={{width:"100%",maxWidth:400,padding:24}}>
+        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:16}}>➕ Nouvel événement</div>
+        <div style={{display:"grid",gap:12}}>
+          <div><label className="lbl">Date</label><input type="date" className="inp" value={evForm.date} onChange={e=>setEvForm(f=>({...f,date:e.target.value}))}/></div>
+          <div><label className="lbl">Type</label><select className="sel" value={evForm.type} onChange={e=>setEvForm(f=>({...f,type:e.target.value}))}>
+            <option value="rdv">📌 Rendez-vous</option><option value="cng">🌴 Congé</option><option value="abs">🤒 Absence / fermeture</option>
+          </select></div>
+          <div><label className="lbl">Description</label><input className="inp" placeholder="Ex : RDV médecin, sortie au parc…" value={evForm.txt} onChange={e=>setEvForm(f=>({...f,txt:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addEvModal()}/></div>
         </div>
-        {vue==="semaine"&&<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:8}}>
-            <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
-            <div style={{textAlign:"center"}}>
-              <div className="pf" style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{labelSemaine}</div>
-              {semOffset!==0&&<button onClick={()=>setSemOffset(0)} style={{background:"none",border:"none",color:"var(--T)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",padding:2}}>Revenir à cette semaine</button>}
-            </div>
-            <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
+        <div style={{display:"flex",gap:8,marginTop:18}}>
+          <button className="btn bG" style={{flex:1}} onClick={()=>setShowEvModal(false)}>Annuler</button>
+          <button className="btn bT" style={{flex:2}} onClick={addEvModal} disabled={!evForm.date||!evForm.txt.trim()}>Ajouter</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* Bascule Semaine / Mois + ajout d'événement */}
+    <div style={{display:"flex",gap:6,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
+      {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{padding:"8px 18px",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--T)":"#fff",color:vue===k?"#fff":"var(--T)",borderColor:vue===k?"var(--T)":"var(--Tp)"}}>{l}</button>)}
+      {role==="asmat"&&<button className="btn bT" style={{marginLeft:"auto",fontSize:13,padding:"8px 14px",fontWeight:700}} onClick={()=>{setEvForm({date:dsDate(joursDeLaSemaine[0]),type:"rdv",txt:""});setShowEvModal(true);}}>➕ Événement</button>}
+    </div>
+
+    {/* ===== VUE SEMAINE — agenda pleine largeur (type Google Agenda) ===== */}
+    {vue==="semaine"&&(()=>{
+      const HSTART=7,HEND=20,PXH=38,H=(HEND-HSTART)*PXH;
+      const heures=Array.from({length:HEND-HSTART+1},(_,i)=>HSTART+i);
+      return <div className="card" style={{padding:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:8}}>
+          <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
+          <div style={{textAlign:"center"}}>
+            <div className="pf" style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>{labelSemaine}</div>
+            {semOffset!==0&&<button onClick={()=>setSemOffset(0)} style={{background:"none",border:"none",color:"var(--T)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:2}}>↺ Cette semaine</button>}
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
+        </div>
+        <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+          <div style={{minWidth:760,display:"grid",gridTemplateColumns:"46px repeat(7,1fr)"}}>
+            <div/>
+            {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} style={{textAlign:"center",padding:"6px 2px",borderBottom:"2px solid "+(auj?"var(--T)":"var(--br)")}}>
+              <div style={{fontSize:11,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
+              <div style={{fontSize:16,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:28,height:28,lineHeight:"28px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
+            </div>;})}
+            <div/>
+            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:16}}>
+              {ferie&&<div style={{fontSize:9,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
+              {ev2.map(ev=><div key={ev.id} style={{fontSize:9,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
+            </div>;})}
+            <div style={{position:"relative",height:H}}>
+              {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH-6,right:4,fontSize:9,color:"var(--l)"}}>{h}h</div>)}
+            </div>
             {joursDeLaSemaine.map((jd,i)=>{
-              const acc=accueilDuJour(jd);
-              const evs2=evDuJour(jd);
-              const ferie=FERIES_2024[dsDate(jd)];
-              const auj=estAujourdhui(jd);
-              const we=i>=5;
-              return <div key={i} style={{border:auj?"2px solid var(--T)":"1px solid var(--br)",borderRadius:12,padding:"10px 12px",background:auj?"var(--Tp)":we?"rgba(0,0,0,.03)":"#fff"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:(acc.length||evs2.length||ferie)?8:0}}>
-                  <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{NOMS_JOURS[i]} {jd.getDate()}</div>
-                  {ferie&&<span className="badge" style={{background:"var(--Rp)",color:"var(--R)",fontSize:10}}>🎉 {ferie}</span>}
-                </div>
-                {acc.length>0&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
-                  {acc.map(e=><div key={e.id} style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5}}>
-                    <AvatarEnfant e={e} size={24}/>
-                    <span style={{fontWeight:600,color:"var(--b)"}}>{e.prenom}</span>
-                    <span style={{color:"var(--m)",marginLeft:"auto",fontFamily:"'DM Mono',monospace",fontSize:11.5}}>{e.contrat?.horaires||"—"}</span>
-                  </div>)}
-                </div>}
-                {evs2.map(ev=><div key={ev.id} style={{fontSize:11.5,color:"var(--m)",marginTop:5,display:"flex",gap:6,alignItems:"center"}}><span>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"}</span>{ev.txt}</div>)}
-                {!acc.length&&!evs2.length&&!ferie&&<div style={{fontSize:11.5,color:"var(--l)"}}>Pas d'accueil</div>}
+              const acc=accueilDuJour(jd);const n=acc.length||1;
+              return <div key={i} style={{position:"relative",height:H,borderRight:i<6?"1px solid var(--br)":"none",borderLeft:i===0?"1px solid var(--br)":"none"}}>
+                {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH,left:0,right:0,borderTop:"1px solid rgba(0,0,0,.05)"}}/>)}
+                {acc.map((e,ci)=>{
+                  const hr=parseHoraire(e.contrat&&e.contrat.horaires);
+                  if(!hr)return null;
+                  const top=Math.max(0,(hr[0]-HSTART)*PXH);
+                  const height=Math.max(22,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
+                  const col=(e.couleur&&e.couleur[0]==="#")?e.couleur:"#E49178";
+                  return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"2px 3px",boxSizing:"border-box"}}>
+                    <div style={{height:"100%",background:col+"22",borderLeft:"3px solid "+col,borderRadius:6,padding:"3px 5px",overflow:"hidden"}}>
+                      <div style={{fontSize:10.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:3,lineHeight:1.2}}><AvatarEnfant e={e} size={15}/>{e.prenom}</div>
+                      <div style={{fontSize:9,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat&&e.contrat.horaires}</div>
+                    </div>
+                  </div>;
+                })}
               </div>;
             })}
           </div>
-        </div>}
-        {vue==="mois"&&<>
+        </div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:10,textAlign:"center"}}>Glissez horizontalement pour voir toute la semaine · « ➕ Événement » pour ajouter un rendez-vous</div>
+      </div>;
+    })()}
+
+    {/* ===== VUE MOIS ===== */}
+    {vue==="mois"&&<div className="g2">
+      <div className="card"style={{padding:18}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
           <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
           <div className="pf"style={{fontWeight:600,fontSize:18,color:"var(--b)"}}>{noms[mois]} {an}</div>
@@ -2270,7 +2326,6 @@ function Calendrier({enfants,role,pEId}){
             </div>;})}
         </div>
 
-        </>}
         {/* Légende */}
         <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
           {[
@@ -2378,7 +2433,7 @@ function Calendrier({enfants,role,pEId}){
             <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(v.fin)}</div>
           </div>)}
       </div>
-    </div>
+    </div>}
   </div>;
 }
 function Messagerie({enfants,role,pEId,user}){
@@ -8089,6 +8144,18 @@ function SanteComplete({enfants,role,pEId}){
     {nom:"Rappel DTP-Coqueluche-Polio (dTcaPolio)",age_mois:72,quand:"6 ans",fait:false},
   ];
   const [vacsState,setVacsState]=useState(VAC_BASE);
+  const [infoVac,setInfoVac]=useState(null);
+  const VAC_MALADIES=[
+    ["Hexavalent","Diphtérie, tétanos, poliomyélite, coqueluche, infections à Haemophilus influenzae b et hépatite B."],
+    ["Pneumocoque","Infections à pneumocoque : méningites, pneumonies et septicémies, fréquentes chez le jeune enfant."],
+    ["Rotavirus","Gastro-entérites à rotavirus, première cause de diarrhées sévères du nourrisson."],
+    ["Méningocoque B","Méningites et septicémies (infections du sang) dues au méningocoque B."],
+    ["Méningocoque ACWY","Méningites et septicémies dues aux méningocoques A, C, W et Y."],
+    ["ROR","Rougeole, oreillons et rubéole."],
+    ["Grippe","Grippe saisonnière et ses complications."],
+    ["DTP-Coqueluche-Polio","Rappel contre la diphtérie, le tétanos, la poliomyélite et la coqueluche."],
+  ];
+  const maladiesDe=(nom)=>{const f=VAC_MALADIES.find(([k])=>nom.includes(k));return f?f[1]:"Vaccin recommandé pour protéger l'enfant.";};
   const VACCINS_CALENDRIER=vacsState;
   const ageActuel=enfant?Math.round((new Date()-new Date(enfant.naissance))/2592000000):12;
   const prochainsVaccins=VACCINS_CALENDRIER.filter(v=>!v.fait&&v.age_mois<=ageActuel+3);
@@ -8177,7 +8244,9 @@ function SanteComplete({enfants,role,pEId}){
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
               <div style={{fontSize:11,color:"var(--l)"}}>{v.quand||(v.age_mois+" mois")} · {v.reco?"Recommandé":"Obligatoire"} · {v.fait?"Fait ✓":enRetard?"En retard":proche?"À prévoir":"À venir"}</div>
+              {infoVac===i&&<div style={{fontSize:11.5,color:"var(--m)",marginTop:6,padding:"7px 10px",background:"var(--w)",borderRadius:8,border:"1px solid var(--br)",lineHeight:1.5}}>🛡️ Protège contre : {maladiesDe(v.nom)}</div>}
             </div>
+            <button onClick={(e)=>{e.stopPropagation();setInfoVac(infoVac===i?null:i);}} title="À quoi sert ce vaccin ?" style={{width:24,height:24,borderRadius:"50%",border:"1.5px solid var(--B)",background:infoVac===i?"var(--B)":"transparent",color:infoVac===i?"#fff":"var(--B)",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0,fontFamily:"inherit",lineHeight:1}}>i</button>
             <div style={{width:22,height:22,borderRadius:6,border:"2px solid",
               borderColor:v.fait?"var(--G)":"var(--br)",
               background:v.fait?"var(--G)":"transparent",
