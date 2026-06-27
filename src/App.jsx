@@ -2042,6 +2042,8 @@ function Calendrier({enfants,role,pEId}){
   const [semOffset,setSemOffset]=useState(0);
   const [showEvModal,setShowEvModal]=useState(false);
   const [evForm,setEvForm]=useState({date:"",type:"rdv",txt:""});
+  const [isMobile,setIsMobile]=useState(typeof window!=="undefined"&&window.innerWidth<640);
+  useEffect(()=>{const f=()=>setIsMobile(window.innerWidth<640);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
   const isDemoUser=enfants.length>0&&enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const [evs,setEvs]=useState([]);
   // Initialiser les événements après le chargement des enfants
@@ -2299,9 +2301,9 @@ function Calendrier({enfants,role,pEId}){
         </div>
         {/* En-têtes jours façon Apple */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
-          {["lun.","mar.","mer.","jeu.","ven.","sam.","dim."].map((j,i)=><div key={j} style={{textAlign:"left",padding:"2px 8px 8px",fontSize:11,fontWeight:600,color:i>=5?"var(--l)":"var(--m)"}}>{j}</div>)}
+          {(isMobile?["L","M","M","J","V","S","D"]:["lun.","mar.","mer.","jeu.","ven.","sam.","dim."]).map((j,i)=><div key={i} style={{textAlign:isMobile?"center":"left",padding:isMobile?"2px 0 8px":"2px 8px 8px",fontSize:11,fontWeight:600,color:i>=5?"var(--l)":"var(--m)"}}>{j}</div>)}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",border:"1px solid var(--br)",borderRadius:12,overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",border:isMobile?"none":"1px solid var(--br)",borderTop:"1px solid var(--br)",borderRadius:isMobile?0:12,overflow:"hidden"}}>
           {(()=>{
             const startOffset=(new Date(an,mois,1).getDay()+6)%7;
             const debutGrille=new Date(an,mois,1-startOffset);
@@ -2316,18 +2318,19 @@ function Calendrier({enfants,role,pEId}){
               const evs2=dMois?evsFiltres.filter(e=>e.date===ds2).filter((ev,i,arr)=>arr.findIndex(x=>x.txt===ev.txt&&x.type===ev.type)===i):[];
               const bday=dMois?enfants.find(e=>e.naissance&&e.naissance.slice(5)===ds2.slice(5)):null;
               const isSel=dMois&&sel===dNum;
+              const items=[];
+              if(ferie&&dMois)items.push({key:"f",bg:"#FCE7F0",fg:"#B83280",txt:ferie});
+              if(bday)items.push({key:"b",bg:colorEnf(bday.id)+"26",fg:"var(--b)",txt:"🎂 "+bday.prenom});
+              evs2.forEach(ev=>items.push({key:ev.id,bg:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",fg:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",txt:(ev.type==="cng"?"🌴 ":ev.type==="abs"?"🤒 ":"")+ev.txt}));
+              const maxShow=3;
               return <div key={k} onClick={()=>{if(dMois)setSel(sel===dNum?null:dNum);}}
-                style={{minHeight:76,borderRight:(k%7)<6?"1px solid var(--br)":"none",borderTop:k>=7?"1px solid var(--br)":"none",padding:"4px 5px",background:!dMois?"rgba(0,0,0,.02)":isSel?"var(--Tp)":colWE?"rgba(0,0,0,.03)":"#fff",cursor:dMois?"pointer":"default",position:"relative",overflow:"hidden"}}>
-                <div style={{display:"flex",justifyContent:"flex-start"}}>
-                  <span style={auj?{fontSize:13,fontWeight:700,background:"var(--R)",color:"#fff",minWidth:24,height:24,lineHeight:"24px",borderRadius:"50%",textAlign:"center",display:"inline-block",padding:"0 5px"}:{fontSize:13,fontWeight:dMois?500:400,color:dMois?"var(--b)":"var(--l)",padding:"2px 3px"}}>{dNum}{(dNum===1)?" "+noms[jd.getMonth()].slice(0,4).toLowerCase()+".":""}</span>
+                style={{minHeight:isMobile?86:76,borderRight:!isMobile&&(k%7)<6?"1px solid var(--br)":"none",borderTop:k>=7?"1px solid var(--br)":"none",padding:isMobile?"5px 3px":"4px 5px",background:isSel?"var(--Tp)":(!dMois?(isMobile?"#fff":"rgba(0,0,0,.02)"):colWE&&!isMobile?"rgba(0,0,0,.03)":"#fff"),cursor:dMois?"pointer":"default",position:"relative",overflow:"hidden"}}>
+                <div style={{display:"flex",justifyContent:isMobile?"center":"flex-start",marginBottom:3}}>
+                  <span style={auj?{fontSize:isMobile?17:13,fontWeight:700,background:"var(--R)",color:"#fff",minWidth:isMobile?32:24,height:isMobile?32:24,lineHeight:(isMobile?32:24)+"px",borderRadius:"50%",textAlign:"center",display:"inline-block",padding:"0 5px",boxSizing:"border-box"}:{fontSize:isMobile?17:13,fontWeight:dMois?500:400,color:dMois?(colWE?"var(--l)":"var(--b)"):"var(--l)",padding:isMobile?"2px 0":"2px 3px"}}>{dNum}{(dNum===1)?(isMobile?"":" "+noms[jd.getMonth()].slice(0,4).toLowerCase()+"."):""}</span>
                 </div>
-                <div style={{marginTop:3,display:"flex",flexDirection:"column",gap:2}}>
-                  {ferie&&dMois&&<div style={{fontSize:9.5,background:"#FCE7F0",color:"#B83280",borderRadius:5,padding:"1px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ferie}</div>}
-                  {bday&&<div style={{fontSize:9.5,color:"var(--m)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:3}}><span style={{width:6,height:6,borderRadius:"50%",background:colorEnf(bday.id),flexShrink:0}}/>🎂 {bday.prenom}</div>}
-                  {evs2.slice(0,2).map(ev=><div key={ev.id} style={{fontSize:9.5,color:"var(--b)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:3}} title={ev.txt}>
-                    <span style={{width:6,height:6,borderRadius:"50%",background:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--T)",flexShrink:0}}/>{ev.type==="cng"?"🌴 ":ev.type==="abs"?"🤒 ":""}{ev.txt}
-                  </div>)}
-                  {evs2.length>2&&<div style={{fontSize:9,color:"var(--l)"}}>+{evs2.length-2} autre(s)</div>}
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                  {items.slice(0,maxShow).map(it=><div key={it.key} style={{fontSize:isMobile?10.5:9.5,background:it.bg,color:it.fg,borderRadius:5,padding:isMobile?"2px 6px":"1px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:600}} title={it.txt}>{it.txt}</div>)}
+                  {items.length>maxShow&&<div style={{fontSize:9.5,color:"var(--l)",fontWeight:600,textAlign:isMobile?"center":"left"}}>+{items.length-maxShow}</div>}
                 </div>
               </div>;
             });
