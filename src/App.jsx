@@ -2036,6 +2036,8 @@ function Calendrier({enfants,role,pEId}){
   const [mois,setMois]=useState(new Date().getMonth());
   const [an,setAn]=useState(new Date().getFullYear());
   const [sel,setSel]=useState(null);
+  const [vue,setVue]=useState("semaine");
+  const [semOffset,setSemOffset]=useState(0);
   const isDemoUser=enfants.length>0&&enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const [evs,setEvs]=useState([]);
   // Initialiser les événements après le chargement des enfants
@@ -2110,6 +2112,17 @@ function Calendrier({enfants,role,pEId}){
   // Légende couleurs des enfants (asmat uniquement)
   const couleursEnfants=enfants.map(e=>({emoji:e.emoji,prenom:e.prenom,couleur:e.couleur}));
 
+  // ===== Vue semaine =====
+  const lundiSemaine=(()=>{const t=new Date();t.setDate(t.getDate()+semOffset*7);const dow=(t.getDay()+6)%7;t.setDate(t.getDate()-dow);t.setHours(0,0,0,0);return t;})();
+  const joursDeLaSemaine=Array.from({length:7},(_,i)=>{const d=new Date(lundiSemaine);d.setDate(d.getDate()+i);return d;});
+  const dsDate=(jd)=>jd.getFullYear()+"-"+String(jd.getMonth()+1).padStart(2,"0")+"-"+String(jd.getDate()).padStart(2,"0");
+  const jourIdxDate=(jd)=>(jd.getDay()+6)%7;
+  const accueilDuJour=(jd)=>enfants.filter(e=>(e.contrat?.jours||[]).some(j=>jourMap[j]===jourIdxDate(jd)));
+  const evDuJour=(jd)=>evsFiltres.filter(e=>e.date===dsDate(jd));
+  const NOMS_JOURS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+  const labelSemaine=lundiSemaine.getDate()+" "+noms[lundiSemaine.getMonth()].slice(0,4)+". → "+joursDeLaSemaine[6].getDate()+" "+noms[joursDeLaSemaine[6].getMonth()].slice(0,4)+". "+joursDeLaSemaine[6].getFullYear();
+  const estAujourdhui=(jd)=>{const t=new Date();return jd.getDate()===t.getDate()&&jd.getMonth()===t.getMonth()&&jd.getFullYear()===t.getFullYear();};
+
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📅"
@@ -2171,6 +2184,45 @@ function Calendrier({enfants,role,pEId}){
 
     <div className="g2">
       <div className="card"style={{padding:18}}>
+        {/* Bascule Semaine / Mois */}
+        <div style={{display:"flex",gap:6,marginBottom:14}}>
+          {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{flex:1,padding:"8px 0",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--T)":"#fff",color:vue===k?"#fff":"var(--T)",borderColor:vue===k?"var(--T)":"var(--Tp)"}}>{l}</button>)}
+        </div>
+        {vue==="semaine"&&<div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:8}}>
+            <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
+            <div style={{textAlign:"center"}}>
+              <div className="pf" style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{labelSemaine}</div>
+              {semOffset!==0&&<button onClick={()=>setSemOffset(0)} style={{background:"none",border:"none",color:"var(--T)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",padding:2}}>Revenir à cette semaine</button>}
+            </div>
+            <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {joursDeLaSemaine.map((jd,i)=>{
+              const acc=accueilDuJour(jd);
+              const evs2=evDuJour(jd);
+              const ferie=FERIES_2024[dsDate(jd)];
+              const auj=estAujourdhui(jd);
+              const we=i>=5;
+              return <div key={i} style={{border:auj?"2px solid var(--T)":"1px solid var(--br)",borderRadius:12,padding:"10px 12px",background:auj?"var(--Tp)":we?"rgba(0,0,0,.03)":"#fff"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:(acc.length||evs2.length||ferie)?8:0}}>
+                  <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{NOMS_JOURS[i]} {jd.getDate()}</div>
+                  {ferie&&<span className="badge" style={{background:"var(--Rp)",color:"var(--R)",fontSize:10}}>🎉 {ferie}</span>}
+                </div>
+                {acc.length>0&&<div style={{display:"flex",flexDirection:"column",gap:5}}>
+                  {acc.map(e=><div key={e.id} style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5}}>
+                    <AvatarEnfant e={e} size={24}/>
+                    <span style={{fontWeight:600,color:"var(--b)"}}>{e.prenom}</span>
+                    <span style={{color:"var(--m)",marginLeft:"auto",fontFamily:"'DM Mono',monospace",fontSize:11.5}}>{e.contrat?.horaires||"—"}</span>
+                  </div>)}
+                </div>}
+                {evs2.map(ev=><div key={ev.id} style={{fontSize:11.5,color:"var(--m)",marginTop:5,display:"flex",gap:6,alignItems:"center"}}><span>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"}</span>{ev.txt}</div>)}
+                {!acc.length&&!evs2.length&&!ferie&&<div style={{fontSize:11.5,color:"var(--l)"}}>Pas d'accueil</div>}
+              </div>;
+            })}
+          </div>
+        </div>}
+        {vue==="mois"&&<>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
           <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
           <div className="pf"style={{fontWeight:600,fontSize:18,color:"var(--b)"}}>{noms[mois]} {an}</div>
@@ -2218,6 +2270,7 @@ function Calendrier({enfants,role,pEId}){
             </div>;})}
         </div>
 
+        </>}
         {/* Légende */}
         <div style={{display:"flex",gap:8,marginTop:14,flexWrap:"wrap"}}>
           {[
@@ -8031,7 +8084,9 @@ function SanteComplete({enfants,role,pEId}){
     {nom:"Méningocoque B (rappel, 3ᵉ)",age_mois:12,quand:"12 mois",fait:false},
     {nom:"Méningocoque ACWY (rappel, 2ᵉ)",age_mois:12,quand:"12 mois",fait:false},
     {nom:"ROR : Rougeole-Oreillons-Rubéole (2ᵉ)",age_mois:17,quand:"16-18 mois",fait:false},
-    {nom:"DTP-Coqueluche (rappel)",age_mois:72,quand:"6 ans",fait:false},
+    {nom:"Méningocoque ACWY + B — rattrapage si non vacciné (transitoire)",age_mois:24,quand:"2 à 4 ans révolus",reco:true,fait:false},
+    {nom:"Grippe saisonnière — chaque automne (possible dès 2 ans)",age_mois:24,quand:"chaque année, dès 2 ans",reco:true,fait:false},
+    {nom:"Rappel DTP-Coqueluche-Polio (dTcaPolio)",age_mois:72,quand:"6 ans",fait:false},
   ];
   const [vacsState,setVacsState]=useState(VAC_BASE);
   const VACCINS_CALENDRIER=vacsState;
@@ -15856,6 +15911,14 @@ export default function App(){
   // //  Charger les donnes relles depuis Supabase
   // FIX P10: attendre que le profil soit charge depuis profiles (_needsProfileFetch=false)
   // sinon user.role peut valoir "asmat" par defaut alors que c'est un parent → filtre asmat_id qui retourne []
+  // Empêcher le zoom automatique iOS (focus champ) : forcer la balise viewport
+  useEffect(()=>{
+    try{
+      let m=document.querySelector('meta[name="viewport"]');
+      if(!m){m=document.createElement("meta");m.setAttribute("name","viewport");document.head.appendChild(m);}
+      m.setAttribute("content","width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+    }catch(e){}
+  },[]);
   useEffect(()=>{
     if(!user?.id)return;
     if(user._needsProfileFetch)return; // attendre la fin du fetch profil
