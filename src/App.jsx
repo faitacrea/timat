@@ -2111,18 +2111,21 @@ function Calendrier({enfants,role,pEId}){
     ...Object.entries(FERIES_2024).filter(([d])=>d.startsWith(moisStr)).map(([d,n])=>({id:d,date:d,txt:n,type:"ferie",src:"ferie"})),
     ...enfants.filter(e=>e.naissance&&(an+"-"+e.naissance.slice(5)).startsWith(moisStr))
       .map(e=>({id:"bd"+e.id,date:an+"-"+e.naissance.slice(5),txt:"🎂 Anniversaire de "+e.prenom,type:"anniv",src:"birthday"}))
-  ].sort((a,b)=>a.date>b.date?1:-1);
+  ].sort((a,b)=>a.date>b.date?1:-1).filter((ev,i,arr)=>arr.findIndex(x=>x.date===ev.date&&x.txt===ev.txt&&x.type===ev.type)===i);
 
   // Légende couleurs des enfants (asmat uniquement)
   const couleursEnfants=enfants.map(e=>({emoji:e.emoji,prenom:e.prenom,couleur:e.couleur}));
 
+  // Couleur distincte par enfant (les couleurs en base sont souvent identiques)
+  const PALETTE_ENF=["#E49178","#5DA9A1","#C77DAE","#E0A458","#7C9CBF","#90A093","#B06C6C","#6FA8DC"];
+  const colorEnf=(id)=>{const i=enfants.findIndex(e=>e.id===id);return PALETTE_ENF[(i<0?0:i)%PALETTE_ENF.length];};
   // ===== Vue semaine =====
   const lundiSemaine=(()=>{const t=new Date();t.setDate(t.getDate()+semOffset*7);const dow=(t.getDay()+6)%7;t.setDate(t.getDate()-dow);t.setHours(0,0,0,0);return t;})();
   const joursDeLaSemaine=Array.from({length:7},(_,i)=>{const d=new Date(lundiSemaine);d.setDate(d.getDate()+i);return d;});
   const dsDate=(jd)=>jd.getFullYear()+"-"+String(jd.getMonth()+1).padStart(2,"0")+"-"+String(jd.getDate()).padStart(2,"0");
   const jourIdxDate=(jd)=>(jd.getDay()+6)%7;
   const accueilDuJour=(jd)=>enfants.filter(e=>(e.contrat?.jours||[]).some(j=>jourMap[j]===jourIdxDate(jd)));
-  const evDuJour=(jd)=>evsFiltres.filter(e=>e.date===dsDate(jd));
+  const evDuJour=(jd)=>evsFiltres.filter(e=>e.date===dsDate(jd)).filter((ev,i,arr)=>arr.findIndex(x=>x.txt===ev.txt&&x.type===ev.type)===i);
   const NOMS_JOURS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
   const labelSemaine=lundiSemaine.getDate()+" "+noms[lundiSemaine.getMonth()].slice(0,4)+". → "+joursDeLaSemaine[6].getDate()+" "+noms[joursDeLaSemaine[6].getMonth()].slice(0,4)+". "+joursDeLaSemaine[6].getFullYear();
   const estAujourdhui=(jd)=>{const t=new Date();return jd.getDate()===t.getDate()&&jd.getMonth()===t.getMonth()&&jd.getFullYear()===t.getFullYear();};
@@ -2248,7 +2251,7 @@ function Calendrier({enfants,role,pEId}){
             {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:16}}>
               {ferie&&<div style={{fontSize:9,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
               {ev2.map(ev=><div key={ev.id} style={{fontSize:9,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
-              {sansH.map(e=>{const col=(e.couleur&&e.couleur[0]==="#")?e.couleur:"#E49178";return <div key={e.id} style={{fontSize:9,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom} · horaire ?</div>;})}
+              {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:9,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom} · horaire ?</div>;})}
             </div>;})}
             <div style={{position:"relative",height:H}}>
               {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH-6,right:4,fontSize:9,color:"var(--l)"}}>{h}h</div>)}
@@ -2262,7 +2265,7 @@ function Calendrier({enfants,role,pEId}){
                   if(!hr)return null;
                   const top=Math.max(0,(hr[0]-HSTART)*PXH);
                   const height=Math.max(22,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
-                  const col=(e.couleur&&e.couleur[0]==="#")?e.couleur:"#E49178";
+                  const col=colorEnf(e.id);
                   return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"2px 3px",boxSizing:"border-box"}}>
                     <div style={{height:"100%",background:col+"22",borderLeft:"3px solid "+col,borderRadius:6,padding:"3px 5px",overflow:"hidden"}}>
                       <div style={{fontSize:10.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:3,lineHeight:1.2}}><AvatarEnfant e={e} size={15}/>{e.prenom}</div>
@@ -2276,7 +2279,7 @@ function Calendrier({enfants,role,pEId}){
         </div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid var(--br)"}}>
           <span style={{fontSize:10.5,color:"var(--l)",fontWeight:700}}>Enfants :</span>
-          {enfants.map(e=>{const col=(e.couleur&&e.couleur[0]==="#")?e.couleur:"#E49178";return <div key={e.id} style={{display:"flex",alignItems:"center",gap:5}}>
+          {enfants.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{display:"flex",alignItems:"center",gap:5}}>
             <span style={{width:11,height:11,borderRadius:3,background:col}}/>
             <AvatarEnfant e={e} size={16}/>
             <span style={{fontSize:11,color:"var(--m)",fontWeight:600}}>{e.prenom}</span>
@@ -2294,46 +2297,41 @@ function Calendrier({enfants,role,pEId}){
           <div className="pf"style={{fontWeight:600,fontSize:18,color:"var(--b)"}}>{noms[mois]} {an}</div>
           <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===11){setMois(0);setAn(a=>a+1)}else setMois(m=>m+1)}}>›</button>
         </div>
-        <div className="cgrid"style={{marginBottom:8}}>
-          {joursSemaine.map(j=><div key={j}style={{textAlign:"center",fontSize:10,fontWeight:700,color:"var(--l)",padding:"4px 0",letterSpacing:".5px"}}>{j}</div>)}
+        {/* En-têtes jours façon Apple */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+          {["lun.","mar.","mer.","jeu.","ven.","sam.","dim."].map((j,i)=><div key={j} style={{textAlign:"left",padding:"2px 8px 8px",fontSize:11,fontWeight:600,color:i>=5?"var(--l)":"var(--m)"}}>{j}</div>)}
         </div>
-        <div className="cgrid">
-          {Array(offset).fill(null).map((_,i)=><div key={"e"+i}/>)}
-          {Array(total).fill(null).map((_,i)=>{
-            const d=i+1;
-            const uev=getUserEv(d);
-            const ferie=getFerie(d);
-            const bday=getBirthday(d);
-            const vac=getVac(d);
-            const accueil=getAccueil(d);
-            const isToday=isActualToday(d);
-            const isSel=sel===d;
-            const isWeekend=jourIdx(d)>=5;
-
-            let cls="cday";
-            let bgStyle={};
-            if(isSel&&!isToday)cls+=" sel";
-            else if(ferie)cls+=" abs"; // Féries → rouge
-            else if(uev?.type==="cng"){cls+=" cng";} // Mes congés → jaune/doré
-            else if(vac)cls+=" hol"; // Vacances → bleu
-            else if(uev?.type==="abs")cls+=" abs"; // Absence enfant → rouge
-            else if(isWeekend){bgStyle={background:"rgba(0,0,0,.04)"};} // Weekend grisé
-
-            // Accueil : petits points colorés par enfant
-            const accueilDots=accueil.filter(e=>!isWeekend&&!ferie&&!(uev?.type==="cng"));
-
-            return <div key={d}className={cls}style={{...bgStyle,position:"relative"}}
-              onClick={()=>setSel(sel===d?null:d)}
-              title={ferie||(accueil.length>0?accueil.map(e=>e.prenom).join(", "):"")}>
-              <span style={isToday?{fontSize:13,fontWeight:700,background:"var(--T)",color:"#fff",width:25,height:25,lineHeight:"25px",borderRadius:"50%",textAlign:"center",display:"inline-block"}:{fontSize:13,fontWeight:400}}>{d}</span>
-              {/* Indicateurs en bas du jour */}
-              <div style={{position:"absolute",bottom:2,left:0,right:0,display:"flex",justifyContent:"center",gap:2}}>
-                {ferie&&!isToday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--R)"}}/>}
-                {uev?.type==="cng"&&!isToday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--G)"}}/>}
-                {bday&&<div style={{width:4,height:4,borderRadius:"50%",background:"var(--T)"}}/>}
-                {accueilDots.slice(0,3).map(e=><div key={e.id}style={{width:4,height:4,borderRadius:"50%",background:e.couleur}}/>)}
-              </div>
-            </div>;})}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",border:"1px solid var(--br)",borderRadius:12,overflow:"hidden"}}>
+          {(()=>{
+            const startOffset=(new Date(an,mois,1).getDay()+6)%7;
+            const debutGrille=new Date(an,mois,1-startOffset);
+            return Array.from({length:42},(_,k)=>{
+              const jd=new Date(debutGrille);jd.setDate(jd.getDate()+k);
+              const dMois=jd.getMonth()===mois;
+              const dNum=jd.getDate();
+              const ds2=jd.getFullYear()+"-"+String(jd.getMonth()+1).padStart(2,"0")+"-"+String(dNum).padStart(2,"0");
+              const auj=estAujourdhui(jd);
+              const colWE=(k%7)>=5;
+              const ferie=FERIES_2024[ds2];
+              const evs2=dMois?evsFiltres.filter(e=>e.date===ds2).filter((ev,i,arr)=>arr.findIndex(x=>x.txt===ev.txt&&x.type===ev.type)===i):[];
+              const bday=dMois?enfants.find(e=>e.naissance&&e.naissance.slice(5)===ds2.slice(5)):null;
+              const isSel=dMois&&sel===dNum;
+              return <div key={k} onClick={()=>{if(dMois)setSel(sel===dNum?null:dNum);}}
+                style={{minHeight:76,borderRight:(k%7)<6?"1px solid var(--br)":"none",borderTop:k>=7?"1px solid var(--br)":"none",padding:"4px 5px",background:!dMois?"rgba(0,0,0,.02)":isSel?"var(--Tp)":colWE?"rgba(0,0,0,.03)":"#fff",cursor:dMois?"pointer":"default",position:"relative",overflow:"hidden"}}>
+                <div style={{display:"flex",justifyContent:"flex-start"}}>
+                  <span style={auj?{fontSize:13,fontWeight:700,background:"var(--R)",color:"#fff",minWidth:24,height:24,lineHeight:"24px",borderRadius:"50%",textAlign:"center",display:"inline-block",padding:"0 5px"}:{fontSize:13,fontWeight:dMois?500:400,color:dMois?"var(--b)":"var(--l)",padding:"2px 3px"}}>{dNum}{(dNum===1)?" "+noms[jd.getMonth()].slice(0,4).toLowerCase()+".":""}</span>
+                </div>
+                <div style={{marginTop:3,display:"flex",flexDirection:"column",gap:2}}>
+                  {ferie&&dMois&&<div style={{fontSize:9.5,background:"#FCE7F0",color:"#B83280",borderRadius:5,padding:"1px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ferie}</div>}
+                  {bday&&<div style={{fontSize:9.5,color:"var(--m)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:3}}><span style={{width:6,height:6,borderRadius:"50%",background:colorEnf(bday.id),flexShrink:0}}/>🎂 {bday.prenom}</div>}
+                  {evs2.slice(0,2).map(ev=><div key={ev.id} style={{fontSize:9.5,color:"var(--b)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:3}} title={ev.txt}>
+                    <span style={{width:6,height:6,borderRadius:"50%",background:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--T)",flexShrink:0}}/>{ev.type==="cng"?"🌴 ":ev.type==="abs"?"🤒 ":""}{ev.txt}
+                  </div>)}
+                  {evs2.length>2&&<div style={{fontSize:9,color:"var(--l)"}}>+{evs2.length-2} autre(s)</div>}
+                </div>
+              </div>;
+            });
+          })()}
         </div>
 
         {/* Légende */}
@@ -2354,7 +2352,7 @@ function Calendrier({enfants,role,pEId}){
         <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:10,color:"var(--l)",fontWeight:700}}>Jours d'accueil :</span>
           {enfants.map(e=><div key={e.id}style={{display:"flex",alignItems:"center",gap:4}}>
-            <div style={{width:8,height:8,borderRadius:"50%",background:e.couleur}}/>
+            <div style={{width:8,height:8,borderRadius:"50%",background:colorEnf(e.id)}}/>
             <span style={{fontSize:10,color:"var(--m)"}}>{e.emoji} {e.prenom}</span>
           </div>)}
         </div>
@@ -2406,7 +2404,7 @@ function Calendrier({enfants,role,pEId}){
           {getAccueil(sel).length>0&&!([0,6].includes(jourIdx(sel)))&&<div style={{marginBottom:6}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Enfants accueillis :</div>
             {getAccueil(sel).map(e=><div key={e.id}style={{display:"flex",gap:6,alignItems:"center",padding:"3px 0",fontSize:13}}>
-              <div style={{width:8,height:8,borderRadius:"50%",background:e.couleur}}/>
+              <div style={{width:8,height:8,borderRadius:"50%",background:colorEnf(e.id)}}/>
               <span style={{color:"var(--b)"}}>{e.emoji} {e.prenom}</span>
               <span style={{fontSize:11,color:"var(--l)"}}>{e.contrat?.horaires}</span>
             </div>)}
@@ -3110,6 +3108,8 @@ function Sante({enfants,role,pEId}){
             <button className="btn bT"style={{fontSize:12}}onClick={addAllergie}>+</button>
           </div>:<div style={{marginTop:10,fontSize:11,color:"var(--l)"}}>ℹ️ Allergies renseignées et tenues à jour par le parent.</div>}
         </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
 
         {/* Urgences */}
         <div className="card"style={{padding:16,background:"#FFF5F5",border:"1px solid #FCA5A5"}}>
