@@ -2242,8 +2242,8 @@ function Calendrier({enfants,role,pEId}){
           </div>
           <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
         </div>
-        <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
-          <div style={{minWidth:760,display:"grid",gridTemplateColumns:"46px repeat(7,1fr)"}}>
+        <div style={{overflowX:"hidden"}}>
+          <div style={{width:"100%",display:"grid",gridTemplateColumns:isMobile?"24px repeat(7,1fr)":"46px repeat(7,1fr)"}}>
             <div/>
             {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} style={{textAlign:"center",padding:"6px 2px",borderBottom:"2px solid "+(auj?"var(--T)":"var(--br)")}}>
               <div style={{fontSize:11,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
@@ -2268,10 +2268,10 @@ function Calendrier({enfants,role,pEId}){
                   const top=Math.max(0,(hr[0]-HSTART)*PXH);
                   const height=Math.max(22,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
                   const col=colorEnf(e.id);
-                  return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"2px 3px",boxSizing:"border-box"}}>
-                    <div style={{height:"100%",background:col+"22",borderLeft:"3px solid "+col,borderRadius:6,padding:"3px 5px",overflow:"hidden"}}>
-                      <div style={{fontSize:10.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:3,lineHeight:1.2}}><AvatarEnfant e={e} size={15}/>{e.prenom}</div>
-                      <div style={{fontSize:9,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat&&e.contrat.horaires}</div>
+                  return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:isMobile?"1px":"2px 3px",boxSizing:"border-box"}}>
+                    <div style={{height:"100%",background:col+"22",borderLeft:"3px solid "+col,borderRadius:6,padding:isMobile?"2px 2px":"3px 5px",overflow:"hidden"}} title={e.prenom+" "+(e.contrat&&e.contrat.horaires||"")}>
+                      <div style={{fontSize:isMobile?9:10.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:2,lineHeight:1.1,overflow:"hidden"}}><AvatarEnfant e={e} size={isMobile?12:15}/>{isMobile?(n>1?"":e.prenom):e.prenom}</div>
+                      <div style={{fontSize:isMobile?8:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",overflow:"hidden",whiteSpace:"nowrap"}}>{e.contrat&&e.contrat.horaires}</div>
                     </div>
                   </div>;
                 })}
@@ -2287,7 +2287,7 @@ function Calendrier({enfants,role,pEId}){
             <span style={{fontSize:11,color:"var(--m)",fontWeight:600}}>{e.prenom}</span>
           </div>;})}
         </div>
-        <div style={{fontSize:11,color:"var(--l)",marginTop:10,textAlign:"center"}}>Glissez horizontalement pour voir toute la semaine · « ➕ Événement » pour ajouter un rendez-vous</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:10,textAlign:"center"}}>« ➕ Événement » pour ajouter un rendez-vous ou un congé</div>
       </div>;
     })()}
 
@@ -2360,13 +2360,6 @@ function Calendrier({enfants,role,pEId}){
           </div>)}
         </div>
 
-        {/* Anniversaires ce mois */}
-        {enfants.some(e=>e.naissance?.slice(5)&&(an+"-"+e.naissance.slice(5)).startsWith(moisStr))&&
-          <div style={{marginTop:12,padding:"8px 12px",background:"var(--Tp)",borderRadius:10,border:"1px solid var(--Tl)"}}>
-            <div style={{fontSize:11,fontWeight:700,color:"var(--T)",marginBottom:4}}>🎂 Anniversaires ce mois</div>
-            {enfants.filter(e=>(an+"-"+(e.naissance?.slice(5)||"")).startsWith(moisStr)).map(e=>
-              <div key={e.id}style={{fontSize:13,color:"var(--b)"}}>{e.emoji} {e.prenom} - {new Date(an,mois,parseInt((an+"-"+(e.naissance?.slice(5)||"")).slice(8))).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}</div>)}
-          </div>}
       </div>
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -5944,6 +5937,12 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"},
       {id:"versements",l:"Mes versements",ic:"💶"},
     ];
+  const GROUPES_FIN=[
+    {id:"paie",l:"Paie",ic:"💶",tabs:["facturation","bulletin","versements"]},
+    {id:"contrats",l:"Contrats",ic:"📄",tabs:["contrats","contrats_types","courriers"]},
+  ];
+  const groupeActif=GROUPES_FIN.find(g=>g.tabs.includes(section))||GROUPES_FIN[0];
+  const choisirGroupe=(gid)=>{const grp=GROUPES_FIN.find(x=>x.id===gid);if(grp&&!grp.tabs.includes(section))setSection(grp.tabs[0]);};
   if(demoMode){
     const demoUnlockedSection="bulletin";
     return <div className="fi">
@@ -5979,7 +5978,20 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     </div>;
   }
   return <div className="fi">
-    <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
+    {role==="asmat"?<>
+      <div style={{display:"flex",gap:6,marginBottom:12}}>
+        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:11,border:"1.5px solid",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--T)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--T)",borderColor:groupeActif.id===g.id?"var(--T)":"var(--Tp)"}}>{g.ic} {g.l}</button>)}
+      </div>
+      <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
+        {sousOnglets.filter(s=>groupeActif.tabs.includes(s.id)).map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
+          padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
+          fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",
+          color:section===s.id?"var(--T)":"var(--b)",
+          borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
+          marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
+        }}><span>{s.ic}</span><span>{s.l}</span></button>)}
+      </div>
+    </>:<div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
         padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",
@@ -5987,7 +5999,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
         borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
-    </div>
+    </div>}
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
