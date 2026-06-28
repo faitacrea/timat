@@ -564,10 +564,8 @@ function VueSuiviProgres({enfants,role,pEId,user,pointagesDB,setPage}){
   return <><SegBar v={v} setV={setV} items={[{ic:"📊",l:"Tableau de bord"},{ic:"🌱",l:"Éveil & Progrès"}]}/>{v===0?<TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>:<EveilComplet {...P}/>}</>;
 }
 function VuePaieContrats({enfants,role,pEId,user,pointagesDB}){
-  const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
-  const items=[{ic:"🧾",l:"Paie & Contrats"},{ic:"🚗",l:"Frais km"}];
-  if(role==="asmat")items.push({ic:"📋",l:"Récap fiscal"});
-  return <><SegBar v={v} setV={setV} items={items}/>{v===0?<AdminFinances {...P} user={user}/>:v===1?<IndemnitesKilometriques enfants={enfants} role={role} user={user}/>:<RecapFiscalAssmat enfants={enfants} user={user}/>}</>;
+  const P={enfants,role,pEId,user,pointagesDB};
+  return <AdminFinances {...P} user={user}/>;
 }
 function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
   const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
@@ -2043,6 +2041,7 @@ function Calendrier({enfants,role,pEId}){
   const [showEvModal,setShowEvModal]=useState(false);
   const [evForm,setEvForm]=useState({date:"",type:"rdv",txt:""});
   const [isMobile,setIsMobile]=useState(typeof window!=="undefined"&&window.innerWidth<640);
+  const [jourLarge,setJourLarge]=useState(null);
   useEffect(()=>{const f=()=>setIsMobile(window.innerWidth<640);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
   const isDemoUser=enfants.length>0&&enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const [evs,setEvs]=useState([]);
@@ -2231,8 +2230,62 @@ function Calendrier({enfants,role,pEId}){
 
     {/* ===== VUE SEMAINE — agenda pleine largeur (type Google Agenda) ===== */}
     {vue==="semaine"&&(()=>{
-      const HSTART=7,HEND=20,PXH=38,H=(HEND-HSTART)*PXH;
+      const HSTART=7,HEND=20,PXH=isMobile?34:38,H=(HEND-HSTART)*PXH;
       const heures=Array.from({length:HEND-HSTART+1},(_,i)=>HSTART+i);
+
+      // ----- PLAN LARGE : un seul jour, en grand et lisible -----
+      if(jourLarge){
+        const jd=jourLarge,idx=jourIdxDate(jd);
+        const acc=accueilDuJour(jd),n=acc.length||1;
+        const ev2=evDuJour(jd),ferie=FERIES_2024[dsDate(jd)];
+        const decaler=(d)=>{const x=new Date(jd);x.setDate(x.getDate()+d);setJourLarge(x);};
+        return <div className="card" style={{padding:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:8}}>
+            <button className="btn bG" style={{fontSize:13,padding:"6px 12px"}} onClick={()=>setJourLarge(null)}>← Semaine</button>
+            <div style={{textAlign:"center"}}>
+              <div className="pf" style={{fontWeight:800,fontSize:17,color:"var(--b)"}}>{NOMS_JOURS[idx]} {jd.getDate()}</div>
+              <div style={{fontSize:12,color:"var(--l)"}}>{noms[jd.getMonth()]} {jd.getFullYear()}</div>
+            </div>
+            <div style={{display:"flex",gap:4}}>
+              <button className="btn bG" style={{padding:"6px 10px",fontSize:15}} onClick={()=>decaler(-1)}>‹</button>
+              <button className="btn bG" style={{padding:"6px 10px",fontSize:15}} onClick={()=>decaler(1)}>›</button>
+            </div>
+          </div>
+          {ferie&&<div style={{fontSize:12,background:"var(--Rp)",color:"var(--R)",borderRadius:8,padding:"6px 10px",marginBottom:8,fontWeight:700}}>🎉 {ferie}</div>}
+          {ev2.map(ev=><div key={ev.id} style={{fontSize:12.5,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:8,padding:"6px 10px",marginBottom:6,fontWeight:600}}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
+          <div style={{display:"grid",gridTemplateColumns:"48px 1fr",marginTop:8}}>
+            <div style={{position:"relative",height:H}}>
+              {heures.map((h,i)=><div key={h} style={{position:"absolute",top:i*PXH-6,right:6,fontSize:10,color:"var(--l)"}}>{h}h</div>)}
+            </div>
+            <div style={{position:"relative",height:H,borderLeft:"1px solid var(--br)"}}>
+              {heures.map((h,i)=><div key={h} style={{position:"absolute",top:i*PXH,left:0,right:0,borderTop:"1px solid rgba(0,0,0,.06)"}}/>)}
+              {acc.map((e,ci)=>{
+                const hr=parseHoraire(e.contrat&&e.contrat.horaires);if(!hr)return null;
+                const top=Math.max(0,(hr[0]-HSTART)*PXH);
+                const height=Math.max(28,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
+                const col=colorEnf(e.id);
+                return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"2px 3px",boxSizing:"border-box"}}>
+                  <div style={{height:"100%",background:col+"22",borderLeft:"3px solid "+col,borderRadius:8,padding:"5px 8px",overflow:"hidden"}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"var(--b)"}}>{e.prenom}</div>
+                    <div style={{fontSize:11,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat&&e.contrat.horaires}</div>
+                  </div>
+                </div>;
+              })}
+            </div>
+          </div>
+          <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid var(--br)"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:8}}>Enfants accueillis</div>
+            {acc.length===0&&<div style={{fontSize:12.5,color:"var(--l)"}}>Aucun accueil ce jour.</div>}
+            {acc.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0"}}>
+              <span style={{width:12,height:12,borderRadius:4,background:col,flexShrink:0}}/>
+              <span style={{fontWeight:600,fontSize:13.5,color:"var(--b)"}}>{e.prenom}</span>
+              <span style={{marginLeft:"auto",fontSize:12.5,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{(e.contrat&&e.contrat.horaires)||"horaires non renseignés"}</span>
+            </div>;})}
+          </div>
+        </div>;
+      }
+
+      // ----- VUE SEMAINE (vue d'ensemble) -----
       return <div className="card" style={{padding:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:8}}>
           <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
@@ -2242,36 +2295,38 @@ function Calendrier({enfants,role,pEId}){
           </div>
           <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
         </div>
+        <button onClick={()=>setJourLarge(new Date())} style={{width:"100%",marginBottom:10,padding:"9px",borderRadius:10,border:"1.5px solid var(--Tp)",background:"var(--Tp)",color:"var(--T)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>🔍 Voir le jour en cours en grand</button>
+        <div style={{fontSize:10.5,color:"var(--l)",textAlign:"center",marginBottom:8}}>Touchez un jour pour l'ouvrir en grand</div>
         <div style={{overflowX:"hidden"}}>
-          <div style={{width:"100%",display:"grid",gridTemplateColumns:isMobile?"24px repeat(7,1fr)":"46px repeat(7,1fr)"}}>
+          <div style={{width:"100%",display:"grid",gridTemplateColumns:isMobile?"22px repeat(7,1fr)":"46px repeat(7,1fr)"}}>
             <div/>
-            {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} style={{textAlign:"center",padding:"6px 2px",borderBottom:"2px solid "+(auj?"var(--T)":"var(--br)")}}>
-              <div style={{fontSize:11,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
-              <div style={{fontSize:16,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:28,height:28,lineHeight:"28px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
+            {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} onClick={()=>setJourLarge(jd)} style={{textAlign:"center",padding:"4px 1px",borderBottom:"2px solid "+(auj?"var(--T)":"var(--br)"),cursor:"pointer"}}>
+              <div style={{fontSize:10,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
+              <div style={{fontSize:15,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:26,height:26,lineHeight:"26px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
             </div>;})}
             <div/>
-            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:16}}>
+            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:14}}>
               {ferie&&<div style={{fontSize:9,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
               {ev2.map(ev=><div key={ev.id} style={{fontSize:9,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
-              {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:9,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom} · horaire ?</div>;})}
+              {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:9,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom}</div>;})}
             </div>;})}
             <div style={{position:"relative",height:H}}>
               {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH-6,right:4,fontSize:9,color:"var(--l)"}}>{h}h</div>)}
             </div>
             {joursDeLaSemaine.map((jd,i)=>{
               const acc=accueilDuJour(jd);const n=acc.length||1;
-              return <div key={i} style={{position:"relative",height:H,borderRight:"1px solid var(--br)",borderLeft:i===0?"1px solid var(--br)":"none",background:estAujourdhui(jd)?"rgba(228,145,120,.06)":i>=5?"rgba(0,0,0,.025)":"transparent"}}>
+              return <div key={i} onClick={()=>setJourLarge(jd)} style={{position:"relative",height:H,borderRight:"1px solid var(--br)",borderLeft:i===0?"1px solid var(--br)":"none",background:estAujourdhui(jd)?"rgba(228,145,120,.06)":i>=5?"rgba(0,0,0,.025)":"transparent",cursor:"pointer"}}>
                 {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH,left:0,right:0,borderTop:"1px solid rgba(0,0,0,.05)"}}/>)}
                 {acc.map((e,ci)=>{
                   const hr=parseHoraire(e.contrat&&e.contrat.horaires);
                   if(!hr)return null;
                   const top=Math.max(0,(hr[0]-HSTART)*PXH);
-                  const height=Math.max(22,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
+                  const height=Math.max(20,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
                   const col=colorEnf(e.id);
-                  return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:isMobile?"1px":"2px 3px",boxSizing:"border-box"}}>
-                    <div style={{height:"100%",background:col+"22",borderLeft:"3px solid "+col,borderRadius:6,padding:isMobile?"2px 2px":"3px 5px",overflow:"hidden"}} title={e.prenom+" "+(e.contrat&&e.contrat.horaires||"")}>
-                      <div style={{fontSize:isMobile?9:10.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:2,lineHeight:1.1,overflow:"hidden"}}><AvatarEnfant e={e} size={isMobile?12:15}/>{isMobile?(n>1?"":e.prenom):e.prenom}</div>
-                      <div style={{fontSize:isMobile?8:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",overflow:"hidden",whiteSpace:"nowrap"}}>{e.contrat&&e.contrat.horaires}</div>
+                  return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"1px 2px",boxSizing:"border-box"}}>
+                    <div style={{height:"100%",background:col+"22",borderLeft:"2.5px solid "+col,borderRadius:5,padding:"2px 3px",overflow:"hidden"}} title={e.prenom+" "+((e.contrat&&e.contrat.horaires)||"")}>
+                      <div style={{fontSize:isMobile?9:10.5,fontWeight:700,color:"var(--b)",lineHeight:1.1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{e.prenom}</div>
+                      {!isMobile&&<div style={{fontSize:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",overflow:"hidden",whiteSpace:"nowrap"}}>{e.contrat&&e.contrat.horaires}</div>}
                     </div>
                   </div>;
                 })}
@@ -2283,11 +2338,10 @@ function Calendrier({enfants,role,pEId}){
           <span style={{fontSize:10.5,color:"var(--l)",fontWeight:700}}>Enfants :</span>
           {enfants.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{display:"flex",alignItems:"center",gap:5}}>
             <span style={{width:11,height:11,borderRadius:3,background:col}}/>
-            <AvatarEnfant e={e} size={16}/>
             <span style={{fontSize:11,color:"var(--m)",fontWeight:600}}>{e.prenom}</span>
           </div>;})}
         </div>
-        <div style={{fontSize:11,color:"var(--l)",marginTop:10,textAlign:"center"}}>« ➕ Événement » pour ajouter un rendez-vous ou un congé</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:8,textAlign:"center"}}>« ➕ Événement » pour ajouter un rendez-vous ou un congé</div>
       </div>;
     })()}
 
@@ -5929,6 +5983,8 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
       {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
       {id:"versements",l:"Versements reçus",ic:"💶"},
+      {id:"frais_km",l:"Frais kilométriques",ic:"🚗"},
+      {id:"recap_fiscal",l:"Récap fiscal",ic:"📋"},
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
       {id:"contrats_types",l:"Modeles & Templates",ic:"📋"},
       {id:"courriers",l:"Courriers types",ic:"✉️"},
@@ -5938,7 +5994,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"versements",l:"Mes versements",ic:"💶"},
     ];
   const GROUPES_FIN=[
-    {id:"paie",l:"Paie",ic:"💶",tabs:["facturation","bulletin","versements"]},
+    {id:"paie",l:"Paie",ic:"💶",tabs:["facturation","bulletin","versements","frais_km","recap_fiscal"]},
     {id:"contrats",l:"Contrats",ic:"📄",tabs:["contrats","contrats_types","courriers"]},
   ];
   const groupeActif=GROUPES_FIN.find(g=>g.tabs.includes(section))||GROUPES_FIN[0];
@@ -6003,6 +6059,8 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
     {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {section==="frais_km"&&<IndemnitesKilometriques enfants={enfants} role={role} user={user}/>}
+    {section==="recap_fiscal"&&<RecapFiscalAssmat enfants={enfants} user={user}/>}
     {section==="contrats"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
         {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"🏁 Fin de contrat"}].map(t=>
