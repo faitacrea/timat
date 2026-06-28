@@ -244,6 +244,8 @@ function Styles(){return(
     .bB:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(46,74,90,.35)}
     .bG2{background:linear-gradient(135deg,#5DA9A1,#4A8E87);color:#fff;box-shadow:0 2px 10px rgba(93,169,161,.28)}
     .bG2:hover{transform:translateY(-1px)}
+    .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
+    .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
     .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw}
     @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}.inp,input,select,textarea{font-size:16px!important}}
@@ -924,15 +926,17 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     {tabToast&&<Toast msg={tabToast}onClose={()=>setTabToast("")}/>}
     {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
     {editAvatar&&<AvatarEditeur enfant={editAvatar} onClose={()=>setEditAvatar(null)} onSaved={(up)=>setAvatarOv(o=>({...o,[up.id]:{emoji:up.emoji,photo_url:up.photo_url}}))}/>}
-    <div style={{marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
-      <div>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:4,fontFamily:"'DM Mono',monospace",letterSpacing:".5px"}}>
-          {todayStr().toUpperCase()}
+    <div style={{borderRadius:20,padding:"22px 22px",marginBottom:18,background:"linear-gradient(135deg,var(--Bp) 0%,var(--Sp) 55%,var(--Tp) 100%)",border:"1px solid var(--br)",position:"relative",overflow:"hidden"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
+        <div style={{minWidth:0}}>
+          <div style={{display:"inline-block",fontSize:10.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
+            {todayStr().toUpperCase()}
+          </div>
+          <div className="pf"style={{fontSize:27,fontWeight:700,color:"var(--b)",lineHeight:1.15}}>Bonjour {user?.prenom||"Marie"} 👋</div>
+          <div style={{fontSize:13.5,color:"var(--m)",marginTop:5}}>Voici votre journée en un coup d'œil.</div>
         </div>
-        <div className="pf"style={{fontSize:26,fontWeight:600,color:"var(--b)",lineHeight:1.2}}>Bonjour {user?.prenom||"Marie"} 👋</div>
-        <div style={{fontSize:13,color:"var(--m)",marginTop:4}}>Votre espace professionnel</div>
+        {user&&!demoStats&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
       </div>
-      {user&&!demoStats&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
     </div>
 
     <QuickActions role="asmat" setPage={setPage}/>
@@ -1077,14 +1081,19 @@ function AccueilParent({enfant,setPage,user}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
-      <div>
-        <div className="pf"style={{fontSize:21,fontWeight:700,color:"var(--b)"}}>Bonjour ! La journée de {enfant.prenom} ✨</div>
-        <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>{todayStr()}</div>
+    <div style={{borderRadius:20,padding:"22px",marginBottom:16,background:"linear-gradient(135deg,var(--Tp) 0%,var(--Sp) 58%,var(--Gp) 100%)",border:"1px solid var(--br)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+        <div style={{minWidth:0}}>
+          <div style={{display:"inline-block",fontSize:10.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
+            {todayStr().toUpperCase()}
+          </div>
+          <div className="pf"style={{fontSize:23,fontWeight:700,color:"var(--b)",lineHeight:1.15}}>La journée de {enfant.prenom} ✨</div>
+          <div style={{fontSize:13,color:"var(--m)",marginTop:5}}>Suivez son quotidien en temps réel.</div>
+        </div>
+        <button className="btn bR"style={{fontSize:12,padding:"9px 15px",flexShrink:0}}onClick={()=>setShowAbsence(true)}>
+          🤒 Déclarer une absence
+        </button>
       </div>
-      <button className="btn bR"style={{fontSize:12,padding:"8px 14px"}}onClick={()=>setShowAbsence(true)}>
-        🤒 Déclarer une absence
-      </button>
     </div>
 
     <QuickActions role="parent" setPage={setPage}/>
