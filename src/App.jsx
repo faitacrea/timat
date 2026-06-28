@@ -238,6 +238,12 @@ function Styles(){return(
     .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(155,107,170,.4)}
     .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
     .bG:hover{background:rgba(26,17,24,.1)}
+    .bR{background:linear-gradient(135deg,#C84B31,#A83A24);color:#fff;box-shadow:0 2px 10px rgba(200,75,49,.25)}
+    .bR:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,75,49,.38)}
+    .bB{background:linear-gradient(135deg,#2E4A5A,#243B47);color:#fff;box-shadow:0 2px 10px rgba(46,74,90,.25)}
+    .bB:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(46,74,90,.35)}
+    .bG2{background:linear-gradient(135deg,#5DA9A1,#4A8E87);color:#fff;box-shadow:0 2px 10px rgba(93,169,161,.28)}
+    .bG2:hover{transform:translateY(-1px)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
     .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw}
     @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}.inp,input,select,textarea{font-size:16px!important}}
@@ -570,6 +576,14 @@ function VuePaieContrats({enfants,role,pEId,user,pointagesDB}){
 function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
   const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
   return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"}]}/>{v===0?<DocumentsComplet {...P}/>:<BilansExports {...P}/>}</>;
+}
+function VueAidesSimulateurs({enfants,role,pEId,user}){
+  const [v,setV]=useState(0);
+  return <><SegBar v={v} setV={setV} items={[{ic:"💶",l:"Aide CMG"},{ic:"🧮",l:"Simulateur de coût"}]}/>{v===0?<KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>:<SimulateurCout enfants={enfants} pEId={pEId}/>}</>;
+}
+function VueAideSupport({role,user}){
+  const [v,setV]=useState(0);
+  return <><SegBar v={v} setV={setV} items={[{ic:"❓",l:"Centre d'aide"},{ic:"💬",l:"Support"}]}/>{v===0?<FAQ role={role}/>:<Support role={role} user={user}/>}</>;
 }
 const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
@@ -2324,9 +2338,13 @@ function Calendrier({enfants,role,pEId}){
                   const height=Math.max(20,(Math.min(hr[1],HEND)-Math.max(hr[0],HSTART))*PXH-2);
                   const col=colorEnf(e.id);
                   return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"1px 2px",boxSizing:"border-box"}}>
-                    <div style={{height:"100%",background:col+"22",borderLeft:"2.5px solid "+col,borderRadius:5,padding:"2px 3px",overflow:"hidden"}} title={e.prenom+" "+((e.contrat&&e.contrat.horaires)||"")}>
-                      <div style={{fontSize:isMobile?9:10.5,fontWeight:700,color:"var(--b)",lineHeight:1.1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{e.prenom}</div>
-                      {(()=>{const hl=horaireLignes(e.contrat&&e.contrat.horaires);return hl[0]?<div style={{fontSize:isMobile?8:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",lineHeight:1.2}}>{hl[0]}{hl[1]?" –":""}{hl[1]?<br/>:null}{hl[1]}</div>:null;})()}
+                    <div style={{height:"100%",background:col+"22",borderLeft:"2.5px solid "+col,borderRadius:5,padding:isMobile?"2px 0":"2px 3px",overflow:"hidden",display:isMobile?"flex":"block",alignItems:"center",justifyContent:"center"}} title={e.prenom+" "+((e.contrat&&e.contrat.horaires)||"")}>
+                      {isMobile
+                        ? <div style={{writingMode:"vertical-rl",fontSize:10,fontWeight:700,color:"var(--b)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxHeight:"100%",letterSpacing:".5px"}}>{e.prenom}</div>
+                        : <>
+                            <div style={{fontSize:10.5,fontWeight:700,color:"var(--b)",lineHeight:1.1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{e.prenom}</div>
+                            {(()=>{const hl=horaireLignes(e.contrat&&e.contrat.horaires);return hl[0]?<div style={{fontSize:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",lineHeight:1.2}}>{hl[0]}{hl[1]?" –":""}{hl[1]?<br/>:null}{hl[1]}</div>:null;})()}
+                          </>}
                     </div>
                   </div>;
                 })}
@@ -3172,27 +3190,6 @@ function Sante({enfants,role,pEId}){
             </div>)}
         </div>
 
-        {/* Croissance — tenue à jour par le parent */}
-        <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:4,color:"var(--b)"}}>📏 Croissance</div>
-          <div style={{fontSize:11,color:"var(--l)",marginBottom:12}}>{role==="parent"?"Ajoutez le poids et la taille à chaque pesée ou visite.":"Mesures tenues à jour par le parent."}</div>
-          {croissance.length===0
-            ?<div style={{fontSize:12.5,color:"var(--l)"}}>Aucune mesure pour l'instant.</div>
-            :<div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {[...croissance].reverse().map(m=><div key={m.id} style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,padding:"6px 0",borderBottom:"1px solid var(--br)"}}>
-                <span style={{color:"var(--l)",minWidth:78}}>{fmt(m.date)}</span>
-                <span style={{fontWeight:700,color:"var(--b)"}}>{m.poids?m.poids+" kg":""}{m.poids&&m.taille?" · ":""}{m.taille?m.taille+" cm":""}</span>
-                {m.age_mois!=null&&<span style={{color:"var(--l)",fontSize:11}}>({m.age_mois} mois)</span>}
-                {role==="parent"&&<button onClick={()=>delMesure(m.id)} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",color:"var(--R)",fontSize:13,opacity:.7}}>✕</button>}
-              </div>)}
-            </div>}
-          {role==="parent"&&<div style={{marginTop:12,display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-end"}}>
-            <div style={{flex:"1 1 110px"}}><label className="lbl" style={{fontSize:10}}>Date</label><input type="date" className="inp" value={mesForm.date} onChange={e=>setMesForm(f=>({...f,date:e.target.value}))}/></div>
-            <div style={{flex:"1 1 70px"}}><label className="lbl" style={{fontSize:10}}>Poids (kg)</label><input className="inp" inputMode="decimal" placeholder="9,2" value={mesForm.poids} onChange={e=>setMesForm(f=>({...f,poids:e.target.value}))}/></div>
-            <div style={{flex:"1 1 70px"}}><label className="lbl" style={{fontSize:10}}>Taille (cm)</label><input className="inp" inputMode="decimal" placeholder="74" value={mesForm.taille} onChange={e=>setMesForm(f=>({...f,taille:e.target.value}))}/></div>
-            <button className="btn bT" style={{flex:"0 0 auto"}} onClick={addMesure}>Ajouter</button>
-          </div>}
-        </div>
       </div>
 
     </div>}
@@ -6665,7 +6662,7 @@ const OMS_TAILLE=[49.9,54.7,58.4,61.4,63.9,65.9,67.6,69.2,70.6,72.0,73.3,74.5,75
 
 function CourbeCroissance({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [data,setData]=useState(CROISSANCE_DEMO);
+  const [data,setData]=useState({});
   const [newM,setNewM]=useState({date:"",poids:"",taille:""});
   const [toast,setToast]=useState("");
   const [vue,setVue]=useState("poids");
@@ -6673,15 +6670,34 @@ function CourbeCroissance({enfants,role,pEId}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const mesures=data[enfant?.id]||[];
   const maxAge=mesures.length?Math.max(...mesures.map(m=>m.age_mois)):12;
+  const estDemo=enfant&&["e1","e2","e3"].includes(enfant.id);
+  const rechargerC=(eid)=>{
+    if(!eid)return;
+    if(["e1","e2","e3"].includes(eid)){setData(p=>({...p,[eid]:(CROISSANCE_DEMO[eid]||[])}));return;}
+    supabase.from("croissance").select("*").eq("enfant_id",eid).order("date",{ascending:true}).then(({data:rows})=>setData(p=>({...p,[eid]:(rows||[]).map(r=>({id:r.id,date:r.date,age_mois:r.age_mois,poids:r.poids,taille:r.taille}))})));
+  };
+  useEffect(()=>{rechargerC(enfant?.id);},[enfant?.id]);
 
-  const ajouter=()=>{
+  const ajouter=async()=>{
     if(!newM.poids&&!newM.taille)return;
-    const naissance=enfant.naissance;
-    const d=newM.date||TODAY_STR;
-    const n=new Date(naissance),mDate=new Date(d);
-    const mois=(mDate.getFullYear()-n.getFullYear())*12+(mDate.getMonth()-n.getMonth());
-    setData(p=>({...p,[enfant.id]:[...p[enfant.id]||[],{date:d,age_mois:mois,poids:parseFloat(newM.poids)||null,taille:parseFloat(newM.taille)||null}].sort((a,b)=>a.age_mois-b.age_mois)}));
-    setNewM({date:"",poids:"",taille:""});setToast("Mesure ajoutée ✓");
+    if(!enfant)return;
+    const d=newM.date||new Date().toISOString().slice(0,10);
+    const n=new Date(enfant.naissance),mDate=new Date(d);
+    const mois=Math.max(0,(mDate.getFullYear()-n.getFullYear())*12+(mDate.getMonth()-n.getMonth()));
+    const poids=parseFloat(String(newM.poids).replace(",","."))||null;
+    const taille=parseFloat(String(newM.taille).replace(",","."))||null;
+    if(estDemo){
+      setData(p=>({...p,[enfant.id]:[...(p[enfant.id]||[]),{date:d,age_mois:mois,poids,taille}].sort((a,b)=>a.age_mois-b.age_mois)}));
+      setNewM({date:"",poids:"",taille:""});setToast("Mesure ajoutée ✓");return;
+    }
+    const{error}=await supabase.from("croissance").insert({enfant_id:enfant.id,date:d,poids,taille,age_mois:mois});
+    if(error){setToast("Erreur : "+error.message);return;}
+    setNewM({date:"",poids:"",taille:""});setToast("Mesure ajoutée ✓");rechargerC(enfant.id);
+  };
+  const supprimer=async(m)=>{
+    if(!window.confirm("Supprimer cette mesure ?"))return;
+    if(estDemo){setData(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(x=>x!==m)}));return;}
+    if(m.id){await supabase.from("croissance").delete().eq("id",m.id);rechargerC(enfant.id);}
   };
 
   const last=mesures[mesures.length-1];
@@ -6742,7 +6758,7 @@ function CourbeCroissance({enfants,role,pEId}){
       </div>
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        {role==="asmat"&&<div className="card"style={{padding:16}}>
+        {role==="parent"?<div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>+ Nouvelle mesure</div>
           <div style={{marginBottom:8}}><label className="lbl">Date</label><input type="date"className="inp"value={newM.date}onChange={e=>setNewM(p=>({...p,date:e.target.value}))}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -6750,14 +6766,18 @@ function CourbeCroissance({enfants,role,pEId}){
             <div><label className="lbl">Taille (cm)</label><input className="inp"type="number"placeholder="75"value={newM.taille}onChange={e=>setNewM(p=>({...p,taille:e.target.value}))}/></div>
           </div>
           <button className="btn bT"style={{width:"100%"}}onClick={ajouter}>Enregistrer</button>
+        </div>:<div className="card"style={{padding:14,background:"var(--c)"}}>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}>📏 La courbe de croissance est <b>tenue à jour par le parent</b> (poids et taille à chaque pesée). Vous la consultez ici en lecture seule.</div>
         </div>}
         <div className="card"style={{padding:14}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📋 Historique</div>
-          {mesures.slice().reverse().slice(0,6).map(m=><div key={m.date}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:12}}>
+          {mesures.length===0&&<div style={{fontSize:12,color:"var(--l)"}}>Aucune mesure pour l'instant.</div>}
+          {mesures.slice().reverse().slice(0,8).map((m,idx)=><div key={m.id||m.date+idx}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:12}}>
             <span style={{color:"var(--l)"}}>{m.age_mois} mois</span>
-            <div style={{display:"flex",gap:12}}>
+            <div style={{display:"flex",gap:12,alignItems:"center"}}>
               {m.poids&&<span style={{color:"var(--T)",fontWeight:600}}>{m.poids}kg</span>}
               {m.taille&&<span style={{color:"var(--B)",fontWeight:600}}>{m.taille}cm</span>}
+              {role==="parent"&&<button onClick={()=>supprimer(m)}style={{background:"none",border:"none",cursor:"pointer",color:"var(--R)",fontSize:13,opacity:.7,padding:0}}>✕</button>}
             </div>
           </div>)}
         </div>
@@ -10520,7 +10540,7 @@ const GROUPS_AM={
     {id:"pointage",l:"Pointage",ic:"⏰"},
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊"},
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥"},
-    {id:"bilans",l:"Bilans périodiques",ic:"✨"},
+    {id:"bilans",l:"Bilans",ic:"✨"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
@@ -10532,8 +10552,7 @@ const GROUPS_AM={
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
-    {id:"faq",l:"Centre d'aide",ic:"❓"},
-    {id:"support",l:"Support",ic:"💬"},
+    {id:"faq",l:"Aide & Support",ic:"❓"},
   ]},
 };
 const GROUPS_P={
@@ -10544,21 +10563,20 @@ const GROUPS_P={
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊"},
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
-    {id:"bilans",l:"Bilans reçus",ic:"✨"},
+    {id:"bilans",l:"Bilans",ic:"✨"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅"},
     {id:"messagerie",l:"Messagerie",ic:"💬"},
-    {id:"kit_cmg",l:"Aide CMG",ic:"💶"},
-    {id:"simulateur",l:"Simulateur coût",ic:"🧮"},
-    {id:"admin_finances",l:"Mon contrat",ic:"🧾"}, // RENAME NAV P9 (côté parent - contenu réduit à Mon contrat & Signature)
+    {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶"},
+    {id:"admin_finances",l:"Mon contrat",ic:"🧾"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
     {id:"faq",l:"Centre d'aide",ic:"❓"},
   ]},
 };
 
 // Alias : anciens ids de pages -> nouvel onglet regroupé (pour le surlignage du menu)
-const PAGE_ALIAS={cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports"};
+const PAGE_ALIAS={cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports",kit_cmg:"aides_simulateurs",simulateur:"aides_simulateurs",support:"faq"};
 // Trouver à quel groupe appartient une page
 const findGroup=(groups,pageId)=>{
   const pid=PAGE_ALIAS[pageId]||pageId;
@@ -16386,7 +16404,8 @@ export default function App(){
       case "projet_accueil": return <ProjetAccueil user={user} role={role}/>;
       case "boutique": return <Boutique user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
-      case "faq": return <FAQ role={role}/>;
+      case "faq": return <VueAideSupport role={role} user={user}/>;
+      case "aides_simulateurs": return <VueAidesSimulateurs enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "inviter_parent": return <InviterParent enfants={enfants} user={user}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
