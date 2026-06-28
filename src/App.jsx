@@ -778,7 +778,7 @@ function PointageRapide({enfants,role,user,demo}){
               {(st.arrivee||st.depart)&&<span style={{color:"var(--l)"}}>· {st.arrivee?("→ "+hhmm(st.arrivee)):""}{st.depart?(" ← "+hhmm(st.depart)):""}</span>}
             </div>
             <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-              <button className={fini?"btn bG":enCours?"btn bR":"btn bT"} disabled={fini||busy===e.id}
+              <button className={fini?"btn bG":enCours?"btn bB":"btn bG2"} disabled={fini||busy===e.id}
                 style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
                 onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
               {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}>📱 QR</button>}
@@ -4377,8 +4377,28 @@ function Documents({enfants,role,pEId,user}){
   const baseList=role==="parent"
     ? docs.filter(d=>d.partage&&enfants.some(e=>e.id===d.eId))
     : docs;
+  // BULLETINS DANS DOCUMENTS - surfacer les bulletins de salaire envoyés (PDF dans bucket documents)
+  const [bulletinDocs,setBulletinDocs]=useState([]);
+  useEffect(()=>{
+    const contratIds=(enfants||[]).map(e=>e?.contrat?.id).filter(Boolean);
+    if(!contratIds.length){setBulletinDocs([]);return;}
+    let alive=true;
+    supabase.from("bulletins").select("mois,annee,pdf_storage_path,envoye_au_parent,enfant_id,contrat_id").in("contrat_id",contratIds).eq("envoye_au_parent",true).then(({data})=>{
+      if(!alive)return;
+      setBulletinDocs((data||[]).filter(b=>b.pdf_storage_path).map(b=>{
+        const e=(enfants||[]).find(x=>x.id===b.enfant_id);
+        const moisStr=typeof b.mois==="string"?b.mois:String(b.mois||"");
+        const dateRef=(moisStr.length>=7)?(moisStr.slice(0,7)+"-01"):((b.annee||new Date().getFullYear())+"-01-01");
+        return {id:"bull_"+b.contrat_id+"_"+moisStr, eId:b.enfant_id, cat:"admin",
+          sous:"Bulletin de salaire", nom:"Bulletin_"+(e?.prenom||"enfant")+"_"+moisStr+".pdf",
+          date:dateRef, annee:String(b.annee||dateRef.slice(0,4)),
+          taille:"PDF", icone:"📜", partage:true, url:null, storagePath:b.pdf_storage_path};
+      }));
+    });
+    return()=>{alive=false;};
+  },[(enfants||[]).map(e=>e?.contrat?.id).join(",")]);
   const seenPaths=new Set(baseList.map(d=>d.storagePath).filter(Boolean));
-  const liste=[...baseList,...contratDocs.filter(d=>!seenPaths.has(d.storagePath))];
+  const liste=[...baseList,...contratDocs.filter(d=>!seenPaths.has(d.storagePath)),...bulletinDocs.filter(d=>!seenPaths.has(d.storagePath))];
 
   const filtres=liste.filter(d=>{
     if(annee!=="tous"&&d.annee!==annee)return false;
@@ -12621,6 +12641,11 @@ function OnboardingWizard({user,onFinish}){
                 onClick={async()=>{
                   if(!parentEmail.trim()){setStep(3);return;}
                   setSaving(true);
+                  let inviteUrl=null;
+                  try{
+                    const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfant.id});
+                    if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://timat.app")+"/?invite="+tk;
+                  }catch(e){}
                   try{
                     const res=await fetch('/api/invite-parent',{
                       method:'POST',headers:{'Content-Type':'application/json'},
@@ -12629,6 +12654,7 @@ function OnboardingWizard({user,onFinish}){
                         prenomEnfant:enfant.prenom,
                         prenomAsmat:user?.prenom||"Votre assistante maternelle",
                         asmatId:user?.id,enfantId:enfant?.id||null,
+                        inviteUrl,
                       })
                     });
                     const d=await res.json();
