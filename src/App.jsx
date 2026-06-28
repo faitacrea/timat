@@ -2139,6 +2139,7 @@ function Calendrier({enfants,role,pEId}){
     if(isNaN(s)||isNaN(e)||e<=s)return null;
     return [s,e];
   };
+  const horaireLignes=(str)=>{if(!str)return["",""];const parts=String(str).split(/\s*(?:–|—|-|à)\s*/);if(parts.length>=2)return[parts[0].trim(),parts.slice(1).join("-").trim()];return[String(str).trim(),""];};
   const addEvModal=()=>{
     if(!evForm.date||!evForm.txt.trim())return;
     setEvs(p=>[...p,{id:"ev"+Date.now(),date:evForm.date,type:evForm.type,txt:evForm.txt.trim()}]);
@@ -2295,8 +2296,7 @@ function Calendrier({enfants,role,pEId}){
           </div>
           <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
         </div>
-        <button onClick={()=>setJourLarge(new Date())} style={{width:"100%",marginBottom:10,padding:"9px",borderRadius:10,border:"1.5px solid var(--Tp)",background:"var(--Tp)",color:"var(--T)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>🔍 Voir le jour en cours en grand</button>
-        <div style={{fontSize:10.5,color:"var(--l)",textAlign:"center",marginBottom:8}}>Touchez un jour pour l'ouvrir en grand</div>
+        <div style={{fontSize:11,color:"var(--l)",textAlign:"center",marginBottom:8,fontWeight:600}}>👆 Touchez un jour pour l'ouvrir en grand</div>
         <div style={{overflowX:"hidden"}}>
           <div style={{width:"100%",display:"grid",gridTemplateColumns:isMobile?"22px repeat(7,1fr)":"46px repeat(7,1fr)"}}>
             <div/>
@@ -2326,7 +2326,7 @@ function Calendrier({enfants,role,pEId}){
                   return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"1px 2px",boxSizing:"border-box"}}>
                     <div style={{height:"100%",background:col+"22",borderLeft:"2.5px solid "+col,borderRadius:5,padding:"2px 3px",overflow:"hidden"}} title={e.prenom+" "+((e.contrat&&e.contrat.horaires)||"")}>
                       <div style={{fontSize:isMobile?9:10.5,fontWeight:700,color:"var(--b)",lineHeight:1.1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{e.prenom}</div>
-                      {!isMobile&&<div style={{fontSize:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",overflow:"hidden",whiteSpace:"nowrap"}}>{e.contrat&&e.contrat.horaires}</div>}
+                      {(()=>{const hl=horaireLignes(e.contrat&&e.contrat.horaires);return hl[0]?<div style={{fontSize:isMobile?8:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",lineHeight:1.2}}>{hl[0]}{hl[1]?" –":""}{hl[1]?<br/>:null}{hl[1]}</div>:null;})()}
                     </div>
                   </div>;
                 })}
@@ -2334,11 +2334,12 @@ function Calendrier({enfants,role,pEId}){
             })}
           </div>
         </div>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid var(--br)"}}>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid var(--br)"}}>
           <span style={{fontSize:10.5,color:"var(--l)",fontWeight:700}}>Enfants :</span>
           {enfants.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{display:"flex",alignItems:"center",gap:5}}>
-            <span style={{width:11,height:11,borderRadius:3,background:col}}/>
-            <span style={{fontSize:11,color:"var(--m)",fontWeight:600}}>{e.prenom}</span>
+            <span style={{width:11,height:11,borderRadius:3,background:col,flexShrink:0}}/>
+            <span style={{fontSize:11.5,color:"var(--b)",fontWeight:700}}>{e.prenom}</span>
+            {e.contrat&&e.contrat.horaires&&<span style={{fontSize:10.5,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat.horaires}</span>}
           </div>;})}
         </div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:8,textAlign:"center"}}>« ➕ Événement » pour ajouter un rendez-vous ou un congé</div>
