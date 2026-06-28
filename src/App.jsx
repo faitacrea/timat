@@ -251,7 +251,7 @@ function Styles(){return(
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}.g2>*,.g3>*,.g4>*{min-width:0}}
     @media(max-width:400px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}.g2>*,.g3>*,.g4>*{min-width:0}}
     .demo-screen .g2{grid-template-columns:minmax(0,1fr)!important}
     .demo-screen .g3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
@@ -286,7 +286,7 @@ function Styles(){return(
     .sec-h-line{flex:1;height:1px;background:linear-gradient(90deg,var(--br),transparent)}
     #bandeau-hl{display:none;background:linear-gradient(90deg,var(--T),var(--S));color:#fff;font-size:11px;text-align:center;padding:4px;font-weight:600}
     .offline #bandeau-hl{display:block}
-    @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)!important}.g2>*,.g3>*,.g4>*{min-width:0!important}}
     @media(max-width:768px){
       .nav-main{display:none!important}
       .content{padding-bottom:72px!important}
@@ -296,7 +296,7 @@ function Styles(){return(
       .btn{padding:8px 13px;font-size:12px}
       .card{border-radius:14px!important}
     }
-    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(234,224,232,.7);box-shadow:0 -4px 20px rgba(0,0,0,.08);height:64px;align-items:stretch;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(234,224,232,.7);box-shadow:0 -4px 20px rgba(0,0,0,.08);height:calc(64px + env(safe-area-inset-bottom,0px));align-items:stretch;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
     .dark .bottom-nav{background:rgba(13,27,30,.97)!important;border-top-color:#1E3A34!important}
     .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:12px;transition:all .18s;font-family:inherit;min-width:0}
     .bnav-btn.active{background:rgba(155,107,170,.12)}
@@ -3252,7 +3252,7 @@ function Portfolio({enfants,role,pEId}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🎨" title="Portfolio pédagogique" sub="Activités, projets et souvenirs"
+    <PageHeader icon="🎨" title="Cahier de réussites" sub="Activités, projets et souvenirs valorisés"
       action={role==="asmat"&&<button className="btn bT"onClick={()=>setShowForm(!showForm)}>+ Activité</button>}/>
 
     {role==="asmat"&&<div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
@@ -6314,7 +6314,7 @@ function Eveil({enfants,role,pEId}){
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
     </div>}
     <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)"}}>
-      {[{id:"portfolio",l:"Portfolio",ic:"🎨"},{id:"developpement",l:"Développement",ic:"🌱"}].map(s=>
+      {[{id:"portfolio",l:"Cahier de réussites",ic:"🎨"},{id:"developpement",l:"Développement",ic:"🌱"}].map(s=>
         <button key={s.id}onClick={()=>setSection(s.id)}style={{
           padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
@@ -8254,8 +8254,8 @@ function JournalComplet({enfants,role,pEId,user}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const secs=role==="asmat"
-    ?[{id:"repas",l:"Repas & Changes",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}]
-    :[{id:"repas",l:"Repas",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activités",ic:"💡"}];
+    ?[{id:"repas",l:"Repas & Changes",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activité du jour",ic:"💡"}]
+    :[{id:"repas",l:"Repas",ic:"🍽️"},{id:"sommeil",l:"Sommeil",ic:"😴"},{id:"activites",l:"Activité du jour",ic:"💡"}];
   return <div className="fi">
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
@@ -8428,7 +8428,7 @@ function EveilComplet({enfants,role,pEId}){
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
     </div>}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)"}}>
-      {[{id:"portfolio",l:"Portfolio",ic:"🎨"},{id:"developpement",l:"Développement",ic:"🌱"}].map(s=>
+      {[{id:"portfolio",l:"Cahier de réussites",ic:"🎨"},{id:"developpement",l:"Développement",ic:"🌱"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 16px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -8976,6 +8976,10 @@ function SignatureContratParent({enfants,pEId,user}){
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="✍️" title="Signer mon contrat"
       sub="Signature électronique conforme eIDAS - valeur légale"/>
+    <div style={{display:"flex",gap:10,alignItems:"flex-start",padding:"11px 14px",background:"var(--Bp)",border:"1px solid rgba(46,74,90,.25)",borderRadius:12,marginBottom:14,fontSize:12.5,color:"var(--B)",lineHeight:1.5}}>
+      <span style={{fontSize:16,flexShrink:0}}>📄</span>
+      <span>Votre contrat (et ses bulletins de salaire) est toujours accessible dans <b>Administratif → Documents & Attestations</b>. Une fois signé, le PDF y apparaît automatiquement.</span>
+    </div>
 
     {/* Récap contrat */}
     <div className="card"style={{padding:18,marginBottom:16}}>
@@ -10990,7 +10994,7 @@ function ParentInvitationScreen({onLogin}){
 
   const inp={width:"100%",padding:"12px 14px",borderRadius:10,border:"1.5px solid rgba(255,255,255,.5)",fontSize:14,marginBottom:10,fontFamily:"inherit",boxSizing:"border-box",background:"rgba(255,255,255,.95)",color:"#2E4A5A"};
 
-  return <div style={{position:"fixed",inset:0,overflow:"auto",display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"linear-gradient(135deg,#E49178 0%,#C84B31 60%,#F6C7A8 100%)"}}>
+  return <div style={{position:"fixed",inset:0,overflow:"auto",display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"linear-gradient(160deg,#2E4A5A 0%,#3E6F74 36%,#5DA9A1 60%,#90A093 82%,#E0A081 100%)"}}>
     <div style={{position:"absolute",inset:0,backdropFilter:"blur(2px)",background:"radial-gradient(circle at 30% 20%,rgba(255,255,255,.25),transparent 42%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.14),transparent 42%)"}}/>
     <div style={{position:"relative",width:"100%",maxWidth:420,background:"rgba(255,255,255,.2)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,.4)",borderRadius:24,padding:"30px 26px",boxShadow:"0 20px 60px rgba(0,0,0,.28)"}}>
       <div style={{textAlign:"center",marginBottom:18}}>
