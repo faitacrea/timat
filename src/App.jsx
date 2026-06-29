@@ -2694,6 +2694,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
   const totalBrut=salBrut+indemAbs;
   const moisCourant=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
   const netEstime=totalBrut*0.78;
+  const histFactDemo=(()=>{const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];const now=new Date();const vals=["672.40€","698.10€","654.80€"];const stat=["Émise","Payée","Payée"];return [1,2,3].map(k=>{const d=new Date(now.getFullYear(),now.getMonth()-k,1);return [noms[d.getMonth()]+" "+d.getFullYear(),stat[k-1],vals[k-1]];});})();
 
   const exportPajemploi=()=>{
     const w=window.open('','_blank');
@@ -2764,6 +2765,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Total brut · {moisCourant}</div>
         <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{totalBrut.toFixed(2)} €</div>
         <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{h.real} h{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {netEstime.toFixed(2)} €</div>
+        {indemAbs>0&&<div style={{fontSize:11,color:"var(--m)",marginTop:2}}>dont absences indemnisées : +{indemAbs.toFixed(2)} € ({absMois.filter(a=>a.indemnise).length} j)</div>}
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
         {[["Heures × taux",(h.real*contrat.tauxHoraire).toFixed(2)+" €","var(--B)","var(--Bp)"],
@@ -2778,23 +2780,6 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
 
     {contrat&&<div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)"}}>💰 Salaire {moisCourant} — {enfant?.prenom}</div>
-          {[["Heures réalisées",h.real+"h × "+contrat.tauxHoraire+"€",(h.real*contrat.tauxHoraire).toFixed(2)+"€"],
-            ["Indemnité entretien",h.real+" jrs × "+contrat.entretien+"€",(h.real/5*contrat.entretien).toFixed(2)+"€"],
-            ["Absences indemnisées",absMois.filter(a=>a.indemnise).length+" jours","+"+indemAbs.toFixed(2)+"€"],
-          ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
-            <div><div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{l}</div>
-              <div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
-            <div style={{fontWeight:700,color:"var(--S)"}}>{v}</div>
-          </div>)}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10,paddingTop:10,borderTop:"2px solid var(--T)"}}>
-            <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>Total brut mensuel</span>
-            <span className="pf"style={{fontSize:20,fontWeight:700,color:"var(--T)"}}>{totalBrut.toFixed(2)} €</span>
-          </div>
-          <div style={{fontSize:11,color:"var(--l)",marginTop:6}}>* Net ≈ {(totalBrut*0.78).toFixed(2)}€ (estimation - vérifiez via Pajemploi)</div>
-        </div>
-
         {/* Pajemploi */}
         <div className="card"style={{padding:16,background:"#EBF4FF",border:"1.5px solid var(--B)"}}>
           <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12}}>
@@ -2826,7 +2811,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
         </div>
         <div className="card"style={{padding:14}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>🧾 Historique factures</div>
-          {isDemoFact?[["Février 2024","Émise","672.40€"],["Janvier 2024","Payée","698.10€"],["Décembre 2023","Payée","654.80€"]].map(([m,s,v])=>
+          {isDemoFact?histFactDemo.map(([m,s,v])=>
             <div key={m}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
               <span style={{fontSize:13,color:"var(--b)",fontWeight:600}}>{m}</span>
               <span className="badge"style={{background:s==="Payée"?"var(--Sp)":"var(--Gp)",color:s==="Payée"?"var(--S)":"var(--G)"}}>{s}</span>
@@ -3033,12 +3018,25 @@ function Contrats({enfants,role,pEId,user}){
 
     {contrat&&<div className="g2">
       <div>
-        <div className="card"style={{padding:16,marginBottom:12}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📋 Contrat - {enfant?.prenom}</div>
-            <span className="badge"style={{background:signes[enfant?.id]?"var(--Sp)":"var(--Gp)",color:signes[enfant?.id]?"var(--S)":"var(--G)"}}>
-              {signes[enfant?.id]?"✅ Signé":"⏳ En attente de signature"}</span>
+        {/* Coup d'oeil contrat — statut signature + essentiel en un regard (repere Pandi-Panda) */}
+        <div className="card"style={{padding:0,marginBottom:12,overflow:"hidden"}}>
+          <div style={{background:signes[enfant?.id]?"linear-gradient(135deg,var(--Sp),var(--Gp))":"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:11,fontWeight:700,color:signes[enfant?.id]?"var(--S)":"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat · {enfant?.prenom}</div>
+                <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}>{signes[enfant?.id]?"✅ Signé":"⏳ En attente de signature"}</div>
+                <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{fmt(contrat.debut)} → {fmt(contrat.fin)} · {contrat.heuresHebdo}h/sem</div>
+              </div>
+              <div style={{textAlign:"right",flexShrink:0}}>
+                <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {(contrat.heuresHebdo*contrat.tauxHoraire*52/12).toFixed(0)} €</div>
+                <div style={{fontSize:10,color:"var(--m)",fontWeight:600,marginTop:2}}>brut / mois</div>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="card"style={{padding:16,marginBottom:12}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Détail du contrat</div>
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",contrat.jours.join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
@@ -4272,8 +4270,8 @@ function Recap({enfants,role,pEId}){
             <div style={{fontSize:11,color:"#888"}}>{user?.prenom||"Assmat"} {user?.nom||""} · Assistante Maternelle agréée</div></div>
           <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
             <div><strong>Récapitulatif mensuel</strong></div>
-            <div>Mars 2024</div>
-            <div>Généré le 11/03/2024</div>
+            <div>{new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</div>
+            <div>Généré le {new Date().toLocaleDateString('fr-FR')}</div>
           </div>
         </div>
         <div style={{background:"#f8f4ef",padding:10,borderRadius:6,marginBottom:12}}>
@@ -9164,9 +9162,18 @@ function SignatureContratParent({enfants,pEId,user}){
       <span>Votre contrat (et ses bulletins de salaire) est toujours accessible dans <b>Administratif → Documents & Attestations</b>. Une fois signé, le PDF y apparaît automatiquement.</span>
     </div>
 
+    {/* Coup d'oeil contrat — a signer, essentiel en un regard (repere Pandi-Panda) */}
+    <div className="card"style={{padding:0,marginBottom:16,overflow:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat d'accueil · {enfant?.prenom}</div>
+        <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}>✍️ À signer</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>Début {fmt(contrat.debut||"")} · {(contrat.tauxHoraire||0).toFixed(2)} €/h · {contrat.signe_asmat?"l'assistante maternelle a signé ✓":"en attente de la signature de l'assmat"}</div>
+      </div>
+    </div>
+
     {/* Récap contrat */}
     <div className="card"style={{padding:18,marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Contrat d'accueil - {enfant?.prenom}</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Détail du contrat</div>
       {[
         ["Enfant",(enfant?.prenom||"-")+" "+(enfant?.nom||"")],
         ["Début du contrat",fmt(contrat.debut||"")],
@@ -11055,7 +11062,7 @@ const DEMO_SCREENS=[
       const [selDay,setSelDay]=useState(15);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📅 Mars 2024</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📅 {new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:12}}>
           {["L","M","Me","J","V","S","D"].map(j=><div key={j}style={{textAlign:"center",fontSize:9,fontWeight:700,color:"#8FA3AD",padding:4}}>{j}</div>)}
           {Array.from({length:31},(_,i)=>i+1).map(d=>{
