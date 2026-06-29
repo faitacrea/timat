@@ -946,74 +946,81 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     <PointageRapide enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
-    {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"12px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D6EBD9)",border:"1.5px solid var(--S)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-        <span style={{fontSize:18}}>🟢</span>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:12,fontWeight:700,color:"var(--S)"}}>Actuellement en accueil</div>
-          <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>
-            {stats.presencesJour.map(p=>(p.emoji||"👶")+" "+p.prenom+" (depuis "+p.depuis?.slice(0,5)+")").join(" · ")}
-          </div>
-        </div>
+    {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{padding:"14px 16px",marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D9EDE0)",border:"1px solid var(--S)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+        <span style={{width:9,height:9,borderRadius:"50%",background:"#3FA868",boxShadow:"0 0 0 4px rgba(63,168,104,.18)",flexShrink:0}}/>
+        <span style={{fontSize:12.5,fontWeight:700,color:"#2E7D4F"}}>Actuellement en accueil · {stats.presencesJour.length}</span>
+      </div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {stats.presencesJour.map(p=><div key={p.id} style={{display:"flex",alignItems:"center",gap:7,background:"rgba(255,255,255,.7)",borderRadius:30,padding:"4px 12px 4px 5px"}}>
+          <AvatarEnfant e={p} size={24}/>
+          <span style={{fontSize:12.5,fontWeight:600,color:"var(--b)"}}>{p.prenom}</span>
+          <span style={{fontSize:11,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{p.depuis?.slice(0,5)}</span>
+        </div>)}
       </div>
     </div>}
 
     {/* Alerte contrats */}
     {nonSigne.length>0&&<div onClick={()=>setPage("admin_finances")}
-      style={{background:"linear-gradient(135deg,#FFF8E6,#FFF3D6)",border:"1.5px solid #E8B820",borderRadius:14,padding:"11px 16px",marginBottom:14,display:"flex",gap:10,alignItems:"center",cursor:"pointer",transition:"transform .15s"}}
-      onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
-      onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
-      <span style={{fontSize:20}}>✍️</span>
-      <div style={{fontSize:13,color:"#7A5500",fontWeight:600,flex:1}}>
-        {nonSigne.map(e=>e.prenom).join(", ")} - signature de contrat en attente
+      style={{background:"linear-gradient(135deg,#FFF8E6,#FFF1CC)",border:"1px solid #E8B820",borderRadius:16,padding:"14px 16px",marginBottom:14,display:"flex",gap:12,alignItems:"center",cursor:"pointer",transition:"transform .15s,box-shadow .15s"}}
+      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 6px 18px rgba(232,184,32,.18)";}}
+      onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
+      <div style={{width:38,height:38,borderRadius:11,background:"rgba(232,184,32,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>✍️</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13,color:"#7A5500",fontWeight:700,marginBottom:1}}>Signature en attente</div>
+        <div style={{fontSize:12,color:"#9A7000",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nonSigne.map(e=>e.prenom).join(", ")}</div>
       </div>
-      <span style={{fontSize:12,color:"#B8892A",fontWeight:700}}>Signer →</span>
+      <span style={{fontSize:12,color:"#fff",fontWeight:700,background:"#D49A1A",padding:"7px 13px",borderRadius:9,whiteSpace:"nowrap",flexShrink:0}}>Signer →</span>
     </div>}
 
 
     {/* TABLEAU SIGNATURES P11 - vue d'ensemble du statut signatures des contrats */}
-    {!isDemoUser&&nbEnfants>0&&<div className="card"style={{padding:18,marginBottom:14}}>
-      <div style={{fontWeight:600,fontSize:14,color:"var(--b)",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-        ✍️ Statut des signatures
-        <span style={{fontSize:10,color:"var(--l)",fontWeight:400}}>({nbEnfants} contrat{nbEnfants>1?"s":""})</span>
+    {!isDemoUser&&nbEnfants>0&&<div className="card"style={{padding:22,marginBottom:16}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,gap:8,flexWrap:"wrap"}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:18}}>✍️</span> Statut des signatures
+        </div>
+        <span style={{fontSize:11,color:"var(--m)",fontWeight:600,background:"var(--c)",padding:"4px 11px",borderRadius:20}}>{nbEnfants} contrat{nbEnfants>1?"s":""}</span>
       </div>
-      <div className="g4"style={{marginBottom:14,gap:8}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:18}}>
         {[
-          {l:"✅ Signés (2/2)",c:"var(--S)",n:sigStats.both.length,bg:"var(--Sp)"},
-          {l:"⏳ Attente parent",c:"#B8892A",n:sigStats.asmat.length,bg:"#FFF8E6"},
-          {l:"⏳ Attente asmat",c:"var(--B)",n:sigStats.parent.length,bg:"var(--Bp)"},
-          {l:"❌ Non signés",c:"var(--R)",n:sigStats.none.length,bg:"var(--Rp)"},
-        ].map(s=><div key={s.l}style={{padding:10,borderRadius:10,background:s.bg,textAlign:"center"}}>
-          <div className="pf"style={{fontSize:22,fontWeight:600,color:s.c,lineHeight:1}}>{s.n}</div>
-          <div style={{fontSize:10,color:s.c,marginTop:4}}>{s.l}</div>
+          {l:"Signés (2/2)",c:"var(--S)",n:sigStats.both.length,bg:"var(--Sp)"},
+          {l:"Attente parent",c:"#B8892A",n:sigStats.asmat.length,bg:"#FFF8E6"},
+          {l:"Attente assmat",c:"var(--B)",n:sigStats.parent.length,bg:"var(--Bp)"},
+          {l:"Non signés",c:"var(--R)",n:sigStats.none.length,bg:"var(--Rp)"},
+        ].map(s=><div key={s.l}style={{padding:"14px 14px",borderRadius:14,background:s.bg,display:"flex",alignItems:"center",gap:12}}>
+          <div className="pf"style={{fontSize:26,fontWeight:700,color:s.c,lineHeight:1,minWidth:22,textAlign:"center"}}>{s.n}</div>
+          <div style={{fontSize:11.5,color:s.c,fontWeight:600,lineHeight:1.3}}>{s.l}</div>
         </div>)}
       </div>
-      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {enfants.map(e=>{
           const ct=e.contrat;if(!ct)return null;
           const both=ct.signe_asmat&&ct.signe_parent;
           const onlyA=ct.signe_asmat&&!ct.signe_parent;
           const onlyP=!ct.signe_asmat&&ct.signe_parent;
           const none=!ct.signe_asmat&&!ct.signe_parent;
-          const status=both?{ic:"✅",l:"Signé (asmat + parent)",c:"var(--S)"}
+          const status=both?{ic:"✅",l:"Signé (assmat + parent)",c:"var(--S)"}
             :onlyA?{ic:"⏳",l:"En attente du parent",c:"#B8892A"}
             :onlyP?{ic:"⏳",l:"En attente de votre signature",c:"var(--B)"}
             :{ic:"❌",l:"Non signé",c:"var(--R)"};
           const genState=genPdf[ct.id];
-          return <div key={e.id}style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderBottom:"1px solid var(--br)",fontSize:12,flexWrap:"wrap"}}>
+          return <div key={e.id}style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:"var(--c)",borderRadius:14,flexWrap:"wrap"}}>
             <button type="button" onClick={()=>setEditAvatar({...e,...(avatarOv[e.id]||{})})} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",lineHeight:0,flexShrink:0}}>
-              <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={34}/>
+              <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={38}/>
               <span style={{position:"absolute",bottom:-4,right:-5,fontSize:9,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 3px rgba(0,0,0,.2)",padding:"1px 2px"}}>📷</span>
             </button>
-            <span style={{fontWeight:600,color:"var(--b)",minWidth:80}}>{e.prenom}</span>
-            <span style={{color:status.c,fontWeight:600,flex:1,minWidth:140}}>{status.ic} {status.l}</span>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {none&&<button className="btn bP"style={{fontSize:11,padding:"4px 10px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
-              {onlyA&&<span style={{fontSize:10,color:"var(--l)",fontStyle:"italic"}}>(rappel email - bientôt)</span>}
-              {(both||onlyA)&&<button className="btn bG"style={{fontSize:10,padding:"4px 8px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
+            <div style={{flex:1,minWidth:120}}>
+              <div style={{fontWeight:700,color:"var(--b)",fontSize:13.5}}>{e.prenom}</div>
+              <div style={{color:status.c,fontWeight:600,fontSize:11.5,marginTop:2}}>{status.ic} {status.l}</div>
+            </div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+              {none&&<button className="btn bP"style={{fontSize:11,padding:"6px 12px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
+              {onlyA&&<span style={{fontSize:10,color:"var(--l)",fontStyle:"italic"}}>rappel email bientôt</span>}
+              {(both||onlyA)&&<button className="btn bG"style={{fontSize:10.5,padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
                 {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}
               </button>}
-              {both&&<button className="btn bT"style={{fontSize:10,padding:"4px 8px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
+              {both&&<button className="btn bT"style={{fontSize:10.5,padding:"6px 11px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
             </div>
           </div>;
         })}
@@ -1022,23 +1029,29 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
 
 
     {/* Prochains événements */}
-    <div>
-      <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:600,fontSize:13,marginBottom:12,color:"var(--b)"}}>📅 Prochains événements</div>
-        {isDemoUser&&D.evenements.slice(0,4).map(ev=><div key={ev.id}onClick={()=>setPage("calendrier")}
-          style={{display:"flex",gap:8,padding:"7px 6px",borderBottom:"1px solid var(--br)",alignItems:"center",cursor:"pointer",borderRadius:8,transition:"background .15s"}}
-          onMouseEnter={ev2=>ev2.currentTarget.style.background="var(--c)"}
-          onMouseLeave={ev2=>ev2.currentTarget.style.background="transparent"}>
-          <span className="badge"style={{
-            background:ev.type==="abs"?"var(--Rp)":ev.type==="conge"?"var(--Gp)":"var(--Bp)",
-            color:ev.type==="abs"?"var(--R)":ev.type==="conge"?"var(--G)":"var(--B)",
-            whiteSpace:"nowrap",fontSize:10}}>
-            {fmt(ev.date)}
-          </span>
-          <span style={{fontSize:13,color:"var(--m)",flex:1}}>{ev.txt}</span>
-          <span style={{fontSize:12,color:"var(--l)"}}>›</span>
-        </div>)}
+    <div className="card"style={{padding:20}}>
+      <div style={{fontWeight:700,fontSize:15,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:18}}>📅</span> Prochains événements
       </div>
+      {isDemoUser
+        ? D.evenements.slice(0,4).map(ev=><div key={ev.id}onClick={()=>setPage("calendrier")}
+            style={{display:"flex",gap:10,padding:"10px 10px",alignItems:"center",cursor:"pointer",borderRadius:12,transition:"background .15s"}}
+            onMouseEnter={ev2=>ev2.currentTarget.style.background="var(--c)"}
+            onMouseLeave={ev2=>ev2.currentTarget.style.background="transparent"}>
+            <span className="badge"style={{
+              background:ev.type==="abs"?"var(--Rp)":ev.type==="conge"?"var(--Gp)":"var(--Bp)",
+              color:ev.type==="abs"?"var(--R)":ev.type==="conge"?"var(--G)":"var(--B)",
+              whiteSpace:"nowrap",fontSize:10,fontWeight:700,padding:"4px 9px",borderRadius:8}}>
+              {fmt(ev.date)}
+            </span>
+            <span style={{fontSize:13,color:"var(--b)",flex:1,fontWeight:500}}>{ev.txt}</span>
+            <span style={{fontSize:14,color:"var(--l)"}}>›</span>
+          </div>)
+        : <div style={{textAlign:"center",padding:"14px 0 6px"}}>
+            <div style={{fontSize:28,marginBottom:8,opacity:.6}}>🗓️</div>
+            <div style={{fontSize:13,color:"var(--l)",marginBottom:12}}>Aucun événement à venir pour le moment.</div>
+            <button className="btn bG"style={{fontSize:12,padding:"8px 16px"}}onClick={()=>setPage("calendrier")}>Ouvrir le calendrier →</button>
+          </div>}
     </div>
   </div>;
 }
@@ -8153,13 +8166,14 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     </div>
 
     {/* En-tete enfant + humeur */}
-    <div className="card"style={{padding:16,marginBottom:12,display:"flex",alignItems:"center",gap:14,borderTop:"4px solid "+(enfant.couleur||"var(--T)")}}>
-      <span style={{fontSize:44}}>{enfant.emoji||"👶"}</span>
-      <div style={{flex:1}}>
+    <div className="card"style={{padding:18,marginBottom:12,display:"flex",alignItems:"center",gap:14,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:5,background:enfant.couleur||"var(--T)"}}/>
+      <AvatarEnfant e={enfant} size={52}/>
+      <div style={{flex:1,minWidth:0}}>
         <div className="pf"style={{fontSize:19,fontWeight:700,color:"var(--b)"}}>{enfant.prenom}</div>
-        <div style={{fontSize:12,color:"var(--l)"}}>{humeurAff?"Humeur du jour":"Journée en cours"}</div>
+        <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>{humeurAff?"Humeur du jour":"Journée en cours"}</div>
       </div>
-      {humeurAff&&<span style={{fontSize:36}}>{humeurAff}</span>}
+      {humeurAff&&<span style={{fontSize:38}}>{humeurAff}</span>}
     </div>
 
     {/* Photos */}
