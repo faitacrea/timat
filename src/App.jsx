@@ -176,7 +176,7 @@ function Styles(){return(
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
+    html,body{width:100%;overflow-x:hidden;overscroll-behavior-y:none;font-family:'DM Sans',sans-serif}
     :root{
       --c:#FDFBF8;--w:#FFFFFF;--b:#2E4A5A;--m:#6B4F5A;--l:#A8909A;--br:#EAE0E8;
       --T:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
@@ -205,16 +205,17 @@ function Styles(){return(
     .dark .btn{border-color:#2A4A44}
     .dark .pf{color:#F0F5F3}
     .dark h1,.dark h2,.dark h3,.dark h4{color:#F0F5F3}
-    .msgs{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;padding:2px}
-    .msg{max-width:80%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.45;overflow-wrap:break-word}
-    .msg-me{align-self:flex-end;background:linear-gradient(135deg,#E49178,#C76754);color:#fff;border-bottom-right-radius:4px}
-    .msg-ot{align-self:flex-start;background:#F1EDE8;color:var(--b);border-bottom-left-radius:4px}
+    .msgs{display:flex;flex-direction:column;gap:10px;max-height:min(56vh,440px);overflow-y:auto;padding:8px 4px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .msg{max-width:78%;padding:10px 14px;border-radius:18px;font-size:13.5px;line-height:1.5;overflow-wrap:break-word;box-shadow:0 1px 3px rgba(0,0,0,.07);animation:msg-in .22s ease}
+    @keyframes msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
+    .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
-    .dark .msg-ot{background:#132428!important;color:#E0EBE8!important}
+    .dark .msg-ot{background:#132428!important;color:#E0EBE8!important;border-color:#1E3A34!important}
     .dark details{background:#132428!important;border-color:#1E3A34!important}
     .dark details summary{color:#F0F5F3!important}
     .dark select option{background:#0D1B1E;color:#F0F5F3}
-    .app{min-height:100vh;background:var(--c);display:flex;flex-direction:column;width:100%;max-width:100vw;overflow-x:hidden;position:relative}
+    .app{min-height:100vh;min-height:100dvh;background:var(--c);display:flex;flex-direction:column;width:100%;max-width:100vw;overflow-x:hidden;position:relative}
     .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
     .card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:var(--r);border:1px solid rgba(234,224,232,.8);box-shadow:var(--sh);position:relative;z-index:1}
     .card-lift{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease}
@@ -247,7 +248,7 @@ function Styles(){return(
     .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
-    .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw}
+    .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
     @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}.inp,input,select,textarea{font-size:16px!important}}
     .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -291,7 +292,7 @@ function Styles(){return(
     @media(max-width:640px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)!important}.g2>*,.g3>*,.g4>*{min-width:0!important}}
     @media(max-width:768px){
       .nav-main{display:none!important}
-      .content{padding-bottom:72px!important}
+      .content{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))!important}
       .fi{padding:12px!important;max-width:100%!important}
       .topbar{height:50px!important;padding:0 12px!important}
       .logo{font-size:19px!important}
@@ -333,7 +334,7 @@ function Styles(){return(
 
 
 const D = {
-  asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-2019-0042",couleur:"#E49178"},
+  asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-"+(new Date().getFullYear()-3)+"-0042",couleur:"#E49178"},
   parents:[
     {id:"p1",role:"parent",prenom:"Sophie",nom:"Martin",email:"sophie.martin@mail.fr",couleur:"#3A72A8"},
     {id:"p2",role:"parent",prenom:"Thomas",nom:"Bernard",email:"thomas.bernard@mail.fr",couleur:"#4E7A5C"},
@@ -1103,7 +1104,7 @@ function AccueilParent({enfant,setPage,user}){
           <div className="pf"style={{fontSize:23,fontWeight:700,color:"var(--b)",lineHeight:1.15}}>La journée de {enfant.prenom} ✨</div>
           <div style={{fontSize:13,color:"var(--m)",marginTop:5}}>Suivez son quotidien en temps réel.</div>
         </div>
-        <button className="btn bR"style={{fontSize:12,padding:"9px 15px",flexShrink:0}}onClick={()=>setShowAbsence(true)}>
+        <button className="btn bB"style={{fontSize:12,padding:"9px 15px",flexShrink:0}}onClick={()=>setShowAbsence(true)}>
           🤒 Déclarer une absence
         </button>
       </div>
@@ -1173,7 +1174,7 @@ function AccueilParent({enfant,setPage,user}){
         </div>
         <div style={{display:"flex",gap:8,marginTop:20}}>
           <button className="btn bG"style={{flex:1}}onClick={()=>setShowAbsence(false)}>Annuler</button>
-          <button className="btn bR"style={{flex:2}}onClick={declarerAbsence}>
+          <button className="btn bB"style={{flex:2}}onClick={declarerAbsence}>
             📢 Notifier {enfant?.prenomAsmat||"l'assmat"}
           </button>
         </div>
@@ -1286,8 +1287,8 @@ function Transmissions({enfants,role,pEId,user}){
 
   // Bilans reçus de Marie (demo data)
   const bilansRecus=role==="parent"?[
-    {id:"br1",type:"bilan",date:"11/03/2024",txt:BILANS[enfant?.id]?.[0]||""},
-    {id:"br2",type:"cr",trim:"T1 2024",txt:CRS[enfant?.id]?.[0]||""},
+    {id:"br1",type:"bilan",date:new Date(Date.now()-21*86400000).toLocaleDateString("fr-FR"),txt:BILANS[enfant?.id]?.[0]||""},
+    {id:"br2",type:"cr",trim:"T"+(Math.floor(new Date().getMonth()/3)+1)+" "+new Date().getFullYear(),txt:CRS[enfant?.id]?.[0]||""},
   ].filter(b=>b.txt):[];
 
   const send=async()=>{
@@ -2198,7 +2199,7 @@ function Calendrier({enfants,role,pEId}){
     <PageHeader icon="📅"
       title={role==="parent"?"Mon calendrier":"Calendrier"}
       sub={role==="parent"?"Jours d'accueil, congés et jours fériés":"Accueil, congés, anniversaires, vacances scolaires Zone C"}
-      action={role==="parent"&&<button className="btn bR"style={{fontSize:13,padding:"10px 18px",fontWeight:700}}
+      action={role==="parent"&&<button className="btn bB"style={{fontSize:13,padding:"10px 18px",fontWeight:700}}
         onClick={()=>{setAbsForm(f=>({...f,date:ds(todayDate.getDate())}));setShowAbsenceModal(true);}}>
         🤒 Déclarer une absence
       </button>}
@@ -2245,7 +2246,7 @@ function Calendrier({enfants,role,pEId}){
         </div>
         <div style={{display:"flex",gap:8,marginTop:20}}>
           <button className="btn bG"style={{flex:1}}onClick={()=>setShowAbsenceModal(false)}>Annuler</button>
-          <button className="btn bR"style={{flex:2}}onClick={declarerAbsence}disabled={!absForm.date||!absForm.heures}>
+          <button className="btn bB"style={{flex:2}}onClick={declarerAbsence}disabled={!absForm.date||!absForm.heures}>
             📢 Notifier l'assmat
           </button>
         </div>
@@ -2623,23 +2624,31 @@ function Messagerie({enfants,role,pEId,user}){
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
     <div className="g2">
-      <div className="card"style={{padding:16,display:"flex",flexDirection:"column",gap:12}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
-          <span style={{fontSize:24}}>{enfant?.emoji}</span>
-          <div><div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{enfant?.prenom} {enfant?.nom}</div>
-            <div style={{fontSize:11,color:"var(--S)",fontWeight:700}}>● En ligne</div></div>
+      <div className="card"style={{padding:0,display:"flex",flexDirection:"column",overflow:"hidden",minHeight:0}}>
+        {/* En-tete conversation */}
+        <div style={{display:"flex",alignItems:"center",gap:11,padding:"13px 16px",borderBottom:"1px solid var(--br)",background:"linear-gradient(135deg,var(--Tp),var(--Sp))"}}>
+          <AvatarEnfant e={enfant} size={40}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--b)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{enfant?.prenom} {enfant?.nom}</div>
+            <div style={{fontSize:11,color:"var(--m)",fontWeight:600}}>{role==="asmat"?"Échange avec le parent":"Échange avec l'assistante maternelle"}</div>
+          </div>
+          <span style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,color:"var(--S)",fontWeight:700,flexShrink:0}}><span className="ai-dot"/>Suivi du jour</span>
         </div>
-        <div className="msgs">
-          {conv.map(m=><div key={m.id}className={(m.de==="asmat"?"msg msg-me":"msg msg-ot")}>
+        {/* Messages */}
+        <div className="msgs"style={{background:"var(--c)",padding:"14px 12px"}}>
+          {loadingMsgs&&<div style={{textAlign:"center",color:"var(--l)",fontSize:12.5,padding:"20px 10px"}}>Chargement…</div>}
+          {!loadingMsgs&&conv.length===0&&<div style={{textAlign:"center",color:"var(--l)",fontSize:12.5,padding:"30px 10px",lineHeight:1.6}}>💬 Démarrez la conversation<br/>avec un petit mot sur la journée.</div>}
+          {conv.map(m=><div key={m.id}className={(m.de===role?"msg msg-me":"msg msg-ot")}>
             <div>{m.txt||m.texte}</div>
-            <div style={{fontSize:10,opacity:.7,marginTop:3,textAlign:"right"}}>{m.h}</div>
+            <div style={{fontSize:10,opacity:.65,marginTop:3,textAlign:"right"}}>{m.h}</div>
           </div>)}
           <div ref={endRef}/>
         </div>
-        <div style={{display:"flex",gap:8,paddingTop:10,borderTop:"1px solid var(--br)"}}>
+        {/* Saisie */}
+        <div style={{display:"flex",gap:8,padding:"12px 14px",borderTop:"1px solid var(--br)",alignItems:"center",background:"#fff"}}>
           <input className="inp"value={txt}onChange={e=>setTxt(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Votre message..."style={{flex:1}}/>
-          <button className="btn bT"onClick={send}>Envoyer</button>
+            onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Votre message…"style={{flex:1,borderRadius:22}}/>
+          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--T)":"var(--br)",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
         </div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -2653,7 +2662,7 @@ function Messagerie({enfants,role,pEId,user}){
               <span style={{fontSize:22}}>{e.emoji}</span>
               <div style={{flex:1,overflow:"hidden"}}>
                 <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div>
-                {last&&<div style={{fontSize:12,color:"var(--l)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{last.txt}</div>}
+                {last&&<div style={{fontSize:12,color:"var(--l)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{last.txt||last.texte}</div>}
               </div>
               {unread>0&&<span className="badge"style={{background:"var(--T)",color:"white"}}>{unread}</span>}
             </div>;})}
@@ -4312,7 +4321,7 @@ function Recap({enfants,role,pEId}){
 //
 function CompteRenduTrimestriel({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
-  const [trim,setTrim]=useState("T1 2024");
+  const [trim,setTrim]=useState("T"+(Math.floor(new Date().getMonth()/3)+1)+" "+new Date().getFullYear());
   const [idx,setIdx]=useState(0);
   const [cr,setCr]=useState("");
   const [loading,setLoading]=useState(false);
@@ -4348,7 +4357,7 @@ function CompteRenduTrimestriel({enfants,role,pEId}){
             <div style={{flex:1}}>
               <label className="lbl">Trimestre</label>
               <select className="sel"value={trim}onChange={e=>{setTrim(e.target.value);setCr("");setEnvoye(false);}}>
-                {["T1 2024","T2 2024","T3 2024","T4 2023","T3 2023"].map(t=><option key={t}>{t}</option>)}
+                {(()=>{const now=new Date();let q=Math.floor(now.getMonth()/3)+1,y=now.getFullYear();const out=[];for(let i=0;i<5;i++){let qq=q-i,yy=y;while(qq<=0){qq+=4;yy--;}out.push("T"+qq+" "+yy);}return out;})().map(t=><option key={t}>{t}</option>)}
               </select>
             </div>
             <button className="btn bP"onClick={generer}disabled={loading}>
@@ -7243,18 +7252,18 @@ function CommunicationPMI({role,user,hasRealData}){
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>📋 Mon agrément</div>
-          {[["N° agrément","AGR-2019-0042"],["Délivré le","15/09/2019"],["Renouvellement","Juin 2024"],["Enfants autorisés","4 simultanément"],["Statut","✅ Valide"]].map(([l,v])=>
+          {[["N° agrément","AGR-"+(new Date().getFullYear()-3)+"-0042"],["Délivré le","15/09/"+(new Date().getFullYear()-3)],["Renouvellement","Septembre "+(new Date().getFullYear()+2)],["Enfants autorisés","4 simultanément"],["Statut","✅ Valide"]].map(([l,v])=>
             <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
               <span style={{color:"var(--l)"}}>{l}</span>
               <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
             </div>)}
-          <div style={{marginTop:10,padding:"8px 12px",background:"#FFF8E6",borderRadius:9,border:"1px solid #E8B820",fontSize:12,color:"#7A5500"}}>
-            ⚠️ Renouvellement à prévoir dans 2 mois - contacter la PMI
+          <div style={{marginTop:10,padding:"8px 12px",background:"#EAF4EE",borderRadius:9,border:"1px solid var(--S)",fontSize:12,color:"var(--S)"}}>
+            💡 TiMat vous préviendra à l'approche du renouvellement de votre agrément.
           </div>
         </div>
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📁 Documents officiels</div>
-          {[["Agrément PMI 2024","✅"],["Assurance RC Pro","✅"],["Formation Continue","⏳"]].map(([n,s])=>
+          {[["Agrément PMI "+(new Date().getFullYear()-3),"✅"],["Assurance RC Pro","✅"],["Formation Continue","⏳"]].map(([n,s])=>
             <div key={n}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
               <span style={{fontSize:13,color:"var(--b)"}}>{n}</span>
               <span>{s}</span>
@@ -8940,7 +8949,7 @@ function KitCMG({enfants,role,pEId,user}){
             <span>👩👧</span> Votre assistante maternelle
           </div>
           <InfoRow label="Nom complet" value={asmat.prenom+" "+asmat.nom} copyKey="asmNom"/>
-          <InfoRow label="N° agrément" value="AGR-2019-0042" copyKey="agrement"/>
+          <InfoRow label="N° agrément" value={user?.numero_agrement||user?.agrement||("AGR-"+(new Date().getFullYear()-3)+"-0042")} copyKey="agrement"/>
           <InfoRow label="Email professionnel" value={user?.email||"marie.dupont@timat.app"} copyKey="asmEmail"/>
           <InfoRow label="Code postal" value="75015" copyKey="cp"/>
           <InfoRow label="Commune" value="Paris 15e" copyKey="commune"/>
@@ -10098,6 +10107,14 @@ function SimulateurCout({enfants,pEId}){
 
   return <div className="fi">
     <PageHeader icon="🧮" title="Simulateur de coût" sub="Estimez le coût réel de la garde après aides CAF et crédit d'impôt"/>
+    {/* Coup d'oeil — reste a charge en un regard (repere Pandi-Panda : comprendre le cout reel) */}
+    <div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Gp))",padding:"16px 18px"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Reste à charge estimé · par mois</div>
+        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{fmt2(resteCharge)}</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>après aide CMG ({fmt2(cmgMensuel)}) et crédit d'impôt ({fmt2(creditImpot)})</div>
+      </div>
+    </div>
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
