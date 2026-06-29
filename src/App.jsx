@@ -2692,6 +2692,8 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
   const absMois=abs.filter(a=>a.eId===enfant?.id);
   const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||4.05)*(contrat?.indemniteAbsence||0.5)),0);
   const totalBrut=salBrut+indemAbs;
+  const moisCourant=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+  const netEstime=totalBrut*0.78;
 
   const exportPajemploi=()=>{
     const w=window.open('','_blank');
@@ -2756,10 +2758,28 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
+    {/* Coup d'oeil — total du mois en un regard (repere Pandi-Panda) */}
+    {contrat&&<div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Total brut · {moisCourant}</div>
+        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{totalBrut.toFixed(2)} €</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{h.real} h{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {netEstime.toFixed(2)} €</div>
+      </div>
+      <div className="g3"style={{padding:14,gap:10}}>
+        {[["Heures × taux",(h.real*contrat.tauxHoraire).toFixed(2)+" €","var(--B)","var(--Bp)"],
+          ["Entretien",(h.real/5*contrat.entretien).toFixed(2)+" €","var(--S)","var(--Sp)"],
+          ["Net estimé",netEstime.toFixed(2)+" €","var(--T)","var(--Tp)"],
+        ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
+          <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
+          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+        </div>)}
+      </div>
+    </div>}
+
     {contrat&&<div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)"}}>💰 Salaire Mars 2024 - {enfant?.prenom}</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)"}}>💰 Salaire {moisCourant} — {enfant?.prenom}</div>
           {[["Heures réalisées",h.real+"h × "+contrat.tauxHoraire+"€",(h.real*contrat.tauxHoraire).toFixed(2)+"€"],
             ["Indemnité entretien",h.real+" jrs × "+contrat.entretien+"€",(h.real/5*contrat.entretien).toFixed(2)+"€"],
             ["Absences indemnisées",absMois.filter(a=>a.indemnise).length+" jours","+"+indemAbs.toFixed(2)+"€"],
@@ -2783,7 +2803,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:11,color:"var(--l)"}}>Export direct vers l'URSSAF</div></div>
           </div>
           <div style={{fontSize:13,color:"var(--b)",marginBottom:12,lineHeight:1.6}}>
-            Heures : <strong>{h.real}h</strong> · Salaire net : <strong>{(totalBrut*0.78).toFixed(2)}€</strong> · Mois : <strong>Mars 2024</strong>
+            Heures : <strong>{h.real}h</strong> · Salaire net : <strong>{netEstime.toFixed(2)}€</strong> · Mois : <strong>{moisCourant}</strong>
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exportPajemploi}>
             🏛️ Exporter vers Pajemploi
@@ -5990,13 +6010,16 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
     {isDemo
       ? <div className="card"style={{padding:20,textAlign:"center",color:"var(--m)",fontSize:13}}>Exemple — disponible dans l'application réelle.</div>
       : <div>
-          {/* Total + bouton ajouter */}
-          <div className="card"style={{padding:16,marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-            <div>
-              <div style={{fontSize:13,color:"var(--m)"}}>Total versé{enfant?.prenom?(" pour "+enfant.prenom):""}</div>
-              <div style={{fontSize:18,fontWeight:800,color:"var(--T)"}}>{fmtEur(totalVerse)}</div>
+          {/* Coup d'oeil — total verse + statut en un regard (repere Pandi-Panda) */}
+          <div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
+            <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Gp))",padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Total versé{enfant?.prenom?(" · "+enfant.prenom):""}</div>
+                <div className="pf"style={{fontSize:28,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{fmtEur(totalVerse)}</div>
+                {suivi.duMensuel>0&&<div style={{fontSize:11.5,fontWeight:700,marginTop:3,color:suivi.ecart>1?"var(--R)":"var(--S)"}}>{suivi.ecart>1?((role==="parent"?"Reste à verser : ":"Reste dû : ")+fmtEur(suivi.ecart)):"À jour ✓"}</div>}
+              </div>
+              {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{flexShrink:0,padding:"10px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"#fff":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
             </div>
-            {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{padding:"9px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"var(--c)":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
           </div>
 
           {/* #5 - Suivi du / verse (assmat: relance ; parent: enregistrer) */}
@@ -9879,15 +9902,15 @@ function RecapFiscalAssmat({enfants,user}){
         {l.moisCouverts>0&&l.moisCouverts<12&&<div style={{marginTop:8,fontSize:11.5,color:"var(--R)"}}>⚠️ {l.moisCouverts}/12 mois de bulletins enregistrés — total incomplet tant que tous les bulletins ne sont pas émis.</div>}
       </div>)}
 
-      <div className="card" style={{padding:"16px 18px",marginBottom:12,background:"var(--Bp)",border:"1.5px solid var(--Bp)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-          <div>
-            <div style={{fontSize:12,color:"var(--l)"}}>Total net imposable {annee} à déclarer</div>
-            <div style={{fontWeight:800,fontSize:24,color:"var(--B)"}}>{eur(totalNet)}</div>
+      <div className="card" style={{padding:0,marginBottom:12,overflow:"hidden"}}>
+        <div style={{background:"linear-gradient(135deg,var(--Bp),var(--Gp))",padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--B)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Total net imposable {annee} à déclarer</div>
+            <div className="pf" style={{fontWeight:800,fontSize:28,color:"var(--b)",lineHeight:1.1}}>{eur(totalNet)}</div>
           </div>
-          <button className="btn bT" style={{fontSize:13}} onClick={imprimer}>🖨️ Version imprimable / PDF</button>
+          <button className="btn bT" style={{fontSize:13,flexShrink:0}} onClick={imprimer}>🖨️ Version imprimable / PDF</button>
         </div>
-        <div style={{fontSize:11.5,color:"var(--m)",marginTop:8,lineHeight:1.6}}>
+        <div style={{padding:"12px 18px",fontSize:11.5,color:"var(--m)",lineHeight:1.6,borderTop:"1px solid var(--br)"}}>
           À reporter sur la <b>déclaration 2042 C PRO</b> (rubrique « traitements et salaires », cases blanches de la famille <b>1GA</b> — vérifiez la case exacte sur votre déclaration). Sans la 2042 C PRO, le fisc applique l'abattement de 10 % par défaut, moins favorable.
         </div>
       </div>
