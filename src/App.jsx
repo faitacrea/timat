@@ -2004,11 +2004,14 @@ function RepasChanges({enfants,role,pEId}){
               <input className="inp"value={re[f]!==undefined?re[f]:erp?.[f]||""}
                 onChange={e=>setRe(p=>({...p,[f]:e.target.value}))} placeholder={l+"..."}/>
             </div>)}
-          <div style={{marginBottom:8}}>
+          <div style={{marginBottom:10}}>
             <label className="lbl">Appétit</label>
-            <select className="sel"value={re.q??erp?.q??"bien"}onChange={e=>setRe(p=>({...p,q:e.target.value}))}>
-              <option value="bien">✅ Bon appétit</option><option value="peu">🟡 Peu mangé</option><option value="refus">🔴 Refus</option>
-            </select>
+            <div style={{display:"flex",gap:6}}>
+              {[["bien","✅ Bon","var(--S)"],["peu","🟡 Peu","#B8892A"],["refus","🔴 Refus","var(--R)"]].map(([v,l,c])=>{
+                const on=(re.q??erp?.q??"bien")===v;
+                return <button key={v} type="button" onClick={()=>setRe(p=>({...p,q:v}))} style={{flex:1,padding:"10px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
+              })}
+            </div>
           </div>
           <button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer les repas</button>
         </div>}
@@ -2020,8 +2023,8 @@ function RepasChanges({enfants,role,pEId}){
           {echs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun change.</div>}
           {echs.map(c=><div key={c.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"var(--c)",borderRadius:9}}>
             <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.h}</span>
-            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":"var(--Gp)",color:c.type==="Propre"?"var(--S)":"var(--G)"}}>
-              {c.type==="Propre"?"✅ Propre":"🔄 Change"}</span>
+            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":c.type==="Selles"?"#FBF0DD":"var(--Gp)",color:c.type==="Propre"?"var(--S)":c.type==="Selles"?"#B8892A":"var(--G)"}}>
+              {c.type==="Propre"?"✅ Propre":c.type==="Selles"?"💩 Selles":"🔄 Change"}</span>
             {c.n&&<span style={{fontSize:11,color:"var(--m)",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.n}</span>}
           </div>)}
         </div>
@@ -2030,9 +2033,16 @@ function RepasChanges({enfants,role,pEId}){
         </div>
         {role==="asmat"&&<div style={{paddingTop:12,borderTop:"1px solid var(--br)"}}>
           <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>+ Ajouter un change</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8,marginBottom:8}}>
             <div><label className="lbl">Heure</label><input type="time"className="inp"value={nch.h}onChange={e=>setNch(p=>({...p,h:e.target.value}))}/></div>
-            <div><label className="lbl">Type</label><select className="sel"value={nch.type}onChange={e=>setNch(p=>({...p,type:e.target.value}))}><option>Change</option><option>Propre</option></select></div>
+            <div><label className="lbl">Type</label>
+              <div style={{display:"flex",gap:6}}>
+                {[["Change","🔄 Change","var(--G)"],["Propre","✅ Propre","var(--S)"],["Selles","💩 Selles","#B8892A"]].map(([v,l,c])=>{
+                  const on=nch.type===v;
+                  return <button key={v} type="button" onClick={()=>setNch(p=>({...p,type:v}))} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:11.5,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
+                })}
+              </div>
+            </div>
           </div>
           <input className="inp"style={{marginBottom:8}}placeholder="Note (optionnel)"value={nch.n}onChange={e=>setNch(p=>({...p,n:e.target.value}))}/>
           <button className="btn bT"style={{width:"100%"}}onClick={addCh}>+ Ajouter</button>
@@ -3174,47 +3184,76 @@ function Sante({enfants,role,pEId}){
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
-    {enfant&&<div className="g2">
+    {enfant&&<>
+      {/* En-tete enfant + groupe sanguin */}
+      <div className="card"style={{padding:16,marginBottom:12,display:"flex",alignItems:"center",gap:14,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",left:0,top:0,bottom:0,width:5,background:enfant.couleur||"var(--T)"}}/>
+        <AvatarEnfant e={enfant} size={48}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--b)"}}>{enfant.prenom}</div>
+          <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Carnet de santé</div>
+        </div>
+        {enfant.groupe_sanguin&&<div style={{textAlign:"center",background:"var(--Rp)",borderRadius:12,padding:"8px 14px",flexShrink:0}}>
+          <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--R)",lineHeight:1}}>{enfant.groupe_sanguin}</div>
+          <div style={{fontSize:9,color:"var(--R)",marginTop:2,fontWeight:600,textTransform:"uppercase"}}>Groupe</div>
+        </div>}
+      </div>
+
+    <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {/* Identité médicale */}
-        <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🪪 Identité médicale</div>
-          {[["Groupe sanguin",enfant.groupe_sanguin||"-"],["Médecin traitant",enfant.medecin||"-"]].map(([l,v])=>
-            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
-              <span style={{fontSize:12,color:"var(--l)",fontWeight:700}}>{l}</span>
-              <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{v}</span>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>🪪</span> Identité médicale</div>
+          {[["Groupe sanguin",enfant.groupe_sanguin||"—"],["Médecin traitant",enfant.medecin||"—"]].map(([l,v],i,arr)=>
+            <div key={l}style={{display:"flex",justifyContent:"space-between",gap:10,padding:"9px 0",borderBottom:i<arr.length-1?"1px solid var(--br)":"none"}}>
+              <span style={{fontSize:12,color:"var(--l)",fontWeight:600}}>{l}</span>
+              <span style={{fontSize:13,fontWeight:600,color:"var(--b)",textAlign:"right"}}>{v}</span>
             </div>)}
         </div>
 
         {/* Allergies ALLERGIES P6 */}
-        <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>⚠️ Allergies</div>
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>⚠️</span> Allergies</div>
           {(enfant.allergies||[]).length===0
-            ?<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>✅ Aucune allergie connue</span>
-            :<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,padding:"5px 12px",display:"inline-flex",alignItems:"center",gap:6}}>⚠️ {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
+            ?<div style={{display:"inline-flex",alignItems:"center",gap:7,background:"var(--Sp)",color:"var(--S)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600}}>✅ Aucune allergie connue</div>
+            :<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+              {(enfant.allergies||[]).map(a=><span key={a}style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,fontWeight:600,padding:"6px 13px",borderRadius:10,display:"inline-flex",alignItems:"center",gap:7}}>⚠️ {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
             </div>}
-          {role==="parent"?<div style={{marginTop:12,display:"flex",gap:8}}>
+          {role==="parent"?<div style={{marginTop:14,display:"flex",gap:8}}>
             <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
-            <button className="btn bT"style={{fontSize:12}}onClick={addAllergie}>+</button>
-          </div>:<div style={{marginTop:10,fontSize:11,color:"var(--l)"}}>ℹ️ Allergies renseignées et tenues à jour par le parent.</div>}
+            <button className="btn bT"style={{fontSize:13,padding:"0 16px"}}onClick={addAllergie}>+</button>
+          </div>:<div style={{marginTop:12,fontSize:11,color:"var(--l)"}}>ℹ️ Renseignées et tenues à jour par le parent.</div>}
         </div>
       </div>
+
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
-
-        {/* Urgences */}
-        <div className="card"style={{padding:16,background:"#FFF5F5",border:"1px solid #FCA5A5"}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:10,color:"#DC2626"}}>🚨 En cas d'urgence</div>
-          {[["SAMU","15"],["Pompiers","18"],["Médecin traitant",enfant.medecin?.split("-")[1]?.trim()||"-"]].map(([l,v])=>
-            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #FCA5A550"}}>
-              <span style={{fontSize:13,color:"#7F1D1D"}}>{l}</span>
-              <span style={{fontWeight:700,color:"#DC2626",fontSize:14}}>{v}</span>
-            </div>)}
+        {/* Urgences - numeros cliquables */}
+        <div className="card"style={{padding:18,background:"#FFF5F5",border:"1px solid #FCA5A5"}}>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"#DC2626",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>🚨</span> En cas d'urgence</div>
+          <div style={{fontSize:11,color:"#9B5757",marginBottom:12}}>Touchez un numéro pour appeler directement.</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {[["SAMU","15","🚑"],["Pompiers","18","🚒"],["Urgences (Europe)","112","📞"]].map(([l,v,ic])=>
+              <a key={l}href={"tel:"+v}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none"}}>
+                <span style={{fontSize:17}}>{ic}</span>
+                <span style={{fontSize:13,color:"#7F1D1D",flex:1,fontWeight:600}}>{l}</span>
+                <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:16}}>{v}</span>
+              </a>)}
+            {(()=>{const tel=enfant.medecin?.split("-")[1]?.trim();return tel?<a href={"tel:"+tel.replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none"}}>
+              <span style={{fontSize:17}}>👨‍⚕️</span>
+              <span style={{fontSize:13,color:"#7F1D1D",flex:1,fontWeight:600}}>Médecin traitant</span>
+              <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14}}>{tel}</span>
+            </a>:null;})()}
+          </div>
         </div>
 
+        {/* Vaccins & croissance - acces rapide aux autres onglets */}
+        <div className="card"style={{padding:18}}>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>📑</span> Suivi médical</div>
+          <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>Le <b>calendrier vaccinal</b> et la <b>courbe de croissance</b> sont disponibles dans les onglets dédiés ci-dessus.</div>
+        </div>
       </div>
-
-    </div>}
+    </div>
+    </>}
   </div>;
 }
 
@@ -6464,13 +6503,14 @@ function Sommeil({enfants,role,pEId}){
             <div><label className="lbl">Début</label><input type="time"className="inp"value={nS.debut}onChange={e=>setNS(p=>({...p,debut:e.target.value}))}/></div>
             <div><label className="lbl">Fin</label><input type="time"className="inp"value={nS.fin}onChange={e=>setNS(p=>({...p,fin:e.target.value}))}/></div>
           </div>
-          <div style={{marginBottom:10}}>
+          <div style={{marginBottom:12}}>
             <label className="lbl">Qualité</label>
-            <select className="sel"value={nS.qualite}onChange={e=>setNS(p=>({...p,qualite:e.target.value}))}>
-              <option value="bien">✅ Bonne sieste</option>
-              <option value="agite">🟡 Agitée</option>
-              <option value="court">🔴 Trop courte</option>
-            </select>
+            <div style={{display:"flex",gap:6}}>
+              {[["bien","✅ Bonne","var(--S)"],["agite","🟡 Agitée","#B8892A"],["court","🔴 Courte","var(--R)"]].map(([v,l,c])=>{
+                const on=nS.qualite===v;
+                return <button key={v} type="button" onClick={()=>setNS(p=>({...p,qualite:v}))} style={{flex:1,padding:"10px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
+              })}
+            </div>
           </div>
           <button className="btn bS"style={{width:"100%"}}onClick={ajout}>Enregistrer</button>
         </div>}
@@ -8143,6 +8183,17 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
   moments.sort((x,y)=>{if(x.time&&y.time)return x.time<y.time?-1:1;if(x.time&&!y.time)return -1;if(!x.time&&y.time)return 1;return 0;});
   const remplis=[!!(repas&&(repas.dej||repas.gou||repas.bib)),siestes.length>0,activites.length>0,changes.length>0,!!(cahier&&cahier.mot_du_jour),photos.length>0];
   const pctJour=Math.round(100*remplis.filter(Boolean).length/remplis.length);
+  const sommeilMin=siestes.reduce((t,s)=>{const m=String(s.duree||"").match(/(\d+)\s*h\s*(\d+)?/);return t+(m?(parseInt(m[1])*60+(parseInt(m[2])||0)):0);},0);
+  const sommeilTxt=sommeilMin>0?(Math.floor(sommeilMin/60)+"h"+String(sommeilMin%60).padStart(2,"0")):"—";
+  const appLabel=(repas&&repas.q)?({bien:"Bon",peu:"Peu",refus:"Refus"}[repas.q]||"—"):"—";
+  const appIc=(repas&&repas.q)?({bien:"🍽️",peu:"🍽️",refus:"🍽️"}[repas.q]):"🍽️";
+  const appColor=(repas&&repas.q)?({bien:"var(--S)",peu:"#B8892A",refus:"var(--R)"}[repas.q]):"var(--l)";
+  const coupOeil=[
+    {ic:appIc,v:appLabel,l:"Appétit",c:appColor},
+    {ic:"😴",v:sommeilTxt,l:"Sommeil",c:"var(--B)"},
+    {ic:"👶",v:String(changes.length),l:changes.length>1?"Changes":"Change",c:"var(--G)"},
+    {ic:humeurAff||"🙂",v:humeurAff?"":"—",l:"Humeur",c:"var(--T)"},
+  ];
 
   if(!enfant)return <div className="fi"><PageHeader icon="📔" title="Cahier du jour" sub="Aucun enfant lié."/></div>;
 
@@ -8174,6 +8225,15 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
         <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>{humeurAff?"Humeur du jour":"Journée en cours"}</div>
       </div>
       {humeurAff&&<span style={{fontSize:38}}>{humeurAff}</span>}
+    </div>
+
+    {/* Coup d'oeil - rythme de la journee en un regard (facon Pandi-Panda) */}
+    <div className="card"style={{padding:"4px",marginBottom:12,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:0,overflow:"hidden"}}>
+      {coupOeil.map((k,i)=><div key={k.l}style={{padding:"12px 6px",textAlign:"center",borderLeft:i>0?"1px solid var(--br)":"none"}}>
+        <div style={{fontSize:20,lineHeight:1}}>{k.ic}</div>
+        {k.v&&<div className="pf"style={{fontSize:14,fontWeight:700,color:k.c,marginTop:5,lineHeight:1.1,wordBreak:"break-word"}}>{k.v}</div>}
+        <div style={{fontSize:10,color:"var(--l)",marginTop:3,fontWeight:600,textTransform:"uppercase",letterSpacing:".3px"}}>{k.l}</div>
+      </div>)}
     </div>
 
     {/* Photos */}
