@@ -3128,11 +3128,19 @@ function Contrats({enfants,role,pEId,user}){
 }
 
 //
-function Sante({enfants,role,pEId}){
+function Sante({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [newAllergie,setNewAllergie]=useState(""); // ALLERGIES P6
+  const [fiche,setFiche]=useState(null); // fiche d'urgence (remplie par le parent)
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+  useEffect(()=>{
+    if(!enfant?.id||["e1","e2","e3"].includes(enfant.id)){setFiche(null);return;}
+    let alive=true;
+    supabase.from("fiche_urgence").select("data").eq("enfant_id",enfant.id).maybeSingle()
+      .then(({data})=>{if(alive)setFiche(data?.data||null);}).catch(()=>{if(alive)setFiche(null);});
+    return()=>{alive=false;};
+  },[enfant?.id]);
   const addAllergie=async()=>{ // ALLERGIES P6
     const v=newAllergie.trim();
     if(!v||!enfant?.id)return;
@@ -3178,6 +3186,24 @@ function Sante({enfants,role,pEId}){
   };
   const isRealChild=!["e1","e2","e3"].includes(enfant?.id);
   const vacs=isRealChild?[]:(enfant?.vaccins||[]);
+  // Identité médicale connectée à la fiche d'urgence (remplie par le parent), avec repli sur les champs enfant
+  const grp=fiche?.groupe||enfant?.groupe_sanguin||"";
+  const medNom=fiche?.medecin||(enfant?.medecin?enfant.medecin.split("-")[0].trim():"");
+  const medTel=fiche?.medecinTel||(enfant?.medecin?.split("-")[1]?.trim()||"");
+  const ficheAJour=!!fiche;
+  const dep=user?.code_postal?.slice(0,2)||user?.departement||"";
+  const pmi=(typeof PMI_PAR_DEP!=="undefined")?(PMI_PAR_DEP[dep]||PMI_PAR_DEP["default"]):null;
+  const pmiTel=(pmi&&/\d/.test(pmi.tel||""))?pmi.tel:"";
+  const urgences=[
+    {l:"SAMU",v:"15",ic:"🚑"},
+    {l:"Pompiers",v:"18",ic:"🚒"},
+    {l:"Police",v:"17",ic:"👮"},
+    {l:"Urgences (Europe)",v:"112",ic:"📞"},
+    {l:"Enfance en danger",v:"119",ic:"🛟"},
+    {l:"Violences conjugales",v:"3919",ic:"💜"},
+  ];
+  if(pmiTel)urgences.push({l:pmi.nom||"PMI",v:pmiTel,ic:"🏛️"});
+  if(medTel)urgences.push({l:"Médecin traitant",v:medTel,ic:"👨‍⚕️"});
 
   return <div className="fi">
     <PageHeader icon="🏥" title="Carnet de santé" sub="Informations médicales, vaccins, allergies"/>
@@ -3193,22 +3219,28 @@ function Sante({enfants,role,pEId}){
           <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--b)"}}>{enfant.prenom}</div>
           <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Carnet de santé</div>
         </div>
-        {enfant.groupe_sanguin&&<div style={{textAlign:"center",background:"var(--Rp)",borderRadius:12,padding:"8px 14px",flexShrink:0}}>
-          <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--R)",lineHeight:1}}>{enfant.groupe_sanguin}</div>
+        {grp&&<div style={{textAlign:"center",background:"var(--Rp)",borderRadius:12,padding:"8px 14px",flexShrink:0}}>
+          <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--R)",lineHeight:1}}>{grp}</div>
           <div style={{fontSize:9,color:"var(--R)",marginTop:2,fontWeight:600,textTransform:"uppercase"}}>Groupe</div>
         </div>}
       </div>
 
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        {/* Identité médicale */}
+        {/* Identité médicale - connectée à la fiche d'urgence */}
         <div className="card"style={{padding:18}}>
           <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>🪪</span> Identité médicale</div>
-          {[["Groupe sanguin",enfant.groupe_sanguin||"—"],["Médecin traitant",enfant.medecin||"—"]].map(([l,v],i,arr)=>
+          {[["Groupe sanguin",grp||"—"],["Médecin traitant",medNom||"—"],["Tél. médecin",medTel||"—"]].map(([l,v],i,arr)=>
             <div key={l}style={{display:"flex",justifyContent:"space-between",gap:10,padding:"9px 0",borderBottom:i<arr.length-1?"1px solid var(--br)":"none"}}>
               <span style={{fontSize:12,color:"var(--l)",fontWeight:600}}>{l}</span>
               <span style={{fontSize:13,fontWeight:600,color:"var(--b)",textAlign:"right"}}>{v}</span>
             </div>)}
+          <div style={{marginTop:12,fontSize:11,color:"var(--l)",display:"flex",alignItems:"flex-start",gap:6,lineHeight:1.5}}>
+            <span>🔗</span>
+            <span>{role==="parent"
+              ?<>Ces informations proviennent de la <b>Fiche d'urgence</b>. Tenez-la à jour pour que votre assistante maternelle ait toujours le bon groupe sanguin et le bon médecin.{!ficheAJour&&<span style={{color:"var(--R)"}}> (fiche non renseignée)</span>}</>
+              :<>Renseigné par le parent via la <b>Fiche d'urgence</b>.{!ficheAJour&&<span style={{color:"var(--R)"}}> Fiche pas encore remplie par le parent.</span>}</>}</span>
+          </div>
         </div>
 
         {/* Allergies ALLERGIES P6 */}
@@ -3232,21 +3264,17 @@ function Sante({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"#DC2626",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>🚨</span> En cas d'urgence</div>
           <div style={{fontSize:11,color:"#9B5757",marginBottom:12}}>Touchez un numéro pour appeler directement.</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {[["SAMU","15","🚑"],["Pompiers","18","🚒"],["Urgences (Europe)","112","📞"]].map(([l,v,ic])=>
-              <a key={l}href={"tel:"+v}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none"}}>
-                <span style={{fontSize:17}}>{ic}</span>
-                <span style={{fontSize:13,color:"#7F1D1D",flex:1,fontWeight:600}}>{l}</span>
-                <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:16}}>{v}</span>
+            {urgences.map((u,i)=>
+              <a key={u.l+i}href={"tel:"+String(u.v).replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none"}}>
+                <span style={{fontSize:17}}>{u.ic}</span>
+                <span style={{fontSize:12.5,color:"#7F1D1D",flex:1,fontWeight:600,minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{u.l}</span>
+                <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
-            {(()=>{const tel=enfant.medecin?.split("-")[1]?.trim();return tel?<a href={"tel:"+tel.replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none"}}>
-              <span style={{fontSize:17}}>👨‍⚕️</span>
-              <span style={{fontSize:13,color:"#7F1D1D",flex:1,fontWeight:600}}>Médecin traitant</span>
-              <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14}}>{tel}</span>
-            </a>:null;})()}
           </div>
+          <div style={{marginTop:10,fontSize:10.5,color:"#9B5757",lineHeight:1.5}}>🛟 119 : Enfance en danger · 💜 3919 : Violences conjugales</div>
         </div>
 
-        {/* Vaccins & croissance - acces rapide aux autres onglets */}
+        {/* Suivi medical - acces autres onglets */}
         <div className="card"style={{padding:18}}>
           <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>📑</span> Suivi médical</div>
           <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>Le <b>calendrier vaccinal</b> et la <b>courbe de croissance</b> sont disponibles dans les onglets dédiés ci-dessus.</div>
@@ -8356,7 +8384,7 @@ function JournalComplet({enfants,role,pEId,user}){
 }
 
 //
-function SanteComplete({enfants,role,pEId}){
+function SanteComplete({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sec,setSec]=useState("sante");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
@@ -8452,7 +8480,7 @@ function SanteComplete({enfants,role,pEId}){
       </button>)}
     </div>
 
-    {sec==="sante"&&<Sante enfants={liste}role={role}pEId={selId}/>}
+    {sec==="sante"&&<Sante enfants={liste}role={role}pEId={selId} user={user}/>}
     {sec==="croissance"&&<CourbeCroissance enfants={liste}role={role}pEId={selId}/>}
     {sec==="vaccins"&&<div>
       <PageHeader icon="💉" title="Suivi vaccinal" sub="Calendrier vaccinal officiel - rappels automatiques"/>
