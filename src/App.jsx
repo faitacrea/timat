@@ -5152,12 +5152,13 @@ function BulletinSalaire({enfants,role,pEId,user}){
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);}}/>)}
     </div>}
+    <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>Choisir le mois</div>
     <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
       {moisDisponibles.slice(0,8).map(m=>{
         const env=bulletinsEnvoyes[m.key];
         return <button key={m.label}onClick={()=>setMoisSel(m.label)}style={{
-          padding:"6px 14px",borderRadius:8,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-          background:moisSel===m.label?"var(--b)":"transparent",color:moisSel===m.label?"#fff":"var(--m)",
+          padding:"7px 15px",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
+          background:moisSel===m.label?"var(--b)":"#fff",color:moisSel===m.label?"#fff":"var(--m)",
           borderColor:moisSel===m.label?"var(--b)":(env?.envoye_au_parent?"var(--S)":"var(--br)"),
           position:"relative"}}>
           {m.label}
@@ -5189,6 +5190,24 @@ function BulletinSalaire({enfants,role,pEId,user}){
         const{error}=await supabase.from("contrats").update({aeeh:!!aeeh,repas:Number(repasJour)||0}).eq("id",contrat.id);
         setToast(error?("Erreur : "+error.message):"Réglages enregistrés dans le contrat ✓");
       }}>💾 Enregistrer dans le contrat</button>}
+    </div>
+
+    {/* Coup d'oeil — le resultat du bulletin en un regard (repere Pandi-Panda : lisibilite immediate) */}
+    <div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,var(--Sp),var(--Bp))",padding:"16px 18px"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--B)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Net à payer · {moisSel}</div>
+        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{netPaye.toFixed(2)} €</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{joursTravailles} jour{joursTravailles>1?"s":""} d'accueil · {Math.round(h.real)} h ce mois{useRealHours?" (pointages réels)":""}</div>
+      </div>
+      <div className="g3"style={{padding:14,gap:10}}>
+        {[["Salaire brut",brut.toFixed(2)+" €","var(--B)","var(--Bp)"],
+          ["Indemnités",(entretien+repasMois).toFixed(2)+" €","var(--T)","var(--Tp)"],
+          ["Coût employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+" €","var(--m)","var(--c)"],
+        ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
+          <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
+          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+        </div>)}
+      </div>
     </div>
 
     <div className="card"style={{padding:24,border:"2px solid var(--br)"}}>
@@ -5249,14 +5268,21 @@ function BulletinSalaire({enfants,role,pEId,user}){
       <div style={{background:"var(--c)",borderRadius:10,padding:14,marginBottom:16}}>
         {[["Salaire brut",brut.toFixed(2)+"€","var(--b)"],
           ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
-          ["NET À PAYER",netPaye.toFixed(2)+"€","var(--S)"],
-          ["Net imposable",netImposable.toFixed(2)+"€","var(--B)"],
+        ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
+          borderBottom:"1px solid var(--br)",fontSize:12}}>
+          <span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:700,color:c}}>{v}</span>
+        </div>)}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"var(--Sp)",borderRadius:10,padding:"12px 14px",margin:"10px 0"}}>
+          <span style={{fontSize:13,fontWeight:800,color:"var(--S)",textTransform:"uppercase",letterSpacing:".3px"}}>Net à payer</span>
+          <span className="pf"style={{fontSize:20,fontWeight:800,color:"var(--S)"}}>{netPaye.toFixed(2)} €</span>
+        </div>
+        {[["Net imposable",netImposable.toFixed(2)+"€","var(--B)"],
           ["Abattement régime spécifique ("+abLabel+")","- "+abattementMois.toFixed(2)+"€","var(--m)"],
           ["Net imposable après abattement",netImpApresAbattement.toFixed(2)+"€","var(--B)"],
           ["Montant net social",netSocial.toFixed(2)+"€","var(--B)"],
           ["Coût total pour l'employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+"€","var(--m)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
-          borderBottom:"1px solid var(--br)",fontSize:l.includes("NET À")?14:12,fontWeight:l.includes("NET À")?700:400}}>
+          borderBottom:"1px solid var(--br)",fontSize:12}}>
           <span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:700,color:c}}>{v}</span>
         </div>)}
       </div>
