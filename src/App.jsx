@@ -3193,7 +3193,12 @@ function Sante({enfants,role,pEId,user}){
   const ficheAJour=!!fiche;
   const dep=user?.code_postal?.slice(0,2)||user?.departement||"";
   const pmi=(typeof PMI_PAR_DEP!=="undefined")?(PMI_PAR_DEP[dep]||PMI_PAR_DEP["default"]):null;
-  const pmiTel=(pmi&&/\d/.test(pmi.tel||""))?pmi.tel:"";
+  // Numéro PMI : priorité au numéro direct saisi dans le profil assmat (donné en formation),
+  // sinon repli sur l'annuaire PMI_PAR_DEP par département.
+  const pmiTelPerso=(user?.pmi_tel||"").trim();
+  const pmiTelAnnuaire=(pmi&&/\d/.test(pmi.tel||""))?pmi.tel:"";
+  const pmiTel=pmiTelPerso||pmiTelAnnuaire;
+  const pmiNom=pmi?.nom||"PMI";
   const urgences=[
     {l:"SAMU",v:"15",ic:"🚑"},
     {l:"Pompiers",v:"18",ic:"🚒"},
@@ -3202,7 +3207,7 @@ function Sante({enfants,role,pEId,user}){
     {l:"Enfance en danger",v:"119",ic:"🛟"},
     {l:"Violences conjugales",v:"3919",ic:"💜"},
   ];
-  if(pmiTel)urgences.push({l:pmi.nom||"PMI",v:pmiTel,ic:"🏛️"});
+  if(pmiTel)urgences.push({l:pmiNom,v:pmiTel,ic:"🏛️"});
   if(medTel)urgences.push({l:"Médecin traitant",v:medTel,ic:"👨‍⚕️"});
 
   return <div className="fi">
@@ -3271,7 +3276,7 @@ function Sante({enfants,role,pEId,user}){
                 <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
           </div>
-          <div style={{marginTop:10,fontSize:10.5,color:"#9B5757",lineHeight:1.5}}>🛟 119 : Enfance en danger · 💜 3919 : Violences conjugales</div>
+          {!pmiTel&&<div style={{marginTop:10,fontSize:10.5,color:"#9B5757",lineHeight:1.5}}>ℹ️ Ajoutez le numéro direct de votre PMI dans <b>Paramètres → Mon profil</b> pour l'avoir ici en un appui.</div>}
         </div>
 
         {/* Suivi medical - acces autres onglets */}
@@ -7804,6 +7809,24 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           </div>
           {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
             ✅ Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
+          </div>}
+        </div>}
+        {/* Numéro PMI direct — saisi manuellement (ex. donné en formation), prioritaire sur l'annuaire */}
+        {user?.role==="asmat"&&<div style={{marginTop:12}}>
+          <label className="lbl">Numéro direct de votre PMI (facultatif)</label>
+          <div style={{fontSize:11,color:"var(--l)",marginBottom:6,lineHeight:1.5}}>Le numéro de contact réel de votre PMI (souvent communiqué en formation). S'il est renseigné, c'est lui qui apparaîtra dans les numéros d'urgence du carnet de santé, à la place du numéro générique.</div>
+          <div style={{display:"flex",gap:8}}>
+            <input className="inp" defaultValue={user?.pmi_tel||""} id="pmitel-input" placeholder="ex: 01 43 99 12 34" style={{flex:1}}/>
+            <button className="btn bT" style={{fontSize:12}} onClick={async()=>{
+              const t=document.getElementById("pmitel-input")?.value?.trim()||"";
+              const{error}=await supabase.from("profiles").update({pmi_tel:t||null}).eq("id",user.id);
+              if(error){setToast("❌ Erreur : "+error.message);return;}
+              setUser&&setUser(u=>({...u,pmi_tel:t||null}));
+              setToast(t?"✅ Numéro PMI enregistré — visible dans le carnet de santé":"✅ Numéro PMI effacé — retour au numéro générique");
+            }}>Sauvegarder</button>
+          </div>
+          {user?.pmi_tel&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
+            ✅ Numéro PMI direct : {user.pmi_tel}
           </div>}
         </div>}
 
