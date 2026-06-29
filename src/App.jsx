@@ -4635,6 +4635,24 @@ function Documents({enfants,role,pEId,user}){
       sub="Tous les documents classés par année - téléchargeables et imprimables"
       action={role==="asmat"&&<button className="btn bT"onClick={()=>setShowUpload(!showUpload)}>+ Ajouter</button>}/>
 
+    {/* Coup d'oeil — ce qui est disponible en un regard (repere Pandi-Panda : tout au meme endroit, lisible) */}
+    <div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
+      <div style={{background:"linear-gradient(135deg,var(--Bp),var(--Sp))",padding:"15px 18px"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--B)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>{role==="parent"?"Vos documents":"Documents"}</div>
+        <div className="pf"style={{fontSize:26,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{liste.length} document{liste.length>1?"s":""}</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>classés par année, accessibles à tout moment et téléchargeables en PDF</div>
+      </div>
+      <div className="g3"style={{padding:14,gap:10}}>
+        {[["Contrats",contratDocs.length,"var(--B)","var(--Bp)"],
+          ["Bulletins de salaire",bulletinDocs.length,"var(--T)","var(--Tp)"],
+          ["Autres documents",Math.max(0,liste.length-contratDocs.length-bulletinDocs.length),"var(--S)","var(--Sp)"],
+        ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
+          <div className="pf"style={{fontSize:20,fontWeight:800,color:c,lineHeight:1.1}}>{v}</div>
+          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+        </div>)}
+      </div>
+    </div>
+
     {/* Formulaire ajout */}
     {showUpload&&<div className="card"style={{padding:18,marginBottom:16,border:"1.5px solid var(--T)"}}>
       <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>📎 Ajouter un document</div>
@@ -4712,9 +4730,10 @@ function Documents({enfants,role,pEId,user}){
     </div>
 
     {/* Documents par catégorie */}
-    {filtres.length===0&&<div className="card"style={{padding:40,textAlign:"center"}}>
-      <div style={{fontSize:40,marginBottom:8}}>🗂️</div>
-      <div style={{fontSize:14,color:"var(--l)"}}>Aucun document pour ces filtres.</div>
+    {filtres.length===0&&<div className="card"style={{padding:"36px 24px",textAlign:"center"}}>
+      <div style={{fontSize:40,marginBottom:10}}>🗂️</div>
+      <div style={{fontSize:14,fontWeight:700,color:"var(--b)",marginBottom:4}}>Aucun document pour ces filtres</div>
+      <div style={{fontSize:12.5,color:"var(--l)",lineHeight:1.6}}>{role==="parent"?"Votre contrat et vos bulletins de salaire apparaîtront ici dès qu'ils seront partagés par votre assistante maternelle.":"Ajoutez un document avec le bouton « + Ajouter », ou changez les filtres ci-dessus."}</div>
     </div>}
 
     {parCat.map(c=>(
@@ -8888,10 +8907,33 @@ function ListeAttente({role,enfants,user}){
 //
 function KitCMG({enfants,role,pEId,user}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
-  const asmat={...D.asmat,prenom:user?.prenom||D.asmat.prenom,nom:user?.nom||D.asmat.nom,email:user?.email||D.asmat.email};
   const contrat=enfant?.contrat||{};
+  const isDemoKit=enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const [copie,setCopie]=useState({});
   const [toast,setToast]=useState("");
+  const [asmatProfil,setAsmatProfil]=useState(null);
+  // Charger les VRAIES infos de l'assistante maternelle liee a l'enfant
+  // (cote parent, user = le parent, surtout pas l'assmat : il faut le profil de l'assmat du contrat)
+  useEffect(()=>{
+    if(isDemoKit){setAsmatProfil(null);return;}
+    const aid=contrat?.asmat_id||enfant?.asmat_id;
+    if(!aid){setAsmatProfil(null);return;}
+    let cancelled=false;
+    (async()=>{
+      const{data}=await supabase.from("profiles").select("prenom,nom,email,numero_agrement,code_postal").eq("id",aid).maybeSingle();
+      if(!cancelled)setAsmatProfil(data||null);
+    })();
+    return()=>{cancelled=true;};
+  },[contrat?.asmat_id,enfant?.asmat_id,isDemoKit]);
+  // Valeurs assmat : demo -> jeu d'exemple ; reel -> profil charge, repli sur les champs de l'enfant
+  const amPrenom=isDemoKit?D.asmat.prenom:(asmatProfil?.prenom||enfant?.prenomAsmat||"");
+  const amNom=isDemoKit?D.asmat.nom:(asmatProfil?.nom||enfant?.nomAsmat||"");
+  const amNomComplet=(amPrenom+" "+amNom).trim()||"À compléter";
+  const amEmail=isDemoKit?"marie.dupont@timat.app":(asmatProfil?.email||"À compléter");
+  const amAgrement=isDemoKit?D.asmat.agrement:(asmatProfil?.numero_agrement||"À compléter");
+  const amCP=isDemoKit?"75015":(asmatProfil?.code_postal||"À compléter");
+  const amCommune=isDemoKit?"Paris 15e":"À compléter";
+  const infosManquantes=!isDemoKit&&(!asmatProfil?.numero_agrement||!asmatProfil?.code_postal);
 
   const copy=(key,val)=>{
     navigator.clipboard?.writeText(val).catch(()=>{});
@@ -8941,6 +8983,10 @@ function KitCMG({enfants,role,pEId,user}){
       </a>
     </div>
 
+    {infosManquantes&&<div style={{background:"#FFF8E6",border:"1px solid #E8B820",borderRadius:12,padding:"12px 16px",marginBottom:20,fontSize:12.5,color:"#7A5500",lineHeight:1.6}}>
+      ⚠️ Certaines infos de votre assistante maternelle (agrément, code postal…) ne sont pas encore renseignées. Demandez-lui de compléter son profil dans TiMat pour que ce kit soit prêt à copier-coller.
+    </div>}
+
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {/* Infos assistante maternelle */}
@@ -8948,11 +8994,11 @@ function KitCMG({enfants,role,pEId,user}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
             <span>👩👧</span> Votre assistante maternelle
           </div>
-          <InfoRow label="Nom complet" value={asmat.prenom+" "+asmat.nom} copyKey="asmNom"/>
-          <InfoRow label="N° agrément" value={user?.numero_agrement||user?.agrement||("AGR-"+(new Date().getFullYear()-3)+"-0042")} copyKey="agrement"/>
-          <InfoRow label="Email professionnel" value={user?.email||"marie.dupont@timat.app"} copyKey="asmEmail"/>
-          <InfoRow label="Code postal" value="75015" copyKey="cp"/>
-          <InfoRow label="Commune" value="Paris 15e" copyKey="commune"/>
+          <InfoRow label="Nom complet" value={amNomComplet} copyKey="asmNom"/>
+          <InfoRow label="N° agrément" value={amAgrement} copyKey="agrement"/>
+          <InfoRow label="Email professionnel" value={amEmail} copyKey="asmEmail"/>
+          <InfoRow label="Code postal" value={amCP} copyKey="cp"/>
+          <InfoRow label="Commune" value={amCommune} copyKey="commune"/>
         </div>
 
         {/* Infos contrat */}
@@ -8997,7 +9043,7 @@ function KitCMG({enfants,role,pEId,user}){
         <div className="card"style={{padding:16,background:"var(--Tp)",border:"1px solid var(--Tl)"}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:8}}>🏛️ Pajemploi</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
-            Une fois déclaré sur monenfant.fr, vous devrez aussi déclarer les heures mensuelles sur <strong>Pajemploi</strong> pour que Marie soit payée et déclarée à l'URSSAF.
+            Une fois déclaré sur monenfant.fr, vous devrez aussi déclarer les heures mensuelles sur <strong>Pajemploi</strong> pour que {amPrenom||"votre assistante maternelle"} soit payée et déclarée à l'URSSAF.
           </div>
           <a href="https://www.pajemploi.urssaf.fr" target="_blank" rel="noopener noreferrer"
             style={{display:"inline-block",background:"var(--T)",color:"#fff",
@@ -10107,12 +10153,21 @@ function SimulateurCout({enfants,pEId}){
 
   return <div className="fi">
     <PageHeader icon="🧮" title="Simulateur de coût" sub="Estimez le coût réel de la garde après aides CAF et crédit d'impôt"/>
-    {/* Coup d'oeil — reste a charge en un regard (repere Pandi-Panda : comprendre le cout reel) */}
+    {/* Coup d'oeil — resultat complet en un regard (repere Pandi-Panda : comprendre le cout reel) */}
     <div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Gp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Reste à charge estimé · par mois</div>
         <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{fmt2(resteCharge)}</div>
-        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>après aide CMG ({fmt2(cmgMensuel)}) et crédit d'impôt ({fmt2(creditImpot)})</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>après aide CMG et crédit d'impôt</div>
+      </div>
+      <div className="g3"style={{padding:14,gap:10}}>
+        {[["Coût brut",fmt2(coutTotal),"var(--m)","var(--c)"],
+          ["Aide CMG","-"+fmt2(cmgMensuel),"var(--S)","var(--Sp)"],
+          ["Crédit d'impôt","-"+fmt2(creditImpot),"var(--B)","var(--Bp)"],
+        ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
+          <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
+          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+        </div>)}
       </div>
     </div>
     <div className="g2">
@@ -10167,22 +10222,6 @@ function SimulateurCout({enfants,pEId}){
       </div>
 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <div className="card"style={{padding:18,border:"2px solid var(--T)"}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--T)",marginBottom:16}}>💶 Résultat mensuel</div>
-          {[
-            ["Coût brut de la garde",fmt2(coutTotal),"var(--m)"],
-            ["Aide CMG (CAF)","-"+fmt2(cmgMensuel),"var(--S)"],
-            ["Crédit d'impôt (50%)","-"+fmt2(creditImpot),"var(--B)"],
-          ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
-            <span style={{fontSize:13,color:"var(--m)"}}>{l}</span>
-            <span style={{fontWeight:700,color:c}}>{v}</span>
-          </div>)}
-          <div style={{marginTop:12,padding:"14px",background:"var(--Tp)",borderRadius:12,textAlign:"center"}}>
-            <div style={{fontSize:12,color:"var(--T)",marginBottom:4}}>Reste à charge mensuel estimé</div>
-            <div className="pf"style={{fontSize:38,fontWeight:700,color:"var(--T)"}}>{fmt2(resteCharge)}</div>
-            <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>par mois</div>
-          </div>
-        </div>
         <div className="card"style={{padding:16,background:"var(--Gp)",border:"1px solid var(--G)"}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}>📊 Sur l'année</div>
           {[
