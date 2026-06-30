@@ -11539,24 +11539,31 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     {page:"messagerie",label:"Échanges parents",ic:"💬",desc:"Messagerie instantanée avec les parents, des deux côtés."},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée."},
   ];
-  const [autoDemo, setAutoDemo] = useState(true);
-  const [demoProgress, setDemoProgress] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const demoScreenRef = useRef(null);
+  // Effet "video demo" : le contenu de l'ecran courant defile doucement tout seul (screencast), en boucle
   useEffect(()=>{
-    if(!autoDemo)return;
-    setDemoProgress(0);
-    const dur=5200, step=55; let el=0;
-    const t=setInterval(()=>{
-      el+=step;
-      setDemoProgress(Math.min(100,(el/dur)*100));
-      if(el>=dur){
-        const idx=demoTour.findIndex(s=>s.page===demoPage);
-        setDemoPage(demoTour[(idx+1>=demoTour.length||idx<0)?0:idx+1].page);
-        el=0;
+    if(!playing)return;
+    let raf, last=performance.now();
+    const tick=(now)=>{
+      const dt=now-last; last=now;
+      const el=demoScreenRef.current;
+      if(el){
+        const max=el.scrollHeight-el.clientHeight;
+        if(max>4){
+          let nt=el.scrollTop+dt*0.035;
+          if(nt>=max) nt=0;
+          el.scrollTop=nt;
+          setVideoProgress((nt/max)*100);
+        } else setVideoProgress(0);
       }
-    },step);
-    return()=>clearInterval(t);
-  },[autoDemo,demoPage]);
-  const goDemo=(p)=>{setAutoDemo(false);setDemoPage(p);};
+      raf=requestAnimationFrame(tick);
+    };
+    raf=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(raf);
+  },[playing,demoPage]);
+  const goDemo=(p)=>{setDemoPage(p);const el=demoScreenRef.current;if(el)el.scrollTop=0;setVideoProgress(0);};
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
   useEffect(()=>{
@@ -11842,26 +11849,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
             {/* Panneau explications (gauche) */}
             <div className="demo-side">
-              <button onClick={()=>setAutoDemo(a=>!a)} style={{display:"inline-flex",alignItems:"center",gap:8,background:autoDemo?"#fff":"linear-gradient(135deg,#E49178,#C84B31)",color:autoDemo?"#C84B31":"#fff",border:"1.5px solid "+(autoDemo?"#E8B6AC":"transparent"),borderRadius:30,padding:"8px 16px",cursor:"pointer",fontSize:12.5,fontWeight:700,boxShadow:"0 4px 14px rgba(0,0,0,.08)",transition:"all .15s",marginBottom:18}}>
-                {autoDemo?<><span style={{display:"inline-block",width:9,height:9,borderRadius:"50%",background:"#C84B31",animation:"recblink 1.1s infinite"}}/> Visite guidée en cours — pause</>:<>▶ Lancer la visite guidée</>}
-              </button>
+              <div style={{fontSize:11,fontWeight:700,color:"#5DA9A1",textTransform:"uppercase",letterSpacing:".8px",marginBottom:7,display:"flex",alignItems:"center",gap:7}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:"#C84B31",animation:"recblink 1.1s infinite"}}/>Démo en direct</div>
+              <div style={{fontFamily:fTitle,fontSize:"clamp(19px,2.4vw,24px)",fontWeight:700,color:"#0D1B2A",marginBottom:16,lineHeight:1.25}}>Explorez TiMat, section par section</div>
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {demoTour.map((s,i)=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                  style={{position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-start",gap:13,textAlign:"left",background:on?"#fff":"transparent",border:"1.5px solid "+(on?"transparent":"rgba(0,0,0,.07)"),borderRadius:16,padding:"14px 16px",cursor:"pointer",transition:"all .2s",boxShadow:on?"0 10px 30px rgba(46,72,89,.13)":"none"}}
+                {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
+                  style={{display:"flex",alignItems:"flex-start",gap:13,textAlign:"left",background:on?"#fff":"transparent",border:"1.5px solid "+(on?"transparent":"rgba(0,0,0,.07)"),borderRadius:16,padding:"14px 16px",cursor:"pointer",transition:"all .2s",boxShadow:on?"0 10px 30px rgba(46,72,89,.13)":"none"}}
                   onMouseEnter={e=>{if(!on){e.currentTarget.style.background="rgba(255,255,255,.6)";e.currentTarget.style.borderColor="rgba(93,169,161,.4)";}}}
                   onMouseLeave={e=>{if(!on){e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="rgba(0,0,0,.07)";}}}>
-                  {on&&autoDemo&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:demoProgress+"%",background:"linear-gradient(90deg,rgba(93,169,161,.10),rgba(228,145,120,.06))",transition:"width .1s linear",pointerEvents:"none"}}/>}
-                  <div style={{position:"relative",flexShrink:0,width:46,height:46,borderRadius:13,background:on?"linear-gradient(135deg,#2E4859,#5DA9A1)":"#fff",border:on?"none":"1px solid rgba(0,0,0,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:23,transition:"all .2s"}}>{s.ic}</div>
-                  <div style={{position:"relative",minWidth:0,flex:1}}>
+                  <div style={{flexShrink:0,width:46,height:46,borderRadius:13,background:on?"linear-gradient(135deg,#2E4859,#5DA9A1)":"#fff",border:on?"none":"1px solid rgba(0,0,0,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:23,transition:"all .2s"}}>{s.ic}</div>
+                  <div style={{minWidth:0,flex:1}}>
                     <div style={{fontSize:14.5,fontWeight:700,color:on?"#2E4859":"#5A6B73",marginBottom:2}}>{s.label}</div>
                     <div style={{fontSize:12,color:"#7A8B92",lineHeight:1.5}}>{s.desc}</div>
                   </div>
-                  {on&&<div style={{position:"relative",alignSelf:"center",color:"#5DA9A1",fontSize:18,flexShrink:0}}>▸</div>}
+                  {on&&<div style={{alignSelf:"center",color:"#5DA9A1",fontSize:18,flexShrink:0}}>▸</div>}
                 </button>;})}
               </div>
               <div onClick={()=>setShowModal(true)} style={{marginTop:18,display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",borderRadius:12,padding:"11px 22px",fontSize:13.5,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</div>
             </div>
 
+            {/* Phone + barre de lecture video (droite) */}
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14,flexShrink:0}}>
             {/* Phone frame — vraie UI de l'app */}
             <div className="demo-phone" style={{ flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 18px 55px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08)" }}>
               {/* Notch */}
@@ -11877,17 +11884,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
-
-                {/* Barre de progression facon screencast (stories) */}
-                <div style={{display:"flex",gap:4,padding:"8px 12px 6px",background:"var(--w)"}}>
-                  {demoTour.map((s,i)=>{
-                    const idx=demoTour.findIndex(x=>x.page===demoPage);
-                    const cur=s.page===demoPage; const done=idx>i;
-                    return <div key={s.page}style={{flex:1,height:3,borderRadius:2,background:"var(--br)",overflow:"hidden"}}>
-                      <div style={{height:"100%",borderRadius:2,background:"var(--T)",width:cur?(autoDemo?demoProgress+"%":"100%"):(done?"100%":"0%"),transition:cur&&autoDemo?"width .1s linear":"width .3s"}}/>
-                    </div>;
-                  })}
-                </div>
 
                 {/* TopBar démo allégée (vrai logo, style identique, sans actions perso) */}
                 <div className="topbar">
@@ -11905,7 +11901,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {/* Navigation démo : uniquement la BottomNav (comme sur téléphone) */}
 
                 {/* Contenu : vrai écran si déverrouillé, sinon aperçu flouté verrouillé */}
-                <div className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
+                <div ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
                   {demoPage==="accueil"
                     ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
                     : demoPage==="pointage"
@@ -11937,6 +11933,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{ width: 90, height: 4, background: "rgba(255,255,255,.25)", borderRadius: 2 }} />
               </div>
             </div>
+            {/* Barre de lecture video (facon screencast) */}
+            <div style={{width:"100%",maxWidth:320,background:"#1a1a2e",borderRadius:16,padding:"10px 14px",display:"flex",alignItems:"center",gap:11,boxShadow:"0 8px 24px rgba(0,0,0,.2)"}}>
+              <button onClick={()=>setPlaying(p=>!p)} aria-label={playing?"Pause":"Lecture"} style={{flexShrink:0,width:34,height:34,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>{playing?"⏸":"▶"}</button>
+              <div style={{flex:1,height:5,borderRadius:3,background:"rgba(255,255,255,.15)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#E49178,#5DA9A1)",width:videoProgress+"%",transition:"width .1s linear"}}/>
+              </div>
+              <span style={{flexShrink:0,fontSize:10,color:"rgba(255,255,255,.7)",fontFamily:"'DM Mono',monospace",letterSpacing:".5px",display:"flex",alignItems:"center",gap:5}}><span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:"#C84B31",animation:playing?"recblink 1.1s infinite":"none"}}/>REC</span>
+            </div>
+            </div>{/* /colonne phone */}
           </div>
         </div>
       </div>}
