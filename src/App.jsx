@@ -267,6 +267,9 @@ function Styles(){return(
     .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
     .demo-phone{width:340px}
+    .demo-layout{display:flex;gap:44px;align-items:center;justify-content:center;max-width:980px;margin:0 auto}
+    .demo-side{flex:1;max-width:420px;min-width:0}
+    @media(max-width:860px){.demo-layout{flex-direction:column;gap:28px}.demo-side{max-width:520px;width:100%}}
     @media(max-width:768px){.demo-phone{width:300px}}
     @media(max-width:480px){.demo-phone{width:min(300px,90vw)}}
     .demo-zoom{zoom:.82}
@@ -11284,6 +11287,22 @@ function ParentInvitationScreen({onLogin}){
   </div>;
 }
 
+function ScrollTopBtn(){
+  const [show,setShow]=useState(false);
+  useEffect(()=>{
+    const onScroll=()=>{
+      const st=window.scrollY||document.documentElement.scrollTop||0;
+      const max=(document.documentElement.scrollHeight-window.innerHeight)||1;
+      setShow(st>max*0.45);
+    };
+    window.addEventListener("scroll",onScroll,{passive:true});
+    onScroll();
+    return()=>window.removeEventListener("scroll",onScroll);
+  },[]);
+  return <button aria-label="Remonter en haut" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
+    style={{position:"fixed",right:18,bottom:"calc(20px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(200,75,49,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
+}
+
 function OutilsGratuits({onClose,onCta}){
   const [outil,setOutil]=useState("mensu");
   const fTitle="'Fraunces',Georgia,serif";
@@ -11362,10 +11381,10 @@ function OutilsGratuits({onClose,onCta}){
         {/* Selecteur d'outils */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:22}}>
           {outils.map(o=>{const on=outil===o.id;return <button key={o.id}onClick={()=>setOutil(o.id)}
-            style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"14px 12px",cursor:"pointer",textAlign:"left",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
+            style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"16px 12px",cursor:"pointer",textAlign:"center",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
             onMouseEnter={e=>{if(!on){e.currentTarget.style.borderColor=o.c+"88";e.currentTarget.style.transform="translateY(-1px)";}}}
             onMouseLeave={e=>{if(!on){e.currentTarget.style.borderColor="#E8E4E0";e.currentTarget.style.transform="none";}}}>
-            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:10}}>{o.ic}</div>
+            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}>{o.ic}</div>
             <div style={{fontWeight:700,fontSize:13.5,color:on?o.c:"#2E4859"}}>{o.t}</div>
           </button>;})}
         </div>
@@ -11514,11 +11533,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   // Auto-demo facon "screencast" : defile automatiquement les sections cles
   const demoTour = [
-    {page:"accueil",label:"Accueil & journée",ic:"🏠"},
-    {page:"calendrier",label:"Planning & présences",ic:"📅"},
-    {page:"admin_finances",label:"Calculs & paie",ic:"💶"},
-    {page:"messagerie",label:"Échanges parents",ic:"💬"},
-    {page:"sante_complet",label:"Santé & urgences",ic:"🩺"},
+    {page:"accueil",label:"Accueil & journée",ic:"🏠",desc:"Vue d'ensemble : enfants présents, signatures, prochains événements."},
+    {page:"calendrier",label:"Planning & présences",ic:"📅",desc:"Pointages, absences et planning partagé en temps réel."},
+    {page:"admin_finances",label:"Calculs & paie",ic:"💶",desc:"Bulletins, mensualisation et déclarations calculés automatiquement."},
+    {page:"messagerie",label:"Échanges parents",ic:"💬",desc:"Messagerie instantanée avec les parents, des deux côtés."},
+    {page:"sante_complet",label:"Santé & urgences",ic:"🩺",desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée."},
   ];
   const [autoDemo, setAutoDemo] = useState(true);
   const [demoProgress, setDemoProgress] = useState(0);
@@ -11819,7 +11838,29 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
+          <div className="demo-layout">
+
+            {/* Panneau explications (gauche) */}
+            <div className="demo-side">
+              <button onClick={()=>setAutoDemo(a=>!a)} style={{display:"inline-flex",alignItems:"center",gap:8,background:autoDemo?"#fff":"linear-gradient(135deg,#E49178,#C84B31)",color:autoDemo?"#C84B31":"#fff",border:"1.5px solid "+(autoDemo?"#E8B6AC":"transparent"),borderRadius:30,padding:"8px 16px",cursor:"pointer",fontSize:12.5,fontWeight:700,boxShadow:"0 4px 14px rgba(0,0,0,.08)",transition:"all .15s",marginBottom:18}}>
+                {autoDemo?<><span style={{display:"inline-block",width:9,height:9,borderRadius:"50%",background:"#C84B31",animation:"recblink 1.1s infinite"}}/> Visite guidée en cours — pause</>:<>▶ Lancer la visite guidée</>}
+              </button>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {demoTour.map((s,i)=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
+                  style={{position:"relative",overflow:"hidden",display:"flex",alignItems:"flex-start",gap:13,textAlign:"left",background:on?"#fff":"transparent",border:"1.5px solid "+(on?"transparent":"rgba(0,0,0,.07)"),borderRadius:16,padding:"14px 16px",cursor:"pointer",transition:"all .2s",boxShadow:on?"0 10px 30px rgba(46,72,89,.13)":"none"}}
+                  onMouseEnter={e=>{if(!on){e.currentTarget.style.background="rgba(255,255,255,.6)";e.currentTarget.style.borderColor="rgba(93,169,161,.4)";}}}
+                  onMouseLeave={e=>{if(!on){e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="rgba(0,0,0,.07)";}}}>
+                  {on&&autoDemo&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:demoProgress+"%",background:"linear-gradient(90deg,rgba(93,169,161,.10),rgba(228,145,120,.06))",transition:"width .1s linear",pointerEvents:"none"}}/>}
+                  <div style={{position:"relative",flexShrink:0,width:46,height:46,borderRadius:13,background:on?"linear-gradient(135deg,#2E4859,#5DA9A1)":"#fff",border:on?"none":"1px solid rgba(0,0,0,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:23,transition:"all .2s"}}>{s.ic}</div>
+                  <div style={{position:"relative",minWidth:0,flex:1}}>
+                    <div style={{fontSize:14.5,fontWeight:700,color:on?"#2E4859":"#5A6B73",marginBottom:2}}>{s.label}</div>
+                    <div style={{fontSize:12,color:"#7A8B92",lineHeight:1.5}}>{s.desc}</div>
+                  </div>
+                  {on&&<div style={{position:"relative",alignSelf:"center",color:"#5DA9A1",fontSize:18,flexShrink:0}}>▸</div>}
+                </button>;})}
+              </div>
+              <div onClick={()=>setShowModal(true)} style={{marginTop:18,display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",borderRadius:12,padding:"11px 22px",fontSize:13.5,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</div>
+            </div>
 
             {/* Phone frame — vraie UI de l'app */}
             <div className="demo-phone" style={{ flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 18px 55px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08)" }}>
@@ -11897,20 +11938,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
             </div>
           </div>
-          {/* Controle lecture + pastilles de sections (facon screencast Pandi-Panda) */}
-          <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>
-            <button onClick={()=>setAutoDemo(a=>!a)} style={{display:"flex",alignItems:"center",gap:8,background:autoDemo?"#fff":"linear-gradient(135deg,#E49178,#C84B31)",color:autoDemo?"#C84B31":"#fff",border:"1.5px solid "+(autoDemo?"#E8B6AC":"transparent"),borderRadius:30,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 4px 14px rgba(0,0,0,.08)",transition:"all .15s"}}>
-              {autoDemo?<><span style={{display:"inline-block",width:9,height:9,borderRadius:"50%",background:"#C84B31",animation:"recblink 1.1s infinite"}}/> Lecture en cours — pause</>:<>▶ Relancer la visite guidée</>}
-            </button>
-          </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap",marginTop:14}}>
-            {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-              style={{display:"flex",alignItems:"center",gap:7,background:on?"linear-gradient(135deg,#2E4859,#5DA9A1)":"#fff",color:on?"#fff":"#5F7A86",border:"1.5px solid "+(on?"transparent":"#E4DFD9"),borderRadius:30,padding:"8px 15px",cursor:"pointer",fontSize:12.5,fontWeight:700,transition:"all .15s",boxShadow:on?"0 6px 18px rgba(46,72,89,.25)":"none"}}
-              onMouseEnter={e=>{if(!on)e.currentTarget.style.borderColor="#5DA9A1";}} onMouseLeave={e=>{if(!on)e.currentTarget.style.borderColor="#E4DFD9";}}>
-              <span style={{fontSize:15}}>{s.ic}</span>{s.label}
-            </button>;})}
-          </div>
-          <div style={{textAlign:"center",fontSize:11.5,color:"#90A093",marginTop:12}}>👆 Cliquez une section pour l'explorer, ou laissez défiler la visite guidée.</div>
         </div>
       </div>}
 
@@ -12615,6 +12642,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
       {/* BOUTIQUE MODAL */}
       {showOutils&&<OutilsGratuits onClose={()=>setShowOutils(false)} onCta={()=>{setShowOutils(false);setShowModal(true);setRole("asmat");}}/>}
+      <ScrollTopBtn/>
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
