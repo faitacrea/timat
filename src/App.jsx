@@ -208,6 +208,8 @@ function Styles(){return(
     .msgs{display:flex;flex-direction:column;gap:10px;max-height:min(56vh,440px);overflow-y:auto;padding:8px 4px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
     .msg{max-width:78%;padding:10px 14px;border-radius:18px;font-size:13.5px;line-height:1.5;overflow-wrap:break-word;box-shadow:0 1px 3px rgba(0,0,0,.07);animation:msg-in .22s ease}
     @keyframes msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes menuDrop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
     .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
     .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
@@ -304,12 +306,16 @@ function Styles(){return(
     }
     .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(234,224,232,.7);box-shadow:0 -4px 20px rgba(0,0,0,.08);height:calc(64px + env(safe-area-inset-bottom,0px));align-items:stretch;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
     .dark .bottom-nav{background:rgba(13,27,30,.97)!important;border-top-color:#1E3A34!important}
-    .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:12px;transition:all .18s;font-family:inherit;min-width:0}
-    .bnav-btn.active{background:rgba(155,107,170,.12)}
-    .bnav-btn .bnav-ic{font-size:22px;line-height:1;transition:transform .18s}
-    .bnav-btn.active .bnav-ic{transform:scale(1.12)}
-    .bnav-btn .bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s}
-    .bnav-btn.active .bnav-lbl{color:var(--S)}
+    .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:14px;transition:background .2s ease;font-family:inherit;min-width:0;position:relative;-webkit-tap-highlight-color:transparent}
+    .bnav-btn::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%) scaleX(0);width:24px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+    .bnav-btn.active::before{transform:translateX(-50%) scaleX(1)}
+    .bnav-btn.active{background:var(--Sp)}
+    .dark .bnav-btn.active{background:rgba(93,169,161,.18)!important}
+    .bnav-btn .bnav-ic{font-size:22px;line-height:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1);filter:grayscale(.25);opacity:.78}
+    .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.18);filter:grayscale(0);opacity:1}
+    .bnav-btn:active .bnav-ic{transform:scale(.82)}
+    .bnav-btn .bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s,font-weight .15s}
+    .bnav-btn.active .bnav-lbl{color:var(--S);font-weight:700}
     @media(max-width:768px){.bottom-nav{display:flex}}
     .demo-bnav .bottom-nav{position:static!important;display:flex!important;box-shadow:none;z-index:auto;padding-bottom:0}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
@@ -11359,8 +11365,8 @@ function OutilsGratuits({onClose,onCta}){
             style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"14px 12px",cursor:"pointer",textAlign:"left",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
             onMouseEnter={e=>{if(!on){e.currentTarget.style.borderColor=o.c+"88";e.currentTarget.style.transform="translateY(-1px)";}}}
             onMouseLeave={e=>{if(!on){e.currentTarget.style.borderColor="#E8E4E0";e.currentTarget.style.transform="none";}}}>
-            <div style={{width:38,height:38,borderRadius:11,background:o.c+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,marginBottom:8}}>{o.ic}</div>
-            <div style={{fontWeight:700,fontSize:13,color:on?o.c:"#2E4859"}}>{o.t}</div>
+            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:10}}>{o.ic}</div>
+            <div style={{fontWeight:700,fontSize:13.5,color:on?o.c:"#2E4859"}}>{o.t}</div>
           </button>;})}
         </div>
 
@@ -11506,6 +11512,32 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
+  // Auto-demo facon "screencast" : defile automatiquement les sections cles
+  const demoTour = [
+    {page:"accueil",label:"Accueil & journée",ic:"🏠"},
+    {page:"calendrier",label:"Planning & présences",ic:"📅"},
+    {page:"admin_finances",label:"Calculs & paie",ic:"💶"},
+    {page:"messagerie",label:"Échanges parents",ic:"💬"},
+    {page:"sante_complet",label:"Santé & urgences",ic:"🩺"},
+  ];
+  const [autoDemo, setAutoDemo] = useState(true);
+  const [demoProgress, setDemoProgress] = useState(0);
+  useEffect(()=>{
+    if(!autoDemo)return;
+    setDemoProgress(0);
+    const dur=5200, step=55; let el=0;
+    const t=setInterval(()=>{
+      el+=step;
+      setDemoProgress(Math.min(100,(el/dur)*100));
+      if(el>=dur){
+        const idx=demoTour.findIndex(s=>s.page===demoPage);
+        setDemoPage(demoTour[(idx+1>=demoTour.length||idx<0)?0:idx+1].page);
+        el=0;
+      }
+    },step);
+    return()=>clearInterval(t);
+  },[autoDemo,demoPage]);
+  const goDemo=(p)=>{setAutoDemo(false);setDemoPage(p);};
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
   useEffect(()=>{
@@ -11693,28 +11725,28 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         </div>
         {/* Dropdown menu (desktop + mobile) */}
         {menuOpen&&<div style={{ position: "relative", zIndex: 10, maxWidth: 1000, margin: "0 auto", padding: "0 0 16px" }}>
-          <div style={{ background: "rgba(0,0,0,.45)", backdropFilter: "blur(20px)", borderRadius: 16, padding: 12, boxShadow:"0 16px 50px rgba(0,0,0,.35)", border:"1px solid rgba(255,255,255,.12)" }}>
+          <div style={{ background: "#FDFBF8", borderRadius: 16, padding: 12, boxShadow:"0 24px 70px rgba(0,0,0,.28)", border:"1px solid rgba(0,0,0,.06)", animation:"menuDrop .2s ease" }}>
             {[
               {sec:"Outils & ressources",items:[
-                ["🧮","Outils & simulateurs gratuits","Mensualisation, salaire, CMG, indemnités","outils"],
-                ["📚","Blog & ressources","Guides pratiques pour le métier","blog-section"],
-                ["🛒","Boutique","Kits, fiches et templates prêts à l'emploi","boutique"],
+                ["🧮","Outils & simulateurs gratuits","Mensualisation, salaire, CMG, indemnités","outils","#5DA9A1"],
+                ["📚","Blog & ressources","Guides pratiques pour le métier","blog-section","#C09553"],
+                ["🛒","Boutique","Kits, fiches et templates prêts à l'emploi","boutique","#E49178"],
               ]},
               {sec:"Découvrir TiMat",items:[
-                ["✨","Fonctionnalités","Cahier de liaison, paie, contrats, déclarations","demo"],
-                ["💶","Tarifs","Forfaits Gratuit et Pro","tarifs"],
-                ["🔑","Connexion / Inscription","Accéder à votre espace","login"],
+                ["✨","Fonctionnalités","Cahier de liaison, paie, contrats, déclarations","demo","#5DA9A1"],
+                ["💶","Tarifs","Forfaits Gratuit et Pro","tarifs","#C09553"],
+                ["🔑","Connexion / Inscription","Accéder à votre espace","login","#2E4859"],
               ]},
             ].map(g=><div key={g.sec} style={{marginBottom:6}}>
-              <div style={{fontSize:10.5,fontWeight:700,color:"rgba(255,255,255,.5)",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
-              {g.items.map(([ic,label,desc,target])=>
+              <div style={{fontSize:10.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
+              {g.items.map(([ic,label,desc,target,c])=>
                 <button key={target} onClick={()=>{setMenuOpen(false);if(target==="outils")setShowOutils(true);else if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
-                  style={{ width:"100%",background: "transparent", color: "#fff", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 10, display:"flex", alignItems:"center", gap:12, transition:"background .15s, transform .12s" }}
-                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.13)";e.currentTarget.style.transform="translateX(3px)";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";}}>
-                  <span style={{fontSize:20,width:34,height:34,borderRadius:10,background:"rgba(255,255,255,.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
+                  style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
+                  onMouseEnter={e=>{e.currentTarget.style.background=c+"14";e.currentTarget.style.transform="translateX(4px)";e.currentTarget.style.boxShadow="0 4px 14px "+c+"22";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+                  <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
                   <span style={{minWidth:0}}>
-                    <span style={{display:"block",fontSize:14,fontWeight:700}}>{label}</span>
-                    <span style={{display:"block",fontSize:11.5,color:"rgba(255,255,255,.6)",marginTop:1}}>{desc}</span>
+                    <span style={{display:"block",fontSize:14.5,fontWeight:700}}>{label}</span>
+                    <span style={{display:"block",fontSize:12,color:"#5F7A86",marginTop:1}}>{desc}</span>
                   </span>
                 </button>
               )}
@@ -11805,6 +11837,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
 
+                {/* Barre de progression facon screencast (stories) */}
+                <div style={{display:"flex",gap:4,padding:"8px 12px 6px",background:"var(--w)"}}>
+                  {demoTour.map((s,i)=>{
+                    const idx=demoTour.findIndex(x=>x.page===demoPage);
+                    const cur=s.page===demoPage; const done=idx>i;
+                    return <div key={s.page}style={{flex:1,height:3,borderRadius:2,background:"var(--br)",overflow:"hidden"}}>
+                      <div style={{height:"100%",borderRadius:2,background:"var(--T)",width:cur?(autoDemo?demoProgress+"%":"100%"):(done?"100%":"0%"),transition:cur&&autoDemo?"width .1s linear":"width .3s"}}/>
+                    </div>;
+                  })}
+                </div>
+
                 {/* TopBar démo allégée (vrai logo, style identique, sans actions perso) */}
                 <div className="topbar">
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -11854,17 +11897,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
             </div>
           </div>
-          {/* Legende */}
-          <div style={{display:"flex",gap:20,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#6B4F3A"}}>
-              <div style={{width:10,height:10,borderRadius:3,background:"linear-gradient(135deg,#E49178,#C76754)"}}/>
-              Onglet navigable dans la demo
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#90A093"}}>
-              <div style={{width:10,height:10,borderRadius:3,background:"#D0C8D8"}}/>
-              🔒 Disponible dans l'application
-            </div>
+          {/* Controle lecture + pastilles de sections (facon screencast Pandi-Panda) */}
+          <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:24}}>
+            <button onClick={()=>setAutoDemo(a=>!a)} style={{display:"flex",alignItems:"center",gap:8,background:autoDemo?"#fff":"linear-gradient(135deg,#E49178,#C84B31)",color:autoDemo?"#C84B31":"#fff",border:"1.5px solid "+(autoDemo?"#E8B6AC":"transparent"),borderRadius:30,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 4px 14px rgba(0,0,0,.08)",transition:"all .15s"}}>
+              {autoDemo?<><span style={{display:"inline-block",width:9,height:9,borderRadius:"50%",background:"#C84B31",animation:"recblink 1.1s infinite"}}/> Lecture en cours — pause</>:<>▶ Relancer la visite guidée</>}
+            </button>
           </div>
+          <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap",marginTop:14}}>
+            {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
+              style={{display:"flex",alignItems:"center",gap:7,background:on?"linear-gradient(135deg,#2E4859,#5DA9A1)":"#fff",color:on?"#fff":"#5F7A86",border:"1.5px solid "+(on?"transparent":"#E4DFD9"),borderRadius:30,padding:"8px 15px",cursor:"pointer",fontSize:12.5,fontWeight:700,transition:"all .15s",boxShadow:on?"0 6px 18px rgba(46,72,89,.25)":"none"}}
+              onMouseEnter={e=>{if(!on)e.currentTarget.style.borderColor="#5DA9A1";}} onMouseLeave={e=>{if(!on)e.currentTarget.style.borderColor="#E4DFD9";}}>
+              <span style={{fontSize:15}}>{s.ic}</span>{s.label}
+            </button>;})}
+          </div>
+          <div style={{textAlign:"center",fontSize:11.5,color:"#90A093",marginTop:12}}>👆 Cliquez une section pour l'explorer, ou laissez défiler la visite guidée.</div>
         </div>
       </div>}
 
