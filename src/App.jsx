@@ -176,7 +176,7 @@ function Styles(){return(
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{width:100%;overflow-x:hidden;overscroll-behavior-y:none;font-family:'DM Sans',sans-serif}
+    html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
     :root{
       --c:#FDFBF8;--w:#FFFFFF;--b:#2E4A5A;--m:#6B4F5A;--l:#A8909A;--br:#EAE0E8;
       --T:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
@@ -248,7 +248,7 @@ function Styles(){return(
     .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
-    .content{flex:1;overflow-y:auto;overflow-x:hidden;max-width:100vw;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .content{flex:1;overflow-x:hidden;max-width:100vw}
     @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}.inp,input,select,textarea{font-size:16px!important}}
     .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
     .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -11275,12 +11275,105 @@ function ParentInvitationScreen({onLogin}){
   </div>;
 }
 
+function OutilsGratuits({onClose,onCta}){
+  const [hSem,setHSem]=useState(40);
+  const [sem,setSem]=useState(52);
+  const [taux,setTaux]=useState(4.50);
+  const [ie,setIe]=useState(4.50);
+  const [jours,setJours]=useState(20);
+  const fTitle="'Fraunces',Georgia,serif";
+  const hMois=(hSem*sem)/12;
+  const salaireBrut=hMois*taux;
+  const ieMois=ie*jours;
+  const totalMois=salaireBrut+ieMois;
+  const eur=n=>n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+  const outils=[
+    {ic:"🧮",t:"Mensualisation",d:"Heures et jours mensualisés en 30 secondes (année complète ou incomplète).",c:"#5DA9A1",actif:true},
+    {ic:"💶",t:"Salaire & coût",d:"Salaire brut/net, indemnités et coût réel de la garde.",c:"#E49178"},
+    {ic:"🏛️",t:"Aides CMG",d:"Estimez le CMG et votre reste à charge selon la réforme 2025.",c:"#2E4859"},
+    {ic:"🍽️",t:"Indemnités d'entretien",d:"Calcul des IE selon la durée d'accueil journalière.",c:"#C09553"},
+  ];
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:260,padding:20}}>
+    <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:860,maxHeight:"92vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
+      <div style={{background:"linear-gradient(135deg,#2E4859,#5DA9A1)",padding:"24px 28px",position:"sticky",top:0,zIndex:2}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+          <div>
+            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}>🧮 Outils & Simulateurs gratuits</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,.85)",marginTop:4,maxWidth:540,lineHeight:1.5}}>Gratuits et sans inscription, pour les assistantes maternelles et les parents employeurs. Calculez en quelques secondes.</div>
+          </div>
+          <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#fff",fontWeight:700}}>✕</button>
+        </div>
+      </div>
+      <div style={{padding:"24px 28px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:12,marginBottom:24}}>
+          {outils.map(o=><div key={o.t}style={{background:"#fff",borderRadius:14,border:"1px solid #E8E4E0",padding:16}}>
+            <div style={{width:40,height:40,borderRadius:11,background:o.c+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,marginBottom:10}}>{o.ic}</div>
+            <div style={{fontWeight:700,fontSize:14,color:"#2E4859",marginBottom:4}}>{o.t}</div>
+            <div style={{fontSize:11.5,color:"#5F7A86",lineHeight:1.5}}>{o.d}</div>
+            {o.actif?<div style={{marginTop:8,fontSize:11,fontWeight:700,color:o.c}}>↓ Essayez ci-dessous</div>
+              :<div style={{marginTop:8,fontSize:11,fontWeight:700,color:"#B8A98C"}}>Bientôt</div>}
+          </div>)}
+        </div>
+
+        <div style={{background:"#fff",borderRadius:16,border:"2px solid #5DA9A1",overflow:"hidden"}}>
+          <div style={{background:"linear-gradient(135deg,#5DA9A115,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>🧮 Simulateur de mensualisation</div>
+            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Trouvez les heures mensualisées et le salaire brut de base.</div>
+          </div>
+          <div style={{padding:18}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14,marginBottom:16}}>
+              {[["Heures par semaine",hSem,setHSem,1,"h"],["Semaines / an",sem,setSem,1,"sem"],["Taux horaire brut",taux,setTaux,0.05,"€"],["Indemnité entretien / jour",ie,setIe,0.05,"€"],["Jours d'accueil / mois",jours,setJours,1,"j"]].map(([lab,val,setter,step,suf])=>
+                <div key={lab}>
+                  <label style={{fontSize:11,fontWeight:700,color:"#5F7A86",display:"block",marginBottom:5}}>{lab}</label>
+                  <div style={{display:"flex",alignItems:"center",border:"1.5px solid #E8E4E0",borderRadius:10,overflow:"hidden"}}>
+                    <input type="number"step={step}value={val}onChange={e=>setter(parseFloat(e.target.value)||0)}style={{flex:1,border:"none",padding:"9px 11px",fontSize:14,fontWeight:600,color:"#2E4859",outline:"none",width:"100%",fontFamily:"'DM Mono',monospace",background:"transparent"}}/>
+                    <span style={{padding:"0 11px",fontSize:12,color:"#9AAAB2",fontWeight:600}}>{suf}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+              {[["Année complète (52 sem)",52],["Année incomplète (46 sem)",46],["40 semaines",40]].map(([lab,v])=>
+                <button key={v}onClick={()=>setSem(v)}style={{padding:"6px 13px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:sem===v?"#2E4859":"#fff",color:sem===v?"#fff":"#5F7A86",borderColor:sem===v?"#2E4859":"#E8E4E0"}}>{lab}</button>
+              )}
+            </div>
+            <div style={{background:"linear-gradient(135deg,#5DA9A118,#E4917815)",borderRadius:14,padding:18}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12,marginBottom:12}}>
+                {[["Heures mensualisées",hMois.toLocaleString('fr-FR',{maximumFractionDigits:2})+" h","#2E4859"],["Salaire brut de base",eur(salaireBrut),"#5DA9A1"],["Indemnités entretien",eur(ieMois),"#C09553"]].map(([l,v,c])=>
+                  <div key={l}style={{textAlign:"center"}}>
+                    <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace",lineHeight:1.1}}>{v}</div>
+                    <div style={{fontSize:10.5,color:"#5F7A86",marginTop:3,fontWeight:600}}>{l}</div>
+                  </div>
+                )}
+              </div>
+              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
+                <div style={{fontSize:12,color:"#5F7A86"}}>Total mensuel estimé (salaire + indemnités)</div>
+                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:"'DM Mono',monospace"}}>{eur(totalMois)}</div>
+              </div>
+            </div>
+            <div style={{fontSize:10.5,color:"#9AAAB2",marginTop:10,lineHeight:1.5}}>
+              ℹ️ Estimation indicative. En année complète, les congés payés sont inclus dans la mensualisation ; en année incomplète, ils sont payés en plus. Le salaire net dépend des cotisations (≈ -22 %).
+            </div>
+          </div>
+        </div>
+
+        <div style={{marginTop:22,background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:16,padding:"20px 22px",textAlign:"center"}}>
+          <div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:fTitle,marginBottom:4}}>Envie d'aller plus loin ?</div>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.9)",marginBottom:14,lineHeight:1.5}}>TiMat calcule tout automatiquement à partir de vos pointages réels : bulletins, déclarations, contrats… Testez gratuitement.</div>
+          <button onClick={onCta}style={{background:"#fff",color:"#C84B31",border:"none",borderRadius:11,padding:"11px 26px",fontSize:14,fontWeight:800,cursor:"pointer"}}>Découvrir TiMat →</button>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
   const [showLegal, setShowLegal] = useState(null);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
+  const [showOutils, setShowOutils] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState("asmat");
   const [modeAuth, setModeAuth] = useState("inscription");
@@ -11468,6 +11561,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <div className="lp-nav-full">
             <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navFonctionBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Fonctionnalités</button>
             <button onClick={() => document.getElementById("tarifs")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.navTarifsBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Tarifs</button>
+            <button onClick={() => setShowOutils(true)} style={{ background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>🧮 Outils gratuits</button>
             <button onClick={() => setShowBoutique(true)} style={{ background: L.navBoutiqueBg||L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 10 }}>Boutique</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)" }}>Se connecter / S'inscrire →</button>
           </div>
@@ -11480,8 +11574,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
         {/* Dropdown menu (mobile) */}
         {menuOpen&&<div style={{ position: "relative", zIndex: 10, maxWidth: 1000, margin: "0 auto", padding: "0 0 16px" }}>
           <div style={{ background: "rgba(0,0,0,.4)", backdropFilter: "blur(20px)", borderRadius: 12, padding: 8, display: "flex", flexDirection: "column", gap: 2 }}>
-            {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Blog","blog-section"],["Boutique","boutique"],["Connexion","login"]].map(([label,target])=>
-              <button key={target} onClick={()=>{setMenuOpen(false);if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+            {[["🧮 Outils gratuits","outils"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Blog","blog-section"],["Boutique","boutique"],["Connexion","login"]].map(([label,target])=>
+              <button key={target} onClick={()=>{setMenuOpen(false);if(target==="outils")setShowOutils(true);else if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                 style={{ background: "transparent", color: "#fff", border: "none", padding: "12px 16px", cursor: "pointer", fontSize: 14, fontWeight: 600, textAlign: "left", borderRadius: 8 }}
                 onMouseEnter={e=>e.target.style.background="rgba(255,255,255,.15)"} onMouseLeave={e=>e.target.style.background="transparent"}>{label}</button>
             )}
@@ -12334,6 +12428,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* BOUTIQUE MODAL */}
+      {showOutils&&<OutilsGratuits onClose={()=>setShowOutils(false)} onCta={()=>{setShowOutils(false);setShowModal(true);setRole("asmat");}}/>}
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
