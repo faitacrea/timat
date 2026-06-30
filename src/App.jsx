@@ -210,6 +210,7 @@ function Styles(){return(
     @keyframes msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     @keyframes menuDrop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
     @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
+    @keyframes tapripple{from{transform:scale(.4);opacity:.85}to{transform:scale(1.7);opacity:0}}
     .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
     .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
@@ -824,6 +825,28 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [avatarOv,setAvatarOv]=useState({});
   // TABLEAU SIGNATURES P11 - state pour le mini-dashboard
   const [genPdf,setGenPdf]=useState({}); // {[contratId]: 'pending'|'done'|'error'}
+  const [rappelState,setRappelState]=useState({}); // {[contratId]: 'sending'|'sent'|'noemail'|'error'}
+  const rappelSignature=async(e)=>{
+    const ct=e.contrat; if(!ct)return;
+    setRappelState(p=>({...p,[ct.id]:"sending"}));
+    try{
+      let email=e.parent_email||null;
+      if(!email&&e.parent_id){
+        const{data}=await supabase.from("profiles").select("email").eq("id",e.parent_id).maybeSingle();
+        email=data?.email||null;
+      }
+      if(!email){setRappelState(p=>({...p,[ct.id]:"noemail"}));return;}
+      const url=(typeof window!=="undefined"?window.location.origin:"https://timat.app")+"/?role=parent";
+      await sendNotificationEmail({
+        type:"signature_reminder",
+        to:email,
+        subject:EMAIL_TEMPLATES.signature_reminder.subject,
+        template:"signature_reminder",
+        vars:{enfant_prenom:e.prenom,date:ct.created_at?String(ct.created_at).slice(0,10):"—",url},
+      });
+      setRappelState(p=>({...p,[ct.id]:"sent"}));
+    }catch(err){ setRappelState(p=>({...p,[ct.id]:"error"})); }
+  };
   const [tabToast,setTabToast]=useState("");
   // STATS TEMPS REEL P14D - vraies stats Supabase (ou stats de démo injectées)
   const [stats,setStats]=useState(demoStats||{heuresSemaine:0,joursSemaine:0,revenuMois:0,heuresMois:0,messagesNonLus:0,presencesJour:[],loaded:false});
@@ -1029,7 +1052,9 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             </div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
               {none&&<button className="btn bP"style={{fontSize:11,padding:"6px 12px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
-              {onlyA&&<span style={{fontSize:10,color:"var(--l)",fontStyle:"italic"}}>rappel email bientôt</span>}
+              {onlyA&&<button className="btn bB"style={{fontSize:10.5,padding:"6px 11px"}}disabled={["sending","sent"].includes(rappelState[ct.id])}onClick={()=>rappelSignature(e)}>
+                {rappelState[ct.id]==="sent"?"✅ Rappel envoyé":rappelState[ct.id]==="sending"?"Envoi…":rappelState[ct.id]==="noemail"?"⚠️ Email parent manquant":"📧 Relancer le parent"}
+              </button>}
               {(both||onlyA)&&<button className="btn bG"style={{fontSize:10.5,padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
                 {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}
               </button>}
@@ -11293,14 +11318,14 @@ function ScrollTopBtn(){
     const onScroll=()=>{
       const st=window.scrollY||document.documentElement.scrollTop||0;
       const max=(document.documentElement.scrollHeight-window.innerHeight)||1;
-      setShow(st>max*0.45);
+      setShow(st>max*0.28);
     };
     window.addEventListener("scroll",onScroll,{passive:true});
     onScroll();
     return()=>window.removeEventListener("scroll",onScroll);
   },[]);
   return <button aria-label="Remonter en haut" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
-    style={{position:"fixed",right:18,bottom:"calc(20px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(200,75,49,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
+    style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(200,75,49,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
 }
 
 function OutilsGratuits({onClose,onCta}){
@@ -11338,12 +11363,30 @@ function OutilsGratuits({onClose,onCta}){
   const [coutJour,setCoutJour]=useState(50);
   const plafondCMG=5*smic;
   const cmgOk=coutJour<=plafondCMG;
+  // --- CMG complet (reforme 1er sept 2025, bareme CNAF 2026) ---
+  const [revCmg,setRevCmg]=useState(45000);
+  const [nbEnfCmg,setNbEnfCmg]=useState(1);
+  const [hSemCmg,setHSemCmg]=useState(40);
+  const [tauxCmg,setTauxCmg]=useState(4.50);
+  const CHR_AM=4.91, PLAFOND_H=8.09, CMG_MAX=825.16;
+  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206};
+  const hMoisCmg=hSemCmg*52/12;
+  const salBrutCmg=(hSemCmg*tauxCmg*52/12)*1.1;
+  const coutTotalCmg=salBrutCmg+salBrutCmg*0.275;
+  const TEcmg=TE_BAREME[Math.min(8,Math.max(1,nbEnfCmg))];
+  const tarifRetenuCmg=Math.min(tauxCmg,PLAFOND_H);
+  const coutGardeCmg=tarifRetenuCmg*hMoisCmg;
+  let cmgComplet=coutGardeCmg*(1-(Math.max(814.62,Math.min(revCmg/12,8500))*TEcmg/CHR_AM));
+  cmgComplet=Math.round(Math.max(0,Math.min(cmgComplet,coutGardeCmg,CMG_MAX))*100)/100;
+  const creditImpotCmg=Math.min((coutTotalCmg-cmgComplet)*0.5,3500/12);
+  const resteChargeCmg=Math.max(0,coutTotalCmg-cmgComplet-creditImpotCmg);
 
   const outils=[
     {id:"mensu",ic:"🧮",t:"Mensualisation",c:"#5DA9A1"},
     {id:"salaire",ic:"💶",t:"Salaire net / brut",c:"#E49178"},
     {id:"ie",ic:"🍽️",t:"Indemnités d'entretien",c:"#C09553"},
-    {id:"cmg",ic:"🏛️",t:"Plafond CMG",c:"#2E4859"},
+    {id:"cmgfull",ic:"🏛️",t:"CMG (réforme 2025)",c:"#2E4859"},
+    {id:"cmg",ic:"📊",t:"Plafond CMG",c:"#7A8B92"},
   ];
   const Field=({lab,val,setter,step=1,suf=""})=>(
     <div>
@@ -11479,6 +11522,34 @@ function OutilsGratuits({onClose,onCta}){
           </div>
         </div>}
 
+        {/* ----- CMG REFORME 2025 (complet) ----- */}
+        {outil==="cmgfull"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
+          <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>🏛️ CMG & reste à charge (réforme 2025)</div>
+            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Estimez l'aide CMG, le crédit d'impôt et ce qu'il vous reste à payer.</div>
+          </div>
+          <div style={{padding:18}}>
+            <div style={grid}>
+              <Field lab="Revenus annuels du foyer"val={revCmg}setter={setRevCmg}step={500}suf="€"/>
+              <Field lab="Enfants à charge"val={nbEnfCmg}setter={setNbEnfCmg}suf=""/>
+              <Field lab="Heures par semaine"val={hSemCmg}setter={setHSemCmg}suf="h"/>
+              <Field lab="Taux horaire net"val={tauxCmg}setter={setTauxCmg}step={0.05}suf="€"/>
+            </div>
+            <div style={resBox}>
+              <div style={{textAlign:"center",marginBottom:14}}>
+                <div style={{fontSize:12,color:"#5F7A86"}}>Reste à charge estimé / mois</div>
+                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(resteChargeCmg)}</div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12}}>
+                <Stat l="Coût total (employeur)"v={eur(coutTotalCmg)}c="#2E4859"/>
+                <Stat l="Aide CMG"v={"-"+eur(cmgComplet)}c="#5DA9A1"/>
+                <Stat l="Crédit d'impôt (50 %)"v={"-"+eur(creditImpotCmg)}c="#C09553"/>
+              </div>
+            </div>
+            <div style={note}>ℹ️ Calcul selon la réforme du 1ᵉʳ sept. 2025 (barème par taux d'effort, paramètres CNAF 2026). Estimation indicative : le montant exact dépend de votre situation CAF. Plafond CMG mensuel : {eur(CMG_MAX)}.</div>
+          </div>
+        </div>}
+
         {/* ----- PLAFOND CMG ----- */}
         {outil==="cmg"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
           <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
@@ -11539,31 +11610,41 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     {page:"messagerie",label:"Échanges parents",ic:"💬",desc:"Messagerie instantanée avec les parents, des deux côtés."},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée."},
   ];
+  // Demo "video" : un doigt se deplace et appuie sur l'ecran, l'app reagit, en boucle
+  const demoScript = [
+    {page:"accueil",       x:13, y:91},  // tap onglet Accueil (bottom-nav)
+    {page:"calendrier",    x:62, y:91},  // tap onglet Administratif
+    {page:"admin_finances",x:55, y:23},  // tap sous-onglet Paie (haut)
+    {page:"messagerie",    x:30, y:23},  // tap sous-onglet Messagerie
+    {page:"sante_complet", x:38, y:91},  // tap onglet L'enfant
+  ];
   const [playing, setPlaying] = useState(true);
-  const [videoProgress, setVideoProgress] = useState(0);
+  const [vStep, setVStep] = useState(0);
+  const [finger, setFinger] = useState({x:50,y:55});
+  const [tapping, setTapping] = useState(false);
   const demoScreenRef = useRef(null);
-  // Effet "video demo" : le contenu de l'ecran courant defile doucement tout seul (screencast), en boucle
   useEffect(()=>{
     if(!playing)return;
-    let raf, last=performance.now();
-    const tick=(now)=>{
-      const dt=now-last; last=now;
-      const el=demoScreenRef.current;
-      if(el){
-        const max=el.scrollHeight-el.clientHeight;
-        if(max>4){
-          let nt=el.scrollTop+dt*0.035;
-          if(nt>=max) nt=0;
-          el.scrollTop=nt;
-          setVideoProgress((nt/max)*100);
-        } else setVideoProgress(0);
-      }
-      raf=requestAnimationFrame(tick);
-    };
-    raf=requestAnimationFrame(tick);
-    return()=>cancelAnimationFrame(raf);
-  },[playing,demoPage]);
-  const goDemo=(p)=>{setDemoPage(p);const el=demoScreenRef.current;if(el)el.scrollTop=0;setVideoProgress(0);};
+    const ts=[];
+    const s=demoScript[vStep%demoScript.length];
+    setFinger({x:s.x,y:s.y});                 // le doigt se deplace vers la cible
+    ts.push(setTimeout(()=>{
+      setTapping(true);                       // tap (ripple + enfoncement)
+      setDemoPage(s.page);                    // l'app reagit
+      const el=demoScreenRef.current; if(el)el.scrollTop=0;
+      ts.push(setTimeout(()=>setTapping(false),340));
+      ts.push(setTimeout(()=>setVStep(v=>v+1),2600));
+    },1050));
+    return()=>ts.forEach(clearTimeout);
+  },[vStep,playing]);
+  const videoProgress=((vStep%demoScript.length)/demoScript.length)*100;
+  const goDemo=(p)=>{
+    setPlaying(false);
+    const i=demoScript.findIndex(s=>s.page===p);
+    if(i>=0)setVStep(i);
+    setDemoPage(p);
+    const el=demoScreenRef.current; if(el)el.scrollTop=0;
+  };
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
   useEffect(()=>{
@@ -11882,6 +11963,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 560, display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
+
+                {/* Doigt animé facon vraie demo video */}
+                <div style={{position:"absolute",left:finger.x+"%",top:finger.y+"%",transform:"translate(-50%,-50%)",transition:"left .85s cubic-bezier(.45,0,.25,1), top .85s cubic-bezier(.45,0,.25,1)",zIndex:55,pointerEvents:"none"}}>
+                  {tapping&&<span style={{position:"absolute",left:"50%",top:"50%",width:48,height:48,marginLeft:-24,marginTop:-24,borderRadius:"50%",background:"rgba(228,145,120,.35)",animation:"tapripple .45s ease-out"}}/>}
+                  <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.94)",boxShadow:"0 5px 16px rgba(0,0,0,.32)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,transform:tapping?"scale(.8)":"scale(1)",transition:"transform .2s"}}>👆</div>
+                </div>
 
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
 
@@ -13341,6 +13428,12 @@ function AjouterEnfantModale({user,onClose}){
       // 3. Inviter le parent (optionnel, seulement si email fourni)
       if(parentInfo.email.trim()){
         try{
+          // Lien de rattachement automatique au bon enfant (token de partage)
+          let inviteUrl=null;
+          try{
+            const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfantData.id});
+            if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://timat.app")+"/?invite="+tk;
+          }catch(e){}
           const res=await fetch("/api/invite-parent",{
             method:"POST",
             headers:{"Content-Type":"application/json"},
@@ -13352,6 +13445,7 @@ function AjouterEnfantModale({user,onClose}){
               prenomAsmat:user?.prenom||"Votre assistante maternelle",
               asmatId:user.id,
               enfantId:enfantData.id,
+              inviteUrl,
             }),
           });
           const d=await res.json().catch(()=>({}));
