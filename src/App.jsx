@@ -975,6 +975,28 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       </div>
     </div>
 
+    {/* Guide de demarrage — prise en main des nouveaux comptes (0 enfant) */}
+    {nbEnfants===0&&!demoStats&&<div className="card"style={{padding:0,marginBottom:18,overflow:"hidden",border:"1.5px solid var(--T)"}}>
+      <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
+        <div className="pf"style={{fontSize:18,fontWeight:800,color:"var(--b)"}}>🚀 Bienvenue sur TiMat !</div>
+        <div style={{fontSize:12.5,color:"var(--m)",marginTop:3}}>3 étapes pour démarrer sereinement.</div>
+      </div>
+      <div style={{padding:14,display:"flex",flexDirection:"column",gap:10}}>
+        {[
+          {n:"1",t:"Ajoutez votre premier enfant",d:"Créez sa fiche et son contrat.",act:true,btn:"➕ Ajouter",fn:()=>setShowAjout(true)},
+          {n:"2",t:"Invitez le parent",d:"Il suit la journée en direct et signe le contrat.",act:false},
+          {n:"3",t:"Pointez les présences",d:"Arrivées, départs et absences en un tap.",act:false},
+        ].map(s=><div key={s.n}style={{display:"flex",alignItems:"center",gap:13,padding:"11px 13px",background:s.act?"var(--c)":"transparent",borderRadius:14,border:"1px solid "+(s.act?"var(--br)":"transparent"),opacity:s.act?1:.6}}>
+          <div style={{flexShrink:0,width:32,height:32,borderRadius:"50%",background:s.act?"var(--T)":"var(--br)",color:s.act?"#fff":"var(--m)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14}}>{s.n}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13.5,fontWeight:700,color:"var(--b)"}}>{s.t}</div>
+            <div style={{fontSize:11.5,color:"var(--m)",marginTop:1}}>{s.d}</div>
+          </div>
+          {s.act&&<button className="btn bT"style={{fontSize:12,flexShrink:0}}onClick={s.fn}>{s.btn}</button>}
+        </div>)}
+      </div>
+    </div>}
+
     <QuickActions role="asmat" setPage={setPage}/>
 
     {/* ECHEANCIER DECLARATION PAJEMPLOI */}
@@ -11610,31 +11632,45 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     {page:"messagerie",label:"Échanges parents",ic:"💬",desc:"Messagerie instantanée avec les parents, des deux côtés."},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée."},
   ];
-  // Demo "video" : un doigt se deplace et appuie sur l'ecran, l'app reagit, en boucle
+  // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
-    {page:"accueil",       x:13, y:91},  // tap onglet Accueil (bottom-nav)
-    {page:"calendrier",    x:62, y:91},  // tap onglet Administratif
-    {page:"admin_finances",x:55, y:23},  // tap sous-onglet Paie (haut)
-    {page:"messagerie",    x:30, y:23},  // tap sous-onglet Messagerie
-    {page:"sante_complet", x:38, y:91},  // tap onglet L'enfant
+    {page:"accueil",       x:13, y:91},
+    {page:"calendrier",    x:62, y:91},
+    {page:"admin_finances",x:55, y:23},
+    {page:"messagerie",    x:30, y:23},
+    {page:"sante_complet", x:38, y:91},
   ];
   const [playing, setPlaying] = useState(true);
   const [vStep, setVStep] = useState(0);
-  const [finger, setFinger] = useState({x:50,y:55});
-  const [tapping, setTapping] = useState(false);
+  const [click, setClick] = useState(null); // onde de clic {x,y} ou null
   const demoScreenRef = useRef(null);
+  // 1) l'ecran suit vStep
+  useEffect(()=>{
+    setDemoPage(demoScript[vStep%demoScript.length].page);
+    const el=demoScreenRef.current; if(el)el.scrollTop=0;
+  },[vStep]);
+  // 2) scroll doux et continu du contenu (effet video)
   useEffect(()=>{
     if(!playing)return;
+    let raf, last=performance.now();
+    const tick=(now)=>{
+      const dt=now-last; last=now;
+      const el=demoScreenRef.current;
+      if(el){const max=el.scrollHeight-el.clientHeight; if(max>4){let nt=el.scrollTop+dt*0.03; if(nt>=max)nt=0; el.scrollTop=nt;}}
+      raf=requestAnimationFrame(tick);
+    };
+    raf=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(raf);
+  },[playing,demoPage]);
+  // 3) apres un temps de lecture : onde de clic (a l'endroit du prochain onglet) puis changement d'ecran
+  useEffect(()=>{
+    if(!playing)return;
+    const next=demoScript[(vStep+1)%demoScript.length];
     const ts=[];
-    const s=demoScript[vStep%demoScript.length];
-    setFinger({x:s.x,y:s.y});                 // le doigt se deplace vers la cible
     ts.push(setTimeout(()=>{
-      setTapping(true);                       // tap (ripple + enfoncement)
-      setDemoPage(s.page);                    // l'app reagit
-      const el=demoScreenRef.current; if(el)el.scrollTop=0;
-      ts.push(setTimeout(()=>setTapping(false),340));
-      ts.push(setTimeout(()=>setVStep(v=>v+1),2600));
-    },1050));
+      setClick({x:next.x,y:next.y});
+      ts.push(setTimeout(()=>{ setClick(null); setVStep(v=>v+1); },480));
+    },3600));
     return()=>ts.forEach(clearTimeout);
   },[vStep,playing]);
   const videoProgress=((vStep%demoScript.length)/demoScript.length)*100;
@@ -11644,6 +11680,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     if(i>=0)setVStep(i);
     setDemoPage(p);
     const el=demoScreenRef.current; if(el)el.scrollTop=0;
+    setClick(null);
   };
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
@@ -11964,11 +12001,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
-                {/* Doigt animé facon vraie demo video */}
-                <div style={{position:"absolute",left:finger.x+"%",top:finger.y+"%",transform:"translate(-50%,-50%)",transition:"left .85s cubic-bezier(.45,0,.25,1), top .85s cubic-bezier(.45,0,.25,1)",zIndex:55,pointerEvents:"none"}}>
-                  {tapping&&<span style={{position:"absolute",left:"50%",top:"50%",width:48,height:48,marginLeft:-24,marginTop:-24,borderRadius:"50%",background:"rgba(228,145,120,.35)",animation:"tapripple .45s ease-out"}}/>}
-                  <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.94)",boxShadow:"0 5px 16px rgba(0,0,0,.32)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,transform:tapping?"scale(.8)":"scale(1)",transition:"transform .2s"}}>👆</div>
-                </div>
+                {/* Onde de clic (sans doigt) — comme une vraie video de l'app */}
+                {click&&<div style={{position:"absolute",left:click.x+"%",top:click.y+"%",transform:"translate(-50%,-50%)",zIndex:55,pointerEvents:"none"}}>
+                  <span style={{position:"absolute",left:"50%",top:"50%",width:14,height:14,marginLeft:-7,marginTop:-7,borderRadius:"50%",background:"rgba(110,120,130,.5)"}}/>
+                  <span style={{display:"block",width:44,height:44,borderRadius:"50%",background:"rgba(120,130,140,.3)",animation:"tapripple .5s ease-out"}}/>
+                </div>}
 
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
 
