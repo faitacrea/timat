@@ -10890,43 +10890,42 @@ function OutilsHub({setPage}){
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
-    {id:"journee",l:"Journée",ic:"📔"},
-    {id:"pointage",l:"Pointage",ic:"⏰"},
-    {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊"},
-    {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥"},
-    {id:"bilans",l:"Bilans",ic:"✨"},
+    {id:"journee",l:"Journée",ic:"📔",d:"Cahier de liaison : repas, sieste, activités"},
+    {id:"pointage",l:"Pointage",ic:"⏰",d:"Arrivées, départs et heures effectuées"},
+    {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Développement et acquisitions de l'enfant"},
+    {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence, allergies, soins"},
+    {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans périodiques à partager"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
-    {id:"calendrier",l:"Calendrier",ic:"📅"},
-    {id:"messagerie",l:"Messagerie",ic:"💬"},
-    {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾"},
-    {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️"},
+    {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
+    {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec les parents"},
+    {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾",d:"Bulletins, contrats et déclarations"},
+    {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️",d:"Attestations et exports"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",color:"#E49178",subs:[
-    {id:"outils_hub",l:"Menu",ic:"⭐"},
-    {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
-    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
-    {id:"pmi",l:"PMI",ic:"🏛️"},
-    {id:"faq",l:"Aide & Support",ic:"❓"},
+    {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
+    {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
+    {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
   ]},
 };
 const GROUPS_P={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"Mon enfant",ic:"👶",color:"#B8622F",subs:[
-    {id:"journee",l:"Journée",ic:"📔"},
-    {id:"pointage",l:"Pointage",ic:"⏰"},
-    {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊"},
-    {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥"},
-    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
-    {id:"bilans",l:"Bilans",ic:"✨"},
+    {id:"journee",l:"Journée",ic:"📔",d:"Sa journée : repas, sieste, activités"},
+    {id:"pointage",l:"Pointage",ic:"⏰",d:"Heures de présence et absences"},
+    {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Son développement au quotidien"},
+    {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence et informations santé"},
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Le projet pédagogique"},
+    {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans partagés par l'assistante maternelle"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
-    {id:"calendrier",l:"Calendrier",ic:"📅"},
-    {id:"messagerie",l:"Messagerie",ic:"💬"},
-    {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶"},
-    {id:"admin_finances",l:"Mon contrat",ic:"🧾"},
-    {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️"},
-    {id:"faq",l:"Centre d'aide",ic:"❓"},
+    {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
+    {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec l'assistante maternelle"},
+    {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
+    {id:"admin_finances",l:"Mon contrat",ic:"🧾",d:"Contrat, bulletins et paiements"},
+    {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️",d:"Vos documents et attestations"},
+    {id:"faq",l:"Centre d'aide",ic:"❓",d:"Guides et contact"},
   ]},
 };
 
@@ -10946,6 +10945,8 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
   const activeGroup=findGroup(groups,page);
   const group=groups[activeGroup];
   const subs=group?.subs||null;
+  const [subOpen,setSubOpen]=useState(false);
+  useEffect(()=>{setSubOpen(false);},[page]);
 
   const onGroupClick=(key)=>{
     const g=groups[key];
@@ -11059,36 +11060,57 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
       })}
     </div>
 
-    {/* Sous-onglets */}
+    {/* Sous-navigation en menu déroulant (clair et compact) */}
     {subs&&<div style={{
       background:"rgba(245,235,248,.6)",backdropFilter:"blur(12px)",
       borderBottom:"1px solid rgba(234,224,232,.5)",
-      display:"flex",gap:4,padding:"6px 16px",overflowX:"auto",
-      scrollbarWidth:"none",flexShrink:0,alignItems:"center",
+      display:"flex",gap:10,padding:"7px 16px",flexShrink:0,alignItems:"center",position:"relative",
     }}>
-      {subs.map(s=>{
-        const isSubActive=(PAGE_ALIAS[page]||page)===s.id;
-        const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
-        return <button key={s.id}onClick={()=>setPage(s.id)}style={{
-          display:"flex",alignItems:"center",gap:5,
-          padding:"5px 13px",borderRadius:16,border:"none",
-          fontFamily:"'DM Sans',sans-serif",fontSize:12,
-          cursor:"pointer",transition:"all .15s",flexShrink:0,whiteSpace:"nowrap",
-          background:isSubActive?"rgba(155,107,170,.12)":"transparent",
-          color:isSubActive?"var(--S)":"var(--b)",
-          fontWeight:isSubActive?700:500,
-          boxShadow:isSubActive?"inset 0 0 0 1.5px rgba(144,160,147,.3)":"none",
-          position:"relative",
-        }}>
-          <span>{s.ic}</span>
-          <span>{s.l}</span>
-          {hasPmiBadge&&<span style={{
-            background:"var(--R)",color:"#fff",
-            borderRadius:10,padding:"1px 5px",
-            fontSize:9,fontWeight:700,marginLeft:2,
-          }}>{pmiNonLus}</span>}
-        </button>;
-      })}
+      {(()=>{
+        const cur=subs.find(s=>(PAGE_ALIAS[page]||page)===s.id)||subs[0];
+        return <>
+          <button onClick={()=>setSubOpen(o=>!o)} style={{
+            display:"flex",alignItems:"center",gap:9,background:"var(--w)",
+            border:"1.5px solid var(--br)",borderRadius:22,padding:"7px 15px",cursor:"pointer",
+            fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,color:"var(--b)",
+            boxShadow:subOpen?"0 4px 14px rgba(0,0,0,.1)":"0 2px 6px rgba(0,0,0,.05)",transition:"box-shadow .15s",
+          }}>
+            <span style={{fontSize:15}}>{cur?.ic}</span>
+            <span>{cur?.l}</span>
+            <span style={{fontSize:9,opacity:.55,transform:subOpen?"rotate(180deg)":"none",transition:"transform .2s",marginLeft:2}}>▼</span>
+          </button>
+          <span style={{fontSize:11.5,color:"var(--l)",fontWeight:600}}>{group?.l}</span>
+          {subOpen&&<>
+            <div onClick={()=>setSubOpen(false)} style={{position:"fixed",inset:0,zIndex:150}}/>
+            <div style={{
+              position:"absolute",top:"100%",left:16,marginTop:5,background:"var(--w)",
+              borderRadius:14,boxShadow:"0 18px 48px rgba(0,0,0,.2)",border:"1px solid var(--br)",
+              zIndex:160,minWidth:240,overflow:"hidden",padding:6,animation:"menuDrop .18s ease",
+            }}>
+              {subs.map(s=>{
+                const on=(PAGE_ALIAS[page]||page)===s.id;
+                const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
+                return <button key={s.id}onClick={()=>{setPage(s.id);setSubOpen(false);}}style={{
+                  width:"100%",display:"flex",alignItems:"center",gap:12,padding:"11px 12px",
+                  borderRadius:11,border:"none",cursor:"pointer",textAlign:"left",
+                  background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
+                  fontWeight:on?700:500,fontSize:13.5,transition:"background .15s",
+                }}
+                  onMouseEnter={e=>{if(!on)e.currentTarget.style.background="var(--c)";}}
+                  onMouseLeave={e=>{if(!on)e.currentTarget.style.background="transparent";}}>
+                  <span style={{fontSize:18,width:26,textAlign:"center",flexShrink:0}}>{s.ic}</span>
+                  <span style={{flex:1,minWidth:0}}>
+                    <span style={{display:"block"}}>{s.l}</span>
+                    {s.d&&<span style={{display:"block",fontSize:11,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
+                  </span>
+                  {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{pmiNonLus}</span>}
+                  {on&&<span style={{color:"var(--S)",fontWeight:700}}>✓</span>}
+                </button>;
+              })}
+            </div>
+          </>}
+        </>;
+      })()}
     </div>}
   </>;
 }
@@ -11688,18 +11710,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     raf=requestAnimationFrame(tick);
     return()=>cancelAnimationFrame(raf);
   },[playing,demoPage]);
-  // 3) apres un temps de lecture : onde de clic (a l'endroit du prochain onglet) puis changement d'ecran
-  useEffect(()=>{
-    if(!playing)return;
-    const next=demoScript[(vStep+1)%demoScript.length];
-    const ts=[];
-    ts.push(setTimeout(()=>{
-      setClick({x:next.x,y:next.y});
-      ts.push(setTimeout(()=>{ setClick(null); setVStep(v=>v+1); },480));
-    },3600));
-    return()=>ts.forEach(clearTimeout);
-  },[vStep,playing]);
-  const videoProgress=((vStep%demoScript.length)/demoScript.length)*100;
   const goDemo=(p)=>{
     const i=demoScript.findIndex(s=>s.page===p);
     if(i>=0)setVStep(i);
