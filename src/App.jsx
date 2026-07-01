@@ -10862,6 +10862,31 @@ function BottomNav({groups,page,setPage,pmiNonLus}){
 }
 
 
+function OutilsHub({setPage}){
+  const items=[
+    {id:"inviter_parent",ic:"👪",t:"Inviter un parent",d:"Envoyez un lien : le parent suit la journée en direct et signe le contrat.",c:"#5DA9A1"},
+    {id:"projet_accueil",ic:"🌿",t:"Projet d'accueil",d:"Rédigez et partagez votre projet pédagogique.",c:"#B8622F"},
+    {id:"pmi",ic:"🏛️",t:"PMI",d:"Contacts et communication avec votre PMI de secteur.",c:"#2E4859"},
+    {id:"faq",ic:"❓",t:"Aide & Support",d:"Guides, questions fréquentes et contact.",c:"#C09553"},
+  ];
+  return <div className="fi">
+    <PageHeader icon="⭐" title="Outils Pro" sub="Vos outils du quotidien, réunis au même endroit"/>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:14}}>
+      {items.map(o=><button key={o.id}onClick={()=>setPage(o.id)}
+        style={{textAlign:"left",background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:18,cursor:"pointer",transition:"transform .15s,box-shadow .15s,border-color .15s",display:"flex",flexDirection:"column",gap:10,minHeight:170}}
+        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 30px "+o.c+"22";e.currentTarget.style.borderColor=o.c;}}
+        onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor="var(--br)";}}>
+        <div style={{width:52,height:52,borderRadius:15,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:27}}>{o.ic}</div>
+        <div>
+          <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:4}}>{o.t}</div>
+          <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>{o.d}</div>
+        </div>
+        <div style={{marginTop:"auto",fontSize:12.5,fontWeight:700,color:o.c}}>Ouvrir →</div>
+      </button>)}
+    </div>
+  </div>;
+}
+
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
@@ -10878,6 +10903,7 @@ const GROUPS_AM={
     {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",color:"#E49178",subs:[
+    {id:"outils_hub",l:"Menu",ic:"⭐"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"},
     {id:"pmi",l:"PMI",ic:"🏛️"},
@@ -11675,7 +11701,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   },[vStep,playing]);
   const videoProgress=((vStep%demoScript.length)/demoScript.length)*100;
   const goDemo=(p)=>{
-    setPlaying(false);
     const i=demoScript.findIndex(s=>s.page===p);
     if(i>=0)setVStep(i);
     setDemoPage(p);
@@ -11967,7 +11992,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
             {/* Panneau explications (gauche) */}
             <div className="demo-side">
-              <div style={{fontSize:11,fontWeight:700,color:"#5DA9A1",textTransform:"uppercase",letterSpacing:".8px",marginBottom:7,display:"flex",alignItems:"center",gap:7}}><span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:"#C84B31",animation:"recblink 1.1s infinite"}}/>Démo en direct</div>
+              <div style={{fontSize:11,fontWeight:700,color:"#5DA9A1",textTransform:"uppercase",letterSpacing:".8px",marginBottom:7}}>L'application en images</div>
               <div style={{fontFamily:fTitle,fontSize:"clamp(19px,2.4vw,24px)",fontWeight:700,color:"#0D1B2A",marginBottom:16,lineHeight:1.25}}>Explorez TiMat, section par section</div>
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
@@ -12056,14 +12081,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
                 <div style={{ width: 90, height: 4, background: "rgba(255,255,255,.25)", borderRadius: 2 }} />
               </div>
-            </div>
-            {/* Barre de lecture video (facon screencast) */}
-            <div style={{width:"100%",maxWidth:320,background:"#1a1a2e",borderRadius:16,padding:"10px 14px",display:"flex",alignItems:"center",gap:11,boxShadow:"0 8px 24px rgba(0,0,0,.2)"}}>
-              <button onClick={()=>setPlaying(p=>!p)} aria-label={playing?"Pause":"Lecture"} style={{flexShrink:0,width:34,height:34,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>{playing?"⏸":"▶"}</button>
-              <div style={{flex:1,height:5,borderRadius:3,background:"rgba(255,255,255,.15)",overflow:"hidden"}}>
-                <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#E49178,#5DA9A1)",width:videoProgress+"%",transition:"width .1s linear"}}/>
-              </div>
-              <span style={{flexShrink:0,fontSize:10,color:"rgba(255,255,255,.7)",fontFamily:"'DM Mono',monospace",letterSpacing:".5px",display:"flex",alignItems:"center",gap:5}}><span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:"#C84B31",animation:playing?"recblink 1.1s infinite":"none"}}/>REC</span>
             </div>
             </div>{/* /colonne phone */}
           </div>
@@ -17128,6 +17145,7 @@ export default function App(){
       case "faq": return <VueAideSupport role={role} user={user}/>;
       case "aides_simulateurs": return <VueAidesSimulateurs enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "inviter_parent": return <InviterParent enfants={enfants} user={user}/>;
+      case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
