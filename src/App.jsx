@@ -211,6 +211,7 @@ function Styles(){return(
     @keyframes menuDrop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
     @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
     @keyframes tapripple{from{transform:scale(.4);opacity:.85}to{transform:scale(1.7);opacity:0}}
+    @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
     .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
     .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
@@ -271,15 +272,25 @@ function Styles(){return(
     .demo-layout{display:flex;gap:30px;align-items:flex-start;justify-content:center;max-width:1160px;margin:0 auto}
     .demo-tabs{display:flex;flex-direction:column;width:190px;flex-shrink:0;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.07)}
     .demo-explain{flex:1;min-width:0;max-width:440px;padding-top:4px}
-    @media(max-width:980px){.demo-layout{flex-wrap:wrap}.demo-tabs{flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none}.demo-tabs button{flex:1;min-width:130px;flex-direction:column;gap:6px;text-align:center;justify-content:center}.demo-explain{max-width:none;flex-basis:100%;order:3}}
-    .demo-layout{display:flex;gap:44px;align-items:center;justify-content:center;max-width:980px;margin:0 auto}
-    .demo-side{flex:1;max-width:420px;min-width:0}
-    @media(max-width:860px){.demo-layout{flex-direction:column;gap:28px}.demo-side{max-width:520px;width:100%}}
-    @media(max-width:768px){.demo-phone{width:250px}}
-    @media(max-width:480px){.demo-phone{width:min(250px,78vw)}}
+    .demo-col-phone{flex-shrink:0}
+    .demo-frame{height:540px}
+    .demo-resume{display:none}
+    .demo-scrollhint{display:none}
     .demo-zoom{zoom:.82}
-    @media(max-width:768px){.demo-zoom{zoom:.78}}
-    @media(max-width:480px){.demo-zoom{zoom:.74}}
+    @media(max-width:860px){
+      .demo-layout{flex-direction:column;gap:14px;align-items:stretch;max-width:520px}
+      .demo-tabs{flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:14px;order:1}
+      .demo-tabs::-webkit-scrollbar{display:none}
+      .demo-tabs button{flex:0 0 auto;min-width:132px;flex-direction:column;gap:5px;text-align:center;justify-content:center;padding:11px 14px;border-bottom:none!important;border-right:1px solid rgba(0,0,0,.05)}
+      .demo-explain{max-width:none;order:2;padding-top:0}
+      .demo-full{display:none}
+      .demo-resume{display:block}
+      .demo-scrollhint{display:flex}
+      .demo-col-phone{order:3;align-self:center}
+      .demo-phone{width:min(360px,94vw)}
+      .demo-frame{height:340px}
+      .demo-zoom{zoom:1}
+    }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
     .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
@@ -11721,26 +11732,31 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     {page:"accueil",label:"Accueil & journée",ic:"🏠",
       desc:"Vue d'ensemble : enfants présents, signatures, prochains événements.",
       intro:"D'un simple coup d'œil, retrouvez les enfants présents, les signatures en attente et les prochains rendez-vous. Tout ce qui compte pour bien démarrer la journée, réuni au même endroit.",
+      resume:["Enfants présents en temps réel","Contrats à signer","Raccourcis d'action rapides"],
       benefices:["Vue d'ensemble immédiate","Rien n'est oublié","Gain de temps au quotidien"],
       permet:["Voir les enfants présents en temps réel","Suivre les contrats à signer","Accéder aux raccourcis d'action","Consulter les prochains événements"]},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
       desc:"Pointages, absences et planning partagé en temps réel.",
       intro:"Le planning rythme le quotidien de l'enfant, des parents et de l'assistante maternelle. TiMat propose une vision claire et partagée des temps d'accueil, en tenant compte des absences et des imprévus.",
+      resume:["Planning partagé en temps réel","Pointages jour par jour","Absences et heures sup."],
       benefices:["Visibilité claire et partagée","Moins de charge mentale","Des données fiables pour les calculs"],
       permet:["Gérer le calendrier et les plannings","Pointer les présences jour par jour","Gérer absences, retards et heures sup.","Feuille de présence et historique mensuel"]},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
       desc:"Bulletins, mensualisation et déclarations calculés automatiquement.",
       intro:"Les calculs de salaire et les déclarations mensuelles sont souvent sources de stress et d'erreurs. TiMat les automatise à partir des données réellement saisies, pour garantir fiabilité et conformité.",
+      resume:["Salaires et indemnités calculés","Bulletins conformes","Déclaration Pajemploi préparée"],
       benefices:["Fini les doutes","Déclaration conforme","Gain de temps chaque mois"],
       permet:["Calculer automatiquement les salaires","Calculer les indemnités (entretien, repas, km)","Gérer les congés payés et déductions","Préparer la déclaration Pajemploi"]},
     {page:"messagerie",label:"Échanges parents",ic:"💬",
       desc:"Messagerie instantanée avec les parents, des deux côtés.",
       intro:"Gardez le lien avec les parents au fil de la journée. Une messagerie simple et instantanée, accessible des deux côtés, pour une relation de confiance.",
+      resume:["Messagerie instantanée","Moments de la journée partagés","Historique conservé"],
       benefices:["Communication fluide","Historique conservé","Confiance renforcée"],
       permet:["Échanger en temps réel avec les parents","Partager les moments de la journée","Retrouver tout l'historique des échanges","Être notifié des nouveaux messages"]},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",
       desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée.",
       intro:"En cas de besoin, chaque information vitale est immédiatement accessible : fiche d'urgence, allergies, traitements et numéros utiles, pour réagir vite et sereinement.",
+      resume:["Fiche d'urgence par enfant","Allergies et traitements","Numéros d'urgence cliquables"],
       benefices:["Réactivité en cas d'urgence","Informations centralisées","Sérénité au quotidien"],
       permet:["Fiche d'urgence par enfant","Allergies et traitements en cours","Numéros d'urgence cliquables","Contacts PMI de votre secteur"]},
   ];
@@ -11784,6 +11800,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     };
     raf=requestAnimationFrame(tick);
     return()=>cancelAnimationFrame(raf);
+  },[playing,demoPage]);
+  // Ondes de clic sur des zones internes plausibles selon l'ecran (effet "on utilise l'app")
+  useEffect(()=>{
+    if(!playing)return;
+    const CLICKS={
+      accueil:[{x:84,y:30},{x:50,y:55},{x:84,y:44}],
+      calendrier:[{x:46,y:40},{x:66,y:52},{x:38,y:60}],
+      admin_finances:[{x:50,y:28},{x:62,y:52},{x:44,y:66}],
+      messagerie:[{x:86,y:90},{x:40,y:46},{x:86,y:90}],
+      sante_complet:[{x:50,y:34},{x:78,y:34},{x:50,y:56}],
+    };
+    const pts=CLICKS[demoPage]||[{x:50,y:45}];
+    let i=0; const ts=[];
+    const loop=()=>{
+      setClick(pts[i%pts.length]); i++;
+      ts.push(setTimeout(()=>setClick(null),520));
+      ts.push(setTimeout(loop,3000));
+    };
+    ts.push(setTimeout(loop,1600));
+    return()=>{ts.forEach(clearTimeout);setClick(null);};
   },[playing,demoPage]);
   const goDemo=(p)=>{
     const i=demoScript.findIndex(s=>s.page===p);
@@ -12075,31 +12111,45 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           </FadeIn>
           <div className="demo-layout">
 
-            {/* Onglets (gauche) facon Pandi-Panda */}
-            <div className="demo-tabs">
-              {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#2E4859,#3E5C4A)":"#F1EFEC",color:on?"#fff":"#5A6B60",transition:"all .2s",borderBottom:"1px solid rgba(0,0,0,.05)"}}>
-                <span style={{fontSize:22,flexShrink:0}}>{s.ic}</span>
-                <span style={{fontSize:14,fontWeight:700,lineHeight:1.25}}>{s.label}</span>
-              </button>;})}
+            {/* Onglets (gauche desktop / haut mobile) facon Pandi-Panda */}
+            <div style={{order:1}}>
+              <div className="demo-tabs">
+                {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
+                  style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#2E4859,#3E5C4A)":"#F1EFEC",color:on?"#fff":"#5A6B60",transition:"all .2s",borderBottom:"1px solid rgba(0,0,0,.05)"}}>
+                  <span style={{fontSize:22,flexShrink:0}}>{s.ic}</span>
+                  <span style={{fontSize:14,fontWeight:700,lineHeight:1.25}}>{s.label}</span>
+                </button>;})}
+              </div>
+              <div className="demo-scrollhint" style={{alignItems:"center",justifyContent:"center",gap:6,marginTop:8,fontSize:11.5,color:"#90A093",fontWeight:600}}>
+                <span style={{animation:"nudge 1.2s ease-in-out infinite"}}>👉</span> Faites défiler pour voir les autres sections
+              </div>
             </div>
 
-            {/* Explication riche (centre) */}
-            {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain">
-              <div style={{fontFamily:fTitle,fontSize:"clamp(22px,2.6vw,30px)",fontWeight:700,color:"#2E4859",marginBottom:14,lineHeight:1.2}}>{s.label}</div>
-              <div style={{fontSize:14,color:"#5A6B73",lineHeight:1.7,marginBottom:22}}>{s.intro}</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"11px 20px",marginBottom:26}}>
-                {s.benefices.map(b=><div key={b}style={{display:"flex",gap:8,fontSize:13,color:"#2E4859",lineHeight:1.45}}><span style={{color:"#5DA9A1",fontWeight:700,flexShrink:0}}>•</span><span style={{fontWeight:600}}>{b}</span></div>)}
+            {/* Explication (centre desktop / sous onglets mobile) */}
+            {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
+              <div style={{fontFamily:fTitle,fontSize:"clamp(20px,2.6vw,30px)",fontWeight:700,color:"#2E4859",marginBottom:12,lineHeight:1.2}}>{s.label}</div>
+              {/* Version complete (desktop) */}
+              <div className="demo-full">
+                <div style={{fontSize:14,color:"#5A6B73",lineHeight:1.7,marginBottom:22}}>{s.intro}</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"11px 20px",marginBottom:26}}>
+                  {s.benefices.map(b=><div key={b}style={{display:"flex",gap:8,fontSize:13,color:"#2E4859",lineHeight:1.45}}><span style={{color:"#5DA9A1",fontWeight:700,flexShrink:0}}>•</span><span style={{fontWeight:600}}>{b}</span></div>)}
+                </div>
+                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#0D1B2A",marginBottom:13}}>Ce que permet TiMat</div>
+                <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
+                  {s.permet.map(p=><div key={p}style={{display:"flex",gap:10,fontSize:13.5,color:"#5A6B73",lineHeight:1.5}}><span style={{color:"#E49178",fontWeight:700,flexShrink:0}}>✓</span><span>{p}</span></div>)}
+                </div>
+                <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
               </div>
-              <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#0D1B2A",marginBottom:13}}>Ce que permet TiMat</div>
-              <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
-                {s.permet.map(p=><div key={p}style={{display:"flex",gap:10,fontSize:13.5,color:"#5A6B73",lineHeight:1.5}}><span style={{color:"#E49178",fontWeight:700,flexShrink:0}}>✓</span><span>{p}</span></div>)}
+              {/* Version resumee (mobile) : 2-3 points cles */}
+              <div className="demo-resume">
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {s.resume.map(r=><div key={r}style={{display:"flex",gap:9,fontSize:13.5,color:"#2E4859",lineHeight:1.4,alignItems:"center"}}><span style={{color:"#5DA9A1",fontWeight:800,flexShrink:0,fontSize:15}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+                </div>
               </div>
-              <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
             </div>;})()}
 
-            {/* Phone + barre de lecture video (droite) */}
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14,flexShrink:0}}>
+            {/* Phone (droite desktop / bas mobile) */}
+            <div className="demo-col-phone" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
             {/* Phone frame — vraie UI de l'app */}
             <div className="demo-phone" style={{ flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 18px 55px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08)" }}>
               {/* Notch */}
@@ -12110,7 +12160,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
               </div>
               {/* Screen */}
-              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 540, display: "flex", flexDirection: "column", position: "relative" }}>
+              <div className="demo-frame" style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
