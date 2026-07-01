@@ -267,7 +267,7 @@ function Styles(){return(
     .demo-screen .g4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
     .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
-    .demo-phone{width:340px}
+    .demo-phone{width:300px}
     .demo-layout{display:flex;gap:44px;align-items:center;justify-content:center;max-width:980px;margin:0 auto}
     .demo-side{flex:1;max-width:420px;min-width:0}
     @media(max-width:860px){.demo-layout{flex-direction:column;gap:28px}.demo-side{max-width:520px;width:100%}}
@@ -10844,21 +10844,55 @@ function Support({role,user}){
 
 function BottomNav({groups,page,setPage,pmiNonLus}){
   const activeGroup=findGroup(groups,page);
-  return <nav className="bottom-nav" role="navigation" aria-label="Navigation principale">
-    {Object.entries(groups).map(([key,g])=>{
-      const isActive=activeGroup===key;
-      const hasBadge=key==="admin"&&pmiNonLus>0;
-      return <button key={key} className={"bnav-btn"+(isActive?" active":"")} onClick={()=>{
-        if(g.subs){setPage(g.subs[0].id);}else{setPage(key);}
+  const [open,setOpen]=useState(null);
+  useEffect(()=>{setOpen(null);},[page]);
+  const openGroup=open?groups[open]:null;
+  return <>
+    {open&&openGroup?.subs&&<>
+      <div onClick={()=>setOpen(null)} style={{position:"fixed",inset:0,zIndex:98}}/>
+      <div style={{
+        position:"fixed",left:10,right:10,bottom:"calc(70px + env(safe-area-inset-bottom,0px))",zIndex:99,
+        background:"var(--w)",borderRadius:18,boxShadow:"0 -8px 40px rgba(0,0,0,.22)",border:"1px solid var(--br)",
+        padding:8,animation:"menuDrop .18s ease",maxHeight:"60vh",overflowY:"auto",
       }}>
-        <span className="bnav-ic" style={{position:"relative",display:"inline-block"}}>
-          {g.ic}
-          {hasBadge&&<span style={{position:"absolute",top:-4,right:-6,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pmiNonLus}</span>}
-        </span>
-        <span className="bnav-lbl">{g.l}</span>
-      </button>;
-    })}
-  </nav>;
+        <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",padding:"6px 12px 8px"}}>{openGroup.l}</div>
+        {openGroup.subs.map(s=>{
+          const on=(PAGE_ALIAS[page]||page)===s.id;
+          const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
+          return <button key={s.id}onClick={()=>{setPage(s.id);setOpen(null);}}style={{
+            width:"100%",display:"flex",alignItems:"center",gap:12,padding:"12px 12px",
+            borderRadius:12,border:"none",cursor:"pointer",textAlign:"left",
+            background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
+            fontWeight:on?700:500,fontSize:14,
+          }}>
+            <span style={{fontSize:19,width:28,textAlign:"center",flexShrink:0}}>{s.ic}</span>
+            <span style={{flex:1,minWidth:0}}>
+              <span style={{display:"block"}}>{s.l}</span>
+              {s.d&&<span style={{display:"block",fontSize:11.5,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
+            </span>
+            {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{pmiNonLus}</span>}
+            {on&&<span style={{color:"var(--S)",fontWeight:700}}>✓</span>}
+          </button>;
+        })}
+      </div>
+    </>}
+    <nav className="bottom-nav" role="navigation" aria-label="Navigation principale">
+      {Object.entries(groups).map(([key,g])=>{
+        const isActive=activeGroup===key;
+        const isOpen=open===key;
+        const hasBadge=key==="admin"&&pmiNonLus>0;
+        return <button key={key} className={"bnav-btn"+((isActive||isOpen)?" active":"")} onClick={()=>{
+          if(g.subs){setOpen(o=>o===key?null:key);}else{setPage(key);setOpen(null);}
+        }}>
+          <span className="bnav-ic" style={{position:"relative",display:"inline-block"}}>
+            {g.ic}
+            {hasBadge&&<span style={{position:"absolute",top:-4,right:-6,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pmiNonLus}</span>}
+          </span>
+          <span className="bnav-lbl">{g.l}</span>
+        </button>;
+      })}
+    </nav>
+  </>;
 }
 
 
@@ -10945,8 +10979,8 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
   const activeGroup=findGroup(groups,page);
   const group=groups[activeGroup];
   const subs=group?.subs||null;
-  const [subOpen,setSubOpen]=useState(false);
-  useEffect(()=>{setSubOpen(false);},[page]);
+  const [subOpen,setSubOpen]=useState(null);
+  useEffect(()=>{setSubOpen(null);},[page]);
 
   const onGroupClick=(key)=>{
     const g=groups[key];
@@ -11024,94 +11058,69 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
       </div>
     </div>
 
-    {/* Barre principale - 3 gros onglets */}
+    {/* Barre principale - onglets avec menu déroulant intégré */}
     <div className="nav-main"style={{
       background:"rgba(255,255,255,.95)",backdropFilter:"blur(20px)",
       borderBottom:"1px solid rgba(234,224,232,.6)",
-      display:"flex",gap:6,padding:"0 20px",height:52,alignItems:"center",
+      display:"flex",gap:6,padding:"0 20px",height:52,alignItems:"center",position:"relative",zIndex:120,
     }}>
+      {subOpen&&<div onClick={()=>setSubOpen(null)} style={{position:"fixed",inset:0,zIndex:1}}/>}
       {Object.entries(groups).map(([key,g])=>{
         const isActive=activeGroup===key;
+        const isOpen=subOpen===key;
         const hasAdminBadge=key==="admin"&&pmiNonLus>0;
-        return <button key={key}onClick={()=>onGroupClick(key)}style={{
-          display:"flex",alignItems:"center",gap:7,
-          padding:"8px 18px",borderRadius:24,border:"none",
-          fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,
-          cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",
-          flexShrink:0,whiteSpace:"nowrap",
-          background:isActive?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",
-          color:isActive?"#fff":"var(--m)",
-          boxShadow:isActive?"0 4px 16px rgba(144,160,147,.3)":"none",
-          transform:isActive?"scale(1.03)":"scale(1)",
-          letterSpacing:".1px",position:"relative",
-        }}>
-          <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
-          <span>{g.l}</span>
-          {g.subs&&<span style={{fontSize:9,opacity:.5,marginLeft:2,transform:isActive?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
-          {hasAdminBadge&&<span style={{
-            position:"absolute",top:4,right:4,
-            background:"var(--R)",color:"#fff",
-            borderRadius:"50%",width:16,height:16,
-            fontSize:9,fontWeight:700,
-            display:"flex",alignItems:"center",justifyContent:"center",
-            boxShadow:"0 1px 4px rgba(0,0,0,.3)",
-          }}>{pmiNonLus}</span>}
-        </button>;
+        return <div key={key} style={{position:"relative",zIndex:2,flexShrink:0}}>
+          <button onClick={()=>{ if(g.subs){setSubOpen(o=>o===key?null:key);} else {setPage(key);setSubOpen(null);} }}style={{
+            display:"flex",alignItems:"center",gap:7,
+            padding:"8px 18px",borderRadius:24,border:"none",
+            fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,
+            cursor:"pointer",transition:"all .2s cubic-bezier(.34,1.56,.64,1)",
+            whiteSpace:"nowrap",
+            background:(isActive||isOpen)?"linear-gradient(135deg,var(--T),var(--S))":"rgba(155,107,170,.08)",
+            color:(isActive||isOpen)?"#fff":"var(--m)",
+            boxShadow:(isActive||isOpen)?"0 4px 16px rgba(144,160,147,.3)":"none",
+            transform:(isActive||isOpen)?"scale(1.03)":"scale(1)",
+            letterSpacing:".1px",position:"relative",
+          }}>
+            <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
+            <span>{g.l}</span>
+            {g.subs&&<span style={{fontSize:9,opacity:.6,marginLeft:2,transform:isOpen?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
+            {hasAdminBadge&&<span style={{
+              position:"absolute",top:4,right:4,background:"var(--R)",color:"#fff",
+              borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,
+              display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 4px rgba(0,0,0,.3)",
+            }}>{pmiNonLus}</span>}
+          </button>
+          {isOpen&&g.subs&&<div style={{
+            position:"absolute",top:"100%",left:0,marginTop:8,background:"var(--w)",
+            borderRadius:14,boxShadow:"0 18px 48px rgba(0,0,0,.22)",border:"1px solid var(--br)",
+            zIndex:130,minWidth:250,overflow:"hidden",padding:6,animation:"menuDrop .18s ease",
+          }}>
+            {g.subs.map(s=>{
+              const on=(PAGE_ALIAS[page]||page)===s.id;
+              const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
+              return <button key={s.id}onClick={()=>{setPage(s.id);setSubOpen(null);}}style={{
+                width:"100%",display:"flex",alignItems:"center",gap:12,padding:"11px 12px",
+                borderRadius:11,border:"none",cursor:"pointer",textAlign:"left",
+                background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
+                fontWeight:on?700:500,fontSize:13.5,transition:"background .15s",
+              }}
+                onMouseEnter={e=>{if(!on)e.currentTarget.style.background="var(--c)";}}
+                onMouseLeave={e=>{if(!on)e.currentTarget.style.background="transparent";}}>
+                <span style={{fontSize:18,width:26,textAlign:"center",flexShrink:0}}>{s.ic}</span>
+                <span style={{flex:1,minWidth:0}}>
+                  <span style={{display:"block"}}>{s.l}</span>
+                  {s.d&&<span style={{display:"block",fontSize:11,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
+                </span>
+                {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{pmiNonLus}</span>}
+                {on&&<span style={{color:"var(--S)",fontWeight:700}}>✓</span>}
+              </button>;
+            })}
+          </div>}
+        </div>;
       })}
     </div>
 
-    {/* Sous-navigation en menu déroulant (clair et compact) */}
-    {subs&&<div style={{
-      background:"rgba(245,235,248,.6)",backdropFilter:"blur(12px)",
-      borderBottom:"1px solid rgba(234,224,232,.5)",
-      display:"flex",gap:10,padding:"7px 16px",flexShrink:0,alignItems:"center",position:"relative",
-    }}>
-      {(()=>{
-        const cur=subs.find(s=>(PAGE_ALIAS[page]||page)===s.id)||subs[0];
-        return <>
-          <button onClick={()=>setSubOpen(o=>!o)} style={{
-            display:"flex",alignItems:"center",gap:9,background:"var(--w)",
-            border:"1.5px solid var(--br)",borderRadius:22,padding:"7px 15px",cursor:"pointer",
-            fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,color:"var(--b)",
-            boxShadow:subOpen?"0 4px 14px rgba(0,0,0,.1)":"0 2px 6px rgba(0,0,0,.05)",transition:"box-shadow .15s",
-          }}>
-            <span style={{fontSize:15}}>{cur?.ic}</span>
-            <span>{cur?.l}</span>
-            <span style={{fontSize:9,opacity:.55,transform:subOpen?"rotate(180deg)":"none",transition:"transform .2s",marginLeft:2}}>▼</span>
-          </button>
-          <span style={{fontSize:11.5,color:"var(--l)",fontWeight:600}}>{group?.l}</span>
-          {subOpen&&<>
-            <div onClick={()=>setSubOpen(false)} style={{position:"fixed",inset:0,zIndex:150}}/>
-            <div style={{
-              position:"absolute",top:"100%",left:16,marginTop:5,background:"var(--w)",
-              borderRadius:14,boxShadow:"0 18px 48px rgba(0,0,0,.2)",border:"1px solid var(--br)",
-              zIndex:160,minWidth:240,overflow:"hidden",padding:6,animation:"menuDrop .18s ease",
-            }}>
-              {subs.map(s=>{
-                const on=(PAGE_ALIAS[page]||page)===s.id;
-                const hasPmiBadge=s.id==="pmi"&&pmiNonLus>0;
-                return <button key={s.id}onClick={()=>{setPage(s.id);setSubOpen(false);}}style={{
-                  width:"100%",display:"flex",alignItems:"center",gap:12,padding:"11px 12px",
-                  borderRadius:11,border:"none",cursor:"pointer",textAlign:"left",
-                  background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
-                  fontWeight:on?700:500,fontSize:13.5,transition:"background .15s",
-                }}
-                  onMouseEnter={e=>{if(!on)e.currentTarget.style.background="var(--c)";}}
-                  onMouseLeave={e=>{if(!on)e.currentTarget.style.background="transparent";}}>
-                  <span style={{fontSize:18,width:26,textAlign:"center",flexShrink:0}}>{s.ic}</span>
-                  <span style={{flex:1,minWidth:0}}>
-                    <span style={{display:"block"}}>{s.l}</span>
-                    {s.d&&<span style={{display:"block",fontSize:11,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
-                  </span>
-                  {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{pmiNonLus}</span>}
-                  {on&&<span style={{color:"var(--S)",fontWeight:700}}>✓</span>}
-                </button>;
-              })}
-            </div>
-          </>}
-        </>;
-      })()}
-    </div>}
   </>;
 }
 
@@ -11697,14 +11706,25 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     setDemoPage(demoScript[vStep%demoScript.length].page);
     const el=demoScreenRef.current; if(el)el.scrollTop=0;
   },[vStep]);
-  // 2) scroll doux et continu du contenu (effet video)
+  // 2) scroll naturel : descend doucement, pause en bas, remonte, pause en haut (comme une vraie personne)
   useEffect(()=>{
     if(!playing)return;
-    let raf, last=performance.now();
+    let raf, last=performance.now(), dir=1, pause=900;
     const tick=(now)=>{
-      const dt=now-last; last=now;
+      const dt=Math.min(now-last,50); last=now;
       const el=demoScreenRef.current;
-      if(el){const max=el.scrollHeight-el.clientHeight; if(max>4){let nt=el.scrollTop+dt*0.03; if(nt>=max)nt=0; el.scrollTop=nt;}}
+      if(el){
+        const max=el.scrollHeight-el.clientHeight;
+        if(max>4){
+          if(pause>0){pause-=dt;}
+          else{
+            let nt=el.scrollTop+dir*dt*0.05;
+            if(nt>=max){nt=max;dir=-1;pause=1500;}
+            else if(nt<=0){nt=0;dir=1;pause=1500;}
+            el.scrollTop=nt;
+          }
+        }
+      }
       raf=requestAnimationFrame(tick);
     };
     raf=requestAnimationFrame(tick);
@@ -12032,7 +12052,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 </div>
               </div>
               {/* Screen */}
-              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 560, display: "flex", flexDirection: "column", position: "relative" }}>
+              <div style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", height: 600, display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
 
@@ -12092,6 +12112,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
                 <div style={{ width: 90, height: 4, background: "rgba(255,255,255,.25)", borderRadius: 2 }} />
               </div>
             </div>
+            {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div style={{maxWidth:300,textAlign:"center",padding:"0 6px"}}>
+              <div style={{fontSize:15,fontWeight:800,color:"#2E4859",fontFamily:fTitle,marginBottom:4}}>{s.ic} {s.label}</div>
+              <div style={{fontSize:12.5,color:"#5F7A86",lineHeight:1.55}}>{s.desc}</div>
+            </div>;})()}
             </div>{/* /colonne phone */}
           </div>
         </div>
