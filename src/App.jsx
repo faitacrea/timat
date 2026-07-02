@@ -11729,34 +11729,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const demoTour = [
     {page:"accueil",label:"Accueil & journée",ic:"🏠",
       desc:"Vue d'ensemble : enfants présents, signatures, prochains événements.",
-      intro:"D'un simple coup d'œil, retrouvez les enfants présents, les signatures en attente et les prochains rendez-vous. Tout ce qui compte pour bien démarrer la journée, réuni au même endroit.",
-      resume:["Enfants présents en temps réel","Contrats à signer","Raccourcis d'action rapides"],
-      benefices:["Vue d'ensemble immédiate","Rien n'est oublié","Gain de temps au quotidien"],
-      permet:["Voir les enfants présents en temps réel","Suivre les contrats à signer","Accéder aux raccourcis d'action","Consulter les prochains événements"]},
+      resume:["Enfants présents en temps réel","Contrats et documents à signer","Prochains rendez-vous et événements","Raccourcis d'action en un tap"]},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
       desc:"Pointages, absences et planning partagé en temps réel.",
-      intro:"Le planning rythme le quotidien de l'enfant, des parents et de l'assistante maternelle. TiMat propose une vision claire et partagée des temps d'accueil, en tenant compte des absences et des imprévus.",
-      resume:["Planning partagé en temps réel","Pointages jour par jour","Absences et heures sup."],
-      benefices:["Visibilité claire et partagée","Moins de charge mentale","Des données fiables pour les calculs"],
-      permet:["Gérer le calendrier et les plannings","Pointer les présences jour par jour","Gérer absences, retards et heures sup.","Feuille de présence et historique mensuel"]},
+      resume:["Planning partagé en temps réel","Pointage des présences jour par jour","Absences, retards et heures sup.","Feuille de présence et historique mensuel"]},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
       desc:"Bulletins, mensualisation et déclarations calculés automatiquement.",
-      intro:"Les calculs de salaire et les déclarations mensuelles sont souvent sources de stress et d'erreurs. TiMat les automatise à partir des données réellement saisies, pour garantir fiabilité et conformité.",
-      resume:["Salaires et indemnités calculés","Bulletins conformes","Déclaration Pajemploi préparée"],
-      benefices:["Fini les doutes","Déclaration conforme","Gain de temps chaque mois"],
-      permet:["Calculer automatiquement les salaires","Calculer les indemnités (entretien, repas, km)","Gérer les congés payés et déductions","Préparer la déclaration Pajemploi"]},
+      resume:["Salaire et mensualisation calculés automatiquement","Indemnités (entretien, repas, km) et congés payés","Bulletins de paie conformes à la convention","Déclaration Pajemploi préparée"]},
     {page:"messagerie",label:"Échanges parents",ic:"💬",
       desc:"Messagerie instantanée avec les parents, des deux côtés.",
-      intro:"Gardez le lien avec les parents au fil de la journée. Une messagerie simple et instantanée, accessible des deux côtés, pour une relation de confiance.",
-      resume:["Messagerie instantanée","Moments de la journée partagés","Historique conservé"],
-      benefices:["Communication fluide","Historique conservé","Confiance renforcée"],
-      permet:["Échanger en temps réel avec les parents","Partager les moments de la journée","Retrouver tout l'historique des échanges","Être notifié des nouveaux messages"]},
+      resume:["Messagerie instantanée avec les parents","Moments de la journée partagés","Notifications des nouveaux messages","Tout l'historique conservé"]},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",
       desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée.",
-      intro:"En cas de besoin, chaque information vitale est immédiatement accessible : fiche d'urgence, allergies, traitements et numéros utiles, pour réagir vite et sereinement.",
-      resume:["Fiche d'urgence par enfant","Allergies et traitements","Numéros d'urgence cliquables"],
-      benefices:["Réactivité en cas d'urgence","Informations centralisées","Sérénité au quotidien"],
-      permet:["Fiche d'urgence par enfant","Allergies et traitements en cours","Numéros d'urgence cliquables","Contacts PMI de votre secteur"]},
+      resume:["Fiche d'urgence par enfant","Allergies et traitements en cours","Numéros d'urgence cliquables","Contacts PMI de votre secteur"]},
   ];
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
@@ -11779,6 +11764,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     setDemoPage(p);
     const el=demoScreenRef.current; if(el)el.scrollTop=0;
   };
+
+  // SEO : titre de page et meta description riches en mots-cles recherches
+  useEffect(()=>{
+    const prevTitle=document.title;
+    document.title="TiMat — Application assistante maternelle : contrat, paie, planning & cahier de liaison";
+    const setMeta=(name,content)=>{
+      let m=document.querySelector('meta[name="'+name+'"]');
+      if(!m){m=document.createElement("meta");m.setAttribute("name",name);document.head.appendChild(m);}
+      const prev=m.getAttribute("content"); m.setAttribute("content",content); return[m,prev];
+    };
+    const [md,prevDesc]=setMeta("description","TiMat, l'application des assistantes maternelles et parents employeurs : contrat conforme, calcul de mensualisation et de salaire, bulletin de paie, déclaration Pajemploi, planning, pointage des présences et cahier de liaison numérique. Simulateurs gratuits (salaire, CMG, indemnités).");
+    const [mk]=setMeta("keywords","application assistante maternelle, logiciel assistante maternelle, cahier de liaison numérique, calcul mensualisation, bulletin de salaire, déclaration Pajemploi, CMG, contrat assistante maternelle, planning nounou, MAM, parents employeurs");
+    return()=>{ document.title=prevTitle; if(prevDesc!=null)md.setAttribute("content",prevDesc); };
+  },[]);
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
   useEffect(()=>{
@@ -12078,8 +12077,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div style={{fontSize:15,color:"#5A6B73",lineHeight:1.65,marginBottom:22}}>{s.intro}</div>
-              <div style={{display:"flex",flexDirection:"column",gap:13,marginBottom:26}}>
+              <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:26}}>
                 {s.resume.map(r=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
               <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
@@ -12162,39 +12160,46 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E49178", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>
-                NOUVEAU · CONFORME eIDAS
+                POURQUOI TIMAT
               </div>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: "#fff", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                Signature électronique en <span style={{ color: "#E49178", fontStyle: "italic" }}>1 clic</span>
+                La gestion assistante maternelle <span style={{ color: "#E49178", fontStyle: "italic" }}>sans mauvaise surprise</span>
               </div>
-              <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)", lineHeight: 1.7, maxWidth: 700, margin: "0 auto" }}>
-                Contrats, avenants, bulletins de salaire : signez une seule fois, réutilisez partout. Conforme à la loi (eIDAS), conforme RGPD, prêt à archiver 5 ans.
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
+                Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
               </div>
             </div>
           </FadeIn>
 
-          {/* 3 différentiateurs */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 56 }}>
+          {/* Differenciateurs alignes sur les attentes reelles */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 56 }}>
             {[
               {
+                ic: "🧮",
+                titre: "Des calculs fiables, toujours identiques",
+                desc: "Salaire, mensualisation, indemnités d'entretien et congés payés calculés depuis vos pointages réels, conformes à la convention collective (IDCC 3239). Le même résultat à chaque fois, sans erreur.",
+                badge: "Fiabilité",
+                color: "#E49178"
+              },
+              {
+                ic: "💶",
+                titre: "Un tarif clair, sans piège",
+                desc: "Pas de prélèvement caché ni de reconduction forcée : vous gardez la main sur votre abonnement et vous résiliez quand vous le souhaitez. L'essai se fait sans carte bancaire.",
+                badge: "Transparence",
+                color: "#E49178"
+              },
+              {
+                ic: "✅",
+                titre: "Le suivi des versements réels",
+                desc: "Vérifiez d'un coup d'œil quels salaires ont réellement été versés et relancez les retards de paiement. Un suivi que peu d'outils proposent aujourd'hui.",
+                badge: "Exclusif",
+                color: "#E49178"
+              },
+              {
                 ic: "✍️",
-                titre: "Signature standard réutilisable",
-                desc: "Dessinez votre signature une seule fois dans vos paramètres. Elle est ensuite proposée en 1 clic sur tous vos contrats, avenants et bulletins. Plus jamais besoin de re-dessiner.",
+                titre: "Signature électronique en 1 clic",
+                desc: "Signez contrats, avenants et bulletins une seule fois : votre signature est réutilisée partout. Conforme eIDAS, hébergée en France, archivée 5 ans.",
                 badge: "Conforme eIDAS",
-                color: "#E49178"
-              },
-              {
-                ic: "🔒",
-                titre: "RGPD by design",
-                desc: "Vos signatures sont chiffrées et hébergées en France (Supabase Paris). Chaque action est tracée dans un journal d'audit. Conforme à l'article 20 RGPD (droit à la portabilité).",
-                badge: "Sécurité maximale",
-                color: "#E49178"
-              },
-              {
-                ic: "🤝",
-                titre: "Parent + asmat dans le même flow",
-                desc: "Vous signez côté asmat. Le parent reçoit une notification et signe à son tour. Le PDF combiné final est automatiquement archivé dans vos documents pendant 5 ans (durée légale de conservation des contrats de travail).",
-                badge: "Bout en bout",
                 color: "#E49178"
               }
             ].map((d, i) => (
@@ -12248,7 +12253,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
           <FadeIn delay={500}>
             <div style={{ textAlign: "center", marginTop: 48 }}>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#E49178,#C76754)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
-                Tester la signature électronique →
+                Tester TiMat gratuitement →
               </button>
               <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,.4)" }}>
                 Gratuit · Sans engagement · Conforme à la loi
