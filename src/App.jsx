@@ -287,8 +287,8 @@ function Styles(){return(
       .demo-resume{display:block}
       .demo-scrollhint{display:flex}
       .demo-col-phone{order:3;align-self:center}
-      .demo-phone{width:min(360px,94vw)}
-      .demo-frame{height:340px}
+      .demo-phone{width:min(240px,66vw)}
+      .demo-frame{height:470px}
       .demo-zoom{zoom:1}
     }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
