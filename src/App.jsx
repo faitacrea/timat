@@ -274,17 +274,15 @@ function Styles(){return(
     .demo-explain{flex:1;min-width:0;max-width:440px;padding-top:4px}
     .demo-col-phone{flex-shrink:0}
     .demo-frame{height:540px}
-    .demo-resume{display:none}
     .demo-scrollhint{display:none}
     .demo-zoom{zoom:.82}
     @media(max-width:860px){
       .demo-layout{flex-direction:column;gap:14px;align-items:stretch;max-width:520px}
       .demo-tabs{flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:14px;order:1}
       .demo-tabs::-webkit-scrollbar{display:none}
-      .demo-tabs button{flex:0 0 auto;min-width:132px;flex-direction:column;gap:5px;text-align:center;justify-content:center;padding:11px 14px;border-bottom:none!important;border-right:1px solid rgba(0,0,0,.05)}
+      .demo-tabs button{flex:0 0 auto;width:112px;min-width:112px;flex-direction:column;gap:5px;text-align:center;justify-content:flex-start;padding:12px 8px;border-bottom:none!important;border-right:1px solid rgba(0,0,0,.05)}
+      .demo-tabs button span:last-child{font-size:12px!important}
       .demo-explain{max-width:none;order:2;padding-top:0}
-      .demo-full{display:none}
-      .demo-resume{display:block}
       .demo-scrollhint{display:flex}
       .demo-col-phone{order:3;align-self:center}
       .demo-phone{width:min(240px,66vw)}
@@ -11768,65 +11766,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
     {page:"messagerie",    x:30, y:23},
     {page:"sante_complet", x:38, y:91},
   ];
-  const [playing, setPlaying] = useState(true);
   const [vStep, setVStep] = useState(0);
-  const [click, setClick] = useState(null); // onde de clic {x,y} ou null
   const demoScreenRef = useRef(null);
   // 1) l'ecran suit vStep
   useEffect(()=>{
     setDemoPage(demoScript[vStep%demoScript.length].page);
     const el=demoScreenRef.current; if(el)el.scrollTop=0;
   },[vStep]);
-  // 2) scroll naturel : descend doucement, pause en bas, remonte, pause en haut (comme une vraie personne)
-  useEffect(()=>{
-    if(!playing)return;
-    let raf, last=performance.now(), dir=1, pause=900;
-    const tick=(now)=>{
-      const dt=Math.min(now-last,50); last=now;
-      const el=demoScreenRef.current;
-      if(el){
-        const max=el.scrollHeight-el.clientHeight;
-        if(max>4){
-          if(pause>0){pause-=dt;}
-          else{
-            let nt=el.scrollTop+dir*dt*0.05;
-            if(nt>=max){nt=max;dir=-1;pause=1500;}
-            else if(nt<=0){nt=0;dir=1;pause=1500;}
-            el.scrollTop=nt;
-          }
-        }
-      }
-      raf=requestAnimationFrame(tick);
-    };
-    raf=requestAnimationFrame(tick);
-    return()=>cancelAnimationFrame(raf);
-  },[playing,demoPage]);
-  // Ondes de clic sur des zones internes plausibles selon l'ecran (effet "on utilise l'app")
-  useEffect(()=>{
-    if(!playing)return;
-    const CLICKS={
-      accueil:[{x:84,y:30},{x:50,y:55},{x:84,y:44}],
-      calendrier:[{x:46,y:40},{x:66,y:52},{x:38,y:60}],
-      admin_finances:[{x:50,y:28},{x:62,y:52},{x:44,y:66}],
-      messagerie:[{x:86,y:90},{x:40,y:46},{x:86,y:90}],
-      sante_complet:[{x:50,y:34},{x:78,y:34},{x:50,y:56}],
-    };
-    const pts=CLICKS[demoPage]||[{x:50,y:45}];
-    let i=0; const ts=[];
-    const loop=()=>{
-      setClick(pts[i%pts.length]); i++;
-      ts.push(setTimeout(()=>setClick(null),520));
-      ts.push(setTimeout(loop,3000));
-    };
-    ts.push(setTimeout(loop,1600));
-    return()=>{ts.forEach(clearTimeout);setClick(null);};
-  },[playing,demoPage]);
   const goDemo=(p)=>{
     const i=demoScript.findIndex(s=>s.page===p);
     if(i>=0)setVStep(i);
     setDemoPage(p);
     const el=demoScreenRef.current; if(el)el.scrollTop=0;
-    setClick(null);
   };
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
@@ -12125,31 +12076,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               </div>
             </div>
 
-            {/* Explication (centre desktop / sous onglets mobile) */}
+            {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div style={{fontFamily:fTitle,fontSize:"clamp(20px,2.6vw,30px)",fontWeight:700,color:"#2E4859",marginBottom:12,lineHeight:1.2}}>{s.label}</div>
-              {/* Version complete (desktop) */}
-              <div className="demo-full">
-                <div style={{fontSize:14,color:"#5A6B73",lineHeight:1.7,marginBottom:22}}>{s.intro}</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"11px 20px",marginBottom:26}}>
-                  {s.benefices.map(b=><div key={b}style={{display:"flex",gap:8,fontSize:13,color:"#2E4859",lineHeight:1.45}}><span style={{color:"#5DA9A1",fontWeight:700,flexShrink:0}}>•</span><span style={{fontWeight:600}}>{b}</span></div>)}
-                </div>
-                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#0D1B2A",marginBottom:13}}>Ce que permet TiMat</div>
-                <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
-                  {s.permet.map(p=><div key={p}style={{display:"flex",gap:10,fontSize:13.5,color:"#5A6B73",lineHeight:1.5}}><span style={{color:"#E49178",fontWeight:700,flexShrink:0}}>✓</span><span>{p}</span></div>)}
-                </div>
-                <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
+              <div style={{fontFamily:fTitle,fontSize:"clamp(21px,2.6vw,30px)",fontWeight:700,color:"#2E4859",marginBottom:12,lineHeight:1.2}}>{s.label}</div>
+              <div style={{fontSize:14,color:"#5A6B73",lineHeight:1.65,marginBottom:20}}>{s.intro}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:24}}>
+                {s.resume.map(r=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
-              {/* Version resumee (mobile) : 2-3 points cles */}
-              <div className="demo-resume">
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {s.resume.map(r=><div key={r}style={{display:"flex",gap:9,fontSize:13.5,color:"#2E4859",lineHeight:1.4,alignItems:"center"}}><span style={{color:"#5DA9A1",fontWeight:800,flexShrink:0,fontSize:15}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
-                </div>
-              </div>
+              <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
             </div>;})()}
 
             {/* Phone (droite desktop / bas mobile) */}
-            <div className="demo-col-phone" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
+            <div className="demo-col-phone" style={{order:3,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
             {/* Phone frame — vraie UI de l'app */}
             <div className="demo-phone" style={{ flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 18px 55px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08)" }}>
               {/* Notch */}
@@ -12163,12 +12101,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
               <div className="demo-frame" style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
                 {/* Badge DEMO */}
                 <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
-
-                {/* Onde de clic (sans doigt) — comme une vraie video de l'app */}
-                {click&&<div style={{position:"absolute",left:click.x+"%",top:click.y+"%",transform:"translate(-50%,-50%)",zIndex:55,pointerEvents:"none"}}>
-                  <span style={{position:"absolute",left:"50%",top:"50%",width:14,height:14,marginLeft:-7,marginTop:-7,borderRadius:"50%",background:"rgba(110,120,130,.5)"}}/>
-                  <span style={{display:"block",width:44,height:44,borderRadius:"50%",background:"rgba(120,130,140,.3)",animation:"tapripple .5s ease-out"}}/>
-                </div>}
 
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
 
