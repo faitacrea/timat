@@ -11729,19 +11729,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
   const demoTour = [
     {page:"accueil",label:"Accueil & journée",ic:"🏠",
       desc:"Vue d'ensemble : enfants présents, signatures, prochains événements.",
-      resume:["Enfants présents en temps réel","Contrats et documents à signer","Prochains rendez-vous et événements","Raccourcis d'action en un tap"]},
+      resume:((config.landing||{}).demoPuces1||"Enfants présents en temps réel\nContrats et documents à signer\nProchains rendez-vous et événements\nRaccourcis d'action en un tap").split("\n").filter(Boolean)},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
       desc:"Pointages, absences et planning partagé en temps réel.",
-      resume:["Planning partagé en temps réel","Pointage des présences jour par jour","Absences, retards et heures sup.","Feuille de présence et historique mensuel"]},
+      resume:((config.landing||{}).demoPuces2||"Planning partagé en temps réel\nPointage des présences jour par jour\nAbsences, retards et heures sup.\nFeuille de présence et historique mensuel").split("\n").filter(Boolean)},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
       desc:"Bulletins, mensualisation et déclarations calculés automatiquement.",
-      resume:["Salaire et mensualisation calculés automatiquement","Indemnités (entretien, repas, km) et congés payés","Bulletins de paie conformes à la convention","Déclaration Pajemploi préparée"]},
+      resume:((config.landing||{}).demoPuces3||"Salaire et mensualisation calculés automatiquement\nIndemnités (entretien, repas, km) et congés payés\nBulletins de paie conformes à la convention\nDéclaration Pajemploi préparée").split("\n").filter(Boolean)},
     {page:"messagerie",label:"Échanges parents",ic:"💬",
       desc:"Messagerie instantanée avec les parents, des deux côtés.",
-      resume:["Messagerie instantanée avec les parents","Moments de la journée partagés","Notifications des nouveaux messages","Tout l'historique conservé"]},
+      resume:((config.landing||{}).demoPuces4||"Messagerie instantanée avec les parents\nMoments de la journée partagés\nNotifications des nouveaux messages\nTout l'historique conservé").split("\n").filter(Boolean)},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",
       desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée.",
-      resume:["Fiche d'urgence par enfant","Allergies et traitements en cours","Numéros d'urgence cliquables","Contacts PMI de votre secteur"]},
+      resume:((config.landing||{}).demoPuces5||"Fiche d'urgence par enfant\nAllergies et traitements en cours\nNuméros d'urgence cliquables\nContacts PMI de votre secteur").split("\n").filter(Boolean)},
   ];
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
@@ -12171,37 +12171,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
             </div>
           </FadeIn>
 
-          {/* Differenciateurs alignes sur les attentes reelles */}
+          {/* Differenciateurs (editables via back-office : L.diffN*) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 56 }}>
             {[
-              {
-                ic: "🧮",
-                titre: "Des calculs fiables, toujours identiques",
-                desc: "Salaire, mensualisation, indemnités d'entretien et congés payés calculés depuis vos pointages réels, conformes à la convention collective (IDCC 3239). Le même résultat à chaque fois, sans erreur.",
-                badge: "Fiabilité",
-                color: "#E49178"
-              },
-              {
-                ic: "💶",
-                titre: "Un tarif clair, sans piège",
-                desc: "Pas de prélèvement caché ni de reconduction forcée : vous gardez la main sur votre abonnement et vous résiliez quand vous le souhaitez. L'essai se fait sans carte bancaire.",
-                badge: "Transparence",
-                color: "#E49178"
-              },
-              {
-                ic: "✅",
-                titre: "Le suivi des versements réels",
-                desc: "Vérifiez d'un coup d'œil quels salaires ont réellement été versés et relancez les retards de paiement. Un suivi que peu d'outils proposent aujourd'hui.",
-                badge: "Exclusif",
-                color: "#E49178"
-              },
-              {
-                ic: "✍️",
-                titre: "Signature électronique en 1 clic",
-                desc: "Signez contrats, avenants et bulletins une seule fois : votre signature est réutilisée partout. Conforme eIDAS, hébergée en France, archivée 5 ans.",
-                badge: "Conforme eIDAS",
-                color: "#E49178"
-              }
+              { ic: L.diff1Ic||"🧮", badge: L.diff1Badge||"Fiabilité", titre: L.diff1Titre||"Des calculs fiables, toujours identiques", desc: L.diff1Desc||"Salaire, mensualisation, indemnités d'entretien et congés payés calculés depuis vos pointages réels, conformes à la convention collective (IDCC 3239). Le même résultat à chaque fois, sans erreur.", color: "#E49178" },
+              { ic: L.diff2Ic||"💶", badge: L.diff2Badge||"Transparence", titre: L.diff2Titre||"Un tarif clair, sans piège", desc: L.diff2Desc||"Pas de prélèvement caché ni de reconduction forcée : vous gardez la main sur votre abonnement et vous résiliez quand vous le souhaitez. L'essai se fait sans carte bancaire.", color: "#E49178" },
+              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements réels", desc: L.diff3Desc||"Vérifiez d'un coup d'œil quels salaires ont réellement été versés et relancez les retards de paiement. Un suivi que peu d'outils proposent aujourd'hui.", color: "#E49178" },
+              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Conforme eIDAS", titre: L.diff4Titre||"Signature électronique en 1 clic", desc: L.diff4Desc||"Signez contrats, avenants et bulletins une seule fois : votre signature est réutilisée partout. Conforme eIDAS, hébergée en France, archivée 5 ans.", color: "#E49178" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 100}>
                 <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28, height: "100%", display: "flex", flexDirection: "column" }}>
@@ -15794,6 +15770,23 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           <BOCard title="Tarifs et CTA" icon="💰">
             {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freePrice","Gratuit - prix (ex: 0€)"],["freeDesc","Gratuit - description"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.txts} setter={setTxt}/></BOField>
+            )}
+          </BOCard>
+          <BOCard title="Différenciateurs (Pourquoi TiMat)" icon="⭐">
+            {[
+              ["diff1Ic","Diff 1 - Emoji"],["diff1Badge","Diff 1 - Badge"],["diff1Titre","Diff 1 - Titre"],["diff1Desc","Diff 1 - Description",true],
+              ["diff2Ic","Diff 2 - Emoji"],["diff2Badge","Diff 2 - Badge"],["diff2Titre","Diff 2 - Titre"],["diff2Desc","Diff 2 - Description",true],
+              ["diff3Ic","Diff 3 - Emoji"],["diff3Badge","Diff 3 - Badge"],["diff3Titre","Diff 3 - Titre"],["diff3Desc","Diff 3 - Description",true],
+              ["diff4Ic","Diff 4 - Emoji"],["diff4Badge","Diff 4 - Badge"],["diff4Titre","Diff 4 - Titre"],["diff4Desc","Diff 4 - Description",true]
+            ].filter(([,l])=>matches(l)).map(([k,l,m])=>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
+            )}
+          </BOCard>
+          <BOCard title="Démo — puces (1 par ligne)" icon="📱">
+            {[
+              ["demoPuces1","Accueil & journée"],["demoPuces2","Planning & présences"],["demoPuces3","Calculs & paie"],["demoPuces4","Échanges parents"],["demoPuces5","Santé & urgences"]
+            ].filter(([,l])=>matches(l)).map(([k,l])=>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={true}/></BOField>
             )}
           </BOCard>
         </>}
