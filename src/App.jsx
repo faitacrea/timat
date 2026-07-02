@@ -269,7 +269,7 @@ function Styles(){return(
     .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
     .demo-phone{width:270px}
-    .demo-layout{display:flex;gap:30px;align-items:flex-start;justify-content:center;max-width:1160px;margin:0 auto}
+    .demo-layout{display:flex;gap:30px;align-items:center;justify-content:center;max-width:1160px;margin:0 auto}
     .demo-tabs{display:flex;flex-direction:column;width:190px;flex-shrink:0;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.07)}
     .demo-explain{flex:1;min-width:0;max-width:440px;padding-top:4px}
     .demo-col-phone{flex-shrink:0}
@@ -12024,7 +12024,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
       <div style={{display:"flex",flexDirection:"column"}}>
       {/* SECTION 1 - PROBLEME */}
-      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {SV.probleme===true&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
@@ -12078,9 +12078,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div style={{fontFamily:fTitle,fontSize:"clamp(21px,2.6vw,30px)",fontWeight:700,color:"#2E4859",marginBottom:12,lineHeight:1.2}}>{s.label}</div>
-              <div style={{fontSize:14,color:"#5A6B73",lineHeight:1.65,marginBottom:20}}>{s.intro}</div>
-              <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:24}}>
+              <div style={{fontSize:15,color:"#5A6B73",lineHeight:1.65,marginBottom:22}}>{s.intro}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:13,marginBottom:26}}>
                 {s.resume.map(r=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
               <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
@@ -12260,7 +12259,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 3 - TRANSFORMATION */}
-      {SV.transformation!==false&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
+      {SV.transformation===true&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s3Align||"center", marginBottom: 56 }}>
@@ -12283,7 +12282,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 4 - CHIFFRES */}
-      {SV.chiffres!==false&&<div className="lp-section" style={{ order:ord("chiffres"), background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {SV.chiffres===true&&<div className="lp-section" style={{ order:ord("chiffres"), background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
@@ -12306,7 +12305,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      {SV.temoignages!==false&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDF5FB" }}>
+      {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDF5FB" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -12416,7 +12415,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
       </div>}
 
       {/* BLOG */}
-      {SV.blog!==false&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: "#FDFBF8" }}>
+      {SV.blog===true&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: "#FDFBF8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
