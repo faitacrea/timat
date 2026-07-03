@@ -11913,6 +11913,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         .lp-demo-grid{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start}
         .lp-demo-tabs{display:flex;flex-direction:column;gap:6px}
         .lp-transfo-row{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;align-items:center}
+        .lp-transfo-head{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;padding:0 20px 10px}
+        .transfo-celllabel{display:none}
         .lp-tarifs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
         .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
         .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -11931,6 +11933,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           .lp-demo-tabs button{padding:8px 12px!important;font-size:12px!important;flex:0 0 auto}
           .lp-transfo-row{grid-template-columns:1fr!important;gap:8px;padding:14px!important}
           .lp-transfo-row>div:first-child{display:none}
+          .lp-transfo-head{display:none!important}
+          .transfo-celllabel{display:block!important}
           .lp-tarifs-grid{grid-template-columns:1fr!important;gap:16px}
           .lp-logo{font-size:22px}
           .lp-logo-icon{width:28px;height:28px;font-size:15px}
@@ -12040,32 +12044,27 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           </FadeIn>
           {/* En-tetes colonnes (web) */}
           <div className="combo-head" style={{ display:"flex", gap:16, padding:"0 20px", marginTop:32, marginBottom:6 }}>
-            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:"rgba(255,255,255,.45)", textTransform:"uppercase" }}>La galère aujourd'hui</div>
+            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:"rgba(255,255,255,.45)", textTransform:"uppercase" }}>{L.comboLabelBefore||"La galère aujourd'hui"}</div>
             <div style={{ width:28 }}/>
-            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:"#E49178", textTransform:"uppercase" }}>Avec TiMat</div>
+            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#E49178", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-            {[
-              {ic:"🤯", pb:"Mensualisation, congés, indemnités : des calculs où l'on s'y perd", sol:"Calculés automatiquement, depuis les présences réelles"},
-              {ic:"📅", pb:"La déclaration Pajemploi chaque mois, entre le 25 et le 5", sol:"Préparée et prête à reporter, sans oubli"},
-              {ic:"🧾", pb:"Des bulletins Pajemploi incomplets (congés, heures, impôts)", sol:"Bulletins détaillés, conformes à la convention"},
-              {ic:"💸", pb:"Savoir qui a vraiment payé, relancer les retards", sol:"Suivi des versements réels + relances en 1 clic"},
-              {ic:"📄", pb:"Contrats, avenants et fin de contrat à rédiger", sol:"Générés, signés en 1 clic et archivés"},
-            ].map((r,i)=>(
-              <FadeIn key={i} delay={i*70}>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", borderRadius:14, padding:"16px 20px" }}>
+            {(L.comboRows||"😩|Des soirées entières à recalculer le salaire|Le salaire juste, calculé tout seul\n😰|La peur constante de se tromper dans les comptes|Des calculs fiables et conformes, sans erreur\n🏃|Courir après les paiements en retard|Suivi des versements réels + relances en 1 clic\n🤯|La déclaration Pajemploi qui retombe chaque mois|Préparée d'avance, prête à reporter\n📚|La paperasse qui s'accumule (contrats, avenants…)|Générée, signée en 1 clic et bien rangée").split("\n").filter(Boolean).map((line,i)=>{
+              const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
+              return <FadeIn key={i} delay={i*70}>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", borderRadius:14, padding:"16px 20px" }}>
                   <div style={{ flex:"1 1 260px", display:"flex", gap:12, alignItems:"center", minWidth:0 }}>
-                    <span style={{ fontSize:24, flexShrink:0 }}>{r.ic}</span>
-                    <span style={{ fontSize:13.5, color:"rgba(255,255,255,.62)", lineHeight:1.4 }}>{r.pb}</span>
+                    <span style={{ fontSize:24, flexShrink:0 }}>{ic}</span>
+                    <span style={{ fontSize:13.5, color:L.comboPbColor||"rgba(255,255,255,.62)", lineHeight:1.4 }}>{pb}</span>
                   </div>
-                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:"rgba(255,255,255,.3)", fontSize:20, flexShrink:0 }}>→</div>
+                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"rgba(255,255,255,.3)", fontSize:20, flexShrink:0 }}>→</div>
                   <div style={{ flex:"1 1 240px", display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
-                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"#E4917822", color:"#E49178", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
-                    <span style={{ fontSize:13.5, color:"#fff", fontWeight:600, lineHeight:1.4 }}>{r.sol}</span>
+                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:(L.comboSolColor||"#E49178")+"22", color:L.comboSolColor||"#E49178", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
+                    <span style={{ fontSize:13.5, color:L.comboSolColor||"#fff", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
                   </div>
                 </div>
-              </FadeIn>
-            ))}
+              </FadeIn>;
+            })}
           </div>
           <FadeIn delay={400}>
             <div style={{ marginTop:36, textAlign:"center" }}>
@@ -12273,21 +12272,32 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 3 - TRANSFORMATION */}
-      {SV.transformation===true&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      {SV.transformation!==false&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
+        <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: L.s3Align||"center", marginBottom: 56 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s3TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title}</div>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s3TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title||"Ce que TiMat change concrètement"}</div>
+              {L.s3Desc&&<div style={{ fontSize: 15, color: L.s3DescColor||"#6B4F3A", lineHeight: 1.6 }}>{L.s3Desc}</div>}
             </div>
           </FadeIn>
+          {/* En-tete tableau (web) */}
+          <div className="lp-transfo-head">
+            <div/>
+            <div style={{ fontSize: 11, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform:"uppercase", letterSpacing:".6px" }}>{L.s3LabelBefore||"Aujourd'hui"}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform:"uppercase", letterSpacing:".6px" }}>{L.s3LabelAfter||"Avec TiMat"}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform:"uppercase", letterSpacing:".6px" }}>{L.s3LabelResult||"Ce que ça change"}</div>
+          </div>
           <div style={{ display: "grid", gap: 3 }}>
-            {transformations.map(([ic, pb, sol, res], i) => (
-              <FadeIn key={pb} delay={i * 60}>
+            {(L.transfoRows
+              ? L.transfoRows.split("\n").filter(Boolean).map(l=>{const p=l.split("|");return [(p[0]||"").trim(),(p[1]||"").trim(),(p[2]||"").trim(),(p[3]||"").trim()];})
+              : transformations
+            ).map(([ic, pb, sol, res], i) => (
+              <FadeIn key={i} delay={i * 60}>
                 <div className="lp-transfo-row" style={{ padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F8F0FC") : (L.s3RowBg2||"#FDF5FB"), border: "1px solid #DDD5C8" }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
-                  <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
-                  <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
-                  <div><div style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelResult||"Ce que ça change"}</div><div style={{ fontSize: 13, color: L.s3ResultColor||"#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
+                  <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
+                  <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
+                  <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelResult||"Ce que ça change"}</div><div style={{ fontSize: 13, color: L.s3ResultColor||"#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
                 </div>
               </FadeIn>
             ))}
@@ -15848,9 +15858,17 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={true}/></BOField>
             )}
           </BOCard>
+          <BOCard title="Problème → Solution (lignes)" icon="⚖️">
+            {[["comboLabelBefore","En-tête colonne gauche"],["comboLabelAfter","En-tête colonne droite"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand}/></BOField>
+            )}
+            {matches("Lignes galère solution")&&<BOField label="Lignes (1 par ligne, format : emoji | galère | solution)"><BOTextInput k="comboRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
+          </BOCard>
+          <BOCard title="Tableau comparatif — Ce que ça change" icon="📊">
+            {matches("Sous-titre tableau")&&<BOField label="Sous-titre (optionnel)"><BOTextInput k="s3Desc" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Lignes tableau comparatif")&&<BOField label="Lignes (1 par ligne, format : emoji | aujourd'hui | avec TiMat | ce que ça change)"><BOTextInput k="transfoRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
+          </BOCard>
         </>}
-
-        {/* ====================== COULEURS (globales + par élément) ====================== */}
         {sec==="couleurs"&&<>
           <BOCard title="Palette de l\'application" icon="🎨">
             {[["T","Principale (terracotta)"],["S","Secondaire (sauge)"],["G","Vert d'eau (succès)"],["R","Rouge alerte (terracotta foncé)"],["c","Fond général (crème)"],["w","Fond cartes (blanc)"],["b","Texte principal (bleu nuit)"]].filter(([,l])=>matches(l)).map(([k,l])=>
@@ -15867,6 +15885,11 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
           <BOCard title="Hero - couleurs de texte" icon="🏠">
             {[["heroTitleColor","Titre hero"],["heroSubColor","Sous-titre"],["heroSubDescColor","Description"],["heroBadgeColor","Badge - texte"],["heroBadgeBg","Badge - fond"],["heroTagsColor","Tags"],["heroStatsColor","Stats (chiffres)"],["heroStatsLabelColor","Stats (labels)"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
+            )}
+          </BOCard>
+          <BOCard title="Section Problème → Solution - couleurs" icon="⚖️">
+            {[["section1Bg","Fond de la section"],["comboCardBg","Fond des cartes"],["comboPbColor","Texte galère"],["comboSolColor","Texte solution + ✓"],["comboArrowColor","Flèche →"],["comboLabelAfterColor","En-tête colonne droite"],["s1TitleColor","Titre"],["s1DescColor","Sous-titre"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
