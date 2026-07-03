@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 
 // Hook générique : charge depuis Supabase, fallback local, sauvegarde auto
@@ -3377,9 +3378,9 @@ function Sante({enfants,role,pEId,user}){
           <div style={{fontSize:11,color:"#9B5757",marginBottom:12}}>Touchez un numéro pour appeler directement.</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {urgences.map((u,i)=>
-              <a key={u.l+i}href={"tel:"+String(u.v).replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none"}}>
+              <a key={u.l+i}href={"tel:"+String(u.v).replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none",flexWrap:"wrap"}}>
                 <span style={{fontSize:17}}>{u.ic}</span>
-                <span style={{fontSize:12.5,color:"#7F1D1D",flex:1,fontWeight:600,minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{u.l}</span>
+                <span style={{fontSize:12.5,color:"#7F1D1D",flex:1,fontWeight:600,minWidth:70,lineHeight:1.3}}>{u.l}</span>
                 <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
           </div>
@@ -11709,7 +11710,7 @@ function OutilsGratuits({onClose,onCta}){
   </div>;
 }
 
-function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
+function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
   const [showLegal, setShowLegal] = useState(null);
@@ -11767,6 +11768,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
   // SEO : titre de page et meta description riches en mots-cles recherches
   useEffect(()=>{
+    if(preview)return;
     const prevTitle=document.title;
     document.title="TiMat — Application assistante maternelle : contrat, paie, planning & cahier de liaison";
     const setMeta=(name,content)=>{
@@ -11781,6 +11783,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG}) {
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
   useEffect(()=>{
+    if(preview)return;
     try{
       const p=new URLSearchParams(window.location.search);
       if(p.get("role")==="parent"||p.has("invite")){ const tk=p.get("invite"); if(tk){try{localStorage.setItem("timat:invite",tk);}catch(e){}} setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
@@ -15101,6 +15104,32 @@ const BOCard=({title,icon,children})=>(
   </div>
 );
 
+function IframePreview({cfg}){
+  const [device,setDevice]=useState("mobile");
+  const [body,setBody]=useState(null);
+  const initDoc=(ifr)=>{
+    if(!ifr)return;
+    const d=ifr.contentDocument||ifr.contentWindow?.document;
+    if(!d||!d.body)return;
+    try{ d.head.innerHTML=document.head.innerHTML; }catch(e){}
+    d.body.style.margin="0";
+    d.body.style.background="#fff";
+    setBody(d.body);
+  };
+  return <div style={{height:"100%",display:"flex",flexDirection:"column",background:"#d8d8d8"}}>
+    <div style={{display:"flex",gap:8,padding:"10px",justifyContent:"center",background:"#e8e8e8",flexShrink:0,alignItems:"center"}}>
+      <span style={{fontSize:10,fontWeight:700,color:"var(--S)",marginRight:4}}>👁 APERÇU LIVE</span>
+      {[["mobile","📱 Mobile"],["web","🖥 Web"]].map(([k,l])=>
+        <button key={k}onClick={()=>{setBody(null);setDevice(k);}}style={{padding:"6px 16px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",background:device===k?"var(--T)":"#fff",color:device===k?"#fff":"var(--m)"}}>{l}</button>)}
+    </div>
+    <div style={{flex:1,overflow:"auto",display:"flex",justifyContent:"center",padding:device==="mobile"?"20px":"0"}}>
+      <iframe key={device} ref={initDoc} onLoad={e=>initDoc(e.target)} title="Aperçu landing"
+        style={{width:device==="mobile"?"390px":"100%",height:device==="mobile"?"812px":"100%",maxWidth:"100%",flexShrink:0,border:device==="mobile"?"10px solid #1a1a2e":"none",borderRadius:device==="mobile"?32:0,background:"#fff"}}/>
+    </div>
+    {body&&createPortal(<div className="app"><Styles/><LandingPage onLogin={()=>{}}dark={false}setDark={()=>{}}config={cfg} preview/></div>, body)}
+  </div>;
+}
+
 function Backoffice({user,setPage,appConfig,setAppConfig}){
   const [sec,setSec]=useState("hero");
   const [subSec,setSubSec]=useState("textes");
@@ -16225,12 +16254,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 
       </div>
 
-      {/* RIGHT PANEL: Live Preview */}
+      {/* RIGHT PANEL: Live Preview (web / mobile) */}
       {showPreview&&<div style={{flex:1,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
-        <div style={{position:"absolute",top:8,left:8,zIndex:10,fontSize:10,fontWeight:700,color:"#fff",background:"var(--S)",padding:"3px 10px",borderRadius:8,opacity:.85}}>👁 APERÇU LIVE</div>
-        <div style={{width:"1200px",height:"100%",transform:"scale("+Math.min(1,(typeof window!=="undefined"?(window.innerWidth-480)/1200:0.6))+")",transformOrigin:"top left",overflow:"auto",background:"#fff"}}>
-          <LandingPage onLogin={()=>{}}dark={false}setDark={()=>{}}config={cfg}/>
-        </div>
+        <IframePreview cfg={cfg}/>
       </div>}
     </div>
   </div>;
