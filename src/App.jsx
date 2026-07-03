@@ -274,9 +274,9 @@ function Styles(){return(
     .demo-tabs{display:flex;flex-direction:column;width:190px;flex-shrink:0;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.07)}
     .demo-explain{flex:1;min-width:0;max-width:440px;padding-top:4px}
     .demo-col-phone{flex-shrink:0}
-    .demo-frame{height:513px}
+    .demo-frame{height:487px}
     .demo-scrollhint{display:none}
-    .demo-zoom{zoom:.82}
+    .demo-zoom{zoom:.8}
     @media(max-width:860px){
       .demo-layout{flex-direction:column;gap:14px;align-items:stretch;max-width:520px}
       .demo-tabs{flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:14px;order:1}
@@ -288,12 +288,13 @@ function Styles(){return(
       .demo-scrollhint{display:flex}
       .demo-scrollarrow{display:flex!important}
       .demo-col-phone{order:3;align-self:center}
-      .demo-phone{width:min(228px,64vw)}
-      .demo-frame{height:446px}
-      .demo-zoom{zoom:.68}
+      .demo-phone{width:min(224px,62vw)}
+      .demo-frame{height:424px}
+      .demo-zoom{zoom:.64}
     }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
+    @media(max-width:700px){.combo-arrow{display:none!important}.combo-head{display:none!important}}
     .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
     .moo{border:2px solid transparent;border-radius:10px;padding:4px 6px;font-size:18px;cursor:pointer;transition:all .15s;background:transparent}
     .moo.on,.moo:hover{border-color:var(--S);background:var(--Sp);transform:scale(1.15)}
@@ -12027,29 +12028,48 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>
 
       <div style={{display:"flex",flexDirection:"column"}}>
-      {/* SECTION 1 - PROBLEME */}
-      {SV.probleme===true&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+      {/* SECTION 1 - PROBLEME + SOLUTION combinés */}
+      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: L.s1Align||"center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s1Title}</div>
-              <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.5)", lineHeight: 1.7, whiteSpace:"pre-line" }}>{L.s1Desc}</div>
+            <div style={{ textAlign: "center", marginBottom: 14 }}>
+              <div style={{ display:"inline-block", background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.2)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#fff", fontWeight:600, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
+              <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.7)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Mensualisation, indemnités, Pajemploi, congés, contrats… TiMat gère tout ce qui vous prend du temps."}</div>
             </div>
           </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
-            {painPoints.map((item, i) => (
-              <FadeIn key={i} delay={i * 80}>
-                <div style={{ background: L.s1CardBg||"rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 14, padding: 20 }}>
-                  <div style={{ fontSize: 28, marginBottom: 10 }}>{item.ic}</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: L.s1CardTitleColor||"#fff", marginBottom: 6 }}>{item.titre}</div>
-                  <div style={{ fontSize: 12, color: L.s1CardDescColor||"rgba(255,255,255,.5)", lineHeight: 1.7 }}>{item.desc}</div>
+          {/* En-tetes colonnes (web) */}
+          <div className="combo-head" style={{ display:"flex", gap:16, padding:"0 20px", marginTop:32, marginBottom:6 }}>
+            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:"rgba(255,255,255,.45)", textTransform:"uppercase" }}>La galère aujourd'hui</div>
+            <div style={{ width:28 }}/>
+            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:"#E49178", textTransform:"uppercase" }}>Avec TiMat</div>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {[
+              {ic:"🤯", pb:"Mensualisation, congés, indemnités : des calculs où l'on s'y perd", sol:"Calculés automatiquement, depuis les présences réelles"},
+              {ic:"📅", pb:"La déclaration Pajemploi chaque mois, entre le 25 et le 5", sol:"Préparée et prête à reporter, sans oubli"},
+              {ic:"🧾", pb:"Des bulletins Pajemploi incomplets (congés, heures, impôts)", sol:"Bulletins détaillés, conformes à la convention"},
+              {ic:"💸", pb:"Savoir qui a vraiment payé, relancer les retards", sol:"Suivi des versements réels + relances en 1 clic"},
+              {ic:"📄", pb:"Contrats, avenants et fin de contrat à rédiger", sol:"Générés, signés en 1 clic et archivés"},
+            ].map((r,i)=>(
+              <FadeIn key={i} delay={i*70}>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", borderRadius:14, padding:"16px 20px" }}>
+                  <div style={{ flex:"1 1 260px", display:"flex", gap:12, alignItems:"center", minWidth:0 }}>
+                    <span style={{ fontSize:24, flexShrink:0 }}>{r.ic}</span>
+                    <span style={{ fontSize:13.5, color:"rgba(255,255,255,.62)", lineHeight:1.4 }}>{r.pb}</span>
+                  </div>
+                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:"rgba(255,255,255,.3)", fontSize:20, flexShrink:0 }}>→</div>
+                  <div style={{ flex:"1 1 240px", display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
+                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"#E4917822", color:"#E49178", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
+                    <span style={{ fontSize:13.5, color:"#fff", fontWeight:600, lineHeight:1.4 }}>{r.sol}</span>
+                  </div>
                 </div>
               </FadeIn>
             ))}
           </div>
           <FadeIn delay={400}>
-            <div style={{ marginTop: 40, textAlign: L.s1Align||"center", padding: "28px 32px", background: L.s1QuoteBg||"rgba(228,145,120,.08)", border: "1px solid rgba(228,145,120,.2)", borderRadius: 20 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(18px,3vw,28px)", color: L.s1QuoteColor||accent, fontWeight: 700, fontStyle: "italic", whiteSpace:"pre-line" }}>{L.s1Quote}</div>
+            <div style={{ marginTop:36, textAlign:"center" }}>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 8px 24px rgba(228,145,120,.4)" }}>Alléger mon quotidien →</button>
             </div>
           </FadeIn>
         </div>
