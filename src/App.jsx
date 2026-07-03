@@ -11199,6 +11199,54 @@ function Counter({target,suffix="",prefix="",duration=2000}){
 }
 
 //
+function HeroPhone(){
+  const notifs=[
+    {ic:"✅",t:"Bulletin de salaire généré",top:"8%",left:"-16%",d:"0s"},
+    {ic:"💶",t:"Salaire calculé automatiquement",top:"42%",left:"58%",d:"1.4s"},
+    {ic:"📩",t:"Parent notifié",top:"78%",left:"-10%",d:"2.8s"},
+  ];
+  return <div style={{position:"relative",width:250,height:510}}>
+    {/* halo */}
+    <div style={{position:"absolute",inset:"6% 4%",borderRadius:"50%",background:"radial-gradient(closest-side,rgba(228,145,120,.55),transparent)",filter:"blur(26px)",animation:"glowpulse 4s ease-in-out infinite"}}/>
+    {/* telephone flottant */}
+    <div style={{position:"relative",width:250,height:510,animation:"floaty 5s ease-in-out infinite"}}>
+      <div style={{position:"absolute",inset:0,background:"#0D1B2A",borderRadius:38,padding:"12px 11px",boxShadow:"0 40px 90px rgba(0,0,0,.45)"}}>
+        <div style={{position:"absolute",top:20,left:"50%",transform:"translateX(-50%)",width:70,height:5,borderRadius:3,background:"rgba(255,255,255,.25)",zIndex:2}}/>
+        <div style={{width:"100%",height:"100%",background:"#FDFBF8",borderRadius:28,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+          {/* header */}
+          <div style={{padding:"18px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:20,color:"#E49178"}}>timat</span>
+            <span style={{width:26,height:26,borderRadius:"50%",background:"#E49178",color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>MD</span>
+          </div>
+          {/* carte du jour */}
+          <div style={{margin:"4px 12px",background:"linear-gradient(135deg,#2E4859,#3E6B63)",borderRadius:16,padding:14,color:"#fff"}}>
+            <div style={{fontSize:10,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
+            <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
+            <div style={{display:"flex",gap:6,marginTop:10}}>
+              {["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{e}</span>)}
+            </div>
+          </div>
+          {/* mini lignes */}
+          {[["⏰","Pointage","à jour"],["💶","Salaire du mois","calculé"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=>
+            <div key={i}style={{margin:"8px 12px 0",background:"#fff",border:"1px solid #EFE7DF",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:17}}>{ic}</span>
+              <span style={{flex:1,fontSize:12,color:"#2E4859",fontWeight:600}}>{a}</span>
+              <span style={{fontSize:10,color:"#5DA9A1",fontWeight:700,background:"#5DA9A118",padding:"2px 8px",borderRadius:8}}>{b}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+    {/* notifications qui sortent */}
+    {notifs.map((n,i)=>
+      <div key={i}style={{position:"absolute",top:n.top,left:n.left,background:"#fff",borderRadius:12,padding:"9px 13px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:9,whiteSpace:"nowrap",zIndex:3,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:n.d}}>
+        <span style={{fontSize:16}}>{n.ic}</span>
+        <span style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>{n.t}</span>
+      </div>
+    )}
+  </div>;
+}
+
 function WaveDivider({color="#fff",height=52,on=true}){
   if(!on)return null;
   return <div aria-hidden="true" style={{position:"absolute",top:0,left:0,right:0,lineHeight:0,transform:"translateY(-99%)",pointerEvents:"none",zIndex:1}}>
@@ -11927,7 +11975,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         .lp-tarifs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
         .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
         .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-        .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+        .lp-hero-ctas{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap;margin-bottom:28px}
+        .lp-hero-grid{display:flex;gap:52px;align-items:center;justify-content:center;max-width:1080px;margin:0 auto}
+        .lp-hero-text{flex:1 1 460px;min-width:0}
+        .lp-hero-visual{flex:0 0 auto;position:relative;display:flex;justify-content:center}
+        .lp-hero-tags{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-start}
+        @keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-16px) rotate(1.2deg)}}
+        @keyframes notifpop{0%{opacity:0;transform:translateY(12px) scale(.92)}14%,82%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-10px) scale(.95)}}
+        @keyframes glowpulse{0%,100%{opacity:.35}50%{opacity:.6}}
+        @media(max-width:820px){
+          .lp-hero-grid{flex-direction:column;gap:34px}
+          .lp-hero-text{text-align:center;flex-basis:auto}
+          .lp-hero-ctas{justify-content:center}
+          .lp-hero-tags{justify-content:center}
+        }
         .lp-hero-ctas button{white-space:nowrap}
         .lp-hero{padding:0 24px 80px;position:relative;overflow:hidden}
         .lp-section{padding:72px 24px;position:relative}
@@ -12021,21 +12082,26 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             </div>
           ))}
         </div>
-        {/* Hero content */}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 760, margin: "0 auto", textAlign: L.heroAlign||"center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E49178", marginBottom: 28, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
-          <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5.5vw,58px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.15, marginBottom: 20 }}>
-            {T.heroTitle}<br/>
-            {T.heroTitleAccent&&<><span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span><br/></>}
-            <span style={{ fontSize: "clamp(20px,3.5vw,36px)", fontWeight: 400, color: L.heroSubColor||"rgba(255,255,255,.75)", fontStyle: "normal" }}>{T.heroSub}</span>
+        {/* Hero content : texte a gauche, telephone anime a droite */}
+        <div className="lp-hero-grid" style={{ position: "relative", zIndex: 1 }}>
+          <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"left" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E49178", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5vw,52px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.12, marginBottom: 18 }}>
+              {T.heroTitle}<br/>
+              {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
+            </div>
+            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"rgba(255,255,255,.8)", lineHeight: 1.5, marginBottom: 14, fontWeight: 500 }}>{T.heroSub}</div>
+            <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"rgba(255,255,255,.55)", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
+            <div className="lp-hero-ctas">
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
+              <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
+            </div>
+            <div className="lp-hero-tags">
+              {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.45)", fontWeight: 500 }}>{t.trim()}</span>)}
+            </div>
           </div>
-          <div style={{ fontSize: "clamp(14px,2vw,17px)", color: L.heroSubDescColor||"rgba(255,255,255,.6)", lineHeight: 1.8, marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
-          <div className="lp-hero-ctas">
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px" }}>{T.heroBtnPrimTxt}</button>
-            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
-          </div>
-          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
-            {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.4)", fontWeight: 500 }}>{t.trim()}</span>)}
+          <div className="lp-hero-visual">
+            <HeroPhone/>
           </div>
         </div>
       </div>
@@ -12284,7 +12350,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 3 - TRANSFORMATION */}
-      {SV.transformation!==false&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
+      {SV.transformation===true&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
         <WaveDivider color={L.wave3||L.section3Bg||"#F8F0FC"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
