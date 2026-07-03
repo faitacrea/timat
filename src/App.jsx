@@ -11199,6 +11199,15 @@ function Counter({target,suffix="",prefix="",duration=2000}){
 }
 
 //
+function WaveDivider({color="#fff",height=52,on=true}){
+  if(!on)return null;
+  return <div aria-hidden="true" style={{position:"absolute",top:0,left:0,right:0,lineHeight:0,transform:"translateY(-99%)",pointerEvents:"none",zIndex:1}}>
+    <svg viewBox="0 0 1200 100" preserveAspectRatio="none" style={{display:"block",width:"100%",height:height}}>
+      <path d="M0,100 C220,25 430,92 620,55 C820,16 1010,82 1200,42 L1200,100 L0,100 Z" fill={color}/>
+    </svg>
+  </div>;
+}
+
 function FadeIn({children,delay=0,className=""}){
   const ref=useRef(null);
   const [visible,setVisible]=useState(false);
@@ -11921,7 +11930,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
         .lp-hero-ctas button{white-space:nowrap}
         .lp-hero{padding:0 24px 80px;position:relative;overflow:hidden}
-        .lp-section{padding:72px 24px}
+        .lp-section{padding:72px 24px;position:relative}
         .lp-guarantees{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;text-align:center;margin-top:24px;font-size:13px}
         @media(max-width:768px){
           .lp-nav-full{display:none!important}
@@ -12034,6 +12043,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       <div style={{display:"flex",flexDirection:"column"}}>
       {/* SECTION 1 - PROBLEME + SOLUTION combinés */}
       {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
+        <WaveDivider color={L.wave1||"#2E4A5A"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
@@ -12076,6 +12086,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       {/* SECTION 2 - DEMO */}
       {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"#FDF5FB" }}>
+        <WaveDivider color={L.wave2||L.section2Bg||"#FDF5FB"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
@@ -12184,6 +12195,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
       {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
+        <WaveDivider color={L.wave4||"#0D1B2A"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -12273,6 +12285,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       {/* SECTION 3 - TRANSFORMATION */}
       {SV.transformation!==false&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
+        <WaveDivider color={L.wave3||L.section3Bg||"#F8F0FC"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -12356,6 +12369,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       {/* SECTION 6 - TARIFS */}
       {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#F5EBF8" }}>
+        <WaveDivider color={L.wave6||L.section6Bg||"#F5EBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
@@ -16217,10 +16231,10 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           <BOCard title="Afficher / masquer les sections de la landing" icon="👁">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Décochez une section pour la masquer de la page d'accueil. Le contenu n'est pas supprimé — vous pouvez la réafficher à tout moment. Le Hero et le Footer restent toujours visibles.</div>
             {[
-              {k:"probleme",l:"La réalité du métier",d:"Section « problème » (cartes des difficultés)"},
-              {k:"demo",l:"Découvrez TiMat en direct",d:"Démo interactive (cadre téléphone)"},
-              {k:"signature",l:"Signature électronique",d:"Section sombre eIDAS / RGPD"},
-              {k:"transformation",l:"Ce que TiMat change",d:"Tableau avant / après"},
+              {k:"probleme",l:"La réalité du métier",d:"Section « problème → solution »"},
+              {k:"demo",l:"L'application en images",d:"Démo interactive (cadre téléphone)"},
+              {k:"signature",l:"Pourquoi TiMat",d:"Différenciateurs + comment ça marche"},
+              {k:"transformation",l:"Ce que ça change",d:"Tableau comparatif (aujourd'hui / avec TiMat)"},
               {k:"chiffres",l:"Ce que disent les chiffres",d:"Statistiques clés"},
               {k:"temoignages",l:"Témoignages",d:"Avis des utilisatrices"},
               {k:"tarifs",l:"Tarifs",d:"Forfaits Gratuit / Pro"},
@@ -16240,9 +16254,21 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               </div>;
             })}
           </BOCard>
+          <BOCard title="Vagues entre sections" icon="🌊">
+            <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Ajoute une transition en vague en haut de chaque section. Désactive si tu préfères des séparations nettes.</div>
+            {(()=>{const on=(cfg.landing||{}).wavesOn!==false;return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"6px 0 14px"}}>
+              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>Activer les vagues</div>
+              <div onClick={()=>setLand("wavesOn",!on)}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
+                <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
+              </div>
+            </div>;})()}
+            {[["wave1","Vague — La réalité du métier"],["wave2","Vague — L'application en images"],["wave4","Vague — Pourquoi TiMat"],["wave3","Vague — Ce que ça change"],["wave6","Vague — Tarifs"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
+            )}
+          </BOCard>
           <BOCard title="Ordre des sections" icon="↕️">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Glissez-déposez une section pour la déplacer, ou utilisez les flèches. L'ordre s'applique à la page d'accueil (le Hero et le Footer restent à leurs extrémités).</div>
-            {(()=>{const labels={probleme:"La réalité du métier",demo:"Découvrez TiMat en direct",signature:"Signature électronique",transformation:"Ce que TiMat change",chiffres:"Ce que disent les chiffres",temoignages:"Témoignages",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
+            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",transformation:"Ce que ça change",chiffres:"Ce que disent les chiffres",temoignages:"Témoignages",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
               <div key={id}
                 draggable
                 onDragStart={()=>setDragSec(i)}
