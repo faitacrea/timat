@@ -274,21 +274,23 @@ function Styles(){return(
     .demo-tabs{display:flex;flex-direction:column;width:190px;flex-shrink:0;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.07)}
     .demo-explain{flex:1;min-width:0;max-width:440px;padding-top:4px}
     .demo-col-phone{flex-shrink:0}
-    .demo-frame{height:540px}
+    .demo-frame{height:513px}
     .demo-scrollhint{display:none}
     .demo-zoom{zoom:.82}
     @media(max-width:860px){
       .demo-layout{flex-direction:column;gap:14px;align-items:stretch;max-width:520px}
       .demo-tabs{flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:14px;order:1}
       .demo-tabs::-webkit-scrollbar{display:none}
-      .demo-tabs button{flex:0 0 auto;width:112px;min-width:112px;flex-direction:column;gap:5px;text-align:center;justify-content:flex-start;padding:12px 8px;border-bottom:none!important;border-right:1px solid rgba(0,0,0,.05)}
-      .demo-tabs button span:last-child{font-size:12px!important}
+      .demo-tabs button{flex:0 0 auto;width:88px;min-width:88px;flex-direction:column;gap:3px;text-align:center;justify-content:flex-start;padding:8px 5px;border-bottom:none!important;border-right:1px solid rgba(0,0,0,.05)}
+      .demo-tabs button span:first-child{font-size:17px!important}
+      .demo-tabs button span:last-child{font-size:10.5px!important;line-height:1.2!important}
       .demo-explain{max-width:none;order:2;padding-top:0}
       .demo-scrollhint{display:flex}
+      .demo-scrollarrow{display:flex!important}
       .demo-col-phone{order:3;align-self:center}
-      .demo-phone{width:min(240px,66vw)}
-      .demo-frame{height:470px}
-      .demo-zoom{zoom:1}
+      .demo-phone{width:min(228px,64vw)}
+      .demo-frame{height:446px}
+      .demo-zoom{zoom:.68}
     }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
@@ -12065,13 +12067,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div className="demo-layout">
 
             {/* Onglets (gauche desktop / haut mobile) facon Pandi-Panda */}
-            <div style={{order:1}}>
+            <div style={{order:1,position:"relative"}}>
               <div className="demo-tabs">
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
                   style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#2E4859,#3E5C4A)":"#F1EFEC",color:on?"#fff":"#5A6B60",transition:"all .2s",borderBottom:"1px solid rgba(0,0,0,.05)"}}>
                   <span style={{fontSize:22,flexShrink:0}}>{s.ic}</span>
                   <span style={{fontSize:14,fontWeight:700,lineHeight:1.25}}>{s.label}</span>
                 </button>;})}
+              </div>
+              {/* Fleche transparente (mobile) indiquant qu'on peut faire defiler les onglets */}
+              <div className="demo-scrollarrow" style={{position:"absolute",top:0,right:0,bottom:0,width:44,pointerEvents:"none",display:"none",alignItems:"center",justifyContent:"flex-end",paddingRight:6,background:"linear-gradient(90deg,rgba(253,245,251,0),rgba(253,245,251,.9))",borderRadius:"0 14px 14px 0"}}>
+                <span style={{fontSize:22,color:"rgba(46,72,89,.4)",animation:"nudge 1.2s ease-in-out infinite"}}>›</span>
               </div>
               <div className="demo-scrollhint" style={{alignItems:"center",justifyContent:"center",gap:6,marginTop:8,fontSize:11.5,color:"#90A093",fontWeight:600}}>
                 <span style={{animation:"nudge 1.2s ease-in-out infinite"}}>👉</span> Faites défiler pour voir les autres sections
@@ -12199,24 +12205,28 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             ))}
           </div>
 
-          {/* Parcours signature en 4 etapes - remplace tableau comparatif (P22-SIG) */}
+          {/* Comment ca marche - fonctionnement general de l'app */}
           <FadeIn delay={300}>
             <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28 }}>
-              <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 28, textAlign: "center" }}>
-                Comment ça marche
+              <div style={{ fontFamily: fTitle, fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8, textAlign: "center" }}>
+                Comment ça marche ?
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", textAlign: "center", marginBottom: 28 }}>
+                Prête à l'emploi en quelques minutes.
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
                 {[
-                  { n: "1", t: "Vous signez en 1 clic", d: "Votre signature standard, déjà enregistrée, s'appose automatiquement sur le contrat." },
-                  { n: "2", t: "Le parent est notifié", d: "Il reçoit un email sécurisé avec un lien unique pour accéder au document." },
-                  { n: "3", t: "Le parent signe à son tour", d: "Sur mobile, tablette ou ordinateur, en quelques secondes." },
-                  { n: "4", t: "PDF archivé 5 ans", d: "Stockage chiffré, hébergement France. Durée légale de conservation respectée." }
+                  { n: "1", ic:"👶", t: "Ajoutez vos enfants", d: "Créez chaque fiche et invitez le parent en un lien." },
+                  { n: "2", ic:"⏰", t: "Pointez les présences", d: "Arrivées, départs et absences en un tap, au quotidien." },
+                  { n: "3", ic:"🧮", t: "TiMat calcule tout", d: "Salaire, mensualisation, indemnités et congés, automatiquement." },
+                  { n: "4", ic:"📄", t: "Signez & déclarez", d: "Contrats signés en 1 clic et déclaration Pajemploi prête." }
                 ].map((s) => (
                   <div key={s.n} style={{ position: "relative", padding: "24px 16px 16px", background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)" }}>
                     <div style={{ position: "absolute", top: -14, left: 16, width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {s.n}
                     </div>
-                    <div style={{ fontFamily: fTitle, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 8, marginTop: 4 }}>
+                    <div style={{ fontSize: 26, marginBottom: 6, marginTop: 4 }}>{s.ic}</div>
+                    <div style={{ fontFamily: fTitle, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
                       {s.t}
                     </div>
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>
@@ -16301,13 +16311,13 @@ const DEFAULT_CONFIG = {
   txts: {
     heroTitle:"Moins de paperasse,",
     heroTitleAccent:"plus de temps pour les enfants.",
-    heroSub:"L'application tout-en-un des assistantes maternelles et parents employeurs.",
+    heroSub:"L'app des assistantes maternelles et parents employeurs.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     heroDesc:"",
     heroBadge:"🧸 CONÇUE PAR UNE ASSMAT, POUR LES ASSMATS",
-    heroSubDesc:"Contrat, mensualisation, bulletin de salaire, planning, pointage, déclaration Pajemploi et cahier de liaison : TiMat calcule et centralise tout, à partir de vos présences réelles.",
+    heroSubDesc:"Contrat, paie, planning, Pajemploi et cahier de liaison — calculés automatiquement.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
