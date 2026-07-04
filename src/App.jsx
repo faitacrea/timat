@@ -220,6 +220,20 @@ function Styles(){return(
     @keyframes badgePulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
     .tarif-pro{transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
     .tarif-pro:hover{transform:translateY(-8px);box-shadow:0 22px 60px rgba(184,98,47,.3)}
+    .tarif-free{transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
+    .tarif-free:hover{transform:translateY(-8px);box-shadow:0 20px 54px rgba(46,72,89,.18)}
+    .faq-item{transition:box-shadow .2s,border-color .2s}
+    .faq-item:hover{border-color:#E49178!important;box-shadow:0 6px 22px rgba(228,145,120,.16)}
+    .faq-item summary{transition:background .18s}
+    .faq-item summary:hover{background:rgba(228,145,120,.06)}
+    .faq-item summary span{transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+    .faq-item[open] summary span{transform:rotate(135deg)}
+    .faq-item[open] .faq-ans{animation:faqOpen .32s ease}
+    @keyframes faqOpen{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    .blog-card{transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+    .blog-card:hover{transform:translateY(-6px);box-shadow:0 18px 44px rgba(46,72,89,.16)}
+    .blog-card:hover .blog-arrow{transform:translateX(5px)}
+    .blog-arrow{transition:transform .25s}
     .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
     .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
@@ -286,18 +300,18 @@ function Styles(){return(
     .demo-zoom{zoom:.8}
     @media(max-width:860px){
       .demo-layout{flex-direction:column;gap:14px;align-items:stretch;max-width:520px}
-      .demo-tabs{flex-direction:row;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:14px;order:1}
-      .demo-tabs::-webkit-scrollbar{display:none}
-      .demo-tabs button{flex:0 0 auto;width:88px;min-width:88px;flex-direction:column;gap:3px;text-align:center;justify-content:flex-start;padding:8px 5px;border-bottom:none!important;border-right:1px solid rgba(0,0,0,.05)}
-      .demo-tabs button span:first-child{font-size:17px!important}
-      .demo-tabs button span:last-child{font-size:10.5px!important;line-height:1.2!important}
+      .demo-tabs{flex-direction:row;flex-wrap:wrap;gap:7px;width:100%;overflow:visible;background:transparent;box-shadow:none;border-radius:0;order:1}
+      .demo-tabs button{flex:1 1 30%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:10px 6px;border:none!important;border-radius:13px!important}
+      .demo-tabs button span:first-child{font-size:19px!important}
+      .demo-tabs button span:last-child{font-size:10px!important;line-height:1.15!important}
       .demo-explain{max-width:none;order:2;padding-top:0}
-      .demo-scrollhint{display:flex}
-      .demo-scrollarrow{display:flex!important}
+      .demo-scrollhint{display:none!important}
+      .demo-scrollarrow{display:none!important}
       .demo-col-phone{order:3;align-self:center}
       .demo-phone{width:min(224px,62vw)}
       .demo-frame{height:424px}
       .demo-zoom{zoom:.64}
+      .demo-beam{display:none}
       .demo-beam{display:none}
     }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
@@ -12060,6 +12074,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         }
         .lp-hero-ctas button{white-space:nowrap}
         .lp-hero{padding:0 24px 80px;position:relative;overflow:hidden}
+        .sticky-burger{display:none!important}
+        @media(max-width:760px){.sticky-links{display:none!important}.sticky-burger{display:flex!important}}
         .lp-section{padding:72px 24px;position:relative}
         .lp-guarantees{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;text-align:center;margin-top:24px;font-size:13px}
         @media(max-width:768px){
@@ -12095,11 +12111,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       `}</style>
       {/* Sticky nav — apparait quand on descend */}
       <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, transform:scrolled?"translateY(0)":"translateY(-110%)", transition:"transform .35s cubic-bezier(.22,1,.36,1)", background:"rgba(253,251,248,.9)", backdropFilter:"blur(14px)", borderBottom:"1px solid rgba(46,72,89,.08)", boxShadow:scrolled?"0 4px 24px rgba(46,72,89,.08)":"none" }}>
-        <div style={{ maxWidth:1080, margin:"0 auto", padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
-          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:32,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <button onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ display:"flex",alignItems:"center",gap:6,background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:13,fontWeight:700,padding:"8px 14px",borderRadius:10,fontFamily:"inherit" }}>☰ Menu</button>
-            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
+        <div style={{ maxWidth:1120, margin:"0 auto", padding:"9px 20px", display:"flex", alignItems:"center", gap:18 }}>
+          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:32,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
+          <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
+            {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+              <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s" }}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
+            )}
+          </nav>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginLeft:"auto" }}>
+            <button className="sticky-burger" onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:18,fontWeight:700,width:40,height:40,borderRadius:10,fontFamily:"inherit",alignItems:"center",justifyContent:"center" }}>☰</button>
+            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
           </div>
         </div>
       </div>
@@ -12510,7 +12533,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           </FadeIn>
           <div className="lp-tarifs-grid">
             {/* Gratuit */}
-            <div style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
+            <div className="tarif-free" style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.freePriceColor||"#0D1B2A" }}>{T.freePrice||"0€"}</span>
@@ -12574,12 +12597,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           </FadeIn>
           {(config.faqLanding||DEFAULT_CONFIG.faqLanding).map(({q,a},i)=>(
             <FadeIn key={i} delay={i*50}>
-              <details style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
+              <details className="faq-item" style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
                 <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#2E4859", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   {q}
-                  <span style={{ fontSize: 18, color: "#E49178", flexShrink: 0, marginLeft: 12 }}>+</span>
+                  <span style={{ fontSize: 18, color: "#E49178", flexShrink: 0, marginLeft: 12, display:"inline-block" }}>+</span>
                 </summary>
-                <div style={{ padding: "0 20px 16px", fontSize: 13, color: "#5F7A86", lineHeight: 1.8 }}>{a}</div>
+                <div className="faq-ans" style={{ padding: "0 20px 16px", fontSize: 13, color: "#5F7A86", lineHeight: 1.8 }}>{a}</div>
               </details>
             </FadeIn>
           ))}
@@ -12598,18 +12621,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {(config.blog||DEFAULT_CONFIG.blog).map((art,i)=>(
               <FadeIn key={art.id} delay={i*80}>
-                <div onClick={()=>setShowBlog(art.id)} style={{
+                <div className="blog-card" onClick={()=>setShowBlog(art.id)} style={{
                   background:"#fff",borderRadius:16,overflow:"hidden",cursor:"pointer",
-                  border:"1px solid #E8E4E0",transition:"all .2s",boxShadow:"0 2px 12px rgba(0,0,0,.04)"
-                }}
-                  onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 12px 32px rgba(0,0,0,.1)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,.04)";}}>
+                  border:"1px solid #E8E4E0",boxShadow:"0 2px 12px rgba(0,0,0,.04)"
+                }}>
                   <div style={{height:120,background:"linear-gradient(135deg,"+art.catColor+"15,"+art.catColor+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{art.emoji}</div>
                   <div style={{padding:"16px 20px"}}>
                     <div style={{fontSize:10,fontWeight:700,color:art.catColor,textTransform:"uppercase",letterSpacing:".8px",marginBottom:8}}>{art.cat}</div>
                     <div style={{fontSize:15,fontWeight:700,color:"#2E4859",lineHeight:1.4,marginBottom:8}}>{art.title}</div>
                     <div style={{fontSize:12,color:"#5F7A86",lineHeight:1.6}}>{art.excerpt}</div>
-                    <div style={{marginTop:12,fontSize:12,color:accent,fontWeight:600}}>Lire l'article →</div>
+                    <div style={{marginTop:12,fontSize:12,color:accent,fontWeight:600}}>Lire l'article <span className="blog-arrow" style={{display:"inline-block"}}>→</span></div>
                   </div>
                 </div>
               </FadeIn>
