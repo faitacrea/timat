@@ -277,9 +277,9 @@ function Styles(){return(
     .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
     .demo-phone{width:270px}
-    .demo-layout{display:flex;gap:30px;align-items:center;justify-content:center;max-width:1160px;margin:0 auto}
-    .demo-tabs{display:flex;flex-direction:column;width:190px;flex-shrink:0;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.07)}
-    .demo-explain{flex:1;min-width:0;max-width:440px;padding-top:4px}
+    .demo-layout{display:flex;gap:22px;align-items:center;justify-content:center;max-width:940px;margin:0 auto}
+    .demo-tabs{display:flex;flex-direction:column;width:178px;flex-shrink:0;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.07)}
+    .demo-explain{flex:0 1 360px;min-width:0;padding-top:4px}
     .demo-col-phone{flex-shrink:0}
     .demo-frame{height:487px}
     .demo-scrollhint{display:none}
@@ -11839,6 +11839,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
   const [showBoutique, setShowBoutique] = useState(false);
   const [showOutils, setShowOutils] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(()=>{
+    if(preview)return;
+    const onScroll=()=>setScrolled(window.scrollY>150);
+    window.addEventListener("scroll",onScroll,{passive:true});
+    return()=>window.removeEventListener("scroll",onScroll);
+  },[preview]);
   const [role, setRole] = useState("asmat");
   const [modeAuth, setModeAuth] = useState("inscription");
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
@@ -12086,13 +12093,23 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           .lp-logo-icon{width:24px;height:24px;font-size:13px}
         }
       `}</style>
+      {/* Sticky nav — apparait quand on descend */}
+      <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, transform:scrolled?"translateY(0)":"translateY(-110%)", transition:"transform .35s cubic-bezier(.22,1,.36,1)", background:"rgba(253,251,248,.9)", backdropFilter:"blur(14px)", borderBottom:"1px solid rgba(46,72,89,.08)", boxShadow:scrolled?"0 4px 24px rgba(46,72,89,.08)":"none" }}>
+        <div style={{ maxWidth:1080, margin:"0 auto", padding:"10px 20px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:32,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <button onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ display:"flex",alignItems:"center",gap:6,background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:13,fontWeight:700,padding:"8px 14px",borderRadius:10,fontFamily:"inherit" }}>☰ Menu</button>
+            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
+          </div>
+        </div>
+      </div>
       <div className="lp-hero" style={{ background: L.heroBg }}>
         <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:L.heroImg?"url("+L.heroImg+")":"none", backgroundSize:"cover", backgroundPosition:L.heroImgPosition||"center center", opacity:L.heroImgOpacity||0.12, filter:"blur("+(L.heroImgBlur||2)+"px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrl || "/logo-dark.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
@@ -12216,8 +12233,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 2 - DEMO */}
-      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"#FDF5FB" }}>
-        <WaveDivider color={L.wave2||L.section2Bg||"#FDF5FB"} on={L.wavesOn!==false}/>
+      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"#FDFBF8" }}>
+        <WaveDivider color={L.wave2||L.section2Bg||"#FDFBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
@@ -12237,7 +12254,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
                 </button>;})}
               </div>
               {/* Fleche transparente (mobile) indiquant qu'on peut faire defiler les onglets */}
-              <div className="demo-scrollarrow" style={{position:"absolute",top:0,right:0,bottom:0,width:44,pointerEvents:"none",display:"none",alignItems:"center",justifyContent:"flex-end",paddingRight:6,background:"linear-gradient(90deg,rgba(253,245,251,0),rgba(253,245,251,.9))",borderRadius:"0 14px 14px 0"}}>
+              <div className="demo-scrollarrow" style={{position:"absolute",top:0,right:0,bottom:0,width:44,pointerEvents:"none",display:"none",alignItems:"center",justifyContent:"flex-end",paddingRight:6,background:"linear-gradient(90deg,rgba(253,251,248,0),rgba(253,251,248,.9))",borderRadius:"0 14px 14px 0"}}>
                 <span style={{fontSize:22,color:"rgba(46,72,89,.4)",animation:"nudge 1.2s ease-in-out infinite"}}>›</span>
               </div>
               <div className="demo-scrollhint" style={{alignItems:"center",justifyContent:"center",gap:6,marginTop:8,fontSize:11.5,color:"#90A093",fontWeight:600}}>
@@ -12401,8 +12418,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 3 - TRANSFORMATION */}
-      {SV.transformation===true&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F8F0FC" }}>
-        <WaveDivider color={L.wave3||L.section3Bg||"#F8F0FC"} on={L.wavesOn!==false}/>
+      {SV.transformation===true&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F4F1EA" }}>
+        <WaveDivider color={L.wave3||L.section3Bg||"#F4F1EA"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -12423,7 +12440,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
               : transformations
             ).map(([ic, pb, sol, res], i) => (
               <FadeIn key={i} delay={i * 60}>
-                <div className="lp-transfo-row" style={{ padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F8F0FC") : (L.s3RowBg2||"#FDF5FB"), border: "1px solid #DDD5C8" }}>
+                <div className="lp-transfo-row" style={{ padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F4F1EA") : (L.s3RowBg2||"#FDFBF8"), border: "1px solid #DDD5C8" }}>
                   <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
                   <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
                   <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
@@ -12459,7 +12476,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDF5FB" }}>
+      {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -12485,8 +12502,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 6 - TARIFS */}
-      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#F5EBF8" }}>
-        <WaveDivider color={L.wave6||L.section6Bg||"#F5EBF8"} on={L.wavesOn!==false}/>
+      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#F4F1EA" }}>
+        <WaveDivider color={L.wave6||L.section6Bg||"#F4F1EA"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
@@ -12508,7 +12525,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
               ))}
             </div>
             {/* Pro */}
-            <div className="tarif-pro" style={{ background: L.proBg||"#FDF5FB", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+            <div className="tarif-pro" style={{ background: L.proBg||"#FDFBF8", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
               <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#E49178,#B85838)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap", animation:"badgePulse 2.2s ease-in-out infinite", boxShadow:"0 6px 18px rgba(184,98,47,.4)" }}>{T.proLabel}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
@@ -16530,14 +16547,14 @@ const DEFAULT_CONFIG = {
     logoUrl:"",
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
-    section1Bg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
-    section2Bg:"#FDF5FB",
-    section3Bg:"#F8F0FC",
-    section4Bg:"linear-gradient(135deg,#2E4859,#5DA9A1)",
-    section5Bg:"#FDF5FB",
-    section6Bg:"#F5EBF8",
+    section1Bg:"linear-gradient(135deg,#2E4859,#3E6B63)",
+    section2Bg:"#FDFBF8",
+    section3Bg:"#F4F1EA",
+    section4Bg:"linear-gradient(135deg,#2E4859,#3E6B63)",
+    section5Bg:"#FDFBF8",
+    section6Bg:"#F4F1EA",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
-    statsBg:"linear-gradient(135deg,#2E4A5A,#5DA9A1)",
+    statsBg:"linear-gradient(135deg,#2E4859,#3E6B63)",
     // ----- BOUTONS HERO -----
     heroBtnPrimBg:"linear-gradient(135deg,#E49178,#C84B31)",
     heroBtnPrimColor:"#fff",
@@ -16578,8 +16595,8 @@ const DEFAULT_CONFIG = {
     s2TitleColor:"#0D1B2A",
     s2DescColor:"#6B4F3A",
     s3TitleColor:"#0D1B2A",
-    s3RowBg1:"#F8F0FC",
-    s3RowBg2:"#FDF5FB",
+    s3RowBg1:"#F4F1EA",
+    s3RowBg2:"#FDFBF8",
     s3LabelBeforeColor:"#B84060",
     s3LabelAfterColor:"#2E5F8A",
     s3LabelResultColor:"#3D6B50",
@@ -16602,7 +16619,7 @@ const DEFAULT_CONFIG = {
     freeLabelColor:"#A68970",
     freePriceColor:"#0D1B2A",
     freeDescColor:"#6B4F3A",
-    proBg:"#FDF5FB",
+    proBg:"#FDFBF8",
     proBorderColor:"#B8622F",
     proLabelColor:"#B8622F",
     proPriceColor:"#B8622F",
