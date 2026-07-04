@@ -11199,12 +11199,65 @@ function Counter({target,suffix="",prefix="",duration=2000}){
 }
 
 //
+function DemoScreen({page}){
+  const card={background:"#fff",border:"1px solid #EFE7DF",borderRadius:13,padding:"11px 13px"};
+  const chip=(c)=>({fontSize:10,fontWeight:700,color:c,background:c+"18",padding:"2px 8px",borderRadius:8});
+  const Title=({children})=><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:15,color:"#2E4859",margin:"2px 2px 12px"}}>{children}</div>;
+  if(page==="accueil")return <div>
+    <Title>Bonjour Sophie 👋</Title>
+    <div style={{background:"linear-gradient(135deg,#2E4859,#3E6B63)",borderRadius:15,padding:14,color:"#fff",marginBottom:10}}>
+      <div style={{fontSize:10,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
+      <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
+      <div style={{display:"flex",gap:6,marginTop:10}}>{["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:28,height:28,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>{e}</span>)}</div>
+    </div>
+    {[["⏰","Pointage du jour","à jour","#5DA9A1"],["✍️","1 contrat","à signer","#E49178"],["📩","Message du parent","nouveau","#2E4859"]].map(([ic,a,b,c],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={chip(c)}>{b}</span></div>)}
+  </div>;
+  if(page==="calendrier")return <div>
+    <Title>Planning de la semaine</Title>
+    {[["Lun","Léo · Emma","8h–17h"],["Mar","Léo · Noah","8h–18h"],["Mer","Emma","9h–16h"],["Jeu","Léo · Emma · Noah","8h–17h"]].map(([j,who,h],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:7}}><span style={{width:34,height:34,borderRadius:9,background:"#5DA9A118",color:"#2E4859",fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{j}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{who}</span><span style={{fontSize:10.5,color:"#8A7A70",fontWeight:600}}>{h}</span></div>)}
+    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:2,background:"#FBEEE9",border:"1px solid #F3D3C7"}}><span>🌴</span><span style={{fontSize:11.5,color:"#C84B31",fontWeight:600}}>Vendredi — absence déclarée</span></div>
+  </div>;
+  if(page==="admin_finances")return <div>
+    <Title>Salaire de juin</Title>
+    <div style={{background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:15,padding:15,color:"#fff",marginBottom:10}}>
+      <div style={{fontSize:10,opacity:.85,fontWeight:600}}>NET À VERSER</div>
+      <div style={{fontSize:26,fontWeight:800,fontFamily:"'Fraunces',serif",marginTop:2}}>1 248,60 €</div>
+      <div style={{fontSize:10.5,opacity:.85,marginTop:2}}>Mensualisation + heures + indemnités</div>
+    </div>
+    {[["🧮","Indemnités d'entretien","64,00 €"],["🍽️","Repas","33,00 €"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={{fontSize:11,fontWeight:700,color:"#5DA9A1"}}>{b}</span></div>)}
+  </div>;
+  if(page==="messagerie")return <div>
+    <Title>Échange avec Marie 💬</Title>
+    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+      <div style={{alignSelf:"flex-start",maxWidth:"85%",background:"#fff",border:"1px solid #EFE7DF",borderRadius:"14px 14px 14px 4px",padding:"9px 12px",fontSize:12,color:"#2E4859"}}>Bonjour ! Léo a bien dormi ce matin 😊</div>
+      <div style={{alignSelf:"flex-end",maxWidth:"85%",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",borderRadius:"14px 14px 4px 14px",padding:"9px 12px",fontSize:12}}>Super, merci Sophie ! Il a mangé ?</div>
+      <div style={{alignSelf:"flex-start",maxWidth:"85%",background:"#fff",border:"1px solid #EFE7DF",borderRadius:"14px 14px 14px 4px",padding:"9px 12px",fontSize:12,color:"#2E4859"}}>Oui, tout mangé 🍎 Photo dans le cahier !</div>
+    </div>
+    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:12,color:"#8A7A70"}}><span style={{flex:1,fontSize:11.5}}>Votre message…</span><span style={{width:28,height:28,borderRadius:"50%",background:"#E49178",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>➤</span></div>
+  </div>;
+  if(page==="sante_complet")return <div>
+    <Title>Santé & urgences 🩺</Title>
+    <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}>⚠️ Allergie : arachides<br/>💊 Aucun traitement en cours</div></div>
+    {[["🚑","SAMU","15"],["🧑‍⚕️","Médecin traitant","01 23 45 67"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8,borderColor:"#FCA5A5"}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#7F1D1D"}}>{a}</span><span style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>{b}</span></div>)}
+  </div>;
+  return <div style={{padding:20,textAlign:"center",color:"#8A7A70",fontSize:12}}>Écran disponible dans l'application.</div>;
+}
+
 function HeroPhone(){
-  const notifs=[
-    {ic:"✅",t:"Bulletin de salaire généré",top:"8%",left:"-16%",d:"0s"},
-    {ic:"💶",t:"Salaire calculé automatiquement",top:"42%",left:"58%",d:"1.4s"},
-    {ic:"📩",t:"Parent notifié",top:"78%",left:"-10%",d:"2.8s"},
+  const pool=[
+    {ic:"✅",t:"Bulletin de salaire généré"},
+    {ic:"💶",t:"Salaire calculé automatiquement"},
+    {ic:"📩",t:"Parent notifié"},
+    {ic:"⏰",t:"Pointage enregistré"},
+    {ic:"📄",t:"Déclaration Pajemploi prête"},
+    {ic:"💬",t:"Nouveau message du parent"},
+    {ic:"🗓️",t:"Absence ajoutée au planning"},
+    {ic:"🧾",t:"Indemnités calculées"},
+    {ic:"✍️",t:"Contrat signé en 1 clic"},
   ];
+  const slots=[{top:"8%",left:"-16%",d:"0s"},{top:"42%",left:"58%",d:"1.4s"},{top:"78%",left:"-10%",d:"2.8s"}];
+  const [tick,setTick]=useState(0);
+  useEffect(()=>{const id=setInterval(()=>setTick(t=>t+1),4200);return()=>clearInterval(id);},[]);
   return <div style={{position:"relative",width:250,height:510}}>
     {/* halo */}
     <div style={{position:"absolute",inset:"6% 4%",borderRadius:"50%",background:"radial-gradient(closest-side,rgba(228,145,120,.55),transparent)",filter:"blur(26px)",animation:"glowpulse 4s ease-in-out infinite"}}/>
@@ -11237,13 +11290,13 @@ function HeroPhone(){
         </div>
       </div>
     </div>
-    {/* notifications qui sortent */}
-    {notifs.map((n,i)=>
-      <div key={i}style={{position:"absolute",top:n.top,left:n.left,background:"#fff",borderRadius:12,padding:"9px 13px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:9,whiteSpace:"nowrap",zIndex:3,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:n.d}}>
+    {/* notifications qui sortent et changent a chaque cycle */}
+    {slots.map((s,i)=>{const n=pool[(tick*3+i)%pool.length];return (
+      <div key={i}style={{position:"absolute",top:s.top,left:s.left,background:"#fff",borderRadius:12,padding:"9px 13px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:9,whiteSpace:"nowrap",zIndex:3,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:s.d}}>
         <span style={{fontSize:16}}>{n.ic}</span>
         <span style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>{n.t}</span>
       </div>
-    )}
+    );})}
   </div>;
 }
 
@@ -11975,11 +12028,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         .lp-tarifs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
         .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
         .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-        .lp-hero-ctas{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap;margin-bottom:28px}
+        .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
         .lp-hero-grid{display:flex;gap:52px;align-items:center;justify-content:center;max-width:1080px;margin:0 auto}
-        .lp-hero-text{flex:1 1 460px;min-width:0}
+        .lp-hero-text{flex:1 1 460px;min-width:0;text-align:center}
         .lp-hero-visual{flex:0 0 auto;position:relative;display:flex;justify-content:center}
-        .lp-hero-tags{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-start}
+        .lp-hero-tags{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
         @keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-16px) rotate(1.2deg)}}
         @keyframes notifpop{0%{opacity:0;transform:translateY(12px) scale(.92)}14%,82%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-10px) scale(.95)}}
         @keyframes glowpulse{0%,100%{opacity:.35}50%{opacity:.6}}
@@ -12084,14 +12137,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         </div>
         {/* Hero content : texte a gauche, telephone anime a droite */}
         <div className="lp-hero-grid" style={{ position: "relative", zIndex: 1 }}>
-          <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"left" }}>
+          <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"center" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E49178", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5vw,52px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.12, marginBottom: 18 }}>
               {T.heroTitle}<br/>
               {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </div>
             <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"rgba(255,255,255,.8)", lineHeight: 1.5, marginBottom: 14, fontWeight: 500 }}>{T.heroSub}</div>
-            <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"rgba(255,255,255,.55)", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
+            <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"rgba(255,255,255,.55)", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             <div className="lp-hero-ctas">
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
               <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
@@ -12125,7 +12178,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#E49178", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-            {(L.comboRows||"😩|Des soirées entières à recalculer le salaire|Le salaire juste, calculé tout seul\n😰|La peur constante de se tromper dans les comptes|Des calculs fiables et conformes, sans erreur\n🏃|Courir après les paiements en retard|Suivi des versements réels + relances en 1 clic\n🤯|La déclaration Pajemploi qui retombe chaque mois|Préparée d'avance, prête à reporter\n📚|La paperasse qui s'accumule (contrats, avenants…)|Générée, signée en 1 clic et bien rangée").split("\n").filter(Boolean).map((line,i)=>{
+            {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des soirées entières à recalculer le salaire|Le salaire juste, calculé tout seul\n😰|La peur constante de se tromper dans les comptes|Des calculs fiables et conformes, sans erreur\n🏃|Courir après les paiements des parents|Suivi des versements réels + relances en 1 clic\n🤯|La déclaration Pajemploi qui retombe chaque mois|Préparée d'avance, prête à reporter\n📚|La paperasse qui s'accumule (contrats, avenants…)|Générée, signée en 1 clic et bien rangée\n⏰|Des heures perdues sur l'administratif|Du temps rendu aux enfants").split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
               return <FadeIn key={i} delay={i*70}>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", borderRadius:14, padding:"16px 20px" }}>
@@ -12190,68 +12243,28 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
             {/* Phone (droite desktop / bas mobile) */}
             <div className="demo-col-phone" style={{order:3,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-            {/* Phone frame — vraie UI de l'app */}
-            <div className="demo-phone" style={{ flexShrink: 0, background: "#1a1a2e", borderRadius: 44, padding: "14px 12px 12px", boxShadow: "0 18px 55px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.08)" }}>
-              {/* Notch */}
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-                <div style={{ width: 110, height: 24, background: "#1a1a2e", borderRadius: "0 0 18px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2a2a4e" }} />
-                  <div style={{ width: 48, height: 4, borderRadius: 2, background: "#2a2a4e" }} />
-                </div>
+            {/* Phone frame — style hero, ecrans propres, sans scroll */}
+            <div className="demo-phone" style={{ flexShrink: 0, background: "#0D1B2A", borderRadius: 42, padding: "12px 11px", boxShadow: "0 30px 70px rgba(13,27,42,.4)" }}>
+              <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>
+                <div style={{ width:70, height:5, borderRadius:3, background:"rgba(255,255,255,.22)" }}/>
               </div>
-              {/* Screen */}
-              <div className="demo-frame" style={{ background: "#FDFBF8", borderRadius: 30, overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
-                {/* Badge DEMO */}
-                <div style={{position:"absolute",top:10,right:10,zIndex:50,background:"rgba(155,107,170,.9)",color:"#fff",fontSize:8,fontWeight:700,padding:"2px 7px",borderRadius:5,letterSpacing:1,pointerEvents:"none"}}>DEMO</div>
-
-                <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
-
-                {/* TopBar démo allégée (vrai logo, style identique, sans actions perso) */}
-                <div className="topbar">
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <img src={logoForRole("asmat",false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
-                    <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
-                  </div>
+              <div className="demo-frame" style={{ background:"#FDFBF8", borderRadius:30, overflow:"hidden", display:"flex", flexDirection:"column", position:"relative" }}>
+                <div style={{padding:"14px 14px 8px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+                  <span style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:18,color:"#E49178"}}>timat</span>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:18,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
-                    <span style={{fontSize:16}}>🌙</span>
-                    <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:D.asmat.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(D.asmat.prenom,D.asmat.nom)}</div>
+                    <span style={{fontSize:15,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-4,right:-4,background:"#C84B31",color:"#fff",borderRadius:"50%",width:12,height:12,fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
+                    <span style={{width:24,height:24,borderRadius:"50%",background:"#E49178",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>MD</span>
                   </div>
                 </div>
-
-                {/* Navigation démo : uniquement la BottomNav (comme sur téléphone) */}
-
-                {/* Contenu : vrai écran si déverrouillé, sinon aperçu flouté verrouillé */}
-                <div ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
-                  {demoPage==="accueil"
-                    ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
-                    : demoPage==="pointage"
-                    ? <div style={{padding:10}}><Pointage enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} demoMode={true}/></div>
-                    : demoPage==="inviter_parent"
-                    ? <div style={{padding:10}}><InviterParent enfants={demoEnfants} user={D.asmat} demoMode={true}/></div>
-                    : demoPage==="admin_finances"
-                    ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
-                    : demoPage==="calendrier"
-                    ? <div style={{padding:10}}><Calendrier enfants={demoEnfants} role="asmat" pEId={null}/></div>
-                    : demoPage==="messagerie"
-                    ? <div style={{padding:10}}><Messagerie enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat}/></div>
-                    : demoPage==="sante_complet"
-                    ? <div style={{padding:10}}><SanteComplete enfants={demoEnfants} role="asmat" pEId={null}/></div>
-                    : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100%",gap:14,textAlign:"center",padding:24}}>
-                        <div style={{fontSize:40}}>🔒</div>
-                        <div style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
-                        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,maxWidth:250}}>Cette fonctionnalité fait partie de TiMat. Créez votre espace pour en profiter.</div>
-                        <div onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#E49178,#C76754)",borderRadius:10,padding:"10px 20px",fontSize:13,color:"#fff",fontWeight:700,cursor:"pointer",marginTop:4}}>Créer mon espace →</div>
-                      </div>}
+                <div style={{flex:1,overflow:"hidden",padding:"4px 12px 8px"}}>
+                  <DemoScreen page={demoPage}/>
                 </div>
-
-                {/* Vraie BottomNav de l'app */}
-                <div className="demo-bnav"><BottomNav groups={GROUPS_AM} page={demoPage} setPage={goDemo} pmiNonLus={0} flat/></div>
-                </div>{/* /demo-zoom */}
+                <div style={{display:"flex",justifyContent:"space-around",alignItems:"center",padding:"8px 6px",borderTop:"1px solid #EFE7DF",flexShrink:0,background:"#fff"}}>
+                  {[["🏠","Accueil"],["👶","Enfant"],["📁","Admin"],["⭐","Outils"]].map(([ic,l],i)=><div key={i}style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,opacity:i===0?1:.45}}><span style={{fontSize:15}}>{ic}</span><span style={{fontSize:8,fontWeight:600,color:"#2E4859"}}>{l}</span></div>)}
+                </div>
               </div>
-              {/* Home indicator */}
-              <div style={{ display: "flex", justifyContent: "center", paddingTop: 8 }}>
-                <div style={{ width: 90, height: 4, background: "rgba(255,255,255,.25)", borderRadius: 2 }} />
+              <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
+                <div style={{ width:90, height:4, background:"rgba(255,255,255,.25)", borderRadius:2 }}/>
               </div>
             </div>
             </div>{/* /colonne phone */}
@@ -17448,3 +17461,4 @@ export default function App(){
     </>
   );
 }
+
