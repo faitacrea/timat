@@ -213,6 +213,13 @@ function Styles(){return(
     @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
     @keyframes tapripple{from{transform:scale(.4);opacity:.85}to{transform:scale(1.7);opacity:0}}
     @keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+    @keyframes demoScreenIn{from{opacity:0;transform:translateX(14px) scale(.98)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes demoPuceIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes demoTabGlow{0%,100%{box-shadow:0 4px 18px rgba(46,72,89,.25)}50%{box-shadow:0 6px 30px rgba(93,169,161,.55)}}
+    @keyframes demoBeam{0%{left:2%;opacity:0}18%{opacity:1}82%{opacity:1}100%{left:98%;opacity:0}}
+    @keyframes badgePulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.07)}}
+    .tarif-pro{transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
+    .tarif-pro:hover{transform:translateY(-8px);box-shadow:0 22px 60px rgba(184,98,47,.3)}
     .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
     .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
@@ -291,6 +298,7 @@ function Styles(){return(
       .demo-phone{width:min(224px,62vw)}
       .demo-frame{height:424px}
       .demo-zoom{zoom:.64}
+      .demo-beam{display:none}
     }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
@@ -12143,7 +12151,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         </div>
         <div className="lp-hero-grid" style={{ position: "relative", zIndex: 1 }}>
           <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"center" }}>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5vw,52px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.12, marginBottom: 18 }}>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4.4vw,50px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.14, marginBottom: 16 }}>
               {T.heroTitle}<br/>
               {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </div>
@@ -12223,8 +12231,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div style={{order:1,position:"relative"}}>
               <div className="demo-tabs">
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                  style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#2E4859,#3E5C4A)":"#F1EFEC",color:on?"#fff":"#5A6B60",transition:"all .2s",borderBottom:"1px solid rgba(0,0,0,.05)"}}>
-                  <span style={{fontSize:22,flexShrink:0}}>{s.ic}</span>
+                  style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#2E4859,#3E5C4A)":"#F1EFEC",color:on?"#fff":"#5A6B60",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(0,0,0,.05)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
+                  <span style={{fontSize:on?24:22,flexShrink:0,transition:"font-size .2s"}}>{s.ic}</span>
                   <span style={{fontSize:14,fontWeight:700,lineHeight:1.25}}>{s.label}</span>
                 </button>;})}
               </div>
@@ -12239,8 +12247,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:4}}>
-                {s.resume.map(r=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+              <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:14,marginBottom:4}}>
+                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:(j*0.09)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+              </div>
+              {/* faisceau lumineux qui file vers le telephone (desktop) a chaque changement */}
+              <div className="demo-beam" style={{position:"relative",height:2,marginTop:22,background:"linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.25),rgba(93,169,161,0))",borderRadius:2}}>
+                <span key={demoPage} style={{position:"absolute",top:-3,width:8,height:8,borderRadius:"50%",background:"#5DA9A1",boxShadow:"0 0 12px 3px rgba(93,169,161,.8)",animation:"demoBeam 1.1s ease-out"}}/>
               </div>
             </div>;})()}
 
@@ -12264,7 +12276,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
                     <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:D.asmat.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(D.asmat.prenom,D.asmat.nom)}</div>
                   </div>
                 </div>
-                <div ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
+                <div key={demoPage} ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative", animation:"demoScreenIn .4s ease" }}>
                   {demoPage==="accueil"
                     ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
                     : demoPage==="pointage"
@@ -12496,8 +12508,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
               ))}
             </div>
             {/* Pro */}
-            <div style={{ background: L.proBg||"#FDF5FB", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
-              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#E49178,#B85838)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>{T.proLabel}</div>
+            <div className="tarif-pro" style={{ background: L.proBg||"#FDF5FB", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
+              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#E49178,#B85838)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap", animation:"badgePulse 2.2s ease-in-out infinite", boxShadow:"0 6px 18px rgba(184,98,47,.4)" }}>{T.proLabel}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
