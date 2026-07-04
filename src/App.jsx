@@ -11255,14 +11255,14 @@ function HeroPhone(){
     {ic:"🧾",t:"Indemnités calculées"},
     {ic:"✍️",t:"Contrat signé en 1 clic"},
   ];
-  const slots=[{top:"8%",left:"-16%",d:"0s"},{top:"42%",left:"58%",d:"1.4s"},{top:"78%",left:"-10%",d:"2.8s"}];
+  const slots=[{top:"6%",left:"-6%",d:"0s"},{top:"44%",left:"52%",d:"1.4s"},{top:"80%",left:"-4%",d:"2.8s"}];
   const [tick,setTick]=useState(0);
   useEffect(()=>{const id=setInterval(()=>setTick(t=>t+1),4200);return()=>clearInterval(id);},[]);
-  return <div style={{position:"relative",width:250,height:510}}>
+  return <div className="hero-phone-wrap" style={{position:"relative",width:230,height:466}}>
     {/* halo */}
     <div style={{position:"absolute",inset:"6% 4%",borderRadius:"50%",background:"radial-gradient(closest-side,rgba(228,145,120,.55),transparent)",filter:"blur(26px)",animation:"glowpulse 4s ease-in-out infinite"}}/>
     {/* telephone flottant */}
-    <div style={{position:"relative",width:250,height:510,animation:"floaty 5s ease-in-out infinite"}}>
+    <div style={{position:"relative",width:230,height:466,animation:"floaty 5s ease-in-out infinite"}}>
       <div style={{position:"absolute",inset:0,background:"#0D1B2A",borderRadius:38,padding:"12px 11px",boxShadow:"0 40px 90px rgba(0,0,0,.45)"}}>
         <div style={{position:"absolute",top:20,left:"50%",transform:"translateX(-50%)",width:70,height:5,borderRadius:3,background:"rgba(255,255,255,.25)",zIndex:2}}/>
         <div style={{width:"100%",height:"100%",background:"#FDFBF8",borderRadius:28,overflow:"hidden",display:"flex",flexDirection:"column"}}>
@@ -11292,9 +11292,9 @@ function HeroPhone(){
     </div>
     {/* notifications qui sortent et changent a chaque cycle */}
     {slots.map((s,i)=>{const n=pool[(tick*3+i)%pool.length];return (
-      <div key={i}style={{position:"absolute",top:s.top,left:s.left,background:"#fff",borderRadius:12,padding:"9px 13px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:9,whiteSpace:"nowrap",zIndex:3,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:s.d}}>
-        <span style={{fontSize:16}}>{n.ic}</span>
-        <span style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>{n.t}</span>
+      <div key={i}style={{position:"absolute",top:s.top,left:s.left,maxWidth:150,background:"#fff",borderRadius:12,padding:"8px 12px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:8,zIndex:3,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:s.d}}>
+        <span style={{fontSize:15,flexShrink:0}}>{n.ic}</span>
+        <span style={{fontSize:11.5,fontWeight:700,color:"#2E4859",lineHeight:1.25}}>{n.t}</span>
       </div>
     );})}
   </div>;
@@ -12041,6 +12041,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           .lp-hero-text{text-align:center;flex-basis:auto}
           .lp-hero-ctas{justify-content:center}
           .lp-hero-tags{justify-content:center}
+          .hero-phone-wrap{transform:scale(.88);margin:-24px 0}
         }
         .lp-hero-ctas button{white-space:nowrap}
         .lp-hero{padding:0 24px 80px;position:relative;overflow:hidden}
@@ -12136,9 +12137,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           ))}
         </div>
         {/* Hero content : texte a gauche, telephone anime a droite */}
+        {/* Badge standalone centré (créée en France) — editable via heroBadge */}
+        <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:28 }}>
+          <span style={{ display:"inline-flex", alignItems:"center", gap:8, background:L.heroBadgeBg||"rgba(228,145,120,.14)", border:"1px solid "+(L.heroBadgeBorder||"rgba(228,145,120,.3)"), borderRadius:22, padding:"7px 18px", fontSize:12.5, color:L.heroBadgeColor||"#fff", fontWeight:600, letterSpacing:".3px", boxShadow:"0 4px 18px rgba(0,0,0,.15)" }}>{T.heroBadge}</span>
+        </div>
         <div className="lp-hero-grid" style={{ position: "relative", zIndex: 1 }}>
           <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"center" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: L.heroBadgeBg||"rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.25)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: L.heroBadgeColor||"#E49178", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>{T.heroBadge}</div>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(30px,5vw,52px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.12, marginBottom: 18 }}>
               {T.heroTitle}<br/>
               {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
@@ -12235,10 +12239,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:26}}>
+              <div style={{display:"flex",flexDirection:"column",gap:14,marginBottom:4}}>
                 {s.resume.map(r=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
-              <button onClick={()=>setShowModal(true)}style={{background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 26px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 24px rgba(228,145,120,.35)"}}>Tester gratuitement →</button>
             </div>;})()}
 
             {/* Phone (droite desktop / bas mobile) */}
@@ -12249,19 +12252,38 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
                 <div style={{ width:70, height:5, borderRadius:3, background:"rgba(255,255,255,.22)" }}/>
               </div>
               <div className="demo-frame" style={{ background:"#FDFBF8", borderRadius:30, overflow:"hidden", display:"flex", flexDirection:"column", position:"relative" }}>
-                <div style={{padding:"14px 14px 8px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-                  <span style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:18,color:"#E49178"}}>timat</span>
+                <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
+                <div className="topbar">
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <img src={logoForRole("asmat",false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+                    <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
+                  </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:15,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-4,right:-4,background:"#C84B31",color:"#fff",borderRadius:"50%",width:12,height:12,fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
-                    <span style={{width:24,height:24,borderRadius:"50%",background:"#E49178",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>MD</span>
+                    <span style={{fontSize:18,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
+                    <span style={{fontSize:16}}>🌙</span>
+                    <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:D.asmat.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(D.asmat.prenom,D.asmat.nom)}</div>
                   </div>
                 </div>
-                <div style={{flex:1,overflow:"hidden",padding:"4px 12px 8px"}}>
-                  <DemoScreen page={demoPage}/>
+                <div ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative" }}>
+                  {demoPage==="accueil"
+                    ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
+                    : demoPage==="pointage"
+                    ? <div style={{padding:10}}><Pointage enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} demoMode={true}/></div>
+                    : demoPage==="admin_finances"
+                    ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
+                    : demoPage==="calendrier"
+                    ? <div style={{padding:10}}><Calendrier enfants={demoEnfants} role="asmat" pEId={null}/></div>
+                    : demoPage==="messagerie"
+                    ? <div style={{padding:10}}><Messagerie enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat}/></div>
+                    : demoPage==="sante_complet"
+                    ? <div style={{padding:10}}><SanteComplete enfants={demoEnfants} role="asmat" pEId={null}/></div>
+                    : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100%",gap:14,textAlign:"center",padding:24}}>
+                        <div style={{fontSize:40}}>🔒</div>
+                        <div style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
+                      </div>}
                 </div>
-                <div style={{display:"flex",justifyContent:"space-around",alignItems:"center",padding:"8px 6px",borderTop:"1px solid #EFE7DF",flexShrink:0,background:"#fff"}}>
-                  {[["🏠","Accueil"],["👶","Enfant"],["📁","Admin"],["⭐","Outils"]].map(([ic,l],i)=><div key={i}style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,opacity:i===0?1:.45}}><span style={{fontSize:15}}>{ic}</span><span style={{fontSize:8,fontWeight:600,color:"#2E4859"}}>{l}</span></div>)}
-                </div>
+                <div className="demo-bnav"><BottomNav groups={GROUPS_AM} page={demoPage} setPage={goDemo} pmiNonLus={0} flat/></div>
+                </div>{/* /demo-zoom */}
               </div>
               <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
                 <div style={{ width:90, height:4, background:"rgba(255,255,255,.25)", borderRadius:2 }}/>
@@ -12290,25 +12312,29 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             </div>
           </FadeIn>
 
-          {/* Differenciateurs (editables via back-office : L.diffN*) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 56 }}>
+          {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 56 }}>
             {[
-              { ic: L.diff1Ic||"🧮", badge: L.diff1Badge||"Fiabilité", titre: L.diff1Titre||"Des calculs fiables, toujours identiques", desc: L.diff1Desc||"Salaire, mensualisation, indemnités d'entretien et congés payés calculés depuis vos pointages réels, conformes à la convention collective (IDCC 3239). Le même résultat à chaque fois, sans erreur.", color: "#E49178" },
-              { ic: L.diff2Ic||"💶", badge: L.diff2Badge||"Transparence", titre: L.diff2Titre||"Un tarif clair, sans piège", desc: L.diff2Desc||"Pas de prélèvement caché ni de reconduction forcée : vous gardez la main sur votre abonnement et vous résiliez quand vous le souhaitez. L'essai se fait sans carte bancaire.", color: "#E49178" },
-              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements réels", desc: L.diff3Desc||"Vérifiez d'un coup d'œil quels salaires ont réellement été versés et relancez les retards de paiement. Un suivi que peu d'outils proposent aujourd'hui.", color: "#E49178" },
-              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Conforme eIDAS", titre: L.diff4Titre||"Signature électronique en 1 clic", desc: L.diff4Desc||"Signez contrats, avenants et bulletins une seule fois : votre signature est réutilisée partout. Conforme eIDAS, hébergée en France, archivée 5 ans.", color: "#E49178" }
+              { ic: L.diff1Ic||"🧮", badge: L.diff1Badge||"Fiabilité", titre: L.diff1Titre||"Des calculs fiables, toujours identiques", puces: L.diff1Puces||"Salaire, indemnités et congés calculés\nConformes à la convention (IDCC 3239)\nLe même résultat, sans erreur" },
+              { ic: L.diff2Ic||"💶", badge: L.diff2Badge||"Transparence", titre: L.diff2Titre||"Un tarif clair, sans piège", puces: L.diff2Puces||"Sans prélèvement caché\nRésiliation quand vous voulez\nEssai sans carte bancaire" },
+              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements réels", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
+              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Conforme eIDAS", titre: L.diff4Titre||"Signature électronique en 1 clic", puces: L.diff4Puces||"Contrats, avenants, bulletins signés\nVotre signature réutilisée partout\nHébergée en France, archivée 5 ans" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 100}>
-                <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28, height: "100%", display: "flex", flexDirection: "column" }}>
-                  <div style={{ fontSize: 36, marginBottom: 14 }}>{d.ic}</div>
-                  <div style={{ display: "inline-block", background: d.color + "20", color: d.color, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 6, marginBottom: 12, alignSelf: "flex-start", letterSpacing: ".5px", textTransform: "uppercase" }}>
+                <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: "28px 22px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center" }}>
+                  <div style={{ fontSize: 52, marginBottom: 14, lineHeight:1 }}>{d.ic}</div>
+                  <div style={{ display: "inline-block", background: "#E4917820", color: "#E49178", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 6, marginBottom: 12, letterSpacing: ".5px", textTransform: "uppercase" }}>
                     {d.badge}
                   </div>
-                  <div style={{ fontFamily: fTitle, fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3 }}>
+                  <div style={{ fontFamily: fTitle, fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14, lineHeight: 1.3 }}>
                     {d.titre}
                   </div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,.65)", lineHeight: 1.7 }}>
-                    {d.desc}
+                  <div style={{ display:"flex", flexDirection:"column", gap:8, textAlign:"left", width:"100%" }}>
+                    {d.puces.split("\n").filter(Boolean).map((p,j)=>(
+                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:12.5, color:"rgba(255,255,255,.7)", lineHeight:1.4 }}>
+                        <span style={{ color:"#E49178", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </FadeIn>
@@ -12331,12 +12357,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
                   { n: "3", ic:"🧮", t: "TiMat calcule tout", d: "Salaire, mensualisation, indemnités et congés, automatiquement." },
                   { n: "4", ic:"📄", t: "Signez & déclarez", d: "Contrats signés en 1 clic et déclaration Pajemploi prête." }
                 ].map((s) => (
-                  <div key={s.n} style={{ position: "relative", padding: "24px 16px 16px", background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)" }}>
-                    <div style={{ position: "absolute", top: -14, left: 16, width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div key={s.n} style={{ position: "relative", padding: "28px 16px 18px", background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)", textAlign:"center" }}>
+                    <div style={{ position: "absolute", top: -14, left: "50%", transform:"translateX(-50%)", width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {s.n}
                     </div>
-                    <div style={{ fontSize: 26, marginBottom: 6, marginTop: 4 }}>{s.ic}</div>
-                    <div style={{ fontFamily: fTitle, fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                    <div style={{ fontSize: 44, marginBottom: 10, marginTop: 8, lineHeight:1 }}>{s.ic}</div>
+                    <div style={{ fontFamily: fTitle, fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
                       {s.t}
                     </div>
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>
@@ -13008,7 +13034,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#1d3a4c", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)" }}>
+      <footer style={{ background: "#1d3a4c", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)", position:"relative" }}>
+        <WaveDivider color={L.waveFooter||"#1d3a4c"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
@@ -15936,10 +15963,10 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
           <BOCard title="Différenciateurs (Pourquoi TiMat)" icon="⭐">
             {[
-              ["diff1Ic","Diff 1 - Emoji"],["diff1Badge","Diff 1 - Badge"],["diff1Titre","Diff 1 - Titre"],["diff1Desc","Diff 1 - Description",true],
-              ["diff2Ic","Diff 2 - Emoji"],["diff2Badge","Diff 2 - Badge"],["diff2Titre","Diff 2 - Titre"],["diff2Desc","Diff 2 - Description",true],
-              ["diff3Ic","Diff 3 - Emoji"],["diff3Badge","Diff 3 - Badge"],["diff3Titre","Diff 3 - Titre"],["diff3Desc","Diff 3 - Description",true],
-              ["diff4Ic","Diff 4 - Emoji"],["diff4Badge","Diff 4 - Badge"],["diff4Titre","Diff 4 - Titre"],["diff4Desc","Diff 4 - Description",true]
+              ["diff1Ic","Diff 1 - Emoji"],["diff1Badge","Diff 1 - Badge"],["diff1Titre","Diff 1 - Titre"],["diff1Puces","Diff 1 - Puces (1/ligne)",true],
+              ["diff2Ic","Diff 2 - Emoji"],["diff2Badge","Diff 2 - Badge"],["diff2Titre","Diff 2 - Titre"],["diff2Puces","Diff 2 - Puces (1/ligne)",true],
+              ["diff3Ic","Diff 3 - Emoji"],["diff3Badge","Diff 3 - Badge"],["diff3Titre","Diff 3 - Titre"],["diff3Puces","Diff 3 - Puces (1/ligne)",true],
+              ["diff4Ic","Diff 4 - Emoji"],["diff4Badge","Diff 4 - Badge"],["diff4Titre","Diff 4 - Titre"],["diff4Puces","Diff 4 - Puces (1/ligne)",true]
             ].filter(([,l])=>matches(l)).map(([k,l,m])=>
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
             )}
@@ -16464,7 +16491,7 @@ const DEFAULT_CONFIG = {
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     heroDesc:"",
-    heroBadge:"🧸 CONÇUE PAR UNE ASSMAT, POUR LES ASSMATS",
+    heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
     heroSubDesc:"Contrat, paie, planning, Pajemploi et cahier de liaison — calculés automatiquement.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
