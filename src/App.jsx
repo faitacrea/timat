@@ -12113,14 +12113,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, transform:scrolled?"translateY(0)":"translateY(-110%)", transition:"transform .35s cubic-bezier(.22,1,.36,1)", background:"rgba(253,251,248,.9)", backdropFilter:"blur(14px)", borderBottom:"1px solid rgba(46,72,89,.08)", boxShadow:scrolled?"0 4px 24px rgba(46,72,89,.08)":"none" }}>
         <div style={{ maxWidth:1120, margin:"0 auto", padding:"9px 20px", display:"flex", alignItems:"center", gap:18 }}>
           <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:32,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
-          <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
-            {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-              <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
-                style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s" }}
-                onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
-            )}
-          </nav>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginLeft:"auto" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
+            <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
+              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                  style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s", whiteSpace:"nowrap" }}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
+              )}
+            </nav>
             <button className="sticky-burger" onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:18,fontWeight:700,width:40,height:40,borderRadius:10,fontFamily:"inherit",alignItems:"center",justifyContent:"center" }}>☰</button>
             <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
           </div>
@@ -12213,35 +12213,35 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       <div style={{display:"flex",flexDirection:"column"}}>
       {/* SECTION 1 - PROBLEME + SOLUTION combinés */}
-      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
-        <WaveDivider color={L.wave1||"#2E4A5A"} on={L.wavesOn!==false}/>
+      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"#FAF6F1" }}>
+        <WaveDivider color={L.wave1||L.section1Bg||"#FAF6F1"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
-              <div style={{ display:"inline-block", background:"rgba(255,255,255,.12)", border:"1px solid rgba(255,255,255,.2)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#fff", fontWeight:600, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
-              <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.7)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Mensualisation, indemnités, Pajemploi, congés, contrats… TiMat gère tout ce qui vous prend du temps."}</div>
+              <div style={{ display:"inline-block", background:"rgba(228,145,120,.12)", border:"1px solid rgba(228,145,120,.3)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#C84B31", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#2E4859", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
+              <div style={{ fontSize: 15, color: L.s1DescColor||"#8A7A70", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Mensualisation, indemnités, Pajemploi, congés, contrats… TiMat gère tout ce qui vous prend du temps."}</div>
             </div>
           </FadeIn>
           {/* En-tetes colonnes (web) */}
           <div className="combo-head" style={{ display:"flex", gap:16, padding:"0 20px", marginTop:32, marginBottom:6 }}>
-            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:"rgba(255,255,255,.45)", textTransform:"uppercase" }}>{L.comboLabelBefore||"La galère aujourd'hui"}</div>
+            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelBeforeColor||"#B0A99F", textTransform:"uppercase" }}>{L.comboLabelBefore||"La galère aujourd'hui"}</div>
             <div style={{ width:28 }}/>
-            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#E49178", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
+            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#C84B31", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des soirées entières à recalculer le salaire|Le salaire juste, calculé tout seul\n😰|La peur constante de se tromper dans les comptes|Des calculs fiables et conformes, sans erreur\n🏃|Courir après les paiements des parents|Suivi des versements réels + relances en 1 clic\n🤯|La déclaration Pajemploi qui retombe chaque mois|Préparée d'avance, prête à reporter\n📚|La paperasse qui s'accumule (contrats, avenants…)|Générée, signée en 1 clic et bien rangée\n⏰|Des heures perdues sur l'administratif|Du temps rendu aux enfants").split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
               return <FadeIn key={i} delay={i*70}>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", borderRadius:14, padding:"16px 20px" }}>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"#FFFFFF", border:"1px solid "+(L.comboCardBorder||"#EDE6DE"), borderRadius:14, padding:"16px 20px", boxShadow:"0 2px 10px rgba(46,72,89,.04)" }}>
                   <div style={{ flex:"1 1 260px", display:"flex", gap:12, alignItems:"center", minWidth:0 }}>
                     <span style={{ fontSize:24, flexShrink:0 }}>{ic}</span>
-                    <span style={{ fontSize:13.5, color:L.comboPbColor||"rgba(255,255,255,.62)", lineHeight:1.4 }}>{pb}</span>
+                    <span style={{ fontSize:13.5, color:L.comboPbColor||"#8A7A70", lineHeight:1.4 }}>{pb}</span>
                   </div>
-                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"rgba(255,255,255,.3)", fontSize:20, flexShrink:0 }}>→</div>
+                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"#D9C9BE", fontSize:20, flexShrink:0 }}>→</div>
                   <div style={{ flex:"1 1 240px", display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
-                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:(L.comboSolColor||"#E49178")+"22", color:L.comboSolColor||"#E49178", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
-                    <span style={{ fontSize:13.5, color:L.comboSolColor||"#fff", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
+                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"#E4917822", color:"#E49178", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
+                    <span style={{ fontSize:13.5, color:L.comboSolColor||"#2E4859", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
                   </div>
                 </div>
               </FadeIn>;
@@ -16560,7 +16560,7 @@ const DEFAULT_CONFIG = {
     freePrice:"0€",
   },
   landing: {
-    heroBg:"linear-gradient(160deg, #2E4859 0%, #2A6F6A 40%, #2E4859 70%, #1B3540 100%)",
+    heroBg:"linear-gradient(160deg, #345C6B 0%, #457E73 55%, #2F5560 100%)",
     heroImg:"",
     heroImgOpacity:0.12,
     heroImgPosition:"center center",
