@@ -11946,7 +11946,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
-  const SECTIONS_ORDER_DEFAULT=["probleme","demo","signature","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
@@ -12597,13 +12597,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* FAQ */}
-      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: L.faqBg||"#FDFBF8" }}>
-        <WaveDivider color={L.waveFaq||L.faqBg||"#FDFBF8"} on={L.wavesOn!==false}/>
+      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: L.faqBg||"#2E4859" }}>
+        <WaveDivider color={L.waveFaq||L.faqBg||"#2E4859"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#2E4859", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
-              <div style={{ fontSize: 15, color: "#5F7A86" }}>Tout ce que vous devez savoir avant de commencer.</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#fff", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
           {(config.faqLanding||DEFAULT_CONFIG.faqLanding).map(({q,a},i)=>(
@@ -13095,16 +13095,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#1d3a4c", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)", position:"relative" }}>
-        <WaveDivider color={L.waveFooter||"#1d3a4c"} on={L.wavesOn!==false}/>
+      <footer style={{ background: "#FDFBF8", padding: "48px 24px 24px", color: "#5A6B72", position:"relative", borderTop:"1px solid #EDE6DE" }}>
+        <WaveDivider color={L.waveFooter||"#FDFBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L?.logoUrl || "/logo-dark.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
-              <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
+              <div style={{ fontSize: 12, lineHeight: 1.7, color: "#8A7A70" }}>
                 {F.description}
               </div>
             </div>
@@ -13112,14 +13112,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
               {[["Mentions légales","mentions"],["Conditions générales d'utilisation","cgu"],["Politique de confidentialité","confidentialite"]].map(([label,id])=>
-                <div key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 12, color: "rgba(255,255,255,.6)", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
-                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</div>
+                <div key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 12, color: "#5A6B72", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
+                  onMouseEnter={e=>e.target.style.color="#2E4859"} onMouseLeave={e=>e.target.style.color="#5A6B72"}>{label}</div>
               )}
             </div>
             {/* Contact */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Contact</div>
-              <div style={{ fontSize: 12, lineHeight: 2, color: "rgba(255,255,255,.6)" }}>
+              <div style={{ fontSize: 12, lineHeight: 2, color: "#5A6B72" }}>
                 📧 {F.contactEmail}<br/>
                 🌐 {F.contactWeb}<br/>
                 📍 {F.contactLieu}
@@ -13128,18 +13128,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             {/* RGPD */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
-              <div style={{ fontSize: 11, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
+              <div style={{ fontSize: 11, lineHeight: 1.7, color: "#8A7A70" }}>
                 {(F.rgpd||[]).map((line,i)=><span key={i} style={{display:"block"}}>{line}</span>)}
               </div>
             </div>
           </div>
           {/* Séparateur */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.35)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}</div>
+          <div style={{ borderTop: "1px solid rgba(46,72,89,.12)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ fontSize: 11, color: "#9AA5A0" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}</div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
-                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
-                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.4)"}>{l}</span>
+                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "#9AA5A0", cursor: "pointer" }}
+                  onMouseEnter={e=>e.target.style.color="#2E4859"} onMouseLeave={e=>e.target.style.color="#9AA5A0"}>{l}</span>
               )}
             </div>
           </div>
@@ -16579,10 +16579,10 @@ const DEFAULT_CONFIG = {
     logoUrl:"",
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
-    section1Bg:"linear-gradient(160deg,#20303C,#2E4859)",
-    section2Bg:"linear-gradient(160deg,#0D1B2A,#22384A)",
+    section1Bg:"#2E4859",
+    section2Bg:"#2E4859",
     section3Bg:"#F4F1EA",
-    section4Bg:"linear-gradient(160deg,#FDFBF8,#F4F1EA)",
+    section4Bg:"#FDFBF8",
     section5Bg:"#FDFBF8",
     section6Bg:"#F4F1EA",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
@@ -16788,7 +16788,7 @@ const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","demo","signature","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"],
+  sectionsOrder:["probleme","signature","demo","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"],
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
