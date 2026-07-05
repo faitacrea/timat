@@ -16539,15 +16539,15 @@ const BLOG_DEFAULT=[
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
-    heroTitle:"Moins de paperasse,",
-    heroTitleAccent:"plus de temps pour les enfants.",
-    heroSub:"L'app des assistantes maternelles et parents employeurs.",
+    heroTitle:"Assistante maternelle,",
+    heroTitleAccent:"pas comptable.",
+    heroSub:"Salaire, congés, Pajemploi : calculés tout seuls.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     heroDesc:"",
     heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
-    heroSubDesc:"Contrat, paie, planning, Pajemploi et cahier de liaison — calculés automatiquement.",
+    heroSubDesc:"L'app des assistantes maternelles et des parents employeurs.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
@@ -16565,7 +16565,7 @@ const DEFAULT_CONFIG = {
     freePrice:"0€",
   },
   landing: {
-    heroBg:"linear-gradient(165deg,#FCF8F3 0%,#F3EEE6 55%,#F7F0E8 100%)",
+    heroBg:"linear-gradient(165deg,#FDF6EE 0%,#F7ECE0 55%,#FBF1E7 100%)",
     heroImg:"",
     heroImgOpacity:0.12,
     heroImgPosition:"center center",
