@@ -12224,7 +12224,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div style={{ textAlign: "center", marginBottom: 14 }}>
               <div style={{ display:"inline-block", background:"rgba(228,145,120,.12)", border:"1px solid rgba(228,145,120,.3)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#C84B31", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#2E4859", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
-              <div style={{ fontSize: 15, color: L.s1DescColor||"#8A7A70", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Mensualisation, indemnités, Pajemploi, congés, contrats… TiMat gère tout ce qui vous prend du temps."}</div>
+              <div style={{ fontSize: 15, color: L.s1DescColor||"#8A7A70", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
           </FadeIn>
           {/* En-tetes colonnes (web) */}
@@ -12234,7 +12234,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#C84B31", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-            {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des soirées entières à recalculer le salaire|Le salaire juste, calculé tout seul\n😰|La peur constante de se tromper dans les comptes|Des calculs fiables et conformes, sans erreur\n🏃|Courir après les paiements des parents|Suivi des versements réels + relances en 1 clic\n🤯|La déclaration Pajemploi qui retombe chaque mois|Préparée d'avance, prête à reporter\n📚|La paperasse qui s'accumule (contrats, avenants…)|Générée, signée en 1 clic et bien rangée\n⏰|Des heures perdues sur l'administratif|Du temps rendu aux enfants").split("\n").filter(Boolean).map((line,i)=>{
+            {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des heures la tête dans les calculs|Salaire, congés, indemnités calculés tout seuls\n😰|La peur de se tromper dans une déclaration|Des calculs fiables, conformes à la convention\n🗂️|Des papiers éparpillés entre classeurs et cartons|Tout est organisé, un dossier par enfant\n🔍|Un papier introuvable le jour où il faut|Retrouvé en 2 clics, gardé en sécurité\n💸|Courir après les paiements|Suivi des versements + relances en 1 clic\n🧸|Du temps volé à votre vrai métier|L'esprit libre pour les enfants").split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
               return <FadeIn key={i} delay={i*70}>
                 <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"#FFFFFF", border:"1px solid "+(L.comboCardBorder||"#EDE6DE"), borderRadius:14, padding:"16px 20px", boxShadow:"0 2px 10px rgba(46,72,89,.04)" }}>
@@ -12244,7 +12244,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
                   </div>
                   <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"#D9C9BE", fontSize:20, flexShrink:0 }}>→</div>
                   <div style={{ flex:"1 1 240px", display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
-                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"#E4917822", color:"#E49178", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
+                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"rgba(93,169,161,.15)", color:"#5DA9A1", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
                     <span style={{ fontSize:13.5, color:L.comboSolColor||"#2E4859", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
                   </div>
                 </div>
