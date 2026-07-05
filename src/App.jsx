@@ -11876,19 +11876,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
   const demoTour = [
     {page:"accueil",label:"Accueil & journée",ic:"🏠",
       desc:"Vue d'ensemble : enfants présents, signatures, prochains événements.",
-      resume:((config.landing||{}).demoPuces1||"Enfants présents en temps réel\nContrats et documents à signer\nProchains rendez-vous et événements\nRaccourcis d'action en un tap").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces1||"Enfants présents en temps réel\nDocuments à signer\nÉvénements à venir\nActions en un tap").split("\n").filter(Boolean)},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
       desc:"Pointages, absences et planning partagé en temps réel.",
-      resume:((config.landing||{}).demoPuces2||"Planning partagé en temps réel\nPointage des présences jour par jour\nAbsences, retards et heures sup.\nFeuille de présence et historique mensuel").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces2||"Planning partagé en temps réel\nPointage jour par jour\nAbsences & heures sup.\nFeuille de présence mensuelle").split("\n").filter(Boolean)},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
       desc:"Bulletins, mensualisation et déclarations calculés automatiquement.",
-      resume:((config.landing||{}).demoPuces3||"Salaire et mensualisation calculés automatiquement\nIndemnités (entretien, repas, km) et congés payés\nBulletins de paie conformes à la convention\nDéclaration Pajemploi préparée").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces3||"Salaire & mensualisation auto\nIndemnités & congés payés\nBulletins conformes à la convention\nDéclaration Pajemploi prête").split("\n").filter(Boolean)},
     {page:"messagerie",label:"Échanges parents",ic:"💬",
       desc:"Messagerie instantanée avec les parents, des deux côtés.",
-      resume:((config.landing||{}).demoPuces4||"Messagerie instantanée avec les parents\nMoments de la journée partagés\nNotifications des nouveaux messages\nTout l'historique conservé").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces4||"Messagerie avec les parents\nMoments de la journée partagés\nNotifications en temps réel\nTout l'historique conservé").split("\n").filter(Boolean)},
     {page:"sante_complet",label:"Santé & urgences",ic:"🩺",
       desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée.",
-      resume:((config.landing||{}).demoPuces5||"Fiche d'urgence par enfant\nAllergies et traitements en cours\nNuméros d'urgence cliquables\nContacts PMI de votre secteur").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces5||"Fiche d'urgence par enfant\nAllergies & traitements\nNuméros d'urgence cliquables\nContact PMI de votre secteur").split("\n").filter(Boolean)},
   ];
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
@@ -12138,10 +12138,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
             <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
-          {/* Desktop nav */}
-          <div className="lp-nav-full">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ display:"flex",alignItems:"center",gap:8,background: L.navBtnBg||"rgba(46,72,89,.06)", color: L.navBtnColor||"#2E4859", border: "1px solid "+(L.navBtnBorder||"rgba(46,72,89,.2)"), cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 10, transition:"background .15s,transform .12s" }} onMouseEnter={e=>e.currentTarget.style.background="rgba(46,72,89,.12)"} onMouseLeave={e=>e.currentTarget.style.background=L.navBtnBg||"rgba(46,72,89,.06)"}>{menuOpen?"✕":"☰"} Menu</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter / S'inscrire →</button>
+          {/* Desktop nav : onglets visibles + Se connecter */}
+          <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
+            <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
+              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                  style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
+              )}
+            </nav>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
@@ -12217,35 +12223,35 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       <div style={{display:"flex",flexDirection:"column"}}>
       {/* SECTION 1 - PROBLEME + SOLUTION combinés */}
-      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"#FAF6F1" }}>
-        <WaveDivider color={L.wave1||L.section1Bg||"#FAF6F1"} on={L.wavesOn!==false}/>
+      {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(160deg,#20303C,#2E4859)" }}>
+        <WaveDivider color={L.wave1||L.section1Bg||"#20303C"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
-              <div style={{ display:"inline-block", background:"rgba(228,145,120,.12)", border:"1px solid rgba(228,145,120,.3)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#C84B31", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#2E4859", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
-              <div style={{ fontSize: 15, color: L.s1DescColor||"#8A7A70", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
+              <div style={{ display:"inline-block", background:"rgba(228,145,120,.14)", border:"1px solid rgba(228,145,120,.32)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#E49178", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
+              <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.65)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
           </FadeIn>
           {/* En-tetes colonnes (web) */}
           <div className="combo-head" style={{ display:"flex", gap:16, padding:"0 20px", marginTop:32, marginBottom:6 }}>
-            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelBeforeColor||"#B0A99F", textTransform:"uppercase" }}>{L.comboLabelBefore||"La galère aujourd'hui"}</div>
+            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelBeforeColor||"rgba(255,255,255,.45)", textTransform:"uppercase" }}>{L.comboLabelBefore||"La galère aujourd'hui"}</div>
             <div style={{ width:28 }}/>
-            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#C84B31", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
+            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#E49178", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des heures la tête dans les calculs|Salaire, congés, indemnités calculés tout seuls\n😰|La peur de se tromper dans une déclaration|Des calculs fiables, conformes à la convention\n🗂️|Des papiers éparpillés entre classeurs et cartons|Tout est organisé, un dossier par enfant\n🔍|Un papier introuvable le jour où il faut|Retrouvé en 2 clics, gardé en sécurité\n💸|Courir après les paiements|Suivi des versements + relances en 1 clic\n🧸|Du temps volé à votre vrai métier|L'esprit libre pour les enfants").split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
               return <FadeIn key={i} delay={i*70}>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"#FFFFFF", border:"1px solid "+(L.comboCardBorder||"#EDE6DE"), borderRadius:14, padding:"16px 20px", boxShadow:"0 2px 10px rgba(46,72,89,.04)" }}>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"rgba(255,255,255,.05)", border:"1px solid "+(L.comboCardBorder||"rgba(255,255,255,.09)"), borderRadius:14, padding:"16px 20px" }}>
                   <div style={{ flex:"1 1 260px", display:"flex", gap:12, alignItems:"center", minWidth:0 }}>
                     <span style={{ fontSize:24, flexShrink:0 }}>{ic}</span>
-                    <span style={{ fontSize:13.5, color:L.comboPbColor||"#8A7A70", lineHeight:1.4 }}>{pb}</span>
+                    <span style={{ fontSize:13.5, color:L.comboPbColor||"rgba(255,255,255,.6)", lineHeight:1.4 }}>{pb}</span>
                   </div>
-                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"#D9C9BE", fontSize:20, flexShrink:0 }}>→</div>
+                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"rgba(255,255,255,.3)", fontSize:20, flexShrink:0 }}>→</div>
                   <div style={{ flex:"1 1 240px", display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
-                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"rgba(93,169,161,.15)", color:"#5DA9A1", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
-                    <span style={{ fontSize:13.5, color:L.comboSolColor||"#2E4859", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
+                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"rgba(93,169,161,.2)", color:"#6FC2B8", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
+                    <span style={{ fontSize:13.5, color:L.comboSolColor||"#fff", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
                   </div>
                 </div>
               </FadeIn>;
@@ -12260,13 +12266,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION 2 - DEMO */}
-      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"#FDFBF8" }}>
-        <WaveDivider color={L.wave2||L.section2Bg||"#FDFBF8"} on={L.wavesOn!==false}/>
+      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"linear-gradient(160deg,#0D1B2A,#22384A)" }}>
+        <WaveDivider color={L.wave2||L.section2Bg||"#0D1B2A"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
-              <div style={{ fontSize: 15, color: L.s2DescColor||"#6B4F3A", lineHeight: 1.7 }}>{L.s2Desc}</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
+              <div style={{ fontSize: 15, color: L.s2DescColor||"rgba(255,255,255,.6)", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
           <div className="demo-layout">
@@ -12275,7 +12281,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div style={{order:1,position:"relative"}}>
               <div className="demo-tabs">
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                  style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#2E4859,#3E5C4A)":"#F1EFEC",color:on?"#fff":"#5A6B60",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(0,0,0,.05)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
+                  style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#E49178,#C84B31)":"rgba(255,255,255,.06)",color:on?"#fff":"rgba(255,255,255,.72)",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(255,255,255,.06)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
                   <span style={{fontSize:on?24:22,flexShrink:0,transition:"font-size .2s"}}>{s.ic}</span>
                   <span style={{fontSize:14,fontWeight:700,lineHeight:1.25}}>{s.label}</span>
                 </button>;})}
@@ -12292,7 +12298,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
               <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:14,marginBottom:4}}>
-                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#2E4859",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:(j*0.09)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"#5DA9A118",color:"#5DA9A1",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"rgba(255,255,255,.88)",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:(j*0.09)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.2)",color:"#6FC2B8",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
               {/* faisceau lumineux qui file vers le telephone (desktop) a chaque changement */}
               <div className="demo-beam" style={{position:"relative",height:2,marginTop:22,background:"linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.25),rgba(93,169,161,0))",borderRadius:2}}>
@@ -12351,18 +12357,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
-      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: "linear-gradient(135deg,#0D1B2A 0%,#1E2B3D 100%)", padding: "80px 24px" }}>
-        <WaveDivider color={L.wave4||"#0D1B2A"} on={L.wavesOn!==false}/>
+      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)", padding: "80px 24px" }}>
+        <WaveDivider color={L.wave4||L.section4Bg||"#FDFBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#E49178", marginBottom: 24, fontWeight: 600, letterSpacing: ".8px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#C84B31", marginBottom: 24, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: "#fff", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: "#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
                 La gestion assistante maternelle <span style={{ color: "#E49178", fontStyle: "italic" }}>sans mauvaise surprise</span>
               </div>
-              <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
+              <div style={{ fontSize: 15, color: "#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
                 Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
               </div>
             </div>
@@ -12377,18 +12383,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
               { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Conforme eIDAS", titre: L.diff4Titre||"Signature électronique en 1 clic", puces: L.diff4Puces||"Contrats, avenants, bulletins signés\nVotre signature réutilisée partout\nHébergée en France, archivée 5 ans" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 100}>
-                <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: "28px 22px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center" }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: "28px 22px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center", boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
                   <div style={{ fontSize: 52, marginBottom: 14, lineHeight:1 }}>{d.ic}</div>
-                  <div style={{ display: "inline-block", background: "#E4917820", color: "#E49178", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 6, marginBottom: 12, letterSpacing: ".5px", textTransform: "uppercase" }}>
+                  <div style={{ display: "inline-block", background: "#E4917818", color: "#C84B31", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 6, marginBottom: 12, letterSpacing: ".5px", textTransform: "uppercase" }}>
                     {d.badge}
                   </div>
-                  <div style={{ fontFamily: fTitle, fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14, lineHeight: 1.3 }}>
+                  <div style={{ fontFamily: fTitle, fontSize: 17, fontWeight: 700, color: "#2E4859", marginBottom: 14, lineHeight: 1.3 }}>
                     {d.titre}
                   </div>
                   <div style={{ display:"flex", flexDirection:"column", gap:8, textAlign:"left", width:"100%" }}>
                     {d.puces.split("\n").filter(Boolean).map((p,j)=>(
-                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:12.5, color:"rgba(255,255,255,.7)", lineHeight:1.4 }}>
-                        <span style={{ color:"#E49178", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
+                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:12.5, color:"#6B7A82", lineHeight:1.4 }}>
+                        <span style={{ color:"#5DA9A1", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
                       </div>
                     ))}
                   </div>
@@ -12399,11 +12405,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
           {/* Comment ca marche - fonctionnement general de l'app */}
           <FadeIn delay={300}>
-            <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16, padding: 28 }}>
-              <div style={{ fontFamily: fTitle, fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8, textAlign: "center" }}>
+            <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: 28, boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
+              <div style={{ fontFamily: fTitle, fontSize: 20, fontWeight: 700, color: "#2E4859", marginBottom: 8, textAlign: "center" }}>
                 Comment ça marche ?
               </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)", textAlign: "center", marginBottom: 28 }}>
+              <div style={{ fontSize: 13, color: "#8A7A70", textAlign: "center", marginBottom: 28 }}>
                 Prête à l'emploi en quelques minutes.
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
@@ -12413,15 +12419,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
                   { n: "3", ic:"🧮", t: "TiMat calcule tout", d: "Salaire, mensualisation, indemnités et congés, automatiquement." },
                   { n: "4", ic:"📄", t: "Signez & déclarez", d: "Contrats signés en 1 clic et déclaration Pajemploi prête." }
                 ].map((s) => (
-                  <div key={s.n} style={{ position: "relative", padding: "28px 16px 18px", background: "rgba(255,255,255,.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,.06)", textAlign:"center" }}>
-                    <div style={{ position: "absolute", top: -14, left: "50%", transform:"translateX(-50%)", width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#0D1B2A", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div key={s.n} style={{ position: "relative", padding: "28px 16px 18px", background: "#FAF6F1", borderRadius: 12, border: "1px solid #EDE6DE", textAlign:"center" }}>
+                    <div style={{ position: "absolute", top: -14, left: "50%", transform:"translateX(-50%)", width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#fff", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {s.n}
                     </div>
                     <div style={{ fontSize: 44, marginBottom: 10, marginTop: 8, lineHeight:1 }}>{s.ic}</div>
-                    <div style={{ fontFamily: fTitle, fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                    <div style={{ fontFamily: fTitle, fontSize: 15, fontWeight: 700, color: "#2E4859", marginBottom: 8 }}>
                       {s.t}
                     </div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>
+                    <div style={{ fontSize: 12, color: "#7A6A60", lineHeight: 1.6 }}>
                       {s.d}
                     </div>
                   </div>
@@ -12436,7 +12442,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#E49178,#C76754)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
                 Tester TiMat gratuitement →
               </button>
-              <div style={{ marginTop: 14, fontSize: 11, color: "rgba(255,255,255,.4)" }}>
+              <div style={{ marginTop: 14, fontSize: 11, color: "#93A0A2" }}>
                 Gratuit · Sans engagement · Conforme à la loi
               </div>
             </div>
@@ -16573,10 +16579,10 @@ const DEFAULT_CONFIG = {
     logoUrl:"",
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
-    section1Bg:"linear-gradient(135deg,#2E4859,#3E6B63)",
-    section2Bg:"#FDFBF8",
+    section1Bg:"linear-gradient(160deg,#20303C,#2E4859)",
+    section2Bg:"linear-gradient(160deg,#0D1B2A,#22384A)",
     section3Bg:"#F4F1EA",
-    section4Bg:"linear-gradient(135deg,#2E4859,#3E6B63)",
+    section4Bg:"linear-gradient(160deg,#FDFBF8,#F4F1EA)",
     section5Bg:"#FDFBF8",
     section6Bg:"#F4F1EA",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
@@ -16877,15 +16883,35 @@ const backupCurrentConfig = async (reason) => {
   }
 };
 
+// Ne garde que ce qui DIFFERE des defauts du code -> les defauts non modifies
+// restent pilotes par le code (une modif de code s'affiche toujours), et le
+// back-office continue de fonctionner (il enregistre uniquement tes surcharges).
+function diffConfig(cur, def){
+  const out = {};
+  if(!cur) return out;
+  for (const k of Object.keys(cur)) {
+    const cv = cur[k], dv = def ? def[k] : undefined;
+    if (dv === undefined) { out[k] = cv; continue; }
+    if (cv && dv && typeof cv==='object' && !Array.isArray(cv) && typeof dv==='object' && !Array.isArray(dv)) {
+      const sub = diffConfig(cv, dv);
+      if (Object.keys(sub).length) out[k] = sub;
+    } else if (JSON.stringify(cv) !== JSON.stringify(dv)) {
+      out[k] = cv;
+    }
+  }
+  return out;
+}
+
 const saveConfig = async (backupReason='before_save') => {
-  const configStr = JSON.stringify(G);
+  const G_save = diffConfig(G, DEFAULT_CONFIG);
+  const configStr = JSON.stringify(G_save);
   // P30B : backup de sécurité best-effort avant écrasement (ne bloque jamais)
   const backupRes = await backupCurrentConfig(backupReason);
   // Try JSONB first (object), then TEXT fallback (string)
   try {
     const {error: errObj} = await supabase.from('app_config').upsert({
       id:'main',
-      config: G,
+      config: G_save,
       updated_at: new Date().toISOString()
     });
     if (!errObj) {
