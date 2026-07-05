@@ -13095,16 +13095,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#FDFBF8", padding: "48px 24px 24px", color: "#5A6B72", position:"relative", borderTop:"1px solid #EDE6DE" }}>
-        <WaveDivider color={L.waveFooter||"#FDFBF8"} on={L.wavesOn!==false}/>
+      <footer style={{ background: "#2E4859", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)", position:"relative" }}>
+        <WaveDivider color={L.waveFooter||"#2E4859"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L?.logoUrl || "/logo-dark.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
-              <div style={{ fontSize: 12, lineHeight: 1.7, color: "#8A7A70" }}>
+              <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 {F.description}
               </div>
             </div>
@@ -13112,14 +13112,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
               {[["Mentions légales","mentions"],["Conditions générales d'utilisation","cgu"],["Politique de confidentialité","confidentialite"]].map(([label,id])=>
-                <div key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 12, color: "#5A6B72", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
-                  onMouseEnter={e=>e.target.style.color="#2E4859"} onMouseLeave={e=>e.target.style.color="#5A6B72"}>{label}</div>
+                <div key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 12, color: "rgba(255,255,255,.6)", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</div>
               )}
             </div>
             {/* Contact */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Contact</div>
-              <div style={{ fontSize: 12, lineHeight: 2, color: "#5A6B72" }}>
+              <div style={{ fontSize: 12, lineHeight: 2, color: "rgba(255,255,255,.6)" }}>
                 📧 {F.contactEmail}<br/>
                 🌐 {F.contactWeb}<br/>
                 📍 {F.contactLieu}
@@ -13128,18 +13128,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             {/* RGPD */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
-              <div style={{ fontSize: 11, lineHeight: 1.7, color: "#8A7A70" }}>
+              <div style={{ fontSize: 11, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 {(F.rgpd||[]).map((line,i)=><span key={i} style={{display:"block"}}>{line}</span>)}
               </div>
             </div>
           </div>
           {/* Séparateur */}
-          <div style={{ borderTop: "1px solid rgba(46,72,89,.12)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ fontSize: 11, color: "#9AA5A0" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}</div>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}</div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
-                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "#9AA5A0", cursor: "pointer" }}
-                  onMouseEnter={e=>e.target.style.color="#2E4859"} onMouseLeave={e=>e.target.style.color="#9AA5A0"}>{l}</span>
+                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
+                  onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.4)"}>{l}</span>
               )}
             </div>
           </div>
