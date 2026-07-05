@@ -299,7 +299,7 @@ function Styles(){return(
     .demo-scrollhint{display:none}
     .demo-zoom{zoom:.8}
     @media(max-width:860px){
-      .demo-layout{flex-direction:column;gap:14px;align-items:stretch;max-width:520px}
+      .demo-layout{flex-direction:column;gap:6px;align-items:stretch;max-width:520px}
       .demo-tabs{flex-direction:row;flex-wrap:wrap;gap:7px;width:100%;overflow:visible;background:transparent;box-shadow:none;border-radius:0;order:1}
       .demo-tabs button{flex:1 1 30%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:10px 6px;border:none!important;border-radius:13px!important}
       .demo-tabs button span:first-child{font-size:19px!important}
@@ -307,11 +307,10 @@ function Styles(){return(
       .demo-explain{max-width:none;order:2;padding-top:0}
       .demo-scrollhint{display:none!important}
       .demo-scrollarrow{display:none!important}
-      .demo-col-phone{order:3;align-self:center}
+      .demo-col-phone{order:3;align-self:center;margin-top:-4px}
       .demo-phone{width:min(224px,62vw)}
       .demo-frame{height:424px}
       .demo-zoom{zoom:.64}
-      .demo-beam{display:none}
       .demo-beam{display:none}
     }
     .bar{height:6px;background:rgba(26,17,24,.08);border-radius:3px;overflow:hidden}
@@ -12365,10 +12364,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#C84B31", marginBottom: 24, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: "#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
                 La gestion assistante maternelle <span style={{ color: "#E49178", fontStyle: "italic" }}>sans mauvaise surprise</span>
               </div>
-              <div style={{ fontSize: 15, color: "#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
+              <div style={{ fontSize: 15, color: L.s4SubColor||"#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
                 Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
               </div>
             </div>
@@ -12602,8 +12601,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#fff", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
-              <div style={{ fontSize: 15, color: "rgba(255,255,255,.65)" }}>Tout ce que vous devez savoir avant de commencer.</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.faqTitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
+              <div style={{ fontSize: 15, color: L.faqDescColor||"rgba(255,255,255,.65)" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
           {(config.faqLanding||DEFAULT_CONFIG.faqLanding).map(({q,a},i)=>(
@@ -12621,12 +12620,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* BLOG */}
-      {SV.blog===true&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: "#FDFBF8" }}>
+      {SV.blog===true&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: L.blogBg||"#FDFBF8" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: "#2E4859", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
-              <div style={{ fontSize: 15, color: "#5F7A86" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.blogTitleColor||"#2E4859", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
+              <div style={{ fontSize: 15, color: L.blogDescColor||"#5F7A86" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
@@ -13095,8 +13094,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: "#2E4859", padding: "48px 24px 24px", color: "rgba(255,255,255,.7)", position:"relative" }}>
-        <WaveDivider color={L.waveFooter||"#2E4859"} on={L.wavesOn!==false}/>
+      <footer style={{ background: L.footerBg||"#2E4859", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.7)", position:"relative" }}>
+        <WaveDivider color={L.waveFooter||L.footerBg||"#2E4859"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
@@ -16057,7 +16056,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             )}
           </BOCard>
           <BOCard title="Fonds de sections landing" icon="🖼️">
-            {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","Section 1 (problème)"],["section2Bg","Section 2 (démo)"],["section3Bg","Section 3 (transfo)"],["section4Bg","Section 4 (stats)"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section 6 (tarifs)"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","Section 1 (problème)"],["section2Bg","Section 2 (démo)"],["section3Bg","Section 3 (transfo)"],["section4Bg","Section Pourquoi TiMat"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section Tarifs"],["faqBg","Section FAQ"],["blogBg","Section Blog"],["footerBg","Footer"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
@@ -16086,9 +16085,13 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
+          <BOCard title="FAQ · Blog · Footer - couleurs" icon="🧩">
+            {[["faqTitleColor","FAQ - Titre"],["faqDescColor","FAQ - Sous-titre"],["blogTitleColor","Blog - Titre"],["blogDescColor","Blog - Sous-titre"],["footerTextColor","Footer - Texte"]].filter(([,l])=>matches(l)).map(([k,l])=>
+              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
+            )}
+          </BOCard>
         </>}
 
-        {/* ====================== BOUTONS ====================== */}
         {sec==="boutons"&&<>
           {[
             {titre:"Bouton NAV \"Commencer\"",icon:"🔸",fields:[["heroBtnNavTxt","Texte",true],["heroBtnNavBg","Fond",false],["heroBtnNavColor","Couleur texte",false]]},
@@ -16585,6 +16588,11 @@ const DEFAULT_CONFIG = {
     section4Bg:"#FDFBF8",
     section5Bg:"#FDFBF8",
     section6Bg:"#F4F1EA",
+    faqBg:"#2E4859", blogBg:"#FDFBF8", footerBg:"#2E4859",
+    faqTitleColor:"#fff", faqDescColor:"rgba(255,255,255,.65)",
+    blogTitleColor:"#2E4859", blogDescColor:"#5F7A86",
+    footerTextColor:"rgba(255,255,255,.7)",
+    s4TitleColor:"#2E4859", s4SubColor:"#6B7A82",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
     statsBg:"linear-gradient(135deg,#2E4859,#3E6B63)",
     // ----- BOUTONS HERO -----
@@ -17570,4 +17578,3 @@ export default function App(){
   );
 }
 
-v
