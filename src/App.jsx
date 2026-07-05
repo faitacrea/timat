@@ -11265,7 +11265,7 @@ function DemoScreen({page}){
   return <div style={{padding:20,textAlign:"center",color:"#8A7A70",fontSize:12}}>Écran disponible dans l'application.</div>;
 }
 
-function HeroPhone(){
+function HeroPhone({screen}){
   const pool=[
     {ic:"✅",t:"Bulletin de salaire généré"},
     {ic:"💶",t:"Salaire calculé automatiquement"},
@@ -11288,6 +11288,9 @@ function HeroPhone(){
       <div style={{position:"absolute",inset:0,background:"#0D1B2A",borderRadius:38,padding:"12px 11px",boxShadow:"0 40px 90px rgba(0,0,0,.45)"}}>
         <div style={{position:"absolute",top:20,left:"50%",transform:"translateX(-50%)",width:70,height:5,borderRadius:3,background:"rgba(255,255,255,.25)",zIndex:2}}/>
         <div style={{width:"100%",height:"100%",background:"#FDFBF8",borderRadius:28,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+          {screen
+          ? <div style={{zoom:.6,width:"100%",height:"100%",overflow:"hidden"}}>{screen}</div>
+          : <>
           {/* header */}
           <div style={{padding:"18px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <span style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:20,color:"#E49178"}}>timat</span>
@@ -11309,12 +11312,13 @@ function HeroPhone(){
               <span style={{fontSize:10,color:"#5DA9A1",fontWeight:700,background:"#5DA9A118",padding:"2px 8px",borderRadius:8}}>{b}</span>
             </div>
           )}
+          </>}
         </div>
       </div>
     </div>
     {/* notifications qui sortent et changent a chaque cycle */}
     {slots.map((s,i)=>{const n=pool[(tick*3+i)%pool.length];return (
-      <div key={i}style={{position:"absolute",top:s.top,left:s.left,maxWidth:150,background:"#fff",borderRadius:12,padding:"8px 12px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:8,zIndex:3,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:s.d}}>
+      <div key={i}style={{position:"absolute",top:s.top,left:s.left,maxWidth:150,background:"#fff",borderRadius:12,padding:"8px 12px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:8,zIndex:3,opacity:0,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:s.d,animationFillMode:"backwards"}}>
         <span style={{fontSize:15,flexShrink:0}}>{n.ic}</span>
         <span style={{fontSize:11.5,fontWeight:700,color:"#2E4859",lineHeight:1.25}}>{n.t}</span>
       </div>
@@ -12132,16 +12136,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo-dark.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav */}
           <div className="lp-nav-full">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ display:"flex",alignItems:"center",gap:8,background: L.navBtnBg||"rgba(255,255,255,.12)", color: L.navBtnColor||"#fff", border: "1px solid "+(L.navBtnBorder||"rgba(255,255,255,.25)"), cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 10, transition:"background .15s,transform .12s" }} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.22)"} onMouseLeave={e=>e.currentTarget.style.background=L.navBtnBg||"rgba(255,255,255,.12)"}>{menuOpen?"✕":"☰"} Menu</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ display:"flex",alignItems:"center",gap:8,background: L.navBtnBg||"rgba(46,72,89,.06)", color: L.navBtnColor||"#2E4859", border: "1px solid "+(L.navBtnBorder||"rgba(46,72,89,.2)"), cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "9px 18px", borderRadius: 10, transition:"background .15s,transform .12s" }} onMouseEnter={e=>e.currentTarget.style.background="rgba(46,72,89,.12)"} onMouseLeave={e=>e.currentTarget.style.background=L.navBtnBg||"rgba(46,72,89,.06)"}>{menuOpen?"✕":"☰"} Menu</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter / S'inscrire →</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(255,255,255,.2)", color: L.navHamburgerColor||L.navBtnColor||"#fff", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(255,255,255,.4)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{menuOpen?"✕":"☰"}</button>
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(46,72,89,.06)", color: L.navHamburgerColor||L.navBtnColor||"#2E4859", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(46,72,89,.25)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{menuOpen?"✕":"☰"}</button>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
           </div>
         </div>
@@ -12180,33 +12184,33 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           {statsHero.map(({ n, suf, label }) => (
             <div key={label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
-              <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"rgba(255,255,255,.45)", marginTop: 2 }}>{label}</div>
+              <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"#93A0A2", marginTop: 2 }}>{label}</div>
             </div>
           ))}
         </div>
         {/* Hero content : texte a gauche, telephone anime a droite */}
         {/* Badge standalone centré (créée en France) — editable via heroBadge */}
         <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:28 }}>
-          <span style={{ display:"inline-flex", alignItems:"center", gap:8, background:L.heroBadgeBg||"rgba(228,145,120,.14)", border:"1px solid "+(L.heroBadgeBorder||"rgba(228,145,120,.3)"), borderRadius:22, padding:"7px 18px", fontSize:12.5, color:L.heroBadgeColor||"#fff", fontWeight:600, letterSpacing:".3px", boxShadow:"0 4px 18px rgba(0,0,0,.15)" }}>{T.heroBadge}</span>
+          <span style={{ display:"inline-flex", alignItems:"center", gap:8, background:L.heroBadgeBg||"rgba(228,145,120,.12)", border:"1px solid "+(L.heroBadgeBorder||"rgba(228,145,120,.35)"), borderRadius:22, padding:"7px 18px", fontSize:12.5, color:L.heroBadgeColor||"#C84B31", fontWeight:700, letterSpacing:".3px", boxShadow:"0 4px 14px rgba(46,72,89,.08)" }}>{T.heroBadge}</span>
         </div>
         <div className="lp-hero-grid" style={{ position: "relative", zIndex: 1 }}>
           <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"center" }}>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4.4vw,50px)", fontWeight: 700, color: L.heroTitleColor||"#fff", lineHeight: 1.14, marginBottom: 16 }}>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4.4vw,50px)", fontWeight: 700, color: L.heroTitleColor||"#2E4859", lineHeight: 1.14, marginBottom: 16 }}>
               {T.heroTitle}<br/>
               {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </div>
-            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"rgba(255,255,255,.8)", lineHeight: 1.5, marginBottom: 14, fontWeight: 500 }}>{T.heroSub}</div>
-            <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"rgba(255,255,255,.55)", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
+            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>{T.heroSub}</div>
+            <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             <div className="lp-hero-ctas">
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
-              <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border: "1px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.18)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer" }}>{T.heroBtnSecTxt}</button>
+              <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"#FFFFFF", color: L.heroBtnSecColor||"#2E4859", border: "1px solid "+(L.heroBtnSecBorder||"rgba(46,72,89,.2)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer", fontWeight:600 }}>{T.heroBtnSecTxt}</button>
             </div>
             <div className="lp-hero-tags">
-              {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.45)", fontWeight: 500 }}>{t.trim()}</span>)}
+              {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"#93A0A2", fontWeight: 500 }}>{t.trim()}</span>)}
             </div>
           </div>
           <div className="lp-hero-visual">
-            <HeroPhone/>
+            <HeroPhone screen={<AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>}/>
           </div>
         </div>
       </div>
@@ -12587,7 +12591,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       </div>}
 
       {/* FAQ */}
-      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: "#F4F7FA" }}>
+      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: L.faqBg||"#FDFBF8" }}>
+        <WaveDivider color={L.waveFaq||L.faqBg||"#FDFBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -16560,7 +16565,7 @@ const DEFAULT_CONFIG = {
     freePrice:"0€",
   },
   landing: {
-    heroBg:"linear-gradient(160deg, #345C6B 0%, #457E73 55%, #2F5560 100%)",
+    heroBg:"linear-gradient(165deg,#FCF8F3 0%,#F3EEE6 55%,#F7F0E8 100%)",
     heroImg:"",
     heroImgOpacity:0.12,
     heroImgPosition:"center center",
