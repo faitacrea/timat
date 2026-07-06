@@ -12142,7 +12142,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else if(target==="boutique")setShowBoutique(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else if(target==="boutique")setShowBoutique(true); else if(target==="blog-section")window.location.href="/blog/"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
               )}
@@ -12164,7 +12164,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
             <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else if(target==="boutique")setShowBoutique(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else if(target==="boutique")setShowBoutique(true); else if(target==="blog-section")window.location.href="/blog/"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
@@ -12194,7 +12194,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             ].map(g=><div key={g.sec} style={{marginBottom:6}}>
               <div style={{fontSize:10.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
               {g.items.map(([ic,label,desc,target,c])=>
-                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="outils")setShowOutils(true);else if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="outils")setShowOutils(true);else if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog/";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                   style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
                   onMouseEnter={e=>{e.currentTarget.style.background=c+"14";e.currentTarget.style.transform="translateX(4px)";e.currentTarget.style.boxShadow="0 4px 14px "+c+"22";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
                   <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
@@ -12659,7 +12659,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {(config.blog||DEFAULT_CONFIG.blog).map((art,i)=>(
               <FadeIn key={art.id} delay={i*80}>
-                <div className="blog-card" onClick={()=>setShowBlog(art.id)} style={{
+                <div className="blog-card" onClick={()=>{window.location.href=(art.id==="mensualisation"?"/blog/mensualisation-assistante-maternelle/":"/blog/");}} style={{
                   background:"#fff",borderRadius:16,overflow:"hidden",cursor:"pointer",
                   border:"1px solid #E8E4E0",boxShadow:"0 2px 12px rgba(0,0,0,.04)"
                 }}>
