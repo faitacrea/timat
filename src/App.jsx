@@ -304,10 +304,10 @@ function Styles(){return(
       .demo-tabs button{flex:1 1 44%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:11px 6px;border:none!important;border-radius:13px!important}
       .demo-tabs button span:first-child{font-size:19px!important}
       .demo-tabs button span:last-child{font-size:10px!important;line-height:1.15!important}
-      .demo-explain{max-width:none;order:3;padding-top:2px}
+      .demo-explain{max-width:none;order:2;padding-top:2px;flex:0 0 auto}
       .demo-scrollhint{display:none!important}
       .demo-scrollarrow{display:none!important}
-      .demo-col-phone{order:2;align-self:center;margin-top:2px}
+      .demo-col-phone{order:3;align-self:center;margin-top:6px}
       .demo-phone{width:min(224px,62vw)}
       .demo-frame{height:424px}
       .demo-zoom{zoom:.64}
@@ -11874,16 +11874,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
   // Auto-demo facon "screencast" : defile automatiquement les sections cles
   const demoTour = [
     {page:"accueil",label:"Le quotidien",ic:"🏠",
-      desc:"Toute la journée d'accueil, en un coup d'œil.",
+      desc:((config.landing||{}).demoPhrase1||"Toute la journée d'accueil, en un coup d'œil."),
       resume:((config.landing||{}).demoPuces1||"Enfants présents, pointage, événements\nFiche d'urgence & santé de chaque enfant").split("\n").filter(Boolean)},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
-      desc:"Le planning partagé, pointé en un tap.",
+      desc:((config.landing||{}).demoPhrase2||"Le planning partagé, pointé en un tap."),
       resume:((config.landing||{}).demoPuces2||"Présences, absences et heures sup.\nFeuille de présence mensuelle prête").split("\n").filter(Boolean)},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
-      desc:"Salaire et déclaration, calculés tout seuls.",
+      desc:((config.landing||{}).demoPhrase3||"Salaire et déclaration, calculés tout seuls."),
       resume:((config.landing||{}).demoPuces3||"Mensualisation, congés et indemnités\nBulletin & Pajemploi prêts").split("\n").filter(Boolean)},
     {page:"messagerie",label:"Messagerie parents",ic:"💬",
-      desc:"Le lien avec les parents, au quotidien.",
+      desc:((config.landing||{}).demoPhrase4||"Le lien avec les parents, au quotidien."),
       resume:((config.landing||{}).demoPuces4||"Messages & moments de la journée partagés\nNotifications en temps réel").split("\n").filter(Boolean)},
   ];
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
@@ -16029,11 +16029,14 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
             )}
           </BOCard>
-          <BOCard title="Démo — puces (1 par ligne)" icon="📱">
+          <BOCard title="Démo — phrases & puces" icon="📱">
             {[
-              ["demoPuces1","Accueil & journée"],["demoPuces2","Planning & présences"],["demoPuces3","Calculs & paie"],["demoPuces4","Échanges parents"],["demoPuces5","Santé & urgences"]
-            ].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={true}/></BOField>
+              ["demoPhrase1","Le quotidien — phrase",false],["demoPuces1","Le quotidien — puces (1/ligne)",true],
+              ["demoPhrase2","Planning & présences — phrase",false],["demoPuces2","Planning & présences — puces",true],
+              ["demoPhrase3","Calculs & paie — phrase",false],["demoPuces3","Calculs & paie — puces",true],
+              ["demoPhrase4","Messagerie parents — phrase",false],["demoPuces4","Messagerie parents — puces",true]
+            ].filter(([,l])=>matches(l)).map(([k,l,multi])=>
+              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={multi}/></BOField>
             )}
           </BOCard>
           <BOCard title="Problème → Solution (lignes)" icon="⚖️">
