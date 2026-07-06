@@ -12230,24 +12230,22 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             </div>
           </FadeIn>
           {/* En-tetes colonnes (web) */}
-          <div className="combo-head" style={{ display:"flex", gap:16, padding:"0 20px", marginTop:32, marginBottom:6 }}>
-            <div style={{ flex:"1 1 260px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelBeforeColor||"rgba(255,255,255,.45)", textTransform:"uppercase" }}>{L.comboLabelBefore||"La galère aujourd'hui"}</div>
-            <div style={{ width:28 }}/>
-            <div style={{ flex:"1 1 240px", fontSize:11, fontWeight:700, letterSpacing:".6px", color:L.comboLabelAfterColor||"#E49178", textTransform:"uppercase" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
+          <div className="combo-head" style={{ display:"flex", gap:10, marginTop:32, marginBottom:8 }}>
+            <div style={{ flex:"1 1 260px", textAlign:"center", fontSize:11, fontWeight:800, letterSpacing:".4px", textTransform:"uppercase", color:L.comboLabelBeforeColor||"#F0A58F", background:"rgba(200,75,49,.16)", borderRadius:9, padding:"7px" }}>{L.comboLabelBefore||"😩 Aujourd'hui"}</div>
+            <div style={{ flex:"1 1 240px", textAlign:"center", fontSize:11, fontWeight:800, letterSpacing:".4px", textTransform:"uppercase", color:L.comboLabelAfterColor||"#8FD4CB", background:"rgba(93,169,161,.18)", borderRadius:9, padding:"7px" }}>{L.comboLabelAfter||"✅ Avec TiMat"}</div>
           </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des heures la tête dans les calculs|Salaire, congés, indemnités calculés tout seuls\n😰|La peur de se tromper dans une déclaration|Des calculs fiables, conformes à la convention\n🗂️|Des papiers éparpillés entre classeurs et cartons|Tout est organisé, un dossier par enfant\n🔍|Un papier introuvable le jour où il faut|Retrouvé en 2 clics, gardé en sécurité\n💸|Courir après les paiements|Suivi des versements + relances en 1 clic\n🧸|Du temps volé à votre vrai métier|L'esprit libre pour les enfants").split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
               return <FadeIn key={i} delay={i*70}>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:16, alignItems:"center", background:L.comboCardBg||"rgba(255,255,255,.05)", border:"1px solid "+(L.comboCardBorder||"rgba(255,255,255,.09)"), borderRadius:14, padding:"16px 20px" }}>
-                  <div style={{ flex:"1 1 260px", display:"flex", gap:12, alignItems:"center", minWidth:0 }}>
-                    <span style={{ fontSize:24, flexShrink:0 }}>{ic}</span>
-                    <span style={{ fontSize:13.5, color:L.comboPbColor||"rgba(255,255,255,.6)", lineHeight:1.4 }}>{pb}</span>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:10, alignItems:"stretch" }}>
+                  <div style={{ flex:"1 1 260px", display:"flex", gap:10, alignItems:"center", minWidth:0, background:L.comboPbBg||"#F7ECE7", borderRadius:12, padding:"13px 15px" }}>
+                    <span style={{ fontSize:22, flexShrink:0 }}>{ic}</span>
+                    <span style={{ fontSize:13, color:L.comboPbColor||"#7A544A", lineHeight:1.35, fontWeight:500 }}>{pb}</span>
                   </div>
-                  <div className="combo-arrow" style={{ width:28, textAlign:"center", color:L.comboArrowColor||"rgba(255,255,255,.3)", fontSize:20, flexShrink:0 }}>→</div>
-                  <div style={{ flex:"1 1 240px", display:"flex", gap:10, alignItems:"center", minWidth:0 }}>
-                    <span style={{ flexShrink:0, width:22, height:22, borderRadius:"50%", background:"rgba(93,169,161,.2)", color:"#6FC2B8", fontWeight:800, fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
-                    <span style={{ fontSize:13.5, color:L.comboSolColor||"#fff", fontWeight:600, lineHeight:1.4 }}>{sol}</span>
+                  <div style={{ flex:"1 1 240px", display:"flex", gap:9, alignItems:"center", minWidth:0, background:L.comboSolBg||"#EAF3F1", borderRadius:12, padding:"13px 15px" }}>
+                    <span style={{ flexShrink:0, width:20, height:20, borderRadius:"50%", background:"rgba(93,169,161,.22)", color:"#3E8079", fontWeight:800, fontSize:11, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
+                    <span style={{ fontSize:13, color:L.comboSolColor||"#2E4859", fontWeight:700, lineHeight:1.35 }}>{sol}</span>
                   </div>
                 </div>
               </FadeIn>;
