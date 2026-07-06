@@ -11908,9 +11908,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
     const el=demoScreenRef.current; if(el)el.scrollTop=0;
   };
 
-  // SEO : titre de page et meta description riches en mots-cles recherches
+  // SEO : titre, meta, Open Graph, canonical + donnees structurees JSON-LD
   useEffect(()=>{
     if(preview)return;
+    const SITE="https://timat.app";
+    const IMG=SITE+"/logo.png";
+    const DESC="TiMat, l'application des assistantes maternelles et parents employeurs : contrat conforme, calcul de mensualisation et de salaire, bulletin de paie, déclaration Pajemploi, planning, pointage des présences et cahier de liaison numérique. Simulateurs gratuits (salaire, CMG, indemnités).";
     const prevTitle=document.title;
     document.title="TiMat — Application assistante maternelle : contrat, paie, planning & cahier de liaison";
     const setMeta=(name,content)=>{
@@ -11918,10 +11921,33 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       if(!m){m=document.createElement("meta");m.setAttribute("name",name);document.head.appendChild(m);}
       const prev=m.getAttribute("content"); m.setAttribute("content",content); return[m,prev];
     };
-    const [md,prevDesc]=setMeta("description","TiMat, l'application des assistantes maternelles et parents employeurs : contrat conforme, calcul de mensualisation et de salaire, bulletin de paie, déclaration Pajemploi, planning, pointage des présences et cahier de liaison numérique. Simulateurs gratuits (salaire, CMG, indemnités).");
+    const setProp=(prop,content)=>{
+      let m=document.querySelector('meta[property="'+prop+'"]');
+      if(!m){m=document.createElement("meta");m.setAttribute("property",prop);document.head.appendChild(m);}
+      m.setAttribute("content",content); return m;
+    };
+    const [md,prevDesc]=setMeta("description",DESC);
     const [mk]=setMeta("keywords","application assistante maternelle, logiciel assistante maternelle, cahier de liaison numérique, calcul mensualisation, bulletin de salaire, déclaration Pajemploi, CMG, contrat assistante maternelle, planning nounou, MAM, parents employeurs");
-    return()=>{ document.title=prevTitle; if(prevDesc!=null)md.setAttribute("content",prevDesc); };
-  },[]);
+    // Open Graph + Twitter
+    setProp("og:title",document.title); setProp("og:description",DESC); setProp("og:type","website");
+    setProp("og:url",SITE); setProp("og:image",IMG); setProp("og:site_name","TiMat"); setProp("og:locale","fr_FR");
+    setMeta("twitter:card","summary_large_image"); setMeta("twitter:title",document.title);
+    setMeta("twitter:description",DESC); setMeta("twitter:image",IMG);
+    // canonical
+    let canon=document.querySelector('link[rel="canonical"]'); const createdCanon=!canon;
+    if(!canon){canon=document.createElement("link");canon.setAttribute("rel","canonical");document.head.appendChild(canon);}
+    const prevCanon=canon.getAttribute("href"); canon.setAttribute("href",SITE);
+    // Donnees structurees JSON-LD
+    const faqs=(config.faqLanding||[]).filter(f=>f&&f.q&&f.a);
+    const schemas=[
+      {"@context":"https://schema.org","@type":"Organization","name":"TiMat","url":SITE,"logo":IMG,"description":"L'application de gestion pour les assistantes maternelles et les parents employeurs."},
+      {"@context":"https://schema.org","@type":"WebSite","name":"TiMat","url":SITE},
+      {"@context":"https://schema.org","@type":"SoftwareApplication","name":"TiMat","applicationCategory":"BusinessApplication","operatingSystem":"Web, iOS, Android","description":"Gestion complète pour assistantes maternelles : salaire, mensualisation, congés, indemnités, déclaration Pajemploi, contrats et planning.","offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Gratuit"},{"@type":"Offer","price":"9.99","priceCurrency":"EUR","name":"Pro"}]}
+    ];
+    if(faqs.length){schemas.push({"@context":"https://schema.org","@type":"FAQPage","mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))});}
+    const scripts=schemas.map(s=>{const el=document.createElement("script");el.type="application/ld+json";el.setAttribute("data-timat-seo","1");el.textContent=JSON.stringify(s);document.head.appendChild(el);return el;});
+    return()=>{ document.title=prevTitle; if(prevDesc!=null)md.setAttribute("content",prevDesc); if(prevCanon!=null)canon.setAttribute("href",prevCanon); else if(createdCanon)canon.remove(); scripts.forEach(el=>el.remove()); };
+  },[config.faqLanding]);
 
   // LIEN INVITATION : ?role=parent ou ?invite=... ouvre directement l'inscription famille
   useEffect(()=>{
@@ -12534,7 +12560,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         <WaveDivider color={L.wave6||L.section6Bg||"#F4F1EA"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 48 }}>{L.s6Title}</div>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
+            <div style={{ fontSize: 14, color: L.s6SubColor||"#6B7A82", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
           </FadeIn>
           <div className="lp-tarifs-grid">
             {/* Gratuit */}
@@ -12574,6 +12601,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           <div className="lp-guarantees">
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
+          <FadeIn>
+            <div style={{ maxWidth:620, margin:"26px auto 0", background:L.tarifCompareBg||"#FFFFFF", border:"1px solid #E8E0D5", borderRadius:12, padding:"14px 18px", fontSize:13, color:"#5A6B72", lineHeight:1.55, textAlign:"center" }}>
+              💡 <b style={{color:"#2E4859"}}>La différence :</b> les autres facturent <b>par contrat</b> (la facture grimpe vite avec plusieurs enfants). Chez TiMat, <b style={{color:"#2E4859"}}>un seul prix, contrats illimités</b> — et l'essai <b style={{color:"#2E4859"}}>sans carte bancaire</b>.
+            </div>
+          </FadeIn>
         </div>
       </div>}
 
