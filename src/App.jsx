@@ -301,7 +301,7 @@ function Styles(){return(
     @media(max-width:860px){
       .demo-layout{flex-direction:column;gap:6px;align-items:stretch;max-width:520px}
       .demo-tabs{flex-direction:row;flex-wrap:wrap;gap:7px;width:100%;overflow:visible;background:transparent;box-shadow:none;border-radius:0;order:1}
-      .demo-tabs button{flex:1 1 30%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:10px 6px;border:none!important;border-radius:13px!important}
+      .demo-tabs button{flex:1 1 44%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:11px 6px;border:none!important;border-radius:13px!important}
       .demo-tabs button span:first-child{font-size:19px!important}
       .demo-tabs button span:last-child{font-size:10px!important;line-height:1.15!important}
       .demo-explain{max-width:none;order:3;padding-top:2px}
@@ -11873,21 +11873,18 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   // Auto-demo facon "screencast" : defile automatiquement les sections cles
   const demoTour = [
-    {page:"accueil",label:"Accueil & journée",ic:"🏠",
-      desc:"Vue d'ensemble : enfants présents, signatures, prochains événements.",
-      resume:((config.landing||{}).demoPuces1||"Enfants présents en temps réel\nDocuments à signer\nÉvénements à venir\nActions en un tap").split("\n").filter(Boolean)},
+    {page:"accueil",label:"Le quotidien",ic:"🏠",
+      desc:"Toute la journée d'accueil, en un coup d'œil.",
+      resume:((config.landing||{}).demoPuces1||"Enfants présents, pointage, événements\nFiche d'urgence & santé de chaque enfant").split("\n").filter(Boolean)},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
-      desc:"Pointages, absences et planning partagé en temps réel.",
-      resume:((config.landing||{}).demoPuces2||"Planning partagé en temps réel\nPointage jour par jour\nAbsences & heures sup.\nFeuille de présence mensuelle").split("\n").filter(Boolean)},
+      desc:"Le planning partagé, pointé en un tap.",
+      resume:((config.landing||{}).demoPuces2||"Présences, absences et heures sup.\nFeuille de présence mensuelle prête").split("\n").filter(Boolean)},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
-      desc:"Bulletins, mensualisation et déclarations calculés automatiquement.",
-      resume:((config.landing||{}).demoPuces3||"Salaire & mensualisation auto\nIndemnités & congés payés\nBulletins conformes à la convention\nDéclaration Pajemploi prête").split("\n").filter(Boolean)},
-    {page:"messagerie",label:"Échanges parents",ic:"💬",
-      desc:"Messagerie instantanée avec les parents, des deux côtés.",
-      resume:((config.landing||{}).demoPuces4||"Messagerie avec les parents\nMoments de la journée partagés\nNotifications en temps réel\nTout l'historique conservé").split("\n").filter(Boolean)},
-    {page:"sante_complet",label:"Santé & urgences",ic:"🩺",
-      desc:"Fiche d'urgence, allergies et numéros utiles toujours à portée.",
-      resume:((config.landing||{}).demoPuces5||"Fiche d'urgence par enfant\nAllergies & traitements\nNuméros d'urgence cliquables\nContact PMI de votre secteur").split("\n").filter(Boolean)},
+      desc:"Salaire et déclaration, calculés tout seuls.",
+      resume:((config.landing||{}).demoPuces3||"Mensualisation, congés et indemnités\nBulletin & Pajemploi prêts").split("\n").filter(Boolean)},
+    {page:"messagerie",label:"Messagerie parents",ic:"💬",
+      desc:"Le lien avec les parents, au quotidien.",
+      resume:((config.landing||{}).demoPuces4||"Messages & moments de la journée partagés\nNotifications en temps réel").split("\n").filter(Boolean)},
   ];
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
@@ -12296,8 +12293,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:14,marginBottom:4}}>
-                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"rgba(255,255,255,.88)",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:(j*0.09)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.2)",color:"#6FC2B8",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+              <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:12,marginBottom:4}}>
+                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#fff",lineHeight:1.3,marginBottom:2,animation:"demoPuceIn .45s ease backwards"}}>{s.desc}</div>
+                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"rgba(255,255,255,.88)",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:((j+1)*0.1)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.2)",color:"#6FC2B8",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
               {/* faisceau lumineux qui file vers le telephone (desktop) a chaque changement */}
               <div className="demo-beam" style={{position:"relative",height:2,marginTop:22,background:"linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.25),rgba(93,169,161,0))",borderRadius:2}}>
