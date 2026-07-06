@@ -12378,23 +12378,24 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             {[
               { ic: L.diff1Ic||"💶", badge: L.diff1Badge||"Notre engagement", titre: L.diff1Titre||"Un tarif sans piège", puces: L.diff1Puces||"2 mois offerts, sans carte bancaire\nAucun prélèvement surprise\nRésiliation quand vous voulez" },
               { ic: L.diff2Ic||"🧮", badge: L.diff2Badge||"Zéro erreur", titre: L.diff2Titre||"Des calculs fiables", puces: L.diff2Puces||"Salaire, congés, Pajemploi calculés\nConformes à la convention\nToujours le même résultat" },
-              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" }
+              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
+              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Zéro impression", titre: L.diff4Titre||"Signez en ligne, sans imprimer", puces: L.diff4Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 100}>
-                <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: "28px 22px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center", boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
-                  <div style={{ fontSize: 52, marginBottom: 14, lineHeight:1 }}>{d.ic}</div>
-                  <div style={{ display: "inline-block", background: "#E4917818", color: "#C84B31", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 6, marginBottom: 12, letterSpacing: ".5px", textTransform: "uppercase" }}>
-                    {d.badge}
-                  </div>
-                  <div style={{ fontFamily: fTitle, fontSize: 17, fontWeight: 700, color: "#2E4859", marginBottom: 14, lineHeight: 1.3 }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: "26px 20px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center", boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
+                  <div style={{ fontSize: 44, marginBottom: 12, lineHeight:1 }}>{d.ic}</div>
+                  <div style={{ fontFamily: fTitle, fontSize: 16, fontWeight: 700, color: "#2E4859", marginBottom: 12, lineHeight: 1.25 }}>
                     {d.titre}
                   </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:8, textAlign:"left", width:"100%" }}>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8, textAlign:"left", width:"100%", marginBottom:16 }}>
                     {d.puces.split("\n").filter(Boolean).map((p,j)=>(
                       <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:12.5, color:"#6B7A82", lineHeight:1.4 }}>
                         <span style={{ color:"#5DA9A1", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
                       </div>
                     ))}
+                  </div>
+                  <div style={{ marginTop:"auto", display: "inline-block", background: "rgba(93,169,161,.15)", color: "#3E8079", fontSize: 9.5, fontWeight: 700, padding: "3px 10px", borderRadius: 6, letterSpacing: ".4px", textTransform: "uppercase" }}>
+                    {d.badge}
                   </div>
                 </div>
               </FadeIn>
@@ -16717,10 +16718,10 @@ const DEFAULT_CONFIG = {
     ["🌙","Vos soirées servent à l'administratif","5 minutes le matin suffisent","Vos soirées vous appartiennent."],
   ],
   statsHero:[
-    {n:847,suf:"+",label:"assmats actives"},
-    {n:12400,suf:"+",label:"bilans générés"},
-    {n:4,suf:".7★",label:"note moyenne"},
-    {n:96,suf:"%",label:"taux de satisfaction"},
+    {n:0,suf:"€",label:"pour essayer"},
+    {n:2,suf:" mois",label:"offerts, sans CB"},
+    {n:100,suf:"%",label:"conforme à la convention"},
+    {n:2,suf:" min",label:"pour s'inscrire"},
   ],
   statsSection:[
     {n:847,suf:"+",label:"assmats actives",desc:"Font confiance à TiMat"},
