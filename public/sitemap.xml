@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://timat.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!-- Quand les pages seront créées (blog, outils, boutique), ajoute-les ici, ex :
+  <url><loc>https://timat.app/outils</loc><priority>0.8</priority></url>
+  <url><loc>https://timat.app/boutique</loc><priority>0.7</priority></url>
+  <url><loc>https://timat.app/blog</loc><priority>0.8</priority></url>
+  <url><loc>https://timat.app/blog/mensualisation</loc><priority>0.7</priority></url>
+  -->
+</urlset>
