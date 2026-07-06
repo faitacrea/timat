@@ -304,10 +304,10 @@ function Styles(){return(
       .demo-tabs button{flex:1 1 30%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:10px 6px;border:none!important;border-radius:13px!important}
       .demo-tabs button span:first-child{font-size:19px!important}
       .demo-tabs button span:last-child{font-size:10px!important;line-height:1.15!important}
-      .demo-explain{max-width:none;order:2;padding-top:0}
+      .demo-explain{max-width:none;order:3;padding-top:2px}
       .demo-scrollhint{display:none!important}
       .demo-scrollarrow{display:none!important}
-      .demo-col-phone{order:3;align-self:center;margin-top:-4px}
+      .demo-col-phone{order:2;align-self:center;margin-top:2px}
       .demo-phone{width:min(224px,62vw)}
       .demo-frame{height:424px}
       .demo-zoom{zoom:.64}
@@ -12115,11 +12115,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       {/* Sticky nav — apparait quand on descend */}
       <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, transform:scrolled?"translateY(0)":"translateY(-110%)", transition:"transform .35s cubic-bezier(.22,1,.36,1)", background:"rgba(253,251,248,.9)", backdropFilter:"blur(14px)", borderBottom:"1px solid rgba(46,72,89,.08)", boxShadow:scrolled?"0 4px 24px rgba(46,72,89,.08)":"none" }}>
         <div style={{ maxWidth:1120, margin:"0 auto", padding:"9px 20px", display:"flex", alignItems:"center", gap:18 }}>
-          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:32,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
+          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:32,objectFit:"contain",flexShrink:0,cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
-              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else if(target==="boutique")setShowBoutique(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
               )}
@@ -12135,13 +12135,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav : onglets visibles + Se connecter */}
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
             <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
-              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+                <button key={target} onClick={()=>{ if(target==="outils")setShowOutils(true); else if(target==="boutique")setShowBoutique(true); else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
@@ -12280,9 +12280,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
             <div style={{order:1,position:"relative"}}>
               <div className="demo-tabs">
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                  style={{display:"flex",alignItems:"center",gap:12,padding:"18px 18px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#E49178,#C84B31)":"rgba(255,255,255,.06)",color:on?"#fff":"rgba(255,255,255,.72)",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(255,255,255,.06)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
-                  <span style={{fontSize:on?24:22,flexShrink:0,transition:"font-size .2s"}}>{s.ic}</span>
-                  <span style={{fontSize:14,fontWeight:700,lineHeight:1.25}}>{s.label}</span>
+                  style={{display:"flex",alignItems:"center",gap:9,padding:"12px 13px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#E49178,#C84B31)":"rgba(255,255,255,.06)",color:on?"#fff":"rgba(255,255,255,.72)",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(255,255,255,.06)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
+                  <span style={{fontSize:on?20:18,flexShrink:0,transition:"font-size .2s"}}>{s.ic}</span>
+                  <span style={{fontSize:13,fontWeight:700,lineHeight:1.2}}>{s.label}</span>
                 </button>;})}
               </div>
               {/* Fleche transparente (mobile) indiquant qu'on peut faire defiler les onglets */}
