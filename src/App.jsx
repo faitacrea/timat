@@ -16592,7 +16592,6 @@ const DEFAULT_CONFIG = {
     faqTitleColor:"#fff", faqDescColor:"rgba(255,255,255,.65)",
     blogTitleColor:"#2E4859", blogDescColor:"#5F7A86",
     footerTextColor:"rgba(255,255,255,.7)",
-    s4TitleColor:"#2E4859", s4SubColor:"#6B7A82",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
     statsBg:"linear-gradient(135deg,#2E4859,#3E6B63)",
     // ----- BOUTONS HERO -----
@@ -16642,8 +16641,8 @@ const DEFAULT_CONFIG = {
     s3LabelResultColor:"#3D6B50",
     s3TextColor:"#6B4F3A",
     s3ResultColor:"#3D6B50",
-    s4TitleColor:"#fff",
-    s4SubColor:"rgba(255,255,255,.4)",
+    s4TitleColor:"#2E4859",
+    s4SubColor:"#6B7A82",
     s4StatColor:"#E8A84A",
     s4StatLabelColor:"#fff",
     s4StatDescColor:"rgba(255,255,255,.4)",
