@@ -1,0 +1,9 @@
+# robots.txt — TiMat
+User-agent: *
+Allow: /
+
+# Bloque les espaces privés / app connectée si besoin (à adapter)
+# Disallow: /app
+# Disallow: /dashboard
+
+Sitemap: https://timat.app/sitemap.xml
