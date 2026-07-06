@@ -12376,10 +12376,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 56 }}>
             {[
-              { ic: L.diff1Ic||"🧮", badge: L.diff1Badge||"Fiabilité", titre: L.diff1Titre||"Des calculs fiables, toujours identiques", puces: L.diff1Puces||"Salaire, indemnités et congés calculés\nConformes à la convention (IDCC 3239)\nLe même résultat, sans erreur" },
-              { ic: L.diff2Ic||"💶", badge: L.diff2Badge||"Transparence", titre: L.diff2Titre||"Un tarif clair, sans piège", puces: L.diff2Puces||"Sans prélèvement caché\nRésiliation quand vous voulez\nEssai sans carte bancaire" },
-              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements réels", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
-              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Conforme eIDAS", titre: L.diff4Titre||"Signature électronique en 1 clic", puces: L.diff4Puces||"Contrats, avenants, bulletins signés\nVotre signature réutilisée partout\nHébergée en France, archivée 5 ans" }
+              { ic: L.diff1Ic||"💶", badge: L.diff1Badge||"Notre engagement", titre: L.diff1Titre||"Un tarif sans piège", puces: L.diff1Puces||"2 mois offerts, sans carte bancaire\nAucun prélèvement surprise\nRésiliation quand vous voulez" },
+              { ic: L.diff2Ic||"🧮", badge: L.diff2Badge||"Zéro erreur", titre: L.diff2Titre||"Des calculs fiables", puces: L.diff2Puces||"Salaire, congés, Pajemploi calculés\nConformes à la convention\nToujours le même résultat" },
+              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 100}>
                 <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: "28px 22px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center", boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
