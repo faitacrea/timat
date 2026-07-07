@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","headline":"Mensualisation assistante maternelle 2026 : calcul, formule et simulateur","description":"Formule officielle de la mensualisation (CCN IDCC 3239), année complète vs incomplète, congés payés et régularisation annuelle, avec un simulateur.","image":"https://timat.app/og-image.png","datePublished":"2026-07-06","dateModified":"2026-07-06","author":{"@type":"Organization","name":"TiMat"},"publisher":{"@type":"Organization","name":"TiMat","logo":{"@type":"ImageObject","url":"https://timat.app/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://timat.app/blog/mensualisation-assistante-maternelle"}}
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Mensualisation assistante maternelle 2026 : calcul, formule et simulateur","description":"Formule officielle de la mensualisation (CCN IDCC 3239), année complète vs incomplète, congés payés et régularisation annuelle, avec un simulateur.","image":"https://timat.app/og-image.png","datePublished":"2026-07-06","dateModified":"2026-07-06","author":{"@type":"Person","name":"Sophie Lefort","jobTitle":"Créatrice de TiMat","description":"Créatrice de TiMat, l'application des assistantes maternelles."},"publisher":{"@type":"Organization","name":"TiMat","logo":{"@type":"ImageObject","url":"https://timat.app/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://timat.app/blog/mensualisation-assistante-maternelle"}}
 </script>
 <style>
   :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
@@ -68,7 +68,7 @@
 </head>
 <body>
   <div class="top"><div class="bar">
-    <a href="/" class="logo">tim<span>at</span></a>
+    <a href="/" class="logo" style="display:flex;align-items:center;gap:8px"><img src="/logo.png" alt="TiMat" style="height:30px" onerror="this.outerHTML='tim<span>at</span>'"></a>
     <a href="/" class="cta-top">Essayer TiMat →</a>
   </div></div>
 
@@ -78,6 +78,10 @@
     <h1>Mensualisation de l'assistante maternelle : le guide clair (2026)</h1>
     <p class="lead">La mensualisation permet de verser un salaire <strong>identique chaque mois</strong> à l'assistante maternelle, même pendant les vacances ou les absences de l'enfant. Voici comment elle se calcule, sans jargon — avec un simulateur.</p>
     <p class="meta">Mis à jour en 2026 · Lecture 5 min</p>
+    <div style="display:flex;align-items:center;gap:12px;margin:0 0 26px">
+      <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#E49178,#C84B31);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">SL</div>
+      <div><div style="font-size:14px;font-weight:700;color:#2E4859">Par Sophie Lefort</div><div style="font-size:12.5px;color:#6B7A82">Créatrice de TiMat</div></div>
+    </div>
 
     <h2>Qu'est-ce que la mensualisation ?</h2>
     <p>Pour tout accueil régulier, la mensualisation est <strong>obligatoire</strong> : elle est prévue par la convention collective nationale des particuliers employeurs et assistants maternels (IDCC 3239). Le principe : on lisse la rémunération sur 12 mois, pour que l'assistante maternelle touche la même somme tous les mois, quel que soit le nombre de jours réellement travaillés dans le mois.</p>
@@ -123,6 +127,7 @@
       <a href="/" class="ctabtn">Essayer TiMat gratuitement →</a>
     </div>
 
+    <div style="display:flex;gap:14px;align-items:flex-start;background:#FAF6F1;border:1px solid #EDE6DE;border-radius:14px;padding:18px;margin:30px 0 10px"><div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#E49178,#C84B31);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">SL</div><div><div style="font-family:'Fraunces',serif;font-weight:700;color:#2E4859;font-size:16px">Sophie Lefort</div><p style="font-size:13.5px;color:#6B7A82;margin:4px 0 0">Créatrice de TiMat, l'application dédiée aux assistantes maternelles et aux parents employeurs. Elle conçoit TiMat au plus près du métier pour régler, une bonne fois, la montagne administrative.</p></div></div>
     <div class="related">
       <h3>À lire aussi</h3>
       <ul><li><a href="/blog">Tous les guides pour assistantes maternelles</a></li></ul>
