@@ -16563,7 +16563,7 @@ const FAQ_LANDING_DEFAULT=[
             {q:"Qui a créé TiMat ?",a:"TiMat a été créée par une assistante maternelle agréée, qui a vécu la montagne administrative du métier. Chaque fonction répond à un besoin réel : c'est conçu par une assmat, pour les assmats."},
           ];
 const BLOG_DEFAULT=[
-              {id:"mensualisation",slug:"mensualisation-assistante-maternelle",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide clair (2026)",excerpt:"Formule officielle, année complète ou incomplète, congés payés et régularisation — avec un simulateur."},
+              {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide clair (2026)",excerpt:"Formule officielle, année complète ou incomplète, congés payés et régularisation — avec un simulateur."},
               {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Paie",catColor:"#5DA9A1",emoji:"🌴",title:"Congés payés : 10 % ou maintien ?",excerpt:"Les deux méthodes comparées, la plus favorable retenue, +2 jours par enfant — avec un simulateur."},
               {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Paie",catColor:"#C84B31",emoji:"💶",title:"Salaire : net, brut et coût employeur",excerpt:"Brut, net, net imposable et coût réel pour le parent — avec un convertisseur brut ⇄ net."},
             ];
