@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mensualisation assistante maternelle 2026 : calcul, formule et simulateur | TiMat</title>
+<meta name="description" content="Comment calculer la mensualisation d'une assistante maternelle en 2026 : formule officielle (CCN IDCC 3239), année complète vs incomplète, congés payés, régularisation et simulateur gratuit.">
+<link rel="canonical" href="https://timat.app/mensualisation-assistante-maternelle.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mensualisation assistante maternelle 2026 : le guide clair + simulateur">
+<meta property="og:description" content="Formule, année complète vs incomplète, congés payés et régularisation — expliqués simplement, avec un simulateur.">
+<meta property="og:url" content="https://timat.app/mensualisation-assistante-maternelle.html">
+<meta property="og:image" content="https://timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":"Mensualisation assistante maternelle 2026 : calcul, formule et simulateur","description":"Formule officielle de la mensualisation (CCN IDCC 3239), année complète vs incomplète, congés payés et régularisation annuelle, avec un simulateur.","image":"https://timat.app/og-image.png","datePublished":"2026-07-06","dateModified":"2026-07-06","author":{"@type":"Person","name":"Sophie Lefort","jobTitle":"Créatrice de TiMat","description":"Créatrice de TiMat, l'application des assistantes maternelles."},"publisher":{"@type":"Organization","name":"TiMat","logo":{"@type":"ImageObject","url":"https://timat.app/logo.png"}},"mainEntityOfPage":{"@type":"WebPage","@id":"https://timat.app/mensualisation-assistante-maternelle.html"}}
+</script>
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+  .bar{max-width:760px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:23px;color:var(--marine);text-decoration:none}
+  .logo span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  main{max-width:760px;margin:0 auto;padding:32px 22px 20px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:18px}
+  .crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(28px,5vw,40px);line-height:1.15;color:var(--marine);margin-bottom:14px}
+  .lead{font-size:18px;color:#42555E;margin-bottom:10px}
+  .meta{font-size:13px;color:var(--muted);margin-bottom:26px}
+  h2{font-family:'Fraunces',serif;font-size:24px;color:var(--marine);margin:34px 0 12px}
+  h3{font-size:18px;color:var(--marine);margin:22px 0 8px}
+  p{margin-bottom:14px}
+  ul{margin:0 0 16px 22px}
+  li{margin-bottom:7px}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:16px 18px;margin:20px 0}
+  .formula{background:var(--marine);color:#fff;border-radius:12px;padding:18px 20px;text-align:center;font-family:'Fraunces',serif;font-size:19px;margin:18px 0}
+  .example{background:#EAF3F1;border:1px solid #D6E8E4;border-radius:12px;padding:18px 20px;margin:18px 0}
+  .example b{color:var(--marine)}
+  .warn{font-size:14px;color:#8A6D4A;background:#FBF3E6;border:1px solid #EFE0C4;border-radius:10px;padding:14px 16px;margin:20px 0}
+  /* simulateur */
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:26px 0;box-shadow:0 6px 24px rgba(46,72,89,.07)}
+  .sim h3{margin-top:0;display:flex;align-items:center;gap:8px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .sim-res{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:12px;padding:16px;text-align:center;margin-top:6px}
+  .sim-res .lbl{font-size:12px;opacity:.8}
+  .sim-res .val{font-family:'Fraunces',serif;font-size:30px;font-weight:700}
+  .sim-note{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:30px 24px;text-align:center;margin:38px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}
+  .ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:15px 28px;border-radius:12px;margin-top:8px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:30px;padding-top:20px}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:30px}
+  footer a{color:#fff}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="logo" style="display:flex;align-items:center;gap:8px"><img src="/logo.png" alt="TiMat" style="height:30px" onerror="this.outerHTML='tim<span>at</span>'"></a>
+    <a href="/" class="cta-top">Essayer TiMat →</a>
+  </div></div>
+
+  <main>
+    <div class="crumb"><a href="/">Accueil</a> › <a href="/blog.html">Blog</a> › Mensualisation</div>
+    <span class="tag">Administratif</span>
+    <h1>Mensualisation de l'assistante maternelle : le guide clair (2026)</h1>
+    <p class="lead">La mensualisation permet de verser un salaire <strong>identique chaque mois</strong> à l'assistante maternelle, même pendant les vacances ou les absences de l'enfant. Voici comment elle se calcule, sans jargon — avec un simulateur.</p>
+    <p class="meta">Mis à jour en 2026 · Lecture 5 min</p>
+    <div style="display:flex;align-items:center;gap:12px;margin:0 0 26px">
+      <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#E49178,#C84B31);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">SL</div>
+      <div><div style="font-size:14px;font-weight:700;color:#2E4859">Par Sophie Lefort</div><div style="font-size:12.5px;color:#6B7A82">Créatrice de TiMat</div></div>
+    </div>
+
+    <h2>Qu'est-ce que la mensualisation ?</h2>
+    <p>Pour tout accueil régulier, la mensualisation est <strong>obligatoire</strong> : elle est prévue par la convention collective nationale des particuliers employeurs et assistants maternels (IDCC 3239). Le principe : on lisse la rémunération sur 12 mois, pour que l'assistante maternelle touche la même somme tous les mois, quel que soit le nombre de jours réellement travaillés dans le mois.</p>
+
+    <h2>La formule officielle</h2>
+    <div class="formula">Mensualité = (Heures par semaine × Semaines d'accueil × Taux horaire) ÷ 12</div>
+    <ul>
+      <li><strong>Heures par semaine</strong> : les heures d'accueil hebdomadaires prévues au contrat.</li>
+      <li><strong>Semaines d'accueil</strong> : le nombre de semaines où l'enfant est accueilli dans l'année.</li>
+      <li><strong>Taux horaire brut</strong> : librement fixé, sans être inférieur au minimum en vigueur.</li>
+    </ul>
+    <div class="warn">💡 Le taux horaire minimum est revalorisé régulièrement. Le plancher légal correspond à 0,281 × le SMIC horaire brut par enfant, et le minimum conventionnel peut être plus élevé (majoré de 4 % avec le titre professionnel). <strong>Vérifiez toujours le taux en vigueur</strong> sur Pajemploi (URSSAF) ou Service-Public.fr.</div>
+
+    <!-- SIMULATEUR -->
+    <div class="sim">
+      <h3>🧮 Simulateur express de mensualisation</h3>
+      <div class="sim-row"><label for="h">Heures par semaine</label><input id="h" type="number" inputmode="decimal" value="35"></div>
+      <div class="sim-row"><label for="s">Semaines d'accueil dans l'année</label><input id="s" type="number" inputmode="decimal" value="42"></div>
+      <div class="sim-row"><label for="t">Taux horaire brut (€)</label><input id="t" type="number" inputmode="decimal" step="0.01" value="4.00"></div>
+      <div class="sim-res"><div class="lbl">Mensualité brute estimée</div><div class="val" id="out">— €</div></div>
+      <div class="sim-note">Estimation indicative (hors congés payés en année incomplète, hors indemnités). Vérifiez sur Pajemploi.</div>
+    </div>
+
+    <h2>Année complète ou incomplète : la vraie différence</h2>
+    <h3>Année complète</h3>
+    <p>L'enfant est accueilli sur la quasi-totalité de l'année (à partir de 47 semaines). Les <strong>congés payés sont déjà inclus</strong> dans la mensualité.</p>
+    <h3>Année incomplète</h3>
+    <p>L'enfant est accueilli sur une partie de l'année (moins de 47 semaines). Les <strong>congés payés sont versés en plus</strong> du salaire mensualisé, selon la méthode la plus favorable à l'assmat : 10 % de la rémunération brute, ou maintien de salaire — on compare les deux et on retient le plus élevé.</p>
+
+    <div class="example"><b>Exemple (année incomplète)</b><br>35 h × 42 semaines × 4,00 € ÷ 12 = <b>490,00 € brut / mois</b>. Les congés payés s'ajoutent à part (souvent en juin).</div>
+
+    <h2>Et la régularisation annuelle ?</h2>
+    <p>Comme le salaire est lissé, on compare une fois par an (à la date anniversaire du contrat ou à sa fin) les salaires mensualisés versés et le salaire dû pour les heures <strong>réellement</strong> effectuées. Si l'assmat a travaillé plus que payé, un <strong>complément est dû</strong> ; si elle a travaillé moins, le salaire mensualisé reste <strong>garanti</strong>.</p>
+
+    <h2>Salaire et indemnités : à ne pas confondre</h2>
+    <p>La mensualisation concerne le <strong>salaire</strong>. À part s'ajoutent des <strong>indemnités</strong> non soumises à cotisations, prévues au contrat : indemnité d'entretien (obligatoire), indemnité de repas (si l'assmat fournit les repas) et frais kilométriques éventuels.</p>
+
+    <div class="box">✅ <strong>À retenir :</strong> mensualité = (heures × semaines × taux) ÷ 12. En année complète, les congés sont inclus ; en année incomplète, ils s'ajoutent. Et on régularise une fois par an.</div>
+
+    <div class="ctabox">
+      <h2>Fini les calculs à la main</h2>
+      <p>TiMat calcule votre mensualisation, vos congés, vos indemnités et prépare votre déclaration Pajemploi — automatiquement, à partir de vos pointages réels.</p>
+      <a href="/" class="ctabtn">Essayer TiMat gratuitement →</a>
+    </div>
+
+    <div style="display:flex;gap:14px;align-items:flex-start;background:#FAF6F1;border:1px solid #EDE6DE;border-radius:14px;padding:18px;margin:30px 0 10px"><div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#E49178,#C84B31);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">SL</div><div><div style="font-family:'Fraunces',serif;font-weight:700;color:#2E4859;font-size:16px">Sophie Lefort</div><p style="font-size:13.5px;color:#6B7A82;margin:4px 0 0">Créatrice de TiMat, l'application dédiée aux assistantes maternelles et aux parents employeurs. Elle conçoit TiMat au plus près du métier pour régler, une bonne fois, la montagne administrative.</p></div></div>
+    <div class="related">
+      <h3>À lire aussi</h3>
+      <ul><li><a href="/blog.html">Tous les guides pour assistantes maternelles</a></li></ul>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:18px">Article à visée informative. Les montants et taux sont revalorisés régulièrement : vérifiez les valeurs en vigueur sur Pajemploi (URSSAF) ou Service-Public.fr avant tout calcul contractuel.</p>
+  </main>
+
+  <footer>
+    <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
+    <a href="/">Retour à l'accueil</a> · <a href="/blog.html">Blog</a>
+  </footer>
+
+  <script>
+    (function(){
+      var h=document.getElementById('h'),s=document.getElementById('s'),t=document.getElementById('t'),out=document.getElementById('out');
+      function calc(){
+        var hv=parseFloat(h.value)||0,sv=parseFloat(s.value)||0,tv=parseFloat(t.value)||0;
+        var m=(hv*sv*tv)/12;
+        out.textContent=m>0?m.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'— €';
+      }
+      [h,s,t].forEach(function(el){el.addEventListener('input',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
