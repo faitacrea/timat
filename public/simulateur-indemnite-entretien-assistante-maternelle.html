@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur indemnité d'entretien assistante maternelle 2026 (barème + calcul) | TiMat</title>
+<meta name="description" content="Calculez l'indemnité d'entretien d'une assistante maternelle en 2026 : barème depuis juin 2026 (3,92 €/9h, 0,436 €/h, plancher 2,65 €/jour). Simulateur gratuit par jour et par mois, sans inscription.">
+<link rel="canonical" href="https://timat.app/simulateur-indemnite-entretien-assistante-maternelle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Simulateur indemnité d'entretien assistante maternelle 2026">
+<meta property="og:description" content="Barème 2026 et calcul par jour/mois selon la durée d'accueil. Gratuit, sans inscription.">
+<meta property="og:url" content="https://timat.app/simulateur-indemnite-entretien-assistante-maternelle.html">
+<meta property="og:image" content="https://timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Quel est le montant de l'indemnité d'entretien en 2026 ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, le minimum est de 3,92 € pour une journée de 9 heures (0,436 €/h entre 6h15 et 9h), avec un plancher de 2,65 € par jour en dessous de 6h15."}},
+{"@type":"Question","name":"L'indemnité d'entretien est-elle due si l'enfant est absent ?","acceptedAnswer":{"@type":"Answer","text":"Non : l'indemnité d'entretien n'est due que pour les jours où l'enfant est effectivement accueilli. Elle n'est pas mensualisée."}},
+{"@type":"Question","name":"L'indemnité d'entretien est-elle soumise à cotisations ?","acceptedAnswer":{"@type":"Answer","text":"Non, dans la limite du barème conventionnel : elle n'est pas soumise aux cotisations et n'est pas imposable pour l'assistante maternelle."}}
+]}
+</script>
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .res .c{border-radius:12px;padding:14px;text-align:center}
+  .res .a{background:#F2ECE6;color:#7A544A}.res .b{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff}
+  .res .lbl{font-size:11px;opacity:.85}.res .val{font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+  .note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  p{margin-bottom:13px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{border:1px solid #EDE6DE;padding:9px 11px;text-align:left}
+  th{background:var(--cream2);color:var(--marine);font-weight:700}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .warn{font-size:14px;color:#8A6D4A;background:#FBF3E6;border:1px solid #EFE0C4;border-radius:10px;padding:14px 16px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}.related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid #E4DCD0;border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:520px){.res{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/" class="cta-top">Essayer TiMat →</a>
+  </div></div>
+
+  <div class="hero"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> › <a href="/outils.html">Outils</a> › Simulateur indemnité d'entretien</div>
+    <span class="tag">Outil gratuit</span>
+    <h1>Simulateur d'indemnité d'entretien (2026)</h1>
+    <p class="lead">Calculez l'indemnité d'entretien due <strong>par jour</strong> et <strong>par mois</strong>, selon la durée d'accueil. Barème à jour de juin 2026.</p>
+  </div></div>
+
+  <main>
+    <div class="sim">
+      <h2>🏠 Votre simulation</h2>
+      <div class="sim-row"><label for="h">Heures d'accueil par jour</label><input id="h" type="number" inputmode="decimal" step="0.25" value="9"></div>
+      <div class="sim-row"><label for="d">Nombre de jours d'accueil dans le mois</label><input id="d" type="number" inputmode="decimal" value="20"></div>
+      <div class="res">
+        <div class="c a"><div class="lbl">Par jour</div><div class="val" id="jour">— €</div></div>
+        <div class="c b"><div class="lbl">Total du mois</div><div class="val" id="mois">— €</div></div>
+      </div>
+      <div class="note">Barème minimum depuis le 1er juin 2026. Le contrat peut prévoir un montant supérieur. Vérifiez sur Pajemploi (URSSAF).</div>
+    </div>
+
+    <h2>Le barème 2026 (depuis juin)</h2>
+    <table>
+      <tr><th>Durée d'accueil / jour</th><th>Indemnité due</th></tr>
+      <tr><td>Moins de 6h15</td><td>2,65 € (plancher)</td></tr>
+      <tr><td>Entre 6h15 et 9h</td><td>0,436 € × nombre d'heures</td></tr>
+      <tr><td>9h ou plus</td><td>3,92 € (forfait journée)</td></tr>
+    </table>
+    <div class="box">L'indemnité d'entretien couvre les frais réels de l'assmat (eau, électricité, chauffage, jeux, matériel). Elle est <strong>obligatoire</strong> pour chaque jour d'accueil, <strong>due dès la 1re heure</strong>, mais <strong>pas due si l'enfant est absent</strong>. Elle n'est <strong>pas mensualisée</strong>.</div>
+    <p>Bon à savoir : dans la limite du barème, l'indemnité d'entretien <strong>n'est pas soumise à cotisations</strong> et <strong>n'est pas imposable</strong> pour l'assmat. Elle ne compte pas non plus dans le calcul du CMG de la CAF (seul le salaire net compte).</p>
+    <div class="warn">💡 À ne pas confondre avec l'<strong>indemnité de repas</strong> (autre ligne, cumulable) ni avec les <strong>frais kilométriques</strong>. Les barèmes sont revalorisés : vérifiez la valeur en vigueur sur Pajemploi ou Service-Public.fr.</div>
+
+    <div class="ctabox">
+      <h2>TiMat calcule vos indemnités automatiquement</h2>
+      <p>Indemnités d'entretien et de repas calculées selon la présence réelle de l'enfant, et reportées sur votre déclaration Pajemploi.</p>
+      <a href="/" class="ctabtn">Essayer TiMat gratuitement →</a>
+    </div>
+
+    <div class="related">
+      <h2>Pour aller plus loin</h2>
+      <div class="chips">
+        <a class="chip" href="/simulateur-salaire-assistante-maternelle.html">🧮 Simulateur salaire</a>
+        <a class="chip" href="/simulateur-conges-payes-assistante-maternelle.html">🌴 Simulateur congés</a>
+        <a class="chip" href="/salaire-assistante-maternelle-net-brut.html">📄 Salaire net/brut</a>
+        <a class="chip" href="/outils.html">🛠️ Tous les outils</a>
+        <a class="chip" href="/">✨ L'application TiMat</a>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:16px">Outil non officiel, fourni à titre indicatif. Barème depuis juin 2026 ; vérifiez les valeurs sur Pajemploi (URSSAF) ou Service-Public.fr.</p>
+  </main>
+
+  <footer>
+    <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
+    <a href="/">Accueil</a> · <a href="/outils.html">Outils</a> · <a href="/blog.html">Blog</a>
+  </footer>
+
+  <script>
+    (function(){
+      var h=document.getElementById('h'),d=document.getElementById('d'),jour=document.getElementById('jour'),mois=document.getElementById('mois');
+      function eur(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+      function perDay(hh){ if(hh<=0)return 0; if(hh<6.25)return 2.65; if(hh<9)return hh*0.436; return 3.92; }
+      function calc(){
+        var hh=parseFloat(h.value)||0, dd=parseFloat(d.value)||0;
+        var pj=perDay(hh);
+        jour.textContent=pj>0?eur(pj):'— €';
+        mois.textContent=(pj>0&&dd>0)?eur(pj*dd):'— €';
+      }
+      [h,d].forEach(function(e){e.addEventListener('input',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
