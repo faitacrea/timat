@@ -11956,7 +11956,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
       const p=new URLSearchParams(window.location.search);
       if(p.get("role")==="parent"||p.has("invite")){ const tk=p.get("invite"); if(tk){try{localStorage.setItem("timat:invite",tk);}catch(e){}} setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
             else if(p.get("role")==="asmat"){ setRole("asmat"); setShowModal(true); }
-      else if(p.has("connexion")){ setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
+            else if(p.has("connexion")){ setRole("asmat"); setModeAuth("inscription"); setShowModal(true); }
 
     }catch(e){}
   },[]);
@@ -15675,6 +15675,4 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
       if(errJsonb&&!errText){
         report+="\n💡 Ta colonne config est de type TEXT, pas JSONB.\nL\'app gère ça automatiquement maintenant. Réessaie de sauvegarder.";
       }else if(!errJsonb&&errText){
-        report+="\n💡 Ta colonne config est de type JSONB. OK.";
-      }else if(errJsonb&&errText){
-        report+="\n🔴 Aucun format ne marche. Problème RLS probable.\n\nExécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL US
+        report+="\n�
