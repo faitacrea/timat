@@ -28,6 +28,11 @@
   .logo{font-family:'Fraunces',serif;font-weight:700;font-size:23px;color:var(--marine)}
   .logo span{color:var(--terra)}
   .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .cta-top{white-space:nowrap}
+  .nav-btns{display:flex;gap:10px;align-items:center}
+  .cta-ghost{background:#fff;color:var(--marine);font-weight:700;font-size:14px;padding:9px 16px;border-radius:10px;border:1.5px solid #E4D9CC;white-space:nowrap}
+  .cta-ghost:hover{border-color:var(--terra);color:var(--terraD)}
+  @media(max-width:440px){.cta-ghost,.cta-top{font-size:13px;padding:8px 12px}.nav-btns{gap:7px}}
   header.hero{max-width:900px;margin:0 auto;padding:40px 22px 10px;text-align:center}
   .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
   h1{font-family:'Fraunces',serif;font-size:clamp(28px,5vw,40px);color:var(--marine);margin-bottom:12px}
@@ -52,7 +57,7 @@
 <body>
   <div class="top"><div class="bar">
     <a href="/" class="logo" style="display:flex;align-items:center;gap:8px"><img src="/logo.png" alt="TiMat" style="height:30px" onerror="this.outerHTML='tim<span>at</span>'"></a>
-    <a href="/" class="cta-top">Essayer TiMat →</a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat →</a>
   </div></div>
 
   <header class="hero">
@@ -103,7 +108,7 @@
     </a>
   </div>
 
-  <div class="backcta"><a href="/" class="backbtn">Découvrir l'application TiMat →</a></div>
+  <div class="backcta"><a href="/" class="backbtn">Découvrir TiMat →</a></div>
 
   <footer>
     <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
