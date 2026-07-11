@@ -16642,6 +16642,7 @@ const BLOG_DEFAULT=[
               {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide clair (2026)",excerpt:"Formule officielle, année complète ou incomplète, congés payés et régularisation — avec un simulateur."},
               {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Paie",catColor:"#5DA9A1",emoji:"🌴",title:"Congés payés : 10 % ou maintien ?",excerpt:"Les deux méthodes comparées, la plus favorable retenue, +2 jours par enfant — avec un simulateur."},
               {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Paie",catColor:"#C84B31",emoji:"💶",title:"Salaire : net, brut et coût employeur",excerpt:"Brut, net, net imposable et coût réel pour le parent — avec un convertisseur brut ⇄ net."},
+              {id:"pajemploi",slug:"pajemploi-declaration-assistante-maternelle",cat:"Parents employeurs",catColor:"#2E4859",emoji:"🏦",title:"Déclaration Pajemploi pas à pas",excerpt:"De l'inscription à la déclaration mensuelle, et la nouveauté 2026 : une déclaration par enfant."},
             ];
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
