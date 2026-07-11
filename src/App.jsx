@@ -13211,6 +13211,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 {F.description}
               </div>
             </div>
+            {/* Guides & ressources (maillage interne SEO) */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
+              {[["Calcul de mensualisation","/calcul-mensualisation-assistante-maternelle.html"],["Congés payés","/conges-payes-assistante-maternelle.html"],["Salaire net, brut & coût","/salaire-assistante-maternelle-net-brut.html"],["Déclaration Pajemploi","/pajemploi-declaration-assistante-maternelle.html"],["Tous les guides","/blog.html"]].map(([label,href])=>
+                <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
+              )}
+            </div>
+            {/* Outils gratuits (maillage interne SEO) */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Outils gratuits</div>
+              {[["Simulateur de salaire","/simulateur-salaire-assistante-maternelle.html"],["Simulateur congés payés","/simulateur-conges-payes-assistante-maternelle.html"],["Indemnités d'entretien","/simulateur-indemnite-entretien-assistante-maternelle.html"],["Coût & CMG (parents)","/cout-assistante-maternelle-cmg-parents.html"],["Tous les outils","/outils.html"]].map(([label,href])=>
+                <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
+              )}
+            </div>
             {/* Liens */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
