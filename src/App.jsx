@@ -13365,7 +13365,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false})
 
       {/* MODALE AUTH */}
       {showModal && (
-        <div onClick={e => e.target === e.currentTarget && setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
+             <div onClick={e => e.target === e.currentTarget && setShowModal(false)} style={{ position: "fixed", inset: 0, background: new URLSearchParams(window.location.search).has("connexion") ? "linear-gradient(160deg,#FDFBF8 0%,#F6E7DC 55%,#E9B79E 100%)" : "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             <div style={{ padding: 24, borderTop: role === "asmat" ? "4px solid #C76754" : "4px solid #2E4859" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -15675,4 +15675,4 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
       if(errJsonb&&!errText){
         report+="\n💡 Ta colonne config est de type TEXT, pas JSONB.\nL\'app gère ça automatiquement maintenant. Réessaie de sauvegarder.";
       }else if(!errJsonb&&errText){
-        report+="\n�
+        report+="
