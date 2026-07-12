@@ -11915,7 +11915,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
     const IMG=SITE+"/logo.png"; const OGIMG=SITE+"/og-image.png";
     const DESC="TiMat, l'application des assistantes maternelles et parents employeurs : contrat conforme, calcul de mensualisation et de salaire, bulletin de paie, déclaration Pajemploi, planning, pointage des présences et cahier de liaison numérique. Simulateurs gratuits (salaire, CMG, indemnités).";
     const prevTitle=document.title;
-    document.title="TiMat — Application assistante maternelle : contrat, paie, planning & cahier de liaison";
+    document.title="Application assistante maternelle : salaire, Pajemploi | TiMat";
     const setMeta=(name,content)=>{
       let m=document.querySelector('meta[name="'+name+'"]');
       if(!m){m=document.createElement("meta");m.setAttribute("name",name);document.head.appendChild(m);}
@@ -16646,9 +16646,12 @@ const FAQ_LANDING_DEFAULT=[
             {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Toujours le même résultat, sans erreur."},
             {q:"TiMat prépare-t-il la déclaration Pajemploi ?",a:"Oui. Chaque mois, votre déclaration Pajemploi est préparée à partir de vos pointages réels, prête à reporter sur pajemploi.urssaf.fr. TiMat complète Pajemploi, il ne le remplace pas."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
+            {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
             {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
             {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. Vous arrêtez quand vous voulez, en un clic, et l'essai ne demande pas de carte bancaire. Pas de reconduction forcée ni de prélèvement surprise."},
             {q:"Les parents employeurs ont-ils aussi accès ?",a:"Oui. Chaque parent est invité par un lien et dispose de son espace : présences, paie, documents et messagerie. Tout est partagé, en toute transparence."},
+            {q:"Je suis parent employeur, qu'est-ce que TiMat m'apporte ?",a:"Votre espace parent regroupe présences, paie, documents et messagerie. Vous suivez le coût réel et le CMG, sans mauvaise surprise de plafond, et tout est partagé en toute transparence avec votre assistante maternelle."},
+            {q:"Comment fonctionne le cahier de liaison numérique ?",a:"Repas, sieste, activités et humeur se remplissent une seule fois, même pour plusieurs enfants, et le parent les consulte en temps réel. Tout est daté et gardé en historique : un compte-rendu factuel qui évite les oublis et les malentendus."},
             {q:"TiMat fonctionne-t-il sur mon téléphone ?",a:"Oui. TiMat fonctionne dans votre navigateur, sur téléphone, tablette et ordinateur, sans rien installer. Vous êtes opérationnelle en quelques minutes, sans formation."},
             {q:"Qui a créé TiMat ?",a:"TiMat a été créée par une assistante maternelle agréée, qui a vécu la montagne administrative du métier. Chaque fonction répond à un besoin réel : c'est conçu par une assmat, pour les assmats."},
           ];
@@ -17691,3 +17694,4 @@ export default function App(){
     </>
   );
 }
+
