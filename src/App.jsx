@@ -16585,7 +16585,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
           <BOCard title="Ordre des sections" icon="↕️">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Glissez-déposez une section pour la déplacer, ou utilisez les flèches. L'ordre s'applique à la page d'accueil (le Hero et le Footer restent à leurs extrémités).</div>
-            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",transformation:"Ce que ça change",chiffres:"Ce que disent les chiffres",temoignages:"Témoignages",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
+            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",transformation:"Ce que ça change",chiffres:"Ce que disent les chiffres",temoignages:"Témoignages",confidentialite:"Confidentialité & photos",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
               <div key={id}
                 draggable
                 onDragStart={()=>setDragSec(i)}
@@ -16937,7 +16937,7 @@ const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","signature","demo","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"],
+  sectionsOrder:["probleme","signature","demo","transformation","chiffres","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
