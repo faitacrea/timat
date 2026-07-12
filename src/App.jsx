@@ -12548,8 +12548,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* SECTION CONFIDENTIALITE P4 - photos privees / hebergement France (differentiateur vs concurrents) */}
-      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
-        <WaveDivider color={L.waveConf||"#FDFBF8"} on={L.wavesOn!==false}/>
+      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#FBF3EC,#F5E4D6)" }}>
+        <WaveDivider color={L.waveConf||"#FBF3EC"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 36 }}>
@@ -12664,6 +12664,11 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
             <div style={{ fontSize: 14, color: L.s6SubColor||"#6B7A82", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
+            <div style={{ display:"flex", justifyContent:"center", marginTop:-26, marginBottom:38 }}>
+              <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(184,98,47,.08)", border:"1px solid rgba(184,98,47,.25)", color:"#B8622F", fontWeight:700, fontSize:13.5, padding:"9px 18px", borderRadius:30, textAlign:"center", lineHeight:1.4 }}>
+                🎯 Un seul forfait — contrats illimités, aucun surcoût par contrat ni par enfant
+              </div>
+            </div>
           </FadeIn>
           <div className="lp-tarifs-grid">
             {/* Gratuit */}
