@@ -12548,8 +12548,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* SECTION CONFIDENTIALITE P4 - photos privees / hebergement France (differentiateur vs concurrents) */}
-      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#EEF4F1,#DFEAE4)" }}>
-        <WaveDivider color={L.waveConf||"#EEF4F1"} on={L.wavesOn!==false}/>
+      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
+        <WaveDivider color={L.waveConf||"#FDFBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 36 }}>
@@ -12658,12 +12658,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* SECTION 6 - TARIFS */}
-      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#F4F1EA" }}>
-        <WaveDivider color={L.wave6||L.section6Bg||"#F4F1EA"} on={L.wavesOn!==false}/>
+      {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#2E4859" }}>
+        <WaveDivider color={L.wave6||L.section6Bg||"#2E4859"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
-            <div style={{ fontSize: 14, color: L.s6SubColor||"#6B7A82", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
+            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
+            <div style={{ fontSize: 14, color: L.s6SubColor||"rgba(255,255,255,.72)", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
           </FadeIn>
           <div className="lp-tarifs-grid">
             {/* Gratuit */}
@@ -12700,12 +12700,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               ))}
             </div>
           </div>
-          <div className="lp-guarantees">
+          <div className="lp-guarantees" style={{color:"rgba(255,255,255,.8)"}}>
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
           <FadeIn>
             <div style={{ maxWidth:620, margin:"26px auto 0", background:L.tarifCompareBg||"#FFFFFF", border:"1px solid #E8E0D5", borderRadius:12, padding:"14px 18px", fontSize:13, color:"#5A6B72", lineHeight:1.55, textAlign:"center" }}>
-              💡 <b style={{color:"#2E4859"}}>La différence :</b> les autres facturent <b>par contrat</b> (la facture grimpe vite avec plusieurs enfants). Chez TiMat, <b style={{color:"#2E4859"}}>un seul prix, contrats illimités</b> — et l'essai <b style={{color:"#2E4859"}}>sans carte bancaire</b>.
+              💡 <b style={{color:"#2E4859"}}>Un seul prix, quel que soit votre nombre de contrats</b> — aucun surcoût par enfant. Essai 2 mois, sans carte bancaire.
             </div>
           </FadeIn>
         </div>
@@ -12726,13 +12726,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* FAQ */}
-      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: L.faqBg||"#2E4859" }}>
-        <WaveDivider color={L.waveFaq||L.faqBg||"#2E4859"} on={L.wavesOn!==false}/>
+      {SV.faq!==false&&<div className="lp-section" style={{ order:ord("faq"), background: L.faqBg||"#FDFBF8" }}>
+        <WaveDivider color={L.waveFaq||L.faqBg||"#FDFBF8"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.faqTitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
-              <div style={{ fontSize: 15, color: L.faqDescColor||"rgba(255,255,255,.65)" }}>Tout ce que vous devez savoir avant de commencer.</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.faqTitleColor||"#2E4859", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
+              <div style={{ fontSize: 15, color: L.faqDescColor||"#6B7A82" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
           {(config.faqLanding||DEFAULT_CONFIG.faqLanding).map(({q,a},i)=>(
@@ -12750,12 +12750,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* BLOG */}
-      {SV.blog===true&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: L.blogBg||"#FDFBF8" }}>
+      {SV.blog===true&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: L.blogBg||"#2E4859" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.blogTitleColor||"#2E4859", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
-              <div style={{ fontSize: 15, color: L.blogDescColor||"#5F7A86" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
+              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.blogTitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
+              <div style={{ fontSize: 15, color: L.blogDescColor||"rgba(255,255,255,.7)" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
@@ -13224,8 +13224,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: L.footerBg||"#2E4859", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.7)", position:"relative" }}>
-        <WaveDivider color={L.waveFooter||L.footerBg||"#2E4859"} on={L.wavesOn!==false}/>
+      <footer style={{ background: L.footerBg||"#264D47", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.7)", position:"relative" }}>
+        <WaveDivider color={L.waveFooter||L.footerBg||"#264D47"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
