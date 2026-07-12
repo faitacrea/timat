@@ -12548,8 +12548,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* SECTION CONFIDENTIALITE P4 - photos privees / hebergement France (differentiateur vs concurrents) */}
-      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#FBF3EC,#F5E4D6)" }}>
-        <WaveDivider color={L.waveConf||"#FBF3EC"} on={L.wavesOn!==false}/>
+      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#EEF4F1,#DFEAE4)" }}>
+        <WaveDivider color={L.waveConf||"#EEF4F1"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 940, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 36 }}>
@@ -12664,11 +12664,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
             <div style={{ fontSize: 14, color: L.s6SubColor||"#6B7A82", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
-            <div style={{ display:"flex", justifyContent:"center", marginTop:-26, marginBottom:38 }}>
-              <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(184,98,47,.08)", border:"1px solid rgba(184,98,47,.25)", color:"#B8622F", fontWeight:700, fontSize:13.5, padding:"9px 18px", borderRadius:30, textAlign:"center", lineHeight:1.4 }}>
-                🎯 Un seul forfait — contrats illimités, aucun surcoût par contrat ni par enfant
-              </div>
-            </div>
           </FadeIn>
           <div className="lp-tarifs-grid">
             {/* Gratuit */}
@@ -16675,7 +16670,6 @@ const logoForRole = (role, dark) => {
 const FAQ_LANDING_DEFAULT=[
             {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. La formule Pro à 9,99€/mois débloque les contrats illimités et toutes les fonctions, et elle est offerte pendant 2 mois pour l'essayer, sans engagement."},
             {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Toujours le même résultat, sans erreur."},
-            {q:"TiMat prépare-t-il la déclaration Pajemploi ?",a:"Oui. Chaque mois, votre déclaration Pajemploi est préparée à partir de vos pointages réels, prête à reporter sur pajemploi.urssaf.fr. TiMat complète Pajemploi, il ne le remplace pas."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
             {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
             {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
