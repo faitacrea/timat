@@ -11968,7 +11968,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
-  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","chiffres","temoignages","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","chiffres","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
@@ -12542,6 +12542,32 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{ marginTop: 14, fontSize: 11, color: "#93A0A2" }}>
                 Gratuit · Sans engagement · Conforme à la loi
               </div>
+            </div>
+          </FadeIn>
+        </div>
+      </div>}
+
+      {/* SECTION CONFIDENTIALITE P4 - photos privees / hebergement France (differentiateur vs concurrents) */}
+      {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
+        <WaveDivider color={L.waveConf||"#FDFBF8"} on={L.wavesOn!==false}/>
+        <div style={{ maxWidth: 940, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign:"center", marginBottom: 36 }}>
+              <div style={{ fontFamily:fTitle, fontSize:"clamp(22px,4vw,34px)", color:"#2E4859", fontWeight:700, marginBottom:10 }}>Vos photos et vos données restent chez vous</div>
+              <div style={{ fontSize:15, color:"#6B7A82", maxWidth:560, margin:"0 auto", lineHeight:1.6 }}>La confiance avant tout : rien n'est jamais public, rien ne part sur les réseaux sociaux.</div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:18 }}>
+              {[
+                ["\U0001F4F8","Photos privées","Partagées uniquement entre vous et le parent, dans l'espace sécurisé. Jamais publiques, jamais sur les réseaux sociaux."],
+                ["\U0001F1EB\U0001F1F7","Hébergées en France","Vos données et celles des enfants ne quittent pas le territoire. Conformes RGPD, chiffrées en transit et au repos."],
+                ["\U0001F5D1\uFE0F","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
+              ].map(([emo,t,d])=>(
+                <div key={t} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:16, padding:"24px 20px", textAlign:"center", boxShadow:"0 4px 16px rgba(46,72,89,.05)" }}>
+                  <div style={{ fontSize:34, marginBottom:10 }}>{emo}</div>
+                  <div style={{ fontFamily:fTitle, fontSize:17, fontWeight:700, color:"#2E4859", marginBottom:8 }}>{t}</div>
+                  <div style={{ fontSize:13.5, color:"#6B7A82", lineHeight:1.6 }}>{d}</div>
+                </div>
+              ))}
             </div>
           </FadeIn>
         </div>
