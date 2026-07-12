@@ -13224,14 +13224,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: L.footerBg||"#264D47", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.7)", position:"relative" }}>
-        <WaveDivider color={L.waveFooter||L.footerBg||"#264D47"} on={L.wavesOn!==false}/>
+      <footer style={{ background: L.footerBg||"#A23C25", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.7)", position:"relative" }}>
+        <WaveDivider color={L.waveFooter||L.footerBg||"#A23C25"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L?.logoUrl || "/logo-dark.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 {F.description}
@@ -13239,21 +13239,21 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             </div>
             {/* Guides & ressources (maillage interne SEO) */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
               {[["Calcul de mensualisation","/calcul-mensualisation-assistante-maternelle.html"],["Congés payés","/conges-payes-assistante-maternelle.html"],["Salaire net, brut & coût","/salaire-assistante-maternelle-net-brut.html"],["Déclaration Pajemploi","/pajemploi-declaration-assistante-maternelle.html"],["Tous les guides","/blog.html"]].map(([label,href])=>
                 <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
             {/* Outils gratuits (maillage interne SEO) */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Outils gratuits</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Outils gratuits</div>
               {[["Simulateur de salaire","/simulateur-salaire-assistante-maternelle.html"],["Simulateur congés payés","/simulateur-conges-payes-assistante-maternelle.html"],["Indemnités d'entretien","/simulateur-indemnite-entretien-assistante-maternelle.html"],["Coût & CMG (parents)","/cout-assistante-maternelle-cmg-parents.html"],["Tous les outils","/outils.html"]].map(([label,href])=>
                 <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
             {/* Liens */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
               {[["Mentions légales","mentions"],["Conditions générales d'utilisation","cgu"],["Politique de confidentialité","confidentialite"]].map(([label,id])=>
                 <div key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 12, color: "rgba(255,255,255,.6)", cursor: "pointer", padding: "4px 0", transition: "color .15s" }}
                   onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</div>
@@ -13261,7 +13261,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             </div>
             {/* Contact */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Contact</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Contact</div>
               <div style={{ fontSize: 12, lineHeight: 2, color: "rgba(255,255,255,.6)" }}>
                 📧 {F.contactEmail}<br/>
                 🌐 {F.contactWeb}<br/>
@@ -13270,7 +13270,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             </div>
             {/* RGPD */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
               <div style={{ fontSize: 11, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 {(F.rgpd||[]).map((line,i)=><span key={i} style={{display:"block"}}>{line}</span>)}
               </div>
