@@ -12558,9 +12558,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:18 }}>
               {[
-                ["\U0001F4F8","Photos privées","Partagées uniquement entre vous et le parent, dans l'espace sécurisé. Jamais publiques, jamais sur les réseaux sociaux."],
-                ["\U0001F1EB\U0001F1F7","Hébergées en France","Vos données et celles des enfants ne quittent pas le territoire. Conformes RGPD, chiffrées en transit et au repos."],
-                ["\U0001F5D1\uFE0F","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
+                ["📸","Photos privées","Partagées uniquement entre vous et le parent, dans l'espace sécurisé. Jamais publiques, jamais sur les réseaux sociaux."],
+                ["🇫🇷","Hébergées en France","Vos données et celles des enfants ne quittent pas le territoire. Conformes RGPD, chiffrées en transit et au repos."],
+                ["🗑️","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
               ].map(([emo,t,d])=>(
                 <div key={t} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:16, padding:"24px 20px", textAlign:"center", boxShadow:"0 4px 16px rgba(46,72,89,.05)" }}>
                   <div style={{ fontSize:34, marginBottom:10 }}>{emo}</div>
