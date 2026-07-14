@@ -13224,8 +13224,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
 
       {/* FOOTER */}
-      <footer style={{ background: L.footerBg||"#C84B31", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.7)", position:"relative" }}>
-        <WaveDivider color={L.waveFooter||L.footerBg||"#C84B31"} on={L.wavesOn!==false}/>
+      <footer style={{ background: L.footerBg||"#C46A5C", padding: "48px 24px 24px", color: L.footerTextColor||"rgba(255,255,255,.85)", position:"relative" }}>
+        <WaveDivider color={L.waveFooter||L.footerBg||"#C46A5C"} on={L.wavesOn!==false}/>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
             {/* Logo + description */}
