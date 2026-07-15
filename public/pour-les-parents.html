@@ -509,5 +509,10 @@
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
   document.querySelectorAll('.fade').forEach(function(el){io.observe(el);});
 </script>
+<button id="totop" aria-label="Remonter en haut" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="position:fixed;right:18px;bottom:20px;z-index:300;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#90A093,#5F7360);color:#fff;font-size:20px;box-shadow:0 8px 24px rgba(95,115,96,.4);display:none">↑</button>
+<script>
+  var tb=document.getElementById('totop');
+  window.addEventListener('scroll',function(){tb.style.display=window.scrollY>400?'block':'none';});
+</script>
 </body>
 </html>
