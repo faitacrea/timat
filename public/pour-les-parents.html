@@ -196,6 +196,22 @@
   .dcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:9px}
   .dcal span{aspect-ratio:1;border-radius:5px;background:#fff;border:1px solid var(--br);font-size:8px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
   .dcal span.p{background:rgba(93,169,161,.22);border-color:rgba(93,169,161,.4);color:#2E7F73;font-weight:700}
+
+  .dhero{background:linear-gradient(160deg,#FDF6EE,#FBEFE6);border:1px solid #F2E3D6;border-radius:14px;padding:11px;margin-bottom:10px}
+  .ddate{display:inline-block;background:#fff;border-radius:20px;padding:3px 9px;font-size:7.5px;font-family:'DM Mono',monospace;color:#5B7FA8;letter-spacing:.5px;margin-bottom:6px;font-weight:700}
+  .dtitle{font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:var(--marine);margin-bottom:2px}
+  .dsub{font-size:9.5px;color:var(--muted);margin-bottom:8px}
+  .dabs{display:inline-block;background:#2E4859;color:#fff;font-size:9px;font-weight:700;padding:6px 11px;border-radius:9px}
+  .dq{font-size:9px;font-weight:700;color:var(--muted);margin:9px 0 6px}
+  .dchips{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:9px}
+  .dchip{border-radius:10px;padding:8px 3px;text-align:center;font-size:7.5px;font-weight:700}
+  .dchip i{display:block;font-size:14px;font-style:normal;margin-bottom:2px}
+  .dsec{font-size:8px;font-weight:700;color:#B08D7A;letter-spacing:.6px;margin-bottom:6px}
+  .dmenu{background:#fff;border-radius:12px;padding:4px}
+  .dmi{display:flex;align-items:center;gap:8px;padding:7px 6px}
+  .dmi i{font-size:14px;font-style:normal;width:20px;text-align:center}
+  .dmi b{display:block;font-size:10px;color:var(--marine);font-weight:700}
+  .dmi span{display:block;font-size:8px;color:var(--muted)}
   .dcal span.a{background:rgba(200,75,49,.12);border-color:rgba(200,75,49,.3);color:var(--terraD)}
 </style>
 </head>
@@ -224,15 +240,14 @@
   <div class="wrap">
     <div class="sectitle fade">
       <h2>Votre espace parent, en vrai</h2>
-      <p>Cliquez sur chaque rubrique pour découvrir ce que vous verrez dans votre application.</p>
+      <p>Trois onglets, tout est là. Cliquez pour découvrir ce que vous verrez dans votre espace.</p>
     </div>
     <div class="demo-layout fade">
 
       <div class="demo-tabs" id="dtabs">
-        <button class="dtab on" data-p="quotidien"><span class="di">🏠</span><span class="dl">Le quotidien</span></button>
-        <button class="dtab" data-p="presences"><span class="di">📅</span><span class="dl">Présences & planning</span></button>
-        <button class="dtab" data-p="cout"><span class="di">💶</span><span class="dl">Coût & paie</span></button>
-        <button class="dtab" data-p="messagerie"><span class="di">💬</span><span class="dl">Messagerie</span></button>
+        <button class="dtab on" data-p="accueil"><span class="di">🏠</span><span class="dl">Accueil</span></button>
+        <button class="dtab" data-p="enfant"><span class="di">👶</span><span class="dl">Mon enfant</span></button>
+        <button class="dtab" data-p="admin"><span class="di">🗂️</span><span class="dl">Administratif</span></button>
       </div>
 
       <div class="demo-explain">
@@ -245,59 +260,58 @@
           <div class="demo-notch"></div>
           <div class="demo-frame">
             <div class="dtopbar">
-              <span class="dlogo">tim<i>at</i></span>
-              <span class="dav">👶</span>
+              <span class="dlogo">tim<i>at</i> <small style="font-size:7px;color:#9AAAB2;font-family:'DM Mono',monospace">v3</small></span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:10px">🔔 🌙 ⚙️ <b style="font-size:9px;color:var(--marine)">Julie</b></span>
             </div>
             <div class="dbody">
 
-              <div class="dscreen on" data-s="quotidien">
-                <div class="dh">Léa, 14 mois · aujourd'hui</div>
-                <div class="drow"><span class="e">🍼</span><span><span class="t">Biberon</span><span class="d">210 ml — bien terminé</span></span><span class="h">9:15</span></div>
-                <div class="drow"><span class="e">🥕</span><span><span class="t">Repas</span><span class="d">Purée carottes — a tout mangé</span></span><span class="h">11:45</span></div>
-                <div class="drow"><span class="e">😴</span><span><span class="t">Sieste</span><span class="d">1h40 — réveil tout sourire</span></span><span class="h">12:30</span></div>
-                <div class="drow"><span class="e">📸</span><span><span class="t">Photo du jour</span><span class="d">Peinture aux doigts !</span></span><span class="h">15:20</span></div>
-                <div class="drow"><span class="e">🚼</span><span><span class="t">Change</span><span class="d">RAS</span></span><span class="h">16:00</span></div>
-              </div>
-
-              <div class="dscreen" data-s="presences">
-                <div class="dh">Juillet 2026</div>
-                <div class="dcal">
-                  <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
-                  <span class="p">1</span><span class="p">2</span><span class="p">3</span><span class="p">4</span><span class="p">5</span><span>6</span><span>7</span>
-                  <span class="p">8</span><span class="p">9</span><span class="a">10</span><span class="p">11</span><span class="p">12</span><span>13</span><span>14</span>
-                  <span class="p">15</span><span class="p">16</span><span class="p">17</span><span class="p">18</span><span class="p">19</span><span>20</span><span>21</span>
+              <div class="dscreen on" data-s="accueil">
+                <div class="dhero">
+                  <span class="ddate">MERCREDI 15 JUILLET 2026</span>
+                  <div class="dtitle">La journée de Chloé ✨</div>
+                  <div class="dsub">Suivez son quotidien en temps réel.</div>
+                  <span class="dabs">🤒 Déclarer une absence</span>
                 </div>
-                <div class="drow"><span class="e">⏱️</span><span><span class="t">Arrivée</span><span class="d">Pointée par l'assistante maternelle</span></span><span class="h">8:30</span></div>
-                <div class="drow"><span class="e">🏁</span><span><span class="t">Départ</span><span class="d">Présence du jour : 8h30</span></span><span class="h">17:00</span></div>
-                <div class="drow"><span class="e">📄</span><span><span class="t">Feuille de présence</span><span class="d">Juillet — prête à signer</span></span><span class="h">✓</span></div>
-              </div>
-
-              <div class="dscreen" data-s="cout">
-                <div class="dcard">
-                  <div class="lbl">Reste à charge estimé</div>
-                  <div class="val">312,40 €</div>
-                  <div class="sub">après CMG et crédit d'impôt</div>
+                <div class="dq">Que voulez-vous faire ?</div>
+                <div class="dchips">
+                  <div class="dchip" style="background:#FBF0DC;color:#9A7B3F"><i>📔</i>La journée</div>
+                  <div class="dchip" style="background:#E7F3EF;color:#2E7F73"><i>⏰</i>Pointer</div>
+                  <div class="dchip" style="background:#FBEDE7;color:var(--terraD)"><i>💬</i>Messages</div>
+                  <div class="dchip" style="background:#E8EEF8;color:#3E6394"><i>📄</i>Documents</div>
                 </div>
-                <div class="drow"><span class="e">💶</span><span><span class="t">Salaire net</span><span class="d">Mensualisation + heures compl.</span></span><span class="h">742 €</span></div>
-                <div class="drow"><span class="e">🏦</span><span><span class="t">CMG estimé</span><span class="d">Versé par la CAF</span></span><span class="h">-430 €</span></div>
-                <div class="drow"><span class="e">🍽️</span><span><span class="t">Indemnités</span><span class="d">Entretien & repas</span></span><span class="h">96 €</span></div>
-                <div class="drow"><span class="e">📋</span><span><span class="t">Récap Pajemploi</span><span class="d">Prêt à reporter</span></span><span class="h">✓</span></div>
+                <div class="drow"><span class="e">🦋</span><span><span class="t">Chloé — Arrivée</span><span class="d">Un tap pour enregistrer l'arrivée</span></span><span class="h">✅</span></div>
+                <div class="drow"><span class="e">📔</span><span><span class="t">Cahier du jour de Chloé</span><span class="d">Repas, siestes, activités, photos</span></span><span class="h">→</span></div>
               </div>
 
-              <div class="dscreen" data-s="messagerie">
-                <div class="dh">Conversation</div>
-                <div class="dmsg them"><span class="who">Assistante maternelle</span>Léa a très bien mangé ce midi et fait une belle sieste 😊</div>
-                <div class="dmsg me"><span class="who">Vous</span>Merci ! Elle a un peu de fièvre hier soir, à surveiller.</div>
-                <div class="dmsg them"><span class="who">Assistante maternelle</span>Bien noté, je surveille. Photo de l'atelier peinture juste après 🎨</div>
-                <div class="dmsg me"><span class="who">Vous</span>Parfait, on arrive vers 17h30 ce soir.</div>
+              <div class="dscreen" data-s="enfant">
+                <div class="dsec">MON ENFANT</div>
+                <div class="dmenu">
+                  <div class="dmi"><i>📔</i><span><b>Journée</b><span>Sa journée : repas, sieste, activités</span></span></div>
+                  <div class="dmi"><i>⏰</i><span><b>Pointage</b><span>Heures de présence et absences</span></span></div>
+                  <div class="dmi"><i>📊</i><span><b>Suivi & Progrès</b><span>Son développement au quotidien</span></span></div>
+                  <div class="dmi"><i>🏥</i><span><b>Santé & Urgence</b><span>Fiche d'urgence et informations santé</span></span></div>
+                  <div class="dmi"><i>🌿</i><span><b>Projet d'accueil</b><span>Le projet pédagogique</span></span></div>
+                  <div class="dmi"><i>✨</i><span><b>Bilans</b><span>Bilans partagés par l'assistante maternelle</span></span></div>
+                </div>
+              </div>
+
+              <div class="dscreen" data-s="admin">
+                <div class="dsec">ADMINISTRATIF</div>
+                <div class="dmenu">
+                  <div class="dmi"><i>📅</i><span><b>Calendrier</b><span>Planning, absences et événements</span></span></div>
+                  <div class="dmi"><i>💬</i><span><b>Messagerie</b><span>Échanges avec l'assistante maternelle</span></span></div>
+                  <div class="dmi"><i>💶</i><span><b>Aides & Simulateurs</b><span>CMG et estimation du coût de garde</span></span></div>
+                  <div class="dmi"><i>🧾</i><span><b>Mon contrat</b><span>Contrat, bulletins et paiements</span></span></div>
+                  <div class="dmi"><i>🗂️</i><span><b>Documents & Attestations</b><span>Vos documents et attestations</span></span></div>
+                  <div class="dmi"><i>❓</i><span><b>Centre d'aide</b><span>Guides et contact</span></span></div>
+                </div>
               </div>
 
             </div>
             <div class="dnav">
-              <span class="on" data-n="quotidien"><i>🏠</i>Accueil</span>
-              <span data-n="presences"><i>📅</i>Planning</span>
-              <span data-n="cout"><i>💶</i>Paie</span>
-              <span data-n="messagerie"><i>💬</i>Messages</span>
+              <span class="on" data-n="accueil"><i>🏠</i>Accueil</span>
+              <span data-n="enfant"><i>👶</i>Mon enfant</span>
+              <span data-n="admin"><i>🗂️</i>Administratif</span>
             </div>
           </div>
         </div>
@@ -476,10 +490,9 @@
 
 <script>
   var DEXP={
-    quotidien:{d:"Toute la journée de votre enfant, en un coup d'œil.",p:["Repas, sieste, change et activités notés au fil de la journée","Les photos partagées, uniquement avec vous"]},
-    presences:{d:"Les heures réelles, tracées et partagées.",p:["Arrivée et départ pointés, sans discussion possible","Feuille de présence mensuelle prête à signer"]},
-    cout:{d:"Ce que vous payez vraiment, sans zone d'ombre.",p:["Salaire, indemnités, CMG et reste à charge détaillés","Récapitulatif Pajemploi prêt à reporter"]},
-    messagerie:{d:"Le lien avec votre assistante maternelle, au quotidien.",p:["Messages datés et rassemblés, pour les deux parents","Notifications en temps réel"]}
+    accueil:{d:"Sa journée en temps réel, dès l'ouverture.",p:["Pointez l'arrivée et le départ en un tap","Le cahier du jour : repas, siestes, activités et photos","Déclarez une absence en deux clics"]},
+    enfant:{d:"Tout ce qui concerne votre enfant, au même endroit.",p:["Sa journée, son pointage et ses progrès","Fiche santé & urgence toujours à jour","Projet d'accueil et bilans partagés"]},
+    admin:{d:"Votre rôle d'employeur, simplifié.",p:["Calendrier, messagerie et documents","Aides & simulateurs : CMG et coût de garde","Contrat, bulletins et paiements suivis"]}
   };
   function dgo(p){
     document.querySelectorAll('.dtab').forEach(function(b){b.classList.toggle('on',b.dataset.p===p);});
@@ -490,7 +503,7 @@
   }
   document.querySelectorAll('.dtab').forEach(function(b){b.addEventListener('click',function(){dgo(b.dataset.p);});});
   document.querySelectorAll('.dnav span').forEach(function(e){e.addEventListener('click',function(){dgo(e.dataset.n);});});
-  dgo('quotidien');
+  dgo('accueil');
 </script>
 <script>
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
