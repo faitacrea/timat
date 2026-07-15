@@ -1867,7 +1867,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
             {[
               ["Prévues",heuresPrev+"h","var(--B)"],
               ["Réalisées",Math.floor(heuresMois/60)+"h"+String(heuresMois%60).padStart(2,"0"),"var(--S)"],
-              ["Solde",(soldeMin>=0?"+":"")+Math.floor(soldeMin)+"h",soldeMin<0?"var(--R)":"var(--S)"]
+              ["Solde",(soldeMin>=0?"+":"-")+Math.floor(Math.abs(soldeMin)/60)+"h"+String(Math.abs(soldeMin)%60).padStart(2,"0"),soldeMin<0?"var(--R)":"var(--S)"]
             ].map(([l,v,c])=>
               <div key={l}style={{background:"var(--c)",borderRadius:10,padding:12,textAlign:"center"}}>
                 <div className="pf"style={{fontSize:20,fontWeight:700,color:c}}>{v}</div>
@@ -6314,7 +6314,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Taux horaire net</span><span style={{fontWeight:600,color:"var(--b)"}}>3,80 €</span></div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--m)"}}>Indemnités entretien</span><span style={{fontWeight:600,color:"var(--b)"}}>+ 92,40 €</span></div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:12}}><span style={{color:"var(--m)"}}>Indemnités repas</span><span style={{fontWeight:600,color:"var(--b)"}}>+ 63,00 €</span></div>
-              <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid var(--br)",paddingTop:12,fontSize:15}}><span style={{fontWeight:700,color:"var(--b)"}}>Net à payer</span><span style={{fontWeight:800,color:"var(--T)"}}>1 731,75 €</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid var(--br)",paddingTop:12,fontSize:15}}><span style={{fontWeight:700,color:"var(--b)"}}>Net à payer</span><span style={{fontWeight:800,color:"var(--T)"}}>731,75 €</span></div>
               <div style={{display:"flex",gap:8,marginTop:16}}>
                 <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>📄 Aperçu PDF</div>
                 <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>⬇️ Télécharger</div>
@@ -11587,7 +11587,7 @@ function ScrollTopBtn(){
     return()=>window.removeEventListener("scroll",onScroll);
   },[]);
   return <button aria-label="Remonter en haut" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
-    style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(200,75,49,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
+    style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#90A093,#5F7360)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(200,75,49,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
 }
 
 function OutilsGratuits({onClose,onCta}){
