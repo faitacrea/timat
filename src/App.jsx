@@ -11863,8 +11863,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
     window.addEventListener("scroll",onScroll,{passive:true});
     return()=>window.removeEventListener("scroll",onScroll);
   },[preview]);
-  const [role, setRole] = useState("asmat");
-  const [modeAuth, setModeAuth] = useState("inscription");
+  const _qParent=(()=>{try{return new URLSearchParams(window.location.search).get("connexion")==="parent";}catch(e){return false;}})();
+  const [role, setRole] = useState(_qParent?"parent":"asmat");
+  const [modeAuth, setModeAuth] = useState(_qParent?"connexion":"inscription");
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12217,8 +12218,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:32,objectFit:"contain",flexShrink:0,cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
-              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")setShowBoutique(true); else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+              {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")setShowBoutique(true); else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
               )}
@@ -12239,8 +12240,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           {/* Desktop nav : onglets visibles + Se connecter */}
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
             <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
-              {[["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")setShowBoutique(true); else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+              {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
+                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")setShowBoutique(true); else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
@@ -12263,6 +12264,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 ["🛒","Boutique","Kits, fiches et templates prêts à l'emploi","boutique","#E49178"],
               ]},
               {sec:"Découvrir TiMat",items:[
+                ["👨‍👩‍👧","Pour les parents","Ce que votre espace parent propose","parents-page","#5DA9A1"],
                 ["✨","Fonctionnalités","Cahier de liaison, paie, contrats, déclarations","demo","#5DA9A1"],
                 ["💶","Tarifs","Forfaits Gratuit et Pro","tarifs","#C09553"],
                 ["🔑","Connexion / Inscription","Accéder à votre espace","login","#2E4859"],
@@ -12270,7 +12272,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             ].map(g=><div key={g.sec} style={{marginBottom:6}}>
               <div style={{fontSize:10.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
               {g.items.map(([ic,label,desc,target,c])=>
-                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog.html";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/pour-les-parents.html";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")setShowBoutique(true);else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog.html";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                   style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
                   onMouseEnter={e=>{e.currentTarget.style.background=c+"14";e.currentTarget.style.transform="translateX(4px)";e.currentTarget.style.boxShadow="0 4px 14px "+c+"22";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
                   <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
@@ -13240,7 +13242,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {/* Guides & ressources (maillage interne SEO) */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
-              {[["Calcul de mensualisation","/calcul-mensualisation-assistante-maternelle.html"],["Congés payés","/conges-payes-assistante-maternelle.html"],["Salaire net, brut & coût","/salaire-assistante-maternelle-net-brut.html"],["Déclaration Pajemploi","/pajemploi-declaration-assistante-maternelle.html"],["Tous les guides","/blog.html"]].map(([label,href])=>
+              {[["Pour les parents","/pour-les-parents.html"],["Calcul de mensualisation","/calcul-mensualisation-assistante-maternelle.html"],["Congés payés","/conges-payes-assistante-maternelle.html"],["Salaire net, brut & coût","/salaire-assistante-maternelle-net-brut.html"],["Déclaration Pajemploi","/pajemploi-declaration-assistante-maternelle.html"],["Tous les guides","/blog.html"]].map(([label,href])=>
                 <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
