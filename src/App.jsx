@@ -11587,7 +11587,7 @@ function ScrollTopBtn(){
     return()=>window.removeEventListener("scroll",onScroll);
   },[]);
   return <button aria-label="Remonter en haut" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
-    style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#90A093,#5F7360)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(200,75,49,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
+    style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#90A093,#5F7360)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(95,115,96,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
 }
 
 function OutilsGratuits({onClose,onCta}){
