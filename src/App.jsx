@@ -11970,6 +11970,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
+  const TABLE_ROWS_DEFAULT=`🧮|Les calculs|Salaire, mensualisation, congés, indemnités|Des heures la tête dans les calculs, chaque fin de mois|Calculés tout seuls, à partir de vos présences réelles\n⚖️|La conformité|Convention collective IDCC 3239|La peur de se tromper, et de devoir régulariser|Toujours conformes, mis à jour avec la convention\n🗂️|Vos papiers|Contrats, bulletins, attestations|Éparpillés entre classeurs, mails et cartons|Un dossier par enfant, tout au même endroit\n🔍|Retrouver un document|Le jour où on vous le demande|Introuvable, et il faut tout ressortir|Retrouvé en 2 clics, gardé en sécurité\n💸|Les paiements|Suivi des versements|Courir après, sans oser relancer|Suivi clair et relances automatiques\n🧸|Votre temps|Ce pour quoi vous faites ce métier|Volé par l'administratif, le soir et le week-end|L'esprit libre pour les enfants`;
   const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","chiffres","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
@@ -12338,28 +12339,39 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.65)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
           </FadeIn>
-          {/* En-tetes colonnes (web) */}
-          <div className="combo-head" style={{ display:"flex", gap:10, marginTop:32, marginBottom:8 }}>
-            <div style={{ flex:"1 1 260px", textAlign:"center", fontSize:11, fontWeight:800, letterSpacing:".4px", textTransform:"uppercase", color:L.comboLabelBeforeColor||"#F0A58F", background:"rgba(200,75,49,.16)", borderRadius:9, padding:"7px" }}>{L.comboLabelBefore||"😩 Aujourd'hui"}</div>
-            <div style={{ flex:"1 1 240px", textAlign:"center", fontSize:11, fontWeight:800, letterSpacing:".4px", textTransform:"uppercase", color:L.comboLabelAfterColor||"#8FD4CB", background:"rgba(93,169,161,.18)", borderRadius:9, padding:"7px" }}>{L.comboLabelAfter||"✅ Avec TiMat"}</div>
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {((L.comboRows&&L.comboRows.trim())?L.comboRows:"😩|Des heures la tête dans les calculs|Salaire, congés, indemnités calculés tout seuls\n😰|La peur de se tromper dans une déclaration|Des calculs fiables, conformes à la convention\n🗂️|Des papiers éparpillés entre classeurs et cartons|Tout est organisé, un dossier par enfant\n🔍|Un papier introuvable le jour où il faut|Retrouvé en 2 clics, gardé en sécurité\n💸|Courir après les paiements|Suivi des versements + relances en 1 clic\n🧸|Du temps volé à votre vrai métier|L'esprit libre pour les enfants").split("\n").filter(Boolean).map((line,i)=>{
-              const p=line.split("|"); const ic=(p[0]||"").trim(), pb=(p[1]||"").trim(), sol=(p[2]||"").trim();
-              return <FadeIn key={i} delay={i*70}>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:10, alignItems:"stretch" }}>
-                  <div style={{ flex:"1 1 260px", display:"flex", gap:10, alignItems:"center", minWidth:0, background:L.comboPbBg||"#F7ECE7", borderRadius:12, padding:"13px 15px" }}>
-                    <span style={{ fontSize:22, flexShrink:0 }}>{ic}</span>
-                    <span style={{ fontSize:13, color:L.comboPbColor||"#7A544A", lineHeight:1.35, fontWeight:500 }}>{pb}</span>
+          {/* TABLEAU COMPARATIF Sans/Avec (editable back-office : L.tableRows) */}
+          <div style={{ marginTop:30, maxWidth:760, marginLeft:"auto", marginRight:"auto", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:16, overflow:"hidden" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr" }}>
+              <div style={{ padding:"11px 12px" }}></div>
+              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:10.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboPbColor||"#FF8C82", background:"rgba(255,140,130,.09)" }}>{L.comboLabelBefore||"Sans TiMat"}</div>
+              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:10.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboSolColor||"#83C0B8", background:"rgba(131,192,184,.11)" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
+            </div>
+            {((L.tableRows&&L.tableRows.trim())?L.tableRows:TABLE_ROWS_DEFAULT).split("\n").filter(Boolean).map((line,i)=>{
+              const p=line.split("|");
+              const ic=(p[0]||"").trim(), t=(p[1]||"").trim(), st=(p[2]||"").trim(), sans=(p[3]||"").trim(), avec=(p[4]||"").trim();
+              return <FadeIn key={i} delay={i*60}>
+                <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid rgba(255,255,255,.08)" }}>
+                  <div style={{ padding:"12px 12px", minWidth:0 }}>
+                    <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:"#fff", lineHeight:1.3 }}>{ic} {t}</span>
+                    {st&&<span style={{ display:"block", fontSize:10, color:"rgba(255,255,255,.5)", marginTop:2, lineHeight:1.35 }}>{st}</span>}
                   </div>
-                  <div style={{ flex:"1 1 240px", display:"flex", gap:9, alignItems:"center", minWidth:0, background:L.comboSolBg||"#EAF3F1", borderRadius:12, padding:"13px 15px" }}>
-                    <span style={{ flexShrink:0, width:20, height:20, borderRadius:"50%", background:"rgba(93,169,161,.22)", color:"#3E8079", fontWeight:800, fontSize:11, display:"flex", alignItems:"center", justifyContent:"center" }}>✓</span>
-                    <span style={{ fontSize:13, color:L.comboSolColor||"#2E4859", fontWeight:700, lineHeight:1.35 }}>{sol}</span>
+                  <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
+                    <span style={{ fontSize:15, display:"block", lineHeight:1.2 }}>❌</span>
+                    <span style={{ display:"block", fontSize:10, color:"rgba(255,255,255,.62)", marginTop:3, lineHeight:1.4 }}>{sans}</span>
+                  </div>
+                  <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(131,192,184,.07)", minWidth:0 }}>
+                    <span style={{ fontSize:15, display:"block", lineHeight:1.2 }}>✅</span>
+                    <span style={{ display:"block", fontSize:10, color:"#A8D5CE", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
                   </div>
                 </div>
               </FadeIn>;
             })}
           </div>
+          <FadeIn delay={350}>
+            <div style={{ maxWidth:600, margin:"18px auto 0", textAlign:"center", fontSize:13, color:"rgba(255,255,255,.6)", lineHeight:1.6 }}>
+              {L.tableFooter||"Vous n'avez pas choisi ce métier pour faire de la comptabilité. TiMat s'occupe du reste."}
+            </div>
+          </FadeIn>
           <FadeIn delay={400}>
             <div style={{ marginTop:36, textAlign:"center" }}>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 8px 24px rgba(228,145,120,.4)" }}>Alléger mon quotidien →</button>
@@ -16205,6 +16217,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
             {matches("Lignes galère solution")&&<BOField label="Lignes (1 par ligne, format : emoji | galère | solution)"><BOTextInput k="comboRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
+            {matches("Tableau comparatif lignes")&&<BOField label="Tableau comparatif — 1 ligne par item (format : emoji | titre | sous-titre | sans TiMat | avec TiMat)"><BOTextInput k="tableRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
+            {matches("Tableau comparatif phrase")&&<BOField label="Tableau comparatif — phrase de conclusion"><BOTextInput k="tableFooter" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
           </BOCard>
           <BOCard title="Tableau comparatif — Ce que ça change" icon="📊">
             {matches("Sous-titre tableau")&&<BOField label="Sous-titre (optionnel)"><BOTextInput k="s3Desc" state={cfg.landing} setter={setLand}/></BOField>}
