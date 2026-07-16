@@ -11866,6 +11866,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const _qParent=(()=>{try{return new URLSearchParams(window.location.search).get("connexion")==="parent";}catch(e){return false;}})();
   const [role, setRole] = useState(_qParent?"parent":"asmat");
   const [modeAuth, setModeAuth] = useState(_qParent?"connexion":"inscription");
+  const [showAllFaq, setShowAllFaq] = useState(false);
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12560,17 +12561,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{ fontFamily:fTitle, fontSize:"clamp(22px,4vw,34px)", color:"#2E4859", fontWeight:700, marginBottom:10 }}>Vos photos et vos données restent chez vous</div>
               <div style={{ fontSize:15, color:"#6B7A82", maxWidth:560, margin:"0 auto", lineHeight:1.6 }}>La confiance avant tout : rien n'est jamais public, rien ne part sur les réseaux sociaux.</div>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:18 }}>
+            <div style={{ display:"flex", flexDirection:"column", gap:10, maxWidth:640, margin:"0 auto" }}>
               {[
                 ["📸","Photos privées","Partagées uniquement entre vous et le parent, dans l'espace sécurisé. Jamais publiques, jamais sur les réseaux sociaux."],
                 ["🇫🇷","Hébergées en France","Vos données et celles des enfants ne quittent pas le territoire. Conformes RGPD, chiffrées en transit et au repos."],
                 ["🗑️","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
               ].map(([emo,t,d])=>(
-                <div key={t} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:16, padding:"24px 20px", textAlign:"center", boxShadow:"0 4px 16px rgba(46,72,89,.05)" }}>
-                  <div style={{ fontSize:34, marginBottom:10 }}>{emo}</div>
-                  <div style={{ fontFamily:fTitle, fontSize:17, fontWeight:700, color:"#2E4859", marginBottom:8 }}>{t}</div>
-                  <div style={{ fontSize:13.5, color:"#6B7A82", lineHeight:1.6 }}>{d}</div>
-                </div>
+                <details key={t} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden" }}>
+                  <summary style={{ display:"flex", alignItems:"center", gap:12, padding:"15px 18px", cursor:"pointer", listStyle:"none" }}>
+                    <span style={{ fontSize:22, lineHeight:1, flexShrink:0 }}>{emo}</span>
+                    <span style={{ flex:1, fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859" }}>{t}</span>
+                    <span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
+                  </summary>
+                  <div style={{ padding:"0 18px 15px", fontSize:13.5, color:"#6B7A82", lineHeight:1.6 }}>{d}</div>
+                </details>
               ))}
             </div>
           </FadeIn>
@@ -12739,7 +12743,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{ fontSize: 15, color: L.faqDescColor||"#6B7A82" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
-          {(config.faqLanding||DEFAULT_CONFIG.faqLanding).map(({q,a},i)=>(
+          {(config.faqLanding||DEFAULT_CONFIG.faqLanding).slice(0,showAllFaq?undefined:5).map(({q,a},i)=>(
             <FadeIn key={i} delay={i*50}>
               <details className="faq-item" style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
                 <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#2E4859", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -12750,6 +12754,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </details>
             </FadeIn>
           ))}
+          {(config.faqLanding||DEFAULT_CONFIG.faqLanding).length>5&&(
+            <div style={{ textAlign:"center", marginTop:18 }}>
+              <button onClick={()=>setShowAllFaq(v=>!v)} style={{ background:"transparent", border:"1.5px solid rgba(228,145,120,.5)", color:"#C84B31", fontWeight:700, fontSize:13.5, padding:"11px 22px", borderRadius:24, cursor:"pointer", fontFamily:"inherit" }}>
+                {showAllFaq?"Réduire les questions ↑":"Voir les "+((config.faqLanding||DEFAULT_CONFIG.faqLanding).length-5)+" autres questions ↓"}
+              </button>
+            </div>
+          )}
         </div>
       </div>}
 
