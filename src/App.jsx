@@ -300,10 +300,10 @@ function Styles(){return(
     .demo-zoom{zoom:.8}
     @media(max-width:860px){
       .demo-layout{flex-direction:column;gap:6px;align-items:stretch;max-width:520px}
-      .demo-tabs{flex-direction:row;flex-wrap:wrap;gap:7px;width:100%;overflow:visible;background:transparent;box-shadow:none;border-radius:0;order:1}
-      .demo-tabs button{flex:1 1 44%;min-width:0;width:auto;flex-direction:column;gap:4px;text-align:center;justify-content:center;padding:11px 6px;border:none!important;border-radius:13px!important}
-      .demo-tabs button span:first-child{font-size:19px!important}
-      .demo-tabs button span:last-child{font-size:10px!important;line-height:1.15!important}
+      .demo-tabs{flex-direction:row;flex-wrap:nowrap;gap:5px;width:100%;overflow:visible;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);box-shadow:none;border-radius:12px;padding:5px;order:1}
+      .demo-tabs button{flex:1 1 0;min-width:0;width:auto;flex-direction:column;gap:3px;text-align:center;justify-content:center;padding:8px 2px;border:none!important;border-radius:13px!important}
+      .demo-tabs button span:first-child{font-size:16px!important}
+      .demo-tabs button span:last-child{font-size:7.5px!important;line-height:1.15!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
       .demo-explain{max-width:none;order:2;padding-top:2px;flex:0 0 auto}
       .demo-scrollhint{display:none!important}
       .demo-scrollarrow{display:none!important}
@@ -11970,7 +11970,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const T = config.txts;
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
-  const TABLE_ROWS_DEFAULT=`🧮|Les calculs|Salaire, mensualisation, congés, indemnités|Des heures la tête dans les calculs, chaque fin de mois|Calculés tout seuls, à partir de vos présences réelles\n⚖️|La conformité|Convention collective IDCC 3239|La peur de se tromper, et de devoir régulariser|Toujours conformes, mis à jour avec la convention\n🗂️|Vos papiers|Contrats, bulletins, attestations|Éparpillés entre classeurs, mails et cartons|Un dossier par enfant, tout au même endroit\n🔍|Retrouver un document|Le jour où on vous le demande|Introuvable, et il faut tout ressortir|Retrouvé en 2 clics, gardé en sécurité\n💸|Les paiements|Suivi des versements|Courir après, sans oser relancer|Suivi clair et relances automatiques\n🧸|Votre temps|Ce pour quoi vous faites ce métier|Volé par l'administratif, le soir et le week-end|L'esprit libre pour les enfants`;
+  const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n⚖️|Convention collective|IDCC 3239, toujours à jour|Des textes à éplucher soi-même|Conforme, mis à jour pour vous\n💸|Suivi des paiements|Versements et relances|Courir après, sans oser relancer|Suivi clair, relances automatiques\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
   const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","chiffres","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
