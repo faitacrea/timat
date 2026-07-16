@@ -12148,6 +12148,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
     <div style={{ fontFamily: fBody, overflowX: "hidden", background: L.pageBg||"#FDFBF8" }}>
       {/* Responsive CSS */}
       <style>{`
+        .lp-section details summary::-webkit-details-marker{display:none}
+        .lp-section details summary::marker{content:""}
+        .lp-section details[open] summary span:last-child{transform:rotate(45deg)}
+        .lp-section details summary span:last-child{transition:transform .2s}
         .lp-nav-btns{display:flex;gap:8px;align-items:center}
         .lp-nav-full{display:flex;gap:8px;align-items:center}
         .lp-nav-mobile{display:none}
@@ -12474,30 +12478,31 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           </FadeIn>
 
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 56 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:10, maxWidth:720, margin:"0 auto", marginBottom: 56 }}>
             {[
               { ic: L.diff1Ic||"💶", badge: L.diff1Badge||"Notre engagement", titre: L.diff1Titre||"Un tarif sans piège", puces: L.diff1Puces||"2 mois offerts, sans carte bancaire\nAucun prélèvement surprise\nRésiliation quand vous voulez" },
               { ic: L.diff2Ic||"🧮", badge: L.diff2Badge||"Zéro erreur", titre: L.diff2Titre||"Des calculs fiables", puces: L.diff2Puces||"Salaire, congés, Pajemploi calculés\nConformes à la convention\nToujours le même résultat" },
               { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
               { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Zéro impression", titre: L.diff4Titre||"Signez en ligne, sans imprimer", puces: L.diff4Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
             ].map((d, i) => (
-              <FadeIn key={d.titre} delay={i * 100}>
-                <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: "26px 20px", height: "100%", display: "flex", flexDirection: "column", alignItems:"center", textAlign:"center", boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
-                  <div style={{ fontSize: 44, marginBottom: 12, lineHeight:1 }}>{d.ic}</div>
-                  <div style={{ fontFamily: fTitle, fontSize: 16, fontWeight: 700, color: "#2E4859", marginBottom: 12, lineHeight: 1.25 }}>
-                    {d.titre}
-                  </div>
-                  <div style={{ display:"flex", flexDirection:"column", gap:8, textAlign:"left", width:"100%", marginBottom:16 }}>
+              <FadeIn key={d.titre} delay={i * 60}>
+                <details style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden" }}>
+                  <summary style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px", cursor:"pointer", listStyle:"none" }}>
+                    <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}>{d.ic}</span>
+                    <span style={{ flex:1, minWidth:0 }}>
+                      <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
+                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:9.5, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
+                    </span>
+                    <span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
+                  </summary>
+                  <div style={{ padding:"0 18px 16px", display:"flex", flexDirection:"column", gap:8 }}>
                     {d.puces.split("\n").filter(Boolean).map((p,j)=>(
-                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:12.5, color:"#6B7A82", lineHeight:1.4 }}>
+                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:13, color:"#6B7A82", lineHeight:1.5 }}>
                         <span style={{ color:"#5DA9A1", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop:"auto", display: "inline-block", background: "rgba(93,169,161,.15)", color: "#3E8079", fontSize: 9.5, fontWeight: 700, padding: "3px 10px", borderRadius: 6, letterSpacing: ".4px", textTransform: "uppercase" }}>
-                    {d.badge}
-                  </div>
-                </div>
+                </details>
               </FadeIn>
             ))}
           </div>
