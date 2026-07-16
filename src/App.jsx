@@ -12150,8 +12150,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       <style>{`
         .lp-section details summary::-webkit-details-marker{display:none}
         .lp-section details summary::marker{content:""}
-        .lp-section details[open] summary span:last-child{transform:rotate(45deg)}
-        .lp-section details summary span:last-child{transition:transform .2s}
+        .lp-section details[open] summary>span:last-child{transform:rotate(45deg)}
+        .lp-section details summary>span:last-child{transition:transform .2s;display:inline-block}
         .lp-nav-btns{display:flex;gap:8px;align-items:center}
         .lp-nav-full{display:flex;gap:8px;align-items:center}
         .lp-nav-mobile{display:none}
@@ -12507,37 +12507,34 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             ))}
           </div>
 
-          {/* Comment ca marche - fonctionnement general de l'app */}
+          {/* Comment ca marche - accordeon compact */}
           <FadeIn delay={300}>
-            <div style={{ background: "#FFFFFF", border: "1px solid #EDE6DE", borderRadius: 16, padding: 28, boxShadow:"0 4px 18px rgba(46,72,89,.06)" }}>
-              <div style={{ fontFamily: fTitle, fontSize: 20, fontWeight: 700, color: "#2E4859", marginBottom: 8, textAlign: "center" }}>
-                Comment ça marche ?
-              </div>
-              <div style={{ fontSize: 13, color: "#8A7A70", textAlign: "center", marginBottom: 28 }}>
-                Prête à l'emploi en quelques minutes.
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+            <details style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:16, boxShadow:"0 4px 18px rgba(46,72,89,.05)", maxWidth:720, margin:"0 auto", overflow:"hidden" }}>
+              <summary style={{ display:"flex", alignItems:"center", gap:12, padding:"18px 20px", cursor:"pointer", listStyle:"none" }}>
+                <span style={{ fontSize:24, lineHeight:1, flexShrink:0 }}>🚀</span>
+                <span style={{ flex:1, minWidth:0 }}>
+                  <span style={{ display:"block", fontFamily:fTitle, fontSize:17, fontWeight:700, color:"#2E4859" }}>Comment ça marche ?</span>
+                  <span style={{ display:"block", fontSize:12.5, color:"#8A7A70", marginTop:2 }}>Prête à l'emploi en quelques minutes.</span>
+                </span>
+                <span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
+              </summary>
+              <div style={{ padding:"0 20px 20px", display:"flex", flexDirection:"column", gap:10 }}>
                 {[
                   { n: "1", ic:"👶", t: "Ajoutez vos enfants", d: "Créez chaque fiche et invitez le parent en un lien." },
                   { n: "2", ic:"⏰", t: "Pointez les présences", d: "Arrivées, départs et absences en un tap, au quotidien." },
                   { n: "3", ic:"🧮", t: "TiMat calcule tout", d: "Salaire, mensualisation, indemnités et congés, automatiquement." },
                   { n: "4", ic:"📄", t: "Signez & déclarez", d: "Contrats signés en 1 clic et déclaration Pajemploi prête." }
-                ].map((s) => (
-                  <div key={s.n} style={{ position: "relative", padding: "28px 16px 18px", background: "#FAF6F1", borderRadius: 12, border: "1px solid #EDE6DE", textAlign:"center" }}>
-                    <div style={{ position: "absolute", top: -14, left: "50%", transform:"translateX(-50%)", width: 28, height: 28, borderRadius: "50%", background: "#E49178", color: "#fff", fontWeight: 800, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {s.n}
-                    </div>
-                    <div style={{ fontSize: 44, marginBottom: 10, marginTop: 8, lineHeight:1 }}>{s.ic}</div>
-                    <div style={{ fontFamily: fTitle, fontSize: 15, fontWeight: 700, color: "#2E4859", marginBottom: 8 }}>
-                      {s.t}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#7A6A60", lineHeight: 1.6 }}>
-                      {s.d}
-                    </div>
+                ].map((st) => (
+                  <div key={st.n} style={{ display:"flex", gap:12, alignItems:"flex-start", background:"#FAF6F1", borderRadius:12, border:"1px solid #F0E7DC", padding:"12px 14px" }}>
+                    <span style={{ width:24, height:24, borderRadius:"50%", background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", fontSize:12, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{st.n}</span>
+                    <span style={{ flex:1, minWidth:0 }}>
+                      <span style={{ display:"block", fontFamily:fTitle, fontSize:14.5, fontWeight:700, color:"#2E4859", marginBottom:2 }}>{st.ic} {st.t}</span>
+                      <span style={{ display:"block", fontSize:12.5, color:"#7A6A60", lineHeight:1.55 }}>{st.d}</span>
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
+            </details>
           </FadeIn>
 
           {/* CTA */}
