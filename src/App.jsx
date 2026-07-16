@@ -11354,7 +11354,7 @@ function FadeIn({children,delay=0,className=""}){
 //
 const DEMO_SCREENS=[
   {
-    id:"journal",label:"Journal quotidien",icon:"📋",color:"#5DA9A1",
+    id:"journal",label:"Journal",icon:"📋",color:"#5DA9A1",
     preview:()=>{
       const [mood,setMood]=useState("😊");
       const [liked,setLiked]=useState(false);
@@ -11383,7 +11383,7 @@ const DEMO_SCREENS=[
     },
   },
   {
-    id:"facturation",label:"Salaire automatique",icon:"🧮",color:"#E49178",
+    id:"facturation",label:"Salaire",icon:"🧮",color:"#E49178",
     preview:()=>{
       const [mois,setMois]=useState("Mars");
       const data={Mars:{h:160,supp:8,ent:20},Fev:{h:152,supp:4,ent:19},Jan:{h:168,supp:12,ent:21}};
@@ -11412,7 +11412,7 @@ const DEMO_SCREENS=[
     },
   },
   {
-    id:"calendrier",label:"Calendrier partagé",icon:"📅",color:"#2E4859",
+    id:"calendrier",label:"Calendrier",icon:"📅",color:"#2E4859",
     preview:()=>{
       const [selDay,setSelDay]=useState(15);
       return(
@@ -11439,7 +11439,7 @@ const DEMO_SCREENS=[
     },
   },
   {
-    id:"parent",label:"Espace parent",icon:"👪",color:"#C84B31",
+    id:"parent",label:"Parents",icon:"👪",color:"#C84B31",
     preview:()=>{
       const [valide,setValide]=useState(false);
       return(
