@@ -35,7 +35,14 @@ const EMAIL_TEMPLATES = {
     subject: "Invitation : votre assistante maternelle vous invite sur TiMat",
     html: (v) => `<h2>Bonjour ${esc(v.parent_prenom)},</h2>
 <p>${esc(v.asmat_prenom)} vous invite à rejoindre TiMat pour suivre ${esc(v.enfant_prenom)}.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Rejoindre TiMat</a></p>`,
+<p>Votre espace parent est <strong>entièrement gratuit</strong> : vous y suivrez la journée de ${esc(v.enfant_prenom)} (repas, sieste, activités, photos privées), les heures de présence, vos documents et votre déclaration Pajemploi.</p>
+<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Créer mon espace parent</a></p>
+<div style="background:#FDFBF8;border:1px solid #EDE6DE;border-radius:10px;padding:14px 16px;margin:22px 0">
+  <p style="margin:0 0 8px;font-size:14px;color:#2E4859"><strong>À quoi sert votre espace parent ?</strong></p>
+  <p style="margin:0;font-size:13px;color:#6B7A82;line-height:1.6">Découvrez en images tout ce que vous pourrez y faire, et comprenez le coût réel de la garde (CMG, crédit d'impôt) :<br/>
+  <a href="https://timat.app/pour-les-parents.html" style="color:#C4714A;font-weight:700;text-decoration:none">Découvrir l'espace parent →</a></p>
+</div>
+<p style="font-size:12px;color:#888;line-height:1.6">Important : créez d'abord votre compte avec le bouton ci-dessus. Ensuite, vous pourrez vous connecter à tout moment depuis <a href="https://timat.app/pour-les-parents.html" style="color:#888">timat.app</a>.</p>`,
   },
   pointage_a_valider: {
     subject: "Un pointage attend votre validation",
@@ -45,8 +52,7 @@ const EMAIL_TEMPLATES = {
 <p>Merci de valider ce pointage dans votre application :</p>
 <p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Valider le pointage</a></p>
 <p style="font-size:11px;color:#888;margin-top:24px">Si vous oubliez, un rappel automatique sera envoyé sous 3 jours.</p>`,
-  },
-  pointage_rappel: {
+  }, pointage_rappel: {
     subject: "Rappel : pointage en attente de validation depuis 3 jours",
     html: (v) => `<p>Bonjour ${esc(v.parent_prenom)},</p>
 <p>Un pointage de ${esc(v.enfant_prenom)} est en attente de votre validation depuis le ${esc(v.date)}.</p>
@@ -131,7 +137,6 @@ export default async function handler(req) {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
-
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   if (!checkRateLimit(ip)) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded (max 10 emails/min)' }), {
