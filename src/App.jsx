@@ -16225,6 +16225,10 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             )}
             {matches("Lignes galère solution")&&<BOField label="Lignes (1 par ligne, format : emoji | galère | solution)"><BOTextInput k="comboRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
             {matches("Tableau comparatif lignes")&&<BOField label="Tableau comparatif — 1 ligne par item (format : emoji | titre | sous-titre | sans TiMat | avec TiMat)"><BOTextInput k="tableRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
+            {matches("Tableau comparatif colonne gauche")&&<BOField label="Tableau — titre colonne gauche (ex : Sans TiMat)"><BOTextInput k="comboLabelBefore" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau comparatif colonne droite")&&<BOField label="Tableau — titre colonne droite (ex : Avec TiMat)"><BOTextInput k="comboLabelAfter" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau comparatif couleur colonne gauche")&&<BOField label="Tableau — couleur du titre colonne gauche"><BOColorInput k="comboPbColor" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau comparatif couleur colonne droite")&&<BOField label="Tableau — couleur du titre colonne droite"><BOColorInput k="comboSolColor" state={cfg.landing} setter={setLand}/></BOField>}
             {matches("Tableau comparatif phrase")&&<BOField label="Tableau comparatif — phrase de conclusion"><BOTextInput k="tableFooter" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
           </BOCard>
           <BOCard title="Tableau comparatif — Ce que ça change" icon="📊">
