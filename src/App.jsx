@@ -12159,7 +12159,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         .lp-nav-btns{display:flex;gap:8px;align-items:center}
         .lp-nav-full{display:flex;gap:8px;align-items:center}
         .lp-nav-mobile{display:none}
-        .lp-hero-stats{display:flex;gap:32px;flex-wrap:wrap;justify-content:center}
+        .lp-hero-stats{align-items:stretch}
         .lp-demo-grid{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start}
         .lp-demo-tabs{display:flex;flex-direction:column;gap:6px}
         .lp-transfo-row{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;align-items:center}
@@ -12192,8 +12192,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         @media(max-width:768px){
           .lp-nav-full{display:none!important}
           .lp-nav-mobile{display:flex!important;gap:6px;align-items:center}
-          .lp-hero-stats{gap:16px}
-          .lp-hero-stats>div{min-width:60px}
+          .lp-hero-stats>div{min-width:0}
           .lp-demo-grid{grid-template-columns:1fr!important;gap:16px}
           .lp-demo-tabs{flex-direction:row;flex-wrap:wrap;gap:4px}
           .lp-demo-tabs button{padding:8px 12px!important;font-size:12px!important;flex:0 0 auto}
@@ -12211,8 +12210,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           .lp-guarantees{flex-direction:column;gap:8px;font-size:12px}
         }
         @media(max-width:480px){
-          .lp-hero-stats{gap:10px}
-          .lp-hero-stats>div{min-width:50px}
+          .lp-hero-stats>div{min-width:0}
           .lp-demo-tabs button{padding:6px 8px!important;font-size:11px!important}
           .lp-section{padding:40px 12px}
           .lp-hero{padding:0 12px 40px}
@@ -12293,15 +12291,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             </div>)}
           </div>
         </div>}
-        {/* Hero stats */}
-        <div className="lp-hero-stats" style={{ position: "relative", zIndex: 1, maxWidth: 1000, margin: "0 auto 48px" }}>
-          {statsHero.map(({ n, suf, label }) => (
-            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.72)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.28)"), borderRadius:14, padding:"14px 8px", boxShadow:L.heroStatsShadow||"0 4px 14px rgba(46,72,89,.06)" }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
-              <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"#93A0A2", marginTop: 2 }}>{label}</div>
-            </div>
-          ))}
-        </div>
         {/* Hero content : texte a gauche, telephone anime a droite */}
         {/* Badge standalone centré (créée en France) — editable via heroBadge */}
         <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:28 }}>
@@ -12315,6 +12304,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             </div>
             <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>{T.heroSub}</div>
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
+            {/* Hero stats (deplaces sous le titre) */}
+        <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(4,1fr)":"repeat(2,1fr)", gap:10, position: "relative", zIndex: 1, maxWidth: isWeb?560:340, margin: "0 auto 22px" }}>
+          {statsHero.map(({ n, suf, label }) => (
+            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.72)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.28)"), borderRadius:14, padding:"14px 8px", boxShadow:L.heroStatsShadow||"0 4px 14px rgba(46,72,89,.06)" }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
+              <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"#93A0A2", marginTop: 2 }}>{label}</div>
+            </div>
+          ))}
+        </div>
             <div className="lp-hero-ctas">
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
               <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"#FFFFFF", color: L.heroBtnSecColor||"#2E4859", border: "1px solid "+(L.heroBtnSecBorder||"rgba(46,72,89,.2)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer", fontWeight:600 }}>{T.heroBtnSecTxt}</button>
@@ -16908,7 +16906,7 @@ const DEFAULT_CONFIG = {
   ],
   statsHero:[
     {n:0,suf:"€",label:"pour essayer"},
-    {n:2,suf:" mois",label:"offerts, sans CB"},
+    {n:2,suf:" mois",label:"offerts"},
     {n:100,suf:"%",label:"conforme à la convention"},
     {n:2,suf:" min",label:"pour s'inscrire"},
   ],
@@ -17767,4 +17765,3 @@ export default function App(){
     </>
   );
 }
-
