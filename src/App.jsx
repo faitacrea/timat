@@ -12305,9 +12305,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>{T.heroSub}</div>
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             {/* Hero stats (deplaces sous le titre) */}
-        <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(4,1fr)":"repeat(2,1fr)", gap:8, position: "relative", zIndex: 1, maxWidth: isWeb?520:320, margin: "0 auto 22px" }}>
+        <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?8:5, position: "relative", zIndex: 1, maxWidth: isWeb?520:370, margin: "0 auto 22px" }}>
           {statsHero.map(({ n, suf, label }) => (
-            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.32)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.18)"), borderRadius:12, padding:"9px 6px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)" }}>
+            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.32)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.18)"), borderRadius:12, padding:isWeb?"9px 6px":"8px 3px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)" }}>
               <div style={{ fontSize: 18, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
               <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"#93A0A2", marginTop: 2 }}>{label}</div>
             </div>
