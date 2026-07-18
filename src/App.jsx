@@ -11277,8 +11277,6 @@ function HeroPhone({screen}){
     {ic:"✍️",t:"Contrat signé en 1 clic"},
   ];
   const slots=[{top:"6%",left:"-6%",d:"0s"},{top:"44%",left:"52%",d:"1.4s"},{top:"80%",left:"-4%",d:"2.8s"}];
-  const [tick,setTick]=useState(0);
-  useEffect(()=>{const id=setInterval(()=>setTick(t=>t+1),4200);return()=>clearInterval(id);},[]);
   return <div className="hero-phone-wrap" style={{position:"relative",width:230,height:466}}>
     {/* halo */}
     <div style={{position:"absolute",inset:"6% 4%",borderRadius:"50%",background:"radial-gradient(closest-side,rgba(228,145,120,.55),transparent)",filter:"blur(26px)",animation:"glowpulse 4s ease-in-out infinite"}}/>
@@ -11316,13 +11314,25 @@ function HeroPhone({screen}){
       </div>
     </div>
     {/* notifications qui sortent et changent a chaque cycle */}
-    {slots.map((s,i)=>{const n=pool[(tick*3+i)%pool.length];return (
-      <div key={i}style={{position:"absolute",top:s.top,left:s.left,maxWidth:150,background:"#fff",borderRadius:12,padding:"8px 12px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:8,zIndex:3,opacity:0,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:s.d,animationFillMode:"backwards"}}>
+    {slots.map((s,i)=>{return (
+      <NotifBulle key={i} slot={s} pool={pool} i={i}/>);})}
+  </div>;
+}
+
+function NotifBulle({slot,pool,i}){
+  const [idx,setIdx]=useState(i);
+  useEffect(()=>{
+    const delayMs=(parseFloat(slot.d)||0)*1000;
+    let iv;const t0=setTimeout(()=>{setIdx(x=>x+3);iv=setInterval(()=>setIdx(x=>x+3),4200);},delayMs+4200);
+    return()=>{clearTimeout(t0);if(iv)clearInterval(iv);};
+  },[]);
+  const n=pool[idx%pool.length];
+  return (
+      <div style={{position:"absolute",top:slot.top,left:slot.left,maxWidth:150,background:"#fff",borderRadius:12,padding:"8px 12px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:8,zIndex:3,opacity:0,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:slot.d,animationFillMode:"backwards"}}>
         <span style={{fontSize:15,flexShrink:0}}>{n.ic}</span>
         <span style={{fontSize:11.5,fontWeight:700,color:"#2E4859",lineHeight:1.25}}>{n.t}</span>
       </div>
-    );})}
-  </div>;
+  );
 }
 
 function WaveDivider({color="#fff",height=52,on=true}){
