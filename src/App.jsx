@@ -16096,10 +16096,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             <BOField label="Hero — largeur max du titre en web (px, force 2 lignes)"><BOTextInput k="heroTitleMaxW" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Hero stats — fond des cartes"><BOColorInput k="heroStatsCardBg" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Hero stats — bordure des cartes"><BOColorInput k="heroStatsCardBorder" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Tableau — couleur des titres"><BOColorInput k="tableTitleColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Tableau — couleur des sous-titres"><BOColorInput k="tableSubColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Tableau — couleur colonne Sans TiMat"><BOColorInput k="tableSansColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Tableau — couleur colonne Avec TiMat"><BOColorInput k="tableAvecColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Couleur labels stats"><BOColorInput k="heroStatsLabelColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Couleur d\'accent (italique)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
@@ -16229,6 +16225,10 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             {matches("Tableau comparatif colonne droite")&&<BOField label="Tableau — titre colonne droite (ex : Avec TiMat)"><BOTextInput k="comboLabelAfter" state={cfg.landing} setter={setLand}/></BOField>}
             {matches("Tableau comparatif couleur colonne gauche")&&<BOField label="Tableau — couleur du titre colonne gauche"><BOColorInput k="comboPbColor" state={cfg.landing} setter={setLand}/></BOField>}
             {matches("Tableau comparatif couleur colonne droite")&&<BOField label="Tableau — couleur du titre colonne droite"><BOColorInput k="comboSolColor" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau cellules couleur titres lignes")&&<BOField label="Tableau — couleur des titres de lignes (ex : Mensualisation)"><BOColorInput k="tableTitleColor" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau cellules couleur sous-titres")&&<BOField label="Tableau — couleur des sous-titres de lignes"><BOColorInput k="tableSubColor" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau cellules couleur texte colonne gauche")&&<BOField label="Tableau — couleur du TEXTE des cases colonne gauche"><BOColorInput k="tableSansColor" state={cfg.landing} setter={setLand}/></BOField>}
+            {matches("Tableau cellules couleur texte colonne droite")&&<BOField label="Tableau — couleur du TEXTE des cases colonne droite"><BOColorInput k="tableAvecColor" state={cfg.landing} setter={setLand}/></BOField>}
             {matches("Tableau comparatif phrase")&&<BOField label="Tableau comparatif — phrase de conclusion"><BOTextInput k="tableFooter" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
           </BOCard>
           <BOCard title="Tableau comparatif — Ce que ça change" icon="📊">
