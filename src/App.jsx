@@ -15565,9 +15565,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setProItem=(idx,v)=>setCfg(c=>{const items=[...(c.proItems||[])];items[idx]=v;return{...c,proItems:items};});
   const addProItem=()=>setCfg(c=>({...c,proItems:[...(c.proItems||[]),"✨ Nouvelle fonctionnalité"]}));
   const removeProItem=(idx)=>setCfg(c=>({...c,proItems:(c.proItems||[]).filter((_,i)=>i!==idx)}));
-  const setGuarantee=(idx,v)=>setCfg(c=>{const items=[...(c.guarantees||[])];items[idx]=v;return{...c,guarantees:items};});
-  const addGuarantee=()=>setCfg(c=>({...c,guarantees:[...(c.guarantees||[]),"✅ Nouvelle garantie"]}));
-  const removeGuarantee=(idx)=>setCfg(c=>({...c,guarantees:(c.guarantees||[]).filter((_,i)=>i!==idx)}));
+  const setGuarantee=(idx,v)=>setCfg(c=>{const items=[...(c.guarantees||DEFAULT_CONFIG.guarantees)];items[idx]=v;return{...c,guarantees:items};});
+  const addGuarantee=()=>setCfg(c=>({...c,guarantees:[...(c.guarantees||DEFAULT_CONFIG.guarantees),"✅ Nouvelle garantie"]}));
+  const removeGuarantee=(idx)=>setCfg(c=>({...c,guarantees:(c.guarantees||DEFAULT_CONFIG.guarantees).filter((_,i)=>i!==idx)}));
   const setFaqL=(idx,field,v)=>setCfg(c=>{const ff=[...(c.faqLanding||[])];ff[idx]={...ff[idx],[field]:v};return{...c,faqLanding:ff};});
   const addFaqL=()=>setCfg(c=>({...c,faqLanding:[...(c.faqLanding||[]),{q:"Nouvelle question ?",a:"Réponse à compléter."}]}));
   const removeFaqL=(idx)=>setCfg(c=>({...c,faqLanding:(c.faqLanding||[]).filter((_,i)=>i!==idx)}));
@@ -16432,7 +16432,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
 
           <BOCard title="Garanties (sous tarifs)" icon="✅">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Les petits points de réassurance affichés sous les tarifs.</div>
-            {(cfg.guarantees||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
+            {(cfg.guarantees||DEFAULT_CONFIG.guarantees).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setGuarantee(i,e.target.value)}placeholder="✅ Texte garantie"/>
               <button onClick={()=>removeGuarantee(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
@@ -16830,7 +16830,6 @@ const DEFAULT_CONFIG = {
     "❓ Centre d'aide prioritaire",
   ],
   guarantees:[
-    "✅ 2 mois d'essai sans CB",
     "✅ Résiliable en 1 clic, sans reconduction",
     "✅ Données en France 🇫🇷",
   ],
