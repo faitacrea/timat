@@ -12511,13 +12511,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
-                  <summary style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px", cursor:"pointer", listStyle:"none" }}>
+                  <summary onClick={e=>{if(isWeb)e.preventDefault();}} style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px", cursor:isWeb?"default":"pointer", listStyle:"none" }}>
                     <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}>{d.ic}</span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
                       <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:9.5, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
                     </span>
-                    <span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
+                    {!isWeb&&<span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
                   <div style={{ padding:"0 18px 16px", display:"flex", flexDirection:"column", gap:8 }}>
                     {d.puces.split("\n").filter(Boolean).map((p,j)=>(
@@ -12591,10 +12591,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 ["🗑️","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
               ].map(([emo,t,d])=>(
                 <details key={t} open={isWeb} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
-                  <summary style={{ display:"flex", alignItems:"center", gap:12, padding:"15px 18px", cursor:"pointer", listStyle:"none" }}>
+                  <summary onClick={e=>{if(isWeb)e.preventDefault();}} style={{ display:"flex", alignItems:"center", gap:12, padding:"15px 18px", cursor:isWeb?"default":"pointer", listStyle:"none" }}>
                     <span style={{ fontSize:22, lineHeight:1, flexShrink:0 }}>{emo}</span>
                     <span style={{ flex:1, fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859" }}>{t}</span>
-                    <span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
+                    {!isWeb&&<span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
                   <div style={{ padding:"0 18px 15px", fontSize:13.5, color:"#6B7A82", lineHeight:1.6 }}>{d}</div>
                 </details>
