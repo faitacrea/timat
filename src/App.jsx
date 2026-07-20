@@ -12165,7 +12165,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       <style>{`
         .lp-section details summary::-webkit-details-marker{display:none}
         .lp-section details summary::marker{content:""}
-        .lp-section details[open] summary>span:last-child{transform:rotate(45deg)}
+        .lp-section details[open] summary .acc-plus{transform:rotate(45deg)}
+        .lp-section details[open] summary>span.cmt-plus{transform:rotate(45deg)}
         .lp-section details summary>span:last-child{transition:transform .2s;display:inline-block}
         .lp-nav-btns{display:flex;gap:8px;align-items:center}
         .lp-nav-full{display:flex;gap:8px;align-items:center}
@@ -12517,7 +12518,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
                       <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:9.5, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
                     </span>
-                    {!isWeb&&<span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
+                    {!isWeb&&<span className="acc-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
                   <div style={{ padding:"0 18px 16px", display:"flex", flexDirection:"column", gap:8 }}>
                     {d.puces.split("\n").filter(Boolean).map((p,j)=>(
@@ -12540,7 +12541,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   <span style={{ display:"block", fontFamily:fTitle, fontSize:17, fontWeight:700, color:"#2E4859" }}>Comment ça marche ?</span>
                   <span style={{ display:"block", fontSize:12.5, color:"#8A7A70", marginTop:2 }}>Prête à l'emploi en quelques minutes.</span>
                 </span>
-                <span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
+                <span className="cmt-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
               </summary>
               <div style={{ padding:"0 20px 20px", display:"flex", flexDirection:"column", gap:10 }}>
                 {[
@@ -12594,7 +12595,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   <summary onClick={e=>{if(isWeb)e.preventDefault();}} style={{ display:"flex", alignItems:"center", gap:12, padding:"15px 18px", cursor:isWeb?"default":"pointer", listStyle:"none" }}>
                     <span style={{ fontSize:22, lineHeight:1, flexShrink:0 }}>{emo}</span>
                     <span style={{ flex:1, fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859" }}>{t}</span>
-                    {!isWeb&&<span style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
+                    {!isWeb&&<span className="acc-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
                   <div style={{ padding:"0 18px 15px", fontSize:13.5, color:"#6B7A82", lineHeight:1.6 }}>{d}</div>
                 </details>
