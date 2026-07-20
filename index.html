@@ -33,16 +33,11 @@
         display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
         font-family:system-ui,-apple-system,'Nunito',sans-serif;
       }
-      #timat-boot .logo{
-        font-family:'Fraunces',Georgia,serif;font-weight:700;
-        font-size:38px;letter-spacing:.5px;color:#264653;
-        display:flex;align-items:center;gap:10px;
+      #timat-boot .logo img{
+        height:56px;width:auto;
+        animation:timat-breathe 1.6s ease-in-out infinite;
       }
-      #timat-boot .logo .dot{
-        width:12px;height:12px;border-radius:50%;background:#E49178;
-        display:inline-block;margin-top:-14px;
-        animation:timat-bounce 1.1s ease-in-out infinite;
-      }
+      @keyframes timat-breathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.05);opacity:.85}}
       #timat-boot .bar{
         width:132px;height:4px;border-radius:99px;background:rgba(38,70,83,.1);overflow:hidden;
       }
@@ -52,7 +47,6 @@
         animation:timat-slide 1.2s ease-in-out infinite;
       }
       #timat-boot .sub{font-size:13px;color:#8A9BA0;font-weight:600}
-      @keyframes timat-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
       @keyframes timat-slide{0%{transform:translateX(-120%)}100%{transform:translateX(330%)}}
       /* Contenu SEO : lu par les robots, invisible à l'écran (l'écran de chargement le couvre) */
       #seo-fallback{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -62,7 +56,7 @@
     <div id="root">
       <!-- Écran de chargement visuel -->
       <div id="timat-boot">
-        <div class="logo">timat<span class="dot"></span></div>
+        <div class="logo"><img src="/logo.png" alt="TiMat"></div>
         <div class="bar"><span></span></div>
         <div class="sub">Chargement…</div>
       </div>
