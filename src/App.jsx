@@ -134,8 +134,10 @@ const EMAIL_TEMPLATES={
   invitation_parent:{
     subject:"Invitation : votre assistante maternelle vous invite sur TiMat",
     html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
-      +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+".</p>"
-      +"<p><a href='"+v.url+"'>Rejoindre TiMat</a></p>",
+      +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
+      +"<p>C'est 100% gratuit pour vous, sans carte bancaire.</p>"
+      +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
+      +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
   },
   // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
   pointage_a_valider:{
@@ -11983,7 +11985,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
   const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n⚖️|Convention collective|IDCC 3239, toujours à jour|Des textes à éplucher soi-même|Conforme, mis à jour pour vous\n💸|Suivi des paiements|Versements et relances|Courir après, sans oser relancer|Suivi clair, relances automatiques\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
-  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","chiffres","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
@@ -12079,7 +12081,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
   const transformations = config.transformations||DEFAULT_CONFIG.transformations;
   const statsHero = config.statsHero||DEFAULT_CONFIG.statsHero;
-  const statsSection = config.statsSection||DEFAULT_CONFIG.statsSection;
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
 
   // PAGE DÉDIÉE CONNEXION/INSCRIPTION ASSMAT (ouverte depuis blog/outils via ?connexion)
@@ -12631,29 +12632,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
                   <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
                   <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelResult||"Ce que ça change"}</div><div style={{ fontSize: 13, color: L.s3ResultColor||"#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </div>}
-
-      {/* SECTION 4 - CHIFFRES */}
-      {SV.chiffres===true&&<div className="lp-section" style={{ order:ord("chiffres"), background: L.section4Bg||"linear-gradient(135deg,#2E4A5A,#5DA9A1)" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <FadeIn>
-            <div style={{ textAlign: L.s4Align||"center", marginBottom: 56 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s4TitleColor||"#fff", fontWeight: 700, marginBottom: 6 }}>{L.s4Title}</div>
-              <div style={{ fontSize: 13, color: L.s4SubColor||"rgba(255,255,255,.4)" }}>{L.s4Sub}</div>
-            </div>
-          </FadeIn>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 24 }}>
-            {statsSection.map(({ n, suf, label, desc }) => (
-              <FadeIn key={label}>
-                <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(255,255,255,.04)", borderRadius: 16, border: "1px solid rgba(255,255,255,.08)" }}>
-                  <div style={{ fontFamily: fTitle, fontSize: 42, fontWeight: 700, color: L.s4StatColor||accent, lineHeight: 1 }}><Counter target={n} suffix={suf} /></div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: L.s4StatLabelColor||"#fff", marginTop: 8, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 11, color: L.s4StatDescColor||"rgba(255,255,255,.4)" }}>{desc}</div>
                 </div>
               </FadeIn>
             ))}
@@ -16463,14 +16441,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsHero",i,"label",e.target.value)}/>
             </div>)}
           </BOCard>
-          <BOCard title="Stats section chiffres" icon="📊">
-            {(cfg.statsSection||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr 1fr",gap:4,marginBottom:4}}>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsSection",i,"n",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsSection",i,"suf",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsSection",i,"label",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.desc||""}onChange={e=>setStat("statsSection",i,"desc",e.target.value)}/>
-            </div>)}
-          </BOCard>
           <BOCard title="Pain points (section 1)" icon="🔥">
             {(cfg.painPoints||[]).map((p,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",gap:4,marginBottom:4}}>
@@ -16602,7 +16572,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {k:"demo",l:"L'application en images",d:"Démo interactive (cadre téléphone)"},
               {k:"signature",l:"Pourquoi TiMat",d:"Différenciateurs + comment ça marche"},
               {k:"transformation",l:"Ce que ça change",d:"Tableau comparatif (aujourd'hui / avec TiMat)"},
-              {k:"chiffres",l:"Ce que disent les chiffres",d:"Statistiques clés"},
               {k:"temoignages",l:"Témoignages",d:"Avis des utilisatrices"},
               {k:"tarifs",l:"Tarifs",d:"Forfaits Gratuit / Pro"},
               {k:"ctaFinal",l:"Appel à l'action final",d:"Bloc « Je commence »"},
@@ -16645,7 +16614,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
           <BOCard title="Ordre des sections" icon="↕️">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Glissez-déposez une section pour la déplacer, ou utilisez les flèches. L'ordre s'applique à la page d'accueil (le Hero et le Footer restent à leurs extrémités).</div>
-            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",transformation:"Ce que ça change",chiffres:"Ce que disent les chiffres",temoignages:"Témoignages",confidentialite:"Confidentialité & photos",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
+            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",transformation:"Ce que ça change",temoignages:"Témoignages",confidentialite:"Confidentialité & photos",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
               <div key={id}
                 draggable
                 onDragStart={()=>setDragSec(i)}
@@ -16925,12 +16894,6 @@ const DEFAULT_CONFIG = {
     {n:100,suf:"%",label:"conforme à la convention"},
     {n:2,suf:" min",label:"pour s'inscrire"},
   ],
-  statsSection:[
-    {n:847,suf:"+",label:"assmats actives",desc:"Font confiance à TiMat"},
-    {n:94,suf:"%",label:"satisfaites",desc:"Recommandent TiMat à une collègue"},
-    {n:4,suf:"h",label:"économisées",desc:"Par mois en admin en moyenne"},
-    {n:2,suf:" mois",label:"d'essai gratuit",desc:"Sans carte bancaire"},
-  ],
   testimonials:[
     {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soirées sur Excel.",apres:"Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
     {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contrôle PMI.",apres:"Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi."},
@@ -16981,7 +16944,7 @@ const DEFAULT_CONFIG = {
   },
   sectionsVisibles:{
     probleme:true, demo:true, signature:true, transformation:true,
-    chiffres:true, temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
+    temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
   },
   faqLanding: FAQ_LANDING_DEFAULT,
   footer:{
@@ -16997,7 +16960,7 @@ const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","signature","demo","transformation","chiffres","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
+  sectionsOrder:["probleme","signature","demo","transformation","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -17030,7 +16993,6 @@ const loadConfig = async () => {
         painPoints: saved.painPoints||DEFAULT_CONFIG.painPoints,
         transformations: saved.transformations||DEFAULT_CONFIG.transformations,
         statsHero: saved.statsHero||DEFAULT_CONFIG.statsHero,
-        statsSection: saved.statsSection||DEFAULT_CONFIG.statsSection,
         testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
         freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
         proItems: saved.proItems||DEFAULT_CONFIG.proItems,
