@@ -11985,7 +11985,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
   const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n⚖️|Convention collective|IDCC 3239, toujours à jour|Des textes à éplucher soi-même|Conforme, mis à jour pour vous\n💸|Suivi des paiements|Versements et relances|Courir après, sans oser relancer|Suivi clair, relances automatiques\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
-  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","transformation","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
@@ -12079,7 +12079,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const fTitle = L.fontTitle||"'Fraunces', Georgia, serif";
   const fBody = L.fontBody||"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
-  const transformations = config.transformations||DEFAULT_CONFIG.transformations;
   const statsHero = config.statsHero||DEFAULT_CONFIG.statsHero;
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
 
@@ -12602,41 +12601,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               ))}
             </div>
           </FadeIn>
-        </div>
-      </div>}
-
-      {/* SECTION 3 - TRANSFORMATION */}
-      {SV.transformation===true&&<div className="lp-section" style={{ order:ord("transformation"), background: L.section3Bg||"#F4F1EA" }}>
-        <WaveDivider color={L.wave3||L.section3Bg||"#F4F1EA"} on={L.wavesOn!==false&&L.waveOn3!==false}/>
-        <div style={{ maxWidth: 940, margin: "0 auto" }}>
-          <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 40 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s3TitleColor||"#0D1B2A", fontWeight: 700, marginBottom: 10 }}>{L.s3Title||"Ce que TiMat change concrètement"}</div>
-              {L.s3Desc&&<div style={{ fontSize: 15, color: L.s3DescColor||"#6B4F3A", lineHeight: 1.6 }}>{L.s3Desc}</div>}
-            </div>
-          </FadeIn>
-          {/* En-tete tableau (web) */}
-          <div className="lp-transfo-head">
-            <div/>
-            <div style={{ fontSize: 11, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform:"uppercase", letterSpacing:".6px" }}>{L.s3LabelBefore||"Aujourd'hui"}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform:"uppercase", letterSpacing:".6px" }}>{L.s3LabelAfter||"Avec TiMat"}</div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform:"uppercase", letterSpacing:".6px" }}>{L.s3LabelResult||"Ce que ça change"}</div>
-          </div>
-          <div style={{ display: "grid", gap: 3 }}>
-            {(L.transfoRows
-              ? L.transfoRows.split("\n").filter(Boolean).map(l=>{const p=l.split("|");return [(p[0]||"").trim(),(p[1]||"").trim(),(p[2]||"").trim(),(p[3]||"").trim()];})
-              : transformations
-            ).map(([ic, pb, sol, res], i) => (
-              <FadeIn key={i} delay={i * 60}>
-                <div className="lp-transfo-row" style={{ padding: "18px 20px", borderRadius: 12, background: i % 2 === 0 ? (L.s3RowBg1||"#F4F1EA") : (L.s3RowBg2||"#FDFBF8"), border: "1px solid #DDD5C8" }}>
-                  <div style={{ fontSize: 22, textAlign: "center" }}>{ic}</div>
-                  <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelBeforeColor||"#B84060", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelBefore||"Aujourd'hui"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{pb}</div></div>
-                  <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelAfterColor||"#2E5F8A", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelAfter||"Avec TiMat"}</div><div style={{ fontSize: 13, color: L.s3TextColor||"#6B4F3A", lineHeight: 1.5 }}>{sol}</div></div>
-                  <div><div className="transfo-celllabel" style={{ fontSize: 10, fontWeight: 700, color: L.s3LabelResultColor||"#3D6B50", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: 4 }}>{L.s3LabelResult||"Ce que ça change"}</div><div style={{ fontSize: 13, color: L.s3ResultColor||"#3D6B50", fontWeight: 600, lineHeight: 1.5 }}>{res}</div></div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
         </div>
       </div>}
 
@@ -15588,7 +15552,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
   const setSV=(k,v)=>setCfg(c=>({...c,sectionsVisibles:{...(c.sectionsVisibles||{}),[k]:v}}));
   const moveSectionAt=(from,to)=>setCfg(c=>{const base=(c.sectionsOrder&&c.sectionsOrder.length)?c.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;const arr=[...base];if(from<0||from>=arr.length||to<0||to>=arr.length)return c;const[x]=arr.splice(from,1);arr.splice(to,0,x);return{...c,sectionsOrder:arr};});
   const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
-  const setTransfo=(idx,pos,v)=>setCfg(c=>{const tt=[...(c.transformations||[])];const row=[...tt[idx]];row[pos]=v;tt[idx]=row;return{...c,transformations:tt};});
   const setTesti=(idx,field,v)=>setCfg(c=>{const tt=[...(c.testimonials||[])];tt[idx]={...tt[idx],[field]:v};return{...c,testimonials:tt};});
   const setStat=(which,idx,field,v)=>setCfg(c=>{const ss=[...(c[which]||[])];ss[idx]={...ss[idx],[field]:field==="n"?Number(v):v};return{...c,[which]:ss};});
   const addPain=()=>setCfg(c=>({...c,painPoints:[...(c.painPoints||[]),{ic:"✨",titre:"Nouveau",desc:"Description"}]}));
@@ -16105,21 +16068,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {k:"s2Title",l:"Titre",type:"txt"},{k:"s2Desc",l:"Description",type:"txt"},
               {k:"section2Bg",l:"Fond section",type:"col"},{k:"s2TitleColor",l:"Couleur titre",type:"col"},{k:"s2DescColor",l:"Couleur description",type:"col"},
             ]},
-            {key:"s3",titre:"Section 3 - Transformation",icon:"🔄",fields:[
-              {k:"s3Align",l:"Alignement du texte",type:"align"},
-              {k:"s3Title",l:"Titre",type:"txt"},
-              {k:"s3LabelBefore",l:"Label \"Avant\"",type:"txt"},{k:"s3LabelAfter",l:"Label \"Avec TiMat\"",type:"txt"},{k:"s3LabelResult",l:"Label \"Résultat\"",type:"txt"},
-              {k:"section3Bg",l:"Fond section",type:"col"},{k:"s3TitleColor",l:"Couleur titre",type:"col"},
-              {k:"s3RowBg1",l:"Fond rangée 1",type:"col"},{k:"s3RowBg2",l:"Fond rangée 2",type:"col"},
-              {k:"s3LabelBeforeColor",l:"Couleur label Avant",type:"col"},{k:"s3LabelAfterColor",l:"Couleur label Avec TiMat",type:"col"},{k:"s3LabelResultColor",l:"Couleur label Résultat",type:"col"},
-              {k:"s3TextColor",l:"Couleur texte",type:"col"},{k:"s3ResultColor",l:"Couleur texte résultat",type:"col"},
-            ]},
-            {key:"s4",titre:"Section 4 - Statistiques",icon:"📊",fields:[
-              {k:"s4Align",l:"Alignement du texte",type:"align"},
-              {k:"s4Title",l:"Titre",type:"txt"},{k:"s4Sub",l:"Sous-titre",type:"txt"},
-              {k:"section4Bg",l:"Fond section",type:"col"},{k:"s4TitleColor",l:"Couleur titre",type:"col"},{k:"s4SubColor",l:"Couleur sous-titre",type:"col"},
-              {k:"s4StatColor",l:"Couleur chiffres",type:"col"},{k:"s4StatLabelColor",l:"Couleur labels",type:"col"},{k:"s4StatDescColor",l:"Couleur descriptions",type:"col"},
-            ]},
             {key:"s5",titre:"Section 5 - Témoignages",icon:"⭐",fields:[
               {k:"s5Align",l:"Alignement du texte",type:"align"},
               {k:"s5Title",l:"Titre",type:"txt"},
@@ -16171,8 +16119,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           <BOCard title="Sections" icon="📝">
             {[["s1Title","Section 1 - Titre"],["s1Desc","Section 1 - Description",true],["s1Quote","Section 1 - Citation",true],
               ["s2Title","Section 2 - Titre"],["s2Desc","Section 2 - Description"],
-              ["s3Title","Section 3 - Titre"],["s3LabelBefore","Section 3 - Label Avant"],["s3LabelAfter","Section 3 - Label Avec TiMat"],["s3LabelResult","Section 3 - Label Résultat"],
-              ["s4Title","Section 4 - Titre"],["s4Sub","Section 4 - Sous-titre"],
               ["s5Title","Section 5 - Titre"],["s6Title","Section 6 - Titre"],
               ["ctaTitle","CTA - Titre (\\n pour saut)",true],["ctaTitleAccent","CTA - Texte accent"],["ctaSubTitle","CTA - Sous-titre"]
             ].filter(([,l])=>matches(l)).map(([k,l,m])=>
@@ -16220,10 +16166,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             {matches("Tableau cellules couleur texte colonne droite")&&<BOField label="Tableau — couleur du TEXTE des cases colonne droite"><BOColorInput k="tableAvecColor" state={cfg.landing} setter={setLand}/></BOField>}
             {matches("Tableau comparatif phrase")&&<BOField label="Tableau comparatif — phrase de conclusion"><BOTextInput k="tableFooter" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
           </BOCard>
-          <BOCard title="Tableau comparatif — Ce que ça change" icon="📊">
-            {matches("Sous-titre tableau")&&<BOField label="Sous-titre (optionnel)"><BOTextInput k="s3Desc" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Lignes tableau comparatif")&&<BOField label="Lignes (1 par ligne, format : emoji | aujourd'hui | avec TiMat | ce que ça change)"><BOTextInput k="transfoRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
-          </BOCard>
         </>}
         {sec==="couleurs"&&<>
           <BOCard title="Palette de l\'application" icon="🎨">
@@ -16232,7 +16174,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             )}
           </BOCard>
           <BOCard title="Fonds de sections landing" icon="🖼️">
-            {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","Section 1 (problème)"],["section2Bg","Section 2 (démo)"],["section3Bg","Section 3 (transfo)"],["section4Bg","Section Pourquoi TiMat"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section Tarifs"],["faqBg","Section FAQ"],["blogBg","Section Blog"],["footerBg","Footer"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","La réalité du métier"],["section2Bg","Section 2 (démo)"],["section4Bg","Pourquoi TiMat"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section Tarifs"],["faqBg","Section FAQ"],["blogBg","Section Blog"],["footerBg","Footer"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
@@ -16252,8 +16194,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           <BOCard title="Sections 1 à 6 - couleurs texte" icon="📑">
             {[["s1TitleColor","S1 - Titre"],["s1DescColor","S1 - Description"],["s1CardBg","S1 - Fond cards"],["s1CardTitleColor","S1 - Titre cards"],["s1CardDescColor","S1 - Texte cards"],["s1QuoteBg","S1 - Fond citation"],["s1QuoteColor","S1 - Citation"],
               ["s2TitleColor","S2 - Titre"],["s2DescColor","S2 - Description"],
-              ["s3TitleColor","S3 - Titre"],["s3RowBg1","S3 - Fond rangée 1"],["s3RowBg2","S3 - Fond rangée 2"],["s3LabelBeforeColor","S3 - Label Avant"],["s3LabelAfterColor","S3 - Label Avec TiMat"],["s3LabelResultColor","S3 - Label Résultat"],["s3TextColor","S3 - Texte"],["s3ResultColor","S3 - Texte résultat"],
-              ["s4TitleColor","S4 - Titre"],["s4SubColor","S4 - Sous-titre"],["s4StatColor","S4 - Chiffres"],["s4StatLabelColor","S4 - Labels stats"],["s4StatDescColor","S4 - Descriptions"],
+              ["s4TitleColor","Pourquoi TiMat - Titre"],["s4SubColor","Pourquoi TiMat - Sous-titre"],
               ["s5TitleColor","S5 - Titre"],["testimonialBg","S5 - Fond cards"],["testimonialNameColor","S5 - Nom"],["testimonialCityColor","S5 - Ville"],["testimonialBeforeColor","S5 - Texte avant"],["testimonialAfterColor","S5 - Texte après"],["testimonialStarColor","S5 - Étoiles"],
               ["s6TitleColor","S6 - Titre"],["freeBg","S6 - Fond Gratuit"],["freeLabelColor","S6 - Label Gratuit"],["freePriceColor","S6 - Prix Gratuit"],["freeDescColor","S6 - Description Gratuit"],["proBg","S6 - Fond Pro"],["proBorderColor","S6 - Bordure Pro"],["proLabelColor","S6 - Label Pro"],["proPriceColor","S6 - Prix Pro"],["proSubColor","S6 - Sous-prix Pro"],["proDescColor","S6 - Description Pro"],
               ["ctaTitleColor","CTA - Titre"],["ctaSubTitleColor","CTA - Sous-titre"],["ctaSubColor","CTA - Descriptif"],["ctaFooterColor","CTA - Footer"]
@@ -16453,17 +16394,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
             </div>)}
             <button onClick={addPain}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%"}}>+ Ajouter un pain point</button>
           </BOCard>
-          <BOCard title="Transformations (section 3)" icon="🔄">
-            {(cfg.transformations||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
-              <div style={{display:"flex",gap:4,marginBottom:4}}>
-                <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={t[0]}onChange={e=>setTransfo(i,0,e.target.value)}/>
-                <span style={{fontSize:11,color:"var(--l)",alignSelf:"center"}}>icône</span>
-              </div>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px",marginBottom:3,width:"100%",boxSizing:"border-box"}}value={t[1]}onChange={e=>setTransfo(i,1,e.target.value)}placeholder="Aujourd\'hui..."/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px",marginBottom:3,width:"100%",boxSizing:"border-box"}}value={t[2]}onChange={e=>setTransfo(i,2,e.target.value)}placeholder="Avec TiMat..."/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px",width:"100%",boxSizing:"border-box"}}value={t[3]}onChange={e=>setTransfo(i,3,e.target.value)}placeholder="Résultat..."/>
-            </div>)}
-          </BOCard>
           <BOCard title="Témoignages (section 5)" icon="⭐">
             {(cfg.testimonials||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -16572,7 +16502,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
               {k:"probleme",l:"La réalité du métier",d:"Section « problème → solution »"},
               {k:"demo",l:"L'application en images",d:"Démo interactive (cadre téléphone)"},
               {k:"signature",l:"Pourquoi TiMat",d:"Différenciateurs + comment ça marche"},
-              {k:"transformation",l:"Ce que ça change",d:"Tableau comparatif (aujourd'hui / avec TiMat)"},
               {k:"temoignages",l:"Témoignages",d:"Avis des utilisatrices"},
               {k:"tarifs",l:"Tarifs",d:"Forfaits Gratuit / Pro"},
               {k:"ctaFinal",l:"Appel à l'action final",d:"Bloc « Je commence »"},
@@ -16615,7 +16544,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
           </BOCard>
           <BOCard title="Ordre des sections" icon="↕️">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Glissez-déposez une section pour la déplacer, ou utilisez les flèches. L'ordre s'applique à la page d'accueil (le Hero et le Footer restent à leurs extrémités).</div>
-            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",transformation:"Ce que ça change",temoignages:"Témoignages",confidentialite:"Confidentialité & photos",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
+            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",temoignages:"Témoignages",confidentialite:"Confidentialité & photos",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
               <div key={id}
                 draggable
                 onDragStart={()=>setDragSec(i)}
@@ -16756,7 +16685,6 @@ const DEFAULT_CONFIG = {
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
     section1Bg:"#2E4859",
     section2Bg:"#2E4859",
-    section3Bg:"#F4F1EA",
     section4Bg:"#FDFBF8",
     section5Bg:"#FDFBF8",
     section6Bg:"#F4F1EA",
@@ -16805,19 +16733,8 @@ const DEFAULT_CONFIG = {
     s1QuoteColor:"#E8A84A",
     s2TitleColor:"#0D1B2A",
     s2DescColor:"#6B4F3A",
-    s3TitleColor:"#0D1B2A",
-    s3RowBg1:"#F4F1EA",
-    s3RowBg2:"#FDFBF8",
-    s3LabelBeforeColor:"#B84060",
-    s3LabelAfterColor:"#2E5F8A",
-    s3LabelResultColor:"#3D6B50",
-    s3TextColor:"#6B4F3A",
-    s3ResultColor:"#3D6B50",
     s4TitleColor:"#2E4859",
     s4SubColor:"#6B7A82",
-    s4StatColor:"#E8A84A",
-    s4StatLabelColor:"#fff",
-    s4StatDescColor:"rgba(255,255,255,.4)",
     s5TitleColor:"#0D1B2A",
     testimonialBg:"#fff",
     testimonialNameColor:"#2C1F14",
@@ -16853,12 +16770,6 @@ const DEFAULT_CONFIG = {
     s1Quote:"TiMat n'ajoute pas une appli à votre vie.\nIl retire tout ce qui n'aurait jamais dû s'y trouver.",
     s2Title:"L'application en images, section par section",
     s2Desc:"Cliquez sur un onglet pour voir tout ce que TiMat gère à votre place.",
-    s3Title:"Ce que TiMat change concrètement",
-    s3LabelBefore:"Aujourd'hui",
-    s3LabelAfter:"Avec TiMat",
-    s3LabelResult:"Ce que ça change",
-    s4Title:"Ce que disent les chiffres",
-    s4Sub:"Données internes TiMat · Mars 2026",
     s5Title:"Devenez l'assistante maternelle dont les parents parlent à leurs amis.",
     s6Title:"Le tarif de votre application assistante maternelle",
     ctaTitle:"Vous n'avez pas eu de formation\nen comptabilité.",
@@ -16881,13 +16792,6 @@ const DEFAULT_CONFIG = {
     {ic:"📱",titre:"Community manager des parents",desc:"Répondre aux messages à toute heure, documenter la journée, rassurer les parents... Une relation qui déborde souvent sur votre vie privée."},
     {ic:"🌙",titre:"Administratrice le soir",desc:"Après 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soirée n'existe plus."},
     {ic:"🔇",titre:"Seule face aux problèmes",desc:"Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème."},
-  ],
-  transformations:[
-    ["🧮","Pajemploi vous prend 2h par mois","Récap prêt en 5 minutes","Zéro erreur. Zéro stress."],
-    ["📄","Vos contrats sont dans un tiroir","Modèles guidés, avenants en 2 clics","Solide juridiquement si ça tourne mal."],
-    ["⏰","Les retards de parents créent des conflits","Pointage horodaté, signé par les deux","Vous discutez de faits. Plus de tensions."],
-    ["🗂️","Un document important est introuvable","Tout centralisé, daté, cherchable","En cas de contrôle PMI, tout est là."],
-    ["🌙","Vos soirées servent à l'administratif","5 minutes le matin suffisent","Vos soirées vous appartiennent."],
   ],
   statsHero:[
     {n:0,suf:"€",label:"pour essayer"},
@@ -16944,7 +16848,7 @@ const DEFAULT_CONFIG = {
     linkPack:"",
   },
   sectionsVisibles:{
-    probleme:true, demo:true, signature:true, transformation:true,
+    probleme:true, demo:true, signature:true,
     temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
   },
   faqLanding: FAQ_LANDING_DEFAULT,
@@ -16961,7 +16865,7 @@ const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","signature","demo","transformation","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
+  sectionsOrder:["probleme","signature","demo","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
@@ -16992,7 +16896,6 @@ const loadConfig = async () => {
         landing:{...DEFAULT_CONFIG.landing,...(saved.landing||{})},
         feats:{...DEFAULT_CONFIG.feats,...(saved.feats||{})},
         painPoints: saved.painPoints||DEFAULT_CONFIG.painPoints,
-        transformations: saved.transformations||DEFAULT_CONFIG.transformations,
         statsHero: saved.statsHero||DEFAULT_CONFIG.statsHero,
         testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
         freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
@@ -17743,3 +17646,5 @@ export default function App(){
     </>
   );
 }
+
+            
