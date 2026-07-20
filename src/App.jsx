@@ -16741,6 +16741,7 @@ const FAQ_LANDING_DEFAULT=[
             {q:"Qui a créé TiMat ?",a:"TiMat a été créée par une assistante maternelle agréée, qui a vécu la montagne administrative du métier. Chaque fonction répond à un besoin réel : c'est conçu par une assmat, pour les assmats."},
           ];
 const BLOG_DEFAULT=[
+              {id:"indemnite2026",slug:"indemnite-entretien-assistante-maternelle-2026",cat:"Administratif",catColor:"#C84B31",emoji:"🧴",title:"Indemnité d'entretien : les montants au 1er juin 2026",excerpt:"Le nouveau barème par durée d'accueil, le plancher de 2,65 € et ce qu'il faut vérifier au contrat."},
               {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide clair (2026)",excerpt:"Formule officielle, année complète ou incomplète, congés payés et régularisation — avec un simulateur."},
               {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Paie",catColor:"#5DA9A1",emoji:"🌴",title:"Congés payés : 10 % ou maintien ?",excerpt:"Les deux méthodes comparées, la plus favorable retenue, +2 jours par enfant — avec un simulateur."},
               {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Paie",catColor:"#C84B31",emoji:"💶",title:"Salaire : net, brut et coût employeur",excerpt:"Brut, net, net imposable et coût réel pour le parent — avec un convertisseur brut ⇄ net."},
@@ -16920,7 +16921,7 @@ const DEFAULT_CONFIG = {
   ],
   statsHero:[
     {n:0,suf:"€",label:"pour essayer"},
-    {n:2,suf:" mois",label:"offerts"},
+    {n:2,suf:" mois",label:"offerts · sans CB"},
     {n:100,suf:"%",label:"conforme à la convention"},
     {n:2,suf:" min",label:"pour s'inscrire"},
   ],
