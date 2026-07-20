@@ -22,10 +22,10 @@
   "@type":"ItemList",
   "name":"Boutique TiMat",
   "itemListElement":[
-    {"@type":"Product","name":"Kit Google Sheets","description":"Tableur de gestion prêt à l'emploi pour assistantes maternelles : suivi des heures, salaires et déclarations.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_5kQ7sDdL2cpI78zbeZ9R603"}},
-    {"@type":"Product","name":"Fiche d'urgence","description":"Fiche de renseignements et d'urgence à remplir pour chaque enfant accueilli.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_aFaeV5eP63Tc0Kb0Al9R602"}},
-    {"@type":"Product","name":"Projet d'accueil","description":"Modèle complet de projet d'accueil personnalisable, conforme aux attentes du métier.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_aFacMXeP6dtMboP82N9R601"}},
-    {"@type":"Product","name":"Pack complet","description":"L'ensemble des documents TiMat réunis : kit Google Sheets, fiche d'urgence et projet d'accueil.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_aFa3cn0Yg4Xg1Ofcj39R600"}}
+    {"@type":"Product","name":"Kit Google Sheets","description":"Tableur de gestion prêt à l'emploi pour assistantes maternelles : suivi des heures, salaires et déclarations.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","price":"14.90","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_5kQ7sDdL2cpI78zbeZ9R603"}},
+    {"@type":"Product","name":"Fiche d'urgence","description":"Fiche de renseignements et d'urgence à remplir pour chaque enfant accueilli.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","price":"4.90","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_aFaeV5eP63Tc0Kb0Al9R602"}},
+    {"@type":"Product","name":"Projet d'accueil","description":"Modèle complet de projet d'accueil personnalisable, conforme aux attentes du métier.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","price":"9.90","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_aFacMXeP6dtMboP82N9R601"}},
+    {"@type":"Product","name":"Pack complet","description":"L'ensemble des documents TiMat réunis : kit Google Sheets, fiche d'urgence et projet d'accueil.","brand":{"@type":"Brand","name":"TiMat"},"offers":{"@type":"Offer","priceCurrency":"EUR","price":"24.90","availability":"https://schema.org/InStock","url":"https://buy.stripe.com/test_aFa3cn0Yg4Xg1Ofcj39R600"}}
   ]
 }
 </script>
@@ -51,6 +51,7 @@
   .card.feat::before{content:"⭐ Le plus complet";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--terra);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:999px;white-space:nowrap}
   .ic{font-size:30px;margin-bottom:12px}
   .card h2{font-size:19px;font-weight:800;color:var(--marine2);margin-bottom:8px}
+  .price{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--terra);margin-bottom:12px}
   .card .desc{font-size:14px;color:#55645F;flex:1;margin-bottom:16px}
   .card ul{list-style:none;margin:0 0 16px;padding:0}
   .card li{font-size:13px;color:#4A5A55;padding-left:20px;position:relative;margin-bottom:5px}
@@ -94,6 +95,7 @@
         <li>Calculs de salaire pré-remplis</li>
         <li>À dupliquer sur votre compte Google</li>
       </ul>
+      <div class="price">14,90 €</div>
       <a class="buy" href="https://buy.stripe.com/test_5kQ7sDdL2cpI78zbeZ9R603">Acheter le kit</a>
     </div>
 
@@ -106,6 +108,7 @@
         <li>Autorisations et informations santé</li>
         <li>Prête à imprimer</li>
       </ul>
+      <div class="price">4,90 €</div>
       <a class="buy" href="https://buy.stripe.com/test_aFaeV5eP63Tc0Kb0Al9R602">Acheter la fiche</a>
     </div>
 
@@ -118,6 +121,7 @@
         <li>Rassure et professionnalise</li>
         <li>Personnalisable à votre image</li>
       </ul>
+      <div class="price">9,90 €</div>
       <a class="buy" href="https://buy.stripe.com/test_aFacMXeP6dtMboP82N9R601">Acheter le projet</a>
     </div>
 
@@ -130,6 +134,7 @@
         <li>Fiche d'urgence incluse</li>
         <li>Projet d'accueil inclus</li>
       </ul>
+      <div class="price">24,90 €</div>
       <a class="buy" href="https://buy.stripe.com/test_aFa3cn0Yg4Xg1Ofcj39R600">Acheter le pack</a>
     </div>
 
@@ -142,7 +147,7 @@
       <h2>Et l'application TiMat ?</h2>
       <p>Au-delà des documents, l'application gère tout votre quotidien : contrats, salaires, planning, Pajemploi et suivi des enfants. 2 mois d'essai gratuit, sans carte bancaire.</p>
     </div>
-    <a class="buy pro" href="https://buy.stripe.com/test_3cIfZ98qI2P864vfvf9R604">Découvrir TiMat Pro</a>
+    <a class="buy pro" href="https://buy.stripe.com/test_3cIfZ98qI2P864vfvf9R604">Découvrir TiMat Pro — 9,99 €/mois</a>
   </div>
 
 </main>
