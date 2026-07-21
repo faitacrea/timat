@@ -12180,7 +12180,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
         .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
         .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
-        .lp-hero-grid{display:flex;gap:52px;align-items:center;justify-content:center;max-width:1080px;margin:0 auto}
+        .lp-hero-grid{display:flex;gap:52px;align-items:center;justify-content:center;max-width:1200px;margin:0 auto}
         .lp-hero-text{flex:1 1 460px;min-width:0;text-align:center}
         .lp-hero-visual{flex:0 0 auto;position:relative;display:flex;justify-content:center}
         .lp-hero-tags{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
@@ -12250,7 +12250,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:L.heroImg?"url("+L.heroImg+")":"none", backgroundSize:"cover", backgroundPosition:L.heroImgPosition||"center center", opacity:L.heroImgOpacity||0.12, filter:"blur("+(L.heroImgBlur||2)+"px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         {/* Nav */}
-        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1000, margin: "0 auto" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1200, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
             <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
@@ -12272,7 +12272,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           </div>
         </div>
         {/* Dropdown menu (desktop + mobile) */}
-        {menuOpen&&<div style={{ position: "relative", zIndex: 10, maxWidth: 1000, margin: "0 auto", padding: "0 0 16px" }}>
+        {menuOpen&&<div style={{ position: "relative", zIndex: 10, maxWidth: 1200, margin: "0 auto", padding: "0 0 16px" }}>
           <div style={{ background: "#FDFBF8", borderRadius: 16, padding: 12, boxShadow:"0 24px 70px rgba(0,0,0,.28)", border:"1px solid rgba(0,0,0,.06)", animation:"menuDrop .2s ease" }}>
             {[
               {sec:"Outils & ressources",items:[
@@ -12316,17 +12316,17 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>{T.heroSub}</div>
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             {/* Hero stats (deplaces sous le titre) */}
-        <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?8:5, position: "relative", zIndex: 1, maxWidth: isWeb?520:370, margin: "0 auto 22px" }}>
+        <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
           {statsHero.map(({ n, suf, label }) => (
-            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.32)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.18)"), borderRadius:12, padding:isWeb?"9px 6px":"8px 3px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)" }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: L.heroStatsColor||accent, fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
-              <div style={{ fontSize: 11, color: L.heroStatsLabelColor||"#93A0A2", marginTop: 2 }}>{label}</div>
+            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.55)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12, padding:isWeb?"12px 8px":"9px 4px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center" }}>
+              <div style={{ fontSize: isWeb?22:18, fontWeight: 900, color: L.heroStatsColor||"#B85C38", fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
+              <div style={{ fontSize: isWeb?12.5:11, fontWeight: 700, color: L.heroStatsLabelColor||"#2E4859", marginTop: 3, lineHeight: 1.25 }}>{label}</div>
             </div>
           ))}
         </div>
             <div className="lp-hero-ctas">
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
-              <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"#FFFFFF", color: L.heroBtnSecColor||"#2E4859", border: "1px solid "+(L.heroBtnSecBorder||"rgba(46,72,89,.2)"), borderRadius: 10, padding: "15px 28px", fontSize: 15, cursor: "pointer", fontWeight:600 }}>{T.heroBtnSecTxt}</button>
+              <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"transparent", color: L.heroBtnSecColor||"rgba(46,72,89,.75)", border: "1px solid "+(L.heroBtnSecBorder||"rgba(46,72,89,.22)"), borderRadius: 10, padding: "13px 22px", fontSize: 14, cursor: "pointer", fontWeight:600 }}>{T.heroBtnSecTxt}</button>
             </div>
             <div className="lp-hero-tags">
               {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"#93A0A2", fontWeight: 500 }}>{t.trim()}</span>)}
@@ -12342,7 +12342,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* SECTION 1 - PROBLEME + SOLUTION combinés */}
       {SV.probleme!==false&&<div className="lp-section" style={{ order:ord("probleme"), background: L.section1Bg||"linear-gradient(160deg,#20303C,#2E4859)" }}>
         <WaveDivider color={L.wave1||L.section1Bg||"#20303C"} on={L.wavesOn!==false&&L.waveOn1!==false}/>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
               <div style={{ display:"inline-block", background:"rgba(228,145,120,.14)", border:"1px solid rgba(228,145,120,.32)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#E49178", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
@@ -12394,7 +12394,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* SECTION 2 - DEMO */}
       {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"linear-gradient(160deg,#0D1B2A,#22384A)" }}>
         <WaveDivider color={L.wave2||L.section2Bg||"#0D1B2A"} on={L.wavesOn!==false&&L.waveOn2!==false}/>
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
@@ -12486,7 +12486,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
       {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)", padding: "80px 24px" }}>
         <WaveDivider color={L.wave4||L.section4Bg||"#FDFBF8"} on={L.wavesOn!==false&&L.waveOn4!==false}/>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#C84B31", marginBottom: 24, fontWeight: 700, letterSpacing: ".8px" }}>
@@ -12578,7 +12578,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* SECTION CONFIDENTIALITE P4 - photos privees / hebergement France (differentiateur vs concurrents) */}
       {SV.confidentialite!==false&&<div className="lp-section" style={{ order:ord("confidentialite"), background: L.sectionConfBg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
         <WaveDivider color={L.waveConf||"#FDFBF8"} on={L.wavesOn!==false&&L.waveOnConf!==false}/>
-        <div style={{ maxWidth: 940, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 36 }}>
               <div style={{ fontFamily:fTitle, fontSize:"clamp(22px,4vw,34px)", color:"#2E4859", fontWeight:700, marginBottom:10 }}>Vos photos et vos données restent chez vous</div>
@@ -12606,7 +12606,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
       {/* SECTION 5 - TEMOIGNAGES */}
       {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
               {L.s5Title}
@@ -12633,7 +12633,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* SECTION 6 - TARIFS */}
       {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#2E4859" }}>
         <WaveDivider color={L.wave6||L.section6Bg||"#2E4859"} on={L.wavesOn!==false&&L.waveOn6!==false}/>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
             <div style={{ fontSize: 14, color: L.s6SubColor||"rgba(255,255,255,.72)", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
@@ -12731,7 +12731,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
       {/* BLOG */}
       {SV.blog===true&&<div id="blog-section" className="lp-section" style={{ order:ord("blog"), background: L.blogBg||"#2E4859" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.blogTitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
@@ -16661,7 +16661,7 @@ const DEFAULT_CONFIG = {
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
-    heroTags:"💳 Sans carte bancaire,🔓 Sans engagement,🔒 Données hébergées en France,✅ Calculs conformes à la convention",
+    heroTags:"💳 Sans carte bancaire,🔓 Sans engagement,🔒 Données hébergées en France,👨‍👩‍👧 Espace parent gratuit pour les familles",
     ctaBtnTxt:"Je commence - 2 mois gratuits →",
     ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
     ctaFooter:"Déjà 847 assistantes maternelles nous font confiance · Données hébergées en France 🇫🇷",
