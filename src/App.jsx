@@ -11122,7 +11122,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
         }} title={dark?"Mode clair":"Mode sombre"}>{dark?"☀️":"🌙"}</button>
         {/* Paramètres */}
         <button onClick={()=>setPage2&&setPage2("parametres")}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4}}title="Paramètres">⚙️</button>
-        {user?.is_admin===true&&<button onClick={()=>setPage2&&setPage2("backoffice")}style={{background:"linear-gradient(135deg,var(--T),var(--S))",border:"none",cursor:"pointer",fontSize:11,padding:"3px 8px",borderRadius:8,color:"#fff",fontWeight:700}}title="Admin">🔧 Admin</button>}
+        {/* Bouton admin retire : le backoffice est desormais sur la route dediee /backoffice */}
         <Av t={ini(user.prenom,user.nom)}c={user.couleur}s={30}/>
         <span style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{user.prenom}</span>
         <button onClick={onLogout}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,marginLeft:4}}title="Déconnexion">🚪</button>
@@ -15474,8 +15474,10 @@ function IframePreview({cfg}){
   </div>;
 }
 
-function Backoffice({user,setPage,appConfig,setAppConfig}){
-  const [sec,setSec]=useState("hero");
+function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hideTabBar}){
+  const [secI,setSecI]=useState("hero");
+  const sec=(secProp!==undefined&&secProp!==null)?secProp:secI;
+  const setSec=setSecProp||setSecI;
   const [subSec,setSubSec]=useState("textes");
   const [openBlocks,setOpenBlocks]=useState(null); // P32-3b : index de l'article dont l'éditeur de blocs est ouvert
   const [dragSec,setDragSec]=useState(null); // P32-4 : index de section en cours de drag
@@ -15925,12 +15927,12 @@ function Backoffice({user,setPage,appConfig,setAppConfig}){
       <div style={{width:showPreview?"460px":"100%",minWidth:340,overflowY:"auto",padding:12,borderRight:"1px solid var(--br)",background:"var(--c)",transition:"width .3s"}}>
 
         {/* Main tabs */}
-        <div style={{display:"flex",gap:3,marginBottom:12,flexWrap:"wrap"}}>
+        {!hideTabBar&&<div style={{display:"flex",gap:3,marginBottom:12,flexWrap:"wrap"}}>
           {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
             padding:"5px 10px",borderRadius:14,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11,
             background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",color:sec===s.id?"#fff":"var(--m)",transition:"all .15s"
           }}>{s.ic} {s.l}</button>)}
-        </div>
+        </div>}
 
         {/* ====================== HERO ====================== */}
         {sec==="hero"&&<>
@@ -17087,6 +17089,168 @@ function BienvenueOnboarding({role,user,setPage,onClose}){
   </div>;
 }
 
+// ============================================================
+// BACKOFFICE STANDALONE (route /backoffice) - etape 1 : structure
+// Coquille sidebar (web) / hamburger (mobile) + onglets, reservee admin.
+// Reutilise le composant Backoffice existant (contenu, sections, sauvegardes).
+// ============================================================
+function BackofficeLogin({onLogin}){
+  const [email,setEmail]=useState("");
+  const [pwd,setPwd]=useState("");
+  const [err,setErr]=useState("");
+  const [busy,setBusy]=useState(false);
+  const submit=async()=>{
+    setErr(""); setBusy(true);
+    try{
+      const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password:pwd});
+      if(error||!data?.user){ setErr("Identifiants incorrects."); setBusy(false); return; }
+      onLogin(data.user);
+    }catch(e){ setErr("Erreur reseau, reessaie."); setBusy(false); }
+  };
+  return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:28,maxWidth:380,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.12)"}}>
+      <div style={{textAlign:"center",marginBottom:18}}>
+        <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,var(--T),var(--S))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 10px"}}>🔧</div>
+        <div style={{fontWeight:800,fontSize:18,color:"var(--b)"}}>Backoffice TiMat</div>
+        <div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Accès réservé à l'administrateur.</div>
+      </div>
+      <input className="inp" type="email" placeholder="E-mail" value={email} onChange={e=>setEmail(e.target.value)} style={{width:"100%",marginBottom:10,fontSize:14,padding:"11px 13px",boxSizing:"border-box"}}/>
+      <input className="inp" type="password" placeholder="Mot de passe" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")submit();}} style={{width:"100%",marginBottom:12,fontSize:14,padding:"11px 13px",boxSizing:"border-box"}}/>
+      {err&&<div style={{color:"var(--R)",fontSize:12.5,marginBottom:10,textAlign:"center"}}>{err}</div>}
+      <button onClick={submit} disabled={busy} className="btn bT" style={{width:"100%",justifyContent:"center",padding:"12px"}}>{busy?"⏳":"Se connecter"}</button>
+      <div style={{textAlign:"center",marginTop:14}}><a href="/" style={{fontSize:12.5,color:"var(--m)",textDecoration:"none"}}>← Retour au site</a></div>
+    </div>
+  </div>;
+}
+
+function BackofficeShell({user,appConfig,setAppConfig}){
+  const [top,setTop]=useState("dashboard");
+  const [sec,setSec]=useState("hero");
+  const [drawer,setDrawer]=useState(false);
+  const [stats,setStats]=useState(null);
+  useEffect(()=>{
+    let cancel=false;
+    (async()=>{
+      try{
+        const {count:u}=await supabase.from("profiles").select("*",{count:"exact",head:true});
+        const {count:p}=await supabase.from("profiles").select("*",{count:"exact",head:true}).eq("subscription_status","pro");
+        const {count:e}=await supabase.from("enfants").select("*",{count:"exact",head:true});
+        if(!cancel)setStats({users:u||0,pro:p||0,enfants:e||0});
+      }catch(e){ if(!cancel)setStats({users:0,pro:0,enfants:0}); }
+    })();
+    return ()=>{cancel=true;};
+  },[]);
+  const goSite=()=>{ try{window.location.href="/";}catch(e){} };
+  const pickTop=(id)=>{
+    setTop(id); setDrawer(false);
+    if(id==="contenu")setSec("hero");
+    else if(id==="sections")setSec("sections");
+    else if(id==="backups")setSec("historique");
+  };
+  const GROUPS=[
+    {grp:"Vue d'ensemble",items:[{id:"dashboard",l:"Tableau de bord",ic:"📊"}]},
+    {grp:"Site & app",items:[{id:"contenu",l:"Contenu (landing)",ic:"✏️"},{id:"sections",l:"Sections",ic:"🧩"},{id:"pages",l:"Pages & articles",ic:"📄",soon:true}]},
+    {grp:"Référencement",items:[{id:"seo",l:"SEO",ic:"🔍",soon:true}]},
+    {grp:"Système",items:[{id:"backups",l:"Sauvegardes",ic:"💾"}]},
+  ];
+  const CONTENU_SUBS=[{id:"hero",l:"Hero",ic:"🏠"},{id:"textes",l:"Textes",ic:"✏️"},{id:"couleurs",l:"Couleurs",ic:"🎨"},{id:"boutons",l:"Boutons",ic:"🔘"},{id:"polices",l:"Polices",ic:"🔤"},{id:"contenu",l:"Blog & listes",ic:"📋"},{id:"app",l:"App",ic:"⚙️"}];
+  const SECTIONS_SUBS=[{id:"sections",l:"Ordre & textes",ic:"↕️"},{id:"sectionsvis",l:"Afficher / masquer",ic:"👁"}];
+  const isBO=(top==="contenu"||top==="sections"||top==="backups");
+  return <div className={"bo-root"+(drawer?" open":"")}>
+    <style>{`
+      .bo-root{min-height:100vh;background:#FDFBF8;font-family:'DM Sans',sans-serif;}
+      .bo-wrap{display:flex;min-height:100vh;}
+      .bo-side{width:230px;background:#2E4A5A;color:#EDE4DE;flex-shrink:0;display:flex;flex-direction:column;padding:14px 10px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+      .bo-grp{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#8FA6B4;font-weight:700;padding:11px 10px 5px;}
+      .bo-tab{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:#DCE6EC;border:none;background:none;width:100%;text-align:left;font-family:inherit;margin-bottom:2px;}
+      .bo-tab .ic{font-size:16px;width:22px;text-align:center;}
+      .bo-tab:hover{background:rgba(255,255,255,.07);}
+      .bo-tab.on{background:#E49178;color:#fff;font-weight:800;}
+      .bo-tab .soon{margin-left:auto;font-size:9px;background:rgba(255,255,255,.16);padding:2px 6px;border-radius:20px;font-weight:700;}
+      .bo-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;}
+      .bo-foot .mail{color:#EDE4DE;font-weight:600;display:block;margin-bottom:7px;word-break:break-all;}
+      .bo-main{flex:1;min-width:0;display:flex;flex-direction:column;}
+      .bo-mbar{display:none;align-items:center;gap:12px;padding:11px 14px;background:#fff;border-bottom:1px solid #EAE0E8;position:sticky;top:0;z-index:15;}
+      .bo-burger{background:none;border:none;font-size:23px;cursor:pointer;color:#2E4A5A;line-height:1;padding:0;}
+      .bo-scrim{display:none;}
+      .bo-subnav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px 0;background:#FDFBF8;}
+      .bo-subbtn{padding:7px 12px;border-radius:20px;border:1px solid #EAE0E8;background:#fff;color:#6B4F5A;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+      .bo-subbtn.on{background:#FDF6F4;color:#B85C38;border-color:#F3CEC2;}
+      .bo-pad{padding:22px;max-width:820px;}
+      .bo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+      .bo-stat{background:#fff;border:1px solid #EAE0E8;border-radius:12px;padding:16px;}
+      .bo-stat .n{font-size:27px;font-weight:900;color:#B85C38;line-height:1;}
+      .bo-stat .l{font-size:12.5px;color:#6B4F5A;font-weight:600;margin-top:6px;}
+      .bo-card{background:#fff;border:1px solid #EAE0E8;border-radius:12px;padding:18px;margin-bottom:14px;color:#2E4A5A;}
+      .bo-card h3{font-size:15px;font-weight:800;margin:0 0 8px;}
+      .bo-card p{font-size:13px;color:#6B4F5A;line-height:1.6;margin:0;}
+      .bo-soon{border:1.5px dashed #F3CEC2;background:#FDF6F4;border-radius:12px;padding:30px 20px;text-align:center;color:#B85C38;font-weight:700;font-size:14px;line-height:1.6;}
+      .bo-soon .big{font-size:34px;display:block;margin-bottom:10px;}
+      @media(max-width:760px){
+        .bo-side{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-100%);transition:transform .22s;box-shadow:4px 0 24px rgba(0,0,0,.25);}
+        .bo-root.open .bo-side{transform:translateX(0);}
+        .bo-mbar{display:flex;}
+        .bo-scrim{position:fixed;inset:0;background:rgba(46,74,90,.45);z-index:25;}
+        .bo-root.open .bo-scrim{display:block;}
+        .bo-stats{grid-template-columns:1fr;}
+        .bo-pad{padding:16px;}
+      }
+    `}</style>
+    <div className="bo-scrim" onClick={()=>setDrawer(false)}/>
+    <div className="bo-wrap">
+      <nav className="bo-side">
+        {GROUPS.map(g=><div key={g.grp}>
+          <div className="bo-grp">{g.grp}</div>
+          {g.items.map(it=><button key={it.id} className={"bo-tab"+(top===it.id?" on":"")} onClick={()=>pickTop(it.id)}>
+            <span className="ic">{it.ic}</span>{it.l}{it.soon&&<span className="soon">à venir</span>}
+          </button>)}
+        </div>)}
+        <div className="bo-foot">
+          <span className="mail">{user?.email||""}</span>
+          <span style={{color:"#E8A594",fontWeight:700,cursor:"pointer"}} onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} goSite();}}>🚪 Se déconnecter</span>
+        </div>
+      </nav>
+      <div className="bo-main">
+        <div className="bo-mbar">
+          <button className="bo-burger" onClick={()=>setDrawer(true)}>☰</button>
+          <span style={{fontWeight:800,fontSize:15,color:"#2E4A5A"}}>TiMat · Admin</span>
+          <a href="/" style={{marginLeft:"auto",fontSize:12.5,color:"#6B4F5A",textDecoration:"none",fontWeight:600}}>← Site</a>
+        </div>
+        {top==="contenu"&&<div className="bo-subnav">{CONTENU_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}>{s.ic} {s.l}</button>)}</div>}
+        {top==="sections"&&<div className="bo-subnav">{SECTIONS_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}>{s.ic} {s.l}</button>)}</div>}
+        <div style={{display:isBO?"block":"none",flex:1,minWidth:0}}>
+          <Backoffice user={user} appConfig={appConfig} setAppConfig={setAppConfig} secProp={sec} setSecProp={setSec} hideTabBar setPage={goSite}/>
+        </div>
+        {top==="dashboard"&&<div className="bo-pad">
+          <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Tableau de bord</div>
+          <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:18}}>Tes chiffres en direct.</div>
+          <div className="bo-stats">
+            <div className="bo-stat"><div className="n">{stats?stats.users:"…"}</div><div className="l">Comptes inscrits</div></div>
+            <div className="bo-stat"><div className="n">{stats?stats.pro:"…"}</div><div className="l">Abonnés Pro</div></div>
+            <div className="bo-stat"><div className="n">{stats?stats.enfants:"…"}</div><div className="l">Enfants suivis</div></div>
+          </div>
+          <div className="bo-card"><h3>Bienvenue 👋</h3><p>Utilise le menu pour modifier le contenu de ta landing, organiser tes sections ou gérer tes sauvegardes. Les onglets « Pages & articles » et « SEO » arrivent aux prochaines étapes.</p></div>
+        </div>}
+        {top==="pages"&&<div className="bo-pad"><div className="bo-soon"><span className="big">📄</span>Pages &amp; articles<br/><span style={{fontWeight:400,color:"#6B4F5A",fontSize:13}}>Liste et gestion de tes pages du site. Prévu à l'étape 4.</span></div></div>}
+        {top==="seo"&&<div className="bo-pad"><div className="bo-soon"><span className="big">🔍</span>Audit SEO<br/><span style={{fontWeight:400,color:"#6B4F5A",fontSize:13}}>Vérification de tes pages (titres, meta, H1, sitemap, liens 404). Prévu à l'étape 4.</span></div></div>}
+      </div>
+    </div>
+  </div>;
+}
+
+function BackofficePage({user,appConfig,setAppConfig,onLogin}){
+  if(!user)return <BackofficeLogin onLogin={onLogin}/>;
+  if(user.is_admin!==true)return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:28,maxWidth:360,width:"100%",textAlign:"center",boxShadow:"0 12px 40px rgba(0,0,0,.12)"}}>
+      <div style={{fontSize:34,marginBottom:10}}>🔒</div>
+      <div style={{fontWeight:800,fontSize:18,color:"var(--b)",marginBottom:6}}>Accès refusé</div>
+      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:16}}>Cette zone est réservée à l'administrateur. Le compte {user.email} n'y a pas accès.</div>
+      <a href="/" style={{display:"inline-block",padding:"11px 18px",borderRadius:12,background:"linear-gradient(135deg,var(--T),var(--S))",color:"#fff",fontWeight:700,fontSize:14,textDecoration:"none"}}>← Retour au site</a>
+    </div>
+  </div>;
+  return <BackofficeShell user={user} appConfig={appConfig} setAppConfig={setAppConfig}/>;
+}
+
 export default function App(){
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
@@ -17449,6 +17613,13 @@ export default function App(){
   );
 
 
+  // ROUTE DEDIEE /backoffice : rendu autonome hors de l app, reserve a l admin
+  let _isBO=false; try{ _isBO=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
+  if(_isBO){
+    const _onLoginBO=u=>{ setUser({...u,_needsProfileFetch:true,_profileConfirmed:false}); };
+    return <><Styles/><BackofficePage user={user} appConfig={appConfig} setAppConfig={setAppConfig} onLogin={_onLoginBO}/></>;
+  }
+
   // - Utiliser données réelles
   if(!user){
     const _onLogin=u=>{setUser({...u,_needsProfileFetch:true,_profileConfirmed:false});setPage("accueil");};
@@ -17562,7 +17733,7 @@ export default function App(){
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)}/>;
-      case "backoffice": return user?.is_admin===true?<Backoffice user={user} setPage={setPage} appConfig={appConfig} setAppConfig={setAppConfig}/>:<div className="fi"><PageHeader icon="🔒" title="Accès refusé" sub="Zone admin réservée."/></div>;
+      case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
