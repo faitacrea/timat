@@ -1,1 +1,6 @@
-{}
+{
+  "rewrites": [
+    { "source": "/backoffice", "destination": "/index.html" },
+    { "source": "/backoffice/", "destination": "/index.html" }
+  ]
+}
