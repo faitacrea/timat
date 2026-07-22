@@ -15448,7 +15448,7 @@ const BOCard=({title,icon,children})=>(
   </div>
 );
 
-function IframePreview({cfg}){
+function IframePreview({cfg,noBezel}){
   const [device,setDevice]=useState("mobile");
   const [body,setBody]=useState(null);
   const initDoc=(ifr)=>{
@@ -15466,9 +15466,9 @@ function IframePreview({cfg}){
       {[["mobile","📱 Mobile"],["web","🖥 Web"]].map(([k,l])=>
         <button key={k}onClick={()=>{setBody(null);setDevice(k);}}style={{padding:"6px 16px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",background:device===k?"var(--T)":"#fff",color:device===k?"#fff":"var(--m)"}}>{l}</button>)}
     </div>
-    <div style={{flex:1,overflow:"auto",display:"flex",justifyContent:"center",padding:device==="mobile"?"20px":"0"}}>
+    <div style={{flex:1,overflow:"auto",display:"flex",justifyContent:"center",padding:(device==="mobile"&&!noBezel)?"20px":"0"}}>
       <iframe key={device} ref={initDoc} onLoad={e=>initDoc(e.target)} title="Aperçu landing"
-        style={{width:device==="mobile"?"390px":"100%",height:device==="mobile"?"812px":"100%",maxWidth:"100%",flexShrink:0,border:device==="mobile"?"10px solid #1a1a2e":"none",borderRadius:device==="mobile"?32:0,background:"#fff"}}/>
+        style={{width:(device==="mobile"&&!noBezel)?"390px":"100%",height:(device==="mobile"&&!noBezel)?"812px":"100%",maxWidth:"100%",flexShrink:0,border:(device==="mobile"&&!noBezel)?"10px solid #1a1a2e":"none",borderRadius:(device==="mobile"&&!noBezel)?32:0,background:"#fff"}}/>
     </div>
     {body&&createPortal(<div className="app"><Styles/><LandingPage onLogin={()=>{}}dark={false}setDark={()=>{}}config={cfg} preview/></div>, body)}
   </div>;
@@ -15478,6 +15478,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
   const [secI,setSecI]=useState("hero");
   const sec=(secProp!==undefined&&secProp!==null)?secProp:secI;
   const setSec=setSecProp||setSecI;
+  const [isWide,setIsWide]=useState(typeof window!=="undefined"&&window.innerWidth>=900);
+  useEffect(()=>{const f=()=>setIsWide(window.innerWidth>=900);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
+  const [mView,setMView]=useState("champs");
   const [subSec,setSubSec]=useState("textes");
   const [openBlocks,setOpenBlocks]=useState(null); // P32-3b : index de l'article dont l'éditeur de blocs est ouvert
   const [dragSec,setDragSec]=useState(null); // P32-4 : index de section en cours de drag
@@ -15908,11 +15911,11 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
     {/* Top bar */}
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid var(--br)",background:"var(--w)",flexWrap:"wrap",gap:8}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
+      {(isWide||!hideTabBar)&&<div style={{display:"flex",alignItems:"center",gap:10}}>
         <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={()=>setPage("accueil")}>← App</button>
         <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>🔧 Backoffice</span>
         <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
-      </div>
+      </div>}
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
         <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
         <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
@@ -15922,9 +15925,14 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
       </div>
     </div>
 
-    <div style={{display:"flex",height:"calc(100vh - 52px)",overflow:"hidden"}}>
-      {/* LEFT PANEL */}
-      <div style={{width:showPreview?"460px":"100%",minWidth:340,overflowY:"auto",padding:12,borderRight:"1px solid var(--br)",background:"var(--c)",transition:"width .3s"}}>
+    {/* Bascule mobile Champs / Apercu (ecrans etroits uniquement) */}
+    {!isWide&&<div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"var(--c)"}}>
+      {[["champs","📝 Champs"],["apercu","👁 Aperçu"]].map(([k,l])=><button key={k}onClick={()=>setMView(k)}style={{flex:1,padding:"10px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13.5,background:mView===k?"var(--T)":"rgba(0,0,0,.05)",color:mView===k?"#fff":"var(--m)"}}>{l}</button>)}
+    </div>}
+
+    <div style={{display:isWide?"flex":"block",height:isWide?"calc(100vh - 52px)":"auto",overflow:isWide?"hidden":"visible"}}>
+      {/* LEFT PANEL (champs) */}
+      {(isWide||mView==="champs")&&<div style={{width:(isWide&&showPreview)?"460px":"100%",minWidth:isWide?340:0,overflowY:isWide?"auto":"visible",padding:12,borderRight:isWide?"1px solid var(--br)":"none",background:"var(--c)",transition:"width .3s"}}>
 
         {/* Main tabs */}
         {!hideTabBar&&<div style={{display:"flex",gap:3,marginBottom:12,flexWrap:"wrap"}}>
@@ -16609,11 +16617,11 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
           </BOCard>
         </>}
 
-      </div>
+      </div>}
 
       {/* RIGHT PANEL: Live Preview (web / mobile) */}
-      {showPreview&&<div style={{flex:1,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
-        <IframePreview cfg={cfg}/>
+      {((isWide&&showPreview)||(!isWide&&mView==="apercu"))&&<div style={{flex:isWide?1:"none",width:isWide?"auto":"100%",height:isWide?"auto":"calc(100vh - 200px)",minHeight:isWide?0:420,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
+        <IframePreview cfg={cfg} noBezel={!isWide}/>
       </div>}
     </div>
   </div>;
