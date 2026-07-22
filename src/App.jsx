@@ -16506,29 +16506,29 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
         {/* ====================== SECTIONS VISIBLES (P32 Palier 1 : afficher/masquer) ====================== */}
         {sec==="sectionsvis"&&<>
-          <BOCard title="Afficher / masquer les sections de la landing" icon="👁">
-            <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Décochez une section pour la masquer de la page d'accueil. Le contenu n'est pas supprimé — vous pouvez la réafficher à tout moment. Le Hero et le Footer restent toujours visibles.</div>
-            {[
-              {k:"probleme",l:"La réalité du métier",d:"Section « problème → solution »"},
-              {k:"demo",l:"L'application en images",d:"Démo interactive (cadre téléphone)"},
-              {k:"signature",l:"Pourquoi TiMat",d:"Différenciateurs + comment ça marche"},
-              {k:"temoignages",l:"Témoignages",d:"Avis des utilisatrices"},
-              {k:"tarifs",l:"Tarifs",d:"Forfaits Gratuit / Pro"},
-              {k:"ctaFinal",l:"Appel à l'action final",d:"Bloc « Je commence »"},
-              {k:"faq",l:"Questions fréquentes",d:"FAQ de la landing"},
-              {k:"blog",l:"Ressources / Blog",d:"Cartes d'articles"},
-            ].map(({k,l,d})=>{
-              const on=(cfg.sectionsVisibles||{})[k]!==false;
-              return <div key={k}style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{l}</div>
-                  <div style={{fontSize:11,color:"var(--m)",marginTop:2}}>{d}</div>
-                </div>
-                <div onClick={()=>setSV(k,!on)}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
-                  <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-                </div>
-              </div>;
-            })}
+          <BOCard title="Gestionnaire de sections" icon="🧩">
+            <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Réorganise ta page d'accueil avec les flèches, et affiche ou masque chaque section. Le contenu n'est jamais supprimé — tu peux réafficher à tout moment. Le Hero et le Footer restent toujours aux extrémités.</div>
+            {(()=>{
+              const META={probleme:{l:"La réalité du métier"},signature:{l:"Pourquoi TiMat"},demo:{l:"L'application en images"},temoignages:{l:"Témoignages",strict:true},confidentialite:{l:"Confidentialité & photos"},tarifs:{l:"Tarifs"},ctaFinal:{l:"Appel à l'action final"},faq:{l:"Questions fréquentes"},blog:{l:"Ressources / Blog",strict:true}};
+              const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;
+              const SVm=cfg.sectionsVisibles||{};
+              return order.map((id,i)=>{
+                const meta=META[id]||{l:id};
+                const on=meta.strict?(SVm[id]===true):(SVm[id]!==false);
+                return <div key={id} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 10px",marginBottom:7,background:on?"var(--w)":"var(--c)",border:"1px solid var(--br)",borderRadius:10}}>
+                  <span style={{fontSize:11,fontWeight:700,color:"var(--l)",width:14,textAlign:"center",flexShrink:0}}>{i+1}</span>
+                  <div style={{display:"flex",flexDirection:"column",gap:3,flexShrink:0}}>
+                    <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:28,height:19,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
+                    <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:28,height:19,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
+                  </div>
+                  <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:on?"var(--b)":"var(--l)"}}>{meta.l}{!on&&<span style={{fontSize:10,fontWeight:700,color:"var(--l)",marginLeft:7}}>· masquée</span>}</span>
+                  <div onClick={()=>setSV(id,!on)}title={on?"Masquer":"Afficher"}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
+                    <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
+                  </div>
+                </div>;
+              });
+            })()}
+            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--Tp)",color:"#B85C38",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✏️ Renommer / modifier le contenu d'une section</button>
           </BOCard>
           <BOCard title="Vagues entre sections" icon="🌊">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Ajoute une transition en vague en haut de chaque section. Désactive si tu préfères des séparations nettes.</div>
@@ -16552,23 +16552,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
-          <BOCard title="Ordre des sections" icon="↕️">
-            <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Glissez-déposez une section pour la déplacer, ou utilisez les flèches. L'ordre s'applique à la page d'accueil (le Hero et le Footer restent à leurs extrémités).</div>
-            {(()=>{const labels={probleme:"La réalité du métier",demo:"L'application en images",signature:"Pourquoi TiMat",temoignages:"Témoignages",confidentialite:"Confidentialité & photos",tarifs:"Tarifs",ctaFinal:"Appel à l'action final",faq:"Questions fréquentes",blog:"Ressources / Blog"};const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;return order.map((id,i)=>(
-              <div key={id}
-                draggable
-                onDragStart={()=>setDragSec(i)}
-                onDragOver={e=>e.preventDefault()}
-                onDrop={()=>{if(dragSec!==null&&dragSec!==i)moveSectionAt(dragSec,i);setDragSec(null);}}
-                onDragEnd={()=>setDragSec(null)}
-                style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:6,background:dragSec===i?"var(--c)":"var(--w)",border:"1px solid var(--br)",borderRadius:10,cursor:"grab",opacity:dragSec===i?.5:1,transition:"opacity .15s"}}>
-                <span style={{fontSize:15,color:"var(--m)"}}>⠿</span>
-                <span style={{flex:1,fontSize:13,fontWeight:600,color:"var(--b)"}}>{i+1}. {labels[id]||id}</span>
-                <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:7,padding:"3px 9px",cursor:i===0?"not-allowed":"pointer",fontSize:12,opacity:i===0?.3:1,fontFamily:"inherit"}}>↑</button>
-                <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:7,padding:"3px 9px",cursor:i===order.length-1?"not-allowed":"pointer",fontSize:12,opacity:i===order.length-1?.3:1,fontFamily:"inherit"}}>↓</button>
-              </div>
-            ));})()}
-          </BOCard>
+          {/* Carte "Ordre des sections" retiree : ordre + visibilite fusionnes dans le Gestionnaire de sections ci-dessus */}
         </>}
 
         {/* ====================== HISTORIQUE (P30D : backups + restauration) ====================== */}
@@ -17152,7 +17136,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
   const pickTop=(id)=>{
     setTop(id); setDrawer(false);
     if(id==="contenu")setSec("hero");
-    else if(id==="sections")setSec("sections");
+    else if(id==="sections")setSec("sectionsvis");
     else if(id==="backups")setSec("historique");
   };
   const GROUPS=[
@@ -17162,7 +17146,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
     {grp:"Système",items:[{id:"backups",l:"Sauvegardes",ic:"💾"}]},
   ];
   const CONTENU_SUBS=[{id:"hero",l:"Hero",ic:"🏠"},{id:"textes",l:"Textes",ic:"✏️"},{id:"couleurs",l:"Couleurs",ic:"🎨"},{id:"boutons",l:"Boutons",ic:"🔘"},{id:"polices",l:"Polices",ic:"🔤"},{id:"contenu",l:"Blog & listes",ic:"📋"},{id:"app",l:"App",ic:"⚙️"}];
-  const SECTIONS_SUBS=[{id:"sections",l:"Ordre & textes",ic:"↕️"},{id:"sectionsvis",l:"Afficher / masquer",ic:"👁"}];
+  const SECTIONS_SUBS=[{id:"sectionsvis",l:"Gérer les sections",ic:"🧩"},{id:"sections",l:"Éditer le contenu",ic:"✏️"}];
   const isBO=(top==="contenu"||top==="sections"||top==="backups");
   return <div className={"bo-root"+(drawer?" open":"")}>
     <style>{`
