@@ -11929,9 +11929,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
     if(preview)return;
     const SITE="https://timat.app";
     const IMG=SITE+"/logo.png"; const OGIMG=SITE+"/og-image.png";
-    const DESC="TiMat, l'application des assistantes maternelles et parents employeurs : contrat conforme, calcul de mensualisation et de salaire, bulletin de paie, déclaration Pajemploi, planning, pointage des présences et cahier de liaison numérique. Simulateurs gratuits (salaire, CMG, indemnités).";
+    const DESC="TiMat gère salaire, congés et déclaration Pajemploi de votre assistante maternelle. Contrats conformes IDCC 3239. 2 mois d'essai gratuit, sans CB.";
     const prevTitle=document.title;
-    document.title="Application assistante maternelle : salaire, Pajemploi | TiMat";
+    document.title="TiMat — Salaire, contrat et Pajemploi assistante maternelle";
     const setMeta=(name,content)=>{
       let m=document.querySelector('meta[name="'+name+'"]');
       if(!m){m=document.createElement("meta");m.setAttribute("name",name);document.head.appendChild(m);}
