@@ -17086,6 +17086,95 @@ function BienvenueOnboarding({role,user,setPage,onClose}){
 // Coquille sidebar (web) / hamburger (mobile) + onglets, reservee admin.
 // Reutilise le composant Backoffice existant (contenu, sections, sauvegardes).
 // ============================================================
+function SeoAudit(){
+  const [loading,setLoading]=useState(false);
+  const [data,setData]=useState(null);
+  const [err,setErr]=useState("");
+  const [open,setOpen]=useState({});
+  const run=async()=>{
+    setLoading(true); setErr(""); setData(null);
+    try{
+      const r=await fetch("/api/seo-audit");
+      const j=await r.json().catch(()=>null);
+      if(!r.ok||!j||j.error) throw new Error((j&&j.error)||("HTTP "+r.status));
+      setData(j);
+    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Verifie que api/seo-audit.js est bien deploye."); }
+    setLoading(false);
+  };
+  const mk={ok:"✅",warn:"⚠️",fail:"❌"};
+  const short=(u)=>{try{const x=new URL(u);return x.pathname==="/"?"/ (accueil)":x.pathname;}catch(e){return u;}};
+  const pageState=(p)=>{ if(p.status>=400||p.error)return"fail"; if(p.checks.some(c=>c.state==="fail"))return"fail"; if(p.checks.some(c=>c.state==="warn"))return"warn"; return"ok"; };
+  return <div>
+    <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Santé SEO</div>
+    <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Audit de tes propres pages : titres, meta description, H1/H2, Open Graph, liens morts et contenu lisible par les robots. Relançable à tout moment.</div>
+    <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:14,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
+    {err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}</div>}
+    {data&&<>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
+        <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:"#2E4A5A"}}>{data.total}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Pages analysées</div></div>
+        <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:data.withWarn>0?"#92600E":"#1F8A5B"}}>{data.withWarn}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Avec alertes</div></div>
+        <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:data.dead>0?"#C84B31":"#1F8A5B"}}>{data.dead}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Liens morts</div></div>
+      </div>
+      {data.results.map((p,i)=>{const st=pageState(p);const isOpen=open[i];return <div key={i} style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,marginBottom:8,overflow:"hidden"}}>
+        <div onClick={()=>setOpen(o=>({...o,[i]:!o[i]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer"}}>
+          <span style={{fontSize:16}}>{mk[st]}</span>
+          <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:700,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(p.url)}</span>
+          {p.status>0&&<span style={{fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:20,background:p.status>=400?"#FBF1EF":"#EAF7F1",color:p.status>=400?"#C84B31":"#1F8A5B"}}>{p.status}</span>}
+          <span style={{fontSize:12,color:"#A8909A"}}>{isOpen?"▲":"▼"}</span>
+        </div>
+        {isOpen&&<div style={{padding:"0 14px 12px"}}>
+          {p.error&&<div style={{fontSize:12.5,color:"#C84B31",padding:"8px 0",fontWeight:600}}>{p.error}</div>}
+          {p.checks.map((c,j)=><div key={j} style={{display:"flex",gap:9,padding:"8px 0",borderTop:"1px solid #F2ECF0"}}>
+            <span style={{fontSize:14,flexShrink:0}}>{mk[c.state]}</span>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:"#2E4A5A"}}>{c.label}</div><div style={{fontSize:12,color:"#6B4F5A",marginTop:1,lineHeight:1.4}}>{c.detail}</div></div>
+          </div>)}
+        </div>}
+      </div>;})}
+      <div style={{fontSize:11.5,color:"#A8909A",marginTop:10,lineHeight:1.5}}>Analyse du {new Date(data.generatedAt).toLocaleString("fr-FR")}. L'audit vérifie tes propres pages (celles du sitemap). Pour les positions Google et mots-clés, on branchera Search Console ensuite.</div>
+    </>}
+  </div>;
+}
+
+function SitePages(){
+  const [urls,setUrls]=useState(null);
+  const [err,setErr]=useState("");
+  const [status,setStatus]=useState({});
+  const [checking,setChecking]=useState(false);
+  useEffect(()=>{
+    let alive=true;
+    (async()=>{
+      try{
+        const r=await fetch("/sitemap.xml");
+        const xml=await r.text();
+        const list=(xml.match(/<loc>([^<]+)<\/loc>/g)||[]).map(m=>m.replace(/<\/?loc>/g,"").trim());
+        if(alive)setUrls(list);
+      }catch(e){ if(alive){setErr("Impossible de lire le sitemap.xml.");setUrls([]);} }
+    })();
+    return ()=>{alive=false;};
+  },[]);
+  const check=async()=>{
+    if(!urls||!urls.length) return;
+    setChecking(true);
+    const res={};
+    await Promise.all(urls.map(async(u)=>{ try{const r=await fetch(u,{method:"HEAD"});res[u]=r.status;}catch(e){res[u]=0;} }));
+    setStatus(res); setChecking(false);
+  };
+  const short=(u)=>{try{const x=new URL(u);return x.pathname==="/"?"/ (accueil)":x.pathname;}catch(e){return u;}};
+  return <div>
+    <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Pages &amp; articles</div>
+    <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Toutes les pages référencées dans ton sitemap. Ouvre-les, ou vérifie qu'elles répondent bien (pas de 404).</div>
+    <button onClick={check} disabled={checking||!urls||!urls.length} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"11px 18px",fontSize:13.5,fontWeight:700,cursor:checking?"wait":"pointer",fontFamily:"inherit",marginBottom:14}}>{checking?"⏳ Vérification…":"🔎 Vérifier le statut des pages"}</button>
+    {err&&<div style={{color:"#C84B31",fontSize:13,marginBottom:12}}>{err}</div>}
+    {!urls&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Chargement du sitemap…</div>}
+    {urls&&urls.map((u,i)=>{const s=status[u];return <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 14px",marginBottom:8}}>
+      <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(u)}</span>
+      {s!==undefined&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,background:(s>=400||s===0)?"#FBF1EF":"#EAF7F1",color:(s>=400||s===0)?"#C84B31":"#1F8A5B"}}>{s===0?"erreur":s}</span>}
+      <a href={u} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"#B85C38",fontWeight:700,textDecoration:"none",flexShrink:0}}>Ouvrir ↗</a>
+    </div>;})}
+    {urls&&urls.length===0&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Aucune URL trouvée dans le sitemap.</div>}
+  </div>;
+}
+
 function BackofficeLogin({onLogin}){
   const [email,setEmail]=useState("");
   const [pwd,setPwd]=useState("");
@@ -17141,8 +17230,8 @@ function BackofficeShell({user,appConfig,setAppConfig}){
   };
   const GROUPS=[
     {grp:"Vue d'ensemble",items:[{id:"dashboard",l:"Tableau de bord",ic:"📊"}]},
-    {grp:"Site & app",items:[{id:"contenu",l:"Contenu (landing)",ic:"✏️"},{id:"sections",l:"Sections",ic:"🧩"},{id:"pages",l:"Pages & articles",ic:"📄",soon:true}]},
-    {grp:"Référencement",items:[{id:"seo",l:"SEO",ic:"🔍",soon:true}]},
+    {grp:"Site & app",items:[{id:"contenu",l:"Contenu (landing)",ic:"✏️"},{id:"sections",l:"Sections",ic:"🧩"},{id:"pages",l:"Pages & articles",ic:"📄"}]},
+    {grp:"Référencement",items:[{id:"seo",l:"SEO",ic:"🔍"}]},
     {grp:"Système",items:[{id:"backups",l:"Sauvegardes",ic:"💾"}]},
   ];
   const CONTENU_SUBS=[{id:"hero",l:"Hero",ic:"🏠"},{id:"textes",l:"Textes",ic:"✏️"},{id:"couleurs",l:"Couleurs",ic:"🎨"},{id:"boutons",l:"Boutons",ic:"🔘"},{id:"polices",l:"Polices",ic:"🔤"},{id:"contenu",l:"Blog & listes",ic:"📋"},{id:"app",l:"App",ic:"⚙️"}];
@@ -17221,10 +17310,10 @@ function BackofficeShell({user,appConfig,setAppConfig}){
             <div className="bo-stat"><div className="n">{stats?stats.pro:"…"}</div><div className="l">Abonnés Pro</div></div>
             <div className="bo-stat"><div className="n">{stats?stats.enfants:"…"}</div><div className="l">Enfants suivis</div></div>
           </div>
-          <div className="bo-card"><h3>Bienvenue 👋</h3><p>Utilise le menu pour modifier le contenu de ta landing, organiser tes sections ou gérer tes sauvegardes. Les onglets « Pages & articles » et « SEO » arrivent aux prochaines étapes.</p></div>
+          <div className="bo-card"><h3>Bienvenue 👋</h3><p>Utilise le menu pour modifier le contenu de ta landing, organiser tes sections, gérer tes pages ou lancer un audit SEO de ton site.</p></div>
         </div>}
-        {top==="pages"&&<div className="bo-pad"><div className="bo-soon"><span className="big">📄</span>Pages &amp; articles<br/><span style={{fontWeight:400,color:"#6B4F5A",fontSize:13}}>Liste et gestion de tes pages du site. Prévu à l'étape 4.</span></div></div>}
-        {top==="seo"&&<div className="bo-pad"><div className="bo-soon"><span className="big">🔍</span>Audit SEO<br/><span style={{fontWeight:400,color:"#6B4F5A",fontSize:13}}>Vérification de tes pages (titres, meta, H1, sitemap, liens 404). Prévu à l'étape 4.</span></div></div>}
+        {top==="pages"&&<div className="bo-pad"><SitePages/></div>}
+        {top==="seo"&&<div className="bo-pad"><SeoAudit/></div>}
       </div>
     </div>
   </div>;
