@@ -17086,6 +17086,78 @@ function BienvenueOnboarding({role,user,setPage,onClose}){
 // Coquille sidebar (web) / hamburger (mobile) + onglets, reservee admin.
 // Reutilise le composant Backoffice existant (contenu, sections, sauvegardes).
 // ============================================================
+function SearchConsoleSetup(){
+  const step={display:"flex",gap:10,marginBottom:12};
+  const numc={width:22,height:22,borderRadius:11,background:"#E49178",color:"#fff",fontSize:12,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0};
+  const txt={fontSize:12.5,color:"#2E4A5A",lineHeight:1.55};
+  return <div>
+    <div style={{background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:12,padding:"16px 16px 5px",marginBottom:14}}>
+      <div style={{fontWeight:800,fontSize:14,color:"#B85C38",marginBottom:12}}>⚙️ Configuration en une fois (~10 min)</div>
+      <div style={step}><span style={numc}>1</span><span style={txt}>Sur <b>console.cloud.google.com</b>, crée un projet, puis active l'<b>API Google Search Console</b>.</span></div>
+      <div style={step}><span style={numc}>2</span><span style={txt}>Crée un <b>compte de service</b>, puis génère et télécharge sa <b>clé JSON</b>.</span></div>
+      <div style={step}><span style={numc}>3</span><span style={txt}>Dans <b>Search Console → Paramètres → Utilisateurs et autorisations</b>, ajoute l'<b>e-mail du compte de service</b> (il finit par <code>.iam.gserviceaccount.com</code>) en lecture.</span></div>
+      <div style={step}><span style={numc}>4</span><span style={txt}>Dans <b>Vercel → Settings → Environment Variables</b>, ajoute :<br/>• <code>GSC_SERVICE_ACCOUNT</code> = tout le contenu du fichier JSON<br/>• <code>GSC_SITE_URL</code> = <code>sc-domain:timat.app</code></span></div>
+      <div style={step}><span style={numc}>5</span><span style={txt}>Redéploie (un simple push, ou « Redeploy » dans Vercel), puis recharge cette page.</span></div>
+    </div>
+    <div style={{fontSize:12,color:"#6B4F5A",lineHeight:1.5}}>Une fois fait, tes mots-clés, positions et clics s'afficheront ici automatiquement. Ces données sont <b>gratuites et officielles</b> (fournies par Google).</div>
+  </div>;
+}
+
+function SearchConsole(){
+  const [loading,setLoading]=useState(true);
+  const [data,setData]=useState(null);
+  const [err,setErr]=useState("");
+  const [tab,setTab]=useState("queries");
+  const load=async()=>{
+    setLoading(true); setErr("");
+    try{
+      const r=await fetch("/api/search-console");
+      const j=await r.json().catch(()=>null);
+      if(!j) throw new Error("Réponse invalide (HTTP "+r.status+")");
+      if(j.error) throw new Error(j.error);
+      setData(j);
+    }catch(e){ setErr(e.message||"Erreur"); setData(null); }
+    setLoading(false);
+  };
+  useEffect(()=>{ load(); },[]);
+  const cardS={background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 12px",textAlign:"center"};
+  const numS={fontSize:22,fontWeight:900,color:"#2E4A5A"};
+  const lblS={fontSize:11.5,color:"#6B4F5A",fontWeight:600,marginTop:4};
+  const pct=(v)=>Math.round((v||0)*1000)/10+" %";
+  const pos=(v)=>Math.round((v||0)*10)/10;
+  const num=(v)=>Math.round(v||0).toLocaleString("fr-FR");
+  const short=(u)=>{try{const x=new URL(u);return x.pathname==="/"?"/ (accueil)":x.pathname;}catch(e){return u;}};
+  return <div>
+    <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Search Console</div>
+    <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Tes vraies données Google : les mots-clés qui t'amènent du trafic, tes positions moyennes, clics et impressions (28 derniers jours).</div>
+    {loading&&<div style={{color:"#6B4F5A",fontSize:13,padding:"20px 0"}}>⏳ Chargement des données Search Console…</div>}
+    {!loading&&err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}<br/><span style={{fontSize:12,color:"#6B4F5A"}}>Vérifie que le compte de service est bien ajouté dans Search Console et que les variables Vercel sont correctes.</span></div>}
+    {!loading&&data&&data.configured===false&&<SearchConsoleSetup/>}
+    {!loading&&data&&data.configured&&<>
+      <button onClick={load} style={{background:"none",border:"1px solid #EAE0E8",borderRadius:10,padding:"7px 14px",fontSize:12.5,fontWeight:700,color:"#6B4F5A",cursor:"pointer",fontFamily:"inherit",marginBottom:14}}>↻ Rafraîchir</button>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
+        <div style={cardS}><div style={numS}>{num(data.totals.clicks)}</div><div style={lblS}>Clics</div></div>
+        <div style={cardS}><div style={numS}>{num(data.totals.impressions)}</div><div style={lblS}>Impressions</div></div>
+        <div style={cardS}><div style={numS}>{pct(data.totals.ctr)}</div><div style={lblS}>CTR moyen</div></div>
+        <div style={cardS}><div style={numS}>{pos(data.totals.position)}</div><div style={lblS}>Position moyenne</div></div>
+      </div>
+      <div style={{display:"flex",gap:6,marginBottom:12}}>
+        {[["queries","🔑 Mots-clés"],["pages","📄 Pages"]].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:"9px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,background:tab===k?"#E49178":"rgba(0,0,0,.05)",color:tab===k?"#fff":"#6B4F5A"}}>{l}</button>)}
+      </div>
+      {(tab==="queries"?data.queries:data.pages).length===0&&<div style={{textAlign:"center",padding:24,color:"#6B4F5A",fontSize:13,background:"#fff",border:"1px solid #EAE0E8",borderRadius:12}}>Pas encore de données sur cette période. Reviens dans quelques jours, le temps que Google indexe plus de pages.</div>}
+      {(tab==="queries"?data.queries:data.pages).map((row,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 13px",marginBottom:7}}>
+        <span style={{width:18,fontSize:11,fontWeight:700,color:"#A8909A",flexShrink:0}}>{i+1}</span>
+        <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tab==="queries"?row.q:short(row.p)}</span>
+        <span style={{textAlign:"right",flexShrink:0}}>
+          <span style={{display:"block",fontSize:13,fontWeight:800,color:"#B85C38"}}>#{pos(row.position)}</span>
+          <span style={{display:"block",fontSize:10.5,color:"#6B4F5A"}}>{num(row.clicks)} clics · {num(row.impressions)} vues</span>
+        </span>
+      </div>)}
+      <div style={{fontSize:11.5,color:"#A8909A",marginTop:10,lineHeight:1.5}}>Période : {data.start} au {data.end}. Source : Google Search Console ({data.siteUrl}).</div>
+    </>}
+  </div>;
+}
+
 function SeoAudit(){
   const [loading,setLoading]=useState(false);
   const [data,setData]=useState(null);
@@ -17231,7 +17303,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
   const GROUPS=[
     {grp:"Vue d'ensemble",items:[{id:"dashboard",l:"Tableau de bord",ic:"📊"}]},
     {grp:"Site & app",items:[{id:"contenu",l:"Contenu (landing)",ic:"✏️"},{id:"sections",l:"Sections",ic:"🧩"},{id:"pages",l:"Pages & articles",ic:"📄"}]},
-    {grp:"Référencement",items:[{id:"seo",l:"SEO",ic:"🔍"}]},
+    {grp:"Référencement",items:[{id:"seo",l:"SEO",ic:"🔍"},{id:"gsc",l:"Search Console",ic:"📈"}]},
     {grp:"Système",items:[{id:"backups",l:"Sauvegardes",ic:"💾"}]},
   ];
   const CONTENU_SUBS=[{id:"hero",l:"Hero",ic:"🏠"},{id:"textes",l:"Textes",ic:"✏️"},{id:"couleurs",l:"Couleurs",ic:"🎨"},{id:"boutons",l:"Boutons",ic:"🔘"},{id:"polices",l:"Polices",ic:"🔤"},{id:"contenu",l:"Blog & listes",ic:"📋"},{id:"app",l:"App",ic:"⚙️"}];
@@ -17314,6 +17386,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
         </div>}
         {top==="pages"&&<div className="bo-pad"><SitePages/></div>}
         {top==="seo"&&<div className="bo-pad"><SeoAudit/></div>}
+        {top==="gsc"&&<div className="bo-pad"><SearchConsole/></div>}
       </div>
     </div>
   </div>;
