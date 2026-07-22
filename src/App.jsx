@@ -17293,6 +17293,18 @@ function BackofficeShell({user,appConfig,setAppConfig}){
     })();
     return ()=>{cancel=true;};
   },[]);
+  const [stripeMrr,setStripeMrr]=useState(null);
+  useEffect(()=>{
+    let cancel=false;
+    (async()=>{
+      try{
+        const r=await fetch("/api/stripe-mrr");
+        const j=await r.json();
+        if(!cancel)setStripeMrr(j);
+      }catch(e){ if(!cancel)setStripeMrr({ok:false,error:"Impossible de contacter /api/stripe-mrr."}); }
+    })();
+    return ()=>{cancel=true;};
+  },[]);
   const goSite=()=>{ try{window.location.href="/";}catch(e){} };
   const pickTop=(id)=>{
     setTop(id); setDrawer(false);
@@ -17381,6 +17393,19 @@ function BackofficeShell({user,appConfig,setAppConfig}){
             <div className="bo-stat"><div className="n">{stats?stats.users:"…"}</div><div className="l">Comptes inscrits</div></div>
             <div className="bo-stat"><div className="n">{stats?stats.pro:"…"}</div><div className="l">Abonnés Pro</div></div>
             <div className="bo-stat"><div className="n">{stats?stats.enfants:"…"}</div><div className="l">Enfants suivis</div></div>
+          </div>
+          <div className="bo-card">
+            <h3>💳 Revenu (Stripe){stripeMrr&&stripeMrr.ok&&stripeMrr.mode==="test"&&<span style={{marginLeft:8,fontSize:10,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>MODE TEST</span>}</h3>
+            {stripeMrr===null&&<p>Chargement…</p>}
+            {stripeMrr&&!stripeMrr.ok&&<p>⚠️ {stripeMrr.error||"Stripe non configuré."}</p>}
+            {stripeMrr&&stripeMrr.ok&&<>
+              <div className="bo-stats" style={{marginTop:4,marginBottom:0}}>
+                <div className="bo-stat"><div className="n">{stripeMrr.mrrFormatted}</div><div className="l">MRR estimé</div></div>
+                <div className="bo-stat"><div className="n">{stripeMrr.activeCount}</div><div className="l">Abonnés actifs</div></div>
+                <div className="bo-stat"><div className="n">{stripeMrr.trialingCount}</div><div className="l">En essai gratuit</div></div>
+              </div>
+              {stripeMrr.mode==="test"&&<p style={{marginTop:10}}>Ces chiffres viennent de comptes de <strong>test</strong> Stripe (aucun paiement réel). Ils deviendront réels dès le passage de Stripe en mode Live.</p>}
+            </>}
           </div>
           <div className="bo-card"><h3>Bienvenue 👋</h3><p>Utilise le menu pour modifier le contenu de ta landing, organiser tes sections, gérer tes pages ou lancer un audit SEO de ton site.</p></div>
         </div>}
