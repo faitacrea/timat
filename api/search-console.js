@@ -7,6 +7,8 @@
 //   GSC_SITE_URL        = "sc-domain:timat.app" (propriete Domaine) ou "https://timat.app/" (propriete Prefixe d'URL)
 // + ajouter l'email du compte de service comme utilisateur dans Search Console.
 
+import { requireAdmin } from "./_admin.js";
+
 import crypto from "crypto";
 
 function b64url(input) {
@@ -41,6 +43,8 @@ async function getAccessToken(clientEmail, privateKey) {
 
 export default async function handler(req, res) {
   try {
+    if (!(await requireAdmin(req, res))) return;
+
     const raw = process.env.GSC_SERVICE_ACCOUNT;
     if (!raw) {
       res.status(200).json({ configured: false, message: "Search Console n'est pas encore configure." });
