@@ -17111,7 +17111,7 @@ function SearchConsole(){
   const load=async()=>{
     setLoading(true); setErr("");
     try{
-      const r=await fetch("/api/search-console");
+      const r=await boFetch("/api/search-console");
       const j=await r.json().catch(()=>null);
       if(!j) throw new Error("Réponse invalide (HTTP "+r.status+")");
       if(j.error) throw new Error(j.error);
@@ -17158,15 +17158,35 @@ function SearchConsole(){
   </div>;
 }
 
+// Appels aux endpoints du backoffice : on joint le jeton de session Supabase
+// pour que le serveur puisse verifier que l appelant est bien l administrateur.
+async function boFetch(url){
+  let t="";
+  try{ const{data}=await supabase.auth.getSession(); t=data?.session?.access_token||""; }catch(e){}
+  return fetch(url,{headers:t?{Authorization:"Bearer "+t}:{}});
+}
+
 function SeoAudit(){
   const [loading,setLoading]=useState(false);
   const [data,setData]=useState(null);
   const [err,setErr]=useState("");
   const [open,setOpen]=useState({});
+  const [history,setHistory]=useState(null);
+  useEffect(()=>{
+    let alive=true;
+    (async()=>{
+      try{
+        const r=await boFetch("/api/seo-audit-history");
+        const j=await r.json();
+        if(alive)setHistory(j);
+      }catch(e){ if(alive)setHistory({ok:false,error:"Impossible de charger l'historique."}); }
+    })();
+    return ()=>{alive=false;};
+  },[data]);
   const run=async()=>{
     setLoading(true); setErr(""); setData(null);
     try{
-      const r=await fetch("/api/seo-audit");
+      const r=await boFetch("/api/seo-audit");
       const j=await r.json().catch(()=>null);
       if(!r.ok||!j||j.error) throw new Error((j&&j.error)||("HTTP "+r.status));
       setData(j);
@@ -17181,6 +17201,24 @@ function SeoAudit(){
     <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Audit de tes propres pages : titres, meta description, H1/H2, Open Graph, liens morts et contenu lisible par les robots. Relançable à tout moment.</div>
     <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:14,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
     {err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}</div>}
+    {history&&history.ok&&history.history.length>0&&<div className="bo-card" style={{marginBottom:16}}>
+      <h3>Historique des audits</h3>
+      <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:8}}>
+        {history.history.map((h,i)=>{
+          const prev=history.history[i+1];
+          const dDead=prev?h.dead-prev.dead:null;
+          const dWarn=prev?h.with_warn-prev.with_warn:null;
+          return <div key={h.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12.5,padding:"7px 0",borderBottom:i<history.history.length-1?"1px solid #F2ECF0":"none"}}>
+            <span style={{color:"#6B4F5A"}}>{new Date(h.created_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
+            <span style={{display:"flex",gap:12}}>
+              <span style={{color:h.dead>0?"#C84B31":"#1F8A5B",fontWeight:700}}>{h.dead} mort{h.dead>1?"s":""}{dDead?(dDead>0?" ▲":" ▼"):""}</span>
+              <span style={{color:h.with_warn>0?"#92600E":"#1F8A5B",fontWeight:700}}>{h.with_warn} alerte{h.with_warn>1?"s":""}{dWarn?(dWarn>0?" ▲":" ▼"):""}</span>
+            </span>
+          </div>;
+        })}
+      </div>
+    </div>}
+    {history&&!history.ok&&<div style={{fontSize:12,color:"#A8909A",marginBottom:14}}>Historique indisponible : {history.error}</div>}
     {data&&<>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
         <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:"#2E4A5A"}}>{data.total}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Pages analysées</div></div>
@@ -17229,7 +17267,7 @@ function SitePages(){
     let alive=true;
     (async()=>{
       try{
-        const r=await fetch("/api/orphan-pages");
+        const r=await boFetch("/api/orphan-pages");
         const j=await r.json();
         if(alive)setOrphans(j);
       }catch(e){ if(alive)setOrphans({ok:false,error:"Impossible de contacter /api/orphan-pages."}); }
@@ -17326,7 +17364,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
     let cancel=false;
     (async()=>{
       try{
-        const r=await fetch("/api/stripe-mrr");
+        const r=await boFetch("/api/stripe-mrr");
         const j=await r.json();
         if(!cancel)setStripeMrr(j);
       }catch(e){ if(!cancel)setStripeMrr({ok:false,error:"Impossible de contacter /api/stripe-mrr."}); }
