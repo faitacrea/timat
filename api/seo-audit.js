@@ -1,7 +1,14 @@
 // api/seo-audit.js
 // Audit SEO des PROPRES pages du site (celles listees dans sitemap.xml).
 // Verifie : titre, meta description, canonical, H1/H2, Open Graph, statut HTTP, contenu lisible.
-// Aucune dependance externe : parsing par expressions regulieres.
+// Enregistre un resume de chaque audit dans Supabase (table seo_audit_history) pour l'historique.
+
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
 function fetchWithTimeout(url, ms) {
   const ctrl = new AbortController();
@@ -99,6 +106,19 @@ export default async function handler(req, res) {
     const dead = results.filter(function (x) { return x.status >= 400 || x.error; }).length;
     const withWarn = results.filter(function (x) { return x.checks.some(function (c) { return c.state === "warn"; }); }).length;
     const withFail = results.filter(function (x) { return x.checks.some(function (c) { return c.state === "fail"; }); }).length;
+
+    try {
+      await supabase.from("seo_audit_history").insert({
+        generated_at: new Date().toISOString(),
+        total: results.length,
+        dead: dead,
+        with_warn: withWarn,
+        with_fail: withFail,
+        base: base
+      });
+    } catch (e) {
+      // On ne fait pas echouer l'audit si la sauvegarde de l'historique rate.
+    }
 
     res.status(200).json({
       base: base,
