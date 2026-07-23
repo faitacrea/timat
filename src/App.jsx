@@ -12318,7 +12318,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {/* Hero stats (deplaces sous le titre) */}
         <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
           {statsHero.map(({ n, suf, label }) => (
-            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.55)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12, padding:isWeb?"12px 8px":"9px 4px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center" }}>
+            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.55)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12, padding:isWeb?"12px 8px":"9px 4px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center" }}>
               <div style={{ fontSize: isWeb?22:18, fontWeight: 900, color: L.heroStatsColor||"#B85C38", fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
               <div style={{ fontSize: isWeb?12.5:11, fontWeight: 700, color: L.heroStatsLabelColor||"#2E4859", marginTop: 3, lineHeight: 1.25 }}>{label}</div>
             </div>
