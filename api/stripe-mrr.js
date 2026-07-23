@@ -6,9 +6,12 @@
 // Necessite la variable Vercel STRIPE_SECRET_KEY (deja utilisee par le checkout existant).
 
 import Stripe from "stripe";
+import { requireAdmin } from "./_admin.js";
 
 export default async function handler(req, res) {
   try {
+    if (!(await requireAdmin(req, res))) return;
+
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
       res.status(500).json({ ok: false, error: "STRIPE_SECRET_KEY manquante dans les variables Vercel." });
