@@ -80,9 +80,12 @@ export default async function handler(req, res) {
 
         const pick = function (re) { const m = html.match(re); return m ? m[1].trim() : null; };
         const title = pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
-        let desc = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]*?)["']/i);
-        if (!desc) desc = pick(/<meta[^>]+content=["']([\s\S]*?)["'][^>]+name=["']description["']/i);
-        const canonical = pick(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i);
+        // On capture le guillemet ouvrant puis on s'arrete sur LE MEME guillemet
+        // (\1). Sans cela, une apostrophe dans le texte coupait la valeur en deux.
+        const pick2 = function (re) { const m = html.match(re); return m ? m[2].trim() : null; };
+        let desc = pick2(/<meta[^>]+name=["']description["'][^>]*?content=(["'])([\s\S]*?)\1/i);
+        if (!desc) desc = pick2(/<meta[^>]+content=(["'])([\s\S]*?)\1[^>]*?name=["']description["']/i);
+        const canonical = pick2(/<link[^>]+rel=["']canonical["'][^>]*?href=(["'])([\s\S]*?)\1/i);
         const ogTitle = /property=["']og:title["']/i.test(html);
         const ogDesc = /property=["']og:description["']/i.test(html);
         const ogImg = /property=["']og:image["']/i.test(html);
