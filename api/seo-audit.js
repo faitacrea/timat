@@ -4,6 +4,7 @@
 // Enregistre un resume de chaque audit dans Supabase (table seo_audit_history) pour l'historique.
 
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "./_admin.js";
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -19,6 +20,8 @@ function fetchWithTimeout(url, ms) {
 
 export default async function handler(req, res) {
   try {
+    if (!(await requireAdmin(req, res))) return;
+
     const proto = (req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
     const host = req.headers["host"] || "timat.app";
     const base = proto + "://" + host;
