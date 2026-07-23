@@ -7,7 +7,8 @@
 //   GSC_SITE_URL        = "sc-domain:timat.app" (propriete Domaine) ou "https://timat.app/" (propriete Prefixe d'URL)
 // + ajouter l'email du compte de service comme utilisateur dans Search Console.
 
-import { requireAdmin } from "./_admin.js";
+
+import { createClient } from "@supabase/supabase-js";
 
 import crypto from "crypto";
 
@@ -39,6 +40,36 @@ async function getAccessToken(clientEmail, privateKey) {
   const j = await resp.json();
   if (!j.access_token) throw new Error(j.error_description || j.error || "Authentification Google echouee");
   return j.access_token;
+}
+
+// Verification serveur que l appelant est bien l administrateur.
+// Volontairement recopiee dans chaque endpoint : aucun fichier partage a creer,
+// donc rien qui puisse casser au moment de l upload.
+async function requireAdmin(req, res) {
+  try {
+    const header = req.headers["authorization"] || req.headers["Authorization"] || "";
+    const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+    if (!token) {
+      res.status(401).json({ ok: false, error: "Authentification requise." });
+      return null;
+    }
+    const adminDb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const { data, error } = await adminDb.auth.getUser(token);
+    if (error || !data || !data.user) {
+      res.status(401).json({ ok: false, error: "Session invalide ou expiree." });
+      return null;
+    }
+    const { data: profile, error: pErr } = await adminDb
+      .from("profiles").select("is_admin").eq("id", data.user.id).maybeSingle();
+    if (pErr || !profile || profile.is_admin !== true) {
+      res.status(403).json({ ok: false, error: "Acces reserve a l administrateur." });
+      return null;
+    }
+    return data.user;
+  } catch (e) {
+    res.status(500).json({ ok: false, error: "Erreur de verification des droits." });
+    return null;
+  }
 }
 
 export default async function handler(req, res) {
