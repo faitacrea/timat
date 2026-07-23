@@ -8,11 +8,15 @@
 // serverless Vercel n'a pas acces au dossier public/ au runtime : on liste
 // son contenu via l'API GitHub.
 
+import { requireAdmin } from "./_admin.js";
+
 const REPO = "faitacrea/timat";
 const EXCLUDE = new Set(["404.html"]);
 
 export default async function handler(req, res) {
   try {
+    if (!(await requireAdmin(req, res))) return;
+
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
       res.status(200).json({ ok: false, error: "GITHUB_TOKEN manquant dans les variables Vercel." });
