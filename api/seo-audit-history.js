@@ -4,6 +4,7 @@
 // GET /api/seo-audit-history
 
 import { createClient } from "@supabase/supabase-js";
+import { requireAdmin } from "./_admin.js";
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -12,6 +13,8 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   try {
+    if (!(await requireAdmin(req, res))) return;
+
     const { data, error } = await supabase
       .from("seo_audit_history")
       .select("*")
