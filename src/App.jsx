@@ -17212,6 +17212,7 @@ function SitePages(){
   const [err,setErr]=useState("");
   const [status,setStatus]=useState({});
   const [checking,setChecking]=useState(false);
+  const [orphans,setOrphans]=useState(null);
   useEffect(()=>{
     let alive=true;
     (async()=>{
@@ -17221,6 +17222,17 @@ function SitePages(){
         const list=(xml.match(/<loc>([^<]+)<\/loc>/g)||[]).map(m=>m.replace(/<\/?loc>/g,"").trim());
         if(alive)setUrls(list);
       }catch(e){ if(alive){setErr("Impossible de lire le sitemap.xml.");setUrls([]);} }
+    })();
+    return ()=>{alive=false;};
+  },[]);
+  useEffect(()=>{
+    let alive=true;
+    (async()=>{
+      try{
+        const r=await fetch("/api/orphan-pages");
+        const j=await r.json();
+        if(alive)setOrphans(j);
+      }catch(e){ if(alive)setOrphans({ok:false,error:"Impossible de contacter /api/orphan-pages."}); }
     })();
     return ()=>{alive=false;};
   },[]);
@@ -17235,6 +17247,22 @@ function SitePages(){
   return <div>
     <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Pages &amp; articles</div>
     <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Toutes les pages référencées dans ton sitemap. Ouvre-les, ou vérifie qu'elles répondent bien (pas de 404).</div>
+    {orphans&&orphans.ok&&orphans.orphans&&orphans.orphans.length>0&&<div className="bo-card">
+      <h3>Pages orphelines<span style={{marginLeft:8,fontSize:10,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>{orphans.orphans.length} trouvée{orphans.orphans.length>1?"s":""}</span></h3>
+      <p>Fichiers présents dans public/ mais absents du sitemap.xml — invisibles pour Google.</p>
+      <div style={{marginTop:10}}>
+        {orphans.orphans.map((o,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,background:"#FDFBF8",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:13.5,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.name}</div>
+            <div style={{fontSize:12,color:"#8FA6B4"}}>{o.path}</div>
+          </div>
+          <a href={"/"+o.name} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"#B85C38",fontWeight:700,textDecoration:"none",flexShrink:0}}>Voir →</a>
+        </div>)}
+      </div>
+      <div style={{marginTop:6,fontSize:12,color:"#8FA6B4",lineHeight:1.5}}>Pour chaque page : ajoute-la au sitemap si elle doit être indexée, ou supprime-la si elle est obsolète.</div>
+    </div>}
+    {orphans&&orphans.ok&&orphans.orphans&&orphans.orphans.length===0&&<div className="bo-card"><h3>Pages orphelines</h3><p>✅ Aucune page orpheline détectée : tous les fichiers de public/ sont dans le sitemap.</p></div>}
+    {orphans&&!orphans.ok&&<div className="bo-card"><h3>Pages orphelines</h3><p>⚠️ {orphans.error||"GITHUB_TOKEN non configuré dans Vercel."}</p></div>}
     <button onClick={check} disabled={checking||!urls||!urls.length} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"11px 18px",fontSize:13.5,fontWeight:700,cursor:checking?"wait":"pointer",fontFamily:"inherit",marginBottom:14}}>{checking?"⏳ Vérification…":"🔎 Vérifier le statut des pages"}</button>
     {err&&<div style={{color:"#C84B31",fontSize:13,marginBottom:12}}>{err}</div>}
     {!urls&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Chargement du sitemap…</div>}
