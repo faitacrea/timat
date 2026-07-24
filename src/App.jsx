@@ -17111,7 +17111,7 @@ function SearchConsole(){
   const load=async()=>{
     setLoading(true); setErr("");
     try{
-      const r=await boFetch("/api/search-console");
+      const r=await boFetch("/api/backoffice?action=search-console");
       const j=await r.json().catch(()=>null);
       if(!j) throw new Error("Réponse invalide (HTTP "+r.status+")");
       if(j.error) throw new Error(j.error);
@@ -17176,7 +17176,7 @@ function SeoAudit(){
     let alive=true;
     (async()=>{
       try{
-        const r=await boFetch("/api/seo-audit-history");
+        const r=await boFetch("/api/backoffice?action=seo-audit-history");
         const j=await r.json();
         if(alive)setHistory(j);
       }catch(e){ if(alive)setHistory({ok:false,error:"Impossible de charger l'historique."}); }
@@ -17186,11 +17186,11 @@ function SeoAudit(){
   const run=async()=>{
     setLoading(true); setErr(""); setData(null);
     try{
-      const r=await boFetch("/api/seo-audit");
+      const r=await boFetch("/api/backoffice?action=seo-audit");
       const j=await r.json().catch(()=>null);
       if(!r.ok||!j||j.error) throw new Error((j&&j.error)||("HTTP "+r.status));
       setData(j);
-    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Verifie que api/seo-audit.js est bien deploye."); }
+    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Verifie que api/backoffice.js est bien deploye."); }
     setLoading(false);
   };
   const mk={ok:"✅",warn:"⚠️",fail:"❌"};
@@ -17267,7 +17267,7 @@ function SitePages(){
     let alive=true;
     (async()=>{
       try{
-        const r=await boFetch("/api/orphan-pages");
+        const r=await boFetch("/api/backoffice?action=orphan-pages");
         const j=await r.json();
         if(alive)setOrphans(j);
       }catch(e){ if(alive)setOrphans({ok:false,error:"Impossible de contacter /api/orphan-pages."}); }
@@ -17364,7 +17364,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
     let cancel=false;
     (async()=>{
       try{
-        const r=await boFetch("/api/stripe-mrr");
+        const r=await boFetch("/api/backoffice?action=stripe-mrr");
         const j=await r.json();
         if(!cancel)setStripeMrr(j);
       }catch(e){ if(!cancel)setStripeMrr({ok:false,error:"Impossible de contacter /api/stripe-mrr."}); }
