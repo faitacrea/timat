@@ -2677,7 +2677,11 @@ function Messagerie({enfants,role,pEId,user}){
       const enfantIds=liste.map(e=>e.id);
       const{data,error}=await supabase.from('messages').select('*').in('enfant_id',enfantIds).order('created_at',{ascending:true}).limit(200);
       if(!error&&data){
-        setMsgs(data.map(m=>({...m,eId:m.enfant_id,de:m.auteur_role,h:m.heure||new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})})));
+        setMsgs(data.map(m=>{
+          const enf=liste.find(e=>e.id===m.enfant_id);
+          const de=(enf&&m.expediteur_id===enf.asmat_id)?"asmat":"parent";
+          return{...m,eId:m.enfant_id,de:de,txt:m.texte,h:new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+        }));
       }
       setLoadingMsgs(false);
     };
@@ -2695,7 +2699,9 @@ function Messagerie({enfants,role,pEId,user}){
         if(enfantIds.includes(m.enfant_id)){
           setMsgs(prev=>{
             if(prev.find(p=>p.id===m.id))return prev;
-            return[...prev,{...m,eId:m.enfant_id,de:m.auteur_role,h:m.heure||new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}];
+            const enf=liste.find(e=>e.id===m.enfant_id);
+            const de=(enf&&m.expediteur_id===enf.asmat_id)?"asmat":"parent";
+            return[...prev,{...m,eId:m.enfant_id,de:de,txt:m.texte,h:new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}];
           });
           setTimeout(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),100);
         }
@@ -2710,12 +2716,12 @@ function Messagerie({enfants,role,pEId,user}){
     if(isDemoMode){
       setMsgs(p=>[...p,{id:"mn"+Date.now(),eId:enfant.id,de:role==="asmat"?"asmat":"parent",h:heure,txt,lu:true}]);
     }else{
+      const destinataireId=role==="asmat"?(enfant.parent_id||null):(enfant.asmat_id||null);
       const{error}=await supabase.from('messages').insert({
         enfant_id:enfant.id,
-        auteur_id:user.id,
-        auteur_role:role==="asmat"?"asmat":"parent",
+        expediteur_id:user.id,
+        destinataire_id:destinataireId,
         texte:txt,
-        heure:heure,
         lu:false,
       });
       if(error)console.error('Message send error:',error.message);
