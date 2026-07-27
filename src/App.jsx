@@ -17574,7 +17574,7 @@ function BackofficePage({user,appConfig,setAppConfig,onLogin}){
 export default function App(){
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
-  const [showWelcome,setShowWelcome]=useState(false);
+  const [pEIdSel,setPEIdSel]=useState(null);  const [showWelcome,setShowWelcome]=useState(false);
   useEffect(()=>{
     if(user?.id){ try{ if(!localStorage.getItem("timat:onboarding:seen:"+user.id)) setShowWelcome(true); }catch(e){} }
   },[user?.id]);
@@ -18040,7 +18040,6 @@ export default function App(){
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
     return [];
   })()));
-  const [pEIdSel,setPEIdSel]=useState(null);
   const pEId=(pEIdSel&&enfants.some(e=>e.id===pEIdSel))?pEIdSel:enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
