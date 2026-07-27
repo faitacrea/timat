@@ -18040,13 +18040,14 @@ export default function App(){
     if(parentDemo)return D.enfants.filter(e=>e.parentId===parentDemo.id);
     return [];
   })()));
-  const pEId=enfants[0]?.id;
+  const [pEIdSel,setPEIdSel]=useState(null);
+  const pEId=(pEIdSel&&enfants.some(e=>e.id===pEIdSel))?pEIdSel:enfants[0]?.id;
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
 
   const renderPage=()=>{
     switch(page){
-      case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
+      case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
       case "cahier_jour": return <CahierJour {...P}/>;
       case "fiches_enfants": return <FichesEnfants enfants={enfants} user={user} setPage={setPage}/>;
       case "journee": return <VueJournee {...P}/>;
@@ -18108,7 +18109,7 @@ export default function App(){
       case "contrats": return <AdminFinances {...P} user={user}/>;
       case "recap": return <AdminFinances {...P} user={user}/>;
       case "dashboard": return <TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>;
-      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants[0]} setPage={setPage} user={user}/>;
+      default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
     }
   };
 
@@ -18143,6 +18144,13 @@ export default function App(){
           showNotifs={showNotifs} setShowNotifs={setShowNotifs} setPage2={setPage}/>
         <BandeauHorsLigne/>
         <BandeauInstall/>
+        {role==="parent"&&enfants.length>1&&<div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 16px",overflowX:"auto",background:"var(--c)",borderBottom:"1px solid var(--br)"}}>
+          <span style={{fontSize:12,fontWeight:700,color:"var(--m)",flexShrink:0}}>Mon enfant :</span>
+          {enfants.map(e=><button key={e.id} onClick={()=>setPEIdSel(e.id)}
+            style={{border:pEId===e.id?"2px solid var(--P)":"1px solid var(--br)",background:pEId===e.id?"var(--Pp)":"#fff",borderRadius:20,padding:"6px 13px",fontSize:13,fontWeight:pEId===e.id?700:600,color:pEId===e.id?"var(--P)":"var(--m)",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6,flexShrink:0}}>
+            <span>{e.emoji||"👶"}</span>{e.prenom||"Enfant"}
+          </button>)}
+        </div>}
         <div className="content"><ActionBar page={page} setPage={setPage} role={role}/>{renderPage()}</div>
         <BottomNav groups={groups} page={page} setPage={setPage} pmiNonLus={role==="parent"?0:pmiNonLus}/>
         {showWelcome&&<BienvenueOnboarding role={role} user={user} setPage={setPage} onClose={closeWelcome}/>}
