@@ -3103,7 +3103,7 @@ function Contrats({enfants,role,pEId,user}){
                 parent_prenom:p.prenom||"",
                 asmat_prenom:user?.prenom||"Votre assistante maternelle",
                 enfant_prenom:enf.prenom||"",
-                url:window.location.origin,
+                url:window.location.origin+"/?goto=signature",
               },
             });
           }
@@ -6325,7 +6325,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 }
 
 function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
-  const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?"facturation":"contrats"));
+  const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?"facturation":((enfants.some(e=>e?.contrat?.partage_parent&&!e?.contrat?.signe_parent))?"signature_parent":"contrats")));
   useEffect(()=>{
     const h=(e)=>{ if(e.detail==="nouveau_bulletin"){ setSection("bulletin"); window.scrollTo({top:0,behavior:"smooth"}); } };
     window.addEventListener("timat:action",h); return()=>window.removeEventListener("timat:action",h);
@@ -6343,7 +6343,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"courriers",l:"Courriers types",ic:"✉️"},
     ]
     :[
-      ...(( ()=>{ const enf=enfants.find(e=>e.id===pEId)||enfants[0]; return enf?.contrat?.partage_parent; })() ? [{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}] : [] ),
+      ...((enfants.some(e=>e?.contrat?.partage_parent)) ? [{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}] : [] ),
       {id:"versements",l:"Mes versements",ic:"💶"},
     ];
   const GROUPES_FIN=[
@@ -6428,8 +6428,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {section==="signature_parent"&&(()=>{const enf=enfants.find(e=>e.id===pEId)||enfants[0];return enf?.contrat?.partage_parent;})()&&<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>}
-    {section==="signature_parent"&&!(()=>{const enf=enfants.find(e=>e.id===pEId)||enfants[0];return enf?.contrat?.partage_parent;})()&&<div className="card" style={{padding:20,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>}
+    {section==="signature_parent"&&(()=>{const enfP=enfants.find(e=>e?.contrat?.partage_parent);return enfP?<SignatureContratParent enfants={enfants}pEId={enfP.id}user={user}/>:<div className="card" style={{padding:20,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>;})()}
   </div>;
 }
 
@@ -17845,6 +17844,19 @@ export default function App(){
     window.addEventListener("timat:refresh-data",handler);
     return()=>window.removeEventListener("timat:refresh-data",handler);
   },[]);
+
+  // LIEN EMAIL SIGNATURE - si l'app est ouverte via ?goto=signature (bouton de l'email
+  // "contrat pret a signer"), amener le parent directement sur la page Finances/contrat.
+  const gotoHandled=useRef(false);
+  useEffect(()=>{
+    if(gotoHandled.current)return;
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("goto")!=="signature")return;
+    if(!user?.id)return; // attendre la connexion
+    gotoHandled.current=true;
+    setPage("admin_finances");
+    try{const u=new URL(window.location.href);u.searchParams.delete("goto");window.history.replaceState({},"",u.pathname+(u.search||""));}catch(e){}
+  },[user?.id]);
 
   // POINTAGE QR - si l'app est ouverte via un QR (?pointage=qr&enfant=ID), enregistrer le pointage via la RPC pointage_qr.
   // L'utilisateur connecte (parent OU assmat lie a l'enfant) declenche l'ecriture ; la RPC attribue le bon asmat_id et bascule arrivee->depart.
