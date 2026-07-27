@@ -6428,7 +6428,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {section==="signature_parent"&&(()=>{const enfP=enfants.find(e=>e?.contrat?.partage_parent);return enfP?<SignatureContratParent enfants={enfants}pEId={enfP.id}user={user}/>:<div className="card" style={{padding:20,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>;})()}
+    {section==="signature_parent"&&(enfants.some(e=>e?.contrat?.partage_parent)?<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>:<div className="card" style={{padding:20,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>)}
   </div>;
 }
 
@@ -7887,6 +7887,7 @@ async function generateAndStoreContratPDF(contratId){
     const{error:eUp}=await supabase.storage.from("documents").upload(path,blob,{
       contentType:"application/pdf",
       upsert:true,
+      cacheControl:"0",
     });
     if(eUp)return{success:false,error:"Upload : "+eUp.message};
 
@@ -9233,7 +9234,7 @@ function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon contrat
     try{
       const{data,error}=await supabase.storage.from("documents").createSignedUrl(path,3600);
       if(error||!data?.signedUrl){onErr?.("❌ Document indisponible (droits d'accès) — réessayez après signature ou contactez votre assistante maternelle.");}
-      else window.open(data.signedUrl,"_blank","noopener");
+      else window.open(data.signedUrl+(data.signedUrl.includes("?")?"&":"?")+"t="+Date.now(),"_blank","noopener");
     }catch(e){onErr?.("❌ Erreur ouverture du contrat");}
     setBusy(false);
   };
@@ -9244,7 +9245,14 @@ function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon contrat
 }
 
 function SignatureContratParent({enfants,pEId,user}){
-  const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
+  // MULTI-ENFANTS - ne montrer que les enfants dont le contrat est partage par l'assmat.
+  // Le parent bascule entre eux via un selecteur (affiche seulement s'il y en a plusieurs).
+  const enfantsPartages=enfants.filter(e=>e?.contrat?.partage_parent);
+  // enfant initial : celui selectionne dans l'app s'il a un contrat partage, sinon le premier partage
+  const initId=enfantsPartages.find(e=>e.id===pEId)?.id||enfantsPartages[0]?.id;
+  const [selEnfId,setSelEnfId]=useState(initId);
+  useEffect(()=>{ if(!enfantsPartages.find(e=>e.id===selEnfId)&&enfantsPartages[0])setSelEnfId(enfantsPartages[0].id); },[enfants]);
+  const enfant=enfantsPartages.find(e=>e.id===selEnfId)||enfantsPartages[0];
   const contrat=enfant?.contrat||{};
   // SIGNATURE PARENT P10 - state initialise depuis le contrat persiste
   const [signe,setSigne]=useState(!!contrat.signe_parent);
@@ -9256,11 +9264,13 @@ function SignatureContratParent({enfants,pEId,user}){
   const [hasSig,setHasSig]=useState(false);
   // SIGNATURE PARENT P10 - signature standard du parent (si dejaa enregistree dans son profil)
   const sigStandard=user?.signature_base64||null;
-  // SIGNATURE PARENT P10 - sync avec le contrat reel quand il change
+  // SIGNATURE PARENT P10 - sync avec le contrat reel quand il change (ou changement d'enfant)
   useEffect(()=>{
     setSigne(!!contrat.signe_parent);
     setDateSignature(contrat.date_signature_parent||null);
-  },[contrat.signe_parent,contrat.date_signature_parent]);
+    setLu(false);
+    setHasSig(false);
+  },[contrat.signe_parent,contrat.date_signature_parent,selEnfId]);
 
   // Helper position pointeur avec scaling correct
   const getPos=(e)=>{
@@ -9330,10 +9340,13 @@ function SignatureContratParent({enfants,pEId,user}){
       return;
     }
     await logAction("sign_contract_parent",{table_name:"contrats",record_id:contrat.id});
-    // PDF CONTRAT COMBINE P11 - regenerer le PDF avec les 2 signatures (asmat + parent)
-    generateAndStoreContratPDF(contrat.id).then(r=>{
+    // PDF CONTRAT COMBINE P11 - regenerer le PDF avec les 2 signatures (asmat + parent).
+    // On ATTEND la fin pour que le telechargement immediat contienne bien la signature.
+    setToast("Enregistrement de votre signature…");
+    try{
+      const r=await generateAndStoreContratPDF(contrat.id);
       if(!r.success)console.log("PDF gen warn:",r.error);
-    });
+    }catch(e){console.log("PDF gen err:",e?.message);}
     // EMAILS NOTIFICATIONS P13 - notifier l'asmat que le contrat est finalise
     if(contrat?.asmat_id){
       createNotification({userId:contrat.asmat_id,type:"signature_parent_signed",titre:"Le parent a signé le contrat"+(enfant?.prenom?(" — "+enfant.prenom):""),page:"admin_finances"});
@@ -9378,6 +9391,13 @@ function SignatureContratParent({enfants,pEId,user}){
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="✍️" title="Signer mon contrat"
       sub="Signature électronique conforme eIDAS - valeur légale"/>
+    {enfantsPartages.length>1&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+      {enfantsPartages.map(e=><button key={e.id} onClick={()=>setSelEnfId(e.id)}
+        style={{border:selEnfId===e.id?"2px solid var(--P)":"1px solid var(--br)",background:selEnfId===e.id?"var(--Pp)":"#fff",borderRadius:20,padding:"7px 14px",fontSize:13,fontWeight:selEnfId===e.id?700:600,color:selEnfId===e.id?"var(--P)":"var(--m)",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:6}}>
+        <span>{e.emoji||"👶"}</span>{e.prenom||"Enfant"}
+        {e.contrat?.signe_parent&&<span style={{fontSize:11}}>✓</span>}
+      </button>)}
+    </div>}
     <div style={{display:"flex",gap:10,alignItems:"flex-start",padding:"11px 14px",background:"var(--Bp)",border:"1px solid rgba(46,74,90,.25)",borderRadius:12,marginBottom:14,fontSize:12.5,color:"var(--B)",lineHeight:1.5}}>
       <span style={{fontSize:16,flexShrink:0}}>📄</span>
       <span>Votre contrat (et ses bulletins de salaire) est toujours accessible dans <b>Administratif → Documents & Attestations</b>. Une fois signé, le PDF y apparaît automatiquement.</span>
