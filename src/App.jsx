@@ -2959,6 +2959,9 @@ function Contrats({enfants,role,pEId,user}){
   const [showAjout,setShowAjout]=useState(false);
   const [modDet,setModDet]=useState({type:"Horaire",detail:""});
   const [toast,setToast]=useState("");
+  // PARTAGE CONTRAT - suivi du partage et du panneau deroulant, par enfant
+  const [partages,setPartages]=useState({});
+  const [partageOuvert,setPartageOuvert]=useState({});
   // SIGNATURE STANDARD ASMAT P10 - signature de reference du profil (chargee depuis profiles.signature_base64)
   const [sigStandard,setSigStandard]=useState(user?.signature_base64||null);
   const canvasRef=useRef(null);
@@ -2970,14 +2973,17 @@ function Contrats({enfants,role,pEId,user}){
   useEffect(()=>{
     const sigMap={};
     const dateMap={};
+    const partMap={};
     enfants.forEach(e=>{
       if(e.contrat?.signe_asmat){
         sigMap[e.id]=true;
         dateMap[e.id]=e.contrat.date_signature_asmat;
       }
+      if(e.contrat?.partage_parent)partMap[e.id]=true;
     });
     setSignes(sigMap);
     setDatesSignature(dateMap);
+    setPartages(partMap);
   },[enfants]);
 
   // FIX: S'assurer que selId pointe vers un enfant existant
@@ -3066,29 +3072,46 @@ function Contrats({enfants,role,pEId,user}){
         if(!r.success)console.log("PDF gen warn:",r.error);
       });
     }
-    // EMAILS NOTIFICATIONS P13 - notifier le parent qu'il doit signer (silencieux si Resend pas configure)
-    if(contrat?.parent_id&&enfant?.id){
-      createNotification({userId:contrat.parent_id,type:"signature_asmat_signed",titre:"Votre contrat est prêt à signer"+(enfant?.prenom?(" — "+enfant.prenom):""),page:"admin_finances"});
-      // Recuperer l'email du parent
-      supabase.rpc("get_recipient_email",{p_user_id:contrat.parent_id}).then(({data:p})=>{
-        if(p?.email){
-          sendNotificationEmail({
-            type:"signature_asmat_signed",
-            to:p.email,
-            subject:EMAIL_TEMPLATES.signature_asmat_signed.subject,
-            template:"signature_asmat_signed",
-            vars:{
-              parent_prenom:p.prenom||"",
-              asmat_prenom:user?.prenom||"Votre assistante maternelle",
-              enfant_prenom:enfant.prenom||"",
-              url:window.location.origin,
-            },
-          });
-        }
-      });
-    }
+    // NOTE: la notification "contrat pret a signer" au parent est desormais
+    // envoyee au moment du PARTAGE (fonction partagerContrat), pas ici.
     // FIX: Trigger un refresh global pour que enfants[].contrat.signe_asmat soit a jour
     // (sinon un re-render parent + useEffect [enfants] reecraserait signes a partir de la donnee stale)
+    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
+  // PARTAGE CONTRAT - rendre le contrat visible (ou non) au parent.
+  // Au partage : notification + email au parent. Retrait possible tant qu'il n'a pas signe.
+  const partagerContrat=async(enf,nouvelEtat)=>{
+    const ct=enf?.contrat;
+    if(!ct?.id){setToast("Aucun contrat a partager");return;}
+    if(!ct.signe_asmat){setToast("Signez d'abord le contrat avant de le partager");return;}
+    if(!nouvelEtat && ct.signe_parent){setToast("Le parent a déjà signé : le partage ne peut plus être retiré");return;}
+    const{error}=await supabase.from("contrats").update({partage_parent:nouvelEtat}).eq("id",ct.id);
+    if(error){setToast("Erreur : "+error.message);return;}
+    setPartages(p=>({...p,[enf.id]:nouvelEtat}));
+    if(nouvelEtat){
+      setToast("Contrat partagé avec le parent ✓");
+      if(ct.parent_id){
+        createNotification({userId:ct.parent_id,type:"signature_asmat_signed",titre:"Votre contrat est prêt à signer"+(enf?.prenom?(" — "+enf.prenom):""),page:"admin_finances"});
+        supabase.rpc("get_recipient_email",{p_user_id:ct.parent_id}).then(({data:p})=>{
+          if(p?.email){
+            sendNotificationEmail({
+              type:"signature_asmat_signed",
+              to:p.email,
+              subject:EMAIL_TEMPLATES.signature_asmat_signed.subject,
+              template:"signature_asmat_signed",
+              vars:{
+                parent_prenom:p.prenom||"",
+                asmat_prenom:user?.prenom||"Votre assistante maternelle",
+                enfant_prenom:enf.prenom||"",
+                url:window.location.origin,
+              },
+            });
+          }
+        });
+      }
+    }else{
+      setToast("Partage retiré — le parent ne voit plus le contrat");
+    }
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const addMod=async()=>{
@@ -3202,6 +3225,32 @@ function Contrats({enfants,role,pEId,user}){
           <div style={{fontSize:24,marginBottom:4}}>✅</div>
           <div style={{fontWeight:700,color:"var(--S)"}}>Contrat signé électroniquement</div>
           <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · Conforme eIDAS</div>
+        </div>}
+        {role==="asmat"&&signes[enfant?.id]&&<div className="card" style={{padding:0,marginTop:12,overflow:"hidden"}}>
+          <div onClick={()=>setPartageOuvert(p=>({...p,[enfant?.id]:!p[enfant?.id]}))} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 15px",cursor:"pointer",userSelect:"none"}}>
+            <span style={{fontSize:13.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:7}}>🔗 Partage avec le parent
+              {partages[enfant?.id]
+                ?<span style={{fontSize:10,fontWeight:800,color:"var(--S)",background:"var(--Sp)",borderRadius:20,padding:"2px 8px"}}>PARTAGÉ</span>
+                :<span style={{fontSize:10,fontWeight:800,color:"#9A7000",background:"#FDF6E8",borderRadius:20,padding:"2px 8px"}}>NON PARTAGÉ</span>}
+            </span>
+            <span style={{color:"var(--l)",transition:"transform .2s",transform:partageOuvert[enfant?.id]?"rotate(180deg)":"none"}}>▾</span>
+          </div>
+          {partageOuvert[enfant?.id]&&<div style={{padding:"0 15px 15px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"var(--c)",borderRadius:10,padding:"11px 13px"}}>
+              <div style={{minWidth:0,paddingRight:10}}>
+                <div style={{fontSize:13,fontWeight:600}}>Rendre visible au parent</div>
+                <div style={{fontSize:11,color:"var(--l)"}}>Le parent pourra le lire et le signer</div>
+              </div>
+              <div onClick={()=>partagerContrat(enfant,!partages[enfant?.id])} style={{width:44,height:26,borderRadius:20,background:partages[enfant?.id]?"var(--S)":"#CBD5DC",position:"relative",flexShrink:0,cursor:contrat?.signe_parent&&partages[enfant?.id]?"not-allowed":"pointer",transition:"background .2s",opacity:contrat?.signe_parent&&partages[enfant?.id]?.6:1}}>
+                <div style={{width:20,height:20,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:partages[enfant?.id]?21:3,boxShadow:"0 1px 3px rgba(0,0,0,.2)",transition:"left .2s"}}/>
+              </div>
+            </div>
+            <div style={{fontSize:11.5,color:"var(--l)",marginTop:9,lineHeight:1.45}}>
+              {contrat?.signe_parent
+                ?"Le parent a signé : le partage est définitif et ne peut plus être retiré."
+                :"Une fois partagé, le parent reçoit un e-mail l'invitant à consulter et signer. Vous pouvez retirer le partage tant qu'il n'a pas signé."}
+            </div>
+          </div>}
         </div>}
       </div>
 
@@ -6294,7 +6343,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {id:"courriers",l:"Courriers types",ic:"✉️"},
     ]
     :[
-      {id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"},
+      ...(( ()=>{ const enf=enfants.find(e=>e.id===pEId)||enfants[0]; return enf?.contrat?.partage_parent; })() ? [{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}] : [] ),
       {id:"versements",l:"Mes versements",ic:"💶"},
     ];
   const GROUPES_FIN=[
@@ -6379,7 +6428,8 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
     {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {section==="signature_parent"&&<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>}
+    {section==="signature_parent"&&(()=>{const enf=enfants.find(e=>e.id===pEId)||enfants[0];return enf?.contrat?.partage_parent;})()&&<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>}
+    {section==="signature_parent"&&!(()=>{const enf=enfants.find(e=>e.id===pEId)||enfants[0];return enf?.contrat?.partage_parent;})()&&<div className="card" style={{padding:20,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>}
   </div>;
 }
 
@@ -17761,6 +17811,8 @@ export default function App(){
                 signe_parent:!!ct.signe_parent,
                 date_signature_parent:ct.date_signature_parent||null,
                 signature_parent_data:ct.signature_parent_data||null,
+                partage_parent:!!ct.partage_parent,
+                parent_id:ct.parent_id||null,
                 pdf_storage_path:ct.pdf_storage_path||null,
                 pdf_generated_at:ct.pdf_generated_at||null,
               }:null,
