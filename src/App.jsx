@@ -3054,10 +3054,17 @@ function Contrats({enfants,role,pEId,user}){
     const canvas=canvasRef.current;
     const sigData=canvas?.toDataURL("image/png");
     const nowIso=new Date().toISOString();
+    // IDENTITE FIGEE P15 - un contrat signe ne doit plus suivre les modifications de profil
+    const snapSalarie={
+      prenom:user?.prenom||null,nom:user?.nom||null,email:user?.email||null,
+      telephone:user?.telephone||null,adresse:user?.adresse||null,
+      numero_agrement:user?.numero_agrement||null,fige_le:nowIso,
+    };
     const{error}=await supabase.from("contrats").update({
       signe_asmat:true,
       date_signature_asmat:nowIso,
       signature_asmat_data:sigData||null,
+      salarie_snapshot:snapSalarie,
     }).eq("enfant_id",enfant.id);
     if(error){
       setToast("Erreur enregistrement : "+error.message);
@@ -7788,8 +7795,8 @@ async function generateAndStoreContratPDF(contratId){
     if(eCt||!ct)return{success:false,error:"Contrat introuvable"};
     const{data:enfant}=await supabase.from("enfants").select("*").eq("id",ct.enfant_id).single();
     if(!enfant)return{success:false,error:"Enfant introuvable"};
-    const{data:asmatProfile}=await supabase.from("profiles").select("prenom,nom,email,telephone,numero_agrement").eq("id",ct.asmat_id).maybeSingle();
-    const{data:parentProfile}=ct.parent_id?await supabase.from("profiles").select("prenom,nom,email,telephone").eq("id",ct.parent_id).maybeSingle():{data:null};
+    const{data:asmatProfile}=await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_agrement").eq("id",ct.asmat_id).maybeSingle();
+    const{data:parentProfile}=ct.parent_id?await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_pajemploi,parent2_prenom,parent2_nom,parent2_email").eq("id",ct.parent_id).maybeSingle():{data:null};
 
     // 2. Charger jsPDF si pas deja charge
     if(!window.jspdf){
@@ -7810,21 +7817,38 @@ async function generateAndStoreContratPDF(contratId){
     doc.setFontSize(10);doc.setFont("helvetica","normal");
     doc.text("Assistante maternelle agreee - CCN 3239",105,y,{align:"center"});y+=12;
 
+    // IDENTITE DES PARTIES P15
+    // Un contrat signe ne doit plus changer : si un snapshot a ete fige a la signature, il prime
+    // sur les donnees live du profil. Sinon (brouillon), on lit le profil a jour.
+    const emp=ct.employeur_snapshot||parentProfile||{};
+    const sal=ct.salarie_snapshot||asmatProfile||{};
+    const ligneAdresse=(a,x,yy)=>{
+      let yr=yy;
+      String(a||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach(l=>{doc.text(l,x,yr);yr+=5;});
+      return yr;
+    };
+
     doc.setFontSize(11);doc.setFont("helvetica","bold");
     doc.text("EMPLOYEUR (Particulier)",20,y);y+=6;
     doc.setFont("helvetica","normal");doc.setFontSize(10);
-    doc.text((parentProfile?.prenom||"")+" "+(parentProfile?.nom||""),20,y);y+=5;
-    if(parentProfile?.email)doc.text("Email : "+parentProfile.email,20,y),y+=5;
-    if(parentProfile?.telephone)doc.text("Tel : "+parentProfile.telephone,20,y),y+=5;
+    doc.text(((emp?.prenom||"")+" "+(emp?.nom||"")).trim()||"-",20,y);y+=5;
+    if(emp?.parent2_prenom||emp?.parent2_nom){
+      doc.text("Et : "+((emp.parent2_prenom||"")+" "+(emp.parent2_nom||"")).trim(),20,y);y+=5;
+    }
+    if(emp?.adresse)y=ligneAdresse(emp.adresse,20,y);
+    if(emp?.email)doc.text("Email : "+emp.email,20,y),y+=5;
+    if(emp?.telephone)doc.text("Tel : "+emp.telephone,20,y),y+=5;
+    doc.text("N Pajemploi : "+(emp?.numero_pajemploi||"communique des reception"),20,y);y+=5;
     y+=4;
 
     doc.setFontSize(11);doc.setFont("helvetica","bold");
     doc.text("SALARIEE (Assistante maternelle)",20,y);y+=6;
     doc.setFont("helvetica","normal");doc.setFontSize(10);
-    doc.text((asmatProfile?.prenom||"")+" "+(asmatProfile?.nom||""),20,y);y+=5;
-    if(asmatProfile?.numero_agrement)doc.text("N agrement : "+asmatProfile.numero_agrement,20,y),y+=5;
-    if(asmatProfile?.email)doc.text("Email : "+asmatProfile.email,20,y),y+=5;
-    if(asmatProfile?.telephone)doc.text("Tel : "+asmatProfile.telephone,20,y),y+=5;
+    doc.text(((sal?.prenom||"")+" "+(sal?.nom||"")).trim()||"-",20,y);y+=5;
+    if(sal?.numero_agrement)doc.text("N agrement : "+sal.numero_agrement,20,y),y+=5;
+    if(sal?.adresse)y=ligneAdresse(sal.adresse,20,y);
+    if(sal?.email)doc.text("Email : "+sal.email,20,y),y+=5;
+    if(sal?.telephone)doc.text("Tel : "+sal.telephone,20,y),y+=5;
     y+=4;
 
     doc.setFontSize(11);doc.setFont("helvetica","bold");
@@ -14759,6 +14783,23 @@ function AttestationFiscale({enfants,role,pEId,user}){
   </div>;
 }
 
+// ALERTE DIVERGENCE FICHE / PROFIL P15
+function AlerteEcart({ecarts,role,onMaj}){
+  return <div style={{background:"var(--Rp)",border:"1px solid #EBB9AA",borderRadius:10,padding:"10px 12px",marginBottom:10,fontSize:11.5,color:"var(--R)",lineHeight:1.55}}>
+    {role==="asmat"
+      ? <>⚠️ Fiche non à jour : le parent a modifié son profil depuis. Fiez-vous au bloc <b>« Contact parent — temps réel »</b> en haut de page.</>
+      : <>⚠️ Ces informations ne correspondent plus à votre profil TiMat.</>}
+    <div style={{marginTop:6}}>
+      {ecarts.map(e=><div key={e.cle}style={{marginTop:3}}>
+        {e.champ} ici : <b>{e.fiche}</b><br/>{e.champ} du profil : <b>{e.profil}</b>
+      </div>)}
+    </div>
+    {role==="parent"&&<button className="btn"style={{marginTop:8,background:"var(--R)",color:"#fff",border:"none",fontSize:11.5,fontWeight:700}}onClick={onMaj}>
+      Mettre à jour depuis mon profil
+    </button>}
+  </div>;
+}
+
 // ========== FICHE D'URGENCE (dans l'app) ==========
 function FicheUrgence({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
@@ -14782,6 +14823,55 @@ function FicheUrgence({enfants,role,pEId,user}){
   });
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
   const ro=role==="asmat"||!editing;
+
+  // CONTACT PARENT TEMPS REEL P15 - lit profiles en direct, jamais fige, critique en cas d'urgence
+  const [parentLive,setParentLive]=useState(null);
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      if(role==="parent"){if(!cancelled)setParentLive(user||null);return;}
+      const pid=enfant?.parentId||enfant?.contrat?.parent_id||null;
+      if(!pid){if(!cancelled)setParentLive(null);return;}
+      try{
+        const{data}=await supabase.from("profiles")
+          .select("prenom,nom,email,telephone,adresse,parent2_prenom,parent2_nom,parent2_email")
+          .eq("id",pid).maybeSingle();
+        if(!cancelled)setParentLive(data||null);
+      }catch(e){console.warn("parent live",e);if(!cancelled)setParentLive(null);}
+    })();
+    return()=>{cancelled=true;};
+  },[enfant?.id,enfant?.parentId,role,user?.id,user?.prenom,user?.nom,user?.telephone,user?.adresse,user?.email]);
+
+  // Detection de divergence : on identifie le bloc du titulaire du compte par son EMAIL
+  const normTel=s=>String(s||"").replace(/[\s.\-()]/g,"");
+  const normTxt=s=>String(s||"").trim().toLowerCase().replace(/\s+/g," ");
+  const nomLive=((parentLive?.prenom||"")+" "+(parentLive?.nom||"")).trim();
+  const blocParent=(()=>{
+    const em=normTxt(parentLive?.email);
+    if(!em)return null;
+    if(normTxt(form.mereEmail)===em)return "mere";
+    if(normTxt(form.pereEmail)===em)return "pere";
+    return null;
+  })();
+  const ecarts=(()=>{
+    if(!blocParent||!parentLive)return [];
+    const out=[];
+    const fNom=form[blocParent+"Nom"],fTel=form[blocParent+"Tel"];
+    if(nomLive&&normTxt(fNom)&&normTxt(fNom)!==normTxt(nomLive))out.push({champ:"Nom",cle:blocParent+"Nom",fiche:fNom,profil:nomLive});
+    if(parentLive.telephone&&normTel(fTel)!==normTel(parentLive.telephone))out.push({champ:"Téléphone",cle:blocParent+"Tel",fiche:fTel||"(vide)",profil:parentLive.telephone});
+    return out;
+  })();
+  const majDepuisProfil=()=>{
+    if(!blocParent||!parentLive)return;
+    setForm(f=>({...f,[blocParent+"Nom"]:nomLive||f[blocParent+"Nom"],[blocParent+"Tel"]:parentLive.telephone||f[blocParent+"Tel"]}));
+    setEditing(true);
+    setToast("Champs mis à jour — pensez à enregistrer");
+  };
+  const prefillDepuisProfil=qui=>{
+    if(!parentLive)return;
+    setForm(f=>({...f,[qui+"Nom"]:nomLive||"",[qui+"Tel"]:parentLive.telephone||"",[qui+"Email"]:parentLive.email||""}));
+    setToast("Pré-rempli depuis votre profil");
+  };
 
   // Charger la fiche enregistree (par enfant) + pre-remplir depuis l'enfant
   useEffect(()=>{
@@ -14842,6 +14932,11 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Sexe :</b> "+f.sexe+"</div>",
       "<div class='line'><b>Adresse :</b> "+f.adresse+"</div>",
       "<div class='sh'>02  Coordonnees des parents</div>",
+      (parentLive?("<div class='urg' style='background:#EFF7F6'><b>Contact parent (compte TiMat, a jour le "+new Date().toLocaleDateString("fr-FR")+")</b><br/>"
+        +(nomLive||"-")+((parentLive.telephone)?" &mdash; <span style='color:#2C6F68'>"+parentLive.telephone+"</span>":"")
+        +(parentLive.email?"<br/>"+parentLive.email:"")
+        +(parentLive.adresse?"<br/>"+String(parentLive.adresse).replace(/\n/g,", "):"")
+        +"</div>"):""),
       "<div class='stt'>Mere</div>",
       "<div class='line'><b>Nom et prenom :</b> "+f.mereNom+"</div>",
       "<div class='line'><b>Telephone :</b> "+f.mereTel+"</div>",
@@ -14904,6 +14999,29 @@ function FicheUrgence({enfants,role,pEId,user}){
     <PageHeader icon="🚨" title="Fiche d'urgence" sub={role==="parent"?(editing?"Remplissez la fiche d'urgence de votre enfant":"Fiche enregistrée · Modifier pour mettre à jour"):"Remplie par le parent — vous êtes en lecture seule"}/>
     {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
+
+    {/* CONTACT PARENT TEMPS REEL P15 */}
+    {parentLive&&<div style={{background:"var(--Gp)",border:"1.5px solid var(--G)",borderRadius:14,padding:16,marginBottom:12}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:4}}>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--G)"}}>📞 Contact parent — compte TiMat</div>
+        <div style={{background:"var(--G)",color:"#fff",fontSize:9.5,fontWeight:700,padding:"3px 8px",borderRadius:20,whiteSpace:"nowrap"}}>🔄 TEMPS RÉEL</div>
+      </div>
+      <div style={{fontSize:10.5,color:"var(--G)",opacity:.85,marginBottom:12,lineHeight:1.5}}>
+        Synchronisé automatiquement avec le profil du parent. Ne peut pas être obsolète.
+      </div>
+      {[
+        ["Parent",nomLive||"—",false],
+        ["Téléphone",parentLive.telephone||"Non renseigné",true],
+        ["Email",parentLive.email||"—",false],
+        ["Adresse",parentLive.adresse||"Non renseignée",false],
+        ["2e parent",((parentLive.parent2_prenom||"")+" "+(parentLive.parent2_nom||"")).trim(),false],
+      ].filter(([,v])=>v&&v!=="—").map(([k,v,big])=>
+        <div key={k}style={{display:"flex",justifyContent:"space-between",gap:10,padding:"7px 0",borderBottom:"1px solid rgba(93,169,161,.25)",fontSize:12.5}}>
+          <span style={{color:"var(--G)",flexShrink:0}}>{k}</span>
+          <span style={{fontWeight:big?800:700,color:"var(--b)",textAlign:"right",fontSize:big?17:12.5,letterSpacing:big?".5px":0,whiteSpace:"pre-line"}}>{v}</span>
+        </div>)}
+    </div>}
+
     {role==="asmat"&&loaded&&!hasData
       ? <div className="card"style={{padding:20,textAlign:"center"}}>
           <div style={{fontSize:48,marginBottom:16}}>🚨</div>
@@ -14919,10 +15037,19 @@ function FicheUrgence({enfants,role,pEId,user}){
         </div>
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👪 Mere</div>
+          {role==="parent"&&!hasData&&parentLive&&<div style={{background:"var(--Tp)",border:"1px dashed var(--Tl)",borderRadius:10,padding:"11px 12px",marginBottom:11,fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>
+            💡 Pré-remplir avec les infos de votre profil TiMat ? Indiquez simplement qui vous êtes.
+            <div style={{display:"flex",gap:8,marginTop:9}}>
+              <button className="btn"style={{flex:1,background:"var(--w)",border:"1px solid var(--Tl)",color:"var(--m)",fontSize:11.5,fontWeight:700,justifyContent:"center"}}onClick={()=>prefillDepuisProfil("mere")}>Je suis la mère</button>
+              <button className="btn"style={{flex:1,background:"var(--w)",border:"1px solid var(--Tl)",color:"var(--m)",fontSize:11.5,fontWeight:700,justifyContent:"center"}}onClick={()=>prefillDepuisProfil("pere")}>Je suis le père</button>
+            </div>
+          </div>}
+          {blocParent==="mere"&&ecarts.length>0&&<AlerteEcart ecarts={ecarts}role={role}onMaj={majDepuisProfil}/>}
           {inp("Nom et prenom","mereNom")}{inp("Telephone","mereTel")}{inp("Email","mereEmail")}{inp("Employeur","mereEmployeur")}
         </div>
         <div className="card"style={{padding:16}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👪 Pere</div>
+          {blocParent==="pere"&&ecarts.length>0&&<AlerteEcart ecarts={ecarts}role={role}onMaj={majDepuisProfil}/>}
           {inp("Nom et prenom","pereNom")}{inp("Telephone","pereTel")}{inp("Email","pereEmail")}{inp("Employeur","pereEmployeur")}
         </div>
       </div>
