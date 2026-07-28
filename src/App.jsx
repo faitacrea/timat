@@ -12075,6 +12075,27 @@ function OutilsGratuits({onClose,onCta}){
   </div>;
 }
 
+// BLOC ERREUR AUTH P16 - message + action contextuelle (basculer en connexion, ou renvoyer un lien)
+function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
+  const gmail=/@(gmail|googlemail)\.com\s*$/i.test(email||"");
+  if(resetInfo)return <div style={{color:"#2C6F68",fontSize:12,marginBottom:12,padding:"10px 12px",background:"#EFF7F6",borderRadius:8,lineHeight:1.55}}>✉️ {resetInfo}</div>;
+  if(!err)return null;
+  return <div style={{color:"#C84B31",fontSize:12,marginBottom:12,padding:"10px 12px",background:"#FEF2F2",borderRadius:8,lineHeight:1.55}}>
+    {err}
+    {errAction==="connexion"&&<>
+      <button type="button" onClick={onSwitch} style={{display:"block",width:"100%",marginTop:9,background:"#C84B31",color:"#fff",border:"none",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+        Se connecter avec cet email →
+      </button>
+      {gmail&&<div style={{marginTop:9,color:"#6B4F5A",fontSize:11,lineHeight:1.5}}>
+        💡 Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici. Vérifiez l'adresse exacte utilisée à la création.
+      </div>}
+    </>}
+    {errAction==="reset"&&<button type="button" onClick={onReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#C84B31",border:"1.5px solid #C84B31",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+      Mot de passe oublié ? Recevoir un lien
+    </button>}
+  </div>;
+}
+
 function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
@@ -12093,6 +12114,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const _qParent=(()=>{try{return new URLSearchParams(window.location.search).get("connexion")==="parent";}catch(e){return false;}})();
   const [role, setRole] = useState(_qParent?"parent":"asmat");
   const [modeAuth, setModeAuth] = useState(_qParent?"connexion":"inscription");
+  // AUTH UX P16 - action contextuelle sous le message d'erreur + reinitialisation mot de passe
+  const [errAction, setErrAction] = useState(null);
+  const [resetInfo, setResetInfo] = useState("");
   const [isWeb,setIsWeb]=useState(typeof window!=="undefined"&&window.innerWidth>=900);
   useEffect(()=>{const f=()=>setIsWeb(window.innerWidth>=900);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
   const [showAllFaq, setShowAllFaq] = useState(false);
@@ -12221,13 +12245,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
   const connexion = async () => {
     if (!form.email || !form.password) { setErr("Email et mot de passe requis."); return; }
-    setLoading(true); setErr("");
+    setLoading(true); setErr(""); setErrAction(null); setResetInfo("");
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
       if (error) {
         const demo = demos.find(d => d.email === form.email.trim().toLowerCase());
         if (demo) { onLogin({...demo, isDemo: true}); return; }
         setErr("Email ou mot de passe incorrect.");
+        setErrAction("reset");
       } else if (data?.user) {
         // GATING ROLE : un compte parent ne peut pas se connecter via la landing (espace assmat)
         let _r=data.user.user_metadata?.role;
@@ -12248,19 +12273,36 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
     setLoading(false);
   };
 
+  const envoyerReset = async () => {
+    const mail=(form.email||"").trim();
+    if(!mail){ setErr("Saisissez d'abord votre email."); return; }
+    setLoading(true);
+    try{
+      await supabase.auth.resetPasswordForEmail(mail,{redirectTo:window.location.origin});
+      // Reponse volontairement identique que le compte existe ou non (pas d'enumeration d'emails)
+      setErr(""); setErrAction(null);
+      setResetInfo("Si un compte existe pour "+mail+", un lien de connexion vient d'être envoyé. Pensez à vérifier vos spams.");
+    }catch(e){ setErr("Envoi impossible pour le moment."); }
+    setLoading(false);
+  };
+
   const inscription = async () => {
     if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
     if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
     if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
-    setLoading(true); setErr("");
+    setLoading(true); setErr(""); setErrAction(null); setResetInfo("");
     try {
       const { data, error } = await supabase.auth.signUp({
         email: form.email, password: form.password,
         options: { data: { prenom: form.prenom, nom: form.nom, role } }
       });
       if (error) {
-        if(error.message?.includes('already registered')) setErr("Cet email est déjà utilisé. Connectez-vous.");
-        else if(error.message?.includes('fetch')) setErr("Erreur réseau. Vérifiez votre connexion.");
+        const _m=(error.message||"").toLowerCase();
+        if(_m.includes('already registered')||_m.includes('already been registered')||_m.includes('already exists')||error.code==='user_already_exists'){
+          setErr("Un compte existe déjà avec cet email.");
+          setErrAction("connexion");
+        }
+        else if(_m.includes('fetch')) setErr("Erreur réseau. Vérifiez votre connexion.");
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
@@ -12313,7 +12355,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ display:"flex", marginBottom:16, background:"#F6F7F6", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
-                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); setErrAction(null); setResetInfo(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
               </div>
               <form onSubmit={e=>{e.preventDefault(); if(loading||(modeAuth==="inscription"&&!consentValide))return; modeAuth==="connexion"?connexion():inscription();}}>
@@ -12347,7 +12389,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 ))}
                 <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
-              {err && <div style={{ color:"#C84B31", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
+              <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
@@ -13686,7 +13728,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ display:"flex", marginBottom:16, background:"#F6F7F6", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
-                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); setErrAction(null); setResetInfo(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
               </div>
               <form onSubmit={e=>{e.preventDefault(); if(loading||(modeAuth==="inscription"&&!consentValide))return; modeAuth==="connexion"?connexion():inscription();}}>
@@ -13720,7 +13762,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 ))}
                 <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
-              {err && <div style={{ color:"#C84B31", fontSize:12, marginBottom:12, padding:"8px 12px", background:"#FEF2F2", borderRadius:8 }}>{err}</div>}
+              <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
