@@ -7934,7 +7934,43 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
   // SIGNATURE STANDARD ASMAT P10 - state pour gestion signature de reference
   const [showSigPad,setShowSigPad]=useState(false);
   const [currentSig,setCurrentSig]=useState(user?.signature_base64||null);
+  // PROFIL EDITABLE P15 - formulaire identite (prenom/nom/tel/adresse + specifique parent employeur)
+  // IMPORTANT : tous les hooks restent en haut du composant, avant tout return conditionnel.
+  const [pf,setPf]=useState({prenom:"",nom:"",telephone:"",adresse:"",numero_pajemploi:"",parent2_prenom:"",parent2_nom:"",parent2_email:""});
+  const [showP2,setShowP2]=useState(false);
+  const [savingPf,setSavingPf]=useState(false);
   useEffect(()=>{setCurrentSig(user?.signature_base64||null);},[user?.signature_base64]);
+  useEffect(()=>{
+    setPf({
+      prenom:user?.prenom||"",nom:user?.nom||"",telephone:user?.telephone||"",adresse:user?.adresse||"",
+      numero_pajemploi:user?.numero_pajemploi||"",
+      parent2_prenom:user?.parent2_prenom||"",parent2_nom:user?.parent2_nom||"",parent2_email:user?.parent2_email||"",
+    });
+    setShowP2(!!(user?.parent2_prenom||user?.parent2_nom||user?.parent2_email));
+  },[user?.id,user?.prenom,user?.nom,user?.telephone,user?.adresse,user?.numero_pajemploi,user?.parent2_prenom,user?.parent2_nom,user?.parent2_email]);
+  const estParent=user?.role!=="asmat";
+  const champsRequis=estParent?["prenom","nom","telephone","adresse","numero_pajemploi"]:["prenom","nom","telephone","adresse"];
+  const nbRemplis=champsRequis.filter(k=>(pf[k]||"").trim()).length;
+  const enregistrerProfil=async()=>{
+    if(savingPf)return;
+    setSavingPf(true);
+    const nettoie=v=>{const s=(v||"").trim();return s||null;};
+    const patch={
+      prenom:nettoie(pf.prenom),nom:nettoie(pf.nom),
+      telephone:nettoie(pf.telephone),adresse:nettoie(pf.adresse),
+    };
+    if(estParent){
+      patch.numero_pajemploi=nettoie(pf.numero_pajemploi);
+      patch.parent2_prenom=showP2?nettoie(pf.parent2_prenom):null;
+      patch.parent2_nom=showP2?nettoie(pf.parent2_nom):null;
+      patch.parent2_email=showP2?nettoie(pf.parent2_email):null;
+    }
+    const{error}=await supabase.from("profiles").update(patch).eq("id",user.id);
+    setSavingPf(false);
+    if(error){setToast("❌ Erreur : "+error.message);return;}
+    setUser&&setUser(u=>({...u,...patch}));
+    setToast("✅ Profil enregistré");
+  };
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="⚙️" title="Paramètres" sub="Votre compte et vos données"/>
@@ -7991,31 +8027,106 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
         </>}
       </div>}
 
-      {/* Profil */}
+      {/* Profil - PROFIL EDITABLE P15 */}
       <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>👤 Mon profil</div>
-        {[
-          ["Prénom",user?.prenom||"-"],
-          ["Nom",user?.nom||"-"],
-          ["Email",user?.email||"-"],
-          ["Rôle",user?.role==="asmat"?"Assistante maternelle":"Parent employeur"],
-        ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-          <span style={{color:"var(--l)"}}>{l}</span>
-          <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
-        </div>)}
-        {/* CHAMPS EDITABLES P14 - telephone + numero_agrement (asmat uniquement pour ce dernier) */}
-        <div style={{marginTop:12}}>
-          <label className="lbl">Téléphone</label>
-          <div style={{display:"flex",gap:8}}>
-            <input className="inp" defaultValue={user?.telephone||""} id="tel-input" placeholder="06 12 34 56 78" style={{flex:1}}/>
-            <button className="btn bT" style={{fontSize:12}} onClick={async()=>{
-              const tel=document.getElementById("tel-input")?.value?.trim();
-              const{error}=await supabase.from("profiles").update({telephone:tel||null}).eq("id",user.id);
-              if(error){setToast("Erreur : "+error.message);return;}
-              setUser&&setUser(u=>({...u,telephone:tel}));
-              setToast("Téléphone enregistré ✓");
-            }}>Enregistrer</button>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>👤 Mon profil</div>
+        <div style={{fontSize:11.5,color:"var(--l)",marginBottom:14,lineHeight:1.5}}>
+          {estParent
+            ?<>Ces informations apparaîtront comme <b>employeur</b> sur votre contrat de travail.</>
+            :<>Ces informations apparaissent sur vos contrats, attestations et bulletins.</>}
+        </div>
+
+        {/* Jauge de completion */}
+        <div style={{marginBottom:14}}>
+          <div style={{height:6,background:"var(--br)",borderRadius:4,overflow:"hidden"}}>
+            <div style={{height:"100%",width:Math.round((nbRemplis/champsRequis.length)*100)+"%",background:nbRemplis===champsRequis.length?"var(--S)":"var(--T)",borderRadius:4,transition:"width .3s"}}/>
           </div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:5}}>
+            <span>{nbRemplis} / {champsRequis.length} champs complétés</span>
+            <span>{estParent?"Pour un contrat conforme":"Pour vos documents"}</span>
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:1,marginBottom:12}}>
+            <label className="lbl">Prénom</label>
+            <input className="inp" value={pf.prenom} placeholder="Votre prénom"
+              onChange={e=>setPf(p=>({...p,prenom:e.target.value}))}/>
+          </div>
+          <div style={{flex:1,marginBottom:12}}>
+            <label className="lbl">Nom</label>
+            <input className="inp" value={pf.nom} placeholder="Votre nom"
+              onChange={e=>setPf(p=>({...p,nom:e.target.value}))}/>
+          </div>
+        </div>
+
+        <div style={{marginBottom:12}}>
+          <label className="lbl">Email</label>
+          <input className="inp" value={user?.email||""} disabled style={{color:"var(--l)",background:"#F3F1EE",cursor:"not-allowed"}}/>
+          <div style={{fontSize:10.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>🔒 L'email de connexion ne se modifie pas ici — écrivez au support si nécessaire.</div>
+        </div>
+
+        <div style={{marginBottom:12}}>
+          <label className="lbl">Téléphone</label>
+          <input className="inp" value={pf.telephone} placeholder="06 12 34 56 78"
+            onChange={e=>setPf(p=>({...p,telephone:e.target.value}))}/>
+        </div>
+
+        <div style={{marginBottom:12}}>
+          <label className="lbl">Adresse postale</label>
+          <textarea className="inp" value={pf.adresse} placeholder="Numéro et rue, code postal, ville"
+            style={{minHeight:56,resize:"vertical",fontFamily:"inherit"}}
+            onChange={e=>setPf(p=>({...p,adresse:e.target.value}))}/>
+          {!(pf.adresse||"").trim()&&<div style={{fontSize:11,color:"var(--R)",marginTop:5}}>⚠️ Obligatoire sur le contrat de travail</div>}
+        </div>
+
+        {estParent&&<div style={{marginBottom:12}}>
+          <label className="lbl">N° d'identification Pajemploi <span style={{fontWeight:400,color:"var(--l)"}}>(si déjà attribué)</span></label>
+          <input className="inp" value={pf.numero_pajemploi} placeholder="ex: 123456789012"
+            onChange={e=>setPf(p=>({...p,numero_pajemploi:e.target.value}))}/>
+          <div style={{fontSize:10.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>
+            Attribué par l'URSSAF à l'ouverture de votre compte Pajemploi. S'il n'est pas encore connu, le contrat mentionnera qu'il sera communiqué dès réception.
+          </div>
+        </div>}
+
+        {estParent&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
+          <div onClick={()=>setShowP2(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",gap:12}}>
+            <div>
+              <div style={{fontWeight:600,fontSize:12.5,color:"var(--b)"}}>👥 Ajouter un 2e parent employeur</div>
+              <div style={{fontSize:11,color:"var(--l)",marginTop:2,lineHeight:1.4}}>Si le contrat est cosigné par les deux parents</div>
+            </div>
+            <div style={{width:36,height:20,borderRadius:20,background:showP2?"var(--S)":"var(--br)",position:"relative",flexShrink:0,transition:"background .2s"}}>
+              <div style={{position:"absolute",top:2,left:showP2?18:2,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left .2s"}}/>
+            </div>
+          </div>
+          {showP2&&<div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed var(--br)"}}>
+            <div style={{display:"flex",gap:10}}>
+              <div style={{flex:1,marginBottom:12}}>
+                <label className="lbl">Prénom</label>
+                <input className="inp" value={pf.parent2_prenom} placeholder="Prénom du 2e parent"
+                  onChange={e=>setPf(p=>({...p,parent2_prenom:e.target.value}))}/>
+              </div>
+              <div style={{flex:1,marginBottom:12}}>
+                <label className="lbl">Nom</label>
+                <input className="inp" value={pf.parent2_nom} placeholder="Nom du 2e parent"
+                  onChange={e=>setPf(p=>({...p,parent2_nom:e.target.value}))}/>
+              </div>
+            </div>
+            <div>
+              <label className="lbl">Email <span style={{fontWeight:400,color:"var(--l)"}}>(facultatif)</span></label>
+              <input type="email" className="inp" value={pf.parent2_email} placeholder="parent2@email.fr"
+                onChange={e=>setPf(p=>({...p,parent2_email:e.target.value}))}/>
+            </div>
+          </div>}
+        </div>}
+
+        <button className="btn bT" style={{width:"100%",justifyContent:"center",padding:12,marginTop:14}}
+          disabled={savingPf} onClick={enregistrerProfil}>
+          {savingPf?"⏳ Enregistrement…":"Enregistrer mon profil"}
+        </button>
+
+        <div style={{fontSize:11,color:"var(--l)",marginTop:10,lineHeight:1.5,textAlign:"center"}}>
+          Rôle : <b style={{color:"var(--b)"}}>{user?.role==="asmat"?"Assistante maternelle":"Parent employeur"}</b>
         </div>
         {user?.role==="asmat"&&<div style={{marginTop:12}}>
           <label className="lbl">N° d'agrément (apparaît sur attestations et contrats)</label>
