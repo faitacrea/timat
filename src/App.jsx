@@ -4975,8 +4975,8 @@ function Documents({enfants,role,pEId,user}){
             <div style={{background:"var(--c)",borderRadius:12,padding:20,minHeight:200,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,textAlign:"center"}}>
               <div style={{fontSize:52}}>{doc.icone}</div>
               <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}>{doc.nom}</div>
-              <div style={{fontSize:12,color:"var(--l)"}}>Aperçu non disponible en mode démo</div>
-              <div style={{fontSize:11,color:"var(--l)"}}>Dans la version finale, le PDF s'affiche ici</div>
+              <div style={{fontSize:12,color:"var(--l)"}}>{(doc.storagePath||doc.url)?"Cliquez sur Télécharger pour ouvrir le PDF":"Aperçu non disponible pour ce document"}</div>
+              <div style={{fontSize:11,color:"var(--l)"}}>{(doc.storagePath||doc.url)?"Le fichier s'ouvre dans un nouvel onglet":""}</div>
             </div>
             <div style={{display:"flex",gap:8,marginTop:16,justifyContent:"flex-end"}}>
               <button className="btn bG"onClick={()=>{if(doc.storagePath||doc.url)telechargerDoc(doc);else window.print();}}>🖨️ Imprimer</button>
@@ -7796,7 +7796,12 @@ async function generateAndStoreContratPDF(contratId){
     const{data:enfant}=await supabase.from("enfants").select("*").eq("id",ct.enfant_id).single();
     if(!enfant)return{success:false,error:"Enfant introuvable"};
     const{data:asmatProfile}=await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_agrement").eq("id",ct.asmat_id).maybeSingle();
-    const{data:parentProfile}=ct.parent_id?await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_pajemploi,parent2_prenom,parent2_nom,parent2_email").eq("id",ct.parent_id).maybeSingle():{data:null};
+    let{data:parentProfile}=ct.parent_id?await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_pajemploi,parent2_prenom,parent2_nom,parent2_email").eq("id",ct.parent_id).maybeSingle():{data:null};
+    // RLS profiles_own : quand c'est l'ASMAT qui genere le PDF, la lecture ci-dessus renvoie null.
+    // On retombe sur la RPC SECURITY DEFINER pour ne pas produire un bloc EMPLOYEUR vide.
+    if(!parentProfile&&ct.enfant_id){
+      try{const{data:pc}=await supabase.rpc("get_parent_contact",{p_enfant_id:ct.enfant_id});if(pc)parentProfile=pc;}catch(e){console.warn("get_parent_contact",e);}
+    }
 
     // 2. Charger jsPDF si pas deja charge
     if(!window.jspdf){
@@ -14833,9 +14838,10 @@ function FicheUrgence({enfants,role,pEId,user}){
       const pid=enfant?.parentId||enfant?.contrat?.parent_id||null;
       if(!pid){if(!cancelled)setParentLive(null);return;}
       try{
-        const{data}=await supabase.from("profiles")
-          .select("prenom,nom,email,telephone,adresse,parent2_prenom,parent2_nom,parent2_email")
-          .eq("id",pid).maybeSingle();
+        // RLS : profiles est restreint au proprietaire (profiles_own), l'assmat ne peut pas
+        // lire le profil du parent en direct. On passe par une RPC SECURITY DEFINER qui
+        // n'autorise que l'assmat de CET enfant (ou le parent lui-meme).
+        const{data}=await supabase.rpc("get_parent_contact",{p_enfant_id:enfant.id});
         if(!cancelled)setParentLive(data||null);
       }catch(e){console.warn("parent live",e);if(!cancelled)setParentLive(null);}
     })();
@@ -15021,6 +15027,9 @@ function FicheUrgence({enfants,role,pEId,user}){
           <span style={{fontWeight:big?800:700,color:"var(--b)",textAlign:"right",fontSize:big?17:12.5,letterSpacing:big?".5px":0,whiteSpace:"pre-line"}}>{v}</span>
         </div>)}
     </div>}
+
+    {/* ALERTE DIVERGENCE EN HAUT P15 - visible sans avoir a faire defiler */}
+    {ecarts.length>0&&<AlerteEcart ecarts={ecarts}role={role}onMaj={majDepuisProfil}/>}
 
     {role==="asmat"&&loaded&&!hasData
       ? <div className="card"style={{padding:20,textAlign:"center"}}>
