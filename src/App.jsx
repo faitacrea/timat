@@ -7958,8 +7958,24 @@ async function generateAndStoreContratPDF(contratId){
 }
 
 //
-function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser,openWelcome}){
+function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser,openWelcome,recovery=false,clearRecovery}){
   const [toast,setToast]=useState("");
+  // MOT DE PASSE P16 - changement depuis l'app (usage courant + retour de lien de reinitialisation)
+  const [mdp,setMdp]=useState({a:"",b:""});
+  const [savingMdp,setSavingMdp]=useState(false);
+  const [mdpOk,setMdpOk]=useState(false);
+  const changerMotDePasse=async()=>{
+    if(savingMdp)return;
+    if(mdp.a.length<8){setToast("❌ 8 caractères minimum");return;}
+    if(mdp.a!==mdp.b){setToast("❌ Les deux mots de passe ne correspondent pas");return;}
+    setSavingMdp(true);
+    const{error}=await supabase.auth.updateUser({password:mdp.a});
+    setSavingMdp(false);
+    if(error){setToast("❌ "+(error.message||"Modification impossible"));return;}
+    setMdp({a:"",b:""});setMdpOk(true);
+    clearRecovery&&clearRecovery();
+    setToast("✅ Mot de passe modifié");
+  };
   // SIGNATURE STANDARD ASMAT P10 - state pour gestion signature de reference
   const [showSigPad,setShowSigPad]=useState(false);
   const [currentSig,setCurrentSig]=useState(user?.signature_base64||null);
@@ -8241,6 +8257,39 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             <button className="btn bT" style={{fontSize:12}} onClick={()=>setShowSigPad(true)}>+ Créer ma signature</button>
           </div>}
         </div>
+      </div>
+
+      {/* SECURITE / MOT DE PASSE P16 */}
+      <div className="card"style={{padding:20,border:recovery?"1.5px solid var(--T)":undefined}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>🔐 Mot de passe</div>
+        {recovery
+          ?<div style={{background:"var(--Tp)",border:"1px solid var(--Tl)",borderRadius:10,padding:"11px 12px",marginBottom:14,fontSize:11.5,color:"var(--m)",lineHeight:1.55}}>
+            Vous êtes arrivé ici par un lien de récupération. Choisissez un nouveau mot de passe pour sécuriser votre compte.
+          </div>
+          :<div style={{fontSize:11.5,color:"var(--l)",marginBottom:14,lineHeight:1.5}}>
+            Choisissez un mot de passe que vous n'utilisez nulle part ailleurs.
+          </div>}
+
+        {mdpOk&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:10,padding:"10px 12px",marginBottom:12,fontSize:11.5,color:"var(--S)"}}>
+          ✅ Mot de passe modifié. Il vous sera demandé à la prochaine connexion.
+        </div>}
+
+        <div style={{marginBottom:12}}>
+          <label className="lbl">Nouveau mot de passe</label>
+          <input type="password" autoComplete="new-password" className="inp" value={mdp.a} placeholder="8 caractères minimum"
+            onChange={e=>{setMdp(m=>({...m,a:e.target.value}));setMdpOk(false);}}/>
+        </div>
+        <div style={{marginBottom:4}}>
+          <label className="lbl">Confirmer le mot de passe</label>
+          <input type="password" autoComplete="new-password" className="inp" value={mdp.b} placeholder="Retapez le mot de passe"
+            onChange={e=>{setMdp(m=>({...m,b:e.target.value}));setMdpOk(false);}}/>
+          {mdp.b&&mdp.a!==mdp.b&&<div style={{fontSize:11,color:"var(--R)",marginTop:5}}>Les deux mots de passe ne correspondent pas</div>}
+        </div>
+
+        <button className="btn bT" style={{width:"100%",justifyContent:"center",padding:12,marginTop:12}}
+          disabled={savingMdp||!mdp.a||mdp.a!==mdp.b} onClick={changerMotDePasse}>
+          {savingMdp?"⏳ Modification…":"Modifier mon mot de passe"}
+        </button>
       </div>
 
       {/* SIGNATURE STANDARD ASMAT P10 - modale de capture */}
@@ -17864,6 +17913,7 @@ export default function App(){
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
   const [pEIdSel,setPEIdSel]=useState(null);  const [showWelcome,setShowWelcome]=useState(false);
+  const [recovery,setRecovery]=useState(false); // MDP P16 - arrivee par lien de reinitialisation
   useEffect(()=>{
     if(user?.id){ try{ if(!localStorage.getItem("timat:onboarding:seen:"+user.id)) setShowWelcome(true); }catch(e){} }
   },[user?.id]);
@@ -17996,6 +18046,13 @@ export default function App(){
       }
       if(event==="SIGNED_IN"&&session?.user){
         handleAuthUser(session);
+      }
+      if(event==="PASSWORD_RECOVERY"&&session?.user){
+        // Arrivee par un lien de reinitialisation : on connecte puis on emmene
+        // directement l'utilisateur vers le formulaire de nouveau mot de passe.
+        handleAuthUser(session);
+        setRecovery(true);
+        setPage("parametres");
       }
       if(event==="SIGNED_OUT"){
         setUser(null);
@@ -18356,7 +18413,7 @@ export default function App(){
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
-      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)}/>;
+      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
