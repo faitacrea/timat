@@ -11769,6 +11769,20 @@ function ParentInvitationScreen({onLogin}){
   const [mode,setMode]=useState("inscription");
   const [form,setForm]=useState({email:"",password:"",prenom:"",nom:""});
   const [err,setErr]=useState("");
+  // AUTH UX P16 - meme traitement que la landing : compte existant actionnable + reinitialisation
+  const [errAction,setErrAction]=useState(null);
+  const [resetInfo,setResetInfo]=useState("");
+  const envoyerReset=async()=>{
+    const mail=(form.email||"").trim();
+    if(!mail){setErr("Saisis d'abord ton email.");return;}
+    setLoading(true);
+    try{
+      await supabase.auth.resetPasswordForEmail(mail,{redirectTo:window.location.origin});
+      setErr("");setErrAction(null);
+      setResetInfo("Si un compte existe pour "+mail+", un lien de connexion vient d'être envoyé. Pense à vérifier tes spams.");
+    }catch(e){setErr("Envoi impossible pour le moment.");}
+    setLoading(false);
+  };
   const [loading,setLoading]=useState(false);
   const [consent,setConsent]=useState(false);
 
@@ -11787,7 +11801,7 @@ function ParentInvitationScreen({onLogin}){
     setLoading(true);setErr("");
     try{
       const{data,error}=await supabase.auth.signInWithPassword({email:form.email,password:form.password});
-      if(error){setErr("Email ou mot de passe incorrect.");}
+      if(error){setErr("Email ou mot de passe incorrect.");setErrAction("reset");}
       else if(data?.user){ await claim(); onLogin({id:data.user.id,email:data.user.email,prenom:data.user.user_metadata?.prenom||"Parent",nom:data.user.user_metadata?.nom||"",role:data.user.user_metadata?.role||"parent",couleur:"#2E5F8A",subscription_status:"free"}); }
     }catch(e){setErr("Erreur réseau. Vérifiez votre connexion.");}
     setLoading(false);
@@ -11801,7 +11815,10 @@ function ParentInvitationScreen({onLogin}){
     try{
       const{data,error}=await supabase.auth.signUp({email:form.email,password:form.password,options:{data:{prenom:form.prenom,nom:form.nom,role:"parent"}}});
       if(error){
-        if(error.message?.includes('already registered'))setErr("Cet email est déjà utilisé. Connectez-vous ci-dessous.");
+        const _m=(error.message||"").toLowerCase();
+        if(_m.includes('already registered')||_m.includes('already been registered')||_m.includes('already exists')||error.code==='user_already_exists'){
+          setErr("Un compte existe déjà avec cet email.");setErrAction("connexion");
+        }
         else setErr(error.message||"Erreur lors de l'inscription.");
       }else if(data?.user){
         setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:"#2E5F8A",subscription_status:'free'},{onConflict:'id'});}catch(e){}},500);
@@ -11836,15 +11853,24 @@ function ParentInvitationScreen({onLogin}){
         <span>J'accepte la politique de confidentialité et les conditions générales d'utilisation.</span>
       </label>}
 
-      {err&&<div style={{background:"rgba(200,75,49,.92)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12}}>{err}</div>}
+      {resetInfo&&<div style={{background:"rgba(93,169,161,.95)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12,lineHeight:1.5}}>✉️ {resetInfo}</div>}
+      {err&&<div style={{background:"rgba(200,75,49,.92)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12,lineHeight:1.5}}>
+        {err}
+        {errAction==="connexion"&&<>
+          <button type="button" onClick={()=>{setMode("connexion");setErr("");setErrAction(null);}} style={{display:"block",width:"100%",marginTop:9,background:"#fff",color:"#C84B31",border:"none",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Se connecter avec cet email →</button>
+          {/@(gmail|googlemail)\.com\s*$/i.test(form.email||"")&&<div style={{marginTop:9,fontSize:11,lineHeight:1.5,opacity:.95}}>💡 Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici.</div>}
+        </>}
+        {errAction==="reset"&&<button type="button" onClick={envoyerReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
+      </div>}
+      {mode==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#fff",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0,opacity:.9}}>Mot de passe oublié ?</button></div>}
 
       <button onClick={mode==="inscription"?inscription:connexion} disabled={loading} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:"pointer",background:"#fff",color:"#2E4A5A",fontSize:15,fontWeight:700,fontFamily:"inherit",boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
         {loading?"…":(mode==="inscription"?"Créer mon espace parent":"Se connecter")}
       </button>
 
       <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"rgba(255,255,255,.92)"}}>
-        {mode==="inscription"?<>Déjà un compte ? <button onClick={()=>{setMode("connexion");setErr("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Se connecter</button></>
-          :<>Pas encore de compte ? <button onClick={()=>{setMode("inscription");setErr("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>S'inscrire</button></>}
+        {mode==="inscription"?<>Déjà un compte ? <button onClick={()=>{setMode("connexion");setErr("");setErrAction(null);setResetInfo("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Se connecter</button></>
+          :<>Pas encore de compte ? <button onClick={()=>{setMode("inscription");setErr("");setErrAction(null);setResetInfo("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>S'inscrire</button></>}
       </div>
     </div>
   </div>;
