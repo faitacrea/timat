@@ -12439,6 +12439,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
+              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
@@ -13812,6 +13813,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
+              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
