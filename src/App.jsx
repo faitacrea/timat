@@ -11765,8 +11765,8 @@ function RenderArticleBlocks({blocks}){
     return <p key={i} style={{marginBottom:8}}>{fmtInline(b.text)}</p>;
   })}</div>;
 }
-function ParentInvitationScreen({onLogin}){
-  const [mode,setMode]=useState("inscription");
+function ParentInvitationScreen({onLogin,initialMode="inscription"}){
+  const [mode,setMode]=useState(initialMode);
   const [form,setForm]=useState({email:"",password:"",prenom:"",nom:""});
   const [err,setErr]=useState("");
   // AUTH UX P16 - meme traitement que la landing : compte existant actionnable + reinitialisation
@@ -11871,6 +11871,9 @@ function ParentInvitationScreen({onLogin}){
       <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"rgba(255,255,255,.92)"}}>
         {mode==="inscription"?<>Déjà un compte ? <button onClick={()=>{setMode("connexion");setErr("");setErrAction(null);setResetInfo("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Se connecter</button></>
           :<>Pas encore de compte ? <button onClick={()=>{setMode("inscription");setErr("");setErrAction(null);setResetInfo("");}} style={{background:"none",border:"none",color:"#fff",fontWeight:700,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>S'inscrire</button></>}
+      </div>
+      <div style={{textAlign:"center",marginTop:14}}>
+        <a href="/?site=1" style={{fontSize:12.5,color:"rgba(255,255,255,.8)",textDecoration:"none"}}>← Découvrir TiMat</a>
       </div>
     </div>
   </div>;
@@ -18336,7 +18339,9 @@ export default function App(){
     const _onLogin=u=>{setUser({...u,_needsProfileFetch:true,_profileConfirmed:false});setPage("accueil");};
     let _isInvite=false; try{const _p=new URLSearchParams(window.location.search); _isInvite=_p.has("invite")||_p.get("role")==="parent";}catch(e){}
     if(_isInvite)return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin}/></div></>;
-    let _isConnexion=false; try{_isConnexion=new URLSearchParams(window.location.search).has("connexion");}catch(e){}
+    let _isConnexion=false,_connexionParent=false;
+    try{const _p=new URLSearchParams(window.location.search);_isConnexion=_p.has("connexion");_connexionParent=_p.get("connexion")==="parent";}catch(e){}
+    if(_connexionParent)return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin} initialMode="connexion"/></div></>;
     if(_isConnexion)return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage authOnly onLogin={_onLogin} dark={dark} setDark={setDark} config={appConfig}/></div></>;
     // RETOUR SUR L ECRAN DE SON ROLE P16
     // Sans session : si la personne s'est deja connectee sur cet appareil, on rouvre directement
@@ -18347,8 +18352,10 @@ export default function App(){
       _forceSite=new URLSearchParams(window.location.search).has("site");
       _lastRole=localStorage.getItem("timat:lastRole");
     }catch(e){}
-    if(!_forceSite&&(_lastRole==="parent"||_lastRole==="asmat"))
-      return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage authOnly forceRole={_lastRole} onLogin={_onLogin} dark={dark} setDark={setDark} config={appConfig}/></div></>;
+    if(!_forceSite&&_lastRole==="parent")
+      return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin} initialMode="connexion"/></div></>;
+    if(!_forceSite&&_lastRole==="asmat")
+      return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage authOnly forceRole="asmat" onLogin={_onLogin} dark={dark} setDark={setDark} config={appConfig}/></div></>;
     return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={_onLogin} /* P16E: forcer fetch profil au login frais */ dark={dark} setDark={setDark} config={appConfig}/></div></>;
   }
   // INVITATION PARENT ouverte alors qu'un compte est déjà connecté : proposer de basculer
