@@ -12171,7 +12171,7 @@ function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   </div>;
 }
 
-function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false}) {
+function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModal, setShowModal] = useState(false);
   const [showLegal, setShowLegal] = useState(null);
@@ -12187,8 +12187,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
     return()=>window.removeEventListener("scroll",onScroll);
   },[preview]);
   const _qParent=(()=>{try{return new URLSearchParams(window.location.search).get("connexion")==="parent";}catch(e){return false;}})();
-  const [role, setRole] = useState(_qParent?"parent":"asmat");
-  const [modeAuth, setModeAuth] = useState(_qParent?"connexion":"inscription");
+  const [role, setRole] = useState(forceRole||(_qParent?"parent":"asmat"));
+  const [modeAuth, setModeAuth] = useState((forceRole||_qParent)?"connexion":"inscription");
   // AUTH UX P16 - action contextuelle sous le message d'erreur + reinitialisation mot de passe
   const [errAction, setErrAction] = useState(null);
   const [resetInfo, setResetInfo] = useState("");
@@ -12418,7 +12418,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   if(authOnly){
     return (
       <div style={{minHeight:"100dvh",background:"linear-gradient(160deg,#FDFBF8 0%,#F6E7DC 55%,#EAD8CC 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,gap:14,fontFamily:fBody}}>
-        <a href={_qParent?"/pour-les-parents.html":"/"} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:12,background:"rgba(255,255,255,.85)",color:"#2E4859",fontSize:13,fontWeight:700,textDecoration:"none",boxShadow:"0 3px 12px rgba(0,0,0,.10)"}}>← {_qParent?"Retour à l'espace parent":"Découvrir TiMat"}</a>
+        <a href={(_qParent||forceRole==="parent")?"/pour-les-parents.html":"/?site=1"} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:12,background:"rgba(255,255,255,.85)",color:"#2E4859",fontSize:13,fontWeight:700,textDecoration:"none",boxShadow:"0 3px 12px rgba(0,0,0,.10)"}}>← {(_qParent||forceRole==="parent")?"Retour à l'espace parent":"Découvrir TiMat"}</a>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             <div style={{ padding: 24, borderTop: role === "asmat" ? "4px solid #C76754" : "4px solid #2E4859" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -18101,6 +18101,8 @@ export default function App(){
         const{data:profil}=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle();
         if(cancelled)return;
         if(profil){
+          // ROLE MEMORISE P16 - sert a reouvrir le bon ecran de connexion (deconnexion, raccourci PWA)
+          try{if(profil.role)localStorage.setItem("timat:lastRole",profil.role);}catch(e){}
           setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true})); // P16D
         }else{
           setUser(u=>({...u,_needsProfileFetch:false}));
@@ -18336,6 +18338,17 @@ export default function App(){
     if(_isInvite)return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin}/></div></>;
     let _isConnexion=false; try{_isConnexion=new URLSearchParams(window.location.search).has("connexion");}catch(e){}
     if(_isConnexion)return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage authOnly onLogin={_onLogin} dark={dark} setDark={setDark} config={appConfig}/></div></>;
+    // RETOUR SUR L ECRAN DE SON ROLE P16
+    // Sans session : si la personne s'est deja connectee sur cet appareil, on rouvre directement
+    // son ecran de connexion (deconnexion, raccourci PWA start_url="/") au lieu de la landing.
+    // ?site=1 force l'affichage de la landing marketing.
+    let _forceSite=false,_lastRole=null;
+    try{
+      _forceSite=new URLSearchParams(window.location.search).has("site");
+      _lastRole=localStorage.getItem("timat:lastRole");
+    }catch(e){}
+    if(!_forceSite&&(_lastRole==="parent"||_lastRole==="asmat"))
+      return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage authOnly forceRole={_lastRole} onLogin={_onLogin} dark={dark} setDark={setDark} config={appConfig}/></div></>;
     return <><Styles/><div className={"app"+(dark?" dark":"")+""}><LandingPage onLogin={_onLogin} /* P16E: forcer fetch profil au login frais */ dark={dark} setDark={setDark} config={appConfig}/></div></>;
   }
   // INVITATION PARENT ouverte alors qu'un compte est déjà connecté : proposer de basculer
