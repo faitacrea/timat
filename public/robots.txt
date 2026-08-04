@@ -7,3 +7,4 @@ Allow: /
 # Disallow: /dashboard
 
 Sitemap: https://timat.app/sitemap.xml
+Sitemap: https://timat.app/sitemap-blog.xml
