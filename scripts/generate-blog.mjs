@@ -643,7 +643,7 @@ ${entries
 // EXECUTION
 // ---------------------------------------------------------------------------
 
-const QUERY = `*[_type == "article" && statut == "publie" && noIndex != true] | order(coalesce(dateMiseAJour, datePublication) desc){
+const QUERY = `*[_type == "article" && statut == "publie" && noIndex != true && !(_id in path("drafts.**"))] | order(coalesce(dateMiseAJour, datePublication) desc){
   titre,
   "slug": slug.current,
   chapo,
