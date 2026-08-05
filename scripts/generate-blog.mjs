@@ -356,6 +356,15 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
   color:${T.light};margin:0 0 12px;font-weight:800;border:0;padding:0}
 .sources ul{margin:0;padding-left:20px;font-size:15px}
 .sources li{margin:7px 0}
+.lire{margin:42px 0 0;background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:20px 22px}
+.lire h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+  color:${T.mauve};margin:0 0 12px}
+.lire ul{margin:0;padding:0;list-style:none}
+.lire li{margin:0 0 12px;padding:0}
+.lire li:last-child{margin-bottom:0}
+.lire a{font-weight:700;font-size:15.5px;text-decoration:none;color:${T.ink}}
+.lire a:hover{text-decoration:underline}
+.lire span{display:block;font-size:13.5px;color:${T.mauve};margin-top:2px}
 .cta{margin:48px 0;background:${T.ink};border-radius:18px;padding:32px 28px;color:#fff;text-align:center}
 .cta h2{font-family:'Fraunces',Georgia,serif;font-size:25px;margin:0 0 10px;color:#fff;border:0;padding:0;letter-spacing:-.4px}
 .cta p{color:rgba(255,255,255,.85);font-size:15.5px;margin:0 0 20px}
@@ -433,7 +442,12 @@ ${body}
 // PAGES
 // ---------------------------------------------------------------------------
 
-function pageArticle(a) {
+function pageArticle(a, tous = []) {
+  // Maillage interne : jusqu'a 3 autres articles, meme categorie d'abord.
+  const autres = tous.filter((x) => x.slug && x.slug !== a.slug);
+  const memeCat = autres.filter((x) => x.categorie?.slug && x.categorie?.slug === a.categorie?.slug);
+  const reste = autres.filter((x) => !memeCat.includes(x));
+  const lies = [...memeCat, ...reste].slice(0, 3);
   const url = SITE + articleTarget(a.slug).url;
   const title = a.seoTitre || a.titre;
   const description = a.seoDescription || a.chapo || "";
@@ -542,6 +556,18 @@ function pageArticle(a) {
                       s.libelle
                     )}</a>`
                   : esc(s.libelle)
+              }</li>`
+          )
+          .join("")}</ul></section>`
+      : ""
+  }
+  ${
+    lies.length
+      ? `<section class="lire"><h2>À lire aussi</h2><ul>${lies
+          .map(
+            (x) =>
+              `<li><a href="${articleTarget(x.slug).url}">${esc(x.titre)}</a>${
+                x.chapo ? `<span>${esc(x.chapo)}</span>` : ""
               }</li>`
           )
           .join("")}</ul></section>`
@@ -693,7 +719,7 @@ async function main() {
   for (const a of valides) {
     const { file } = articleTarget(a.slug);
     await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, pageArticle(a), "utf8");
+    await writeFile(file, pageArticle(a, valides), "utf8");
   }
 
   const idx = indexTarget();
