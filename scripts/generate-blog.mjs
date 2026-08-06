@@ -686,7 +686,7 @@ const QUERY = `*[_type == "article" && statut == "publie" && noIndex != true && 
 
 async function fetchArticles() {
   const url =
-    `https://${PROJECT_ID}.apicdn.sanity.io/v${API_VERSION}/data/query/${DATASET}` +
+    `https://${PROJECT_ID}.api.sanity.io/v${API_VERSION}/data/query/${DATASET}` +
     `?query=${encodeURIComponent(QUERY)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Sanity a répondu ${res.status} ${res.statusText}`);
