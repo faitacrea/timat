@@ -358,13 +358,17 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .sources li{margin:7px 0}
 .lire{margin:42px 0 0;background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:20px 22px}
 .lire h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
-  color:${T.mauve};margin:0 0 12px}
+  color:${T.light};margin:0 0 14px;font-weight:800;border:0;padding:0}
 .lire ul{margin:0;padding:0;list-style:none}
-.lire li{margin:0 0 12px;padding:0}
-.lire li:last-child{margin-bottom:0}
-.lire a{font-weight:700;font-size:15.5px;text-decoration:none;color:${T.ink}}
-.lire a:hover{text-decoration:underline}
-.lire span{display:block;font-size:13.5px;color:${T.mauve};margin-top:2px}
+.lire li{margin:0;padding:0;border-top:1px solid ${T.border}}
+.lire li:first-child{border-top:0}
+.lire a{display:block;padding:14px 0;text-decoration:none;color:${T.ink}}
+.lire .t{display:flex;justify-content:space-between;gap:14px;font-size:15px;font-weight:700;
+  line-height:1.35;letter-spacing:-.2px}
+.lire .arw{flex:0 0 auto;color:${T.terracotta};font-size:17px;font-weight:800}
+.lire a:hover .t{text-decoration:underline}
+.lire .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:13px;color:${T.mauve};line-height:1.5;margin-top:4px}
 .cta{margin:48px 0;background:${T.ink};border-radius:18px;padding:32px 28px;color:#fff;text-align:center}
 .cta h2{font-family:'Fraunces',Georgia,serif;font-size:25px;margin:0 0 10px;color:#fff;border:0;padding:0;letter-spacing:-.4px}
 .cta p{color:rgba(255,255,255,.85);font-size:15.5px;margin:0 0 20px}
@@ -448,6 +452,10 @@ function pageArticle(a, tous = []) {
   const memeCat = autres.filter((x) => x.categorie?.slug && x.categorie?.slug === a.categorie?.slug);
   const reste = autres.filter((x) => !memeCat.includes(x));
   const lies = [...memeCat, ...reste].slice(0, 3);
+  // Une entree de source vide (ajoutee par megarde dans le Studio) ne doit pas
+  // afficher un encadre "Sources officielles" vide : on filtre avant de decider.
+  const sourcesValides = (Array.isArray(a.sourcesOfficielles) ? a.sourcesOfficielles : [])
+    .filter((s) => s && s.libelle);
   const url = SITE + articleTarget(a.slug).url;
   const title = a.seoTitre || a.titre;
   const description = a.seoDescription || a.chapo || "";
@@ -545,9 +553,8 @@ function pageArticle(a, tous = []) {
       : ""
   }
   ${
-    Array.isArray(a.sourcesOfficielles) && a.sourcesOfficielles.length
-      ? `<section class="sources"><h2>Sources officielles</h2><ul>${a.sourcesOfficielles
-          .filter((s) => s.libelle)
+    sourcesValides.length
+      ? `<section class="sources"><h2>Sources officielles</h2><ul>${sourcesValides
           .map(
             (s) =>
               `<li>${
@@ -566,9 +573,10 @@ function pageArticle(a, tous = []) {
       ? `<section class="lire"><h2>À lire aussi</h2><ul>${lies
           .map(
             (x) =>
-              `<li><a href="${articleTarget(x.slug).url}">${esc(x.titre)}</a>${
-                x.chapo ? `<span>${esc(x.chapo)}</span>` : ""
-              }</li>`
+              `<li><a href="${articleTarget(x.slug).url}">` +
+              `<span class="t">${esc(x.titre)}<span class="arw">&rarr;</span></span>` +
+              (x.chapo ? `<span class="d">${esc(x.chapo)}</span>` : "") +
+              `</a></li>`
           )
           .join("")}</ul></section>`
       : ""
