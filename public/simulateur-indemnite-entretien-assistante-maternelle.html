@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulateur indemnité d'entretien assistante maternelle 2026 (barème + calcul) | TiMat</title>
-<meta name="description" content="Calculez l'indemnité d'entretien d'une assistante maternelle en 2026 : barème depuis juin 2026 (3,92 €/9h, 0,436 €/h, plancher 2,65 €/jour). Simulateur gratuit par jour et par mois, sans inscription.">
+<title>Calculer l'indemnité d'entretien assmat 2026 | TiMat</title>
+<meta name="description" content="Barème depuis juin 2026 : 3,92 € pour 9 h, 0,435 €/h, plancher 2,65 € par jour. Calcul par jour et par mois, gratuit et sans inscription.">
 <link rel="canonical" href="https://timat.app/simulateur-indemnite-entretien-assistante-maternelle.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Simulateur indemnité d'entretien assistante maternelle 2026">
@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Quel est le montant de l'indemnité d'entretien en 2026 ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, le minimum est de 3,92 € pour une journée de 9 heures (0,436 €/h entre 6h15 et 9h), avec un plancher de 2,65 € par jour en dessous de 6h15."}},
+{"@type":"Question","name":"Quel est le montant de l'indemnité d'entretien en 2026 ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, le minimum est de 3,92 € pour une journée de 9 heures (0,435 €/h entre 6h15 et 9h), avec un plancher de 2,65 € par jour en dessous de 6h15."}},
 {"@type":"Question","name":"L'indemnité d'entretien est-elle due si l'enfant est absent ?","acceptedAnswer":{"@type":"Answer","text":"Non : l'indemnité d'entretien n'est due que pour les jours où l'enfant est effectivement accueilli. Elle n'est pas mensualisée."}},
 {"@type":"Question","name":"L'indemnité d'entretien est-elle soumise à cotisations ?","acceptedAnswer":{"@type":"Answer","text":"Non, dans la limite du barème conventionnel : elle n'est pas soumise aux cotisations et n'est pas imposable pour l'assistante maternelle."}}
 ]}
@@ -98,7 +98,7 @@
     <table>
       <tr><th>Durée d'accueil / jour</th><th>Indemnité due</th></tr>
       <tr><td>Moins de 6h15</td><td>2,65 € (plancher)</td></tr>
-      <tr><td>Entre 6h15 et 9h</td><td>0,436 € × nombre d'heures</td></tr>
+      <tr><td>Entre 6h15 et 9h</td><td>0,435 € × nombre d'heures</td></tr>
       <tr><td>9h ou plus</td><td>3,92 € (forfait journée)</td></tr>
     </table>
     <div class="box">L'indemnité d'entretien couvre les frais réels de l'assmat (eau, électricité, chauffage, jeux, matériel). Elle est <strong>obligatoire</strong> pour chaque jour d'accueil, <strong>due dès la 1re heure</strong>, mais <strong>pas due si l'enfant est absent</strong>. Elle n'est <strong>pas mensualisée</strong>.</div>
@@ -133,7 +133,7 @@
     (function(){
       var h=document.getElementById('h'),d=document.getElementById('d'),jour=document.getElementById('jour'),mois=document.getElementById('mois');
       function eur(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
-      function perDay(hh){ if(hh<=0)return 0; if(hh<6.25)return 2.65; if(hh<9)return hh*0.436; return 3.92; }
+      function perDay(hh){ if(hh<=0)return 0; if(hh<6.25)return 2.65; if(hh<9)return hh*0.435; return 3.92; }
       function calc(){
         var hh=parseFloat(h.value)||0, dd=parseFloat(d.value)||0;
         var pj=perDay(hh);
