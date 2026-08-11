@@ -84,6 +84,7 @@
       <div class="sim-row"><label for="h">Heures d'accueil par semaine</label><input id="h" type="number" inputmode="decimal" value="40"></div>
       <div class="sim-row"><label for="s">Semaines d'accueil dans l'année</label><input id="s" type="number" inputmode="decimal" value="47"></div>
       <div class="sim-row"><label for="t">Taux horaire brut (€)</label><input id="t" type="number" inputmode="decimal" step="0.01" value="4.20"></div>
+      <div class="sim-row"><label for="am">Alsace-Moselle (régime local)</label><input id="am" type="checkbox"></div>
       <div class="res">
         <div class="c brut"><div class="lbl">Mensualité BRUTE</div><div class="val" id="brut">— €</div></div>
         <div class="c net"><div class="lbl">Mensualité NETTE (est.)</div><div class="val" id="net">— €</div></div>
@@ -93,7 +94,7 @@
 
     <h2>Comment ça marche ?</h2>
     <p>Le salaire d'une assistante maternelle est <strong>mensualisé</strong> : on lisse la rémunération sur 12 mois pour qu'elle touche la même somme chaque mois. La formule :</p>
-    <div class="box">Mensualité brute = (heures/semaine × semaines d'accueil × taux horaire brut) ÷ 12<br>Net ≈ brut × 0,7812 (≈ −21,88 % de cotisations en 2026)</div>
+    <div class="box">Mensualité brute = (heures/semaine × semaines d'accueil × taux horaire brut) ÷ 12<br>Net ≈ brut × 0,7812 (≈ −21,88 % de cotisations en 2026)<br>En Alsace-Moselle : brut × 0,7682, la cotisation maladie du régime local ajoutant 1,30 %</div>
 
     <h3>Année complète ou incomplète</h3>
     <p>À partir de <strong>47 semaines</strong> d'accueil, on parle d'année complète : les <strong>congés payés sont inclus</strong> dans la mensualité. En dessous, en année incomplète, les <strong>congés payés se versent en plus</strong>.</p>
@@ -123,14 +124,16 @@
 
   <script>
     (function(){
-      var h=document.getElementById('h'),s=document.getElementById('s'),t=document.getElementById('t'),brut=document.getElementById('brut'),net=document.getElementById('net');
+      var h=document.getElementById('h'),s=document.getElementById('s'),t=document.getElementById('t'),am=document.getElementById('am'),brut=document.getElementById('brut'),net=document.getElementById('net');
       function eur(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
       function calc(){
         var b=((parseFloat(h.value)||0)*(parseFloat(s.value)||0)*(parseFloat(t.value)||0))/12;
         brut.textContent=b>0?eur(b):'— €';
-        net.textContent=b>0?eur(b*0.7812):'— €';
+        var coef=am.checked?0.7682:0.7812;
+        net.textContent=b>0?eur(b*coef):'— €';
       }
       [h,s,t].forEach(function(e){e.addEventListener('input',calc);});
+      am.addEventListener('change',calc);
       calc();
     })();
   </script>
