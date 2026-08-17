@@ -180,7 +180,7 @@
 
   <script>
     (function(){
-      var CHR=4.91, PLAF=8.09, PLANCHER=814.62, PLAFRES=8500, CI_PLAFOND=3500;
+      var CHR=4.91, PLAF=8.09, PLANCHER=814.62, PLAFRES=8500, CI_PLAFOND=3500, IE_FORFAIT_FISCAL=2.65;
       var TE={1:0.000619,2:0.000516,3:0.000413,4:0.000310,8:0.000206};
       var ids=['hm','jm','sn','ie','rp','rs','ne','cmgReel'], el={};
       ids.forEach(function(i){el[i]=document.getElementById(i);});
@@ -209,7 +209,11 @@
         var cmgUtil = el.cmgReel.value!=='' ? n(el.cmgReel.value) : cmg;
         var racMois = Math.max(0, cout-cmgUtil);
         var racAn = racMois*12;
-        var ci = Math.min(racAn, CI_PLAFOND)*0.5;
+        // Base du credit d'impot (impots.gouv.fr) : salaire net + indemnite d'entretien
+        // retenue au forfait de 2,65 EUR par journee d'accueil. Frais de repas exclus.
+        var eligibleMois = h*s + j*Math.min(i, IE_FORFAIT_FISCAL);
+        var baseAn = Math.max(0, eligibleMois - cmgUtil)*12;
+        var ci = Math.min(baseAn, CI_PLAFOND)*0.5;
         rAn.textContent=eur(racAn); rCi.textContent=eur(ci); rFin.textContent=eur((racAn-ci)/12);
       }
       ids.forEach(function(i){el[i].addEventListener('input',calc);el[i].addEventListener('change',calc);});
