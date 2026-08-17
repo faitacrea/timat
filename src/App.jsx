@@ -12572,7 +12572,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
               )}
@@ -12594,7 +12594,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
             <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
@@ -12625,7 +12625,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             ].map(g=><div key={g.sec} style={{marginBottom:6}}>
               <div style={{fontSize:10.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
               {g.items.map(([ic,label,desc,target,c])=>
-                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/pour-les-parents.html";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")window.location.href="/boutique.html";else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/pour-les-parents.html";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")window.location.href="/boutique.html";else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog.html";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                   style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
                   onMouseEnter={e=>{e.currentTarget.style.background=c+"14";e.currentTarget.style.transform="translateX(4px)";e.currentTarget.style.boxShadow="0 4px 14px "+c+"22";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
                   <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
@@ -13077,7 +13077,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {(config.blog||DEFAULT_CONFIG.blog).map((art,i)=>(
               <FadeIn key={art.id} delay={i*80}>
-                <div className="blog-card" onClick={()=>{window.location.href=(art.slug?"/blog/"+art.slug:"/blog");}} style={{
+                <div className="blog-card" onClick={()=>{window.location.href=(art.slug?"/"+art.slug+".html":"/blog.html");}} style={{
                   background:"#fff",borderRadius:16,overflow:"hidden",cursor:"pointer",
                   border:"1px solid #E8E4E0",boxShadow:"0 2px 12px rgba(0,0,0,.04)"
                 }}>
@@ -13556,7 +13556,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {/* Guides & ressources (maillage interne SEO) */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
-              {[["Pour les parents","/pour-les-parents.html"],["Calcul de mensualisation","/blog/calcul-mensualisation-assistante-maternelle"],["Congés payés","/blog/conges-payes-assistante-maternelle"],["Salaire net, brut & coût","/blog/salaire-assistante-maternelle-net-brut"],["Déclaration Pajemploi","/blog/pajemploi-declaration-assistante-maternelle"],["Tous les guides","/blog"]].map(([label,href])=>
+              {[["Pour les parents","/pour-les-parents.html"],["Calcul de mensualisation","/calcul-mensualisation-assistante-maternelle.html"],["Congés payés","/conges-payes-assistante-maternelle.html"],["Salaire net, brut & coût","/salaire-assistante-maternelle-net-brut.html"],["Déclaration Pajemploi","/pajemploi-declaration-assistante-maternelle.html"],["Tous les guides","/blog.html"]].map(([label,href])=>
                 <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
@@ -17940,7 +17940,68 @@ function BackofficePage({user,appConfig,setAppConfig,onLogin}){
   return <BackofficeShell user={user} appConfig={appConfig} setAppConfig={setAppConfig}/>;
 }
 
+// ===== MODE MAINTENANCE =====
+// Passer MAINTENANCE a false pour remettre le site en ligne.
+// Acces de service : https://timat.app/?acces=D1Jrp_UaM29A  (memorise 24 h)
+const MAINTENANCE = true;
+const MAINTENANCE_CLE = "D1Jrp_UaM29A";
+function maintenanceBypass(){
+  try{
+    const q = new URLSearchParams(window.location.search);
+    if(q.get("acces") === MAINTENANCE_CLE){
+      localStorage.setItem("timat:acces", String(Date.now()));
+      return true;
+    }
+    const t = parseInt(localStorage.getItem("timat:acces") || "0", 10);
+    return t > 0 && (Date.now() - t) < 86400000;
+  }catch(e){ return false; }
+}
+function MaintenanceScreen(){
+  useEffect(()=>{
+    document.title = "TiMat - maintenance en cours";
+    let m = document.querySelector('meta[name="robots"]');
+    if(!m){ m = document.createElement("meta"); m.name = "robots"; document.head.appendChild(m); }
+    m.content = "noindex,nofollow";
+    return ()=>{ if(m) m.content = "index,follow"; };
+  },[]);
+  const C = DEFAULT_CONFIG.cols;
+  const S = {
+    wrap:{minHeight:"100vh",background:C.c,color:C.b,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",position:"relative",overflow:"hidden",fontFamily:"-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif"},
+    b1:{position:"absolute",borderRadius:"50%",background:C.T,opacity:.9,width:280,height:280,top:-140,right:-90},
+    b2:{position:"absolute",borderRadius:"50%",background:C.T,opacity:.32,width:150,height:150,bottom:-80,left:-60},
+    inner:{position:"relative",zIndex:1,maxWidth:440,width:"100%",textAlign:"center"},
+    logo:{height:46,marginBottom:30},
+    h1:{fontSize:27,lineHeight:1.22,margin:"0 0 14px",fontWeight:700,letterSpacing:"-.01em"},
+    msg:{fontSize:16,lineHeight:1.55,color:"#4A6270",margin:"0 0 26px"},
+    card:{background:C.w,border:"1px solid #E8E4E0",borderRadius:14,padding:"16px 18px",textAlign:"left"},
+    ch:{fontSize:11,letterSpacing:".1em",textTransform:"uppercase",color:C.R,fontWeight:700,marginBottom:10},
+    a:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,textDecoration:"none",color:C.b,fontSize:14.5,fontWeight:600,padding:"9px 0",borderTop:"1px solid #E8E4E0"},
+    a0:{borderTop:"none"},
+    ar:{color:C.T,fontWeight:400},
+    foot:{marginTop:26,fontSize:12.5,color:"#6E8089"}
+  };
+  const liens = [["Les guides du blog","/blog"],["Les simulateurs gratuits","/outils.html"],["Calculer son CMG et son reste a charge","/simulateur-cmg-reste-a-charge.html"]];
+  return (
+    <div style={S.wrap}>
+      <div style={S.b1}/><div style={S.b2}/>
+      <div style={S.inner}>
+        <img src="/logo.png" alt="TiMat" style={S.logo}/>
+        <h1 style={S.h1}>On prepare quelque chose de mieux</h1>
+        <p style={S.msg}>TiMat est en maintenance le temps d'une mise a jour.<br/><strong style={{color:C.b,fontWeight:600}}>Vos donnees et vos contrats sont intacts.</strong><br/>Le service revient tres vite.</p>
+        <div style={S.card}>
+          <div style={S.ch}>Pendant ce temps, tout reste accessible</div>
+          {liens.map(([t,u],i)=>(
+            <a key={u} href={u} style={i===0?{...S.a,...S.a0}:S.a}><span>{t}</span><span style={S.ar}>&rarr;</span></a>
+          ))}
+        </div>
+        <p style={S.foot}>Une question ? <a href="mailto:contact@timat.app" style={{color:"#6E8089"}}>contact@timat.app</a></p>
+      </div>
+    </div>
+  );
+}
+
 export default function App(){
+  const [maintOk] = useState(()=>maintenanceBypass());
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
   const [pEIdSel,setPEIdSel]=useState(null);  const [showWelcome,setShowWelcome]=useState(false);
@@ -18329,6 +18390,11 @@ export default function App(){
 
   // ROUTE DEDIEE /backoffice : rendu autonome hors de l app, reserve a l admin
   let _isBO=false; try{ _isBO=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
+
+  // MODE MAINTENANCE : bloque landing, application, connexion et inscription.
+  // Le backoffice reste accessible, ainsi que le blog et les simulateurs (fichiers statiques).
+  if(MAINTENANCE && !maintOk && !_isBO) return <MaintenanceScreen/>;
+
   if(_isBO){
     const _onLoginBO=u=>{ setUser({...u,_needsProfileFetch:true,_profileConfirmed:false}); };
     return <><Styles/><BackofficePage user={user} appConfig={appConfig} setAppConfig={setAppConfig} onLogin={_onLoginBO}/></>;
