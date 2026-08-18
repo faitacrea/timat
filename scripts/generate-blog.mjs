@@ -300,8 +300,10 @@ img{max-width:100%;height:auto}
 .wrap{max-width:720px;margin:0 auto;padding:0 22px}
 .topbar{border-bottom:1px solid ${T.border};background:${T.white};position:sticky;top:0;z-index:10}
 .topbar .wrap{max-width:1100px;display:flex;align-items:center;justify-content:space-between;height:62px}
-.brand{font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:21px;letter-spacing:-.4px;text-decoration:none;color:${T.ink}}
-.brand span{color:${T.terracotta}}
+.brand{display:flex;align-items:center;text-decoration:none;color:${T.ink};line-height:0}
+.brand img{height:30px;width:auto;display:block}
+.brand .wm{font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:21px;letter-spacing:-.4px;line-height:1}
+.brand .wm span{color:${T.terracotta}}
 .topnav{display:flex;gap:18px;align-items:center;font-size:14px;font-weight:600}
 .topnav a{text-decoration:none;color:${T.mauve}}
 .topnav a:hover{color:${T.ink}}
@@ -423,7 +425,7 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
 <body>
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="/">Ti<span>Mat</span></a>
+    <a class="brand" href="/" aria-label="TiMat"><img src="/logo.png" alt="TiMat" width="95" height="30" onerror="this.outerHTML='<span class=&quot;wm&quot;>Ti<span>Mat</span></span>'"></a>
     <nav class="topnav">
       <a href="${indexTarget().url}">Blog</a>
       <a href="/boutique.html">Boutique</a>
