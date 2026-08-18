@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Acces de service</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#F8F8F8;color:#2E4859;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:15px;text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div id="m">Un instant&hellip;</div>
+<script>
+(function(){
+  var CLE = "D1Jrp_UaM29A";
+  var stop = new URLSearchParams(location.search).has("stop");
+  try{
+    if(stop){
+      document.cookie = "timat_acces=; path=/; max-age=0; SameSite=Lax";
+      localStorage.removeItem("timat:acces");
+    } else {
+      document.cookie = "timat_acces=" + CLE + "; path=/; max-age=86400; SameSite=Lax";
+    }
+  }catch(e){}
+  document.getElementById("m").textContent = stop
+    ? "Acces de service retire. Redirection\u2026"
+    : "Acces de service active pour 24 h. Redirection\u2026";
+  setTimeout(function(){
+    location.replace(stop ? "/" : "/?acces=" + CLE);
+  }, 700);
+})();
+</script>
+</body>
+</html>
