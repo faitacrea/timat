@@ -1,9 +1,11 @@
-{
   "rewrites": [
     { "source": "/backoffice", "destination": "/index.html" },
-    { "source": "/backoffice/", "destination": "/index.html" }
+    { "source": "/backoffice/", "destination": "/index.html" },
+    { "source": "/", "has": [{ "type": "cookie", "key": "timat_acces", "value": "D1Jrp_UaM29A" }], "destination": "/index.html" },
+    { "source": "/", "destination": "/maintenance.html" }
   ],
   "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": false },
     { "source": "/calcul-mensualisation-assistante-maternelle.html", "destination": "/blog/calcul-mensualisation-assistante-maternelle", "permanent": true },
     { "source": "/conges-payes-assistante-maternelle.html", "destination": "/blog/conges-payes-assistante-maternelle", "permanent": true },
     { "source": "/cout-reel-assistante-maternelle-reste-a-charge.html", "destination": "/blog/cout-reel-assistante-maternelle-reste-a-charge", "permanent": true },
