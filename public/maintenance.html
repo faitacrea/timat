@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>TiMat &mdash; maintenance en cours</title>
+<meta name="description" content="TiMat est momentanement en maintenance. Le blog et les simulateurs restent accessibles.">
+<link rel="icon" href="/logo.png">
+<style>
+  :root{ --marine:#2E4859; --terra:#E49178; --terraD:#C84B31; --bg:#F8F8F8; --w:#FFFFFF; --line:#E8E4E0; --muted:#6E8089; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--marine);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-text-size-adjust:100%;
+    display:flex;align-items:center;justify-content:center;
+    padding:32px 20px;position:relative;overflow-x:hidden}
+  .blob{position:absolute;border-radius:50%;background:var(--terra);pointer-events:none}
+  .b1{width:280px;height:280px;top:-140px;right:-90px;opacity:.9}
+  .b2{width:150px;height:150px;bottom:-80px;left:-60px;opacity:.32}
+  .inner{position:relative;z-index:1;max-width:440px;width:100%;text-align:center}
+  .logo{height:46px;width:auto;margin-bottom:30px}
+  h1{font-size:27px;line-height:1.22;margin:0 0 14px;font-weight:700;letter-spacing:-.01em}
+  .msg{font-size:16px;color:#4A6270;margin:0 0 26px}
+  .msg strong{color:var(--marine);font-weight:600}
+  .card{background:var(--w);border:1px solid var(--line);border-radius:14px;padding:16px 18px;text-align:left}
+  .ch{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--terraD);font-weight:700;margin-bottom:10px}
+  .card a{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    text-decoration:none;color:var(--marine);font-size:14.5px;font-weight:600;
+    padding:9px 0;border-top:1px solid var(--line)}
+  .card a:first-of-type{border-top:none}
+  .ar{color:var(--terra);font-weight:400}
+  .foot{margin-top:26px;font-size:12.5px;color:var(--muted)}
+  .foot a{color:var(--muted)}
+  @media(max-width:520px){ h1{font-size:23px} .b1{width:200px;height:200px;top:-100px;right:-70px} }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="inner">
+    <img class="logo" src="/logo.png" alt="TiMat">
+    <h1>On pr&eacute;pare quelque chose de mieux</h1>
+    <p class="msg">TiMat est en maintenance le temps d&#39;une mise &agrave; jour.<br>
+      <strong>Vos donn&eacute;es et vos contrats sont intacts.</strong><br>
+      Le service revient tr&egrave;s vite.</p>
+    <div class="card">
+      <div class="ch">Pendant ce temps, tout reste accessible</div>
+      <a href="/blog"><span>Les guides du blog</span><span class="ar">&rarr;</span></a>
+      <a href="/outils.html"><span>Les simulateurs gratuits</span><span class="ar">&rarr;</span></a>
+      <a href="/simulateur-cmg-reste-a-charge.html"><span>Calculer son CMG et son reste &agrave; charge</span><span class="ar">&rarr;</span></a>
+    </div>
+    <p class="foot">Une question ? <a href="mailto:contact@timat.app">contact@timat.app</a></p>
+  </div>
+</body>
+</html>
