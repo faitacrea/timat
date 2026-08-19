@@ -1,4 +1,5 @@
-  "rewrites": [
+ {
+ "rewrites": [
     { "source": "/backoffice", "destination": "/index.html" },
     { "source": "/backoffice/", "destination": "/index.html" },
     { "source": "/", "has": [{ "type": "cookie", "key": "timat_acces", "value": "D1Jrp_UaM29A" }], "destination": "/index.html" },
