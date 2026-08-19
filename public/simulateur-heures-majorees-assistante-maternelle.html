@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calcul des heures majorées assistante maternelle 2026</title>
+<meta name="description" content="Heures complémentaires jusqu'à 45 h, majorées au-delà : le calcul semaine par semaine, avec le taux minimum de 10 % prévu par la convention.">
+<link rel="canonical" href="https://timat.app/simulateur-heures-majorees-assistante-maternelle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calcul des heures majorées assistante maternelle 2026">
+<meta property="og:description" content="Le seuil de 45 h, le taux minimum de 10 %, le montant à ajouter au salaire.">
+<meta property="og:url" content="https://timat.app/simulateur-heures-majorees-assistante-maternelle.html">
+<meta property="og:image" content="https://timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .res .c{border-radius:12px;padding:14px;text-align:center}
+  .res .a{background:#F2ECE6;color:#7A544A}.res .b{background:#EAF3F1;color:#2E4859}
+  .res .lbl{font-size:11px;opacity:.85}.res .val{font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+  .verdict{margin-top:12px;text-align:center;font-weight:700;color:var(--marine);font-size:14px}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  p{margin-bottom:13px}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}
+  .related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid #E4DCD0;border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:520px){.res{grid-template-columns:1fr}}
+</style><style>
+  .sim-row select{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream);color:var(--ink)}
+  .sim-row .hint{font-size:11.5px;color:var(--muted);font-weight:400}
+  .res3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .res3.t3{grid-template-columns:1fr 1fr 1fr}
+  .res3 .c{border-radius:12px;padding:14px 10px;text-align:center}
+  .res3 .lbl{font-size:11px;opacity:.85;line-height:1.35}
+  .res3 .val{font-family:'Fraunces',serif;font-size:20px;font-weight:700;margin-top:3px}
+  .c1{background:#F2ECE6;color:#7A544A}.c2{background:#EAF3F1;color:#2E4859}.c3{background:var(--marine);color:#fff}
+  .sep{border:0;border-top:1px dashed #E4DCD0;margin:18px 0 14px}
+  .subt{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--terraD);margin-bottom:10px}
+  .warnbox{background:#FFF6F2;border:1px solid #F3DDD4;border-left:4px solid var(--terraD);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  th,td{border:1px solid #E7DED2;padding:9px 11px;text-align:left}
+  th{background:var(--cream2);font-weight:600}
+  @media(max-width:520px){.res3,.res3.t3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat &rarr;</a>
+  </div></div>
+
+  <div class="hero"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> &rsaquo; <a href="/outils.html">Outils</a> &rsaquo; Heures majorées</div>
+    <span class="tag">Outil gratuit</span>
+    <h1>Calcul des heures majorées</h1>
+    <p class="lead">Le partage se fait &agrave; <strong>45 heures par semaine</strong>, chez un m&ecirc;me employeur. En de&ccedil;&agrave;, taux normal ; au-del&agrave;, majoration d'au moins 10 %.</p>
+  </div></div>
+
+  <main>
+    <div class="sim">
+      <h2>&#9201; Votre semaine</h2>
+      <div class="sim-row"><label for="hc">Heures pr&eacute;vues au contrat (par semaine)</label><input id="hc" type="number" inputmode="decimal" step="0.25" value="40"></div>
+      <div class="sim-row"><label for="hr">Heures r&eacute;ellement effectu&eacute;es cette semaine</label><input id="hr" type="number" inputmode="decimal" step="0.25" value="47"></div>
+      <div class="sim-row"><label for="tx">Taux horaire brut (&euro;)</label><input id="tx" type="number" inputmode="decimal" step="0.01" value="4.20"></div>
+      <div class="sim-row"><label for="mj">Taux de majoration (%) <span class="hint">fix&eacute; au contrat, minimum 10 %</span></label><input id="mj" type="number" inputmode="decimal" step="1" value="10"></div>
+
+      <div class="res3 t3">
+        <div class="c c1"><div class="lbl">Heures compl&eacute;mentaires</div><div class="val" id="rC">&mdash;</div></div>
+        <div class="c c2"><div class="lbl">Heures major&eacute;es</div><div class="val" id="rM">&mdash;</div></div>
+        <div class="c c3"><div class="lbl">&Agrave; ajouter au salaire</div><div class="val" id="rT">&mdash; &euro;</div></div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <div class="note">Ces montants s'ajoutent au salaire mensualis&eacute; du mois o&ugrave; les heures ont &eacute;t&eacute; effectu&eacute;es. Ils ne se lissent jamais sur douze mois.</div>
+    </div>
+
+    <h2>Comment se fait le partage</h2>
+    <table>
+      <tr><th>Heures</th><th>R&eacute;gime</th><th>R&eacute;mun&eacute;ration</th></tr>
+      <tr><td>Jusqu'au volume pr&eacute;vu au contrat</td><td>Heures normales</td><td>Comprises dans la mensualisation</td></tr>
+      <tr><td>Au-del&agrave; du contrat, jusqu'&agrave; 45 h</td><td>Heures compl&eacute;mentaires</td><td>Taux normal, sauf majoration &eacute;crite au contrat</td></tr>
+      <tr><td>&Agrave; partir de la 46<sup>e</sup> heure</td><td>Heures major&eacute;es</td><td>Taux major&eacute;, minimum 10 %</td></tr>
+    </table>
+    <p>Le d&eacute;compte se fait sur la <strong>semaine civile</strong>, du lundi au dimanche, et <strong>par employeur</strong>. Une assistante maternelle qui totalise 50 heures chez trois familles diff&eacute;rentes n'a aucune heure major&eacute;e si aucun contrat ne d&eacute;passe 45 heures.</p>
+
+    <div class="warnbox"><strong>Le taux n'est pas libre.</strong> On lit souvent qu'il se n&eacute;gocie sans contrainte, ou qu'il serait de 25 %. La convention collective fixe un plancher de <strong>10 %</strong> et laisse le taux exact au contrat. Une clause pr&eacute;voyant moins serait sans effet ; au-del&agrave;, tout est possible.</div>
+
+    <div class="related">
+      <h2>&Agrave; lire aussi</h2>
+      <div class="chips">
+        <a class="chip" href="/blog/heures-complementaires-majorees-assistante-maternelle">Heures compl&eacute;mentaires et major&eacute;es</a>
+        <a class="chip" href="/blog/calcul-mensualisation-assistante-maternelle">La mensualisation</a>
+        <a class="chip" href="/simulateur-salaire-assistante-maternelle.html">Simulateur de salaire</a>
+      </div>
+    </div>
+
+    <div class="ctabox">
+      <h2>Suivez vos heures sans y penser</h2>
+      <p>TiMat enregistre les arriv&eacute;es et les d&eacute;parts, et calcule les montants &agrave; d&eacute;clarer chaque mois.</p>
+      <a href="/?connexion" class="ctabtn">Essayer gratuitement &rarr;</a>
+    </div>
+  </main>
+  <footer><a href="/">Accueil</a> &middot; <a href="/outils.html">Outils</a> &middot; <a href="/blog">Blog</a></footer>
+
+  <script>
+    (function(){
+      var ids=['hc','hr','tx','mj'], el={};
+      ids.forEach(function(i){el[i]=document.getElementById(i);});
+      var rC=document.getElementById('rC'),rM=document.getElementById('rM'),rT=document.getElementById('rT'),v=document.getElementById('verdict');
+      function n(x){return parseFloat(x)||0;}
+      function eur(x){return x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' \u20ac';}
+      function hh(x){return x.toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:2})+' h';}
+      function calc(){
+        var c=n(el.hc.value), r=n(el.hr.value), t=n(el.tx.value), m=n(el.mj.value);
+        if(m<10) m=10;
+        var comp = Math.max(0, Math.min(r,45) - Math.min(c,45));
+        var maj  = Math.max(0, r - Math.max(45, Math.min(c,r)));
+        var majContrat = Math.max(0, Math.min(c,r) - 45);
+        var total = comp*t + maj*t*(1+m/100);
+        rC.textContent=hh(comp); rM.textContent=hh(maj); rT.textContent=eur(total);
+        if(r<=c){
+          v.textContent='Aucune heure au-del\u00e0 du contrat cette semaine : rien \u00e0 ajouter.';
+        } else if(majContrat>0){
+          v.textContent='Attention : votre contrat pr\u00e9voit d\u00e9j\u00e0 '+hh(majContrat)+' au-del\u00e0 de 45 h par semaine. Ces heures-l\u00e0 doivent \u00eatre major\u00e9es d\u00e8s la mensualisation, en plus de ce qui est calcul\u00e9 ici.';
+        } else if(maj>0){
+          v.textContent='Soit '+hh(comp)+' au taux normal ('+eur(comp*t)+') et '+hh(maj)+' au taux major\u00e9 de '+m+' % ('+eur(maj*t*(1+m/100))+').';
+        } else {
+          v.textContent='Toutes les heures suppl\u00e9mentaires restent sous le seuil de 45 h : elles se paient au taux normal, sauf majoration pr\u00e9vue au contrat.';
+        }
+      }
+      ids.forEach(function(i){el[i].addEventListener('input',calc);el[i].addEventListener('change',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
