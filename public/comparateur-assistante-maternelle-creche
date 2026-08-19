@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistante maternelle ou crèche : comparateur de coût</title>
+<meta name="description" content="Depuis la réforme, les deux modes d'accueil partagent le même barème. Comparez votre reste à charge réel, calcul officiel post-septembre 2025.">
+<link rel="canonical" href="https://timat.app/comparateur-assistante-maternelle-creche.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Assistante maternelle ou crèche : comparateur de coût">
+<meta property="og:description" content="Le vrai reste à charge des deux modes d'accueil, barème 2026.">
+<meta property="og:url" content="https://timat.app/comparateur-assistante-maternelle-creche.html">
+<meta property="og:image" content="https://timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .res .c{border-radius:12px;padding:14px;text-align:center}
+  .res .a{background:#F2ECE6;color:#7A544A}.res .b{background:#EAF3F1;color:#2E4859}
+  .res .lbl{font-size:11px;opacity:.85}.res .val{font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+  .verdict{margin-top:12px;text-align:center;font-weight:700;color:var(--marine);font-size:14px}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  p{margin-bottom:13px}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}
+  .related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid #E4DCD0;border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:520px){.res{grid-template-columns:1fr}}
+</style><style>
+  .sim-row select{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream);color:var(--ink)}
+  .sim-row .hint{font-size:11.5px;color:var(--muted);font-weight:400}
+  .res3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .res3.t3{grid-template-columns:1fr 1fr 1fr}
+  .res3 .c{border-radius:12px;padding:14px 10px;text-align:center}
+  .res3 .lbl{font-size:11px;opacity:.85;line-height:1.35}
+  .res3 .val{font-family:'Fraunces',serif;font-size:20px;font-weight:700;margin-top:3px}
+  .c1{background:#F2ECE6;color:#7A544A}.c2{background:#EAF3F1;color:#2E4859}.c3{background:var(--marine);color:#fff}
+  .sep{border:0;border-top:1px dashed #E4DCD0;margin:18px 0 14px}
+  .subt{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--terraD);margin-bottom:10px}
+  .warnbox{background:#FFF6F2;border:1px solid #F3DDD4;border-left:4px solid var(--terraD);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  th,td{border:1px solid #E7DED2;padding:9px 11px;text-align:left}
+  th{background:var(--cream2);font-weight:600}
+  @media(max-width:520px){.res3,.res3.t3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat &rarr;</a>
+  </div></div>
+
+  <div class="hero"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> &rsaquo; <a href="/outils.html">Outils</a> &rsaquo; Comparateur</div>
+    <span class="tag">Outil gratuit</span>
+    <h1>Assistante maternelle ou cr&egrave;che ?</h1>
+    <p class="lead">Depuis septembre 2025, les deux modes d'accueil partagent <strong>le m&ecirc;me bar&egrave;me</strong>. Ce qui fait l'&eacute;cart, c'est le tarif horaire que vous n&eacute;gociez.</p>
+  </div></div>
+
+  <main>
+    <div class="sim">
+      <h2>&#9878; Votre situation</h2>
+      <div class="sim-row"><label for="rs">Ressources mensuelles du foyer (&euro;) <span class="hint">revenus N&#8209;2 divis&eacute;s par 12</span></label><input id="rs" type="number" inputmode="decimal" value="3000"></div>
+      <div class="sim-row"><label for="ne">Enfants &agrave; charge</label>
+        <select id="ne"><option value="1">1 enfant</option><option value="2">2 enfants</option><option value="3">3 enfants</option><option value="4">4 &agrave; 7 enfants</option><option value="8">8 enfants ou plus</option></select>
+      </div>
+      <div class="sim-row"><label for="hm">Heures d'accueil par mois</label><input id="hm" type="number" inputmode="decimal" value="140"></div>
+
+      <hr class="sep">
+      <div class="subt">C&ocirc;t&eacute; assistante maternelle</div>
+      <div class="sim-row"><label for="jm">Jours d'accueil par mois</label><input id="jm" type="number" inputmode="decimal" value="20"></div>
+      <div class="sim-row"><label for="sn">Salaire net horaire (&euro;)</label><input id="sn" type="number" inputmode="decimal" step="0.01" value="3.28"></div>
+      <div class="sim-row"><label for="ie">Indemnit&eacute; d'entretien par jour (&euro;)</label><input id="ie" type="number" inputmode="decimal" step="0.01" value="3.92"></div>
+      <div class="sim-row"><label for="rp">Frais de repas par jour (&euro;)</label><input id="rp" type="number" inputmode="decimal" step="0.01" value="0"></div>
+
+      <div class="res3">
+        <div class="c c2"><div class="lbl">Reste &agrave; charge en cr&egrave;che</div><div class="val" id="rCr">&mdash; &euro;</div></div>
+        <div class="c c3"><div class="lbl">Reste &agrave; charge assmat</div><div class="val" id="rAm">&mdash; &euro;</div></div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <div class="note">Estimation avant cr&eacute;dit d'imp&ocirc;t, qui s'applique aux deux modes d'accueil. Le tarif cr&egrave;che correspond &agrave; une place en &eacute;tablissement financ&eacute; par la prestation de service unique, repas et couches compris ; les micro-cr&egrave;ches priv&eacute;es suivent d'autres r&egrave;gles.</div>
+    </div>
+
+    <h2>Pourquoi les deux se rejoignent</h2>
+    <p>La r&eacute;forme du CMG a repris pour l'accueil individuel le bar&egrave;me de taux d'effort d&eacute;j&agrave; utilis&eacute; par les cr&egrave;ches : 0,0619 % des ressources par heure pour un enfant &agrave; charge, 0,0516 % pour deux, et ainsi de suite. La seule diff&eacute;rence tient au tarif pratiqu&eacute;.</p>
+    <div class="box">Cr&egrave;che : reste &agrave; charge = ressources &times; taux d'effort &times; heures<br>Assistante maternelle : la m&ecirc;me formule, corrig&eacute;e par le rapport entre votre tarif horaire r&eacute;el et le co&ucirc;t de r&eacute;f&eacute;rence de 4,91 &euro;</div>
+    <p>Au co&ucirc;t de r&eacute;f&eacute;rence exactement, les deux montants sont identiques &mdash; c'&eacute;tait l'objectif affich&eacute; de la r&eacute;forme. Au-dessus, votre participation augmente proportionnellement.</p>
+
+    <div class="warnbox"><strong>Au-del&agrave; de 8,09 &euro; de l'heure, la part qui d&eacute;passe est enti&egrave;rement pour vous</strong>, cotisations comprises. Le CMG n'est pas perdu, mais il est calcul&eacute; dans la limite de ce plafond. C'est ce qui creuse l'&eacute;cart en zone tendue.</div>
+
+    <div class="related">
+      <h2>&Agrave; lire aussi</h2>
+      <div class="chips">
+        <a class="chip" href="/blog/assistante-maternelle-ou-creche-comparatif">Le comparatif complet</a>
+        <a class="chip" href="/blog/cmg-assistante-maternelle-calcul-2026">Comment se calcule le CMG</a>
+        <a class="chip" href="/simulateur-cmg-reste-a-charge.html">Simulateur CMG</a>
+      </div>
+    </div>
+
+    <div class="ctabox">
+      <h2>Une fois le choix fait</h2>
+      <p>TiMat g&egrave;re le contrat, la mensualisation et les d&eacute;clarations Pajemploi.</p>
+      <a href="/?connexion" class="ctabtn">Essayer gratuitement &rarr;</a>
+    </div>
+  </main>
+  <footer><a href="/">Accueil</a> &middot; <a href="/outils.html">Outils</a> &middot; <a href="/blog">Blog</a></footer>
+
+  <script>
+    (function(){
+      var CHR=4.91, PLAF=8.09, PLANCHER=814.62, PLAFRES=8500;
+      var TE={1:0.000619,2:0.000516,3:0.000413,4:0.000310,8:0.000206};
+      var ids=['rs','ne','hm','jm','sn','ie','rp'], el={};
+      ids.forEach(function(i){el[i]=document.getElementById(i);});
+      var rCr=document.getElementById('rCr'),rAm=document.getElementById('rAm'),v=document.getElementById('verdict');
+      function n(x){return parseFloat(x)||0;}
+      function eur(x){return x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' \u20ac';}
+      function calc(){
+        var h=n(el.hm.value), j=n(el.jm.value), s=n(el.sn.value), i=n(el.ie.value), r=n(el.rp.value);
+        var res=Math.min(Math.max(n(el.rs.value),PLANCHER),PLAFRES);
+        var te=TE[el.ne.value]||TE[1];
+        if(h<=0){rCr.textContent='\u2014 \u20ac';rAm.textContent='\u2014 \u20ac';v.textContent='';return;}
+        var creche = res*te*h;
+        var cout = h*s + j*i + j*r;
+        var tarif = cout/h;
+        var retenu = Math.min(tarif, PLAF);
+        var cmg = Math.max(0, h*retenu - res*te*(retenu/CHR)*h);
+        var assmat = cout - cmg;
+        rCr.textContent=eur(creche); rAm.textContent=eur(assmat);
+        var ecart = assmat - creche;
+        var msg = 'Tarif horaire r\u00e9el de '+eur(tarif)+' contre 4,91 \u20ac de r\u00e9f\u00e9rence. ';
+        if(Math.abs(ecart)<1){ msg += 'Les deux modes reviennent au m\u00eame.'; }
+        else if(ecart>0){ msg += 'L\u2019assistante maternelle vous co\u00fbte '+eur(ecart)+' de plus par mois.'; }
+        else { msg += 'L\u2019assistante maternelle vous co\u00fbte '+eur(-ecart)+' de moins par mois.'; }
+        if(tarif>PLAF){ msg += ' Attention : au-dessus du plafond de 8,09 \u20ac, la part qui d\u00e9passe reste enti\u00e8rement \u00e0 votre charge.'; }
+        v.textContent=msg;
+      }
+      ids.forEach(function(i){el[i].addEventListener('input',calc);el[i].addEventListener('change',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
