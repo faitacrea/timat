@@ -12572,7 +12572,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s, color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color="#2E4859";}}>{label}</button>
               )}
@@ -12594,7 +12594,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
             <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
-                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog.html"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
+                <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/pour-les-parents.html"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
@@ -12625,7 +12625,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             ].map(g=><div key={g.sec} style={{marginBottom:6}}>
               <div style={{fontSize:10.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
               {g.items.map(([ic,label,desc,target,c])=>
-                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/pour-les-parents.html";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")window.location.href="/boutique.html";else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog.html";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
+                <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/pour-les-parents.html";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")window.location.href="/boutique.html";else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                   style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
                   onMouseEnter={e=>{e.currentTarget.style.background=c+"14";e.currentTarget.style.transform="translateX(4px)";e.currentTarget.style.boxShadow="0 4px 14px "+c+"22";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
                   <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
@@ -13077,7 +13077,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {(config.blog||DEFAULT_CONFIG.blog).map((art,i)=>(
               <FadeIn key={art.id} delay={i*80}>
-                <div className="blog-card" onClick={()=>{window.location.href=(art.slug?"/"+art.slug+".html":"/blog.html");}} style={{
+                <div className="blog-card" onClick={()=>{window.location.href=(art.slug?"/blog/"+art.slug:"/blog");}} style={{
                   background:"#fff",borderRadius:16,overflow:"hidden",cursor:"pointer",
                   border:"1px solid #E8E4E0",boxShadow:"0 2px 12px rgba(0,0,0,.04)"
                 }}>
@@ -13096,413 +13096,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       </div>}
       </div>
 
-      {/* BLOG ARTICLE MODAL */}
-      {showBlog&&<div onClick={e=>e.target===e.currentTarget&&setShowBlog(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
-        <div style={{background:"#fff",borderRadius:20,width:"100%",maxWidth:700,maxHeight:"90vh",overflow:"hidden",boxShadow:"0 24px 80px rgba(0,0,0,.3)",display:"flex",flexDirection:"column"}}>
-          <div style={{padding:"20px 24px",borderBottom:"1px solid #E8E4E0",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
-            <div style={{fontFamily:fTitle,fontSize:16,fontWeight:700,color:"#2E4859"}}>📝 Blog TiMat</div>
-            <button onClick={()=>setShowBlog(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
-          </div>
-          <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#2E4859",lineHeight:1.9}}>
-            {(()=>{ const _art=(config.blog||DEFAULT_CONFIG.blog).find(x=>x.id===showBlog)||{}; if(_art.blocks&&_art.blocks.length) return <div><h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:8}}>{_art.emoji} {_art.title}</h2><div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>{_art.cat}</div><RenderArticleBlocks blocks={_art.blocks}/></div>; return (<>
-
-            {showBlog==="mensualisation"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🧮 Mensualisation : le guide complet pour ne plus se tromper</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 8 min de lecture</div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Pourquoi mensualiser ?</h3>
-              <p>La mensualisation est obligatoire pour les assistantes maternelles depuis la Convention Collective Nationale. Son objectif est simple : lisser votre salaire sur l'année pour que vous receviez la même somme chaque mois, même si les semaines d'accueil varient.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Année complète ou incomplète ?</h3>
-              <p><strong>Année complète (47 semaines et plus)</strong> — Le calcul est le plus courant. L'enfant est accueilli au moins 47 semaines par an. Votre salaire mensuel est : <em>heures hebdo × 52 / 12 × taux horaire</em>. Les congés payés sont inclus dans ce calcul.</p>
-              <p style={{marginTop:8}}><strong>Année incomplète (moins de 47 semaines)</strong> — Utilisé quand les parents prennent plus de 5 semaines de vacances ou pour un accueil périscolaire. Le calcul : <em>heures hebdo × nombre de semaines / 12 × taux horaire</em>. Les congés payés sont versés séparément (10% du total).</p>
-
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>💡 Exemple concret</div>
-                <div style={{fontSize:12}}>
-                  Marie accueille Léo 40h/semaine, 47 semaines/an, à 4,05€/h brut.<br/>
-                  Salaire mensualisé = 40 × 52 / 12 × 4,05 = <strong>702 € brut/mois</strong><br/>
-                  Soit environ <strong>547,56 € net/mois</strong> (après cotisations ~22%).
-                </div>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>La régularisation de fin d'année</h3>
-              <p>En fin d'année (ou de contrat), il faut comparer les heures réellement effectuées avec les heures payées. Si l'assmat a travaillé plus que prévu, le parent doit compléter. Si elle a travaillé moins, en année complète le salaire reste acquis (c'est le principe de la mensualisation).</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les heures complémentaires et majorées</h3>
-              <p>Au-delà de 45 heures par semaine, les heures sont majorées d'au moins 25% (ou plus selon accord). Entre le nombre contractuel et 45h, ce sont des heures complémentaires, rémunérées au taux normal sauf accord contraire.</p>
-
-              <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
-                <div style={{fontWeight:700,color:"#E49178",marginBottom:6}}>🔧 TiMat calcule tout automatiquement</div>
-                <div style={{fontSize:12}}>Plus besoin de faire ces calculs à la main. TiMat applique les règles de la CCN et génère votre bulletin de salaire chaque mois.</div>
-              </div>
-            </div>}
-
-            {showBlog==="maladies"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🩺 Les 5 maladies les plus fréquentes chez les tout-petits</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Santé · 6 min de lecture</div>
-
-              <p>En accueil collectif ou individuel, les enfants tombent malades. C'est normal et même nécessaire pour construire leur immunité. Voici les 5 maladies les plus fréquentes et ce que vous devez savoir.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>1. La bronchiolite</h3>
-              <p><strong>Quoi :</strong> infection virale des bronchioles, très courante chez les moins de 2 ans, surtout en hiver (octobre à mars).</p>
-              <p><strong>Signes :</strong> toux, respiration sifflante, difficulté à s'alimenter, tirage intercostal.</p>
-              <p><strong>Conduite :</strong> nettoyer le nez (DRP), fractionner les repas, surélever légèrement la tête du lit. Consulter si détresse respiratoire. L'enfant peut revenir chez l'assmat après la phase aiguë (2-3 jours), si pas de fièvre et alimentation correcte.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>2. La gastro-entérite</h3>
-              <p><strong>Quoi :</strong> inflammation de l'estomac et des intestins, virale dans 90% des cas (rotavirus).</p>
-              <p><strong>Signes :</strong> vomissements, diarrhée, fièvre possible, risque de déshydratation.</p>
-              <p><strong>Conduite :</strong> soluté de réhydratation orale (SRO), régime adapté. Exclure l'enfant 24h après le dernier vomissement. Hygiène des mains renforcée pour éviter la contagion aux autres enfants.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>3. Le syndrome pieds-mains-bouche</h3>
-              <p><strong>Quoi :</strong> infection virale (coxsackie) très contagieuse, fréquente l'été-automne.</p>
-              <p><strong>Signes :</strong> petites vésicules sur les mains, les pieds et dans la bouche, fièvre modérée, refus de manger.</p>
-              <p><strong>Conduite :</strong> pas de traitement spécifique, guérison en 7-10 jours. L'éviction n'est pas obligatoire (avis du médecin). Proposer des aliments froids et mous si la bouche est douloureuse.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>4. L'otite moyenne aiguë</h3>
-              <p><strong>Quoi :</strong> infection de l'oreille moyenne, souvent consécutive à un rhume. Très fréquente avant 3 ans.</p>
-              <p><strong>Signes :</strong> douleur à l'oreille (l'enfant se tire l'oreille), fièvre, pleurs inhabituels, troubles du sommeil.</p>
-              <p><strong>Conduite :</strong> consultation médicale nécessaire (possible antibiotiques). L'enfant peut revenir 24h après le début du traitement si état général correct.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>5. La conjonctivite</h3>
-              <p><strong>Quoi :</strong> inflammation de la membrane qui recouvre l'oeil, souvent bactérienne chez les petits.</p>
-              <p><strong>Signes :</strong> oeil rouge, sécrétions jaune-vertes, paupières collées au réveil.</p>
-              <p><strong>Conduite :</strong> lavage au sérum physiologique, collyre prescrit par le médecin. Très contagieux — se laver les mains après chaque soin. Retour possible après 24h de traitement.</p>
-
-              <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"20px 0"}}>
-                <div style={{fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 À retenir</div>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2}}>
-                  <li>Exiger systématiquement une ordonnance médicale avant d'administrer un médicament</li>
-                  <li>Tenir un registre des maladies et traitements dans le carnet de l'enfant</li>
-                  <li>Prévenir les parents dès les premiers symptômes</li>
-                  <li>Renforcer l'hygiène des mains (avant/après chaque change, repas, mouchage)</li>
-                </ul>
-              </div>
-            </div>}
-
-            {showBlog==="agrement"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🏛️ Renouvellement d'agrément : la checklist complète</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>PMI & Agrément · 7 min de lecture</div>
-
-              <p>Votre agrément doit être renouvelé tous les 5 ans (10 ans avec le CAP AEPE). La demande doit être envoyée au moins 3 mois avant l'expiration. Voici tout ce qu'il faut préparer.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>📅 Le calendrier</h3>
-              <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"8px 12px",fontSize:12,margin:"10px 0"}}>
-                <strong>6 mois avant :</strong><span>Commencer à rassembler les documents</span>
-                <strong>3 mois avant :</strong><span>Envoyer le dossier complet au Conseil départemental</span>
-                <strong>2 mois avant :</strong><span>Visite de la puéricultrice PMI à domicile</span>
-                <strong>Jour J :</strong><span>Réponse du Conseil départemental (silence = accord)</span>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>📋 Documents à fournir</h3>
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"10px 0"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
-                  <li>Formulaire CERFA de renouvellement (disponible sur service-public.fr)</li>
-                  <li>Copie de votre pièce d'identité</li>
-                  <li>Justificatif de domicile de moins de 3 mois</li>
-                  <li>Certificat médical attestant votre aptitude à accueillir des enfants</li>
-                  <li>Extrait de casier judiciaire (bulletin n°2 — demandé automatiquement par la PMI)</li>
-                  <li>Attestation d'assurance responsabilité civile professionnelle</li>
-                  <li>Attestation de formation continue (120h obligatoires)</li>
-                  <li>Votre projet d'accueil mis à jour</li>
-                </ul>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>🏠 La visite PMI : à quoi s'attendre</h3>
-              <p>La puéricultrice viendra évaluer votre domicile et votre pratique. Elle regardera notamment :</p>
-              <ul style={{paddingLeft:20,fontSize:12,lineHeight:2}}>
-                <li>La sécurité du logement (barrières, prises, escaliers, produits dangereux)</li>
-                <li>L'espace dédié à l'accueil (coin repos, coin repas, coin jeu)</li>
-                <li>Votre organisation quotidienne et vos pratiques éducatives</li>
-                <li>Votre capacité à travailler avec les parents</li>
-                <li>Votre connaissance des gestes de premiers secours</li>
-              </ul>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>⚠️ Les erreurs à éviter</h3>
-              <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"10px 0",border:"1px solid #FECACA"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#C84B31"}}>
-                  <li>Envoyer le dossier en retard (moins de 3 mois avant expiration)</li>
-                  <li>Oublier la formation continue obligatoire</li>
-                  <li>Ne pas mettre à jour son projet d'accueil</li>
-                  <li>Négliger la sécurité du domicile avant la visite</li>
-                </ul>
-              </div>
-            </div>}
-
-            {showBlog==="attachement"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🤱 L'attachement sécure : pourquoi c'est fondamental en accueil individuel</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Pédagogie · 5 min de lecture</div>
-
-              <p>En tant qu'assistante maternelle, vous êtes une figure d'attachement secondaire pour les enfants que vous accueillez. Ce rôle est essentiel pour leur développement émotionnel et cognitif.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Qu'est-ce que l'attachement sécure ?</h3>
-              <p>La théorie de l'attachement, développée par John Bowlby et Mary Ainsworth, montre que chaque enfant a besoin d'au moins une figure d'attachement stable et disponible pour se développer sereinement. Quand l'enfant se sent en sécurité avec un adulte, il ose explorer le monde, gérer ses émotions et développer sa confiance en lui.</p>
-
-              <p style={{marginTop:8}}>En accueil individuel, vous avez un avantage énorme sur les structures collectives : <strong>un ratio faible</strong> (1 adulte pour 3-4 enfants maximum) qui permet de créer un vrai lien personnalisé.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les 4 piliers au quotidien</h3>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,margin:"12px 0"}}>
-                {[["🎯","Disponibilité","Être physiquement et émotionnellement présente. Poser son téléphone. Être à hauteur de l'enfant. Répondre quand il vous sollicite."],
-                  ["🤗","Réactivité","Répondre rapidement et de manière adaptée aux signaux de l'enfant. Un pleur, un geste, un regard — chaque signal mérite une réponse."],
-                  ["🔄","Prévisibilité","Des routines stables (repas, sieste, activités). L'enfant sait ce qui va se passer, et ça le rassure profondément."],
-                  ["💛","Sensibilité","Comprendre l'émotion derrière le comportement. Un enfant qui tape n'est pas méchant — il est submergé par une émotion qu'il ne sait pas exprimer."]
-                ].map(([ic,titre,desc])=>
-                  <div key={titre}style={{background:"#F4F7FA",borderRadius:12,padding:14}}>
-                    <div style={{fontSize:24,marginBottom:6}}>{ic}</div>
-                    <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:4}}>{titre}</div>
-                    <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.6}}>{desc}</div>
-                  </div>
-                )}
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>L'adaptation : le moment clé</h3>
-              <p>La période d'adaptation n'est pas une formalité — c'est le fondement de la relation. Un enfant qui vit une séparation brutale avec ses parents peut développer un attachement insécure qui affectera son comportement pendant des mois.</p>
-              <p style={{marginTop:8}}>Une bonne adaptation est progressive : d'abord avec le parent présent, puis des séparations courtes qui s'allongent, toujours avec un objet transitionnel (doudou, tissu avec l'odeur du parent). L'enfant doit comprendre que ses parents reviennent toujours.</p>
-
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>💡 Votre force d'assmat</div>
-                <div style={{fontSize:12}}>
-                  En crèche, le turnover du personnel et les ratios élevés rendent l'attachement individualisé difficile.
-                  Chez vous, l'enfant retrouve <strong>le même visage chaque matin</strong>, dans <strong>le même environnement</strong>, avec <strong>les mêmes rituels</strong>. C'est une stabilité que les parents recherchent — et c'est ce qui fait la valeur de votre métier.
-                </div>
-              </div>
-            </div>}
-
-            {showBlog==="pajemploi"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🏛️ Pajemploi pas à pas : le guide pour déclarer sans stress</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 7 min de lecture</div>
-
-              <p>Pajemploi est le service de l'URSSAF dédié aux particuliers employeurs d'assistantes maternelles. C'est par ce site que les parents déclarent votre salaire et paient vos cotisations. Voici comment ça fonctionne, étape par étape.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Étape 1 : Créer son compte</h3>
-              <p>Le <strong>parent employeur</strong> crée son compte sur <em>pajemploi.urssaf.fr</em> dès l'embauche. Il a besoin de : son numéro de Sécurité sociale, un RIB, et les informations de l'assistante maternelle (numéro de Sécu, adresse, numéro d'agrément). L'assmat n'a pas de compte à créer — elle est déclarée par le parent.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Étape 2 : La déclaration mensuelle</h3>
-              <p>Chaque mois, le parent se connecte et remplit la déclaration :</p>
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"12px 0"}}>
-                <ol style={{paddingLeft:20,fontSize:12,lineHeight:2.4}}>
-                  <li>Se connecter sur pajemploi.urssaf.fr</li>
-                  <li>Cliquer sur "Déclarer" et sélectionner l'assistante maternelle</li>
-                  <li>Indiquer le <strong>nombre de jours d'activité</strong></li>
-                  <li>Indiquer le <strong>nombre d'heures normales</strong></li>
-                  <li>Indiquer les <strong>heures supplémentaires/complémentaires</strong> éventuelles</li>
-                  <li>Saisir le <strong>salaire net total</strong></li>
-                  <li>Ajouter les <strong>indemnités d'entretien</strong> et de <strong>repas</strong></li>
-                  <li>Valider — Pajemploi calcule automatiquement les cotisations</li>
-                </ol>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Étape 3 : Le prélèvement et le bulletin</h3>
-              <p>Après validation, Pajemploi prélève les cotisations sur le compte du parent et génère un bulletin de salaire dématérialisé. L'assmat reçoit son salaire directement du parent (virement, chèque ou CESU).</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les erreurs les plus fréquentes</h3>
-              <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"12px 0",border:"1px solid #FECACA"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#C84B31"}}>
-                  <li><strong>Confondre brut et net</strong> — Pajemploi demande le net, pas le brut</li>
-                  <li><strong>Oublier les indemnités d'entretien</strong> — elles doivent être déclarées séparément</li>
-                  <li><strong>Déclarer en retard</strong> — la déclaration doit être faite avant le 5 du mois suivant</li>
-                  <li><strong>Ne pas vérifier le bulletin</strong> — vérifiez que le montant correspond à ce que vous avez reçu</li>
-                </ul>
-              </div>
-
-              <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
-                <div style={{fontWeight:700,color:"#E49178",marginBottom:6}}>🔧 TiMat vous simplifie la vie</div>
-                <div style={{fontSize:12}}>TiMat génère chaque mois un récapitulatif prêt à reporter sur Pajemploi : heures, jours, salaire net, indemnités. Le parent n'a plus qu'à copier les chiffres.</div>
-              </div>
-            </div>}
-
-            {showBlog==="bulletin"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>📜 Comprendre son bulletin de salaire ligne par ligne</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 8 min de lecture</div>
-
-              <p>Le bulletin de salaire d'une assistante maternelle peut sembler complexe. Pourtant, une fois qu'on comprend chaque ligne, tout s'éclaire. Décryptage complet.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>La rémunération brute</h3>
-              <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"6px 16px",fontSize:12,margin:"12px 0",background:"#F4F7FA",borderRadius:12,padding:16}}>
-                <strong>Salaire de base</strong><span>Heures mensualisées × taux horaire brut. C'est la ligne principale.</span>
-                <strong>Heures complémentaires</strong><span>Heures entre votre horaire contractuel et 45h/semaine. Même taux horaire (sauf accord contraire).</span>
-                <strong>Heures majorées</strong><span>Au-delà de 45h/semaine : majorées de 25% minimum. Taux = brut × 1,25.</span>
-                <strong>Indemnité d'entretien</strong><span>Montant par jour d'accueil. Minimum 3,69€ (2024). Couvre l'eau, l'électricité, les jouets, le matériel.</span>
-                <strong>Indemnité de repas</strong><span>Si vous fournissez les repas. Montant fixé dans le contrat. Non soumise à cotisations.</span>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les cotisations sociales</h3>
-              <p>Les cotisations sont calculées sur le salaire brut (hors indemnités). Elles se divisent en part salariale (payée par l'assmat) et part patronale (payée par le parent).</p>
-              <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"12px 0",fontSize:11}}>
-                <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:4,fontWeight:700,paddingBottom:8,borderBottom:"1px solid #E8E4E0"}}>
-                  <span>Cotisation</span><span>Part salariale</span><span>Part patronale</span>
-                </div>
-                {[["Maladie, maternité","—","7,30%"],["Vieillesse plafonnée","6,90%","8,55%"],["Vieillesse déplafonnée","0,40%","2,02%"],["Allocations familiales","—","3,45%"],["CSG déductible","6,80%","—"],["CSG non déductible + CRDS","2,90%","—"],["Chômage","—","4,05%"],["Retraite complémentaire","~3,15%","~4,72%"]].map(([n,s,p])=>
-                  <div key={n}style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:4,padding:"4px 0",borderBottom:"1px dotted #E8E4E0"}}>
-                    <span>{n}</span><span style={{color:s!=="—"?"#C84B31":"#B0BEC5"}}>{s}</span><span>{p}</span>
-                  </div>
-                )}
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Du brut au net</h3>
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"12px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontSize:12,lineHeight:2}}>
-                  <strong>Salaire brut</strong> − cotisations salariales (~22%) = <strong>Salaire net</strong><br/>
-                  Salaire net + indemnités (entretien + repas) = <strong>Total versé à l'assmat</strong><br/>
-                  Salaire brut + cotisations patronales + indemnités = <strong>Coût total pour le parent</strong>
-                </div>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>L'abattement fiscal spécifique</h3>
-              <p>Les assistantes maternelles bénéficient d'un abattement fiscal unique : vous pouvez déduire 3 fois le SMIC horaire par jour et par enfant gardé de votre revenu imposable. Cet abattement réduit considérablement votre impôt sur le revenu — c'est un avantage fiscal majeur du métier.</p>
-            </div>}
-
-            {showBlog==="secours"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🩹 Trousse de secours : les indispensables de l'assistante maternelle</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Santé · 5 min de lecture</div>
-
-              <p>La PMI vérifie votre trousse de secours lors de chaque visite. Elle doit être complète, accessible (mais hors de portée des enfants), et régulièrement vérifiée. Voici ce qu'elle doit contenir.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>Le contenu obligatoire</h3>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,margin:"12px 0"}}>
-                {[
-                  ["🩹","Pansements et compresses","Pansements hypoallergéniques de plusieurs tailles, compresses stériles, sparadrap microporeux"],
-                  ["🧴","Désinfectant","Antiseptique sans alcool (type Biseptine ou Chlorhexidine). Jamais d'alcool sur la peau d'un enfant."],
-                  ["🌡️","Thermomètre","Thermomètre frontal ou auriculaire. Vérifier les piles régulièrement."],
-                  ["✂️","Ciseaux et pinces","Ciseaux à bouts ronds, pince à écharde, pince à tique."],
-                  ["🧊","Froid","Poches de froid instantané (pas de glace directe sur la peau — toujours avec un linge)."],
-                  ["📱","Numéros d'urgence","Affichés visiblement : 15 (SAMU), 18 (Pompiers), 112 (Urgences européen), Centre antipoison."],
-                ].map(([ic,titre,desc])=>
-                  <div key={titre}style={{background:"#FEF2F2",borderRadius:12,padding:14,border:"1px solid #FECACA"}}>
-                    <div style={{fontSize:20,marginBottom:6}}>{ic}</div>
-                    <div style={{fontSize:12,fontWeight:700,color:"#C84B31",marginBottom:4}}>{titre}</div>
-                    <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.6}}>{desc}</div>
-                  </div>
-                )}
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>Ce qui NE doit PAS être dans la trousse</h3>
-              <div style={{background:"#FEF2F2",borderRadius:12,padding:16,margin:"12px 0"}}>
-                <ul style={{paddingLeft:20,fontSize:12,lineHeight:2,color:"#C84B31"}}>
-                  <li><strong>Aucun médicament</strong> sans ordonnance nominative et autorisation écrite des parents</li>
-                  <li>Pas de Doliprane, pas d'Advil — même si les parents vous disent "c'est bon"</li>
-                  <li>Pas de crème solaire sans accord parental écrit</li>
-                  <li>Pas d'huiles essentielles — dangereuses pour les moins de 6 ans</li>
-                </ul>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#C84B31",margin:"20px 0 10px"}}>Les gestes de premiers secours à connaître</h3>
-              <p>Votre formation initiale de 120h inclut le PSC1 (Prévention et Secours Civiques). Voici les situations les plus fréquentes :</p>
-              <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
-                <li><strong>Chute :</strong> vérifier la conscience, mettre du froid, surveiller 24h, appeler le 15 si perte de conscience même brève</li>
-                <li><strong>Fièvre {">"}38,5°C :</strong> déshabiller l'enfant, hydrater, appeler les parents, appeler le 15 si {">"}40°C ou convulsions</li>
-                <li><strong>Étouffement :</strong> 5 claques dorsales puis 5 compressions thoraciques (nourrisson) ou abdominales (Heimlich, {">"}1 an)</li>
-                <li><strong>Brûlure :</strong> eau froide 10 minutes, ne pas décoller les vêtements, appeler le 15 si étendue</li>
-              </ul>
-
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>📋 Rappel PMI</div>
-                <div style={{fontSize:12}}>
-                  La trousse doit être dans un endroit connu de tous mais inaccessible aux enfants. Vérifiez les dates de péremption tous les 6 mois. Gardez un double des PAI (Projets d'Accueil Individualisés) pour les enfants allergiques à côté de la trousse.
-                </div>
-              </div>
-            </div>}
-
-            {showBlog==="tarif"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>💶 Comment fixer son tarif horaire en tant qu'assistante maternelle</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Administratif · 6 min de lecture</div>
-
-              <p>Fixer son tarif est l'une des décisions les plus importantes — et les plus stressantes — quand on débute. Trop bas, vous vous épuisez. Trop haut, les parents vont ailleurs. Voici comment trouver le juste milieu.</p>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Le cadre légal</h3>
-              <p>Le <strong>minimum légal</strong> est fixé à 0,281 fois le SMIC horaire, soit environ <strong>3,27€ brut/h</strong> (valeur 2024). Mais dans la pratique, la plupart des assmats facturent entre <strong>3,50€ et 5,50€ brut/h</strong> selon la région et les services proposés.</p>
-
-              <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"16px 0"}}>
-                <div style={{fontWeight:700,color:"#2E4859",marginBottom:8}}>📊 Moyennes par zone (2024)</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:12}}>
-                  {[["Paris / Île-de-France","4,50€ - 5,50€"],["Grandes villes (Lyon, Marseille)","4,00€ - 5,00€"],["Villes moyennes","3,80€ - 4,50€"],["Zone rurale","3,50€ - 4,00€"]].map(([zone,prix])=>
-                    <div key={zone}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px dotted #E8E4E0"}}>
-                      <span style={{color:"#5F7A86"}}>{zone}</span><strong style={{color:"#2E4859"}}>{prix}</strong>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les critères qui justifient un tarif plus élevé</h3>
-              <ul style={{paddingLeft:20,fontSize:12,lineHeight:2.2}}>
-                <li><strong>Votre expérience</strong> — plus d'années d'agrément = plus de légitimité</li>
-                <li><strong>Vos formations</strong> — CAP AEPE, Montessori, Snoezelen, Langue des signes bébé</li>
-                <li><strong>Votre localisation</strong> — forte demande dans votre quartier</li>
-                <li><strong>Vos horaires</strong> — horaires atypiques (tôt le matin, tard le soir) = tarif majoré</li>
-                <li><strong>Vos services</strong> — repas bio faits maison, sorties quotidiennes, activités pédagogiques structurées</li>
-                <li><strong>Votre logement</strong> — jardin, salle de jeux dédiée, espace aménagé</li>
-              </ul>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Les indemnités en plus du salaire</h3>
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"12px 0",border:"1px solid #B7E4C7",fontSize:12,lineHeight:2}}>
-                <strong>Indemnité d'entretien :</strong> minimum 3,69€/jour (2024). Couvre l'eau, l'électricité, les produits ménagers, l'usure du matériel. Vous pouvez négocier plus.<br/>
-                <strong>Indemnité de repas :</strong> si vous fournissez les repas. Généralement entre 3€ et 6€ par repas + goûter.<br/>
-                <strong>Indemnité kilométrique :</strong> 0,63€/km si vous transportez l'enfant avec votre véhicule.<br/>
-                <strong>Aucune de ces indemnités n'est soumise à cotisations</strong> — c'est du net.
-              </div>
-
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>Comment l'annoncer aux parents</h3>
-              <p>Ne vous justifiez pas. Présentez votre tarif avec assurance et expliquez ce qu'il inclut. Un parent qui négocie fortement à la baisse n'est généralement pas le parent avec qui vous aurez la meilleure relation de travail. Rappelez que le crédit d'impôt couvre 50% des frais de garde — votre tarif réel pour le parent est donc divisé par deux.</p>
-
-              <div style={{background:"#FFF8F3",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid #FFD6B3"}}>
-                <div style={{fontWeight:700,color:"#E49178",marginBottom:6}}>🧮 TiMat inclut un simulateur</div>
-                <div style={{fontSize:12}}>Le simulateur de coût TiMat permet aux parents de voir exactement ce que la garde leur coûtera après crédit d'impôt et CMG. Ça facilite la discussion sur le tarif.</div>
-              </div>
-            </div>}
-
-            {showBlog==="motricite"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>🧸 Les étapes du développement moteur de 0 à 3 ans</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Pédagogie · 6 min de lecture</div>
-              <p>Chaque enfant se développe à son rythme. Les âges ci-dessous sont des repères moyens, pas des normes.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>0-4 mois : les réflexes</h3>
-              <p>Le bébé découvre son corps. Il tourne la tête vers les sons, suit des yeux, attrape instinctivement. Sur le ventre, il relève la tête.</p>
-              <p style={{marginTop:8}}><strong>Votre rôle :</strong> varier les positions (dos, ventre, côté sur tapis ferme), proposer des mobiles contrastés, parler et chanter.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>4-8 mois : retournement et préhension</h3>
-              <p>L'enfant se retourne seul, attrape les objets volontairement, les porte à la bouche, commence à tenir assis avec appui. Il passe un objet d'une main à l'autre.</p>
-              <p style={{marginTop:8}}><strong>Votre rôle :</strong> proposer des objets variés (textures, tailles), laisser explorer au sol, ne pas mettre assis un bébé qui ne le fait pas seul.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>8-12 mois : le déplacement</h3>
-              <p>Rampé, quatre pattes, se hisse debout, premiers pas tenus. La pince pouce-index apparaît.</p>
-              <p style={{marginTop:8}}><strong>Votre rôle :</strong> sécuriser l'espace, proposer des parcours moteurs simples, encourager sans aider systématiquement.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>12-18 mois : la marche</h3>
-              <p>Premiers pas vers 12-15 mois. L'enfant monte les marches à quatre pattes, empile 2-3 cubes, gribouille, essaie la cuillère.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#2E4859",margin:"20px 0 10px"}}>18-36 mois : l'autonomie</h3>
-              <p>L'enfant court, saute, pédale, monte les escaliers. Il dessine des cercles, enfile des perles, découpe, s'habille partiellement seul.</p>
-              <div style={{background:"#F0FAF4",borderRadius:12,padding:16,margin:"20px 0",border:"1px solid #B7E4C7"}}>
-                <div style={{fontWeight:700,color:"#5DA9A1",marginBottom:6}}>💡 Motricité libre (Pikler)</div>
-                <div style={{fontSize:12}}>Ne pas mettre un enfant dans une position qu'il n'a pas acquise seul. Pas de trotteur, pas de transat prolongé. L'enfant apprend mieux quand il découvre par lui-même.</div>
-              </div>
-            </div>}
-
-            {showBlog==="droits"&&<div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:16}}>⚖️ Droits et devoirs de l'assistante maternelle</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>Juridique · 8 min de lecture</div>
-              <p>L'assistante maternelle est une salariée du particulier employeur, encadrée par la Convention Collective Nationale.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>Vos droits</h3>
-              <p><strong>Rémunération :</strong> minimum conventionnel (~3,49€ brut/h). Heures au-delà de 45h/semaine majorées de 25%. Indemnité d'entretien minimum 3,65€/jour.</p>
-              <p style={{marginTop:8}}><strong>Congés payés :</strong> 2,5 jours ouvrables/mois, soit 5 semaines/an. En année complète, inclus dans la mensualisation.</p>
-              <p style={{marginTop:8}}><strong>Formation :</strong> 120h en 5 ans (80h avant le 1er accueil). Formations gratuites, rémunérées. Organisme : IPERIA.</p>
-              <p style={{marginTop:8}}><strong>Protection sociale :</strong> maladie, maternité, retraite, chômage, accidents du travail.</p>
-              <h3 style={{fontSize:16,fontWeight:700,color:"#5DA9A1",margin:"20px 0 10px"}}>Vos devoirs</h3>
-              <p><strong>Agrément :</strong> obligatoire, délivré par le Conseil départemental. Respecter le nombre et l'âge des enfants autorisés. Signaler tout changement.</p>
-              <p style={{marginTop:8}}><strong>Assurance :</strong> RC professionnelle obligatoire, attestation annuelle aux parents.</p>
-              <p style={{marginTop:8}}><strong>Secret professionnel :</strong> ne pas partager d'informations sur les familles. Pas de photos sans autorisation écrite.</p>
-              <p style={{marginTop:8}}><strong>Rupture :</strong> préavis de 15 jours (moins d'1 an) ou 1 mois (au-delà). Le retrait d'enfant = licenciement avec indemnités.</p>
-              <div style={{background:"#F4F7FA",borderRadius:12,padding:16,margin:"20px 0"}}>
-                <div style={{fontWeight:700,color:"#2E4859",marginBottom:8}}>📋 Documents indispensables</div>
-                <div style={{fontSize:12}}>Contrat signé, avenants, bulletins de salaire, attestation fiscale, certificat médical, attestation RC Pro, agrément valide, projet d'accueil.</div>
-              </div>
-            </div>}
-            {showBlog&&!["mensualisation","maladies","agrement","attachement","pajemploi","bulletin","secours","tarif","motricite","droits"].includes(showBlog)&&(()=>{const a=(config.blog||DEFAULT_CONFIG.blog).find(x=>x.id===showBlog)||{};return <div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#2E4859",marginBottom:8}}>{a.emoji} {a.title}</h2>
-              <div style={{fontSize:11,color:"#8FA3AD",marginBottom:20}}>{a.cat}</div>
-              <p>{a.excerpt}</p>
-              <p style={{marginTop:16,color:"#8FA3AD",fontStyle:"italic"}}>📝 Le contenu complet de cet article sera bientôt disponible.</p>
-            </div>;})()}
-            </>);})()}
-
-          </div>
-        </div>
-      </div>}
 
       {/* BOUTIQUE MODAL */}
       {showOutils&&<OutilsGratuits onClose={()=>setShowOutils(false)} onCta={()=>{setShowOutils(false);setShowModal(true);setRole("asmat");}}/>}
@@ -13556,7 +13149,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {/* Guides & ressources (maillage interne SEO) */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
-              {[["Pour les parents","/pour-les-parents.html"],["Calcul de mensualisation","/calcul-mensualisation-assistante-maternelle.html"],["Congés payés","/conges-payes-assistante-maternelle.html"],["Salaire net, brut & coût","/salaire-assistante-maternelle-net-brut.html"],["Déclaration Pajemploi","/pajemploi-declaration-assistante-maternelle.html"],["Tous les guides","/blog.html"]].map(([label,href])=>
+              {[["Pour les parents","/pour-les-parents.html"],["Calcul de mensualisation","/blog/calcul-mensualisation-assistante-maternelle"],["Congés payés","/blog/conges-payes-assistante-maternelle"],["Salaire net, brut & coût","/blog/salaire-assistante-maternelle-net-brut"],["Déclaration Pajemploi","/blog/pajemploi-declaration-assistante-maternelle"],["Tous les guides","/blog"]].map(([label,href])=>
                 <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
@@ -17078,11 +16671,12 @@ const FAQ_LANDING_DEFAULT=[
             {q:"Qui a créé TiMat ?",a:"TiMat a été créée par une assistante maternelle agréée, qui a vécu la montagne administrative du métier. Chaque fonction répond à un besoin réel : c'est conçu par une assmat, pour les assmats."},
           ];
 const BLOG_DEFAULT=[
-              {id:"indemnite2026",slug:"indemnite-entretien-assistante-maternelle-2026",cat:"Administratif",catColor:"#C84B31",emoji:"🧴",title:"Indemnité d'entretien : les montants au 1er juin 2026",excerpt:"Le nouveau barème par durée d'accueil, le plancher de 2,65 € et ce qu'il faut vérifier au contrat."},
-              {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Administratif",catColor:"#E49178",emoji:"🧮",title:"Mensualisation : le guide clair (2026)",excerpt:"Formule officielle, année complète ou incomplète, congés payés et régularisation — avec un simulateur."},
-              {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Paie",catColor:"#5DA9A1",emoji:"🌴",title:"Congés payés : 10 % ou maintien ?",excerpt:"Les deux méthodes comparées, la plus favorable retenue, +2 jours par enfant — avec un simulateur."},
-              {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Paie",catColor:"#C84B31",emoji:"💶",title:"Salaire : net, brut et coût employeur",excerpt:"Brut, net, net imposable et coût réel pour le parent — avec un convertisseur brut ⇄ net."},
-              {id:"pajemploi",slug:"pajemploi-declaration-assistante-maternelle",cat:"Parents employeurs",catColor:"#2E4859",emoji:"🏦",title:"Déclaration Pajemploi pas à pas",excerpt:"De l'inscription à la déclaration mensuelle, et la nouveauté 2026 : une déclaration par enfant."},
+              {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Salaire et mensualisation",catColor:"#C84B31",emoji:"\uD83D\uDCB6",title:"Salaire net, brut et co\u00fbt employeur",excerpt:"4,20 \u20ac brut depuis juin 2026. Les quatre montants qu'on confond tout le temps."},
+              {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Salaire et mensualisation",catColor:"#E49178",emoji:"\uD83E\uDDEE",title:"La mensualisation, sans se tromper",excerpt:"Ann\u00e9e compl\u00e8te ou incompl\u00e8te : la formule, les pi\u00e8ges et les r\u00e9gularisations."},
+              {id:"heures",slug:"heures-complementaires-majorees-assistante-maternelle",cat:"Contrat et rupture",catColor:"#5DA9A1",emoji:"\u23F1\uFE0F",title:"Heures compl\u00e9mentaires et major\u00e9es",excerpt:"Le seuil de 45 h, le taux minimum de 10 % et le plafond de 2 250 heures par an."},
+              {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Cong\u00e9s pay\u00e9s",catColor:"#5DA9A1",emoji:"\uD83C\uDF34",title:"Cong\u00e9s pay\u00e9s : 10 % ou maintien ?",excerpt:"Deux m\u00e9thodes, une seule \u00e0 retenir \u2014 la plus favorable. Et le versement mensuel interdit."},
+              {id:"pajemploi",slug:"pajemploi-declaration-assistante-maternelle",cat:"Pajemploi et d\u00e9clarations",catColor:"#2E4859",emoji:"\uD83C\uDFE6",title:"D\u00e9clarer sur Pajemploi",excerpt:"Chaque rubrique expliqu\u00e9e, et la fen\u00eatre du 25 au 5 \u00e0 ne pas manquer."},
+              {id:"indemnite2026",slug:"indemnite-entretien-assistante-maternelle-2026",cat:"Indemnit\u00e9 d'entretien",catColor:"#C84B31",emoji:"\uD83E\uDDF4",title:"Indemnit\u00e9 d'entretien 2026",excerpt:"3,92 \u20ac pour 9 h, 0,435 \u20ac de l'heure au-del\u00e0, plancher \u00e0 2,65 \u20ac par journ\u00e9e."}
             ];
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
@@ -17948,6 +17542,7 @@ const MAINTENANCE_CLE = "D1Jrp_UaM29A";
 function maintenanceBypass(){
   try{
     const q = new URLSearchParams(window.location.search);
+    if(q.get("acces") === "stop"){ localStorage.removeItem("timat:acces"); return false; }
     if(q.get("acces") === MAINTENANCE_CLE){
       localStorage.setItem("timat:acces", String(Date.now()));
       return true;
@@ -18002,6 +17597,19 @@ function MaintenanceScreen(){
 
 export default function App(){
   const [maintOk] = useState(()=>maintenanceBypass());
+  // ?site=1 force la landing marketing. Lu une seule fois, puis efface de la barre d adresse.
+  const [forceSite] = useState(()=>{
+    try{
+      const p = new URLSearchParams(window.location.search);
+      if(p.has("site")){
+        p.delete("site");
+        const reste = p.toString();
+        window.history.replaceState(null, "", window.location.pathname + (reste ? "?"+reste : ""));
+        return true;
+      }
+    }catch(e){}
+    return false;
+  });
   const [user,setUser]=useState(null);
   const [page,setPage]=useState("accueil");
   const [pEIdSel,setPEIdSel]=useState(null);  const [showWelcome,setShowWelcome]=useState(false);
@@ -18376,6 +17984,13 @@ export default function App(){
     return()=>{cancelled=true;};
   },[user?.id,user?.role,enfantsDB.length]);
 
+  // MODE MAINTENANCE : premiere chose evaluee, avant meme l ecran de chargement.
+  // Le backoffice reste ouvert, ainsi que le blog et les simulateurs (fichiers statiques).
+  {
+    let _boRoute=false; try{ _boRoute=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
+    if(MAINTENANCE && !maintOk && !_boRoute) return <MaintenanceScreen/>;
+  }
+
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
@@ -18390,10 +18005,6 @@ export default function App(){
 
   // ROUTE DEDIEE /backoffice : rendu autonome hors de l app, reserve a l admin
   let _isBO=false; try{ _isBO=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
-
-  // MODE MAINTENANCE : bloque landing, application, connexion et inscription.
-  // Le backoffice reste accessible, ainsi que le blog et les simulateurs (fichiers statiques).
-  if(MAINTENANCE && !maintOk && !_isBO) return <MaintenanceScreen/>;
 
   if(_isBO){
     const _onLoginBO=u=>{ setUser({...u,_needsProfileFetch:true,_profileConfirmed:false}); };
@@ -18415,7 +18026,7 @@ export default function App(){
     // ?site=1 force l'affichage de la landing marketing.
     let _forceSite=false,_lastRole=null;
     try{
-      _forceSite=new URLSearchParams(window.location.search).has("site");
+      _forceSite=forceSite;
       _lastRole=localStorage.getItem("timat:lastRole");
     }catch(e){}
     if(!_forceSite&&_lastRole==="parent")
