@@ -365,6 +365,8 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .lire li{margin:0;padding:0;border-top:1px solid ${T.border}}
 .lire li:first-child{border-top:0}
 .lire a{display:block;padding:14px 0;text-decoration:none;color:${T.ink}}
+.lire .cat{display:inline-block;font-size:10px;letter-spacing:.6px;text-transform:uppercase;
+  font-weight:800;padding:3px 9px;border-radius:99px;margin:0 0 7px}
 .lire .t{display:flex;justify-content:space-between;gap:14px;font-size:15px;font-weight:700;
   line-height:1.35;letter-spacing:-.2px}
 .lire .arw{flex:0 0 auto;color:${T.terracotta};font-size:17px;font-weight:800}
@@ -448,12 +450,29 @@ ${body}
 // PAGES
 // ---------------------------------------------------------------------------
 
+// Une teinte par categorie, tiree de la palette TiMat. Les couples fond/texte
+// sont choisis pour rester lisibles ; toute categorie inconnue retombe sur le gris.
+const PASTILLES = {
+  "Contrat et paie": ["#F0E2D6", "#8A5240"],
+  "Démarches et Pajemploi": ["#DFEAF0", "#2E4859"],
+  "Le quotidien de l'accueil": ["#EDE6F0", "#5C4A64"],
+  "Devenir assistante maternelle": ["#E4EDE6", "#40614A"],
+  "Choisir son mode de garde": ["#E6EFEE", "#2E5C57"],
+};
+function pastilleStyle(titre) {
+  const [fond, texte] = PASTILLES[titre] || ["#EDEAE6", "#6E6669"];
+  return `background:${fond};color:${texte}`;
+}
+
 function pageArticle(a, tous = []) {
   // Maillage interne : jusqu'a 3 autres articles, meme categorie d'abord.
   const autres = tous.filter((x) => x.slug && x.slug !== a.slug);
   const memeCat = autres.filter((x) => x.categorie?.slug && x.categorie?.slug === a.categorie?.slug);
   const reste = autres.filter((x) => !memeCat.includes(x));
-  const lies = [...memeCat, ...reste].slice(0, 3);
+  // Deux articles proches, puis un venu d'ailleurs : la pastille de categorie
+  // n'apprend rien si les trois suggestions portent le meme libelle, et le
+  // lecteur ne decouvre jamais les autres rubriques du blog.
+  const lies = [...memeCat.slice(0, 2), ...reste, ...memeCat.slice(2)].slice(0, 3);
   // Une entree de source vide (ajoutee par megarde dans le Studio) ne doit pas
   // afficher un encadre "Sources officielles" vide : on filtre avant de decider.
   const sourcesValides = (Array.isArray(a.sourcesOfficielles) ? a.sourcesOfficielles : [])
@@ -576,6 +595,9 @@ function pageArticle(a, tous = []) {
           .map(
             (x) =>
               `<li><a href="${articleTarget(x.slug).url}">` +
+              (x.categorie?.titre
+                ? `<span class="cat" style="${pastilleStyle(x.categorie.titre)}">${esc(x.categorie.titre)}</span>`
+                : "") +
               `<span class="t">${esc(x.titre)}<span class="arw">&rarr;</span></span>` +
               (x.chapo ? `<span class="d">${esc(x.chapo)}</span>` : "") +
               `</a></li>`
