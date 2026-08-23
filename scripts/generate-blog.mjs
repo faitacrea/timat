@@ -22,7 +22,7 @@ import path from "node:path";
 const PROJECT_ID = "740dzcep";
 const DATASET = "production";
 const API_VERSION = "2024-01-01";
-const SITE = "https://timat.app";
+const SITE = "https://www.timat.app";
 
 // Structure des fichiers generes.
 //   false -> public/blog/<slug>/index.html   URL : /blog/<slug>
