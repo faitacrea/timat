@@ -195,6 +195,9 @@ export default async function handler(req) {
     ? from
     : 'TiMat <noreply@timat.app>';
 
+  // noreply@ ne reçoit pas : sans reply_to, une réponse part dans le vide.
+  const replyTo = 'support@timat.app';
+
   try {
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -205,6 +208,7 @@ export default async function handler(req) {
       body: JSON.stringify({
         from: finalFrom,
         to: [to],
+        reply_to: replyTo,
         subject: finalSubject,
         html: finalHtml,
       }),
