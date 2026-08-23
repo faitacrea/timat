@@ -201,7 +201,7 @@ async function actionOrphanPages(req, res) {
     return;
   }
 
-  const sitemapRes = await fetch("https://timat.app/sitemap.xml");
+  const sitemapRes = await fetch("https://www.timat.app/sitemap.xml");
   if (!sitemapRes.ok) {
     res.status(200).json({ ok: false, error: "sitemap.xml injoignable (" + sitemapRes.status + ")." });
     return;

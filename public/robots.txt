@@ -6,5 +6,5 @@ Allow: /
 # Disallow: /app
 # Disallow: /dashboard
 
-Sitemap: https://timat.app/sitemap.xml
-Sitemap: https://timat.app/sitemap-blog.xml
+Sitemap: https://www.timat.app/sitemap.xml
+Sitemap: https://www.timat.app/sitemap-blog.xml

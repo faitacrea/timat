@@ -137,7 +137,7 @@ const EMAIL_TEMPLATES={
       +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
       +"<p>C'est 100% gratuit pour vous, sans carte bancaire.</p>"
       +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
-      +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
+      +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://www.timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
   },
   // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
   pointage_a_valider:{
@@ -799,7 +799,7 @@ function PointageRapide({enfants,role,user,demo}){
     setBusy(null);
   };
   if(!list.length)return null;
-  const origin=(typeof window!=="undefined"&&window.location.origin)||"https://timat.app";
+  const origin=(typeof window!=="undefined"&&window.location.origin)||"https://www.timat.app";
   const showQR=role==="asmat"&&!demo;
   const qrUrl=(e,size)=>"https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&data="+encodeURIComponent(origin+"/?pointage=qr&enfant="+e.id);
   const imprimerQR=(e)=>{
@@ -876,7 +876,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         email=data?.email||null;
       }
       if(!email){setRappelState(p=>({...p,[ct.id]:"noemail"}));return;}
-      const url=(typeof window!=="undefined"?window.location.origin:"https://timat.app")+"/?role=parent";
+      const url=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?role=parent";
       await sendNotificationEmail({
         type:"signature_reminder",
         to:email,
@@ -1940,7 +1940,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                 </div>
                 <img
                   src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
-                    (window.location.origin||"https://timat.app")+"/?pointage=qr&enfant="+enfant?.id
+                    (window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id
                   )}
                   alt="QR Pointage"
                   style={{width:180,height:180,borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
@@ -1948,7 +1948,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                 <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
                   <button className="btn bG"style={{fontSize:11}}onClick={()=>{
                     navigator.clipboard?.writeText(
-                      (window.location.origin||"https://timat.app")+"/?pointage=qr&enfant="+enfant?.id
+                      (window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id
                     );
                     setToast("Lien copié ✓");
                   }}>📋 Copier le lien</button>
@@ -5971,7 +5971,7 @@ function Parrainage({user}){
   const prefix=(user?.prenom||"MARIE").toUpperCase().slice(0,4);
   const codeNum=Math.abs((user?.email||"test").split("").reduce((a,c)=>a+c.charCodeAt(0),1000)%9000+1000);
   const code="TM-"+prefix+"-"+codeNum;
-  const lien="https://timat.app/rejoindre?code="+code;
+  const lien="https://www.timat.app/rejoindre?code="+code;
   const copy=()=>{navigator.clipboard?.writeText(lien).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2500);setToast("Lien copié ✓");};
   const filleules=[
     {prenom:"Nathalie",ville:"Lyon",date:"Il y a 5 jours",statut:"actif",gain:"1 mois offert"},
@@ -12244,7 +12244,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   // SEO : titre, meta, Open Graph, canonical + donnees structurees JSON-LD
   useEffect(()=>{
     if(preview)return;
-    const SITE="https://timat.app";
+    const SITE="https://www.timat.app";
     const IMG=SITE+"/logo.png"; const OGIMG=SITE+"/og-image.png";
     const DESC="TiMat gère salaire, congés et déclaration Pajemploi de votre assistante maternelle. Contrats conformes IDCC 3239. 2 mois d'essai gratuit, sans CB.";
     const prevTitle=document.title;
@@ -13676,7 +13676,7 @@ function OnboardingWizard({user,onFinish}){
                   let inviteUrl=null;
                   try{
                     const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfant.id});
-                    if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://timat.app")+"/?invite="+tk;
+                    if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?invite="+tk;
                   }catch(e){}
                   try{
                     const res=await fetch('/api/invite-parent',{
@@ -13813,7 +13813,7 @@ function AjouterEnfantModale({user,onClose}){
           let inviteUrl=null;
           try{
             const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfantData.id});
-            if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://timat.app")+"/?invite="+tk;
+            if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?invite="+tk;
           }catch(e){}
           const res=await fetch("/api/invite-parent",{
             method:"POST",
@@ -17536,7 +17536,7 @@ function BackofficePage({user,appConfig,setAppConfig,onLogin}){
 
 // ===== MODE MAINTENANCE =====
 // Passer MAINTENANCE a false pour remettre le site en ligne.
-// Acces de service : https://timat.app/?acces=D1Jrp_UaM29A  (memorise 24 h)
+// Acces de service : https://www.timat.app/?acces=D1Jrp_UaM29A  (memorise 24 h)
 const MAINTENANCE = true;
 const MAINTENANCE_CLE = "D1Jrp_UaM29A";
 function maintenanceBypass(){

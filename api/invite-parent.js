@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Enregistrement invitation : " + dbError.message });
     }
 
-    const lien = inviteUrl || "https://timat.app?role=parent";
+    const lien = inviteUrl || "https://www.timat.app?role=parent";
     const html = [
       "<h2 style='color:#2E4859'>Bonjour" + (prenomParent ? " " + prenomParent : "") + " 👋</h2>",
       "<p>" + (prenomAsmat || "Votre assistante maternelle") + " vous invite à rejoindre TiMat pour suivre le quotidien de " + (prenomEnfant || "votre enfant") + ".</p>",
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       "<p><strong>C'est 100 % gratuit pour vous</strong>, sans carte bancaire : votre accès est inclus dans l'abonnement de votre assistante maternelle.</p>",
       "<p>Créez votre compte avec <strong>cette adresse e-mail</strong> pour accéder directement à l'espace de votre enfant :</p>",
       "<p><a href='" + lien + "' style='background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:700'>Créer mon espace parent</a></p>",
-      "<p style='font-size:12px;color:#888;margin-top:22px'>Envie d'en savoir plus avant de créer votre compte ? <a href='https://timat.app/brochure-parents.html' style='color:#C4714A'>Découvrez ce que TiMat va changer pour vous</a>.</p>"
+      "<p style='font-size:12px;color:#888;margin-top:22px'>Envie d'en savoir plus avant de créer votre compte ? <a href='https://www.timat.app/brochure-parents.html' style='color:#C4714A'>Découvrez ce que TiMat va changer pour vous</a>.</p>"
     ].join("");
 
     const { error: emailError } = await resend.emails.send({

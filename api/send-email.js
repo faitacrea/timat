@@ -40,9 +40,9 @@ const EMAIL_TEMPLATES = {
 <div style="background:#FDFBF8;border:1px solid #EDE6DE;border-radius:10px;padding:14px 16px;margin:22px 0">
   <p style="margin:0 0 8px;font-size:14px;color:#2E4859"><strong>À quoi sert votre espace parent ?</strong></p>
   <p style="margin:0;font-size:13px;color:#6B7A82;line-height:1.6">Découvrez en images tout ce que vous pourrez y faire, et comprenez le coût réel de la garde (CMG, crédit d'impôt) :<br/>
-  <a href="https://timat.app/pour-les-parents.html" style="color:#C4714A;font-weight:700;text-decoration:none">Découvrir l'espace parent →</a></p>
+  <a href="https://www.timat.app/pour-les-parents.html" style="color:#C4714A;font-weight:700;text-decoration:none">Découvrir l'espace parent →</a></p>
 </div>
-<p style="font-size:12px;color:#888;line-height:1.6">Important : créez d'abord votre compte avec le bouton ci-dessus. Ensuite, vous pourrez vous connecter à tout moment depuis <a href="https://timat.app/pour-les-parents.html" style="color:#888">timat.app</a>.</p>`,
+<p style="font-size:12px;color:#888;line-height:1.6">Important : créez d'abord votre compte avec le bouton ci-dessus. Ensuite, vous pourrez vous connecter à tout moment depuis <a href="https://www.timat.app/pour-les-parents.html" style="color:#888">timat.app</a>.</p>`,
   },
   pointage_a_valider: {
     subject: "Un pointage attend votre validation",
