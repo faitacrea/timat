@@ -49,7 +49,7 @@ Toute reproduction, représentation, modification, publication ou adaptation de 
 
 Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données.
 
-Responsable de traitement : TiMat — privacy@timat.app
+Responsable de traitement : TiMat — support@timat.app
 Autorité de contrôle : CNIL — www.cnil.fr
 
 Voir notre [Politique de confidentialité complète](/confidentialite).

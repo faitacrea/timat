@@ -8,7 +8,7 @@
 
 **TiMat**
 Représentée par : Sophie LEFORT
-Email de contact : privacy@timat.app
+Email de contact : support@timat.app
 Adresse :12 rue étienne dolet 94230 cachan, France
 
 ---
@@ -101,9 +101,9 @@ Conformément au RGPD (articles 15 à 22), vous disposez des droits suivants :
 - **Droit à l'effacement** : bouton "Supprimer mon compte" dans Paramètres → suppression immédiate et définitive
 - **Droit à la portabilité** : export en CSV/PDF depuis l'application
 - **Droit d'opposition** : pour les traitements basés sur l'intérêt légitime
-- **Droit à la limitation** : contactez privacy@timat.app
+- **Droit à la limitation** : contactez support@timat.app
 
-Pour exercer vos droits : **privacy@timat.app** — réponse sous 30 jours.
+Pour exercer vos droits : **support@timat.app** — réponse sous 30 jours.
 
 En cas de réclamation non résolue : **CNIL — 3 Place de Fontenoy, 75007 Paris — www.cnil.fr**
 

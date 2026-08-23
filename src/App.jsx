@@ -7628,7 +7628,7 @@ function SupprimerCompte({onDeleted}){
       setEtape("done");
       setTimeout(()=>onDeleted?.(),2000);
     }catch(e){
-      setErreur(e.message||"Erreur - contactez privacy@timat.app");
+      setErreur(e.message||"Erreur - contactez support@timat.app");
       setEtape("error");
     }
   };
@@ -8360,7 +8360,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 //
 function PolitiqueConfidentialite(){
   const sections=[
-    {titre:"1. Responsable de traitement",contenu:"TiMat - contact : privacy@timat.app\nHébergement des données : France (OVHcloud Paris via Supabase)."},
+    {titre:"1. Responsable de traitement",contenu:"TiMat - contact : support@timat.app\nHébergement des données : France (OVHcloud Paris via Supabase)."},
     {titre:"2. Données collectées",contenu:""},
     {titre:"3. Durées de conservation",contenu:""},
     {titre:"4. Vos droits",contenu:""},
@@ -8392,7 +8392,7 @@ function PolitiqueConfidentialite(){
       ["Rectification","Paramètres → Modifier mon profil"],
       ["Effacement (oubli)","Paramètres → Supprimer mon compte (immédiat et définitif)"],
       ["Portabilité","Export CSV/PDF depuis l'application"],
-      ["Opposition","Contactez privacy@timat.app"],
+      ["Opposition","Contactez support@timat.app"],
       ["Réclamation CNIL","www.cnil.fr - 3 Place de Fontenoy, 75007 Paris"],
     ],
   };
@@ -8421,7 +8421,7 @@ function PolitiqueConfidentialite(){
       </div>)}
       <div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid var(--B)"}}>
         <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}>📧 Contact RGPD</div>
-        <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>privacy@timat.app</strong> - Réponse sous 30 jours.</div>
+        <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>support@timat.app</strong> - Réponse sous 30 jours.</div>
       </div>
     </div>
   </div>;
@@ -8442,7 +8442,7 @@ function MentionsLegales(){
     {titre:"Hébergement",contenu:"Application web : Vercel Inc. (serveurs européens)\nBase de données : Supabase / OVHcloud - 2 rue Kellermann, 59100 Roubaix, France\nToutes les données sont hébergées en France."},
     {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de TiMat et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
     {titre:"Limitation de responsabilité",contenu:"Les calculs de salaire, récapitulatifs Pajemploi et attestations fiscales générés par TiMat sont fournis à titre indicatif. L'utilisateur reste responsable de la vérification des montants auprès des organismes compétents (URSSAF, CAF, Administration fiscale)."},
-    {titre:"Données personnelles",contenu:"Responsable de traitement : TiMat - privacy@timat.app\nAutorité de contrôle : CNIL - www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements."},
+    {titre:"Données personnelles",contenu:"Responsable de traitement : TiMat - support@timat.app\nAutorité de contrôle : CNIL - www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements."},
     {titre:"Droit applicable",contenu:"Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents."},
   ];
 
@@ -10967,7 +10967,7 @@ function ExportDonnees({enfants,user,role}){
         <div className="card"style={{padding:16,background:"var(--Sp)",border:"1px solid var(--Sl)"}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}>✅ Vos droits RGPD</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>
-            Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les supprimer à tout moment. En cas de demande : privacy@timat.app - réponse sous 30 jours.
+            Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les supprimer à tout moment. En cas de demande : support@timat.app - réponse sous 30 jours.
           </div>
         </div>
       </div>

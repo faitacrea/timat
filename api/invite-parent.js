@@ -57,6 +57,8 @@ export default async function handler(req, res) {
 
     const { error: emailError } = await resend.emails.send({
       from: "TiMat <noreply@timat.app>",
+      // noreply@ ne reçoit pas : sans replyTo, la réponse du parent part dans le vide.
+      replyTo: "support@timat.app",
       to: emailParent,
       subject: "Votre assistante maternelle vous invite sur TiMat",
       html: html
