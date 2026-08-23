@@ -148,7 +148,7 @@ export function SupprimerCompte({ onDeleted }) {
 
     } catch (err) {
       console.error('Erreur suppression:', err)
-      setErreur(err.message || 'Une erreur est survenue. Contactez privacy@timat.app')
+      setErreur(err.message || 'Une erreur est survenue. Contactez support@timat.app')
       setEtape('error')
     }
   }
