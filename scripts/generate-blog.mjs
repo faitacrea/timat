@@ -660,7 +660,7 @@ function pageIndex(articles) {
 </main>`;
 
   return layout({
-    title: "Blog — contrat, salaire et démarches des assistantes maternelles | TiMat",
+    title: "Blog assistante maternelle : salaire et contrat | TiMat",
     description:
       "Contrat de travail, mensualisation, indemnités, Pajemploi, agrément : des réponses claires et sourcées pour assistantes maternelles agréées et parents employeurs.",
     canonical: url,
