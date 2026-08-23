@@ -1,18 +1,74 @@
- {
- "rewrites": [
-    { "source": "/backoffice", "destination": "/index.html" },
-    { "source": "/backoffice/", "destination": "/index.html" },
-    { "source": "/", "has": [{ "type": "cookie", "key": "timat_acces", "value": "D1Jrp_UaM29A" }], "destination": "/index.html" },
-    { "source": "/", "destination": "/maintenance.html" }
+{
+  "rewrites": [
+    {
+      "source": "/parents",
+      "destination": "/pour-les-parents.html"
+    },
+    {
+      "source": "/parents/",
+      "destination": "/pour-les-parents.html"
+    },
+    {
+      "source": "/backoffice",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/backoffice/",
+      "destination": "/index.html"
+    }
   ],
   "redirects": [
-    { "source": "/index.html", "destination": "/", "permanent": false },
-    { "source": "/calcul-mensualisation-assistante-maternelle.html", "destination": "/blog/calcul-mensualisation-assistante-maternelle", "permanent": true },
-    { "source": "/conges-payes-assistante-maternelle.html", "destination": "/blog/conges-payes-assistante-maternelle", "permanent": true },
-    { "source": "/cout-reel-assistante-maternelle-reste-a-charge.html", "destination": "/blog/cout-reel-assistante-maternelle-reste-a-charge", "permanent": true },
-    { "source": "/indemnite-entretien-assistante-maternelle-2026.html", "destination": "/blog/indemnite-entretien-assistante-maternelle-2026", "permanent": true },
-    { "source": "/pajemploi-declaration-assistante-maternelle.html", "destination": "/blog/pajemploi-declaration-assistante-maternelle", "permanent": true },
-    { "source": "/salaire-assistante-maternelle-net-brut.html", "destination": "/blog/salaire-assistante-maternelle-net-brut", "permanent": true },
-    { "source": "/blog.html", "destination": "/blog", "permanent": true }
+    {
+      "source": "/",
+      "missing": [
+        {
+          "type": "cookie",
+          "key": "timat_acces",
+          "value": "D1Jrp_UaM29A"
+        }
+      ],
+      "destination": "/maintenance.html",
+      "permanent": false
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/calcul-mensualisation-assistante-maternelle.html",
+      "destination": "/blog/calcul-mensualisation-assistante-maternelle",
+      "permanent": true
+    },
+    {
+      "source": "/conges-payes-assistante-maternelle.html",
+      "destination": "/blog/conges-payes-assistante-maternelle",
+      "permanent": true
+    },
+    {
+      "source": "/cout-reel-assistante-maternelle-reste-a-charge.html",
+      "destination": "/blog/cout-reel-assistante-maternelle-reste-a-charge",
+      "permanent": true
+    },
+    {
+      "source": "/indemnite-entretien-assistante-maternelle-2026.html",
+      "destination": "/blog/indemnite-entretien-assistante-maternelle-2026",
+      "permanent": true
+    },
+    {
+      "source": "/pajemploi-declaration-assistante-maternelle.html",
+      "destination": "/blog/pajemploi-declaration-assistante-maternelle",
+      "permanent": true
+    },
+    {
+      "source": "/salaire-assistante-maternelle-net-brut.html",
+      "destination": "/blog/salaire-assistante-maternelle-net-brut",
+      "permanent": true
+    },
+    {
+      "source": "/blog.html",
+      "destination": "/blog",
+      "permanent": true
+    }
   ]
 }

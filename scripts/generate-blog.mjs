@@ -439,7 +439,7 @@ ${body}
 <footer>
   <div class="wrap">
     <span>© ${new Date().getFullYear()} TiMat — L'application des assistantes maternelles et des parents employeurs.</span>
-    <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/confidentialite.html">Confidentialité</a></span>
+    <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a></span>
   </div>
 </footer>
 </body>
@@ -660,7 +660,7 @@ function pageIndex(articles) {
 </main>`;
 
   return layout({
-    title: "Blog — contrat, salaire et démarches des assistantes maternelles | TiMat",
+    title: "Blog assistante maternelle : salaire et contrat | TiMat",
     description:
       "Contrat de travail, mensualisation, indemnités, Pajemploi, agrément : des réponses claires et sourcées pour assistantes maternelles agréées et parents employeurs.",
     canonical: url,
