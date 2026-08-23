@@ -191,9 +191,14 @@ export default async function handler(req) {
     });
   }
 
-  const finalFrom = from && /<[^>]+@timat\.app>/.test(from)
-    ? from
-    : 'TiMat <noreply@timat.app>';
+  // Accepte timat.app et ses sous-domaines : Resend est configuré sur
+  // send.timat.app, que l'ancienne expression ne reconnaissait pas.
+  const FROM_AUTORISE = /<[^>@]+@(?:[a-z0-9-]+\.)*timat\.app>/i;
+  const fromValide = Boolean(from) && FROM_AUTORISE.test(from);
+  if (from && !fromValide) {
+    console.warn('[send-email] expéditeur refusé, repli sur le défaut :', from);
+  }
+  const finalFrom = fromValide ? from : 'TiMat <noreply@timat.app>';
 
   // noreply@ ne reçoit pas : sans reply_to, une réponse part dans le vide.
   const replyTo = 'support@timat.app';
