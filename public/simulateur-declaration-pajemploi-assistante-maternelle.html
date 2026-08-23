@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déclaration Pajemploi : quoi mettre dans chaque case | TiMat</title>
+<meta name="description" content="Le récapitulatif à reporter case par case dans votre déclaration mensuelle Pajemploi : heures, jours d'activité, salaire net et indemnités. Gratuit.">
+<link rel="canonical" href="https://www.timat.app/simulateur-declaration-pajemploi-assistante-maternelle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Simulateur de déclaration Pajemploi mensuelle">
+<meta property="og:description" content="Chaque case de la déclaration, calculée à partir de votre contrat et du mois réel. Gratuit, sans inscription.">
+<meta property="og:url" content="https://www.timat.app/simulateur-declaration-pajemploi-assistante-maternelle.html">
+<meta property="og:image" content="https://www.timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Quand faut-il faire la déclaration Pajemploi ?","acceptedAnswer":{"@type":"Answer","text":"La déclaration se remplit entre le 25 du mois en cours et le 5 du mois suivant. Depuis 2026, une déclaration distincte est nécessaire pour chaque enfant accueilli."}},
+{"@type":"Question","name":"Faut-il déclarer un salaire brut ou net ?","acceptedAnswer":{"@type":"Answer","text":"Le salaire net. Il faut y ajouter les congés payés s'ils ont été versés ce mois-là, ainsi que les heures complémentaires et majorées payées. Pajemploi calcule ensuite les cotisations et établit le bulletin de salaire."}},
+{"@type":"Question","name":"Les indemnités d'entretien et de repas se déclarent-elles ?","acceptedAnswer":{"@type":"Answer","text":"Oui, mais dans des cases séparées du salaire. Elles ne sont pas soumises à cotisations dans la limite des barèmes, mais doivent être déclarées pour figurer sur le bulletin de salaire."}},
+{"@type":"Question","name":"Que met-on dans le nombre de jours d'activité ?","acceptedAnswer":{"@type":"Answer","text":"Pour un accueil mensualisé, le nombre de jours mensualisés prévus au contrat. Pour un accueil occasionnel, le nombre de jours réellement travaillés dans le mois."}}
+]}
+</script>
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+  .seg button{font-family:inherit;font-size:13.5px;font-weight:700;padding:11px 8px;border-radius:10px;border:1px solid #DDD5C8;background:var(--cream);color:var(--marine);cursor:pointer;line-height:1.3}
+  .seg button.on{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-color:transparent}
+  .grp{border-top:1px solid #EDE6DE;margin-top:16px;padding-top:14px}
+  .grp-t{font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--terraD);margin-bottom:10px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row .hint{font-size:12px;color:var(--muted);font-weight:400}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .out{background:var(--cream2);border:1px solid #EDE6DE;border-radius:12px;padding:6px 14px;margin-top:18px}
+  .out .oh{font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--terraD);padding:12px 0 6px}
+  .line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-top:1px solid #EDE6DE}
+  .line:first-of-type{border-top:none}
+  .line .k{font-size:13.5px;color:var(--marine);font-weight:600}
+  .line .v{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--marine);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .line.big{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;margin:8px -14px 0;padding:12px 14px;border-radius:10px;border-top:none}
+  .line.big .k{color:rgba(255,255,255,.88)}.line.big .v{color:#fff;font-size:20px}
+  .note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  p{margin-bottom:13px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{border:1px solid #EDE6DE;padding:9px 11px;text-align:left}
+  th{background:var(--cream2);color:var(--marine);font-weight:700}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .warn{font-size:14px;color:#8A6D4A;background:#FBF3E6;border:1px solid #EFE0C4;border-radius:10px;padding:14px 16px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}.related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid #E4DCD0;border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:520px){.two{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat →</a>
+  </div></div>
+
+  <div class="hero"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> › <a href="/outils.html">Outils</a> › Déclaration Pajemploi</div>
+    <span class="tag">Outil gratuit</span>
+    <h1>Déclaration Pajemploi : quoi mettre dans chaque case</h1>
+    <p class="lead">Le problème n'est presque jamais le calcul. C'est de savoir <strong>quel chiffre va dans quelle case</strong>. Voici le récapitulatif du mois, prêt à recopier.</p>
+  </div></div>
+
+  <main>
+    <div class="sim">
+      <h2>🏦 Votre déclaration du mois</h2>
+      <div class="seg">
+        <button id="bMens" class="on" type="button">Accueil mensualisé</button>
+        <button id="bOcca" type="button">Accueil occasionnel</button>
+      </div>
+
+      <div class="grp" style="border-top:none;margin-top:0;padding-top:0">
+        <div class="grp-t">Salaire</div>
+        <div class="sim-row"><label for="net" id="labNet">Salaire mensualisé net</label><input id="net" type="number" inputmode="decimal" step="0.01" value="650"></div>
+        <div class="sim-row"><label for="taux">Taux horaire net <span class="hint">sert aux heures en plus</span></label><input id="taux" type="number" inputmode="decimal" step="0.01" value="4.10"></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Heures et jours</div>
+        <div class="sim-row"><label for="heures" id="labHeures">Heures mensualisées</label><input id="heures" type="number" inputmode="decimal" step="0.25" value="151"></div>
+        <div class="sim-row"><label for="jours" id="labJours">Nombre de jours d'activité</label><input id="jours" type="number" inputmode="numeric" value="18"></div>
+        <div class="two">
+          <div class="sim-row"><label for="hcomp">Heures complémentaires</label><input id="hcomp" type="number" inputmode="decimal" step="0.25" value="0"></div>
+          <div class="sim-row"><label for="hmaj">Heures majorées</label><input id="hmaj" type="number" inputmode="decimal" step="0.25" value="0"></div>
+        </div>
+        <div class="sim-row"><label for="tmaj">Majoration des heures majorées <span class="hint">en %, selon le contrat</span></label><input id="tmaj" type="number" inputmode="decimal" step="1" value="10"></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Congés payés</div>
+        <div class="sim-row"><label for="cp">Congés payés versés ce mois-ci <span class="hint">à ajouter au salaire net déclaré</span></label><input id="cp" type="number" inputmode="decimal" step="0.01" value="0"></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Indemnités — cases séparées du salaire</div>
+        <div class="two">
+          <div class="sim-row"><label for="ientJ">Entretien par jour</label><input id="ientJ" type="number" inputmode="decimal" step="0.01" value="3.92"></div>
+          <div class="sim-row"><label for="ientN">Jours de présence réelle</label><input id="ientN" type="number" inputmode="numeric" value="18"></div>
+        </div>
+        <div class="two">
+          <div class="sim-row"><label for="irepU">Repas, montant unitaire</label><input id="irepU" type="number" inputmode="decimal" step="0.01" value="0"></div>
+          <div class="sim-row"><label for="irepN">Nombre de repas fournis</label><input id="irepN" type="number" inputmode="numeric" value="0"></div>
+        </div>
+        <div class="sim-row"><label for="ikm">Indemnités kilométriques du mois</label><input id="ikm" type="number" inputmode="decimal" step="0.01" value="0"></div>
+      </div>
+
+      <div class="out">
+        <div class="oh">À reporter dans la déclaration</div>
+        <div class="line"><span class="k">Nombre d'heures normales</span><span class="v" id="oHeures">—</span></div>
+        <div class="line"><span class="k">Heures complémentaires</span><span class="v" id="oHcomp">—</span></div>
+        <div class="line"><span class="k">Heures majorées</span><span class="v" id="oHmaj">—</span></div>
+        <div class="line"><span class="k">Nombre de jours d'activité</span><span class="v" id="oJours">—</span></div>
+        <div class="line"><span class="k">Indemnités d'entretien</span><span class="v" id="oEnt">—</span></div>
+        <div class="line"><span class="k">Frais de repas</span><span class="v" id="oRep">—</span></div>
+        <div class="line"><span class="k">Indemnités kilométriques</span><span class="v" id="oKm">—</span></div>
+        <div class="line big"><span class="k">Salaire net à déclarer</span><span class="v" id="oNet">—</span></div>
+      </div>
+      <div class="note" id="detail">Le salaire net déclaré comprend la mensualisation, les heures en plus et les congés payés versés.</div>
+    </div>
+
+    <h2>Ce qui va où</h2>
+    <table>
+      <tr><th>Case</th><th>Ce qu'on y met</th></tr>
+      <tr><td>Heures normales</td><td>Les heures mensualisées du contrat. En accueil occasionnel, les heures réellement effectuées.</td></tr>
+      <tr><td>Heures complémentaires et majorées</td><td>Les heures faites au-delà de l'horaire prévu, dans leurs cases respectives.</td></tr>
+      <tr><td>Jours d'activité</td><td>En mensualisé, les jours mensualisés prévus. En occasionnel, les jours réellement travaillés.</td></tr>
+      <tr><td>Salaire net</td><td>Tout ce qui est du salaire : mensualisation, heures en plus, et congés payés s'ils ont été versés ce mois-ci.</td></tr>
+      <tr><td>Indemnités</td><td>Entretien, repas et kilométriques, chacune dans sa case — jamais dans le salaire.</td></tr>
+      <tr><td>Date de paiement</td><td>Celle prévue au contrat de travail.</td></tr>
+    </table>
+
+    <div class="box">La déclaration se remplit <strong>entre le 25 du mois en cours et le 5 du mois suivant</strong>. C'est Pajemploi qui calcule ensuite les cotisations et édite le bulletin de salaire : vous n'avez ni à les calculer, ni à les saisir.</div>
+    <p>L'erreur la plus fréquente consiste à verser les congés payés puis à oublier de les ajouter au salaire net déclaré. Le bulletin est alors inférieur à ce qui a réellement été payé, et l'écart se retrouve plus tard, souvent au pire moment.</p>
+    <div class="warn">⚠️ Depuis 2026, la déclaration se fait <strong>par enfant accueilli</strong>. Avec deux enfants d'une même famille, ce sont deux déclarations distinctes, chacune avec ses propres heures, jours et indemnités.</div>
+
+    <div class="ctabox">
+      <h2>TiMat prépare ce récapitulatif tout seul</h2>
+      <p>Les présences sont pointées au fil du mois, les heures en plus détectées, les indemnités calculées : le récapitulatif est prêt le 25, enfant par enfant.</p>
+      <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
+    </div>
+
+    <div class="related">
+      <h2>Pour aller plus loin</h2>
+      <div class="chips">
+        <a class="chip" href="/blog/pajemploi-declaration-assistante-maternelle">🏦 La déclaration pas à pas</a>
+        <a class="chip" href="/simulateur-deduction-absence-assistante-maternelle.html">➖ Déduction d'absence</a>
+        <a class="chip" href="/simulateur-indemnite-entretien-assistante-maternelle.html">🏠 Indemnité d'entretien</a>
+        <a class="chip" href="/outils.html">🛠️ Tous les outils</a>
+        <a class="chip" href="/">✨ L'application TiMat</a>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:16px">Outil non officiel, fourni à titre indicatif. Les cotisations et le bulletin de salaire sont établis par Pajemploi (Urssaf) à partir de votre déclaration.</p>
+  </main>
+
+  <footer>
+    <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
+    <a href="/">Accueil</a> · <a href="/outils.html">Outils</a> · <a href="/blog">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a>
+  </footer>
+
+  <script>
+    (function(){
+      var ids=['net','taux','heures','jours','hcomp','hmaj','tmaj','cp','ientJ','ientN','irepU','irepN','ikm'],el={};
+      ids.forEach(function(i){el[i]=document.getElementById(i);});
+      var o={},outs=['oHeures','oHcomp','oHmaj','oJours','oEnt','oRep','oKm','oNet'];
+      outs.forEach(function(i){o[i]=document.getElementById(i);});
+      var detail=document.getElementById('detail'),
+          bM=document.getElementById('bMens'),bO=document.getElementById('bOcca'),
+          labNet=document.getElementById('labNet'),labHeures=document.getElementById('labHeures'),labJours=document.getElementById('labJours'),
+          mode='mens';
+      function n(x){var v=parseFloat(el[x].value);return isFinite(v)?v:0;}
+      function eur(v){return v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+      function hr(v){return v.toLocaleString('fr-FR',{maximumFractionDigits:2})+' h';}
+      function setMode(m){
+        mode=m;
+        bM.classList.toggle('on',m==='mens');
+        bO.classList.toggle('on',m==='occa');
+        if(m==='mens'){
+          labNet.textContent='Salaire mensualisé net';
+          labHeures.textContent='Heures mensualisées';
+          labJours.textContent="Nombre de jours d'activité mensualisés";
+        }else{
+          labNet.textContent='Salaire net de base du mois';
+          labHeures.textContent='Heures réellement effectuées';
+          labJours.textContent='Jours réellement travaillés';
+        }
+        calc();
+      }
+      function calc(){
+        var base=n('net'),taux=n('taux'),h=n('heures'),j=n('jours'),
+            hc=n('hcomp'),hm=n('hmaj'),tm=n('tmaj'),cp=n('cp'),
+            ent=n('ientJ')*n('ientN'),rep=n('irepU')*n('irepN'),km=n('ikm');
+        var payeHc=hc*taux, payeHm=hm*taux*(1+tm/100);
+        var net=base+payeHc+payeHm+cp;
+        o.oHeures.textContent=h>0?hr(h):'—';
+        o.oHcomp.textContent=hc>0?hr(hc):'0 h';
+        o.oHmaj.textContent=hm>0?hr(hm):'0 h';
+        o.oJours.textContent=j>0?j.toLocaleString('fr-FR'):'—';
+        o.oEnt.textContent=ent>0?eur(ent):'0,00 €';
+        o.oRep.textContent=rep>0?eur(rep):'0,00 €';
+        o.oKm.textContent=km>0?eur(km):'0,00 €';
+        o.oNet.textContent=net>0?eur(net):'—';
+        var bits=[eur(base)+' de base'];
+        if(payeHc>0)bits.push(eur(payeHc)+' d’heures complémentaires');
+        if(payeHm>0)bits.push(eur(payeHm)+' d’heures majorées');
+        if(cp>0)bits.push(eur(cp)+' de congés payés');
+        detail.textContent='Salaire net = '+bits.join(' + ')+'. Les indemnités restent hors du salaire.';
+      }
+      bM.addEventListener('click',function(){setMode('mens');});
+      bO.addEventListener('click',function(){setMode('occa');});
+      ids.forEach(function(i){el[i].addEventListener('input',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
