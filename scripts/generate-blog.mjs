@@ -439,7 +439,7 @@ ${body}
 <footer>
   <div class="wrap">
     <span>© ${new Date().getFullYear()} TiMat — L'application des assistantes maternelles et des parents employeurs.</span>
-    <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/confidentialite.html">Confidentialité</a></span>
+    <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a></span>
   </div>
 </footer>
 </body>
