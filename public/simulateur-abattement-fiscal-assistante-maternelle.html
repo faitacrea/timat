@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculer l'abattement fiscal assmat | TiMat</title>
+<meta name="description" content="Abattement de 3 fois le SMIC horaire par jour et par enfant, 4 fois en cas de handicap, proratisé sous 8 heures. Calcul gratuit et sans inscription.">
+<link rel="canonical" href="https://www.timat.app/simulateur-abattement-fiscal-assistante-maternelle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Simulateur d'abattement fiscal — assistante maternelle">
+<meta property="og:description" content="Calculez l'abattement forfaitaire et le montant réellement à déclarer. Gratuit, sans inscription.">
+<meta property="og:url" content="https://www.timat.app/simulateur-abattement-fiscal-assistante-maternelle.html">
+<meta property="og:image" content="https://www.timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Comment se calcule l'abattement fiscal d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"L'abattement forfaitaire vaut trois fois le montant horaire du SMIC, par jour d'accueil et par enfant. Il passe à quatre fois le SMIC horaire pour l'accueil d'un enfant handicapé, malade ou inadapté ouvrant droit à une majoration de salaire."}},
+{"@type":"Question","name":"Que se passe-t-il si la garde dure moins de 8 heures ?","acceptedAnswer":{"@type":"Answer","text":"L'abattement plein suppose une garde d'au moins huit heures dans la journée. En deçà, il se proratise selon la formule (3 ou 4 SMIC) multiplié par le nombre d'heures de garde et divisé par 8."}},
+{"@type":"Question","name":"Le montant prérempli sur la déclaration est-il correct ?","acceptedAnswer":{"@type":"Answer","text":"Non, il ne tient pas compte de l'abattement forfaitaire. Il faut le remplacer par le montant obtenu après déduction, sur les lignes 1AA à 1DA lorsque l'assistante maternelle est employée directement par des particuliers."}}
+]}
+</script>
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row .hint{font-size:12px;color:var(--muted);font-weight:400}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .check{display:flex;align-items:flex-start;gap:9px;margin:4px 0 14px;font-size:13.5px;color:var(--marine)}
+  .check input{margin-top:4px}
+  .res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .res .c{border-radius:12px;padding:14px;text-align:center}
+  .res .a{background:#F2ECE6;color:#7A544A}.res .b{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff}
+  .res .lbl{font-size:11px;opacity:.85}.res .val{font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+  .note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  p{margin-bottom:13px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{border:1px solid #EDE6DE;padding:9px 11px;text-align:left}
+  th{background:var(--cream2);color:var(--marine);font-weight:700}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .warn{font-size:14px;color:#8A6D4A;background:#FBF3E6;border:1px solid #EFE0C4;border-radius:10px;padding:14px 16px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}.related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid #E4DCD0;border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:520px){.res{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat →</a>
+  </div></div>
+
+  <div class="hero"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> › <a href="/outils.html">Outils</a> › Abattement fiscal</div>
+    <span class="tag">Outil gratuit</span>
+    <h1>Calculer son abattement fiscal</h1>
+    <p class="lead">Une assistante maternelle agréée ne déclare pas ce qu'elle a perçu, mais ce qui reste <strong>après abattement</strong>. Voici le montant à reporter.</p>
+  </div></div>
+
+  <main>
+    <div class="sim">
+      <h2>🧾 Votre simulation</h2>
+      <div class="sim-row"><label for="smic">SMIC horaire de l'année déclarée <span class="hint">11,88 € pour les revenus 2025 déclarés en 2026</span></label><input id="smic" type="number" inputmode="decimal" step="0.01" value="11.88"></div>
+      <div class="sim-row"><label for="jours">Jours d'accueil dans l'année, pour un enfant</label><input id="jours" type="number" inputmode="numeric" value="200"></div>
+      <div class="sim-row"><label for="heures">Heures d'accueil par jour <span class="hint">au-delà de 8 h, l'abattement ne monte plus</span></label><input id="heures" type="number" inputmode="decimal" step="0.25" value="9"></div>
+      <div class="sim-row"><label for="enfants">Nombre d'enfants accueillis dans ces mêmes conditions</label><input id="enfants" type="number" inputmode="numeric" value="2"></div>
+      <label class="check"><input id="handi" type="checkbox"><span>Enfant handicapé, malade ou inadapté ouvrant droit à une majoration de salaire (abattement porté à 4 SMIC)</span></label>
+      <div class="sim-row"><label for="percu">Total perçu dans l'année <span class="hint">salaires et indemnités cumulés, facultatif</span></label><input id="percu" type="number" inputmode="decimal" step="0.01" placeholder="ex. 18 500"></div>
+      <div class="res">
+        <div class="c a"><div class="lbl">Abattement total</div><div class="val" id="abat">— €</div></div>
+        <div class="c b"><div class="lbl">Montant à déclarer</div><div class="val" id="decl">— €</div></div>
+      </div>
+      <div class="note" id="detail">Renseignez vos valeurs pour obtenir le détail du calcul.</div>
+    </div>
+
+    <h2>La règle appliquée</h2>
+    <table>
+      <tr><th>Situation</th><th>Abattement par jour et par enfant</th></tr>
+      <tr><td>Accueil de 8 heures ou plus</td><td>3 × SMIC horaire</td></tr>
+      <tr><td>Accueil de moins de 8 heures</td><td>3 × SMIC horaire × heures ÷ 8</td></tr>
+      <tr><td>Enfant handicapé, malade ou inadapté</td><td>4 × SMIC horaire, proratisé de la même façon</td></tr>
+    </table>
+    <div class="box">Le décompte se fait <strong>par jour et par enfant</strong> : deux enfants accueillis le même jour ouvrent deux abattements. C'est ce qui explique que le montant final soit souvent bien plus élevé qu'on ne l'imagine.</div>
+    <p>Le résultat se reporte sur la déclaration n° 2042, aux <strong>lignes 1AA à 1DA</strong> lorsque l'assistante maternelle est employée directement par des particuliers. Les lignes 1AJ à 1DJ concernent les salariées employées par une personne morale.</p>
+    <div class="warn">⚠️ Les montants préremplis par l'administration <strong>ne tiennent pas compte de l'abattement</strong>. Il faut les corriger, et non les valider tels quels. Si vos enfants accueillis n'ont pas les mêmes horaires ou le même nombre de jours, calculez-les séparément et additionnez les abattements.</div>
+
+    <div class="ctabox">
+      <h2>TiMat compte vos jours d'accueil pour vous</h2>
+      <p>Présences pointées au fil de l'eau, enfant par enfant : le décompte annuel est déjà fait quand arrive la déclaration.</p>
+      <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
+    </div>
+
+    <div class="related">
+      <h2>Pour aller plus loin</h2>
+      <div class="chips">
+        <a class="chip" href="/simulateur-salaire-assistante-maternelle.html">🧮 Simulateur salaire</a>
+        <a class="chip" href="/simulateur-deduction-absence-assistante-maternelle.html">➖ Déduction d'absence</a>
+        <a class="chip" href="/simulateur-indemnite-entretien-assistante-maternelle.html">🏠 Indemnité d'entretien</a>
+        <a class="chip" href="/outils.html">🛠️ Tous les outils</a>
+        <a class="chip" href="/">✨ L'application TiMat</a>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:16px">Outil non officiel, fourni à titre indicatif. Le SMIC horaire de référence change chaque année : vérifiez-le dans la notice 2041-GJ publiée par l'administration fiscale.</p>
+  </main>
+
+  <footer>
+    <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
+    <a href="/">Accueil</a> · <a href="/outils.html">Outils</a> · <a href="/blog">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a>
+  </footer>
+
+  <script>
+    (function(){
+      var ids=['smic','jours','heures','enfants','percu','handi'],el={};
+      ids.forEach(function(i){el[i]=document.getElementById(i);});
+      var abat=document.getElementById('abat'),decl=document.getElementById('decl'),detail=document.getElementById('detail');
+      function eur(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+      function calc(){
+        var smic=parseFloat(el.smic.value)||0,
+            jours=parseFloat(el.jours.value)||0,
+            heures=parseFloat(el.heures.value)||0,
+            enfants=parseFloat(el.enfants.value)||0,
+            percu=parseFloat(el.percu.value),
+            k=el.handi.checked?4:3;
+        if(smic<=0||jours<=0||heures<=0||enfants<=0){
+          abat.textContent='— €';decl.textContent='— €';
+          detail.textContent='Renseignez vos valeurs pour obtenir le détail du calcul.';return;
+        }
+        var parJour=k*smic*Math.min(heures,8)/8;
+        var total=parJour*jours*enfants;
+        abat.textContent=eur(total);
+        detail.textContent=eur(parJour)+' par jour et par enfant × '+jours+' jours × '+enfants+' enfant'+(enfants>1?'s':'')+
+          ' — base '+k+' × SMIC'+(heures<8?', proratisée sur '+heures+' h':'');
+        if(isFinite(percu)&&percu>0){ decl.textContent=eur(Math.max(0,percu-total)); }
+        else { decl.textContent='— €'; }
+      }
+      ids.forEach(function(i){el[i].addEventListener('input',calc);el[i].addEventListener('change',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
