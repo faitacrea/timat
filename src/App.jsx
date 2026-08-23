@@ -12174,9 +12174,15 @@ function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   </div>;
 }
 
-function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null}) {
+function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
   const [demoPage, setDemoPage] = useState("accueil");
-  const [showModal, setShowModal] = useState(false);
+  const [showModalBrut, setShowModalBrut] = useState(false);
+  const [showBientot, setShowBientot] = useState(false);
+  // Mode vitrine : la landing reste visible et indexable, mais aucune inscription
+  // ni connexion n'est possible. Toutes les ouvertures de la modale d'authentification
+  // passent par ce garde-fou, ce qui evite d'avoir a neutraliser chaque bouton.
+  const showModal = vitrine ? false : showModalBrut;
+  const setShowModal = (v) => { if(vitrine){ if(v) setShowBientot(true); return; } setShowModalBrut(v); };
   const [showLegal, setShowLegal] = useState(null);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
@@ -13385,6 +13391,31 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           </div>
         </div>
       </div>}
+
+      {/* MODALE VITRINE : remplace l'authentification avant l'ouverture */}
+      {showBientot && (
+        <div onClick={e => e.target === e.currentTarget && setShowBientot(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
+          <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", borderTop: "4px solid #C76754" }}>
+            <div style={{ padding: 26 }}>
+              <div style={{ fontFamily: "Fraunces,Georgia,serif", fontSize: 21, fontWeight: 700, color: "#0D1B2A", marginBottom: 10 }}>Ouverture tres bientot</div>
+              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#4A6270", margin: "0 0 18px" }}>
+                Nous mettons la derniere main a l'application. Les inscriptions et les connexions ouvriront au lancement.
+              </p>
+              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#4A6270", margin: "0 0 18px" }}>
+                En attendant, tout le reste est deja accessible :
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {[["Les guides du blog","/blog"],["Les simulateurs gratuits","/outils.html"],["L'espace parent employeur","/parents"]].map(([t,u])=>(
+                  <a key={u} href={u} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textDecoration: "none", color: "#0D1B2A", fontSize: 14.5, fontWeight: 600, padding: "10px 12px", background: "#fff", border: "1px solid #E8E4E0", borderRadius: 10 }}>
+                    <span>{t}</span><span style={{ color: "#C76754" }}>&rarr;</span>
+                  </a>
+                ))}
+              </div>
+              <button onClick={()=>setShowBientot(false)} style={{ width: "100%", padding: "12px 18px", borderRadius: 10, border: "none", cursor: "pointer", background: "#C76754", color: "#fff", fontSize: 15, fontWeight: 700 }}>Fermer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODALE AUTH */}
       {showModal && (
@@ -17534,8 +17565,9 @@ function BackofficePage({user,appConfig,setAppConfig,onLogin}){
   return <BackofficeShell user={user} appConfig={appConfig} setAppConfig={setAppConfig}/>;
 }
 
-// ===== MODE MAINTENANCE =====
-// Passer MAINTENANCE a false pour remettre le site en ligne.
+// ===== MODE VITRINE (avant ouverture) =====
+// MAINTENANCE=true : la landing marketing reste visible et indexable, mais aucune
+// inscription ni connexion n'est possible. Passer a false le jour de l'ouverture.
 // Acces de service : https://www.timat.app/?acces=D1Jrp_UaM29A  (memorise 24 h)
 const MAINTENANCE = true;
 const MAINTENANCE_CLE = "D1Jrp_UaM29A";
@@ -17551,6 +17583,8 @@ function maintenanceBypass(){
     return t > 0 && (Date.now() - t) < 86400000;
   }catch(e){ return false; }
 }
+// Ecran de maintenance complet. Plus branche depuis le passage en mode vitrine :
+// conserve pour pouvoir refermer entierement le site en une ligne si besoin.
 function MaintenanceScreen(){
   useEffect(()=>{
     document.title = "TiMat - maintenance en cours";
@@ -17984,11 +18018,13 @@ export default function App(){
     return()=>{cancelled=true;};
   },[user?.id,user?.role,enfantsDB.length]);
 
-  // MODE MAINTENANCE : premiere chose evaluee, avant meme l ecran de chargement.
+  // MODE VITRINE : premiere chose evaluee, avant meme l ecran de chargement.
+  // La landing s'affiche normalement, sans inscription ni connexion possible.
   // Le backoffice reste ouvert, ainsi que le blog et les simulateurs (fichiers statiques).
   {
     let _boRoute=false; try{ _boRoute=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
-    if(MAINTENANCE && !maintOk && !_boRoute) return <MaintenanceScreen/>;
+    if(MAINTENANCE && !maintOk && !_boRoute)
+      return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage vitrine onLogin={()=>{}} dark={dark} setDark={setDark} config={appConfig}/></div></>;
   }
 
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
