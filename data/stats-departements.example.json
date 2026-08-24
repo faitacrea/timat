@@ -1,0 +1,39 @@
+{
+  "_lisezmoi": "Copier ce fichier en data/stats-departements.json et le remplir. Le générateur n'écrit une page QUE pour les départements dont il a les chiffres : un département absent ou incomplet est simplement ignoré, jamais rempli avec une moyenne nationale.",
+
+  "sources": {
+    "offre": {
+      "libelle": "DREES — Données départementales sur l'offre d'accueil du jeune enfant",
+      "url": "https://drees.solidarites-sante.gouv.fr/",
+      "millesime": "2023"
+    },
+    "salaire": {
+      "libelle": "Observatoire de l'emploi à domicile (FEPEM), données Urssaf Caisse nationale",
+      "url": "https://www.fepem.fr/",
+      "millesime": "4e trimestre 2024"
+    }
+  },
+
+  "national": {
+    "assmats": 294900,
+    "salaireHoraireNet": 3.92,
+    "enfantsParAssmat": 2.3
+  },
+
+  "regions": {
+    "Île-de-France": { "salaireHoraireNet": 4.30 },
+    "Nouvelle-Aquitaine": { "salaireHoraireNet": 3.83 },
+    "Provence-Alpes-Côte d'Azur": { "salaireHoraireNet": 4.50 },
+    "Guyane": { "salaireHoraireNet": 4.73 }
+  },
+
+  "departements": {
+    "69": {
+      "assmats": 0,
+      "places": 0,
+      "tauxCouverture": 0,
+      "salaireHoraireNet": 0,
+      "_note": "assmats = assistantes maternelles agréées ; places = places théoriques ; tauxCouverture = places pour 100 enfants de moins de 3 ans, tous modes d'accueil ; salaireHoraireNet = € net de l'heure et par enfant, hors indemnités."
+    }
+  }
+}
