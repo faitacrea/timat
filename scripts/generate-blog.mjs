@@ -116,6 +116,19 @@ function articleTarget(slug) {
   };
 }
 
+function categorieTarget(slug) {
+  if (FLAT) {
+    return {
+      file: path.join(PUBLIC_DIR, `blog-rubrique-${slug}.html`),
+      url: `/blog-rubrique-${slug}.html`,
+    };
+  }
+  return {
+    file: path.join(BLOG_DIR, "rubrique", slug, "index.html"),
+    url: `/blog/rubrique/${slug}`,
+  };
+}
+
 function indexTarget() {
   if (FLAT) {
     return { file: path.join(PUBLIC_DIR, "blog.html"), url: "/blog.html" };
@@ -384,6 +397,23 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .cta p{color:rgba(255,255,255,.85);font-size:15.5px;margin:0 0 20px}
 .cta a{display:inline-block;background:${T.terracotta};color:#fff;text-decoration:none;font-weight:700;
   padding:13px 26px;border-radius:12px;font-size:15px}
+.filtres{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:26px 0 6px}
+.filtres .lab{font-size:11.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:${T.light};margin-right:4px}
+.filtres button{font-family:inherit;font-size:14px;font-weight:700;padding:9px 17px;border-radius:99px;
+  border:1px solid ${T.border};background:${T.white};color:${T.mauve};cursor:pointer;transition:.15s}
+.filtres button:hover{border-color:${T.terracottaLine};color:${T.terracotta}}
+.filtres button[aria-pressed="true"]{background:${T.mauve};border-color:${T.mauve};color:#fff}
+.rubs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.rubs a{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;text-decoration:none;
+  padding:7px 14px;border-radius:99px;border:1px solid transparent;transition:.15s}
+.rubs a:hover{filter:brightness(.96);border-color:rgba(0,0,0,.08)}
+.rubs a .n{font-size:11.5px;font-weight:800;opacity:.65}
+.vide{display:none;color:${T.light};font-size:16px;padding:30px 0}
+.rub-tete{background:${T.white};border:1px solid ${T.border};border-radius:16px;padding:24px 26px;margin:0 0 26px}
+.rub-tete h1{margin:0 0 10px}
+.rub-tete p{margin:0;font-size:17px;line-height:1.6;color:${T.mauve}}
+.rub-tete .aud{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
+  color:${T.light};margin-bottom:10px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin:26px 0 50px}
 .card{background:${T.white};border:1px solid ${T.border};border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
 .card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
@@ -406,7 +436,7 @@ footer a{color:${T.mauve};text-decoration:none}
 }
 `;
 
-function layout({ title, description, canonical, ogImage, jsonLd, body, wide }) {
+function layout({ title, description, canonical, ogImage, jsonLd, body, wide, script }) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -448,6 +478,7 @@ ${body}
     <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a></span>
   </div>
 </footer>
+${script ? `<script>${script}</script>` : ""}
 </body>
 </html>`;
 }
@@ -463,6 +494,29 @@ ${body}
 const SLUG_SITUATION = "situation-pratique";
 const estSituation = (a) => a?.categorie?.slug === SLUG_SITUATION;
 
+// L'axe d'audience vient du champ `audience` de la rubrique, present dans le
+// schema depuis le debut mais jamais exploite. Une rubrique sans audience
+// declaree s'adresse aux deux publics : c'est le defaut le moins surprenant.
+const AUDIENCES = {
+  assmat: "Assistantes maternelles",
+  parent: "Parents employeurs",
+  "les-deux": "Les deux",
+};
+const audienceDe = (a) => a?.categorie?.audience || "les-deux";
+
+/** Rubriques presentes dans les articles publies, avec leur compte. */
+function rubriques(articles) {
+  const parSlug = new Map();
+  for (const a of articles) {
+    const c = a.categorie;
+    if (!c?.slug || !c?.titre) continue;
+    const vue = parSlug.get(c.slug);
+    if (vue) vue.n += 1;
+    else parSlug.set(c.slug, { ...c, n: 1 });
+  }
+  return [...parSlug.values()].sort((x, y) => y.n - x.n || x.titre.localeCompare(y.titre, "fr"));
+}
+
 // Une teinte par categorie, tiree de la palette TiMat. Les couples fond/texte
 // sont choisis pour rester lisibles ; toute categorie inconnue retombe sur le gris.
 const PASTILLES = {
@@ -472,9 +526,11 @@ const PASTILLES = {
   "Devenir assistante maternelle": ["#E4EDE6", "#40614A"],
   "Choisir son mode de garde": ["#E6EFEE", "#2E5C57"],
   "Situation pratique": ["#F4EAD5", "#7A5E28"],
+  // Repli d'une rubrique creee dans le Studio sans teinte declaree ici.
+  _defaut: ["#EDEAE6", "#6E6669"],
 };
 function pastilleStyle(titre) {
-  const [fond, texte] = PASTILLES[titre] || ["#EDEAE6", "#6E6669"];
+  const [fond, texte] = PASTILLES[titre] || PASTILLES._defaut;
   return `background:${fond};color:${texte}`;
 }
 
@@ -643,22 +699,14 @@ function pageArticle(a, tous = []) {
   });
 }
 
-function pageIndex(articles) {
-  const url = SITE + indexTarget().url;
-  const body = `
-<main class="wrap">
-  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="/">Accueil</a> › <span>Blog</span></nav>
-  <span class="eyebrow">Le blog TiMat</span>
-  <h1>Comprendre l'accueil chez une assistante maternelle</h1>
-  <p class="lead">Contrat, salaire, Pajemploi, agrément, quotidien de l'accueil : des réponses claires et sourcées, pour les assistantes maternelles agréées comme pour les parents employeurs.</p>
-  <div class="cards">
-    ${
-      articles.length
-        ? articles
-            .map((a) => {
-              const img = a.imageCouverture ? imageUrl(a.imageCouverture, 700) : null;
-              const href = articleTarget(a.slug).url;
-              return `<article class="card">
+/** Une carte d'article, partagee par l'index et les pages de rubrique. */
+function carte(a) {
+  const img = a.imageCouverture ? imageUrl(a.imageCouverture, 700) : null;
+  const href = articleTarget(a.slug).url;
+  const cat = a.categorie?.titre || "";
+  return `<article class="card" data-audience="${escAttr(audienceDe(a))}" data-rubrique="${escAttr(
+    a.categorie?.slug || ""
+  )}">
         ${
           img
             ? `<a href="${escAttr(href)}" aria-hidden="true" tabindex="-1"><img src="${escAttr(
@@ -667,17 +715,85 @@ function pageIndex(articles) {
             : ""
         }
         <div class="card-body">
-          ${a.categorie?.titre ? `<div class="cat">${esc(a.categorie.titre)}</div>` : ""}
+          ${cat ? `<div class="cat">${esc(cat)}</div>` : ""}
           <h2><a href="${escAttr(href)}">${esc(a.titre)}</a></h2>
           <p>${esc(a.chapo || "")}</p>
           <div class="date">${esc(dateFr(a.dateMiseAJour || a.datePublication))}</div>
         </div>
       </article>`;
-            })
-            .join("\n")
+}
+
+/** Les pastilles de rubrique, menant aux pages dediees. */
+function chipsRubriques(articles, actif = null) {
+  const rubs = rubriques(articles);
+  if (!rubs.length) return "";
+  return `<div class="rubs">${rubs
+    .map((r) => {
+      const [bg, fg] = PASTILLES[r.titre] || PASTILLES._defaut;
+      const ici = r.slug === actif;
+      return `<a href="${escAttr(categorieTarget(r.slug).url)}" style="background:${bg};color:${fg}${
+        ici ? ";outline:2px solid " + fg : ""
+      }"${ici ? ' aria-current="page"' : ""}>${esc(r.titre)}<span class="n">${r.n}</span></a>`;
+    })
+    .join("")}</div>`;
+}
+
+// Filtre client : l'axe d'audience se joue sur une seule classe, sans rechargement.
+const SCRIPT_FILTRE = `(function(){
+  var barre=document.getElementById('filtres');
+  if(!barre)return;
+  var cartes=[].slice.call(document.querySelectorAll('.cards .card'));
+  var vide=document.getElementById('vide');
+  function appliquer(val){
+    var n=0;
+    cartes.forEach(function(c){
+      var a=c.getAttribute('data-audience')||'les-deux';
+      var ok = val==='tout' || a==='les-deux' || a===val;
+      c.style.display = ok ? '' : 'none';
+      if(ok)n++;
+    });
+    if(vide)vide.style.display = n ? 'none' : 'block';
+    [].slice.call(barre.querySelectorAll('button')).forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-aud')===val));
+    });
+    try{ localStorage.setItem('timat-blog-audience', val); }catch(e){}
+  }
+  barre.addEventListener('click',function(e){
+    var b=e.target.closest('button');
+    if(b)appliquer(b.getAttribute('data-aud'));
+  });
+  var init='tout';
+  try{ init = localStorage.getItem('timat-blog-audience') || 'tout'; }catch(e){}
+  appliquer(init);
+})();`;
+
+function barreFiltres() {
+  return `<div class="filtres" id="filtres">
+    <span class="lab">Je suis</span>
+    <button type="button" data-aud="tout" aria-pressed="true">Tout voir</button>
+    <button type="button" data-aud="assmat" aria-pressed="false">Assistante maternelle</button>
+    <button type="button" data-aud="parent" aria-pressed="false">Parent employeur</button>
+  </div>`;
+}
+
+function pageIndex(articles) {
+  const url = SITE + indexTarget().url;
+  const body = `
+<main class="wrap">
+  <nav class="crumbs" aria-label="Fil d'Ariane"><a href="/">Accueil</a> › <span>Blog</span></nav>
+  <span class="eyebrow">Le blog TiMat</span>
+  <h1>Comprendre l'accueil chez une assistante maternelle</h1>
+  <p class="lead">Contrat, salaire, Pajemploi, agrément, quotidien de l'accueil : des réponses claires et sourcées, pour les assistantes maternelles agréées comme pour les parents employeurs.</p>
+  ${barreFiltres()}
+  ${chipsRubriques(articles)}
+  <div class="cards">
+    ${
+      articles.length
+        ? articles.map(carte).join("\n")
         : `<p class="lead">Les premiers articles arrivent très bientôt.</p>`
     }
   </div>
+  <p class="vide" id="vide">Aucun article pour ce public pour l'instant. Choisissez « Tout voir ».</p>
 </main>`;
 
   return layout({
@@ -695,12 +811,81 @@ function pageIndex(articles) {
     },
     body,
     wide: true,
+    script: SCRIPT_FILTRE,
+  });
+}
+
+/** Page d'une rubrique : la description du Studio y trouve enfin sa place. */
+function pageCategorie(rub, articlesDeLaRubrique, tous) {
+  const url = SITE + categorieTarget(rub.slug).url;
+  const titre = `${rub.titre} : nos articles | TiMat`;
+  const description =
+    rub.description ||
+    `Tous nos articles de la rubrique « ${rub.titre} » : des réponses claires et sourcées pour les assistantes maternelles agréées et les parents employeurs.`;
+
+  const body = `
+<main class="wrap">
+  <nav class="crumbs" aria-label="Fil d'Ariane">
+    <a href="/">Accueil</a> › <a href="${indexTarget().url}">Blog</a> › <span>${esc(rub.titre)}</span>
+  </nav>
+  <div class="rub-tete">
+    <span class="aud">${esc(AUDIENCES[rub.audience] || AUDIENCES["les-deux"])}</span>
+    <h1>${esc(rub.titre)}</h1>
+    <p>${esc(description)}</p>
+  </div>
+  ${chipsRubriques(tous, rub.slug)}
+  <div class="cards">
+    ${articlesDeLaRubrique.map(carte).join("\n")}
+  </div>
+</main>`;
+
+  return layout({
+    title: titre,
+    description,
+    canonical: url,
+    jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: rub.titre,
+        description,
+        url,
+        inLanguage: "fr-FR",
+        isPartOf: { "@type": "Blog", name: "Blog TiMat", url: SITE + indexTarget().url },
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Accueil", item: SITE },
+          { "@type": "ListItem", position: 2, name: "Blog", item: SITE + indexTarget().url },
+          { "@type": "ListItem", position: 3, name: rub.titre, item: url },
+        ],
+      },
+    ],
+    body,
+    wide: true,
   });
 }
 
 function sitemap(articles) {
+  // La date d'une rubrique est celle de son article le plus recent : elle bouge
+  // a chaque publication, ce qui est exactement ce que Google doit voir.
+  const majRubrique = (slug) =>
+    isoDay(
+      articles
+        .filter((a) => a.categorie?.slug === slug)
+        .map((a) => a.dateMiseAJour || a.datePublication)
+        .sort()
+        .pop()
+    );
   const entries = [
     { loc: SITE + indexTarget().url, lastmod: isoDay(new Date().toISOString()), prio: "0.7" },
+    ...rubriques(articles).map((r) => ({
+      loc: SITE + categorieTarget(r.slug).url,
+      lastmod: majRubrique(r.slug),
+      prio: "0.7",
+    })),
     ...articles.map((a) => ({
       loc: SITE + articleTarget(a.slug).url,
       lastmod: isoDay(a.dateMiseAJour || a.datePublication),
@@ -734,7 +919,7 @@ const QUERY = `*[_type == "article" && statut == "publie" && noIndex != true && 
   sourcesOfficielles,
   seoTitre,
   seoDescription,
-  categorie->{titre, "slug": slug.current, audience}
+  categorie->{titre, "slug": slug.current, audience, description}
 }`;
 
 async function fetchArticles() {
@@ -779,10 +964,18 @@ async function main() {
   await mkdir(path.dirname(idx.file), { recursive: true });
   await writeFile(idx.file, pageIndex(valides), "utf8");
 
+  const rubs = rubriques(valides);
+  for (const r of rubs) {
+    const { file } = categorieTarget(r.slug);
+    await mkdir(path.dirname(file), { recursive: true });
+    const dedans = valides.filter((a) => a.categorie?.slug === r.slug);
+    await writeFile(file, pageCategorie(r, dedans, valides), "utf8");
+  }
+
   await writeFile(path.join(PUBLIC_DIR, "sitemap-blog.xml"), sitemap(valides), "utf8");
 
   console.log(
-    `[blog] ${valides.length} article(s) généré(s) + index + sitemap-blog.xml (mode ${FLAT ? "plat" : "dossiers"}).`
+    `[blog] ${valides.length} article(s) + ${rubs.length} rubrique(s) + index + sitemap-blog.xml (mode ${FLAT ? "plat" : "dossiers"}).`
   );
 }
 

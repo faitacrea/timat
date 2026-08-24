@@ -1,6 +1,6 @@
 # Politique de confidentialité — TiMat
 
-*Dernière mise à jour : mars 2026 — Version 1.0*
+*Dernière mise à jour : août 2026 — Version 1.1*
 
 ---
 
@@ -109,12 +109,14 @@ En cas de réclamation non résolue : **CNIL — 3 Place de Fontenoy, 75007 Pari
 
 ---
 
-## 7. Cookies
+## 7. Cookies et mesure d'audience
 
 TiMat utilise uniquement :
 - **Cookies techniques** (session, authentification) — nécessaires, pas de consentement requis
 - **Aucun cookie publicitaire**
 - **Aucun cookie de tracking tiers**
+
+La fréquentation du site est mesurée avec **Vercel Web Analytics** : aucun cookie déposé, rien d'écrit sur votre appareil, aucun identifiant permanent, aucun suivi d'un site à l'autre. Seules des statistiques agrégées en sont tirées (pages vues, provenance, type d'appareil, pays).
 
 ---
 
