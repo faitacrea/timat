@@ -4,7 +4,7 @@ Un article par jour. Cet ordre n'est pas décoratif : il encode des
 **dépendances de liens internes**. Publier hors ordre crée des liens morts,
 parce qu'un article publié peut pointer vers un article encore en brouillon.
 
-Dernière mise à jour : 24 août 2026 — 18 brouillons en attente, 16 articles
+Dernière mise à jour : 24 août 2026 — 23 brouillons en attente, 16 articles
 publiés.
 
 ## L'ordre
@@ -19,16 +19,21 @@ publiés.
 | 6 | `contrat-travail-assistante-maternelle` | Guide |
 | 7 | `changement-horaires-contrat-assistante-maternelle` | Situation pratique |
 | 8 | `pajemploi-plus-obligation-2027` | Guide |
-| 9 | `bulletin-de-paie-manquant-assistante-maternelle` | Situation pratique |
+| 9 | `separation-parents-contrat-assistante-maternelle` | Situation pratique |
 | 10 | `retards-depassements-horaires-assistante-maternelle` | Guide |
-| 11 | `impayes-salaire-assistante-maternelle` | Guide |
-| 12 | `separation-parents-contrat-assistante-maternelle` | Situation pratique |
-| 13 | `indemnite-repas-assistante-maternelle` | Guide |
-| 14 | `arret-travail-assistante-maternelle` | Guide |
-| 15 | `micro-creche-cmg-structure` | Guide |
-| 16 | `maison-assistantes-maternelles-mam` | Guide |
-| 17 | `developpement-moteur-motricite-libre-assistante-maternelle` | Guide |
-| 18 | `declaration-revenus-assistante-maternelle-abattement` | Guide |
+| 11 | `tiers-vient-chercher-enfant-assistante-maternelle` | Situation pratique |
+| 12 | `impayes-salaire-assistante-maternelle` | Guide |
+| 13 | `parents-ne-viennent-pas-chercher-enfant-assistante-maternelle` | Situation pratique |
+| 14 | `indemnite-repas-assistante-maternelle` | Guide |
+| 15 | `nombre-enfants-accueillis-agrement-assistante-maternelle` | Situation pratique |
+| 16 | `arret-travail-assistante-maternelle` | Guide |
+| 17 | `augmenter-son-tarif-horaire-assistante-maternelle` | Situation pratique |
+| 18 | `micro-creche-cmg-structure` | Guide |
+| 19 | `bulletin-de-paie-manquant-assistante-maternelle` | Situation pratique |
+| 20 | `maison-assistantes-maternelles-mam` | Guide |
+| 21 | `demenagement-agrement-contrats-assistante-maternelle` | Situation pratique |
+| 22 | `developpement-moteur-motricite-libre-assistante-maternelle` | Guide |
+| 23 | `declaration-revenus-assistante-maternelle-abattement` | Guide |
 
 ## Les contraintes à respecter
 
@@ -38,10 +43,21 @@ Ce sont les seules. Tout le reste de l'ordre est éditorial et peut bouger.
 - `jours-feries` **avant** `contrat-travail`
 - `periode-adaptation` **avant** `contrat-travail`
 - `pajemploi-plus-obligation-2027` **avant** `impayes-salaire`
+- `separation-parents-contrat` **avant** `tiers-vient-chercher-enfant`
+- `tiers-vient-chercher-enfant` **avant** `parents-ne-viennent-pas-chercher-enfant`
 
-Les cinq fiches « situation pratique » ne pointent que vers des articles déjà
-publiés et vers les pages d'outils statiques : elles sont libres de contrainte
-et servent à aérer la suite de guides.
+Les sept autres fiches « situation pratique » ne pointent que vers des articles
+déjà publiés et vers les pages d'outils statiques : elles sont libres de
+contrainte et servent à aérer la suite de guides.
+
+Ces contraintes se revérifient d'une requête, sans se fier à la mémoire :
+
+```groq
+*[_type=="article" && _id in path("drafts.**")]{"slug": slug.current, "liens": corps[].markDefs[].href}
+```
+
+Tout lien `/blog/<slug>` pointant vers un slug encore en brouillon est une
+dépendance : l'article cible doit être publié avant.
 
 ## Le raisonnement éditorial
 
@@ -50,8 +66,9 @@ fin de contrat, période d'adaptation, vaccins à l'admission et contrat de
 travail arrivent dans les six premiers jours. Les sujets sans saison
 (motricité, MAM, micro-crèche, déclaration de revenus) ferment la marche.
 
-Une fiche « situation pratique » tombe tous les trois à quatre jours, pour
-installer la rubrique sans noyer les guides.
+Une fiche « situation pratique » tombe tous les deux à trois jours, pour
+installer la rubrique sans noyer les guides. Dix fiches pour treize guides :
+la rubrique a désormais assez de volume pour tenir seule.
 
 ## Comment publier (le piège)
 
