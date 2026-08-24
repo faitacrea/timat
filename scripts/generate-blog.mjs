@@ -317,6 +317,12 @@ img{max-width:100%;height:auto}
 h1{font-family:'Fraunces',Georgia,serif;font-size:clamp(29px,5.4vw,44px);line-height:1.12;
   font-weight:800;letter-spacing:-.8px;margin:0 0 16px}
 .chapo{font-size:19px;line-height:1.6;color:${T.mauve};margin:0 0 22px}
+.reponse{background:${T.white};border:1px solid ${T.border};border-left:5px solid ${T.terracotta};
+  border-radius:4px 14px 14px 4px;padding:18px 22px;margin:0 0 24px;
+  box-shadow:0 6px 20px rgba(46,74,90,.07)}
+.reponse h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;letter-spacing:1.2px;
+  text-transform:uppercase;color:${T.terracotta};margin:0 0 8px;font-weight:800;border:0;padding:0}
+.reponse p{margin:0;font-size:17.5px;line-height:1.6;color:${T.ink};font-weight:600}
 .meta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:${T.light};
   border-top:1px solid ${T.border};border-bottom:1px solid ${T.border};padding:14px 0;margin-bottom:30px}
 .maj{display:inline-flex;align-items:center;gap:7px;background:${T.sagePale};border:1px solid ${T.sageLine};
@@ -450,6 +456,13 @@ ${body}
 // PAGES
 // ---------------------------------------------------------------------------
 
+// Le format « situation pratique » : une fiche courte qui repond a UNE question
+// concrete, la ou les guides traitent un sujet en entier. Faute de champ dedie
+// dans le schema Sanity, la rubrique porte le format — elle reste selectionnable
+// dans le Studio sans redeploiement de schema.
+const SLUG_SITUATION = "situation-pratique";
+const estSituation = (a) => a?.categorie?.slug === SLUG_SITUATION;
+
 // Une teinte par categorie, tiree de la palette TiMat. Les couples fond/texte
 // sont choisis pour rester lisibles ; toute categorie inconnue retombe sur le gris.
 const PASTILLES = {
@@ -458,6 +471,7 @@ const PASTILLES = {
   "Le quotidien de l'accueil": ["#EDE6F0", "#5C4A64"],
   "Devenir assistante maternelle": ["#E4EDE6", "#40614A"],
   "Choisir son mode de garde": ["#E6EFEE", "#2E5C57"],
+  "Situation pratique": ["#F4EAD5", "#7A5E28"],
 };
 function pastilleStyle(titre) {
   const [fond, texte] = PASTILLES[titre] || ["#EDEAE6", "#6E6669"];
@@ -481,6 +495,7 @@ function pageArticle(a, tous = []) {
   const title = a.seoTitre || a.titre;
   const description = a.seoDescription || a.chapo || "";
   const cover = a.imageCouverture ? imageUrl(a.imageCouverture, 1200) : null;
+  const situation = estSituation(a);
   const headings = extractHeadings(a.corps);
   const minutes = readingMinutes(a.corps);
 
@@ -536,7 +551,13 @@ function pageArticle(a, tous = []) {
   </nav>
   ${a.categorie?.titre ? `<span class="eyebrow">${esc(a.categorie.titre)}</span>` : ""}
   <h1>${esc(a.titre)}</h1>
-  ${a.chapo ? `<p class="chapo">${esc(a.chapo)}</p>` : ""}
+  ${
+    a.chapo
+      ? situation
+        ? `<section class="reponse"><h2>Réponse courte</h2><p>${esc(a.chapo)}</p></section>`
+        : `<p class="chapo">${esc(a.chapo)}</p>`
+      : ""
+  }
   <div class="meta">
     ${
       a.dateMiseAJour
@@ -553,7 +574,7 @@ function pageArticle(a, tous = []) {
       : ""
   }
   ${
-    headings.length >= 3
+    !situation && headings.length >= 3
       ? `<nav class="sommaire" aria-label="Sommaire"><h2>Au sommaire</h2><ol>${headings
           .map((h) => `<li><a href="#${h.id}">${esc(h.texte)}</a></li>`)
           .join("")}</ol></nav>`
