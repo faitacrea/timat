@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relevé mensuel d'heures à imprimer — gratuit | TiMat</title>
+<meta name="description" content="Le relevé mensuel d'heures et d'indemnités de l'assistante maternelle, généré au bon mois puis imprimé ou enregistré en PDF. Gratuit, sans inscription.">
+<link rel="canonical" href="https://www.timat.app/releve-heures-assistante-maternelle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Relevé mensuel d'heures à imprimer — gratuit">
+<meta property="og:description" content="Choisissez le mois, le tableau se remplit aux bonnes dates. À imprimer, remplir à la main et faire signer chaque fin de mois.">
+<meta property="og:url" content="https://www.timat.app/releve-heures-assistante-maternelle.html">
+<meta property="og:image" content="https://www.timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Le relevé d'heures est-il obligatoire ?","acceptedAnswer":{"@type":"Answer","text":"Aucun texte n'impose ce document précis, mais l'employeur doit pouvoir justifier les heures rémunérées, et la salariée doit pouvoir prouver les heures effectuées. Un relevé signé chaque mois par les deux parties est la preuve la plus simple à constituer, et la seule qui vaille des années plus tard."}},
+{"@type":"Question","name":"À quoi sert-il concrètement ?","acceptedAnswer":{"@type":"Answer","text":"Il justifie les heures complémentaires et majorées, les jours d'accueil qui ouvrent droit à l'indemnité d'entretien, et les repas fournis. En cas de désaccord sur une paie, c'est lui qui tranche."}},
+{"@type":"Question","name":"Faut-il le faire signer par les parents ?","acceptedAnswer":{"@type":"Answer","text":"Oui, c'est tout l'intérêt. Un relevé signé des deux côtés à la fin du mois vaut accord sur les heures. Un relevé rempli seul ne vaut qu'un témoignage."}}
+]}
+</script>
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82;--line:#E4DCD0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:900px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:900px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:900px;margin:0 auto;padding:26px 22px 20px}
+  .panneau{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .panneau h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .champs{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  .ch{display:flex;flex-direction:column;gap:4px}
+  .ch label{font-size:13px;font-weight:600;color:var(--marine)}
+  .ch input,.ch select{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .btn{font-family:inherit;font-size:15px;font-weight:700;padding:13px 24px;border-radius:12px;border:0;cursor:pointer;
+    background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;box-shadow:0 8px 22px rgba(200,75,49,.35)}
+  .btn.sec{background:#fff;color:var(--marine);border:1px solid #DDD5C8;box-shadow:none}
+  .apercu{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 24px;margin:0 0 26px;overflow-x:auto}
+  .feuille{min-width:660px}
+  .fh{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2px solid var(--marine);padding-bottom:12px;margin-bottom:14px}
+  .fh .ti{font-family:'Fraunces',serif;font-size:21px;font-weight:700;color:var(--marine);line-height:1.2}
+  .fh .mois{font-size:14px;color:var(--muted);margin-top:3px}
+  .fh .lg{font-family:'Fraunces',serif;font-weight:700;font-size:17px;color:var(--marine)}
+  .fh .lg span{color:var(--terra)}
+  .ident{display:grid;grid-template-columns:1fr 1fr;gap:5px 22px;font-size:13px;margin-bottom:14px}
+  .ident div{border-bottom:1px solid var(--line);padding:4px 0}
+  .ident b{color:var(--muted);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{border:1px solid #CFC6B8;padding:5px 6px;text-align:center;height:26px}
+  th{background:var(--cream2);color:var(--marine);font-weight:700;font-size:11.5px;line-height:1.25}
+  td.d{text-align:left;width:78px;white-space:nowrap}
+  tr.we td{background:#F4F1EC;color:#9A9086}
+  tr.tot td{background:var(--cream2);font-weight:700;height:30px}
+  td.obs{width:150px}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px}
+  .sign div{border:1px solid #CFC6B8;border-radius:8px;padding:9px 11px;height:88px;font-size:12px;color:var(--muted)}
+  .mention{font-size:11px;color:var(--muted);margin-top:12px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  p{margin-bottom:13px}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4)}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}.related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:620px){.champs,.ident,.sign{grid-template-columns:1fr}}
+
+  @media print{
+    @page{size:A4 portrait;margin:11mm}
+    .noprint{display:none!important}
+    body{background:#fff;font-size:11px}
+    main{padding:0;max-width:none}
+    .apercu{border:0;border-radius:0;padding:0;margin:0;box-shadow:none;overflow:visible}
+    .feuille{min-width:0}
+    /* Le pire cas est un mois de 31 jours : 33 lignes de tableau doivent
+       tenir sur une seule page A4. D'ou le rognage des interlignes. */
+    table{font-size:10px}
+    th,td{height:auto;padding:3.4px 5px;line-height:1.35;border-color:#999}
+    .fh{padding-bottom:8px;margin-bottom:9px}
+    .fh .ti{font-size:17px}
+    .ident{font-size:11px;gap:2px 20px;margin-bottom:9px}
+    .ident div{padding:2px 0}
+    .sign{margin-top:11px;gap:18px}
+    .mention{margin-top:7px}
+    tr.we td{background:#F2F2F2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    tr.tot td{background:#EEE!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    th{background:#EEE!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sign div{height:58px;font-size:11px}
+  }
+</style>
+</head>
+<body>
+  <div class="top noprint"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat →</a>
+  </div></div>
+
+  <div class="hero noprint"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> › <a href="/outils.html">Outils</a> › Relevé mensuel d'heures</div>
+    <span class="tag">Gratuit · à imprimer</span>
+    <h1>Relevé mensuel d'heures à imprimer</h1>
+    <p class="lead">Le document que nos articles vous répètent de tenir. Choisissez le mois : le tableau se remplit aux bonnes dates, week-ends grisés. Vous imprimez, vous remplissez à la main, <strong>et vous faites signer</strong>.</p>
+  </div></div>
+
+  <main>
+    <div class="panneau noprint">
+      <h2>📄 Votre relevé</h2>
+      <div class="champs">
+        <div class="ch"><label for="mois">Mois</label>
+          <select id="mois"></select></div>
+        <div class="ch"><label for="annee">Année</label>
+          <input id="annee" type="number" inputmode="numeric" step="1" value="2026"></div>
+        <div class="ch"><label for="assmat">Assistante maternelle</label>
+          <input id="assmat" type="text" placeholder="Nom et prénom"></div>
+        <div class="ch"><label for="employeur">Parent employeur</label>
+          <input id="employeur" type="text" placeholder="Nom et prénom"></div>
+        <div class="ch"><label for="enfant">Enfant accueilli</label>
+          <input id="enfant" type="text" placeholder="Prénom"></div>
+        <div class="ch"><label for="taux">Taux horaire net <span style="font-weight:400;color:var(--muted);font-size:12px">facultatif</span></label>
+          <input id="taux" type="text" placeholder="ex. 4,10 €"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="imprimer" type="button">Imprimer ou enregistrer en PDF</button>
+        <button class="btn sec" id="vider" type="button">Vider les champs</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:12px 0 0">Rien n'est envoyé ni enregistré : tout reste dans votre navigateur. Pour obtenir un PDF, choisissez « Enregistrer au format PDF » comme imprimante.</p>
+    </div>
+
+    <div class="apercu">
+      <div class="feuille">
+        <div class="fh">
+          <div>
+            <div class="ti">Relevé mensuel d'heures et d'indemnités</div>
+            <div class="mois" id="oMois">—</div>
+          </div>
+          <div class="lg">Ti<span>Mat</span></div>
+        </div>
+
+        <div class="ident">
+          <div><b>Assistante maternelle :</b> <span id="oAssmat"></span></div>
+          <div><b>Parent employeur :</b> <span id="oEmployeur"></span></div>
+          <div><b>Enfant accueilli :</b> <span id="oEnfant"></span></div>
+          <div><b>Taux horaire net :</b> <span id="oTaux"></span></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures<br>effectuées</th>
+              <th>Repas<br>fournis</th><th>Km</th><th>Observations</th>
+            </tr>
+          </thead>
+          <tbody id="lignes"></tbody>
+          <tfoot>
+            <tr class="tot"><td class="d">Totaux</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          </tfoot>
+        </table>
+
+        <div class="sign">
+          <div>Signature de l'assistante maternelle<br><span style="font-size:11px">Le …… / …… / ……</span></div>
+          <div>Signature du parent employeur<br><span style="font-size:11px">Le …… / …… / ……</span></div>
+        </div>
+        <p class="mention">Document établi en deux exemplaires, un pour chaque partie. Modèle gratuit — timat.app</p>
+      </div>
+    </div>
+
+    <div class="noprint">
+      <h2>Pourquoi ce papier vaut mieux qu'une bonne mémoire</h2>
+      <p>Aucun texte n'impose ce document précis. Mais l'employeur doit pouvoir justifier les heures qu'il rémunère, et vous devez pouvoir prouver celles que vous avez effectuées. Un relevé <strong>signé des deux côtés à la fin du mois</strong> est la preuve la plus simple à constituer — et la seule qui tienne encore debout deux ans plus tard, quand plus personne ne se souvient du mois de mars.</p>
+
+      <p>Il tranche trois désaccords classiques : les heures complémentaires et majorées réellement faites, les jours d'accueil qui ouvrent droit à l'indemnité d'entretien, et les repas effectivement fournis. Ces trois lignes se calculent au réel, jamais au forfait : sans relevé, elles se discutent de mémoire.</p>
+
+      <div class="box">Le réflexe qui change tout : faites-le signer <strong>chaque fin de mois</strong>, pas au moment du conflit. Un relevé qu'on sort pour la première fois le jour d'un désaccord perd l'essentiel de sa force.</div>
+
+      <h2>Comment le remplir</h2>
+      <p>Les week-ends sont grisés, mais restent utilisables : un accueil exceptionnel un samedi s'y note comme les autres jours. La colonne « Heures effectuées » se remplit en heures et minutes réelles, sans arrondir à l'avantage de personne. La colonne « Observations » sert aux retards, aux absences et aux échanges qui comptent — c'est souvent elle qu'on relit.</p>
+      <p>Une fois le mois clos, reportez les totaux dans votre déclaration, et gardez la feuille signée. Nos outils font le reste du calcul.</p>
+
+      <div class="ctabox">
+        <h2>Ou laissez TiMat le tenir pour vous</h2>
+        <p>Les présences se pointent en deux secondes, les totaux se calculent seuls, et le relevé du mois est partagé avec les parents — signé dans l'application, sans papier ni discussion.</p>
+        <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
+      </div>
+
+      <div class="related">
+        <h2>Pour aller plus loin</h2>
+        <div class="chips">
+          <a class="chip" href="/verificateur-bulletin-assistante-maternelle.html">🔎 Vérifier un bulletin</a>
+          <a class="chip" href="/simulateur-heures-majorees-assistante-maternelle.html">⏱️ Heures majorées</a>
+          <a class="chip" href="/simulateur-indemnite-entretien-assistante-maternelle.html">🏠 Indemnité d'entretien</a>
+          <a class="chip" href="/boutique.html">🛍️ Les documents TiMat</a>
+          <a class="chip" href="/outils.html">🛠️ Tous les outils</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="noprint">
+    <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
+    <a href="/">Accueil</a> · <a href="/outils.html">Outils</a> · <a href="/boutique.html">Boutique</a> · <a href="/blog">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a>
+  </footer>
+
+  <script>
+    (function(){
+      var MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      var JOURS=['dim','lun','mar','mer','jeu','ven','sam'];
+      var sel=document.getElementById('mois'),an=document.getElementById('annee'),
+          lignes=document.getElementById('lignes'),oMois=document.getElementById('oMois');
+      var champs={assmat:'oAssmat',employeur:'oEmployeur',enfant:'oEnfant',taux:'oTaux'};
+
+      MOIS.forEach(function(m,i){
+        var o=document.createElement('option');o.value=i;o.textContent=m.charAt(0).toUpperCase()+m.slice(1);
+        sel.appendChild(o);
+      });
+      var now=new Date();
+      sel.value=now.getMonth();
+      an.value=now.getFullYear();
+
+      function grille(){
+        var m=parseInt(sel.value,10), y=parseInt(an.value,10);
+        if(!isFinite(y)||y<2000||y>2100){ lignes.innerHTML=''; oMois.textContent='—'; return; }
+        // Le jour 0 du mois suivant : dernier jour du mois courant.
+        var nb=new Date(y,m+1,0).getDate();
+        var html='';
+        for(var d=1;d<=nb;d++){
+          var dt=new Date(y,m,d), j=dt.getDay();
+          var we=(j===0||j===6)?' class="we"':'';
+          html+='<tr'+we+'><td class="d">'+JOURS[j]+' '+d+'</td>'+
+                '<td></td><td></td><td></td><td></td><td></td><td class="obs"></td></tr>';
+        }
+        lignes.innerHTML=html;
+        oMois.textContent=MOIS[m].charAt(0).toUpperCase()+MOIS[m].slice(1)+' '+y;
+      }
+      function textes(){
+        Object.keys(champs).forEach(function(k){
+          var v=document.getElementById(k).value.trim();
+          document.getElementById(champs[k]).textContent=v||'……………………………';
+        });
+      }
+      sel.addEventListener('change',grille);
+      an.addEventListener('input',grille);
+      Object.keys(champs).forEach(function(k){
+        document.getElementById(k).addEventListener('input',textes);
+      });
+      document.getElementById('imprimer').addEventListener('click',function(){window.print();});
+      document.getElementById('vider').addEventListener('click',function(){
+        Object.keys(champs).forEach(function(k){document.getElementById(k).value='';});
+        textes();
+      });
+      grille();textes();
+    })();
+  </script>
+</body>
+</html>
