@@ -4,7 +4,7 @@ Un article par jour. Cet ordre n'est pas décoratif : il encode des
 **dépendances de liens internes**. Publier hors ordre crée des liens morts,
 parce qu'un article publié peut pointer vers un article encore en brouillon.
 
-Dernière mise à jour : 24 août 2026 — 23 brouillons en attente, 16 articles
+Dernière mise à jour : 24 août 2026 (soir) — 27 brouillons en attente, 16 articles
 publiés.
 
 ## L'ordre
@@ -13,27 +13,31 @@ publiés.
 |---:|---|---|
 | 1 | `parents-vacances-hors-conges-assistante-maternelle` | Situation pratique |
 | 2 | `fin-de-contrat-assistante-maternelle` | Guide |
-| 3 | `vaccins-obligatoires-refus-accueil-assistante-maternelle` | Situation pratique |
-| 4 | `periode-adaptation-essai-assistante-maternelle` | Guide |
-| 5 | `jours-feries-assistante-maternelle` | Guide |
-| 6 | `contrat-travail-assistante-maternelle` | Guide |
-| 7 | `changement-horaires-contrat-assistante-maternelle` | Situation pratique |
-| 8 | `pajemploi-plus-obligation-2027` | Guide |
-| 9 | `separation-parents-contrat-assistante-maternelle` | Situation pratique |
-| 10 | `retards-depassements-horaires-assistante-maternelle` | Guide |
-| 11 | `tiers-vient-chercher-enfant-assistante-maternelle` | Situation pratique |
-| 12 | `impayes-salaire-assistante-maternelle` | Guide |
-| 13 | `parents-ne-viennent-pas-chercher-enfant-assistante-maternelle` | Situation pratique |
-| 14 | `indemnite-repas-assistante-maternelle` | Guide |
-| 15 | `nombre-enfants-accueillis-agrement-assistante-maternelle` | Situation pratique |
-| 16 | `arret-travail-assistante-maternelle` | Guide |
-| 17 | `augmenter-son-tarif-horaire-assistante-maternelle` | Situation pratique |
-| 18 | `micro-creche-cmg-structure` | Guide |
-| 19 | `bulletin-de-paie-manquant-assistante-maternelle` | Situation pratique |
-| 20 | `maison-assistantes-maternelles-mam` | Guide |
-| 21 | `demenagement-agrement-contrats-assistante-maternelle` | Situation pratique |
-| 22 | `developpement-moteur-motricite-libre-assistante-maternelle` | Guide |
-| 23 | `declaration-revenus-assistante-maternelle-abattement` | Guide |
+| 3 | `quand-chercher-mode-de-garde` | Guide parents |
+| 4 | `vaccins-obligatoires-refus-accueil-assistante-maternelle` | Situation pratique |
+| 5 | `periode-adaptation-essai-assistante-maternelle` | Guide |
+| 6 | `declaration-pajemploi-par-enfant-2026` | Guide parents |
+| 7 | `jours-feries-assistante-maternelle` | Guide |
+| 8 | `contrat-travail-assistante-maternelle` | Guide |
+| 9 | `changement-horaires-contrat-assistante-maternelle` | Situation pratique |
+| 10 | `pajemploi-plus-obligation-2027` | Guide |
+| 11 | `questions-a-poser-assistante-maternelle-avant-signature` | Guide parents |
+| 12 | `separation-parents-contrat-assistante-maternelle` | Situation pratique |
+| 13 | `retards-depassements-horaires-assistante-maternelle` | Guide |
+| 14 | `avance-immediate-credit-impot-garde-enfant` | Guide parents |
+| 15 | `tiers-vient-chercher-enfant-assistante-maternelle` | Situation pratique |
+| 16 | `impayes-salaire-assistante-maternelle` | Guide |
+| 17 | `parents-ne-viennent-pas-chercher-enfant-assistante-maternelle` | Situation pratique |
+| 18 | `indemnite-repas-assistante-maternelle` | Guide |
+| 19 | `nombre-enfants-accueillis-agrement-assistante-maternelle` | Situation pratique |
+| 20 | `arret-travail-assistante-maternelle` | Guide |
+| 21 | `augmenter-son-tarif-horaire-assistante-maternelle` | Situation pratique |
+| 22 | `micro-creche-cmg-structure` | Guide |
+| 23 | `bulletin-de-paie-manquant-assistante-maternelle` | Situation pratique |
+| 24 | `maison-assistantes-maternelles-mam` | Guide |
+| 25 | `demenagement-agrement-contrats-assistante-maternelle` | Situation pratique |
+| 26 | `developpement-moteur-motricite-libre-assistante-maternelle` | Guide |
+| 27 | `declaration-revenus-assistante-maternelle-abattement` | Guide |
 
 ## Les contraintes à respecter
 
@@ -45,6 +49,7 @@ Ce sont les seules. Tout le reste de l'ordre est éditorial et peut bouger.
 - `pajemploi-plus-obligation-2027` **avant** `impayes-salaire`
 - `separation-parents-contrat` **avant** `tiers-vient-chercher-enfant`
 - `tiers-vient-chercher-enfant` **avant** `parents-ne-viennent-pas-chercher-enfant`
+- `pajemploi-plus-obligation-2027` **avant** `avance-immediate-credit-impot-garde-enfant`
 
 Les sept autres fiches « situation pratique » ne pointent que vers des articles
 déjà publiés et vers les pages d'outils statiques : elles sont libres de
@@ -67,8 +72,13 @@ travail arrivent dans les six premiers jours. Les sujets sans saison
 (motricité, MAM, micro-crèche, déclaration de revenus) ferment la marche.
 
 Une fiche « situation pratique » tombe tous les deux à trois jours, pour
-installer la rubrique sans noyer les guides. Dix fiches pour treize guides :
-la rubrique a désormais assez de volume pour tenir seule.
+installer la rubrique sans noyer les guides. Dix fiches pour treize guides
+assmat : la rubrique a désormais assez de volume pour tenir seule.
+
+Quatre guides s'adressent aux parents employeurs et alimentent les deux
+rubriques qui étaient vides. Ils sont répartis dans le premier tiers du
+calendrier, de façon à faire vivre le filtre « Je suis → Parent employeur »
+plutôt que de le laisser ne montrer qu'un seul article.
 
 ## Comment publier (le piège)
 
