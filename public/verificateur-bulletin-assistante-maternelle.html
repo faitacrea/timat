@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votre bulletin de salaire est-il conforme ? | TiMat</title>
-<meta name="description" content="Six contrôles sur votre bulletin d'assistante maternelle : taux horaire minimum, mensualisation, indemnité d'entretien, congés payés, heures majorées, plafond CMG. Gratuit.">
+<meta name="description" content="Six contrôles sur votre bulletin d'assistante maternelle : minimum conventionnel de 4,20 €, mensualisation, indemnité d'entretien, congés payés, heures majorées, plafond CMG. Gratuit.">
 <link rel="canonical" href="https://www.timat.app/verificateur-bulletin-assistante-maternelle.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Vérificateur de bulletin de salaire — assistante maternelle">
@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Quel est le salaire horaire minimum d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"Le minimum légal est de 0,281 fois le SMIC horaire brut, par enfant et par heure d'accueil. Avec un SMIC horaire de 12,31 € au 1er juin 2026, cela représente 3,46 € brut de l'heure et par enfant. La convention collective ou le contrat peuvent prévoir mieux, jamais moins."}},
+{"@type":"Question","name":"Quel est le salaire horaire minimum d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"Deux planchers coexistent et le plus élevé s'applique. Le minimum légal vaut 0,281 fois le SMIC horaire, soit 3,46 € brut au 1er juin 2026. Le minimum conventionnel, fixé par l'avenant n° 10 du 5 février 2026 à la convention collective, vaut 4,20 € brut par heure et par enfant, soit 3,28 € net. C'est donc 4,20 € le plancher réellement applicable, porté à 4,37 € pour les titulaires du titre de branche."}},
 {"@type":"Question","name":"Comment vérifier le montant de la mensualisation ?","acceptedAnswer":{"@type":"Answer","text":"La mensualisation se calcule ainsi : taux horaire brut × nombre d'heures d'accueil par semaine × nombre de semaines d'accueil dans l'année, le tout divisé par 12. Le résultat doit correspondre au salaire de base figurant chaque mois sur le bulletin."}},
 {"@type":"Question","name":"Quel est le minimum de l'indemnité d'entretien ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, elle se calcule à 0,435 € par heure d'accueil, sans pouvoir descendre sous 2,65 € par journée d'accueil et par enfant. Pour une journée de 9 heures, cela représente 3,92 €."}},
 {"@type":"Question","name":"Que se passe-t-il si le salaire journalier dépasse 5 fois le SMIC horaire ?","acceptedAnswer":{"@type":"Answer","text":"Les parents perdent le complément de libre choix du mode de garde pour cet enfant. Le plafond s'apprécie par jour d'accueil et par enfant, sur le salaire brut : au-delà, l'aide n'est pas réduite, elle est supprimée."}}
@@ -148,7 +148,8 @@
 
       <div class="grp">
         <div class="grp-t">Référence</div>
-        <div class="sim-row"><label for="smic">SMIC horaire brut <span class="hint">12,31 € depuis le 1er juin 2026</span></label><input id="smic" type="number" inputmode="decimal" step="0.01" value="12.31"></div>
+        <div class="sim-row"><label for="mini">Minimum conventionnel brut <span class="hint">4,20 €/h et par enfant depuis le 1er juin 2026 — 4,37 € avec le titre de branche</span></label><input id="mini" type="number" inputmode="decimal" step="0.01" value="4.20"></div>
+        <div class="sim-row"><label for="smic">SMIC horaire brut <span class="hint">12,31 € depuis le 1er juin 2026 — sert au plafond CMG</span></label><input id="smic" type="number" inputmode="decimal" step="0.01" value="12.31"></div>
       </div>
 
       <div class="verdicts">
@@ -161,7 +162,13 @@
     <h2>Les six contrôles, et d'où ils viennent</h2>
 
     <h3>1. Le taux horaire minimum</h3>
-    <p>La rémunération ne peut pas être inférieure à <strong>0,281 fois le SMIC horaire brut</strong>, par enfant et par heure d'accueil. Au 1<sup>er</sup> juin 2026, avec un SMIC horaire de 12,31 €, le plancher est donc de <strong>3,46 € brut</strong>. Le contrat ou la convention peuvent prévoir mieux ; jamais moins.</p>
+    <p>Deux planchers coexistent, et <strong>c'est le plus élevé qui s'applique</strong>. C'est le point que presque tout le monde rate.</p>
+    <table>
+      <tr><th>Minimum légal</th><td>0,281 × SMIC horaire, soit <strong>3,46 € brut</strong> au 1<sup>er</sup> juin 2026 (article D423-9 du code de l'action sociale et des familles).</td></tr>
+      <tr><th>Minimum conventionnel</th><td><strong>4,20 € brut</strong> par heure d'accueil et par enfant depuis le 1<sup>er</sup> juin 2026, soit 3,28 € net (3,23 € en Alsace-Moselle). Avenant n° 10 du 5 février 2026 à la convention collective, étendu.</td></tr>
+    </table>
+    <p>La convention collective s'applique à tous les particuliers employeurs : c'est donc <strong>4,20 €</strong> le vrai plancher, et non 3,46 €. Un bulletin à 3,80 € de l'heure est en règle au regard de la loi, et sous-payé au regard de la convention.</p>
+    <p>Le titre de branche « assistant maternel – garde d'enfants » ouvre droit à une majoration de 4 %, ce qui porte le minimum à <strong>4,37 € brut</strong> (3,41 € net). Saisissez alors 4,37 dans le champ de référence.</p>
 
     <h3>2. La mensualisation</h3>
     <p>Le salaire de base se calcule une fois pour toutes : <strong>taux horaire × heures par semaine × semaines par an ÷ 12</strong>. Il ne bouge pas d'un mois sur l'autre, quelles que soient les absences de l'enfant. Un salaire de base qui varie chaque mois est le signe d'une mensualisation mal posée — ou pas posée du tout.</p>
@@ -212,7 +219,7 @@
 
   <script>
     (function(){
-      var ids=['taux','hsem','sem','jsem','mens','jours','ent','hmaj','tmaj','smic'],el={};
+      var ids=['taux','hsem','sem','jsem','mens','jours','ent','hmaj','tmaj','smic','mini'],el={};
       ids.forEach(function(i){el[i]=document.getElementById(i);});
       var liste=document.getElementById('liste'),score=document.getElementById('score'),
           bDix=document.getElementById('bDix'),bMaint=document.getElementById('bMaint'),bRien=document.getElementById('bRien'),
@@ -237,16 +244,25 @@
             hmaj=n('hmaj'),tmaj=n('tmaj'),smic=n('smic');
         var v=[];
 
-        // 1. Taux horaire minimum : 0,281 x SMIC horaire, par enfant et par heure.
-        var mini=smic*0.281;
+        // 1. Taux horaire minimum. Deux planchers coexistent, et c'est le plus
+        //    élevé qui s'applique : le minimum légal (0,281 × SMIC, article
+        //    D423-9) et le minimum conventionnel de la convention collective
+        //    IDCC 3239. Depuis l'avenant n° 10 du 5 février 2026, étendu et
+        //    applicable au 1er juin 2026, le conventionnel (4,20 €) dépasse
+        //    largement le légal (3,46 €) : contrôler contre le légal seul
+        //    validerait des bulletins pourtant sous-payés.
+        var miniLegal=smic*0.281;
+        var miniConv=n('mini');
+        var mini=Math.max(miniLegal, miniConv);
+        var quel = miniConv>=miniLegal ? 'conventionnel' : 'légal';
         if(taux<=0){
           v.push(['att','Taux horaire','Renseignez le taux horaire brut inscrit au contrat pour lancer le contrôle.']);
         }else if(taux<mini-0.005){
-          v.push(['ko','Taux horaire sous le minimum légal',
-            'Le minimum est de <span class="num">'+eur(mini)+'</span> brut par heure et par enfant (0,281 × SMIC). Votre bulletin affiche <span class="num">'+eur(taux)+'</span>, soit <span class="num">'+eur(mini-taux)+'</span> de moins par heure — environ <span class="num">'+eur((mini-taux)*hsem*sem/12)+'</span> par mois.']);
+          v.push(['ko','Taux horaire sous le minimum '+quel,
+            'Le minimum applicable est de <span class="num">'+eur(mini)+'</span> brut par heure et par enfant. Votre bulletin affiche <span class="num">'+eur(taux)+'</span>, soit <span class="num">'+eur(mini-taux)+'</span> de moins par heure — environ <span class="num">'+eur((mini-taux)*hsem*sem/12)+'</span> par mois, et <span class="num">'+eur((mini-taux)*hsem*sem)+'</span> sur l\'année.']);
         }else{
           v.push(['ok','Taux horaire conforme',
-            'Minimum légal : <span class="num">'+eur(mini)+'</span> brut de l\'heure. Votre taux : <span class="num">'+eur(taux)+'</span>.']);
+            'Minimum applicable : <span class="num">'+eur(mini)+'</span> brut de l\'heure (minimum '+quel+'). Votre taux : <span class="num">'+eur(taux)+'</span>.']);
         }
 
         // 2. Mensualisation : taux x heures/semaine x semaines/an / 12.
