@@ -81,7 +81,18 @@
   .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 14px;color:var(--marine)}
   footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
   footer a{color:#fff}
-  @media(max-width:620px){.champs,.ident,.sign{grid-template-columns:1fr}}
+  .mail h2{margin-bottom:6px}
+  .mail-ligne{display:flex;gap:10px;flex-wrap:wrap}
+  .mail-ligne input{flex:1 1 240px;border:1px solid #DDD5C8;border-radius:9px;padding:12px 13px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .mail-ligne input:invalid:not(:placeholder-shown){border-color:#C88}
+  .mail-ligne .btn{flex:0 0 auto}
+  .leurre{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .consent{display:flex;gap:10px;align-items:flex-start;margin-top:13px;font-size:13px;color:var(--muted);line-height:1.55;cursor:pointer}
+  .consent input{margin-top:3px;flex:0 0 auto;width:16px;height:16px;accent-color:var(--terraD)}
+  .mail-retour{margin:12px 0 0;font-size:14px;font-weight:600;min-height:1px}
+  .mail-retour.ok{color:#3F7A63}
+  .mail-retour.ko{color:#B33A24}
+  @media(max-width:620px){.champs,.ident,.sign{grid-template-columns:1fr}.mail-ligne .btn{width:100%}}
 
   @media print{
     @page{size:A4 portrait;margin:11mm}
@@ -142,6 +153,29 @@
         <button class="btn sec" id="vider" type="button">Vider les champs</button>
       </div>
       <p style="font-size:12px;color:var(--muted);margin:12px 0 0">Rien n'est envoyé ni enregistré : tout reste dans votre navigateur. Pour obtenir un PDF, choisissez « Enregistrer au format PDF » comme imprimante.</p>
+    </div>
+
+    <div class="panneau mail noprint">
+      <h2>✉️ Ou recevez-le par e-mail</h2>
+      <p style="font-size:15px;margin-bottom:14px">Pour le retrouver chaque mois sans chercher. Vous recevrez aussi les nouveaux outils gratuits, pas plus d'une fois par mois.</p>
+      <form id="fmail" novalidate>
+        <div class="mail-ligne">
+          <input id="mailAdresse" type="email" name="email" autocomplete="email" required
+                 placeholder="votre@email.fr" aria-label="Votre adresse e-mail">
+          <button class="btn" type="submit" id="mailEnvoi">Recevoir le relevé</button>
+        </div>
+        <!-- Champ leurre : masqué aux humains, rempli par la plupart des robots. -->
+        <div class="leurre" aria-hidden="true">
+          <label for="mailPiege">Ne pas remplir</label>
+          <input id="mailPiege" type="text" name="piege" tabindex="-1" autocomplete="off">
+        </div>
+        <label class="consent" for="mailConsent">
+          <input id="mailConsent" type="checkbox" required>
+          <span id="texteConsent">J'accepte de recevoir le relevé mensuel d'heures par e-mail, ainsi que les nouveaux outils et guides gratuits de TiMat. Je peux me désinscrire à tout moment via le lien présent dans chaque e-mail.</span>
+        </label>
+        <p class="mail-retour" id="mailRetour" role="status" aria-live="polite"></p>
+      </form>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Votre adresse sert uniquement à cet envoi. Elle n'est ni revendue ni transmise. Détail dans notre <a href="/confidentialite.html">politique de confidentialité</a>.</p>
     </div>
 
     <div class="apercu">
@@ -266,6 +300,39 @@
         textes();
       });
       grille();textes();
+
+      // Envoi du relevé par e-mail.
+      var f=document.getElementById('fmail');
+      if(f){
+        var adresse=document.getElementById('mailAdresse'),
+            consent=document.getElementById('mailConsent'),
+            piege=document.getElementById('mailPiege'),
+            bouton=document.getElementById('mailEnvoi'),
+            retour=document.getElementById('mailRetour');
+        function dire(msg,ok){ retour.textContent=msg; retour.className='mail-retour '+(ok?'ok':'ko'); }
+        f.addEventListener('submit',function(e){
+          e.preventDefault();
+          var mail=(adresse.value||'').trim();
+          if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){ dire('Vérifiez votre adresse e-mail.',false); adresse.focus(); return; }
+          if(!consent.checked){ dire('Cochez la case pour que nous puissions vous écrire.',false); consent.focus(); return; }
+          bouton.disabled=true; dire('Envoi en cours…',true);
+          fetch('/api/inscription-releve',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({email:mail,consentement:true,piege:piege.value||''})
+          }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+            .then(function(res){
+              if(res.ok&&res.j.succes){
+                f.reset();
+                dire('C’est envoyé. Regardez votre boîte — et vos indésirables, au cas où.',true);
+              }else{
+                dire((res.j&&res.j.error)||'Envoi impossible pour le moment.',false);
+                bouton.disabled=false;
+              }
+            })
+            .catch(function(){ dire('Connexion impossible. Réessayez dans un instant.',false); bouton.disabled=false; });
+        });
+      }
     })();
   </script>
 </body>
