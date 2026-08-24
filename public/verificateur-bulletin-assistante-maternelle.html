@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Votre bulletin de salaire est-il conforme ? | TiMat</title>
+<meta name="description" content="Six contrôles sur votre bulletin d'assistante maternelle : taux horaire minimum, mensualisation, indemnité d'entretien, congés payés, heures majorées, plafond CMG. Gratuit.">
+<link rel="canonical" href="https://www.timat.app/verificateur-bulletin-assistante-maternelle.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Vérificateur de bulletin de salaire — assistante maternelle">
+<meta property="og:description" content="Entrez ce qui figure sur votre bulletin : l'outil signale ce qui est sous le minimum légal, ce qui manque, et ce qui coûte le CMG aux parents.">
+<meta property="og:url" content="https://www.timat.app/verificateur-bulletin-assistante-maternelle.html">
+<meta property="og:image" content="https://www.timat.app/og-image.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Quel est le salaire horaire minimum d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"Le minimum légal est de 0,281 fois le SMIC horaire brut, par enfant et par heure d'accueil. Avec un SMIC horaire de 12,31 € au 1er juin 2026, cela représente 3,46 € brut de l'heure et par enfant. La convention collective ou le contrat peuvent prévoir mieux, jamais moins."}},
+{"@type":"Question","name":"Comment vérifier le montant de la mensualisation ?","acceptedAnswer":{"@type":"Answer","text":"La mensualisation se calcule ainsi : taux horaire brut × nombre d'heures d'accueil par semaine × nombre de semaines d'accueil dans l'année, le tout divisé par 12. Le résultat doit correspondre au salaire de base figurant chaque mois sur le bulletin."}},
+{"@type":"Question","name":"Quel est le minimum de l'indemnité d'entretien ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, elle se calcule à 0,435 € par heure d'accueil, sans pouvoir descendre sous 2,65 € par journée d'accueil et par enfant. Pour une journée de 9 heures, cela représente 3,92 €."}},
+{"@type":"Question","name":"Que se passe-t-il si le salaire journalier dépasse 5 fois le SMIC horaire ?","acceptedAnswer":{"@type":"Answer","text":"Les parents perdent le complément de libre choix du mode de garde pour cet enfant. Le plafond s'apprécie par jour d'accueil et par enfant, sur le salaire brut : au-delà, l'aide n'est pas réduite, elle est supprimée."}}
+]}
+</script>
+<style>
+  :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82;--ok:#3F7A63;--okBg:#EFF6F2;--okLn:#CCE3D8;--ko:#B33A24;--koBg:#FBF0ED;--koLn:#F0CFC6;--att:#8A6D4A;--attBg:#FBF3E6;--attLn:#EFE0C4}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  a{color:var(--terraD)}
+  .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
+  .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
+  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
+  .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
+  .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
+  .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  .lead{font-size:17px;color:#42555E}
+  main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
+  .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
+  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+  .seg button{font-family:inherit;font-size:12.5px;font-weight:700;padding:11px 6px;border-radius:10px;border:1px solid #DDD5C8;background:var(--cream);color:var(--marine);cursor:pointer;line-height:1.3}
+  .seg button.on{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-color:transparent}
+  .grp{border-top:1px solid #EDE6DE;margin-top:16px;padding-top:14px}
+  .grp-t{font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--terraD);margin-bottom:10px}
+  .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
+  .sim-row .hint{font-size:12px;color:var(--muted);font-weight:400}
+  .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .verdicts{margin-top:20px}
+  .score{border-radius:12px;padding:14px 16px;margin-bottom:14px;font-weight:700;font-size:15.5px;font-family:'Fraunces',serif}
+  .score.s-ok{background:var(--okBg);border:1px solid var(--okLn);color:var(--ok)}
+  .score.s-att{background:var(--attBg);border:1px solid var(--attLn);color:var(--att)}
+  .score.s-ko{background:var(--koBg);border:1px solid var(--koLn);color:var(--ko)}
+  .vd{display:flex;gap:11px;align-items:flex-start;border-radius:11px;padding:12px 14px;margin-bottom:9px;border:1px solid}
+  .vd .ic{font-size:16px;line-height:1.45;flex:0 0 auto}
+  .vd .tx{font-size:14px;line-height:1.55}
+  .vd .tt{font-weight:700;display:block;margin-bottom:2px}
+  .vd .num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+  .vd.ok{background:var(--okBg);border-color:var(--okLn)}
+  .vd.ok .tt{color:var(--ok)}
+  .vd.ko{background:var(--koBg);border-color:var(--koLn)}
+  .vd.ko .tt{color:var(--ko)}
+  .vd.att{background:var(--attBg);border-color:var(--attLn)}
+  .vd.att .tt{color:var(--att)}
+  .note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  h3{font-family:'Fraunces',serif;font-size:17px;color:var(--marine);margin:20px 0 6px}
+  p{margin-bottom:13px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+  th,td{border:1px solid #EDE6DE;padding:9px 11px;text-align:left}
+  th{background:var(--cream2);color:var(--marine);font-weight:700}
+  .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
+  .warn{font-size:14px;color:#8A6D4A;background:#FBF3E6;border:1px solid #EFE0C4;border-radius:10px;padding:14px 16px;margin:18px 0}
+  .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}
+  .ctabox h2{color:#fff;margin-top:0}.ctabox p{color:rgba(255,255,255,.85)}
+  .ctabtn{display:inline-block;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:14px 26px;border-radius:12px;margin-top:6px;box-shadow:0 8px 22px rgba(200,75,49,.4);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  .related{border-top:1px solid #EDE6DE;margin-top:24px;padding-top:18px}.related h2{font-size:18px;margin-top:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid #E4DCD0;border-radius:20px;padding:7px 14px;color:var(--marine)}
+  footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:20px}
+  footer a{color:#fff}
+  @media(max-width:520px){.two{grid-template-columns:1fr}.seg{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="top"><div class="bar">
+    <a href="/" class="brand"><img src="/logo.png" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+    <a href="/?connexion" class="cta-top">Essayer TiMat →</a>
+  </div></div>
+
+  <div class="hero"><div class="hero-in">
+    <div class="crumb"><a href="/">Accueil</a> › <a href="/outils.html">Outils</a> › Vérificateur de bulletin</div>
+    <span class="tag">Outil gratuit</span>
+    <h1>Votre bulletin de salaire est-il conforme ?</h1>
+    <p class="lead">Les autres outils calculent ce qui <em>devrait</em> être payé. Celui-ci fait l'inverse : vous recopiez ce qui <strong>figure réellement</strong> sur le bulletin, et il vous dit ce qui cloche.</p>
+  </div></div>
+
+  <main>
+    <div class="sim">
+      <h2>🔎 Ce qui figure sur votre bulletin</h2>
+
+      <div class="grp" style="border-top:none;margin-top:0;padding-top:0">
+        <div class="grp-t">Le contrat</div>
+        <div class="two">
+          <div class="sim-row"><label for="taux">Taux horaire brut <span class="hint">par enfant</span></label><input id="taux" type="number" inputmode="decimal" step="0.01" value="3.80"></div>
+          <div class="sim-row"><label for="hsem">Heures d'accueil par semaine</label><input id="hsem" type="number" inputmode="decimal" step="0.25" value="45"></div>
+        </div>
+        <div class="two">
+          <div class="sim-row"><label for="sem">Semaines d'accueil par an <span class="hint">47 en année complète</span></label><input id="sem" type="number" inputmode="decimal" step="1" value="47"></div>
+          <div class="sim-row"><label for="jsem">Jours d'accueil par semaine</label><input id="jsem" type="number" inputmode="decimal" step="0.5" value="5"></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Le bulletin du mois</div>
+        <div class="sim-row"><label for="mens">Salaire de base brut du mois <span class="hint">la ligne « mensualisation », hors heures en plus</span></label><input id="mens" type="number" inputmode="decimal" step="0.01" value="670"></div>
+        <div class="two">
+          <div class="sim-row"><label for="jours">Jours d'accueil dans le mois</label><input id="jours" type="number" inputmode="decimal" step="1" value="20"></div>
+          <div class="sim-row"><label for="ent">Indemnité d'entretien du mois <span class="hint">total en €</span></label><input id="ent" type="number" inputmode="decimal" step="0.01" value="60"></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Congés payés</div>
+        <div class="seg">
+          <button id="bDix" class="on" type="button">10 % chaque mois</button>
+          <button id="bMaint" type="button">Maintien aux congés</button>
+          <button id="bRien" type="button">Rien sur le bulletin</button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Heures au-delà de 45 h</div>
+        <div class="two">
+          <div class="sim-row"><label for="hmaj">Heures majorées payées <span class="hint">dans le mois</span></label><input id="hmaj" type="number" inputmode="decimal" step="0.25" value="0"></div>
+          <div class="sim-row"><label for="tmaj">Taux de majoration appliqué <span class="hint">en %</span></label><input id="tmaj" type="number" inputmode="decimal" step="1" value="10"></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-t">Référence</div>
+        <div class="sim-row"><label for="smic">SMIC horaire brut <span class="hint">12,31 € depuis le 1er juin 2026</span></label><input id="smic" type="number" inputmode="decimal" step="0.01" value="12.31"></div>
+      </div>
+
+      <div class="verdicts">
+        <div id="score" class="score s-ok">—</div>
+        <div id="liste"></div>
+      </div>
+      <p class="note">Rien n'est envoyé ni enregistré : tout se calcule dans votre navigateur.</p>
+    </div>
+
+    <h2>Les six contrôles, et d'où ils viennent</h2>
+
+    <h3>1. Le taux horaire minimum</h3>
+    <p>La rémunération ne peut pas être inférieure à <strong>0,281 fois le SMIC horaire brut</strong>, par enfant et par heure d'accueil. Au 1<sup>er</sup> juin 2026, avec un SMIC horaire de 12,31 €, le plancher est donc de <strong>3,46 € brut</strong>. Le contrat ou la convention peuvent prévoir mieux ; jamais moins.</p>
+
+    <h3>2. La mensualisation</h3>
+    <p>Le salaire de base se calcule une fois pour toutes : <strong>taux horaire × heures par semaine × semaines par an ÷ 12</strong>. Il ne bouge pas d'un mois sur l'autre, quelles que soient les absences de l'enfant. Un salaire de base qui varie chaque mois est le signe d'une mensualisation mal posée — ou pas posée du tout.</p>
+
+    <h3>3. L'indemnité d'entretien</h3>
+    <p>Elle se calcule à <strong>0,435 € par heure d'accueil</strong>, sans pouvoir descendre sous <strong>2,65 € par journée</strong> et par enfant. Pour une journée de 9 heures, cela fait 3,92 €. Ce n'est pas du salaire : elle rembourse des frais réellement engagés, et n'est due que pour les jours réellement accueillis.</p>
+
+    <h3>4. Les congés payés</h3>
+    <p>Deux méthodes sont admises, et une seule doit apparaître : le versement de 10 % chaque mois, ou le maintien du salaire au moment des congés. Ce qui n'est pas admis, c'est qu'il n'y ait rien. Les congés payés ne se perdent pas et ne se rachètent pas discrètement.</p>
+
+    <h3>5. La majoration au-delà de 45 heures</h3>
+    <p>À partir de la 46<sup>e</sup> heure dans la même semaine, la majoration est obligatoire, à un taux fixé au contrat qui <strong>ne peut pas être inférieur à 10 %</strong> du taux de base. En dessous de 45 heures, les heures au-delà du contrat sont des heures complémentaires : elles se paient au taux normal, sauf si le contrat prévoit mieux.</p>
+
+    <h3>6. Le plafond qui coûte le CMG</h3>
+    <p>Si le salaire brut dépasse <strong>5 fois le SMIC horaire par jour d'accueil et par enfant</strong> — soit 61,55 € au 1<sup>er</sup> juin 2026 — les parents ne perdent pas une partie de l'aide : ils la perdent en entier. Un contrôle qui ne concerne pas la légalité du bulletin, mais qui pèse souvent plus lourd que tous les autres.</p>
+
+    <div class="box">Ces contrôles portent sur le <strong>brut</strong>. Si votre bulletin n'affiche qu'un net, appliquez le taux de conversion de votre situation avant de saisir les montants, ou partez du taux horaire inscrit au contrat, qui est toujours exprimé en brut.</div>
+
+    <div class="warn">⚠️ Un écart détecté n'est pas toujours une faute : une prime, une ancienneté, un accueil d'enfant en situation de handicap ou une régularisation peuvent expliquer une différence. L'outil signale ce qui mérite une question, pas ce qui mérite un conflit.</div>
+
+    <h2>Un écart, et maintenant ?</h2>
+    <p>Le réflexe utile tient en trois mots : <strong>écrire, chiffrer, dater</strong>. Un message qui expose le calcul, mois par mois, règle la grande majorité des situations — parce que l'erreur est presque toujours involontaire. Une erreur signalée le mois même se corrige en une déclaration rectificative ; la même erreur signalée deux ans plus tard se plaide.</p>
+    <p>Gardez une copie de chaque bulletin, sans limite de durée : ce sont eux qui serviront à reconstituer votre carrière au moment de la retraite.</p>
+
+    <div class="ctabox">
+      <h2>TiMat contrôle vos bulletins tout seul</h2>
+      <p>Les présences sont pointées au fil du mois, la mensualisation recalculée à chaque avenant, les indemnités vérifiées ligne à ligne. Vous voyez l'écart avant les parents.</p>
+      <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
+    </div>
+
+    <div class="related">
+      <h2>Pour aller plus loin</h2>
+      <div class="chips">
+        <a class="chip" href="/simulateur-salaire-assistante-maternelle.html">💶 Salaire net et brut</a>
+        <a class="chip" href="/simulateur-indemnite-entretien-assistante-maternelle.html">🏠 Indemnité d'entretien</a>
+        <a class="chip" href="/simulateur-heures-majorees-assistante-maternelle.html">⏱️ Heures majorées</a>
+        <a class="chip" href="/blog/calcul-mensualisation-assistante-maternelle">📘 La mensualisation</a>
+        <a class="chip" href="/outils.html">🛠️ Tous les outils</a>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:16px">Outil non officiel, fourni à titre indicatif. Seuls les textes en vigueur et votre contrat de travail font foi. Montants applicables au 1<sup>er</sup> juin 2026.</p>
+  </main>
+
+  <footer>
+    <a href="/">TiMat</a> — l'application des assistantes maternelles et parents employeurs.<br>
+    <a href="/">Accueil</a> · <a href="/outils.html">Outils</a> · <a href="/blog">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a>
+  </footer>
+
+  <script>
+    (function(){
+      var ids=['taux','hsem','sem','jsem','mens','jours','ent','hmaj','tmaj','smic'],el={};
+      ids.forEach(function(i){el[i]=document.getElementById(i);});
+      var liste=document.getElementById('liste'),score=document.getElementById('score'),
+          bDix=document.getElementById('bDix'),bMaint=document.getElementById('bMaint'),bRien=document.getElementById('bRien'),
+          cp='dix';
+      function n(x){var v=parseFloat(el[x].value);return isFinite(v)?v:0;}
+      function eur(v){return v.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+      function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      function setCp(v){
+        cp=v;
+        bDix.classList.toggle('on',v==='dix');
+        bMaint.classList.toggle('on',v==='maintien');
+        bRien.classList.toggle('on',v==='rien');
+        calc();
+      }
+      // Minimum legal de l'indemnite d'entretien : 0,435 € par heure d'accueil,
+      // avec un plancher de 2,65 € par journee et par enfant (1er juin 2026).
+      function entretienJour(h){ if(h<=0) return 0; return Math.max(2.65, h*0.435); }
+
+      function calc(){
+        var taux=n('taux'),hsem=n('hsem'),sem=n('sem'),jsem=n('jsem'),
+            mens=n('mens'),jours=n('jours'),ent=n('ent'),
+            hmaj=n('hmaj'),tmaj=n('tmaj'),smic=n('smic');
+        var v=[];
+
+        // 1. Taux horaire minimum : 0,281 x SMIC horaire, par enfant et par heure.
+        var mini=smic*0.281;
+        if(taux<=0){
+          v.push(['att','Taux horaire','Renseignez le taux horaire brut inscrit au contrat pour lancer le contrôle.']);
+        }else if(taux<mini-0.005){
+          v.push(['ko','Taux horaire sous le minimum légal',
+            'Le minimum est de <span class="num">'+eur(mini)+'</span> brut par heure et par enfant (0,281 × SMIC). Votre bulletin affiche <span class="num">'+eur(taux)+'</span>, soit <span class="num">'+eur(mini-taux)+'</span> de moins par heure — environ <span class="num">'+eur((mini-taux)*hsem*sem/12)+'</span> par mois.']);
+        }else{
+          v.push(['ok','Taux horaire conforme',
+            'Minimum légal : <span class="num">'+eur(mini)+'</span> brut de l\'heure. Votre taux : <span class="num">'+eur(taux)+'</span>.']);
+        }
+
+        // 2. Mensualisation : taux x heures/semaine x semaines/an / 12.
+        var attendu=taux*hsem*sem/12;
+        var ecart=mens-attendu;
+        if(hsem<=0||sem<=0||taux<=0){
+          v.push(['att','Mensualisation','Renseignez le taux horaire, les heures par semaine et les semaines par an pour vérifier le salaire de base.']);
+        }else if(Math.abs(ecart)<=1){
+          v.push(['ok','Mensualisation exacte',
+            'Calcul attendu : <span class="num">'+eur(attendu)+'</span> brut par mois. Votre bulletin affiche <span class="num">'+eur(mens)+'</span>.']);
+        }else if(ecart<0){
+          v.push(['ko','Mensualisation inférieure au calcul',
+            'Le calcul donne <span class="num">'+eur(attendu)+'</span> brut ('+taux.toLocaleString('fr-FR')+' € × '+hsem.toLocaleString('fr-FR')+' h × '+sem.toLocaleString('fr-FR')+' semaines ÷ 12). Il manque <span class="num">'+eur(-ecart)+'</span> par mois, soit <span class="num">'+eur(-ecart*12)+'</span> sur l\'année.']);
+        }else{
+          v.push(['att','Mensualisation supérieure au calcul',
+            'Le calcul donne <span class="num">'+eur(attendu)+'</span> brut, votre bulletin <span class="num">'+eur(mens)+'</span> : <span class="num">'+eur(ecart)+'</span> de plus. Rien d\'illégal — mais vérifiez ce que couvre cet écart, il doit apparaître quelque part au contrat.']);
+        }
+
+        // 3. Indemnite d'entretien : due par journee d'accueil, au reel.
+        var hjour=jsem>0?hsem/jsem:0;
+        var entMini=jours*entretienJour(hjour);
+        if(jours<=0||hjour<=0){
+          v.push(['att','Indemnité d\'entretien','Renseignez les jours d\'accueil du mois et les jours par semaine pour vérifier l\'indemnité.']);
+        }else if(ent<entMini-0.01){
+          v.push(['ko','Indemnité d\'entretien insuffisante',
+            'Pour '+jours.toLocaleString('fr-FR')+' jours de '+hjour.toLocaleString('fr-FR',{maximumFractionDigits:2})+' h, le minimum est de <span class="num">'+eur(entretienJour(hjour))+'</span> par jour, soit <span class="num">'+eur(entMini)+'</span> sur le mois. Il manque <span class="num">'+eur(entMini-ent)+'</span>.']);
+        }else{
+          v.push(['ok','Indemnité d\'entretien conforme',
+            'Minimum : <span class="num">'+eur(entretienJour(hjour))+'</span> par jour, soit <span class="num">'+eur(entMini)+'</span> pour le mois. Versé : <span class="num">'+eur(ent)+'</span>.']);
+        }
+
+        // 4. Conges payes : une methode doit figurer, quelle qu'elle soit.
+        if(cp==='rien'){
+          v.push(['ko','Congés payés absents du bulletin',
+            'Aucune des deux méthodes n\'apparaît. Les congés payés sont dus : soit 10 % versés chaque mois, soit le salaire maintenu au moment des congés. Sur cette base, 10 % représenteraient <span class="num">'+eur(attendu*0.10)+'</span> par mois.']);
+        }else if(cp==='dix'){
+          v.push(['ok','Congés payés versés chaque mois',
+            'Méthode des 10 %. Sur un salaire de base de <span class="num">'+eur(mens)+'</span>, cela représente <span class="num">'+eur(mens*0.10)+'</span> par mois. Vérifiez que la ligne y figure bien, et qu\'elle n\'est pas incluse dans le salaire de base.']);
+        }else{
+          v.push(['ok','Congés payés maintenus',
+            'Le salaire est maintenu pendant les congés. Rien à voir sur un bulletin de mois travaillé : le contrôle se fait sur les bulletins des mois de congés.']);
+        }
+
+        // 5. Majoration obligatoire a partir de la 46e heure dans la semaine.
+        if(hsem>45){
+          if(tmaj<10){
+            v.push(['ko','Majoration sous le minimum',
+              'Au-delà de 45 h dans la semaine, la majoration est obligatoire et ne peut pas être inférieure à <strong>10 %</strong>. Votre bulletin applique '+tmaj.toLocaleString('fr-FR')+' %.']);
+          }else{
+            v.push(['ok','Majoration conforme',
+              'Le contrat prévoit '+hsem.toLocaleString('fr-FR')+' h par semaine : les heures au-delà de 45 h sont majorées à '+tmaj.toLocaleString('fr-FR')+' %, au-dessus du minimum de 10 %.']);
+          }
+          if(hmaj<=0){
+            v.push(['att','Aucune heure majorée sur le bulletin',
+              'Le contrat dépasse 45 h par semaine, mais aucune heure majorée n\'apparaît. La majoration ne se lisse pas dans la mensualisation : elle se paie chaque mois, sur les heures réellement effectuées au-delà du seuil.']);
+          }
+        }else if(hmaj>0&&tmaj<10){
+          v.push(['ko','Majoration sous le minimum',
+            'Des heures majorées sont payées à '+tmaj.toLocaleString('fr-FR')+' %. Le minimum est de 10 % du taux de base.']);
+        }else{
+          v.push(['ok','Durée hebdomadaire sous le seuil',
+            hsem.toLocaleString('fr-FR')+' h par semaine : à 45 h ou en dessous, aucune majoration n\'est obligatoire. Les heures faites en plus du contrat restent des heures complémentaires, payées au taux normal.']);
+        }
+        if(hsem>48){
+          v.push(['att','Durée de travail élevée',
+            'La durée est plafonnée à 48 h par semaine en moyenne sur quatre mois. Au-delà, un accord écrit est nécessaire, dans la limite de 2 250 heures par an tous contrats confondus.']);
+        }
+
+        // 6. Plafond CMG : 5 x SMIC horaire par jour d'accueil et par enfant.
+        var plafond=smic*5;
+        var brutJour=jsem>0?taux*hsem/jsem:0;
+        if(brutJour>plafond){
+          v.push(['ko','Plafond CMG dépassé',
+            'Le salaire brut atteint <span class="num">'+eur(brutJour)+'</span> par jour d\'accueil, au-dessus du plafond de <span class="num">'+eur(plafond)+'</span> (5 × SMIC). Les parents perdent la totalité du CMG pour cet enfant — pas une partie.']);
+        }else if(brutJour>plafond*0.95&&brutJour>0){
+          v.push(['att','Plafond CMG bientôt atteint',
+            '<span class="num">'+eur(brutJour)+'</span> brut par jour, pour un plafond de <span class="num">'+eur(plafond)+'</span>. La marge est faible : une revalorisation ou une heure de plus par jour ferait perdre le CMG aux parents.']);
+        }else if(brutJour>0){
+          v.push(['ok','Plafond CMG respecté',
+            '<span class="num">'+eur(brutJour)+'</span> brut par jour d\'accueil, sous le plafond de <span class="num">'+eur(plafond)+'</span> (5 × SMIC).']);
+        }
+
+        // Rendu.
+        var nbKo=0,nbAtt=0;
+        var html='';
+        v.forEach(function(r){
+          if(r[0]==='ko')nbKo++; else if(r[0]==='att')nbAtt++;
+          var ic=r[0]==='ok'?'✅':(r[0]==='ko'?'❌':'⚠️');
+          html+='<div class="vd '+r[0]+'"><span class="ic">'+ic+'</span><span class="tx"><span class="tt">'+esc(r[1])+'</span>'+r[2]+'</span></div>';
+        });
+        liste.innerHTML=html;
+
+        if(nbKo>0){
+          score.className='score s-ko';
+          score.textContent=nbKo+(nbKo>1?' points sont non conformes':' point est non conforme')+(nbAtt>0?', et '+nbAtt+(nbAtt>1?' méritent':' mérite')+' une vérification.':'.');
+        }else if(nbAtt>0){
+          score.className='score s-att';
+          score.textContent='Rien de non conforme, mais '+nbAtt+(nbAtt>1?' points méritent':' point mérite')+' une vérification.';
+        }else{
+          score.className='score s-ok';
+          score.textContent='Tout est conforme sur les six contrôles.';
+        }
+      }
+      bDix.addEventListener('click',function(){setCp('dix');});
+      bMaint.addEventListener('click',function(){setCp('maintien');});
+      bRien.addEventListener('click',function(){setCp('rien');});
+      ids.forEach(function(i){el[i].addEventListener('input',calc);});
+      calc();
+    })();
+  </script>
+</body>
+</html>
