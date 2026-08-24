@@ -21,9 +21,17 @@ const PUBLIC_DIR = path.join(RACINE, "public");
 const LOCAL_DIR = path.join(PUBLIC_DIR, "assistante-maternelle");
 const DATA_DIR = path.join(RACINE, "data");
 
-// Minimum légal : 0,281 × SMIC horaire brut, par enfant et par heure.
+// Deux planchers coexistent et le plus élevé s'applique. Le minimum légal
+// (0,281 × SMIC, article D423-9) est aujourd'hui largement dépassé par le
+// minimum conventionnel de la CCN IDCC 3239 — avenant n° 10 du 5 février 2026,
+// étendu, applicable au 1er juin 2026. C'est donc le conventionnel qu'il faut
+// citer : afficher le légal seul laisserait croire qu'un tarif à 3,80 € est
+// régulier.
 const SMIC_HORAIRE = 12.31;
-const MINIMUM_BRUT = +(SMIC_HORAIRE * 0.281).toFixed(2);
+const MINIMUM_LEGAL = +(SMIC_HORAIRE * 0.281).toFixed(2);
+const MINIMUM_CONV = 4.2;
+const MINIMUM_CONV_NET = 3.28;
+const MINIMUM_BRUT = Math.max(MINIMUM_LEGAL, MINIMUM_CONV);
 const PLAFOND_CMG_JOUR = +(SMIC_HORAIRE * 5).toFixed(2);
 const MAJ = new Date().toISOString().slice(0, 10);
 
@@ -154,7 +162,8 @@ function pageTarif(d, st, stats) {
     : "soit le niveau de la moyenne nationale";
 
   const lignes = [
-    ["Minimum légal", MINIMUM_BRUT, "brut", "Plancher opposable : 0,281 × SMIC horaire, par enfant et par heure."],
+    ["Minimum conventionnel", MINIMUM_CONV, "brut", `Plancher applicable partout en France, soit ${eur(MINIMUM_CONV_NET)} net. Convention collective IDCC 3239.`],
+    ["Minimum légal", MINIMUM_LEGAL, "brut", "0,281 × SMIC horaire. Plus bas que le conventionnel : c'est le conventionnel qui s'applique."],
     ...(reg ? [[`Moyenne en ${d.region}`, reg, "net", "Salaire horaire net moyen observé dans la région."]] : []),
     ...(nat ? [["Moyenne nationale", nat, "net", "Toutes régions confondues."]] : []),
   ];
@@ -169,7 +178,7 @@ function pageTarif(d, st, stats) {
 <main>
   <section class="reponse">
     <h2>Réponse courte</h2>
-    <p>${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, le salaire horaire net moyen est de <strong>${eur(ici)}</strong> par enfant et par heure${comparaison ? ", " + comparaison : ""}. Le minimum légal, lui, est de ${eur(MINIMUM_BRUT)} brut partout en France.</p>
+    <p>${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, le salaire horaire net moyen est de <strong>${eur(ici)}</strong> par enfant et par heure${comparaison ? ", " + comparaison : ""}. Le minimum applicable, lui, est de ${eur(MINIMUM_CONV)} brut partout en France — ${eur(MINIMUM_CONV_NET)} net.</p>
   </section>
 
   <h2>Le tarif ${esc(ou)}, en contexte</h2>
@@ -180,7 +189,7 @@ function pageTarif(d, st, stats) {
       ${lignes.map(([l, v, t, quoi]) => `<tr><td>${esc(l)}</td><td class="n">${eur(v)} ${t}</td><td>${esc(quoi)}</td></tr>`).join("\n      ")}
     </tbody>
   </table>
-  <div class="warn">⚠️ Une moyenne n'est pas un tarif à appliquer. Elle situe, elle ne fixe rien : le tarif se négocie librement avant la signature, dans le respect du minimum légal, et ne se modifie ensuite que par avenant.</div>
+  <div class="warn">⚠️ Une moyenne n'est pas un tarif à appliquer. Elle situe, elle ne fixe rien : le tarif se négocie librement avant la signature, dans le respect du minimum conventionnel, et ne se modifie ensuite que par avenant.</div>
 
   <h2>Ce que le taux horaire ne dit pas</h2>
   <p>Trois lignes s'ajoutent au salaire et changent le montant réellement versé chaque mois :</p>
@@ -212,6 +221,7 @@ function pageTarif(d, st, stats) {
 
   <div class="sources"><strong>Sources</strong><ul>
     <li>${esc(stats.sources?.salaire?.libelle || "Observatoire de l'emploi à domicile")}${stats.sources?.salaire?.millesime ? ` — ${esc(stats.sources.salaire.millesime)}` : ""}</li>
+    <li>Convention collective nationale des particuliers employeurs et de l'emploi à domicile (IDCC 3239) — avenant n° 10 du 5 février 2026, applicable au 1<sup>er</sup> juin 2026</li>
     <li>Code de l'action sociale et des familles — rémunération minimale de l'assistant maternel (article D423-9)</li>
   </ul><p style="margin-top:10px">Page mise à jour le ${esc(MAJ)}.</p></div>
 </main>`;
@@ -244,20 +254,31 @@ function pageDevenir(d, st, stats) {
 <main>
   <section class="reponse">
     <h2>Réponse courte</h2>
-    <p>${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, on compte <strong>${nb(st.assmats)} assistantes maternelles agréées</strong>${partNat ? `, soit ${partNat.toLocaleString("fr-FR")} % du total national` : ""}. L'agrément se demande auprès du service de PMI du conseil départemental — c'est lui qui instruit, évalue et délivre.</p>
+    <p>${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, on compte <strong>${nb(st.assmats)} agréments d'assistants maternels en cours de validité</strong>${
+      typeof st.evolution10ans === "number"
+        ? `, ${st.evolution10ans < 0 ? "en recul de" : "en hausse de"} ${Math.abs(st.evolution10ans).toLocaleString("fr-FR")} % en dix ans`
+        : partNat ? `, soit ${partNat.toLocaleString("fr-FR")} % du total national` : ""
+    }. L'agrément se demande auprès du service de PMI du conseil départemental — c'est lui qui instruit, évalue et délivre.</p>
   </section>
 
   <h2>L'accueil du jeune enfant ${esc(ou)}</h2>
   <table>
     <thead><tr><th>Indicateur</th><th>Valeur</th></tr></thead>
     <tbody>
-      <tr><td>Assistantes maternelles agréées</td><td class="n">${nb(st.assmats)}</td></tr>
+      <tr><td>Agréments en cours de validité</td><td class="n">${nb(st.assmats)}</td></tr>
+      ${typeof st.evolution10ans === "number" ? `<tr><td>Évolution sur dix ans</td><td class="n">${st.evolution10ans > 0 ? "+" : ""}${st.evolution10ans.toLocaleString("fr-FR")} %</td></tr>` : ""}
+      ${st.mam ? `<tr><td>Maisons d'assistants maternels (MAM)</td><td class="n">${nb(st.mam)}</td></tr>` : ""}
       ${st.places ? `<tr><td>Places théoriques d'accueil</td><td class="n">${nb(st.places)}</td></tr>` : ""}
       ${st.tauxCouverture ? `<tr><td>Taux de couverture, tous modes d'accueil</td><td class="n">${st.tauxCouverture.toLocaleString("fr-FR")} places pour 100 enfants</td></tr>` : ""}
       ${st.salaireHoraireNet ? `<tr><td>Salaire horaire net moyen</td><td class="n">${eur(st.salaireHoraireNet)} par enfant</td></tr>` : ""}
     </tbody>
   </table>
-  <p>Le nombre d'assistantes maternelles agréées recule partout en France depuis une dizaine d'années. Un département qui en compte peu au regard de sa population d'enfants est un département où les places manquent — donc où une nouvelle professionnelle trouve preneur vite.</p>
+  ${
+    typeof st.evolution10ans === "number" && st.evolution10ans < -5
+      ? `<p>Le chiffre qui compte est celui du milieu. ${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, le nombre d'agréments a reculé de <strong>${Math.abs(st.evolution10ans).toLocaleString("fr-FR")} %</strong> en dix ans. Ce recul touche toute la France, mais son ampleur varie fortement d'un département à l'autre — et là où les professionnelles se raréfient, celles qui s'installent remplissent leurs places vite.</p>`
+      : `<p>Le nombre d'assistantes maternelles agréées recule dans la plupart des départements depuis une dizaine d'années. Là où les professionnelles se raréfient, celles qui s'installent remplissent leurs places vite.</p>`
+  }
+  ${st.mam ? `<p>Le département compte aussi <strong>${nb(st.mam)} maison${st.mam > 1 ? "s" : ""} d'assistants maternels</strong>. Exercer en MAM permet d'accueillir hors de son domicile, à plusieurs : une option à connaître si votre logement ne se prête pas à l'agrément.</p>` : ""}
 
   <h2>Le parcours, étape par étape</h2>
   <p>Les règles sont les mêmes dans toute la France ; seuls les délais et l'organisation des sessions varient d'un département à l'autre.</p>
@@ -298,7 +319,7 @@ function pageDevenir(d, st, stats) {
 
   return page({
     titre: `Devenir assistante maternelle ${ou} | TiMat`,
-    description: `${nb(st.assmats)} assistantes maternelles agréées ${ou}. Le parcours d'agrément, les délais, la formation obligatoire et le service de PMI à contacter.`,
+    description: `${nb(st.assmats)} agréments d'assistants maternels ${ou}${typeof st.evolution10ans === "number" ? `, ${st.evolution10ans < 0 ? "-" : "+"}${Math.abs(st.evolution10ans).toLocaleString("fr-FR")} % en dix ans` : ""}. Le parcours d'agrément, les délais, la formation et la PMI à contacter.`,
     canonical: url,
     jsonLd: filAriane(d, `Devenir assistante maternelle ${ou}`, url),
     corps,

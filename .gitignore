@@ -64,6 +64,6 @@ public/assistante-maternelle/
 public/sitemap-blog.xml
 public/sitemap-local.xml
 
-# === Données départementales : le fichier réel n'est pas versionné tant
-#     qu'il n'est pas vérifié ; seul l'exemple de format l'est. ===
-data/stats-departements.json
+# Note : data/stats-departements.json EST versionné. Le build Vercel en a
+# besoin pour générer les pages départementales — l'ignorer reviendrait à ne
+# rien publier en production.
