@@ -19,6 +19,17 @@
   ],
   "redirects": [
     {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "timat.app"
+        }
+      ],
+      "destination": "https://www.timat.app/$1",
+      "permanent": true
+    },
+    {
       "source": "/index.html",
       "destination": "/",
       "permanent": false
