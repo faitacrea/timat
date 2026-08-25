@@ -57,3 +57,13 @@ timat-recap-session-*.json
 # P24 cleanup (session du 23 mai 2026)
 _archive_vercel_deploy/
 loogo Timat/
+
+# === Pages générées au build (blog Sanity, pages départementales) ===
+public/blog/
+public/assistante-maternelle/
+public/sitemap-blog.xml
+public/sitemap-local.xml
+
+# Note : data/stats-departements.json EST versionné. Le build Vercel en a
+# besoin pour générer les pages départementales — l'ignorer reviendrait à ne
+# rien publier en production.

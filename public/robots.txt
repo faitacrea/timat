@@ -6,5 +6,9 @@ Allow: /
 # Disallow: /app
 # Disallow: /dashboard
 
+# Pages départementales : accueil chez une assistante maternelle, par département.
+Allow: /assistante-maternelle/
+
 Sitemap: https://www.timat.app/sitemap.xml
 Sitemap: https://www.timat.app/sitemap-blog.xml
+Sitemap: https://www.timat.app/sitemap-local.xml

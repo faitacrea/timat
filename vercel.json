@@ -58,5 +58,11 @@
       "destination": "/blog",
       "permanent": true
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/publier-article",
+      "schedule": "0 6 * * *"
+    }
   ]
 }
