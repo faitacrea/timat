@@ -9,6 +9,10 @@
  * est ici exécutable : un article qui pointe vers un confrère encore en
  * brouillon n'est pas publié, il est sauté. Publier dans le désordre créerait
  * des liens morts.
+ *
+ * Le blog est généré au build par scripts/generate-blog.mjs : publier dans
+ * Sanity ne suffit pas à faire apparaître l'article sur le site. Une fois la
+ * publication faite, ce cron déclenche donc un redéploiement Vercel.
  */
 const PROJECT_ID = "740dzcep";
 const DATASET = "production";
@@ -42,6 +46,38 @@ const GROQ = `*[_type == "article"]{
   "slug": slug.current,
   "liens": corps[].markDefs[].href
 }`;
+
+/**
+ * Reconstruction du site après publication.
+ *
+ * Sans ce déclenchement, l'article est publié dans Sanity mais reste invisible
+ * sur timat.app jusqu'au prochain push : les pages du blog sont écrites au
+ * build, pas servies dynamiquement.
+ *
+ * L'échec est signalé, jamais fatal : l'article est déjà publié à ce stade, et
+ * un redéploiement manuel rattrape la situation. Renvoyer une erreur ferait
+ * croire au cron que la publication a échoué et la ferait rejouer demain sur
+ * l'article suivant, en laissant celui-ci invisible pour toujours.
+ */
+async function redeployer() {
+  const hook = process.env.VERCEL_DEPLOY_HOOK;
+  if (!hook) {
+    console.warn("[publier-article] VERCEL_DEPLOY_HOOK absente : article publié dans Sanity mais site non reconstruit.");
+    return { declenche: false, raison: "VERCEL_DEPLOY_HOOK absente" };
+  }
+  try {
+    const res = await fetch(hook, { method: "POST" });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      console.error("[publier-article] déploiement refusé :", res.status, detail.slice(0, 200));
+      return { declenche: false, raison: `Vercel a répondu ${res.status}` };
+    }
+    return { declenche: true };
+  } catch (e) {
+    console.error("[publier-article] déploiement injoignable :", e.message);
+    return { declenche: false, raison: e.message };
+  }
+}
 
 /** Slugs cités par cet article et qui vivent encore sur /blog/. */
 function dependances(article) {
@@ -110,7 +146,14 @@ export default async function handler(req, res) {
 
     const aujourdhui = new Date().toISOString().slice(0, 10);
     if (simulation) {
-      return res.status(200).json({ simulation: true, publierait: cible.slug, sautes });
+      return res.status(200).json({
+        simulation: true,
+        publierait: cible.slug,
+        // Vérifiable sans publier : le hook doit être là avant le premier
+        // passage du cron, sinon l'article part dans Sanity sans rejoindre le site.
+        deploiementConfigure: Boolean(process.env.VERCEL_DEPLOY_HOOK),
+        sautes,
+      });
     }
 
     const idPublie = cible._id.replace(/^drafts\./, "");
@@ -145,11 +188,16 @@ export default async function handler(req, res) {
       }),
     });
 
+    // 3. Reconstruction : le blog est statique, sans elle l'article reste
+    //    invisible sur le site.
+    const deploiement = await redeployer();
+
     console.log(`[publier-article] publié : ${cible.slug}`);
     return res.status(200).json({
       publie: cible.slug,
       url: `https://www.timat.app/blog/${cible.slug}`,
       date: aujourdhui,
+      deploiement,
       sautes,
       restants: ordre.filter((s) => !publies.has(s) && s !== cible.slug).length,
     });
