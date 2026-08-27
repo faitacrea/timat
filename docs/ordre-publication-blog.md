@@ -93,12 +93,43 @@ Vérifier ensuite que `dateMiseAJour`, s'il existe, n'est pas *antérieur* à
 `datePublication` — sinon le `dateModified` du JSON-LD précède le
 `datePublished`, ce que Google relève. Le vider dans ce cas.
 
-Le webhook Sanity déclenche le déploiement Vercel ; l'article apparaît en
-ligne deux à trois minutes plus tard.
+**Publier dans Sanity ne suffit pas.** Les pages du blog sont écrites au build
+par `scripts/generate-blog.mjs` ; tant que le site n'est pas reconstruit,
+l'article reste invisible sur timat.app. Il faut donc un redéploiement Vercel
+après chaque publication — c'est ce que fait le cron ci-dessous.
 
 ## État de l'automatisation
 
-La routine quotidienne `trig_01SLCVMJeUTyXKk6bShswsye` est **désactivée** et le
-reste : la création de routine refuse les connecteurs pour cette organisation,
-la routine n'aurait donc aucun accès à Sanity et échouerait chaque jour. La
-publication est manuelle.
+La routine Claude quotidienne `trig_01SLCVMJeUTyXKk6bShswsye` est **désactivée**
+et le reste : la création de routine refuse les connecteurs pour cette
+organisation, la routine n'aurait donc aucun accès à Sanity et échouerait chaque
+jour.
+
+La publication est automatisée par `api/publier-article.js`, déclenché chaque
+jour à 6 h UTC par le cron déclaré dans `vercel.json`. Il choisit le premier
+article de l'ordre dont toutes les dépendances sont publiées, le publie, puis
+reconstruit le site.
+
+### Variables d'environnement nécessaires
+
+| Variable | Rôle | Si absente |
+| --- | --- | --- |
+| `CRON_SECRET` | Authentifie l'appel. Vercel l'envoie automatiquement en `Authorization: Bearer`. | L'endpoint renvoie 500 et ne publie rien. |
+| `SANITY_WRITE_TOKEN` | Écriture dans Sanity. | L'endpoint renvoie 500 et ne publie rien. |
+| `VERCEL_DEPLOY_HOOK` | Reconstruit le site après publication. Se crée dans Vercel → Settings → Git → Deploy Hooks. | L'article est publié dans Sanity mais **n'apparaît pas** sur le site avant le prochain push. Signalé dans les logs et dans la réponse. |
+
+Aucune de ces valeurs ne doit comporter d'espace ni de retour à la ligne avant
+ou après : Vercel refuse de construire le projet si une variable en contient
+un, et le site continue alors de servir l'ancien déploiement.
+
+### Vérifier sans rien publier
+
+`https://www.timat.app/api/publier-article?simulation=1`
+
+- `{"error":"Non autorisé."}` — attendu depuis un navigateur : la variable est
+  lue, l'endpoint est protégé. C'est le signe que tout va bien.
+- `{"error":"CRON_SECRET absent…"}` — la variable n'est pas lue, ou le dernier
+  build a échoué et le site sert une version antérieure à son ajout.
+
+Appelé avec le bon en-tête, le mode simulation renvoie aussi
+`deploiementConfigure`, qui dit si `VERCEL_DEPLOY_HOOK` est en place.
