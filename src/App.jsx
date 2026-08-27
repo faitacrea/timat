@@ -12427,7 +12427,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   if(authOnly){
     return (
       <div style={{minHeight:"100dvh",background:"linear-gradient(160deg,#FDFBF8 0%,#F6E7DC 55%,#EAD8CC 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,gap:14,fontFamily:fBody}}>
-        <a href={(_qParent||forceRole==="parent")?"/pour-les-parents.html":"/?site=1"} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:12,background:"rgba(255,255,255,.85)",color:"#2E4859",fontSize:13,fontWeight:700,textDecoration:"none",boxShadow:"0 3px 12px rgba(0,0,0,.10)"}}>← {(_qParent||forceRole==="parent")?"Retour à l'espace parent":"Découvrir TiMat"}</a>
+        <a href={(_qParent||forceRole==="parent")?"/parents":"/?site=1"} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:12,background:"rgba(255,255,255,.85)",color:"#2E4859",fontSize:13,fontWeight:700,textDecoration:"none",boxShadow:"0 3px 12px rgba(0,0,0,.10)"}}>← {(_qParent||forceRole==="parent")?"Retour à l'espace parent":"Découvrir TiMat"}</a>
           <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", maxHeight:"95vh", overflowY:"auto" }}>
             <div style={{ padding: 24, borderTop: role === "asmat" ? "4px solid #C76754" : "4px solid #2E4859" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
