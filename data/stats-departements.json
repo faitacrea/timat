@@ -1,508 +1,611 @@
 {
-  "sources": {
-    "offre": {
-      "libelle": "DREES, Enquêtes Aide sociale — L'offre d'accueil des enfants de moins de 3 ans",
-      "millesime": "2024",
-      "url": "https://drees.solidarites-sante.gouv.fr/"
-    },
-    "salaire": {
-      "libelle": "Observatoire de l'emploi à domicile (FEPEM), données Urssaf Caisse nationale",
-      "millesime": "2026"
-    }
+ "sources": {
+  "offre": {
+   "libelle": "DREES, Enquêtes Aide sociale — L'offre d'accueil des enfants de moins de 3 ans",
+   "millesime": "2024",
+   "url": "https://drees.solidarites-sante.gouv.fr/"
   },
-  "national": {
-    "assmats": 277804
-  },
-  "regions": {},
-  "departements": {
-    "01": {
-      "assmats": 3612,
-      "evolution10ans": -32.6,
-      "mam": 27
-    },
-    "02": {
-      "assmats": 3565,
-      "evolution10ans": -29.0,
-      "mam": 12
-    },
-    "03": {
-      "assmats": 1383,
-      "evolution10ans": -39.2,
-      "mam": 46
-    },
-    "04": {
-      "assmats": 331,
-      "evolution10ans": -45.1,
-      "mam": 12
-    },
-    "05": {
-      "assmats": 424,
-      "evolution10ans": -37.6,
-      "mam": 25
-    },
-    "06": {
-      "assmats": 2726,
-      "evolution10ans": -31.9,
-      "mam": 42
-    },
-    "07": {
-      "assmats": 1316,
-      "evolution10ans": -28.0,
-      "mam": 44
-    },
-    "08": {
-      "assmats": 1222,
-      "evolution10ans": -37.3,
-      "mam": 11
-    },
-    "09": {
-      "assmats": 527,
-      "evolution10ans": -42.8,
-      "mam": 21
-    },
-    "10": {
-      "assmats": 1328,
-      "evolution10ans": -35.3,
-      "mam": 17
-    },
-    "11": {
-      "assmats": 1034,
-      "evolution10ans": -37.6,
-      "mam": 21
-    },
-    "12": {
-      "assmats": 991,
-      "evolution10ans": -36.8,
-      "mam": 33
-    },
-    "13": {
-      "assmats": 5189,
-      "evolution10ans": -39.6,
-      "mam": 41
-    },
-    "14": {
-      "assmats": 3928,
-      "evolution10ans": -37.2,
-      "mam": 31
-    },
-    "15": {
-      "assmats": 618,
-      "evolution10ans": -43.5,
-      "mam": 7
-    },
-    "16": {
-      "assmats": 1363,
-      "evolution10ans": -40.7,
-      "mam": 27
-    },
-    "17": {
-      "assmats": 3065,
-      "evolution10ans": -27.2,
-      "mam": 84
-    },
-    "18": {
-      "assmats": 1570,
-      "evolution10ans": -40.4,
-      "mam": 20
-    },
-    "19": {
-      "assmats": 805,
-      "evolution10ans": -36.5,
-      "mam": 30
-    },
-    "21": {
-      "assmats": 2525,
-      "evolution10ans": -44.2,
-      "mam": 10
-    },
-    "22": {
-      "assmats": 3028,
-      "evolution10ans": -38.8,
-      "mam": 71
-    },
-    "23": {
-      "assmats": 434,
-      "evolution10ans": -22.8,
-      "mam": 28
-    },
-    "24": {
-      "assmats": 1311,
-      "evolution10ans": -29.0,
-      "mam": 38
-    },
-    "25": {
-      "assmats": 3313,
-      "evolution10ans": -44.1,
-      "mam": 46
-    },
-    "26": {
-      "assmats": 2466,
-      "evolution10ans": -36.0,
-      "mam": 29
-    },
-    "27": {
-      "assmats": 2980,
-      "evolution10ans": -39.7,
-      "mam": 40
-    },
-    "28": {
-      "assmats": 2194,
-      "evolution10ans": -42.7,
-      "mam": 43
-    },
-    "29": {
-      "assmats": 4408,
-      "evolution10ans": -31.6,
-      "mam": 189
-    },
-    "30": {
-      "assmats": 2163,
-      "evolution10ans": -37.6,
-      "mam": 62
-    },
-    "31": {
-      "assmats": 5393,
-      "evolution10ans": -38.7,
-      "mam": 165
-    },
-    "32": {
-      "assmats": 693,
-      "evolution10ans": -38.1,
-      "mam": 30
-    },
-    "33": {
-      "assmats": 7924,
-      "evolution10ans": -28.5,
-      "mam": 450
-    },
-    "34": {
-      "assmats": 3947,
-      "evolution10ans": -27.3,
-      "mam": 89
-    },
-    "35": {
-      "assmats": 6375,
-      "evolution10ans": -33.8,
-      "mam": 112
-    },
-    "36": {
-      "assmats": 950,
-      "evolution10ans": -43.3,
-      "mam": 9
-    },
-    "37": {
-      "assmats": 3527,
-      "evolution10ans": -31.7,
-      "mam": 66
-    },
-    "38": {
-      "assmats": 6597,
-      "evolution10ans": -42.1,
-      "mam": 73
-    },
-    "39": {
-      "assmats": 1311,
-      "evolution10ans": -41.4,
-      "mam": 41
-    },
-    "40": {
-      "assmats": 2060,
-      "evolution10ans": -3.6,
-      "mam": 76
-    },
-    "41": {
-      "assmats": 1473,
-      "evolution10ans": -42.1,
-      "mam": 13
-    },
-    "42": {
-      "assmats": 3507,
-      "evolution10ans": -40.7,
-      "mam": 65
-    },
-    "43": {
-      "assmats": 1049,
-      "evolution10ans": -46.8,
-      "mam": 37
-    },
-    "44": {
-      "assmats": 8341,
-      "evolution10ans": -41.3,
-      "mam": 196
-    },
-    "45": {
-      "assmats": 3543,
-      "evolution10ans": -44.2,
-      "mam": 54
-    },
-    "46": {
-      "assmats": 545,
-      "evolution10ans": -47.2
-    },
-    "47": {
-      "assmats": 1130,
-      "evolution10ans": -27.1,
-      "mam": 72
-    },
-    "48": {
-      "assmats": 212,
-      "evolution10ans": -35.8,
-      "mam": 11
-    },
-    "49": {
-      "assmats": 4673,
-      "evolution10ans": -42.1,
-      "mam": 206
-    },
-    "50": {
-      "assmats": 3259,
-      "evolution10ans": -32.6,
-      "mam": 82
-    },
-    "51": {
-      "assmats": 1819,
-      "evolution10ans": -49.0,
-      "mam": 15
-    },
-    "52": {
-      "assmats": 918,
-      "evolution10ans": -45.0,
-      "mam": 15
-    },
-    "53": {
-      "assmats": 1727,
-      "evolution10ans": -42.8,
-      "mam": 116
-    },
-    "54": {
-      "assmats": 2956,
-      "evolution10ans": -46.9,
-      "mam": 23
-    },
-    "55": {
-      "assmats": 846,
-      "evolution10ans": -46.7,
-      "mam": 21
-    },
-    "56": {
-      "assmats": 3465,
-      "evolution10ans": -30.9,
-      "mam": 62
-    },
-    "57": {
-      "assmats": 4616,
-      "evolution10ans": -45.2,
-      "mam": 102
-    },
-    "58": {
-      "assmats": 915,
-      "evolution10ans": -40.2,
-      "mam": 9
-    },
-    "59": {
-      "assmats": 12355,
-      "evolution10ans": -39.4,
-      "mam": 177
-    },
-    "60": {
-      "assmats": 4088,
-      "evolution10ans": -41.8,
-      "mam": 55
-    },
-    "61": {
-      "assmats": 1172,
-      "evolution10ans": -39.5,
-      "mam": 33
-    },
-    "62": {
-      "assmats": 6394,
-      "evolution10ans": -39.1,
-      "mam": 120
-    },
-    "63": {
-      "assmats": 3061,
-      "evolution10ans": -35.2,
-      "mam": 30
-    },
-    "64": {
-      "assmats": 2360,
-      "evolution10ans": -41.0,
-      "mam": 91
-    },
-    "65": {
-      "assmats": 627,
-      "evolution10ans": -30.3,
-      "mam": 18
-    },
-    "66": {
-      "assmats": 1437,
-      "evolution10ans": -19.8,
-      "mam": 103
-    },
-    "67": {
-      "assmats": 5698,
-      "evolution10ans": -41.0,
-      "mam": 75
-    },
-    "68": {
-      "assmats": 2897,
-      "evolution10ans": -41.6,
-      "mam": 32
-    },
-    "69": {
-      "assmats": 8922,
-      "evolution10ans": -46.5,
-      "mam": 30
-    },
-    "70": {
-      "assmats": 1538,
-      "evolution10ans": -43.2,
-      "mam": 33
-    },
-    "71": {
-      "assmats": 2343,
-      "evolution10ans": -46.7,
-      "mam": 61
-    },
-    "72": {
-      "assmats": 3574,
-      "evolution10ans": -42.4,
-      "mam": 72
-    },
-    "73": {
-      "assmats": 1912,
-      "evolution10ans": -45.6,
-      "mam": 43
-    },
-    "74": {
-      "assmats": 3851,
-      "evolution10ans": -34.5,
-      "mam": 37
-    },
-    "75": {
-      "assmats": 2096,
-      "evolution10ans": -36.7,
-      "mam": 3
-    },
-    "76": {
-      "assmats": 7095,
-      "evolution10ans": -39.3,
-      "mam": 278
-    },
-    "77": {
-      "assmats": 7321,
-      "evolution10ans": -33.5,
-      "mam": 33
-    },
-    "78": {
-      "assmats": 5257,
-      "evolution10ans": -42.4,
-      "mam": 21
-    },
-    "79": {
-      "assmats": 1620,
-      "evolution10ans": -44.4,
-      "mam": 52
-    },
-    "80": {
-      "assmats": 2722,
-      "evolution10ans": -43.3,
-      "mam": 17
-    },
-    "81": {
-      "assmats": 1036,
-      "evolution10ans": -31.9,
-      "mam": 22
-    },
-    "82": {
-      "assmats": 1013,
-      "evolution10ans": -29.2,
-      "mam": 27
-    },
-    "83": {
-      "assmats": 2647,
-      "evolution10ans": -29.5,
-      "mam": 51
-    },
-    "84": {
-      "assmats": 1813,
-      "evolution10ans": -21.3,
-      "mam": 82
-    },
-    "85": {
-      "assmats": 4120,
-      "evolution10ans": -37.8,
-      "mam": 133
-    },
-    "86": {
-      "assmats": 2398,
-      "evolution10ans": -31.6,
-      "mam": 56
-    },
-    "87": {
-      "assmats": 1247,
-      "evolution10ans": -43.1,
-      "mam": 10
-    },
-    "88": {
-      "assmats": 2094,
-      "evolution10ans": -32.1,
-      "mam": 64
-    },
-    "89": {
-      "assmats": 1388,
-      "evolution10ans": -39.4,
-      "mam": 12
-    },
-    "90": {
-      "assmats": 704,
-      "evolution10ans": -42.6,
-      "mam": 9
-    },
-    "91": {
-      "assmats": 6878,
-      "evolution10ans": -33.8,
-      "mam": 34
-    },
-    "92": {
-      "assmats": 3712,
-      "evolution10ans": -42.1,
-      "mam": 13
-    },
-    "93": {
-      "assmats": 4089,
-      "evolution10ans": -31.6,
-      "mam": 40
-    },
-    "94": {
-      "assmats": 3926,
-      "evolution10ans": -42.3,
-      "mam": 6
-    },
-    "95": {
-      "assmats": 5456,
-      "evolution10ans": -36.4,
-      "mam": 28
-    },
-    "971": {
-      "assmats": 510,
-      "evolution10ans": -27.6,
-      "mam": 28
-    },
-    "972": {
-      "assmats": 765,
-      "evolution10ans": 46.0,
-      "mam": 27
-    },
-    "973": {
-      "assmats": 213,
-      "evolution10ans": -19.3,
-      "mam": 2
-    },
-    "974": {
-      "assmats": 1865,
-      "evolution10ans": 29.6,
-      "mam": 172
-    }
+  "salaire": {
+   "libelle": "Observatoire de l'emploi à domicile (FEPEM), données Urssaf Caisse nationale",
+   "millesime": "4e trimestre 2025",
+   "url": "https://www.fepem.fr/blog/2026/08/05/emploi-a-domicile-quels-sont-les-niveaux-de-salaires-pratiques-dans-toute-la-france/"
   }
+ },
+ "national": {
+  "assmats": 277804,
+  "salaireHoraireNet": 4.21
+ },
+ "regions": {},
+ "departements": {
+  "01": {
+   "assmats": 3612,
+   "evolution10ans": -32.6,
+   "mam": 27,
+   "salaireHoraireNet": 4.16
+  },
+  "02": {
+   "assmats": 3565,
+   "evolution10ans": -29.0,
+   "mam": 12,
+   "salaireHoraireNet": 3.35
+  },
+  "03": {
+   "assmats": 1383,
+   "evolution10ans": -39.2,
+   "mam": 46,
+   "salaireHoraireNet": 3.86
+  },
+  "04": {
+   "assmats": 331,
+   "evolution10ans": -45.1,
+   "mam": 12,
+   "salaireHoraireNet": 4.64
+  },
+  "05": {
+   "assmats": 424,
+   "evolution10ans": -37.6,
+   "mam": 25,
+   "salaireHoraireNet": 4.54
+  },
+  "06": {
+   "assmats": 2726,
+   "evolution10ans": -31.9,
+   "mam": 42,
+   "salaireHoraireNet": 4.97
+  },
+  "07": {
+   "assmats": 1316,
+   "evolution10ans": -28.0,
+   "mam": 44,
+   "salaireHoraireNet": 4.13
+  },
+  "08": {
+   "assmats": 1222,
+   "evolution10ans": -37.3,
+   "mam": 11,
+   "salaireHoraireNet": 3.91
+  },
+  "09": {
+   "assmats": 527,
+   "evolution10ans": -42.8,
+   "mam": 21,
+   "salaireHoraireNet": 4.23
+  },
+  "10": {
+   "assmats": 1328,
+   "evolution10ans": -35.3,
+   "mam": 17,
+   "salaireHoraireNet": 3.94
+  },
+  "11": {
+   "assmats": 1034,
+   "evolution10ans": -37.6,
+   "mam": 21,
+   "salaireHoraireNet": 4.45
+  },
+  "12": {
+   "assmats": 991,
+   "evolution10ans": -36.8,
+   "mam": 33,
+   "salaireHoraireNet": 4.03
+  },
+  "13": {
+   "assmats": 5189,
+   "evolution10ans": -39.6,
+   "mam": 41,
+   "salaireHoraireNet": 4.83
+  },
+  "14": {
+   "assmats": 3928,
+   "evolution10ans": -37.2,
+   "mam": 31,
+   "salaireHoraireNet": 3.86
+  },
+  "15": {
+   "assmats": 618,
+   "evolution10ans": -43.5,
+   "mam": 7,
+   "salaireHoraireNet": 3.94
+  },
+  "16": {
+   "assmats": 1363,
+   "evolution10ans": -40.7,
+   "mam": 27,
+   "salaireHoraireNet": 3.94
+  },
+  "17": {
+   "assmats": 3065,
+   "evolution10ans": -27.2,
+   "mam": 84,
+   "salaireHoraireNet": 4.12
+  },
+  "18": {
+   "assmats": 1570,
+   "evolution10ans": -40.4,
+   "mam": 20,
+   "salaireHoraireNet": 3.82
+  },
+  "19": {
+   "assmats": 805,
+   "evolution10ans": -36.5,
+   "mam": 30,
+   "salaireHoraireNet": 4.14
+  },
+  "21": {
+   "assmats": 2525,
+   "evolution10ans": -44.2,
+   "mam": 10,
+   "salaireHoraireNet": 3.98
+  },
+  "22": {
+   "assmats": 3028,
+   "evolution10ans": -38.8,
+   "mam": 71,
+   "salaireHoraireNet": 3.99
+  },
+  "23": {
+   "assmats": 434,
+   "evolution10ans": -22.8,
+   "mam": 28,
+   "salaireHoraireNet": 3.74
+  },
+  "24": {
+   "assmats": 1311,
+   "evolution10ans": -29.0,
+   "mam": 38,
+   "salaireHoraireNet": 4.08
+  },
+  "25": {
+   "assmats": 3313,
+   "evolution10ans": -44.1,
+   "mam": 46,
+   "salaireHoraireNet": 4.03
+  },
+  "26": {
+   "assmats": 2466,
+   "evolution10ans": -36.0,
+   "mam": 29,
+   "salaireHoraireNet": 4.17
+  },
+  "27": {
+   "assmats": 2980,
+   "evolution10ans": -39.7,
+   "mam": 40,
+   "salaireHoraireNet": 4.01
+  },
+  "28": {
+   "assmats": 2194,
+   "evolution10ans": -42.7,
+   "mam": 43,
+   "salaireHoraireNet": 4.08
+  },
+  "29": {
+   "assmats": 4408,
+   "evolution10ans": -31.6,
+   "mam": 189,
+   "salaireHoraireNet": 4.03
+  },
+  "2A": {
+   "salaireHoraireNet": 4.98
+  },
+  "2B": {
+   "salaireHoraireNet": 5.0
+  },
+  "30": {
+   "assmats": 2163,
+   "evolution10ans": -37.6,
+   "mam": 62,
+   "salaireHoraireNet": 4.49
+  },
+  "31": {
+   "assmats": 5393,
+   "evolution10ans": -38.7,
+   "mam": 165,
+   "salaireHoraireNet": 4.46
+  },
+  "32": {
+   "assmats": 693,
+   "evolution10ans": -38.1,
+   "mam": 30,
+   "salaireHoraireNet": 4.09
+  },
+  "33": {
+   "assmats": 7924,
+   "evolution10ans": -28.5,
+   "mam": 450,
+   "salaireHoraireNet": 4.25
+  },
+  "34": {
+   "assmats": 3947,
+   "evolution10ans": -27.3,
+   "mam": 89,
+   "salaireHoraireNet": 4.66
+  },
+  "35": {
+   "assmats": 6375,
+   "evolution10ans": -33.8,
+   "mam": 112,
+   "salaireHoraireNet": 4.18
+  },
+  "36": {
+   "assmats": 950,
+   "evolution10ans": -43.3,
+   "mam": 9,
+   "salaireHoraireNet": 3.71
+  },
+  "37": {
+   "assmats": 3527,
+   "evolution10ans": -31.7,
+   "mam": 66,
+   "salaireHoraireNet": 4.0
+  },
+  "38": {
+   "assmats": 6597,
+   "evolution10ans": -42.1,
+   "mam": 73,
+   "salaireHoraireNet": 4.19
+  },
+  "39": {
+   "assmats": 1311,
+   "evolution10ans": -41.4,
+   "mam": 41,
+   "salaireHoraireNet": 3.88
+  },
+  "40": {
+   "assmats": 2060,
+   "evolution10ans": -3.6,
+   "mam": 76,
+   "salaireHoraireNet": 4.21
+  },
+  "41": {
+   "assmats": 1473,
+   "evolution10ans": -42.1,
+   "mam": 13,
+   "salaireHoraireNet": 3.84
+  },
+  "42": {
+   "assmats": 3507,
+   "evolution10ans": -40.7,
+   "mam": 65,
+   "salaireHoraireNet": 3.97
+  },
+  "43": {
+   "assmats": 1049,
+   "evolution10ans": -46.8,
+   "mam": 37,
+   "salaireHoraireNet": 4.09
+  },
+  "44": {
+   "assmats": 8341,
+   "evolution10ans": -41.3,
+   "mam": 196,
+   "salaireHoraireNet": 4.12
+  },
+  "45": {
+   "assmats": 3543,
+   "evolution10ans": -44.2,
+   "mam": 54,
+   "salaireHoraireNet": 4.15
+  },
+  "46": {
+   "assmats": 545,
+   "evolution10ans": -47.2,
+   "salaireHoraireNet": 4.01
+  },
+  "47": {
+   "assmats": 1130,
+   "evolution10ans": -27.1,
+   "mam": 72
+  },
+  "48": {
+   "assmats": 212,
+   "evolution10ans": -35.8,
+   "mam": 11,
+   "salaireHoraireNet": 4.06
+  },
+  "49": {
+   "assmats": 4673,
+   "evolution10ans": -42.1,
+   "mam": 206,
+   "salaireHoraireNet": 3.86
+  },
+  "50": {
+   "assmats": 3259,
+   "evolution10ans": -32.6,
+   "mam": 82,
+   "salaireHoraireNet": 3.72
+  },
+  "51": {
+   "assmats": 1819,
+   "evolution10ans": -49.0,
+   "mam": 15,
+   "salaireHoraireNet": 4.06
+  },
+  "52": {
+   "assmats": 918,
+   "evolution10ans": -45.0,
+   "mam": 15,
+   "salaireHoraireNet": 3.74
+  },
+  "53": {
+   "assmats": 1727,
+   "evolution10ans": -42.8,
+   "mam": 116,
+   "salaireHoraireNet": 3.96
+  },
+  "54": {
+   "assmats": 2956,
+   "evolution10ans": -46.9,
+   "mam": 23,
+   "salaireHoraireNet": 4.13
+  },
+  "55": {
+   "assmats": 846,
+   "evolution10ans": -46.7,
+   "mam": 21,
+   "salaireHoraireNet": 3.84
+  },
+  "56": {
+   "assmats": 3465,
+   "evolution10ans": -30.9,
+   "mam": 62,
+   "salaireHoraireNet": 4.05
+  },
+  "57": {
+   "assmats": 4616,
+   "evolution10ans": -45.2,
+   "mam": 102,
+   "salaireHoraireNet": 4.16
+  },
+  "58": {
+   "assmats": 915,
+   "evolution10ans": -40.2,
+   "mam": 9,
+   "salaireHoraireNet": 3.82
+  },
+  "59": {
+   "assmats": 12355,
+   "evolution10ans": -39.4,
+   "mam": 177,
+   "salaireHoraireNet": 4.12
+  },
+  "60": {
+   "assmats": 4088,
+   "evolution10ans": -41.8,
+   "mam": 55,
+   "salaireHoraireNet": 4.26
+  },
+  "61": {
+   "assmats": 1172,
+   "evolution10ans": -39.5,
+   "mam": 33,
+   "salaireHoraireNet": 3.67
+  },
+  "62": {
+   "assmats": 6394,
+   "evolution10ans": -39.1,
+   "mam": 120,
+   "salaireHoraireNet": 3.89
+  },
+  "63": {
+   "assmats": 3061,
+   "evolution10ans": -35.2,
+   "mam": 30,
+   "salaireHoraireNet": 4.18
+  },
+  "64": {
+   "assmats": 2360,
+   "evolution10ans": -41.0,
+   "mam": 91,
+   "salaireHoraireNet": 4.25
+  },
+  "65": {
+   "assmats": 627,
+   "evolution10ans": -30.3,
+   "mam": 18,
+   "salaireHoraireNet": 4.11
+  },
+  "66": {
+   "assmats": 1437,
+   "evolution10ans": -19.8,
+   "mam": 103,
+   "salaireHoraireNet": 4.38
+  },
+  "67": {
+   "assmats": 5698,
+   "evolution10ans": -41.0,
+   "mam": 75,
+   "salaireHoraireNet": 4.18
+  },
+  "68": {
+   "assmats": 2897,
+   "evolution10ans": -41.6,
+   "mam": 32,
+   "salaireHoraireNet": 4.2
+  },
+  "69": {
+   "assmats": 8922,
+   "evolution10ans": -46.5,
+   "mam": 30,
+   "salaireHoraireNet": 4.32
+  },
+  "70": {
+   "assmats": 1538,
+   "evolution10ans": -43.2,
+   "mam": 33,
+   "salaireHoraireNet": 3.68
+  },
+  "71": {
+   "assmats": 2343,
+   "evolution10ans": -46.7,
+   "mam": 61,
+   "salaireHoraireNet": 3.8
+  },
+  "72": {
+   "assmats": 3574,
+   "evolution10ans": -42.4,
+   "mam": 72,
+   "salaireHoraireNet": 3.7
+  },
+  "73": {
+   "assmats": 1912,
+   "evolution10ans": -45.6,
+   "mam": 43,
+   "salaireHoraireNet": 4.38
+  },
+  "74": {
+   "assmats": 3851,
+   "evolution10ans": -34.5,
+   "mam": 37,
+   "salaireHoraireNet": 4.74
+  },
+  "75": {
+   "assmats": 2096,
+   "evolution10ans": -36.7,
+   "mam": 3,
+   "salaireHoraireNet": 4.29
+  },
+  "76": {
+   "assmats": 7095,
+   "evolution10ans": -39.3,
+   "mam": 278,
+   "salaireHoraireNet": 3.99
+  },
+  "77": {
+   "assmats": 7321,
+   "evolution10ans": -33.5,
+   "mam": 33,
+   "salaireHoraireNet": 4.44
+  },
+  "78": {
+   "assmats": 5257,
+   "evolution10ans": -42.4,
+   "mam": 21,
+   "salaireHoraireNet": 4.59
+  },
+  "79": {
+   "assmats": 1620,
+   "evolution10ans": -44.4,
+   "mam": 52,
+   "salaireHoraireNet": 3.8
+  },
+  "80": {
+   "assmats": 2722,
+   "evolution10ans": -43.3,
+   "mam": 17,
+   "salaireHoraireNet": 3.86
+  },
+  "81": {
+   "assmats": 1036,
+   "evolution10ans": -31.9,
+   "mam": 22,
+   "salaireHoraireNet": 4.28
+  },
+  "82": {
+   "assmats": 1013,
+   "evolution10ans": -29.2,
+   "mam": 27,
+   "salaireHoraireNet": 4.29
+  },
+  "83": {
+   "assmats": 2647,
+   "evolution10ans": -29.5,
+   "mam": 51,
+   "salaireHoraireNet": 4.82
+  },
+  "84": {
+   "assmats": 1813,
+   "evolution10ans": -21.3,
+   "mam": 82,
+   "salaireHoraireNet": 4.54
+  },
+  "85": {
+   "assmats": 4120,
+   "evolution10ans": -37.8,
+   "mam": 133,
+   "salaireHoraireNet": 3.79
+  },
+  "86": {
+   "assmats": 2398,
+   "evolution10ans": -31.6,
+   "mam": 56,
+   "salaireHoraireNet": 3.92
+  },
+  "87": {
+   "assmats": 1247,
+   "evolution10ans": -43.1,
+   "mam": 10,
+   "salaireHoraireNet": 3.96
+  },
+  "88": {
+   "assmats": 2094,
+   "evolution10ans": -32.1,
+   "mam": 64,
+   "salaireHoraireNet": 3.77
+  },
+  "89": {
+   "assmats": 1388,
+   "evolution10ans": -39.4,
+   "mam": 12,
+   "salaireHoraireNet": 4.02
+  },
+  "90": {
+   "assmats": 704,
+   "evolution10ans": -42.6,
+   "mam": 9
+  },
+  "91": {
+   "assmats": 6878,
+   "evolution10ans": -33.8,
+   "mam": 34,
+   "salaireHoraireNet": 4.54
+  },
+  "92": {
+   "assmats": 3712,
+   "evolution10ans": -42.1,
+   "mam": 13,
+   "salaireHoraireNet": 4.89
+  },
+  "93": {
+   "assmats": 4089,
+   "evolution10ans": -31.6,
+   "mam": 40,
+   "salaireHoraireNet": 4.7
+  },
+  "94": {
+   "assmats": 3926,
+   "evolution10ans": -42.3,
+   "mam": 6,
+   "salaireHoraireNet": 4.7
+  },
+  "95": {
+   "assmats": 5456,
+   "evolution10ans": -36.4,
+   "mam": 28
+  },
+  "971": {
+   "assmats": 510,
+   "evolution10ans": -27.6,
+   "mam": 28,
+   "salaireHoraireNet": 4.81
+  },
+  "972": {
+   "assmats": 765,
+   "evolution10ans": 46.0,
+   "mam": 27,
+   "salaireHoraireNet": 4.84
+  },
+  "973": {
+   "assmats": 213,
+   "evolution10ans": -19.3,
+   "mam": 2,
+   "salaireHoraireNet": 4.88
+  },
+  "974": {
+   "assmats": 1865,
+   "evolution10ans": 29.6,
+   "mam": 172,
+   "salaireHoraireNet": 5.17
+  }
+ }
 }
