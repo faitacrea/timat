@@ -179,8 +179,9 @@
   },
   "35": {
    "nom": "Ille-et-Vilaine",
-   "url": "",
-   "verifie": false
+   "url": "https://www.ille-et-vilaine.fr/comment-devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "comment devenir assistant maternel en Ille-et-Vilaine"
   },
   "36": {
    "nom": "Indre",
@@ -194,8 +195,9 @@
   },
   "38": {
    "nom": "Isère",
-   "url": "",
-   "verifie": false
+   "url": "https://www.isere.fr/enfance-famille-jeunesse/les-assistants-maternels",
+   "verifie": false,
+   "libelle": "les assistants maternels en Isère"
   },
   "39": {
    "nom": "Jura",
@@ -316,8 +318,9 @@
   },
   "62": {
    "nom": "Pas-de-Calais",
-   "url": "",
-   "verifie": false
+   "url": "https://www.pasdecalais.fr/devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans le Pas-de-Calais"
   },
   "63": {
    "nom": "Puy-de-Dôme",
@@ -341,8 +344,9 @@
   },
   "67": {
    "nom": "Bas-Rhin",
-   "url": "",
-   "verifie": false
+   "url": "https://www.bas-rhin.fr/enfance/devenir-assistant-maternel/",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans le Bas-Rhin"
   },
   "68": {
    "nom": "Haut-Rhin",
@@ -387,13 +391,15 @@
   },
   "76": {
    "nom": "Seine-Maritime",
-   "url": "",
-   "verifie": false
+   "url": "https://www.seinemaritime.fr/aides-et-demarches/devenir-assistant-maternel/",
+   "verifie": false,
+   "libelle": "devenir assistant maternel en Seine-Maritime"
   },
   "77": {
    "nom": "Seine-et-Marne",
-   "url": "",
-   "verifie": false
+   "url": "https://www.seine-et-marne.fr/fr/le-metier-dassistante-maternelle",
+   "verifie": false,
+   "libelle": "le métier d'assistante maternelle en Seine-et-Marne"
   },
   "78": {
    "nom": "Yvelines",
@@ -462,8 +468,9 @@
   },
   "91": {
    "nom": "Essonne",
-   "url": "",
-   "verifie": false
+   "url": "https://essonne.fr/sante-social-solidarite/enfance-et-familles/ou-faire-garder-votre-enfant/devenir-assistante-maternelle",
+   "verifie": false,
+   "libelle": "devenir assistante maternelle dans l'Essonne"
   },
   "92": {
    "nom": "Hauts-de-Seine",
@@ -482,8 +489,9 @@
   },
   "95": {
    "nom": "Val-d'Oise",
-   "url": "",
-   "verifie": false
+   "url": "https://valdoise.fr/436-assistant-e-maternel-le-.htm",
+   "verifie": false,
+   "libelle": "le service petite enfance du Val-d'Oise"
   },
   "971": {
    "nom": "Guadeloupe",
