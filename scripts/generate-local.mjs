@@ -256,8 +256,14 @@ ${corps}
 </html>`;
 }
 
-const fil = (d, feuille) =>
-  `<div class="crumb"><a href="/">Accueil</a> › <a href="/assistante-maternelle/">Par département</a> › <a href="/assistante-maternelle/${slugify(d.nom)}/tarif">${esc(d.nom)}</a> › ${esc(feuille)}</div>`;
+// Le fil ne lie vers /tarif que si cette page est écrite : la Corse a un
+// salaire mais pas d'effectif DREES, l'inverse peut arriver ailleurs.
+const fil = (d, feuille, aTarif = true) =>
+  `<div class="crumb"><a href="/">Accueil</a> › <a href="/assistante-maternelle/">Par département</a> › ${
+    aTarif
+      ? `<a href="/assistante-maternelle/${slugify(d.nom)}/tarif">${esc(d.nom)}</a>`
+      : `${esc(d.nom)}`
+  } › ${esc(feuille)}</div>`;
 
 const filAriane = (d, feuille, url) => ({
   "@context": "https://schema.org",
@@ -293,7 +299,7 @@ function pageTarif(d, st, stats, ctx) {
 
   const corps = `
 <div class="hero"><div class="hero-in">
-  ${fil(d, "Tarif")}
+  ${fil(d, "Tarif", false)}
   <span class="tag">Chiffres ${esc(stats.sources?.salaire?.millesime || "récents")}</span>
   <h1>Tarif d'une assistante maternelle ${esc(ou)}</h1>
   <p class="lead">Ce que gagnent réellement les assistantes maternelles du département, ce que dit le minimum légal, et les trois lignes que le taux horaire ne couvre pas.</p>
@@ -372,7 +378,7 @@ function pageTarif(d, st, stats, ctx) {
   </div>
 
   <div class="related"><h2>À voir aussi</h2><div class="chips">
-    <a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/devenir">📋 Devenir assmat ${esc(ou)}</a>
+    ${Number(st.assmats) > 0 ? `<a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/devenir">📋 Devenir assmat ${esc(ou)}</a>` : ""}
     <a class="chip" href="/blog/salaire-assistante-maternelle-net-brut">💶 Net, brut et coût employeur</a>
     <a class="chip" href="/blog/indemnite-entretien-assistante-maternelle-2026">🏠 L'indemnité d'entretien</a>
     <a class="chip" href="/assistante-maternelle/">🗺️ Tous les départements</a>
@@ -405,7 +411,7 @@ function pageDevenir(d, st, stats, ctx, pmi) {
 
   const corps = `
 <div class="hero"><div class="hero-in">
-  ${fil(d, "Devenir assistante maternelle")}
+  ${fil(d, "Devenir assistante maternelle", Number(st.salaireHoraireNet) > 0)}
   <span class="tag">Chiffres ${esc(stats.sources?.offre?.millesime || "récents")}</span>
   <h1>Devenir assistante maternelle ${esc(ou)}</h1>
   <p class="lead">Le parcours d'agrément est national, mais il se fait auprès de votre conseil départemental. Voici les chiffres de l'accueil ${esc(ou)}, et l'interlocuteur à contacter.</p>
@@ -511,7 +517,7 @@ function pageDevenir(d, st, stats, ctx, pmi) {
   </div>
 
   <div class="related"><h2>À voir aussi</h2><div class="chips">
-    <a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/tarif">💶 Les tarifs ${esc(ou)}</a>
+    ${Number(st.salaireHoraireNet) > 0 ? `<a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/tarif">💶 Les tarifs ${esc(ou)}</a>` : ""}
     <a class="chip" href="/blog/devenir-assistante-maternelle-agrement">📋 Le parcours d'agrément</a>
     <a class="chip" href="/blog/renouvellement-agrement-assistante-maternelle">🔄 Le renouvellement</a>
     <a class="chip" href="/assistante-maternelle/">🗺️ Tous les départements</a>

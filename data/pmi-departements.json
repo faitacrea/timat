@@ -169,8 +169,8 @@
   "33": {
    "nom": "Gironde",
    "url": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
-   "verifie": false,
-   "libelle": "Santé maternelle et infantile (PMI) — Département de la Gironde"
+   "verifie": true,
+   "libelle": "le service de santé maternelle et infantile de la Gironde"
   },
   "34": {
    "nom": "Hérault",
@@ -225,8 +225,8 @@
   "44": {
    "nom": "Loire-Atlantique",
    "url": "https://www.loire-atlantique.fr/44/enfance-familles/devenir-assistant-ou-assistante-maternelle/c_1277504",
-   "verifie": false,
-   "libelle": "Devenir assistant ou assistante maternelle — Département de Loire-Atlantique"
+   "verifie": true,
+   "libelle": "devenir assistante maternelle en Loire-Atlantique"
   },
   "45": {
    "nom": "Loiret",
@@ -301,8 +301,8 @@
   "59": {
    "nom": "Nord",
    "url": "https://services.lenord.fr/devenir-assistant-maternel",
-   "verifie": false,
-   "libelle": "Devenir assistant maternel — Département du Nord"
+   "verifie": true,
+   "libelle": "devenir assistant maternel dans le Nord"
   },
   "60": {
    "nom": "Oise",
@@ -352,8 +352,8 @@
   "69": {
    "nom": "Rhône",
    "url": "https://www.rhone.fr/jcms/tl1_2007156/fr/devenir-assistant-e-s-maternel-le-s",
-   "verifie": false,
-   "libelle": "Devenir assistant·e maternel·le — Département du Rhône"
+   "verifie": true,
+   "libelle": "devenir assistant·e maternel·le dans le Rhône"
   },
   "70": {
    "nom": "Haute-Saône",
