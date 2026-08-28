@@ -108,13 +108,28 @@ export default async function handler(req, res) {
     const { result } = await sanity(`query/${DATASET}?query=${encodeURIComponent(GROQ)}`);
     const articles = Array.isArray(result) ? result : [];
 
+    // Trois états possibles, et non deux. Un article peut exister comme document
+    // publié tout en portant statut "brouillon" : le site le masque, mais il n'a
+    // plus de préfixe drafts. Sans ce troisième cas il n'était ni brouillon ni
+    // publié, donc sauté à chaque passage — et il bloquait aussi tous les
+    // articles qui le citent, pour toujours.
     const brouillons = new Map();
     const publies = new Set();
+    const limbes = new Set();
     for (const a of articles) {
       if (!a.slug) continue;
-      if (a._id.startsWith("drafts.")) brouillons.set(a.slug, a);
-      else if (a.statut === "publie") publies.add(a.slug);
+      if (a._id.startsWith("drafts.")) {
+        brouillons.set(a.slug, a);
+      } else if (a.statut === "publie") {
+        publies.add(a.slug);
+      } else {
+        limbes.add(a.slug);
+        // Un vrai brouillon fait autorité sur la version publiée restée en
+        // statut brouillon : ne pas l'écraser si les deux coexistent.
+        if (!brouillons.has(a.slug)) brouillons.set(a.slug, a);
+      }
     }
+    for (const slug of publies) limbes.delete(slug);
 
     const sautes = [];
     let cible = null;
@@ -152,6 +167,7 @@ export default async function handler(req, res) {
         // Vérifiable sans publier : le hook doit être là avant le premier
         // passage du cron, sinon l'article part dans Sanity sans rejoindre le site.
         deploiementConfigure: Boolean(process.env.VERCEL_DEPLOY_HOOK),
+        limbes: [...limbes],
         sautes,
       });
     }
@@ -177,13 +193,18 @@ export default async function handler(req, res) {
     const doc = Array.isArray(documents) ? documents[0] : documents;
     if (!doc) throw new Error(`brouillon introuvable : ${cible._id}`);
 
+    // Pour un article des limbes, la source EST la cible : le brouillon n'existe
+    // pas, l'identifiant n'a pas de préfixe. Supprimer cible._id effacerait alors
+    // le document que createOrReplace vient d'écrire.
+    const aSupprimer = cible._id !== idPublie ? [{ delete: { id: cible._id } }] : [];
+
     const { _id, _rev, _createdAt, _updatedAt, ...contenu } = doc;
     await sanity(`mutate/${DATASET}`, {
       method: "POST",
       body: JSON.stringify({
         mutations: [
           { createOrReplace: { ...contenu, _id: idPublie } },
-          { delete: { id: cible._id } },
+          ...aSupprimer,
         ],
       }),
     });
@@ -198,6 +219,7 @@ export default async function handler(req, res) {
       url: `https://www.timat.app/blog/${cible.slug}`,
       date: aujourdhui,
       deploiement,
+      limbes: [...limbes],
       sautes,
       restants: ordre.filter((s) => !publies.has(s) && s !== cible.slug).length,
     });
