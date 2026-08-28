@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build",
-    "preview": "vite preview"
+    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/audit.mjs",
+    "preview": "vite preview",
+    "audit": "node scripts/audit.mjs",
+    "audit:strict": "node scripts/audit.mjs --strict"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
