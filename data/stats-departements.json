@@ -295,7 +295,8 @@
   "47": {
    "assmats": 1130,
    "evolution10ans": -27.1,
-   "mam": 72
+   "mam": 72,
+   "salaireHoraireNet": 4.12
   },
   "48": {
    "assmats": 212,
@@ -552,7 +553,8 @@
   "90": {
    "assmats": 704,
    "evolution10ans": -42.6,
-   "mam": 9
+   "mam": 9,
+   "salaireHoraireNet": 4.1
   },
   "91": {
    "assmats": 6878,
@@ -581,7 +583,8 @@
   "95": {
    "assmats": 5456,
    "evolution10ans": -36.4,
-   "mam": 28
+   "mam": 28,
+   "salaireHoraireNet": 4.6
   },
   "971": {
    "assmats": 510,
