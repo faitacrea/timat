@@ -50,6 +50,129 @@ function slugify(nom) {
 
 const lire = (f) => JSON.parse(readFileSync(path.join(DATA_DIR, f), "utf8"));
 
+/**
+ * Contexte départemental dérivé.
+ *
+ * Sans lui, deux pages ne diffèrent que par un nom propre et trois nombres
+ * dans un tableau : mesuré, le texte utile était identique à 98 % d'un
+ * département à l'autre. Google traite alors la série comme un gabarit
+ * dupliqué et n'en indexe qu'une poignée.
+ *
+ * Tout ce qui suit se calcule à partir des chiffres déjà présents — rien
+ * n'est inventé, rien n'est emprunté à un autre département.
+ */
+function contexte(departements, stats) {
+  const dep = stats.departements || {};
+  const region = new Map(departements.map((d) => [String(d.code), d.region]));
+  const nom = new Map(departements.map((d) => [String(d.code), d.nom]));
+
+  const avecSalaire = Object.entries(dep).filter(([, v]) => Number(v.salaireHoraireNet) > 0);
+  const parSalaire = [...avecSalaire].sort((a, b) => b[1].salaireHoraireNet - a[1].salaireHoraireNet);
+  const rangSalaire = new Map(parSalaire.map(([c], i) => [c, i + 1]));
+
+  const avecEffectif = Object.entries(dep).filter(([, v]) => Number(v.assmats) > 0);
+  const parEffectif = [...avecEffectif].sort((a, b) => b[1].assmats - a[1].assmats);
+  const rangEffectif = new Map(parEffectif.map(([c], i) => [c, i + 1]));
+
+  // Moyenne régionale pondérée par les effectifs : c'est une statistique que
+  // nous calculons, jamais un chiffre publié — les pages le disent.
+  const regions = new Map();
+  for (const [c, v] of avecSalaire) {
+    const r = region.get(c);
+    if (!r) continue;
+    if (!regions.has(r)) regions.set(r, []);
+    regions.get(r).push({ code: c, val: v.salaireHoraireNet, poids: Number(v.assmats) || 0 });
+  }
+
+  const out = new Map();
+  for (const [c, v] of Object.entries(dep)) {
+    const r = region.get(c);
+    const membres = (regions.get(r) || []).slice().sort((a, b) => b.val - a.val);
+    const poids = membres.reduce((t, m) => t + m.poids, 0);
+    const moyRegion = poids
+      ? +(membres.reduce((t, m) => t + m.val * m.poids, 0) / poids).toFixed(2)
+      : membres.length
+        ? +(membres.reduce((t, m) => t + m.val, 0) / membres.length).toFixed(2)
+        : null;
+
+    const evo = typeof v.evolution10ans === "number" ? v.evolution10ans : null;
+    const avant = evo !== null && v.assmats && evo > -100
+      ? Math.round(v.assmats / (1 + evo / 100))
+      : null;
+
+    out.set(c, {
+      rangSalaire: rangSalaire.get(c) || null,
+      nbClasses: parSalaire.length,
+      rangEffectif: rangEffectif.get(c) || null,
+      nbEffectifs: parEffectif.length,
+      moyRegion,
+      regionNb: membres.length,
+      hautRegion: membres[0] ? { nom: nom.get(membres[0].code), val: membres[0].val } : null,
+      basRegion: membres.at(-1) ? { nom: nom.get(membres.at(-1).code), val: membres.at(-1).val } : null,
+      assmatsAvant: avant,
+      perdus: avant && v.assmats ? avant - v.assmats : null,
+      mamPour1000: v.mam && v.assmats ? +((v.mam / v.assmats) * 1000).toFixed(1) : null,
+    });
+  }
+  return out;
+}
+
+/**
+ * Formes grammaticales. « Aisne se classe » et « la moyenne de Hauts-de-France »
+ * se liraient sur cent pages : l'article se déduit de la préposition déjà
+ * portée par la donnée, et « de » se contracte avec lui.
+ */
+const VOYELLE = /^[aeiouyàâäéèêëîïôöûü]/i;
+function avecArticle(d) {
+  switch (d.prep) {
+    case "à ": return d.nom;                     // Paris, La Réunion, Mayotte
+    case "dans le ": return `le ${d.nom}`;
+    case "dans la ": return `la ${d.nom}`;
+    case "dans l'": return `l'${d.nom}`;
+    case "dans les ": return `les ${d.nom}`;
+    case "en ": return VOYELLE.test(d.nom) ? `l'${d.nom}` : `la ${d.nom}`;
+    default: return d.nom;
+  }
+}
+function deArticle(d) {
+  const a = avecArticle(d);
+  if (a.startsWith("les ")) return `des ${a.slice(4)}`;
+  if (a.startsWith("le ")) return `du ${a.slice(3)}`;
+  if (a.startsWith("la ")) return `de ${a}`;
+  if (a.startsWith("l'")) return `de ${a}`;
+  return `de ${a}`;
+}
+const estPluriel = (d) => d.prep === "dans les ";
+/** 1 se dit « première », pas « unième » : le rang 1 prend re, les autres e. */
+const rangOrdinal = (n) => `${n}<sup>${n === 1 ? "re" : "e"}</sup>`;
+
+/** « la moyenne <de la région> » : dix-huit cas, tous écrits, aucun deviné. */
+const DE_REGION = {
+  "Auvergne-Rhône-Alpes": "d'Auvergne-Rhône-Alpes",
+  "Bourgogne-Franche-Comté": "de Bourgogne-Franche-Comté",
+  "Bretagne": "de Bretagne",
+  "Centre-Val de Loire": "du Centre-Val de Loire",
+  "Corse": "de Corse",
+  "Grand Est": "du Grand Est",
+  "Guadeloupe": "de Guadeloupe",
+  "Guyane": "de Guyane",
+  "Hauts-de-France": "des Hauts-de-France",
+  "La Réunion": "de La Réunion",
+  "Martinique": "de Martinique",
+  "Mayotte": "de Mayotte",
+  "Normandie": "de Normandie",
+  "Nouvelle-Aquitaine": "de Nouvelle-Aquitaine",
+  "Occitanie": "d'Occitanie",
+  "Pays de la Loire": "des Pays de la Loire",
+  "Provence-Alpes-Côte d'Azur": "de Provence-Alpes-Côte d'Azur",
+  "Île-de-France": "d'Île-de-France",
+};
+const deRegion = (r) => DE_REGION[r] || `de ${r}`;
+
+/** Heures mensualisées d'un contrat courant : 40 h par semaine, 47 semaines. */
+const HEURES_MOIS = +((40 * 47) / 12).toFixed(1);
+const parMois = (ecart) => Math.round(Math.abs(ecart) * HEURES_MOIS);
+
 const CSS = `
 :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82;--line:#E4DCD0}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -147,7 +270,7 @@ const filAriane = (d, feuille, url) => ({
 });
 
 /* ---------------------------------------------------------------- TARIF */
-function pageTarif(d, st, stats) {
+function pageTarif(d, st, stats, ctx) {
   const ici = st.salaireHoraireNet;
   const nat = stats.national?.salaireHoraireNet;
   const reg = stats.regions?.[d.region]?.salaireHoraireNet;
@@ -190,6 +313,42 @@ function pageTarif(d, st, stats) {
     </tbody>
   </table>
   <div class="warn">⚠️ Une moyenne n'est pas un tarif à appliquer. Elle situe, elle ne fixe rien : le tarif se négocie librement avant la signature, dans le respect du minimum conventionnel, et ne se modifie ensuite que par avenant.</div>
+
+  <h2>Où se situe${estPluriel(d) ? "nt" : ""} ${esc(avecArticle(d))}</h2>
+  ${(() => {
+    const p = [];
+    if (ctx.rangSalaire && ctx.nbClasses) {
+      const r = ctx.rangSalaire, n = ctx.nbClasses;
+      const situe =
+        r <= 10 ? `parmi les dix départements les mieux rémunérés de France`
+        : r > n - 10 ? `parmi les dix départements les moins rémunérés de France`
+        : r <= n / 2 ? `dans la moitié haute du classement national`
+        : `dans la moitié basse du classement national`;
+      p.push(`<p>Avec ${eur(ici)} nets de l'heure et par enfant, ${esc(avecArticle(d))} se classe${estPluriel(d) ? "nt" : ""} <strong>${rangOrdinal(r)} sur ${n}</strong> départements, ${situe}.</p>`);
+    }
+    if (nat && ici !== nat) {
+      const sens = ici > nat ? "de plus" : "de moins";
+      p.push(`<p>L'écart avec la moyenne nationale de ${eur(nat)} est de ${eur(Math.abs(ici - nat))} de l'heure. Sur un contrat de 40 heures par semaine mensualisé sur 47 semaines, soit ${HEURES_MOIS.toLocaleString("fr-FR")} heures par mois, cela représente <strong>${nb(parMois(ici - nat))} € ${sens}</strong> par mois et par enfant.</p>`);
+    }
+    if (ctx.moyRegion && ctx.regionNb > 1 && ctx.hautRegion && ctx.basRegion) {
+      const pos = ici > ctx.moyRegion ? "au-dessus" : ici < ctx.moyRegion ? "en dessous" : "au niveau";
+      const estHaut = ctx.hautRegion.nom === d.nom;
+      const estBas = ctx.basRegion.nom === d.nom;
+      const voisins = estHaut
+        ? `C'est le département le mieux rémunéré de sa région, devant ${esc(ctx.basRegion.nom)} qui ferme la marche à ${eur(ctx.basRegion.val)}.`
+        : estBas
+          ? `C'est le département le moins bien rémunéré de sa région, loin de ${esc(ctx.hautRegion.nom)} qui atteint ${eur(ctx.hautRegion.val)}.`
+          : `Dans cette région, le mieux rémunéré est ${esc(ctx.hautRegion.nom)} à ${eur(ctx.hautRegion.val)}, le moins bien ${esc(ctx.basRegion.nom)} à ${eur(ctx.basRegion.val)}.`;
+      p.push(`<p>À l'échelle régionale, ${esc(avecArticle(d))} se situe${estPluriel(d) ? "nt" : ""} ${pos} de la moyenne ${esc(deRegion(d.region))}, que nous calculons à ${eur(ctx.moyRegion)} en pondérant chaque département par son nombre d'assistantes maternelles. ${voisins}</p>`);
+    }
+    const marge = +(ici - MINIMUM_CONV_NET).toFixed(2);
+    if (marge <= 0.5) {
+      p.push(`<div class="warn">⚠️ La moyenne ${esc(ou)} n'est qu'à ${eur(marge)} au-dessus du minimum conventionnel de ${eur(MINIMUM_CONV_NET)} net. Or une moyenne signifie qu'une moitié des situations se trouve en dessous : dans ce département, une part des contrats signés avant le 1<sup>er</sup> juin 2026 est probablement passée sous le plancher sans que personne ne s'en aperçoive. Le <a href="/verificateur-bulletin-assistante-maternelle.html">vérificateur de bulletin</a> tranche en une saisie.</div>`);
+    } else {
+      p.push(`<p>La moyenne ${esc(ou)} dépasse le minimum conventionnel de ${eur(marge)} nets de l'heure. Ce plancher de ${eur(MINIMUM_CONV_NET)} net reste néanmoins le seul chiffre opposable : aucun contrat ne peut descendre en dessous, quelle que soit la moyenne locale.</p>`);
+    }
+    return p.join("\n  ");
+  })()}
 
   <h2>Ce que le taux horaire ne dit pas</h2>
   <p>Trois lignes s'ajoutent au salaire et changent le montant réellement versé chaque mois :</p>
@@ -236,7 +395,7 @@ function pageTarif(d, st, stats) {
 }
 
 /* -------------------------------------------------------------- DEVENIR */
-function pageDevenir(d, st, stats) {
+function pageDevenir(d, st, stats, ctx) {
   const url = `${SITE}/assistante-maternelle/${slugify(d.nom)}/devenir`;
   const ou = d.prep + d.nom;
   const partNat =
@@ -278,21 +437,66 @@ function pageDevenir(d, st, stats) {
       ? `<p>Le chiffre qui compte est celui du milieu. ${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, le nombre d'agréments a reculé de <strong>${Math.abs(st.evolution10ans).toLocaleString("fr-FR")} %</strong> en dix ans. Ce recul touche toute la France, mais son ampleur varie fortement d'un département à l'autre — et là où les professionnelles se raréfient, celles qui s'installent remplissent leurs places vite.</p>`
       : `<p>Le nombre d'assistantes maternelles agréées recule dans la plupart des départements depuis une dizaine d'années. Là où les professionnelles se raréfient, celles qui s'installent remplissent leurs places vite.</p>`
   }
-  ${st.mam ? `<p>Le département compte aussi <strong>${nb(st.mam)} maison${st.mam > 1 ? "s" : ""} d'assistants maternels</strong>. Exercer en MAM permet d'accueillir hors de son domicile, à plusieurs : une option à connaître si votre logement ne se prête pas à l'agrément.</p>` : ""}
+  ${(() => {
+    const p = [];
+    if (ctx.assmatsAvant && ctx.perdus > 0) {
+      p.push(`<p>Traduit en personnes : le département comptait environ <strong>${nb(ctx.assmatsAvant)} assistantes maternelles agréées</strong> il y a dix ans, contre ${nb(st.assmats)} aujourd'hui — près de <strong>${nb(ctx.perdus)} professionnelles de moins</strong>. Ce sont autant de places d'accueil qui ont disparu, et autant de familles qui cherchent.</p>`);
+    } else if (ctx.assmatsAvant && ctx.perdus < 0) {
+      p.push(`<p>Le département fait exception : il comptait environ ${nb(ctx.assmatsAvant)} assistantes maternelles agréées il y a dix ans, contre ${nb(st.assmats)} aujourd'hui, soit <strong>${nb(Math.abs(ctx.perdus))} de plus</strong>. La profession y progresse alors qu'elle recule presque partout ailleurs.</p>`);
+    }
+    if (ctx.rangEffectif && ctx.nbEffectifs) {
+      const r = ctx.rangEffectif, n = ctx.nbEffectifs;
+      const phrase = r <= 10
+        ? `figure${estPluriel(d) ? "nt" : ""} parmi les dix départements les mieux pourvus de France`
+        : r > n - 10
+          ? `figure${estPluriel(d) ? "nt" : ""} parmi les dix départements les moins pourvus de France`
+          : `arrive${estPluriel(d) ? "nt" : ""} au ${rangOrdinal(r)} rang sur les ${n} départements documentés`;
+      p.push(`<p>Par le nombre d'agréments en cours, ${esc(avecArticle(d))} ${phrase}.</p>`);
+    }
+    if (st.mam) {
+      const dense = ctx.mamPour1000;
+      const commentaire = dense >= 30
+        ? `C'est une densité élevée : la formule y est nettement plus installée que dans la moyenne des départements.`
+        : dense <= 8
+          ? `C'est une densité faible : la formule reste peu répandue ici, ce qui laisse de la place à qui veut s'y lancer.`
+          : `La formule y est présente sans être dominante.`;
+      p.push(`<p>Le département compte aussi <strong>${nb(st.mam)} maison${st.mam > 1 ? "s" : ""} d'assistants maternels</strong>, soit ${dense ? `${dense.toLocaleString("fr-FR")} pour 1 000 professionnelles agréées. ` : ""}${commentaire} Exercer en MAM permet d'accueillir hors de son domicile, à plusieurs : une option à connaître si votre logement ne se prête pas à l'agrément.</p>`);
+    }
+    return p.join("\n  ");
+  })()}
 
   <h2>Le parcours, étape par étape</h2>
-  <p>Les règles sont les mêmes dans toute la France ; seuls les délais et l'organisation des sessions varient d'un département à l'autre.</p>
+  <p>Les règles sont nationales et fixées par le Code de l'action sociale et des familles ; seuls les délais réels, le calendrier des réunions et l'organisation des sessions de formation varient d'un département à l'autre.</p>
   <table>
-    <thead><tr><th>Étape</th><th>Ce qui se passe</th></tr></thead>
+    <thead><tr><th>Étape</th><th>Ce qui se passe</th><th>Délai</th></tr></thead>
     <tbody>
-      <tr><td>1. Réunion d'information</td><td>Organisée par le conseil départemental. Souvent obligatoire avant le dépôt du dossier.</td></tr>
-      <tr><td>2. Dossier de demande</td><td>Formulaire Cerfa, certificat médical, extrait de casier judiciaire, justificatif de domicile.</td></tr>
-      <tr><td>3. Instruction et visite</td><td>Une puéricultrice de la PMI se déplace chez vous : sécurité du logement, espace, projet d'accueil.</td></tr>
-      <tr><td>4. Décision</td><td>Le conseil départemental dispose de trois mois pour répondre. Le silence vaut acceptation.</td></tr>
-      <tr><td>5. Formation obligatoire</td><td>120 heures, dont 80 avant le premier accueil. Prise en charge par le département.</td></tr>
+      <tr><td>1. Réunion d'information</td><td>Organisée par le conseil départemental. Le plus souvent obligatoire avant le dépôt du dossier.</td><td class="n">variable</td></tr>
+      <tr><td>2. Dépôt du dossier</td><td>Cerfa n° 13394*05, certificat médical, extrait de casier judiciaire, pièce d'identité, justificatif de domicile.</td><td class="n">—</td></tr>
+      <tr><td>3. Entretiens et visite</td><td>Une puéricultrice ou une infirmière de la PMI vient chez vous : sécurité et dimensions du logement, espace de couchage, projet d'accueil.</td><td class="n">—</td></tr>
+      <tr><td>4. Décision</td><td>Notifiée par le président du conseil départemental. Son silence vaut agrément.</td><td class="n">3 mois</td></tr>
+      <tr><td>5. Formation, 1re partie</td><td>80 heures, gratuites, avant tout accueil d'enfant. Une évaluation les clôture et vaut autorisation d'accueillir.</td><td class="n">6 mois</td></tr>
+      <tr><td>6. Formation, 2e partie</td><td>40 heures en cours d'emploi, qui complètent les 120 heures obligatoires.</td><td class="n">3 ans</td></tr>
     </tbody>
   </table>
-  <div class="box">L'agrément vaut cinq ans et se renouvelle. Le détail complet du parcours figure dans notre guide <a href="/blog/devenir-assistante-maternelle-agrement">Devenir assistante maternelle : le parcours vers l'agrément</a>.</div>
+
+  <div class="warn">⚠️ Le compte à rebours des 80 heures ne part pas de votre agrément, mais de la <strong>réception de votre dossier complet</strong> par la PMI : vous avez six mois à partir de cette date. C'est le point sur lequel la plupart des sites se trompent, en annonçant deux ans ou six mois « après l'agrément ». Attendre l'arrêté pour chercher une session, c'est consommer une partie du délai.</div>
+
+  <h2>Ce qu'il faut, et ce qu'il ne faut pas</h2>
+  <p><strong>Aucun diplôme n'est exigé.</strong> Ce qui est demandé tient en quelques points : présenter les garanties de santé, de moralité et d'aptitude éducative nécessaires à l'accueil d'enfants, disposer d'un logement dont l'état, les dimensions et l'environnement permettent d'accueillir en sécurité, résider en France et maîtriser le français oral.</p>
+  <p>L'arrêté d'agrément précise le nombre d'enfants accueillis simultanément — <strong>quatre au maximum</strong>, une dérogation restant possible — leur âge, et une durée de validité de <strong>cinq ans</strong>. Il attribue un numéro à mentionner dans les contrats et à afficher au domicile.</p>
+
+  <h2>Si l'agrément est refusé</h2>
+  <p>Tout refus, même partiel, doit être motivé par écrit et mentionner les voies et délais de recours — une motivation insuffisante est en elle-même un motif d'annulation. Deux recours existent et se cumulent :</p>
+  <ul>
+    <li>Le <strong>recours gracieux</strong>, adressé au président du conseil départemental dans les deux mois suivant la notification, en recommandé avec accusé de réception.</li>
+    <li>Le <strong>recours contentieux</strong>, devant le tribunal administratif, dans les deux mois suivant la notification — ou, après un recours gracieux, dans les deux mois suivant la réponse, l'absence de réponse au bout de deux mois valant confirmation du refus.</li>
+  </ul>
+  <div class="box">On lit souvent qu'il faudrait saisir la commission consultative paritaire départementale après un refus. C'est inexact pour une première demande : cette commission n'est consultée que lorsque le président du conseil départemental envisage de retirer un agrément, d'y apporter une restriction ou de ne pas le renouveler — et c'est lui qui la saisit, pas vous.</div>
+
+  <h2>Le renouvellement</h2>
+  <p>Le conseil départemental adresse le dossier quatre à six mois avant l'échéance ; il se retourne au plus tard trois mois avant. Pour tout agrément délivré depuis 2018, le premier renouvellement suppose de s'être présentée aux épreuves EP1 et EP3 du CAP Accompagnant éducatif petite enfance. L'obligation porte sur le fait de s'y présenter, pas de les réussir : c'est un relevé de notes qui est demandé. Les valider fait passer l'agrément à dix ans au lieu de cinq.</p>
+
+  <div class="box">Le parcours complet est détaillé dans nos guides <a href="/blog/devenir-assistante-maternelle-agrement">Devenir assistante maternelle : le parcours vers l'agrément</a> et <a href="/blog/renouvellement-agrement-assistante-maternelle">Le renouvellement de l'agrément</a>.</div>
 
   <h2>Qui contacter ${esc(ou)}</h2>
   <p>Votre interlocuteur est le <strong>service de protection maternelle et infantile (PMI)</strong> du conseil départemental. Cherchez « PMI ${esc(d.nom)} agrément assistante maternelle » ou passez par le standard du conseil départemental : c'est le service qui organise les réunions d'information et fixe le calendrier des sessions.</p>
@@ -313,7 +517,9 @@ function pageDevenir(d, st, stats) {
 
   <div class="sources"><strong>Sources</strong><ul>
     <li>${esc(stats.sources?.offre?.libelle || "DREES")}${stats.sources?.offre?.millesime ? ` — millésime ${esc(stats.sources.offre.millesime)}` : ""}</li>
-    <li>Code de l'action sociale et des familles — agrément de l'assistant maternel (articles L421-3 et suivants)</li>
+    <li>Code de l'action sociale et des familles — agrément de l'assistant maternel, articles L421-3 et suivants</li>
+    <li>Décret du 23 octobre 2018 relatif à la formation des assistants maternels</li>
+    <li>Justice.fr — refus, retrait, restriction ou suspension de l'agrément d'assistant maternel</li>
   </ul><p style="margin-top:10px">Page mise à jour le ${esc(MAJ)}.</p></div>
 </main>`;
 
@@ -387,6 +593,7 @@ async function main() {
 
   const departements = lire("departements.json");
   const stats = lire("stats-departements.json");
+  const ctx = contexte(departements, stats);
   const parCode = new Map(departements.map((d) => [String(d.code), d]));
 
   if (existsSync(LOCAL_DIR)) await rm(LOCAL_DIR, { recursive: true, force: true });
@@ -407,13 +614,13 @@ async function main() {
     const base = path.join(LOCAL_DIR, slugify(d.nom));
     if (aTarif) {
       await mkdir(path.join(base, "tarif"), { recursive: true });
-      await writeFile(path.join(base, "tarif", "index.html"), pageTarif(d, st, stats), "utf8");
+      await writeFile(path.join(base, "tarif", "index.html"), pageTarif(d, st, stats, ctx.get(code) || {}), "utf8");
       urls.push(`${SITE}/assistante-maternelle/${slugify(d.nom)}/tarif`);
       nbTarif++;
     }
     if (aDevenir) {
       await mkdir(path.join(base, "devenir"), { recursive: true });
-      await writeFile(path.join(base, "devenir", "index.html"), pageDevenir(d, st, stats), "utf8");
+      await writeFile(path.join(base, "devenir", "index.html"), pageDevenir(d, st, stats, ctx.get(code) || {}), "utf8");
       urls.push(`${SITE}/assistante-maternelle/${slugify(d.nom)}/devenir`);
       nbDevenir++;
     }

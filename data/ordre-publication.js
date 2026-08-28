@@ -3,6 +3,10 @@
 // (contraintes de dépendance et raisonnement éditorial).
 // Module JS plutôt que JSON : pas d'assertion d'import, groupage serverless sûr.
 export const ordre = [
+  // Placé en tête : il explique les 100 pages /assistante-maternelle/<dep>/tarif
+  // mises en ligne le 28 août et leur envoie de l'autorité. Ses deux liens blog
+  // pointent vers des articles déjà publiés, il ne dépend donc de rien.
+  "salaire-assistante-maternelle-par-departement",
   "parents-vacances-hors-conges-assistante-maternelle",
   "fin-de-contrat-assistante-maternelle",
   "quand-chercher-mode-de-garde",
