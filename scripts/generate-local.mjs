@@ -395,7 +395,7 @@ function pageTarif(d, st, stats, ctx) {
 }
 
 /* -------------------------------------------------------------- DEVENIR */
-function pageDevenir(d, st, stats, ctx) {
+function pageDevenir(d, st, stats, ctx, pmi) {
   const url = `${SITE}/assistante-maternelle/${slugify(d.nom)}/devenir`;
   const ou = d.prep + d.nom;
   const partNat =
@@ -499,7 +499,9 @@ function pageDevenir(d, st, stats, ctx) {
   <div class="box">Le parcours complet est détaillé dans nos guides <a href="/blog/devenir-assistante-maternelle-agrement">Devenir assistante maternelle : le parcours vers l'agrément</a> et <a href="/blog/renouvellement-agrement-assistante-maternelle">Le renouvellement de l'agrément</a>.</div>
 
   <h2>Qui contacter ${esc(ou)}</h2>
-  <p>Votre interlocuteur est le <strong>service de protection maternelle et infantile (PMI)</strong> du conseil départemental. Cherchez « PMI ${esc(d.nom)} agrément assistante maternelle » ou passez par le standard du conseil départemental : c'est le service qui organise les réunions d'information et fixe le calendrier des sessions.</p>
+  ${pmi && pmi.verifie && pmi.url
+    ? `<p>Votre interlocuteur est le <strong>service de protection maternelle et infantile (PMI)</strong> du conseil départemental : <a href="${esc(pmi.url)}" rel="nofollow">${esc(pmi.libelle || `le service dédié ${ou}`)}</a>. C'est lui qui organise les réunions d'information et fixe le calendrier des sessions de formation.</p>`
+    : `<p>Votre interlocuteur est le <strong>service de protection maternelle et infantile (PMI)</strong> du conseil départemental. Cherchez « PMI ${esc(d.nom)} agrément assistante maternelle » ou passez par le standard du conseil départemental : c'est le service qui organise les réunions d'information et fixe le calendrier des sessions.</p>`}
   <p>Le relais petite enfance de votre commune est le second interlocuteur utile : il connaît les besoins du secteur, et il accompagne ensuite sur les contrats.</p>
 
   <div class="ctabox">
@@ -594,6 +596,10 @@ async function main() {
   const departements = lire("departements.json");
   const stats = lire("stats-departements.json");
   const ctx = contexte(departements, stats);
+  // Fichier facultatif : son absence ne casse rien, les pages gardent leur repli.
+  const pmi = existsSync(path.join(DATA_DIR, "pmi-departements.json"))
+    ? lire("pmi-departements.json").departements || {}
+    : {};
   const parCode = new Map(departements.map((d) => [String(d.code), d]));
 
   if (existsSync(LOCAL_DIR)) await rm(LOCAL_DIR, { recursive: true, force: true });
@@ -620,7 +626,7 @@ async function main() {
     }
     if (aDevenir) {
       await mkdir(path.join(base, "devenir"), { recursive: true });
-      await writeFile(path.join(base, "devenir", "index.html"), pageDevenir(d, st, stats, ctx.get(code) || {}), "utf8");
+      await writeFile(path.join(base, "devenir", "index.html"), pageDevenir(d, st, stats, ctx.get(code) || {}, pmi[code] || null), "utf8");
       urls.push(`${SITE}/assistante-maternelle/${slugify(d.nom)}/devenir`);
       nbDevenir++;
     }
