@@ -1,0 +1,514 @@
+{
+ "_lisezmoi": "URL officielle du service PMI ou de la page « devenir assistante maternelle » du conseil départemental. Un lien n'est rendu sur les pages /assistante-maternelle/ que si verifie vaut true : une URL non vérifiée reste dans ce fichier sans être publiée, et la page garde sa formulation de repli. Ne jamais passer verifie à true sans avoir ouvert le lien.",
+ "departements": {
+  "01": {
+   "nom": "Ain",
+   "url": "",
+   "verifie": false
+  },
+  "02": {
+   "nom": "Aisne",
+   "url": "",
+   "verifie": false
+  },
+  "03": {
+   "nom": "Allier",
+   "url": "",
+   "verifie": false
+  },
+  "04": {
+   "nom": "Alpes-de-Haute-Provence",
+   "url": "",
+   "verifie": false
+  },
+  "05": {
+   "nom": "Hautes-Alpes",
+   "url": "",
+   "verifie": false
+  },
+  "06": {
+   "nom": "Alpes-Maritimes",
+   "url": "",
+   "verifie": false
+  },
+  "07": {
+   "nom": "Ardèche",
+   "url": "",
+   "verifie": false
+  },
+  "08": {
+   "nom": "Ardennes",
+   "url": "",
+   "verifie": false
+  },
+  "09": {
+   "nom": "Ariège",
+   "url": "",
+   "verifie": false
+  },
+  "10": {
+   "nom": "Aube",
+   "url": "",
+   "verifie": false
+  },
+  "11": {
+   "nom": "Aude",
+   "url": "",
+   "verifie": false
+  },
+  "12": {
+   "nom": "Aveyron",
+   "url": "",
+   "verifie": false
+  },
+  "13": {
+   "nom": "Bouches-du-Rhône",
+   "url": "",
+   "verifie": false
+  },
+  "14": {
+   "nom": "Calvados",
+   "url": "",
+   "verifie": false
+  },
+  "15": {
+   "nom": "Cantal",
+   "url": "",
+   "verifie": false
+  },
+  "16": {
+   "nom": "Charente",
+   "url": "",
+   "verifie": false
+  },
+  "17": {
+   "nom": "Charente-Maritime",
+   "url": "",
+   "verifie": false
+  },
+  "18": {
+   "nom": "Cher",
+   "url": "",
+   "verifie": false
+  },
+  "19": {
+   "nom": "Corrèze",
+   "url": "",
+   "verifie": false
+  },
+  "21": {
+   "nom": "Côte-d'Or",
+   "url": "",
+   "verifie": false
+  },
+  "22": {
+   "nom": "Côtes-d'Armor",
+   "url": "",
+   "verifie": false
+  },
+  "23": {
+   "nom": "Creuse",
+   "url": "",
+   "verifie": false
+  },
+  "24": {
+   "nom": "Dordogne",
+   "url": "",
+   "verifie": false
+  },
+  "25": {
+   "nom": "Doubs",
+   "url": "",
+   "verifie": false
+  },
+  "26": {
+   "nom": "Drôme",
+   "url": "",
+   "verifie": false
+  },
+  "27": {
+   "nom": "Eure",
+   "url": "",
+   "verifie": false
+  },
+  "28": {
+   "nom": "Eure-et-Loir",
+   "url": "",
+   "verifie": false
+  },
+  "29": {
+   "nom": "Finistère",
+   "url": "",
+   "verifie": false
+  },
+  "2A": {
+   "nom": "Corse-du-Sud",
+   "url": "",
+   "verifie": false
+  },
+  "2B": {
+   "nom": "Haute-Corse",
+   "url": "",
+   "verifie": false
+  },
+  "30": {
+   "nom": "Gard",
+   "url": "",
+   "verifie": false
+  },
+  "31": {
+   "nom": "Haute-Garonne",
+   "url": "",
+   "verifie": false
+  },
+  "32": {
+   "nom": "Gers",
+   "url": "",
+   "verifie": false
+  },
+  "33": {
+   "nom": "Gironde",
+   "url": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
+   "verifie": false,
+   "libelle": "Santé maternelle et infantile (PMI) — Département de la Gironde"
+  },
+  "34": {
+   "nom": "Hérault",
+   "url": "",
+   "verifie": false
+  },
+  "35": {
+   "nom": "Ille-et-Vilaine",
+   "url": "",
+   "verifie": false
+  },
+  "36": {
+   "nom": "Indre",
+   "url": "",
+   "verifie": false
+  },
+  "37": {
+   "nom": "Indre-et-Loire",
+   "url": "",
+   "verifie": false
+  },
+  "38": {
+   "nom": "Isère",
+   "url": "",
+   "verifie": false
+  },
+  "39": {
+   "nom": "Jura",
+   "url": "",
+   "verifie": false
+  },
+  "40": {
+   "nom": "Landes",
+   "url": "",
+   "verifie": false
+  },
+  "41": {
+   "nom": "Loir-et-Cher",
+   "url": "",
+   "verifie": false
+  },
+  "42": {
+   "nom": "Loire",
+   "url": "",
+   "verifie": false
+  },
+  "43": {
+   "nom": "Haute-Loire",
+   "url": "",
+   "verifie": false
+  },
+  "44": {
+   "nom": "Loire-Atlantique",
+   "url": "https://www.loire-atlantique.fr/44/enfance-familles/devenir-assistant-ou-assistante-maternelle/c_1277504",
+   "verifie": false,
+   "libelle": "Devenir assistant ou assistante maternelle — Département de Loire-Atlantique"
+  },
+  "45": {
+   "nom": "Loiret",
+   "url": "",
+   "verifie": false
+  },
+  "46": {
+   "nom": "Lot",
+   "url": "",
+   "verifie": false
+  },
+  "47": {
+   "nom": "Lot-et-Garonne",
+   "url": "",
+   "verifie": false
+  },
+  "48": {
+   "nom": "Lozère",
+   "url": "",
+   "verifie": false
+  },
+  "49": {
+   "nom": "Maine-et-Loire",
+   "url": "",
+   "verifie": false
+  },
+  "50": {
+   "nom": "Manche",
+   "url": "",
+   "verifie": false
+  },
+  "51": {
+   "nom": "Marne",
+   "url": "",
+   "verifie": false
+  },
+  "52": {
+   "nom": "Haute-Marne",
+   "url": "",
+   "verifie": false
+  },
+  "53": {
+   "nom": "Mayenne",
+   "url": "",
+   "verifie": false
+  },
+  "54": {
+   "nom": "Meurthe-et-Moselle",
+   "url": "",
+   "verifie": false
+  },
+  "55": {
+   "nom": "Meuse",
+   "url": "",
+   "verifie": false
+  },
+  "56": {
+   "nom": "Morbihan",
+   "url": "",
+   "verifie": false
+  },
+  "57": {
+   "nom": "Moselle",
+   "url": "",
+   "verifie": false
+  },
+  "58": {
+   "nom": "Nièvre",
+   "url": "",
+   "verifie": false
+  },
+  "59": {
+   "nom": "Nord",
+   "url": "https://services.lenord.fr/devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "Devenir assistant maternel — Département du Nord"
+  },
+  "60": {
+   "nom": "Oise",
+   "url": "",
+   "verifie": false
+  },
+  "61": {
+   "nom": "Orne",
+   "url": "",
+   "verifie": false
+  },
+  "62": {
+   "nom": "Pas-de-Calais",
+   "url": "",
+   "verifie": false
+  },
+  "63": {
+   "nom": "Puy-de-Dôme",
+   "url": "",
+   "verifie": false
+  },
+  "64": {
+   "nom": "Pyrénées-Atlantiques",
+   "url": "",
+   "verifie": false
+  },
+  "65": {
+   "nom": "Hautes-Pyrénées",
+   "url": "",
+   "verifie": false
+  },
+  "66": {
+   "nom": "Pyrénées-Orientales",
+   "url": "",
+   "verifie": false
+  },
+  "67": {
+   "nom": "Bas-Rhin",
+   "url": "",
+   "verifie": false
+  },
+  "68": {
+   "nom": "Haut-Rhin",
+   "url": "",
+   "verifie": false
+  },
+  "69": {
+   "nom": "Rhône",
+   "url": "https://www.rhone.fr/jcms/tl1_2007156/fr/devenir-assistant-e-s-maternel-le-s",
+   "verifie": false,
+   "libelle": "Devenir assistant·e maternel·le — Département du Rhône"
+  },
+  "70": {
+   "nom": "Haute-Saône",
+   "url": "",
+   "verifie": false
+  },
+  "71": {
+   "nom": "Saône-et-Loire",
+   "url": "",
+   "verifie": false
+  },
+  "72": {
+   "nom": "Sarthe",
+   "url": "",
+   "verifie": false
+  },
+  "73": {
+   "nom": "Savoie",
+   "url": "",
+   "verifie": false
+  },
+  "74": {
+   "nom": "Haute-Savoie",
+   "url": "",
+   "verifie": false
+  },
+  "75": {
+   "nom": "Paris",
+   "url": "",
+   "verifie": false
+  },
+  "76": {
+   "nom": "Seine-Maritime",
+   "url": "",
+   "verifie": false
+  },
+  "77": {
+   "nom": "Seine-et-Marne",
+   "url": "",
+   "verifie": false
+  },
+  "78": {
+   "nom": "Yvelines",
+   "url": "",
+   "verifie": false
+  },
+  "79": {
+   "nom": "Deux-Sèvres",
+   "url": "",
+   "verifie": false
+  },
+  "80": {
+   "nom": "Somme",
+   "url": "",
+   "verifie": false
+  },
+  "81": {
+   "nom": "Tarn",
+   "url": "",
+   "verifie": false
+  },
+  "82": {
+   "nom": "Tarn-et-Garonne",
+   "url": "",
+   "verifie": false
+  },
+  "83": {
+   "nom": "Var",
+   "url": "",
+   "verifie": false
+  },
+  "84": {
+   "nom": "Vaucluse",
+   "url": "",
+   "verifie": false
+  },
+  "85": {
+   "nom": "Vendée",
+   "url": "",
+   "verifie": false
+  },
+  "86": {
+   "nom": "Vienne",
+   "url": "",
+   "verifie": false
+  },
+  "87": {
+   "nom": "Haute-Vienne",
+   "url": "",
+   "verifie": false
+  },
+  "88": {
+   "nom": "Vosges",
+   "url": "",
+   "verifie": false
+  },
+  "89": {
+   "nom": "Yonne",
+   "url": "",
+   "verifie": false
+  },
+  "90": {
+   "nom": "Territoire de Belfort",
+   "url": "",
+   "verifie": false
+  },
+  "91": {
+   "nom": "Essonne",
+   "url": "",
+   "verifie": false
+  },
+  "92": {
+   "nom": "Hauts-de-Seine",
+   "url": "",
+   "verifie": false
+  },
+  "93": {
+   "nom": "Seine-Saint-Denis",
+   "url": "",
+   "verifie": false
+  },
+  "94": {
+   "nom": "Val-de-Marne",
+   "url": "",
+   "verifie": false
+  },
+  "95": {
+   "nom": "Val-d'Oise",
+   "url": "",
+   "verifie": false
+  },
+  "971": {
+   "nom": "Guadeloupe",
+   "url": "",
+   "verifie": false
+  },
+  "972": {
+   "nom": "Martinique",
+   "url": "",
+   "verifie": false
+  },
+  "973": {
+   "nom": "Guyane",
+   "url": "",
+   "verifie": false
+  },
+  "974": {
+   "nom": "La Réunion",
+   "url": "",
+   "verifie": false
+  },
+  "976": {
+   "nom": "Mayotte",
+   "url": "",
+   "verifie": false
+  }
+ }
+}
