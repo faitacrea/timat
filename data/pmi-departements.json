@@ -28,8 +28,9 @@
   },
   "06": {
    "nom": "Alpes-Maritimes",
-   "url": "",
-   "verifie": false
+   "url": "https://www.departement06.fr/devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans les Alpes-Maritimes"
   },
   "07": {
    "nom": "Ardèche",
@@ -63,8 +64,9 @@
   },
   "13": {
    "nom": "Bouches-du-Rhône",
-   "url": "",
-   "verifie": false
+   "url": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
+   "verifie": false,
+   "libelle": "être assistante maternelle dans les Bouches-du-Rhône"
   },
   "14": {
    "nom": "Calvados",
@@ -138,8 +140,9 @@
   },
   "29": {
    "nom": "Finistère",
-   "url": "",
-   "verifie": false
+   "url": "https://www.finistere.fr/aides-et-services/enfance-famille/assistants-maternels/",
+   "verifie": false,
+   "libelle": "les assistants maternels dans le Finistère"
   },
   "2A": {
    "nom": "Corse-du-Sud",
@@ -158,8 +161,9 @@
   },
   "31": {
    "nom": "Haute-Garonne",
-   "url": "",
-   "verifie": false
+   "url": "https://www.haute-garonne.fr/aide/assistante-maternelle",
+   "verifie": false,
+   "libelle": "la demande d'agrément en Haute-Garonne"
   },
   "32": {
    "nom": "Gers",
@@ -174,8 +178,9 @@
   },
   "34": {
    "nom": "Hérault",
-   "url": "",
-   "verifie": false
+   "url": "https://herault.fr/591-devenir-assistant-maternel.htm",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans l'Hérault"
   },
   "35": {
    "nom": "Ille-et-Vilaine",
@@ -252,8 +257,9 @@
   },
   "49": {
    "nom": "Maine-et-Loire",
-   "url": "",
-   "verifie": false
+   "url": "https://www.maine-et-loire.fr/aides-et-services/enfance-et-famille/metiers-de-la-petite-enfance/devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "devenir assistant maternel en Maine-et-Loire"
   },
   "50": {
    "nom": "Manche",
@@ -292,8 +298,9 @@
   },
   "57": {
    "nom": "Moselle",
-   "url": "",
-   "verifie": false
+   "url": "https://www.moselle.fr/jcms/pl_10954/fr/devenir-assistant-e-maternel-le",
+   "verifie": false,
+   "libelle": "devenir assistant maternel en Moselle"
   },
   "58": {
    "nom": "Nièvre",
@@ -351,7 +358,7 @@
   "68": {
    "nom": "Haut-Rhin",
    "url": "https://www.alsace.eu/aides-et-services/enfance-et-famille/vous-etes-assistant-maternel/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "l'espace assistants maternels de la Collectivité européenne d'Alsace"
   },
   "69": {
@@ -404,8 +411,9 @@
   },
   "78": {
    "nom": "Yvelines",
-   "url": "",
-   "verifie": false
+   "url": "https://www.yvelines.fr/solidarite/enfance-et-famille/accueil-petite-enfan/devenirassistantematernelle/",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans les Yvelines"
   },
   "79": {
    "nom": "Deux-Sèvres",
@@ -469,9 +477,9 @@
   },
   "91": {
    "nom": "Essonne",
-   "url": "https://www.essonne.fr/sante-social-solidarite/mes-demarches/quelles-aides/detail/agrement-dassistant-maternel",
-   "verifie": false,
-   "libelle": "l'agrément d'assistant maternel en Essonne"
+   "url": "https://assmat.essonne.fr/actualites",
+   "verifie": true,
+   "libelle": "le portail des assistants maternels de l'Essonne"
   },
   "92": {
    "nom": "Hauts-de-Seine",
