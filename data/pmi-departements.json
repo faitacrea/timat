@@ -180,7 +180,7 @@
   "35": {
    "nom": "Ille-et-Vilaine",
    "url": "https://www.ille-et-vilaine.fr/comment-devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "comment devenir assistant maternel en Ille-et-Vilaine"
   },
   "36": {
@@ -196,7 +196,7 @@
   "38": {
    "nom": "Isère",
    "url": "https://www.isere.fr/enfance-famille-jeunesse/les-assistants-maternels",
-   "verifie": false,
+   "verifie": true,
    "libelle": "les assistants maternels en Isère"
   },
   "39": {
@@ -319,7 +319,7 @@
   "62": {
    "nom": "Pas-de-Calais",
    "url": "https://www.pasdecalais.fr/devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans le Pas-de-Calais"
   },
   "63": {
@@ -344,14 +344,15 @@
   },
   "67": {
    "nom": "Bas-Rhin",
-   "url": "https://www.bas-rhin.fr/enfance/devenir-assistant-maternel/",
-   "verifie": false,
+   "url": "https://www.alsace.eu/aides-et-services/enfance-et-famille/devenir-assistant-maternel-dans-bas-rhin/",
+   "verifie": true,
    "libelle": "devenir assistant maternel dans le Bas-Rhin"
   },
   "68": {
    "nom": "Haut-Rhin",
-   "url": "",
-   "verifie": false
+   "url": "https://www.alsace.eu/aides-et-services/enfance-et-famille/vous-etes-assistant-maternel/",
+   "verifie": false,
+   "libelle": "l'espace assistants maternels de la Collectivité européenne d'Alsace"
   },
   "69": {
    "nom": "Rhône",
@@ -392,13 +393,13 @@
   "76": {
    "nom": "Seine-Maritime",
    "url": "https://www.seinemaritime.fr/aides-et-demarches/devenir-assistant-maternel/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Seine-Maritime"
   },
   "77": {
    "nom": "Seine-et-Marne",
    "url": "https://www.seine-et-marne.fr/fr/le-metier-dassistante-maternelle",
-   "verifie": false,
+   "verifie": true,
    "libelle": "le métier d'assistante maternelle en Seine-et-Marne"
   },
   "78": {
@@ -468,9 +469,9 @@
   },
   "91": {
    "nom": "Essonne",
-   "url": "https://essonne.fr/sante-social-solidarite/enfance-et-familles/ou-faire-garder-votre-enfant/devenir-assistante-maternelle",
+   "url": "https://www.essonne.fr/sante-social-solidarite/mes-demarches/quelles-aides/detail/agrement-dassistant-maternel",
    "verifie": false,
-   "libelle": "devenir assistante maternelle dans l'Essonne"
+   "libelle": "l'agrément d'assistant maternel en Essonne"
   },
   "92": {
    "nom": "Hauts-de-Seine",
@@ -489,9 +490,9 @@
   },
   "95": {
    "nom": "Val-d'Oise",
-   "url": "https://valdoise.fr/436-assistant-e-maternel-le-.htm",
+   "url": "",
    "verifie": false,
-   "libelle": "le service petite enfance du Val-d'Oise"
+   "libelle": ""
   },
   "971": {
    "nom": "Guadeloupe",
