@@ -3,28 +3,35 @@
  "departements": {
   "01": {
    "nom": "Ain",
-   "url": "",
-   "verifie": false
+   "url": "https://www.ain.fr/solutions/devenir-assistant-maternel/",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans l'Ain"
   },
   "02": {
    "nom": "Aisne",
-   "url": "",
-   "verifie": false
+   "url": "https://www.aisne.com/votre-service/enfance-famille/devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans l'Aisne",
+   "note": "Le conseil départemental de l'Aisne publie sur aisne.com, pas sur aisne.fr qui est le domaine des archives départementales."
   },
   "03": {
    "nom": "Allier",
-   "url": "",
-   "verifie": false
+   "url": "https://www.allier.fr/828-assistant-e-s-maternel-le-s.htm",
+   "verifie": false,
+   "libelle": "les assistants maternels dans l'Allier",
+   "note": "Pas de page « devenir » distincte : la page rassemble agrément, formation et suivi."
   },
   "04": {
    "nom": "Alpes-de-Haute-Provence",
-   "url": "",
-   "verifie": false
+   "url": "https://www.mondepartement04.fr/famille/devenir-assistante-maternelle",
+   "verifie": false,
+   "libelle": "devenir assistante maternelle dans les Alpes-de-Haute-Provence"
   },
   "05": {
    "nom": "Hautes-Alpes",
-   "url": "",
-   "verifie": false
+   "url": "https://www.hautes-alpes.fr/nos-actions/enfance-et-famille/faire-garder-son-enfant/devenir-assistante-maternelle/",
+   "verifie": false,
+   "libelle": "devenir assistante maternelle dans les Hautes-Alpes"
   },
   "06": {
    "nom": "Alpes-Maritimes",
@@ -34,33 +41,44 @@
   },
   "07": {
    "nom": "Ardèche",
-   "url": "",
-   "verifie": false
+   "url": "https://www.ardeche.fr/mon-quotidien/enfance-et-famille/",
+   "verifie": false,
+   "libelle": "l'enfance et la famille en Ardèche",
+   "note": "Aucune page consacrée à l'agrément : le département renvoie vers les centres médico-sociaux. Rubrique générale faute de mieux, libellé volontairement non promettant."
   },
   "08": {
    "nom": "Ardennes",
-   "url": "",
-   "verifie": false
+   "url": "https://www.cd08.fr/devenir-assistante-maternelle",
+   "verifie": false,
+   "libelle": "devenir assistante maternelle dans les Ardennes",
+   "note": "Deux URL coexistent, celle-ci et /vous-voulez/devenir-assistante-maternelle. Vérifier laquelle est vivante."
   },
   "09": {
    "nom": "Ariège",
-   "url": "",
-   "verifie": false
+   "url": "http://www.ariege.fr/Etre-solidaire/Enfance-et-famille/Enfance-prevention/Devenir-assistant-maternel",
+   "verifie": false,
+   "libelle": "devenir assistant maternel en Ariège",
+   "note": "À contrôler de près : URL en http et page annonçant 60 h de formation, l'ancienne règle d'avant 2019. Sans doute l'ancien site, le nouveau étant en https sur ariege.fr."
   },
   "10": {
    "nom": "Aube",
-   "url": "",
-   "verifie": false
+   "url": "https://assistante-maternelle.aube.fr/131-le-metier-d-assistant-e-maternel-le.htm",
+   "verifie": false,
+   "libelle": "le métier d'assistante maternelle dans l'Aube",
+   "note": "Comme l'Essonne, l'Aube a un portail séparé du site départemental."
   },
   "11": {
    "nom": "Aude",
-   "url": "",
-   "verifie": false
+   "url": "https://www.aude.fr/je-veux-devenir-assistante-maternelle",
+   "verifie": false,
+   "libelle": "devenir assistante maternelle dans l'Aude"
   },
   "12": {
    "nom": "Aveyron",
-   "url": "",
-   "verifie": false
+   "url": "https://aveyron.fr/pages/service-de-pmi/devenir-assistant-e-maternel-le",
+   "verifie": false,
+   "libelle": "devenir assistant maternel en Aveyron",
+   "note": "Une seconde URL très proche existe (je-souhaite-devenir-assistante-maternelle) : garder celle qui répond."
   },
   "13": {
    "nom": "Bouches-du-Rhône",
@@ -70,23 +88,30 @@
   },
   "14": {
    "nom": "Calvados",
-   "url": "",
-   "verifie": false
+   "url": "https://www.calvados.fr/accueil/le-departement/solidarite-familles/enfance--familles/devenir-assistant-maternel.html",
+   "verifie": false,
+   "libelle": "devenir assistant maternel dans le Calvados",
+   "note": "Les autres pages du site écrivent « solidarite---familles » avec trois tirets. Si le lien casse, essayer cette variante."
   },
   "15": {
    "nom": "Cantal",
-   "url": "",
-   "verifie": false
+   "url": "https://www.cantal.fr/les-assistantes-maternelles/",
+   "verifie": false,
+   "libelle": "les assistantes maternelles dans le Cantal"
   },
   "16": {
    "nom": "Charente",
-   "url": "",
-   "verifie": false
+   "url": "https://www.lacharente.fr/actualite/emploi/devenir-assistante-maternelle",
+   "verifie": false,
+   "libelle": "devenir assistante maternelle en Charente",
+   "note": "Page classée sous la rubrique actualités/emploi : risque qu'elle soit archivée un jour."
   },
   "17": {
    "nom": "Charente-Maritime",
-   "url": "",
-   "verifie": false
+   "url": "https://la.charente-maritime.fr/parents-petite-enfance/metier-dassistante-maternelle",
+   "verifie": false,
+   "libelle": "le métier d'assistante maternelle en Charente-Maritime",
+   "note": "Le site du département est sur le sous-domaine la.charente-maritime.fr."
   },
   "18": {
    "nom": "Cher",
