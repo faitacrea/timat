@@ -29,7 +29,7 @@
   "06": {
    "nom": "Alpes-Maritimes",
    "url": "https://www.departement06.fr/devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans les Alpes-Maritimes"
   },
   "07": {
@@ -65,7 +65,7 @@
   "13": {
    "nom": "Bouches-du-Rhône",
    "url": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
-   "verifie": false,
+   "verifie": true,
    "libelle": "être assistante maternelle dans les Bouches-du-Rhône"
   },
   "14": {
@@ -141,7 +141,7 @@
   "29": {
    "nom": "Finistère",
    "url": "https://www.finistere.fr/aides-et-services/enfance-famille/assistants-maternels/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "les assistants maternels dans le Finistère"
   },
   "2A": {
@@ -162,7 +162,7 @@
   "31": {
    "nom": "Haute-Garonne",
    "url": "https://www.haute-garonne.fr/aide/assistante-maternelle",
-   "verifie": false,
+   "verifie": true,
    "libelle": "la demande d'agrément en Haute-Garonne"
   },
   "32": {
@@ -179,7 +179,7 @@
   "34": {
    "nom": "Hérault",
    "url": "https://herault.fr/591-devenir-assistant-maternel.htm",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans l'Hérault"
   },
   "35": {
@@ -258,7 +258,7 @@
   "49": {
    "nom": "Maine-et-Loire",
    "url": "https://www.maine-et-loire.fr/aides-et-services/enfance-et-famille/metiers-de-la-petite-enfance/devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Maine-et-Loire"
   },
   "50": {
@@ -299,7 +299,7 @@
   "57": {
    "nom": "Moselle",
    "url": "https://www.moselle.fr/jcms/pl_10954/fr/devenir-assistant-e-maternel-le",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Moselle"
   },
   "58": {
@@ -412,7 +412,7 @@
   "78": {
    "nom": "Yvelines",
    "url": "https://www.yvelines.fr/solidarite/enfance-et-famille/accueil-petite-enfan/devenirassistantematernelle/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans les Yvelines"
   },
   "79": {
