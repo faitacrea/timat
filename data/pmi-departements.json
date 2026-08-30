@@ -51,9 +51,8 @@
   },
   "09": {
    "nom": "Ariège",
-   "url": "https://www.ariege.fr/Etre-solidaire/Enfance-et-famille/Enfance-prevention/Devenir-assistant-maternel",
-   "verifie": false,
-   "libelle": "devenir assistant maternel en Ariège"
+   "url": "",
+   "verifie": false
   },
   "10": {
    "nom": "Aube",
@@ -154,7 +153,7 @@
   "27": {
    "nom": "Eure",
    "url": "https://eureennormandie.fr/nos-aides-et-services/particuliers/enfance-et-famille/je-voudrais-devenir-assistante-maternelle/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans l'Eure"
   },
   "28": {
@@ -282,7 +281,7 @@
   "47": {
    "nom": "Lot-et-Garonne",
    "url": "https://www.lotetgaronne.fr/nos-services/solidarite/enfance-famille/modes-de-garde",
-   "verifie": false,
+   "verifie": true,
    "libelle": "les modes de garde en Lot-et-Garonne"
   },
   "48": {
@@ -324,13 +323,13 @@
   "54": {
    "nom": "Meurthe-et-Moselle",
    "url": "https://meurthe-et-moselle.fr/vous-souhaitez-devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Meurthe-et-Moselle"
   },
   "55": {
    "nom": "Meuse",
    "url": "https://www.meuse.fr/proche/enfance-et-famille/devenir-assistant-maternel-agree",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel agréé dans la Meuse"
   },
   "56": {
@@ -491,7 +490,7 @@
   "82": {
    "nom": "Tarn-et-Garonne",
    "url": "https://www.tarnetgaronne.fr/devenir-assistante-maternelle",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Tarn-et-Garonne"
   },
   "83": {
@@ -503,7 +502,7 @@
   "84": {
    "nom": "Vaucluse",
    "url": "https://www.vaucluse.fr/enfance-et-famille/les-metiers-de-l-accueil-de-l-enfant/devenir-assistant-maternel-559.html",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Vaucluse"
   },
   "85": {
