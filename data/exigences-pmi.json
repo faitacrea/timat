@@ -1,26 +1,29 @@
 {
  "_lisezmoi": "Ce que chaque PMI départementale demande concrètement, au-delà du parcours national décrit sur les pages « devenir ». Un champ n'est rempli que s'il est écrit noir sur blanc sur le site du conseil départemental, et la section n'est rendue que si le département a au moins un champ renseigné. Aucune valeur n'est déduite, extrapolée ni reprise d'une autre source que le département lui-même.",
-
  "_regles_de_collecte": [
   "Ne retenir que ce qui figure explicitement sur la page du conseil départemental. Un résumé de moteur de recherche ne fait pas foi : plusieurs se sont révélés faux à la lecture de la page.",
   "Un écart à la norme nationale n'est retenu que s'il est EN PLUS. La formation légale est de 120 heures dont 80 avant tout accueil, dans les six mois suivant la réception du dossier complet, puis 40 heures dans les trois ans. Un département peut faire davantage — le Gard 126 heures, Paris 174 — et c'est une vraie différence. Un chiffre inférieur ou un délai plus court signale un site qui n'est pas à jour, jamais une règle locale : on n'affiche alors rien.",
   "Exemple vécu : la Haute-Garonne annonce « 40 heures dans les 2 ans », qui est l'ancienne règle d'avant 2019 — le délai est de trois ans depuis. Sa durée de formation est donc laissée vide, alors que ses autres champs sont retenus.",
   "Le délai d'instruction n'est stocké que s'il diffère des trois mois légaux, et il est alors présenté comme le délai annoncé par le Département, jamais comme le délai légal. L'article L421-6 du code de l'action sociale et des familles fixe trois mois à compter du dossier complet, le silence valant agrément : cette garantie ne doit jamais être noyée par un délai de traitement affiché.",
-  "Chaque département porte sa source et sa date de relevé. Sans source, pas d'affichage."
+  "Chaque département porte sa source et sa date de relevé. Sans source, pas d'affichage.",
+  "Ce qui est examiné pendant l'entretien et la visite à domicile est fixé au niveau national par le décret n° 2012-364 du 15 mars 2012 : disponibilité, capacité d'organisation, aptitude au dialogue, capacités éducatives, connaissance du métier, confort et sécurité du logement. Ces critères n'ont donc pas à être stockés département par département. Ce qui se collecte ici, ce sont les exigences que le département ajoute par-dessus — les règlements départementaux les signalent en propres termes, comme « exigences départementales spécifiques ».",
+  "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
  ],
-
  "departements": {
   "29": {
    "nom": "Finistère",
    "reunion": "proposee",
-   "depot": ["enligne"],
+   "depot": [
+    "enligne"
+   ],
    "depotNote": "par le portail e-services du Département, ou par service-public.fr",
-   "contact": { "email": "assistantes.maternelles@finistere.fr" },
+   "contact": {
+    "email": "assistantes.maternelles@finistere.fr"
+   },
    "contactNote": "l'interlocuteur téléphonique dépend de la première lettre de votre nom ; permanence le lundi et le mercredi de 14 h à 17 h",
    "source": "https://www.finistere.fr/aides-et-services/enfance-famille/assistants-maternels/",
    "releve": "2026-08-30"
   },
-
   "30": {
    "nom": "Gard",
    "formation": {
@@ -28,32 +31,46 @@
     "note": "126 heures au lieu des 120 heures légales, plus 12 heures d'initiation aux gestes de premiers secours"
    },
    "reunion": "conseillee",
-   "depot": ["recommande", "surplace", "enligne"],
+   "depot": [
+    "recommande",
+    "surplace",
+    "enligne"
+   ],
    "depotNote": "en recommandé avec accusé de réception, en main propre à la maison départementale, ou par voie électronique avec demande d'accusé de réception",
-   "contact": { "tel": "04 66 05 40 84", "email": "depe-am.af.mam@gard.fr" },
+   "contact": {
+    "tel": "04 66 05 40 84",
+    "email": "depe-am.af.mam@gard.fr"
+   },
    "source": "https://www.gard.fr/mes-demarches/pour-la-famille-les-enfants/devenir-assistante-maternelle",
    "releve": "2026-08-30"
   },
-
   "31": {
    "nom": "Haute-Garonne",
    "reunion": "obligatoire",
    "reunionNote": "la réunion d'information préalable à l'agrément (RIPA), sur inscription",
-   "depot": ["enligne", "courrier"],
-   "contact": { "tel": "05 34 33 41 53", "email": "accueilpmi-individuelcollectif@cd31.fr" },
+   "depot": [
+    "enligne",
+    "courrier"
+   ],
+   "contact": {
+    "tel": "05 34 33 41 53",
+    "email": "accueilpmi-individuelcollectif@cd31.fr"
+   },
    "source": "https://www.haute-garonne.fr/aide/assistante-maternelle",
    "releve": "2026-08-30"
   },
-
   "65": {
    "nom": "Hautes-Pyrénées",
-   "depot": ["courrier"],
+   "depot": [
+    "courrier"
+   ],
    "depotNote": "par courrier, à la direction de la solidarité départementale, service des modes d'accueil, 1 place Ferré à Tarbes",
-   "contact": { "tel": "05 62 56 74 42" },
+   "contact": {
+    "tel": "05 62 56 74 42"
+   },
    "source": "https://www.hautespyrenees.fr/enfance-familles/les-metiers-de-lenfance/le-metier-dassistante-maternelle/",
    "releve": "2026-08-30"
   },
-
   "75": {
    "nom": "Paris",
    "formation": {
@@ -62,6 +79,31 @@
    },
    "contactNote": "l'interlocuteur est le service d'accompagnement des assistants maternels et familiaux (SAMF) de votre arrondissement",
    "source": "https://www.paris.fr/pages/les-assistantes-maternelles-213",
+   "releve": "2026-08-30"
+  },
+  "17": {
+   "nom": "Charente-Maritime",
+   "reunion": "obligatoire",
+   "reunionNote": "une réunion d'information est organisée à Saintes ou à La Rochelle avant le dépôt du dossier",
+   "depot": [
+    "courrier"
+   ],
+   "depotNote": "à la délégation territoriale de Saintes, après la réunion d'information",
+   "source": "https://la.charente-maritime.fr/parents-petite-enfance/metier-dassistante-maternelle",
+   "reglementUrl": "https://la.charente-maritime.fr/sites/charente_maritime/files/2022-07/reglement-departement-agrement-ass-mat.pdf",
+   "minimumAgrement": "l'agrément est accordé au minimum pour deux enfants, sauf si les conditions d'accueil ne le permettent pas — toute restriction en deçà doit être motivée dans l'arrêté",
+   "apresRefus": "le candidat peut demander à être reçu par le service de PMI ; en revanche, des demandes répétitives ou abusives ne donnent pas lieu à une nouvelle évaluation",
+   "reglesLocales": [
+    "le jardin doit être entièrement clôturé sur 1,10 m minimum au-dessus du point le plus haut accessible à l'enfant, avec un portail dont le déverrouillage exige l'intervention d'un adulte",
+    "les balcons, terrasses et mezzanines demandent un garde-corps de 1,10 m ; les barreaux horizontaux sont proscrits, seuls les verticaux sont admis",
+    "les escaliers doivent être fermés en haut et en bas par des barrières rigides homologuées NF ou CE, rambarde et contremarches comprises",
+    "les piscines enterrées exigent un dispositif normalisé attesté par une note technique ; une simple alarme ne suffit pas, il faut y ajouter une clôture conforme à la norme NF P 90-306",
+    "les piscines hors-sol, gonflables, spas et jacuzzis relèvent des mêmes règles ; récupérateurs d'eau, puits et tonneaux doivent être obturés par un système qu'un enfant ne peut déplacer et qui supporte son poids",
+    "les fenêtres des étages demandent une allège ou un garde-corps à 1,10 m, à défaut une ouverture limitée",
+    "les abris de jardin, garages, sous-sols et greniers doivent être fermés à clé ou rendus inaccessibles",
+    "la détention d'un chien de catégorie 1 ou 2 est incompatible avec l'agrément, et son acquisition en cours d'agrément entraîne un retrait ; les autres animaux sont appréciés au cas par cas",
+    "les enfants ne doivent être exposés ni au tabac ni à la cigarette électronique, dans le logement comme à l'extérieur, pendant tout le temps d'accueil"
+   ],
    "releve": "2026-08-30"
   }
  }
