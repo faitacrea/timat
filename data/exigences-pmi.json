@@ -105,6 +105,17 @@
     "les enfants ne doivent être exposés ni au tabac ni à la cigarette électronique, dans le logement comme à l'extérieur, pendant tout le temps d'accueil"
    ],
    "releve": "2026-08-30"
+  },
+  "33": {
+   "nom": "Gironde",
+   "source": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
+   "reglementUrl": "https://www.gironde.fr/sites/default/files/2017-04/rda-assmaternelle.pdf",
+   "apresRefus": "un refus fondé sur la seule sécurité (piscine, point d'eau, clôture ou portail non conformes) n'est pas définitif : dès que vous signalez la mise en conformité au service PMI Modes d'accueil, l'agrément vous est adressé après une contre-visite",
+   "reglesLocales": [
+    "le Département pose une exigence propre sur les piscines, enterrées comme hors-sol : l'accès doit être fermé par une barrière d'au moins 1,10 m munie d'un portillon qu'un jeune enfant ne peut ouvrir, de préférence à fermeture automatique — le Département recommande de privilégier 1,30 m",
+    "un chien de 1re ou 2e catégorie est incompatible avec l'exercice du métier, y compris s'il vit en chenil"
+   ],
+   "releve": "2026-08-30"
   }
  }
 }

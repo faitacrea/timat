@@ -67,3 +67,7 @@ public/sitemap-local.xml
 # Note : data/stats-departements.json EST versionné. Le build Vercel en a
 # besoin pour générer les pages départementales — l'ignorer reviendrait à ne
 # rien publier en production.
+
+# === Documents vendus en boutique (générés par npm run documents) ===
+# Le PDF est un produit livré à l'acheteur, pas un fichier servi par le site.
+documents/*.pdf

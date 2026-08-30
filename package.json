@@ -8,7 +8,8 @@
     "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/audit.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
-    "audit:strict": "node scripts/audit.mjs --strict"
+    "audit:strict": "node scripts/audit.mjs --strict",
+    "documents": "node scripts/generer-documents.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "pdfkit": "^0.20.2",
     "vite": "^5.4.0"
   }
 }

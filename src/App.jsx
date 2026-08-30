@@ -13116,8 +13116,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
               {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
-              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir et imprimer. Document obligatoire.",icon:"🚨",color:"#C84B31",link:config.boutique?.linkFiche},
-              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections personnalisables. Pret a l'emploi.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
+              {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Le document a afficher, que la PMI regarde. A remplir et imprimer.",icon:"🚨",color:"#C84B31",link:config.boutique?.linkFiche},
+              {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"13 sections guidees, adossees au referentiel national qualite 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
               {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis (-16%).",icon:"🎁",color:"#E49178",badge:"-16%",link:config.boutique?.linkPack},
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
@@ -15212,7 +15212,7 @@ function Boutique({user}){
   const products=[
     {id:"kit_sheets",name:"Kit Google Sheets Assmat",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel, planning, indemnites, facture.",icon:"📊",color:"#5DA9A1"},
     {id:"fiche_urgence",name:"Fiche d'urgence",price:"4,90",desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences, autorisations.",icon:"🚨",color:"#C84B31"},
-    {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"10 sections : presentation, valeurs, journee type, alimentation, sommeil, activites, sante, parents.",icon:"🌿",color:"#2E4859"},
+    {id:"projet_accueil",name:"Projet d'accueil",price:"9,90",desc:"13 sections : presentation, lieu, familiarisation, journee type, sommeil, repas, change, jeu, emotions, parents, inclusion, securite, formation.",icon:"🌿",color:"#2E4859"},
     {id:"pack_complet",name:"Pack Complet",price:"24,90",desc:"Les 3 produits reunis. Economisez 4,80 EUR par rapport a l'achat separe.",icon:"🎁",color:"#E49178",badge:"-16%"},
   ];
 
