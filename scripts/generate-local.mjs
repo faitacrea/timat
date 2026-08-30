@@ -210,6 +210,7 @@ tr.fort td{background:#FDF6F4;font-weight:700}
 .chip{font-size:13px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 14px;color:var(--marine);text-decoration:none}
 .sources{font-size:13px;color:var(--muted);margin-top:22px;border-top:1px solid #EDE6DE;padding-top:14px}
 .sources li{margin:5px 0}
+.mini{font-size:13px;color:var(--muted);margin-top:8px}
 .grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:20px 0 40px}
 .grille a{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:var(--marine);font-weight:600;font-size:14.5px}
 .grille a:hover{border-color:var(--terra)}
@@ -401,7 +402,115 @@ function pageTarif(d, st, stats, ctx) {
 }
 
 /* -------------------------------------------------------------- DEVENIR */
-function pageDevenir(d, st, stats, ctx, pmi) {
+// Ce que la PMI du departement demande en propre, au-dela du parcours national.
+// Chaque ligne vient du site du conseil departemental, relevee a la main : le
+// bloc n'affiche que les champs presents, et disparait entierement s'il n'y en
+// a aucun. Rien n'est deduit — un departement muet sur la formation reste muet
+// sur la page, il ne recupere pas la regle nationale a son nom.
+const DEPOTS = {
+  enligne: "en ligne",
+  courrier: "par courrier",
+  recommande: "en recommandé avec accusé de réception",
+  surplace: "sur place",
+  reunion: "remis lors de la réunion d'information",
+};
+
+const REUNIONS = {
+  obligatoire: "obligatoire avant de déposer votre dossier",
+  conseillee: "facultative, mais vivement conseillée par le Département",
+  proposee: "proposée par le Département",
+};
+
+function blocExigences(ex, ou) {
+  if (!ex) return "";
+
+  const lignes = [];
+
+  if (ex.formation?.heures) {
+    // L'ecart au national est le fait notable. Quand la note le formule deja,
+    // elle se suffit : rappeler le minimum legal juste apres ferait doublon.
+    lignes.push(
+      `<li><strong>Formation</strong> — ${
+        ex.formation.note
+          ? esc(ex.formation.note)
+          : `${esc(String(ex.formation.heures))} heures, là où le minimum légal est de 120 heures dont 80 avant tout accueil`
+      }.</li>`
+    );
+  }
+
+  if (ex.reunion && REUNIONS[ex.reunion]) {
+    lignes.push(
+      `<li><strong>Réunion d'information</strong> — ${esc(REUNIONS[ex.reunion])}${
+        ex.reunionNote ? ` : ${esc(ex.reunionNote)}` : ""
+      }.</li>`
+    );
+  }
+
+  // La note precise l'adresse ou le portail : quand elle existe elle remplace la
+  // liste des modes, qui redirait la meme chose en plus vague.
+  if (ex.depotNote) {
+    lignes.push(`<li><strong>Dépôt du dossier</strong> — ${esc(ex.depotNote)}.</li>`);
+  } else if (Array.isArray(ex.depot) && ex.depot.length) {
+    const modes = ex.depot.map((m) => DEPOTS[m]).filter(Boolean);
+    if (modes.length) {
+      const liste =
+        modes.length > 1 ? `${modes.slice(0, -1).join(", ")} ou ${modes[modes.length - 1]}` : modes[0];
+      lignes.push(`<li><strong>Dépôt du dossier</strong> — ${esc(liste)}.</li>`);
+    }
+  }
+
+  if (ex.delaiAnnonce) {
+    // Le delai legal prime toujours : il ne doit jamais etre efface par le
+    // delai de traitement qu'affiche un departement.
+    lignes.push(
+      `<li><strong>Délai annoncé</strong> — le Département indique ${esc(
+        ex.delaiAnnonce
+      )}. La loi fixe trois mois à compter du dossier complet, au terme desquels le silence vaut agrément.</li>`
+    );
+  }
+
+  const c = ex.contact || {};
+  if (c.tel || c.email || ex.contactNote) {
+    const coord = [
+      c.tel ? `<strong>${esc(c.tel)}</strong>` : "",
+      c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : "",
+    ]
+      .filter(Boolean)
+      .join(" — ");
+    lignes.push(
+      `<li><strong>Service agréments</strong> — ${coord}${
+        coord && ex.contactNote ? ". " : ""
+      }${ex.contactNote ? esc(ex.contactNote.charAt(0).toUpperCase() + ex.contactNote.slice(1)) : ""}.</li>`
+    );
+  }
+
+  if (!lignes.length) return "";
+
+  return `
+  <h2>Ce que demande la PMI ${esc(ou)}</h2>
+  <p>Le parcours d'agrément est le même partout, mais chaque conseil départemental en fixe les modalités. Voici ce que celui-ci annonce${
+    ex.releve ? `, relevé sur son site le ${esc(dateFr(ex.releve))}` : ""
+  }.</p>
+  <ul>
+    ${lignes.join("\n    ")}
+  </ul>
+  ${
+    ex.source
+      ? `<p class="mini">Source : <a href="${esc(ex.source)}" rel="nofollow">le site du conseil départemental</a>. Ces modalités changent sans préavis — vérifiez-les avant de vous déplacer.</p>`
+      : ""
+  }`;
+}
+
+function dateFr(iso) {
+  const [a, m, j] = String(iso).split("-");
+  const mois = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+  ];
+  return `${Number(j)} ${mois[Number(m) - 1]} ${a}`;
+}
+
+function pageDevenir(d, st, stats, ctx, pmi, exigences) {
   const url = `${SITE}/assistante-maternelle/${slugify(d.nom)}/devenir`;
   const ou = d.prep + d.nom;
   const partNat =
@@ -504,6 +613,8 @@ function pageDevenir(d, st, stats, ctx, pmi) {
 
   <div class="box">Le parcours complet est détaillé dans nos guides <a href="/blog/devenir-assistante-maternelle-agrement">Devenir assistante maternelle : le parcours vers l'agrément</a> et <a href="/blog/renouvellement-agrement-assistante-maternelle">Le renouvellement de l'agrément</a>.</div>
 
+  ${blocExigences(exigences, ou)}
+
   <h2>Qui contacter ${esc(ou)}</h2>
   ${pmi && pmi.verifie && pmi.url
     ? `<p>Votre interlocuteur est le <strong>service de protection maternelle et infantile (PMI)</strong> du conseil départemental : <a href="${esc(pmi.url)}" rel="nofollow">${esc(pmi.libelle || `le service dédié ${ou}`)}</a>. C'est lui qui organise les réunions d'information et fixe le calendrier des sessions de formation.</p>`
@@ -602,9 +713,12 @@ async function main() {
   const departements = lire("departements.json");
   const stats = lire("stats-departements.json");
   const ctx = contexte(departements, stats);
-  // Fichier facultatif : son absence ne casse rien, les pages gardent leur repli.
+  // Fichiers facultatifs : leur absence ne casse rien, les pages gardent leur repli.
   const pmi = existsSync(path.join(DATA_DIR, "pmi-departements.json"))
     ? lire("pmi-departements.json").departements || {}
+    : {};
+  const exigences = existsSync(path.join(DATA_DIR, "exigences-pmi.json"))
+    ? lire("exigences-pmi.json").departements || {}
     : {};
   const parCode = new Map(departements.map((d) => [String(d.code), d]));
 
@@ -632,7 +746,7 @@ async function main() {
     }
     if (aDevenir) {
       await mkdir(path.join(base, "devenir"), { recursive: true });
-      await writeFile(path.join(base, "devenir", "index.html"), pageDevenir(d, st, stats, ctx.get(code) || {}, pmi[code] || null), "utf8");
+      await writeFile(path.join(base, "devenir", "index.html"), pageDevenir(d, st, stats, ctx.get(code) || {}, pmi[code] || null, exigences[code] || null), "utf8");
       urls.push(`${SITE}/assistante-maternelle/${slugify(d.nom)}/devenir`);
       nbDevenir++;
     }
