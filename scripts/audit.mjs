@@ -161,8 +161,21 @@ for (const p of pages) {
 }
 
 // --- cohérence du minimum conventionnel ---
+// « Minimum conventionnel » designe ici le salaire horaire brut par enfant,
+// 4,20 € depuis le 1er juin 2026. Une page qui l'evoque sans le chiffrer laisse
+// le lecteur devant le minimum legal, plus bas : c'est l'erreur qui avait fait
+// valider des bulletins sous-payes.
+//
+// La convention emploie le meme terme pour l'indemnite d'entretien, dont le
+// minimum n'a rien a voir (2,65 € par journee, ou 0,435 € par heure au-dela de
+// six heures). Ces occurrences-la sont ecartees avant le controle, sinon un
+// texte exact sur l'entretien serait signale a tort — c'est arrive.
+const MIN_CONV_ENTRETIEN = /minimum conventionnel\s+d(?:e l)?'\s*indemnité\s+d'\s*entretien/gi;
+
 for (const p of pages) {
-  const html = lire(p);
+  // Les apostrophes sont echappees a la generation : les normaliser d'abord,
+  // sans quoi la mention d'entretien passe au travers du filtre.
+  const html = lire(p).replace(/&#39;|&rsquo;|’/g, "'").replace(MIN_CONV_ENTRETIEN, "");
   if (!/minimum conventionnel/i.test(html)) continue;
   if (!/4,20\s*(&nbsp;|\s)?€/.test(html)) {
     signale("montant", `${routeDe(p)} cite le minimum conventionnel sans le chiffrer à 4,20 €`);
