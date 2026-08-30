@@ -657,6 +657,7 @@ function pageDevenir(d, st, stats, ctx, pmi, exigences) {
 
   <div class="related"><h2>À voir aussi</h2><div class="chips">
     ${Number(st.salaireHoraireNet) > 0 ? `<a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/tarif">💶 Les tarifs ${esc(ou)}</a>` : ""}
+    <a class="chip" href="/assistante-maternelle/documents">📄 Les documents à connaître</a>
     <a class="chip" href="/blog/devenir-assistante-maternelle-agrement">📋 Le parcours d'agrément</a>
     <a class="chip" href="/blog/renouvellement-agrement-assistante-maternelle">🔄 Le renouvellement</a>
     <a class="chip" href="/assistante-maternelle/">🗺️ Tous les départements</a>
@@ -680,6 +681,102 @@ function pageDevenir(d, st, stats, ctx, pmi, exigences) {
 }
 
 /* ------------------------------------------------------------------ HUB */
+// Page transverse : ces documents sont nationaux, ils n'ont donc rien a faire
+// sur 98 pages departementales, ou ils fabriqueraient exactement les pages
+// satellites que la differenciation des pages locales cherche a eviter. Une
+// page unique, liee depuis chaque page « devenir ».
+const STATUTS = {
+  obligatoire: {
+    titre: "Ce qu'un texte impose",
+    chapo:
+      "Ces documents ne relèvent pas du choix : un texte les rend obligatoires, et leur absence se voit lors d'un contrôle.",
+  },
+  officiel: {
+    titre: "Ce que l'administration publie gratuitement",
+    chapo:
+      "Rien à acheter ici : ces documents sont en accès libre sur les sites officiels. Ils valent d'être lus une fois plutôt que résumés de seconde main.",
+  },
+  utile: {
+    titre: "Ce qu'il vaut mieux préparer",
+    chapo:
+      "Aucun texte ne les impose sous cette forme, mais ils répondent à un besoin réel du quotidien — et la PMI les demande souvent.",
+  },
+};
+
+function pageDocuments(docs) {
+  const url = `${SITE}/assistante-maternelle/documents`;
+  const bloc = (statut) => {
+    const liste = docs.filter((d) => d.statut === statut);
+    if (!liste.length) return "";
+    const s = STATUTS[statut];
+    return `
+  <h2>${esc(s.titre)}</h2>
+  <p>${esc(s.chapo)}</p>
+  ${liste
+    .map(
+      (d) => `<div class="box">
+    <strong>${esc(d.titre)}</strong>
+    <p>${esc(d.quoi)}</p>
+    <p class="mini">${d.texte ? `${esc(d.texte)}. ` : ""}${
+        d.lien ? `<a href="${esc(d.lien)}" rel="nofollow">${esc(d.lienLibelle || "Consulter le texte")}</a>.` : ""
+      }${
+        d.boutique
+          ? `Un modèle prêt à remplir existe dans notre boutique — <a href="/boutique.html">${esc(
+              d.boutique.produit
+            )}, ${esc(d.boutique.prix)}</a>.`
+          : ""
+      }</p>
+  </div>`
+    )
+    .join("\n  ")}`;
+  };
+
+  const corps = `
+<div class="hero"><div class="hero-in">
+  <div class="crumb"><a href="/">Accueil</a> › <a href="/assistante-maternelle/">Par département</a> › Les documents</div>
+  <span class="tag">Documents</span>
+  <h1>Les documents d'une assistante maternelle</h1>
+  <p class="lead">Ce qu'un texte impose, ce que l'administration met à disposition gratuitement, et ce qu'il vaut mieux préparer même sans y être obligée. Avec le texte qui fonde chaque obligation.</p>
+</div></div>
+<main>
+  <section class="reponse">
+    <h2>Réponse courte</h2>
+    <p>Trois documents seulement sont imposés par un texte : le <strong>registre des médicaments administrés</strong>, l'<strong>attestation d'honorabilité</strong> et le <strong>contrat de travail écrit</strong>, auquel s'ajoute la convention collective que l'employeur tient à votre disposition. Tout le reste est utile, parfois attendu par la PMI, mais pas obligatoire — et mérite qu'on le dise.</p>
+  </section>
+  ${bloc("obligatoire")}
+  ${bloc("officiel")}
+  ${bloc("utile")}
+
+  <div class="ctabox">
+    <h2>Les contrats, eux, se calculent</h2>
+    <p>Mensualisation, congés payés, indemnités d'entretien et de repas, déclaration Pajemploi : TiMat établit les contrats et les bulletins à votre place, à jour de la convention collective.</p>
+    <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
+  </div>
+
+  <div class="related"><h2>À voir aussi</h2><div class="chips">
+    <a class="chip" href="/blog/devenir-assistante-maternelle-agrement">📋 Le parcours d'agrément</a>
+    <a class="chip" href="/blog/renouvellement-agrement-assistante-maternelle">🔄 Le renouvellement</a>
+    <a class="chip" href="/assistante-maternelle/">🗺️ Tous les départements</a>
+    <a class="chip" href="/boutique.html">🛒 La boutique</a>
+  </div></div>
+
+  <div class="sources"><strong>Sources</strong><ul>
+    <li>Code de la santé publique, article R2111-1 — décret n° 2021-1131 du 30 août 2021</li>
+    <li>Convention collective de la branche des particuliers employeurs et de l'emploi à domicile — IDCC 3239</li>
+    <li>Arrêté du 23 septembre 2021 portant création d'une charte nationale pour l'accueil du jeune enfant</li>
+    <li>Décret n° 2012-364 du 15 mars 2012 — référentiel d'agrément des assistants maternels</li>
+  </ul></div>
+</main>`;
+
+  return page({
+    titre: "Les documents d'une assistante maternelle : obligatoires, officiels, utiles",
+    description:
+      "Registre des médicaments, attestation d'honorabilité, contrat, convention collective, projet d'accueil : ce qu'un texte impose vraiment et ce qui relève du confort de travail.",
+    canonical: url,
+    corps,
+  });
+}
+
 function pageHub(entrees) {
   const url = `${SITE}/assistante-maternelle/`;
   const parRegion = new Map();
@@ -787,9 +884,21 @@ async function main() {
   }
 
   await writeFile(path.join(LOCAL_DIR, "index.html"), pageHub(entrees), "utf8");
+
+  // Page transverse des documents : rendue seulement si le fichier existe, et
+  // seulement si des documents y sont declares.
+  const docs = existsSync(path.join(DATA_DIR, "documents-assmat.json"))
+    ? lire("documents-assmat.json").documents || []
+    : [];
+  if (docs.length) {
+    await mkdir(path.join(LOCAL_DIR, "documents"), { recursive: true });
+    await writeFile(path.join(LOCAL_DIR, "documents", "index.html"), pageDocuments(docs), "utf8");
+    urls.push(`${SITE}/assistante-maternelle/documents`);
+  }
+
   await writeFile(path.join(PUBLIC_DIR, "sitemap-local.xml"), sitemap(urls), "utf8");
 
-  console.log(`[local] ${nbTarif} page(s) tarif + ${nbDevenir} page(s) devenir + hub + sitemap-local.xml`);
+  console.log(`[local] ${nbTarif} page(s) tarif + ${nbDevenir} page(s) devenir + hub${docs.length ? " + documents" : ""} + sitemap-local.xml`);
   if (ignores.length) console.warn(`[local] ${ignores.length} département(s) ignoré(s) faute de chiffres : ${ignores.join(", ")}`);
 }
 

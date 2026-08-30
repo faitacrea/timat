@@ -1,0 +1,93 @@
+{
+ "_lisezmoi": "Les documents qui comptent dans la vie d'une assistante maternelle, rangés par ce qu'ils sont vraiment : imposés par un texte, mis à disposition gratuitement par l'administration, ou simplement utiles à préparer. Chaque document porte le texte qui le fonde quand il en a un, et le lien vers la source officielle.",
+ "_regles": [
+  "Ne jamais présenter comme obligatoire ce qui ne l'est pas. Un modèle vendu répond à un besoin réel, mais un besoin n'est pas une obligation légale : la distinction se lit sur la page, pas seulement dans notre tête.",
+  "Quand un document existe gratuitement sur un site officiel, le dire et donner le lien, même si la boutique propose un équivalent mis en forme. Cacher la version gratuite se retournerait contre nous, et l'apport de la boutique n'est pas le contenu mais la mise en forme prête à remplir.",
+  "Chaque lien externe est vérifié avant publication. Un lien mort vers un texte de loi est pire que pas de lien."
+ ],
+ "documents": [
+  {
+   "titre": "Le registre des médicaments administrés",
+   "statut": "obligatoire",
+   "quoi": "Dès qu'un médicament est donné à un enfant, le geste doit être consigné immédiatement dans un registre dédié : nom de l'enfant, date et heure, nom de la personne qui l'a administré, nom du médicament et posologie. L'administration suppose par ailleurs l'ordonnance, l'autorisation écrite des parents, et que le médecin n'ait pas prescrit l'intervention d'un auxiliaire médical.",
+   "texte": "article R2111-1 du code de la santé publique, créé par le décret du 30 août 2021",
+   "lien": "https://www.legifrance.gouv.fr/jorf/article_jo/JORFARTI000043990613",
+   "lienLibelle": "le texte du décret sur Légifrance",
+   "verifie": true
+  },
+  {
+   "titre": "L'attestation d'honorabilité",
+   "statut": "obligatoire",
+   "quoi": "Obligatoire sur tout le territoire depuis le 1er octobre 2025, pour la demande d'agrément comme pour son renouvellement. Elle atteste l'absence de condamnation inscrite au casier judiciaire et d'inscription au fichier des auteurs d'infractions sexuelles et violentes. Elle doit dater de moins de six mois au moment où vous la présentez, et les majeurs vivant à votre domicile doivent également en fournir une.",
+   "texte": "généralisée au 1er octobre 2025",
+   "lien": "https://honorabilite.social.gouv.fr/",
+   "lienLibelle": "le service officiel de demande",
+   "verifie": true
+  },
+  {
+   "titre": "Le contrat de travail écrit",
+   "statut": "obligatoire",
+   "quoi": "Un contrat par enfant accueilli. Il porte notamment la liste des personnes exerçant l'autorité parentale, celle des personnes autorisées à venir chercher l'enfant, et les contacts à prévenir en cas d'urgence quand les parents ne sont pas joignables. Ces mentions ne sont donc pas un document à part : elles font partie du contrat.",
+   "texte": "convention collective de la branche des particuliers employeurs et de l'emploi à domicile",
+   "lien": "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000044594539",
+   "lienLibelle": "la convention collective sur Légifrance",
+   "verifie": true
+  },
+  {
+   "titre": "La convention collective, tenue à disposition",
+   "statut": "obligatoire",
+   "quoi": "L'employeur doit tenir un exemplaire de la convention collective à la disposition de son salarié. C'est elle qui fixe le minimum conventionnel — 4,20 € brut de l'heure et par enfant depuis le 1er juin 2026 —, l'indemnité d'entretien, les congés et la mensualisation, autrement dit l'essentiel de ce qui se discute au moment du contrat.",
+   "texte": "IDCC 3239, convention du 15 mars 2021 étendue par arrêté du 6 octobre 2021",
+   "lien": "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000044594539",
+   "lienLibelle": "le texte intégral",
+   "verifie": true
+  },
+  {
+   "titre": "La charte nationale pour l'accueil du jeune enfant",
+   "statut": "officiel",
+   "quoi": "Dix principes qui s'appliquent à tous les modes d'accueil depuis 2021. Pour l'accueil individuel, la charte prévoit que le professionnel explicite, le cas échéant, la manière dont il met ces principes en œuvre — c'est ce que la PMI attend de retrouver dans un projet d'accueil.",
+   "texte": "arrêté du 23 septembre 2021",
+   "lien": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000044126586",
+   "lienLibelle": "l'arrêté et le texte de la charte",
+   "verifie": true
+  },
+  {
+   "titre": "Le référentiel d'agrément",
+   "statut": "officiel",
+   "quoi": "Les critères sur lesquels la PMI évalue une candidature, identiques dans tous les départements. Le référentiel les range en deux volets : les capacités et compétences — santé de l'enfant, maîtrise du français et communication, qualités personnelles et aptitudes éducatives, disponibilité et adaptation, connaissance du métier et de ses responsabilités — puis les conditions matérielles : dimensions et sécurité du lieu d'accueil, moyens de communication d'urgence, environnement et accessibilité, présence d'animaux, transports et déplacements. Les départements peuvent ajouter des exigences par-dessus, jamais en retirer.",
+   "texte": "annexe 4-8 du code de l'action sociale et des familles, issue du décret n° 2012-364 du 15 mars 2012 — non applicable à Mayotte",
+   "lien": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025523748/2020-01-01",
+   "lienLibelle": "le référentiel intégral sur Légifrance",
+   "verifie": true
+  },
+  {
+   "titre": "Les guides et chartes à l'usage des assistants maternels",
+   "statut": "officiel",
+   "quoi": "Les documents de référence rassemblés par la branche famille : cadre du métier, repères sur l'accueil, relations avec les parents employeurs.",
+   "texte": "monenfant.fr, service de la Caisse nationale des allocations familiales",
+   "lien": "https://monenfant.fr/chartes-et-guides-%C3%A0-l-usage-des-assistants-maternels",
+   "lienLibelle": "les guides sur monenfant.fr",
+   "verifie": true
+  },
+  {
+   "titre": "La fiche de renseignements et d'urgence",
+   "statut": "utile",
+   "quoi": "Un document unique par enfant qui rassemble ce qui doit être trouvé en quelques secondes : coordonnées des parents et des personnes à prévenir, autorisations, allergies, médecin traitant, numéros d'urgence. Rien n'impose de fiche séparée — les mentions elles-mêmes sont obligatoires dans le contrat — mais chercher un contrat de huit pages pendant qu'un enfant convulse n'est pas une option. C'est le document à afficher, et à donner à toute personne qui garde les enfants à votre place.",
+   "texte": null,
+   "boutique": {
+    "produit": "Fiche d'urgence",
+    "prix": "4,90 €"
+   }
+  },
+  {
+   "titre": "Le projet d'accueil",
+   "statut": "utile",
+   "quoi": "Le document qui dit comment vous travaillez : vos journées, vos repères éducatifs, votre façon d'accompagner le sommeil, les repas, la séparation. Il n'est pas imposé aux assistantes maternelles par un texte, mais la charte nationale prévoit que le professionnel explicite ses pratiques, et beaucoup de PMI le demandent à l'agrément ou au renouvellement. C'est aussi ce qui vous distingue auprès des parents.",
+   "texte": null,
+   "boutique": {
+    "produit": "Projet d'accueil",
+    "prix": "9,90 €"
+   }
+  }
+ ]
+}
