@@ -34,7 +34,10 @@ async function handler(req, res) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const userId = session.metadata && session.metadata.userId;
-      if (userId) {
+      // Un achat de la boutique porte lui aussi un userId : sans ce filtre, une
+      // fiche a 6,90 EUR ouvrait l'acces Pro.
+      const estAbonnement = session.mode === 'subscription' || (session.metadata && session.metadata.type === 'subscription');
+      if (userId && estAbonnement) {
         await supabase.from('profiles').update({
           subscription_status: 'pro',
           stripe_customer_id: session.customer,

@@ -2,11 +2,16 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Prix en centimes. Ils font foi : la session Stripe est creee a la volee a
+// partir de ces montants, il n'y a pas de catalogue Stripe a synchroniser. Toute
+// modification ici doit etre reportee sur les prix affiches — vue boutique de
+// l'application, public/boutique.html et data/documents-assmat.json.
 const BOUTIQUE_PRODUCTS = {
   kit_sheets: { name: 'Kit Google Sheets Assmat', price: 1490 },
-  fiche_urgence: { name: "Fiche d'urgence", price: 490 },
-  projet_accueil: { name: "Projet d'accueil", price: 990 },
-  pack_complet: { name: 'Pack Complet Assmat', price: 2490 },
+  fiche_urgence: { name: "Fiche d'urgence", price: 690 },
+  projet_accueil: { name: "Projet d'accueil", price: 1290 },
+  registre_medicaments: { name: 'Registre des medicaments administres', price: 690 },
+  pack_complet: { name: 'Pack Complet Assmat', price: 3490 },
 };
 
 export default async function handler(req, res) {
