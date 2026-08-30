@@ -194,6 +194,7 @@ main{max-width:820px;margin:0 auto;padding:26px 22px 20px}
 .reponse h2{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--terraD);margin:0 0 8px;font-weight:800}
 .reponse p{margin:0;font-size:17.5px;font-weight:600;line-height:1.6}
 h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+h3{font-family:'Fraunces',serif;font-size:17px;color:var(--marine);margin:22px 0 8px}
 p{margin-bottom:13px}
 table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
 th,td{border:1px solid #EDE6DE;padding:10px 12px;text-align:left}
@@ -484,19 +485,46 @@ function blocExigences(ex, ou) {
     );
   }
 
-  if (!lignes.length) return "";
+  if (ex.minimumAgrement) {
+    lignes.push(`<li><strong>Nombre d'enfants</strong> — ${esc(ex.minimumAgrement)}.</li>`);
+  }
+
+  if (ex.apresRefus) {
+    lignes.push(`<li><strong>Après un refus</strong> — ${esc(ex.apresRefus)}.</li>`);
+  }
+
+  // Les exigences que le departement ajoute par-dessus le referentiel national.
+  // Elles vivent dans le reglement departemental d'agrement, pas sur la page
+  // vitrine : c'est la seule partie vraiment introuvable ailleurs.
+  const locales =
+    Array.isArray(ex.reglesLocales) && ex.reglesLocales.length
+      ? `
+  <h3>Les exigences propres à ce département</h3>
+  <p>Le référentiel d'agrément est national — le décret du 15 mars 2012 fixe ce qui est évalué chez tous les candidats. Par-dessus, ce département précise ses propres exigences de sécurité, à connaître avant la visite à domicile :</p>
+  <ul>
+    ${ex.reglesLocales.map((r) => `<li>${esc(r.charAt(0).toUpperCase() + r.slice(1))}.</li>`).join("\n    ")}
+  </ul>`
+      : "";
+
+  if (!lignes.length && !locales) return "";
 
   return `
   <h2>Ce que demande la PMI ${esc(ou)}</h2>
   <p>Le parcours d'agrément est le même partout, mais chaque conseil départemental en fixe les modalités. Voici ce que celui-ci annonce${
     ex.releve ? `, relevé sur son site le ${esc(dateFr(ex.releve))}` : ""
   }.</p>
-  <ul>
-    ${lignes.join("\n    ")}
-  </ul>
+  ${lignes.length ? `<ul>\n    ${lignes.join("\n    ")}\n  </ul>` : ""}
+  ${locales}
   ${
-    ex.source
-      ? `<p class="mini">Source : <a href="${esc(ex.source)}" rel="nofollow">le site du conseil départemental</a>. Ces modalités changent sans préavis — vérifiez-les avant de vous déplacer.</p>`
+    ex.source || ex.reglementUrl
+      ? `<p class="mini">Source : ${[
+          ex.source ? `<a href="${esc(ex.source)}" rel="nofollow">le site du conseil départemental</a>` : "",
+          ex.reglementUrl
+            ? `<a href="${esc(ex.reglementUrl)}" rel="nofollow">son règlement départemental d'agrément</a>`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" et ")}. Ces modalités changent sans préavis — vérifiez-les avant de vous déplacer.</p>`
       : ""
   }`;
 }
