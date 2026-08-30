@@ -937,17 +937,46 @@ async function main() {
     throw new Error(`Dossier introuvable : ${PUBLIC_DIR}. Lancer le script depuis la racine du projet.`);
   }
 
-  let articles = [];
+  // Rien du blog n'est stocke dans le depot : les articles sont fabriques ici, a
+  // chaque build. Laisser passer un echec Sanity ne conserve donc pas le blog
+  // existant, il le supprime : le site part en ligne sans aucun article et avec
+  // des centaines de liens internes morts, sur un deploiement affiche en vert.
+  // Mieux vaut interrompre le build — Vercel garde alors la version precedente
+  // en ligne, blog compris.
+  //
+  // ALLOW_MISSING_BLOG=1 retablit l'ancien comportement tolerant, pour deployer
+  // une correction urgente pendant une panne Sanity. A n'utiliser qu'en sachant
+  // que le blog disparaitra du site jusqu'au build suivant.
+  const tolerant = process.env.ALLOW_MISSING_BLOG === "1";
+
+  let articles;
   try {
     articles = await fetchArticles();
   } catch (err) {
-    // Ne jamais casser un deploiement pour un blog indisponible.
-    console.warn(`[blog] Récupération Sanity impossible (${err.message}). Génération ignorée.`);
+    if (!tolerant) {
+      throw new Error(
+        `Récupération Sanity impossible (${err.message}). ` +
+          `Build interrompu : générer le site sans le blog supprimerait tous les articles en ligne. ` +
+          `Poser ALLOW_MISSING_BLOG=1 pour déployer quand même sans blog.`
+      );
+    }
+    console.warn(`[blog] Récupération Sanity impossible (${err.message}). Génération ignorée (ALLOW_MISSING_BLOG=1).`);
     return;
   }
 
   const valides = articles.filter((a) => a.slug && a.titre && Array.isArray(a.corps));
   const ignores = articles.length - valides.length;
+
+  // Une reponse vide est aussi anormale qu'une absence de reponse : le dataset
+  // compte des articles publies. Le cas se produirait sur un changement de
+  // schema ou de requete, avec les memes consequences.
+  if (valides.length === 0 && !tolerant) {
+    throw new Error(
+      `Sanity n'a renvoyé aucun article exploitable (${articles.length} document(s) reçu(s)). ` +
+        `Build interrompu : vérifier le schéma, la requête et le statut des articles. ` +
+        `Poser ALLOW_MISSING_BLOG=1 pour déployer quand même sans blog.`
+    );
+  }
   if (ignores > 0) console.warn(`[blog] ${ignores} article(s) ignoré(s) : slug, titre ou corps manquant.`);
 
   // Repartir d'un dossier propre pour supprimer les articles depubliés.
