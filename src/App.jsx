@@ -15220,7 +15220,7 @@ function Boutique({user}){
 
   const acheter=async(product)=>{
     try{
-      const res=await fetch('/api/create-checkout-session',{
+      const res=await fetch('/api/checkout-session',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({userId:user?.id,email:user?.email,prenom:user?.prenom,productId:product.id,productName:product.name,productPrice:product.price}),
       });
@@ -18105,7 +18105,7 @@ export default function App(){
       return;
     }
     try{
-      const res=await fetch('/api/create-checkout-session',{
+      const res=await fetch('/api/checkout-session',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
@@ -18121,7 +18121,7 @@ export default function App(){
       else alert("Erreur: "+JSON.stringify(data));
     }catch(e){
       console.error('Stripe fetch error:', e);
-      alert("Erreur reseau. Verifiez que :\n1. npm install stripe est fait\n2. STRIPE_SECRET_KEY est dans les variables Vercel\n3. L'API /api/create-checkout-session est deployee");
+      alert("Erreur reseau. Verifiez que :\n1. npm install stripe est fait\n2. STRIPE_SECRET_KEY est dans les variables Vercel\n3. L'API /api/checkout-session est deployee");
     }
   };
 
