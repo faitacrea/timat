@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
-    "documents": "node scripts/generer-documents.mjs"
+    "documents": "node scripts/generer-documents.mjs",
+    "documents:publier": "node scripts/publier-documents.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
