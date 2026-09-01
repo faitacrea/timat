@@ -500,7 +500,9 @@ function blocExigences(ex, ou) {
     Array.isArray(ex.reglesLocales) && ex.reglesLocales.length
       ? `
   <h3>Les exigences propres à ce département</h3>
-  <p>Le référentiel d'agrément est national — le décret du 15 mars 2012 fixe ce qui est évalué chez tous les candidats. Par-dessus, ce département précise ses propres exigences de sécurité, à connaître avant la visite à domicile :</p>
+  <p>Le référentiel d'agrément est national — le décret du 15 mars 2012 fixe ce qui est évalué chez tous les candidats. Par-dessus, ce département précise ses propres exigences de sécurité, à connaître avant la visite à domicile${
+    ex.reglesSource ? `. Elles sont tirées du ${esc(ex.reglesSource)}` : ""
+  } :</p>
   <ul>
     ${ex.reglesLocales.map((r) => `<li>${esc(r.charAt(0).toUpperCase() + r.slice(1))}.</li>`).join("\n    ")}
   </ul>`
@@ -510,9 +512,11 @@ function blocExigences(ex, ou) {
 
   return `
   <h2>Ce que demande la PMI ${esc(ou)}</h2>
-  <p>Le parcours d'agrément est le même partout, mais chaque conseil départemental en fixe les modalités. Voici ce que celui-ci annonce${
-    ex.releve ? `, relevé sur son site le ${esc(dateFr(ex.releve))}` : ""
-  }.</p>
+  <p>${
+    lignes.length
+      ? "Le parcours d'agrément est le même partout, mais chaque conseil départemental en fixe les modalités. Voici ce que celui-ci annonce"
+      : "Le parcours d'agrément est le même partout, mais chaque conseil départemental ajoute ses propres exigences. Voici ce que celui-ci publie"
+  }${ex.releve ? `, relevé sur son site le ${esc(dateFr(ex.releve))}` : ""}.</p>
   ${lignes.length ? `<ul>\n    ${lignes.join("\n    ")}\n  </ul>` : ""}
   ${locales}
   ${
@@ -535,7 +539,7 @@ function dateFr(iso) {
     "janvier", "février", "mars", "avril", "mai", "juin",
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
   ];
-  return `${Number(j)} ${mois[Number(m) - 1]} ${a}`;
+  return `${Number(j) === 1 ? "1er" : Number(j)} ${mois[Number(m) - 1]} ${a}`;
 }
 
 function pageDevenir(d, st, stats, ctx, pmi, exigences) {
