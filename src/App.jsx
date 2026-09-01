@@ -16907,11 +16907,11 @@ const DEFAULT_CONFIG = {
     email:"support@timat.app",
   },
   boutique:{
-    linkSheets:"",
-    linkFiche:"",
-    linkProjet:"",
-    linkRegistre:"",
-    linkPack:"",
+    linkSheets:"https://buy.stripe.com/9B64gr4cGfDP0Qq7j3dwc07",
+    linkFiche:"https://buy.stripe.com/00wcMX38C0IV1UucDndwc0c",
+    linkProjet:"https://buy.stripe.com/4gM5kvaB4ezL2Yy46Rdwc0b",
+    linkRegistre:"https://buy.stripe.com/6oU5kvfVofDPeHg1YJdwc09",
+    linkPack:"https://buy.stripe.com/aFa7sD6kO4Zb8iS7j3dwc0a",
   },
   sectionsVisibles:{
     probleme:true, demo:true, signature:true,
