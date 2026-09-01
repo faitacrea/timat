@@ -10,6 +10,58 @@
   "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
  ],
  "departements": {
+  "17": {
+   "nom": "Charente-Maritime",
+   "reunion": "obligatoire",
+   "reunionNote": "une réunion d'information est organisée à Saintes ou à La Rochelle avant le dépôt du dossier",
+   "depot": [
+    "courrier"
+   ],
+   "depotNote": "à la délégation territoriale de Saintes, après la réunion d'information",
+   "source": "https://la.charente-maritime.fr/parents-petite-enfance/metier-dassistante-maternelle",
+   "reglementUrl": "https://la.charente-maritime.fr/sites/charente_maritime/files/2022-07/reglement-departement-agrement-ass-mat.pdf",
+   "minimumAgrement": "l'agrément est accordé au minimum pour deux enfants, sauf si les conditions d'accueil ne le permettent pas — toute restriction en deçà doit être motivée dans l'arrêté",
+   "apresRefus": "le candidat peut demander à être reçu par le service de PMI ; en revanche, des demandes répétitives ou abusives ne donnent pas lieu à une nouvelle évaluation",
+   "reglesLocales": [
+    "le jardin doit être entièrement clôturé sur 1,10 m minimum au-dessus du point le plus haut accessible à l'enfant, avec un portail dont le déverrouillage exige l'intervention d'un adulte",
+    "les balcons, terrasses et mezzanines demandent un garde-corps de 1,10 m ; les barreaux horizontaux sont proscrits, seuls les verticaux sont admis",
+    "les escaliers doivent être fermés en haut et en bas par des barrières rigides homologuées NF ou CE, rambarde et contremarches comprises",
+    "les piscines enterrées exigent un dispositif normalisé attesté par une note technique ; une simple alarme ne suffit pas, il faut y ajouter une clôture conforme à la norme NF P 90-306",
+    "les piscines hors-sol, gonflables, spas et jacuzzis relèvent des mêmes règles ; récupérateurs d'eau, puits et tonneaux doivent être obturés par un système qu'un enfant ne peut déplacer et qui supporte son poids",
+    "les fenêtres des étages demandent une allège ou un garde-corps à 1,10 m, à défaut une ouverture limitée",
+    "les abris de jardin, garages, sous-sols et greniers doivent être fermés à clé ou rendus inaccessibles",
+    "la détention d'un chien de catégorie 1 ou 2 est incompatible avec l'agrément, et son acquisition en cours d'agrément entraîne un retrait ; les autres animaux sont appréciés au cas par cas",
+    "les enfants ne doivent être exposés ni au tabac ni à la cigarette électronique, dans le logement comme à l'extérieur, pendant tout le temps d'accueil"
+   ],
+   "releve": "2026-08-30"
+  },
+  "18": {
+   "nom": "Cher",
+   "reunion": "proposee",
+   "reunionNote": "des réunions d’information préalables à l’agrément sont organisées régulièrement par la PMI, sur inscription obligatoire par courriel ; le Département publie leur calendrier",
+   "depot": [
+    "recommande",
+    "surplace"
+   ],
+   "depotNote": "par lettre recommandée avec accusé de réception, ou déposé au service départemental de PMI, rue Heurtault de Lamerville, BP 612, 18016 Bourges Cedex",
+   "contact": {
+    "tel": "02 48 55 82 05",
+    "email": "pmi.pole-agrements@departement18.fr"
+   },
+   "source": "https://www.departement18.fr/Je-souhaite-devenir-assistant-maternel",
+   "releve": "2026-09-01"
+  },
+  "22": {
+   "nom": "Côtes-d’Armor",
+   "reunion": "conseillee",
+   "reunionNote": "le Département recommande fortement d’assister à une réunion d’information avant tout envoi de dossier",
+   "contact": {
+    "tel": "02 96 62 62 22"
+   },
+   "contactNote": "l’interlocuteur précis est la PMI de votre secteur",
+   "source": "https://cotesdarmor.fr/vos-services/devenir-assistante-ou-assistant-maternel",
+   "releve": "2026-09-01"
+  },
   "29": {
    "nom": "Finistère",
    "reunion": "proposee",
@@ -59,6 +111,100 @@
    "source": "https://www.haute-garonne.fr/aide/assistante-maternelle",
    "releve": "2026-08-30"
   },
+  "33": {
+   "nom": "Gironde",
+   "source": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
+   "reglementUrl": "https://www.gironde.fr/sites/default/files/2017-04/rda-assmaternelle.pdf",
+   "apresRefus": "un refus fondé sur la seule sécurité (piscine, point d'eau, clôture ou portail non conformes) n'est pas définitif : dès que vous signalez la mise en conformité au service PMI Modes d'accueil, l'agrément vous est adressé après une contre-visite",
+   "reglesLocales": [
+    "le Département pose une exigence propre sur les piscines, enterrées comme hors-sol : l'accès doit être fermé par une barrière d'au moins 1,10 m munie d'un portillon qu'un jeune enfant ne peut ouvrir, de préférence à fermeture automatique — le Département recommande de privilégier 1,30 m",
+    "un chien de 1re ou 2e catégorie est incompatible avec l'exercice du métier, y compris s'il vit en chenil"
+   ],
+   "releve": "2026-08-30"
+  },
+  "34": {
+   "nom": "Hérault",
+   "reunion": "obligatoire",
+   "reunionNote": "le dossier CERFA n’est remis qu’à l’issue de la réunion d’information préalable à l’agrément (RIPA), et l’attestation de présence figure parmi les pièces exigées du dossier",
+   "depot": [
+    "recommande",
+    "surplace"
+   ],
+   "depotNote": "en recommandé avec avis de réception, ou en main propre au service agréments et modes d’accueil enfance (SAMAE) ; tout dossier incomplet est renvoyé sous quinzaine",
+   "contact": {
+    "tel": "04 67 67 68 44"
+   },
+   "source": "https://herault.fr/591-devenir-assistant-maternel.htm",
+   "reglementUrl": "https://herault.fr/cms_viewFile.php?idtf=4021&path=Reglement-departemental-des-assistant-e-s-maternelle-s.pdf",
+   "apresRefus": "le refus est motivé et notifié par lettre recommandée avant l’expiration du délai légal ; deux recours sont ouverts dans les deux mois qui suivent la notification — un recours gracieux ou hiérarchique auprès du directeur général adjoint des solidarités départementales, et un recours contentieux devant le tribunal administratif de Montpellier, qui se saisit aussi en ligne par Télérecours citoyens",
+   "reglesLocales": [
+    "le jardin, ou à défaut une aire de jeux, doit être entièrement clôturé sur 1,10 m au-dessus du dernier point d’appui ; un grillage ne doit pas dépasser 5,5 cm de maille, une barrière 11 cm entre deux barreaux verticaux",
+    "toute terrasse ou tout balcon présentant un dénivelé d’au moins 40 cm demande un garde-corps de 1,10 m ; si la pose est impossible, le Département accepte à titre exceptionnel un engagement écrit à condamner l’accès et à ne jamais utiliser l’espace pendant l’accueil",
+    "les escaliers demandent une barrière rigide aux normes NF en haut et en bas dès que l’enfant fréquente l’étage, et au minimum une barrière en bas ; mezzanines et escaliers exigent un garde-corps de 1,10 m",
+    "à l’étage, les fenêtres doivent être sécurisées par un dispositif adapté ; une porte-fenêtre ou une baie vitrée donnant directement sur une piscine demande une barrière de 1,20 m",
+    "piscines, spas et jacuzzis de moins de 1,20 m de haut doivent être entourés d’une barrière de 1,10 m à portillon rigide, verrou double action et bras de retour automatique, conforme à la norme NF P 90-306 : le Département refuse expressément tout autre dispositif, volets roulants, bâches et dômes compris",
+    "au-dessus de 1,20 m, l’échelle d’une piscine hors-sol et tout objet escaladable doivent être retirés ; pataugeoires gonflables et coques se vident et se retournent après chaque utilisation ; en maison d’assistants maternels, piscines, spas et jacuzzis sont interdits",
+    "bassins, puits, forages et tout point d’eau demandent une obturation hermétique qui résiste au poids d’une personne, qu’un enfant ne peut déplacer, cadenassée le cas échéant",
+    "garages, annexes et toute pièce dangereuse restent fermés à clé, les clés placées en hauteur ; portes de garage et portails automatiques doivent être équipés d’un détecteur",
+    "le trampoline est interdit aux enfants de moins de 6 ans, le youpala interdit, et les lits superposés proscrits pour le couchage des moins de 6 ans",
+    "un chien de 1re ou 2e catégorie est incompatible avec l’agrément et expose à son retrait ; toute acquisition d’animal se déclare à la direction PMI, les nouveaux animaux de compagnie — serpents, araignées, furets — vivent dans une pièce inaccessible à l’enfant, et le suivi vétérinaire doit être vérifiable sur le carnet de santé",
+    "transporter un enfant en voiture suppose une assurance spécifique et une autorisation écrite des parents, valable pour tous les modes de transport",
+    "tout incident grave survenu pendant un accueil doit être signalé à la direction PMI dans les 24 heures"
+   ],
+   "releve": "2026-09-01"
+  },
+  "35": {
+   "nom": "Ille-et-Vilaine",
+   "reunion": "proposee",
+   "reunionNote": "des réunions sont proposées toute l’année dans plusieurs lieux du département ; l’inscription est obligatoire",
+   "contactNote": "l’interlocuteur est l’agence départementale de votre pays — Saint-Malo 02 99 02 45 17, Vallons-de-Vilaine 02 99 02 47 00, Rennes 02 99 02 44 23",
+   "source": "https://www.ille-et-vilaine.fr/comment-devenir-assistant-maternel",
+   "releve": "2026-09-01"
+  },
+  "38": {
+   "nom": "Isère",
+   "reunion": "conseillee",
+   "reunionNote": "des réunions d’information sur la procédure d’agrément et le métier sont organisées une fois par mois",
+   "depot": [
+    "courrier"
+   ],
+   "depotNote": "le dossier de demande d’agrément se transmet au service de PMI",
+   "contact": {
+    "tel": "04 76 00 38 38"
+   },
+   "source": "https://www.isere.fr/enfance-famille-jeunesse/les-assistants-maternels",
+   "reglementUrl": "https://www.isere.fr/sites/default/files/2025-11/reglement-departemental-assmat-2025.pdf",
+   "apresRefus": "le refus est notifié par lettre recommandée avec ses motifs et les voies de recours. Deux chemins, dans les deux mois suivant la notification : le recours gracieux auprès du président du conseil départemental, qui ne rouvre l’examen que si vous apportez des éléments nouveaux et dont le silence pendant deux mois vaut rejet ; et le recours contentieux devant le tribunal administratif, qui peut être saisi directement ou après le recours gracieux — dans ce second cas, les deux mois repartent de la réponse ou du rejet implicite",
+   "reglesLocales": [
+    "les alarmes de piscine ne sont pas acceptées comme seule protection : le Département les juge insuffisamment fiables et exige une barrière ou un volet roulant homologué NF",
+    "une piscine hors-sol, gonflable ou démontable de moins de 1,10 m de haut doit être protégée de façon à rendre son escalade impossible, par exemple une barrière de 1,10 m ; les petites piscines gonflables non protégées se vident après chaque utilisation",
+    "bassins à poissons, mares, ruisseaux, citernes, récupérateurs d’eau de pluie et puits se protègent comme une piscine — un enfant peut se noyer dans 15 cm d’eau",
+    "les barrières d’escalier à croisillons ne sont plus autorisées : il faut des barrières conformes à la norme NF EN 1930, en haut et en bas, avec un système que l’enfant ne peut manœuvrer",
+    "le bord inférieur des fenêtres doit se trouver à 1 m au moins du sol hors de tout point d’appui ; à défaut, un limiteur d’ouverture de 11 cm maximum, placé le plus haut possible",
+    "balcons et mezzanines demandent une protection infranchissable d’au moins 1 m au-dessus du point d’appui le plus haut, sans appui horizontal, barreaux verticaux espacés de 11 cm au plus et moins de 11 cm entre le sol et le bas de la protection",
+    "fumer est interdit en présence et à proximité des enfants, et la consommation d’alcool est déclarée incompatible avec l’accueil",
+    "le trotteur — le youpala — ne doit pas être utilisé, et les lits superposés ne conviennent pas aux moins de 6 ans",
+    "en voiture, chaque enfant dispose de son siège homologué et aucun enfant de moins de 10 ans ne voyage à l’avant, sauf nourrisson dos à la route avec airbag désactivé",
+    "la détention d’un animal réputé dangereux est incompatible avec l’agrément, chiens de 1re et 2e catégories compris ; les autres animaux sont évalués par la PMI, mentionnés au contrat d’accueil, et ne doivent pas être présents dans l’espace d’accueil",
+    "l’accueil est un temps de travail que le Département juge inconciliable avec les activités personnelles sans intérêt éducatif pour l’enfant — courses familiales, rendez-vous médicaux, coiffeur"
+   ],
+   "reglesSource": "guide départemental « La sécurité de l’enfant chez l’assistant maternel », publié par le Département de l’Isère",
+   "releve": "2026-09-01"
+  },
+  "62": {
+   "nom": "Pas-de-Calais",
+   "source": "https://www.pasdecalais.fr/obligations-de-securite-au-domicile-de-lassistant-maternel-et-de-lassistant-familial",
+   "reglesLocales": [
+    "le terrain doit être clôturé, entièrement ou par un espace de jeux délimité, avec un grillage tendu ou rigide aux normes CE de 1,10 m minimum",
+    "les escaliers demandent des barrières aux normes en haut et en bas — les barrières à croisillons ne sont pas autorisées — et les contremarches laissant plus de 11 cm de vide doivent être comblées par une planche, une barre ou un filet",
+    "les fenêtres, y compris de toit, qui donnent sur la route ou présentent un risque de chute sont à sécuriser au rez-de-chaussée comme à l’étage",
+    "une piscine enterrée ou semi-enterrée exige l’un des quatre dispositifs normalisés : barrière NF P 90-306, couverture NF P 90-308, abri NF P 90-309 ou alarme NF P 90-307",
+    "les fossés et autres points d’eau demandent un grillage tendu ou rigide de 1,10 m minimum",
+    "la présence d’un chien réputé dangereux n’est pas compatible avec l’accueil de jeunes enfants",
+    "les produits d’entretien restent hors de portée quel que soit l’âge des enfants, et les alcools sous clé"
+   ],
+   "releve": "2026-09-01"
+  },
   "65": {
    "nom": "Hautes-Pyrénées",
    "depot": [
@@ -79,42 +225,6 @@
    },
    "contactNote": "l'interlocuteur est le service d'accompagnement des assistants maternels et familiaux (SAMF) de votre arrondissement",
    "source": "https://www.paris.fr/pages/les-assistantes-maternelles-213",
-   "releve": "2026-08-30"
-  },
-  "17": {
-   "nom": "Charente-Maritime",
-   "reunion": "obligatoire",
-   "reunionNote": "une réunion d'information est organisée à Saintes ou à La Rochelle avant le dépôt du dossier",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "à la délégation territoriale de Saintes, après la réunion d'information",
-   "source": "https://la.charente-maritime.fr/parents-petite-enfance/metier-dassistante-maternelle",
-   "reglementUrl": "https://la.charente-maritime.fr/sites/charente_maritime/files/2022-07/reglement-departement-agrement-ass-mat.pdf",
-   "minimumAgrement": "l'agrément est accordé au minimum pour deux enfants, sauf si les conditions d'accueil ne le permettent pas — toute restriction en deçà doit être motivée dans l'arrêté",
-   "apresRefus": "le candidat peut demander à être reçu par le service de PMI ; en revanche, des demandes répétitives ou abusives ne donnent pas lieu à une nouvelle évaluation",
-   "reglesLocales": [
-    "le jardin doit être entièrement clôturé sur 1,10 m minimum au-dessus du point le plus haut accessible à l'enfant, avec un portail dont le déverrouillage exige l'intervention d'un adulte",
-    "les balcons, terrasses et mezzanines demandent un garde-corps de 1,10 m ; les barreaux horizontaux sont proscrits, seuls les verticaux sont admis",
-    "les escaliers doivent être fermés en haut et en bas par des barrières rigides homologuées NF ou CE, rambarde et contremarches comprises",
-    "les piscines enterrées exigent un dispositif normalisé attesté par une note technique ; une simple alarme ne suffit pas, il faut y ajouter une clôture conforme à la norme NF P 90-306",
-    "les piscines hors-sol, gonflables, spas et jacuzzis relèvent des mêmes règles ; récupérateurs d'eau, puits et tonneaux doivent être obturés par un système qu'un enfant ne peut déplacer et qui supporte son poids",
-    "les fenêtres des étages demandent une allège ou un garde-corps à 1,10 m, à défaut une ouverture limitée",
-    "les abris de jardin, garages, sous-sols et greniers doivent être fermés à clé ou rendus inaccessibles",
-    "la détention d'un chien de catégorie 1 ou 2 est incompatible avec l'agrément, et son acquisition en cours d'agrément entraîne un retrait ; les autres animaux sont appréciés au cas par cas",
-    "les enfants ne doivent être exposés ni au tabac ni à la cigarette électronique, dans le logement comme à l'extérieur, pendant tout le temps d'accueil"
-   ],
-   "releve": "2026-08-30"
-  },
-  "33": {
-   "nom": "Gironde",
-   "source": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
-   "reglementUrl": "https://www.gironde.fr/sites/default/files/2017-04/rda-assmaternelle.pdf",
-   "apresRefus": "un refus fondé sur la seule sécurité (piscine, point d'eau, clôture ou portail non conformes) n'est pas définitif : dès que vous signalez la mise en conformité au service PMI Modes d'accueil, l'agrément vous est adressé après une contre-visite",
-   "reglesLocales": [
-    "le Département pose une exigence propre sur les piscines, enterrées comme hors-sol : l'accès doit être fermé par une barrière d'au moins 1,10 m munie d'un portillon qu'un jeune enfant ne peut ouvrir, de préférence à fermeture automatique — le Département recommande de privilégier 1,30 m",
-    "un chien de 1re ou 2e catégorie est incompatible avec l'exercice du métier, y compris s'il vit en chenil"
-   ],
    "releve": "2026-08-30"
   }
  }
