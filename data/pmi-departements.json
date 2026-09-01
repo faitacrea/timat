@@ -4,7 +4,7 @@
   "01": {
    "nom": "Ain",
    "url": "https://www.ain.fr/solutions/devenir-assistant-maternel/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans l'Ain"
   },
   "02": {
@@ -21,9 +21,9 @@
   },
   "04": {
    "nom": "Alpes-de-Haute-Provence",
-   "url": "https://www.mondepartement04.fr/famille/modes-de-garde",
-   "verifie": false,
-   "libelle": "les modes de garde dans les Alpes-de-Haute-Provence"
+   "url": "https://www.mondepartement04.fr/famille/devenir-assistante-maternelle",
+   "verifie": true,
+   "libelle": "devenir assistante maternelle dans les Alpes-de-Haute-Provence"
   },
   "05": {
    "nom": "Hautes-Alpes",
@@ -63,14 +63,14 @@
   "11": {
    "nom": "Aude",
    "url": "https://www.aude.fr/je-veux-devenir-assistante-maternelle",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistante maternelle dans l'Aude"
   },
   "12": {
    "nom": "Aveyron",
-   "url": "https://aveyron.fr/pages/service-de-pmi/devenir-assistant-e-maternel-le",
-   "verifie": false,
-   "libelle": "devenir assistant maternel en Aveyron"
+   "url": "https://aveyron.fr/pages/service-de-pmi/je-souhaite-devenir-assistante-maternelle",
+   "verifie": true,
+   "libelle": "devenir assistante maternelle en Aveyron"
   },
   "13": {
    "nom": "Bouches-du-Rhône",
@@ -81,7 +81,7 @@
   "14": {
    "nom": "Calvados",
    "url": "https://www.calvados.fr/accueil/le-departement/solidarite-familles/enfance--familles/devenir-assistant-maternel.html",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans le Calvados"
   },
   "15": {
@@ -117,7 +117,7 @@
   "21": {
    "nom": "Côte-d'Or",
    "url": "https://www.cotedor.fr/votre-service/enfance-famille/enfant-de-moins-de-6-ans/vous-souhaitez-devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Côte-d'Or"
   },
   "22": {
@@ -146,9 +146,8 @@
   },
   "26": {
    "nom": "Drôme",
-   "url": "https://dromeinfos.ladrome.fr/aide/255/4-je-souhaite-devenir-assistant-e-maternel-le-assistant-e-familial-e-ou-accueillant-e-familial-e.htm",
-   "verifie": false,
-   "libelle": "devenir assistant maternel dans la Drôme"
+   "url": "",
+   "verifie": false
   },
   "27": {
    "nom": "Eure",
@@ -239,9 +238,9 @@
   },
   "40": {
    "nom": "Landes",
-   "url": "https://www.landes.fr/assistantes-maternelles-agreees",
-   "verifie": false,
-   "libelle": "les assistantes maternelles agréées dans les Landes"
+   "url": "https://www.landes.fr/maccompagne/famille/enfance/professionnel-de-la-petite-enfance",
+   "verifie": true,
+   "libelle": "les professionnels de la petite enfance dans les Landes"
   },
   "41": {
    "nom": "Loir-et-Cher",
@@ -305,7 +304,7 @@
   "51": {
    "nom": "Marne",
    "url": "https://devenir-assmat.marne.fr/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans la Marne"
   },
   "52": {
@@ -358,8 +357,8 @@
   },
   "60": {
    "nom": "Oise",
-   "url": "https://www.oise.fr/actions/sante-social-solidarite/enfance-famille/devenir-assistant-maternel",
-   "verifie": false,
+   "url": "https://oise.fr/actions/sante-social-solidarite/enfance-famille/devenir-assistant-maternel",
+   "verifie": true,
    "libelle": "devenir assistant maternel dans l'Oise"
   },
   "61": {
@@ -382,9 +381,8 @@
   },
   "64": {
    "nom": "Pyrénées-Atlantiques",
-   "url": "https://www.le64.fr/obtenir-lagrement",
-   "verifie": false,
-   "libelle": "obtenir l'agrément dans les Pyrénées-Atlantiques"
+   "url": "",
+   "verifie": false
   },
   "65": {
    "nom": "Hautes-Pyrénées",
@@ -394,9 +392,8 @@
   },
   "66": {
    "nom": "Pyrénées-Orientales",
-   "url": "https://www.ledepartement66.fr/archive_libre/assistant-maternel/",
-   "verifie": false,
-   "libelle": "le métier d'assistant maternel dans les Pyrénées-Orientales"
+   "url": "",
+   "verifie": false
   },
   "67": {
    "nom": "Bas-Rhin",
@@ -423,9 +420,8 @@
   },
   "71": {
    "nom": "Saône-et-Loire",
-   "url": "https://www.saoneetloire71.fr/que-peut-on-faire-pour-vous/vous-etes-un-professionnel/devenir-assistant-maternel",
-   "verifie": false,
-   "libelle": "devenir assistant maternel en Saône-et-Loire"
+   "url": "",
+   "verifie": false
   },
   "72": {
    "nom": "Sarthe",
@@ -472,19 +468,19 @@
   "79": {
    "nom": "Deux-Sèvres",
    "url": "https://assistant-maternel-79.fr/devenir-assistant-maternel/mon-parcours-pour-obtenir-lagrement",
-   "verifie": false,
+   "verifie": true,
    "libelle": "le parcours vers l'agrément dans les Deux-Sèvres"
   },
   "80": {
    "nom": "Somme",
    "url": "https://www.somme.fr/services/enfance-et-famille/les-accueils-collectifs/devenir-assistant-maternel/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans la Somme"
   },
   "81": {
    "nom": "Tarn",
    "url": "https://www.tarn.fr/au-quotidien/professionnel-medecin/devenir-assistant-maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans le Tarn"
   },
   "82": {
@@ -508,7 +504,7 @@
   "85": {
    "nom": "Vendée",
    "url": "https://www.vendee-enfance.fr/Devenir-Assistant-Maternel",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel en Vendée"
   },
   "86": {
@@ -526,7 +522,7 @@
   "88": {
    "nom": "Vosges",
    "url": "https://www.vosges.fr/dispositifs/dossier-dagrement-assistant-maternel/",
-   "verifie": false,
+   "verifie": true,
    "libelle": "le dossier d'agrément d'assistant maternel dans les Vosges"
   },
   "89": {
@@ -537,9 +533,8 @@
   },
   "90": {
    "nom": "Territoire de Belfort",
-   "url": "https://www.territoiredebelfort.fr/assistantes-maternelles",
-   "verifie": false,
-   "libelle": "les assistants maternels dans le Territoire de Belfort"
+   "url": "",
+   "verifie": false
   },
   "91": {
    "nom": "Essonne",
@@ -550,26 +545,25 @@
   "92": {
    "nom": "Hauts-de-Seine",
    "url": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
-   "verifie": false,
+   "verifie": true,
    "libelle": "devenir assistant maternel dans les Hauts-de-Seine"
   },
   "93": {
    "nom": "Seine-Saint-Denis",
-   "url": "https://seinesaintdenis.fr/Je-souhaite-devenir-assistant-e-maternel-le",
-   "verifie": false,
+   "url": "https://www.seinesaintdenis.fr/enfance-education-jeunesse/petite-enfance/article/devenir-assistant-e-maternel-le-en-seine-saint-denis",
+   "verifie": true,
    "libelle": "devenir assistant maternel en Seine-Saint-Denis"
   },
   "94": {
    "nom": "Val-de-Marne",
    "url": "https://www.valdemarne.fr/a-votre-service/enfance/famille/assistante-maternelle-agrement-et-recrutement",
-   "verifie": false,
+   "verifie": true,
    "libelle": "l'agrément d'assistant maternel dans le Val-de-Marne"
   },
   "95": {
    "nom": "Val-d'Oise",
-   "url": "https://valdoise.fr/436-assistant-e-maternel-le-.htm",
-   "verifie": false,
-   "libelle": "le rôle du Département dans la petite enfance en Val-d'Oise"
+   "url": "",
+   "verifie": false
   },
   "971": {
    "nom": "Guadeloupe",
@@ -579,9 +573,9 @@
   },
   "972": {
    "nom": "Martinique",
-   "url": "https://www.petite-enfancemartinique.fr/presentation/presentation-de-laccueil-individuel-petite-enfance",
-   "verifie": false,
-   "libelle": "l'accueil individuel de la petite enfance en Martinique"
+   "url": "https://www.petite-enfancemartinique.fr/faq/je-souhaite-exercer-le-metier-dassistant-maternel-comment-dois-je-my-prendre",
+   "verifie": true,
+   "libelle": "devenir assistant maternel en Martinique"
   },
   "973": {
    "nom": "Guyane",
@@ -596,9 +590,9 @@
   },
   "976": {
    "nom": "Mayotte",
-   "url": "https://publications.mayotte.fr/ressources/devenir-assistante-maternelle.pdf",
-   "verifie": false,
-   "libelle": "devenir assistante maternelle à Mayotte (document du Département)"
+   "url": "https://publications.mayotte.fr/downloads/44",
+   "verifie": true,
+   "libelle": "le guide du Département pour devenir assistante maternelle à Mayotte"
   }
  }
 }
