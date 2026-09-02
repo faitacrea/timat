@@ -10,6 +10,15 @@
   "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
  ],
  "departements": {
+  "13": {
+   "nom": "Bouches-du-Rhône",
+   "contact": {
+    "tel": "04 13 31 56 31"
+   },
+   "contactNote": "l’interlocuteur est le service des modes d’accueil de la petite enfance, 21 boulevard Mirabeau, 13331 Marseille",
+   "source": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
+   "releve": "2026-09-02"
+  },
   "17": {
    "nom": "Charente-Maritime",
    "reunion": "obligatoire",
@@ -49,7 +58,21 @@
     "email": "pmi.pole-agrements@departement18.fr"
    },
    "source": "https://www.departement18.fr/Je-souhaite-devenir-assistant-maternel",
-   "releve": "2026-09-01"
+   "releve": "2026-09-01",
+   "reglementUrl": "https://www.departement18.fr/IMG/pdf/2020_04_ce_if_solidarites_guide_securite_enfants.pdf",
+   "reglesSource": "guide départemental « Les assistants maternels pour la sécurité des enfants », publié par le conseil départemental du Cher",
+   "reglesLocales": [
+    "toutes les piscines et tous les points d’eau — pataugeoires, jacuzzis, puits, bassins d’agrément, mares, citernes, collecteurs d’eau — doivent être clôturés aux normes sur 1,20 m minimum, avec un portillon fermé à clé, et le Département demande que les piscines ne soient pas utilisées pendant les temps d’accueil",
+    "pour une piscine hors-sol de moins de 1,20 m, la clôture est exigée et l’échelle d’accès se retire après chaque utilisation ; les petites piscines gonflables se vident après chaque usage",
+    "les terrasses en surplomb demandent une protection de 1,20 m avec au plus 11 cm entre les barreaux, et les portiques — balançoires, toboggans — doivent être scellés au sol",
+    "une barrière est exigée en haut et en bas des escaliers, et les portes de sous-sol restent fermées à clé",
+    "si les enfants ont accès à l’étage, les portes-fenêtres doivent obligatoirement recevoir un bloque-fenêtre ou un garde-corps d’au moins 1,10 m ; aucun meuble ni objet ne doit se trouver sous une fenêtre ou sur un balcon",
+    "les radiateurs demandent des parois de protection, et les cheminées à foyer ouvert, inserts et poêles à bois un pare-feu",
+    "le couchage en hauteur est proscrit avant 6 ans, lits superposés compris ; chaque enfant dispose d’un lit individuel, sans oreiller ni couette avant 2 ans, et les lits parapluie ne servent que d’appoint avec le matelas prévu par la notice",
+    "un chien de catégorie 1 ou 2 est incompatible avec tout agrément ; pour les autres animaux, un espace réservé doit être défini, les vaccinations être à jour, les parents toujours informés, et un vétérinaire doit certifier qu’un nouvel animal de compagnie est compatible avec l’accueil d’un enfant — le nombre d’animaux est pris en compte au même titre que leur dangerosité",
+    "transporter un enfant en voiture suppose une autorisation écrite des parents et des dispositifs de retenue adaptés à l’âge et au poids, conformes à la réglementation européenne"
+   ],
+   "reglementLibelle": "son guide de la sécurité des enfants"
   },
   "22": {
    "nom": "Côtes-d’Armor",
@@ -189,7 +212,19 @@
     "l’accueil est un temps de travail que le Département juge inconciliable avec les activités personnelles sans intérêt éducatif pour l’enfant — courses familiales, rendez-vous médicaux, coiffeur"
    ],
    "reglesSource": "guide départemental « La sécurité de l’enfant chez l’assistant maternel », publié par le Département de l’Isère",
-   "releve": "2026-09-01"
+   "releve": "2026-09-01",
+   "reglementLibelle": "son règlement départemental d’agrément"
+  },
+  "57": {
+   "nom": "Moselle",
+   "reunion": "proposee",
+   "reunionNote": "le pôle petite enfance du territoire dont dépend votre domicile vous invite à une réunion d’information",
+   "contact": {
+    "email": "pmidirection@moselle.fr"
+   },
+   "contactNote": "par courrier, la direction PMI se trouve à l’hôtel du Département, 1 rue du Pont Moreau, CS 11096, 57036 Metz Cedex 1",
+   "source": "https://www.moselle.fr/jcms/pl_10954/fr/devenir-assistant-e-maternel-le",
+   "releve": "2026-09-02"
   },
   "62": {
    "nom": "Pas-de-Calais",

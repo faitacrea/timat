@@ -524,7 +524,9 @@ function blocExigences(ex, ou) {
       ? `<p class="mini">Source : ${[
           ex.source ? `<a href="${esc(ex.source)}" rel="nofollow">le site du conseil départemental</a>` : "",
           ex.reglementUrl
-            ? `<a href="${esc(ex.reglementUrl)}" rel="nofollow">son règlement départemental d'agrément</a>`
+            ? `<a href="${esc(ex.reglementUrl)}" rel="nofollow">${esc(
+                ex.reglementLibelle || "son règlement départemental d'agrément"
+              )}</a>`
             : "",
         ]
           .filter(Boolean)
