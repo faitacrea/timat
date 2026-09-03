@@ -14713,9 +14713,19 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Particularites :</b> "+f.particularites+"</div>",
       "<div class='sh'>05  Numeros d'urgence</div>",
       "<div class='urg'>SAMU : <span>15</span></div>",
+      "<div class='urg'>Police / Gendarmerie : <span>17</span></div>",
       "<div class='urg'>Pompiers : <span>18</span></div>",
       "<div class='urg'>Urgences europeennes : <span>112</span></div>",
       "<div class='urg'>Centre anti-poison : <span>01 40 05 48 48</span></div>",
+      "<div class='urg'>Enfance en danger : <span>119</span></div>",
+      "<div class='urg'>Violences femmes info : <span>3919</span></div>",
+      // Le referentiel d'agrement impose d'afficher les coordonnees des secours,
+      // des parents ET du service departemental de PMI. Les deux premiers sont
+      // au-dessus ; la PMI manquait, et sans elle l'affichage reste incomplet.
+      // Elle se remplit a la main : elle depend du secteur, pas de l'enfant.
+      "<div class='stt'>Service de PMI du secteur</div>",
+      "<div class='line'><b>Nom / antenne :</b> ______________________________</div>",
+      "<div class='line'><b>Telephone :</b> ______________________________</div>",
       "<div class='sh'>06  Autorisations parentales</div>",
       authLines,
       "<div class='sh'>07  Signatures</div>",
@@ -14724,7 +14734,8 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px'>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature parent :</div></div>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature assmat :</div></div></div>",
-      "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:20px'>Genere par TiMat - timat.app</p>",
+      "<p style='color:#6B7A82;font-size:9.5px;line-height:1.6;margin-top:18px;border-top:1px solid #E4DCD0;padding-top:10px'>Affichez cette fiche a un endroit permanent, visible et facilement accessible : le referentiel d'agrement l'exige pour les coordonnees des services de secours, des parents et du service departemental de protection maternelle et infantile (annexe 4-8 du code de l'action sociale et des familles, section 2, sous-section 2, 2°).</p>",
+      "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:14px'>Genere par TiMat - timat.app</p>",
       "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
@@ -14752,6 +14763,20 @@ function FicheUrgence({enfants,role,pEId,user}){
     <PageHeader icon="🚨" title="Fiche d'urgence" sub={role==="parent"?(editing?"Remplissez la fiche d'urgence de votre enfant":"Fiche enregistrée · Modifier pour mettre à jour"):"Remplie par le parent — vous êtes en lecture seule"}/>
     {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
+
+    {/* Beaucoup d'assmats ignorent que l'affichage est exige : la fiche parait
+        un confort alors qu'elle repond a une obligation du referentiel. Le
+        rappel est court, il cite le texte, et il ne dit jamais que la fiche
+        elle-meme serait imposee — c'est l'affichage qui l'est. */}
+    {role==="asmat"&&<div style={{background:"var(--Tp,#FDF1EC)",border:"1.5px solid var(--T)",borderRadius:14,padding:14,marginBottom:12}}>
+      <div style={{fontWeight:700,fontSize:12.5,color:"var(--b)",marginBottom:6}}>📌 À afficher, pas seulement à ranger</div>
+      <div style={{fontSize:11.5,color:"var(--m)",lineHeight:1.6}}>
+        Le référentiel d'agrément impose « l'affichage permanent, visible et facilement accessible des coordonnées
+        des services de secours, des parents et des services départementaux de protection maternelle et infantile »
+        (annexe 4-8 du code de l'action sociale et des familles). Aucun format n'est imposé : imprimez cette fiche,
+        complétez la ligne PMI, et affichez-la.
+      </div>
+    </div>}
 
     {/* CONTACT PARENT TEMPS REEL P15 */}
     {parentLive&&<div style={{background:"var(--Gp)",border:"1.5px solid var(--G)",borderRadius:14,padding:16,marginBottom:12}}>
