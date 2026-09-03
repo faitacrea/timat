@@ -748,6 +748,7 @@ function pageDocuments(docs) {
   <section class="reponse">
     <h2>Réponse courte</h2>
     <p>Trois documents seulement sont imposés par un texte : le <strong>registre des médicaments administrés</strong>, l'<strong>attestation d'honorabilité</strong> et le <strong>contrat de travail écrit</strong>, auquel s'ajoute la convention collective que l'employeur tient à votre disposition. Tout le reste est utile, parfois attendu par la PMI, mais pas obligatoire — et mérite qu'on le dise.</p>
+    <p>Une obligation échappe à cette liste parce qu'elle ne porte pas sur un document mais sur un mur : le référentiel d'agrément impose l'affichage permanent, visible et facilement accessible des coordonnées des services de secours, des parents et de la PMI. Le texte n'impose aucun format — c'est à vous de choisir le vôtre.</p>
   </section>
   ${bloc("obligatoire")}
   ${bloc("officiel")}

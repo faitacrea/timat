@@ -81,12 +81,15 @@
   {
    "titre": "La fiche de renseignements et d'urgence",
    "statut": "utile",
-   "quoi": "Un document unique par enfant qui rassemble ce qui doit être trouvé en quelques secondes : coordonnées des parents et des personnes à prévenir, autorisations, allergies, médecin traitant, numéros d'urgence. Rien n'impose de fiche séparée — les mentions elles-mêmes sont obligatoires dans le contrat — mais chercher un contrat de huit pages pendant qu'un enfant convulse n'est pas une option. C'est le document à afficher, et à donner à toute personne qui garde les enfants à votre place.",
-   "texte": null,
+   "quoi": "Un affichage est obligatoire, et peu de gens le savent : le référentiel d’agrément impose « l’affichage permanent, visible et facilement accessible des coordonnées des services de secours, des parents et des services départementaux de protection maternelle et infantile ». Le texte impose l’affichage, pas un document particulier — mais une fiche unique par enfant est la façon la plus simple de le satisfaire, et d’y ajouter ce qui doit être trouvé en quelques secondes : personnes à prévenir, autorisations, allergies, médecin traitant. Chercher un contrat de huit pages pendant qu’un enfant convulse n’est pas une option. C’est le document à afficher, et à donner à toute personne qui garde les enfants à votre place.",
+   "texte": "annexe 4-8 du code de l’action sociale et des familles, section 2, sous-section 2, 2°",
    "boutique": {
     "produit": "Fiche d'urgence",
     "prix": "6,90 €"
-   }
+   },
+   "lien": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025523748/2020-01-01",
+   "lienLibelle": "le texte de l’obligation d’affichage",
+   "verifie": true
   },
   {
    "titre": "Le projet d'accueil",

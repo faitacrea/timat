@@ -10,6 +10,17 @@
   "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
  ],
  "departements": {
+  "10": {
+   "nom": "Aube",
+   "reunion": "proposee",
+   "reunionNote": "vous adressez d’abord un courrier au service de PMI, et c’est à sa réception que vous êtes invitée à une réunion d’information, où le dossier de candidature vous est remis",
+   "depot": [
+    "courrier"
+   ],
+   "depotNote": "le premier courrier part au secrétariat des modes d’accueil de la PMI, cité administrative des Vassaules, 10026 Troyes Cedex",
+   "source": "https://assistante-maternelle.aube.fr/131-le-metier-d-assistant-e-maternel-le.htm",
+   "releve": "2026-09-03"
+  },
   "13": {
    "nom": "Bouches-du-Rhône",
    "contact": {
@@ -18,6 +29,17 @@
    "contactNote": "l’interlocuteur est le service des modes d’accueil de la petite enfance, 21 boulevard Mirabeau, 13331 Marseille",
    "source": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
    "releve": "2026-09-02"
+  },
+  "16": {
+   "nom": "Charente",
+   "reunion": "proposee",
+   "reunionNote": "le Département publie le calendrier des réunions, qui se tiennent au 15 boulevard Jean Moulin à Angoulême",
+   "contact": {
+    "tel": "05 16 09 68 65"
+   },
+   "contactNote": "ce numéro sert aux informations et aux inscriptions aux réunions",
+   "source": "https://www.lacharente.fr/actualite/emploi/devenir-assistante-maternelle",
+   "releve": "2026-09-03"
   },
   "17": {
    "nom": "Charente-Maritime",
@@ -74,6 +96,19 @@
    ],
    "reglementLibelle": "son guide de la sécurité des enfants"
   },
+  "19": {
+   "nom": "Corrèze",
+   "depot": [
+    "recommande",
+    "surplace"
+   ],
+   "depotNote": "vous adressez d’abord au président du conseil départemental, en recommandé avec accusé de réception ou en dépôt au service PMI, un courrier précisant vos coordonnées et vos motivations ; l’invitation à la réunion suit",
+   "contact": {
+    "tel": "05 55 93 70 00"
+   },
+   "source": "https://www.correze.fr/nos-missions/famille-petite-enfance-jeunesse/assistante-maternelle/devenir-assistante-maternelle",
+   "releve": "2026-09-03"
+  },
   "22": {
    "nom": "Côtes-d’Armor",
    "reunion": "conseillee",
@@ -84,6 +119,33 @@
    "contactNote": "l’interlocuteur précis est la PMI de votre secteur",
    "source": "https://cotesdarmor.fr/vos-services/devenir-assistante-ou-assistant-maternel",
    "releve": "2026-09-01"
+  },
+  "24": {
+   "nom": "Dordogne",
+   "reunion": "proposee",
+   "reunionNote": "une journée d’information sur inscription ; le dossier de demande d’agrément est remis en fin de réunion à qui le souhaite",
+   "depot": [
+    "recommande",
+    "surplace"
+   ],
+   "depotNote": "le dossier complété, daté et signé se dépose ou se retourne en recommandé à l’adresse indiquée sur le formulaire",
+   "source": "https://www.dordogne.fr/a-votre-service/enfance-famille/exercer-le-metier-dassistant-maternel",
+   "releve": "2026-09-03"
+  },
+  "27": {
+   "nom": "Eure",
+   "reunion": "obligatoire",
+   "reunionNote": "le Département écrit que vous devez y assister ; le dossier de demande d’agrément y est remis",
+   "depot": [
+    "recommande"
+   ],
+   "depotNote": "le dossier complété se renvoie au Département en lettre recommandée avec accusé de réception",
+   "contact": {
+    "tel": "02 32 31 50 50"
+   },
+   "contactNote": "pour s’inscrire à une réunion, l’interlocuteur dépend du territoire — Sud Évreux 02 32 37 31 14, Est Vernon 02 32 09 46 52, Ouest Bernay 02 32 41 11 57 ; le service enfance et famille se trouve 14 boulevard Georges-Chauvin à Évreux",
+   "source": "https://eureennormandie.fr/nos-aides-et-services/particuliers/enfance-et-famille/je-voudrais-devenir-assistante-maternelle/",
+   "releve": "2026-09-03"
   },
   "29": {
    "nom": "Finistère",
@@ -184,6 +246,21 @@
    "source": "https://www.ille-et-vilaine.fr/comment-devenir-assistant-maternel",
    "releve": "2026-09-01"
   },
+  "37": {
+   "nom": "Indre-et-Loire",
+   "reunion": "proposee",
+   "reunionNote": "une réunion d’information précède le dépôt du dossier",
+   "depot": [
+    "courrier"
+   ],
+   "depotNote": "le dossier CERFA et ses pièces se transmettent au service agréments, direction de la prévention et protection de l’enfant et de la famille, place de la Préfecture, 37000 Tours",
+   "contact": {
+    "tel": "02 47 31 45 35"
+   },
+   "contactNote": "le service agréments répond de 9 h 30 à 11 h 30 et de 14 h à 16 h 30, tous les jours sauf le jeudi matin",
+   "source": "https://www.touraine.fr/mes-services-au-quotidien/enfance-famille/devenir-assistant-e-maternel-lle.html",
+   "releve": "2026-09-03"
+  },
   "38": {
    "nom": "Isère",
    "reunion": "conseillee",
@@ -214,6 +291,80 @@
    "reglesSource": "guide départemental « La sécurité de l’enfant chez l’assistant maternel », publié par le Département de l’Isère",
    "releve": "2026-09-01",
    "reglementLibelle": "son règlement départemental d’agrément"
+  },
+  "42": {
+   "nom": "Loire",
+   "reunion": "obligatoire",
+   "reunionNote": "le Département la place parmi les conditions pour obtenir l’agrément ; elle est organisée par la PMI du territoire de votre résidence",
+   "contactNote": "l’interlocuteur est le secrétariat assistants maternels de votre territoire — Saint-Étienne 04 77 59 98 03, Gier Ondaine Pilat 04 77 29 27 47, Forez 04 77 96 56 05, Roannais 04 77 23 24 17, chacun avec son adresse en secretariatassmat suivi du nom du territoire, à loire.fr",
+   "source": "https://www.loire.fr/jcms/lw_1332874/fr/devenir-assistant-maternel",
+   "releve": "2026-09-03"
+  },
+  "45": {
+   "nom": "Loiret",
+   "reunion": "obligatoire",
+   "reunionNote": "la réunion d’information préalable à l’agrément (RIPA), sur inscription obligatoire auprès de la PMI ; le Département publie ses dates et ses lieux, et les éléments du dossier ne sont transmis qu’à l’issue",
+   "depot": [
+    "courrier"
+   ],
+   "depotNote": "le dossier se retourne au Département, qui adresse ou remet un accusé de réception",
+   "contact": {
+    "tel": "02 38 25 45 45",
+    "email": "assistantsmaternels45@loiret.fr"
+   },
+   "source": "https://www.loiret.fr/devenir-assmat",
+   "releve": "2026-09-03"
+  },
+  "46": {
+   "nom": "Lot",
+   "reunion": "proposee",
+   "reunionNote": "vous êtes conviée à une réunion d’information après votre première demande",
+   "depot": [
+    "enligne",
+    "courrier"
+   ],
+   "depotNote": "la demande se fait sur assistant-maternel-familial.lot.fr ou par courrier à l’hôtel du Département, service PMI, avenue de l’Europe, BP 291 Regourd, 46005 Cahors Cedex 9 ; le dossier de candidature se saisit ensuite en ligne sur ce même site",
+   "contact": {
+    "tel": "05 65 53 44 95"
+   },
+   "source": "https://lot.fr/devenir-assistante-maternelle",
+   "releve": "2026-09-03"
+  },
+  "48": {
+   "nom": "Lozère",
+   "contact": {
+    "tel": "04 66 49 42 10"
+   },
+   "contactNote": "l’interlocuteur est le service enfance famille, mission offre d’accueil",
+   "source": "https://lozere.fr/faq-solidarite/les-modes-de-garde-des-enfants-de-6-ans/je-souhaite-devenir-assistante-maternelle",
+   "releve": "2026-09-03"
+  },
+  "49": {
+   "nom": "Maine-et-Loire",
+   "contact": {
+    "tel": "02 41 81 48 18",
+    "email": "pmi@maine-et-loire.fr"
+   },
+   "contactNote": "la PMI du Département se trouve CS 94104, 49941 Angers Cedex 9",
+   "source": "https://www.maine-et-loire.fr/aides-et-services/enfance-et-famille/metiers-de-la-petite-enfance/devenir-assistant-maternel",
+   "releve": "2026-09-03"
+  },
+  "50": {
+   "nom": "Manche",
+   "reunion": "obligatoire",
+   "reunionNote": "le Département la présente comme la première démarche nécessaire ; elle se tient dans l’un des pôles d’action sociale, et la présence des enfants n’y est pas souhaitée",
+   "source": "https://www.manche.fr/mon-departement/metiers/metiers-accueil-domicile/devenir-assistant-maternel/",
+   "releve": "2026-09-03"
+  },
+  "52": {
+   "nom": "Haute-Marne",
+   "reunion": "proposee",
+   "contact": {
+    "tel": "03 25 32 87 49"
+   },
+   "contactNote": "l’interlocuteur est le pôle assistantes maternelles et familiales, rue Eugène Issartel à Chaumont ; le courrier s’adresse au conseil départemental de la Haute-Marne",
+   "source": "https://haute-marne.fr/emplois/assistant-maternel/",
+   "releve": "2026-09-03"
   },
   "57": {
    "nom": "Moselle",
@@ -261,6 +412,22 @@
    "contactNote": "l'interlocuteur est le service d'accompagnement des assistants maternels et familiaux (SAMF) de votre arrondissement",
    "source": "https://www.paris.fr/pages/les-assistantes-maternelles-213",
    "releve": "2026-08-30"
+  },
+  "83": {
+   "nom": "Var",
+   "reunion": "conseillee",
+   "reunionNote": "le Département la recommande avant le dépôt du dossier, et c’est là que le dossier de candidature est remis ; les dates s’obtiennent auprès de la PMI de votre territoire",
+   "depot": [
+    "recommande",
+    "surplace"
+   ],
+   "depotNote": "le dossier, accompagné de l’attestation de présence à la réunion, s’adresse à la direction de l’enfance et de la famille, 390 avenue des Lices, CS 41303, 83076 Toulon Cedex, en précisant la PMI de territoire de votre résidence",
+   "contact": {
+    "email": "gro-def-cellule-assmat@var.fr"
+   },
+   "contactNote": "cette adresse est celle de la cellule des assistants maternels et familiaux, qui gère aussi les inscriptions aux réunions",
+   "source": "https://var.fr/social/enfance-famille/devenir-assistante-maternelle",
+   "releve": "2026-09-03"
   }
  }
 }
