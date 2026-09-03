@@ -278,6 +278,25 @@ const filAriane = (d, feuille, url) => ({
 });
 
 /* ---------------------------------------------------------------- TARIF */
+/**
+ * L'appel à l'action des pages départementales.
+ *
+ * Une page lue depuis un département précis mérite mieux qu'un encart
+ * interchangeable : la lectrice vient de lire des chiffres qui la concernent,
+ * l'invitation doit continuer la même phrase. D'où le nom du département dans
+ * le texte, et une preuve datée plutôt qu'un pourcentage — « 100 % conforme »
+ * ne veut rien dire pour qui sait que la convention bouge chaque année.
+ */
+function ctaLocal(ou, titre, phrase) {
+  return `
+  <div class="ctabox">
+    <h2>${esc(titre)}</h2>
+    <p>${phrase}</p>
+    <p class="mini">À jour du minimum conventionnel de ${eur(MINIMUM_CONV)} brut de l'heure et par enfant, applicable au 1<sup>er</sup> juin 2026 — avenant n° 10 à la convention collective IDCC 3239. Deux mois d'essai, sans carte bancaire.</p>
+    <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
+  </div>`;
+}
+
 function pageTarif(d, st, stats, ctx) {
   const ici = st.salaireHoraireNet;
   const nat = stats.national?.salaireHoraireNet;
@@ -373,11 +392,7 @@ function pageTarif(d, st, stats, ctx) {
   <h2>Le plafond qui coûte le CMG</h2>
   <p>Au-delà de <strong>${eur(PLAFOND_CMG_JOUR)} brut par jour d'accueil et par enfant</strong> — cinq fois le SMIC horaire — les parents ne perdent pas une partie du complément de libre choix du mode de garde : ils le perdent en entier. Sur une journée de neuf heures, ce plafond correspond à environ ${eur(PLAFOND_CMG_JOUR / 9)} brut de l'heure. Une marge confortable au regard des moyennes observées, mais un seuil à vérifier sur les contrats à forte amplitude.</p>
 
-  <div class="ctabox">
-    <h2>Calculez, ne devinez pas</h2>
-    <p>TiMat pose la mensualisation, suit les présences, calcule les indemnités et prépare la déclaration Pajemploi. Gratuit pendant deux mois.</p>
-    <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
-  </div>
+  ${ctaLocal(ou, "Ce tarif, transformé en contrat", `Les moyennes ${esc(ou)} disent ce qui se pratique. Un contrat, lui, demande une mensualisation, des congés payés, une indemnité d'entretien et une déclaration Pajemploi. TiMat pose les quatre à partir de votre tarif et de vos horaires.`)}
 
   <div class="related"><h2>À voir aussi</h2><div class="chips">
     ${Number(st.assmats) > 0 ? `<a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/devenir">📋 Devenir assmat ${esc(ou)}</a>` : ""}
@@ -655,11 +670,7 @@ function pageDevenir(d, st, stats, ctx, pmi, exigences) {
     : `<p>Votre interlocuteur est le <strong>service de protection maternelle et infantile (PMI)</strong> du conseil départemental. Cherchez « PMI ${esc(d.nom)} agrément assistante maternelle » ou passez par le standard du conseil départemental : c'est le service qui organise les réunions d'information et fixe le calendrier des sessions.</p>`}
   <p>Le relais petite enfance de votre commune est le second interlocuteur utile : il connaît les besoins du secteur, et il accompagne ensuite sur les contrats.</p>
 
-  <div class="ctabox">
-    <h2>Une fois agréée, tout commence</h2>
-    <p>Contrats conformes à la convention collective, mensualisation, congés, déclarations Pajemploi : TiMat s'occupe du calcul et de la paperasse.</p>
-    <a href="/?connexion" class="ctabtn">Essayer TiMat gratuitement →</a>
-  </div>
+  ${ctaLocal(ou, "L'agrément obtenu, le premier contrat arrive vite", `Le service de PMI ${esc(deArticle(d))} vérifie votre logement et vos aptitudes. Personne ne vérifie votre premier contrat à votre place : c'est là que se jouent la mensualisation, les congés payés et la déclaration Pajemploi. TiMat les calcule.`)}
 
   <div class="related"><h2>À voir aussi</h2><div class="chips">
     ${Number(st.salaireHoraireNet) > 0 ? `<a class="chip" href="/assistante-maternelle/${slugify(d.nom)}/tarif">💶 Les tarifs ${esc(ou)}</a>` : ""}
