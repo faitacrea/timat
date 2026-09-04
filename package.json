@@ -10,7 +10,7 @@
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
     "documents": "node scripts/generer-documents.mjs",
-    "documents:kit": "python3 scripts/generer-kit.py",
+    "documents:kit": "python3 scripts/generer-kit.py && python3 scripts/verifier-kit.py",
     "documents:publier": "node scripts/publier-documents.mjs"
   },
   "dependencies": {
