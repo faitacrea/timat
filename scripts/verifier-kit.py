@@ -105,7 +105,26 @@ retenue = str(annee["C16"].value)
 attendu("MAX(" in retenue and "C14" in retenue and "C15" in retenue,
         "Année!C16 doit retenir le maximum des deux méthodes de congés payés")
 
-# 10. Aucune fonction récente qu'un tableur ancien pourrait ne pas évaluer.
+# 10. La ligne d'exemple doit être exploitable : de vraies valeurs de date et
+#     d'heure, et surtout ses formules intactes. Écrire dans une cellule de
+#     formule après coup l'efface sans bruit — c'est arrivé, et le classeur
+#     livré ne calculait rien.
+from datetime import date as _date, time as _time
+attendu(isinstance(heures["A4"].value, _date), "Heures!A4 doit porter une vraie date, pas du texte")
+attendu(isinstance(heures["C4"].value, _time), "Heures!C4 doit porter une vraie heure, pas du texte")
+attendu(isinstance(heures["D4"].value, _time), "Heures!D4 doit porter une vraie heure, pas du texte")
+for coord in ("E4", "H4", "I4"):
+    v = heures[coord].value
+    attendu(isinstance(v, str) and v.startswith("="),
+            f"Heures!{coord} a perdu sa formule (valeur : {v!r})")
+
+# 11. Le classeur doit demander un recalcul complet à l'ouverture : openpyxl
+#     n'écrit aucune valeur en cache, et un lecteur qui se fie au cache
+#     n'afficherait que des cellules vides.
+attendu(getattr(wb.calculation, "fullCalcOnLoad", False) is True,
+        "le classeur doit porter fullCalcOnLoad pour se recalculer à l'ouverture")
+
+# 12. Aucune fonction récente qu'un tableur ancien pourrait ne pas évaluer.
 #     La frontière de mot compte : SUMIFS et COUNTIFS contiennent « IFS( »
 #     sans être la fonction IFS. Sans \b, le contrôle rejette des formules saines.
 interdites = ("XLOOKUP", "XMATCH", "TEXTJOIN", "IFS", "SWITCH", "MAXIFS", "MINIFS",

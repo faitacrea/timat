@@ -490,6 +490,36 @@ const D = {
 };
 
 //
+//
+// FORFAIT — le gratuit donne acces a un enfant et au quotidien : journee,
+// pointage, sante, messagerie, calendrier. Bulletins de salaire, declaration
+// Pajemploi et enfants supplementaires relevent du Pro.
+//
+// Ces limites etaient annoncees sur la page tarifs sans exister nulle part
+// dans le code : une utilisatrice gratuite avait exactement la meme
+// application qu'une abonnee, et donc aucune raison de payer.
+//
+// Un parent n'est jamais bride : son espace est gratuit par construction.
+const LIMITE_ENFANTS_GRATUIT = 1;
+const estPro = (u) => ["pro", "trialing"].includes(u?.subscription_status) || u?.role === "parent";
+const peutAjouterEnfant = (u, enfants) =>
+  estPro(u) || (enfants || []).length < LIMITE_ENFANTS_GRATUIT;
+
+// L'ecran qui remplace une fonction reservee. Il dit ce que la fonction fait,
+// pourquoi elle est reservee, et ouvre la page d'abonnement — jamais une
+// impasse.
+function VerrouPro({ titre, desc, cta = "Voir le forfait Pro" }) {
+  return <div className="card" style={{ padding: 26, textAlign: "center", border: "1.5px dashed var(--T)" }}>
+    <div style={{ fontSize: 34, marginBottom: 10 }}>🔒</div>
+    <div className="pf" style={{ fontSize: 17, fontWeight: 700, color: "var(--b)", marginBottom: 8 }}>{titre}</div>
+    <div style={{ fontSize: 13, color: "var(--m)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 18px" }}>{desc}</div>
+    <button className="btn bT" onClick={() => window.dispatchEvent(new CustomEvent("timat:page", { detail: "parametres" }))}>
+      {cta}
+    </button>
+    <div style={{ fontSize: 11, color: "var(--l)", marginTop: 10 }}>2 mois offerts, sans carte bancaire</div>
+  </div>;
+}
+
 const age=(d)=>{const n=new Date(d),t=new Date(),m=(t.getFullYear()-n.getFullYear())*12+(t.getMonth()-n.getMonth());return m>=24?Math.floor(m/12)+" ans":m+" mois"};
 const fmt=(s)=>s?new Date(s).toLocaleDateString("fr-FR"):"-";
 const ini=(p,n)=>(p[0]+n[0]).toUpperCase();
@@ -577,7 +607,7 @@ function FichesEnfants({enfants,user,setPage}){
   return <div className="fi">
     <PageHeader icon="👧" title="Mes enfants" sub="Photo, emoji et informations de chaque enfant accueilli"/>
     <div style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
-      <button className="btn bT" onClick={()=>setShowAjout(true)}>➕ Ajouter un enfant</button>
+      <BoutonAjouterEnfant user={user} enfants={enfants} onClick={()=>setShowAjout(true)}/>
     </div>
     {list.length===0
       ? <EmptyState emoji="👶" titre="Aucun enfant pour le moment" texte="Ajoutez un premier enfant pour commencer à suivre son quotidien." cta="➕ Ajouter un enfant" onCta={()=>setShowAjout(true)}/>
@@ -1011,7 +1041,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
           <div className="pf"style={{fontSize:27,fontWeight:700,color:"var(--b)",lineHeight:1.15}}>Bonjour {user?.prenom||"Marie"} 👋</div>
           <div style={{fontSize:13.5,color:"var(--m)",marginTop:5}}>Voici votre journée en un coup d'œil.</div>
         </div>
-        {user&&!demoStats&&<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>}
+        {user&&!demoStats&&<BoutonAjouterEnfant compact user={user} enfants={enfants} onClick={()=>setShowAjout(true)}/>}
       </div>
     </div>
 
@@ -3160,7 +3190,7 @@ function Contrats({enfants,role,pEId,user}){
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
     <PageHeader icon="📄" title="Contrats & Signatures" sub="Signature électronique légale"
-      action={role==="asmat"&&user?<BoutonAjouterEnfant compact onClick={()=>setShowAjout(true)}/>:null}/>
+      action={role==="asmat"&&user?<BoutonAjouterEnfant compact user={user} enfants={enfants} onClick={()=>setShowAjout(true)}/>:null}/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}
         badge={signes[e.id]
@@ -6332,7 +6362,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 }
 
 function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
-  const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?"facturation":((enfants.some(e=>e?.contrat?.partage_parent&&!e?.contrat?.signe_parent))?"signature_parent":"contrats")));
+  const proActif=estPro(user)||demoMode;
+  const [section,setSection]=useState(demoMode?"bulletin":(role==="asmat"?(proActif?"facturation":"contrats"):((enfants.some(e=>e?.contrat?.partage_parent&&!e?.contrat?.signe_parent))?"signature_parent":"contrats")));
   useEffect(()=>{
     const h=(e)=>{ if(e.detail==="nouveau_bulletin"){ setSection("bulletin"); window.scrollTo({top:0,behavior:"smooth"}); } };
     window.addEventListener("timat:action",h); return()=>window.removeEventListener("timat:action",h);
@@ -6340,8 +6371,12 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
   const [contratTab,setContratTab]=useState("contrats");
   const sousOnglets=role==="asmat"
     ?[
-      {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
-      {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
+      // Facturation et bulletins sont le coeur du forfait Pro : les onglets
+      // disparaissent pour une gratuite plutot que de s'ouvrir sur un refus.
+      ...(proActif?[
+        {id:"facturation",l:"Facturation & Pajemploi",ic:"🧾"},
+        {id:"bulletin",l:"Bulletin de salaire",ic:"📜"},
+      ]:[]),
       {id:"versements",l:"Versements reçus",ic:"💶"},
       {id:"frais_km",l:"Frais kilométriques",ic:"🚗"},
       {id:"recap_fiscal",l:"Récap fiscal",ic:"📋"},
@@ -6416,8 +6451,12 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><span>{s.ic}</span><span>{s.l}</span></button>)}
     </div>}
-    {section==="facturation"&&<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>}
-    {section==="bulletin"&&<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {section==="facturation"&&(proActif
+      ?<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>
+      :<VerrouPro titre="La facturation et la déclaration Pajemploi" desc="Le récapitulatif mensuel et l'export Pajemploi préparent votre déclaration à partir de vos présences réelles. Ils font partie du forfait Pro."/>)}
+    {section==="bulletin"&&(proActif
+      ?<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>
+      :<VerrouPro titre="Les bulletins de salaire" desc="Salaire mensualisé, heures complémentaires, congés payés et indemnités, réunis sur un bulletin conforme à la convention collective. Cette fonction fait partie du forfait Pro."/>)}
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="frais_km"&&<IndemnitesKilometriques enfants={enfants} role={role} user={user}/>}
     {section==="recap_fiscal"&&<RecapFiscalAssmat enfants={enfants} user={user}/>}
@@ -13778,9 +13817,17 @@ function OnboardingWizard({user,onFinish}){
 
 //
 // Bouton reutilisable pour ouvrir la modale d'ajout d'enfant
-function BoutonAjouterEnfant({onClick,compact}){
-  return <button className="btn bT" onClick={onClick}
-    style={compact?{padding:"8px 14px",fontSize:12}:{padding:"10px 18px",fontSize:13}}>
+function BoutonAjouterEnfant({onClick,compact,user,enfants}){
+  // Mieux vaut un bouton qui explique qu'un bouton qui ouvre une modale pour
+  // refuser trois ecrans plus loin.
+  const verrouille = user !== undefined && !peutAjouterEnfant(user, enfants);
+  const style = compact?{padding:"8px 14px",fontSize:12}:{padding:"10px 18px",fontSize:13};
+  if(verrouille) return <button className="btn" onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"parametres"}))}
+    title="Le forfait gratuit couvre un enfant. Passez au Pro pour en accueillir davantage."
+    style={{...style,background:"transparent",color:"var(--m)",border:"1.5px dashed var(--br)"}}>
+    <span style={{fontSize:14,marginRight:4}}>🔒</span> Ajouter un enfant — Pro
+  </button>;
+  return <button className="btn bT" onClick={onClick} style={style}>
     <span style={{fontSize:15,marginRight:2}}>+</span> Ajouter un enfant
   </button>;
 }
@@ -13818,6 +13865,19 @@ function AjouterEnfantModale({user,onClose}){
     }
     setSaving(true);
     try{
+      // 0. Le verrou du forfait, verifie ici et pas seulement sur le bouton :
+      //    un lien direct ou un bouton oublie ne doit pas contourner la limite.
+      //    Le comptage se fait en base, pas sur une liste deja chargee.
+      if(!estPro(user)){
+        const{count}=await supabase.from("enfants")
+          .select("id",{count:"exact",head:true})
+          .eq("asmat_id",user.id);
+        if((count||0)>=LIMITE_ENFANTS_GRATUIT){
+          setSaving(false);
+          setToast("Le forfait gratuit couvre un enfant. Passez au Pro pour en accueillir davantage.");
+          return;
+        }
+      }
       // 1. Creer l'enfant
       const{data:enfantData,error:errEnfant}=await supabase.from("enfants").insert({
         prenom:enfant.prenom.trim(),
@@ -18137,7 +18197,10 @@ export default function App(){
 
   const role=user.role;
   // //  Statut abonnement
-  const isPro=['pro','trialing'].includes(user?.subscription_status)||user?.role==="parent";
+  // Une seule definition du statut, partagee avec les verrous du forfait :
+  // deux regles qui divergent, c'est une fonction bridee d'un cote et ouverte
+  // de l'autre.
+  const isPro=estPro(user);
   const isTrialing=user?.subscription_status==="trialing";
 
   // //  Lancer le checkout Stripe
