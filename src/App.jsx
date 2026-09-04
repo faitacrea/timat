@@ -661,7 +661,11 @@ function VuePaieContrats({enfants,role,pEId,user,pointagesDB}){
 }
 function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
   const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
-  return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"}]}/>{v===0?<DocumentsComplet {...P}/>:<BilansExports {...P}/>}</>;
+  const pro=estPro(user);
+  return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"}]}/>
+    {v===0
+      ? (pro?<DocumentsComplet {...P}/>:<VerrouPro titre="Documents et attestations" desc="Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."/>)
+      : <BilansExports {...P}/>}</>;
 }
 function VueAidesSimulateurs({enfants,role,pEId,user}){
   const [v,setV]=useState(0);
@@ -6379,10 +6383,10 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       ]:[]),
       {id:"versements",l:"Versements reçus",ic:"💶"},
       {id:"frais_km",l:"Frais kilométriques",ic:"🚗"},
-      {id:"recap_fiscal",l:"Récap fiscal",ic:"📋"},
+      ...(proActif?[{id:"recap_fiscal",l:"Récap fiscal",ic:"📋"}]:[]),
       {id:"contrats",l:"Contrats & Avenants",ic:"📄"},
       {id:"contrats_types",l:"Modeles & Templates",ic:"📋"},
-      {id:"courriers",l:"Courriers types",ic:"✉️"},
+      ...(proActif?[{id:"courriers",l:"Courriers types",ic:"✉️"}]:[]),
     ]
     :[
       ...((enfants.some(e=>e?.contrat?.partage_parent)) ? [{id:"signature_parent",l:"Mon contrat & Signature",ic:"📄"}] : [] ),
@@ -6459,7 +6463,9 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       :<VerrouPro titre="Les bulletins de salaire" desc="Salaire mensualisé, heures complémentaires, congés payés et indemnités, réunis sur un bulletin conforme à la convention collective. Cette fonction fait partie du forfait Pro."/>)}
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="frais_km"&&<IndemnitesKilometriques enfants={enfants} role={role} user={user}/>}
-    {section==="recap_fiscal"&&<RecapFiscalAssmat enfants={enfants} user={user}/>}
+    {section==="recap_fiscal"&&(proActif
+      ?<RecapFiscalAssmat enfants={enfants} user={user}/>
+      :<VerrouPro titre="Le récapitulatif fiscal" desc="Le montant à reporter sur votre déclaration, après abattement. Cette fonction fait partie du forfait Pro."/>)}
     {section==="contrats"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
         {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"🏁 Fin de contrat"}].map(t=>
@@ -6470,10 +6476,14 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
         <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
           <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
         </div>
-      </div>:<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}user={user}/>}
+      </div>:(proActif
+        ?<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}user={user}/>
+        :<VerrouPro titre="La fin de contrat" desc="Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte. Cette fonction fait partie du forfait Pro."/>)}
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
-    {section==="courriers"&&<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {section==="courriers"&&(proActif
+      ?<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>
+      :<VerrouPro titre="Les courriers types" desc="Modèles de courriers conformes à la convention collective, prêts à personnaliser. Cette fonction fait partie du forfait Pro."/>)}
     {section==="signature_parent"&&(enfants.some(e=>e?.contrat?.partage_parent)?<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>:<div className="card" style={{padding:20,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>)}
   </div>;
 }
@@ -11030,8 +11040,12 @@ function BilansExports({enfants,role,pEId,user,pointagesDB}){
         }}><span>{s.ic}</span><span>{s.l}</span></button>
       )}
     </div>
-    {sec==="rapport"&&<RapportAnnuel enfants={enfants}role={role}pEId={pEId}user={user}/>}
-    {sec==="recap"&&<Recap enfants={enfants}role={role}pEId={pEId}/>}
+    {sec==="rapport"&&(estPro(user)
+      ?<RapportAnnuel enfants={enfants}role={role}pEId={pEId}user={user}/>
+      :<VerrouPro titre="Le rapport annuel" desc="La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie du forfait Pro."/>)}
+    {sec==="recap"&&(estPro(user)
+      ?<Recap enfants={enfants}role={role}pEId={pEId}/>
+      :<VerrouPro titre="Le récapitulatif mensuel" desc="Le récapitulatif du mois en PDF, prêt à remettre au parent employeur. Cette fonction fait partie du forfait Pro."/>)}
     {sec==="export"&&<ExportDonnees enfants={enfants}role={role}user={user}/>}
   </div>;
 }
@@ -16973,15 +16987,21 @@ const DEFAULT_CONFIG = {
     {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contesté des heures.",apres:"Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat."},
     {nom:"Fatima A.",ville:"Marseille",avant:"Je me réveillais la nuit à stresser.",apres:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai."},
   ],
+  // Cette liste doit correspondre exactement aux verrous du code. Une ligne qui
+  // promet plus que l'application n'accorde se decouvre au pire moment, et une
+  // ligne qui promet moins fait perdre une inscription pour rien.
   freeItems:[
     [true, "1 enfant accueilli"],
     [true, "Journal quotidien"],
     [true, "Pointage & Repas"],
     [true, "Messagerie parents"],
     [true, "Calendrier"],
-    [false, "Bilans & Bulletins de salaire"],
-    [false, "Pajemploi export"],
-    [false, "PMI & Documents"],
+    [true, "Fiche d'urgence & santé"],
+    [true, "Export de vos données (RGPD)"],
+    [false, "Bulletins de salaire & Pajemploi"],
+    [false, "Bilans, rapports et récap fiscal"],
+    [false, "PMI, documents et attestations"],
+    [false, "Courriers types & fin de contrat"],
     [false, "Enfants illimités"],
   ],
   proItems:[
@@ -18272,11 +18292,11 @@ export default function App(){
       case "documents_rapports": return <VueDocsRapports {...P}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
-      case "bilans": return <Bilans {...P}/>;
+      case "bilans": return isPro?<Bilans {...P}/>:<VerrouPro titre="Les bilans de journée" desc="Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."/>;
       case "eveil_complet": return <EveilComplet {...P}/>;
-      case "documents_complet": return <DocumentsComplet {...P}/>;
+      case "documents_complet": return isPro?<DocumentsComplet {...P}/>:<VerrouPro titre="Documents et attestations" desc="Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."/>;
       case "bilans_exports": return <BilansExports {...P}/>;
-      case "recap_fiscal": return <RecapFiscalAssmat enfants={enfants} user={user}/>;
+      case "recap_fiscal": return isPro?<RecapFiscalAssmat enfants={enfants} user={user}/>:<VerrouPro titre="Le récapitulatif fiscal" desc="Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."/>;
       case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
@@ -18285,16 +18305,16 @@ export default function App(){
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
-      case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
+      case "pmi": return isPro?<CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>:<VerrouPro titre="La communication avec la PMI" desc="Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
       case "ik": return <IndemnitesKilometriques enfants={enfants} role={role} user={user}/>;
-      case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "solde_compte": return isPro?<SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>:<VerrouPro titre="Le solde de tout compte" desc="Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte, calculés à la fin d'un contrat. Cette fonction fait partie du forfait Pro."/>;
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
-      case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "attestation_fiscale": return isPro?<AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>:<VerrouPro titre="L'attestation fiscale" desc="L'attestation annuelle à remettre aux parents employeurs pour leur crédit d'impôt. Cette fonction fait partie du forfait Pro."/>;
       case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "projet_accueil": return <ProjetAccueil user={user} role={role}/>;
       case "boutique": return <Boutique user={user}/>;
