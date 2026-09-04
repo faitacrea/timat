@@ -505,6 +505,139 @@ const estPro = (u) => ["pro", "trialing"].includes(u?.subscription_status) || u?
 const peutAjouterEnfant = (u, enfants) =>
   estPro(u) || (enfants || []).length < LIMITE_ENFANTS_GRATUIT;
 
+// STOCKAGE — le gratuit accepte 20 photos et 50 Mo de documents, le Pro
+// 5 Go de documents et des photos sans limite de nombre.
+//
+// La mesure passe par la fonction quota_stockage() : storage.objects n'est pas
+// interrogeable depuis le client, et lister les fichiers un par un couterait
+// une requete par dossier. La fonction ne lit que le prefixe de l'appelante.
+const QUOTAS = {
+  gratuit: { photos: 20, documentsOctets: 50 * 1024 * 1024 },
+  pro: { photos: Infinity, documentsOctets: 5 * 1024 * 1024 * 1024 },
+};
+const quotaDe = (u) => (estPro(u) ? QUOTAS.pro : QUOTAS.gratuit);
+const enMo = (o) => (o >= 1024 * 1024 * 1024
+  ? (o / 1024 / 1024 / 1024).toFixed(1) + " Go"
+  : (o / 1024 / 1024).toFixed(1) + " Mo");
+
+async function lireQuota() {
+  try {
+    const { data, error } = await supabase.rpc("quota_stockage");
+    if (error || !data || !data[0]) return null;
+    const q = data[0];
+    return {
+      photosNb: Number(q.photos_nb) || 0,
+      photosOctets: Number(q.photos_octets) || 0,
+      docsNb: Number(q.documents_nb) || 0,
+      docsOctets: Number(q.documents_octets) || 0,
+    };
+  } catch (e) { console.warn("quota", e); return null; }
+}
+
+// Verifie qu'il reste de la place avant d'envoyer.
+//
+// En cas d'echec de la mesure, on laisse passer : une coupure reseau ne doit
+// pas empecher quelqu'un de travailler, et le risque d'un fichier de trop est
+// sans commune mesure avec celui d'une journee bloquee.
+async function placeDisponible(user, type, octets = 0) {
+  const lim = quotaDe(user);
+  const q = await lireQuota();
+  if (!q) return { ok: true };
+  if (type === "photos") {
+    if (q.photosNb >= lim.photos) return {
+      ok: false, quota: q,
+      message: `Vous avez atteint la limite de ${lim.photos} photos du forfait gratuit. Supprimez-en quelques-unes dans Paramètres, ou passez au Pro pour des photos sans limite.`,
+    };
+  } else if (q.docsOctets + octets > lim.documentsOctets) {
+    return {
+      ok: false, quota: q,
+      message: `Ce fichier dépasse l'espace disponible (${enMo(lim.documentsOctets)}). Faites de la place dans Paramètres, ou passez au Pro.`,
+    };
+  }
+  return { ok: true, quota: q };
+}
+
+// L'espace occupe, et de quoi faire de la place sans chercher soi-meme quels
+// fichiers supprimer. Sans cet ecran, une limite atteinte serait une impasse.
+function GestionStockage({ user }) {
+  const [q, setQ] = useState(null);
+  const [anciens, setAnciens] = useState(null);
+  const [bucket, setBucket] = useState("photos");
+  const [occupe, setOccupe] = useState(false);
+  const lim = quotaDe(user);
+  const pro = estPro(user);
+
+  const rafraichir = async () => { setQ(await lireQuota()); };
+  useEffect(() => { rafraichir(); }, []);
+
+  const listerAnciens = async (b) => {
+    setBucket(b); setAnciens(null);
+    const { data, error } = await supabase.rpc("fichiers_anciens", { p_bucket: b, p_limite: 10 });
+    setAnciens(error ? [] : (data || []));
+  };
+
+  const supprimer = async (chemin) => {
+    if (!window.confirm("Supprimer définitivement ce fichier ?")) return;
+    setOccupe(true);
+    const { error } = await supabase.storage.from(bucket).remove([chemin]);
+    setOccupe(false);
+    if (error) { alert("Suppression impossible : " + error.message); return; }
+    setAnciens((a) => (a || []).filter((f) => f.chemin !== chemin));
+    rafraichir();
+  };
+
+  const barre = (part, plafond) => {
+    const pct = plafond === Infinity ? 0 : Math.min(100, Math.round((part / plafond) * 100));
+    const chaud = pct >= 90;
+    return <div style={{ height: 7, background: "var(--br)", borderRadius: 99, overflow: "hidden", margin: "6px 0 2px" }}>
+      <div style={{ width: pct + "%", height: "100%", borderRadius: 99, background: chaud ? "var(--R)" : "var(--G)", transition: "width .3s" }}/>
+    </div>;
+  };
+
+  return <div className="card" style={{ padding: 20 }}>
+    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--b)", marginBottom: 14 }}>💾 Espace de stockage</div>
+    {!q ? <div style={{ fontSize: 12.5, color: "var(--l)" }}>Mesure en cours…</div> : <>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--b)" }}>
+          <span>📷 Photos</span>
+          <span style={{ fontWeight: 700 }}>{q.photosNb}{lim.photos === Infinity ? " — sans limite" : " / " + lim.photos}</span>
+        </div>
+        {barre(q.photosNb, lim.photos)}
+        {lim.photos !== Infinity && q.photosNb >= lim.photos &&
+          <div style={{ fontSize: 11.5, color: "var(--R)", marginTop: 4 }}>Limite atteinte : supprimez des photos ou passez au Pro.</div>}
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--b)" }}>
+          <span>🗂️ Documents</span>
+          <span style={{ fontWeight: 700 }}>{enMo(q.docsOctets)} / {enMo(lim.documentsOctets)}</span>
+        </div>
+        {barre(q.docsOctets, lim.documentsOctets)}
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        <button className="btn" style={{ fontSize: 12 }} onClick={() => listerAnciens("photos")}>Voir les photos les plus anciennes</button>
+        <button className="btn" style={{ fontSize: 12 }} onClick={() => listerAnciens("documents")}>Voir les documents les plus anciens</button>
+      </div>
+      {anciens && (anciens.length === 0
+        ? <div style={{ fontSize: 12, color: "var(--l)" }}>Aucun fichier à afficher.</div>
+        : <div>
+          <div style={{ fontSize: 11.5, color: "var(--m)", marginBottom: 8 }}>
+            Les plus anciens d'abord. La suppression est définitive : enregistrez ce que vous voulez garder avant.
+          </div>
+          {anciens.map((f) => <div key={f.chemin} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "1px solid var(--br)" }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: "var(--b)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {String(f.chemin).split("/").pop()}
+            </span>
+            <span style={{ fontSize: 11, color: "var(--l)", whiteSpace: "nowrap" }}>{fmt(f.cree_le)}</span>
+            <button className="btn" disabled={occupe} onClick={() => supprimer(f.chemin)} style={{ fontSize: 11, padding: "4px 10px", color: "var(--R)", borderColor: "var(--R)" }}>Supprimer</button>
+          </div>)}
+        </div>)}
+      {!pro && <div style={{ fontSize: 11.5, color: "var(--m)", marginTop: 14, lineHeight: 1.6 }}>
+        Le forfait Pro porte les documents à {enMo(QUOTAS.pro.documentsOctets)} et lève la limite du nombre de photos.
+      </div>}
+    </>}
+  </div>;
+}
+
 // L'ecran qui remplace une fonction reservee. Il dit ce que la fonction fait,
 // pourquoi elle est reservee, et ouvre la page d'abonnement — jamais une
 // impasse.
@@ -4787,6 +4920,11 @@ function Documents({enfants,role,pEId,user}){
       const fileName=`${Date.now()}_${newDoc.nom.replace(/[^a-zA-Z0-9]/g,'_')}.${ext}`;
       const path=`${user.id}/${newDoc.eId||'general'}/${fileName}`;
 
+      // Seuls les envois manuels sont bloques. Un contrat ou un bulletin genere
+      // par l'application passe toujours : refuser d'enregistrer un document que
+      // l'utilisatrice vient de produire serait pire qu'un depassement.
+      const place=await placeDisponible(user,"documents",newFile.size);
+      if(!place.ok){ setToast("🔒 "+place.message); setUploading(false); return; }
       const{error:upErr}=await supabase.storage.from('documents').upload(path,newFile,{upsert:false});
       if(upErr){
         console.error('Upload doc:',upErr.message);
@@ -6563,6 +6701,10 @@ function TransmissionsContent({enfant,role,user}){
     const ext=file.name.split('.').pop()||'jpg';
     const fileName=`${Date.now()}.${ext}`;
     const path=`${user?.id||'anon'}/${enfant.id}/${today}/${fileName}`;
+    // Le quota se verifie juste avant l'envoi : le mesurer plus tot laisserait
+    // passer une photo ajoutee entre-temps depuis un autre appareil.
+    const place=await placeDisponible(user,"photos");
+    if(!place.ok){ alert(place.message); return; }
     const{error}=await supabase.storage.from('photos').upload(path,file,{upsert:false});
     if(error){
       console.error('Upload photo:',error.message);
@@ -8376,6 +8518,8 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
         </div>
         <InstallButton/>
       </div>
+      <GestionStockage user={user}/>
+
       <div className="card"style={{padding:20}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Légal & RGPD</div>
         {[
@@ -8682,6 +8826,10 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     setPhotoLoading(true);
     const ext=file.name.split('.').pop()||'jpg';
     const path=`${user?.id||'anon'}/${enfant.id}/${dateSel}/${Date.now()}.${ext}`;
+    // Le quota se verifie juste avant l'envoi : le mesurer plus tot laisserait
+    // passer une photo ajoutee entre-temps depuis un autre appareil.
+    const place=await placeDisponible(user,"photos");
+    if(!place.ok){ alert(place.message); return; }
     const{error}=await supabase.storage.from('photos').upload(path,file,{upsert:false});
     if(error){setToast("Erreur upload : "+error.message);setPhotoLoading(false);return;}
     await loadPhotos(enfant.id);setToast("Photo ajoutée ✓");
@@ -16997,6 +17145,8 @@ const DEFAULT_CONFIG = {
     [true, "Messagerie parents"],
     [true, "Calendrier"],
     [true, "Fiche d'urgence & santé"],
+    [true, "Suivi des versements reçus"],
+    [true, "20 photos et 50 Mo de documents"],
     [true, "Export de vos données (RGPD)"],
     [false, "Bulletins de salaire & Pajemploi"],
     [false, "Bilans, rapports et récap fiscal"],
@@ -17009,9 +17159,9 @@ const DEFAULT_CONFIG = {
     "📜 Bulletins de salaire complets",
     "🏛️ Export Pajemploi en 1 clic",
     "📑 Attestation fiscale",
-    "📸 Photos illimitées",
+    "📸 Photos sans limite de nombre",
     "🏥 Communication PMI",
-    "🗂️ Documents illimités (5 Go)",
+    "🗂️ 5 Go de documents",
     "👶 Enfants illimités",
     "📋 Solde de tout compte",
     "✉️ Courriers types",
