@@ -17,11 +17,9 @@ export const PRODUITS = {
     nom: 'Kit de gestion — tableur',
     prix: 1490,
     // Le kit est un classeur, pas un PDF, mais il se livre comme les autres :
-    // depuis le bucket privé, par lien signé. Passer par un lien de duplication
-    // Google supposait un partage ouvert et un compte Google chez l'acheteuse —
-    // deux dépendances de trop pour un fichier qu'on peut simplement envoyer.
-    // Le classeur s'ouvre dans Excel, LibreOffice, Numbers, et s'importe dans
-    // Google Sheets pour qui le préfère.
+    // par api/telecharger.js, sur présentation du jeton d'achat. Le classeur
+    // s'ouvre dans Excel, LibreOffice, Numbers, et s'importe dans Google Sheets
+    // pour qui le préfère.
     fichier: 'kit-gestion-assmat.xlsx',
     typeMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     motsCles: ['kit', 'sheets', 'tableur', 'gestion'],
@@ -52,13 +50,6 @@ export const PRODUITS = {
     motsCles: ['pack', 'complet'],
   },
 };
-
-export const BUCKET = 'documents-boutique';
-
-// Les fichiers attendus dans le bucket, sans doublon.
-export function fichiersAttendus() {
-  return Object.values(PRODUITS).map((p) => p.fichier).filter(Boolean);
-}
 
 function normaliser(texte) {
   return String(texte || '')

@@ -11663,6 +11663,12 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 
 //
 function Counter({target,suffix="",prefix="",duration=2000}){
+  // Tout ne se compte pas. Un encadré peut vouloir dire « 🇫🇷 » ou « 1 saisie » :
+  // ce qui n'est pas un nombre s'affiche tel quel, sans animation.
+  if(typeof target!=="number"||!isFinite(target)) return <>{prefix}{target}{suffix}</>;
+  return <CounterNombre target={target} suffix={suffix} prefix={prefix} duration={duration}/>;
+}
+function CounterNombre({target,suffix="",prefix="",duration=2000}){
   const [count,setCount]=useState(0);
   const ref=useRef(null);
   const started=useRef(false);
@@ -17146,6 +17152,7 @@ const DEFAULT_CONFIG = {
     [true, "Calendrier"],
     [true, "Fiche d'urgence & santé"],
     [true, "Suivi des versements reçus"],
+    [true, "Frais kilométriques"],
     [true, "20 photos et 50 Mo de documents"],
     [true, "Export de vos données (RGPD)"],
     [false, "Bulletins de salaire & Pajemploi"],

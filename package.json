@@ -11,7 +11,7 @@
     "audit:strict": "node scripts/audit.mjs --strict",
     "documents": "node scripts/generer-documents.mjs",
     "documents:kit": "python3 scripts/generer-kit.py && python3 scripts/verifier-kit.py",
-    "documents:publier": "node scripts/publier-documents.mjs"
+    "documents:embarquer": "node scripts/embarquer-documents.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
