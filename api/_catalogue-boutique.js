@@ -14,12 +14,17 @@
 
 export const PRODUITS = {
   kit_sheets: {
-    nom: 'Kit Google Sheets Assmat',
+    nom: 'Kit de gestion — tableur',
     prix: 1490,
-    // Le kit n'est pas un PDF : c'est un tableur à dupliquer. Il se livre par un
-    // lien, renseigné dans la variable d'environnement KIT_SHEETS_URL.
-    lienEnv: 'KIT_SHEETS_URL',
-    motsCles: ['kit', 'sheets', 'tableur'],
+    // Le kit est un classeur, pas un PDF, mais il se livre comme les autres :
+    // depuis le bucket privé, par lien signé. Passer par un lien de duplication
+    // Google supposait un partage ouvert et un compte Google chez l'acheteuse —
+    // deux dépendances de trop pour un fichier qu'on peut simplement envoyer.
+    // Le classeur s'ouvre dans Excel, LibreOffice, Numbers, et s'importe dans
+    // Google Sheets pour qui le préfère.
+    fichier: 'kit-gestion-assmat.xlsx',
+    typeMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    motsCles: ['kit', 'sheets', 'tableur', 'gestion'],
   },
   fiche_urgence: {
     nom: "Fiche de renseignements et d'urgence",

@@ -71,3 +71,4 @@ public/sitemap-local.xml
 # === Documents vendus en boutique (générés par npm run documents) ===
 # Le PDF est un produit livré à l'acheteur, pas un fichier servi par le site.
 documents/*.pdf
+documents/*.xlsx

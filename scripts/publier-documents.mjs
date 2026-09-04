@@ -2,7 +2,8 @@
 /**
  * Téléverse les PDF de la boutique dans le bucket privé Supabase.
  *
- *   npm run documents        # (re)génère les PDF dans documents/
+ *   npm run documents        # (re)génère les trois PDF dans documents/
+ *   npm run documents:kit    # (re)génère le classeur du kit
  *   npm run documents:publier
  *
  * À relancer chaque fois qu'un document change : le téléversement écrase le
@@ -18,7 +19,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { BUCKET, fichiersAttendus } from "../api/_catalogue-boutique.js";
+import { BUCKET, PRODUITS, fichiersAttendus } from "../api/_catalogue-boutique.js";
 
 const RACINE = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const DOSSIER = path.join(RACINE, "documents");
@@ -37,11 +38,14 @@ if (!url || !cle) {
 const supabase = createClient(url, cle, { auth: { persistSession: false } });
 
 const fichiers = fichiersAttendus();
+const TYPES = new Map(
+  Object.values(PRODUITS).filter((p) => p.fichier).map((p) => [p.fichier, p.typeMime])
+);
 const absents = fichiers.filter((f) => !existsSync(path.join(DOSSIER, f)));
 if (absents.length) {
   console.error(
-    "PDF manquants dans documents/ : " + absents.join(", ") + "\n" +
-      "Lancez d'abord « npm run documents »."
+    "Fichiers manquants dans documents/ : " + absents.join(", ") + "\n" +
+      "Lancez d'abord « npm run documents » puis « npm run documents:kit »."
   );
   process.exit(1);
 }
@@ -49,8 +53,11 @@ if (absents.length) {
 let erreurs = 0;
 for (const fichier of fichiers) {
   const contenu = await readFile(path.join(DOSSIER, fichier));
+  // Le kit est un classeur, les trois autres des PDF : le type se lit dans le
+  // catalogue plutôt que d'être supposé.
+  const type = TYPES.get(fichier) || "application/pdf";
   const { error } = await supabase.storage.from(BUCKET).upload(fichier, contenu, {
-    contentType: "application/pdf",
+    contentType: type,
     upsert: true,
   });
   if (error) {

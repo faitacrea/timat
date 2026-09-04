@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // modification ici doit etre reportee sur les prix affiches — vue boutique de
 // l'application, public/boutique.html et data/documents-assmat.json.
 const BOUTIQUE_PRODUCTS = {
-  kit_sheets: { name: 'Kit Google Sheets Assmat', price: 1490 },
+  kit_sheets: { name: 'Kit de gestion Assmat', price: 1490 },
   fiche_urgence: { name: "Fiche d'urgence", price: 690 },
   projet_accueil: { name: "Projet d'accueil", price: 1290 },
   registre_medicaments: { name: 'Registre des medicaments administres', price: 690 },

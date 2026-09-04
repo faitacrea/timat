@@ -13115,7 +13115,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
-              {id:"kit_sheets",name:"Kit Google Sheets",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
+              {id:"kit_sheets",name:"Kit de gestion",price:"14,90",desc:"Classeur pret a l'emploi : heures jour par jour, mensualisation, indemnites, recap annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
               {id:"fiche_urgence",name:"Fiche d'urgence",price:"6,90",desc:"Le document a afficher, que la PMI regarde. A remplir et imprimer.",icon:"🚨",color:"#C84B31",link:config.boutique?.linkFiche},
               {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections guidees, adossees au referentiel national qualite 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
               {id:"registre_medicaments",name:"Registre des medicaments",price:"6,90",desc:"Document obligatoire : consignation, autorisation parentale type.",icon:"💊",color:"#5DA9A1",link:config.boutique?.linkRegistre},
@@ -15236,7 +15236,7 @@ function Boutique({user}){
   const [toast,setToast]=useState("");
   const isPro=user?.subscription_status==="pro";
   const products=[
-    {id:"kit_sheets",name:"Kit Google Sheets Assmat",price:"14,90",desc:"7 tableurs interconnectes : heures, salaire, conges, bilan annuel, planning, indemnites, facture.",icon:"📊",color:"#5DA9A1"},
+    {id:"kit_sheets",name:"Kit de gestion Assmat",price:"14,90",desc:"Classeur pret a l'emploi : contrat, heures jour par jour, recapitulatif mensuel et annuel.",icon:"📊",color:"#5DA9A1"},
     {id:"fiche_urgence",name:"Fiche d'urgence",price:"6,90",desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences, autorisations.",icon:"🚨",color:"#C84B31"},
     {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections : presentation, lieu, familiarisation, journee type, sommeil, repas, change, jeu, emotions, parents, inclusion, securite, formation.",icon:"🌿",color:"#2E4859"},
     {id:"registre_medicaments",name:"Registre des medicaments",price:"6,90",desc:"Document obligatoire (article R2111-1) : grilles de consignation et modele d'autorisation parentale a faire signer.",icon:"💊",color:"#5DA9A1"},
@@ -16580,7 +16580,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
           </BOCard>
           <BOCard title="Boutique — Liens de paiement Stripe" icon="🛒">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Collez ici vos liens Stripe. Dashboard Stripe → Produits → Liens de paiement.</div>
-            <BOField label="Kit Google Sheets"><BOTextInput k="linkSheets" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+            <BOField label="Kit de gestion"><BOTextInput k="linkSheets" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Fiche d'urgence"><BOTextInput k="linkFiche" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Projet d'accueil"><BOTextInput k="linkProjet" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Registre des medicaments"><BOTextInput k="linkRegistre" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
@@ -16727,7 +16727,7 @@ const FAQ_LANDING_DEFAULT=[
             {q:"Je suis parent employeur, qu'est-ce que TiMat m'apporte ?",a:"Votre espace parent regroupe présences, paie, documents et messagerie. Vous suivez le coût réel et le CMG, sans mauvaise surprise de plafond, et tout est partagé en toute transparence avec votre assistante maternelle."},
             {q:"Comment fonctionne le cahier de liaison numérique ?",a:"Repas, sieste, activités et humeur se remplissent une seule fois, même pour plusieurs enfants, et le parent les consulte en temps réel. Tout est daté et gardé en historique : un compte-rendu factuel qui évite les oublis et les malentendus."},
             {q:"TiMat fonctionne-t-il sur mon téléphone ?",a:"Oui. TiMat fonctionne dans votre navigateur, sur téléphone, tablette et ordinateur, sans rien installer. Vous êtes opérationnelle en quelques minutes, sans formation."},
-            {q:"Qui a créé TiMat ?",a:"TiMat a été créée par une assistante maternelle agréée, qui a vécu la montagne administrative du métier. Chaque fonction répond à un besoin réel : c'est conçu par une assmat, pour les assmats."},
+            {q:"Qui a créé TiMat ?",a:"TiMat est né d'un constat simple : le métier impose une gestion administrative que personne n'apprend nulle part — mensualisation, congés payés, indemnités, déclaration Pajemploi. Chaque calcul de l'application s'appuie sur un texte précis, convention collective IDCC 3239 ou code de l'action sociale et des familles, et ces textes sont cités pour que vous puissiez les vérifier vous-même."},
           ];
 const BLOG_DEFAULT=[
               {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Salaire et mensualisation",catColor:"#C84B31",emoji:"\uD83D\uDCB6",title:"Salaire net, brut et co\u00fbt employeur",excerpt:"4,20 \u20ac brut depuis juin 2026. Les quatre montants qu'on confond tout le temps."},
