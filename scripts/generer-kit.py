@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """Kit de gestion TiMat pour assistante maternelle.
 
+Repère de contrôle, à vérifier en ouvrant le fichier : la ligne d'exemple va
+de 07:30 à 18:00, soit 10,50 heures, et son indemnité d'entretien doit
+afficher 4,57 € (10,50 × 0,435, au-dessus du plancher de 2,65 €). Une journée
+plus courte, de 07:30 à 12:00, doit au contraire afficher le plancher.
+
 Tout est formule : la lectrice change ses paramètres de contrat et l'ensemble
 du tableur suit. Rien n'est calculé en Python puis figé dans une cellule.
 """
