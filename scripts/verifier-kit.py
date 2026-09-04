@@ -1,43 +1,53 @@
 # -*- coding: utf-8 -*-
 """Contrôle des références du classeur, à défaut de pouvoir le recalculer.
 
-LibreOffice ne répond pas ici, donc aucune preuve que l'arithmétique tombe
-juste. Ce que ce script prouve en revanche, c'est le défaut le plus probable
-d'un classeur écrit par programme : une formule qui pointe une colonne ou une
-ligne à côté. Chaque référence est résolue et confrontée à l'en-tête ou au
-libellé qu'elle est censée désigner.
+LibreOffice ne répond pas dans l'environnement de développement, donc aucune
+preuve que l'arithmétique tombe juste. Ce que ce script prouve en revanche,
+c'est le défaut le plus probable d'un classeur écrit par programme : une
+formule qui pointe une colonne ou une ligne à côté. Chaque référence est
+résolue et confrontée à l'en-tête ou au libellé qu'elle est censée désigner.
 """
-import re, sys
+import os
+import re
+import sys
 from openpyxl import load_workbook
 
-import os
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 wb = load_workbook(os.path.join(RACINE, "documents", "kit-gestion-assmat.xlsx"))
-contrat, heures, mois, annee = wb["Contrat"], wb["Heures"], wb["Mois"], wb["Année"]
+contrats, heures, mois, annee = wb["Contrats"], wb["Heures"], wb["Mois"], wb["Année"]
 echecs = []
+
 
 def attendu(condition, message):
     if not condition:
         echecs.append(message)
 
-# 1. Chaque cellule de paramètre porte bien le libellé que les formules supposent.
-libelles = {7: "Taux horaire brut", 8: "Heures d'accueil par semaine",
-            9: "Semaines d'accueil par an", 10: "Indemnité d'entretien par heure",
-            11: "Plancher d'entretien par journée", 12: "Indemnité par repas",
-            13: "Indemnité kilométrique", 16: "Heures mensualisées",
-            17: "Salaire mensualisé brut"}
-for ligne, debut in libelles.items():
-    lu = str(contrat.cell(row=ligne, column=2).value or "")
-    attendu(lu.startswith(debut), f"Contrat!C{ligne} devait être « {debut} », trouvé « {lu} »")
 
-# 2. Les colonnes de l'onglet Heures, dans l'ordre supposé par les SUMIFS.
-colonnes = {1: "Date", 2: "Arrivée", 3: "Départ", 4: "Heures",
-            5: "Repas", 6: "Km", 7: "Entretien (€)", 8: "Clé mois"}
+# 1. Chaque ligne de paramètre porte le libellé que les formules supposent.
+libelles = {
+    5: "Prénom de l'enfant", 7: "Taux horaire brut", 8: "Heures d'accueil par semaine",
+    9: "Semaines d'accueil par an", 10: "Indemnité d'entretien par heure",
+    11: "Plancher d'entretien par journée", 12: "Indemnité par repas",
+    13: "Indemnité kilométrique", 14: "Semaines de congés payés acquises",
+    16: "Heures mensualisées", 17: "Salaire mensualisé brut",
+}
+for ligne, debut in libelles.items():
+    lu = str(contrats.cell(row=ligne, column=2).value or "")
+    attendu(lu.startswith(debut), f"Contrats ligne {ligne} devait être « {debut} », trouvé « {lu} »")
+
+# 2. Les quatre colonnes d'enfants existent, et dans cet ordre.
+for i, col in enumerate("CDEF", start=1):
+    lu = contrats[f"{col}4"].value
+    attendu(lu == f"Enfant {i}", f"Contrats!{col}4 devait être « Enfant {i} », trouvé « {lu} »")
+
+# 3. Les colonnes de l'onglet Heures, dans l'ordre supposé par les SUMIFS.
+colonnes = {1: "Date", 2: "Enfant", 3: "Arrivée", 4: "Départ", 5: "Heures",
+            6: "Repas", 7: "Km", 8: "Entretien (€)", 9: "Clé mois"}
 for col, titre in colonnes.items():
     lu = heures.cell(row=3, column=col).value
     attendu(lu == titre, f"Heures colonne {col} devait être « {titre} », trouvé « {lu} »")
 
-# 3. Les colonnes de l'onglet Mois.
+# 4. Les colonnes de l'onglet Mois.
 colM = {1: "Mois", 2: "Clé", 3: "Heures faites", 4: "Heures mensualisées",
         5: "Heures compl.", 6: "Journées", 7: "Brut mensualisé", 8: "Brut compl.",
         9: "Entretien", 10: "Repas", 11: "Kilomètres"}
@@ -45,34 +55,59 @@ for col, titre in colM.items():
     lu = mois.cell(row=5, column=col).value
     attendu(lu == titre, f"Mois colonne {col} devait être « {titre} », trouvé « {lu} »")
 
-# 4. Toute référence Contrat!$C$n d'une formule vise une ligne réellement définie.
-lignes_valides = set(libelles)
+# 5. Toute référence à une ligne de Contrats vise un paramètre réellement défini.
 for ws in (heures, mois, annee):
     for rang in ws.iter_rows():
         for c in rang:
             if isinstance(c.value, str) and c.value.startswith("="):
-                for n in re.findall(r"Contrat!\$C\$(\d+)", c.value):
-                    attendu(int(n) in lignes_valides,
-                            f"{ws.title}!{c.coordinate} référence Contrat!C{n}, qui n'est pas un paramètre")
-
-# 5. Les totaux de l'onglet Année visent la ligne Total de l'onglet Mois.
-attendu(mois.cell(row=18, column=1).value == "Total", "Mois!A18 devrait porter « Total »")
-for coord, colonne in (("C4", "C"), ("C6", "G"), ("C7", "H"), ("C11", "I"), ("C12", "J"), ("C13", "K")):
-    f = str(annee[coord].value)
-    attendu(f"Mois!{colonne}18" in f, f"Année!{coord} devait pointer Mois!{colonne}18, trouvé « {f} »")
+                for n in re.findall(r"Contrats!\$?[C-F]\$?(\d+)", c.value):
+                    attendu(int(n) in libelles,
+                            f"{ws.title}!{c.coordinate} référence Contrats ligne {n}, qui n'est pas un paramètre")
 
 # 6. Les plages SUMIFS couvrent exactement les lignes de saisie, sans déborder.
 premiere = 4
 derniere = max(r for r in range(4, heures.max_row + 1)
-               if isinstance(heures.cell(row=r, column=8).value, str))
-for c in mois["C6"], mois["I6"], mois["J6"], mois["K6"]:
-    for debut, fin in re.findall(r"Heures!\$[A-H]\$(\d+):\$[A-H]\$(\d+)", str(c.value)):
-        attendu(int(debut) == premiere and int(fin) == derniere,
-                f"Mois!{c.coordinate} couvre {debut}-{fin}, attendu {premiere}-{derniere}")
+               if isinstance(heures.cell(row=r, column=9).value, str))
+for ws in (mois, annee):
+    for rang in ws.iter_rows():
+        for c in rang:
+            if isinstance(c.value, str) and "Heures!" in c.value:
+                for debut, fin in re.findall(r"Heures!\$[A-I]\$(\d+):\$[A-I]\$(\d+)", c.value):
+                    attendu(int(debut) == premiere and int(fin) == derniere,
+                            f"{ws.title}!{c.coordinate} couvre {debut}-{fin}, attendu {premiere}-{derniere}")
 
-# 7. Aucune fonction récente que le tableur de l'acheteuse pourrait ne pas connaître.
-# La frontière de mot compte : SUMIFS et COUNTIFS contiennent « IFS( » sans être
-# la fonction IFS. Sans \b, le contrôle se déclenche sur des formules saines.
+# 7. L'onglet Année : les libellés attendus aux lignes que les formules chaînent.
+attendus_annee = {
+    6: "Heures réalisées", 7: "Journées d'accueil", 8: "Mois travaillés",
+    9: "Salaire brut mensualisé", 10: "Heures complémentaires", 11: "Salaire brut total",
+    14: "Méthode 10 %", 15: "Méthode maintien de salaire", 16: "Indemnité retenue",
+    19: "Indemnité d'entretien", 20: "Indemnités de repas", 21: "Indemnités kilométriques",
+    22: "Total des indemnités", 24: "Total perçu sur l'année",
+}
+for ligne, libelle in attendus_annee.items():
+    lu = str(annee.cell(row=ligne, column=2).value or "")
+    attendu(lu == libelle, f"Année ligne {ligne} devait être « {libelle} », trouvé « {lu} »")
+
+# 8. La zone de calcul des mois travaillés couvre bien douze lignes, et la
+#    ligne « Mois travaillés » les additionne toutes.
+formule_mois = str(annee["C8"].value)
+plage = re.search(r"SUM\(C(\d+):C(\d+)\)", formule_mois)
+attendu(plage is not None, "Année!C8 devait additionner la zone de calcul")
+if plage:
+    debut, fin = int(plage.group(1)), int(plage.group(2))
+    attendu(fin - debut == 11, f"la zone de calcul couvre {fin - debut + 1} lignes, attendu 12")
+    for r in range(debut, fin + 1):
+        attendu(str(annee.cell(row=r, column=2).value or "").startswith("=Mois!B"),
+                f"Année!B{r} devait reprendre une clé de mois")
+
+# 9. L'indemnité retenue compare bien les deux méthodes, dans les deux sens.
+retenue = str(annee["C16"].value)
+attendu("MAX(" in retenue and "C14" in retenue and "C15" in retenue,
+        "Année!C16 doit retenir le maximum des deux méthodes de congés payés")
+
+# 10. Aucune fonction récente qu'un tableur ancien pourrait ne pas évaluer.
+#     La frontière de mot compte : SUMIFS et COUNTIFS contiennent « IFS( »
+#     sans être la fonction IFS. Sans \b, le contrôle rejette des formules saines.
 interdites = ("XLOOKUP", "XMATCH", "TEXTJOIN", "IFS", "SWITCH", "MAXIFS", "MINIFS",
               "FILTER", "UNIQUE", "SORT", "SEQUENCE")
 motif = re.compile(r"\b(" + "|".join(interdites) + r")\s*\(")
