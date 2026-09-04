@@ -1,7 +1,8 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import { PRODUITS, BUCKET, reconnaitreProduit, developper } from './_catalogue-boutique.js';
+import { randomBytes } from 'node:crypto';
+import { PRODUITS, reconnaitreProduit, developper } from './_catalogue-boutique.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
@@ -12,8 +13,10 @@ const supabase = createClient(
 // Durée de validité des liens de téléchargement. Sept jours : assez pour qu'un
 // courriel lu en fin de semaine reste utile, assez court pour qu'un lien qui
 // circule ne serve pas indéfiniment. Passé ce délai, l'acheteuse écrit au
-// support et on lui régénère un lien depuis la table achats_boutique.
+// support et on lui régénère un jeton depuis la table achats_boutique.
 const VALIDITE_SECONDES = 7 * 24 * 3600;
+
+const SITE = process.env.NEXT_PUBLIC_APP_URL || 'https://www.timat.app';
 
 function echapper(s) {
   return String(s === null || s === undefined ? '' : s)
@@ -79,56 +82,42 @@ async function livrer(session) {
     console.log('[boutique] rejeu après échec de livraison :', session.id);
   }
 
-  // Le pack se déplie ici en ses quatre documents.
-  const aLivrer = developper(achetes);
-  const liens = [];
-  const manquants = [];
+  // Un jeton par commande, tiré au hasard sur 32 octets : deviner un lien de
+  // téléchargement est hors de portée, et le jeton ne dit rien de l'acheteuse.
+  const jeton = randomBytes(32).toString('base64url');
+  const expire = new Date(Date.now() + VALIDITE_SECONDES * 1000).toISOString();
+  const { error: erreurJeton } = await supabase.from('achats_boutique')
+    .update({ jeton, expire_le: expire })
+    .eq('stripe_session_id', session.id);
+  if (erreurJeton) throw new Error('jeton non enregistré : ' + erreurJeton.message);
 
-  for (const cle of aLivrer) {
-    const produit = PRODUITS[cle];
-    if (produit.fichier) {
-      const { data, error } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(produit.fichier, VALIDITE_SECONDES);
-      if (error || !data) {
-        manquants.push(produit.nom);
-        console.error('[boutique] URL signée impossible pour', produit.fichier, error && error.message);
-        continue;
-      }
-      liens.push({ nom: produit.nom, url: data.signedUrl });
-    } else if (produit.lienEnv) {
-      const url = process.env[produit.lienEnv];
-      if (url) liens.push({ nom: produit.nom, url });
-      else {
-        manquants.push(produit.nom);
-        console.error('[boutique] variable', produit.lienEnv, 'non renseignée');
-      }
-    }
-  }
+  // Le pack se déplie ici en ses quatre documents.
+  const liens = developper(achetes)
+    .filter((cle) => PRODUITS[cle] && PRODUITS[cle].fichier)
+    .map((cle) => ({
+      nom: PRODUITS[cle].nom,
+      url: `${SITE}/api/telecharger?jeton=${encodeURIComponent(jeton)}&f=${encodeURIComponent(cle)}`,
+    }));
 
   if (!liens.length) throw new Error('aucun lien de téléchargement produit');
 
-  await envoyerCourriel(email, liens, manquants);
+  await envoyerCourriel(email, liens);
 
   await supabase.from('achats_boutique').update({
     livre_le: new Date().toISOString(),
-    erreur: manquants.length ? 'non livré : ' + manquants.join(', ') : null,
+    erreur: null,
   }).eq('stripe_session_id', session.id);
 
   console.log('[boutique] livré à', email, ':', liens.map((l) => l.nom).join(', '));
 }
 
-async function envoyerCourriel(email, liens, manquants) {
+async function envoyerCourriel(email, liens) {
   if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY manquante');
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const boutons = liens.map((l) =>
     `<p style="margin:0 0 12px"><a href="${echapper(l.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:700">${echapper(l.nom)}</a></p>`
   ).join('\n');
-
-  const reserve = manquants.length
-    ? `<p style="font-size:13px;color:#B25B3A">${echapper(manquants.join(', '))} vous ${manquants.length > 1 ? 'seront envoyés' : 'sera envoyé'} séparément — écrivez-nous si vous ne l'avez pas reçu d'ici 24 heures.</p>`
-    : '';
 
   const { error } = await resend.emails.send({
     from: 'TiMat <noreply@timat.app>',
@@ -138,7 +127,6 @@ async function envoyerCourriel(email, liens, manquants) {
     html: `<h2 style="color:#2E4859">Merci pour votre commande</h2>
 <p>Voici ${liens.length > 1 ? 'vos documents' : 'votre document'} :</p>
 ${boutons}
-${reserve}
 <p style="font-size:13px;color:#6B7A82;line-height:1.6">Ces liens restent valables sept jours : pensez à enregistrer les fichiers sur votre ordinateur ou votre téléphone. Passé ce délai, écrivez à <a href="mailto:support@timat.app" style="color:#C4714A">support@timat.app</a> et nous vous en renverrons.</p>
 <p style="font-size:12px;color:#888">Une question sur l'utilisation d'un document ? Répondez simplement à ce message.</p>`,
   });
