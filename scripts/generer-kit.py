@@ -16,6 +16,7 @@ Tout est formule : la lectrice change un paramètre de contrat et l'année
 entière se recalcule. Rien n'est calculé en Python puis figé dans une cellule.
 """
 import os
+from datetime import date, time
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -228,8 +229,12 @@ for r in range(PREMIERE, DERNIERE + 1):
     ws.cell(row=r, column=9, value=f'=IF(A{r}="","",YEAR(A{r})*100+MONTH(A{r}))')
     for col in (5, 8, 9):
         c = ws.cell(row=r, column=col); c.font = norm; c.fill = fond_doux; c.border = bord
-ws["A4"] = "01/09/2026"; ws["B4"] = 1; ws["C4"] = "07:30"; ws["D4"] = "18:00"
-ws["E4"] = None; ws["F4"] = 1; ws["G4"] = 0
+# Des valeurs réelles, pas des chaînes : « 07:30 » écrit en texte n'est pas une
+# heure, la soustraction échoue et la ligne d'exemple reste muette. Et surtout,
+# ne rien écrire dans E4 : la formule des heures y est déjà.
+ws["A4"] = date(2026, 9, 1); ws["B4"] = 1
+ws["C4"] = time(7, 30); ws["D4"] = time(18, 0)
+ws["F4"] = 1; ws["G4"] = 0
 ws["A4"].comment = Comment("Ligne d'exemple : écrasez-la par votre première journée réelle.", "TiMat")
 ws.freeze_panes = "A4"
 
@@ -418,6 +423,8 @@ for i, n in enumerate(notes):
 
 ws["B34"] = "Kit TiMat · timat.app · repères à jour au 1er juin 2026, à vérifier chaque année."
 ws["B34"].font = petit
+
+wb.calculation.fullCalcOnLoad = True
 
 for s in wb.worksheets:
     s.sheet_view.showGridLines = False
