@@ -18307,7 +18307,13 @@ export default function App(){
   // Le backoffice reste ouvert, ainsi que le blog et les simulateurs (fichiers statiques).
   {
     let _boRoute=false; try{ _boRoute=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
-    if(MAINTENANCE && !maintOk && !_boRoute)
+    // configLoaded est indispensable ici : sans lui, la vitrine s'affiche d'abord
+    // avec DEFAULT_CONFIG — les textes figes dans le bundle, donc l'ancienne
+    // version de la page — puis se redessine quand la config Supabase arrive.
+    // C'est ce clignotement que voyaient les visiteurs. Tant que la config n'est
+    // pas la, on laisse la main a l'ecran de chargement ci-dessous, que le
+    // useEffect libere de toute facon au bout de 3 s meme si Supabase ne repond pas.
+    if(MAINTENANCE && !maintOk && !_boRoute && configLoaded)
       return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage vitrine onLogin={()=>{}} dark={dark} setDark={setDark} config={appConfig}/></div></>;
   }
 
