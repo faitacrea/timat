@@ -1,433 +1,690 @@
 {
- "_lisezmoi": "Ce que chaque PMI départementale demande concrètement, au-delà du parcours national décrit sur les pages « devenir ». Un champ n'est rempli que s'il est écrit noir sur blanc sur le site du conseil départemental, et la section n'est rendue que si le département a au moins un champ renseigné. Aucune valeur n'est déduite, extrapolée ni reprise d'une autre source que le département lui-même.",
- "_regles_de_collecte": [
-  "Ne retenir que ce qui figure explicitement sur la page du conseil départemental. Un résumé de moteur de recherche ne fait pas foi : plusieurs se sont révélés faux à la lecture de la page.",
-  "Un écart à la norme nationale n'est retenu que s'il est EN PLUS. La formation légale est de 120 heures dont 80 avant tout accueil, dans les six mois suivant la réception du dossier complet, puis 40 heures dans les trois ans. Un département peut faire davantage — le Gard 126 heures, Paris 174 — et c'est une vraie différence. Un chiffre inférieur ou un délai plus court signale un site qui n'est pas à jour, jamais une règle locale : on n'affiche alors rien.",
-  "Exemple vécu : la Haute-Garonne annonce « 40 heures dans les 2 ans », qui est l'ancienne règle d'avant 2019 — le délai est de trois ans depuis. Sa durée de formation est donc laissée vide, alors que ses autres champs sont retenus.",
-  "Le délai d'instruction n'est stocké que s'il diffère des trois mois légaux, et il est alors présenté comme le délai annoncé par le Département, jamais comme le délai légal. L'article L421-6 du code de l'action sociale et des familles fixe trois mois à compter du dossier complet, le silence valant agrément : cette garantie ne doit jamais être noyée par un délai de traitement affiché.",
-  "Chaque département porte sa source et sa date de relevé. Sans source, pas d'affichage.",
-  "Ce qui est examiné pendant l'entretien et la visite à domicile est fixé au niveau national par le décret n° 2012-364 du 15 mars 2012 : disponibilité, capacité d'organisation, aptitude au dialogue, capacités éducatives, connaissance du métier, confort et sécurité du logement. Ces critères n'ont donc pas à être stockés département par département. Ce qui se collecte ici, ce sont les exigences que le département ajoute par-dessus — les règlements départementaux les signalent en propres termes, comme « exigences départementales spécifiques ».",
-  "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
- ],
- "departements": {
-  "10": {
-   "nom": "Aube",
-   "reunion": "proposee",
-   "reunionNote": "vous adressez d’abord un courrier au service de PMI, et c’est à sa réception que vous êtes invitée à une réunion d’information, où le dossier de candidature vous est remis",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "le premier courrier part au secrétariat des modes d’accueil de la PMI, cité administrative des Vassaules, 10026 Troyes Cedex",
-   "source": "https://assistante-maternelle.aube.fr/131-le-metier-d-assistant-e-maternel-le.htm",
-   "releve": "2026-09-03"
-  },
-  "13": {
-   "nom": "Bouches-du-Rhône",
-   "contact": {
-    "tel": "04 13 31 56 31"
-   },
-   "contactNote": "l’interlocuteur est le service des modes d’accueil de la petite enfance, 21 boulevard Mirabeau, 13331 Marseille",
-   "source": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
-   "releve": "2026-09-02"
-  },
-  "16": {
-   "nom": "Charente",
-   "reunion": "proposee",
-   "reunionNote": "le Département publie le calendrier des réunions, qui se tiennent au 15 boulevard Jean Moulin à Angoulême",
-   "contact": {
-    "tel": "05 16 09 68 65"
-   },
-   "contactNote": "ce numéro sert aux informations et aux inscriptions aux réunions",
-   "source": "https://www.lacharente.fr/actualite/emploi/devenir-assistante-maternelle",
-   "releve": "2026-09-03"
-  },
-  "17": {
-   "nom": "Charente-Maritime",
-   "reunion": "obligatoire",
-   "reunionNote": "une réunion d'information est organisée à Saintes ou à La Rochelle avant le dépôt du dossier",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "à la délégation territoriale de Saintes, après la réunion d'information",
-   "source": "https://la.charente-maritime.fr/parents-petite-enfance/metier-dassistante-maternelle",
-   "reglementUrl": "https://la.charente-maritime.fr/sites/charente_maritime/files/2022-07/reglement-departement-agrement-ass-mat.pdf",
-   "minimumAgrement": "l'agrément est accordé au minimum pour deux enfants, sauf si les conditions d'accueil ne le permettent pas — toute restriction en deçà doit être motivée dans l'arrêté",
-   "apresRefus": "le candidat peut demander à être reçu par le service de PMI ; en revanche, des demandes répétitives ou abusives ne donnent pas lieu à une nouvelle évaluation",
-   "reglesLocales": [
-    "le jardin doit être entièrement clôturé sur 1,10 m minimum au-dessus du point le plus haut accessible à l'enfant, avec un portail dont le déverrouillage exige l'intervention d'un adulte",
-    "les balcons, terrasses et mezzanines demandent un garde-corps de 1,10 m ; les barreaux horizontaux sont proscrits, seuls les verticaux sont admis",
-    "les escaliers doivent être fermés en haut et en bas par des barrières rigides homologuées NF ou CE, rambarde et contremarches comprises",
-    "les piscines enterrées exigent un dispositif normalisé attesté par une note technique ; une simple alarme ne suffit pas, il faut y ajouter une clôture conforme à la norme NF P 90-306",
-    "les piscines hors-sol, gonflables, spas et jacuzzis relèvent des mêmes règles ; récupérateurs d'eau, puits et tonneaux doivent être obturés par un système qu'un enfant ne peut déplacer et qui supporte son poids",
-    "les fenêtres des étages demandent une allège ou un garde-corps à 1,10 m, à défaut une ouverture limitée",
-    "les abris de jardin, garages, sous-sols et greniers doivent être fermés à clé ou rendus inaccessibles",
-    "la détention d'un chien de catégorie 1 ou 2 est incompatible avec l'agrément, et son acquisition en cours d'agrément entraîne un retrait ; les autres animaux sont appréciés au cas par cas",
-    "les enfants ne doivent être exposés ni au tabac ni à la cigarette électronique, dans le logement comme à l'extérieur, pendant tout le temps d'accueil"
-   ],
-   "releve": "2026-08-30"
-  },
-  "18": {
-   "nom": "Cher",
-   "reunion": "proposee",
-   "reunionNote": "des réunions d’information préalables à l’agrément sont organisées régulièrement par la PMI, sur inscription obligatoire par courriel ; le Département publie leur calendrier",
-   "depot": [
-    "recommande",
-    "surplace"
-   ],
-   "depotNote": "par lettre recommandée avec accusé de réception, ou déposé au service départemental de PMI, rue Heurtault de Lamerville, BP 612, 18016 Bourges Cedex",
-   "contact": {
-    "tel": "02 48 55 82 05",
-    "email": "pmi.pole-agrements@departement18.fr"
-   },
-   "source": "https://www.departement18.fr/Je-souhaite-devenir-assistant-maternel",
-   "releve": "2026-09-01",
-   "reglementUrl": "https://www.departement18.fr/IMG/pdf/2020_04_ce_if_solidarites_guide_securite_enfants.pdf",
-   "reglesSource": "guide départemental « Les assistants maternels pour la sécurité des enfants », publié par le conseil départemental du Cher",
-   "reglesLocales": [
-    "toutes les piscines et tous les points d’eau — pataugeoires, jacuzzis, puits, bassins d’agrément, mares, citernes, collecteurs d’eau — doivent être clôturés aux normes sur 1,20 m minimum, avec un portillon fermé à clé, et le Département demande que les piscines ne soient pas utilisées pendant les temps d’accueil",
-    "pour une piscine hors-sol de moins de 1,20 m, la clôture est exigée et l’échelle d’accès se retire après chaque utilisation ; les petites piscines gonflables se vident après chaque usage",
-    "les terrasses en surplomb demandent une protection de 1,20 m avec au plus 11 cm entre les barreaux, et les portiques — balançoires, toboggans — doivent être scellés au sol",
-    "une barrière est exigée en haut et en bas des escaliers, et les portes de sous-sol restent fermées à clé",
-    "si les enfants ont accès à l’étage, les portes-fenêtres doivent obligatoirement recevoir un bloque-fenêtre ou un garde-corps d’au moins 1,10 m ; aucun meuble ni objet ne doit se trouver sous une fenêtre ou sur un balcon",
-    "les radiateurs demandent des parois de protection, et les cheminées à foyer ouvert, inserts et poêles à bois un pare-feu",
-    "le couchage en hauteur est proscrit avant 6 ans, lits superposés compris ; chaque enfant dispose d’un lit individuel, sans oreiller ni couette avant 2 ans, et les lits parapluie ne servent que d’appoint avec le matelas prévu par la notice",
-    "un chien de catégorie 1 ou 2 est incompatible avec tout agrément ; pour les autres animaux, un espace réservé doit être défini, les vaccinations être à jour, les parents toujours informés, et un vétérinaire doit certifier qu’un nouvel animal de compagnie est compatible avec l’accueil d’un enfant — le nombre d’animaux est pris en compte au même titre que leur dangerosité",
-    "transporter un enfant en voiture suppose une autorisation écrite des parents et des dispositifs de retenue adaptés à l’âge et au poids, conformes à la réglementation européenne"
-   ],
-   "reglementLibelle": "son guide de la sécurité des enfants"
-  },
-  "19": {
-   "nom": "Corrèze",
-   "depot": [
-    "recommande",
-    "surplace"
-   ],
-   "depotNote": "vous adressez d’abord au président du conseil départemental, en recommandé avec accusé de réception ou en dépôt au service PMI, un courrier précisant vos coordonnées et vos motivations ; l’invitation à la réunion suit",
-   "contact": {
-    "tel": "05 55 93 70 00"
-   },
-   "source": "https://www.correze.fr/nos-missions/famille-petite-enfance-jeunesse/assistante-maternelle/devenir-assistante-maternelle",
-   "releve": "2026-09-03"
-  },
-  "22": {
-   "nom": "Côtes-d’Armor",
-   "reunion": "conseillee",
-   "reunionNote": "le Département recommande fortement d’assister à une réunion d’information avant tout envoi de dossier",
-   "contact": {
-    "tel": "02 96 62 62 22"
-   },
-   "contactNote": "l’interlocuteur précis est la PMI de votre secteur",
-   "source": "https://cotesdarmor.fr/vos-services/devenir-assistante-ou-assistant-maternel",
-   "releve": "2026-09-01"
-  },
-  "24": {
-   "nom": "Dordogne",
-   "reunion": "proposee",
-   "reunionNote": "une journée d’information sur inscription ; le dossier de demande d’agrément est remis en fin de réunion à qui le souhaite",
-   "depot": [
-    "recommande",
-    "surplace"
-   ],
-   "depotNote": "le dossier complété, daté et signé se dépose ou se retourne en recommandé à l’adresse indiquée sur le formulaire",
-   "source": "https://www.dordogne.fr/a-votre-service/enfance-famille/exercer-le-metier-dassistant-maternel",
-   "releve": "2026-09-03"
-  },
-  "27": {
-   "nom": "Eure",
-   "reunion": "obligatoire",
-   "reunionNote": "le Département écrit que vous devez y assister ; le dossier de demande d’agrément y est remis",
-   "depot": [
-    "recommande"
-   ],
-   "depotNote": "le dossier complété se renvoie au Département en lettre recommandée avec accusé de réception",
-   "contact": {
-    "tel": "02 32 31 50 50"
-   },
-   "contactNote": "pour s’inscrire à une réunion, l’interlocuteur dépend du territoire — Sud Évreux 02 32 37 31 14, Est Vernon 02 32 09 46 52, Ouest Bernay 02 32 41 11 57 ; le service enfance et famille se trouve 14 boulevard Georges-Chauvin à Évreux",
-   "source": "https://eureennormandie.fr/nos-aides-et-services/particuliers/enfance-et-famille/je-voudrais-devenir-assistante-maternelle/",
-   "releve": "2026-09-03"
-  },
-  "29": {
-   "nom": "Finistère",
-   "reunion": "proposee",
-   "depot": [
-    "enligne"
-   ],
-   "depotNote": "par le portail e-services du Département, ou par service-public.fr",
-   "contact": {
-    "email": "assistantes.maternelles@finistere.fr"
-   },
-   "contactNote": "l'interlocuteur téléphonique dépend de la première lettre de votre nom ; permanence le lundi et le mercredi de 14 h à 17 h",
-   "source": "https://www.finistere.fr/aides-et-services/enfance-famille/assistants-maternels/",
-   "releve": "2026-08-30"
-  },
-  "30": {
-   "nom": "Gard",
-   "formation": {
-    "heures": 126,
-    "note": "126 heures au lieu des 120 heures légales, plus 12 heures d'initiation aux gestes de premiers secours"
-   },
-   "reunion": "conseillee",
-   "depot": [
-    "recommande",
-    "surplace",
-    "enligne"
-   ],
-   "depotNote": "en recommandé avec accusé de réception, en main propre à la maison départementale, ou par voie électronique avec demande d'accusé de réception",
-   "contact": {
-    "tel": "04 66 05 40 84",
-    "email": "depe-am.af.mam@gard.fr"
-   },
-   "source": "https://www.gard.fr/mes-demarches/pour-la-famille-les-enfants/devenir-assistante-maternelle",
-   "releve": "2026-08-30"
-  },
-  "31": {
-   "nom": "Haute-Garonne",
-   "reunion": "obligatoire",
-   "reunionNote": "la réunion d'information préalable à l'agrément (RIPA), sur inscription",
-   "depot": [
-    "enligne",
-    "courrier"
-   ],
-   "contact": {
-    "tel": "05 34 33 41 53",
-    "email": "accueilpmi-individuelcollectif@cd31.fr"
-   },
-   "source": "https://www.haute-garonne.fr/aide/assistante-maternelle",
-   "releve": "2026-08-30"
-  },
-  "33": {
-   "nom": "Gironde",
-   "source": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
-   "reglementUrl": "https://www.gironde.fr/sites/default/files/2017-04/rda-assmaternelle.pdf",
-   "apresRefus": "un refus fondé sur la seule sécurité (piscine, point d'eau, clôture ou portail non conformes) n'est pas définitif : dès que vous signalez la mise en conformité au service PMI Modes d'accueil, l'agrément vous est adressé après une contre-visite",
-   "reglesLocales": [
-    "le Département pose une exigence propre sur les piscines, enterrées comme hors-sol : l'accès doit être fermé par une barrière d'au moins 1,10 m munie d'un portillon qu'un jeune enfant ne peut ouvrir, de préférence à fermeture automatique — le Département recommande de privilégier 1,30 m",
-    "un chien de 1re ou 2e catégorie est incompatible avec l'exercice du métier, y compris s'il vit en chenil"
-   ],
-   "releve": "2026-08-30"
-  },
-  "34": {
-   "nom": "Hérault",
-   "reunion": "obligatoire",
-   "reunionNote": "le dossier CERFA n’est remis qu’à l’issue de la réunion d’information préalable à l’agrément (RIPA), et l’attestation de présence figure parmi les pièces exigées du dossier",
-   "depot": [
-    "recommande",
-    "surplace"
-   ],
-   "depotNote": "en recommandé avec avis de réception, ou en main propre au service agréments et modes d’accueil enfance (SAMAE) ; tout dossier incomplet est renvoyé sous quinzaine",
-   "contact": {
-    "tel": "04 67 67 68 44"
-   },
-   "source": "https://herault.fr/591-devenir-assistant-maternel.htm",
-   "reglementUrl": "https://herault.fr/cms_viewFile.php?idtf=4021&path=Reglement-departemental-des-assistant-e-s-maternelle-s.pdf",
-   "apresRefus": "le refus est motivé et notifié par lettre recommandée avant l’expiration du délai légal ; deux recours sont ouverts dans les deux mois qui suivent la notification — un recours gracieux ou hiérarchique auprès du directeur général adjoint des solidarités départementales, et un recours contentieux devant le tribunal administratif de Montpellier, qui se saisit aussi en ligne par Télérecours citoyens",
-   "reglesLocales": [
-    "le jardin, ou à défaut une aire de jeux, doit être entièrement clôturé sur 1,10 m au-dessus du dernier point d’appui ; un grillage ne doit pas dépasser 5,5 cm de maille, une barrière 11 cm entre deux barreaux verticaux",
-    "toute terrasse ou tout balcon présentant un dénivelé d’au moins 40 cm demande un garde-corps de 1,10 m ; si la pose est impossible, le Département accepte à titre exceptionnel un engagement écrit à condamner l’accès et à ne jamais utiliser l’espace pendant l’accueil",
-    "les escaliers demandent une barrière rigide aux normes NF en haut et en bas dès que l’enfant fréquente l’étage, et au minimum une barrière en bas ; mezzanines et escaliers exigent un garde-corps de 1,10 m",
-    "à l’étage, les fenêtres doivent être sécurisées par un dispositif adapté ; une porte-fenêtre ou une baie vitrée donnant directement sur une piscine demande une barrière de 1,20 m",
-    "piscines, spas et jacuzzis de moins de 1,20 m de haut doivent être entourés d’une barrière de 1,10 m à portillon rigide, verrou double action et bras de retour automatique, conforme à la norme NF P 90-306 : le Département refuse expressément tout autre dispositif, volets roulants, bâches et dômes compris",
-    "au-dessus de 1,20 m, l’échelle d’une piscine hors-sol et tout objet escaladable doivent être retirés ; pataugeoires gonflables et coques se vident et se retournent après chaque utilisation ; en maison d’assistants maternels, piscines, spas et jacuzzis sont interdits",
-    "bassins, puits, forages et tout point d’eau demandent une obturation hermétique qui résiste au poids d’une personne, qu’un enfant ne peut déplacer, cadenassée le cas échéant",
-    "garages, annexes et toute pièce dangereuse restent fermés à clé, les clés placées en hauteur ; portes de garage et portails automatiques doivent être équipés d’un détecteur",
-    "le trampoline est interdit aux enfants de moins de 6 ans, le youpala interdit, et les lits superposés proscrits pour le couchage des moins de 6 ans",
-    "un chien de 1re ou 2e catégorie est incompatible avec l’agrément et expose à son retrait ; toute acquisition d’animal se déclare à la direction PMI, les nouveaux animaux de compagnie — serpents, araignées, furets — vivent dans une pièce inaccessible à l’enfant, et le suivi vétérinaire doit être vérifiable sur le carnet de santé",
-    "transporter un enfant en voiture suppose une assurance spécifique et une autorisation écrite des parents, valable pour tous les modes de transport",
-    "tout incident grave survenu pendant un accueil doit être signalé à la direction PMI dans les 24 heures"
-   ],
-   "releve": "2026-09-01"
-  },
-  "35": {
-   "nom": "Ille-et-Vilaine",
-   "reunion": "proposee",
-   "reunionNote": "des réunions sont proposées toute l’année dans plusieurs lieux du département ; l’inscription est obligatoire",
-   "contactNote": "l’interlocuteur est l’agence départementale de votre pays — Saint-Malo 02 99 02 45 17, Vallons-de-Vilaine 02 99 02 47 00, Rennes 02 99 02 44 23",
-   "source": "https://www.ille-et-vilaine.fr/comment-devenir-assistant-maternel",
-   "releve": "2026-09-01"
-  },
-  "37": {
-   "nom": "Indre-et-Loire",
-   "reunion": "proposee",
-   "reunionNote": "une réunion d’information précède le dépôt du dossier",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "le dossier CERFA et ses pièces se transmettent au service agréments, direction de la prévention et protection de l’enfant et de la famille, place de la Préfecture, 37000 Tours",
-   "contact": {
-    "tel": "02 47 31 45 35"
-   },
-   "contactNote": "le service agréments répond de 9 h 30 à 11 h 30 et de 14 h à 16 h 30, tous les jours sauf le jeudi matin",
-   "source": "https://www.touraine.fr/mes-services-au-quotidien/enfance-famille/devenir-assistant-e-maternel-lle.html",
-   "releve": "2026-09-03"
-  },
-  "38": {
-   "nom": "Isère",
-   "reunion": "conseillee",
-   "reunionNote": "des réunions d’information sur la procédure d’agrément et le métier sont organisées une fois par mois",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "le dossier de demande d’agrément se transmet au service de PMI",
-   "contact": {
-    "tel": "04 76 00 38 38"
-   },
-   "source": "https://www.isere.fr/enfance-famille-jeunesse/les-assistants-maternels",
-   "reglementUrl": "https://www.isere.fr/sites/default/files/2025-11/reglement-departemental-assmat-2025.pdf",
-   "apresRefus": "le refus est notifié par lettre recommandée avec ses motifs et les voies de recours. Deux chemins, dans les deux mois suivant la notification : le recours gracieux auprès du président du conseil départemental, qui ne rouvre l’examen que si vous apportez des éléments nouveaux et dont le silence pendant deux mois vaut rejet ; et le recours contentieux devant le tribunal administratif, qui peut être saisi directement ou après le recours gracieux — dans ce second cas, les deux mois repartent de la réponse ou du rejet implicite",
-   "reglesLocales": [
-    "les alarmes de piscine ne sont pas acceptées comme seule protection : le Département les juge insuffisamment fiables et exige une barrière ou un volet roulant homologué NF",
-    "une piscine hors-sol, gonflable ou démontable de moins de 1,10 m de haut doit être protégée de façon à rendre son escalade impossible, par exemple une barrière de 1,10 m ; les petites piscines gonflables non protégées se vident après chaque utilisation",
-    "bassins à poissons, mares, ruisseaux, citernes, récupérateurs d’eau de pluie et puits se protègent comme une piscine — un enfant peut se noyer dans 15 cm d’eau",
-    "les barrières d’escalier à croisillons ne sont plus autorisées : il faut des barrières conformes à la norme NF EN 1930, en haut et en bas, avec un système que l’enfant ne peut manœuvrer",
-    "le bord inférieur des fenêtres doit se trouver à 1 m au moins du sol hors de tout point d’appui ; à défaut, un limiteur d’ouverture de 11 cm maximum, placé le plus haut possible",
-    "balcons et mezzanines demandent une protection infranchissable d’au moins 1 m au-dessus du point d’appui le plus haut, sans appui horizontal, barreaux verticaux espacés de 11 cm au plus et moins de 11 cm entre le sol et le bas de la protection",
-    "fumer est interdit en présence et à proximité des enfants, et la consommation d’alcool est déclarée incompatible avec l’accueil",
-    "le trotteur — le youpala — ne doit pas être utilisé, et les lits superposés ne conviennent pas aux moins de 6 ans",
-    "en voiture, chaque enfant dispose de son siège homologué et aucun enfant de moins de 10 ans ne voyage à l’avant, sauf nourrisson dos à la route avec airbag désactivé",
-    "la détention d’un animal réputé dangereux est incompatible avec l’agrément, chiens de 1re et 2e catégories compris ; les autres animaux sont évalués par la PMI, mentionnés au contrat d’accueil, et ne doivent pas être présents dans l’espace d’accueil",
-    "l’accueil est un temps de travail que le Département juge inconciliable avec les activités personnelles sans intérêt éducatif pour l’enfant — courses familiales, rendez-vous médicaux, coiffeur"
-   ],
-   "reglesSource": "guide départemental « La sécurité de l’enfant chez l’assistant maternel », publié par le Département de l’Isère",
-   "releve": "2026-09-01",
-   "reglementLibelle": "son règlement départemental d’agrément"
-  },
-  "42": {
-   "nom": "Loire",
-   "reunion": "obligatoire",
-   "reunionNote": "le Département la place parmi les conditions pour obtenir l’agrément ; elle est organisée par la PMI du territoire de votre résidence",
-   "contactNote": "l’interlocuteur est le secrétariat assistants maternels de votre territoire — Saint-Étienne 04 77 59 98 03, Gier Ondaine Pilat 04 77 29 27 47, Forez 04 77 96 56 05, Roannais 04 77 23 24 17, chacun avec son adresse en secretariatassmat suivi du nom du territoire, à loire.fr",
-   "source": "https://www.loire.fr/jcms/lw_1332874/fr/devenir-assistant-maternel",
-   "releve": "2026-09-03"
-  },
-  "45": {
-   "nom": "Loiret",
-   "reunion": "obligatoire",
-   "reunionNote": "la réunion d’information préalable à l’agrément (RIPA), sur inscription obligatoire auprès de la PMI ; le Département publie ses dates et ses lieux, et les éléments du dossier ne sont transmis qu’à l’issue",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "le dossier se retourne au Département, qui adresse ou remet un accusé de réception",
-   "contact": {
-    "tel": "02 38 25 45 45",
-    "email": "assistantsmaternels45@loiret.fr"
-   },
-   "source": "https://www.loiret.fr/devenir-assmat",
-   "releve": "2026-09-03"
-  },
-  "46": {
-   "nom": "Lot",
-   "reunion": "proposee",
-   "reunionNote": "vous êtes conviée à une réunion d’information après votre première demande",
-   "depot": [
-    "enligne",
-    "courrier"
-   ],
-   "depotNote": "la demande se fait sur assistant-maternel-familial.lot.fr ou par courrier à l’hôtel du Département, service PMI, avenue de l’Europe, BP 291 Regourd, 46005 Cahors Cedex 9 ; le dossier de candidature se saisit ensuite en ligne sur ce même site",
-   "contact": {
-    "tel": "05 65 53 44 95"
-   },
-   "source": "https://lot.fr/devenir-assistante-maternelle",
-   "releve": "2026-09-03"
-  },
-  "48": {
-   "nom": "Lozère",
-   "contact": {
-    "tel": "04 66 49 42 10"
-   },
-   "contactNote": "l’interlocuteur est le service enfance famille, mission offre d’accueil",
-   "source": "https://lozere.fr/faq-solidarite/les-modes-de-garde-des-enfants-de-6-ans/je-souhaite-devenir-assistante-maternelle",
-   "releve": "2026-09-03"
-  },
-  "49": {
-   "nom": "Maine-et-Loire",
-   "contact": {
-    "tel": "02 41 81 48 18",
-    "email": "pmi@maine-et-loire.fr"
-   },
-   "contactNote": "la PMI du Département se trouve CS 94104, 49941 Angers Cedex 9",
-   "source": "https://www.maine-et-loire.fr/aides-et-services/enfance-et-famille/metiers-de-la-petite-enfance/devenir-assistant-maternel",
-   "releve": "2026-09-03"
-  },
-  "50": {
-   "nom": "Manche",
-   "reunion": "obligatoire",
-   "reunionNote": "le Département la présente comme la première démarche nécessaire ; elle se tient dans l’un des pôles d’action sociale, et la présence des enfants n’y est pas souhaitée",
-   "source": "https://www.manche.fr/mon-departement/metiers/metiers-accueil-domicile/devenir-assistant-maternel/",
-   "releve": "2026-09-03"
-  },
-  "52": {
-   "nom": "Haute-Marne",
-   "reunion": "proposee",
-   "contact": {
-    "tel": "03 25 32 87 49"
-   },
-   "contactNote": "l’interlocuteur est le pôle assistantes maternelles et familiales, rue Eugène Issartel à Chaumont ; le courrier s’adresse au conseil départemental de la Haute-Marne",
-   "source": "https://haute-marne.fr/emplois/assistant-maternel/",
-   "releve": "2026-09-03"
-  },
-  "57": {
-   "nom": "Moselle",
-   "reunion": "proposee",
-   "reunionNote": "le pôle petite enfance du territoire dont dépend votre domicile vous invite à une réunion d’information",
-   "contact": {
-    "email": "pmidirection@moselle.fr"
-   },
-   "contactNote": "par courrier, la direction PMI se trouve à l’hôtel du Département, 1 rue du Pont Moreau, CS 11096, 57036 Metz Cedex 1",
-   "source": "https://www.moselle.fr/jcms/pl_10954/fr/devenir-assistant-e-maternel-le",
-   "releve": "2026-09-02"
-  },
-  "62": {
-   "nom": "Pas-de-Calais",
-   "source": "https://www.pasdecalais.fr/obligations-de-securite-au-domicile-de-lassistant-maternel-et-de-lassistant-familial",
-   "reglesLocales": [
-    "le terrain doit être clôturé, entièrement ou par un espace de jeux délimité, avec un grillage tendu ou rigide aux normes CE de 1,10 m minimum",
-    "les escaliers demandent des barrières aux normes en haut et en bas — les barrières à croisillons ne sont pas autorisées — et les contremarches laissant plus de 11 cm de vide doivent être comblées par une planche, une barre ou un filet",
-    "les fenêtres, y compris de toit, qui donnent sur la route ou présentent un risque de chute sont à sécuriser au rez-de-chaussée comme à l’étage",
-    "une piscine enterrée ou semi-enterrée exige l’un des quatre dispositifs normalisés : barrière NF P 90-306, couverture NF P 90-308, abri NF P 90-309 ou alarme NF P 90-307",
-    "les fossés et autres points d’eau demandent un grillage tendu ou rigide de 1,10 m minimum",
-    "la présence d’un chien réputé dangereux n’est pas compatible avec l’accueil de jeunes enfants",
-    "les produits d’entretien restent hors de portée quel que soit l’âge des enfants, et les alcools sous clé"
-   ],
-   "releve": "2026-09-01"
-  },
-  "65": {
-   "nom": "Hautes-Pyrénées",
-   "depot": [
-    "courrier"
-   ],
-   "depotNote": "par courrier, à la direction de la solidarité départementale, service des modes d'accueil, 1 place Ferré à Tarbes",
-   "contact": {
-    "tel": "05 62 56 74 42"
-   },
-   "source": "https://www.hautespyrenees.fr/enfance-familles/les-metiers-de-lenfance/le-metier-dassistante-maternelle/",
-   "releve": "2026-08-30"
-  },
-  "75": {
-   "nom": "Paris",
-   "formation": {
-    "heures": 174,
-    "note": "174 heures au lieu des 120 heures légales, dont 114 heures avant le premier accueil et 60 heures sur les trois premières années"
-   },
-   "contactNote": "l'interlocuteur est le service d'accompagnement des assistants maternels et familiaux (SAMF) de votre arrondissement",
-   "source": "https://www.paris.fr/pages/les-assistantes-maternelles-213",
-   "releve": "2026-08-30"
-  },
-  "83": {
-   "nom": "Var",
-   "reunion": "conseillee",
-   "reunionNote": "le Département la recommande avant le dépôt du dossier, et c’est là que le dossier de candidature est remis ; les dates s’obtiennent auprès de la PMI de votre territoire",
-   "depot": [
-    "recommande",
-    "surplace"
-   ],
-   "depotNote": "le dossier, accompagné de l’attestation de présence à la réunion, s’adresse à la direction de l’enfance et de la famille, 390 avenue des Lices, CS 41303, 83076 Toulon Cedex, en précisant la PMI de territoire de votre résidence",
-   "contact": {
-    "email": "gro-def-cellule-assmat@var.fr"
-   },
-   "contactNote": "cette adresse est celle de la cellule des assistants maternels et familiaux, qui gère aussi les inscriptions aux réunions",
-   "source": "https://var.fr/social/enfance-famille/devenir-assistante-maternelle",
-   "releve": "2026-09-03"
+  "_lisezmoi": "Ce que chaque PMI départementale demande concrètement, au-delà du parcours national décrit sur les pages « devenir ». Un champ n'est rempli que s'il est écrit noir sur blanc sur le site du conseil départemental, et la section n'est rendue que si le département a au moins un champ renseigné. Aucune valeur n'est déduite, extrapolée ni reprise d'une autre source que le département lui-même.",
+  "_regles_de_collecte": [
+    "Ne retenir que ce qui figure explicitement sur la page du conseil départemental. Un résumé de moteur de recherche ne fait pas foi : plusieurs se sont révélés faux à la lecture de la page.",
+    "Un écart à la norme nationale n'est retenu que s'il est EN PLUS. La formation légale est de 120 heures dont 80 avant tout accueil, dans les six mois suivant la réception du dossier complet, puis 40 heures dans les trois ans. Un département peut faire davantage — le Gard 126 heures, Paris 174 — et c'est une vraie différence. Un chiffre inférieur ou un délai plus court signale un site qui n'est pas à jour, jamais une règle locale : on n'affiche alors rien.",
+    "Exemple vécu : la Haute-Garonne annonce « 40 heures dans les 2 ans », qui est l'ancienne règle d'avant 2019 — le délai est de trois ans depuis. Sa durée de formation est donc laissée vide, alors que ses autres champs sont retenus.",
+    "Le délai d'instruction n'est stocké que s'il diffère des trois mois légaux, et il est alors présenté comme le délai annoncé par le Département, jamais comme le délai légal. L'article L421-6 du code de l'action sociale et des familles fixe trois mois à compter du dossier complet, le silence valant agrément : cette garantie ne doit jamais être noyée par un délai de traitement affiché.",
+    "Chaque département porte sa source et sa date de relevé. Sans source, pas d'affichage.",
+    "Ce qui est examiné pendant l'entretien et la visite à domicile est fixé au niveau national par le décret n° 2012-364 du 15 mars 2012 : disponibilité, capacité d'organisation, aptitude au dialogue, capacités éducatives, connaissance du métier, confort et sécurité du logement. Ces critères n'ont donc pas à être stockés département par département. Ce qui se collecte ici, ce sont les exigences que le département ajoute par-dessus — les règlements départementaux les signalent en propres termes, comme « exigences départementales spécifiques ».",
+    "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
+  ],
+  "departements": {
+    "02": {
+      "nom": "Aisne",
+      "reunion": "proposee",
+      "reunionNote": "des réunions d'information sont organisées régulièrement ; l'inscription se fait auprès de la PMI",
+      "source": "https://www.aisne.com/votre-service/enfance-famille/devenir-assistant-maternel",
+      "releve": "2026-09-05"
+    },
+    "05": {
+      "nom": "Hautes-Alpes",
+      "reunion": "obligatoire",
+      "reunionNote": "le dossier de demande d'agrément est remis pendant la réunion : on ne peut pas déposer sans y être passé",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "le dossier complété part en recommandé avec accusé de réception, accompagné d'une lettre de motivation adressée au président du Département",
+      "contactNote": "l'interlocuteur est le service Prévention santé offre d'accueil (PSOA) du Département",
+      "source": "https://www.hautes-alpes.fr/nos-actions/enfance-et-famille/faire-garder-son-enfant/devenir-assistante-maternelle/",
+      "releve": "2026-09-05"
+    },
+    "06": {
+      "nom": "Alpes-Maritimes",
+      "reunion": "obligatoire",
+      "reunionNote": "un calendrier annuel des réunions est publié ; l'attestation de présence fait partie du dossier",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "l'attestation de présence à la réunion et une lettre de motivation s'envoient d'abord au centre de PMI de votre secteur, qui transmet ensuite le dossier d'agrément à compléter",
+      "contactNote": "le service est au 147 boulevard du Mercantour, B.P. 3007, 06201 Nice Cedex 3",
+      "source": "https://www.departement06.fr/devenir-assistant-maternel",
+      "releve": "2026-09-05"
+    },
+    "08": {
+      "nom": "Ardennes",
+      "reunion": "proposee",
+      "reunionNote": "le dossier de demande est remis à l'issue de la réunion ; on s'y inscrit par le formulaire du site ou par téléphone, et l'invitation arrive par courriel",
+      "depot": [
+        "reunion"
+      ],
+      "contact": {
+        "tel": "03 24 36 63 31"
+      },
+      "source": "https://www.cd08.fr/devenir-assistante-maternelle",
+      "releve": "2026-09-05"
+    },
+    "10": {
+      "nom": "Aube",
+      "reunion": "proposee",
+      "reunionNote": "vous adressez d’abord un courrier au service de PMI, et c’est à sa réception que vous êtes invitée à une réunion d’information, où le dossier de candidature vous est remis",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "le premier courrier part au secrétariat des modes d’accueil de la PMI, cité administrative des Vassaules, 10026 Troyes Cedex",
+      "source": "https://assistante-maternelle.aube.fr/131-le-metier-d-assistant-e-maternel-le.htm",
+      "releve": "2026-09-03"
+    },
+    "13": {
+      "nom": "Bouches-du-Rhône",
+      "contact": {
+        "tel": "04 13 31 56 31"
+      },
+      "contactNote": "l’interlocuteur est le service des modes d’accueil de la petite enfance, 21 boulevard Mirabeau, 13331 Marseille",
+      "source": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
+      "releve": "2026-09-02"
+    },
+    "15": {
+      "nom": "Cantal",
+      "reglesLocales": [
+        "le Département demande de pouvoir attester du suivi du stage Prévention et secours civiques niveau 1 (PSC1)"
+      ],
+      "reglesSource": "https://www.cantal.fr/vivre-dans-le-cantal/grandir-et-apprendre/creches-et-assistantes-maternelles/",
+      "source": "https://www.cantal.fr/vivre-dans-le-cantal/grandir-et-apprendre/creches-et-assistantes-maternelles/",
+      "releve": "2026-09-05"
+    },
+    "16": {
+      "nom": "Charente",
+      "reunion": "proposee",
+      "reunionNote": "le Département publie le calendrier des réunions, qui se tiennent au 15 boulevard Jean Moulin à Angoulême",
+      "contact": {
+        "tel": "05 16 09 68 65"
+      },
+      "contactNote": "ce numéro sert aux informations et aux inscriptions aux réunions",
+      "source": "https://www.lacharente.fr/actualite/emploi/devenir-assistante-maternelle",
+      "releve": "2026-09-03"
+    },
+    "17": {
+      "nom": "Charente-Maritime",
+      "reunion": "obligatoire",
+      "reunionNote": "une réunion d'information est organisée à Saintes ou à La Rochelle avant le dépôt du dossier",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "à la délégation territoriale de Saintes, après la réunion d'information",
+      "source": "https://la.charente-maritime.fr/parents-petite-enfance/metier-dassistante-maternelle",
+      "reglementUrl": "https://la.charente-maritime.fr/sites/charente_maritime/files/2022-07/reglement-departement-agrement-ass-mat.pdf",
+      "minimumAgrement": "l'agrément est accordé au minimum pour deux enfants, sauf si les conditions d'accueil ne le permettent pas — toute restriction en deçà doit être motivée dans l'arrêté",
+      "apresRefus": "le candidat peut demander à être reçu par le service de PMI ; en revanche, des demandes répétitives ou abusives ne donnent pas lieu à une nouvelle évaluation",
+      "reglesLocales": [
+        "le jardin doit être entièrement clôturé sur 1,10 m minimum au-dessus du point le plus haut accessible à l'enfant, avec un portail dont le déverrouillage exige l'intervention d'un adulte",
+        "les balcons, terrasses et mezzanines demandent un garde-corps de 1,10 m ; les barreaux horizontaux sont proscrits, seuls les verticaux sont admis",
+        "les escaliers doivent être fermés en haut et en bas par des barrières rigides homologuées NF ou CE, rambarde et contremarches comprises",
+        "les piscines enterrées exigent un dispositif normalisé attesté par une note technique ; une simple alarme ne suffit pas, il faut y ajouter une clôture conforme à la norme NF P 90-306",
+        "les piscines hors-sol, gonflables, spas et jacuzzis relèvent des mêmes règles ; récupérateurs d'eau, puits et tonneaux doivent être obturés par un système qu'un enfant ne peut déplacer et qui supporte son poids",
+        "les fenêtres des étages demandent une allège ou un garde-corps à 1,10 m, à défaut une ouverture limitée",
+        "les abris de jardin, garages, sous-sols et greniers doivent être fermés à clé ou rendus inaccessibles",
+        "la détention d'un chien de catégorie 1 ou 2 est incompatible avec l'agrément, et son acquisition en cours d'agrément entraîne un retrait ; les autres animaux sont appréciés au cas par cas",
+        "les enfants ne doivent être exposés ni au tabac ni à la cigarette électronique, dans le logement comme à l'extérieur, pendant tout le temps d'accueil"
+      ],
+      "releve": "2026-08-30"
+    },
+    "18": {
+      "nom": "Cher",
+      "reunion": "proposee",
+      "reunionNote": "des réunions d’information préalables à l’agrément sont organisées régulièrement par la PMI, sur inscription obligatoire par courriel ; le Département publie leur calendrier",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "par lettre recommandée avec accusé de réception, ou déposé au service départemental de PMI, rue Heurtault de Lamerville, BP 612, 18016 Bourges Cedex",
+      "contact": {
+        "tel": "02 48 55 82 05",
+        "email": "pmi.pole-agrements@departement18.fr"
+      },
+      "source": "https://www.departement18.fr/Je-souhaite-devenir-assistant-maternel",
+      "releve": "2026-09-01",
+      "reglementUrl": "https://www.departement18.fr/IMG/pdf/2020_04_ce_if_solidarites_guide_securite_enfants.pdf",
+      "reglesSource": "guide départemental « Les assistants maternels pour la sécurité des enfants », publié par le conseil départemental du Cher",
+      "reglesLocales": [
+        "toutes les piscines et tous les points d’eau — pataugeoires, jacuzzis, puits, bassins d’agrément, mares, citernes, collecteurs d’eau — doivent être clôturés aux normes sur 1,20 m minimum, avec un portillon fermé à clé, et le Département demande que les piscines ne soient pas utilisées pendant les temps d’accueil",
+        "pour une piscine hors-sol de moins de 1,20 m, la clôture est exigée et l’échelle d’accès se retire après chaque utilisation ; les petites piscines gonflables se vident après chaque usage",
+        "les terrasses en surplomb demandent une protection de 1,20 m avec au plus 11 cm entre les barreaux, et les portiques — balançoires, toboggans — doivent être scellés au sol",
+        "une barrière est exigée en haut et en bas des escaliers, et les portes de sous-sol restent fermées à clé",
+        "si les enfants ont accès à l’étage, les portes-fenêtres doivent obligatoirement recevoir un bloque-fenêtre ou un garde-corps d’au moins 1,10 m ; aucun meuble ni objet ne doit se trouver sous une fenêtre ou sur un balcon",
+        "les radiateurs demandent des parois de protection, et les cheminées à foyer ouvert, inserts et poêles à bois un pare-feu",
+        "le couchage en hauteur est proscrit avant 6 ans, lits superposés compris ; chaque enfant dispose d’un lit individuel, sans oreiller ni couette avant 2 ans, et les lits parapluie ne servent que d’appoint avec le matelas prévu par la notice",
+        "un chien de catégorie 1 ou 2 est incompatible avec tout agrément ; pour les autres animaux, un espace réservé doit être défini, les vaccinations être à jour, les parents toujours informés, et un vétérinaire doit certifier qu’un nouvel animal de compagnie est compatible avec l’accueil d’un enfant — le nombre d’animaux est pris en compte au même titre que leur dangerosité",
+        "transporter un enfant en voiture suppose une autorisation écrite des parents et des dispositifs de retenue adaptés à l’âge et au poids, conformes à la réglementation européenne"
+      ],
+      "reglementLibelle": "son guide de la sécurité des enfants"
+    },
+    "19": {
+      "nom": "Corrèze",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "vous adressez d’abord au président du conseil départemental, en recommandé avec accusé de réception ou en dépôt au service PMI, un courrier précisant vos coordonnées et vos motivations ; l’invitation à la réunion suit",
+      "contact": {
+        "tel": "05 55 93 70 00"
+      },
+      "source": "https://www.correze.fr/nos-missions/famille-petite-enfance-jeunesse/assistante-maternelle/devenir-assistante-maternelle",
+      "releve": "2026-09-03"
+    },
+    "22": {
+      "nom": "Côtes-d’Armor",
+      "reunion": "conseillee",
+      "reunionNote": "le Département recommande fortement d’assister à une réunion d’information avant tout envoi de dossier",
+      "contact": {
+        "tel": "02 96 62 62 22"
+      },
+      "contactNote": "l’interlocuteur précis est la PMI de votre secteur",
+      "source": "https://cotesdarmor.fr/vos-services/devenir-assistante-ou-assistant-maternel",
+      "releve": "2026-09-01"
+    },
+    "24": {
+      "nom": "Dordogne",
+      "reunion": "proposee",
+      "reunionNote": "une journée d’information sur inscription ; le dossier de demande d’agrément est remis en fin de réunion à qui le souhaite",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "le dossier complété, daté et signé se dépose ou se retourne en recommandé à l’adresse indiquée sur le formulaire",
+      "source": "https://www.dordogne.fr/a-votre-service/enfance-famille/exercer-le-metier-dassistant-maternel",
+      "releve": "2026-09-03"
+    },
+    "27": {
+      "nom": "Eure",
+      "reunion": "obligatoire",
+      "reunionNote": "le Département écrit que vous devez y assister ; le dossier de demande d’agrément y est remis",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "le dossier complété se renvoie au Département en lettre recommandée avec accusé de réception",
+      "contact": {
+        "tel": "02 32 31 50 50"
+      },
+      "contactNote": "pour s’inscrire à une réunion, l’interlocuteur dépend du territoire — Sud Évreux 02 32 37 31 14, Est Vernon 02 32 09 46 52, Ouest Bernay 02 32 41 11 57 ; le service enfance et famille se trouve 14 boulevard Georges-Chauvin à Évreux",
+      "source": "https://eureennormandie.fr/nos-aides-et-services/particuliers/enfance-et-famille/je-voudrais-devenir-assistante-maternelle/",
+      "releve": "2026-09-03"
+    },
+    "29": {
+      "nom": "Finistère",
+      "reunion": "proposee",
+      "depot": [
+        "enligne"
+      ],
+      "depotNote": "par le portail e-services du Département, ou par service-public.fr",
+      "contact": {
+        "email": "assistantes.maternelles@finistere.fr"
+      },
+      "contactNote": "l'interlocuteur téléphonique dépend de la première lettre de votre nom ; permanence le lundi et le mercredi de 14 h à 17 h",
+      "source": "https://www.finistere.fr/aides-et-services/enfance-famille/assistants-maternels/",
+      "releve": "2026-08-30"
+    },
+    "30": {
+      "nom": "Gard",
+      "formation": {
+        "heures": 126,
+        "note": "126 heures au lieu des 120 heures légales, plus 12 heures d'initiation aux gestes de premiers secours"
+      },
+      "reunion": "conseillee",
+      "depot": [
+        "recommande",
+        "surplace",
+        "enligne"
+      ],
+      "depotNote": "en recommandé avec accusé de réception, en main propre à la maison départementale, ou par voie électronique avec demande d'accusé de réception",
+      "contact": {
+        "tel": "04 66 05 40 84",
+        "email": "depe-am.af.mam@gard.fr"
+      },
+      "source": "https://www.gard.fr/mes-demarches/pour-la-famille-les-enfants/devenir-assistante-maternelle",
+      "releve": "2026-08-30"
+    },
+    "31": {
+      "nom": "Haute-Garonne",
+      "reunion": "obligatoire",
+      "reunionNote": "la réunion d'information préalable à l'agrément (RIPA), sur inscription",
+      "depot": [
+        "enligne",
+        "courrier"
+      ],
+      "contact": {
+        "tel": "05 34 33 41 53",
+        "email": "accueilpmi-individuelcollectif@cd31.fr"
+      },
+      "source": "https://www.haute-garonne.fr/aide/assistante-maternelle",
+      "releve": "2026-08-30"
+    },
+    "32": {
+      "nom": "Gers",
+      "reunion": "proposee",
+      "reunionNote": "une journée d'information collective a lieu à Auch ; on s'y inscrit dès réception du dossier d'agrément, avant de le renseigner",
+      "source": "https://www.gers.fr/aides-infos-pratiques/enfance-et-famille/la-protection-maternelle-et-infantile/mode-de-garde/devenir-assistant-maternel",
+      "releve": "2026-09-05"
+    },
+    "33": {
+      "nom": "Gironde",
+      "source": "https://www.gironde.fr/enfance-et-famille/sante-maternelle-et-infantile-pmi",
+      "reglementUrl": "https://www.gironde.fr/sites/default/files/2017-04/rda-assmaternelle.pdf",
+      "apresRefus": "un refus fondé sur la seule sécurité (piscine, point d'eau, clôture ou portail non conformes) n'est pas définitif : dès que vous signalez la mise en conformité au service PMI Modes d'accueil, l'agrément vous est adressé après une contre-visite",
+      "reglesLocales": [
+        "le Département pose une exigence propre sur les piscines, enterrées comme hors-sol : l'accès doit être fermé par une barrière d'au moins 1,10 m munie d'un portillon qu'un jeune enfant ne peut ouvrir, de préférence à fermeture automatique — le Département recommande de privilégier 1,30 m",
+        "un chien de 1re ou 2e catégorie est incompatible avec l'exercice du métier, y compris s'il vit en chenil"
+      ],
+      "releve": "2026-08-30"
+    },
+    "34": {
+      "nom": "Hérault",
+      "reunion": "obligatoire",
+      "reunionNote": "le dossier CERFA n’est remis qu’à l’issue de la réunion d’information préalable à l’agrément (RIPA), et l’attestation de présence figure parmi les pièces exigées du dossier",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "en recommandé avec avis de réception, ou en main propre au service agréments et modes d’accueil enfance (SAMAE) ; tout dossier incomplet est renvoyé sous quinzaine",
+      "contact": {
+        "tel": "04 67 67 68 44"
+      },
+      "source": "https://herault.fr/591-devenir-assistant-maternel.htm",
+      "reglementUrl": "https://herault.fr/cms_viewFile.php?idtf=4021&path=Reglement-departemental-des-assistant-e-s-maternelle-s.pdf",
+      "apresRefus": "le refus est motivé et notifié par lettre recommandée avant l’expiration du délai légal ; deux recours sont ouverts dans les deux mois qui suivent la notification — un recours gracieux ou hiérarchique auprès du directeur général adjoint des solidarités départementales, et un recours contentieux devant le tribunal administratif de Montpellier, qui se saisit aussi en ligne par Télérecours citoyens",
+      "reglesLocales": [
+        "le jardin, ou à défaut une aire de jeux, doit être entièrement clôturé sur 1,10 m au-dessus du dernier point d’appui ; un grillage ne doit pas dépasser 5,5 cm de maille, une barrière 11 cm entre deux barreaux verticaux",
+        "toute terrasse ou tout balcon présentant un dénivelé d’au moins 40 cm demande un garde-corps de 1,10 m ; si la pose est impossible, le Département accepte à titre exceptionnel un engagement écrit à condamner l’accès et à ne jamais utiliser l’espace pendant l’accueil",
+        "les escaliers demandent une barrière rigide aux normes NF en haut et en bas dès que l’enfant fréquente l’étage, et au minimum une barrière en bas ; mezzanines et escaliers exigent un garde-corps de 1,10 m",
+        "à l’étage, les fenêtres doivent être sécurisées par un dispositif adapté ; une porte-fenêtre ou une baie vitrée donnant directement sur une piscine demande une barrière de 1,20 m",
+        "piscines, spas et jacuzzis de moins de 1,20 m de haut doivent être entourés d’une barrière de 1,10 m à portillon rigide, verrou double action et bras de retour automatique, conforme à la norme NF P 90-306 : le Département refuse expressément tout autre dispositif, volets roulants, bâches et dômes compris",
+        "au-dessus de 1,20 m, l’échelle d’une piscine hors-sol et tout objet escaladable doivent être retirés ; pataugeoires gonflables et coques se vident et se retournent après chaque utilisation ; en maison d’assistants maternels, piscines, spas et jacuzzis sont interdits",
+        "bassins, puits, forages et tout point d’eau demandent une obturation hermétique qui résiste au poids d’une personne, qu’un enfant ne peut déplacer, cadenassée le cas échéant",
+        "garages, annexes et toute pièce dangereuse restent fermés à clé, les clés placées en hauteur ; portes de garage et portails automatiques doivent être équipés d’un détecteur",
+        "le trampoline est interdit aux enfants de moins de 6 ans, le youpala interdit, et les lits superposés proscrits pour le couchage des moins de 6 ans",
+        "un chien de 1re ou 2e catégorie est incompatible avec l’agrément et expose à son retrait ; toute acquisition d’animal se déclare à la direction PMI, les nouveaux animaux de compagnie — serpents, araignées, furets — vivent dans une pièce inaccessible à l’enfant, et le suivi vétérinaire doit être vérifiable sur le carnet de santé",
+        "transporter un enfant en voiture suppose une assurance spécifique et une autorisation écrite des parents, valable pour tous les modes de transport",
+        "tout incident grave survenu pendant un accueil doit être signalé à la direction PMI dans les 24 heures"
+      ],
+      "releve": "2026-09-01"
+    },
+    "35": {
+      "nom": "Ille-et-Vilaine",
+      "reunion": "proposee",
+      "reunionNote": "des réunions sont proposées toute l’année dans plusieurs lieux du département ; l’inscription est obligatoire",
+      "contactNote": "l’interlocuteur est l’agence départementale de votre pays — Saint-Malo 02 99 02 45 17, Vallons-de-Vilaine 02 99 02 47 00, Rennes 02 99 02 44 23",
+      "source": "https://www.ille-et-vilaine.fr/comment-devenir-assistant-maternel",
+      "releve": "2026-09-01"
+    },
+    "37": {
+      "nom": "Indre-et-Loire",
+      "reunion": "proposee",
+      "reunionNote": "une réunion d’information précède le dépôt du dossier",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "le dossier CERFA et ses pièces se transmettent au service agréments, direction de la prévention et protection de l’enfant et de la famille, place de la Préfecture, 37000 Tours",
+      "contact": {
+        "tel": "02 47 31 45 35"
+      },
+      "contactNote": "le service agréments répond de 9 h 30 à 11 h 30 et de 14 h à 16 h 30, tous les jours sauf le jeudi matin",
+      "source": "https://www.touraine.fr/mes-services-au-quotidien/enfance-famille/devenir-assistant-e-maternel-lle.html",
+      "releve": "2026-09-03"
+    },
+    "38": {
+      "nom": "Isère",
+      "reunion": "conseillee",
+      "reunionNote": "des réunions d’information sur la procédure d’agrément et le métier sont organisées une fois par mois",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "le dossier de demande d’agrément se transmet au service de PMI",
+      "contact": {
+        "tel": "04 76 00 38 38"
+      },
+      "source": "https://www.isere.fr/enfance-famille-jeunesse/les-assistants-maternels",
+      "reglementUrl": "https://www.isere.fr/sites/default/files/2025-11/reglement-departemental-assmat-2025.pdf",
+      "apresRefus": "le refus est notifié par lettre recommandée avec ses motifs et les voies de recours. Deux chemins, dans les deux mois suivant la notification : le recours gracieux auprès du président du conseil départemental, qui ne rouvre l’examen que si vous apportez des éléments nouveaux et dont le silence pendant deux mois vaut rejet ; et le recours contentieux devant le tribunal administratif, qui peut être saisi directement ou après le recours gracieux — dans ce second cas, les deux mois repartent de la réponse ou du rejet implicite",
+      "reglesLocales": [
+        "les alarmes de piscine ne sont pas acceptées comme seule protection : le Département les juge insuffisamment fiables et exige une barrière ou un volet roulant homologué NF",
+        "une piscine hors-sol, gonflable ou démontable de moins de 1,10 m de haut doit être protégée de façon à rendre son escalade impossible, par exemple une barrière de 1,10 m ; les petites piscines gonflables non protégées se vident après chaque utilisation",
+        "bassins à poissons, mares, ruisseaux, citernes, récupérateurs d’eau de pluie et puits se protègent comme une piscine — un enfant peut se noyer dans 15 cm d’eau",
+        "les barrières d’escalier à croisillons ne sont plus autorisées : il faut des barrières conformes à la norme NF EN 1930, en haut et en bas, avec un système que l’enfant ne peut manœuvrer",
+        "le bord inférieur des fenêtres doit se trouver à 1 m au moins du sol hors de tout point d’appui ; à défaut, un limiteur d’ouverture de 11 cm maximum, placé le plus haut possible",
+        "balcons et mezzanines demandent une protection infranchissable d’au moins 1 m au-dessus du point d’appui le plus haut, sans appui horizontal, barreaux verticaux espacés de 11 cm au plus et moins de 11 cm entre le sol et le bas de la protection",
+        "fumer est interdit en présence et à proximité des enfants, et la consommation d’alcool est déclarée incompatible avec l’accueil",
+        "le trotteur — le youpala — ne doit pas être utilisé, et les lits superposés ne conviennent pas aux moins de 6 ans",
+        "en voiture, chaque enfant dispose de son siège homologué et aucun enfant de moins de 10 ans ne voyage à l’avant, sauf nourrisson dos à la route avec airbag désactivé",
+        "la détention d’un animal réputé dangereux est incompatible avec l’agrément, chiens de 1re et 2e catégories compris ; les autres animaux sont évalués par la PMI, mentionnés au contrat d’accueil, et ne doivent pas être présents dans l’espace d’accueil",
+        "l’accueil est un temps de travail que le Département juge inconciliable avec les activités personnelles sans intérêt éducatif pour l’enfant — courses familiales, rendez-vous médicaux, coiffeur"
+      ],
+      "reglesSource": "guide départemental « La sécurité de l’enfant chez l’assistant maternel », publié par le Département de l’Isère",
+      "releve": "2026-09-01",
+      "reglementLibelle": "son règlement départemental d’agrément"
+    },
+    "42": {
+      "nom": "Loire",
+      "reunion": "obligatoire",
+      "reunionNote": "le Département la place parmi les conditions pour obtenir l’agrément ; elle est organisée par la PMI du territoire de votre résidence",
+      "contactNote": "l’interlocuteur est le secrétariat assistants maternels de votre territoire — Saint-Étienne 04 77 59 98 03, Gier Ondaine Pilat 04 77 29 27 47, Forez 04 77 96 56 05, Roannais 04 77 23 24 17, chacun avec son adresse en secretariatassmat suivi du nom du territoire, à loire.fr",
+      "source": "https://www.loire.fr/jcms/lw_1332874/fr/devenir-assistant-maternel",
+      "releve": "2026-09-03"
+    },
+    "44": {
+      "nom": "Loire-Atlantique",
+      "contactNote": "le Département a un site dédié, assmat.loire-atlantique.fr ; pour un premier contact, c'est l'unité modes d'accueil petite enfance la plus proche de chez vous",
+      "source": "https://www.loire-atlantique.fr/44/enfance-familles/devenir-assistant-ou-assistante-maternelle/c_1277504",
+      "releve": "2026-09-05"
+    },
+    "45": {
+      "nom": "Loiret",
+      "reunion": "obligatoire",
+      "reunionNote": "la réunion d’information préalable à l’agrément (RIPA), sur inscription obligatoire auprès de la PMI ; le Département publie ses dates et ses lieux, et les éléments du dossier ne sont transmis qu’à l’issue",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "le dossier se retourne au Département, qui adresse ou remet un accusé de réception",
+      "contact": {
+        "tel": "02 38 25 45 45",
+        "email": "assistantsmaternels45@loiret.fr"
+      },
+      "source": "https://www.loiret.fr/devenir-assmat",
+      "releve": "2026-09-03"
+    },
+    "46": {
+      "nom": "Lot",
+      "reunion": "proposee",
+      "reunionNote": "vous êtes conviée à une réunion d’information après votre première demande",
+      "depot": [
+        "enligne",
+        "courrier"
+      ],
+      "depotNote": "la demande se fait sur assistant-maternel-familial.lot.fr ou par courrier à l’hôtel du Département, service PMI, avenue de l’Europe, BP 291 Regourd, 46005 Cahors Cedex 9 ; le dossier de candidature se saisit ensuite en ligne sur ce même site",
+      "contact": {
+        "tel": "05 65 53 44 95"
+      },
+      "source": "https://lot.fr/devenir-assistante-maternelle",
+      "releve": "2026-09-03"
+    },
+    "48": {
+      "nom": "Lozère",
+      "contact": {
+        "tel": "04 66 49 42 10"
+      },
+      "contactNote": "l’interlocuteur est le service enfance famille, mission offre d’accueil",
+      "source": "https://lozere.fr/faq-solidarite/les-modes-de-garde-des-enfants-de-6-ans/je-souhaite-devenir-assistante-maternelle",
+      "releve": "2026-09-03"
+    },
+    "49": {
+      "nom": "Maine-et-Loire",
+      "contact": {
+        "tel": "02 41 81 48 18",
+        "email": "pmi@maine-et-loire.fr"
+      },
+      "contactNote": "la PMI du Département se trouve CS 94104, 49941 Angers Cedex 9",
+      "source": "https://www.maine-et-loire.fr/aides-et-services/enfance-et-famille/metiers-de-la-petite-enfance/devenir-assistant-maternel",
+      "releve": "2026-09-03"
+    },
+    "50": {
+      "nom": "Manche",
+      "reunion": "obligatoire",
+      "reunionNote": "le Département la présente comme la première démarche nécessaire ; elle se tient dans l’un des pôles d’action sociale, et la présence des enfants n’y est pas souhaitée",
+      "source": "https://www.manche.fr/mon-departement/metiers/metiers-accueil-domicile/devenir-assistant-maternel/",
+      "releve": "2026-09-03"
+    },
+    "52": {
+      "nom": "Haute-Marne",
+      "reunion": "proposee",
+      "contact": {
+        "tel": "03 25 32 87 49"
+      },
+      "contactNote": "l’interlocuteur est le pôle assistantes maternelles et familiales, rue Eugène Issartel à Chaumont ; le courrier s’adresse au conseil départemental de la Haute-Marne",
+      "source": "https://haute-marne.fr/emplois/assistant-maternel/",
+      "releve": "2026-09-03"
+    },
+    "56": {
+      "nom": "Morbihan",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "pour le renouvellement, le dossier est transmis dans les cinq mois précédant l'échéance de l'agrément et se renvoie en recommandé avec accusé de réception ; un récépissé suit",
+      "source": "https://www.morbihan.fr/nos-actions/accompagnement-tout-au-long-de-la-vie/enfance-famille/petite-enfance/espace-assistantes-maternelles",
+      "releve": "2026-09-05"
+    },
+    "57": {
+      "nom": "Moselle",
+      "reunion": "proposee",
+      "reunionNote": "le pôle petite enfance du territoire dont dépend votre domicile vous invite à une réunion d’information",
+      "contact": {
+        "email": "pmidirection@moselle.fr"
+      },
+      "contactNote": "par courrier, la direction PMI se trouve à l’hôtel du Département, 1 rue du Pont Moreau, CS 11096, 57036 Metz Cedex 1",
+      "source": "https://www.moselle.fr/jcms/pl_10954/fr/devenir-assistant-e-maternel-le",
+      "releve": "2026-09-02"
+    },
+    "58": {
+      "nom": "Nièvre",
+      "reunion": "proposee",
+      "reunionNote": "le calendrier des réunions est publié chaque année ; on demande à y participer par courrier au service de PMI",
+      "depot": [
+        "enligne",
+        "courrier"
+      ],
+      "depotNote": "le formulaire de demande se renvoie complété à uppe@nievre.fr",
+      "contact": {
+        "email": "uppe@nievre.fr"
+      },
+      "source": "https://nievre.fr/au-quotidien/solidarites/parents-mode-demploi/assistant-maternel/",
+      "releve": "2026-09-05"
+    },
+    "61": {
+      "nom": "Orne",
+      "reunion": "obligatoire",
+      "reunionNote": "une réunion de pré-agrément, sur convocation ; le dossier à remplir est remis à l'issue",
+      "depot": [
+        "courrier",
+        "reunion"
+      ],
+      "depotNote": "la démarche s'ouvre par un courrier au bureau des agréments des assistants maternels précisant votre demande",
+      "source": "https://www.orne.fr/services/enfants-et-parents/assistants-maternels",
+      "releve": "2026-09-05"
+    },
+    "62": {
+      "nom": "Pas-de-Calais",
+      "source": "https://www.pasdecalais.fr/obligations-de-securite-au-domicile-de-lassistant-maternel-et-de-lassistant-familial",
+      "reglesLocales": [
+        "le terrain doit être clôturé, entièrement ou par un espace de jeux délimité, avec un grillage tendu ou rigide aux normes CE de 1,10 m minimum",
+        "les escaliers demandent des barrières aux normes en haut et en bas — les barrières à croisillons ne sont pas autorisées — et les contremarches laissant plus de 11 cm de vide doivent être comblées par une planche, une barre ou un filet",
+        "les fenêtres, y compris de toit, qui donnent sur la route ou présentent un risque de chute sont à sécuriser au rez-de-chaussée comme à l’étage",
+        "une piscine enterrée ou semi-enterrée exige l’un des quatre dispositifs normalisés : barrière NF P 90-306, couverture NF P 90-308, abri NF P 90-309 ou alarme NF P 90-307",
+        "les fossés et autres points d’eau demandent un grillage tendu ou rigide de 1,10 m minimum",
+        "la présence d’un chien réputé dangereux n’est pas compatible avec l’accueil de jeunes enfants",
+        "les produits d’entretien restent hors de portée quel que soit l’âge des enfants, et les alcools sous clé"
+      ],
+      "releve": "2026-09-01"
+    },
+    "63": {
+      "nom": "Puy-de-Dôme",
+      "reunion": "proposee",
+      "reunionNote": "les réunions sont ouvertes à tous mais l'inscription est obligatoire, par téléphone à la Maison des Solidarités de votre secteur",
+      "source": "https://www.puy-de-dome.fr/social/enfance-famille/devenir-assistante-maternelle.html",
+      "releve": "2026-09-05"
+    },
+    "65": {
+      "nom": "Hautes-Pyrénées",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "par courrier, à la direction de la solidarité départementale, service des modes d'accueil, 1 place Ferré à Tarbes",
+      "contact": {
+        "tel": "05 62 56 74 42"
+      },
+      "source": "https://www.hautespyrenees.fr/enfance-familles/les-metiers-de-lenfance/le-metier-dassistante-maternelle/",
+      "releve": "2026-08-30"
+    },
+    "72": {
+      "nom": "Sarthe",
+      "reunion": "obligatoire",
+      "reunionNote": "réunion « INFO – Agrément » pour un exercice à domicile ; pour une MAM, il faut suivre en plus la réunion « INFO – MAM ». L'inscription se fait en ligne depuis le calendrier",
+      "contact": {
+        "tel": "02 43 50 10 37",
+        "email": "contact.bea@sarthe.fr"
+      },
+      "contactNote": "l'interlocuteur est le Bureau évaluation des agréments",
+      "source": "https://www.sarthe.fr/solidarite-autonomie/professionnels-solidarite/assistants-maternels",
+      "releve": "2026-09-05"
+    },
+    "73": {
+      "nom": "Savoie",
+      "reunion": "proposee",
+      "reunionNote": "le rendez-vous se prend à la Maison sociale départementale la plus proche de chez vous",
+      "source": "https://www.savoie.fr/web/psw_39685/devenir-assistant-e-maternel-le",
+      "releve": "2026-09-05"
+    },
+    "74": {
+      "nom": "Haute-Savoie",
+      "contactNote": "l'interlocuteur est le service PMI – Promotion de la santé de votre direction territoriale : Annecy 04 50 33 20 04 (dpmips.acy@hautesavoie.fr), Genevois 04 50 84 08 70 (dpmips.ge@hautesavoie.fr), Vallée de l'Arve 04 50 47 63 17 (dpmips.va@hautesavoie.fr), Chablais 04 50 81 89 25 (dpmips.cha@hautesavoie.fr)",
+      "source": "https://hautesavoie.fr/en-pratique/parent-enfance-petite-enfance/assistants-maternels/",
+      "releve": "2026-09-05"
+    },
+    "75": {
+      "nom": "Paris",
+      "formation": {
+        "heures": 174,
+        "note": "174 heures au lieu des 120 heures légales, dont 114 heures avant le premier accueil et 60 heures sur les trois premières années"
+      },
+      "contactNote": "l'interlocuteur est le service d'accompagnement des assistants maternels et familiaux (SAMF) de votre arrondissement",
+      "source": "https://www.paris.fr/pages/les-assistantes-maternelles-213",
+      "releve": "2026-08-30"
+    },
+    "78": {
+      "nom": "Yvelines",
+      "reunion": "proposee",
+      "reunionNote": "le service de proximité le plus proche de votre domicile vous propose une réunion préalable à l'agrément ; le dossier y est remis",
+      "depot": [
+        "reunion",
+        "courrier"
+      ],
+      "reglesLocales": [
+        "la formation obligatoire est dispensée par l'IFAC, et la première partie inclut la formation Prévention et secours civiques niveau 1 (PSC1)"
+      ],
+      "reglesSource": "https://www.yvelines.fr/solidarite/enfance-et-famille/accueil-petite-enfan/devenirassistantematernelle/",
+      "source": "https://www.yvelines.fr/solidarite/enfance-et-famille/accueil-petite-enfan/devenirassistantematernelle/",
+      "releve": "2026-09-05"
+    },
+    "79": {
+      "nom": "Deux-Sèvres",
+      "reunion": "proposee",
+      "reunionNote": "une réunion d'information ouvre le parcours : rôle et responsabilités, modalités d'exercice, déroulé de la demande",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "le dossier complet part en recommandé avec avis de réception ou se dépose sur place ; un récépissé arrive ensuite par courriel, et un dossier incomplet doit être complété sous quinze jours",
+      "reglesLocales": [
+        "les pièces doivent être des originaux : formulaire réglementaire daté et signé, certificat médical de moins de trois mois, justificatif de domicile de moins de trois mois",
+        "pour un exercice en maison d'assistants maternels, une attestation d'assurance « incendie, accident et risques divers » — ou une attestation d'engagement d'assurance s'il s'agit d'un projet de MAM",
+        "la présence d'animaux dans le lieu d'accueil fait partie des points examinés"
+      ],
+      "reglesSource": "https://assistant-maternel-79.fr/devenir-assistant-maternel/mon-parcours-pour-obtenir-lagrement",
+      "source": "https://assistant-maternel-79.fr/devenir-assistant-maternel/mon-parcours-pour-obtenir-lagrement",
+      "releve": "2026-09-05"
+    },
+    "82": {
+      "nom": "Tarn-et-Garonne",
+      "reunion": "obligatoire",
+      "reunionNote": "séance d'information préalable à l'agrément, sur convocation ; le CERFA et la liste des pièces ne sont envoyés qu'après que vous ayez confirmé vouloir poursuivre",
+      "depot": [
+        "courrier"
+      ],
+      "depotNote": "la démarche s'ouvre par une lettre de motivation adressée à Monsieur le Président du Conseil départemental, Pôle des solidarités humaines, service PMI – SSPA, 7 allées Mortarieu, BP 783, 82013 Montauban Cedex",
+      "contactNote": "l'interlocuteur est le service spécialisé pour l'agrément (SSPA)",
+      "source": "https://www.tarnetgaronne.fr/devenir-assistante-maternelle",
+      "releve": "2026-09-05"
+    },
+    "83": {
+      "nom": "Var",
+      "reunion": "conseillee",
+      "reunionNote": "le Département la recommande avant le dépôt du dossier, et c’est là que le dossier de candidature est remis ; les dates s’obtiennent auprès de la PMI de votre territoire",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "le dossier, accompagné de l’attestation de présence à la réunion, s’adresse à la direction de l’enfance et de la famille, 390 avenue des Lices, CS 41303, 83076 Toulon Cedex, en précisant la PMI de territoire de votre résidence",
+      "contact": {
+        "email": "gro-def-cellule-assmat@var.fr"
+      },
+      "contactNote": "cette adresse est celle de la cellule des assistants maternels et familiaux, qui gère aussi les inscriptions aux réunions",
+      "source": "https://var.fr/social/enfance-famille/devenir-assistante-maternelle",
+      "releve": "2026-09-03"
+    },
+    "85": {
+      "nom": "Vendée",
+      "reunion": "proposee",
+      "reunionNote": "la réunion est proposée par la Maison départementale des solidarités et de la famille la plus proche ; les dates et l'inscription sont en ligne",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "le dossier se retire au service de PMI ou se télécharge, puis se retourne complet en recommandé avec accusé de réception ; un récépissé est délivré si le dossier est complet",
+      "source": "https://www.vendee-enfance.fr/Devenir-Assistant-Maternel",
+      "releve": "2026-09-05"
+    },
+    "86": {
+      "nom": "Vienne",
+      "depot": [
+        "courrier",
+        "enligne"
+      ],
+      "depotNote": "la démarche s'ouvre par un courrier ou un courriel indiquant nom, prénom, adresse, numéro de téléphone et date de naissance",
+      "contactNote": "l'instruction est assurée par le pôle modes d'accueil du service de PMI",
+      "source": "https://www.lavienne86.fr/au-quotidien/enfance-famille/faire-garder-son-enfant/devenir-assistant-maternel",
+      "releve": "2026-09-05"
+    },
+    "87": {
+      "nom": "Haute-Vienne",
+      "reunion": "obligatoire",
+      "reunionNote": "les dates vous sont communiquées au moment de la demande, et le dossier d'agrément est remis pendant la réunion",
+      "depot": [
+        "courrier",
+        "enligne",
+        "surplace",
+        "reunion"
+      ],
+      "depotNote": "la demande se formule par courrier, par courriel, par téléphone ou sur place, auprès de la Maison du département de votre lieu de résidence",
+      "source": "https://www.haute-vienne.fr/nos-actions/enfance-et-famille/vous-souhaitez-accompagner-un-enfant-ou-travailler-aupres-denfants/de-facon-professionnelle/vous-souhaitez-devenir-assistant-maternel",
+      "releve": "2026-09-05"
+    },
+    "89": {
+      "nom": "Yonne",
+      "reunion": "obligatoire",
+      "reunionNote": "l'invitation à la réunion suit votre demande écrite ; tous les documents nécessaires au dépôt y sont remis",
+      "depot": [
+        "courrier",
+        "reunion"
+      ],
+      "depotNote": "la démarche s'ouvre par une demande écrite adressée à votre unité territoriale de solidarité (UTS)",
+      "source": "https://www.yonne.fr/aides-services/devenir-assistante-maternelle-2/",
+      "releve": "2026-09-05"
+    },
+    "92": {
+      "nom": "Hauts-de-Seine",
+      "formation": {
+        "heures": 132,
+        "note": "89 heures avant le premier accueil au lieu des 80 heures légales, puis 43 heures dans les trois ans au lieu de 40"
+      },
+      "depot": [
+        "enligne",
+        "surplace",
+        "reunion"
+      ],
+      "depotNote": "on postule en ligne, ou on retire le dossier CERFA sur place à l'issue de la réunion",
+      "reglesLocales": [
+        "une fois agréé, vous êtes inscrit d'office sur la carte des assistants maternels de la plateforme départementale EnfEnConfiance",
+        "pour le renouvellement, le formulaire adressé par le Département se renvoie au moins trois mois avant l'échéance de l'agrément"
+      ],
+      "reglesSource": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
+      "source": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
+      "releve": "2026-09-05"
+    },
+    "974": {
+      "nom": "La Réunion",
+      "contact": {
+        "tel": "0262 90 30 30"
+      },
+      "contactNote": "le standard répond du lundi au vendredi de 8 h à 16 h 30 ; les équipes d'instruction sont joignables au 02 62 21 27 08 pour le Nord et au 02 62 57 98 57 pour le Sud, et le premier interlocuteur reste le centre de PMI de votre secteur",
+      "source": "https://www.departement974.fr/devenir-assistant-maternel",
+      "releve": "2026-09-05"
+    }
   }
- }
 }
