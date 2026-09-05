@@ -352,6 +352,15 @@
       "releve": "2026-09-01",
       "reglementLibelle": "son règlement départemental d’agrément"
     },
+    "39": {
+      "nom": "Jura",
+      "contact": {
+        "tel": "03 84 87 41 04"
+      },
+      "contactNote": "l'interlocuteur est le service de protection maternelle et infantile, joignable aussi par courriel depuis le site du Département",
+      "source": "https://www.jura.fr/famille/protection-maternelle-infantile-et-actions-de-sante/",
+      "releve": "2026-09-05"
+    },
     "42": {
       "nom": "Loire",
       "reunion": "obligatoire",
@@ -675,6 +684,15 @@
       ],
       "reglesSource": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
       "source": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
+      "releve": "2026-09-05"
+    },
+    "95": {
+      "nom": "Val-d'Oise",
+      "contactNote": "les demandes sont instruites par le service de PMI ; pour un projet de maison d'assistants maternels, la demande s'adresse à smabam@valdoise.fr",
+      "contact": {
+        "email": "smabam@valdoise.fr"
+      },
+      "source": "https://www.valdoise.fr/436-assistant-e-maternel-le-.htm",
       "releve": "2026-09-05"
     },
     "974": {
