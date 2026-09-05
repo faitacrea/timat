@@ -12866,8 +12866,12 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             {/* Hero stats (deplaces sous le titre) */}
         <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
-          {statsHero.map(({ n, suf, label }) => (
-            <div key={label} style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.55)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12, padding:isWeb?"12px 8px":"9px 4px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center" }}>
+          {statsHero.map(({ n, suf, label, lien }) => (
+            <div key={label} onClick={lien?()=>{window.location.href=lien;}:undefined}
+              title={lien?"Découvrir l'espace parent":undefined}
+              style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.55)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12, padding:isWeb?"12px 8px":"9px 4px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", cursor:lien?"pointer":"default", transition:"transform .12s" }}
+              onMouseEnter={lien?(e)=>e.currentTarget.style.transform="translateY(-2px)":undefined}
+              onMouseLeave={lien?(e)=>e.currentTarget.style.transform="none":undefined}>
               <div style={{ fontSize: isWeb?22:18, fontWeight: 900, color: L.heroStatsColor||"#B85C38", fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
               <div style={{ fontSize: isWeb?12.5:11, fontWeight: 700, color: L.heroStatsLabelColor||"#2E4859", marginTop: 3, lineHeight: 1.25 }}>{label}</div>
             </div>
@@ -16997,9 +17001,9 @@ const DEFAULT_CONFIG = {
     heroTags:"💳 Sans carte bancaire,🔓 Sans engagement,🔒 Données hébergées en France,👨‍👩‍👧 Espace parent gratuit pour les familles",
     ctaBtnTxt:"Je commence - 2 mois gratuits →",
     ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
-    ctaFooter:"Déjà 847 assistantes maternelles nous font confiance · Données hébergées en France 🇫🇷",
+    ctaFooter:"Créé par une professionnelle de la petite enfance · Données hébergées en France 🇫🇷",
     proLabel:"⭐ TOUT INCLUS",
-    proSubtxt:"soit 0,33€/jour - moins qu'un café",
+    proSubtxt:"quel que soit le nombre d'enfants",
     proDesc:"La solution complète. Tout est inclus.",
     proBtnTxt:"2 mois gratuits, sans CB →",
     freeLabel:"Gratuit",
