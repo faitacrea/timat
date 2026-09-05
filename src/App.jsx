@@ -12878,7 +12878,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"transparent", color: L.heroBtnSecColor||"rgba(46,72,89,.75)", border: "1px solid "+(L.heroBtnSecBorder||"rgba(46,72,89,.22)"), borderRadius: 10, padding: "13px 22px", fontSize: 14, cursor: "pointer", fontWeight:600 }}>{T.heroBtnSecTxt}</button>
             </div>
             <div className="lp-hero-tags">
-              {(T.heroTags||"").split(",").map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"#93A0A2", fontWeight: 500 }}>{t.trim()}</span>)}
+              {(T.heroTags||"").split(",").map(t=>t.trim()).filter(Boolean).map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"#93A0A2", fontWeight: 500 }}>{t.trim()}</span>)}
             </div>
           </div>
           <div className="lp-hero-visual">
@@ -13053,7 +13053,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display:"grid", gridTemplateColumns:isWeb?"1fr 1fr":"1fr", gap:10, maxWidth:isWeb?900:720, margin:"0 auto", marginBottom: 56 }}>
             {[
-              { ic: L.diff1Ic||"💶", badge: L.diff1Badge||"Notre engagement", titre: L.diff1Titre||"Un tarif sans piège", puces: L.diff1Puces||"2 mois offerts, sans carte bancaire\nAucun prélèvement surprise\nRésiliation quand vous voulez" },
+              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Unique", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n28 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
               { ic: L.diff2Ic||"🧮", badge: L.diff2Badge||"Zéro erreur", titre: L.diff2Titre||"Des calculs fiables", puces: L.diff2Puces||"Salaire, congés, Pajemploi calculés\nConformes à la convention\nToujours le même résultat" },
               { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
               { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Zéro impression", titre: L.diff4Titre||"Signez en ligne, sans imprimer", puces: L.diff4Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
@@ -13133,9 +13133,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#E49178,#C76754)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
                 Tester TiMat gratuitement →
               </button>
-              <div style={{ marginTop: 14, fontSize: 11, color: "#93A0A2" }}>
-                Gratuit · Sans engagement · Conforme à la loi
-              </div>
             </div>
           </FadeIn>
         </div>
