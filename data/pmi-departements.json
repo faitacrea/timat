@@ -245,8 +245,9 @@
     },
     "41": {
       "nom": "Loir-et-Cher",
-      "url": "",
-      "verifie": false
+      "url": "https://www.departement41.fr/au-quotidien/solidarites/bien-vivre-son-enfance-et-sa-parentalite/faire-garder-son-enfant/",
+      "verifie": true,
+      "libelle": "faire garder son enfant en Loir-et-Cher"
     },
     "42": {
       "nom": "Loire",
