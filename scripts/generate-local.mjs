@@ -508,6 +508,18 @@ function blocExigences(ex, ou) {
     lignes.push(`<li><strong>Après un refus</strong> — ${esc(ex.apresRefus)}.</li>`);
   }
 
+  // Un site departemental qui affiche encore une regle abrogee est un piege :
+  // la candidate lit une source officielle, et l'information est fausse. On ne
+  // recopie donc pas le chiffre, et on ne se contente pas non plus de l'ignorer
+  // en silence — on dit que la page est datee, et vers qui se tourner.
+  if (ex.pageDatee) {
+    lignes.push(
+      `<li><strong>Point de vigilance</strong> — ${esc(ex.pageDatee)} ` +
+        `Avant de vous en servir, appelez le service agréments du Département ou la PMI la plus proche de chez vous : ` +
+        `eux seuls font foi sur leur propre procédure.</li>`
+    );
+  }
+
   // Les exigences que le departement ajoute par-dessus le referentiel national.
   // Elles vivent dans le reglement departemental d'agrement, pas sur la page
   // vitrine : c'est la seule partie vraiment introuvable ailleurs.

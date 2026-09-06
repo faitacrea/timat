@@ -12866,16 +12866,31 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             {/* Hero stats (deplaces sous le titre) */}
         <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
-          {statsHero.map(({ n, suf, label, lien }) => (
-            <div key={label} onClick={lien?()=>{window.location.href=lien;}:undefined}
-              title={lien?"Découvrir l'espace parent":undefined}
-              style={{ textAlign: "center", background:L.heroStatsCardBg||"rgba(255,255,255,.55)", border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12, padding:isWeb?"12px 8px":"9px 4px", boxShadow:L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", cursor:lien?"pointer":"default", transition:"transform .12s" }}
+          {statsHero.map(({ n, suf, label, lien }) => {
+            // L'encadré qui mène quelque part doit le dire sans souris : ni le
+            // curseur ni le survol n'existent sur un téléphone. Il le dit par une
+            // flèche permanente, un fond plus opaque et une ombre plus marquée —
+            // il est posé au-dessus des trois autres. La bordure reste la même
+            // que celle des voisins : c'est le relief qui distingue, pas la couleur.
+            const Balise = lien ? "a" : "div";
+            return (
+            <Balise key={label} {...(lien ? { href: lien } : {})}
+              style={{ textAlign: "center", textDecoration:"none",
+                background: lien ? (L.heroStatsCardBgLien||"rgba(255,255,255,.82)") : (L.heroStatsCardBg||"rgba(255,255,255,.55)"),
+                border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12,
+                padding:isWeb?"12px 8px":"9px 4px",
+                boxShadow: lien ? (L.heroStatsShadowLien||"0 4px 16px rgba(46,72,89,.13)") : (L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)"),
+                display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
+                cursor:lien?"pointer":"default", transition:"transform .12s, box-shadow .12s" }}
               onMouseEnter={lien?(e)=>e.currentTarget.style.transform="translateY(-2px)":undefined}
               onMouseLeave={lien?(e)=>e.currentTarget.style.transform="none":undefined}>
               <div style={{ fontSize: isWeb?22:18, fontWeight: 900, color: L.heroStatsColor||"#B85C38", fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
-              <div style={{ fontSize: isWeb?12.5:11, fontWeight: 700, color: L.heroStatsLabelColor||"#2E4859", marginTop: 3, lineHeight: 1.25 }}>{label}</div>
-            </div>
-          ))}
+              <div style={{ fontSize: isWeb?12.5:11, fontWeight: 700, color: L.heroStatsLabelColor||"#2E4859", marginTop: 3, lineHeight: 1.25 }}>
+                {label}{lien ? <span aria-hidden="true" style={{ fontWeight:900, color:L.heroStatsColor||"#B85C38" }}> →</span> : null}
+              </div>
+            </Balise>
+            );
+          })}
         </div>
             <div className="lp-hero-ctas">
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
@@ -13378,21 +13393,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 {F.description}
               </div>
             </div>
-            {/* Guides & ressources (maillage interne SEO) */}
+            {/* Ressources — guides et outils réunis (maillage interne SEO) */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Guides</div>
-              {[["Espace parent employeur","/parents"],["Calcul de mensualisation","/blog/calcul-mensualisation-assistante-maternelle"],["Congés payés","/blog/conges-payes-assistante-maternelle"],["Salaire net, brut & coût","/blog/salaire-assistante-maternelle-net-brut"],["Déclaration Pajemploi","/blog/pajemploi-declaration-assistante-maternelle"],["Tous les guides","/blog"]].map(([label,href])=>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Ressources</div>
+              {[["Espace parent employeur","/parents"],["Calcul de mensualisation","/blog/calcul-mensualisation-assistante-maternelle"],["Congés payés","/blog/conges-payes-assistante-maternelle"],["Salaire net, brut & coût","/blog/salaire-assistante-maternelle-net-brut"],["Déclaration Pajemploi","/blog/pajemploi-declaration-assistante-maternelle"],["Tous les guides","/blog"],["Simulateur de salaire","/simulateur-salaire-assistante-maternelle.html"],["Simulateur congés payés","/simulateur-conges-payes-assistante-maternelle.html"],["Indemnités d'entretien","/simulateur-indemnite-entretien-assistante-maternelle.html"],["Coût & CMG (parents)","/simulateur-cmg-reste-a-charge.html"],["Tous les outils","/outils.html"]].map(([label,href])=>
                 <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
-            {/* Outils gratuits (maillage interne SEO) */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Outils gratuits</div>
-              {[["Simulateur de salaire","/simulateur-salaire-assistante-maternelle.html"],["Simulateur congés payés","/simulateur-conges-payes-assistante-maternelle.html"],["Indemnités d'entretien","/simulateur-indemnite-entretien-assistante-maternelle.html"],["Coût & CMG (parents)","/simulateur-cmg-reste-a-charge.html"],["Tous les outils","/outils.html"]].map(([label,href])=>
-                <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
-              )}
-            </div>
-            {/* Liens */}
+            {/* Légal */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Légal</div>
               {[["Mentions légales","mentions"],["Conditions générales d'utilisation","cgu"],["Politique de confidentialité","confidentialite"]].map(([label,id])=>
@@ -13409,17 +13417,13 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 📍 {F.contactLieu}
               </div>
             </div>
-            {/* RGPD */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Données & RGPD</div>
-              <div style={{ fontSize: 11, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
-                {(F.rgpd||[]).map((line,i)=><span key={i} style={{display:"block"}}>{line}</span>)}
-              </div>
-            </div>
           </div>
           {/* Séparateur */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>© {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", lineHeight: 1.9 }}>
+              {(F.rgpd||[]).length ? <span style={{display:"block", color:"rgba(255,255,255,.5)"}}>{(F.rgpd||[]).join(" · ")}</span> : null}
+              © {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}
+            </div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
                 <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
@@ -16984,7 +16988,7 @@ const BLOG_DEFAULT=[
               {id:"indemnite2026",slug:"indemnite-entretien-assistante-maternelle-2026",cat:"Indemnit\u00e9 d'entretien",catColor:"#C84B31",emoji:"\uD83E\uDDF4",title:"Indemnit\u00e9 d'entretien 2026",excerpt:"3,92 \u20ac pour 9 h, 0,435 \u20ac de l'heure au-del\u00e0, plancher \u00e0 2,65 \u20ac par journ\u00e9e."}
             ];
 const DEFAULT_CONFIG = {
-  cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#C84B31",c:"#F8F8F8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
+  cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#B85C38",c:"#FDFBF8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
     heroTitle:"Assistante maternelle,",
     heroTitleAccent:"pas comptable.",
@@ -17021,76 +17025,76 @@ const DEFAULT_CONFIG = {
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
     section1Bg:"#2E4859",
-    section2Bg:"#2E4859",
+    section2Bg:"#26404F",
     section4Bg:"#FDFBF8",
-    section5Bg:"#FDFBF8",
-    section6Bg:"#F4F1EA",
-    faqBg:"#2E4859", blogBg:"#FDFBF8", footerBg:"#2E4859",
-    faqTitleColor:"#fff", faqDescColor:"rgba(255,255,255,.65)",
+    section5Bg:"#FFFFFF",
+    section6Bg:"#FDFBF8",
+    sectionConfBg:"#F4F1EA", faqBg:"#F4F1EA", blogBg:"#FDFBF8", footerBg:"#2E4859",
+    faqTitleColor:"#FFFFFF", faqDescColor:"rgba(255,255,255,.65)",
     blogTitleColor:"#2E4859", blogDescColor:"#5F7A86",
     footerTextColor:"rgba(255,255,255,.7)",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
     statsBg:"linear-gradient(135deg,#2E4859,#3E6B63)",
     // ----- BOUTONS HERO -----
     heroBtnPrimBg:"linear-gradient(135deg,#E49178,#C84B31)",
-    heroBtnPrimColor:"#fff",
-    heroBtnSecBg:"rgba(255,255,255,.07)",
-    heroBtnSecColor:"#fff",
+    heroBtnPrimColor:"#FFFFFF",
+    heroBtnSecBg:"transparent",
+    heroBtnSecColor:"#2E4859",
     heroBtnNavBg:"linear-gradient(135deg,#5DA9A1,#2E4859)",
-    heroBtnNavColor:"#fff",
-    heroBtnTarifsBg:"rgba(255,255,255,.12)",
-    heroBtnTarifsColor:"rgba(255,255,255,.85)",
-    heroBtnConnexionBg:"rgba(255,255,255,.18)",
-    heroBtnConnexionColor:"#fff",
+    heroBtnNavColor:"#FFFFFF",
+    heroBtnTarifsBg:"rgba(46,72,89,.06)",
+    heroBtnTarifsColor:"#42555E",
+    heroBtnConnexionBg:"rgba(46,72,89,.10)",
+    heroBtnConnexionColor:"#FFFFFF",
     // ----- BOUTONS TARIFS -----
     proBtnBg:"linear-gradient(135deg,#E49178,#C84B31)",
-    proBtnColor:"#fff",
+    proBtnColor:"#FFFFFF",
     freeBtnBg:"#0D1B2A",
-    freeBtnColor:"#fff",
+    freeBtnColor:"#FFFFFF",
     // ----- BOUTON CTA FINAL -----
     ctaBtnBg:"linear-gradient(135deg,#E49178,#C84B31)",
-    ctaBtnColor:"#fff",
+    ctaBtnColor:"#FFFFFF",
     // ----- COULEURS -----
     accentColor:"#E49178",
     // Couleurs de texte par section
-    heroTitleColor:"#fff",
-    heroSubColor:"rgba(255,255,255,.75)",
-    heroSubDescColor:"rgba(255,255,255,.6)",
-    heroBadgeColor:"#E49178",
+    heroTitleColor:"#2E4859",
+    heroSubColor:"#42555E",
+    heroSubDescColor:"#7C8A90",
+    heroBadgeColor:"#B85C38",
     heroBadgeBg:"rgba(228,145,120,.12)",
-    heroTagsColor:"rgba(255,255,255,.4)",
+    heroTagsColor:"#93A0A2",
     heroStatsColor:"#E49178",
-    heroStatsLabelColor:"rgba(255,255,255,.45)",
-    s1TitleColor:"#fff",
+    heroStatsLabelColor:"#2E4859",
+    s1TitleColor:"#FFFFFF",
     s1DescColor:"rgba(255,255,255,.5)",
     s1CardBg:"rgba(255,255,255,.04)",
-    s1CardTitleColor:"#fff",
+    s1CardTitleColor:"#FFFFFF",
     s1CardDescColor:"rgba(255,255,255,.5)",
     s1QuoteBg:"rgba(232,168,74,.08)",
     s1QuoteColor:"#E8A84A",
     s2TitleColor:"#0D1B2A",
-    s2DescColor:"#6B4F3A",
+    s2DescColor:"#6B5348",
     s4TitleColor:"#2E4859",
-    s4SubColor:"#6B7A82",
+    s4SubColor:"#5F7A86",
     s5TitleColor:"#0D1B2A",
-    testimonialBg:"#fff",
+    testimonialBg:"#FFFFFF",
     testimonialNameColor:"#2C1F14",
     testimonialCityColor:"#A68970",
     testimonialBeforeColor:"#A68970",
     testimonialAfterColor:"#2C1F14",
     testimonialStarColor:"#E8A84A",
     s6TitleColor:"#0D1B2A",
-    freeBg:"#fff",
+    freeBg:"#FFFFFF",
     freeLabelColor:"#A68970",
     freePriceColor:"#0D1B2A",
-    freeDescColor:"#6B4F3A",
+    freeDescColor:"#6B5348",
     proBg:"#FDFBF8",
-    proBorderColor:"#B8622F",
-    proLabelColor:"#B8622F",
-    proPriceColor:"#B8622F",
+    proBorderColor:"#B85C38",
+    proLabelColor:"#B85C38",
+    proPriceColor:"#B85C38",
     proSubColor:"#A68970",
-    proDescColor:"#6B4F3A",
-    ctaTitleColor:"#fff",
+    proDescColor:"#6B5348",
+    ctaTitleColor:"#FFFFFF",
     ctaSubTitleColor:"rgba(255,255,255,.6)",
     ctaSubColor:"rgba(255,255,255,.5)",
     ctaFooterColor:"rgba(255,255,255,.35)",
@@ -17133,7 +17137,9 @@ const DEFAULT_CONFIG = {
   statsHero:[
     {n:0,suf:"€",label:"pour essayer"},
     {n:2,suf:" mois",label:"offerts · sans CB"},
-    {n:100,suf:"%",label:"conforme à la convention"},
+    // Le seul encadré qui mène quelque part : « lien » suffit à le rendre
+    // cliquable, à lui donner sa flèche et à en faire un vrai lien.
+    {n:0,suf:" €",label:"l'espace des parents employeurs",lien:"/parents"},
     {n:2,suf:" min",label:"pour s'inscrire"},
   ],
   testimonials:[
@@ -17211,7 +17217,7 @@ const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","signature","demo","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
+  sectionsOrder:["probleme","demo","signature","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
 };
 let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 

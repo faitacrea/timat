@@ -7,7 +7,8 @@
     "Le délai d'instruction n'est stocké que s'il diffère des trois mois légaux, et il est alors présenté comme le délai annoncé par le Département, jamais comme le délai légal. L'article L421-6 du code de l'action sociale et des familles fixe trois mois à compter du dossier complet, le silence valant agrément : cette garantie ne doit jamais être noyée par un délai de traitement affiché.",
     "Chaque département porte sa source et sa date de relevé. Sans source, pas d'affichage.",
     "Ce qui est examiné pendant l'entretien et la visite à domicile est fixé au niveau national par le décret n° 2012-364 du 15 mars 2012 : disponibilité, capacité d'organisation, aptitude au dialogue, capacités éducatives, connaissance du métier, confort et sécurité du logement. Ces critères n'ont donc pas à être stockés département par département. Ce qui se collecte ici, ce sont les exigences que le département ajoute par-dessus — les règlements départementaux les signalent en propres termes, comme « exigences départementales spécifiques ».",
-    "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers."
+    "Les pages « devenir » des sites départementaux sont des vitrines. Le détail vit dans le règlement départemental d'agrément, souvent un PDF d'une vingtaine de pages : c'est lui qui porte les règles locales, les surfaces, les conditions de sécurité et la position du département sur les cas particuliers.",
+    "Quand la page d'un département affiche une règle abrogée — le plus souvent l'ancien délai de formation d'avant 2019 —, on ne recopie pas le chiffre et on ne se tait pas non plus : le champ pageDatee dit que la page est en retard sur ce point et renvoie vers le service agréments. Une candidate qui lit une source officielle fausse n'a aucun moyen de le deviner seule."
   ],
   "departements": {
     "02": {
@@ -15,7 +16,8 @@
       "reunion": "proposee",
       "reunionNote": "des réunions d'information sont organisées régulièrement ; l'inscription se fait auprès de la PMI",
       "source": "https://www.aisne.com/votre-service/enfance-famille/devenir-assistant-maternel",
-      "releve": "2026-09-05"
+      "releve": "2026-09-05",
+      "pageDatee": "la page du Département annonce 40 heures de formation « dans les 5 ans qui suivent ». C'est la règle d'avant 2019 : le délai est de trois ans depuis l'accueil du premier enfant."
     },
     "05": {
       "nom": "Hautes-Alpes",
@@ -651,6 +653,7 @@
         "reunion"
       ],
       "depotNote": "la demande se formule par courrier, par courriel, par téléphone ou sur place, auprès de la Maison du département de votre lieu de résidence",
+      "pageDatee": "la page du Département annonce que les 40 heures de formation se font « dans les deux années qui suivent ». C'est la règle d'avant 2019 : depuis, le délai est de trois ans à compter de l'accueil du premier enfant. La page n'a pas été mise à jour sur ce point.",
       "source": "https://www.haute-vienne.fr/nos-actions/enfance-et-famille/vous-souhaitez-accompagner-un-enfant-ou-travailler-aupres-denfants/de-facon-professionnelle/vous-souhaitez-devenir-assistant-maternel",
       "releve": "2026-09-05"
     },
