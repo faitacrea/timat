@@ -24,6 +24,10 @@
       "reunion": "proposee",
       "reunionNote": "les candidats sont invités à se rapprocher de la PMI pour assister à une réunion d'information pré-agrément, organisée régulièrement sur chacun des trois bassins (Montluçon, Moulins, Vichy) ; l'inscription se fait auprès du secrétariat du territoire concerné",
       "contactNote": "le département compte trois territoires des solidarités : Moulins 04 70 34 15 70 (pmi-tsdmoulins@allier.fr), Montluçon 04 70 34 15 00 (pmi-tsdmontlucon@allier.fr), Vichy 04 70 34 15 50 (pmi-tsdvichy@allier.fr)",
+      "formation": {
+        "heures": 120,
+        "note": "le Département annonce les 40 heures « dans les 18 mois suivant l'accueil du premier enfant », alors que le code de l'action sociale et des familles laisse trois ans. Un délai plus court n'enlève aucun droit — c'est le Département qui organise et finance la formation, il peut la programmer plus tôt — mais aucune source indépendante ne confirme cette pratique, et la page pourrait simplement ne pas être à jour. À faire confirmer par le service PMI de votre territoire avant de vous engager sur ce calendrier."
+      },
       "reglesLocales": [
         "un logement construit avant le 1er janvier 1949 impose de fournir un constat des risques d'exposition au plomb (CREP) réalisé par un organisme accrédité Cofrac, pour une première demande comme pour un renouvellement (arrêté du 13 juillet 2022) ; si le CREP conclut à un risque de saturnisme infantile, l'agrément est refusé en première demande",
         "la détention d'un chien de 1re ou de 2e catégorie est une contre-indication absolue à l'agrément comme à son maintien ; le propriétaire doit fournir une attestation vétérinaire précisant la catégorie du chien",
@@ -721,6 +725,36 @@
       "depotNote": "la démarche s'ouvre par une demande écrite adressée à votre unité territoriale de solidarité (UTS)",
       "source": "https://www.yonne.fr/aides-services/devenir-assistante-maternelle-2/",
       "releve": "2026-09-05"
+    },
+    "90": {
+      "nom": "Territoire de Belfort",
+      "reunion": "obligatoire",
+      "reunionNote": "les candidats sont conviés à une réunion d'information ; c'est à l'issue de cette réunion que le dossier complet et le lien pour télécharger le formulaire de demande d'agrément leur sont transmis",
+      "depotNote": "la demande se fait auprès du service accueil du jeune enfant du Département",
+      "contact": {
+        "tel": "03 84 28 18 88"
+      },
+      "contactNote": "service accueil du jeune enfant, 14B rue des Entrepreneurs, 90000 Belfort — accueil physique le mardi de 8h45 à 12h et le jeudi de 13h45 à 17h, accueil téléphonique du lundi au vendredi de 13h30 à 17h",
+      "formation": {
+        "heures": 127,
+        "note": "aux 120 heures légales s'ajoutent 7 heures de formation aux premiers secours (PSC1), suivies avec le module de 80 heures avant le premier accueil ; les 40 heures restantes sont dispensées dans les trois ans qui suivent le premier contrat de travail"
+      },
+      "reglesLocales": [
+        "les garde-corps doivent être installés à 1,10 m au-dessus du sol au minimum, avec des barreaux verticaux espacés de 11 cm au maximum ; les garde-corps à barreaux horizontaux sont proscrits",
+        "une barrière de sécurité rigide et adaptée, à la norme AFNOR, doit être installée en haut et en bas des escaliers, qui doivent par ailleurs être munis d'une rampe",
+        "les fenêtres doivent être oscillo-battantes, ou équipées d'un entrebâilleur, ou pourvues d'un garde-corps rehaussé à 1,10 m",
+        "les portes d'accès à la cave, au garage, au balcon ou à l'escalier doivent être munies d'un verrou placé en hauteur",
+        "une piscine hors sol de moins de 1,20 m doit être protégée par une barrière d'au moins 1,10 m par rapport à la traverse basse et 1,22 m par rapport au sol fini, à barreaux verticaux espacés de moins de 9 cm, avec portillon verrouillable qu'un enfant ne peut pas ouvrir ; une haie ne constitue pas une barrière",
+        "une piscine hors sol de 1,20 m ou plus doit être munie d'une échelle escamotable, et une piscine installée ponctuellement doit être remplie au dernier moment puis vidée après la baignade",
+        "une piscine enterrée ou semi-enterrée doit être pourvue d'au moins un des quatre dispositifs normalisés : barrière NF P90-306, alarme NF P90-307, couverture de sécurité ou abri",
+        "une perche, une bouée et un téléphone doivent être disponibles à côté de la piscine, et la baignade suppose une autorisation écrite des parents",
+        "le matériel de puériculture doit être homologué et adapté à l'âge de l'enfant, et les jouets conformes aux normes de sécurité"
+      ],
+      "reglementUrl": "https://www.territoiredebelfort.fr/sites/default/files/media/downloads/la_securite_chez_assistant_maternel_0.pdf",
+      "reglementLibelle": "« La sécurité chez l'assistant(e) maternel(le) », guide publié par le Département du Territoire de Belfort",
+      "reglesSource": "https://www.territoiredebelfort.fr/sites/default/files/media/downloads/la_securite_chez_assistant_maternel_0.pdf",
+      "source": "https://www.territoiredebelfort.fr/assistantes-maternelles",
+      "releve": "2026-09-06"
     },
     "92": {
       "nom": "Hauts-de-Seine",
