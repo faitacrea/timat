@@ -12510,8 +12510,23 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   // Démo : sous-onglets déverrouillés (vrais écrans) ; tout le reste = aperçu verrouillé
   const DEMO_UNLOCKED = ["accueil","pointage","admin_finances","inviter_parent","calendrier","messagerie","sante_complet"];
   const demoActiveGroup = findGroup(GROUPS_AM, demoPage) || "accueil";
-  const L = config.landing;
-  const T = config.txts;
+  // Deux sources de vérité se contredisaient. DEFAULT_CONFIG décrit le design
+  // voulu ; chaque endroit du rendu portait en plus son propre repli littéral
+  // (`L.faqBg||"#FDFBF8"`), écrit à une autre époque. Tant que la configuration
+  // enregistrée renseigne la clé, personne ne le voit — mais le back-office
+  // enregistre des chaînes vides pour les cases qu'on n'a pas remplies, et une
+  // chaîne vide est fausse en JavaScript : le repli littéral l'emportait alors
+  // sur le défaut. D'où des sections sombres là où le design les voulait
+  // claires, et des titres blancs sur fond crème.
+  //
+  // On fusionne donc ici, en ignorant les valeurs vides : la configuration
+  // enregistrée gagne quand elle dit quelque chose, DEFAULT_CONFIG sinon. Les
+  // replis littéraux du rendu deviennent inatteignables, ce qui est le but.
+  const _sansVide = (o) => Object.fromEntries(
+    Object.entries(o || {}).filter(([, v]) => v !== "" && v !== null && v !== undefined)
+  );
+  const L = { ...(DEFAULT_CONFIG.landing || {}), ..._sansVide(config.landing) };
+  const T = { ...(DEFAULT_CONFIG.txts || {}), ..._sansVide(config.txts) };
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
   const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n⚖️|Convention collective|IDCC 3239, toujours à jour|Des textes à éplucher soi-même|Conforme, mis à jour pour vous\n💸|Suivi des paiements|Versements et relances|Courir après, sans oser relancer|Suivi clair, relances automatiques\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
