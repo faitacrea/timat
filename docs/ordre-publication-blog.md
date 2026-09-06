@@ -4,8 +4,15 @@ Un article par jour. Cet ordre n'est pas décoratif : il encode des
 **dépendances de liens internes**. Publier hors ordre crée des liens morts,
 parce qu'un article publié peut pointer vers un article encore en brouillon.
 
-Dernière mise à jour : 24 août 2026 (soir) — 27 brouillons en attente, 16 articles
+Dernière mise à jour : 5 septembre 2026 — 28 brouillons dans la file, 33 articles
 publiés.
+
+Quatre articles ont été publiés le 5 septembre **hors file** : absences de
+l'enfant, congé pour enfant malade, retrait ou suspension d'agrément,
+attestation d'honorabilité. Ils comblaient des trous que la file ne prévoyait
+pas, et leurs liens internes ne pointent que vers des articles déjà en ligne —
+l'audit le vérifie à chaque construction. La file, elle, n'a pas bougé : le
+cron reprend où il en était.
 
 ## L'ordre
 
