@@ -69,6 +69,34 @@
       "source": "https://www.departement06.fr/devenir-assistant-maternel",
       "releve": "2026-09-05"
     },
+    "07": {
+      "nom": "Ardèche",
+      "reunion": "obligatoire",
+      "reunionNote": "la participation à une réunion d'information est la première étape de la procédure décrite par le Département, avant l'envoi du dossier",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "le dossier se renvoie au Président du Conseil départemental en courrier recommandé avec accusé de réception : cerfa 13394*05, certificat médical, pièces d'identité et autorisation de consultation du casier judiciaire et du FIJAIS pour toute personne d'au moins 13 ans vivant au domicile",
+      "formation": {
+        "heures": 123,
+        "note": "le Département de l'Ardèche propose une formation de 123 heures au lieu des 120 heures légales, dont 83 heures avant le premier accueil au lieu de 80"
+      },
+      "reglesLocales": [
+        "la présence d'un chien de 1re ou de 2e catégorie entraîne un refus d'agrément, de même que celle de nouveaux animaux de compagnie non domestiques — le Département cite les serpents, les mygales et les iguanes",
+        "la non-maîtrise du français à l'oral est listée parmi les éléments incompatibles avec l'agrément",
+        "il est interdit de fumer dans le logement pendant les temps d'accueil",
+        "chaque enfant transporté doit être protégé par un système de retenue homologué adapté à son âge et à sa taille",
+        "l'évaluation s'appuie sur un référentiel sécurité départemental qui s'ajoute au référentiel national de l'agrément",
+        "le dossier passe devant une commission d'agrément de la direction territoriale d'action sociale, chargée d'émettre un avis avant la décision",
+        "les arrivées et les départs d'enfants doivent être signalés au service de PMI dans les 8 jours",
+        "un accueil dérogatoire — un enfant supplémentaire jusqu'à 50 heures par mois, ou un à deux enfants à titre gracieux jusqu'à 55 jours par an — impose d'informer la PMI et l'ensemble des parents employeurs sans délai, au plus tard dans les 48 heures suivant l'accueil"
+      ],
+      "reglementUrl": "https://www.ardeche.fr/wp-content/uploads/2026/03/2024_guide_assmat-1.pdf",
+      "reglementLibelle": "guide de l'assistant maternel du Département de l'Ardèche, édition 2024",
+      "reglesSource": "https://www.ardeche.fr/wp-content/uploads/2026/03/2024_guide_assmat-1.pdf",
+      "source": "https://www.ardeche.fr/mon-quotidien/enfance-et-famille/",
+      "releve": "2026-09-06"
+    },
     "08": {
       "nom": "Ardennes",
       "reunion": "proposee",
@@ -100,7 +128,21 @@
       },
       "contactNote": "l’interlocuteur est le service des modes d’accueil de la petite enfance, 21 boulevard Mirabeau, 13331 Marseille",
       "source": "https://departement13.fr/en-actions/enfance-famille/etre-assistante-maternelle",
-      "releve": "2026-09-02"
+      "releve": "2026-09-06",
+      "reglesLocales": [
+        "les garde-corps et rambardes ne doivent pas laisser passer la tête d'un enfant : l'espacement des barreaux est limité à 9 cm, et jusqu'à 11 cm selon les configurations ; à défaut une protection doit venir doubler l'existant",
+        "les contremarches d'escalier sont obligatoires, à défaut une protection adaptée doit être posée",
+        "des barrières de sécurité à la norme NF EN 1930 doivent être installées en haut et en bas des escaliers",
+        "les fenêtres doivent être sécurisées par un moyen qui reste opérationnel même fenêtres fermées et qui assure un entrebâillement inférieur à 11 cm",
+        "l'échelle des lits superposés ou de la mezzanine doit obligatoirement être sécurisée",
+        "pour une piscine dont le bassin est totalement ou partiellement enterré, l'assistant maternel doit fournir la copie de la note technique du constructeur attestant du dispositif de sécurité",
+        "les barrières de piscine doivent avoir un espacement de barreaux inférieur à 102 mm et être placées à 1 m minimum du bord du bassin",
+        "les récipients, pataugeoires, coques et bacs à sable doivent être vidés ou couverts",
+        "le domicile doit être équipé d'un détecteur de fumée conformément au code de la construction et de l'habitation"
+      ],
+      "reglementUrl": "https://www.departement13.fr/sites/default/files/media/downloads/guide_securite_hygiene_assistante_maternelles_2025.pdf",
+      "reglementLibelle": "guide sécurité et hygiène des assistantes maternelles du Département des Bouches-du-Rhône, édition 2025",
+      "reglesSource": "https://www.departement13.fr/sites/default/files/media/downloads/guide_securite_hygiene_assistante_maternelles_2025.pdf"
     },
     "15": {
       "nom": "Cantal",
@@ -211,7 +253,15 @@
       ],
       "depotNote": "le dossier complété, daté et signé se dépose ou se retourne en recommandé à l’adresse indiquée sur le formulaire",
       "source": "https://www.dordogne.fr/a-votre-service/enfance-famille/exercer-le-metier-dassistant-maternel",
-      "releve": "2026-09-03"
+      "releve": "2026-09-06",
+      "reglesLocales": [
+        "le dossier passe devant une commission d'agrément qui se tient à l'unité territoriale une fois par mois, à dates préétablies ; une fiche de synthèse est établie pour chaque dossier",
+        "l'avis de cette commission est consultatif : la décision finale appartient au service central PMI modes d'accueil, et elle peut différer de l'avis émis",
+        "les journées d'information se déroulent sur l'ensemble du département hors vacances scolaires, animées par une psychologue ou une éducatrice de jeunes enfants, avec une puéricultrice et une animatrice de relais"
+      ],
+      "reglementUrl": "https://www.dordogne.fr/fileadmin/telechargements/DGA-SP/GUIDE_DEPARTEMENTAL_2021.pdf",
+      "reglementLibelle": "guide départemental des procédures d'agrément des assistants maternels et familiaux de la Dordogne, édition 2021",
+      "reglesSource": "https://www.dordogne.fr/fileadmin/telechargements/DGA-SP/GUIDE_DEPARTEMENTAL_2021.pdf"
     },
     "27": {
       "nom": "Eure",
@@ -240,7 +290,24 @@
       },
       "contactNote": "l'interlocuteur téléphonique dépend de la première lettre de votre nom ; permanence le lundi et le mercredi de 14 h à 17 h",
       "source": "https://www.finistere.fr/aides-et-services/enfance-famille/assistants-maternels/",
-      "releve": "2026-08-30"
+      "releve": "2026-09-06",
+      "reglesLocales": [
+        "le logement doit être propre, ordonné, aéré et lumineux, avec une température comprise environ entre 18 et 20 °C",
+        "le tabac, la vapoteuse et l'alcool sont interdits en présence des enfants accueillis",
+        "il faut fournir un certificat d'entretien annuel des appareils de chauffage au fioul, au gaz ou au bois, réalisé par un professionnel, et un certificat annuel de ramonage de la cheminée ou du poêle le cas échéant",
+        "un certificat de non-exposition au plomb est exigé pour les logements antérieurs à 1949",
+        "le domicile doit comporter au moins un détecteur de fumée en état de marche et fixé, ainsi que des prises électriques aux normes, sans fil apparent ni dénudé",
+        "une fiche répertoriant les numéros d'urgence, les coordonnées de la PMI et les numéros des parents doit être affichée de manière visible",
+        "la possession d'un chien de 1re ou de 2e catégorie est incompatible avec l'exercice de la profession",
+        "les piscines et spas enterrés ou encastrés demandent une clôture de 1,10 m minimum avec portillon fermé à clé, ou un abri homologué verrouillé, ou une bâche rigide à verrouillage de sécurité — une alarme n'est pas considérée comme un système de sécurité",
+        "pour une piscine hors-sol de moins de 1,10 m, clôture de 1,10 m et portillon fermé à clé ; au-delà, bâche aux normes et matériel d'accès retiré en présence des jeunes enfants",
+        "les cheminées et les poêles doivent être protégés par une barrière fixée à 50 cm au moins de la source de chaleur",
+        "des barrières doivent être fixées en bas et en haut des escaliers dès lors que sont accueillis des enfants de 6 mois à 3 ans",
+        "les terrasses surélevées demandent un garde-corps sécurisé sur 1 m de haut, et les accès aux bouteilles de gaz, tas de bois, réserves d'eau et bâtiments annexes doivent être sécurisés"
+      ],
+      "reglementUrl": "https://www.finistere.fr/wp-content/uploads/2023/09/La-securite-des-enfants-au-domicile-des-assistants-maternels.pdf",
+      "reglementLibelle": "« La sécurité des enfants au domicile des assistants maternels », guide du Département du Finistère",
+      "reglesSource": "https://www.finistere.fr/wp-content/uploads/2023/09/La-securite-des-enfants-au-domicile-des-assistants-maternels.pdf"
     },
     "30": {
       "nom": "Gard",
@@ -533,7 +600,19 @@
         "email": "uppe@nievre.fr"
       },
       "source": "https://nievre.fr/au-quotidien/solidarites/parents-mode-demploi/assistant-maternel/",
-      "releve": "2026-09-05"
+      "releve": "2026-09-06",
+      "reglesLocales": [
+        "les escaliers doivent être sécurisés par une barrière fixée et adaptée à leur configuration, maintenue fermée pendant toute la durée de l'accueil ; une barrière en bas suffit sauf si l'étage est utilisé pour l'accueil, auquel cas il en faut une en haut également",
+        "la rambarde ou la rampe d'escalier doit mesurer au moins 110 cm à partir du dernier point d'appui, avec des barreaux verticaux espacés de 11 cm au maximum",
+        "les cheminées et poêles doivent être protégés par une barrière fixée située à 50 cm au moins de la source de chaleur",
+        "des détecteurs de fumée doivent impérativement être installés au domicile",
+        "le tabac et le vapotage sont encadrés : l'air doit être renouvelé si l'on a fumé hors de la présence des enfants, et les mégots mis hors de portée",
+        "les barrières de piscine doivent interdire le passage d'un enfant sans l'aide d'un adulte, et une fois les dispositifs fermés la piscine doit rester inaccessible à un enfant de moins de 5 ans",
+        "les chiens autres que ceux de 1re et 2e catégorie doivent être à jour de leurs vaccins obligatoires"
+      ],
+      "reglementUrl": "https://www.nievre.fr/wp-content/uploads/2025/07/Referenciel-Securite-12-pages-A4-Avril-2025-5.pdf",
+      "reglementLibelle": "référentiel sécurité du Département de la Nièvre, avril 2025",
+      "reglesSource": "https://www.nievre.fr/wp-content/uploads/2025/07/Referenciel-Securite-12-pages-A4-Avril-2025-5.pdf"
     },
     "61": {
       "nom": "Orne",
