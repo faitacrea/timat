@@ -19,6 +19,28 @@
       "releve": "2026-09-05",
       "pageDatee": "la page du Département annonce 40 heures de formation « dans les 5 ans qui suivent ». C'est la règle d'avant 2019 : le délai est de trois ans depuis l'accueil du premier enfant."
     },
+    "03": {
+      "nom": "Allier",
+      "reunion": "proposee",
+      "reunionNote": "les candidats sont invités à se rapprocher de la PMI pour assister à une réunion d'information pré-agrément, organisée régulièrement sur chacun des trois bassins (Montluçon, Moulins, Vichy) ; l'inscription se fait auprès du secrétariat du territoire concerné",
+      "contactNote": "le département compte trois territoires des solidarités : Moulins 04 70 34 15 70 (pmi-tsdmoulins@allier.fr), Montluçon 04 70 34 15 00 (pmi-tsdmontlucon@allier.fr), Vichy 04 70 34 15 50 (pmi-tsdvichy@allier.fr)",
+      "reglesLocales": [
+        "un logement construit avant le 1er janvier 1949 impose de fournir un constat des risques d'exposition au plomb (CREP) réalisé par un organisme accrédité Cofrac, pour une première demande comme pour un renouvellement (arrêté du 13 juillet 2022) ; si le CREP conclut à un risque de saturnisme infantile, l'agrément est refusé en première demande",
+        "la détention d'un chien de 1re ou de 2e catégorie est une contre-indication absolue à l'agrément comme à son maintien ; le propriétaire doit fournir une attestation vétérinaire précisant la catégorie du chien",
+        "les piscines enterrées et hors sol demandent une barrière non escaladable d'au moins 1,10 m sans point d'appui, à barreaux verticaux espacés de moins de 9 cm, avec portillon fermé à clé et fixée à plus d'un mètre du bord ; à défaut, un abri haut et rigide fixé au sol fermant à clé",
+        "les piscines gonflables et coquilles ne doivent pas dépasser 15 cm d'eau et doivent être vidées après chaque baignade ; si elles ne peuvent pas l'être, une barrière réglementaire est exigée",
+        "toute installation d'une piscine ou d'un point d'eau après l'obtention de l'agrément doit obligatoirement être signalée au service PMI du territoire qui a délivré l'agrément",
+        "il est interdit de fumer et de vapoter en présence des enfants accueillis",
+        "l'enfant accueilli ne doit jamais être confié à une autre personne, même pour un court instant et même au conjoint, sauf extrême urgence ; l'accord des parents, oral ou écrit, ne dégage pas la responsabilité de l'assistant maternel",
+        "si le véhicule doit être utilisé et que le nombre de places est insuffisant au regard du nombre d'enfants accueillis, l'agrément peut être refusé ou retiré ; le véhicule doit être muni de dispositifs de retenue homologués pour chaque enfant de moins de 10 ans",
+        "si un enfant du candidat ou du professionnel agréé fait l'objet d'une mesure d'assistance éducative prononcée par un juge des enfants, l'agrément est refusé ou retiré"
+      ],
+      "reglementUrl": "https://www.allier.fr/cms_viewFile.php?idtf=37866&path=Reglement-des-assistants-maternels-de-l-Allier.pdf",
+      "reglementLibelle": "règlement départemental des assistants maternels de l'Allier, mis à jour par délibération du Conseil départemental du 5 décembre 2024",
+      "reglesSource": "https://www.allier.fr/cms_viewFile.php?idtf=37866&path=Reglement-des-assistants-maternels-de-l-Allier.pdf",
+      "source": "https://www.allier.fr/828-assistant-e-s-maternel-le-s.htm",
+      "releve": "2026-09-06"
+    },
     "05": {
       "nom": "Hautes-Alpes",
       "reunion": "obligatoire",
@@ -363,6 +385,18 @@
       "source": "https://www.jura.fr/famille/protection-maternelle-infantile-et-actions-de-sante/",
       "releve": "2026-09-05"
     },
+    "41": {
+      "nom": "Loir-et-Cher",
+      "reunion": "proposee",
+      "reunionNote": "le service de PMI organise des réunions d'information pour toute personne souhaitant en savoir plus sur le métier ; l'inscription se fait par téléphone auprès du service",
+      "depotNote": "la demande d'agrément se dépose auprès du service de PMI, joint par téléphone au 02 54 58 54 91 ou au 02 54 58 54 92",
+      "contact": {
+        "tel": "02 54 58 54 91"
+      },
+      "contactNote": "service de protection maternelle et infantile, 34 avenue Maunoury, porte D, 41000 Blois",
+      "source": "https://www.departement41.fr/au-quotidien/solidarites/bien-vivre-son-enfance-et-sa-parentalite/faire-garder-son-enfant/",
+      "releve": "2026-09-06"
+    },
     "42": {
       "nom": "Loire",
       "reunion": "obligatoire",
@@ -406,6 +440,25 @@
       },
       "source": "https://lot.fr/devenir-assistante-maternelle",
       "releve": "2026-09-03"
+    },
+    "47": {
+      "nom": "Lot-et-Garonne",
+      "contact": {
+        "tel": "05 53 69 40 87"
+      },
+      "contactNote": "direction PMI et actions de santé, 1633 avenue du Général Leclerc, 47922 Agen — du lundi au vendredi, 9h-12h et 14h-17h",
+      "reglesLocales": [
+        "les barrières d'escalier doivent répondre à la norme NF EN 1930, hauteur recommandée 73 cm, et être posées en haut comme en bas ; les barrières à croisillons ne sont pas autorisées",
+        "la rampe d'escalier doit mesurer au moins 90 cm de hauteur, et tout escalier sans contremarche doit être sécurisé si l'espacement des marches le justifie",
+        "l'ouverture des fenêtres doit être limitée à 11 cm au maximum, par barrière ou limitateur d'ouverture",
+        "la distance préconisée entre la barrière de protection et la piscine est de 80 cm",
+        "le règlement départemental indique des surfaces moyennes de 3 m² par enfant et 2 m² par adulte dans la pièce d'activité, et de 2 m² par enfant dans la pièce dévolue au sommeil"
+      ],
+      "reglesSource": "référentiel sécurité-confort-hygiène chez un(e) assistant(e) maternel(le) du conseil départemental de Lot-et-Garonne, édition 2018 ; les surfaces proviennent du règlement départemental adopté le 25 mars 2010 et modifié le 14 septembre 2012",
+      "reglementUrl": "https://www.lotetgaronne.fr/fileadmin/cru-1784813437/mediatheque/Lot-et-Garonne/01-Documents/Nos_services/Solidarite/Enfance_famille/Modes_de_garde/Reglement_departemental_ass_mat_2012.pdf",
+      "reglementLibelle": "règlement départemental des assistants maternels de Lot-et-Garonne, adopté le 25 mars 2010 et modifié le 14 septembre 2012 — antérieur à la réforme de la formation de 2019, à vérifier auprès du service pour tout ce qui touche à la formation",
+      "source": "https://www.lotetgaronne.fr/nos-services/solidarite/enfance-famille/modes-de-garde",
+      "releve": "2026-09-06"
     },
     "48": {
       "nom": "Lozère",
