@@ -535,8 +535,9 @@
     },
     "90": {
       "nom": "Territoire de Belfort",
-      "url": "",
-      "verifie": false
+      "url": "https://www.territoiredebelfort.fr/assistantes-maternelles",
+      "verifie": true,
+      "libelle": "les assistants maternels dans le Territoire de Belfort"
     },
     "91": {
       "nom": "Essonne",
