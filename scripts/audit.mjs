@@ -182,6 +182,40 @@ for (const p of pages) {
   }
 }
 
+// --- contraste des jetons de couleur ---
+// Six des neuf teintes de l'app echouaient au seuil legal (RGAA / WCAG AA) tout
+// en portant du texte : corail 2,36 - sauge 2,66 - turquoise 2,66 - bleu 4,14 -
+// or 2,80 - tertiaire 2,86. Une fois corrigees, rien n'empeche qu'une future
+// retouche les eclaircisse a nouveau : ce controle est la pour l'interdire.
+const luminance = (hex) => {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((x) => (x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+};
+const contraste = (a, b) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+const appSrc = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const racine = appSrc.slice(appSrc.indexOf(":root{"), appSrc.indexOf("}", appSrc.indexOf(":root{")));
+const jeton = (nom) => (racine.match(new RegExp("--" + nom + ":(#[0-9A-Fa-f]{6})")) || [])[1];
+
+const CREME = jeton("c") || "#FDFBF8";
+// Teintes qui portent du texte ou un bouton : seuil 4,5:1 sur le fond creme.
+for (const nom of ["T", "S", "G", "B", "R", "P", "b", "m", "l"]) {
+  const hex = jeton(nom);
+  if (!hex) { signale("contraste", `le jeton --${nom} est introuvable dans :root`); continue; }
+  const r = contraste(hex, CREME);
+  if (r < 4.5) signale("contraste", `--${nom} (${hex}) ne tient que ${r.toFixed(2)}:1 sur ${CREME} — il en faut 4,5`);
+}
+// Couleurs de role : posees sur la pastille d'avatar sous du texte blanc.
+const roles = appSrc.match(/const COULEUR_ROLE=\{([^}]*)\}/);
+for (const [, role, hex] of (roles ? roles[1] : "").matchAll(/(\w+):"(#[0-9A-Fa-f]{6})"/g)) {
+  const r = contraste(hex, "#FFFFFF");
+  if (r < 4.5) signale("contraste", `couleur du role ${role} (${hex}) ne tient que ${r.toFixed(2)}:1 sous le texte blanc de l'avatar`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

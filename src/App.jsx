@@ -164,6 +164,13 @@ const EMAIL_TEMPLATES={
   },
 };
 
+// Couleur de chaque role, d'apres les logos : bleu pour l'assistante
+// maternelle (c'est aussi celui de la landing), corail / terracotta pour le
+// parent employeur, sauge pour la MAM et la creche a venir. Ces valeurs sont
+// posees sur la pastille d'avatar sous du texte blanc : elles doivent tenir
+// 4,5:1, ce que ne faisaient ni #E49178 (2,44) ni #B8622F (4,35).
+const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#B85536",mam:"#4E6B57"};
+
 // DATES
 var _D=new Date();
 var _y=_D.getFullYear();
@@ -179,25 +186,76 @@ function Styles(){return(
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    /* Certaines personnes desactivent les animations pour raison medicale
+       (vertiges, migraines). On respecte le reglage du systeme. */
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    }
     html,body{width:100%;overflow-x:hidden;font-family:'DM Sans',sans-serif}
+    /* ================= JETONS TIMAT =================
+       Une couleur qui porte du texte ou un bouton doit atteindre 4,5:1 sur le
+       fond creme (RGAA / WCAG AA). Six des neuf teintes precedentes echouaient :
+       corail 2,36 - sauge 2,66 - turquoise 2,66 - bleu 4,14 - or 2,80 -
+       tertiaire 2,86. Elles sont approfondies ici, en gardant leurs noms : les
+       2294 usages de var(--...) deja en place heritent de la correction.
+       Chaque teinte garde aussi une variante claire (--Tb, --Sb...) pour les
+       aplats decoratifs, ou le contraste n'a pas lieu d'etre. Ne jamais poser
+       de texte sur une variante claire. */
     :root{
-      --c:#FDFBF8;--w:#FFFFFF;--b:#2E4A5A;--m:#6B4F5A;--l:#A8909A;--br:#EAE0E8;
-      --T:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
-      --S:#90A093;--Sp:#F6F7F6;--Sl:#CDD4CE;
-      --G:#5DA9A1;--Gp:#F2F8F7;
-      --B:#5A7AB8;--Bp:#EBF0F8;
-      --R:#C84B31;--Rp:#FBF1EF;
-      --P:#B8924D;--Pp:#F8F2E4;
+      /* --- surfaces et texte --- */
+      --c:#FDFBF8;--w:#FFFFFF;
+      --b:#2E4A5A;   /* encre, 9,06:1 */
+      --m:#61565C;   /* secondaire, 6,79:1 */
+      --l:#7A6C73;   /* tertiaire, 4,82:1 (etait #A8909A a 2,86) */
+      --br:#EAE0E8;
+
+      /* --- corail / terracotta : le parent employeur --- */
+      --T:#B85536;--Tb:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
+      /* --- sauge : la MAM et la creche --- */
+      --S:#4E6B57;--Sb:#8FAE99;--Sp:#F3F8F5;--Sl:#CDD4CE;
+      /* --- vert : etat positif (present, valide, a jour) --- */
+      --G:#2F6B64;--Gb:#7FC4BC;--Gp:#F2F8F7;
+      /* --- bleu : l'assistante maternelle, et la landing --- */
+      --B:#2E5F8A;--Bb:#6E9FC4;--Bp:#E4EFF7;
+      /* --- rouge : alerte. Reste rouge, il doit alerter --- */
+      --R:#B3261E;--Rb:#E26B4F;--Rp:#FCEBEA;
+      /* --- or : mise en avant --- */
+      --P:#8A6A16;--Pb:#D4B068;--Pp:#F8F2E4;
+
+      /* --- couleurs de role, d'apres les logos --- */
+      --role-am:var(--B);--role-parent:var(--T);--role-mam:var(--S);
+
+      /* --- echelle typographique : six tailles, plus 39 valeurs eparpillees --- */
+      --t1:24px;  /* titre d'ecran */
+      --t2:18px;  /* titre de section */
+      --t3:15px;  /* corps accentue */
+      --t4:13px;  /* corps */
+      --t5:12px;  /* secondaire */
+      --t6:11px;  /* legende, etiquette */
+
+      /* --- rayons : deux valeurs, plus une pastille --- */
+      --r:18px;--r2:12px;--r3:10px;--rpill:999px;
+
+      /* --- ombres --- */
       --sh:0 1px 4px rgba(46,74,90,.05),0 4px 20px rgba(46,74,90,.07);
       --sh2:0 2px 12px rgba(46,74,90,.08),0 16px 48px rgba(46,74,90,.12);
-      --sh3:0 0 0 3px rgba(144,160,147,.2);
-      --r:18px;--r2:14px;--r3:10px
+      --sh3:0 0 0 3px rgba(46,95,138,.28);
+
+      /* --- etats d'interaction, partages par les onglets et les boutons --- */
+      --tap:150ms;                        /* duree du retour a l'appui */
+      --ease:cubic-bezier(.34,1.56,.64,1);
+      --hover-veil:rgba(46,95,138,.06);   /* survol, ordinateur uniquement */
+      --tap-veil:rgba(46,95,138,.13);     /* appui */
     }
     .dark{
       --c:#1A2530;--w:#243140;--b:#E8EEF0;--m:#9FAEB5;--l:#7A8993;--br:#34424E;
       --Tp:#3A2218;--Sp:#1F2A22;--Gp:#0F2A26;--Bp:#0D1A2A;--Rp:#2E1610;--Pp:#2E2418;
+      /* Sur fond sombre le rapport s'inverse : ce sont les teintes claires qui
+         portent le texte. Les memes noms, les valeurs opposees. */
       --T:#E49178;--S:#A8B5A8;--G:#7FC4BC;--B:#7AAAE0;--R:#E26B4F;--P:#D4B068;
+      --Tb:#B85536;--Sb:#4E6B57;--Gb:#2F6B64;--Bb:#2E5F8A;--Rb:#B3261E;--Pb:#8A6A16;
       --Tl:#5A3A2C;--Sl:#384038;--Gl:#1F4A44;--Bl:#1A3050;--Rl:#4A1F12;
+      --hover-veil:rgba(255,255,255,.07);--tap-veil:rgba(255,255,255,.14);
       --sh:0 1px 4px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.6);
       --sh2:0 2px 12px rgba(0,0,0,.6),0 16px 48px rgba(0,0,0,.7);
     }
@@ -236,7 +294,7 @@ function Styles(){return(
     .blog-card:hover{transform:translateY(-6px);box-shadow:0 18px 44px rgba(46,72,89,.16)}
     .blog-card:hover .blog-arrow{transform:translateX(5px)}
     .blog-arrow{transition:transform .25s}
-    .msg-me{align-self:flex-end;background:linear-gradient(135deg,var(--T),#C76754);color:#fff;border-bottom-right-radius:5px}
+    .msg-me{align-self:flex-end;background:var(--T);color:#fff;border-bottom-right-radius:5px}
     .msg-ot{align-self:flex-start;background:#fff;color:var(--b);border:1px solid var(--br);border-bottom-left-radius:5px}
     .dark .msg-me{background:#1A3A34!important;color:#F0F5F3!important}
     .dark .msg-ot{background:#132428!important;color:#E0EBE8!important;border-color:#1E3A34!important}
@@ -264,17 +322,23 @@ function Styles(){return(
     .btn:hover{transform:translateY(-1px);filter:brightness(1.04);box-shadow:0 6px 16px rgba(0,0,0,.1)}
     .btn:active{transform:translateY(1px) scale(.985);box-shadow:0 2px 6px rgba(0,0,0,.12)}
     .btn:disabled{opacity:.55;cursor:default;transform:none!important;box-shadow:none!important;filter:none!important}
-    .bT{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
-    .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
-    .bS{background:linear-gradient(135deg,#90A093,#A8B5A8);color:#fff;box-shadow:0 2px 10px rgba(144,160,147,.3)}
-    .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(155,107,170,.4)}
-    .bG{background:rgba(26,17,24,.06);color:var(--m);border:1px solid var(--br)}
-    .bG:hover{background:rgba(26,17,24,.1)}
-    .bR{background:linear-gradient(135deg,#C84B31,#A83A24);color:#fff;box-shadow:0 2px 10px rgba(200,75,49,.25)}
-    .bR:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(200,75,49,.38)}
+    /* Trois variantes, et trois seulement : pleine (l'action principale de
+       l'ecran, une seule), contour (les actions secondaires), discrete (tout le
+       reste). Les degrades sont retires : ils eclaircissaient le bas du bouton
+       sous le texte blanc, ou le contraste tombait le plus bas. */
+    .bT{background:var(--T);color:#fff;box-shadow:0 2px 10px rgba(184,85,54,.28)}
+    .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(184,85,54,.36)}
+    .bS{background:var(--S);color:#fff;box-shadow:0 2px 10px rgba(78,107,87,.28)}
+    .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(78,107,87,.36)}
+    .bO{background:transparent;color:var(--B);border:1.5px solid var(--B)}
+    .bO:hover{background:var(--hover-veil)}
+    .bG{background:var(--hover-veil);color:var(--m);border:1px solid var(--br)}
+    .bG:hover{background:var(--tap-veil)}
+    .bR{background:var(--R);color:#fff;box-shadow:0 2px 10px rgba(179,38,30,.25)}
+    .bR:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(179,38,30,.36)}
     .bB{background:linear-gradient(135deg,#2E4A5A,#243B47);color:#fff;box-shadow:0 2px 10px rgba(46,74,90,.25)}
     .bB:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(46,74,90,.35)}
-    .bG2{background:linear-gradient(135deg,#5DA9A1,#4A8E87);color:#fff;box-shadow:0 2px 10px rgba(93,169,161,.28)}
+    .bG2{background:var(--G);color:#fff;box-shadow:0 2px 10px rgba(47,107,100,.28)}
     .bG2:hover{transform:translateY(-1px)}
     .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
@@ -350,16 +414,22 @@ function Styles(){return(
     }
     .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(234,224,232,.7);box-shadow:0 -4px 20px rgba(0,0,0,.08);height:calc(64px + env(safe-area-inset-bottom,0px));align-items:stretch;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
     .dark .bottom-nav{background:rgba(13,27,30,.97)!important;border-top-color:#1E3A34!important}
-    .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:14px;transition:background .2s ease;font-family:inherit;min-width:0;position:relative;-webkit-tap-highlight-color:transparent}
-    .bnav-btn::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%) scaleX(0);width:24px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+    /* Quatre etats d'onglet. L'appui est le seul retour possible sur telephone,
+       ou le survol n'existe pas : sans lui on ne sait pas si le doigt a ete pris.
+       L'etat actif porte trois signaux -- pastille, gras, teinte -- pour rester
+       lisible en noir et blanc et en cas de daltonisme. */
+    .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:var(--r2);transition:background var(--tap) ease,transform var(--tap) ease;font-family:inherit;min-width:0;position:relative;-webkit-tap-highlight-color:transparent}
+    .bnav-btn::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%) scaleX(0);width:24px;height:3px;border-radius:3px;background:var(--B);transition:transform .3s var(--ease)}
     .bnav-btn.active::before{transform:translateX(-50%) scaleX(1)}
-    .bnav-btn.active{background:var(--Sp)}
-    .dark .bnav-btn.active{background:rgba(93,169,161,.18)!important}
+    .bnav-btn.active{background:var(--Bp)}
+    .bnav-btn:active{background:var(--tap-veil);transform:scale(.94)}
+    @media(hover:hover){.bnav-btn:hover:not(.active){background:var(--hover-veil)}}
+    .dark .bnav-btn.active{background:rgba(122,170,224,.18)!important}
     .bnav-btn .bnav-ic{font-size:22px;line-height:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1);filter:grayscale(.25);opacity:.78}
     .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.18);filter:grayscale(0);opacity:1}
     .bnav-btn:active .bnav-ic{transform:scale(.82)}
     .bnav-btn .bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s,font-weight .15s}
-    .bnav-btn.active .bnav-lbl{color:var(--S);font-weight:700}
+    .bnav-btn.active .bnav-lbl{color:var(--B);font-weight:700}
     @media(max-width:768px){.bottom-nav{display:flex}}
     .demo-bnav .bottom-nav{position:static!important;display:flex!important;box-shadow:none;z-index:auto;padding-bottom:0}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
@@ -387,11 +457,11 @@ function Styles(){return(
 
 
 const D = {
-  asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-"+(new Date().getFullYear()-3)+"-0042",couleur:"#E49178"},
+  asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-"+(new Date().getFullYear()-3)+"-0042",couleur:COULEUR_ROLE.asmat},
   parents:[
     {id:"p1",role:"parent",prenom:"Sophie",nom:"Martin",email:"sophie.martin@mail.fr",couleur:"#3A72A8"},
     {id:"p2",role:"parent",prenom:"Thomas",nom:"Bernard",email:"thomas.bernard@mail.fr",couleur:"#4E7A5C"},
-    {id:"p3",role:"parent",prenom:"Camille",nom:"Petit",email:"camille.petit@mail.fr",couleur:"#C44E72"},
+    {id:"p3",role:"parent",prenom:"Camille",nom:"Petit",email:"camille.petit@mail.fr",couleur:"#BC4869"},
   ],
   enfants:[
     {id:"e1",prenom:"Léo",nom:"Martin",parentId:"p1",naissance:"2022-03-15",couleur:"#3A72A8",emoji:"🦁",
@@ -404,7 +474,7 @@ const D = {
       vaccins:[{nom:"DTP",date:"2022-05-22",ok:true},{nom:"ROR",date:"2022-11-22",ok:true},{nom:"Méningite B",date:"2023-05-22",ok:true}],
       contrat:{debut:"2023-09-04",fin:"2024-08-31",heuresHebdo:35,tauxHoraire:4.05,jours:["Lundi","Mardi","Jeudi","Vendredi"],horaires:"08h00–18h00",entretien:3.8,indemniteAbsence:0.5},
       signe:true},
-    {id:"e3",prenom:"Noah",nom:"Petit",parentId:"p3",naissance:"2023-01-08",couleur:"#C44E72",emoji:"⭐",
+    {id:"e3",prenom:"Noah",nom:"Petit",parentId:"p3",naissance:"2023-01-08",couleur:"#BC4869",emoji:"⭐",
       allergies:[],groupe_sanguin:"B+",medecin:"Dr. Durand - 01 45 67 89",
       vaccins:[{nom:"DTP",date:"2023-07-08",ok:true},{nom:"ROR",date:"2024-01-08",ok:false},{nom:"Hépatite B",date:"2023-07-08",ok:true}],
       contrat:{debut:"2024-01-08",fin:"2024-12-31",heuresHebdo:45,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h00–18h00",entretien:3.8,indemniteAbsence:0.5},
@@ -12005,7 +12075,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
     try{
       const{data,error}=await supabase.auth.signInWithPassword({email:form.email,password:form.password});
       if(error){setErr("Email ou mot de passe incorrect.");setErrAction("reset");}
-      else if(data?.user){ await claim(); onLogin({id:data.user.id,email:data.user.email,prenom:data.user.user_metadata?.prenom||"Parent",nom:data.user.user_metadata?.nom||"",role:data.user.user_metadata?.role||"parent",couleur:"#2E5F8A",subscription_status:"free"}); }
+      else if(data?.user){ await claim(); onLogin({id:data.user.id,email:data.user.email,prenom:data.user.user_metadata?.prenom||"Parent",nom:data.user.user_metadata?.nom||"",role:data.user.user_metadata?.role||"parent",couleur:COULEUR_ROLE.parent,subscription_status:"free"}); }
     }catch(e){setErr("Erreur réseau. Vérifiez votre connexion.");}
     setLoading(false);
   };
@@ -12024,10 +12094,10 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         }
         else setErr(error.message||"Erreur lors de l'inscription.");
       }else if(data?.user){
-        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:"#2E5F8A",subscription_status:'free'},{onConflict:'id'});}catch(e){}},500);
+        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,subscription_status:'free'},{onConflict:'id'});}catch(e){}},500);
         await claim();
         try{if(typeof logConsent==="function")logConsent(data.user.id,{politique:true,cgu:true,newsletter:false});}catch(e){}
-        onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:"#2E5F8A"});
+        onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:COULEUR_ROLE.parent});
       }
     }catch(e){setErr("Erreur lors de l'inscription.");}
     setLoading(false);
@@ -12531,8 +12601,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
   const demos=[
-    {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:"#B8622F",label:"Marie Dupont (AssMat)"},
-    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:"#2E5F8A",label:"Sophie Martin - Léo"},
+    {id:"demo-asmat",email:"marie.dupont@mail.fr",prenom:"Marie",nom:"Dupont",role:"asmat",couleur:COULEUR_ROLE.asmat,label:"Marie Dupont (AssMat)"},
+    {id:"demo-parent1",email:"sophie.martin@mail.fr",prenom:"Sophie",nom:"Martin",role:"parent",couleur:COULEUR_ROLE.parent,label:"Sophie Martin - Léo"},
     {id:"demo-parent2",email:"thomas.bernard@mail.fr",prenom:"Thomas",nom:"Bernard",role:"parent",couleur:"#3D6B50",label:"Thomas Bernard - Emma"},
   ];
 
@@ -12567,7 +12637,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           prenom: data.user.user_metadata?.prenom || "Utilisateur",
           nom: data.user.user_metadata?.nom || "",
           role: _r || "asmat",
-          couleur: "#E49178",
+          couleur: COULEUR_ROLE.asmat,
           subscription_status: "free"
         });
       }
@@ -12614,7 +12684,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             await supabase.from('profiles').upsert({
               id: data.user.id, email: data.user.email,
               prenom: form.prenom, nom: form.nom||'',
-              role: role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A",
+              role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
               subscription_status: 'free',
             },{onConflict:'id'});
           }catch(e){console.log('Profile upsert:', e);}
@@ -12625,7 +12695,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           if(tk&&tk.length>20){ await supabase.rpc("claim_invite_token",{p_token:tk}); try{localStorage.removeItem("timat:invite");}catch(e){} }
           if(role==="parent"){ await supabase.rpc("claim_invitations"); }
         }catch(e){console.log("claim:",e?.message);}
-        onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: role === "asmat" ? "#B8622F" : "#2E5F8A" });
+        onLogin({ id: data.user.id, email: data.user.email, prenom: form.prenom, nom: form.nom, role, couleur: COULEUR_ROLE[role] || COULEUR_ROLE.parent });
         // AUDIT LOG + CONSENT P8 : preuve RGPD du consentement + trace de la création de compte
         logConsent(data.user.id, consent);
         logAction('signup', {table_name:'profiles', record_id:data.user.id, user_id:data.user.id});
