@@ -619,6 +619,28 @@
       "reglementLibelle": "référentiel sécurité du Département de la Nièvre, avril 2025",
       "reglesSource": "https://www.nievre.fr/wp-content/uploads/2025/07/Referenciel-Securite-12-pages-A4-Avril-2025-5.pdf"
     },
+    "59": {
+      "nom": "Nord",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "le pôle PMI Santé adresse d'abord le dossier au candidat, qui le renvoie en recommandé avec accusé de réception au Président du Conseil départemental ; le pôle vérifie la complétude sous 15 jours, réclame le cas échéant les pièces manquantes, puis envoie un récépissé de dossier complet précisant le démarrage de l'instruction",
+      "formation": {
+        "heures": 128,
+        "note": "128 heures au lieu des 120 heures légales : aux 80 heures en trois modules s'ajoutent 8 heures d'initiation aux gestes de premiers secours, les deux à suivre et valider avant tout accueil d'enfant, dans les six mois suivant le récépissé de dossier complet"
+      },
+      "reglesLocales": [
+        "chaque module de formation se termine par un contrôle de connaissances : un questionnaire à choix multiple d'une heure, réussi à partir de 10/20",
+        "en cas de note inférieure à 10 sur 20, le candidat n'est pas autorisé à exercer l'activité d'assistant maternel",
+        "l'attestation d'agrément permettant d'exercer n'est délivrée qu'après le suivi et la validation des deux formations obligatoires",
+        "un recours contentieux se forme dans un délai de deux mois à compter de la réception du courrier de décision"
+      ],
+      "reglementUrl": "https://info.lenord.fr/upload/attachments/livret_devenirassistantmaternel-62ce7192c1a4a.pdf",
+      "reglementLibelle": "livret « Devenir assistant maternel » du Département du Nord",
+      "reglesSource": "https://info.lenord.fr/upload/attachments/livret_devenirassistantmaternel-62ce7192c1a4a.pdf",
+      "source": "https://info.lenord.fr/upload/attachments/livret_devenirassistantmaternel-62ce7192c1a4a.pdf",
+      "releve": "2026-09-07"
+    },
     "61": {
       "nom": "Orne",
       "reunion": "obligatoire",
@@ -862,6 +884,25 @@
       "reglesSource": "https://www.territoiredebelfort.fr/sites/default/files/media/downloads/la_securite_chez_assistant_maternel_0.pdf",
       "source": "https://www.territoiredebelfort.fr/assistantes-maternelles",
       "releve": "2026-09-06"
+    },
+    "91": {
+      "nom": "Essonne",
+      "reglesLocales": [
+        "les barrières de sécurité homologuées doivent mesurer 75 cm et être fixées solidement en haut et en bas des escaliers si l'étage est utilisé, uniquement en bas dans le cas contraire",
+        "le lit doit répondre à la norme NF EN 716 : barreaux espacés de 4,5 à 6,5 cm, hauteur intérieure de 60 cm au minimum, lattes espacées de 6 cm au maximum",
+        "la superposition de matelas est interdite, y compris dans les lits parapluie",
+        "les lits en hauteur — mezzanine, lits superposés — situés à partir de 60 cm du sol ne conviennent pas aux enfants de moins de 6 ans, et leur échelle doit être sécurisée",
+        "pour une piscine non close dont le bassin est enterré ou semi-enterré, le dispositif normalisé doit être attesté par une note technique ; le Département privilégie la barrière, d'une hauteur de 1,20 m, barreaux espacés de moins de 9 cm, avec portillon de sécurité fermant à clé",
+        "les piscines hors sol doivent être entourées d'une barrière de 1,20 m ou voir leur échelle retirée, et les piscines gonflables vidées après chaque utilisation",
+        "les bassins, plans d'eau et rivières doivent être sécurisés de la même façon que les piscines",
+        "sur les balcons, terrasses et dénivelés, l'écartement des barreaux verticaux doit rester inférieur à 9 cm pour une hauteur d'au moins 1,20 m, et aucun objet sur lequel l'enfant pourrait grimper ne doit être entreposé",
+        "l'accès aux chaufferies et aux buanderies doit être sécurisé"
+      ],
+      "reglementUrl": "https://assmat.essonne.fr/fileadmin/PWA_Assistantes_Maternelles/Docs/N__10_Fiche_Securite_Assistant_Maternel.pdf",
+      "reglementLibelle": "fiche n° 10 « Sécurité » du Département de l'Essonne",
+      "reglesSource": "https://assmat.essonne.fr/fileadmin/PWA_Assistantes_Maternelles/Docs/N__10_Fiche_Securite_Assistant_Maternel.pdf",
+      "source": "https://assmat.essonne.fr/",
+      "releve": "2026-09-07"
     },
     "92": {
       "nom": "Hauts-de-Seine",
