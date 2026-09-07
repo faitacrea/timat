@@ -70,6 +70,16 @@ const esc = (s) =>
 const escAttr = esc;
 
 /** Convertit une reference d'asset Sanity en URL CDN. */
+// Le texte de reference de toute la profession. Il est rappele au bas de
+// chaque article : une assistante maternelle qui tombe sur une page du blog
+// doit pouvoir remonter au texte en un clic, sans avoir a le chercher.
+const CCN_URL = "https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000044594539/";
+const CCN_SOURCE = {
+  libelle:
+    "L\u00e9gifrance \u2014 Convention collective de la branche du secteur des particuliers employeurs et de l'emploi \u00e0 domicile du 15 mars 2021 (IDCC 3239), texte en vigueur",
+  url: CCN_URL,
+};
+
 function imageUrl(source, width) {
   const ref = source?.asset?._ref || source?._ref;
   if (!ref) return null;
@@ -546,7 +556,15 @@ function pageArticle(a, tous = []) {
   // Une entree de source vide (ajoutee par megarde dans le Studio) ne doit pas
   // afficher un encadre "Sources officielles" vide : on filtre avant de decider.
   const sourcesValides = (Array.isArray(a.sourcesOfficielles) ? a.sourcesOfficielles : [])
-    .filter((s) => s && s.libelle);
+    .filter((s) => s && s.libelle)
+    // La convention collective est le texte qui fonde la relation de travail
+    // de l'assistante maternelle : elle a sa place au bas de chaque article,
+    // que l'article s'appuie dessus ou non. On ne l'ajoute pas deux fois quand
+    // l'article la cite deja, et on remplace au passage tout lien vers
+    // KALICONT000005635807 : c'est la convention de 2004, remplacee par
+    // l'IDCC 3239 depuis le 15 mars 2021.
+    .map((s) => (s.url && s.url.includes("KALICONT000005635807") ? { ...s, url: CCN_URL } : s))
+    .filter((s) => !(s.url === CCN_URL));
   const url = SITE + articleTarget(a.slug).url;
   const title = a.seoTitre || a.titre;
   const description = a.seoDescription || a.chapo || "";
@@ -651,8 +669,8 @@ function pageArticle(a, tous = []) {
       : ""
   }
   ${
-    sourcesValides.length
-      ? `<section class="sources"><h2>Sources officielles</h2><ul>${sourcesValides
+    true
+      ? `<section class="sources"><h2>Sources officielles</h2><ul>${[...sourcesValides, CCN_SOURCE]
           .map(
             (s) =>
               `<li>${
