@@ -733,6 +733,21 @@
       "source": "https://info.lenord.fr/upload/attachments/livret_devenirassistantmaternel-62ce7192c1a4a.pdf",
       "releve": "2026-09-07"
     },
+    "60": {
+      "nom": "Oise",
+      "reunion": "obligatoire",
+      "reunionNote": "à réception du courrier, le candidat doit assister à une réunion d'information sur le métier, à l'issue de laquelle il obtient le dossier de candidature ; ces réunions sont organisées dans différents lieux du département",
+      "depotNote": "le dossier complété, daté, signé et accompagné des pièces demandées — certificat médical, extraits de casier judiciaire — ouvre un délai d'instruction de trois mois à compter de l'accusé de réception du dossier complet",
+      "contactNote": "conseil départemental de l'Oise, direction adjointe PMI, service agréments petite enfance",
+      "reglesLocales": [
+        "les deux parties de la formation doivent obligatoirement être suivies sous peine de retrait d'agrément",
+        "pendant la seconde période de formation, les parents employeurs peuvent être indemnisés pour la garde de remplacement",
+        "le renouvellement d'agrément suppose de justifier du suivi de l'intégralité de la formation obligatoire et de la présentation à l'unité 1 du CAP petite enfance, dont l'inscription se fait sur le site du rectorat"
+      ],
+      "pageDatee": "le document du Département décrit un stage préalable de 67 heures avant tout accueil, puis 60 heures en cours d'emploi. C'est l'ancienne organisation, antérieure à 2019 : depuis, ce sont 80 heures qui doivent être suivies avant tout accueil, puis 40 heures dans les trois ans. La durée n'est donc pas reprise ici.",
+      "source": "https://oise.fr/actions/sante-social-solidarite/enfance-famille/devenir-assistant-maternel",
+      "releve": "2026-09-07"
+    },
     "61": {
       "nom": "Orne",
       "reunion": "obligatoire",
@@ -934,6 +949,19 @@
       "source": "https://assistant-maternel-79.fr/devenir-assistant-maternel/mon-parcours-pour-obtenir-lagrement",
       "releve": "2026-09-05"
     },
+    "81": {
+      "nom": "Tarn",
+      "reglesLocales": [
+        "la présence d'un chien de catégorie 1 ou 2 n'est pas compatible avec l'accueil ; pour tout autre animal, l'assistant maternel doit en informer les parents et préciser son type dans le projet d'accueil",
+        "les enfants ne doivent jamais rester seuls en présence d'un animal, quel qu'il soit",
+        "le gel d'arnica, comme toute autre pommade, est interdit aux enfants de moins de 30 mois en raison des risques d'allergie",
+        "en cas d'accident grave, l'assistant maternel est tenu d'informer le service de PMI dès que possible",
+        "les plans d'eau et les piscines doivent être rendus inaccessibles aux enfants, conformément aux consignes départementales"
+      ],
+      "reglesSource": "document « Projet d'accueil petite enfance » à l'usage des assistants maternels et des parents, Conseil départemental du Tarn",
+      "source": "https://www.tarn.fr/au-quotidien/professionnel-medecin/devenir-assistant-maternel",
+      "releve": "2026-09-07"
+    },
     "82": {
       "nom": "Tarn-et-Garonne",
       "reunion": "obligatoire",
@@ -961,6 +989,20 @@
       "contactNote": "cette adresse est celle de la cellule des assistants maternels et familiaux, qui gère aussi les inscriptions aux réunions",
       "source": "https://var.fr/social/enfance-famille/devenir-assistante-maternelle",
       "releve": "2026-09-03"
+    },
+    "84": {
+      "nom": "Vaucluse",
+      "reunion": "obligatoire",
+      "reunionNote": "le candidat est convoqué à une réunion d'information collective à l'issue de laquelle il peut déposer un dossier : c'est à la fin de cette réunion, et seulement s'il maintient son projet, que l'imprimé Cerfa et la liste des pièces complémentaires lui sont remis",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "le dossier complété s'envoie en recommandé avec accusé de réception au service PMI modes d'accueil petite enfance de l'espace départemental des solidarités de domiciliation, dont l'adresse est fournie lors de la réunion d'information",
+      "contact": {
+        "tel": "04 90 16 15 00"
+      },
+      "source": "https://www.vaucluse.fr/enfance-et-famille/les-metiers-de-l-accueil-de-l-enfant/devenir-assistant-maternel-559.html",
+      "releve": "2026-09-07"
     },
     "85": {
       "nom": "Vendée",
@@ -1137,6 +1179,19 @@
       "contactNote": "le standard répond du lundi au vendredi de 8 h à 16 h 30 ; les équipes d'instruction sont joignables au 02 62 21 27 08 pour le Nord et au 02 62 57 98 57 pour le Sud, et le premier interlocuteur reste le centre de PMI de votre secteur",
       "source": "https://www.departement974.fr/devenir-assistant-maternel",
       "releve": "2026-09-05"
+    },
+    "976": {
+      "nom": "Mayotte",
+      "reunion": "proposee",
+      "reunionNote": "le dossier de demande d'agrément est remis par le bureau petite enfance, et le candidat est également convié à une réunion d'information",
+      "depotNote": "la demande se fait auprès du bureau petite enfance de la direction générale adjointe santé, famille et enfance, par téléphone, par courriel ou par courrier ; la réponse arrive par courrier dans un délai de trois mois à compter de la réception du dossier complet",
+      "contact": {
+        "tel": "06 39 27 51 40",
+        "email": "celluleagrement.pmi@cg976.fr"
+      },
+      "contactNote": "bureau petite enfance, direction générale adjointe santé, famille et enfance, 8 boulevard Halidi Selemani, BP 101, 97645 Mamoudzou cedex",
+      "source": "https://publications.mayotte.fr/downloads/44",
+      "releve": "2026-09-07"
     }
   }
 }
