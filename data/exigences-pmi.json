@@ -253,11 +253,16 @@
       ],
       "depotNote": "le dossier complété, daté et signé se dépose ou se retourne en recommandé à l’adresse indiquée sur le formulaire",
       "source": "https://www.dordogne.fr/a-votre-service/enfance-famille/exercer-le-metier-dassistant-maternel",
-      "releve": "2026-09-06",
+      "releve": "2026-09-07",
       "reglesLocales": [
         "le dossier passe devant une commission d'agrément qui se tient à l'unité territoriale une fois par mois, à dates préétablies ; une fiche de synthèse est établie pour chaque dossier",
         "l'avis de cette commission est consultatif : la décision finale appartient au service central PMI modes d'accueil, et elle peut différer de l'avis émis",
-        "les journées d'information se déroulent sur l'ensemble du département hors vacances scolaires, animées par une psychologue ou une éducatrice de jeunes enfants, avec une puéricultrice et une animatrice de relais"
+        "les journées d'information se déroulent sur l'ensemble du département hors vacances scolaires, animées par une psychologue ou une éducatrice de jeunes enfants, avec une puéricultrice et une animatrice de relais",
+        "les garde-corps et la main courante doivent atteindre 1,10 m au minimum, avec des barreaux verticaux espacés de 11 cm au maximum",
+        "une barrière de sécurité à la norme NF P01-012 doit être installée en haut des escaliers",
+        "les fenêtres dont l'appui se trouve à moins de 90 cm du sol en rez-de-chaussée doivent être équipées d'un entrebâilleur, d'un garde-corps rehaussé à 1,10 m, ou fermées à clé",
+        "le terrain doit être clos par un entourage de 1,10 m infranchissable et impossible à escalader",
+        "pour une piscine enterrée ou semi-enterrée, l'attestation du dispositif de sécurité doit être remise au plus tard à la date de réception de la piscine"
       ],
       "reglementUrl": "https://www.dordogne.fr/fileadmin/telechargements/DGA-SP/GUIDE_DEPARTEMENTAL_2021.pdf",
       "reglementLibelle": "guide départemental des procédures d'agrément des assistants maternels et familiaux de la Dordogne, édition 2021",
@@ -624,7 +629,19 @@
       ],
       "depotNote": "la démarche s'ouvre par un courrier au bureau des agréments des assistants maternels précisant votre demande",
       "source": "https://www.orne.fr/services/enfants-et-parents/assistants-maternels",
-      "releve": "2026-09-05"
+      "releve": "2026-09-07",
+      "reglesLocales": [
+        "l'escalier doit être muni d'une rampe dont les barreaux verticaux sont espacés de 9 cm au maximum ; s'ils sont horizontaux, l'espacement monte à 18 cm mais impose une zone de protection d'au moins 45 cm à partir du sol, pour empêcher l'enfant de grimper ou de se glisser dessous",
+        "un escalier à claire-voie doit être sécurisé par des contremarches",
+        "des barrières rigides à la norme AFNOR sont exigées en haut et en bas des escaliers ; les barrières à croisillons ne sont pas acceptées",
+        "les portes d'entrée et de sous-sol doivent être fermées à clé pendant le temps d'accueil, les clés retirées des serrures et rangées hors de portée",
+        "les fenêtres doivent être sécurisées dès lors que le bas de la poignée se trouve à moins de 1,10 m du sol, par bloque-fenêtre, entrebâilleur ou clenche fermée à clé, et aucun meuble ne doit être placé dessous",
+        "la rampe ou la balustrade de terrasse doit mesurer au moins 1,10 m, avec des barreaux verticaux espacés de moins de 9 cm — ou horizontaux à 18 cm au maximum, avec la même zone de protection de 45 cm",
+        "les escaliers extérieurs demandent les mêmes barrières AFNOR en haut et en bas ; sur leur rampe, les barreaux verticaux restent à 9 cm au maximum et les horizontaux à 11 cm"
+      ],
+      "reglementUrl": "https://www.orne.fr/sites/default/files/2023-02/Guide-S%C3%A9curit%C3%A9%20enfants-WEB.pdf",
+      "reglementLibelle": "guide sécurité des enfants du Département de l'Orne",
+      "reglesSource": "https://www.orne.fr/sites/default/files/2023-02/Guide-S%C3%A9curit%C3%A9%20enfants-WEB.pdf"
     },
     "62": {
       "nom": "Pas-de-Calais",
@@ -657,7 +674,18 @@
         "tel": "05 62 56 74 42"
       },
       "source": "https://www.hautespyrenees.fr/enfance-familles/les-metiers-de-lenfance/le-metier-dassistante-maternelle/",
-      "releve": "2026-08-30"
+      "releve": "2026-09-07",
+      "reglesLocales": [
+        "les clôtures doivent mesurer au minimum 1,20 m à partir du dernier point d'appui, en grillage à mailles fines ne permettant pas de prendre appui pour l'escalader",
+        "s'il s'agit de filets à mailles souples, les mailles doivent rester inférieures à 7 cm ; s'il s'agit de barreaux verticaux, l'espacement est limité à 11 cm",
+        "le portail doit être fermé à clé ou rendu infranchissable pour l'enfant",
+        "les terrasses surplombantes demandent un garde-corps d'au moins 1,20 m à partir du dernier point d'appui, barreaux verticaux espacés de 11 cm au maximum, fixé solidement au sol et aux façades en tenant compte des matériaux d'ancrage",
+        "les balcons doivent être munis de rambardes d'au moins 1,20 m, avec des barreaux espacés de 11 cm au maximum",
+        "les piscines privées de plein air enterrées ou semi-enterrées doivent être pourvues d'un dispositif normalisé — barrière, alarme, couverture ou abri"
+      ],
+      "reglementUrl": "https://www.hautespyrenees.fr/wp-content/uploads/2018/12/Livret-de-s%C3%A9curit%C3%A9-2018.pdf",
+      "reglementLibelle": "livret de sécurité du Département des Hautes-Pyrénées, édition 2018",
+      "reglesSource": "https://www.hautespyrenees.fr/wp-content/uploads/2018/12/Livret-de-s%C3%A9curit%C3%A9-2018.pdf"
     },
     "72": {
       "nom": "Sarthe",
