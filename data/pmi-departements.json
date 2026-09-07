@@ -354,7 +354,7 @@
     "59": {
       "nom": "Nord",
       "url": "https://services.lenord.fr/devenir-assistant-maternel",
-      "verifie": true,
+      "verifie": false,
       "libelle": "devenir assistant maternel dans le Nord"
     },
     "60": {
