@@ -121,6 +121,25 @@
       "source": "https://assistante-maternelle.aube.fr/131-le-metier-d-assistant-e-maternel-le.htm",
       "releve": "2026-09-03"
     },
+    "12": {
+      "nom": "Aveyron",
+      "reglesLocales": [
+        "les lits parapluie et les lits pliants de 90 cm restent des lits d'appoint selon la notice des fabricants : ils ne peuvent donc pas être utilisés pour un usage professionnel, et l'ajout d'un matelas supplémentaire y est qualifié d'extrêmement dangereux",
+        "pour les enfants de moins de 18 mois, le service PMI recommande des lits rigides à barreaux conformes aux normes, avec un espacement de 6,5 cm au maximum, et un matelas adapté aux dimensions du lit, ferme et renouvelé si nécessaire",
+        "la chambre doit être interdite aux animaux, et tout objet retiré du cou de l'enfant — collier, bavoir, attache-sucette",
+        "les barrières de sécurité, conformes aux exigences NF ou CE, se fixent solidement en bas des escaliers et également en haut si l'étage est utilisé ; l'espacement des barreaux verticaux doit idéalement rester sous 9 cm, toléré jusqu'à 11 cm",
+        "un grillage, un filet de protection ou du plexiglas doit être prévu si l'enfant risque de passer à travers les barreaux d'un garde-corps",
+        "le service PMI donne trois repères de hauteur : un point au-dessus de 1,50 m sur une paroi verticale est réputé inaccessible, une hauteur de plus de 1,30 m au-dessus de tout appui est réputée infranchissable, et un objet placé au-dessus de 1,10 m est réputé difficile d'accès",
+        "en cas de cheminée ou de poêle, une protection fixée au mur ou au sol est recommandée, à 50 cm de la source de chaleur ; les chauffages d'appoint au gaz ou au pétrole sont déconseillés",
+        "il est fortement recommandé de ne pas fumer ni vapoter à l'intérieur du logement et des véhicules en présence des enfants, recommandation qui vaut aussi pour l'entourage de l'assistant maternel",
+        "les piscines privatives doivent être équipées d'un des quatre dispositifs normalisés : barrière NF P90-306, alarme NF P90-307, couverture NF P90-308 ou abri NF P90-309"
+      ],
+      "reglesSource": "livret « Sécurité du logement de l'assistant maternel et familial » du Département de l'Aveyron, décembre 2025",
+      "reglementUrl": "https://aveyron.fr/sites/default/files/documents/Solidarite/2025/12-decembre/2025-12-02-livret-securite-logement-assistant-maternel-familial-min.pdf",
+      "reglementLibelle": "livret sécurité du logement de l'assistant maternel et familial de l'Aveyron, décembre 2025",
+      "source": "https://aveyron.fr/pages/service-de-pmi/je-souhaite-devenir-assistante-maternelle",
+      "releve": "2026-09-07"
+    },
     "13": {
       "nom": "Bouches-du-Rhône",
       "contact": {
@@ -784,6 +803,19 @@
       "reglementUrl": "https://www.alsace.eu/media/9560/cea-depliant-metier-assmat.pdf",
       "reglementLibelle": "dépliant « Le métier d'assistant maternel » de la Collectivité européenne d'Alsace",
       "source": "https://www.alsace.eu/aides-et-services/enfance-et-famille/vous-etes-assistant-maternel/",
+      "releve": "2026-09-07"
+    },
+    "69": {
+      "nom": "Rhône",
+      "reglesLocales": [
+        "la charte qualité du Département attend de l'assistant maternel qu'il dispose d'une adresse e-mail professionnelle, distincte de son adresse personnelle",
+        "l'assistant maternel informe la PMI de tout changement de situation familiale ou de lieu d'exercice, et lui fait part de toute difficulté ayant un impact sur son activité",
+        "la visite de la PMI se prépare : ses objectifs, ses modalités et son déroulé sont convenus à l'avance avec l'assistant maternel, qui participe à l'organisation de ce rendez-vous"
+      ],
+      "reglesSource": "charte qualité et accompagnement des assistants maternels du Département du Rhône",
+      "reglementUrl": "https://www.rhone.fr/upload/docs/application/pdf/2024-11/charte_qualite_et_accompagnement_des_assistants_maternels.pdf",
+      "reglementLibelle": "charte qualité et accompagnement des assistants maternels du Rhône",
+      "source": "https://www.rhone.fr/jcms/tl1_2007156/fr/devenir-assistant-e-s-maternel-le-s",
       "releve": "2026-09-07"
     },
     "72": {
