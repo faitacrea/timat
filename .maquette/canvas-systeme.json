@@ -1,0 +1,16 @@
+{
+  "artboards": [
+    { "file": "Jetons.dc.html", "x": 0, "y": 0, "w": 860, "h": 1180, "title": "Les jetons de couleur" },
+    { "file": "Onglets.dc.html", "x": 980, "y": 0, "w": 860, "h": 720, "title": "Les onglets, état par état" },
+    { "file": "Main.dc.html", "x": 0, "y": 1420, "w": 390, "h": 844, "title": "Assistante maternelle" },
+    { "file": "Parent.dc.html", "x": 510, "y": 1420, "w": 390, "h": 844, "title": "Parent employeur" },
+    { "file": "Mam.dc.html", "x": 1020, "y": 1420, "w": 390, "h": 844, "title": "MAM / crèche — plus tard" },
+    { "file": "Actuel.dc.html", "x": 1530, "y": 1420, "w": 390, "h": 844, "title": "Aujourd'hui" }
+  ],
+  "annotations": [
+    { "id": "note-titre", "x": 0, "y": -260, "w": 860, "text": "SYSTÈME DE COULEUR TIMAT — CORAIL APPROFONDI\n\nVos trois couleurs gardent le rôle que vous leur aviez donné : corail pour l'assistante maternelle, bleu pour le parent, sauge pour la MAM et la crèche. On ne remplace rien, on approfondit — pour qu'une couleur puisse enfin porter du texte et des boutons sans devenir illisible.\n\nLe turquoise, lui, sort : son rôle revient au bleu de votre landing, qui est déjà dans le code comme couleur du rôle parent." },
+    { "id": "note-onglets", "x": 980, "y": -260, "w": 860, "text": "CE QUE VOUS AVEZ DEMANDÉ POUR LES ONGLETS\n\nOnglet actif coloré en permanence · retour visuel net à l'appui, environ 150 ms · survol en supplément sur ordinateur.\n\nLa planche de droite montre les quatre états côte à côte. Un point d'honnêteté : sur téléphone le survol n'existe pas, il n'y a que l'appui. C'est donc l'appui qui porte tout le travail, et le survol est un bonus pour la version web et l'ordinateur." },
+    { "id": "note-ecrans", "x": 0, "y": 2320, "w": 1920, "text": "LE MÊME ÉCRAN DANS LES TROIS UNIVERS, ET CELUI D'AUJOURD'HUI\n\nLes trois premiers écrans sont rigoureusement identiques : même mise en page, mêmes polices, mêmes espacements, mêmes composants. Seule la teinte change, et elle dit à qui appartient l'écran. C'est ce qui permet d'avoir trois publics sans avoir trois applications à entretenir.\n\nLe quatrième est l'écran d'aujourd'hui, pour mesurer l'écart. Prénoms et heures sont inventés ; ce sont des images fixes, pas une démonstration cliquable.\n\nCE QUI RESTE COMMUN AUX TROIS, ET QUI COMPTE AUTANT QUE LA COULEUR\n· Une seule action colorée par écran : Pointer. Le reste attend son tour.\n· L'alerte reste rouge — elle doit alerter — mais devient une ligne cliquable au lieu d'un pavé.\n· Les heures en chiffres à chasse fixe, alignées en colonne.\n· Le titrage en serif, la journée en cours en carte principale à grand rayon.\n· Icônes dessinées au lieu des emoji : elles se recolorent avec l'univers et restent nettes partout." }
+  ],
+  "launch": { "view": "canvas" }
+}
