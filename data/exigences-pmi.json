@@ -375,6 +375,27 @@
       "source": "https://eureennormandie.fr/nos-aides-et-services/particuliers/enfance-et-famille/je-voudrais-devenir-assistante-maternelle/",
       "releve": "2026-09-03"
     },
+    "28": {
+      "nom": "Eure-et-Loir",
+      "contactNote": "huit circonscriptions de PMI se répartissent le département : chacune traite l'agrément, le suivi et le contrôle des assistants maternels de son secteur",
+      "reglesLocales": [
+        "aucune personne ne doit fumer au domicile en présence des enfants accueillis : le Département rappelle que le domicile de l'assistant maternel est aussi son lieu de travail",
+        "les fenêtres d'une hauteur inférieure à 90 cm doivent être équipées d'un garde-corps à la norme NF P01-012, et sécurisées par un bloque-fenêtre ; en présence de barres horizontales, la plus basse doit se situer à plus de 45 cm du sol",
+        "les barrières d'escalier doivent porter la mention « conforme aux exigences de sécurité » (NF EN 1930) et être posées en bas et en haut ; un escalier sans contremarche doit être sécurisé",
+        "la distance préconisée entre une cheminée ou un chauffage d'appoint et sa barrière de protection est de 80 cm, et le Département recommande de ne pas utiliser la cheminée en présence des enfants",
+        "les téléviseurs à écran plat doivent être fixés au mur ou sur un support, avec un dispositif anti-basculement",
+        "quelle que soit sa catégorie, une arme doit être rangée dans une armoire fermée à clé, la clé hors de portée ; les armes blanches doivent être inaccessibles",
+        "les piscines doivent être entourées d'une clôture d'au moins 1,20 m, ou couvertes par un abri fermé ou un rideau de sécurité homologué, la distance préconisée entre le bassin et la clôture étant de 80 cm",
+        "une piscine hors-sol de plus de 1,20 m ne nécessite pas de dispositif spécifique si l'échelle est retirée ; les piscines gonflables ou coquilles ne doivent pas dépasser 10 cm de hauteur et doivent être vidées après chaque utilisation",
+        "les mêmes principes s'appliquent aux puits, bassins et points d'eau",
+        "un animal domestique ne peut cohabiter avec un enfant accueilli que sous surveillance, et doit pouvoir être isolé ; sa nourriture et son couchage restent hors de portée"
+      ],
+      "reglementUrl": "https://assmat28.eurelien.fr/dyn/documents/guide-de-securite-am_v2022.pdf",
+      "reglementLibelle": "guide de sécurité pour les assistants maternels du Département d'Eure-et-Loir, édition 2022",
+      "reglesSource": "https://assmat28.eurelien.fr/dyn/documents/guide-de-securite-am_v2022.pdf",
+      "source": "https://assmat28.eurelien.fr/laccueil-du-jeune-enfant/lagrement/9-devenir-assistante-maternelle-agreee.html",
+      "releve": "2026-09-07"
+    },
     "29": {
       "nom": "Finistère",
       "reunion": "proposee",
@@ -663,6 +684,20 @@
       "contactNote": "l’interlocuteur est le pôle assistantes maternelles et familiales, rue Eugène Issartel à Chaumont ; le courrier s’adresse au conseil départemental de la Haute-Marne",
       "source": "https://haute-marne.fr/emplois/assistant-maternel/",
       "releve": "2026-09-03"
+    },
+    "55": {
+      "nom": "Meuse",
+      "reunion": "proposee",
+      "reunionNote": "des réunions d'information sur le métier sont organisées sur l'ensemble du département ; on s'y inscrit auprès de la gestionnaire agréments de son secteur",
+      "depotNote": "le dossier de demande d'agrément se retire auprès des gestionnaires agréments ; une fois déposé, le service de PSMI dispose de trois mois pour répondre, et l'absence de réponse dans ce délai vaut agrément",
+      "reglesLocales": [
+        "pendant les trois mois d'instruction, une infirmière ou une puéricultrice de PSMI prend contact pour convenir d'un rendez-vous de visite",
+        "les refus comme les accords partiels sont motivés, et un recours gracieux peut être déposé dans un délai de deux mois",
+        "la première partie de formation, de 80 heures, n'est pas rémunérée et conditionne tout accueil d'enfant"
+      ],
+      "reglesSource": "document « Devenir assistant maternel agréé » du Département de la Meuse",
+      "source": "https://www.meuse.fr/proche/enfance-et-famille/devenir-assistant-maternel-agree",
+      "releve": "2026-09-07"
     },
     "56": {
       "nom": "Morbihan",
