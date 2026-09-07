@@ -917,6 +917,28 @@
       "source": "https://www.rhone.fr/jcms/tl1_2007156/fr/devenir-assistant-e-s-maternel-le-s",
       "releve": "2026-09-07"
     },
+    "71": {
+      "nom": "Saône-et-Loire",
+      "reglesLocales": [
+        "chaque enfant doit disposer d'une literie individuelle, avec un espace suffisant entre les lits pour pouvoir accéder à chacun, et aucun lit placé près de rideaux, d'une source de chaleur ou d'une fenêtre",
+        "le matelas doit être adapté aux dimensions du lit, sans superposition ; pour un lit d'appoint, parapluie ou pliant, seul le matelas fourni par le constructeur — la galette — doit être utilisé",
+        "les lits en hauteur, mezzanine ou superposés, à partir de 60 cm du sol sont interdits aux enfants de moins de 6 ans, et l'échelle d'accès doit être systématiquement retirée",
+        "chaque enfant doit avoir sa propre gigoteuse, surpyjama ou turbulette ; ni couette, ni oreiller, ni tour de lit, ni jouet à cordon dans le lit, et les nourrissons sont couchés sur le dos",
+        "le youpala ne doit pas être utilisé, et la coque de transport ne doit pas servir de transat",
+        "le collier d'ambre ne doit pas être porté au domicile du professionnel, en raison du risque d'étranglement",
+        "la chaise haute impose l'usage systématique de la sangle d'entrejambe et de la ceinture ou du harnais, selon le modèle",
+        "la détention comme l'acquisition d'un chien de catégorie 1 ou 2 sont interdites ; l'animal ne doit pas entraver l'espace de vie dédié aux enfants, le guide citant le cas d'un gros chien dans un petit appartement",
+        "l'espace de jeux extérieur doit être délimité et clôturé sur 1,20 m ; si le jardin est trop grand, un espace clos doit y être réservé dans les mêmes conditions",
+        "les balançoires et toboggans doivent être fixés au sol, et le bac à sable fermé après utilisation, son sable changé tous les ans",
+        "les protections extérieures doivent atteindre 1,10 m minimum, avec un écartement de barreaux de 11 cm au maximum et sans barreaux horizontaux",
+        "une piscine enterrée ou semi-enterrée non close doit être rendue inaccessible par une barrière normalisée, attestée par une note technique du constructeur à mettre à disposition de la puéricultrice",
+        "la clôture de piscine doit mesurer au moins 1,20 m, avec un espacement de barreaux de 102 mm au maximum ou un grillage à petites mailles partant du sol, et un portillon fermant à clé ; elle est recommandée à un mètre au minimum du bord du bassin",
+        "l'eau doit être vidée systématiquement après chaque baignade"
+      ],
+      "reglesSource": "fiche sécurité du Département de Saône-et-Loire",
+      "source": "https://www.saoneetloire71.fr/",
+      "releve": "2026-09-07"
+    },
     "72": {
       "nom": "Sarthe",
       "reunion": "obligatoire",

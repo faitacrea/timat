@@ -423,8 +423,9 @@
     },
     "71": {
       "nom": "Saône-et-Loire",
-      "url": "",
-      "verifie": false
+      "url": "https://www.saoneetloire71.fr/",
+      "verifie": false,
+      "libelle": "le Département de Saône-et-Loire"
     },
     "72": {
       "nom": "Sarthe",
