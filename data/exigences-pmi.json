@@ -1113,6 +1113,30 @@
       "source": "https://www.haute-vienne.fr/nos-actions/enfance-et-famille/vous-souhaitez-accompagner-un-enfant-ou-travailler-aupres-denfants/de-facon-professionnelle/vous-souhaitez-devenir-assistant-maternel",
       "releve": "2026-09-05"
     },
+    "88": {
+      "nom": "Vosges",
+      "reunion": "proposee",
+      "reunionNote": "une réunion d'information sur le métier est proposée après la demande de dossier ; le guide départemental insiste sur l'intérêt d'y participer avant de s'engager",
+      "depot": [
+        "recommande",
+        "surplace"
+      ],
+      "depotNote": "le dossier se retourne en recommandé avec accusé de réception, ou se dépose à l'accueil de la maison des solidarités et de la vie sociale dont on dépend",
+      "reglesLocales": [
+        "l'accusé de dépôt ne vaut pas récépissé de dossier complet : c'est le récépissé, envoyé après examen, qui fait courir le délai de trois mois",
+        "l'évaluation porte notamment sur la capacité à suivre la formation obligatoire, ce qui suppose de savoir parler couramment le français",
+        "pour être agréé en horaires particuliers et accueillir des enfants la nuit, il faut un lit personnel pour cet enfant, même s'il est placé dans la chambre d'un autre enfant",
+        "si des travaux de sécurisation s'avèrent nécessaires, l'agrément n'est délivré qu'une fois ces travaux réalisés ; s'ils ne peuvent l'être dans le délai imparti, la demande est refusée pour motif de sécurité",
+        "il est interdit de posséder un chien de 1re catégorie, dite d'attaque, ou de 2e catégorie",
+        "tout renouvellement suppose de fournir l'attestation d'assurance responsabilité civile professionnelle et le planning des enfants accueillis",
+        "les garde-corps doivent atteindre 1,10 m au-dessus du sol au minimum, avec des barreaux verticaux espacés de 9 cm au maximum, et des barrières de sécurité doivent être posées en haut et en bas des escaliers",
+        "la première partie de formation doit être commencée dans les trois mois qui suivent l'agrément, et elle se déroule à Épinal, plusieurs jours par semaine"
+      ],
+      "pageDatee": "le guide du Département annonce une première partie de formation de 60 heures. C'est la règle d'avant 2019 : depuis, ce sont 80 heures qui doivent être suivies avant tout accueil d'enfant. La durée n'est donc pas reprise ici.",
+      "reglesSource": "guide à l'usage des assistants maternels concernant l'agrément, Conseil départemental des Vosges, complété par son petit guide de prévention « Des dangers pour les enfants »",
+      "source": "https://www.vosges.fr/dispositifs/dossier-dagrement-assistant-maternel/",
+      "releve": "2026-09-07"
+    },
     "89": {
       "nom": "Yonne",
       "reunion": "obligatoire",
