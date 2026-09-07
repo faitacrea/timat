@@ -7,115 +7,118 @@
 <body>
 <x-dc>
 <helmet>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:wght@400;500;600;700&display=swap">
   <style>
-    body { margin:0; font-family:'Public Sans','Segoe UI',system-ui,sans-serif; }
-    a { color:#7A4A3A; } a:hover { color:#5C3629; }
+    body { margin:0; font-family:'DM Sans','Segoe UI',system-ui,sans-serif; }
+    a { color:#B85536; }
   </style>
 </helmet>
 
-<div style="width:390px;height:844px;background:#F4F1EC;display:flex;flex-direction:column;overflow:hidden;color:#2A2622">
+<div style="width:390px;height:844px;background:#FDFBF8;display:flex;flex-direction:column;overflow:hidden;color:#2E4859">
 
-  <div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:18px;flex-grow:1">
+  <div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:17px;flex-grow:1">
 
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-      <div style="display:flex;flex-direction:column;gap:2px">
-        <span style="font-size:13px;letter-spacing:.02em;color:#8A8079">Mardi 8 septembre</span>
-        <span style="font-family:'Instrument Serif',Georgia,serif;font-size:30px;line-height:1.1;color:#2A2622">Bonjour Sophie</span>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:12.5px;color:#7C8A94">Mardi 8 septembre</span>
+        <span style="font-family:'Instrument Serif',Georgia,serif;font-size:30px;line-height:1.12">Bonjour Sophie</span>
       </div>
-      <div style="width:42px;height:42px;border-radius:21px;background:#E5DED4;display:flex;align-items:center;justify-content:center;flex:none">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B6058" stroke-width="1.6" stroke-linecap="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      <div style="width:42px;height:42px;border-radius:21px;background:#FBEAE3;display:flex;align-items:center;justify-content:center;flex:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B85536" stroke-width="1.7" stroke-linecap="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:9px">
-      <span style="font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#9A9089">Aujourd'hui</span>
-      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px">
+    <div style="background:#B85536;border-radius:24px;padding:20px;display:flex;align-items:center;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:3px;flex-grow:1">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#FFFFFF;opacity:.72">Journée en cours</span>
+        <span style="font-size:30px;font-weight:700;letter-spacing:-.02em;color:#FFFFFF;font-variant-numeric:tabular-nums;line-height:1.1">7 h 12</span>
+        <span style="font-size:12.5px;color:#FFFFFF;opacity:.8">3 enfants pointés sur 3</span>
+      </div>
+      <div style="background:#FFFFFF;border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:8px;flex:none">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B85536" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span style="font-size:13.5px;font-weight:700;color:#B85536">Pointer</span>
+      </div>
+    </div>
 
-        <div style="background:#7A4A3A;border-radius:14px;padding:15px 12px;display:flex;flex-direction:column;gap:9px;min-height:96px">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F4F1EC" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <span style="font-size:13px;font-weight:600;color:#F4F1EC;line-height:1.25">Pointer</span>
-        </div>
-
-        <div style="background:#FFFFFF;border:1px solid #E2DBD2;border-radius:14px;padding:15px 12px;display:flex;flex-direction:column;gap:9px;min-height:96px">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#7A4A3A" stroke-width="1.7" stroke-linecap="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M8 9h7M8 13h5"/></svg>
-          <span style="font-size:13px;font-weight:600;color:#2A2622;line-height:1.25">Cahier du jour</span>
-        </div>
-
-        <div style="background:#FFFFFF;border:1px solid #E2DBD2;border-radius:14px;padding:15px 12px;display:flex;flex-direction:column;gap:9px;min-height:96px;position:relative">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#7A4A3A" stroke-width="1.7" stroke-linecap="round"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l.9-4.4A8 8 0 1 1 20 12Z"/></svg>
-          <span style="font-size:13px;font-weight:600;color:#2A2622;line-height:1.25">Messages</span>
-          <span style="position:absolute;top:11px;right:11px;min-width:19px;height:19px;border-radius:10px;background:#B4553F;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px">2</span>
-        </div>
-
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <div style="background:#FFFFFF;border:1px solid #EDE6E0;border-radius:18px;padding:15px;display:flex;align-items:center;gap:11px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B85536" stroke-width="1.8" stroke-linecap="round" style="flex:none"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M8 9h7M8 13h5"/></svg>
+        <span style="font-size:13.5px;font-weight:600">Cahier du jour</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #EDE6E0;border-radius:18px;padding:15px;display:flex;align-items:center;gap:11px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B85536" stroke-width="1.8" stroke-linecap="round" style="flex:none"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l.9-4.4A8 8 0 1 1 20 12Z"/></svg>
+        <span style="font-size:13.5px;font-weight:600;flex-grow:1">Messages</span>
+        <span style="min-width:20px;height:20px;border-radius:10px;background:#E49178;color:#FFFFFF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex:none">2</span>
       </div>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:9px">
       <div style="display:flex;align-items:baseline;justify-content:space-between">
-        <span style="font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#9A9089">Enfants accueillis</span>
-        <span style="font-size:12px;color:#7A4A3A;font-weight:600">3 présents</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#7C8A94">Enfants accueillis</span>
+        <span style="font-size:11.5px;font-weight:700;color:#2F6B64;background:#E4F1EF;padding:3px 9px;border-radius:9px">3 présents</span>
       </div>
+      <div style="background:#FFFFFF;border:1px solid #EDE6E0;border-radius:18px;overflow:hidden;display:flex;flex-direction:column">
 
-      <div style="display:flex;flex-direction:column;gap:8px">
-
-        <div style="background:#FFFFFF;border:1px solid #E2DBD2;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:13px">
-          <div style="width:40px;height:40px;border-radius:20px;background:#EFE3D8;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',Georgia,serif;font-size:18px;color:#7A4A3A">L</div>
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid #EDE6E0">
+          <div style="width:40px;height:40px;border-radius:20px;background:#FBEAE3;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',Georgia,serif;font-size:19px;color:#B85536">L</div>
           <div style="display:flex;flex-direction:column;gap:2px;flex-grow:1">
-            <span style="font-size:15px;font-weight:600">Léa</span>
-            <span style="font-size:12.5px;color:#8A8079">Arrivée 07 h 35 · sieste en cours</span>
+            <span style="font-size:15px;font-weight:600;color:#2E4859">Léa</span>
+            <span style="font-size:12.5px;color:#7C8A94">Sieste en cours</span>
           </div>
-          <div style="width:9px;height:9px;border-radius:5px;background:#5F7D5A;flex:none"></div>
+          <span style="font-size:13.5px;font-weight:600;color:#2E4859;font-variant-numeric:tabular-nums;letter-spacing:.01em">07:35</span>
         </div>
 
-        <div style="background:#FFFFFF;border:1px solid #E2DBD2;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:13px">
-          <div style="width:40px;height:40px;border-radius:20px;background:#EFE3D8;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',Georgia,serif;font-size:18px;color:#7A4A3A">T</div>
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid #EDE6E0">
+          <div style="width:40px;height:40px;border-radius:20px;background:#FBEAE3;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',Georgia,serif;font-size:19px;color:#B85536">T</div>
           <div style="display:flex;flex-direction:column;gap:2px;flex-grow:1">
-            <span style="font-size:15px;font-weight:600">Tom</span>
-            <span style="font-size:12.5px;color:#8A8079">Arrivée 08 h 10 · repas noté</span>
+            <span style="font-size:15px;font-weight:600;color:#2E4859">Tom</span>
+            <span style="font-size:12.5px;color:#7C8A94">Repas noté</span>
           </div>
-          <div style="width:9px;height:9px;border-radius:5px;background:#5F7D5A;flex:none"></div>
+          <span style="font-size:13.5px;font-weight:600;color:#2E4859;font-variant-numeric:tabular-nums;letter-spacing:.01em">08:10</span>
         </div>
 
-        <div style="background:#FFFFFF;border:1px solid #E2DBD2;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:13px">
-          <div style="width:40px;height:40px;border-radius:20px;background:#EFE3D8;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',Georgia,serif;font-size:18px;color:#7A4A3A">J</div>
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:13px;">
+          <div style="width:40px;height:40px;border-radius:20px;background:#FBEAE3;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',Georgia,serif;font-size:19px;color:#B85536">J</div>
           <div style="display:flex;flex-direction:column;gap:2px;flex-grow:1">
-            <span style="font-size:15px;font-weight:600">Jade</span>
-            <span style="font-size:12.5px;color:#8A8079">Arrivée 07 h 50</span>
+            <span style="font-size:15px;font-weight:600;color:#2E4859">Jade</span>
+            <span style="font-size:12.5px;color:#7C8A94">Aucune note</span>
           </div>
-          <div style="width:9px;height:9px;border-radius:5px;background:#5F7D5A;flex:none"></div>
+          <span style="font-size:13.5px;font-weight:600;color:#2E4859;font-variant-numeric:tabular-nums;letter-spacing:.01em">07:50</span>
         </div>
-
       </div>
     </div>
 
-    <div style="background:#EDE6DC;border-radius:14px;padding:15px;display:flex;align-items:center;gap:13px">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A4A3A" stroke-width="1.7" stroke-linecap="round" style="flex:none"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    <div style="background:#FCEBEA;border:1px solid #F3CFCC;border-radius:16px;padding:14px 15px;display:flex;align-items:center;gap:12px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="1.9" stroke-linecap="round" style="flex:none"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <div style="display:flex;flex-direction:column;gap:1px;flex-grow:1">
-        <span style="font-size:13.5px;font-weight:600;color:#2A2622">Contrat de Tom à signer</span>
-        <span style="font-size:12.5px;color:#8A8079">En attente depuis 4 jours</span>
+        <span style="font-size:13.5px;font-weight:700;color:#B3261E">Contrat de Tom à signer</span>
+        <span style="font-size:12.5px;color:#B3261E;opacity:.82">En attente depuis 4 jours</span>
       </div>
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A8079" stroke-width="1.9" stroke-linecap="round" style="flex:none"><path d="m9 18 6-6-6-6"/></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="2.1" stroke-linecap="round" style="flex:none"><path d="m9 18 6-6-6-6"/></svg>
     </div>
 
   </div>
 
-  <div style="border-top:1px solid #E2DBD2;background:#FBF9F6;padding:9px 8px 22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A4A3A" stroke-width="1.8" stroke-linecap="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
-      <span style="font-size:10.5px;font-weight:600;color:#7A4A3A">Accueil</span>
+  <div style="border-top:1px solid #EDE6E0;background:#FFFFFF;padding:8px 8px 22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px">
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:12px;background:#FBEAE3">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B85536" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+      <span style="font-size:10.5px;font-weight:700;color:#B85536">Accueil</span>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A39890" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="9" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
-      <span style="font-size:10.5px;color:#A39890">L'enfant</span>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:12px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C8A94" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+      <span style="font-size:10.5px;color:#7C8A94">L'enfant</span>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A39890" stroke-width="1.8" stroke-linecap="round"><path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/></svg>
-      <span style="font-size:10.5px;color:#A39890">Administratif</span>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:12px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C8A94" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/></svg>
+      <span style="font-size:10.5px;color:#7C8A94">Administratif</span>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A39890" stroke-width="1.8" stroke-linecap="round"><path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8Z"/></svg>
-      <span style="font-size:10.5px;color:#A39890">Outils Pro</span>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:12px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C8A94" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8Z"/></svg>
+      <span style="font-size:10.5px;color:#7C8A94">Outils Pro</span>
     </div>
   </div>
 
