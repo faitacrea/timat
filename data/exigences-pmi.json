@@ -330,6 +330,36 @@
       "reglementLibelle": "guide départemental des procédures d'agrément des assistants maternels et familiaux de la Dordogne, édition 2021",
       "reglesSource": "https://www.dordogne.fr/fileadmin/telechargements/DGA-SP/GUIDE_DEPARTEMENTAL_2021.pdf"
     },
+    "25": {
+      "nom": "Doubs",
+      "reunion": "obligatoire",
+      "reunionNote": "le référentiel départemental prévoit une réunion d'information des candidats, au cours de laquelle le futur assistant maternel est informé de ses obligations de formation",
+      "formation": {
+        "heures": 130,
+        "note": "130 heures au lieu des 120 légales : le Doubs porte l'initiation aux gestes de premiers secours à 10 heures. La première partie se décompose en trois blocs avec des minimums — 30 heures pour les besoins fondamentaux de l'enfant, 20 heures pour les spécificités du métier, 15 heures pour le rôle et le positionnement professionnel"
+      },
+      "reglesLocales": [
+        "avant tout accueil, l'assistant maternel signe un contrat d'engagement par lequel il s'engage à suivre la formation et à n'accueillir aucun enfant avant d'avoir achevé la première partie",
+        "un diplôme de puéricultrice, d'éducateur de jeunes enfants, d'infirmier, d'auxiliaire de puériculture ou un CAP petite enfance dispense du bloc 1 ; le CAP accompagnement éducatif petite enfance, ou la validation de ses unités 1 et 3, dispense des blocs 1 et 2",
+        "aucune dispense n'est possible pour le bloc 3 ni pour les heures de gestes de premiers secours, quel que soit le diplôme",
+        "une évaluation d'au moins 3 heures clôt la première partie ; l'attestation n'est délivrée qu'à partir de 10 sur 20, avec une seconde chance en cas d'échec — au second échec, l'accueil d'enfant n'est pas possible",
+        "un retrait d'agrément est prononcé si l'assistant maternel refuse la formation, s'absente sans justificatif ou ne la termine pas ; toute demande de report doit être justifiée",
+        "la formation reste possible pendant un congé maternité et un congé parental",
+        "à partir de 70 ans, il faut transmettre chaque année au secrétariat assistants maternels un certificat médical confirmant l'aptitude à exercer, accompagné d'une copie du contrat d'assurance professionnelle ; à défaut, le dossier peut être présenté en commission consultative paritaire départementale en vue d'un retrait d'agrément",
+        "l'enfant doit disposer d'un lit individuel conforme aux normes, barreaux espacés de 6,5 cm au maximum ; dans un lit parapluie, ajouter un matelas supplémentaire est formellement interdit",
+        "l'escalier demande une barrière aux normes d'au moins 73 cm de hauteur, avec un écartement de barreaux inférieur à 9 cm",
+        "la consommation de tabac par l'assistant maternel comme par toute autre personne est interdite en présence des enfants",
+        "les prises électriques doivent être à éclipses ; à défaut, la pose de cache-prises est obligatoire",
+        "un chien de catégorie 1 ou 2 est incompatible avec l'agrément ; pour les autres chiens, un enclos sécurisé et distant est obligatoire pendant le temps d'accueil",
+        "le jardin doit être entièrement clôturé de façon à exclure tout danger",
+        "une piscine enterrée ou semi-enterrée doit être protégée par un dispositif homologué NF ; la barrière doit mesurer au moins 1,10 m avec un écartement de barreaux inférieur à 9 cm et un verrouillage résistant — une haie ne constitue pas une barrière",
+        "une piscine hors sol de moins de 1,10 m doit être rendue inaccessible par une barrière rigide ou vidée après chaque usage ; les petites piscines gonflables ne doivent pas dépasser 30 cm",
+        "un constat d'exposition au plomb est demandé pour les logements antérieurs à 1949"
+      ],
+      "reglesSource": "référentiel de l'agrément assistant maternel du Département du Doubs, fiches 3, 4, 6 et 7",
+      "source": "https://www.doubs.fr/a-votre-service/enfance-famille/etre-assistante-maternelle/",
+      "releve": "2026-09-07"
+    },
     "27": {
       "nom": "Eure",
       "reunion": "obligatoire",
@@ -1050,6 +1080,29 @@
       "reglesSource": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
       "source": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
       "releve": "2026-09-05"
+    },
+    "93": {
+      "nom": "Seine-Saint-Denis",
+      "reunion": "proposee",
+      "reunionNote": "une réunion d'information est organisée en visioconférence, toutes les six semaines",
+      "formation": {
+        "heures": 132,
+        "note": "132 heures au lieu des 120 légales : la Seine-Saint-Denis porte l'initiation aux gestes de premiers secours à 12 heures, le volume le plus élevé relevé à ce jour. La première partie se décompose en trois socles, de 30, 20 et 15 heures minimum"
+      },
+      "reglesLocales": [
+        "le socle 3 et les gestes de premiers secours sont obligatoires pour tous : les dispenses accordées selon le diplôme ne peuvent porter que sur le socle 1 seul, ou sur les socles 1 et 2",
+        "une évaluation de 3 heures clôt la première partie ; l'attestation de formation, délivrée par le Président du Département, conditionne l'accueil d'un enfant, et l'évaluation doit être repassée si les résultats ne sont pas satisfaisants",
+        "une commission d'agrément, animée par le responsable de circonscription de PMI, rend un avis sur lequel le Président du Département se prononce ; elle peut proposer une suspension, un retrait ou un non-renouvellement"
+      ],
+      "contact": {
+        "tel": "01 43 93 12 82"
+      },
+      "pageDatee": "le guide pratique du Département annonce les 40 heures de formation post-accueil « dans les deux ans ». C'est la règle d'avant 2019 : le délai est de trois ans depuis. Les 12 heures de premiers secours, elles, sont bien une particularité départementale et restent affichées.",
+      "reglementUrl": "https://www.seinesaintdenis.fr/IMG/pdf/web_guide_pratique_agrement_assistant_maternel_2024.pdf",
+      "reglementLibelle": "guide pratique de l'agrément d'assistant maternel de la Seine-Saint-Denis, édition 2024",
+      "reglesSource": "https://www.seinesaintdenis.fr/IMG/pdf/web_guide_pratique_agrement_assistant_maternel_2024.pdf",
+      "source": "https://www.seinesaintdenis.fr/enfance-education-jeunesse/petite-enfance/article/devenir-assistant-e-maternel-le-en-seine-saint-denis",
+      "releve": "2026-09-07"
     },
     "94": {
       "nom": "Val-de-Marne",
