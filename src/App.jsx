@@ -4146,17 +4146,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
     if(!bilan||!enfant){setToast("Erreur : bilan ou enfant introuvable");return;}
     setToast("⏳ Génération du PDF…");
     try{
-      // Charger jsPDF dynamiquement via CDN si pas déjà fait (lazy load)
-      if(!window.jspdf){
-        await new Promise((res,rej)=>{
-          const s=document.createElement("script");
-          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-          s.onload=res;
-          s.onerror=()=>rej(new Error("Chargement jsPDF échoué — vérifie ta connexion"));
-          document.head.appendChild(s);
-        });
-      }
-      const{jsPDF}=window.jspdf;
+      const jsPDF=await chargerJsPDF();
       const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
       // === Constantes layout ===
       const PW=210,PH=297,MX=18,MTOP=15,MBOT=20;
@@ -4765,6 +4755,35 @@ const DOCS_DEMO=[
   {id:"d14",eId:null,cat:"agrement",sous:"Assurance",nom:"Assurance_RC_Pro_2024.pdf",date:"2024-01-01",annee:"2024",taille:"380 Ko",icone:"🛡️",partage:false},
 ];
 
+// SMIC horaire brut, par date d'entree en vigueur, du plus recent au plus ancien.
+// Une valeur en dur ne suffit pas : le recap fiscal porte sur l'annee N-1 et doit
+// donc continuer d'utiliser le SMIC de cette annee-la, pas celui d'aujourd'hui.
+// Sources : info.gouv.fr et Insee. A completer a chaque revalorisation.
+const SMIC_HORAIRE_HISTO=[
+  ["2026-06-01",12.31],
+  ["2026-01-01",12.02],
+  ["2024-11-01",11.88],
+  ["2024-01-01",11.65],
+];
+const isoJour=(d)=>{
+  if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const t=String(d||"").slice(0,10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(t)?t:isoJour(new Date());
+};
+// SMIC horaire brut applicable a une date donnee (defaut : aujourd'hui).
+const smicHoraireAu=(d)=>{
+  const j=isoJour(d);
+  for(const[debut,valeur]of SMIC_HORAIRE_HISTO)if(j>=debut)return valeur;
+  return SMIC_HORAIRE_HISTO[SMIC_HORAIRE_HISTO.length-1][1];
+};
+
+// jsPDF est charge a la demande, mais depuis le paquet installe et non plus
+// depuis un CDN : le PDF continue de ne peser sur aucun chargement de page
+// (Vite en fait un morceau separe), tout en restant generable hors ligne et
+// sans dependre d'un tiers dont on ne maitrise ni la version ni la duree de vie.
+let jsPDFPromesse=null;
+const chargerJsPDF=()=>(jsPDFPromesse||(jsPDFPromesse=import("jspdf").then(m=>m.jsPDF)));
+
 const CATS={
   medical:{l:"Médical",ic:"🏥",c:"#B84060",bg:"#FAEEF2"},
   admin:{l:"Administratif",ic:"🧾",c:"#B8892A",bg:"#FBF5E0"},
@@ -5279,7 +5298,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
   // Journee >=8h : 3 x SMIC horaire. Journee <8h : proratise = (3 x SMIC / 8) x heures reelles.
   // Enfant handicape (AEEH) : base 3->4 sur toutes les journees. Journee de 24h consecutives : +1 SMIC (4x, ou 5x si AEEH).
   // Calcul JOUR PAR JOUR a partir des pointages reels (gere les mois mixtes : journees pleines + journees courtes).
-  const SMIC_H=11.88;
+  const SMIC_H=smicHoraireAu(moisSelKey?moisSelKey+"-15":new Date());
   const baseMult=aeeh?4:3; // AEEH = +1 SMIC sur chaque journee
   // Liste des heures par journee d'accueil : pointages reels si dispo, sinon estimation uniforme depuis le contrat
   const heuresJourEst=(contrat.heuresHebdo||0)/(((contrat.jours&&contrat.jours.length))||5);
@@ -5313,15 +5332,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
     setEnvoyer(true);
     try{
       // 1. Generer le PDF en jsPDF natif
-      if(!window.jspdf){
-        await new Promise((res,rej)=>{
-          const s=document.createElement("script");
-          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-          s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF"));
-          document.head.appendChild(s);
-        });
-      }
-      const{jsPDF}=window.jspdf;
+      const jsPDF=await chargerJsPDF();
       const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
       const PW=210,MX=15;let y=15;
       const orange=[184,98,47];const noir=[40,40,40];const gris=[120,120,120];const vert=[42,157,143];
@@ -5675,7 +5686,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       </div>
 
       <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire (11,88 €) par journée d'accueil ≥ 8 h, soit {(baseMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire ({SMIC_H.toFixed(2).replace(".",",")} €) par journée d'accueil ≥ 8 h, soit {(baseMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -7995,15 +8006,7 @@ async function generateAndStoreContratPDF(contratId){
     }
 
     // 2. Charger jsPDF si pas deja charge
-    if(!window.jspdf){
-      await new Promise((res,rej)=>{
-        const s=document.createElement("script");
-        s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-        s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF echoue"));
-        document.head.appendChild(s);
-      });
-    }
-    const{jsPDF}=window.jspdf;
+const jsPDF=await chargerJsPDF();
     const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
 
     // 3. Genenrer le PDF
@@ -10168,15 +10171,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
         if(fresh?.signature_base64)userSig=fresh.signature_base64;
       }
       // Charger jsPDF si pas deja charge
-      if(!window.jspdf){
-        await new Promise((res,rej)=>{
-          const s=document.createElement("script");
-          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-          s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF echoue"));
-          document.head.appendChild(s);
-        });
-      }
-      const{jsPDF}=window.jspdf;
+const jsPDF=await chargerJsPDF();
       const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
       const PW=210,MX=18;let y=20;
       // Couleurs
@@ -10427,7 +10422,6 @@ function RapportAnnuel({enfants,role,pEId,user}){
 // Salaire imposable = somme des bulletins stockes (net_imposable + entretien). Abattement = recalcule jour par jour
 // depuis les pointages reels (prorata <8h, AEEH 4x, 24h 5x). AEEH non persiste -> toggle par enfant.
 function RecapFiscalAssmat({enfants,user}){
-  const SMIC_H=11.88;
   const yNow=new Date().getFullYear();
   const [annee,setAnnee]=useState(yNow-1); // on declare l'annee N-1
   const [bulletins,setBulletins]=useState([]);
@@ -10459,7 +10453,9 @@ function RecapFiscalAssmat({enfants,user}){
           .in("enfant_id",ids).gte("date",annee+"-01-01").lte("date",annee+"-12-31");
         const byEnfDate={};
         (pts||[]).forEach(p=>{if((p.total_minutes||0)>0){const k=p.enfant_id+"|"+p.date;byEnfDate[k]=(byEnfDate[k]||0)+p.total_minutes;}});
-        Object.entries(byEnfDate).forEach(([k,min])=>{const eid=k.split("|")[0];(map[eid]=map[eid]||[]).push(min/60);});
+        // On garde la date de chaque journee : le SMIC a change en cours d'annee 2026,
+        // donc l'abattement ne peut pas etre calcule avec une valeur unique.
+        Object.entries(byEnfDate).forEach(([k,min])=>{const[eid,date]=k.split("|");(map[eid]=map[eid]||[]).push({date,h:min/60});});
       }
       if(cancelled)return;
       setJoursParEnfant(map);setLoading(false);
@@ -10478,7 +10474,7 @@ function RecapFiscalAssmat({enfants,user}){
       const baseMult=aeeh[eid]?4:3;
       const jh=joursParEnfant[eid]||[];
       let abatt=0,jPlein=0,jPart=0,jNuit=0;
-      jh.forEach(h=>{if(h>=23.5){jNuit++;abatt+=(baseMult+1)*SMIC_H;}else if(h>=8){jPlein++;abatt+=baseMult*SMIC_H;}else{jPart++;abatt+=(baseMult*SMIC_H/8)*h;}});
+      jh.forEach(({date,h})=>{const smic=smicHoraireAu(date);if(h>=23.5){jNuit++;abatt+=(baseMult+1)*smic;}else if(h>=8){jPlein++;abatt+=baseMult*smic;}else{jPart++;abatt+=(baseMult*smic/8)*h;}});
       abatt=Math.round(abatt*100)/100;
       const baseImposable=salaireImp+entretienTot;
       const netApres=Math.max(0,Math.round((baseImposable-abatt)*100)/100);
@@ -12133,7 +12129,7 @@ function OutilsGratuits({onClose,onCta}){
   const ieMoisTotal=ieJour*joursIe;
   const ieSousMin=ieJour<ieMinJour-0.001;
   // --- Plafond CMG (seuil journalier = 5 x SMIC horaire brut) ---
-  const [smic,setSmic]=useState(11.88);
+  const [smic,setSmic]=useState(smicHoraireAu(new Date()));
   const [coutJour,setCoutJour]=useState(50);
   const plafondCMG=5*smic;
   const cmgOk=coutJour<=plafondCMG;
@@ -14506,15 +14502,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
         const{data:fresh}=await supabase.from("profiles").select("signature_base64,numero_agrement").eq("id",user.id).maybeSingle();
         if(fresh){userSig=fresh.signature_base64||userSig;userAgrement=fresh.numero_agrement||userAgrement;}
       }
-      if(!window.jspdf){
-        await new Promise((res,rej)=>{
-          const s=document.createElement("script");
-          s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-          s.onload=res;s.onerror=()=>rej(new Error("Chargement jsPDF echoue"));
-          document.head.appendChild(s);
-        });
-      }
-      const{jsPDF}=window.jspdf;
+const jsPDF=await chargerJsPDF();
       const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
       const PW=210,MX=18;let y=20;
       const vert=[42,157,143];const noir=[40,40,40];const gris=[120,120,120];const bleuFonce=[38,70,83];
