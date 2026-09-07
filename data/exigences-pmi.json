@@ -752,6 +752,40 @@
       "reglementLibelle": "livret de sécurité du Département des Hautes-Pyrénées, édition 2018",
       "reglesSource": "https://www.hautespyrenees.fr/wp-content/uploads/2018/12/Livret-de-s%C3%A9curit%C3%A9-2018.pdf"
     },
+    "67": {
+      "nom": "Bas-Rhin",
+      "contact": {
+        "tel": "03 69 20 75 00",
+        "email": "amat@alsace.eu"
+      },
+      "contactNote": "Collectivité européenne d'Alsace, direction de la santé, de la prévention et de la PMI, service modes d'accueil, unité accueil individuel et familial, place du Quartier Blanc, 67000 Strasbourg. Attention : les personnes résidant à Strasbourg même relèvent d'un autre service, celui de la Ville — cellule des assistants maternels, 1 parc de l'Étoile, 03 68 98 64 46, santeautonomie-assistantsmaternels@strasbourg.eu",
+      "reglesLocales": [
+        "l'inscription sur monenfant.fr figure parmi les obligations de l'assistant maternel listées par la Collectivité européenne d'Alsace",
+        "le dossier de candidature se renvoie complet, avec accusé de réception"
+      ],
+      "reglesSource": "dépliant « Le métier d'assistant maternel » de la Collectivité européenne d'Alsace, juillet 2026",
+      "reglementUrl": "https://www.alsace.eu/media/9560/cea-depliant-metier-assmat.pdf",
+      "reglementLibelle": "dépliant « Le métier d'assistant maternel » de la Collectivité européenne d'Alsace",
+      "source": "https://www.alsace.eu/aides-et-services/enfance-et-famille/devenir-assistant-maternel-dans-bas-rhin/",
+      "releve": "2026-09-07"
+    },
+    "68": {
+      "nom": "Haut-Rhin",
+      "contact": {
+        "tel": "03 69 49 31 00",
+        "email": "assistants.maternels@alsace.eu"
+      },
+      "contactNote": "Collectivité européenne d'Alsace, direction de la santé, de la prévention et de la PMI, service modes d'accueil, unité accueil individuel et familial, 100 avenue d'Alsace, 68000 Colmar",
+      "reglesLocales": [
+        "l'inscription sur monenfant.fr figure parmi les obligations de l'assistant maternel listées par la Collectivité européenne d'Alsace",
+        "le dossier de candidature se renvoie complet, avec accusé de réception"
+      ],
+      "reglesSource": "dépliant « Le métier d'assistant maternel » de la Collectivité européenne d'Alsace, juillet 2026",
+      "reglementUrl": "https://www.alsace.eu/media/9560/cea-depliant-metier-assmat.pdf",
+      "reglementLibelle": "dépliant « Le métier d'assistant maternel » de la Collectivité européenne d'Alsace",
+      "source": "https://www.alsace.eu/aides-et-services/enfance-et-famille/vous-etes-assistant-maternel/",
+      "releve": "2026-09-07"
+    },
     "72": {
       "nom": "Sarthe",
       "reunion": "obligatoire",
@@ -786,6 +820,24 @@
       "contactNote": "l'interlocuteur est le service d'accompagnement des assistants maternels et familiaux (SAMF) de votre arrondissement",
       "source": "https://www.paris.fr/pages/les-assistantes-maternelles-213",
       "releve": "2026-08-30"
+    },
+    "76": {
+      "nom": "Seine-Maritime",
+      "reglesLocales": [
+        "la formation pré-accueil de 80 heures se déroule sur 12 jours, dont une journée entière consacrée aux premiers secours",
+        "l'inscription se fait dans la session la plus proche de la date d'agrément : une place est proposée, et il faut confirmer sa participation par coupon réponse dans un délai de 8 jours",
+        "seuls deux reports sont possibles, et uniquement en cas de force majeure justifiée",
+        "toute absence anticipée entraîne le report de la totalité de la formation, pas seulement des journées manquées",
+        "en cas d'absence imprévisible et justifiée, les journées manquées et leurs évaluations doivent être rattrapées lors d'une prochaine session",
+        "les frais de déplacement, de repas et d'accueil des propres enfants de l'assistant maternel restent à sa charge ; France Travail et une aide départementale individuelle peuvent, sous conditions, en rembourser une partie",
+        "la formation a lieu à Rouen, à l'Hôtel du Département pour les quatre premiers jours, de 9h à 16h40 — avec une arrivée demandée à 8h30 le premier jour",
+        "la demande de renouvellement d'agrément doit être accompagnée de l'attestation de validation des 80 heures, de justificatifs d'accueil d'au moins un enfant, et d'un document attestant la présentation aux épreuves EP1 et EP3 du CAP accompagnement éducatif petite enfance"
+      ],
+      "reglementUrl": "https://www.seinemaritime.fr/app/uploads/2025/01/REGLEMENT-FORMATION-PRE-ACCUEIL.pdf",
+      "reglementLibelle": "règlement de la formation pré-accueil des assistants maternels du Département de la Seine-Maritime",
+      "reglesSource": "https://www.seinemaritime.fr/app/uploads/2025/01/REGLEMENT-FORMATION-PRE-ACCUEIL.pdf",
+      "source": "https://www.seinemaritime.fr/aides-et-demarches/devenir-assistant-maternel/",
+      "releve": "2026-09-07"
     },
     "78": {
       "nom": "Yvelines",
@@ -966,6 +1018,22 @@
       "reglesSource": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
       "source": "https://www.hauts-de-seine.fr/devenir-assistante-maternelle",
       "releve": "2026-09-05"
+    },
+    "94": {
+      "nom": "Val-de-Marne",
+      "reglesLocales": [
+        "l'accueil d'un premier enfant n'est possible qu'après la délivrance de deux documents distincts par le Conseil départemental : une attestation de suivi des 80 premières heures, et une attestation d'autorisation d'accueil d'un premier enfant",
+        "la formation aux premiers secours (PSC1) est dispensée à l'intérieur des 80 heures, elle ne s'y ajoute pas",
+        "une mesure transitoire existe pour les assistantes maternelles ayant suivi une formation de niveau 1 de 60 heures avant 2019 : elles doivent la compléter par 20 heures supplémentaires",
+        "un diplôme d'éducateur de jeunes enfants, de puéricultrice, d'infirmière ou d'auxiliaire de puériculture peut ouvrir droit à une dispense partielle de formation",
+        "au premier renouvellement, au bout de cinq ans date à date, il faut fournir l'attestation des 120 heures et le justificatif de présentation aux épreuves EP1 et EP3 du CAP accompagnement éducatif petite enfance"
+      ],
+      "reglesSource": "fascicule d'information relatif à la formation des assistants maternels du Département du Val-de-Marne, version du 30 mars 2022",
+      "reglementUrl": "https://www.valdemarne.fr/sites/default/files/Fascicule-information-formation-Ass-Mat.pdf",
+      "reglementLibelle": "fascicule d'information sur la formation des assistants maternels du Val-de-Marne",
+      "pageDatee": "le fascicule du Département annonce les 40 heures de formation « dans un délai de 2 ans après l'accueil du premier enfant ». C'est la règle d'avant 2019 : le délai est de trois ans depuis. La durée n'est donc pas reprise ici.",
+      "source": "https://www.valdemarne.fr/a-votre-service/enfance/famille/assistante-maternelle-agrement-et-recrutement",
+      "releve": "2026-09-07"
     },
     "95": {
       "nom": "Val-d'Oise",
