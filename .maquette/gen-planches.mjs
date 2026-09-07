@@ -37,19 +37,19 @@ const jetons = head + `
     <span style="font-size:14px;color:${G.ink2};line-height:1.5;max-width:640px">Chaque teinte garde le rôle que vous lui aviez donné — un logo, un public. On ne change que la profondeur, pour que la couleur puisse enfin porter du texte et des boutons. Les ratios sont mesurés sur fond blanc ; le minimum réglementaire (RGAA / WCAG AA) est de 4,5:1.</span>
   </div>
 
-${rangee("Assistante maternelle — corail / terracotta",
-  "Votre couleur principale, celle du logo Assmat. Le corail clair reste la marque ; la version foncée prend les boutons et les liens.",
-  pastille("#E49178","Corail — marque","2,44:1","fonds, avatars, pastilles uniquement",false)
-+ pastille("#B85536","Terracotta — action","4,78:1","conforme · boutons et liens",true)
-+ pastille("#FBEAE3","Corail pâle — fond","—","fonds de section, avatars",false)
-+ pastille("#FDF4F0","Corail voile — survol","—","survol sur ordinateur",false))}
-
-${rangee("Parent employeur — bleu",
-  "Le bleu de la landing. Il est déjà dans le code comme couleur du rôle parent, et il est déjà conforme : on n'y touche pas.",
+${rangee("Assistante maternelle — bleu",
+  "La couleur du logo Assmat, et celle de la landing. Elle est déjà conforme : on n'y touche pas. C'est le public principal de TiMat.",
   pastille("#2E5F8A","Bleu — action","6,73:1","conforme · inchangé",true)
 + pastille("#6E9FC4","Bleu clair — marque","2,83:1","fonds et pastilles uniquement",false)
-+ pastille("#E4EFF7","Bleu pâle — fond","—","fonds de section",false)
++ pastille("#E4EFF7","Bleu pâle — fond","—","fonds de section, avatars",false)
 + pastille("#F2F8FC","Bleu voile — survol","—","survol sur ordinateur",false))}
+
+${rangee("Parent employeur — corail / terracotta",
+  "La couleur du logo parent. Le corail clair reste la marque ; la version foncée prend les boutons et les liens.",
+  pastille("#E49178","Corail — marque","2,44:1","fonds, avatars, pastilles uniquement",false)
++ pastille("#B85536","Terracotta — action","4,78:1","conforme · boutons et liens",true)
++ pastille("#FBEAE3","Corail pâle — fond","—","fonds de section",false)
++ pastille("#FDF4F0","Corail voile — survol","—","survol sur ordinateur",false))}
 
 ${rangee("MAM / crèche — sauge (pour plus tard)",
   "La sauge actuelle #8F9F92 ne tient que 2,78:1 : elle ne peut porter ni texte ni bouton. Approfondie, elle devient utilisable sans changer de famille.",
@@ -83,7 +83,7 @@ const ICO = {
   admin:'<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/>',
   outils:'<path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8Z"/>',
 };
-const ACT="#B85536", SOFT="#FBEAE3", PALE="#FDF4F0";
+const ACT="#2E5F8A", SOFT="#E4EFF7", PALE="#F2F8FC";
 const ong = (etat, label, d) => {
   const fond = etat==="actif"||etat==="appui" ? SOFT : etat==="survol" ? PALE : "transparent";
   const teinte = etat==="repos" ? G.ink2 : ACT;
@@ -110,7 +110,7 @@ const onglets = head + `
 <div style="width:860px;background:${G.ground};padding:34px 36px 38px;display:flex;flex-direction:column;gap:26px;color:${G.ink}">
   <div style="display:flex;flex-direction:column;gap:4px">
     <span style="font-family:'Instrument Serif',Georgia,serif;font-size:34px;line-height:1.1">Les onglets, état par état</span>
-    <span style="font-size:14px;color:${G.ink2};line-height:1.5;max-width:640px">Quatre états, une seule règle : la couleur ne sert qu'à dire où l'on est et où l'on vient d'appuyer. Ici en corail — la même mécanique vaut en bleu parent et en sauge.</span>
+    <span style="font-size:14px;color:${G.ink2};line-height:1.5;max-width:640px">Quatre états, une seule règle : la couleur ne sert qu'à dire où l'on est et où l'on vient d'appuyer. Ici en bleu assmat — la même mécanique vaut en corail parent et en sauge.</span>
   </div>
   <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 30px">
 ${cas("Au repos","Gris, aucune pastille. Trois onglets sur quatre sont dans cet état en permanence.",["actif","repos","repos","repos"])}

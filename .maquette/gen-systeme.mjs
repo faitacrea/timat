@@ -3,8 +3,8 @@ import { writeFileSync } from "node:fs";
 // Trois univers, une seule grammaire. La teinte identifie à qui
 // appartient l'écran ; tout le reste est rigoureusement commun.
 const U = [
-  { f:"Main.dc.html",   qui:"Assistante maternelle", act:"#B85536", brand:"#E49178", soft:"#FBEAE3", pale:"#FDF4F0" },
-  { f:"Parent.dc.html", qui:"Parent employeur",      act:"#2E5F8A", brand:"#6E9FC4", soft:"#E4EFF7", pale:"#F2F8FC" },
+  { f:"Main.dc.html",   qui:"Assistante maternelle", act:"#2E5F8A", brand:"#6E9FC4", soft:"#E4EFF7", pale:"#F2F8FC" },
+  { f:"Parent.dc.html", qui:"Parent employeur",      act:"#B85536", brand:"#E49178", soft:"#FBEAE3", pale:"#FDF4F0" },
   { f:"Mam.dc.html",    qui:"MAM / crèche",          act:"#4E6B57", brand:"#8FAE99", soft:"#E6EFE9", pale:"#F3F8F5" },
 ];
 const G = { ground:"#FDFBF8", sheet:"#FFFFFF", ink:"#2E4859", ink2:"#617079",
