@@ -144,6 +144,35 @@
       "reglementLibelle": "guide sécurité et hygiène des assistantes maternelles du Département des Bouches-du-Rhône, édition 2025",
       "reglesSource": "https://www.departement13.fr/sites/default/files/media/downloads/guide_securite_hygiene_assistante_maternelles_2025.pdf"
     },
+    "14": {
+      "nom": "Calvados",
+      "reunion": "obligatoire",
+      "reunionNote": "pour obtenir le formulaire de demande d'agrément, il faut contacter la circonscription d'action sociale dont on dépend ; on est alors convié à une séance d'information, à l'issue de laquelle le formulaire est remis. Des séances sont régulièrement organisées sur le département",
+      "depot": [
+        "recommande"
+      ],
+      "depotNote": "le formulaire complété s'envoie en recommandé avec avis de réception à la circonscription d'action sociale de son secteur, accompagné d'un certificat médical d'aptitude établi par le médecin traitant et d'un extrait de casier judiciaire (bulletin n° 3)",
+      "contact": {
+        "email": "mam-pmi@calvados.fr"
+      },
+      "reglesLocales": [
+        "les inserts de cheminée et les poêles doivent être protégés par une grille solidement fixée au mur, à 50 cm au minimum du foyer, d'une hauteur d'au moins 75 cm et avec un espacement des barreaux de 6,5 cm au maximum",
+        "une barrière à la norme NF EN 1930 doit être installée en bas des escaliers, et également en haut si l'enfant accueilli accède à l'étage",
+        "la rambarde ou le garde-corps d'escalier doit mesurer 1,10 m au minimum, avec des barreaux espacés de 9 cm au maximum ; s'ils sont horizontaux, il faut 45 cm de partie pleine en bas",
+        "l'accès à l'escalier doit être empêché sur tous les côtés, sur une hauteur de 80 cm",
+        "les garde-corps de balcon, terrasse, galerie et loggia doivent atteindre un mètre, hauteur qui peut descendre à 0,80 m si le garde-corps fait plus de cinquante centimètres d'épaisseur",
+        "aucun objet susceptible d'être escaladé ne doit se trouver sous une fenêtre",
+        "la nourriture, la litière et le couchage de l'animal doivent rester hors de portée de l'enfant, qui ne doit jamais être laissé seul avec lui",
+        "tout animal non domestique réputé ou susceptible de représenter un danger, ainsi que les nouveaux animaux de compagnie, ne doivent jamais être en contact avec l'enfant",
+        "le lit doit respecter la norme NF EN 716-1, avec un espacement des barreaux compris entre 4,5 et 6,5 cm"
+      ],
+      "reglesSource": "guide de sécurité des assistants maternels du Département du Calvados, édition 2020",
+      "reglementUrl": "https://www.calvados.fr/files/live/sites/calvados/files/documents/le-departement/Solidarite-famille/Enfance%20%26%20Famille/GARDE_guide-pratique",
+      "reglementLibelle": "guide pratique à l'usage des assistants maternels et des parents employeurs du Département du Calvados",
+      "pageDatee": "le guide pratique du Département annonce une première partie de formation de 60 heures avant l'accueil. C'est la règle d'avant 2019 : depuis, ce sont 80 heures qui doivent être suivies avant tout accueil d'enfant. Les 9 heures de gestes de premiers secours que le Calvados intègre à ses 120 heures sont en revanche bien une particularité départementale.",
+      "source": "https://www.calvados.fr/accueil/le-departement/solidarite-familles/enfance--familles/devenir-assistant-maternel.html",
+      "releve": "2026-09-07"
+    },
     "15": {
       "nom": "Cantal",
       "reglesLocales": [
@@ -231,6 +260,20 @@
       },
       "source": "https://www.correze.fr/nos-missions/famille-petite-enfance-jeunesse/assistante-maternelle/devenir-assistante-maternelle",
       "releve": "2026-09-03"
+    },
+    "21": {
+      "nom": "Côte-d'Or",
+      "contact": {
+        "tel": "03 80 63 66 28"
+      },
+      "contactNote": "service PMI-CAJE, cellule accueil du jeune enfant, 53 bis rue de la Préfecture, 21000 Dijon",
+      "reglesLocales": [
+        "une initiation aux gestes de premiers secours de 6 heures s'ajoute aux 120 heures de formation légales"
+      ],
+      "reglesSource": "fiche métier « Assistant maternel » du Conseil départemental de la Côte-d'Or, mars 2022",
+      "pageDatee": "la fiche métier du Département annonce les 40 heures de formation « dans les deux ans suivant le premier accueil ». C'est la règle d'avant 2019 : le délai est de trois ans depuis. La durée totale n'est donc pas reprise ici, seule l'initiation aux premiers secours, qui est bien une exigence supplémentaire du Département, l'est.",
+      "source": "https://www.cotedor.fr/votre-service/enfance-famille/enfant-de-moins-de-6-ans/vous-souhaitez-devenir-assistant-maternel",
+      "releve": "2026-09-07"
     },
     "22": {
       "nom": "Côtes-d’Armor",
