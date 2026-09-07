@@ -31,6 +31,18 @@ const SMIC_HORAIRE = 12.31;
 const MINIMUM_LEGAL = +(SMIC_HORAIRE * 0.281).toFixed(2);
 const MINIMUM_CONV = 4.2;
 const MINIMUM_CONV_NET = 3.28;
+// Le brut conventionnel est le même partout, mais le net ne l'est pas : le
+// régime local d'assurance maladie d'Alsace-Moselle prélève une cotisation
+// salariale supplémentaire, si bien qu'à 4,20 € brut le net tombe à 3,23 €
+// dans le Bas-Rhin, le Haut-Rhin et la Moselle (barème Urssaf du 1er juin
+// 2026). Afficher 3,28 € pour ces trois départements donnait un plancher
+// faux, et surestimé, à celles qui vérifient leur bulletin.
+const REGIME_LOCAL = new Set(["57", "67", "68"]);
+const netMinimum = (code) => (REGIME_LOCAL.has(String(code)) ? 3.23 : MINIMUM_CONV_NET);
+const partoutOuLocal = (code) =>
+  REGIME_LOCAL.has(String(code))
+    ? "Plancher applicable partout en France. Le net est ici de %s au lieu de 3,28 €, le régime local d'Alsace-Moselle prélevant une cotisation salariale supplémentaire."
+    : "Plancher applicable partout en France, soit %s net.";
 const MINIMUM_BRUT = Math.max(MINIMUM_LEGAL, MINIMUM_CONV);
 const PLAFOND_CMG_JOUR = +(SMIC_HORAIRE * 5).toFixed(2);
 const MAJ = new Date().toISOString().slice(0, 10);
@@ -312,7 +324,7 @@ function pageTarif(d, st, stats, ctx) {
     : "soit le niveau de la moyenne nationale";
 
   const lignes = [
-    ["Minimum conventionnel", MINIMUM_CONV, "brut", `Plancher applicable partout en France, soit ${eur(MINIMUM_CONV_NET)} net. Convention collective IDCC 3239.`],
+    ["Minimum conventionnel", MINIMUM_CONV, "brut", `${partoutOuLocal(d.code).replace("%s", eur(netMinimum(d.code)))} Convention collective IDCC 3239.`],
     ["Minimum légal", MINIMUM_LEGAL, "brut", "0,281 × SMIC horaire. Plus bas que le conventionnel : c'est le conventionnel qui s'applique."],
     ...(reg ? [[`Moyenne en ${d.region}`, reg, "net", "Salaire horaire net moyen observé dans la région."]] : []),
     ...(nat ? [["Moyenne nationale", nat, "net", "Toutes régions confondues."]] : []),
@@ -328,7 +340,7 @@ function pageTarif(d, st, stats, ctx) {
 <main>
   <section class="reponse">
     <h2>Réponse courte</h2>
-    <p>${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, le salaire horaire net moyen est de <strong>${eur(ici)}</strong> par enfant et par heure${comparaison ? ", " + comparaison : ""}. Le minimum applicable, lui, est de ${eur(MINIMUM_CONV)} brut partout en France — ${eur(MINIMUM_CONV_NET)} net.</p>
+    <p>${esc(ou.charAt(0).toUpperCase() + ou.slice(1))}, le salaire horaire net moyen est de <strong>${eur(ici)}</strong> par enfant et par heure${comparaison ? ", " + comparaison : ""}. Le minimum applicable, lui, est de ${eur(MINIMUM_CONV)} brut partout en France — ${eur(netMinimum(d.code))} net${REGIME_LOCAL.has(String(d.code)) ? ", le régime local d'Alsace-Moselle abaissant le net de cinq centimes" : ""}.</p>
   </section>
 
   <h2>Le tarif ${esc(ou)}, en contexte</h2>
@@ -368,11 +380,11 @@ function pageTarif(d, st, stats, ctx) {
           : `Dans cette région, le mieux rémunéré est ${esc(ctx.hautRegion.nom)} à ${eur(ctx.hautRegion.val)}, le moins bien ${esc(ctx.basRegion.nom)} à ${eur(ctx.basRegion.val)}.`;
       p.push(`<p>À l'échelle régionale, ${esc(avecArticle(d))} se situe${estPluriel(d) ? "nt" : ""} ${pos} de la moyenne ${esc(deRegion(d.region))}, que nous calculons à ${eur(ctx.moyRegion)} en pondérant chaque département par son nombre d'assistantes maternelles. ${voisins}</p>`);
     }
-    const marge = +(ici - MINIMUM_CONV_NET).toFixed(2);
+    const marge = +(ici - netMinimum(d.code)).toFixed(2);
     if (marge <= 0.5) {
-      p.push(`<div class="warn">⚠️ La moyenne ${esc(ou)} n'est qu'à ${eur(marge)} au-dessus du minimum conventionnel de ${eur(MINIMUM_CONV_NET)} net. Or une moyenne signifie qu'une moitié des situations se trouve en dessous : dans ce département, une part des contrats signés avant le 1<sup>er</sup> juin 2026 est probablement passée sous le plancher sans que personne ne s'en aperçoive. Le <a href="/verificateur-bulletin-assistante-maternelle.html">vérificateur de bulletin</a> tranche en une saisie.</div>`);
+      p.push(`<div class="warn">⚠️ La moyenne ${esc(ou)} n'est qu'à ${eur(marge)} au-dessus du minimum conventionnel de ${eur(netMinimum(d.code))} net. Or une moyenne signifie qu'une moitié des situations se trouve en dessous : dans ce département, une part des contrats signés avant le 1<sup>er</sup> juin 2026 est probablement passée sous le plancher sans que personne ne s'en aperçoive. Le <a href="/verificateur-bulletin-assistante-maternelle.html">vérificateur de bulletin</a> tranche en une saisie.</div>`);
     } else {
-      p.push(`<p>La moyenne ${esc(ou)} dépasse le minimum conventionnel de ${eur(marge)} nets de l'heure. Ce plancher de ${eur(MINIMUM_CONV_NET)} net reste néanmoins le seul chiffre opposable : aucun contrat ne peut descendre en dessous, quelle que soit la moyenne locale.</p>`);
+      p.push(`<p>La moyenne ${esc(ou)} dépasse le minimum conventionnel de ${eur(marge)} nets de l'heure. Ce plancher de ${eur(netMinimum(d.code))} net reste néanmoins le seul chiffre opposable : aucun contrat ne peut descendre en dessous, quelle que soit la moyenne locale.</p>`);
     }
     return p.join("\n  ");
   })()}
