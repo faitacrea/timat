@@ -360,6 +360,25 @@
       "source": "https://www.doubs.fr/a-votre-service/enfance-famille/etre-assistante-maternelle/",
       "releve": "2026-09-07"
     },
+    "26": {
+      "nom": "Drôme",
+      "reglesLocales": [
+        "les lits parapluie doivent être utilisés uniquement avec leur matelas d'origine",
+        "les barreaux verticaux des lits doivent être espacés de 6,5 cm au maximum, selon la norme NF EN 716-1",
+        "les lits superposés et les lits en mezzanine sont interdits avant 6 ans, et leur échelle doit être rendue inaccessible",
+        "le bébé doit obligatoirement être couché sur le dos, dans une pièce dont la température se situe entre 18 et 20 °C",
+        "les garde-corps doivent atteindre 1,10 m au minimum au-dessus de tout point d'appui, et une barrière rigide à la norme AFNOR NF P01-012 doit être posée en haut et en bas des escaliers, barreaux verticaux espacés de 9 cm au maximum",
+        "la montée d'escalier doit comporter une rambarde côté vide d'au moins 90 cm de hauteur",
+        "les fenêtres dangereuses doivent être équipées d'un entrebâilleur, d'un garde-corps rehaussé à 1,10 m au-dessus de tout point d'appui, ou d'une crémone à serrure ; aucun meuble pouvant servir de marchepied ne doit être placé dessous",
+        "les portes vitrées intérieures doivent être protégées sur une hauteur de 1,10 m",
+        "il est interdit de fumer lorsque les enfants sont présents au domicile",
+        "les logements construits avant 1949 doivent faire l'objet d'un constat de risque d'exposition au plomb ; en cas de tuyauterie en plomb, il faut laisser couler l'eau avant usage",
+        "un détecteur de fumée normalisé NF EN 14604 est obligatoire"
+      ],
+      "reglesSource": "guide « Sécurité chez l'assistant maternel et familial » du Département de la Drôme",
+      "source": "https://www.ladrome.fr/",
+      "releve": "2026-09-07"
+    },
     "27": {
       "nom": "Eure",
       "reunion": "obligatoire",
@@ -983,6 +1002,23 @@
       "reglesSource": "https://assistant-maternel-79.fr/devenir-assistant-maternel/mon-parcours-pour-obtenir-lagrement",
       "source": "https://assistant-maternel-79.fr/devenir-assistant-maternel/mon-parcours-pour-obtenir-lagrement",
       "releve": "2026-09-05"
+    },
+    "80": {
+      "nom": "Somme",
+      "reglesLocales": [
+        "les barrières d'escalier doivent répondre à la norme NF EN 1930 et être posées en haut et en bas dès lors que les enfants fréquentent les deux niveaux",
+        "les barrières rétractables ne sont homologuées que jusqu'à 24 mois et ne peuvent pas être installées à l'étage",
+        "les autres barrières doivent mesurer 75 cm au minimum, avec un espacement des barreaux de 6,5 cm et un système de fermeture non manœuvrable par l'enfant ; la puéricultrice s'assure de la tenue du dispositif",
+        "la montée d'escalier doit être sécurisée par un mur plein ou une rambarde d'au moins 1,10 m, barreaux verticaux espacés de 11 cm au maximum et sans barreaux horizontaux, pour éviter l'escalade",
+        "les contremarches doivent être sécurisées, pleines ou par filets",
+        "les balcons et surplombs demandent une balustrade d'au moins 1,10 m par rapport au dernier point d'appui, mêmes règles de barreaux",
+        "les fenêtres, à l'étage comme en position basse sous 1,10 m, doivent être sécurisées par bloque-fenêtre, entrebâilleur de 11 cm, fermeture à clé ou garde-corps à 1,10 m",
+        "les moyens de chauffage doivent être protégés par une barrière stable, fixée au mur ou au sol et non déplaçable par l'enfant, d'une hauteur minimale de 75 cm, suffisamment distante de la source de chaleur ; les parois du poêle et le conduit de cheminée doivent aussi être protégés",
+        "au moins un détecteur de fumée normalisé est exigé, et un détecteur de monoxyde de carbone est recommandé"
+      ],
+      "reglesSource": "livret sécurité des assistants maternels du Département de la Somme",
+      "source": "https://www.somme.fr/services/enfance-et-famille/les-accueils-collectifs/devenir-assistant-maternel/",
+      "releve": "2026-09-07"
     },
     "81": {
       "nom": "Tarn",

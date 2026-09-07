@@ -146,8 +146,9 @@
     },
     "26": {
       "nom": "Drôme",
-      "url": "",
-      "verifie": false
+      "url": "https://www.ladrome.fr/",
+      "verifie": false,
+      "libelle": "le Département de la Drôme"
     },
     "27": {
       "nom": "Eure",
