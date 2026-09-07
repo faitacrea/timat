@@ -171,6 +171,22 @@ const EMAIL_TEMPLATES={
 // 4,5:1, ce que ne faisaient ni #E49178 (2,44) ni #B8622F (4,35).
 const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#B85536",mam:"#4E6B57"};
 
+const isoJour=(d)=>{
+  if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const t=String(d||"").slice(0,10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(t)?t:isoJour(new Date());
+};
+
+// Dates du jeu de demonstration. Elles etaient figees en 2024 : en 2026, la
+// demonstration publique de la page d'accueil montrait donc des contrats
+// expires depuis deux ans et des « prochains evenements » deja passes. Elles
+// sont desormais calculees a partir du jour ou la page est ouverte.
+const jourDecale=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return isoJour(d);};
+const apresNaissance=(iso,mois)=>{const d=new Date(iso+"T12:00:00");d.setMonth(d.getMonth()+mois);return isoJour(d);};
+const neIlYa=(mois)=>{const d=new Date();d.setMonth(d.getMonth()-mois);return isoJour(d);};
+// Annee scolaire en cours : du 4 septembre au 31 aout suivant.
+const ANNEE_SCOLAIRE=(()=>{const d=new Date();const y=d.getFullYear()-(d.getMonth()<8?1:0);return{debut:y+"-09-04",fin:(y+1)+"-08-31"};})();
+
 // DATES
 var _D=new Date();
 var _y=_D.getFullYear();
@@ -449,12 +465,19 @@ function Styles(){return(
     /* - PHOTO GRID - */
     .photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     @media(max-width:640px){.photo-grid{grid-template-columns:repeat(3,1fr)}}
+    /* La pastille d'initiales : la classe etait posee sur l'element mais n'avait
+       jamais ete definie, si bien que les initiales s'affichaient en haut a
+       gauche d'un carre pale au lieu d'etre centrees dans un rond. */
+    .av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;line-height:1;flex:none;letter-spacing:.02em}
+
     /* - NAV TABS - */
     .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--b);transition:all .15s}
     .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
   `}</style>
 );}
 
+
+const NAISSANCES={e1:neIlYa(30),e2:neIlYa(34),e3:neIlYa(14)};
 
 const D = {
   asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-"+(new Date().getFullYear()-3)+"-0042",couleur:COULEUR_ROLE.asmat},
@@ -464,20 +487,20 @@ const D = {
     {id:"p3",role:"parent",prenom:"Camille",nom:"Petit",email:"camille.petit@mail.fr",couleur:"#BC4869"},
   ],
   enfants:[
-    {id:"e1",prenom:"Léo",nom:"Martin",parentId:"p1",naissance:"2022-03-15",couleur:"#3A72A8",emoji:"🦁",
+    {id:"e1",prenom:"Léo",nom:"Martin",parentId:"p1",naissance:NAISSANCES.e1,couleur:"#3A72A8",emoji:"🦁",
       allergies:["Arachides","Noix de cajou"],groupe_sanguin:"A+",medecin:"Dr. Lefebvre - 01 23 45 67",
-      vaccins:[{nom:"DTP",date:"2022-09-15",ok:true},{nom:"ROR",date:"2023-03-15",ok:true},{nom:"Méningite B",date:"2023-09-15",ok:false}],
-      contrat:{debut:"2023-09-04",fin:"2024-08-31",heuresHebdo:40,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h30–17h30",entretien:3.8,indemniteAbsence:0.5},
+      vaccins:[{nom:"DTP",date:apresNaissance(NAISSANCES.e1,6),ok:true},{nom:"ROR",date:apresNaissance(NAISSANCES.e1,12),ok:true},{nom:"Méningite B",date:apresNaissance(NAISSANCES.e1,18),ok:false}],
+      contrat:{debut:ANNEE_SCOLAIRE.debut,fin:ANNEE_SCOLAIRE.fin,heuresHebdo:40,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h30–17h30",entretien:3.8,indemniteAbsence:0.5},
       signe:false},
-    {id:"e2",prenom:"Emma",nom:"Bernard",parentId:"p2",naissance:"2021-11-22",couleur:"#4E7A5C",emoji:"🌸",
+    {id:"e2",prenom:"Emma",nom:"Bernard",parentId:"p2",naissance:NAISSANCES.e2,couleur:"#4E7A5C",emoji:"🌸",
       allergies:["Lactose"],groupe_sanguin:"O+",medecin:"Dr. Martin - 01 34 56 78",
-      vaccins:[{nom:"DTP",date:"2022-05-22",ok:true},{nom:"ROR",date:"2022-11-22",ok:true},{nom:"Méningite B",date:"2023-05-22",ok:true}],
-      contrat:{debut:"2023-09-04",fin:"2024-08-31",heuresHebdo:35,tauxHoraire:4.05,jours:["Lundi","Mardi","Jeudi","Vendredi"],horaires:"08h00–18h00",entretien:3.8,indemniteAbsence:0.5},
+      vaccins:[{nom:"DTP",date:apresNaissance(NAISSANCES.e2,6),ok:true},{nom:"ROR",date:apresNaissance(NAISSANCES.e2,12),ok:true},{nom:"Méningite B",date:apresNaissance(NAISSANCES.e2,18),ok:true}],
+      contrat:{debut:ANNEE_SCOLAIRE.debut,fin:ANNEE_SCOLAIRE.fin,heuresHebdo:35,tauxHoraire:4.05,jours:["Lundi","Mardi","Jeudi","Vendredi"],horaires:"08h00–18h00",entretien:3.8,indemniteAbsence:0.5},
       signe:true},
-    {id:"e3",prenom:"Noah",nom:"Petit",parentId:"p3",naissance:"2023-01-08",couleur:"#BC4869",emoji:"⭐",
+    {id:"e3",prenom:"Noah",nom:"Petit",parentId:"p3",naissance:NAISSANCES.e3,couleur:"#BC4869",emoji:"⭐",
       allergies:[],groupe_sanguin:"B+",medecin:"Dr. Durand - 01 45 67 89",
-      vaccins:[{nom:"DTP",date:"2023-07-08",ok:true},{nom:"ROR",date:"2024-01-08",ok:false},{nom:"Hépatite B",date:"2023-07-08",ok:true}],
-      contrat:{debut:"2024-01-08",fin:"2024-12-31",heuresHebdo:45,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h00–18h00",entretien:3.8,indemniteAbsence:0.5},
+      vaccins:[{nom:"DTP",date:apresNaissance(NAISSANCES.e3,6),ok:true},{nom:"ROR",date:apresNaissance(NAISSANCES.e3,12),ok:false},{nom:"Hépatite B",date:apresNaissance(NAISSANCES.e3,6),ok:true}],
+      contrat:{debut:jourDecale(-240),fin:jourDecale(125),heuresHebdo:45,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h00–18h00",entretien:3.8,indemniteAbsence:0.5},
       signe:false},
   ],
   transmissions:[
@@ -498,9 +521,9 @@ const D = {
     {id:"pt1",eId:"e1",date:TODAY_STR,arr:"07h35",dep:"17h20",tot:"9h45",valide:true},
     {id:"pt2",eId:"e2",date:TODAY_STR,arr:"08h05",dep:null,tot:null,valide:false},
     {id:"pt3",eId:"e3",date:TODAY_STR,arr:"07h10",dep:"17h05",tot:"9h55",valide:true},
-    {id:"pt4",eId:"e1",date:"2024-03-08",arr:"07h40",dep:"17h25",tot:"9h45",valide:true},
-    {id:"pt5",eId:"e2",date:"2024-03-08",arr:"08h00",dep:"18h00",tot:"10h00",valide:true},
-    {id:"pt6",eId:"e3",date:"2024-03-08",arr:"07h05",dep:"17h10",tot:"10h05",valide:true},
+    {id:"pt4",eId:"e1",date:jourDecale(-7),arr:"07h40",dep:"17h25",tot:"9h45",valide:true},
+    {id:"pt5",eId:"e2",date:jourDecale(-7),arr:"08h00",dep:"18h00",tot:"10h00",valide:true},
+    {id:"pt6",eId:"e3",date:jourDecale(-7),arr:"07h05",dep:"17h10",tot:"10h05",valide:true},
   ],
   repas:[
     {id:"r1",eId:"e1",date:TODAY_STR,dej:"Tout mangé",gou:"Yaourt + compote",bib:null,notes:"",q:"bien"},
@@ -515,22 +538,22 @@ const D = {
   ],
   heures:{"e1":{prev:160,real:152},"e2":{prev:140,real:138},"e3":{prev:180,real:178}},
   absences:[
-    {id:"ab1",eId:"e1",date:"2024-03-05",motif:"Maladie",indemnise:true,heures:9},
-    {id:"ab2",eId:"e2",date:"2024-03-07",motif:"Décision parent",indemnise:true,heures:8},
-    {id:"ab3",eId:"e3",date:"2024-02-28",motif:"Congés parents",indemnise:false,heures:9},
+    {id:"ab1",eId:"e1",date:jourDecale(-10),motif:"Maladie",indemnise:true,heures:9},
+    {id:"ab2",eId:"e2",date:jourDecale(-8),motif:"Décision parent",indemnise:true,heures:8},
+    {id:"ab3",eId:"e3",date:jourDecale(-15),motif:"Congés parents",indemnise:false,heures:9},
   ],
   evenements:[
-    {id:"ev1",date:"2024-03-15",type:"conge",txt:"Congés assmat",},
-    {id:"ev2",date:"2024-03-20",type:"rdv",txt:"Réunion parents Emma"},
-    {id:"ev3",date:"2024-03-25",type:"hol",txt:"Sortie Printemps"},
-    {id:"ev4",date:"2024-04-01",type:"abs",txt:"Absent - Léo"},
+    {id:"ev1",date:jourDecale(8),type:"conge",txt:"Congés assmat",},
+    {id:"ev2",date:jourDecale(13),type:"rdv",txt:"Réunion parents Emma"},
+    {id:"ev3",date:jourDecale(18),type:"hol",txt:"Sortie au parc"},
+    {id:"ev4",date:jourDecale(25),type:"abs",txt:"Absent - Léo"},
   ],
   portfolio:[
     {id:"pf1",eId:"e1",date:TODAY_STR,titre:"Peinture cerisier",desc:"Coton-tige et peinture rose, inspiration japonaise",emoji:"🌸",competences:["Motricité fine","Créativité"]},
-    {id:"pf2",eId:"e1",date:"2024-03-06",titre:"Plantation radis",desc:"Découverte des graines, arrosage, responsabilité",emoji:"🌱",competences:["Sciences","Responsabilité"]},
-    {id:"pf3",eId:"e2",date:"2024-03-09",titre:"Puzzle 12 pièces",desc:"Concentration remarquable, fini seul en 8 minutes !",emoji:"🧩",competences:["Logique","Patience"]},
+    {id:"pf2",eId:"e1",date:jourDecale(-9),titre:"Plantation radis",desc:"Découverte des graines, arrosage, responsabilité",emoji:"🌱",competences:["Sciences","Responsabilité"]},
+    {id:"pf3",eId:"e2",date:jourDecale(-6),titre:"Puzzle 12 pièces",desc:"Concentration remarquable, fini seul en 8 minutes !",emoji:"🧩",competences:["Logique","Patience"]},
     {id:"pf4",eId:"e3",date:TODAY_STR,titre:"Premiers pas 🎉",desc:"4 pas autonomes, sourire immense. Moment magique.",emoji:"👣",competences:["Motricité globale","Équilibre"]},
-    {id:"pf5",eId:"e3",date:"2024-03-04",titre:"Maracas maison",desc:"Riz dans bouteilles, découverte du son et du rythme",emoji:"🎵",competences:["Éveil musical","Créativité"]},
+    {id:"pf5",eId:"e3",date:jourDecale(-11),titre:"Maracas maison",desc:"Riz dans bouteilles, découverte du son et du rythme",emoji:"🎵",competences:["Éveil musical","Créativité"]},
   ],
   milestones:{
     "e1":[
@@ -4835,11 +4858,6 @@ const SMIC_HORAIRE_HISTO=[
   ["2024-11-01",11.88],
   ["2024-01-01",11.65],
 ];
-const isoJour=(d)=>{
-  if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
-  const t=String(d||"").slice(0,10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(t)?t:isoJour(new Date());
-};
 // SMIC horaire brut applicable a une date donnee (defaut : aujourd'hui).
 const smicHoraireAu=(d)=>{
   const j=isoJour(d);
