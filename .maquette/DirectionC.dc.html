@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <style>
+    body { margin:0; font-family:Manrope,'Segoe UI',system-ui,sans-serif; }
+    a { color:#4338CA; } a:hover { color:#312A9E; }
+  </style>
+</helmet>
+
+<div style="width:390px;height:844px;background:#FAFAFB;display:flex;flex-direction:column;overflow:hidden;color:#16181D">
+
+  <div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:20px;flex-grow:1">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:12.5px;font-weight:500;color:#787F8C">Mardi 8 septembre</span>
+        <span style="font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.15">Bonjour Sophie</span>
+      </div>
+      <div style="width:40px;height:40px;border-radius:12px;background:#EEF0F4;display:flex;align-items:center;justify-content:center;flex:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4B515C" stroke-width="1.7" stroke-linecap="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      </div>
+    </div>
+
+    <div style="background:#4338CA;border-radius:16px;padding:18px;display:flex;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-grow:1">
+        <span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#B9B3F5">Journée en cours</span>
+        <span style="font-size:27px;font-weight:800;letter-spacing:-.02em;color:#FFFFFF;font-variant-numeric:tabular-nums">7 h 12</span>
+        <span style="font-size:12.5px;color:#C9C5F7">3 enfants pointés sur 3</span>
+      </div>
+      <div style="background:#FFFFFF;border-radius:12px;padding:11px 15px;display:flex;align-items:center;gap:8px;flex:none">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4338CA" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span style="font-size:13.5px;font-weight:700;color:#4338CA">Pointer</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <div style="background:#FFFFFF;border:1px solid #E6E8EC;border-radius:14px;padding:14px;display:flex;align-items:center;gap:11px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4338CA" stroke-width="1.9" stroke-linecap="round" style="flex:none"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M8 9h7M8 13h5"/></svg>
+        <span style="font-size:13.5px;font-weight:600">Cahier du jour</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E6E8EC;border-radius:14px;padding:14px;display:flex;align-items:center;gap:11px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4338CA" stroke-width="1.9" stroke-linecap="round" style="flex:none"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l.9-4.4A8 8 0 1 1 20 12Z"/></svg>
+        <span style="font-size:13.5px;font-weight:600;flex-grow:1">Messages</span>
+        <span style="min-width:19px;height:19px;border-radius:6px;background:#4338CA;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex:none">2</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#787F8C">Enfants accueillis</span>
+
+      <div style="background:#FFFFFF;border:1px solid #E6E8EC;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:13px 15px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EEF0F4">
+          <div style="width:8px;height:8px;border-radius:4px;background:#0E9F6E;flex:none"></div>
+          <div style="display:flex;flex-direction:column;gap:1px;flex-grow:1">
+            <span style="font-size:15px;font-weight:600">Léa</span>
+            <span style="font-size:12.5px;color:#787F8C">Sieste en cours</span>
+          </div>
+          <span style="font-size:13px;font-weight:600;color:#4B515C;font-variant-numeric:tabular-nums">07:35</span>
+        </div>
+        <div style="padding:13px 15px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EEF0F4">
+          <div style="width:8px;height:8px;border-radius:4px;background:#0E9F6E;flex:none"></div>
+          <div style="display:flex;flex-direction:column;gap:1px;flex-grow:1">
+            <span style="font-size:15px;font-weight:600">Tom</span>
+            <span style="font-size:12.5px;color:#787F8C">Repas noté</span>
+          </div>
+          <span style="font-size:13px;font-weight:600;color:#4B515C;font-variant-numeric:tabular-nums">08:10</span>
+        </div>
+        <div style="padding:13px 15px;display:flex;align-items:center;gap:12px">
+          <div style="width:8px;height:8px;border-radius:4px;background:#0E9F6E;flex:none"></div>
+          <div style="display:flex;flex-direction:column;gap:1px;flex-grow:1">
+            <span style="font-size:15px;font-weight:600">Jade</span>
+            <span style="font-size:12.5px;color:#787F8C">Aucune note</span>
+          </div>
+          <span style="font-size:13px;font-weight:600;color:#4B515C;font-variant-numeric:tabular-nums">07:50</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#FFF8EC;border:1px solid #F5DFB8;border-radius:14px;padding:14px 15px;display:flex;align-items:center;gap:12px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#B4761A" stroke-width="1.9" stroke-linecap="round" style="flex:none"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <div style="display:flex;flex-direction:column;gap:1px;flex-grow:1">
+        <span style="font-size:13.5px;font-weight:600;color:#6B4A11">Contrat de Tom à signer</span>
+        <span style="font-size:12.5px;color:#9A7327">En attente depuis 4 jours</span>
+      </div>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9A7327" stroke-width="2.1" stroke-linecap="round" style="flex:none"><path d="m9 18 6-6-6-6"/></svg>
+    </div>
+
+  </div>
+
+  <div style="border-top:1px solid #E6E8EC;background:#FFFFFF;padding:9px 8px 22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4338CA" stroke-width="1.9" stroke-linecap="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+      <span style="font-size:10.5px;font-weight:700;color:#4338CA">Accueil</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="9" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+      <span style="font-size:10.5px;font-weight:500;color:#9AA1AD">L'enfant</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.9" stroke-linecap="round"><path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/></svg>
+      <span style="font-size:10.5px;font-weight:500;color:#9AA1AD">Administratif</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.9" stroke-linecap="round"><path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8Z"/></svg>
+      <span style="font-size:10.5px;font-weight:500;color:#9AA1AD">Outils Pro</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
