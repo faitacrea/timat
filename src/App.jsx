@@ -7906,6 +7906,38 @@ function BandeauHorsLigne(){
 }
 
 //
+
+// Efface les fichiers d'un compte dans les compartiments photos et documents.
+// Ils sont ranges sous l'identifiant du compte : « photos/<id>/... ». Le
+// declencheur storage.protect_delete de Supabase interdit de les supprimer en
+// SQL, cet effacement ne peut donc pas vivre dans delete_user_account.
+async function viderStockageDuCompte(userId){
+  for(const bucket of ["photos","documents"]){
+    try{
+      const aEffacer=[];
+      const parcourir=async(prefixe)=>{
+        const{data,error}=await supabase.storage.from(bucket).list(prefixe,{limit:1000});
+        if(error||!data)return;
+        for(const entree of data){
+          const chemin=prefixe?prefixe+"/"+entree.name:entree.name;
+          // Une entree sans metadonnees est un dossier, pas un fichier.
+          if(entree.id===null||entree.metadata===null)await parcourir(chemin);
+          else aEffacer.push(chemin);
+        }
+      };
+      await parcourir(String(userId));
+      // La suppression accepte un lot ; on decoupe pour ne pas depasser la limite.
+      for(let i=0;i<aEffacer.length;i+=100){
+        await supabase.storage.from(bucket).remove(aEffacer.slice(i,i+100));
+      }
+    }catch(e){
+      // Un echec de nettoyage ne doit pas empecher l'effacement des donnees
+      // elles-memes : le droit a l'effacement prime sur le menage des fichiers.
+      console.warn("[suppression] nettoyage du compartiment "+bucket+" incomplet :",e?.message);
+    }
+  }
+}
+
 function SupprimerCompte({onDeleted}){
   const [etape,setEtape]=useState("idle");
   const [confirmation,setConfirmation]=useState("");
@@ -7918,7 +7950,12 @@ function SupprimerCompte({onDeleted}){
     try{
       const{data:{user}}=await supabase.auth.getUser();
       if(!user)throw new Error("Non connecté");
-      const{error}=await supabase.rpc("delete_user_account",{user_id:user.id});
+      // Les photos et documents doivent partir AVANT les lignes de base : une
+      // fois le compte supprime, plus aucune session ne peut y acceder et ils
+      // resteraient indefiniment sur le stockage. Supabase interdit de les
+      // effacer depuis SQL, cela ne peut donc pas se faire cote serveur.
+      await viderStockageDuCompte(user.id);
+      const{error}=await supabase.rpc("delete_user_account",{p_user_id:user.id});
       if(error)throw error;
       // AUDIT LOG P8 : trace de suppression de compte (avant signOut, user_id explicite car user supprimé en DB)
       await logAction('delete_account', {table_name:'profiles', record_id:user.id, user_id:user.id});

@@ -1,0 +1,29 @@
+-- Migrations appliquées le 8 septembre 2026 — volet RGPD / sécurité.
+-- Conservées ici pour que le dépôt garde la trace de ce qui a été changé en
+-- base : sans cela, seule la base connaît son propre historique.
+--
+-- 1. protege_colonnes_sensibles_profiles
+--    La table profiles n'avait qu'une politique, « profiles_own », en ALL sur
+--    (auth.uid() = id). Une personne connectée pouvait donc modifier sa propre
+--    ligne, y compris is_admin — la colonne exacte que api/backoffice.js lit
+--    pour autoriser l'accès au back-office — et subscription_status, qui
+--    décide de l'accès aux fonctions payantes.
+--    Deux déclencheurs remettent ces colonnes à leur valeur précédente quand
+--    l'appel vient d'une session anon ou authenticated. On n'a pas retiré le
+--    privilège UPDATE colonne par colonne : l'inscription passe par un upsert
+--    qui écrit subscription_status, et un REVOKE l'aurait fait échouer.
+--
+-- 2. repare_suppression_compte_rgpd + suppression_compte_sans_storage_direct
+--    delete_user_account ne pouvait pas fonctionner : elle visait les tables
+--    « sommeils » et « documents », qui n'existent pas (sommeil,
+--    documents_meta), et appelait auth.admin_delete_user(), qui n'existe pas
+--    non plus. Son paramètre s'appelait user_id, comme la colonne : « WHERE
+--    user_id = user_id » était toujours vrai, si bien qu'une correction
+--    naïve des deux premières erreurs aurait vidé les paiements et les
+--    notifications de TOUS les comptes. Elle ignorait par ailleurs quatorze
+--    tables de données de l'enfant.
+--    Le paramètre est renommé p_user_id, et l'appel côté application suit.
+--    L'effacement des fichiers est passé côté application : Supabase interdit
+--    « delete from storage.objects » en SQL.
+--
+-- Le détail exact des fonctions est dans l'historique des migrations Supabase.
