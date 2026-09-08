@@ -323,6 +323,14 @@ function Styles(){return(
     .card-lift{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease}
     .card-lift:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
     .pf{font-family:'Cormorant Garamond','Georgia',serif}
+    /* Aucun element cliquable ne doit descendre sous 24 px : c'est le minimum
+       fixe par le WCAG 2.5.8. Le bouton Deconnexion mesurait 19 x 20 px. */
+    button,a[role="button"]{min-height:24px}
+    /* Les icones de la barre du haut sont les cibles les plus utilisees et les
+       plus proches du bord de l'ecran : elles montent a 40 px. */
+    .ico-btn{min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r3);background:none;border:none;cursor:pointer;padding:0;transition:background var(--tap) ease}
+    .ico-btn:active{background:var(--tap-veil)}
+    @media(hover:hover){.ico-btn:hover{background:var(--hover-veil)}}
     .topbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(234,224,232,.6);display:flex;justify-content:space-between;align-items:center;padding:0 20px;height:54px;box-shadow:0 1px 0 rgba(0,0,0,.04)}
     .logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-.5px}
     .logo-dot{width:5px;height:5px;border-radius:50%;background:var(--S);margin-top:2px}
@@ -334,7 +342,7 @@ function Styles(){return(
     .ta:focus{border-color:var(--S);box-shadow:var(--sh3)}
     .sel{width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;background:#fff;color:var(--b)}
     .lbl{display:block;font-size:11.5px;font-weight:600;color:var(--l);margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase}
-    .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:transform .12s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;letter-spacing:.1px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 18px;border-radius:12px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:transform .12s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;letter-spacing:.1px}
     .btn:hover{transform:translateY(-1px);filter:brightness(1.04);box-shadow:0 6px 16px rgba(0,0,0,.1)}
     .btn:active{transform:translateY(1px) scale(.985);box-shadow:0 2px 6px rgba(0,0,0,.12)}
     .btn:disabled{opacity:.55;cursor:default;transform:none!important;box-shadow:none!important;filter:none!important}
@@ -358,7 +366,7 @@ function Styles(){return(
     .bG2:hover{transform:translateY(-1px)}
     .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
-    .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
     .content{flex:1;overflow-x:hidden;max-width:100vw}
     @media(max-width:600px){.content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}.fi{padding:14px;overflow-wrap:anywhere}.inp,input,select,textarea{font-size:16px!important}}
     .fi{padding:20px;max-width:900px;margin:0 auto;width:100%;flex:1}
@@ -399,9 +407,9 @@ function Styles(){return(
     .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--T),var(--S));transition:width .6s ease}
     @media(max-width:700px){.combo-arrow{display:none!important}.combo-head{display:none!important}}
     .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
-    .moo{border:2px solid transparent;border-radius:10px;padding:4px 6px;font-size:18px;cursor:pointer;transition:all .15s;background:transparent}
+    .moo{border:2px solid transparent;border-radius:var(--r3);min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:4px 6px;font-size:20px;cursor:pointer;transition:all .15s;background:transparent}
     .moo.on,.moo:hover{border-color:var(--S);background:var(--Sp);transform:scale(1.15)}
-    .msc{width:18px;height:18px;border-radius:50%;border:2px solid var(--br);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;transition:all .15s}
+    .msc{width:18px;height:18px;border-radius:50%;border:2px solid var(--br);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .15s}
     .msc.ok{background:var(--G);border-color:var(--G);color:#fff}
     .mood-bar{display:flex;gap:2px;height:32px;align-items:flex-end;margin-top:4px}
     .mood-b{border-radius:3px 3px 0 0;background:linear-gradient(to top,var(--T),var(--S));min-width:8px;transition:height .3s ease}
@@ -444,7 +452,7 @@ function Styles(){return(
     .bnav-btn .bnav-ic{font-size:22px;line-height:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1);filter:grayscale(.25);opacity:.78}
     .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.18);filter:grayscale(0);opacity:1}
     .bnav-btn:active .bnav-ic{transform:scale(.82)}
-    .bnav-btn .bnav-lbl{font-size:10px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s,font-weight .15s}
+    .bnav-btn .bnav-lbl{font-size:11px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s,font-weight .15s}
     .bnav-btn.active .bnav-lbl{color:var(--B);font-weight:700}
     @media(max-width:768px){.bottom-nav{display:flex}}
     .demo-bnav .bottom-nav{position:static!important;display:flex!important;box-shadow:none;z-index:auto;padding-bottom:0}
@@ -905,7 +913,7 @@ const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"nu
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
 
 //
-function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,background:c+"22",color:c,fontSize:s*.34,minWidth:s}}>{t}</div>}
+function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,background:c+"22",color:c,fontSize:Math.max(11,s*.34),minWidth:s}}>{t}</div>}
 function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9,position:"relative"}}>
   <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div>{badge&&<span style={{position:"absolute",top:-6,right:-6}}>{badge}</span>}</div>}
 
@@ -991,7 +999,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
 
   return <div className="card" style={{padding:"14px 16px",marginBottom:14,border:"1.5px solid "+accent,background:bg}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}}>
-      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisLabel}{isPreview&&<span style={{marginLeft:8,fontSize:10,fontWeight:700,color:"#fff",background:"var(--T)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle"}}>APERÇU</span>}</div>
+      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisLabel}{isPreview&&<span style={{marginLeft:8,fontSize:11,fontWeight:700,color:"#fff",background:"var(--T)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle"}}>APERÇU</span>}</div>
       {fenetreOuverte
         ?<span style={{fontSize:12,fontWeight:700,color:accent,background:"#fff",border:"1px solid "+accent,borderRadius:20,padding:"3px 10px"}}>{joursRestants===0?"dernier jour !":joursRestants+" jour"+(joursRestants>1?"s":"")+" restant"+(joursRestants>1?"s":"")}</span>
         :<span style={{fontSize:11,color:"var(--l)",fontStyle:"italic"}}>{ouvreLabel}</span>}
@@ -1016,7 +1024,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
     </div>
     <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
       <a href="https://www.pajemploi.urssaf.fr" target="_blank" rel="noopener noreferrer" className="btn bT" style={{fontSize:12,padding:"7px 14px",textDecoration:"none",display:"inline-block"}}>Ouvrir Pajemploi ↗</a>
-      <span style={{fontSize:10.5,color:"var(--l)",fontStyle:"italic"}}>TiMat ne déclare pas à votre place (pas encore tiers-déclarant) : la déclaration officielle se fait sur Pajemploi.</span>
+      <span style={{fontSize:11.5,color:"var(--l)",fontStyle:"italic"}}>TiMat ne déclare pas à votre place (pas encore tiers-déclarant) : la déclaration officielle se fait sur Pajemploi.</span>
     </div>
   </div>;
 }
@@ -1265,7 +1273,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     <div style={{borderRadius:20,padding:"22px 22px",marginBottom:18,background:"linear-gradient(135deg,var(--Bp) 0%,var(--Sp) 55%,var(--Tp) 100%)",border:"1px solid var(--br)",position:"relative",overflow:"hidden"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
         <div style={{minWidth:0}}>
-          <div style={{display:"inline-block",fontSize:10.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
+          <div style={{display:"inline-block",fontSize:11.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
             {todayStr().toUpperCase()}
           </div>
           <div className="pf"style={{fontSize:27,fontWeight:700,color:"var(--b)",lineHeight:1.15}}>Bonjour {user?.prenom||"Marie"} 👋</div>
@@ -1366,7 +1374,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
           return <div key={e.id}style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:"var(--c)",borderRadius:14,flexWrap:"wrap"}}>
             <button type="button" onClick={()=>setEditAvatar({...e,...(avatarOv[e.id]||{})})} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",lineHeight:0,flexShrink:0}}>
               <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={38}/>
-              <span style={{position:"absolute",bottom:-4,right:-5,fontSize:9,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 3px rgba(0,0,0,.2)",padding:"1px 2px"}}>📷</span>
+              <span style={{position:"absolute",bottom:-4,right:-5,fontSize:11,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 3px rgba(0,0,0,.2)",padding:"1px 2px"}}>📷</span>
             </button>
             <div style={{flex:1,minWidth:120}}>
               <div style={{fontWeight:700,color:"var(--b)",fontSize:13.5}}>{e.prenom}</div>
@@ -1374,13 +1382,13 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             </div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
               {none&&<button className="btn bP"style={{fontSize:11,padding:"6px 12px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
-              {onlyA&&<button className="btn bB"style={{fontSize:10.5,padding:"6px 11px"}}disabled={["sending","sent"].includes(rappelState[ct.id])}onClick={()=>rappelSignature(e)}>
+              {onlyA&&<button className="btn bB"style={{fontSize:11.5,padding:"6px 11px"}}disabled={["sending","sent"].includes(rappelState[ct.id])}onClick={()=>rappelSignature(e)}>
                 {rappelState[ct.id]==="sent"?"✅ Rappel envoyé":rappelState[ct.id]==="sending"?"Envoi…":rappelState[ct.id]==="noemail"?"⚠️ Email parent manquant":"📧 Relancer le parent"}
               </button>}
-              {(both||onlyA)&&<button className="btn bG"style={{fontSize:10.5,padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
+              {(both||onlyA)&&<button className="btn bG"style={{fontSize:11.5,padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
                 {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}
               </button>}
-              {both&&<button className="btn bT"style={{fontSize:10.5,padding:"6px 11px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
+              {both&&<button className="btn bT"style={{fontSize:11.5,padding:"6px 11px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
             </div>
           </div>;
         })}
@@ -1401,7 +1409,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             <span className="badge"style={{
               background:ev.type==="abs"?"var(--Rp)":ev.type==="conge"?"var(--Gp)":"var(--Bp)",
               color:ev.type==="abs"?"var(--R)":ev.type==="conge"?"var(--G)":"var(--B)",
-              whiteSpace:"nowrap",fontSize:10,fontWeight:700,padding:"4px 9px",borderRadius:8}}>
+              whiteSpace:"nowrap",fontSize:11,fontWeight:700,padding:"4px 9px",borderRadius:8}}>
               {fmt(ev.date)}
             </span>
             <span style={{fontSize:13,color:"var(--b)",flex:1,fontWeight:500}}>{ev.txt}</span>
@@ -1457,7 +1465,7 @@ function AccueilParent({enfant,setPage,user}){
     <div style={{borderRadius:20,padding:"22px",marginBottom:16,background:"linear-gradient(135deg,var(--Tp) 0%,var(--Sp) 58%,var(--Gp) 100%)",border:"1px solid var(--br)"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
         <div style={{minWidth:0}}>
-          <div style={{display:"inline-block",fontSize:10.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
+          <div style={{display:"inline-block",fontSize:11.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
             {todayStr().toUpperCase()}
           </div>
           <div className="pf"style={{fontSize:23,fontWeight:700,color:"var(--b)",lineHeight:1.15}}>La journée de {enfant.prenom} ✨</div>
@@ -1714,7 +1722,7 @@ function Transmissions({enfants,role,pEId,user}){
         <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:380,overflowY:"auto"}}>
           {msgs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune transmission.</div>}
           {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
-            <div style={{textAlign:"center",minWidth:38}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
+            <div style={{textAlign:"center",minWidth:38}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:11,color:"var(--l)"}}>{t.h}</div></div>
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
               borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:3}}>
@@ -1747,7 +1755,7 @@ function Transmissions({enfants,role,pEId,user}){
               height:(v/5*100)+"%",width:"100%",
               background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:4}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:4}}>
             <span>J-14</span><span>Aujourd'hui</span>
           </div>
         </div>}
@@ -2182,7 +2190,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                 <button className="btn bG"style={{width:"100%",fontSize:12}}onClick={sauverEdition}disabled={saving||!arrEdit}>
                   {saving?"⏳ ...":"Enregistrer la correction"}
                 </button>
-                <div style={{fontSize:10,color:"var(--l)",marginTop:6}}>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:6}}>
                   💡 Utile si tu as oublié de pointer en direct.
                 </div>
               </div>
@@ -2214,7 +2222,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   }}>📋 Copier le lien</button>
                   <button className="btn bG"style={{fontSize:11}}onClick={()=>window.print()}>🖨️ Imprimer</button>
                 </div>
-                <div style={{fontSize:10,color:"var(--l)",marginTop:8}}>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
                   🔒 QR propre à {enfant?.prenom}. Imprimable une fois : il enregistre toujours le pointage du jour.
                 </div>
               </div>
@@ -2241,7 +2249,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                 <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>
                   {new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}
-                  {enRetard&&<span style={{marginLeft:8,fontSize:10,color:"var(--R)",fontWeight:700}}>⚠️ Depuis {ageJours} jours</span>}
+                  {enRetard&&<span style={{marginLeft:8,fontSize:11,color:"var(--R)",fontWeight:700}}>⚠️ Depuis {ageJours} jours</span>}
                 </div>
                 <div style={{display:"flex",gap:10,fontSize:12}}>
                   <span style={{color:"var(--S)"}}>{p.arr?"↗"+p.arr:""}</span>
@@ -2262,7 +2270,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   ✏️ Modifier
                 </button>
               </div>}
-              {p.valide_parent&&p.date_validation&&<div style={{fontSize:10,color:"var(--S)",fontStyle:"italic"}}>
+              {p.valide_parent&&p.date_validation&&<div style={{fontSize:11,color:"var(--S)",fontStyle:"italic"}}>
                 ✅ Validé le {new Date(p.date_validation).toLocaleDateString("fr-FR")}
                 {p.modified_by_parent&&<span style={{marginLeft:6,color:"var(--T)"}}>· ✏️ heures corrigées</span>}
               </div>}
@@ -2666,7 +2674,7 @@ function Calendrier({enfants,role,pEId}){
           {ev2.map(ev=><div key={ev.id} style={{fontSize:12.5,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:8,padding:"6px 10px",marginBottom:6,fontWeight:600}}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
           <div style={{display:"grid",gridTemplateColumns:"48px 1fr",marginTop:8}}>
             <div style={{position:"relative",height:H}}>
-              {heures.map((h,i)=><div key={h} style={{position:"absolute",top:i*PXH-6,right:6,fontSize:10,color:"var(--l)"}}>{h}h</div>)}
+              {heures.map((h,i)=><div key={h} style={{position:"absolute",top:i*PXH-6,right:6,fontSize:11,color:"var(--l)"}}>{h}h</div>)}
             </div>
             <div style={{position:"relative",height:H,borderLeft:"1px solid var(--br)"}}>
               {heures.map((h,i)=><div key={h} style={{position:"absolute",top:i*PXH,left:0,right:0,borderTop:"1px solid rgba(0,0,0,.06)"}}/>)}
@@ -2711,17 +2719,17 @@ function Calendrier({enfants,role,pEId}){
           <div style={{width:"100%",display:"grid",gridTemplateColumns:isMobile?"22px repeat(7,1fr)":"46px repeat(7,1fr)"}}>
             <div/>
             {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} onClick={()=>setJourLarge(jd)} style={{textAlign:"center",padding:"4px 1px",borderBottom:"2px solid "+(auj?"var(--T)":"var(--br)"),cursor:"pointer"}}>
-              <div style={{fontSize:10,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
+              <div style={{fontSize:11,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
               <div style={{fontSize:15,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:26,height:26,lineHeight:"26px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
             </div>;})}
             <div/>
             {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:14}}>
-              {ferie&&<div style={{fontSize:9,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
-              {ev2.map(ev=><div key={ev.id} style={{fontSize:9,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
-              {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:9,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom}</div>;})}
+              {ferie&&<div style={{fontSize:11,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
+              {ev2.map(ev=><div key={ev.id} style={{fontSize:11,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
+              {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:11,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom}</div>;})}
             </div>;})}
             <div style={{position:"relative",height:H}}>
-              {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH-6,right:4,fontSize:9,color:"var(--l)"}}>{h}h</div>)}
+              {heures.map((h,idx)=><div key={h} style={{position:"absolute",top:idx*PXH-6,right:4,fontSize:11,color:"var(--l)"}}>{h}h</div>)}
             </div>
             {joursDeLaSemaine.map((jd,i)=>{
               const acc=accueilDuJour(jd);const n=acc.length||1;
@@ -2736,10 +2744,10 @@ function Calendrier({enfants,role,pEId}){
                   return <div key={e.id} style={{position:"absolute",top,height,left:(ci*(100/n))+"%",width:(100/n)+"%",padding:"1px 2px",boxSizing:"border-box"}}>
                     <div style={{height:"100%",background:col+"22",borderLeft:"2.5px solid "+col,borderRadius:5,padding:isMobile?"2px 0":"2px 3px",overflow:"hidden",display:isMobile?"flex":"block",alignItems:"center",justifyContent:"center"}} title={e.prenom+" "+((e.contrat&&e.contrat.horaires)||"")}>
                       {isMobile
-                        ? <div style={{writingMode:"vertical-rl",fontSize:10,fontWeight:700,color:"var(--b)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxHeight:"100%",letterSpacing:".5px"}}>{e.prenom}</div>
+                        ? <div style={{writingMode:"vertical-rl",fontSize:11,fontWeight:700,color:"var(--b)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxHeight:"100%",letterSpacing:".5px"}}>{e.prenom}</div>
                         : <>
-                            <div style={{fontSize:10.5,fontWeight:700,color:"var(--b)",lineHeight:1.1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{e.prenom}</div>
-                            {(()=>{const hl=horaireLignes(e.contrat&&e.contrat.horaires);return hl[0]?<div style={{fontSize:9,color:"var(--m)",fontFamily:"'DM Mono',monospace",lineHeight:1.2}}>{hl[0]}{hl[1]?" –":""}{hl[1]?<br/>:null}{hl[1]}</div>:null;})()}
+                            <div style={{fontSize:11.5,fontWeight:700,color:"var(--b)",lineHeight:1.1,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{e.prenom}</div>
+                            {(()=>{const hl=horaireLignes(e.contrat&&e.contrat.horaires);return hl[0]?<div style={{fontSize:11,color:"var(--m)",fontFamily:"'DM Mono',monospace",lineHeight:1.2}}>{hl[0]}{hl[1]?" –":""}{hl[1]?<br/>:null}{hl[1]}</div>:null;})()}
                           </>}
                     </div>
                   </div>;
@@ -2749,11 +2757,11 @@ function Calendrier({enfants,role,pEId}){
           </div>
         </div>
         <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"center",marginTop:12,paddingTop:10,borderTop:"1px solid var(--br)"}}>
-          <span style={{fontSize:10.5,color:"var(--l)",fontWeight:700}}>Enfants :</span>
+          <span style={{fontSize:11.5,color:"var(--l)",fontWeight:700}}>Enfants :</span>
           {enfants.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{display:"flex",alignItems:"center",gap:5}}>
             <span style={{width:11,height:11,borderRadius:3,background:col,flexShrink:0}}/>
             <span style={{fontSize:11.5,color:"var(--b)",fontWeight:700}}>{e.prenom}</span>
-            {e.contrat&&e.contrat.horaires&&<span style={{fontSize:10.5,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat.horaires}</span>}
+            {e.contrat&&e.contrat.horaires&&<span style={{fontSize:11.5,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat.horaires}</span>}
           </div>;})}
         </div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:8,textAlign:"center"}}>« ➕ Événement » pour ajouter un rendez-vous ou un congé</div>
@@ -2799,7 +2807,7 @@ function Calendrier({enfants,role,pEId}){
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   {items.slice(0,maxShow).map(it=><div key={it.key} style={{fontSize:isMobile?10.5:9.5,background:it.bg,color:it.fg,borderRadius:5,padding:isMobile?"2px 6px":"1px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:600}} title={it.txt}>{it.txt}</div>)}
-                  {items.length>maxShow&&<div style={{fontSize:9.5,color:"var(--l)",fontWeight:600,textAlign:isMobile?"center":"left"}}>+{items.length-maxShow}</div>}
+                  {items.length>maxShow&&<div style={{fontSize:11,color:"var(--l)",fontWeight:600,textAlign:isMobile?"center":"left"}}>+{items.length-maxShow}</div>}
                 </div>
               </div>;
             });
@@ -2816,16 +2824,16 @@ function Calendrier({enfants,role,pEId}){
           ].map(([bg,c,l])=>
             <div key={l}style={{display:"flex",alignItems:"center",gap:4}}>
               <div style={{width:9,height:9,borderRadius:2,background:bg,border:"1px solid "+c}}/>
-              <span style={{fontSize:10,color:"var(--m)"}}>{l}</span>
+              <span style={{fontSize:11,color:"var(--m)"}}>{l}</span>
             </div>)}
         </div>
 
         {/* Légende enfants (asmat) ou mon enfant (parent) */}
         <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:10,color:"var(--l)",fontWeight:700}}>Jours d'accueil :</span>
+          <span style={{fontSize:11,color:"var(--l)",fontWeight:700}}>Jours d'accueil :</span>
           {enfants.map(e=><div key={e.id}style={{display:"flex",alignItems:"center",gap:4}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:colorEnf(e.id)}}/>
-            <span style={{fontSize:10,color:"var(--m)"}}>{e.emoji} {e.prenom}</span>
+            <span style={{fontSize:11,color:"var(--m)"}}>{e.emoji} {e.prenom}</span>
           </div>)}
         </div>
 
@@ -2900,7 +2908,7 @@ function Calendrier({enfants,role,pEId}){
           <span className="badge"style={{
             background:ev.type==="ferie"?"var(--Rp)":ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":ev.type==="anniv"?"var(--Tp)":"var(--Bp)",
             color:ev.type==="ferie"?"var(--R)":ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":ev.type==="anniv"?"var(--T)":"var(--B)",
-            whiteSpace:"nowrap",fontSize:10}}>
+            whiteSpace:"nowrap",fontSize:11}}>
             {ev.date.slice(8)} {noms[mois].slice(0,3).toLowerCase()}
           </span>
           <span style={{fontSize:12,color:"var(--m)",flex:1}}>{ev.txt}</span>
@@ -3013,7 +3021,7 @@ function Messagerie({enfants,role,pEId,user}){
           {!loadingMsgs&&conv.length===0&&<div style={{textAlign:"center",color:"var(--l)",fontSize:12.5,padding:"30px 10px",lineHeight:1.6}}>💬 Démarrez la conversation<br/>avec un petit mot sur la journée.</div>}
           {conv.map(m=><div key={m.id}className={(m.de===role?"msg msg-me":"msg msg-ot")}>
             <div>{m.txt||m.texte}</div>
-            <div style={{fontSize:10,opacity:.65,marginTop:3,textAlign:"right"}}>{m.h}</div>
+            <div style={{fontSize:11,opacity:.65,marginTop:3,textAlign:"right"}}>{m.h}</div>
           </div>)}
           <div ref={endRef}/>
         </div>
@@ -3095,7 +3103,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       'table{width:100%;border-collapse:collapse}td{padding:6px 10px;border-bottom:1px solid #f0f0f0}',
       'td:first-child{font-weight:600;color:#2E4859;width:55%}td:last-child{text-align:right}',
       '.hl{background:#FFF8F3;font-weight:700;font-size:13px}.hl td{border-bottom:2px solid #E49178}',
-      '.note{background:#F4F7FA;border-radius:8px;padding:12px;margin-top:16px;font-size:10px;color:#666;line-height:1.6}',
+      '.note{background:#F4F7FA;border-radius:8px;padding:12px;margin-top:16px;font-size:11px;color:#666;line-height:1.6}',
       '.steps{margin-top:20px;padding:16px;border:1px dashed #5DA9A1;border-radius:8px}',
       '.steps h3{font-size:12px;color:#5DA9A1;margin-bottom:10px}',
       '.steps ol{padding-left:20px;font-size:11px;line-height:2}',
@@ -3155,7 +3163,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
           ["Net estimé",netEstime.toFixed(2)+" €","var(--T)","var(--Tp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
-          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+          <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
         </div>)}
       </div>
     </div>}
@@ -3441,7 +3449,7 @@ function Contrats({enfants,role,pEId,user}){
               </div>
               <div style={{textAlign:"right",flexShrink:0}}>
                 <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {(contrat.heuresHebdo*contrat.tauxHoraire*52/12).toFixed(0)} €</div>
-                <div style={{fontSize:10,color:"var(--m)",fontWeight:600,marginTop:2}}>brut / mois</div>
+                <div style={{fontSize:11,color:"var(--m)",fontWeight:600,marginTop:2}}>brut / mois</div>
               </div>
             </div>
           </div>
@@ -3497,8 +3505,8 @@ function Contrats({enfants,role,pEId,user}){
           <div onClick={()=>setPartageOuvert(p=>({...p,[enfant?.id]:!p[enfant?.id]}))} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 15px",cursor:"pointer",userSelect:"none"}}>
             <span style={{fontSize:13.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:7}}>🔗 Partage avec le parent
               {partages[enfant?.id]
-                ?<span style={{fontSize:10,fontWeight:800,color:"var(--S)",background:"var(--Sp)",borderRadius:20,padding:"2px 8px"}}>PARTAGÉ</span>
-                :<span style={{fontSize:10,fontWeight:800,color:"#9A7000",background:"#FDF6E8",borderRadius:20,padding:"2px 8px"}}>NON PARTAGÉ</span>}
+                ?<span style={{fontSize:11,fontWeight:800,color:"var(--S)",background:"var(--Sp)",borderRadius:20,padding:"2px 8px"}}>PARTAGÉ</span>
+                :<span style={{fontSize:11,fontWeight:800,color:"#9A7000",background:"#FDF6E8",borderRadius:20,padding:"2px 8px"}}>NON PARTAGÉ</span>}
             </span>
             <span style={{color:"var(--l)",transition:"transform .2s",transform:partageOuvert[enfant?.id]?"rotate(180deg)":"none"}}>▾</span>
           </div>
@@ -3682,7 +3690,7 @@ function Sante({enfants,role,pEId,user}){
         </div>
         {grp&&<div style={{textAlign:"center",background:"var(--Rp)",borderRadius:12,padding:"8px 14px",flexShrink:0}}>
           <div className="pf"style={{fontSize:18,fontWeight:700,color:"var(--R)",lineHeight:1}}>{grp}</div>
-          <div style={{fontSize:9,color:"var(--R)",marginTop:2,fontWeight:600,textTransform:"uppercase"}}>Groupe</div>
+          <div style={{fontSize:11,color:"var(--R)",marginTop:2,fontWeight:600,textTransform:"uppercase"}}>Groupe</div>
         </div>}
       </div>
 
@@ -3732,7 +3740,7 @@ function Sante({enfants,role,pEId,user}){
                 <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
           </div>
-          {!pmiTel&&<div style={{marginTop:10,fontSize:10.5,color:"#9B5757",lineHeight:1.5}}>ℹ️ Ajoutez le numéro direct de votre PMI dans <b>Paramètres → Mon profil</b> pour l'avoir ici en un appui.</div>}
+          {!pmiTel&&<div style={{marginTop:10,fontSize:11.5,color:"#9B5757",lineHeight:1.5}}>ℹ️ Ajoutez le numéro direct de votre PMI dans <b>Paramètres → Mon profil</b> pour l'avoir ici en un appui.</div>}
         </div>
 
         {/* Suivi medical - acces autres onglets */}
@@ -3836,7 +3844,7 @@ function Portfolio({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{pf.titre}</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}>{pf.description}</div>
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-            {(pf.competences||[]).map(c=><span key={c}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:10}}>{c}</span>)}
+            {(pf.competences||[]).map(c=><span key={c}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:11}}>{c}</span>)}
           </div>
           {role==="asmat"&&<button className="btn bG"style={{fontSize:11,padding:"5px 10px",color:"var(--R)",alignSelf:"flex-start",marginTop:4}}onClick={()=>supprimer(pf.id)}>🗑️ Supprimer</button>}
         </div>;})}
@@ -4052,7 +4060,7 @@ function Developpement({enfants,role,pEId}){
           <input type="range" min="0" max="36" value={filterAge}
             onChange={e=>setFilterAge(parseInt(e.target.value,10))}
             style={{width:"100%",accentColor:"var(--S)",cursor:"pointer"}}/>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:2}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:2}}>
             <span>0 mois</span>
             <span style={{fontWeight:700,color:"var(--S)"}}>Jusqu'à {filterAge} mois</span>
             <span>36 mois</span>
@@ -4067,7 +4075,7 @@ function Developpement({enfants,role,pEId}){
               <div style={{fontSize:13,color:"var(--b)",fontWeight:m.acquis?700:400}}>{m.texte}</div>
               <div style={{fontSize:11,color:"var(--l)"}}>{m.age_attendu}</div>
             </div>
-            {!m.acquis&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)",fontSize:10}}>En cours</span>}
+            {!m.acquis&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)",fontSize:11}}>En cours</span>}
           </div>)}
         </div>)}
         {role==="asmat"&&<div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Cliquez sur une étape pour valider</div>}
@@ -5096,7 +5104,7 @@ function Documents({enfants,role,pEId,user}){
           ["Autres documents",Math.max(0,liste.length-contratDocs.length-bulletinDocs.length),"var(--S)","var(--Sp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:20,fontWeight:800,color:c,lineHeight:1.1}}>{v}</div>
-          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+          <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
         </div>)}
       </div>
     </div>
@@ -5212,10 +5220,10 @@ function Documents({enfants,role,pEId,user}){
                   <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{doc.date.split("-").reverse().join("/")}</span>
                   {doc.taille!=="-"&&<><span style={{fontSize:11,color:"var(--l)"}}>·</span>
                   <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{doc.taille}</span></>}
-                  {enfant&&<span className="badge"style={{background:enfant.couleur+"18",color:enfant.couleur,fontSize:10,padding:"1px 7px"}}>
+                  {enfant&&<span className="badge"style={{background:enfant.couleur+"18",color:enfant.couleur,fontSize:11,padding:"1px 7px"}}>
                     {enfant.emoji} {enfant.prenom}
                   </span>}
-                  {!doc.partage&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:10}}>Privé</span>}
+                  {!doc.partage&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:11}}>Privé</span>}
                 </div>
               </div>
               {/* Actions */}
@@ -5691,7 +5699,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ["Coût employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+" €","var(--m)","var(--c)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
-          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+          <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
         </div>)}
       </div>
     </div>
@@ -5718,7 +5726,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
 
       {/* Rémunération */}
       <div style={{marginBottom:14}}>
-        <div style={{fontSize:10,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
           ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.92)+"€",entretien.toFixed(2)+"€"],
@@ -5735,19 +5743,19 @@ function BulletinSalaire({enfants,role,pEId,user}){
 
       {/* Cotisations */}
       <div style={{marginBottom:14}}>
-        <div style={{fontSize:10,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:6}}>COTISATIONS</div>
-        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",fontSize:10}}>
+        <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:6}}>COTISATIONS</div>
+        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",fontSize:11}}>
           {["Libellé","Salarié","Employeur"].map(h2=><div key={h2}style={{fontWeight:700,color:"var(--l)",padding:"3px 0",borderBottom:"1px solid var(--br)"}}>{h2}</div>)}
           {Object.entries(TAUX_COTISATIONS).flatMap(([nom,t])=>[
-            <div key={nom+"l"}style={{fontSize:10,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
-            <div key={nom+"s"}style={{fontSize:10,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?(brut*(t.base||1)*t.sal/100).toFixed(2)+"€":"-"}</div>,
-            <div key={nom+"p"}style={{fontSize:10,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?(brut*(t.base||1)*t.pat/100).toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"l"}style={{fontSize:11,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
+            <div key={nom+"s"}style={{fontSize:11,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?(brut*(t.base||1)*t.sal/100).toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"p"}style={{fontSize:11,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?(brut*(t.base||1)*t.pat/100).toFixed(2)+"€":"-"}</div>,
           ])}
           <div style={{fontWeight:700,fontSize:11,padding:"4px 0",borderTop:"1px solid var(--b)"}}>TOTAL</div>
           <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotSal.toFixed(2)}€</div>
           <div style={{fontWeight:700,fontSize:11,textAlign:"right",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotPat.toFixed(2)}€</div>
         </div>
-        <div style={{fontSize:9,color:"var(--l)",marginTop:4,fontStyle:"italic"}}>« - » = pas de cotisation sur cette part. CSG/CRDS calculées sur 98,25 % du brut.</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:4,fontStyle:"italic"}}>« - » = pas de cotisation sur cette part. CSG/CRDS calculées sur 98,25 % du brut.</div>
       </div>
 
       {/* Net */}
@@ -5773,7 +5781,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         </div>)}
       </div>
 
-      <div style={{fontSize:10,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
+      <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
         Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire ({SMIC_H.toFixed(2).replace(".",",")} €) par journée d'accueil ≥ 8 h, soit {(baseMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
@@ -5796,10 +5804,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "body{font-family:Arial,sans-serif;font-size:11px;color:#222;padding:20px;max-width:800px;margin:0 auto}",
           "h1{font-size:16px;color:#2C1F14;text-align:center;margin:12px 0}",
           ".hg{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#F5F0EB;padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid #DDD5C8}",
-          ".hg div{font-size:10px;line-height:1.7}",
+          ".hg div{font-size:11px;line-height:1.7}",
           ".hg strong{font-size:11px;color:#B8622F}",
           ".st{background:#2C1F14;color:#fff;padding:5px 10px;font-weight:700;font-size:11px;margin:10px 0 4px;letter-spacing:.5px}",
-          "table{width:100%;border-collapse:collapse;font-size:10px}",
+          "table{width:100%;border-collapse:collapse;font-size:11px}",
           "td,th{padding:5px 8px;border:1px solid #ddd}",
           "th{background:#f5f5f5;font-weight:700;text-align:left}",
           ".right{text-align:right}",
@@ -5808,12 +5816,12 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ".ni{background:#EAF4EE;font-weight:700;color:#3D6B50}",
           ".ce{background:#F5F0FF;font-weight:700}",
           ".sz{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}",
-          ".sb{border:1px solid #ddd;height:80px;border-radius:4px;padding:8px;font-size:9px;color:#aaa;display:flex;align-items:center;justify-content:center}",
+          ".sb{border:1px solid #ddd;height:80px;border-radius:4px;padding:8px;font-size:11px;color:#aaa;display:flex;align-items:center;justify-content:center}",
           ".sb img{max-height:60px;max-width:100%;object-fit:contain}",
           "@media print{.nb{display:none}}",
           "</style></head><body>",
           "<div style=\"text-align:center;margin-bottom:8px\">",
-          "<div style=\"font-size:9px;color:#888;text-transform:uppercase;letter-spacing:1px\">Convention Collective Nationale - Particuliers Employeurs</div>",
+          "<div style=\"font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px\">Convention Collective Nationale - Particuliers Employeurs</div>",
           "<h1>BULLETIN DE PAIE</h1>",
           "<div style=\"font-size:12px;color:#B8622F;font-weight:700\">"+moisSel+"</div>",
           "</div>",
@@ -5837,7 +5845,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           cotisDetails,
           "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+totalCotSal.toFixed(2)+" euros</td><td class=\"right\">"+totalCotPat.toFixed(2)+" euros</td></tr>",
           "</table>",
-          "<div style=\"font-size:10px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.</div>",
+          "<div style=\"font-size:11px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.</div>",
           "<div class=\"st\">RECAPITULATIF NET</div>",
           "<table>",
           "<tr><td>Salaire brut</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
@@ -5853,15 +5861,15 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+(coutEmployeur+entretien+repasMois).toFixed(2)+" euros</td></tr>",
           "</table>",
           "<div class=\"sz\">",
-          "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
+          "<div><div style=\"font-size:11px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
           // SIGNATURE STANDARD ASMAT P10 - injection signature dans bulletin de salaire
-          "<div><div style=\"font-size:10px;font-weight:700;margin-bottom:6px\">Signature de la salariee</div>",
+          "<div><div style=\"font-size:11px;font-weight:700;margin-bottom:6px\">Signature de la salariee</div>",
           (user?.signature_base64
-            ?"<div class=\"sb\"><img src=\""+user.signature_base64+"\" alt=\"Signature\"/></div><div style=\"font-size:9px;color:#888;text-align:center;margin-top:4px\">Le "+new Date().toLocaleDateString("fr-FR")+"</div>"
+            ?"<div class=\"sb\"><img src=\""+user.signature_base64+"\" alt=\"Signature\"/></div><div style=\"font-size:11px;color:#888;text-align:center;margin-top:4px\">Le "+new Date().toLocaleDateString("fr-FR")+"</div>"
             :"<div class=\"sb\">Date: ________________</div>"),
           "</div>",
           "</div>",
-          "<p style=\"margin-top:16px;font-size:9px;color:#888;line-height:1.8\">",
+          "<p style=\"margin-top:16px;font-size:11px;color:#888;line-height:1.8\">",
           "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN Particuliers Employeurs (IDCC 2395) | A conserver 5 ans",
           "</p>",
           "<div style=\"text-align:center;margin-top:12px\">",
@@ -6014,7 +6022,7 @@ function ContratsTypes({enfants}){
           borderLeft:(mod.avenant?"4px solid var(--G)":"4px solid var(--T)"),
           boxShadow:selModele===mod.id?"var(--sh2)":"var(--sh)"}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-          <span className="badge"style={{background:mod.avenant?"var(--Gp)":"var(--Tp)",color:mod.avenant?"var(--G)":"var(--T)",fontSize:9}}>
+          <span className="badge"style={{background:mod.avenant?"var(--Gp)":"var(--Tp)",color:mod.avenant?"var(--G)":"var(--T)",fontSize:11}}>
             {mod.avenant?"Avenant":"Contrat"}
           </span>
         </div>
@@ -6115,7 +6123,7 @@ function CourriersTypes({enfants,pEId,user}){
               <span style={{fontSize:18}}>{c.ic}</span>
               <div>
                 <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.titre}</div>
-                <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:9,marginTop:3}}>{c.cat}</span>
+                <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:11,marginTop:3}}>{c.cat}</span>
               </div>
             </div>
             <span style={{color:"var(--l)",fontSize:18}}>›</span>
@@ -6259,7 +6267,7 @@ function Parrainage({user}){
         <strong style={{color:"#E8B060"}}>Vous gagnez 1 mois gratuit · Elle gagne 1 mois gratuit.</strong>
       </div>
       <div style={{background:"rgba(255,255,255,.1)",borderRadius:10,padding:"12px 16px",marginBottom:12}}>
-        <div style={{fontSize:10,color:"rgba(255,255,255,.5)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Votre code personnel</div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Votre code personnel</div>
         <div style={{fontFamily:"'DM Mono',monospace",fontSize:22,fontWeight:700,color:"#E8B060",letterSpacing:"2px"}}>{code}</div>
       </div>
       <div style={{display:"flex",gap:8,alignItems:"center",background:"rgba(255,255,255,.08)",borderRadius:8,padding:"8px 12px",marginBottom:12}}>
@@ -6900,7 +6908,7 @@ function TransmissionsContent({enfant,role,user}){
         <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:400,overflowY:"auto"}}>
           {msgs.length===0&&<EmptyState compact emoji="💬" titre="Aucune transmission aujourd'hui" texte="Les petits mots échangés sur la journée de l'enfant apparaîtront ici."/>}
           {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
-            <div style={{textAlign:"center",minWidth:38,flexShrink:0}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:10,color:"var(--l)"}}>{t.h}</div></div>
+            <div style={{textAlign:"center",minWidth:38,flexShrink:0}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:11,color:"var(--l)"}}>{t.h}</div></div>
             <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"10px 14px",borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:4}}>
                 {t.auteur==="asmat"?"👩👧 "+(user?.prenom||"Marie"):"👪 "+(D.parents.find(p=>p.id===enfant?.parentId)?.prenom||"Parent")}</div>
@@ -6927,7 +6935,7 @@ function TransmissionsContent({enfant,role,user}){
           <div className="mood-bar">
             {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{height:(v/5*100)+"%",width:"100%",background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:4}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:4}}>
             <span>J-14</span><span>Aujourd'hui</span>
           </div>
         </div>}
@@ -7096,8 +7104,8 @@ function Sommeil({enfants,role,pEId}){
           </div>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
             <div className="pf"style={{fontSize:16,fontWeight:700,color:"var(--T)"}}>{s.duree}</div>
-            <span className="badge"style={{background:qColor[s.qualite]+"22",color:qColor[s.qualite],fontSize:10}}>{s.qualite}</span>
-            {role==="asmat"&&<button className="btn bG"style={{fontSize:10,padding:"3px 8px",color:"var(--R)"}}onClick={()=>supprimer(s.id)}title="Supprimer">🗑️</button>}
+            <span className="badge"style={{background:qColor[s.qualite]+"22",color:qColor[s.qualite],fontSize:11}}>{s.qualite}</span>
+            {role==="asmat"&&<button className="btn bG"style={{fontSize:11,padding:"3px 8px",color:"var(--R)"}}onClick={()=>supprimer(s.id)}title="Supprimer">🗑️</button>}
           </div>
         </div>)}
         {/* Sparkline durées */}
@@ -7208,7 +7216,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
           {/* Points */}
           {moodPts.map((p,i)=><circle key={i}cx={p.x}cy={p.y}r={3.5}fill={avg>=4?"var(--S)":avg>=3?"var(--G)":"var(--R)"}/>)}
         </svg>
-        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)",marginTop:4,fontFamily:"'DM Mono',monospace"}}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:4,fontFamily:"'DM Mono',monospace"}}>
           <span>J-{jours-1}</span><span>Aujourd'hui</span>
         </div>
       </div>
@@ -7218,7 +7226,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
         <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:14}}>⏰ Heures / semaine</div>
         <div style={{display:"flex",gap:4,alignItems:"flex-end",height:72}}>
           {heuresData.map((d,i)=><div key={i}style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-            <div style={{fontSize:9,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{d.h||""}</div>
+            <div style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{d.h||""}</div>
             <div style={{
               width:"100%",borderRadius:"4px 4px 0 0",
               height:((d.h/maxH)*60)+"px",
@@ -7228,7 +7236,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
           </div>)}
         </div>
         <div style={{display:"flex",gap:4,marginTop:6}}>
-          {heuresData.map((d,i)=><div key={i}style={{flex:1,textAlign:"center",fontSize:9,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{d.j}</div>)}
+          {heuresData.map((d,i)=><div key={i}style={{flex:1,textAlign:"center",fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{d.j}</div>)}
         </div>
         <div style={{marginTop:10,padding:"6px 10px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)",fontWeight:600}}>
           Total semaine : {heuresData.reduce((a,d)=>a+d.h,0)}h
@@ -7406,7 +7414,7 @@ function CourbeCroissance({enfants,role,pEId}){
             {/* Points */}
             {pts.map((p,i)=><circle key={i}cx={p.x}cy={p.y}r="4"fill="var(--T)"stroke="#fff"strokeWidth="1.5"/>)}
           </svg>:<div style={{textAlign:"center",padding:"30px 0",color:"var(--l)",fontSize:13}}>Pas encore de données</div>}
-          {vue==="poids"&&<div style={{fontSize:10,color:"var(--B)",marginTop:6}}>- - - Médiane OMS (p50)</div>}
+          {vue==="poids"&&<div style={{fontSize:11,color:"var(--B)",marginTop:6}}>- - - Médiane OMS (p50)</div>}
         </div>
       </div>
 
@@ -7599,7 +7607,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
             <span className="badge"style={{background:(catColors[a.cat]||"var(--T)")+"22",color:catColors[a.cat]||"var(--T)",fontSize:11}}>{a.cat}</span>
-            {a._perso&&<span className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:10}}>✦ Perso</span>}
+            {a._perso&&<span className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:11}}>✦ Perso</span>}
           </div>
           <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{a.duree?"⏱ "+a.duree:""}</span>
         </div>
@@ -7607,7 +7615,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
         {a.desc&&<div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:8}}>{a.desc}</div>}
         {a.materiel&&<div style={{fontSize:11,color:"var(--l)",marginBottom:6}}>📦 {a.materiel}</div>}
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {(a.competences||[]).map((c,j)=><span key={j}className="badge"style={{background:"var(--c)",color:"var(--m)",fontSize:10}}>{c}</span>)}
+          {(a.competences||[]).map((c,j)=><span key={j}className="badge"style={{background:"var(--c)",color:"var(--m)",fontSize:11}}>{c}</span>)}
         </div>
         {(()=>{const f=faitDe(a.titre);return <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid var(--br)",display:"flex",alignItems:"center",gap:8,justifyContent:"space-between"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
@@ -7710,11 +7718,11 @@ function CommunicationPMI({role,user,hasRealData}){
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:11,fontWeight:700,color:m.de==="PMI"?"var(--B)":"var(--T)"}}>
                   {m.de==="PMI"?"🏛️ PMI":"👩👧 "+(user?.prenom||"Marie")}
-                  {m.email&&<span style={{fontSize:10,color:"var(--l)",marginLeft:6}}>via {m.email}</span>}
+                  {m.email&&<span style={{fontSize:11,color:"var(--l)",marginLeft:6}}>via {m.email}</span>}
                 </span>
                 <div style={{display:"flex",gap:6,alignItems:"center"}}>
                   {!m.lu&&m.de==="PMI"&&<div style={{width:8,height:8,borderRadius:"50%",background:"var(--R)"}}/>}
-                  <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{m.h}</span>
+                  <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{m.h}</span>
                 </div>
               </div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{m.txt}</div>
@@ -7857,7 +7865,7 @@ function BandeauInstall(){
       <span style={{fontSize:18}}>📲</span>
       <div style={{flex:1}}>
         <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>Installer TiMat sur votre écran d'accueil</div>
-        <div style={{fontSize:10,color:"rgba(255,255,255,.75)"}}>Accès rapide comme une vraie app</div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,.75)"}}>Accès rapide comme une vraie app</div>
       </div>
       <button onClick={()=>install(()=>{if(!deferredPrompt)setShowGuide(true);})}
         style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:700,color:"#fff",flexShrink:0}}>
@@ -8390,7 +8398,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
         <div style={{marginBottom:12}}>
           <label className="lbl">Email</label>
           <input className="inp" value={user?.email||""} disabled style={{color:"var(--l)",background:"#F3F1EE",cursor:"not-allowed"}}/>
-          <div style={{fontSize:10.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>🔒 L'email de connexion ne se modifie pas ici — écrivez au support si nécessaire.</div>
+          <div style={{fontSize:11.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>🔒 L'email de connexion ne se modifie pas ici — écrivez au support si nécessaire.</div>
         </div>
 
         <div style={{marginBottom:12}}>
@@ -8411,7 +8419,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           <label className="lbl">N° d'identification Pajemploi <span style={{fontWeight:400,color:"var(--l)"}}>(si déjà attribué)</span></label>
           <input className="inp" value={pf.numero_pajemploi} placeholder="ex: 123456789012"
             onChange={e=>setPf(p=>({...p,numero_pajemploi:e.target.value}))}/>
-          <div style={{fontSize:10.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>
+          <div style={{fontSize:11.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>
             Attribué par l'URSSAF à l'ouverture de votre compte Pajemploi. S'il n'est pas encore connu, le contrat mentionnera qu'il sera communiqué dès réception.
           </div>
         </div>}
@@ -9002,7 +9010,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
       {coupOeil.map((k,i)=><div key={k.l}style={{padding:"12px 6px",textAlign:"center",borderLeft:i>0?"1px solid var(--br)":"none"}}>
         <div style={{fontSize:20,lineHeight:1}}>{k.ic}</div>
         {k.v&&<div className="pf"style={{fontSize:14,fontWeight:700,color:k.c,marginTop:5,lineHeight:1.1,wordBreak:"break-word"}}>{k.v}</div>}
-        <div style={{fontSize:10,color:"var(--l)",marginTop:3,fontWeight:600,textTransform:"uppercase",letterSpacing:".3px"}}>{k.l}</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:3,fontWeight:600,textTransform:"uppercase",letterSpacing:".3px"}}>{k.l}</div>
       </div>)}
     </div>
 
@@ -9042,7 +9050,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:14,fontWeight:600,color:"var(--b)"}}>{m.l}</div>
               {m.sub&&<div style={{fontSize:12,color:"var(--m)",marginTop:1}}>{m.sub}</div>}
               {m.comps&&m.comps.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
-                {m.comps.map((co,j)=><span key={j}className="badge"style={{background:"var(--Sp)",color:"var(--S)",fontSize:10}}>{co}</span>)}
+                {m.comps.map((co,j)=><span key={j}className="badge"style={{background:"var(--Sp)",color:"var(--S)",fontSize:11}}>{co}</span>)}
               </div>}
             </div>
           </div>)}
@@ -9077,7 +9085,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
         ?<div style={{fontSize:13,color:"var(--l)"}}>{role==="parent"?"Aucun message échangé aujourd'hui.":"Aucun message du parent aujourd'hui."}</div>
         :<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {echanges.map(t=>{const am=t.auteur==="asmat";return <div key={t.id}style={{display:"flex",gap:10}}>
-            <div style={{textAlign:"center",minWidth:34,flexShrink:0}}>{t.mood&&<div style={{fontSize:18}}>{t.mood}</div>}<div style={{fontSize:10,color:"var(--l)"}}>{t.heure?String(t.heure).slice(0,5):""}</div></div>
+            <div style={{textAlign:"center",minWidth:34,flexShrink:0}}>{t.mood&&<div style={{fontSize:18}}>{t.mood}</div>}<div style={{fontSize:11,color:"var(--l)"}}>{t.heure?String(t.heure).slice(0,5):""}</div></div>
             <div style={{flex:1,background:am?"var(--Tp)":"var(--Bp)",borderRadius:12,padding:"9px 13px",borderLeft:"3px solid "+(am?"var(--T)":"var(--B)")}}>
               <div style={{fontSize:11,fontWeight:700,color:am?"var(--T)":"var(--B)",marginBottom:3}}>{am?(enfant?.prenomAsmat||"Assistante maternelle"):"Parent"}</div>
               <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5,whiteSpace:"pre-wrap"}}>{t.texte}</div>
@@ -9218,7 +9226,7 @@ function SanteComplete({enfants,role,pEId,user}){
       }}>
         <span>{s.ic}</span><span>{s.l}</span>
         {s.badge>0&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,
-          padding:"1px 5px",fontSize:9,fontWeight:700}}>{s.badge}</span>}
+          padding:"1px 5px",fontSize:11,fontWeight:700}}>{s.badge}</span>}
       </button>)}
     </div>
 
@@ -9444,7 +9452,7 @@ function ListeAttente({role,enfants,user}){
             <div style={{flex:1}}>
               <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
                 <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{d.parent.prenom} {d.parent.nom}</span>
-                <span className="badge"style={{background:statutBg[d.statut],color:statutColor[d.statut],fontSize:10}}>
+                <span className="badge"style={{background:statutBg[d.statut],color:statutColor[d.statut],fontSize:11}}>
                   {statutLabel[d.statut]}
                 </span>
               </div>
@@ -9470,7 +9478,7 @@ function ListeAttente({role,enfants,user}){
         <div className="card"style={{padding:18}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
             <span>👪</span> {sel.parent.prenom} {sel.parent.nom}
-            <span className="badge"style={{background:statutBg[sel.statut],color:statutColor[sel.statut],fontSize:10,marginLeft:4}}>
+            <span className="badge"style={{background:statutBg[sel.statut],color:statutColor[sel.statut],fontSize:11,marginLeft:4}}>
               {statutLabel[sel.statut]}
             </span>
           </div>
@@ -9594,7 +9602,7 @@ function KitCMG({enfants,role,pEId,user}){
         <span style={{fontSize:13,fontWeight:700,color:"var(--b)",textAlign:"right"}}>{value}</span>
         {copyKey&&<button onClick={()=>copy(copyKey,value)}style={{
           background:copie[copyKey]?"var(--Sp)":"var(--c)",border:"1px solid var(--br)",
-          borderRadius:6,padding:"3px 8px",fontSize:10,cursor:"pointer",
+          borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",
           color:copie[copyKey]?"var(--S)":"var(--l)",fontWeight:600,flexShrink:0
         }}>{copie[copyKey]?"✓ Copié":"Copier"}</button>}
       </div>
@@ -10043,10 +10051,10 @@ function PlanningPeriscolaire({enfants,role,pEId}){
             if(!actif)return null;
             return <div key={per.id}style={{
               background:"var(--Bp)",borderRadius:6,padding:"3px 4px",
-              fontSize:10,color:"var(--B)",fontWeight:600,marginBottom:3
+              fontSize:11,color:"var(--B)",fontWeight:600,marginBottom:3
             }}>{per.ic}</div>;
           })}
-          {j==="Mercredi"&&p.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:10,color:"var(--S)",fontWeight:600}}>Journée</div>}
+          {j==="Mercredi"&&p.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:11,color:"var(--S)",fontWeight:600}}>Journée</div>}
         </div>)}
       </div>
     </div>
@@ -10131,14 +10139,14 @@ function ForumCommunaute({role}){
         {postsFiltres.map(post=><div key={post.id}className="card card-lift"
           onClick={()=>setSelPost(selPost?.id===post.id?null:post)}
           style={{padding:16,cursor:"pointer",borderLeft:post.epingle?"4px solid var(--G)":"4px solid var(--P)"}}>
-          {post.epingle&&<div style={{fontSize:10,fontWeight:700,color:"var(--G)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}>📌 Épinglé</div>}
+          {post.epingle&&<div style={{fontSize:11,fontWeight:700,color:"var(--G)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}>📌 Épinglé</div>}
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6,lineHeight:1.4}}>{post.titre}</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5,marginBottom:8,
             overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",
             WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{post.contenu}</div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {post.tags.map(t=><span key={t}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:10}}>{t}</span>)}
+              {post.tags.map(t=><span key={t}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:11}}>{t}</span>)}
             </div>
             <div style={{display:"flex",gap:12,fontSize:11,color:"var(--l)"}}>
               <span>👩 {post.auteur} · {post.ville}</span>
@@ -10390,7 +10398,7 @@ const jsPDF=await chargerJsPDF();
         +"<tr><td>Credit d'impot estime (50%)</td><td>"+creditImpot+"€</td></tr>"
         +'</table>'
         +(userSig
-          ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:10px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
+          ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:11px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
           :'')
         +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'</body></html>';
@@ -10822,7 +10830,7 @@ function SimulateurCout({enfants,pEId}){
           ["Crédit d'impôt","-"+fmt2(creditImpot),"var(--B)","var(--Bp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
-          <div style={{fontSize:10,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
+          <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
         </div>)}
       </div>
     </div>
@@ -10843,10 +10851,10 @@ function SimulateurCout({enfants,pEId}){
             <input type="range"min={min}max={max}step={step}value={v}
               onChange={e=>set(parseFloat(e.target.value))}
               style={{width:"100%",accentColor:"var(--T)"}}/>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--l)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)"}}>
               <span>{min}</span><span>{max}</span>
             </div>
-            {hint&&<div style={{fontSize:10.5,color:"var(--T)",marginTop:3,fontWeight:600,lineHeight:1.45}}>{hint}</div>}
+            {hint&&<div style={{fontSize:11.5,color:"var(--T)",marginTop:3,fontWeight:600,lineHeight:1.45}}>{hint}</div>}
           </div>)}
         </div>
         <div className="card"style={{padding:18}}>
@@ -10872,7 +10880,7 @@ function SimulateurCout({enfants,pEId}){
                 background:aeeh===n?"var(--S)":"transparent",color:aeeh===n?"#fff":"var(--m)",
                 borderColor:aeeh===n?"var(--S)":"var(--br)"}}>{n}</button>)}
             </div>
-            <div style={{fontSize:10.5,color:"var(--l)",marginTop:4}}>Chaque enfant AEEH applique le taux d'effort de la tranche inférieure (CMG plus élevé).</div>
+            <div style={{fontSize:11.5,color:"var(--l)",marginTop:4}}>Chaque enfant AEEH applique le taux d'effort de la tranche inférieure (CMG plus élevé).</div>
           </div>
         </div>
       </div>
@@ -11009,7 +11017,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
             <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>TOTAL SOLDE DE TOUT COMPTE</span>
             <span className="pf"style={{fontSize:28,fontWeight:700,color:"var(--G)"}}>{total.toFixed(2)} €</span>
           </div>
-          <div style={{fontSize:10,color:"var(--l)",marginTop:12,lineHeight:1.6}}>
+          <div style={{fontSize:11,color:"var(--l)",marginTop:12,lineHeight:1.6}}>
             Calcul conforme à la CCN des particuliers employeurs. L'ICCP est calculée sur la base des congés non pris. Le préavis dépend de l'ancienneté. Ces montants sont indicatifs - vérifiez avec votre syndicat ou le RPE.
           </div>
         </div>
@@ -11334,7 +11342,7 @@ function FAQ({role}){
           width:"100%",padding:"14px 18px",background:"none",border:"none",cursor:"pointer",
           display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left",gap:12}}>
           <div style={{flex:1}}>
-            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:9,marginBottom:4,display:"inline-block"}}>{f.cat}</span>
+            <span className="badge"style={{background:"var(--Bp)",color:"var(--B)",fontSize:11,marginBottom:4,display:"inline-block"}}>{f.cat}</span>
             <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.q}</div>
           </div>
           <span style={{fontSize:18,color:"var(--l)",flexShrink:0,transition:"transform .2s",
@@ -11471,7 +11479,7 @@ function BottomNav({groups,page,setPage,pmiNonLus,flat}){
               <span style={{display:"block"}}>{s.l}</span>
               {s.d&&<span style={{display:"block",fontSize:11.5,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
             </span>
-            {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{pmiNonLus}</span>}
+            {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:11,fontWeight:700}}>{pmiNonLus}</span>}
             {on&&<span style={{color:"var(--S)",fontWeight:700}}>✓</span>}
           </button>;
         })}
@@ -11488,7 +11496,7 @@ function BottomNav({groups,page,setPage,pmiNonLus,flat}){
         }}>
           <span className="bnav-ic" style={{position:"relative",display:"inline-block"}}>
             {g.ic}
-            {hasBadge&&<span style={{position:"absolute",top:-4,right:-6,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pmiNonLus}</span>}
+            {hasBadge&&<span style={{position:"absolute",top:-4,right:-6,background:"var(--R)",color:"#fff",borderRadius:"50%",minWidth:17,height:17,padding:"0 4px",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pmiNonLus}</span>}
           </span>
           <span className="bnav-lbl">{g.l}</span>
         </button>;
@@ -11614,19 +11622,19 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
           <img src={logoForRole(user?.role, dark)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
-          <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
+          <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
         </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:6}}>
         {/* Cloche notifications */}
         <div>
-          <button onClick={()=>setShowNotifs&&setShowNotifs(p=>!p)}style={{
+          <button className="ico-btn" aria-label="Notifications" onClick={()=>setShowNotifs&&setShowNotifs(p=>!p)}style={{
             background:"none",border:"none",cursor:"pointer",fontSize:18,padding:4,
             position:"relative",display:"flex",alignItems:"center"
           }}>🔔
             {notifNonLus>0&&<span style={{
               position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",
-              borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,
+              borderRadius:"50%",minWidth:17,height:17,padding:"0 4px",fontSize:11,fontWeight:700,
               display:"flex",alignItems:"center",justifyContent:"center"
             }}>{notifNonLus}</span>}
           </button>
@@ -11654,7 +11662,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
               <span style={{fontSize:16,flexShrink:0}}>{n.ic}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,color:"var(--b)",fontWeight:n.lu?400:700,lineHeight:1.4}}>{n.txt}</div>
-                <div style={{fontSize:10,color:"var(--l)",marginTop:2}}>Aujourd'hui</div>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Aujourd'hui</div>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,marginTop:2}}>
                 {!n.lu&&<div style={{width:7,height:7,borderRadius:"50%",background:"var(--T)"}}/>}
@@ -11666,15 +11674,13 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           </div>}
         </div>
         {/* Toggle mode sombre */}
-        <button onClick={()=>setDark&&setDark(d=>!d)}style={{
-          background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4
-        }} title={dark?"Mode clair":"Mode sombre"}>{dark?"☀️":"🌙"}</button>
+        <button className="ico-btn" style={{fontSize:18}} title={dark?"Mode clair":"Mode sombre"} aria-label={dark?"Mode clair":"Mode sombre"} onClick={()=>setDark&&setDark(d=>!d)}>{dark?"☀️":"🌙"}</button>
         {/* Paramètres */}
-        <button onClick={()=>setPage2&&setPage2("parametres")}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,padding:4}}title="Paramètres">⚙️</button>
+        <button className="ico-btn" onClick={()=>setPage2&&setPage2("parametres")}style={{fontSize:18}}title="Paramètres" aria-label="Paramètres">⚙️</button>
         {/* Bouton admin retire : le backoffice est desormais sur la route dediee /backoffice */}
         <Av t={ini(user.prenom,user.nom)}c={user.couleur}s={30}/>
         <span style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{user.prenom}</span>
-        <button onClick={onLogout}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,marginLeft:4}}title="Déconnexion">🚪</button>
+        <button className="ico-btn" onClick={onLogout}style={{fontSize:18}}title="Déconnexion" aria-label="Déconnexion">🚪</button>
       </div>
     </div>
 
@@ -11704,10 +11710,10 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
           }}>
             <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
             <span>{g.l}</span>
-            {g.subs&&<span style={{fontSize:9,opacity:.6,marginLeft:2,transform:isOpen?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
+            {g.subs&&<span style={{fontSize:11,opacity:.6,marginLeft:2,transform:isOpen?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
             {hasAdminBadge&&<span style={{
               position:"absolute",top:4,right:4,background:"var(--R)",color:"#fff",
-              borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,
+              borderRadius:"50%",minWidth:18,height:18,padding:"0 4px",fontSize:11,fontWeight:700,
               display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 4px rgba(0,0,0,.3)",
             }}>{pmiNonLus}</span>}
           </button>
@@ -11732,7 +11738,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
                   <span style={{display:"block"}}>{s.l}</span>
                   {s.d&&<span style={{display:"block",fontSize:11,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
                 </span>
-                {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:9,fontWeight:700}}>{pmiNonLus}</span>}
+                {hasPmiBadge&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,padding:"1px 6px",fontSize:11,fontWeight:700}}>{pmiNonLus}</span>}
                 {on&&<span style={{color:"var(--S)",fontWeight:700}}>✓</span>}
               </button>;
             })}
@@ -11779,12 +11785,12 @@ function CounterNombre({target,suffix="",prefix="",duration=2000}){
 //
 function DemoScreen({page}){
   const card={background:"#fff",border:"1px solid #EFE7DF",borderRadius:13,padding:"11px 13px"};
-  const chip=(c)=>({fontSize:10,fontWeight:700,color:c,background:c+"18",padding:"2px 8px",borderRadius:8});
+  const chip=(c)=>({fontSize:11,fontWeight:700,color:c,background:c+"18",padding:"2px 8px",borderRadius:8});
   const Title=({children})=><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:15,color:"#2E4859",margin:"2px 2px 12px"}}>{children}</div>;
   if(page==="accueil")return <div>
     <Title>Bonjour Sophie 👋</Title>
     <div style={{background:"linear-gradient(135deg,#2E4859,#3E6B63)",borderRadius:15,padding:14,color:"#fff",marginBottom:10}}>
-      <div style={{fontSize:10,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
+      <div style={{fontSize:11,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
       <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
       <div style={{display:"flex",gap:6,marginTop:10}}>{["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:28,height:28,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>{e}</span>)}</div>
     </div>
@@ -11792,15 +11798,15 @@ function DemoScreen({page}){
   </div>;
   if(page==="calendrier")return <div>
     <Title>Planning de la semaine</Title>
-    {[["Lun","Léo · Emma","8h–17h"],["Mar","Léo · Noah","8h–18h"],["Mer","Emma","9h–16h"],["Jeu","Léo · Emma · Noah","8h–17h"]].map(([j,who,h],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:7}}><span style={{width:34,height:34,borderRadius:9,background:"#5DA9A118",color:"#2E4859",fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{j}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{who}</span><span style={{fontSize:10.5,color:"#8A7A70",fontWeight:600}}>{h}</span></div>)}
+    {[["Lun","Léo · Emma","8h–17h"],["Mar","Léo · Noah","8h–18h"],["Mer","Emma","9h–16h"],["Jeu","Léo · Emma · Noah","8h–17h"]].map(([j,who,h],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:7}}><span style={{width:34,height:34,borderRadius:9,background:"#5DA9A118",color:"#2E4859",fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{j}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{who}</span><span style={{fontSize:11.5,color:"#8A7A70",fontWeight:600}}>{h}</span></div>)}
     <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:2,background:"#FBEEE9",border:"1px solid #F3D3C7"}}><span>🌴</span><span style={{fontSize:11.5,color:"#C84B31",fontWeight:600}}>Vendredi — absence déclarée</span></div>
   </div>;
   if(page==="admin_finances")return <div>
     <Title>Salaire de juin</Title>
     <div style={{background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:15,padding:15,color:"#fff",marginBottom:10}}>
-      <div style={{fontSize:10,opacity:.85,fontWeight:600}}>NET À VERSER</div>
+      <div style={{fontSize:11,opacity:.85,fontWeight:600}}>NET À VERSER</div>
       <div style={{fontSize:26,fontWeight:800,fontFamily:"'Fraunces',serif",marginTop:2}}>1 248,60 €</div>
-      <div style={{fontSize:10.5,opacity:.85,marginTop:2}}>Mensualisation + heures + indemnités</div>
+      <div style={{fontSize:11.5,opacity:.85,marginTop:2}}>Mensualisation + heures + indemnités</div>
     </div>
     {[["🧮","Indemnités d'entretien","64,00 €"],["🍽️","Repas","33,00 €"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={{fontSize:11,fontWeight:700,color:"#5DA9A1"}}>{b}</span></div>)}
   </div>;
@@ -11852,7 +11858,7 @@ function HeroPhone({screen}){
           </div>
           {/* carte du jour */}
           <div style={{margin:"4px 12px",background:"linear-gradient(135deg,#2E4859,#3E6B63)",borderRadius:16,padding:14,color:"#fff"}}>
-            <div style={{fontSize:10,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
+            <div style={{fontSize:11,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
             <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
             <div style={{display:"flex",gap:6,marginTop:10}}>
               {["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{e}</span>)}
@@ -11863,7 +11869,7 @@ function HeroPhone({screen}){
             <div key={i}style={{margin:"8px 12px 0",background:"#fff",border:"1px solid #EFE7DF",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}>
               <span style={{fontSize:17}}>{ic}</span>
               <span style={{flex:1,fontSize:12,color:"#2E4859",fontWeight:600}}>{a}</span>
-              <span style={{fontSize:10,color:"#5DA9A1",fontWeight:700,background:"#5DA9A118",padding:"2px 8px",borderRadius:8}}>{b}</span>
+              <span style={{fontSize:11,color:"#5DA9A1",fontWeight:700,background:"#5DA9A118",padding:"2px 8px",borderRadius:8}}>{b}</span>
             </div>
           )}
           </>}
@@ -11929,18 +11935,18 @@ const DEMO_SCREENS=[
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📋 Journal du jour — Léo 🦁</div>
         <div style={{background:"#F0FAF4",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #5DA9A1"}}>
-          <div style={{fontSize:10,color:"#5DA9A1",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
+          <div style={{fontSize:11,color:"#5DA9A1",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
           <div style={{fontSize:12,color:"#2E4859",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
             <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}>{liked?"❤️":"🤍"}</button>
           </div>
         </div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #E49178"}}>
-          <div style={{fontSize:10,color:"#E49178",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
+          <div style={{fontSize:11,color:"#E49178",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
           <div style={{fontSize:12,color:"#2E4859"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
         </div>
         <div style={{marginTop:12,display:"flex",gap:6,alignItems:"center"}}>
-          <span style={{fontSize:10,color:"#8FA3AD"}}>Humeur :</span>
+          <span style={{fontSize:11,color:"#8FA3AD"}}>Humeur :</span>
           {["😊","😴","🤗","😢"].map(m=><button key={m}onClick={()=>setMood(m)}style={{
             fontSize:18,background:mood===m?"#F0FAF4":"transparent",border:mood===m?"1.5px solid #5DA9A1":"1.5px solid transparent",
             borderRadius:8,padding:"2px 6px",cursor:"pointer",transition:"all .15s"
@@ -11967,7 +11973,7 @@ const DEMO_SCREENS=[
         </div>
         {[["Heures réalisées",m.h+"h × 4,05€",(m.h*4.05).toFixed(2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",(m.ent*3.80).toFixed(2)+"€"],["Heures majorées",m.supp+"h × 5,06€",(m.supp*5.06).toFixed(2)+"€"]].map(([l,d,v])=>(
           <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
-            <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:10,color:"#8FA3AD"}}>{d}</div></div>
+            <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:11,color:"#8FA3AD"}}>{d}</div></div>
             <div style={{fontWeight:700,color:"#5DA9A1"}}>{v}</div>
           </div>
         ))}
@@ -11986,7 +11992,7 @@ const DEMO_SCREENS=[
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📅 {new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:12}}>
-          {["L","M","Me","J","V","S","D"].map(j=><div key={j}style={{textAlign:"center",fontSize:9,fontWeight:700,color:"#8FA3AD",padding:4}}>{j}</div>)}
+          {["L","M","Me","J","V","S","D"].map(j=><div key={j}style={{textAlign:"center",fontSize:11,fontWeight:700,color:"#8FA3AD",padding:4}}>{j}</div>)}
           {Array.from({length:31},(_,i)=>i+1).map(d=>{
             const isWork=d%7!==0&&d%7!==6;
             return <div key={d}onClick={()=>setSelDay(d)}style={{
@@ -12013,10 +12019,10 @@ const DEMO_SCREENS=[
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>👪 Sophie — Léo 🦁</div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #FFD6B3"}}>
-          <div style={{fontSize:10,color:"#C84B31",fontWeight:700,marginBottom:4}}>⏰ Pointage du jour</div>
+          <div style={{fontSize:11,color:"#C84B31",fontWeight:700,marginBottom:4}}>⏰ Pointage du jour</div>
           <div style={{display:"flex",gap:16}}>
             {[["Arrivée","07h35","#5DA9A1"],["Départ","17h20","#C84B31"],["Total","9h45","#2E4859"]].map(([l,v,c])=>(
-              <div key={l}style={{textAlign:"center"}}><div style={{fontSize:9,color:"#8FA3AD"}}>{l}</div><div style={{fontSize:16,fontWeight:700,color:c}}>{v}</div></div>
+              <div key={l}style={{textAlign:"center"}}><div style={{fontSize:11,color:"#8FA3AD"}}>{l}</div><div style={{fontSize:16,fontWeight:700,color:c}}>{v}</div></div>
             ))}
           </div>
           <button onClick={()=>setValide(!valide)}style={{
@@ -12260,12 +12266,12 @@ function OutilsGratuits({onClose,onCta}){
   const Stat=({l,v,c})=>(
     <div style={{textAlign:"center"}}>
       <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:fMono,lineHeight:1.1}}>{v}</div>
-      <div style={{fontSize:10.5,color:"#5F7A86",marginTop:3,fontWeight:600}}>{l}</div>
+      <div style={{fontSize:11.5,color:"#5F7A86",marginTop:3,fontWeight:600}}>{l}</div>
     </div>
   );
   const grid={display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14,marginBottom:16};
   const resBox={background:"linear-gradient(135deg,#5DA9A118,#E4917815)",borderRadius:14,padding:18};
-  const note={fontSize:10.5,color:"#9AAAB2",marginTop:10,lineHeight:1.5};
+  const note={fontSize:11.5,color:"#9AAAB2",marginTop:10,lineHeight:1.5};
 
   return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:260,padding:20}}>
     <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:880,maxHeight:"92vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
@@ -12659,7 +12665,16 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           subscription_status: "free"
         });
       }
-    } catch(e) { setErr("Erreur réseau. Vérifiez votre connexion ou utilisez un compte démo."); }
+    } catch(e) {
+      // Le message conseillait d'« utiliser un compte demo » alors que c'est
+      // precisement ce qui echouait ici : un compte de demonstration n'etait
+      // reconnu que si Supabase repondait par un refus, jamais si Supabase ne
+      // repondait pas du tout. Le chemin de secours devenait donc inutilisable
+      // au moment ou l'on en a le plus besoin.
+      const demo = demos.find(d => d.email === (form.email||"").trim().toLowerCase());
+      if (demo) { onLogin({...demo, isDemo: true}); return; }
+      setErr("Connexion impossible. Vérifiez votre connexion internet, puis réessayez.");
+    }
     setLoading(false);
   };
 
@@ -12770,14 +12785,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
                 {[{k:"politique", l:"J'accepte la politique de confidentialité", req:true},{k:"cgu", l:"J'accepte les conditions générales d'utilisation", req:true},{k:"newsletter", l:"Recevoir les actualités TiMat (optionnel)", req:false}].map(({k,l,req}) => (
                   <label key={k} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer", marginBottom:7 }}>
                     <input type="checkbox" checked={consent[k]} onChange={e=>setConsent(c=>({...c,[k]:e.target.checked}))} style={{ width:14, height:14, marginTop:2, accentColor: role==="asmat"?"#C76754":"#2E4859", flexShrink:0 }} />
                     <span style={{ fontSize:11, color:"#2C1F14", lineHeight:1.5 }}>{l}{req&&<span style={{color:"#B84060",fontWeight:700}}> *</span>}</span>
                   </label>
                 ))}
-                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
+                <div style={{ fontSize:11, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
@@ -12791,7 +12806,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
                 <div style={{ fontSize:13, fontWeight:700, color:role==="asmat"?"#C76754":"#2E4859", marginBottom:2 }}>🎭 Explorer la démo</div>
                 <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
                   <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
@@ -12935,7 +12950,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 ["🔑","Connexion / Inscription","Accéder à votre espace","login","#2E4859"],
               ]},
             ].map(g=><div key={g.sec} style={{marginBottom:6}}>
-              <div style={{fontSize:10.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
+              <div style={{fontSize:11.5,fontWeight:700,color:"#9AAAB2",textTransform:"uppercase",letterSpacing:".6px",padding:"8px 12px 4px"}}>{g.sec}</div>
               {g.items.map(([ic,label,desc,target,c])=>
                 <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/parents";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")window.location.href="/boutique.html";else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                   style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
@@ -13021,8 +13036,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           <div style={{ marginTop:30, maxWidth:760, marginLeft:"auto", marginRight:"auto", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:16, overflow:"hidden" }}>
             <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr" }}>
               <div style={{ padding:"11px 12px" }}></div>
-              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:10.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboPbColor||"#FF8C82", background:"rgba(255,140,130,.09)" }}>{L.comboLabelBefore||"Sans TiMat"}</div>
-              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:10.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboSolColor||"#83C0B8", background:"rgba(131,192,184,.11)" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
+              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:11.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboPbColor||"#FF8C82", background:"rgba(255,140,130,.09)" }}>{L.comboLabelBefore||"Sans TiMat"}</div>
+              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:11.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboSolColor||"#83C0B8", background:"rgba(131,192,184,.11)" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
             </div>
             {((L.tableRows&&L.tableRows.trim())?L.tableRows:TABLE_ROWS_DEFAULT).split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|");
@@ -13031,15 +13046,15 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid rgba(255,255,255,.08)" }}>
                   <div style={{ padding:"12px 12px", minWidth:0 }}>
                     <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#fff", lineHeight:1.3 }}>{ic} {t}</span>
-                    {st&&<span style={{ display:"block", fontSize:10, color:L.tableSubColor||"rgba(255,255,255,.5)", marginTop:2, lineHeight:1.35 }}>{st}</span>}
+                    {st&&<span style={{ display:"block", fontSize:11, color:L.tableSubColor||"rgba(255,255,255,.5)", marginTop:2, lineHeight:1.35 }}>{st}</span>}
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
                     <span style={{ fontSize:15, display:"block", lineHeight:1.2 }}>❌</span>
-                    <span style={{ display:"block", fontSize:10, color:L.tableSansColor||"rgba(255,255,255,.62)", marginTop:3, lineHeight:1.4 }}>{sans}</span>
+                    <span style={{ display:"block", fontSize:11, color:L.tableSansColor||"rgba(255,255,255,.62)", marginTop:3, lineHeight:1.4 }}>{sans}</span>
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(131,192,184,.07)", minWidth:0 }}>
                     <span style={{ fontSize:15, display:"block", lineHeight:1.2 }}>✅</span>
-                    <span style={{ display:"block", fontSize:10, color:L.tableAvecColor||"#A8D5CE", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
+                    <span style={{ display:"block", fontSize:11, color:L.tableAvecColor||"#A8D5CE", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
                   </div>
                 </div>
               </FadeIn>;
@@ -13112,10 +13127,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div className="topbar">
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
                     <img src={logoForRole("asmat",false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
-                    <span style={{fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
+                    <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:18,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",width:14,height:14,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
+                    <span style={{fontSize:18,position:"relative",display:"inline-flex"}}>🔔<span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",minWidth:17,height:17,padding:"0 4px",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
                     <span style={{fontSize:16}}>🌙</span>
                     <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:D.asmat.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(D.asmat.prenom,D.asmat.nom)}</div>
                   </div>
@@ -13182,7 +13197,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                     <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}>{d.ic}</span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
-                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:9.5, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
+                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
                     </span>
                     {!isWeb&&<span className="acc-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
@@ -13428,7 +13443,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 }}>
                   <div style={{height:120,background:"linear-gradient(135deg,"+art.catColor+"15,"+art.catColor+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{art.emoji}</div>
                   <div style={{padding:"16px 20px"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:art.catColor,textTransform:"uppercase",letterSpacing:".8px",marginBottom:8}}>{art.cat}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:art.catColor,textTransform:"uppercase",letterSpacing:".8px",marginBottom:8}}>{art.cat}</div>
                     <div style={{fontSize:15,fontWeight:700,color:"#2E4859",lineHeight:1.4,marginBottom:8}}>{art.title}</div>
                     <div style={{fontSize:12,color:"#5F7A86",lineHeight:1.6}}>{art.excerpt}</div>
                     <div style={{marginTop:12,fontSize:12,color:accent,fontWeight:600}}>Lire l'article <span className="blog-arrow" style={{display:"inline-block"}}>→</span></div>
@@ -13462,7 +13477,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
                 {p.icon}
-                {p.badge&&<div style={{position:"absolute",top:6,right:6,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:10,fontWeight:700}}>{p.badge}</div>}
+                {p.badge&&<div style={{position:"absolute",top:6,right:6,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:700}}>{p.badge}</div>}
               </div>
               <div style={{padding:14,flex:1,display:"flex",flexDirection:"column"}}>
                 <div style={{fontWeight:700,fontSize:13,color:"#2E4859",marginBottom:4}}>{p.name}</div>
@@ -13785,14 +13800,14 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
                 {[{k:"politique", l:"J'accepte la politique de confidentialité", req:true},{k:"cgu", l:"J'accepte les conditions générales d'utilisation", req:true},{k:"newsletter", l:"Recevoir les actualités TiMat (optionnel)", req:false}].map(({k,l,req}) => (
                   <label key={k} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer", marginBottom:7 }}>
                     <input type="checkbox" checked={consent[k]} onChange={e=>setConsent(c=>({...c,[k]:e.target.checked}))} style={{ width:14, height:14, marginTop:2, accentColor: role==="asmat"?"#C76754":"#2E4859", flexShrink:0 }} />
                     <span style={{ fontSize:11, color:"#2C1F14", lineHeight:1.5 }}>{l}{req&&<span style={{color:"#B84060",fontWeight:700}}> *</span>}</span>
                   </label>
                 ))}
-                <div style={{ fontSize:10, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
+                <div style={{ fontSize:11, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
@@ -13806,7 +13821,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{ background:"#F7F2EC", borderRadius:12, padding:12, border:"1.5px solid "+(role==="asmat"?"#C76754":"#2E4859") }}>
                 <div style={{ fontSize:13, fontWeight:700, color:role==="asmat"?"#C76754":"#2E4859", marginBottom:2 }}>🎭 Explorer la démo</div>
                 <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
-                <div style={{ fontSize:10, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
+                <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
                   <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
@@ -14743,7 +14758,7 @@ const jsPDF=await chargerJsPDF();
         'td{padding:8px 12px;border:1px solid #e0e0e0}',
         'td:first-child{width:60%;background:#FDFBF8;font-weight:600;color:#2E4859}',
         '.total{background:#5DA9A1;color:#fff;font-weight:700;font-size:13px}.total td{border-color:#5DA9A1}',
-        '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:10px;color:#666;page-break-inside:avoid}',
+        '.note{margin-top:20px;padding:14px;background:#FFF8F3;border:1px solid #FFD6B3;border-radius:8px;font-size:11px;color:#666;page-break-inside:avoid}',
         '.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px;page-break-inside:avoid}',
         '.sig-box{border-top:1px solid #2E4859;padding-top:10px;font-size:11px}',
         '.actions{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:9999}',
@@ -14780,7 +14795,7 @@ const jsPDF=await chargerJsPDF();
         (hasReal
           ? '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📋 Détail des versements</h3>'
             +'<table><tr><td style="background:#F4F7FA">Date</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Mode</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Période</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859;text-align:right">Montant</td></tr>'
-            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+(parseFloat(v.montant)||0).toFixed(2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:10px">↳ '+v.note+'</td></tr>':'');}).join('')
+            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+(parseFloat(v.montant)||0).toFixed(2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:11px">↳ '+v.note+'</td></tr>':'');}).join('')
             +'</table>'
           : '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Éléments du contrat (base d\'estimation)</h3>'
             +'<table>'
@@ -14800,10 +14815,10 @@ const jsPDF=await chargerJsPDF();
         '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#2E4859">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
         '<div class="sig">',
         '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :'
-          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:10px;font-style:italic">(Aucune signature enregistree dans Parametres)</span>')
+          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:11px;font-style:italic">(Aucune signature enregistree dans Parametres)</span>')
           +'</div>',
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
-        '<p style="font-size:9px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
+        '<p style="font-size:11px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
         '</div>',
         '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"recapitulatif-versements-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>',
         '</body></html>'
@@ -14833,7 +14848,7 @@ const jsPDF=await chargerJsPDF();
           <div style={{padding:12,background:"var(--c)",borderRadius:10,marginBottom:14,fontSize:12,lineHeight:1.7}}>
             <div style={{fontWeight:700,marginBottom:6,color:"var(--b)",display:"flex",justifyContent:"space-between"}}>
               <span>Récapitulatif {annee}</span>
-              <span style={{fontSize:10,fontWeight:400,color:hasReal?"var(--S)":"var(--l)",fontStyle:"italic"}}>{sourceLabel}</span>
+              <span style={{fontSize:11,fontWeight:400,color:hasReal?"var(--S)":"var(--l)",fontStyle:"italic"}}>{sourceLabel}</span>
             </div>
             {hasReal?<>
               <div style={{display:"flex",justifyContent:"space-between"}}><span>Nombre de versements</span><strong>{versementsList.length}</strong></div>
@@ -15075,8 +15090,8 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px'>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature parent :</div></div>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature assmat :</div></div></div>",
-      "<p style='color:#6B7A82;font-size:9.5px;line-height:1.6;margin-top:18px;border-top:1px solid #E4DCD0;padding-top:10px'>Affichez cette fiche a un endroit permanent, visible et facilement accessible : le referentiel d'agrement l'exige pour les coordonnees des services de secours, des parents et du service departemental de protection maternelle et infantile (annexe 4-8 du code de l'action sociale et des familles, section 2, sous-section 2, 2°).</p>",
-      "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:14px'>Genere par TiMat - timat.app</p>",
+      "<p style='color:#6B7A82;font-size:11px;line-height:1.6;margin-top:18px;border-top:1px solid #E4DCD0;padding-top:10px'>Affichez cette fiche a un endroit permanent, visible et facilement accessible : le referentiel d'agrement l'exige pour les coordonnees des services de secours, des parents et du service departemental de protection maternelle et infantile (annexe 4-8 du code de l'action sociale et des familles, section 2, sous-section 2, 2°).</p>",
+      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:14px'>Genere par TiMat - timat.app</p>",
       "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
@@ -15123,9 +15138,9 @@ function FicheUrgence({enfants,role,pEId,user}){
     {parentLive&&<div style={{background:"var(--Gp)",border:"1.5px solid var(--G)",borderRadius:14,padding:16,marginBottom:12}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:4}}>
         <div style={{fontWeight:700,fontSize:13,color:"var(--G)"}}>📞 Contact parent — compte TiMat</div>
-        <div style={{background:"var(--G)",color:"#fff",fontSize:9.5,fontWeight:700,padding:"3px 8px",borderRadius:20,whiteSpace:"nowrap"}}>🔄 TEMPS RÉEL</div>
+        <div style={{background:"var(--G)",color:"#fff",fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,whiteSpace:"nowrap"}}>🔄 TEMPS RÉEL</div>
       </div>
-      <div style={{fontSize:10.5,color:"var(--G)",opacity:.85,marginBottom:12,lineHeight:1.5}}>
+      <div style={{fontSize:11.5,color:"var(--G)",opacity:.85,marginBottom:12,lineHeight:1.5}}>
         Synchronisé automatiquement avec le profil du parent. Ne peut pas être obsolète.
       </div>
       {[
@@ -15357,7 +15372,7 @@ function ProjetAccueil({user,role}){
       "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px'>",
       "<div><p style='font-weight:700'>L'assistante maternelle :</p><div style='height:80px'></div></div>",
       "<div><p style='font-weight:700'>Les parents :</p><div style='height:80px'></div></div></div>",
-      "<p style='text-align:center;color:#ccc;font-size:10px;margin-top:30px'>Genere par TiMat - timat.app</p>",
+      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:30px'>Genere par TiMat - timat.app</p>",
       "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
@@ -15538,7 +15553,7 @@ function InviterParent({enfants,user,demoMode=false}){
             Envoyez ce lien par SMS, WhatsApp ou autre. Le parent n'a qu'à créer son compte.
           </div>
           <div style={{display:"flex",gap:8,minWidth:0}}>
-            <div style={{flex:1,minWidth:0,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:10,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+            <div style={{flex:1,minWidth:0,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
               {shareToken?(window.location.origin+"/?invite="+shareToken):"Génération du lien…"}
             </div>
             <button className="btn bG" style={{fontSize:11,padding:"6px 10px",flexShrink:0}}
@@ -15606,7 +15621,7 @@ function Boutique({user}){
       {products.map(p=><div key={p.id}className="card"style={{padding:0,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         <div style={{height:80,background:"linear-gradient(135deg,"+p.color+"20,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,position:"relative"}}>
           {p.icon}
-          {p.badge&&<div style={{position:"absolute",top:8,right:8,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:10,fontWeight:700}}>{p.badge}</div>}
+          {p.badge&&<div style={{position:"absolute",top:8,right:8,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:700}}>{p.badge}</div>}
         </div>
         <div style={{padding:16,flex:1,display:"flex",flexDirection:"column"}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{p.name}</div>
@@ -15842,9 +15857,9 @@ function Login({onLogin}){
 // --- Backoffice reusable components (outside to avoid re-mount on state change) ---
 const BOField=({label,children,hint})=>(
   <div style={{marginBottom:10}}>
-    <div style={{fontSize:10,fontWeight:700,color:"var(--m)",marginBottom:3,textTransform:"uppercase",letterSpacing:".4px"}}>{label}</div>
+    <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:3,textTransform:"uppercase",letterSpacing:".4px"}}>{label}</div>
     {children}
-    {hint&&<div style={{fontSize:10,color:"var(--l)",marginTop:3,fontStyle:"italic"}}>{hint}</div>}
+    {hint&&<div style={{fontSize:11,color:"var(--l)",marginTop:3,fontStyle:"italic"}}>{hint}</div>}
   </div>
 );
 
@@ -15854,7 +15869,7 @@ const BOColorInput=({k,state,setter})=>{
   return (
     <div style={{display:"flex",gap:4,alignItems:"center"}}>
       {isSolid&&<input type="color"value={v.slice(0,7)}onChange={e=>setter(k,e.target.value)} style={{width:32,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1,flexShrink:0}}/>}
-      <input className="inp"style={{flex:1,fontSize:10,padding:"5px 7px",minWidth:0}}value={v}onChange={e=>setter(k,e.target.value)}placeholder="#rrggbb ou rgba(...) ou gradient"/>
+      <input className="inp"style={{flex:1,fontSize:11,padding:"5px 7px",minWidth:0}}value={v}onChange={e=>setter(k,e.target.value)}placeholder="#rrggbb ou rgba(...) ou gradient"/>
       <div style={{width:20,height:20,borderRadius:4,background:v||"transparent",border:"1px solid var(--br)",flexShrink:0}}/>
     </div>
   );
@@ -15869,7 +15884,7 @@ const BOTextInput=({k,state,setter,multi,placeholder})=>(
 const BOAlignInput=({k,state,setter})=>(
   <div style={{display:"flex",gap:2}}>
     {[["left","☰ Gauche"],["center","☰ Centre"],["right","☰ Droite"],["justify","☰ Justifié"]].map(([a,label])=><button key={a}onClick={()=>setter(k,a)}style={{
-      flex:1,padding:"5px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:600,
+      flex:1,padding:"5px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:600,
       background:state[k]===a?"var(--S)":"var(--c)",color:state[k]===a?"#fff":"var(--m)",transition:"all .15s"
     }}>{label}</button>)}
   </div>
@@ -15898,7 +15913,7 @@ function IframePreview({cfg,noBezel}){
   };
   return <div style={{height:"100%",display:"flex",flexDirection:"column",background:"#d8d8d8"}}>
     <div style={{display:"flex",gap:8,padding:"10px",justifyContent:"center",background:"#e8e8e8",flexShrink:0,alignItems:"center"}}>
-      <span style={{fontSize:10,fontWeight:700,color:"var(--S)",marginRight:4}}>👁 APERÇU LIVE</span>
+      <span style={{fontSize:11,fontWeight:700,color:"var(--S)",marginRight:4}}>👁 APERÇU LIVE</span>
       {[["mobile","📱 Mobile"],["web","🖥 Web"]].map(([k,l])=>
         <button key={k}onClick={()=>{setBody(null);setDevice(k);}}style={{padding:"6px 16px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",background:device===k?"var(--T)":"#fff",color:device===k?"#fff":"var(--m)"}}>{l}</button>)}
     </div>
@@ -16409,7 +16424,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               <div style={{height:80,borderRadius:8,overflow:"hidden",border:"1px solid var(--br)",marginTop:6,position:"relative"}}>
                 <div style={{position:"absolute",inset:0,backgroundImage:"url("+cfg.landing.heroImg+")",backgroundSize:"cover",backgroundPosition:cfg.landing.heroImgPosition||"center center",opacity:cfg.landing.heroImgOpacity||0.12,filter:"blur("+(cfg.landing.heroImgBlur||2)+"px)"}}/>
                 <div style={{position:"absolute",inset:0,background:cfg.landing.heroBg||"#2E4859",opacity:.7}}/>
-                <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",height:"100%",fontSize:10,color:"#fff",fontWeight:600}}>Aperçu du hero</div>
+                <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",height:"100%",fontSize:11,color:"#fff",fontWeight:600}}>Aperçu du hero</div>
               </div>
             </>}
             <BOField label="Fond hero (gradient / couleur)">
@@ -16429,7 +16444,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 ?<img src={cfg.landing.logoUrl}alt="logo"style={{height:28,borderRadius:6,objectFit:"contain"}}onError={e=>{e.target.style.display="none"}}/>
                 :<div style={{width:28,height:28,borderRadius:8,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{cfg.landing.logoEmoji||"🌿"}</div>}
               <span style={{color:"#fff",fontSize:16,fontWeight:700,fontFamily:cfg.landing.fontTitle}}>TiMat</span>
-              <span style={{fontSize:10,color:"rgba(255,255,255,.4)",marginLeft:"auto"}}>Aperçu</span>
+              <span style={{fontSize:11,color:"rgba(255,255,255,.4)",marginLeft:"auto"}}>Aperçu</span>
             </div>
             <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid var(--b)"}}>
               <div style={{fontSize:11,color:"var(--l)",marginBottom:10,fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Tailles du logo (px)</div>
@@ -16676,7 +16691,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               )}
               {/* Preview */}
               <div style={{marginTop:8,padding:8,background:"#f0f0f0",borderRadius:8}}>
-                <div style={{fontSize:9,color:"var(--l)",marginBottom:4,textTransform:"uppercase"}}>Aperçu</div>
+                <div style={{fontSize:11,color:"var(--l)",marginBottom:4,textTransform:"uppercase"}}>Aperçu</div>
                 <button style={{
                   background:cfg.landing[btn.fields.find(f=>f[0].endsWith("Bg"))?.[0]]||"#ccc",
                   color:cfg.landing[btn.fields.find(f=>f[0].endsWith("Color"))?.[0]]||"#000",
@@ -16697,8 +16712,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 onMouseEnter={e=>e.currentTarget.style.background="var(--Sp)"}
                 onMouseLeave={e=>e.currentTarget.style.background="var(--c)"}>
                 <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:2}}>{p.name}</div>
-                <div style={{fontSize:10,color:"var(--l)",fontFamily:p.title}}>Titre ({p.title.split(",")[0].replace(/\'/g,"")})</div>
-                <div style={{fontSize:10,color:"var(--l)",fontFamily:p.body}}>Corps ({p.body.split(",")[0].replace(/\'/g,"")})</div>
+                <div style={{fontSize:11,color:"var(--l)",fontFamily:p.title}}>Titre ({p.title.split(",")[0].replace(/\'/g,"")})</div>
+                <div style={{fontSize:11,color:"var(--l)",fontFamily:p.body}}>Corps ({p.body.split(",")[0].replace(/\'/g,"")})</div>
               </button>)}
             </div>
           </BOCard>
@@ -16782,7 +16797,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                   {(art.blocks||[]).map((b,bi)=>(
                     <div key={bi}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:8,padding:8,marginBottom:8}}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                        <span style={{fontSize:10,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px"}}>{b.type==="h3"?"Titre":b.type==="callout"?"Encadré":b.type==="list"?"Liste":"Paragraphe"}</span>
+                        <span style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px"}}>{b.type==="h3"?"Titre":b.type==="callout"?"Encadré":b.type==="list"?"Liste":"Paragraphe"}</span>
                         <div style={{display:"flex",gap:4}}>
                           <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
                           <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
@@ -16848,7 +16863,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               </div>
               {[["nom","Nom"],["ville","Ville"],["avant","Avant (citation)"],["apres","Après (témoignage)"]].map(([k,l])=>
                 <div key={k}style={{marginBottom:5}}>
-                  <div style={{fontSize:10,fontWeight:600,color:"var(--m)",marginBottom:2}}>{l}</div>
+                  <div style={{fontSize:11,fontWeight:600,color:"var(--m)",marginBottom:2}}>{l}</div>
                   {k==="apres"?<textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>
                     :<input className="inp"style={{fontSize:11,padding:"5px 8px",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>}
                 </div>
@@ -16907,7 +16922,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               {[{v:stats.users,l:"Inscrits",c:"var(--T)"},{v:stats.pro,l:"Pro",c:"var(--S)"},{v:stats.enfants,l:"Enfants",c:"var(--G)"}].map(s=>
                 <div key={s.l}style={{padding:10,background:"var(--c)",borderRadius:8}}>
                   <div style={{fontSize:22,fontWeight:700,color:s.c}}>{s.v}</div>
-                  <div style={{fontSize:10,color:"var(--l)"}}>{s.l}</div>
+                  <div style={{fontSize:11,color:"var(--l)"}}>{s.l}</div>
                 </div>
               )}
             </div>
@@ -16929,7 +16944,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
           </BOCard>
           <BOCard title="Table Supabase" icon="🗄️">
             <div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>À exécuter dans Supabase SQL Editor :</div>
-            <div style={{fontSize:10,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
+            <div style={{fontSize:11,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
               CREATE TABLE app_config (<br/>
               &nbsp;&nbsp;id TEXT PRIMARY KEY,<br/>
               &nbsp;&nbsp;config JSONB,<br/>
@@ -16958,7 +16973,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                     <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:28,height:19,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
                     <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:28,height:19,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
                   </div>
-                  <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:on?"var(--b)":"var(--l)"}}>{meta.l}{!on&&<span style={{fontSize:10,fontWeight:700,color:"var(--l)",marginLeft:7}}>· masquée</span>}</span>
+                  <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:on?"var(--b)":"var(--l)"}}>{meta.l}{!on&&<span style={{fontSize:11,fontWeight:700,color:"var(--l)",marginLeft:7}}>· masquée</span>}</span>
                   <div onClick={()=>setSV(id,!on)}title={on?"Masquer":"Afficher"}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
                     <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
                   </div>
@@ -17016,8 +17031,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               return <div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,padding:"12px 14px",border:"1px solid var(--br)",borderRadius:10,marginBottom:8,background:"var(--w)"}}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
-                    <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:6,background:reasonInfo.bg,color:reasonInfo.col}}>{reasonInfo.ic} {reasonInfo.l}</span>
-                    <span style={{fontSize:10,color:"var(--l)"}}>{sizeKo} ko</span>
+                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,background:reasonInfo.bg,color:reasonInfo.col}}>{reasonInfo.ic} {reasonInfo.l}</span>
+                    <span style={{fontSize:11,color:"var(--l)"}}>{sizeKo} ko</span>
                   </div>
                   <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{dateStr}</div>
                 </div>
@@ -17600,7 +17615,7 @@ function SearchConsole(){
         <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tab==="queries"?row.q:short(row.p)}</span>
         <span style={{textAlign:"right",flexShrink:0}}>
           <span style={{display:"block",fontSize:13,fontWeight:800,color:"#B85C38"}}>#{pos(row.position)}</span>
-          <span style={{display:"block",fontSize:10.5,color:"#6B4F5A"}}>{num(row.clicks)} clics · {num(row.impressions)} vues</span>
+          <span style={{display:"block",fontSize:11.5,color:"#6B4F5A"}}>{num(row.clicks)} clics · {num(row.impressions)} vues</span>
         </span>
       </div>)}
       <div style={{fontSize:11.5,color:"#A8909A",marginTop:10,lineHeight:1.5}}>Période : {data.start} au {data.end}. Source : Google Search Console ({data.siteUrl}).</div>
@@ -17679,7 +17694,7 @@ function SeoAudit(){
         <div onClick={()=>setOpen(o=>({...o,[i]:!o[i]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer"}}>
           <span style={{fontSize:16}}>{mk[st]}</span>
           <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:700,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(p.url)}</span>
-          {p.status>0&&<span style={{fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:20,background:p.status>=400?"#FBF1EF":"#EAF7F1",color:p.status>=400?"#C84B31":"#1F8A5B"}}>{p.status}</span>}
+          {p.status>0&&<span style={{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:20,background:p.status>=400?"#FBF1EF":"#EAF7F1",color:p.status>=400?"#C84B31":"#1F8A5B"}}>{p.status}</span>}
           <span style={{fontSize:12,color:"#A8909A"}}>{isOpen?"▲":"▼"}</span>
         </div>
         {isOpen&&<div style={{padding:"0 14px 12px"}}>
@@ -17736,7 +17751,7 @@ function SitePages(){
     <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Pages &amp; articles</div>
     <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Toutes les pages référencées dans ton sitemap. Ouvre-les, ou vérifie qu'elles répondent bien (pas de 404).</div>
     {orphans&&orphans.ok&&orphans.orphans&&orphans.orphans.length>0&&<div className="bo-card">
-      <h3>Pages orphelines<span style={{marginLeft:8,fontSize:10,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>{orphans.orphans.length} trouvée{orphans.orphans.length>1?"s":""}</span></h3>
+      <h3>Pages orphelines<span style={{marginLeft:8,fontSize:11,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>{orphans.orphans.length} trouvée{orphans.orphans.length>1?"s":""}</span></h3>
       <p>Fichiers présents dans public/ mais absents du sitemap.xml — invisibles pour Google.</p>
       <div style={{marginTop:10}}>
         {orphans.orphans.map((o,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,background:"#FDFBF8",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
@@ -17756,7 +17771,7 @@ function SitePages(){
     {!urls&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Chargement du sitemap…</div>}
     {urls&&urls.map((u,i)=>{const s=status[u];return <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 14px",marginBottom:8}}>
       <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(u)}</span>
-      {s!==undefined&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,background:(s>=400||s===0)?"#FBF1EF":"#EAF7F1",color:(s>=400||s===0)?"#C84B31":"#1F8A5B"}}>{s===0?"erreur":s}</span>}
+      {s!==undefined&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:20,background:(s>=400||s===0)?"#FBF1EF":"#EAF7F1",color:(s>=400||s===0)?"#C84B31":"#1F8A5B"}}>{s===0?"erreur":s}</span>}
       <a href={u} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"#B85C38",fontWeight:700,textDecoration:"none",flexShrink:0}}>Ouvrir ↗</a>
     </div>;})}
     {urls&&urls.length===0&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Aucune URL trouvée dans le sitemap.</div>}
@@ -17842,12 +17857,12 @@ function BackofficeShell({user,appConfig,setAppConfig}){
       .bo-root{min-height:100vh;background:#FDFBF8;font-family:'DM Sans',sans-serif;}
       .bo-wrap{display:flex;min-height:100vh;}
       .bo-side{width:230px;background:#2E4A5A;color:#EDE4DE;flex-shrink:0;display:flex;flex-direction:column;padding:14px 10px;position:sticky;top:0;height:100vh;overflow-y:auto;}
-      .bo-grp{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#8FA6B4;font-weight:700;padding:11px 10px 5px;}
+      .bo-grp{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#8FA6B4;font-weight:700;padding:11px 10px 5px;}
       .bo-tab{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:#DCE6EC;border:none;background:none;width:100%;text-align:left;font-family:inherit;margin-bottom:2px;}
       .bo-tab .ic{font-size:16px;width:22px;text-align:center;}
       .bo-tab:hover{background:rgba(255,255,255,.07);}
       .bo-tab.on{background:#E49178;color:#fff;font-weight:800;}
-      .bo-tab .soon{margin-left:auto;font-size:9px;background:rgba(255,255,255,.16);padding:2px 6px;border-radius:20px;font-weight:700;}
+      .bo-tab .soon{margin-left:auto;font-size:11px;background:rgba(255,255,255,.16);padding:2px 6px;border-radius:20px;font-weight:700;}
       .bo-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;}
       .bo-foot .mail{color:#EDE4DE;font-weight:600;display:block;margin-bottom:7px;word-break:break-all;}
       .bo-main{flex:1;min-width:0;display:flex;flex-direction:column;}
@@ -17911,7 +17926,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
             <div className="bo-stat"><div className="n">{stats?stats.enfants:"…"}</div><div className="l">Enfants suivis</div></div>
           </div>
           <div className="bo-card">
-            <h3>💳 Revenu (Stripe){stripeMrr&&stripeMrr.ok&&stripeMrr.mode==="test"&&<span style={{marginLeft:8,fontSize:10,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>MODE TEST</span>}</h3>
+            <h3>💳 Revenu (Stripe){stripeMrr&&stripeMrr.ok&&stripeMrr.mode==="test"&&<span style={{marginLeft:8,fontSize:11,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>MODE TEST</span>}</h3>
             {stripeMrr===null&&<p>Chargement…</p>}
             {stripeMrr&&!stripeMrr.ok&&<p>⚠️ {stripeMrr.error||"Stripe non configuré."}</p>}
             {stripeMrr&&stripeMrr.ok&&<>
