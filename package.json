@@ -13,7 +13,8 @@
     "documents:kit": "python3 scripts/generer-kit.py && python3 scripts/verifier-kit.py",
     "documents:embarquer": "node scripts/embarquer-documents.mjs",
     "parcours": "node scripts/parcours-visuel.mjs",
-    "parcours:parent": "node scripts/parcours-visuel.mjs http://localhost:4173 /tmp/timat-parent parent"
+    "parcours:parent": "node scripts/parcours-visuel.mjs http://localhost:4173 /tmp/timat-parent parent",
+    "parcours:backoffice": "node scripts/parcours-backoffice.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
