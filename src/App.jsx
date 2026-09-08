@@ -4024,7 +4024,7 @@ function Sante({enfants,role,pEId,user}){
             <span>🔗</span>
             <span>{role==="parent"
               ?<>Ces informations proviennent de la <b>Fiche d'urgence</b>. Tenez-la à jour pour que votre assistante maternelle ait toujours le bon groupe sanguin et le bon médecin.{!ficheAJour&&<span style={{color:"var(--R)"}}> (fiche non renseignée)</span>}</>
-              :<>Renseigné par le parent via la <b>Fiche d'urgence</b>.{!ficheAJour&&<span style={{color:"var(--R)"}}> Fiche pas encore remplie par le parent.</span>}</>}</span>
+              :<>Renseigné par le parent via la <b>Fiche d'urgence</b>.{!ficheAJour&&<span style={{color:"var(--m)"}}> Elle n'a pas encore été remplie.</span>}</>}</span>
           </div>
         </div>
 
@@ -5593,6 +5593,8 @@ function Documents({enfants,role,pEId,user}){
 }
 
 //
+// Somme des taux patronaux de la table ci-dessous. On la calcule plutot que de
+// la recopier : deux endroits ne peuvent pas diverger s'il n'y en a qu'un.
 const TAUX_COTISATIONS={
   "Maladie-maternité":{sal:0,pat:13},
   "Vieillesse plafonnée":{sal:6.9,pat:8.55},
@@ -5609,6 +5611,8 @@ const TAUX_COTISATIONS={
   "CSG non déductible":{sal:2.4,pat:0,base:0.9825},
   "CRDS":{sal:0.5,pat:0,base:0.9825},
 };
+const TAUX_PATRONAL_TOTAL = Object.values(TAUX_COTISATIONS)
+  .reduce((s, t) => s + (t.pat > 0 ? t.pat * (t.base || 1) : 0), 0) / 100;
 
 function BulletinSalaire({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
@@ -11159,7 +11163,9 @@ function SimulateurCout({enfants,pEId}){
   // Calculs
   const heuresMois=heures*semaines/12;
   const salBrut=(heures*taux*semaines/12)*1.1; // brut mensuel estimé (taux net + ~10% CP)
-  const cotPat=salBrut*0.275;
+  // Le taux vient de la table du bulletin, plus d'un nombre en dur : le
+  // simulateur annoncait 27,5 % la ou le bulletin en calculait 44,37 %.
+  const cotPat=salBrut*TAUX_PATRONAL_TOTAL;
   const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
   // CMG 2026 - REFORME 1er sept 2025 : calcul horaire par taux d'effort (barème PSU), parametres assmat 2026
   // Bareme CMG au 1er avril 2026, verifie sur les publications Urssaf et CNAF.
@@ -11200,12 +11206,17 @@ function SimulateurCout({enfants,pEId}){
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
         {[["Coût brut",fmt2(coutTotal),"var(--m)","var(--c)"],
-          ["Aide CMG","-"+fmt2(cmgMensuel),"var(--S)","var(--Sp)"],
-          ["Crédit d'impôt","-"+fmt2(creditImpot),"var(--B)","var(--Bp)"],
+          ["Aide CMG","-"+fmt2(cmgMensuel),"var(--G)","var(--Gp)"],
+          ["Crédit d'impôt","-"+fmt2(creditImpot),"var(--G)","var(--Gp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
           <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
         </div>)}
+      </div>
+      <div style={{padding:"0 14px 12px",fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>
+        Le coût brut inclut {(TAUX_PATRONAL_TOTAL*100).toFixed(2).replace(".",",")} % de cotisations patronales.
+        Si vous percevez le CMG, la CAF les règle directement à l'Urssaf dans la limite du plafond
+        journalier : elles ne sont pas prélevées sur votre compte.
       </div>
     </div>
     <div className="g2">
