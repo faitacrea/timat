@@ -13,6 +13,7 @@
  * comptés comme non vérifiables, jamais comme morts.
  */
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 
 const RACINE = process.cwd();
@@ -214,6 +215,49 @@ const roles = appSrc.match(/const COULEUR_ROLE=\{([^}]*)\}/);
 for (const [, role, hex] of (roles ? roles[1] : "").matchAll(/(\w+):"(#[0-9A-Fa-f]{6})"/g)) {
   const r = contraste(hex, "#FFFFFF");
   if (r < 4.5) signale("contraste", `couleur du role ${role} (${hex}) ne tient que ${r.toFixed(2)}:1 sous le texte blanc de l'avatar`);
+}
+
+// --- coherence avec le schema de la base ---
+// delete_user_account visait les tables « sommeils » et « documents », qui
+// n'existent pas : l'erreur ne se voyait qu'a l'execution, et la fonction
+// n'effacait rien. Ce controle compare ce que le code cite a l'empreinte du
+// schema, pour que ce genre d'ecart se voie a la construction.
+const schemaConnu = JSON.parse(readFileSync(new URL("../data/schema-supabase.json", import.meta.url), "utf8"));
+const sourcesDonnees = [new URL("../src/App.jsx", import.meta.url)]
+  .concat(fs.readdirSync(new URL("../api/", import.meta.url)).filter((f) => f.endsWith(".js")).map((f) => new URL("../api/" + f, import.meta.url)))
+  .map((u) => readFileSync(u, "utf8")).join("\n")
+  // Un compartiment de stockage n'est pas une table : storage.from("documents")
+  // designe un bucket, et le confondre produirait une fausse alerte.
+  .replace(/supabase\.storage\.from\("[a-z_-]+"\)/g, "STOCKAGE");
+
+for (const t of new Set([...sourcesDonnees.matchAll(/\.from\("([a-z_]+)"\)/g)].map((m) => m[1]))) {
+  if (!schemaConnu[t]) signale("schéma", `la table « ${t} » est appelée par le code mais absente du schéma`);
+}
+const citees = new Map();
+const noter = (t, c) => { if (!citees.has(t)) citees.set(t, new Set()); citees.get(t).add(c); };
+for (const m of sourcesDonnees.matchAll(/\.from\("([a-z_]+)"\)\s*\.select\(\s*"([^"*]+)"/g)) {
+  for (const brut of m[2].split(/[,\s]+/)) {
+    const c = brut.split("(")[0].split(":")[0].trim();
+    if (/^[a-z_]+$/.test(c)) noter(m[1], c);
+  }
+}
+for (const m of sourcesDonnees.matchAll(/\.from\("([a-z_]+)"\)\s*\.(?:insert|upsert|update)\(\s*\{([\s\S]{0,600}?)\}/g)) {
+  for (const c of m[2].matchAll(/([a-z_]+)\s*:/g)) noter(m[1], c[1]);
+}
+for (const [t, cols] of citees) {
+  if (!schemaConnu[t]) continue;
+  for (const c of cols) {
+    if (!schemaConnu[t].includes(c)) signale("schéma", `${t}.${c} est utilisée par le code mais absente du schéma`);
+  }
+}
+
+// --- coherence des modeles de courriel ---
+// Un modele demande par l'application mais inconnu de l'API produit un envoi
+// silencieusement vide : l'erreur ne remonte pas jusqu'a l'utilisatrice.
+const apiMail = readFileSync(new URL("../api/send-email.js", import.meta.url), "utf8");
+const modelesApi = new Set([...apiMail.matchAll(/^\s{2}([a-z_]+):\s*\{/gm)].map((m) => m[1]));
+for (const m of new Set([...readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").matchAll(/template:"([a-z_]+)"/g)].map((x) => x[1]))) {
+  if (!modelesApi.has(m)) signale("courriel", `le modèle « ${m} » est demandé par l'application mais inconnu de api/send-email.js`);
 }
 
 // --- chiffres reglementaires ---
