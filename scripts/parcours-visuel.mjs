@@ -26,8 +26,14 @@ const src = readFileSync(new globalThis.URL("../src/App.jsx", import.meta.url), 
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
 if (!CLE) { console.error("Clé d'accès introuvable dans src/App.jsx."); process.exit(1); }
 
+// Le parcours ne couvrait que l'espace assistante maternelle. L'espace parent
+// et la page d'accueil publique n'avaient jamais ete ouverts : c'est pourtant
+// la landing que voient tous les prospects, et l'espace parent la moitie des
+// utilisateurs.
+const ESPACE = process.argv[4] || "asmat";
+
 // [nom du fichier, groupe de la barre du bas, entrée du sous-menu]
-const ECRANS = [
+const ECRANS_ASMAT = [
   ["accueil", "Accueil", null],
   ["journee", "L'enfant", "Journée"],
   ["pointage", "L'enfant", "Pointage"],
@@ -43,6 +49,27 @@ const ECRANS = [
   ["pmi", "Outils Pro", "PMI"],
   ["faq", "Outils Pro", "Aide & Support"],
 ];
+
+const ECRANS_PARENT = [
+  ["accueil", "Accueil", null],
+  ["journee", "Mon enfant", "Journée"],
+  ["pointage", "Mon enfant", "Pointage"],
+  ["suivi-progres", "Mon enfant", "Suivi & Progrès"],
+  ["sante-urgence", "Mon enfant", "Santé & Urgence"],
+  ["projet-accueil", "Mon enfant", "Projet d'accueil"],
+  ["bilans", "Mon enfant", "Bilans"],
+  ["calendrier", "Administratif", "Calendrier"],
+  ["messagerie", "Administratif", "Messagerie"],
+  ["aides-simulateurs", "Administratif", "Aides & Simulateurs"],
+  ["mon-contrat", "Administratif", "Mon contrat"],
+  ["documents", "Administratif", "Documents & Attestations"],
+  ["centre-aide", "Administratif", "Centre d'aide"],
+];
+
+const ECRANS = ESPACE === "parent" ? ECRANS_PARENT : ECRANS_ASMAT;
+const COMPTE = ESPACE === "parent"
+  ? { email: "sophie.martin@mail.fr", bouton: /Accéder à mon espace|Se connecter/ }
+  : { email: "marie.dupont@mail.fr", bouton: /Accéder à mon espace/ };
 
 mkdirSync(SORTIE, { recursive: true });
 // Playwright telecharge normalement son propre navigateur. Quand il est deja
@@ -75,7 +102,7 @@ await page.goto(`${URL_BASE}/?acces=${CLE}&connexion=1`, { waitUntil: "domconten
 await page.waitForTimeout(2500);
 await page.getByRole("button", { name: /^Se connecter$/ }).first().click();
 await page.waitForTimeout(600);
-await page.fill('input[type="email"]', "marie.dupont@mail.fr");
+await page.fill('input[type="email"]', COMPTE.email);
 await page.fill('input[type="password"]', "demonstration");
 await page.getByRole("button", { name: /Accéder à mon espace/ }).click();
 await page.waitForTimeout(3000);
@@ -111,7 +138,7 @@ for (const [nom, groupe, entree] of ECRANS) {
 await navigateur.close();
 
 const n = (x) => String(x).padEnd(20);
-console.log(`\n=== PARCOURS VISUEL — ${lignes.length} écrans, captures dans ${SORTIE} ===\n`);
+console.log(`\n=== PARCOURS VISUEL (${ESPACE}) — ${lignes.length} écrans, captures dans ${SORTIE} ===\n`);
 console.log(n("écran") + "déborde  <11px  cibles<36  erreurs");
 for (const l of lignes) {
   if (l.souci) { console.log(n(l.nom) + "— " + l.souci); continue; }

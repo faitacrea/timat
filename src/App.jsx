@@ -492,7 +492,7 @@ function Styles(){return(
       .demo-tabs{flex-direction:row;flex-wrap:nowrap;gap:5px;width:100%;overflow:visible;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);box-shadow:none;border-radius:12px;padding:5px;order:1}
       .demo-tabs button{flex:1 1 0;min-width:0;width:auto;flex-direction:column;gap:3px;text-align:center;justify-content:center;padding:8px 2px;border:none!important;border-radius:13px!important}
       .demo-tabs button span:first-child{font-size:16px!important}
-      .demo-tabs button span:last-child{font-size:7.5px!important;line-height:1.15!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+      .demo-tabs button span:last-child{font-size:11px!important;line-height:1.2!important;white-space:normal;max-width:100%;hyphens:auto}
       .demo-explain{max-width:none;order:2;padding-top:2px;flex:0 0 auto}
       .demo-scrollhint{display:none!important}
       .demo-scrollarrow{display:none!important}
@@ -1820,7 +1820,7 @@ function Transmissions({enfants,role,pEId,user}){
             style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"var(--Pp)",borderRadius:10,cursor:"pointer",border:"1px solid rgba(106,63,136,.2)"}}>
             <div>
               <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>
-                {b.type==="bilan"?"✨ Bilan de journée du "+b.date:"📝 CR Trimestriel - "+b.trim}
+                {b.type==="bilan"?"✨ Résumé de la journée du "+b.date:"📝 CR Trimestriel - "+b.trim}
               </div>
               <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Par {enfant?.prenomAsmat||"votre assmat"} · Cliquer pour lire</div>
             </div>
@@ -1942,8 +1942,8 @@ function RecitIA({enfants,role,pEId}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="✨" title="Bilan de journée"
-      sub="Journal personnalisé de la journée - rédigé automatiquement"/>
+    <PageHeader icon="✨" title="Résumé de la journée"
+      sub="Le résumé de la journée, à relire avant de l'envoyer au parent"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);setRecit("");setIdx(0);}}/>)}</div>}
 
@@ -1952,8 +1952,8 @@ function RecitIA({enfants,role,pEId}){
         <div className={"card "+(recit?"ai-card":"")+""}style={{padding:18,marginBottom:12,border:"1.5px solid var(--P)"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
             <div style={{width:32,height:32,borderRadius:"50%",background:"var(--Pp)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>✨</div>
-            <div><div className="pf"style={{fontSize:15,fontWeight:700,color:"var(--P)"}}>Bilan de journée de {enfant?.prenom}</div>
-              <div style={{fontSize:11,color:"var(--l)"}}>Rédigé automatiquement · Exclusif TiMat</div></div>
+            <div><div className="pf"style={{fontSize:15,fontWeight:700,color:"var(--P)"}}>Résumé de la journée de {enfant?.prenom}</div>
+              <div style={{fontSize:11,color:"var(--l)"}}>Une base à personnaliser · Exclusif TiMat</div></div>
           </div>
 
           {loading&&<div style={{display:"flex",alignItems:"center",gap:10,padding:"20px 0"}}>
@@ -9801,7 +9801,7 @@ function KitCMG({enfants,role,pEId,user}){
       </div>
       <a href="https://www.monenfant.fr" target="_blank" rel="noopener noreferrer"
         style={{display:"inline-block",marginTop:10,background:"var(--B)",color:"#fff",
-        borderRadius:8,padding:"7px 14px",fontSize:12,fontWeight:700,textDecoration:"none"}}>
+        borderRadius:8,padding:"11px 16px",fontSize:12,fontWeight:700,textDecoration:"none"}}>
         Aller sur monenfant.fr →
       </a>
     </div>
@@ -9870,7 +9870,7 @@ function KitCMG({enfants,role,pEId,user}){
           </div>
           <a href="https://www.pajemploi.urssaf.fr" target="_blank" rel="noopener noreferrer"
             style={{display:"inline-block",background:"var(--T)",color:"#fff",
-            borderRadius:8,padding:"7px 14px",fontSize:12,fontWeight:700,textDecoration:"none"}}>
+            borderRadius:8,padding:"11px 16px",fontSize:12,fontWeight:700,textDecoration:"none"}}>
             Aller sur Pajemploi →
           </a>
         </div>
@@ -13693,7 +13693,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.9)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 12 }}>Ressources</div>
               {[["Espace parent employeur","/parents"],["Calcul de mensualisation","/blog/calcul-mensualisation-assistante-maternelle"],["Congés payés","/blog/conges-payes-assistante-maternelle"],["Salaire net, brut & coût","/blog/salaire-assistante-maternelle-net-brut"],["Déclaration Pajemploi","/blog/pajemploi-declaration-assistante-maternelle"],["Tous les guides","/blog"],["Simulateur de salaire","/simulateur-salaire-assistante-maternelle.html"],["Simulateur congés payés","/simulateur-conges-payes-assistante-maternelle.html"],["Indemnités d'entretien","/simulateur-indemnite-entretien-assistante-maternelle.html"],["Coût & CMG (parents)","/simulateur-cmg-reste-a-charge.html"],["Tous les outils","/outils.html"]].map(([label,href])=>
-                <a key={href} href={href} style={{ display:"block", fontSize: 12, color: "rgba(255,255,255,.6)", textDecoration:"none", padding: "4px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
+                <a key={href} href={href} style={{ display:"block", fontSize: 12.5, color: "rgba(255,255,255,.72)", textDecoration:"none", padding: "10px 0", transition:"color .15s" }} onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.6)"}>{label}</a>
               )}
             </div>
             {/* Légal */}
@@ -16012,7 +16012,7 @@ function Login({onLogin}){
         <img src="/logo.png" alt="TiMat" style={{height:(G?.landing?.logoSizes?.login)||80,marginBottom:8,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div style="font-size:56px;margin-bottom:8px">🌿</div><div class="pf" style="font-size:38px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-1px">TiMat</div>'}}/>
         <div style={{fontSize:14,color:"var(--l)",marginTop:4}}>L'application qui réinvente l'assistante maternelle</div>
         <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:12,flexWrap:"wrap"}}>
-          {["✨ Bilan de journée","📝 CR Trimestriel","🏛️ Pajemploi","📑 Attestation fiscale"].map(t=>
+          {["✨ Résumé de la journée","📝 CR Trimestriel","🏛️ Pajemploi","📑 Attestation fiscale"].map(t=>
             <span key={t}className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:11}}>{t}</span>)}
         </div>
       </div>
