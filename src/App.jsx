@@ -8689,12 +8689,13 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 //
 function PolitiqueConfidentialite(){
   const sections=[
-    {titre:"1. Responsable de traitement",contenu:"TiMat - contact : support@timat.app\nHébergement des données : France (OVHcloud Paris via Supabase)."},
+    {titre:"1. Rôles",contenu:"TiMat - contact : support@timat.app\nHébergement des données : France (OVHcloud Paris via Supabase).\n\nTiMat est responsable de traitement pour ce qu'elle décide elle-même : les comptes, l'abonnement, la facturation, la prospection, le support et les journaux techniques.\n\nTiMat est sous-traitante pour les données professionnelles de l'assistante maternelle : le dossier de l'enfant, les pointages, les contrats et les bulletins. Ces données sont hébergées sur instruction, et l'assistante maternelle en reste seule responsable."},
     {titre:"2. Données collectées",contenu:""},
-    {titre:"3. Durées de conservation",contenu:""},
-    {titre:"4. Vos droits",contenu:""},
-    {titre:"5. Cookies",contenu:"TiMat n'utilise aucun cookie publicitaire ni de tracking. Seuls les cookies techniques nécessaires au fonctionnement (session, authentification) sont utilisés."},
-    {titre:"6. Sécurité",contenu:"Chiffrement en transit (HTTPS/TLS 1.3), chiffrement au repos (AES-256), Row Level Security Supabase, authentification sécurisée."},
+    {titre:"3. Qui décide de quoi",contenu:""},
+    {titre:"4. Durées de conservation",contenu:""},
+    {titre:"5. Vos droits",contenu:""},
+    {titre:"6. Cookies",contenu:"TiMat n'utilise aucun cookie publicitaire ni de tracking. Seuls les cookies techniques nécessaires au fonctionnement (session, authentification) sont utilisés."},
+    {titre:"7. Sécurité",contenu:"Chiffrement en transit (HTTPS/TLS 1.3), chiffrement au repos (AES-256), Row Level Security Supabase, authentification sécurisée."},
   ];
 
   const tableaux={
@@ -8707,15 +8708,25 @@ function PolitiqueConfidentialite(){
       ["Photos enfants","Images (journal partagé)","Consentement explicite parents","Durée contrat + 1 an"],
       ["Paiements","Plan, Stripe ID (aucune CB stockée)","Exécution du contrat","10 ans"],
     ],
-    "3. Durées de conservation":[
+    "3. Qui décide de quoi":[
+      ["Donnée","Rôle de TiMat","Qui décide de sa suppression"],
+      ["Compte, abonnement, facturation TiMat","Responsable de traitement","TiMat, selon les durées ci-dessous"],
+      ["Prospection, support, journaux","Responsable de traitement","TiMat, selon les durées ci-dessous"],
+      ["Dossier de l'enfant, pointages, contrats, bulletins","Sous-traitant","L'assistante maternelle, seule"],
+    ],
+    "4. Durées de conservation":[
       ["Données","Durée","Justification"],
       ["Compte actif","Durée de l'abonnement","Nécessité du service"],
-      ["Après suppression du compte","0 jour (effacement immédiat)","Droit à l'effacement RGPD"],
-      ["Données financières / contrats","10 ans","Obligation légale comptable"],
-      ["Logs de connexion","12 mois","Sécurité"],
+      ["Après suppression du compte","Effacement immédiat","Droit à l'effacement (RGPD art. 17)"],
+      ["Compte inactif","Signalé à 2 ans, supprimé après avertissement","Recommandation CNIL"],
+      ["Facturation et comptabilité TiMat","10 ans","Code de commerce, art. L123-22"],
+      ["Prospects","3 ans après le dernier contact","Norme CNIL prospection"],
+      ["Messages de support","2 ans","Suivi de la demande"],
+      ["Journaux de connexion","12 mois","Sécurité"],
       ["Consentements","5 ans","Preuve de conformité CNIL"],
+      ["Données de l'enfant et registres professionnels","Fixée par l'assistante maternelle","TiMat n'en est que l'hébergeur"],
     ],
-    "4. Vos droits":[
+    "5. Vos droits":[
       ["Droit","Comment l'exercer"],
       ["Accès à vos données","Administratif → Documents → Export dossier"],
       ["Rectification","Paramètres → Modifier mon profil"],
@@ -11342,9 +11353,9 @@ const FAQ_DATA=[
   {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
    r:"Dans Paie & Contrats > Solde de tout compte. Saisissez la date de fin et le motif. TiMat calcule automatiquement l'ICCP (indemnité compensatrice de congés payés) et l'indemnité de préavis selon la CCN."}, // RENAME NAV P9
   {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
-   r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive. Toutes vos données sont effacées de nos serveurs conformément au RGPD (droit à l'effacement, article 17)."},
+   r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive (RGPD, droit à l'effacement, article 17). Assistante maternelle : tout votre dossier part avec le compte, y compris les données des enfants accueillis et vos fichiers. Parent : vos données personnelles sont effacées et vous êtes détaché du dossier, mais le registre de présence et les bulletins restent chez l'assistante maternelle — ce sont ses pièces justificatives, elle en a besoin pour se défendre en cas de litige."},
   {cat:"RGPD",q:"Où sont stockées mes données ?",
-   r:"Exclusivement en France, sur des serveurs OVHcloud à Paris via Supabase. Aucun transfert hors de l'Union Européenne, sauf pour la génération IA des bilans (données anonymisées envoyées à Anthropic)."},
+   r:"Exclusivement en France, sur des serveurs OVHcloud à Paris via Supabase. Aucun transfert hors de l'Union Européenne."},
   {cat:"Abonnement",q:"Puis-je changer d'offre ou résilier ?",
    r:"Oui, à tout moment depuis Paramètres → Mon abonnement. Pas d'engagement, pas de frais de résiliation. Si vous résiliez, votre accès Pro reste actif jusqu'à la fin de la période payée."},
   {cat:"Abonnement",q:"Comment fonctionne le parrainage ?",
@@ -13724,12 +13735,21 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Durée de conservation</h3>
+              <p><strong>Les durées dépendent de qui décide de la donnée.</strong> TiMat ne fixe librement que celles dont elle est responsable ; pour les données professionnelles de l'assistante maternelle, elle n'est qu'hébergeur et ne supprime rien de sa propre initiative.</p>
+              <p style={{marginTop:10}}><strong>Données dont TiMat est responsable</strong></p>
               <ul style={{paddingLeft:20,margin:"8px 0"}}>
-                <li><strong>Données de compte :</strong> conservées tant que le compte est actif, supprimées 30 jours après résiliation</li>
-                <li><strong>Données des enfants :</strong> conservées pendant la durée du contrat d'accueil, supprimées à la fin du contrat ou sur demande</li>
-                <li><strong>Données de facturation :</strong> conservées 5 ans (obligation légale)</li>
-                <li><strong>Données de support :</strong> conservées 2 ans</li>
+                <li><strong>Compte :</strong> conservé tant qu'il est actif. La suppression demandée depuis Paramètres est <strong>immédiate</strong>, sans délai de grâce.</li>
+                <li><strong>Compte inactif :</strong> signalé après 2 ans sans connexion, supprimé après vous avoir averti (recommandation CNIL).</li>
+                <li><strong>Facturation et comptabilité de TiMat :</strong> 10 ans (article L123-22 du code de commerce).</li>
+                <li><strong>Prospection :</strong> 3 ans après le dernier contact.</li>
+                <li><strong>Messages de support :</strong> 2 ans.</li>
+                <li><strong>Journaux de connexion :</strong> 12 mois.</li>
+                <li><strong>Preuves de consentement :</strong> 5 ans.</li>
               </ul>
+              <p style={{marginTop:10}}><strong>Données dont l'assistante maternelle est responsable</strong></p>
+              <p>Le dossier de l'enfant, les pointages, les contrats et les bulletins sont conservés aussi longtemps qu'elle en a l'usage, et effacés à sa demande ou avec son compte. TiMat ne les supprime pas d'office à la fin d'un accueil : ces pièces justifient les bulletins de salaire, et un salarié dispose de trois ans pour réclamer un rappel de salaire. Les effacer automatiquement priverait l'assistante maternelle de ses propres preuves.</p>
+              <p style={{marginTop:8}}>Un parent qui supprime son compte est détaché du dossier sans que celui-ci soit détruit, pour la même raison.</p>
+              <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont appliquées automatiquement, chaque mois, et non seulement annoncées.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
               <p>Conformément au RGPD, vous disposez des droits suivants :</p>

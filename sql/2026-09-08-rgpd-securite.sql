@@ -27,3 +27,17 @@
 --    « delete from storage.objects » en SQL.
 --
 -- Le détail exact des fonctions est dans l'historique des migrations Supabase.
+
+-- 3. purge_rgpd_durees_de_conservation + programme_purge_mensuelle
+--    Les durées annoncées n'étaient appliquées nulle part : aucun mécanisme de
+--    purge n'existait. La fonction purge_donnees_expirees() efface les données
+--    dont TiMat est RESPONSABLE DE TRAITEMENT — prospects 3 ans, support 2 ans,
+--    journaux 12 mois, consentements orphelins 5 ans, audit SEO 12 mois — et
+--    jamais les données métier de l'assistante maternelle, pour lesquelles
+--    TiMat n'est que sous-traitante (RGPD art. 28). Purger d'office un pointage
+--    ou un bulletin reviendrait à détruire la pièce justificative d'un tiers.
+--    Les achats en boutique ne sont pas purgés : pièces comptables, 10 ans
+--    (code de commerce, art. L123-22).
+--    La vue comptes_inactifs signale les comptes sans connexion depuis 2 ans
+--    sans les supprimer : la CNIL demande d'avertir la personne avant.
+--    Programmée par pg_cron, le 1er de chaque mois à 03h17 UTC.
