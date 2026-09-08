@@ -455,9 +455,9 @@ function Styles(){return(
     .nav-main{background:rgba(255,255,255,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(234,224,232,.5);display:flex;gap:4px;padding:0 16px;height:46px;align-items:center}
     .inp{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:16px;outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s;background:#fff;color:var(--b)}
     input,select,textarea,.inp,.sel,.ta{font-size:16px!important}
-    .inp:focus{border-color:var(--S);box-shadow:var(--sh3)}
+    .inp:focus{border-color:var(--accent);box-shadow:var(--sh3)}
     .ta{width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;resize:vertical;min-height:80px;transition:border-color .15s;background:#fff;color:var(--b)}
-    .ta:focus{border-color:var(--S);box-shadow:var(--sh3)}
+    .ta:focus{border-color:var(--accent);box-shadow:var(--sh3)}
     .sel{width:100%;padding:10px 14px;border-radius:12px;border:1.5px solid var(--br);font-size:13px;outline:none;font-family:inherit;background:#fff;color:var(--b)}
     .lbl{display:block;font-size:11.5px;font-weight:600;color:var(--l);margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:9px 18px;border-radius:12px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:transform .12s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;letter-spacing:.1px}
@@ -528,7 +528,7 @@ function Styles(){return(
     @media(max-width:700px){.combo-arrow{display:none!important}.combo-head{display:none!important}}
     .canv{border-radius:14px;border:2px solid var(--br);cursor:crosshair;touch-action:none;background:#fff}
     .moo{border:2px solid transparent;border-radius:var(--r3);min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:4px 6px;font-size:20px;cursor:pointer;transition:all .15s;background:transparent}
-    .moo.on,.moo:hover{border-color:var(--S);background:var(--Sp);transform:scale(1.15)}
+    .moo.on,.moo:hover{border-color:var(--accent);background:var(--accent-pale);transform:scale(1.12)}
     .msc{width:18px;height:18px;border-radius:50%;border:2px solid var(--br);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .15s}
     .msc.ok{background:var(--G);border-color:var(--G);color:#fff}
     .mood-bar{display:flex;gap:2px;height:32px;align-items:flex-end;margin-top:4px}
@@ -537,7 +537,7 @@ function Styles(){return(
     .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--S);animation:ai-pulse 1.2s ease-in-out infinite}
     @keyframes ai-pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.3);opacity:1}}
     .cp{padding:7px 12px!important;display:inline-flex!important;align-items:center;gap:6px;cursor:pointer;flex:unset!important;transition:all .15s!important;border-radius:20px!important}
-    .cp.on{border-color:var(--S)!important;background:var(--Sp)!important}
+    .cp.on{border-color:var(--accent)!important;background:var(--accent-pale)!important}
     ::-webkit-scrollbar{width:4px;height:4px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
@@ -929,7 +929,7 @@ function AvatarPicker({emoji,photo,onEmoji,onPhoto}){
         {photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:34}}>{emoji||"👶"}</span>}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-start"}}>
-        <button type="button" onClick={()=>fileRef.current&&fileRef.current.click()} disabled={busy} style={{padding:"7px 12px",borderRadius:10,border:"1.5px solid var(--T)",background:"var(--Tp)",color:"var(--T)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{busy?"…":(photo?"📷 Changer la photo":"📷 Ajouter une photo")}</button>
+        <button type="button" onClick={()=>fileRef.current&&fileRef.current.click()} disabled={busy} style={{padding:"7px 12px",borderRadius:10,border:"1.5px solid var(--accent)",background:"var(--accent-pale)",color:"var(--accent)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{busy?"…":(photo?"📷 Changer la photo":"📷 Ajouter une photo")}</button>
         {photo&&<button type="button" onClick={()=>onPhoto(null)} style={{padding:"2px 4px",borderRadius:10,border:"none",background:"none",color:"var(--R)",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Retirer la photo</button>}
       </div>
       <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>choisir(e.target.files&&e.target.files[0])}/>
@@ -963,7 +963,7 @@ function AvatarEditeur({enfant,onClose,onSaved}){
       <AvatarPicker emoji={emoji} photo={photo} onEmoji={setEmoji} onPhoto={setPhoto}/>
       <div style={{display:"flex",gap:8,marginTop:18}}>
         <button onClick={onClose} style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",color:"var(--m)",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Annuler</button>
-        <button onClick={sauver} disabled={saving} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:"var(--T)",color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{saving?"…":"Enregistrer"}</button>
+        <button onClick={sauver} disabled={saving} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:"var(--accent)",color:"#fff",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{saving?"…":"Enregistrer"}</button>
       </div>
     </div>
   </div>;
@@ -1263,7 +1263,7 @@ function PointageRapide({enfants,role,user,demo}){
               <button className={fini?"btn bG":"btn bA"} disabled={fini||busy===e.id}
                 style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
                 onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
-              {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}><IconeOuEmoji e="📱"/> QR</button>}
+              {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}><IconeOuEmoji e="📱"/> QR</button>}
             </div>
           </div>
         </div>;
@@ -2959,7 +2959,7 @@ function Calendrier({enfants,role,pEId}){
 
     {/* Bascule Semaine / Mois + ajout d'événement */}
     <div style={{display:"flex",gap:6,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
-      {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{padding:"8px 18px",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--T)":"#fff",color:vue===k?"#fff":"var(--T)",borderColor:vue===k?"var(--T)":"var(--Tp)"}}>{l}</button>)}
+      {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{padding:"8px 18px",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--accent)":"#fff",color:vue===k?"#fff":"var(--accent)",borderColor:vue===k?"var(--accent)":"var(--accent-pale)"}}>{l}</button>)}
       {role==="asmat"&&<button className="btn bT" style={{marginLeft:"auto",fontSize:13,padding:"8px 14px",fontWeight:700}} onClick={()=>{setEvForm({date:dsDate(joursDeLaSemaine[0]),type:"rdv",txt:""});setShowEvModal(true);}}><IconeOuEmoji e="➕"/> Événement</button>}
     </div>
 
@@ -3026,7 +3026,7 @@ function Calendrier({enfants,role,pEId}){
           <button className="btn bG" style={{padding:"6px 12px",fontSize:15}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
           <div style={{textAlign:"center"}}>
             <div className="pf" style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>{labelSemaine}</div>
-            {semOffset!==0&&<button onClick={()=>setSemOffset(0)} style={{background:"none",border:"none",color:"var(--T)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:2}}>↺ Cette semaine</button>}
+            {semOffset!==0&&<button onClick={()=>setSemOffset(0)} style={{background:"none",border:"none",color:"var(--accent)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:2}}>↺ Cette semaine</button>}
           </div>
           <button className="btn bG" style={{padding:"6px 12px",fontSize:15}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
         </div>
@@ -3034,7 +3034,7 @@ function Calendrier({enfants,role,pEId}){
         <div style={{overflowX:"hidden"}}>
           <div style={{width:"100%",display:"grid",gridTemplateColumns:isMobile?"22px repeat(7,1fr)":"46px repeat(7,1fr)"}}>
             <div/>
-            {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} onClick={()=>setJourLarge(jd)} style={{textAlign:"center",padding:"4px 1px",borderBottom:"2px solid "+(auj?"var(--T)":"var(--br)"),cursor:"pointer"}}>
+            {joursDeLaSemaine.map((jd,i)=>{const auj=estAujourdhui(jd);return <div key={i} onClick={()=>setJourLarge(jd)} style={{textAlign:"center",padding:"4px 1px",borderBottom:"2px solid "+(auj?"var(--accent)":"var(--br)"),cursor:"pointer"}}>
               <div style={{fontSize:11,color:auj?"var(--T)":"var(--l)",fontWeight:700,textTransform:"uppercase"}}>{NOMS_JOURS[i].slice(0,3)}</div>
               <div style={{fontSize:15,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:26,height:26,lineHeight:"26px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
             </div>;})}
@@ -3345,7 +3345,7 @@ function Messagerie({enfants,role,pEId,user}){
         <div style={{display:"flex",gap:8,padding:"12px 14px",borderTop:"1px solid var(--br)",alignItems:"center",background:"#fff"}}>
           <input id="timat-msg-input" className="inp"value={txt}onChange={e=>setTxt(e.target.value)}
             onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Votre message…"style={{flex:1,borderRadius:22}}/>
-          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--T)":"var(--br)",color:"#fff",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
+          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--accent)":"var(--br)",color:"#fff",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
         </div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -4891,7 +4891,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       <PageHeader icon="✨" title={viewing.trimestre||(viewing.type==="mensuel"?"Bilan mensuel":"Bilan")} sub={(p?.date_debut||"")+(p?.date_fin?" → "+p.date_fin:"")}
         action={<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           {/* PDF BILAN P9 - bouton export PDF */}
-          <button className="btn" style={{background:"var(--T)",color:"#fff",border:"none"}} onClick={()=>exporterBilanPDF(viewing)}>📥 PDF</button>
+          <button className="btn" style={{background:"var(--accent)",color:"#fff",border:"none"}} onClick={()=>exporterBilanPDF(viewing)}>📥 PDF</button>
           <button className="btn" onClick={()=>setViewing(null)}>← Retour</button>
         </div>}/>
       {!p&&<div className="card"style={{padding:14}}>{viewing.contenu}</div>}
@@ -4962,7 +4962,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>setViewing(b)}>👁️ Voir</button>
           {/* PDF BILAN P9 - export PDF rapide depuis la liste, sur bilans envoyés uniquement */}
-          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,background:"var(--T)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
+          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,background:"var(--accent)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
           {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
           {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
           {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
@@ -6447,7 +6447,7 @@ function CourriersTypes({enfants,pEId,user}){
         </div>)}
       </div>
     </>:<>
-      <button onClick={()=>setSelId(null)}style={{background:"none",border:"none",cursor:"pointer",color:"var(--T)",fontWeight:700,fontSize:13,marginBottom:12,padding:0}}>← Retour aux modèles</button>
+      <button onClick={()=>setSelId(null)}style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontWeight:700,fontSize:13,marginBottom:12,padding:0}}>← Retour aux modèles</button>
       <div className="card"style={{padding:18,marginBottom:14}}>
         <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{sel.ic} {sel.titre}</div>
         <div style={{fontSize:11,color:"var(--l)"}}>{sel.cat} · contexte rempli automatiquement (nom, agrément, enfant)</div>
@@ -6588,7 +6588,7 @@ function Parrainage({user}){
       </div>
       <div style={{display:"flex",gap:8,alignItems:"center",background:"rgba(255,255,255,.08)",borderRadius:8,padding:"8px 12px",marginBottom:12}}>
         <span style={{fontSize:11,color:"rgba(255,255,255,.6)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{lien}</span>
-        <button onClick={copy}style={{background:copied?"var(--S)":"rgba(255,255,255,.2)",color:"#fff",border:"none",borderRadius:10,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700,flexShrink:0}}>
+        <button onClick={copy}style={{background:copied?"var(--G)":"rgba(255,255,255,.2)",color:"#fff",border:"none",borderRadius:10,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700,flexShrink:0}}>
           {copied?"✓ Copié":"Copier"}
         </button>
       </div>
@@ -6794,7 +6794,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 
     {/* Selecteur d'enfant */}
     {liste.length>1&&<div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
-      {liste.map(e=><button key={e.id}onClick={()=>{setSelId(e.id);setShowForm(false);}}style={{padding:"6px 14px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:e.id===enfant?.id?"var(--T)":"var(--c)",color:e.id===enfant?.id?"#fff":"var(--m)"}}>{e.prenom||"Enfant"}</button>)}
+      {liste.map(e=><button key={e.id}onClick={()=>{setSelId(e.id);setShowForm(false);}}style={{padding:"6px 14px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:e.id===enfant?.id?"var(--accent)":"var(--c)",color:e.id===enfant?.id?"#fff":"var(--m)"}}>{e.prenom||"Enfant"}</button>)}
     </div>}
 
     {isDemo
@@ -6808,7 +6808,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                 <div className="pf"style={{fontSize:28,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{fmtEur(totalVerse)}</div>
                 {suivi.duMensuel>0&&<div style={{fontSize:11.5,fontWeight:700,marginTop:3,color:suivi.ecart>1?"var(--R)":"var(--S)"}}>{suivi.ecart>1?((role==="parent"?"Reste à verser : ":"Reste dû : ")+fmtEur(suivi.ecart)):"À jour ✓"}</div>}
               </div>
-              {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{flexShrink:0,padding:"10px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"#fff":"var(--T)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
+              {role==="parent"&&<button onClick={()=>setShowForm(s=>!s)}style={{flexShrink:0,padding:"10px 16px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:showForm?"#fff":"var(--accent)",color:showForm?"var(--m)":"#fff"}}>{showForm?"Annuler":"+ Ajouter un versement"}</button>}
             </div>
           </div>
 
@@ -6826,8 +6826,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                   <div style={{fontSize:11,color:"var(--m)"}}>Dû {fmtEur(m.du)} · Versé {fmtEur(m.verse)}{m.ecart>1?(" · reste "+fmtEur(m.ecart)):""}</div>
                 </div>
                 {m.statut!=="paye"&&(role==="parent"
-                  ? <button onClick={()=>prefillVersement(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>+ Enregistrer</button>
-                  : <button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>Relancer</button>)}
+                  ? <button onClick={()=>prefillVersement(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--accent)",color:"#fff"}}>+ Enregistrer</button>
+                  : <button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--accent)",color:"#fff"}}>Relancer</button>)}
               </div>)}
             </div>
           </div>}
@@ -6862,7 +6862,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
               <label style={labelStyle}>Note (optionnel)</label>
               <input type="text"placeholder="ex. virement reçu en retard"value={fNote}onChange={e=>setFNote(e.target.value)}style={inputStyle}/>
             </div>
-            <button onClick={ajouterVersement}disabled={saving}style={{width:"100%",padding:"11px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:saving?"var(--c)":"var(--T)",color:saving?"var(--m)":"#fff"}}>{saving?"Enregistrement…":"Enregistrer le versement"}</button>
+            <button onClick={ajouterVersement}disabled={saving}style={{width:"100%",padding:"11px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:saving?"var(--c)":"var(--accent)",color:saving?"var(--m)":"#fff"}}>{saving?"Enregistrement…":"Enregistrer le versement"}</button>
           </div>}
 
           {/* Liste */}
@@ -6917,7 +6917,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
         </div>
         <div style={{display:"flex",gap:10}}>
           <button onClick={()=>{setEditId(null);resetForm();}}style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,color:"var(--m)"}}>Annuler</button>
-          <button onClick={modifierVersement}disabled={savingEdit}style={{flex:1,padding:"11px",borderRadius:10,border:"none",cursor:savingEdit?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:savingEdit?"var(--c)":"var(--T)",color:savingEdit?"var(--m)":"#fff"}}>{savingEdit?"Enregistrement…":"Enregistrer"}</button>
+          <button onClick={modifierVersement}disabled={savingEdit}style={{flex:1,padding:"11px",borderRadius:10,border:"none",cursor:savingEdit?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:savingEdit?"var(--c)":"var(--accent)",color:savingEdit?"var(--m)":"#fff"}}>{savingEdit?"Enregistrement…":"Enregistrer"}</button>
         </div>
       </div>
     </div>}
@@ -6963,7 +6963,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     const demoUnlockedSection="bulletin";
     return <div className="fi">
       <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
-        {sousOnglets.map(s=>{const unlocked=s.id===demoUnlockedSection;return <button key={s.id}onClick={()=>setSection(s.id)}style={{padding:"8px 16px",border:"none",background:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",color:section===s.id?"var(--T)":(unlocked?"var(--b)":"var(--l)"),borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6,opacity:unlocked?1:.7}}><IconeOuEmoji e={s.ic}/><span>{s.l}</span>{!unlocked&&<span style={{fontSize:11}}>🔒</span>}</button>;})}
+        {sousOnglets.map(s=>{const unlocked=s.id===demoUnlockedSection;return <button key={s.id}onClick={()=>setSection(s.id)}style={{padding:"8px 16px",border:"none",background:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",color:section===s.id?"var(--accent)":(unlocked?"var(--b)":"var(--l)"),borderBottom:section===s.id?"2.5px solid var(--accent)":"2.5px solid transparent",marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6,opacity:unlocked?1:.7}}><IconeOuEmoji e={s.ic}/><span>{s.l}</span>{!unlocked&&<span style={{fontSize:11}}>🔒</span>}</button>;})}
       </div>
       {section==="bulletin"
         ? <div>
@@ -6996,14 +6996,14 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
   return <div className="fi">
     {role==="asmat"?<>
       <div style={{display:"flex",gap:6,marginBottom:12}}>
-        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--T)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--T)",borderColor:groupeActif.id===g.id?"var(--T)":"var(--Tp)"}}>{g.ic} {g.l}</button>)}
+        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--accent)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--accent)",borderColor:groupeActif.id===g.id?"var(--accent)":"var(--accent-pale)"}}>{g.ic} {g.l}</button>)}
       </div>
       <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
         {sousOnglets.filter(s=>groupeActif.tabs.includes(s.id)).map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
           padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",
-          color:section===s.id?"var(--T)":"var(--b)",
-          borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
+          color:section===s.id?"var(--accent)":"var(--b)",
+          borderBottom:section===s.id?"2.5px solid var(--accent)":"2.5px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
         }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
       </div>
@@ -7011,8 +7011,8 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
         padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",
-        color:section===s.id?"var(--T)":"var(--b)",
-        borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
+        color:section===s.id?"var(--accent)":"var(--b)",
+        borderBottom:section===s.id?"2.5px solid var(--accent)":"2.5px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>}
@@ -7030,7 +7030,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     {section==="contrats"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
         {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"🏁 Fin de contrat"}].map(t=>
-          <button key={t.id}onClick={()=>setContratTab(t.id)}style={{padding:"6px 14px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:contratTab===t.id?"var(--T)":"transparent",color:contratTab===t.id?"#fff":"var(--m)",borderColor:contratTab===t.id?"var(--T)":"var(--br)"}}>{t.l}</button>)}
+          <button key={t.id}onClick={()=>setContratTab(t.id)}style={{padding:"6px 14px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:contratTab===t.id?"var(--accent)":"transparent",color:contratTab===t.id?"#fff":"var(--m)",borderColor:contratTab===t.id?"var(--accent)":"var(--br)"}}>{t.l}</button>)}
       </div>
       {contratTab==="contrats"?<div>
         <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
@@ -7067,7 +7067,7 @@ function Journal({enfants,role,pEId,user}){
         padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
         color:sousOnglet===s.id?"var(--T)":"var(--b)",
-        borderBottom:sousOnglet===s.id?"2px solid var(--T)":"2px solid transparent",
+        borderBottom:sousOnglet===s.id?"2px solid var(--accent)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
       }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>
@@ -8154,7 +8154,7 @@ function InstallGuide({isIOS,onClose}){
             <div><div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div><div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
           </div>)}
       </div>}
-      <button onClick={onClose} style={{width:"100%",background:"var(--T)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit"}}>Compris ✓</button>
+      <button onClick={onClose} style={{width:"100%",background:"var(--accent)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit"}}>Compris ✓</button>
     </div>
   </div>;
 }
@@ -9488,7 +9488,7 @@ function JournalComplet({enfants,role,pEId,user}){
         padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,whiteSpace:"nowrap",flexShrink:0,
         color:sec===s.id?"var(--T)":"var(--b)",
-        borderBottom:sec===s.id?"2px solid var(--T)":"2px solid transparent",
+        borderBottom:sec===s.id?"2px solid var(--accent)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>
@@ -11970,7 +11970,7 @@ function ActionBar({page,setPage,role}){
   }[p];
   if(!A)return null;
   return <div style={{maxWidth:1100,margin:"0 auto",padding:"0 4px 14px",display:"flex",justifyContent:"flex-end"}}>
-    <button onClick={A.fn} style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,var(--T),#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 22px rgba(228,145,120,.35)",transition:"transform .12s"}}
+    <button onClick={A.fn} style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,var(--accent),#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 22px rgba(228,145,120,.35)",transition:"transform .12s"}}
       onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>
       <span style={{fontSize:16}}>{A.ic}</span>{A.l}
     </button>
@@ -16304,7 +16304,7 @@ function IframePreview({cfg,noBezel}){
     <div style={{display:"flex",gap:8,padding:"10px",justifyContent:"center",background:"#e8e8e8",flexShrink:0,alignItems:"center"}}>
       <span style={{fontSize:11,fontWeight:700,color:"var(--S)",marginRight:4}}>👁 APERÇU LIVE</span>
       {[["mobile","📱 Mobile"],["web","🖥 Web"]].map(([k,l])=>
-        <button key={k}onClick={()=>{setBody(null);setDevice(k);}}style={{padding:"6px 16px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",background:device===k?"var(--T)":"#fff",color:device===k?"#fff":"var(--m)"}}>{l}</button>)}
+        <button key={k}onClick={()=>{setBody(null);setDevice(k);}}style={{padding:"6px 16px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",background:device===k?"var(--accent)":"#fff",color:device===k?"#fff":"var(--m)"}}>{l}</button>)}
     </div>
     <div style={{flex:1,overflow:"auto",display:"flex",justifyContent:"center",padding:(device==="mobile"&&!noBezel)?"20px":"0"}}>
       <iframe key={device} ref={initDoc} onLoad={e=>initDoc(e.target)} title="Aperçu landing"
@@ -16744,7 +16744,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
         <pre style={{margin:0,padding:"16px 20px",overflow:"auto",fontSize:11,lineHeight:1.5,color:"var(--b)",background:"var(--c)",whiteSpace:"pre-wrap",wordBreak:"break-word",flex:1,fontFamily:"ui-monospace,Menlo,monospace"}}>{prettyConfig(showJsonModal.config)}</pre>
         <div style={{display:"flex",gap:8,justifyContent:"flex-end",padding:"12px 20px",borderTop:"1px solid var(--br)",flexShrink:0}}>
           <button onClick={()=>{navigator.clipboard?.writeText(prettyConfig(showJsonModal.config)).then(()=>setToast("✅ JSON copié")).catch(()=>setToast("❌ Copie impossible"));}} style={{padding:"9px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📋"/> Copier</button>
-          <button onClick={()=>setShowJsonModal(null)} style={{padding:"9px 16px",borderRadius:10,border:"none",background:"var(--T)",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Fermer</button>
+          <button onClick={()=>setShowJsonModal(null)} style={{padding:"9px 16px",borderRadius:10,border:"none",background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Fermer</button>
         </div>
       </div>
     </div>}
@@ -16767,7 +16767,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
     {/* Bascule mobile Champs / Apercu (ecrans etroits uniquement) */}
     {!isWide&&<div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"var(--c)"}}>
-      {[["champs","📝 Champs"],["apercu","👁 Aperçu"]].map(([k,l])=><button key={k}onClick={()=>setMView(k)}style={{flex:1,padding:"10px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,background:mView===k?"var(--T)":"rgba(0,0,0,.05)",color:mView===k?"#fff":"var(--m)"}}>{l}</button>)}
+      {[["champs","📝 Champs"],["apercu","👁 Aperçu"]].map(([k,l])=><button key={k}onClick={()=>setMView(k)}style={{flex:1,padding:"10px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,background:mView===k?"var(--accent)":"rgba(0,0,0,.05)",color:mView===k?"#fff":"var(--m)"}}>{l}</button>)}
     </div>}
 
     <div style={{display:isWide?"flex":"block",height:isWide?"calc(100vh - 52px)":"auto",overflow:isWide?"hidden":"visible"}}>
@@ -17369,7 +17369,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 </div>;
               });
             })()}
-            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--Tp)",color:"#B85C38",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="✏️"/> Renommer / modifier le contenu d'une section</button>
+            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--accent-pale)",color:"#B85C38",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="✏️"/> Renommer / modifier le contenu d'une section</button>
           </BOCard>
           <BOCard title="Vagues entre sections" icon="🌊">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Ajoute une transition en vague en haut de chaque section. Désactive si tu préfères des séparations nettes.</div>
