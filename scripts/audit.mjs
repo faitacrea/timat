@@ -361,6 +361,24 @@ if (/ActionBar[\s\S]{0,1200}boxShadow:"0 8px 22px rgba\(/.test(appSrc)) {
   signale("mise en page", "l'action principale porte une ombre codee en dur : elle ne suit plus la couleur du role");
 }
 
+// --- icones : plus d'emoji dans les commandes de l'interface ---
+// Pourquoi : la barre du haut (cloche, lune, reglages, deconnexion) et les
+// libelles de boutons affichaient encore des emoji systeme, qui changent de
+// dessin selon le telephone et ne suivent pas la couleur du role. Les traces
+// dessinees passent par <IconeOuEmoji>.
+const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
+const boutonsIcone = [...appSrc.matchAll(/className="ico-btn"[\s\S]{0,400}?<\/button>/g)].map((m) => m[0]);
+const icoAvecEmoji = boutonsIcone.filter((b) => EMOJI.test(b.replace(/e=(?:"[^"]*"|\{[^}]*\})/g, "")));
+if (icoAvecEmoji.length) {
+  signale("icônes", `${icoAvecEmoji.length} commande(s) de la barre du haut affichent encore un emoji au lieu d'une icône dessinée`);
+}
+// Les libelles de boutons .btn ne doivent plus commencer par un emoji.
+const libellesEmoji = [...appSrc.matchAll(/className="btn[^"]*"[^>]{0,400}>\s*([^<{\n]{0,4})/g)]
+  .filter((m) => EMOJI.test(m[1]));
+if (libellesEmoji.length) {
+  signale("icônes", `${libellesEmoji.length} libellé(s) de bouton commencent par un emoji au lieu d'une icône dessinée`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
