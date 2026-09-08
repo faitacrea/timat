@@ -279,6 +279,7 @@ const BAREME = [
   { nom: "barème kilométrique 5 CV",       motif: /5:\s*0\.636\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "barème kilométrique 6 CV",       motif: /6:\s*0\.665\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "barème kilométrique 7 CV",       motif: /7:\s*0\.697\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
+  { nom: "abattement AEEH (4× au lieu de 3×)", motif: /baseMult\s*=\s*aeeh\s*\?\s*4\s*:\s*3/, source: "CGI art. 80 sexies, vérifié sur Légifrance" },
 ];
 const sourcesChiffres = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
   + readFileSync(new URL("./generate-local.mjs", import.meta.url), "utf8");
@@ -303,6 +304,13 @@ for (const m of tableCot.matchAll(/sal:([\d.]+),pat:[\d.]+(?:,base:([\d.]+))?/g)
 const txSal = Number((sourcesChiffres.match(/TX_SAL\s*=\s*(0\.\d+)/) || [])[1]) * 100;
 if (txSal && Math.abs(totalSal - txSal) > 0.01) {
   signale("chiffre", `le total salarial de TAUX_COTISATIONS (${totalSal.toFixed(4)} %) ne correspond plus à TX_SAL (${txSal.toFixed(4)} %)`);
+}
+
+// L'abattement ne peut exceder le total des sommes versees (CGI art. 80
+// sexies). Le net imposable etait deja plancher a zero, mais le montant
+// affiche pouvait depasser la base.
+if (!/abattementMois\s*=\s*Math\.min\(/.test(sourcesChiffres)) {
+  signale("chiffre", "l'abattement affiché n'est plus plafonné au total des sommes versées (CGI art. 80 sexies)");
 }
 
 // Le plafond du credit d'impot porte sur les depenses : un credit plafonne a
