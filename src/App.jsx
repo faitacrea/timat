@@ -219,6 +219,18 @@ const TRACES = {
   panier:'<path d="M3 5h2l2.6 10.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/>',
   calcul:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
   facture:'<path d="M5 3h14v18l-2.3-1.5L14.4 21l-2.4-1.5L9.6 21l-2.3-1.5L5 21Z"/><path d="M9 8h6M9 12h6"/>',
+  valide:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>',
+  alerte:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+  courbe:'<path d="M3 3v18h18"/><path d="m7 14 3.5-4 3 2.5L20 6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  sauver:'<path d="M5 3h11l3 3v15H5Z"/><path d="M8 3v6h7V3M8 21v-6h8v6"/>',
+  mobile:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  fievre:'<path d="M10 13V5a2 2 0 1 1 4 0v8a4.5 4.5 0 1 1-4 0Z"/><path d="M12 16.5v.01"/>',
+  cloche:'<path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z"/><path d="M10.5 20a2 2 0 0 0 3 0"/>',
+  lien:'<path d="M10 13a4 4 0 0 0 5.7.3l3-3A4 4 0 0 0 13 4.7l-1.7 1.7"/><path d="M14 11a4 4 0 0 0-5.7-.3l-3 3A4 4 0 0 0 11 19.3l1.7-1.7"/>',
+  rafraichir:'<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/>',
+  telecharger:'<path d="M12 3v12"/><path d="m7.5 11 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/>',
 };
 
 // Correspondance entre les emoji encore presents dans le code et les traces.
@@ -234,6 +246,9 @@ const EMOJI_TRACE = {
   "📝":"crayon","📦":"colis","📬":"boite","🔒":"cadenas","🗂️":"dossier",
   "😴":"sommeil","🚌":"bus","🚗":"voiture","🚨":"urgence","🛒":"panier",
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
+  "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
+  "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
+  "🔄":"rafraichir","📥":"telecharger",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -816,7 +831,7 @@ function GestionStockage({ user }) {
   };
 
   return <div className="card" style={{ padding: 20 }}>
-    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--b)", marginBottom: 14 }}>💾 Espace de stockage</div>
+    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--b)", marginBottom: 14 }}><IconeOuEmoji e="💾"/> Espace de stockage</div>
     {!q ? <div style={{ fontSize: 12.5, color: "var(--l)" }}>Mesure en cours…</div> : <>
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--b)" }}>
@@ -1046,7 +1061,9 @@ function Toast({msg,onClose}){useEffect(()=>{const t=setTimeout(onClose,3000);re
 function IconeOuEmoji({e,taille=17,couleur="currentColor"}){
   const trace=EMOJI_TRACE[e];
   return trace
-    ?<Icone nom={trace} taille={taille} couleur={couleur} epaisseur={1.9}/>
+    ?<span style={{display:"inline-block",verticalAlign:"-0.16em",lineHeight:0}}>
+       <Icone nom={trace} taille={taille} couleur={couleur} epaisseur={1.9}/>
+     </span>
     :<span style={{fontSize:taille-1,lineHeight:1}}>{e}</span>;
 }
 
@@ -1139,7 +1156,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
 
   return <div className="card" style={{padding:"14px 16px",marginBottom:14,border:"1.5px solid "+accent,background:bg}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}}>
-      <div style={{fontWeight:700,color:accent,fontSize:14}}>📅 Déclaration Pajemploi — salaire de {moisLabel}{isPreview&&<span style={{marginLeft:8,fontSize:11,fontWeight:700,color:"#fff",background:"var(--T)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle"}}>APERÇU</span>}</div>
+      <div style={{fontWeight:700,color:accent,fontSize:14}}><IconeOuEmoji e="📅"/> Déclaration Pajemploi — salaire de {moisLabel}{isPreview&&<span style={{marginLeft:8,fontSize:11,fontWeight:700,color:"#fff",background:"var(--T)",borderRadius:6,padding:"2px 7px",verticalAlign:"middle"}}>APERÇU</span>}</div>
       {fenetreOuverte
         ?<span style={{fontSize:12,fontWeight:700,color:accent,background:"#fff",border:"1px solid "+accent,borderRadius:20,padding:"3px 10px"}}>{joursRestants===0?"dernier jour !":joursRestants+" jour"+(joursRestants>1?"s":"")+" restant"+(joursRestants>1?"s":"")}</span>
         :<span style={{fontSize:11,color:"var(--l)",fontStyle:"italic"}}>{ouvreLabel}</span>}
@@ -1245,7 +1262,7 @@ function PointageRapide({enfants,role,user,demo}){
               <button className={fini?"btn bG":"btn bA"} disabled={fini||busy===e.id}
                 style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
                 onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
-              {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}>📱 QR</button>}
+              {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}><IconeOuEmoji e="📱"/> QR</button>}
             </div>
           </div>
         </div>;
@@ -1648,7 +1665,7 @@ function AccueilParent({enfant,setPage,user}){
       onClick={e=>e.target===e.currentTarget&&setShowAbsence(false)}>
       <div className="card"style={{width:"100%",maxWidth:420,padding:28}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-          <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}>🤒 Déclarer une absence</div>
+          <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}><IconeOuEmoji e="🤒"/> Déclarer une absence</div>
           <button onClick={()=>setShowAbsence(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
         </div>
         <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)"}}>
@@ -1729,7 +1746,7 @@ function AccueilParent({enfant,setPage,user}){
       style={{padding:16,marginBottom:12,cursor:"pointer",transition:"box-shadow .18s"}}
       onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
       onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
-      <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📋 Journal de la journée</div>
+      <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📋"/> Journal de la journée</div>
       {txs.length===0?<EmptyState compact emoji="💬" titre="Pas encore de transmission" texte="Le journal du jour de votre enfant s'affichera ici dès que votre assistante maternelle écrira un mot." cta="Voir le cahier du jour" onCta={()=>setPage&&setPage("cahier_jour")}/>
         :txs.map(t=><div key={t.id}style={{display:"flex",gap:10,marginBottom:10}}>
           <div style={{fontSize:22}}>{t.mood}</div>
@@ -1746,7 +1763,7 @@ function AccueilParent({enfant,setPage,user}){
       style={{padding:16,cursor:"pointer",transition:"box-shadow .18s"}}
       onMouseEnter={e=>e.currentTarget.style.boxShadow="var(--sh2)"}
       onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
-      <div style={{fontWeight:700,marginBottom:10,color:"var(--b)"}}>🍽️ Repas du jour</div>
+      <div style={{fontWeight:700,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="🍽️"/> Repas du jour</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         {rep.dej&&<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>🥗 {rep.dej}</span>}
         {rep.gou&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)"}}>🍎 {rep.gou}</span>}
@@ -1875,7 +1892,7 @@ function Transmissions({enfants,role,pEId,user}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>✏️ Nouvelle transmission</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="✏️"/> Nouvelle transmission</div>
           <div style={{marginBottom:10}}>
             <label className="lbl">Humeur</label>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1890,7 +1907,7 @@ function Transmissions({enfants,role,pEId,user}){
           <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer ✉️</button>
         </div>
         {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📈 Humeurs - 15 derniers jours</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📈"/> Humeurs - 15 derniers jours</div>
           <div className="mood-bar">
             {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{
               height:(v/5*100)+"%",width:"100%",
@@ -2168,7 +2185,7 @@ function RecitIA({enfants,role,pEId}){
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📊 Données de la journée</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📊"/> Données de la journée</div>
           {[["😊 Humeurs",tx.map(t=>t.mood).join(" ")||"-"],
             ["🍽️ Repas",rep?rep.dej:"-"],
             ["👶 Changes",ch.length+" change(s)"],
@@ -2178,7 +2195,7 @@ function RecitIA({enfants,role,pEId}){
           </div>)}
         </div>
         <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(--P)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}>💡 Exclusivité TiMat</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Exclusivité TiMat</div>
           <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>
             Aucun concurrent ne génère un bilan personnalisé de la journée. TiMat transforme les données en émotions pour les parents.
           </div>
@@ -2430,7 +2447,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📊 Bilan du mois - {enfant?.prenom}</div>
+          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📊"/> Bilan du mois - {enfant?.prenom}</div>
           <div className="g3"style={{marginBottom:12}}>
             {[
               ["Prévues",heuresPrev+"h","var(--B)"],
@@ -2517,7 +2534,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                       (window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id
                     );
                     setToast("Lien copié ✓");
-                  }}>📋 Copier le lien</button>
+                  }}><IconeOuEmoji e="📋"/> Copier le lien</button>
                   <button className="btn bG"style={{fontSize:11}}onClick={()=>window.print()}>🖨️ Imprimer</button>
                 </div>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
@@ -2530,8 +2547,8 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
       </div>
       <div className="card"style={{padding:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <div style={{fontWeight:700,color:"var(--b)"}}>📅 Historique récent</div>
-          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}>✅ Valider · ✏️ Modifier</div>}
+          <div style={{fontWeight:700,color:"var(--b)"}}><IconeOuEmoji e="📅"/> Historique récent</div>
+          {role==="parent"&&<div style={{fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="✅"/> Valider · ✏️ Modifier</div>}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {ptH.slice(0,10).map(p=>{
@@ -2547,7 +2564,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                 <div style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>
                   {new Date(p.date).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})}
-                  {enRetard&&<span style={{marginLeft:8,fontSize:11,color:"var(--R)",fontWeight:700}}>⚠️ Depuis {ageJours} jours</span>}
+                  {enRetard&&<span style={{marginLeft:8,fontSize:11,color:"var(--R)",fontWeight:700}}><IconeOuEmoji e="⚠️"/> Depuis {ageJours} jours</span>}
                 </div>
                 <div style={{display:"flex",gap:10,fontSize:12}}>
                   <span style={{color:"var(--S)"}}>{p.arr?"↗"+p.arr:""}</span>
@@ -2649,7 +2666,7 @@ function RepasChanges({enfants,role,pEId}){
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
     <div className="g2">
       <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>🍽️ Repas du jour</div>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="🍽️"/> Repas du jour</div>
         {erp?<div>
           {[["🥗 Déjeuner",erp.dej],["🍎 Goûter",erp.gou],["🍼 Biberon",erp.bib]].filter(r=>r[1]).map(([l,v])=>
             <div key={l}style={{display:"flex",gap:10,marginBottom:8,padding:"9px 12px",background:"var(--c)",borderRadius:9}}>
@@ -2684,7 +2701,7 @@ function RepasChanges({enfants,role,pEId}){
       </div>
 
       <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>👶 Changes du jour</div>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="👶"/> Changes du jour</div>
         <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
           {echs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun change.</div>}
           {echs.map(c=><div key={c.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"var(--c)",borderRadius:9}}>
@@ -2879,7 +2896,7 @@ function Calendrier({enfants,role,pEId}){
       onClick={e=>e.target===e.currentTarget&&setShowAbsenceModal(false)}>
       <div className="card"style={{width:"100%",maxWidth:420,padding:28}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}>🤒 Déclarer une absence</div>
+          <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)"}}><IconeOuEmoji e="🤒"/> Déclarer une absence</div>
           <button onClick={()=>setShowAbsenceModal(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
         </div>
         <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)",lineHeight:1.5}}>
@@ -2924,7 +2941,7 @@ function Calendrier({enfants,role,pEId}){
 
     {showEvModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={e=>e.target===e.currentTarget&&setShowEvModal(false)}>
       <div className="card" style={{width:"100%",maxWidth:400,padding:24}}>
-        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:16}}>➕ Nouvel événement</div>
+        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="➕"/> Nouvel événement</div>
         <div style={{display:"grid",gap:12}}>
           <div><label className="lbl">Date</label><input type="date" className="inp" value={evForm.date} onChange={e=>setEvForm(f=>({...f,date:e.target.value}))}/></div>
           <div><label className="lbl">Type</label><select className="sel" value={evForm.type} onChange={e=>setEvForm(f=>({...f,type:e.target.value}))}>
@@ -2942,7 +2959,7 @@ function Calendrier({enfants,role,pEId}){
     {/* Bascule Semaine / Mois + ajout d'événement */}
     <div style={{display:"flex",gap:6,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
       {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{padding:"8px 18px",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--T)":"#fff",color:vue===k?"#fff":"var(--T)",borderColor:vue===k?"var(--T)":"var(--Tp)"}}>{l}</button>)}
-      {role==="asmat"&&<button className="btn bT" style={{marginLeft:"auto",fontSize:13,padding:"8px 14px",fontWeight:700}} onClick={()=>{setEvForm({date:dsDate(joursDeLaSemaine[0]),type:"rdv",txt:""});setShowEvModal(true);}}>➕ Événement</button>}
+      {role==="asmat"&&<button className="btn bT" style={{marginLeft:"auto",fontSize:13,padding:"8px 14px",fontWeight:700}} onClick={()=>{setEvForm({date:dsDate(joursDeLaSemaine[0]),type:"rdv",txt:""});setShowEvModal(true);}}><IconeOuEmoji e="➕"/> Événement</button>}
     </div>
 
     {/* ===== VUE SEMAINE — agenda pleine largeur (type Google Agenda) ===== */}
@@ -3194,7 +3211,7 @@ function Calendrier({enfants,role,pEId}){
     </div>}
     {/* ===== Bloc événements du mois — sous le calendrier, pleine largeur (les deux vues) ===== */}
     <div className="card" style={{padding:16,marginTop:14}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}>📋 Événements de {noms[mois]} {an}
+      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="📋"/> Événements de {noms[mois]} {an}
         <div style={{marginLeft:"auto",display:"flex",gap:4}}>
           <button className="btn bG" style={{padding:"4px 9px",fontSize:13}} onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
           <button className="btn bG" style={{padding:"4px 9px",fontSize:13}} onClick={()=>{if(mois===11){setMois(0);setAn(a=>a+1)}else setMois(m=>m+1)}}>›</button>
@@ -3316,7 +3333,7 @@ function Messagerie({enfants,role,pEId,user}){
         {/* Messages */}
         <div className="msgs"style={{background:"var(--c)",padding:"14px 12px"}}>
           {loadingMsgs&&<div style={{textAlign:"center",color:"var(--l)",fontSize:12.5,padding:"20px 10px"}}>Chargement…</div>}
-          {!loadingMsgs&&conv.length===0&&<div style={{textAlign:"center",color:"var(--l)",fontSize:12.5,padding:"30px 10px",lineHeight:1.6}}>💬 Démarrez la conversation<br/>avec un petit mot sur la journée.</div>}
+          {!loadingMsgs&&conv.length===0&&<div style={{textAlign:"center",color:"var(--l)",fontSize:12.5,padding:"30px 10px",lineHeight:1.6}}><IconeOuEmoji e="💬"/> Démarrez la conversation<br/>avec un petit mot sur la journée.</div>}
           {conv.map(m=><div key={m.id}className={(m.de===role?"msg msg-me":"msg msg-ot")}>
             <div>{m.txt||m.texte}</div>
             <div style={{fontSize:11,opacity:.65,marginTop:3,textAlign:"right"}}>{m.h}</div>
@@ -3332,7 +3349,7 @@ function Messagerie({enfants,role,pEId,user}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>🔔 Conversations récentes</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="🔔"/> Conversations récentes</div>
           {liste.map(e=>{
             const unread=msgs.filter(m=>m.eId===e.id&&!m.lu).length;
             const last=msgs.filter(m=>m.eId===e.id).slice(-1)[0];
@@ -3347,7 +3364,7 @@ function Messagerie({enfants,role,pEId,user}){
             </div>;})}
         </div>
         <div className="card"style={{padding:14,background:"var(--Sp)",border:"1px solid var(--Sl)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}>💡 Bon à savoir</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}><IconeOuEmoji e="💡"/> Bon à savoir</div>
           <div style={{fontSize:12,color:"var(--b)",lineHeight:1.6}}>
             Les messages sont consultables par les deux parties. En cas d'urgence, 
             utilisez directement l'appel téléphonique. La messagerie est archivée 2 ans.
@@ -3486,7 +3503,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>📋 Absences & Indemnités</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📋"/> Absences & Indemnités</div>
           {absMois.map(a=><div key={a.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{fmt(a.date)} - {a.motif}</div>
@@ -3498,7 +3515,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
           {role==="asmat"&&<button className="btn bG"style={{width:"100%",marginTop:12}}>+ Déclarer une absence</button>}
         </div>
         <div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>🧾 Historique factures</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="🧾"/> Historique factures</div>
           {isDemoFact?histFactDemo.map(([m,s,v])=>
             <div key={m}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
               <span style={{fontSize:13,color:"var(--b)",fontWeight:600}}>{m}</span>
@@ -3754,7 +3771,7 @@ function Contrats({enfants,role,pEId,user}){
         </div>
 
         <div className="card"style={{padding:16,marginBottom:12}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Détail du contrat</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Détail du contrat</div>
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",contrat.jours.join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
@@ -3769,7 +3786,7 @@ function Contrats({enfants,role,pEId,user}){
 
         {/* Signature électronique */}
         {!signes[enfant?.id]&&<div className="card"style={{padding:16,border:"1.5px solid var(--P)"}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:4}}>✍️ Signature électronique</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:4}}><IconeOuEmoji e="✍️"/> Signature électronique</div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:12}}>Signez dans la zone ci-dessous pour valider le contrat</div>
           <canvas ref={canvasRef}className="sig-c"width={340}height={100}
             style={{width:"100%",maxWidth:340,touchAction:"none"}}
@@ -3801,7 +3818,7 @@ function Contrats({enfants,role,pEId,user}){
         </div>}
         {role==="asmat"&&signes[enfant?.id]&&<div className="card" style={{padding:0,marginTop:12,overflow:"hidden"}}>
           <div onClick={()=>setPartageOuvert(p=>({...p,[enfant?.id]:!p[enfant?.id]}))} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 15px",cursor:"pointer",userSelect:"none"}}>
-            <span style={{fontSize:13.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:7}}>🔗 Partage avec le parent
+            <span style={{fontSize:13.5,fontWeight:700,color:"var(--b)",display:"flex",alignItems:"center",gap:7}}><IconeOuEmoji e="🔗"/> Partage avec le parent
               {partages[enfant?.id]
                 ?<span style={{fontSize:11,fontWeight:800,color:"var(--S)",background:"var(--Sp)",borderRadius:20,padding:"2px 8px"}}>PARTAGÉ</span>
                 :<span style={{fontSize:11,fontWeight:800,color:"#9A7000",background:"#FDF6E8",borderRadius:20,padding:"2px 8px"}}>NON PARTAGÉ</span>}
@@ -3829,7 +3846,7 @@ function Contrats({enfants,role,pEId,user}){
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>🔄 Demandes de modifications</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}><IconeOuEmoji e="🔄"/> Demandes de modifications</div>
           <button className="btn bT"style={{fontSize:12,padding:"6px 12px"}}onClick={()=>setShowModale(true)}>+ Demande</button>
         </div>
         {(mods[enfant?.id]||[]).length===0&&<div className="card"style={{padding:14}}>
@@ -4014,7 +4031,7 @@ function Sante({enfants,role,pEId,user}){
         <div className="card"style={{padding:18}}>
           <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>⚠️</span> Allergies</div>
           {(enfant.allergies||[]).length===0
-            ?<div style={{display:"inline-flex",alignItems:"center",gap:7,background:"var(--Sp)",color:"var(--S)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600}}>✅ Aucune allergie connue</div>
+            ?<div style={{display:"inline-flex",alignItems:"center",gap:7,background:"var(--Sp)",color:"var(--S)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600}}><IconeOuEmoji e="✅"/> Aucune allergie connue</div>
             :<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
               {(enfant.allergies||[]).map(a=><span key={a}style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,fontWeight:600,padding:"6px 13px",borderRadius:10,display:"inline-flex",alignItems:"center",gap:7}}>⚠️ {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
             </div>}
@@ -4802,7 +4819,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
 
       {/* Section 1 : Notes libres */}
       <div className="card"style={{padding:16,marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>📝 Observations & axes à travailler</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📝"/> Observations & axes à travailler</div>
         <div style={{fontSize:11,color:"var(--l)",marginBottom:4}}>Vos observations sur la période</div>
         <textarea className="inp"rows={4}placeholder="Comportement, humeur, intégration, points forts, progrès remarqués..."
           value={s.notes.observations}onChange={e=>updS("notes",{observations:e.target.value})}
@@ -4815,7 +4832,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
 
       {/* Section 2 : Alimentation & sommeil */}
       <div className="card"style={{padding:16,marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>🍽️ Alimentation & sommeil</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="🍽️"/> Alimentation & sommeil</div>
         {s.alimentation_sommeil.stats?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
           <div><b>{s.alimentation_sommeil.stats.repasCount}</b> jours de repas suivis{s.alimentation_sommeil.stats.repasQualitePct!==null?` · qualité bonne ${s.alimentation_sommeil.stats.repasQualitePct}%`:""}</div>
           <div><b>{s.alimentation_sommeil.stats.sommeilCount}</b> siestes enregistrées{s.alimentation_sommeil.stats.sommeilQualitePct!==null?` · qualité bonne ${s.alimentation_sommeil.stats.sommeilQualitePct}%`:""}</div>
@@ -4827,7 +4844,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
 
       {/* Section 3 : Croissance */}
       <div className="card"style={{padding:16,marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>📏 Croissance</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📏"/> Croissance</div>
         {s.croissance.mesures.length>0?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
           {s.croissance.mesures.map((m,i)=><div key={i}>{m.date} : {m.poids?`${m.poids} kg`:""}{m.poids&&m.taille?" · ":""}{m.taille?`${m.taille} cm`:""}{m.age_mois?` (${m.age_mois} mois)`:""}</div>)}
         </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Aucune mesure sur la période. Cliquez sur "Auto-remplir" si des mesures existent.</div>}
@@ -4838,7 +4855,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
 
       {/* Section 4 : Jalons */}
       <div className="card"style={{padding:16,marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}>🌱 Jalons acquis sur la période</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="🌱"/> Jalons acquis sur la période</div>
         {s.jalons.acquis.length>0?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12,maxHeight:200,overflowY:"auto"}}>
           {s.jalons.acquis.map((j,i)=><div key={i}style={{marginBottom:3}}>✓ <b>{j.categorie}</b> — {j.texte} <span style={{color:"var(--l)"}}>({j.date})</span></div>)}
           <div style={{marginTop:6,fontWeight:700,color:"var(--T)"}}>{s.jalons.acquis.length} jalon{s.jalons.acquis.length>1?"s":""} acquis</div>
@@ -4879,13 +4896,13 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       {!p&&<div className="card"style={{padding:14}}>{viewing.contenu}</div>}
       {sec&&<>
         <div className="card"style={{padding:16,marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>📝 Observations</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="📝"/> Observations</div>
           <div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.notes?.observations||<i>(vide)</i>}</div>
           {sec.notes?.axes&&<><div style={{fontWeight:700,fontSize:12,marginTop:12,color:"var(--b)"}}>Axes à travailler</div>
             <div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.notes.axes}</div></>}
         </div>
         <div className="card"style={{padding:16,marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>🍽️ Alimentation & sommeil</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="🍽️"/> Alimentation & sommeil</div>
           {sec.alimentation_sommeil?.stats&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
             <div><b>{sec.alimentation_sommeil.stats.repasCount}</b> jours suivis · qualité bonne {sec.alimentation_sommeil.stats.repasQualitePct||0}%</div>
             <div><b>{sec.alimentation_sommeil.stats.sommeilCount}</b> siestes · qualité bonne {sec.alimentation_sommeil.stats.sommeilQualitePct||0}%</div>
@@ -4893,14 +4910,14 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
           {sec.alimentation_sommeil?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.alimentation_sommeil.commentaire}</div>}
         </div>
         <div className="card"style={{padding:16,marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>📏 Croissance</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="📏"/> Croissance</div>
           {sec.croissance?.mesures?.length>0&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
             {sec.croissance.mesures.map((m,i)=><div key={i}>{m.date} : {m.poids?`${m.poids} kg`:""}{m.poids&&m.taille?" · ":""}{m.taille?`${m.taille} cm`:""}</div>)}
           </div>}
           {sec.croissance?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.croissance.commentaire}</div>}
         </div>
         <div className="card"style={{padding:16,marginBottom:30}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}>🌱 Jalons acquis ({sec.jalons?.acquis?.length||0})</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="🌱"/> Jalons acquis ({sec.jalons?.acquis?.length||0})</div>
           {sec.jalons?.acquis?.length>0&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12,maxHeight:240,overflowY:"auto"}}>
             {sec.jalons.acquis.map((j,i)=><div key={i}>✓ <b>{j.categorie}</b> — {j.texte}</div>)}
           </div>}
@@ -4944,7 +4961,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>setViewing(b)}>👁️ Voir</button>
           {/* PDF BILAN P9 - export PDF rapide depuis la liste, sur bilans envoyés uniquement */}
-          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,background:"var(--T)",color:"#fff"}}>📥 PDF</button>}
+          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,background:"var(--T)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
           {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
           {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
           {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
@@ -5000,7 +5017,7 @@ function Recap({enfants,role,pEId}){
       </div>
       <div className="pdf-preview">
         <div style={{borderBottom:"2px solid #E49178",paddingBottom:12,marginBottom:16,display:"flex",justifyContent:"space-between"}}>
-          <div><h2 style={{color:"#E49178",fontFamily:"Georgia",fontSize:18}}>🌿 TiMat</h2>
+          <div><h2 style={{color:"#E49178",fontFamily:"Georgia",fontSize:18}}><IconeOuEmoji e="🌿"/> TiMat</h2>
             <div style={{fontSize:11,color:"#888"}}>{user?.prenom||"Assmat"} {user?.nom||""} · Assistante Maternelle agréée</div></div>
           <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
             <div><strong>Récapitulatif mensuel</strong></div>
@@ -5030,7 +5047,7 @@ function Recap({enfants,role,pEId}){
     </div>}
 
     {!showPrev&&<div className="card"style={{padding:16,background:"var(--Pp)",border:"1px solid var(--P)"}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:8}}>💡 Fonctionnalité exclusive</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Fonctionnalité exclusive</div>
       <div style={{fontSize:13,color:"var(--b)",lineHeight:1.7}}>
         TiMat génère automatiquement chaque mois un <strong>récapitulatif PDF complet</strong> :
         heures, repas, humeurs, étapes de développement, facturation et transmissions.
@@ -5115,11 +5132,11 @@ function CompteRenduTrimestriel({enfants,role,pEId}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:14,background:"var(--Pp)",border:"1px solid var(--P)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}>💡 Pensé pour la transmission PMI</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Pensé pour la transmission PMI</div>
           <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>Un compte-rendu trimestriel professionnel que les parents peuvent glisser dans le dossier scolaire et présenter à la PMI lors du renouvellement d'agrément.</div>
         </div>
         <div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📊 Données utilisées</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📊"/> Données utilisées</div>
           {[["🌱 Jalons acquis",ms.filter(m=>m.ok).length+"/"+ms.length],
             ["🎨 Activités",pfs.length+" dans le portfolio"],
             ["📋 Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges"],
@@ -5981,7 +5998,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       {!isDemoBull&&contrat?.id&&<button className="btn bG" style={{fontSize:11,padding:"6px 12px"}} onClick={async()=>{
         const{error}=await supabase.from("contrats").update({aeeh:!!aeeh,repas:Number(repasJour)||0}).eq("id",contrat.id);
         setToast(error?("Erreur : "+error.message):"Réglages enregistrés dans le contrat ✓");
-      }}>💾 Enregistrer dans le contrat</button>}
+      }}><IconeOuEmoji e="💾"/> Enregistrer dans le contrat</button>}
     </div>
 
     {/* Coup d'oeil — le resultat du bulletin en un regard (repere Pandi-Panda : lisibilite immediate) */}
@@ -6179,7 +6196,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
                 w.document.write(htmlBulletin);
         w.document.close();
         setToast('Bulletin ouvert dans un nouvel onglet ✓');
-      }}>📥 Télécharger PDF</button>
+      }}><IconeOuEmoji e="📥"/> Télécharger PDF</button>
         {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={envoyerAuParent}disabled={envoyer||isDemoBull}>
           {envoyer?"⏳ Envoi en cours...":(bulletinsEnvoyes[moisSelKey]?.envoye_au_parent?"🔄 Renvoyer au parent":"📧 Envoyer au parent")}
         </button>}
@@ -6267,7 +6284,7 @@ function DemandesAvenants({enfants,role,pEId}){
     </div>
 
     {demandes.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:6}}>📋 Historique des demandes</div>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="📋"/> Historique des demandes</div>
       {demandes.map(d=><div key={d.id}className="card"style={{padding:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
           <div>
@@ -6435,7 +6452,7 @@ function CourriersTypes({enfants,pEId,user}){
         <div style={{fontSize:11,color:"var(--l)"}}>{sel.cat} · contexte rempli automatiquement (nom, agrément, enfant)</div>
       </div>
       {placeholders.length>0&&<div className="card"style={{padding:18,marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>✏️ À compléter{reste>0&&<span style={{color:"var(--T)",fontSize:12,fontWeight:600}}> · {reste} restant{reste>1?"s":""}</span>}</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="✏️"/> À compléter{reste>0&&<span style={{color:"var(--T)",fontSize:12,fontWeight:600}}> · {reste} restant{reste>1?"s":""}</span>}</div>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {placeholders.map(p=><div key={p}>
             <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{p}</label>
@@ -6449,7 +6466,7 @@ function CourriersTypes({enfants,pEId,user}){
         {reste>0&&<div style={{fontSize:11,color:"var(--T)",marginTop:8}}>Les champs non remplis restent entre [crochets] dans le document.</div>}
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(texte).catch(()=>{});setToast("Copié ✓");}}>📋 Copier le texte</button>
+        <button className="btn bG"style={{flex:1}}onClick={()=>{navigator.clipboard?.writeText(texte).catch(()=>{});setToast("Copié ✓");}}><IconeOuEmoji e="📋"/> Copier le texte</button>
         <button className="btn bT"style={{flex:1}}onClick={genPDF}>📥 Télécharger PDF</button>
       </div>
     </>}
@@ -6476,7 +6493,7 @@ function ImportContrat({onFinish}){
       </div>
       <div className="card"style={{padding:28}}>
         {step===1&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:6}}>📦 Importer votre contrat</div>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="📦"/> Importer votre contrat</div>
           <div style={{fontSize:13,color:"var(--l)",marginBottom:20,lineHeight:1.6}}>Basculez depuis votre ancien outil en 3 minutes. Toutes vos données reprises automatiquement.</div>
           <div style={{marginBottom:14}}>
             <label className="lbl">Depuis quel outil ?</label>
@@ -6495,7 +6512,7 @@ function ImportContrat({onFinish}){
           <button className="btn bT"style={{width:"100%"}}onClick={()=>setStep(2)}disabled={!data.prenomAsmat||!data.emailAsmat}>Continuer →</button>
         </>}
         {step===2&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}>👶 L'enfant & le parent</div>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="👶"/> L'enfant & le parent</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <div><label className="lbl">Prénom de l'enfant</label><input className="inp"placeholder="Léo"value={data.prenomEnfant}onChange={e=>setData(d=>({...d,prenomEnfant:e.target.value}))}/></div>
             <div><label className="lbl">Date de naissance</label><input type="date"className="inp"value={data.dateNaiss}onChange={e=>setData(d=>({...d,dateNaiss:e.target.value}))}/></div>
@@ -6510,7 +6527,7 @@ function ImportContrat({onFinish}){
           </div>
         </>}
         {step===3&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}>📄 Les conditions du contrat</div>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="📄"/> Les conditions du contrat</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <div><label className="lbl">Date de début</label><input type="date"className="inp"value={data.debut}onChange={e=>setData(d=>({...d,debut:e.target.value}))}/></div>
             <div><label className="lbl">Heures / semaine</label><input type="number"className="inp"placeholder="40"value={data.heures}onChange={e=>setData(d=>({...d,heures:e.target.value}))}/></div>
@@ -6533,7 +6550,7 @@ function ImportContrat({onFinish}){
           </div>
           <div style={{display:"flex",gap:8}}>
             <button className="btn bG"style={{flex:1}}onClick={()=>setStep(2)}>← Retour</button>
-            <button className="btn bT"style={{flex:2}}onClick={()=>{setToast("Contrat importé ✓");setTimeout(()=>onFinish?.(),1500);}}>✅ Importer dans TiMat</button>
+            <button className="btn bT"style={{flex:2}}onClick={()=>{setToast("Contrat importé ✓");setTimeout(()=>onFinish?.(),1500);}}><IconeOuEmoji e="✅"/> Importer dans TiMat</button>
           </div>
         </>}
       </div>
@@ -6575,8 +6592,8 @@ function Parrainage({user}){
         </button>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button onClick={()=>setToast("Message SMS préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}>📱 SMS</button>
-        <button onClick={()=>setToast("Message WhatsApp préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}>💬 WhatsApp</button>
+        <button onClick={()=>setToast("Message SMS préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="📱"/> SMS</button>
+        <button onClick={()=>setToast("Message WhatsApp préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="💬"/> WhatsApp</button>
       </div>
     </div>
     <div className="card"style={{padding:18,marginBottom:16}}>
@@ -6962,7 +6979,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:12}}><span style={{color:"var(--m)"}}>Indemnités repas</span><span style={{fontWeight:600,color:"var(--b)"}}>+ 63,00 €</span></div>
               <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid var(--br)",paddingTop:12,fontSize:15}}><span style={{fontWeight:700,color:"var(--b)"}}>Net à payer</span><span style={{fontWeight:800,color:"var(--T)"}}>731,75 €</span></div>
               <div style={{display:"flex",gap:8,marginTop:16}}>
-                <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>📄 Aperçu PDF</div>
+                <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}><IconeOuEmoji e="📄"/> Aperçu PDF</div>
                 <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>⬇️ Télécharger</div>
               </div>
             </div>
@@ -7217,7 +7234,7 @@ function TransmissionsContent({enfant,role,user}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>✏️ Nouveau message</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="✏️"/> Nouveau message</div>
           <div style={{marginBottom:10}}>
             <label className="lbl">Humeur</label>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -7229,7 +7246,7 @@ function TransmissionsContent({enfant,role,user}){
           <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer ✉️</button>
         </div>
         {D.moodHistory[enfant?.id]&&<div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📈 Humeurs - 15 jours</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📈"/> Humeurs - 15 jours</div>
           <div className="mood-bar">
             {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{height:(v/5*100)+"%",width:"100%",background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
           </div>
@@ -7360,7 +7377,7 @@ function Sommeil({enfants,role,pEId}){
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)"}}>😴 Sieste d'aujourd'hui</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)"}}><IconeOuEmoji e="😴"/> Sieste d'aujourd'hui</div>
           {auj?<div style={{background:"var(--Sp)",borderRadius:12,padding:14,border:"1px solid var(--Sl)"}}>
             <div style={{display:"flex",justifyContent:"space-around",marginBottom:10}}>
               {[["Début",auj.debut,"var(--S)"],["Fin",auj.fin,"var(--T)"],["Durée",auj.duree,"var(--b)"]].map(([l,v,c])=>
@@ -7393,7 +7410,7 @@ function Sommeil({enfants,role,pEId}){
         </div>}
       </div>
       <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>📈 Historique récent</div>
+        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📈"/> Historique récent</div>
         {hist.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune donnée</div>}
         {hist.map(s=><div key={s.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
           <div>
@@ -7543,7 +7560,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
 
       {/* Sommeil - barres horizontales */}
       <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:14}}>😴 Durée sieste - {enfant?.prenom}</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="😴"/> Durée sieste - {enfant?.prenom}</div>
         {somData.map((d,i)=><div key={i}style={{marginBottom:8}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
             <span style={{fontSize:11,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{d.j}</span>
@@ -7557,7 +7574,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
 
       {/* Appétit + Activités */}
       <div className="card"style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:14}}>🍽️ Appétit & Activités du jour</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="🍽️"/> Appétit & Activités du jour</div>
         <div style={{fontWeight:600,fontSize:11,color:"var(--m)",marginBottom:8,textTransform:"uppercase",letterSpacing:".5px"}}>Repas</div>
         {D.repas.filter(r=>r.date===TODAY_STR).map(r=>{
           const e=liste.find(x=>x.id===r.eId);
@@ -7678,7 +7695,7 @@ function CourbeCroissance({enfants,role,pEId}){
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {/* Dernière mesure */}
         {last&&<div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>📊 Dernière mesure - {enfant.prenom}</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📊"/> Dernière mesure - {enfant.prenom}</div>
           <div style={{display:"flex",gap:16,justifyContent:"center"}}>
             {[["⚖️ Poids",last.poids+"kg","var(--T)"],["📏 Taille",last.taille+"cm","var(--B)"],["🎂 Âge",last.age_mois+"m","var(--S)"]].map(([l,v,c])=>
               <div key={l}style={{textAlign:"center"}}>
@@ -7726,10 +7743,10 @@ function CourbeCroissance({enfants,role,pEId}){
           </div>
           <button className="btn bT"style={{width:"100%"}}onClick={ajouter}>Enregistrer</button>
         </div>:<div className="card"style={{padding:14,background:"var(--c)"}}>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}>📏 La courbe de croissance est <b>tenue à jour par le parent</b> (poids et taille à chaque pesée). Vous la consultez ici en lecture seule.</div>
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}><IconeOuEmoji e="📏"/> La courbe de croissance est <b>tenue à jour par le parent</b> (poids et taille à chaque pesée). Vous la consultez ici en lecture seule.</div>
         </div>}
         <div className="card"style={{padding:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📋 Historique</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📋"/> Historique</div>
           {mesures.length===0&&<div style={{fontSize:12,color:"var(--l)"}}>Aucune mesure pour l'instant.</div>}
           {mesures.slice().reverse().slice(0,8).map((m,idx)=><div key={m.id||m.date+idx}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:12}}>
             <span style={{color:"var(--l)"}}>{m.age_mois} mois</span>
@@ -7993,7 +8010,7 @@ function CommunicationPMI({role,user,hasRealData}){
       <strong>📧 Fonctionnement :</strong> vos messages sont envoyés par email à la PMI ({pmiEmail}). 
       Leurs réponses arrivent automatiquement ici. Vous apparaissez comme expéditeur : {asmatEmail}.
       <br/><strong>🏛️ {pmiInfo.nom}</strong> - {pmiInfo.tel} - {pmiInfo.adresse}
-      <br/><span style={{fontSize:11,color:"var(--l)"}}>💡 Pour configurer votre PMI de secteur, renseignez votre code postal dans Paramètres → Profil</span>
+      <br/><span style={{fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="💡"/> Pour configurer votre PMI de secteur, renseignez votre code postal dans Paramètres → Profil</span>
     </div>
 
     {nonLus>0&&<div style={{background:"#EBF4FF",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
@@ -8032,14 +8049,14 @@ function CommunicationPMI({role,user,hasRealData}){
           <div style={{display:"flex",gap:8}}>
             <textarea className="ta"value={txt}onChange={e=>setTxt(e.target.value)}
               placeholder="Votre message à la PMI..."style={{flex:1,minHeight:60,resize:"none"}}/>
-            <button className="btn bT"onClick={send}style={{alignSelf:"flex-end"}}>📧 Envoyer</button>
+            <button className="btn bT"onClick={send}style={{alignSelf:"flex-end"}}><IconeOuEmoji e="📧"/> Envoyer</button>
           </div>
         </div>
       </div>
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>📋 Mon agrément</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📋"/> Mon agrément</div>
           {[["N° agrément","AGR-"+(new Date().getFullYear()-3)+"-0042"],["Délivré le","15/09/"+(new Date().getFullYear()-3)],["Renouvellement","Septembre "+(new Date().getFullYear()+2)],["Enfants autorisés","4 simultanément"],["Statut","✅ Valide"]].map(([l,v])=>
             <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
               <span style={{color:"var(--l)"}}>{l}</span>
@@ -8100,7 +8117,7 @@ function InstallButton(){
   const {deferredPrompt,isInstalled,isIOS,install}=useInstallPWA();
   const [showGuide,setShowGuide]=useState(false);
 
-  if(isInstalled)return <div style={{fontSize:12,color:"var(--S)",fontWeight:600}}>✅ TiMat est déjà installé sur votre appareil</div>;
+  if(isInstalled)return <div style={{fontSize:12,color:"var(--S)",fontWeight:600}}><IconeOuEmoji e="✅"/> TiMat est déjà installé sur votre appareil</div>;
 
   return <>
     <button className="btn bT" style={{width:"100%",justifyContent:"center"}}
@@ -8268,7 +8285,7 @@ function SupprimerCompte({onDeleted}){
 
   if(etape==="idle")return(
     <div style={{background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:12,padding:20}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}>⚠️ Zone de danger</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}><IconeOuEmoji e="⚠️"/> Zone de danger</div>
       <div style={{fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>
         La suppression est <strong>définitive et irréversible</strong>. Toutes vos données (enfants, contrats, transmissions, photos, bilans) seront effacées immédiatement conformément au RGPD.
       </div>
@@ -8733,7 +8750,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
         <div style={{marginBottom:12}}>
           <label className="lbl">Email</label>
           <input className="inp" value={user?.email||""} disabled style={{color:"var(--l)",background:"#F3F1EE",cursor:"not-allowed"}}/>
-          <div style={{fontSize:11.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>🔒 L'email de connexion ne se modifie pas ici — écrivez au support si nécessaire.</div>
+          <div style={{fontSize:11.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}><IconeOuEmoji e="🔒"/> L'email de connexion ne se modifie pas ici — écrivez au support si nécessaire.</div>
         </div>
 
         <div style={{marginBottom:12}}>
@@ -8747,7 +8764,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           <textarea className="inp" value={pf.adresse} placeholder="Numéro et rue, code postal, ville"
             style={{minHeight:56,resize:"vertical",fontFamily:"inherit"}}
             onChange={e=>setPf(p=>({...p,adresse:e.target.value}))}/>
-          {!(pf.adresse||"").trim()&&<div style={{fontSize:11,color:"var(--R)",marginTop:5}}>⚠️ Obligatoire sur le contrat de travail</div>}
+          {!(pf.adresse||"").trim()&&<div style={{fontSize:11,color:"var(--R)",marginTop:5}}><IconeOuEmoji e="⚠️"/> Obligatoire sur le contrat de travail</div>}
         </div>
 
         {estParent&&<div style={{marginBottom:12}}>
@@ -8955,7 +8972,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
       <GestionStockage user={user}/>
 
       <div className="card"style={{padding:20}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Légal & RGPD</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Légal & RGPD</div>
         {[
           ["🔒","Politique de confidentialité","politique_confidentialite"],
           ["📋","Mentions légales","mentions_legales"],
@@ -9059,7 +9076,7 @@ function PolitiqueConfidentialite(){
         </div>:<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{s.contenu}</div>}
       </div>)}
       <div className="card"style={{padding:20,background:"var(--Bp)",border:"1px solid var(--B)"}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}>📧 Contact RGPD</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}><IconeOuEmoji e="📧"/> Contact RGPD</div>
         <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>support@timat.app</strong> - Réponse sous 30 jours.</div>
       </div>
     </div>
@@ -9378,7 +9395,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     {/* La journée — frise + complétude (modernisation) */}
     <div className="card"style={{padding:16,marginBottom:12}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📔 La journée{role==="parent"?" de "+(enfant.prenom||""):""}</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="📔"/> La journée{role==="parent"?" de "+(enfant.prenom||""):""}</div>
         <span style={{fontSize:12,fontWeight:700,color:"var(--T)"}}>journée remplie · {pctJour}%</span>
       </div>
       <div style={{height:8,borderRadius:99,background:"var(--c)",overflow:"hidden",marginBottom:16}}>
@@ -9427,7 +9444,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
 
     {/* Échanges du jour (transmissions parent + assmat) */}
     <div className="card"style={{padding:16,marginBottom:12}}>
-      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>💬 Échanges du jour</div>
+      <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="💬"/> Échanges du jour</div>
       {echanges.length===0
         ?<div style={{fontSize:13,color:"var(--l)"}}>{role==="parent"?"Aucun message échangé aujourd'hui.":"Aucun message du parent aujourd'hui."}</div>
         :<div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -9873,7 +9890,7 @@ function ListeAttente({role,enfants,user}){
 
         {/* Actions */}
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>💬 Répondre</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="💬"/> Répondre</div>
           <textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
             placeholder={"Bonjour "+sel.parent.prenom+",\n\nMerci pour votre message..."}
             style={{width:"100%",minHeight:90,marginBottom:10,resize:"vertical"}}/>
@@ -9968,7 +9985,7 @@ function KitCMG({enfants,role,pEId,user}){
 
     {/* Explication */}
     <div style={{background:"linear-gradient(135deg,var(--Gp),var(--Bp))",border:"1px solid var(--G)",borderRadius:14,padding:"16px 20px",marginBottom:20}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>📋 Comment utiliser ce kit ?</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📋"/> Comment utiliser ce kit ?</div>
       <div style={{fontSize:13,color:"var(--m)",lineHeight:1.8}}>
         1. Allez sur <strong>monenfant.fr</strong> → "Déclarer votre mode de garde"<br/>
         2. Utilisez les boutons <strong>"Copier"</strong> ci-dessous pour coller chaque information<br/>
@@ -10040,7 +10057,7 @@ function KitCMG({enfants,role,pEId,user}){
 
         {/* Lien Pajemploi */}
         <div className="card"style={{padding:16,background:"var(--Tp)",border:"1px solid var(--Tl)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:8}}>🏛️ Pajemploi</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--T)",marginBottom:8}}><IconeOuEmoji e="🏛️"/> Pajemploi</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
             Une fois déclaré sur monenfant.fr, vous devrez aussi déclarer les heures mensuelles sur <strong>Pajemploi</strong> pour que {amPrenom||"votre assistante maternelle"} soit payée et déclarée à l'URSSAF.
           </div>
@@ -10239,14 +10256,14 @@ function SignatureContratParent({enfants,pEId,user}){
     <div className="card"style={{padding:0,marginBottom:16,overflow:"hidden"}}>
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat d'accueil · {enfant?.prenom}</div>
-        <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}>✍️ À signer</div>
+        <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}><IconeOuEmoji e="✍️"/> À signer</div>
         <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>Début {fmt(contrat.debut||"")} · {(contrat.tauxHoraire||0).toFixed(2)} €/h · {contrat.signe_asmat?"l'assistante maternelle a signé ✓":"en attente de la signature de l'assmat"}</div>
       </div>
     </div>
 
     {/* Récap contrat */}
     <div className="card"style={{padding:18,marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Détail du contrat</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📄"/> Détail du contrat</div>
       {[
         ["Enfant",(enfant?.prenom||"-")+" "+(enfant?.nom||"")],
         ["Début du contrat",fmt(contrat.debut||"")],
@@ -10276,7 +10293,7 @@ function SignatureContratParent({enfants,pEId,user}){
 
     {/* Zone signature */}
     <div className="card"style={{padding:18,marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}>✍️ Votre signature</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="✍️"/> Votre signature</div>
       <div style={{fontSize:12,color:"var(--l)",marginBottom:12}}>Signez ci-dessous avec votre doigt (mobile) ou la souris</div>
       <canvas ref={canvasRef}width={400}height={120}
         style={{width:"100%",height:120,border:"2px dashed var(--br)",borderRadius:10,
@@ -10389,7 +10406,7 @@ function PlanningPeriscolaire({enfants,role,pEId}){
 
     {/* Vue hebdo synthèse */}
     <div className="card"style={{padding:18,marginTop:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📋 Récapitulatif semaine type - {enfant?.prenom}</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Récapitulatif semaine type - {enfant?.prenom}</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
         {JOURS_SEM.map(j=><div key={j}style={{textAlign:"center"}}>
           <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>{j.slice(0,2)}</div>
@@ -10467,7 +10484,7 @@ function ForumCommunaute({role}){
     </div>
 
     {showNew&&<div className="card"style={{padding:18,marginBottom:16,border:"2px solid var(--T)"}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>✏️ Nouvelle question</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="✏️"/> Nouvelle question</div>
       <input className="inp"placeholder="Titre de votre question..."value={newPost.titre}
         onChange={e=>setNewPost(p=>({...p,titre:e.target.value}))}style={{marginBottom:10}}/>
       <textarea className="ta"placeholder="Décrivez votre situation..."value={newPost.contenu}
@@ -10796,7 +10813,7 @@ const jsPDF=await chargerJsPDF();
 
         {/* Contenu du rapport */}
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📋 Contenu du rapport PDF</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Contenu du rapport PDF</div>
           {[
             ["✅","Page de garde - identité asmat et enfant"],
             ["✅","Récapitulatif mensuel des heures (jan→déc)"],
@@ -10847,7 +10864,7 @@ const jsPDF=await chargerJsPDF();
 
         {/* Partage parent */}
         {role==="asmat"&&<div className="card"style={{padding:16,background:"var(--Gp)",border:"1px solid var(--G)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}>📧 Envoi au parent</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}><IconeOuEmoji e="📧"/> Envoi au parent</div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
             L'attestation fiscale peut être envoyée directement aux parents pour leur déclaration d'impôts (à remettre avant le 31 janvier).
           </div>
@@ -11079,7 +11096,7 @@ function IndemnitesKilometriques({enfants,role,user}){
     </div>
 
     <div className="card" style={{padding:16,marginBottom:14}}>
-      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:10}}>➕ Ajouter un trajet</div>
+      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:10}}><IconeOuEmoji e="➕"/> Ajouter un trajet</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
         <input type="date" value={nt.date} onChange={e=>setNt({...nt,date:e.target.value})} style={inp}/>
         <select value={nt.enfant_id} onChange={e=>setNt({...nt,enfant_id:e.target.value})} style={inp}>
@@ -11193,7 +11210,7 @@ function SimulateurCout({enfants,pEId}){
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>⚙️ Les paramètres de garde</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="⚙️"/> Les paramètres de garde</div>
           {[
             {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+(taux/0.7822).toFixed(2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
             {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
@@ -11243,7 +11260,7 @@ function SimulateurCout({enfants,pEId}){
 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:16,background:"var(--Gp)",border:"1px solid var(--G)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}>📊 Sur l'année</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}><IconeOuEmoji e="📊"/> Sur l'année</div>
           {[
             ["Coût annuel brut",fmt2(coutTotal*12)],
             ["Aides totales",fmt2((cmgMensuel+creditImpot)*12)],
@@ -11263,7 +11280,7 @@ function SimulateurCout({enfants,pEId}){
           Calcul : CMG = (min(taux ; {PLAFOND_H.toFixed(2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {(TE*100).toFixed(4)} % ÷ {CHR_AM.toFixed(2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
         </div>
         <div style={{fontSize:13,color:"#7a3a00",lineHeight:1.65,padding:"16px 18px",marginTop:14,background:"#FFE7C2",border:"2.5px solid #E8943A",borderRadius:14,boxShadow:"0 4px 16px rgba(232,148,58,.28)"}}>
-          <div style={{fontWeight:800,marginBottom:8,fontSize:15.5,color:"#B45309",display:"flex",alignItems:"center",gap:8}}>⚠️ Ne vous fiez pas à ces chiffres</div>
+          <div style={{fontWeight:800,marginBottom:8,fontSize:15.5,color:"#B45309",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="⚠️"/> Ne vous fiez pas à ces chiffres</div>
           Estimation indicative selon la réforme CMG du 1er septembre 2025 (calcul horaire par taux d'effort, barème CNAF 2026 : 1→0,0619 % · 2→0,0516 % · 3→0,0413 % · 4-7→0,0310 % · 8+→0,0206 %). <b>Le montant réel est calculé par la CAF</b> selon vos ressources N-2 ; ne vous fiez pas à ce chiffre pour vos décisions. Référez-vous au <b>simulateur officiel URSSAF</b> (« Évaluer votre reste à charge et votre CMG ») pour la valeur définitive.
         </div>
       </div>
@@ -11319,7 +11336,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Paramètres de fin de contrat</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Paramètres de fin de contrat</div>
           <div style={{marginBottom:12}}>
             <label className="lbl">Date de fin du contrat</label>
             <input type="date"className="inp"value={dateFin}onChange={e=>setDateFin(e.target.value)}/>
@@ -11346,7 +11363,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
           </button>
         </div>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>📄 Documents de fin de contrat</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📄"/> Documents de fin de contrat</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button className="btn bG"style={{width:"100%"}}onClick={genRupture}>✉️ Lettre de rupture</button>
             <button className="btn bG"style={{width:"100%"}}onClick={genCertificat}>📜 Certificat de travail</button>
@@ -11358,7 +11375,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
 
       {calcule&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:20,border:"2px solid var(--G)"}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--G)",marginBottom:16}}>💶 Solde de tout compte - {enfant?.prenom}</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--G)",marginBottom:16}}><IconeOuEmoji e="💶"/> Solde de tout compte - {enfant?.prenom}</div>
           {[
             ["Indemnité compensatrice de congés payés",congesRestants+" jours × "+(heuresMois/20*tauxH).toFixed(2)+"€",iccp.toFixed(2)+"€","var(--S)"],
             ["Indemnité de préavis ("+preavis+"j)",preavis+" jours selon CCN",indemPreavis.toFixed(2)+"€","var(--B)"],
@@ -11562,7 +11579,7 @@ function ExportDonnees({enfants,user,role}){
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Ce que vous exportez</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Ce que vous exportez</div>
           {modules.map(m=><label key={m.id}style={{display:"flex",gap:10,alignItems:"center",cursor:"pointer",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
             <input type="checkbox"checked={sel[m.id]}onChange={e=>setSel(p=>({...p,[m.id]:e.target.checked}))}
               style={{width:15,height:15,accentColor:"var(--T)",flexShrink:0}}/>
@@ -11576,7 +11593,7 @@ function ExportDonnees({enfants,user,role}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>⚙️ Options</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="⚙️"/> Options</div>
           <div style={{marginBottom:12}}>
             <label className="lbl">Enfant concerné</label>
             <select className="sel"value={selEnfant}onChange={e=>setSelEnfant(e.target.value)}>
@@ -11610,7 +11627,7 @@ function ExportDonnees({enfants,user,role}){
           </button>
         </div>
         <div className="card"style={{padding:16,background:"var(--Sp)",border:"1px solid var(--Sl)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}>✅ Vos droits RGPD</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}><IconeOuEmoji e="✅"/> Vos droits RGPD</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>
             Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les supprimer à tout moment. En cas de demande : support@timat.app - réponse sous 30 jours.
           </div>
@@ -12177,7 +12194,7 @@ function DemoScreen({page}){
   </div>;
   if(page==="sante_complet")return <div>
     <Title>Santé & urgences 🩺</Title>
-    <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}>⚠️ Allergie : arachides<br/>💊 Aucun traitement en cours</div></div>
+    <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Allergie : arachides<br/>💊 Aucun traitement en cours</div></div>
     {[["🚑","SAMU","15"],["🧑‍⚕️","Médecin traitant","01 23 45 67"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8,borderColor:"#FCA5A5"}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#7F1D1D"}}>{a}</span><span style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>{b}</span></div>)}
   </div>;
   return <div style={{padding:20,textAlign:"center",color:"#8A7A70",fontSize:12}}>Écran disponible dans l'application.</div>;
@@ -12289,7 +12306,7 @@ const DEMO_SCREENS=[
       const [liked,setLiked]=useState(false);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📋 Journal du jour — Léo 🦁</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="📋"/> Journal du jour — Léo 🦁</div>
         <div style={{background:"#F0FAF4",borderRadius:10,padding:12,marginBottom:8,borderLeft:"3px solid #5DA9A1"}}>
           <div style={{fontSize:11,color:"#5DA9A1",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
           <div style={{fontSize:12,color:"#2E4859",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
@@ -12298,7 +12315,7 @@ const DEMO_SCREENS=[
           </div>
         </div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #E49178"}}>
-          <div style={{fontSize:11,color:"#E49178",fontWeight:700,marginBottom:3}}>🍽️ Repas</div>
+          <div style={{fontSize:11,color:"#E49178",fontWeight:700,marginBottom:3}}><IconeOuEmoji e="🍽️"/> Repas</div>
           <div style={{fontSize:12,color:"#2E4859"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
         </div>
         <div style={{marginTop:12,display:"flex",gap:6,alignItems:"center"}}>
@@ -12373,7 +12390,7 @@ const DEMO_SCREENS=[
       const [valide,setValide]=useState(false);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>👪 Sophie — Léo 🦁</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="👪"/> Sophie — Léo 🦁</div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,marginBottom:8,border:"1px solid #FFD6B3"}}>
           <div style={{fontSize:11,color:"#C84B31",fontWeight:700,marginBottom:4}}>⏰ Pointage du jour</div>
           <div style={{display:"flex",gap:16}}>
@@ -12511,7 +12528,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         {err}
         {errAction==="connexion"&&<>
           <button type="button" onClick={()=>{setMode("connexion");setErr("");setErrAction(null);}} style={{display:"block",width:"100%",marginTop:9,background:"#fff",color:"#C84B31",border:"none",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Se connecter avec cet email →</button>
-          {/@(gmail|googlemail)\.com\s*$/i.test(form.email||"")&&<div style={{marginTop:9,fontSize:11,lineHeight:1.5,opacity:.95}}>💡 Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici.</div>}
+          {/@(gmail|googlemail)\.com\s*$/i.test(form.email||"")&&<div style={{marginTop:9,fontSize:11,lineHeight:1.5,opacity:.95}}><IconeOuEmoji e="💡"/> Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici.</div>}
         </>}
         {errAction==="reset"&&<button type="button" onClick={envoyerReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
       </div>}
@@ -12636,7 +12653,7 @@ function OutilsGratuits({onClose,onCta}){
       <div style={{background:"linear-gradient(135deg,#2E4859,#5DA9A1)",padding:"24px 28px",position:"sticky",top:0,zIndex:2}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
           <div>
-            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}>🧮 Outils & Simulateurs gratuits</div>
+            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}><IconeOuEmoji e="🧮"/> Outils & Simulateurs gratuits</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,.85)",marginTop:4,maxWidth:560,lineHeight:1.5}}>Gratuits et sans inscription, pour les assistantes maternelles et les parents employeurs. Choisissez un outil ci-dessous.</div>
           </div>
           <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#fff",fontWeight:700,transition:"background .15s"}}onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.35)"}onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.2)"}>✕</button>
@@ -12657,7 +12674,7 @@ function OutilsGratuits({onClose,onCta}){
         {/* ----- MENSUALISATION ----- */}
         {outil==="mensu"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #5DA9A1",overflow:"hidden"}}>
           <div style={{background:"linear-gradient(135deg,#5DA9A115,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>🧮 Simulateur de mensualisation</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🧮"/> Simulateur de mensualisation</div>
             <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Heures mensualisées et salaire brut de base, année complète ou incomplète.</div>
           </div>
           <div style={{padding:18}}>
@@ -12690,7 +12707,7 @@ function OutilsGratuits({onClose,onCta}){
         {/* ----- SALAIRE NET / BRUT ----- */}
         {outil==="salaire"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #E49178",overflow:"hidden"}}>
           <div style={{background:"linear-gradient(135deg,#E4917815,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>💶 Salaire net ↔ brut</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="💶"/> Salaire net ↔ brut</div>
             <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Conversion avec le taux de cotisations salariales 2026 (21,88 %).</div>
           </div>
           <div style={{padding:18}}>
@@ -12719,7 +12736,7 @@ function OutilsGratuits({onClose,onCta}){
         {/* ----- INDEMNITES D'ENTRETIEN ----- */}
         {outil==="ie"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #C09553",overflow:"hidden"}}>
           <div style={{background:"linear-gradient(135deg,#C0955315,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>🍽️ Indemnités d'entretien</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🍽️"/> Indemnités d'entretien</div>
             <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Montant mensuel des IE et vérification du minimum conventionnel.</div>
           </div>
           <div style={{padding:18}}>
@@ -12739,7 +12756,7 @@ function OutilsGratuits({onClose,onCta}){
                 <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(ieMoisTotal)}</div>
               </div>
             </div>
-            {ieSousMin&&<div style={{marginTop:10,padding:"9px 13px",background:"#FFF3F0",borderRadius:10,border:"1px solid #E8B6AC",fontSize:11.5,color:"#A33D28",lineHeight:1.5}}>⚠️ Le montant saisi semble inférieur au minimum conventionnel indicatif pour {hJourIe} h d'accueil.</div>}
+            {ieSousMin&&<div style={{marginTop:10,padding:"9px 13px",background:"#FFF3F0",borderRadius:10,border:"1px solid #E8B6AC",fontSize:11.5,color:"#A33D28",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Le montant saisi semble inférieur au minimum conventionnel indicatif pour {hJourIe} h d'accueil.</div>}
             <div style={note}>ℹ️ Les IE couvrent les frais (jeux, eau, électricité, chauffage…). Minimum conventionnel indicatif ≈ 2,65 € pour 9 h d'accueil, proportionnel au-delà (CCN 3239). Vérifiez le montant en vigueur.</div>
           </div>
         </div>}
@@ -12747,7 +12764,7 @@ function OutilsGratuits({onClose,onCta}){
         {/* ----- CMG REFORME 2025 (complet) ----- */}
         {outil==="cmgfull"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
           <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>🏛️ CMG & reste à charge (réforme 2025)</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🏛️"/> CMG & reste à charge (réforme 2025)</div>
             <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Estimez l'aide CMG, le crédit d'impôt et ce qu'il vous reste à payer.</div>
           </div>
           <div style={{padding:18}}>
@@ -12775,7 +12792,7 @@ function OutilsGratuits({onClose,onCta}){
         {/* ----- PLAFOND CMG ----- */}
         {outil==="cmg"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
           <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}>🏛️ Plafond CMG (seuil journalier)</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🏛️"/> Plafond CMG (seuil journalier)</div>
             <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Vérifiez si le coût journalier respecte le plafond CAF (5 × SMIC horaire).</div>
           </div>
           <div style={{padding:18}}>
@@ -13821,7 +13838,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}>🛒 Boutique TiMat</div>
+            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}><IconeOuEmoji e="🛒"/> Boutique TiMat</div>
             <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
@@ -13847,7 +13864,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
             </div>)}
           </div>
-          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}>🔒 Paiement securise par Stripe · Telechargement immediat apres achat</div>
+          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Paiement securise par Stripe · Telechargement immediat apres achat</div>
         </div>
       </div>}
 
@@ -14456,7 +14473,7 @@ function OnboardingWizard({user,onFinish}){
               Commencez par votre premier pointage.
             </div>
             {'Notification' in window&&!pushDone&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:12,color:"var(--G)"}}>
-              <div style={{fontWeight:700,marginBottom:6}}>🔔 Activer les notifications push ?</div>
+              <div style={{fontWeight:700,marginBottom:6}}><IconeOuEmoji e="🔔"/> Activer les notifications push ?</div>
               <div style={{marginBottom:8}}>Recevez les alertes en temps réel sur votre téléphone Android.</div>
               <button className="btn bG"style={{width:"100%"}}onClick={async()=>{
                 await demanderPush(user.id);setPushDone(true);setToast("Notifications activées ✓");
@@ -14880,12 +14897,12 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
       {inp("Nom et prénom","empNom")}{inp("Adresse","empAdresse")}{inp("Email","empEmail")}{inp("N° Pajemploi","empPajemploi")}
       <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}>👩 Salariée (assistante maternelle)</div>
       {inp("Nom et prénom","salNom")}{inp("N° d'agrément","salAgrement")}{inp("Enfant accueilli","enfantNom")}
-      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}>📄 Contrat</div>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}><IconeOuEmoji e="📄"/> Contrat</div>
       {inp("Date d'embauche","dateEmbauche","date")}{inp("Date de fin du contrat","dateFin","date")}
       <div style={{marginBottom:10}}><label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>Motif de la rupture</label>
         <select className="sel"disabled={ro}value={form.motif||"Fin de contrat"}onChange={e=>set("motif",e.target.value)}>{motifs.map(m=><option key={m}>{m}</option>)}</select></div>
       {inp("Heures par semaine","heuresHebdo")}{inp("Dernier salaire mensuel (€)","dernierSalaire")}
-      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}>💶 Sommes versées à la rupture</div>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}><IconeOuEmoji e="💶"/> Sommes versées à la rupture</div>
       {inp("Salaire du dernier mois (€)","salDernierMois")}{inp("Indemnité congés payés (€)","iccp")}{inp("Indemnité de préavis (€)","indemPreavis")}
     </div>
     <button className={"btn "+(role==="parent"?"bT":"bG")}style={{width:"100%",marginBottom:14}}onClick={generer}>📥 {role==="parent"?"Générer l'attestation":"Voir / télécharger l'attestation"}</button>
@@ -15209,7 +15226,7 @@ const jsPDF=await chargerJsPDF();
     <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{padding:18}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>💶 Récapitulatif pour {enfant.prenom||"-"}</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="💶"/> Récapitulatif pour {enfant.prenom||"-"}</div>
           <div style={{marginBottom:12}}>
             <label className="lbl">Année</label>
             <select className="sel"value={annee}onChange={e=>setAnnee(Number(e.target.value))}>
@@ -15250,7 +15267,7 @@ const jsPDF=await chargerJsPDF();
         </div>
       </div>
       <div className="card"style={{padding:18}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Contrat en cours</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Contrat en cours</div>
         {contrat.debut?<div style={{fontSize:12,lineHeight:2}}>
           <div>Début : <strong>{contrat.debut}</strong></div>
           <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
@@ -15509,7 +15526,7 @@ function FicheUrgence({enfants,role,pEId,user}){
     {parentLive&&<div style={{background:"var(--Gp)",border:"1.5px solid var(--G)",borderRadius:14,padding:16,marginBottom:12}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:4}}>
         <div style={{fontWeight:700,fontSize:13,color:"var(--G)"}}>📞 Contact parent — compte TiMat</div>
-        <div style={{background:"var(--G)",color:"#fff",fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,whiteSpace:"nowrap"}}>🔄 TEMPS RÉEL</div>
+        <div style={{background:"var(--G)",color:"#fff",fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,whiteSpace:"nowrap"}}><IconeOuEmoji e="🔄"/> TEMPS RÉEL</div>
       </div>
       <div style={{fontSize:11.5,color:"var(--G)",opacity:.85,marginBottom:12,lineHeight:1.5}}>
         Synchronisé automatiquement avec le profil du parent. Ne peut pas être obsolète.
@@ -15535,16 +15552,16 @@ function FicheUrgence({enfants,role,pEId,user}){
           <div style={{fontSize:48,marginBottom:16}}>🚨</div>
           <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Fiche pas encore remplie</div>
           <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>Le parent de {enfant.prenom||"cet enfant"} n'a pas encore rempli la fiche d'urgence dans TiMat.</div>
-          <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}>💡 Vous la consulterez ici dès qu'il l'aura enregistrée.</div>
+          <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}><IconeOuEmoji e="💡"/> Vous la consulterez ici dès qu'il l'aura enregistrée.</div>
         </div>
       : <div className="g2">
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👶 Enfant</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="👶"/> Enfant</div>
           {inp("Nom","nom")}{inp("Prenom","prenom")}{inp("Date de naissance","naissance","JJ/MM/AAAA")}{inp("Sexe","sexe","F / M")}{inp("Adresse","adresse")}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👪 Mere</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="👪"/> Mere</div>
           {role==="parent"&&!hasData&&parentLive&&<div style={{background:"var(--Tp)",border:"1px dashed var(--Tl)",borderRadius:10,padding:"11px 12px",marginBottom:11,fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>
             💡 Pré-remplir avec les infos de votre profil TiMat ? Indiquez simplement qui vous êtes.
             <div style={{display:"flex",gap:8,marginTop:9}}>
@@ -15556,7 +15573,7 @@ function FicheUrgence({enfants,role,pEId,user}){
           {inp("Nom et prenom","mereNom")}{inp("Telephone","mereTel")}{inp("Email","mereEmail")}{inp("Employeur","mereEmployeur")}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👪 Pere</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="👪"/> Pere</div>
           {blocParent==="pere"&&ecarts.length>0&&<AlerteEcart ecarts={ecarts}role={role}onMaj={majDepuisProfil}/>}
           {inp("Nom et prenom","pereNom")}{inp("Telephone","pereTel")}{inp("Email","pereEmail")}{inp("Employeur","pereEmployeur")}
         </div>
@@ -15575,7 +15592,7 @@ function FicheUrgence({enfants,role,pEId,user}){
           {ta("Allergies","allergies","Aucune connue")}{ta("Traitements","traitements","Aucun")}{ta("Particularites","particularites")}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>✅ Autorisations</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="✅"/> Autorisations</div>
           {chk("Emmener aux urgences","authUrgences")}
           {chk("Paracetamol (ordonnance jointe)","authParacetamol")}
           {chk("Sorties exterieures","authSorties")}
@@ -15779,7 +15796,7 @@ function ProjetAccueil({user,role}){
           {inp("Nom et prenom","nom")}{inp("Adresse","adresse")}{inp("Telephone","tel")}{inp("Email","email")}{inp("Numero d'agrement","agrement")}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>📝 Mon introduction</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📝"/> Mon introduction</div>
           {ta("Pourquoi j'aime ce metier, ce qui me motive","intro","Depuis X ans, j'exerce le metier d'assistante maternelle avec passion...",4)}
         </div>
         <div className="card"style={{padding:16}}>
@@ -15796,21 +15813,21 @@ function ProjetAccueil({user,role}){
           {ta("Mes valeurs complementaires","valeursPerso","Motricite libre, pedagogie Montessori, lien avec la nature...",3)}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>📋 Ma journee type</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Ma journee type</div>
           {form.horaires.map((h,i)=><div key={i}style={{display:"flex",gap:6,marginBottom:4}}>
             <input className="inp"disabled={ro}style={{width:110,flexShrink:0,fontSize:11}}value={h.h}onChange={e=>setHoraire(i,"h",e.target.value)}/>
             <input className="inp"disabled={ro}style={{flex:1,fontSize:11}}value={h.d}onChange={e=>setHoraire(i,"d",e.target.value)}/>
           </div>)}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🍽️ Mes specificites</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="🍽️"/> Mes specificites</div>
           {ta("Alimentation","alimentationPerso","Bio, potager, menus de la semaine...",2)}
           {ta("Sommeil","sommeilPerso","Piece dediee, babyphone, gigoteuse...",2)}
           {ta("Activites","activitesPerso","Yoga enfant, jardinage, sorties nature...",2)}
           {ta("Communication avec les parents","communicationPerso","Application TiMat, cahier de liaison...",2)}
         </div>
         <div className="card"style={{padding:16}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🌿 Conclusion</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="🌿"/> Conclusion</div>
           {ta("Mon mot de conclusion","conclusion","Ce projet d'accueil est le reflet de mon engagement...",3)}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -15919,7 +15936,7 @@ function InviterParent({enfants,user,demoMode=false}){
 
         {/* Lien direct (backup) */}
         <div className="card" style={{padding:16,background:"var(--Bp)",border:"1px solid var(--B)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:8}}>🔗 Ou partagez ce lien directement</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:8}}><IconeOuEmoji e="🔗"/> Ou partagez ce lien directement</div>
           <div style={{fontSize:11,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
             Envoyez ce lien par SMS, WhatsApp ou autre. Le parent n'a qu'à créer son compte.
           </div>
@@ -15937,7 +15954,7 @@ function InviterParent({enfants,user,demoMode=false}){
 
       {/* Historique invitations */}
       <div className="card" style={{padding:16}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>📋 Invitations envoyées</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Invitations envoyées</div>
         {invitations.length===0
           ?<EmptyState emoji="📭" titre="Aucune invitation envoyée" texte="Invitez un parent pour partager l'espace de son enfant : les invitations envoyées apparaîtront ici."/>
           :<div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -16725,7 +16742,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
         </div>
         <pre style={{margin:0,padding:"16px 20px",overflow:"auto",fontSize:11,lineHeight:1.5,color:"var(--b)",background:"var(--c)",whiteSpace:"pre-wrap",wordBreak:"break-word",flex:1,fontFamily:"ui-monospace,Menlo,monospace"}}>{prettyConfig(showJsonModal.config)}</pre>
         <div style={{display:"flex",gap:8,justifyContent:"flex-end",padding:"12px 20px",borderTop:"1px solid var(--br)",flexShrink:0}}>
-          <button onClick={()=>{navigator.clipboard?.writeText(prettyConfig(showJsonModal.config)).then(()=>setToast("✅ JSON copié")).catch(()=>setToast("❌ Copie impossible"));}} style={{padding:"9px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>📋 Copier</button>
+          <button onClick={()=>{navigator.clipboard?.writeText(prettyConfig(showJsonModal.config)).then(()=>setToast("✅ JSON copié")).catch(()=>setToast("❌ Copie impossible"));}} style={{padding:"9px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📋"/> Copier</button>
           <button onClick={()=>setShowJsonModal(null)} style={{padding:"9px 16px",borderRadius:10,border:"none",background:"var(--T)",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Fermer</button>
         </div>
       </div>
@@ -17162,7 +17179,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 </div>
                 <input value={art.title||""}onChange={e=>setBlog(i,"title",e.target.value)}placeholder="Titre de l'article"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
                 <textarea value={art.excerpt||""}onChange={e=>setBlog(i,"excerpt",e.target.value)}placeholder="Extrait (résumé court)"rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
-                <button onClick={()=>setOpenBlocks(openBlocks===i?null:i)}style={{marginTop:6,width:"100%",padding:"7px",borderRadius:8,border:"1px solid var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📝 Contenu de l'article ({(art.blocks||[]).length} bloc{(art.blocks||[]).length>1?"s":""}) {openBlocks===i?"▲":"▼"}</button>
+                <button onClick={()=>setOpenBlocks(openBlocks===i?null:i)}style={{marginTop:6,width:"100%",padding:"7px",borderRadius:8,border:"1px solid var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📝"/> Contenu de l'article ({(art.blocks||[]).length} bloc{(art.blocks||[]).length>1?"s":""}) {openBlocks===i?"▲":"▼"}</button>
                 {openBlocks===i&&<div style={{marginTop:8,padding:10,background:"var(--c)",borderRadius:10}}>
                   {(art.blocks||[]).length===0&&<div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>Aucun bloc : cet article affiche son contenu d'origine. Dès que vous ajoutez un bloc, le contenu par blocs remplace l'original.</div>}
                   {(art.blocks||[]).map((b,bi)=>(
@@ -17351,7 +17368,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 </div>;
               });
             })()}
-            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--Tp)",color:"#B85C38",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✏️ Renommer / modifier le contenu d'une section</button>
+            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--Tp)",color:"#B85C38",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="✏️"/> Renommer / modifier le contenu d'une section</button>
           </BOCard>
           <BOCard title="Vagues entre sections" icon="🌊">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Ajoute une transition en vague en haut de chaque section. Désactive si tu préfères des séparations nettes.</div>
@@ -17933,7 +17950,7 @@ function SearchConsoleSetup(){
   const txt={fontSize:12.5,color:"#2E4A5A",lineHeight:1.55};
   return <div>
     <div style={{background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:12,padding:"16px 16px 5px",marginBottom:14}}>
-      <div style={{fontWeight:800,fontSize:14,color:"#B85C38",marginBottom:12}}>⚙️ Configuration en une fois (~10 min)</div>
+      <div style={{fontWeight:800,fontSize:14,color:"#B85C38",marginBottom:12}}><IconeOuEmoji e="⚙️"/> Configuration en une fois (~10 min)</div>
       <div style={step}><span style={numc}>1</span><span style={txt}>Sur <b>console.cloud.google.com</b>, crée un projet, puis active l'<b>API Google Search Console</b>.</span></div>
       <div style={step}><span style={numc}>2</span><span style={txt}>Crée un <b>compte de service</b>, puis génère et télécharge sa <b>clé JSON</b>.</span></div>
       <div style={step}><span style={numc}>3</span><span style={txt}>Dans <b>Search Console → Paramètres → Utilisateurs et autorisations</b>, ajoute l'<b>e-mail du compte de service</b> (il finit par <code>.iam.gserviceaccount.com</code>) en lecture.</span></div>
