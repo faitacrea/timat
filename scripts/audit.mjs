@@ -274,6 +274,11 @@ const BAREME = [
   { nom: "plafond horaire CMG",            motif: /PLAFOND_H\s*=\s*8\.09\b/,        source: "Urssaf, 1er avril 2026" },
   { nom: "plafond mensuel CMG",            motif: /CMG_MAX\s*=\s*825\.16\b/,        source: "CNAF, 1er avril 2026" },
   { nom: "minimum conventionnel brut",     motif: /MINIMUM_CONV\s*=\s*4\.2\b/,      source: "CCN 3239, 1er juin 2026" },
+  { nom: "barème kilométrique 3 CV",       motif: /3:\s*0\.529\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
+  { nom: "barème kilométrique 4 CV",       motif: /4:\s*0\.606\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
+  { nom: "barème kilométrique 5 CV",       motif: /5:\s*0\.636\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
+  { nom: "barème kilométrique 6 CV",       motif: /6:\s*0\.665\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
+  { nom: "barème kilométrique 7 CV",       motif: /7:\s*0\.697\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
 ];
 const sourcesChiffres = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
   + readFileSync(new URL("./generate-local.mjs", import.meta.url), "utf8");
@@ -282,6 +287,24 @@ for (const { nom, motif, source } of BAREME) {
     signale("chiffre", `${nom} ne vaut plus la valeur vérifiée (${source}) — vérifier à la source avant de modifier`);
   }
 }
+// Les deux taux de cotisations doivent venir de la meme table. Le simulateur
+// utilisait 27,5 % en dur la ou le bulletin en calculait 44,37 % : la meme
+// application annoncait deux couts employeur differents.
+if (/cotPat\s*=\s*salBrut\s*\*\s*0?\.\d+/.test(sourcesChiffres)) {
+  signale("chiffre", "le taux patronal du simulateur est écrit en dur au lieu d'être dérivé de TAUX_COTISATIONS : il peut diverger du bulletin");
+}
+// Le total salarial de la table doit rester egal a la constante utilisee
+// ailleurs : c'est ce recoupement qui confirme que la table est juste.
+const tableCot = sourcesChiffres.slice(sourcesChiffres.indexOf("const TAUX_COTISATIONS={"), sourcesChiffres.indexOf("const TAUX_PATRONAL_TOTAL"));
+let totalSal = 0;
+for (const m of tableCot.matchAll(/sal:([\d.]+),pat:[\d.]+(?:,base:([\d.]+))?/g)) {
+  totalSal += Number(m[1]) * (m[2] ? Number(m[2]) : 1);
+}
+const txSal = Number((sourcesChiffres.match(/TX_SAL\s*=\s*(0\.\d+)/) || [])[1]) * 100;
+if (txSal && Math.abs(totalSal - txSal) > 0.01) {
+  signale("chiffre", `le total salarial de TAUX_COTISATIONS (${totalSal.toFixed(4)} %) ne correspond plus à TX_SAL (${txSal.toFixed(4)} %)`);
+}
+
 // Le plafond du credit d'impot porte sur les depenses : un credit plafonne a
 // 3 500 EUR vaudrait le double du maximum reel.
 if (/creditImpot\s*=\s*Math\.min\([^;]*?\*\s*0?\.5\s*,\s*3500/.test(sourcesChiffres)) {
