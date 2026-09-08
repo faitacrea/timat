@@ -171,6 +171,29 @@ const EMAIL_TEMPLATES={
 // 4,5:1, ce que ne faisaient ni #E49178 (2,44) ni #B8622F (4,35).
 const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#B85536",mam:"#4E6B57"};
 
+// Icones dessinees, en remplacement des emoji. Un emoji change d'aspect selon
+// le telephone, ne se recolore pas et grossit mal ; un trace reste net partout
+// et prend la teinte de son contexte.
+const TRACES = {
+  pointer:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  cahier:'<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H19v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M8 9h7M8 13h5"/>',
+  messages:'<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l.9-4.4A8 8 0 1 1 20 12Z"/>',
+  paie:'<circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-4.5 1.5c0 2.5 4.5 1.5 4.5 4a2.5 2.5 0 0 1-4.5 1.5M12 7v10"/>',
+  planning:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/>',
+  documents:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/>',
+  accueil:'<path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+  enfant:'<circle cx="12" cy="9" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+  admin:'<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/>',
+  outils:'<path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8Z"/>',
+};
+function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
+  const d = TRACES[nom];
+  if (!d) return null;
+  return <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none"
+    stroke={couleur} strokeWidth={epaisseur} strokeLinecap="round" strokeLinejoin="round"
+    aria-hidden="true" dangerouslySetInnerHTML={{ __html: d }} />;
+}
+
 // Bareme de l'indemnite d'entretien, indexe sur le minimum garanti (MG).
 // CCN 3239 : l'indemnite ne peut etre inferieure a 90 % du MG par journee de
 // neuf heures d'accueil, avec un plancher absolu de 2,65 EUR par journee.
@@ -337,7 +360,7 @@ function Styles(){return(
     .dark details{background:#132428!important;border-color:#1E3A34!important}
     .dark details summary{color:#F0F5F3!important}
     .dark select option{background:#0D1B1E;color:#F0F5F3}
-    .app{min-height:100vh;min-height:100dvh;background:var(--c);display:flex;flex-direction:column;width:100%;max-width:100vw;overflow-x:hidden;position:relative}
+    .app{font-variant-numeric:tabular-nums;min-height:100vh;min-height:100dvh;background:var(--c);display:flex;flex-direction:column;width:100%;max-width:100vw;overflow-x:hidden;position:relative}
     .app::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
     .card{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:var(--r);border:1px solid rgba(234,224,232,.8);box-shadow:var(--sh);position:relative;z-index:1}
     .card-lift{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease}
@@ -469,8 +492,8 @@ function Styles(){return(
     .bnav-btn:active{background:var(--tap-veil);transform:scale(.94)}
     @media(hover:hover){.bnav-btn:hover:not(.active){background:var(--hover-veil)}}
     .dark .bnav-btn.active{background:rgba(122,170,224,.18)!important}
-    .bnav-btn .bnav-ic{font-size:22px;line-height:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1);filter:grayscale(.25);opacity:.78}
-    .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.18);filter:grayscale(0);opacity:1}
+    .bnav-btn .bnav-ic{font-size:22px;line-height:1;color:var(--l);transition:transform .3s var(--ease),color .15s}
+    .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.08);color:var(--B)}
     .bnav-btn:active .bnav-ic{transform:scale(.82)}
     .bnav-btn .bnav-lbl{font-size:11px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s,font-weight .15s}
     .bnav-btn.active .bnav-lbl{color:var(--B);font-weight:700}
@@ -497,6 +520,18 @@ function Styles(){return(
        jamais ete definie, si bien que les initiales s'affichaient en haut a
        gauche d'un carre pale au lieu d'etre centrees dans un rond. */
     .av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;line-height:1;flex:none;letter-spacing:.02em}
+
+    /* Raccourcis de l'accueil. La forme est commune, seule l'action principale
+       porte la couleur : c'est elle qui doit se voir en premier. */
+    .qa{border-radius:var(--r2);padding:14px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:84px;font-family:inherit;transition:transform .12s var(--ease),background var(--tap) ease}
+    .qa:active{transform:scale(.96)}
+    @media(hover:hover){.qa:hover{transform:translateY(-2px)}}
+
+    /* L'alerte reste rouge -- elle doit alerter -- mais tient sur une ligne
+       plutot que dans un pave, et n'ajoute pas de bouton plein a l'ecran. */
+    .ligne-alerte{width:100%;background:var(--Rp);border:1px solid var(--R);border-radius:var(--r2);padding:13px 15px;margin-bottom:14px;display:flex;gap:12px;align-items:center;cursor:pointer;font-family:inherit;transition:background var(--tap) ease}
+    .ligne-alerte:active{background:#F8DAD7}
+    @media(hover:hover){.ligne-alerte:hover{background:#F8DAD7}}
 
     /* - NAV TABS - */
     .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--b);transition:all .15s}
@@ -1290,7 +1325,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     {tabToast&&<Toast msg={tabToast}onClose={()=>setTabToast("")}/>}
     {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
     {editAvatar&&<AvatarEditeur enfant={editAvatar} onClose={()=>setEditAvatar(null)} onSaved={(up)=>setAvatarOv(o=>({...o,[up.id]:{emoji:up.emoji,photo_url:up.photo_url}}))}/>}
-    <div style={{borderRadius:20,padding:"22px 22px",marginBottom:18,background:"linear-gradient(135deg,var(--Bp) 0%,var(--Sp) 55%,var(--Tp) 100%)",border:"1px solid var(--br)",position:"relative",overflow:"hidden"}}>
+    <div style={{borderRadius:"var(--r)",padding:"22px 22px",marginBottom:18,background:"var(--Bp)",border:"1px solid var(--br)",position:"relative",overflow:"hidden"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
         <div style={{minWidth:0}}>
           <div style={{display:"inline-block",fontSize:11.5,color:"var(--B)",fontWeight:700,letterSpacing:".5px",background:"rgba(255,255,255,.6)",padding:"3px 11px",borderRadius:20,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>
@@ -1347,17 +1382,18 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     </div>}
 
     {/* Alerte contrats */}
-    {nonSigne.length>0&&<div onClick={()=>setPage("admin_finances")}
-      style={{background:"linear-gradient(135deg,#FFF8E6,#FFF1CC)",border:"1px solid #E8B820",borderRadius:16,padding:"14px 16px",marginBottom:14,display:"flex",gap:12,alignItems:"center",cursor:"pointer",transition:"transform .15s,box-shadow .15s"}}
-      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow="0 6px 18px rgba(232,184,32,.18)";}}
-      onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
-      <div style={{width:38,height:38,borderRadius:11,background:"rgba(232,184,32,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,flexShrink:0}}>✍️</div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:13,color:"#7A5500",fontWeight:700,marginBottom:1}}>Signature en attente</div>
-        <div style={{fontSize:12,color:"#9A7000",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nonSigne.map(e=>e.prenom).join(", ")}</div>
-      </div>
-      <span style={{fontSize:12,color:"#fff",fontWeight:700,background:"#D49A1A",padding:"7px 13px",borderRadius:9,whiteSpace:"nowrap",flexShrink:0}}>Signer →</span>
-    </div>}
+    {nonSigne.length>0&&<button className="ligne-alerte" onClick={()=>setPage("admin_finances")}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--R)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}} aria-hidden="true">
+        <path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+      </svg>
+      <span style={{flex:1,minWidth:0,textAlign:"left"}}>
+        <span style={{display:"block",fontSize:13.5,fontWeight:700,color:"var(--R)"}}>
+          {nonSigne.length>1?"Contrats à signer":"Contrat à signer"}
+        </span>
+        <span style={{display:"block",fontSize:12.5,color:"var(--R)",opacity:.85,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nonSigne.map(e=>e.prenom).join(", ")}</span>
+      </span>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--R)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}} aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>}
 
 
     {/* TABLEAU SIGNATURES P11 - vue d'ensemble du statut signatures des contrats */}
@@ -11572,8 +11608,8 @@ function BottomNav({groups,page,setPage,pmiNonLus,flat}){
           if(g.subs){ if(flat){setPage(g.subs[0].id);} else {setOpen(o=>o===key?null:key);} }
           else{setPage(key);setOpen(null);}
         }}>
-          <span className="bnav-ic" style={{position:"relative",display:"inline-block"}}>
-            {g.ic}
+          <span className="bnav-ic" style={{position:"relative",display:"inline-flex"}}>
+            {g.trace?<Icone nom={g.trace} taille={23}/>:g.ic}
             {hasBadge&&<span style={{position:"absolute",top:-4,right:-6,background:"var(--R)",color:"#fff",borderRadius:"50%",minWidth:17,height:17,padding:"0 4px",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pmiNonLus}</span>}
           </span>
           <span className="bnav-lbl">{g.l}</span>
@@ -11610,21 +11646,21 @@ function OutilsHub({setPage}){
 }
 
 const GROUPS_AM={
-  accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
-  enfant:{l:"L'enfant",ic:"👶",color:"#B8622F",subs:[
+  accueil:{l:"Accueil",ic:"🏠",trace:"accueil",color:"var(--B)",subs:null},
+  enfant:{l:"L'enfant",ic:"👶",trace:"enfant",color:"var(--T)",subs:[
     {id:"journee",l:"Journée",ic:"📔",d:"Cahier de liaison : repas, sieste, activités"},
     {id:"pointage",l:"Pointage",ic:"⏰",d:"Arrivées, départs et heures effectuées"},
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Développement et acquisitions de l'enfant"},
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence, allergies, soins"},
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans périodiques à partager"},
   ]},
-  admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
+  admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec les parents"},
     {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾",d:"Bulletins, contrats et déclarations"},
     {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️",d:"Attestations et exports"},
   ]},
-  outils:{l:"Outils Pro",ic:"⭐",color:"#E49178",subs:[
+  outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
@@ -11632,8 +11668,8 @@ const GROUPS_AM={
   ]},
 };
 const GROUPS_P={
-  accueil:{l:"Accueil",ic:"🏠",color:"var(--T)",subs:null},
-  enfant:{l:"Mon enfant",ic:"👶",color:"#B8622F",subs:[
+  accueil:{l:"Accueil",ic:"🏠",trace:"accueil",color:"var(--T)",subs:null},
+  enfant:{l:"Mon enfant",ic:"👶",trace:"enfant",color:"var(--T)",subs:[
     {id:"journee",l:"Journée",ic:"📔",d:"Sa journée : repas, sieste, activités"},
     {id:"pointage",l:"Pointage",ic:"⏰",d:"Heures de présence et absences"},
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Son développement au quotidien"},
@@ -11641,7 +11677,7 @@ const GROUPS_P={
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Le projet pédagogique"},
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans partagés par l'assistante maternelle"},
   ]},
-  admin:{l:"Administratif",ic:"🗂️",color:"#B8892A",subs:[
+  admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec l'assistante maternelle"},
     {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
@@ -17561,27 +17597,32 @@ const saveConfig = async (backupReason='before_save') => {
 
 
 function QuickActions({role,setPage}){
+  // Les cinq raccourcis etaient colores a parts egales, chacun dans une teinte
+  // differente : aucun ne ressortait, et l'ecran comptait cinq couleurs pleines
+  // avant meme le contenu. Un seul porte desormais la couleur -- Pointer, le
+  // geste fait plusieurs fois par jour -- les autres restent neutres.
+  const teinte=role==="asmat"?"var(--B)":"var(--T)";
   const A=role==="asmat"?[
-    {e:"⏰",l:"Pointer",p:"pointage",bg:"var(--Gp)",c:"var(--G)"},
-    {e:"📔",l:"Cahier du jour",p:"cahier_jour",bg:"var(--Pp)",c:"var(--P)"},
-    {e:"💬",l:"Messages",p:"messagerie",bg:"var(--Sp)",c:"var(--S)"},
-    {e:"💶",l:"Paie",p:"admin_finances",bg:"var(--Tp)",c:"var(--T)"},
-    {e:"📅",l:"Planning",p:"calendrier",bg:"var(--Bp)",c:"var(--B)"},
+    {i:"pointer",l:"Pointer",p:"pointage",principal:true},
+    {i:"cahier",l:"Cahier du jour",p:"cahier_jour"},
+    {i:"messages",l:"Messages",p:"messagerie"},
+    {i:"paie",l:"Paie",p:"admin_finances"},
+    {i:"planning",l:"Planning",p:"calendrier"},
   ]:[
-    {e:"📔",l:"La journée",p:"cahier_jour",bg:"var(--Pp)",c:"var(--P)"},
-    {e:"⏰",l:"Pointer",p:"pointage",bg:"var(--Gp)",c:"var(--G)"},
-    {e:"💬",l:"Messages",p:"messagerie",bg:"var(--Tp)",c:"var(--T)"},
-    {e:"📄",l:"Documents",p:"documents_complet",bg:"var(--Bp)",c:"var(--B)"},
+    {i:"pointer",l:"Pointer",p:"pointage",principal:true},
+    {i:"cahier",l:"La journée",p:"cahier_jour"},
+    {i:"messages",l:"Messages",p:"messagerie"},
+    {i:"documents",l:"Documents",p:"documents_complet"},
   ];
   return <div style={{marginBottom:16}}>
     <div style={{fontSize:13,fontWeight:700,color:"var(--l)",marginBottom:9,paddingLeft:2}}>Que voulez-vous faire ?</div>
     <div style={{display:"grid",gridTemplateColumns:"repeat("+A.length+",1fr)",gap:8}}>
-      {A.map(a=><button key={a.p}onClick={()=>setPage&&setPage(a.p)}
-        style={{background:a.bg,border:"none",borderRadius:14,padding:"13px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:6,minHeight:78,transition:"transform .12s"}}
-        onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
-        onMouseLeave={e=>e.currentTarget.style.transform="none"}>
-        <span style={{fontSize:24,lineHeight:1}}>{a.e}</span>
-        <span style={{fontSize:11,fontWeight:700,color:a.c,textAlign:"center",lineHeight:1.25}}>{a.l}</span>
+      {A.map(a=><button key={a.p}className="qa"onClick={()=>setPage&&setPage(a.p)}
+        style={a.principal
+          ?{background:teinte,border:"1px solid transparent"}
+          :{background:"var(--w)",border:"1px solid var(--br)"}}>
+        <Icone nom={a.i} taille={23} couleur={a.principal?"#fff":teinte}/>
+        <span style={{fontSize:11,fontWeight:700,textAlign:"center",lineHeight:1.25,color:a.principal?"#fff":"var(--b)"}}>{a.l}</span>
       </button>)}
     </div>
   </div>;
