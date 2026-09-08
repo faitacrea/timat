@@ -1031,6 +1031,16 @@ function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on
 function Toast({msg,onClose}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
   return <div className="toast"><span>✅</span>{msg}</div>}
 
+// Affiche le trace correspondant a un emoji, ou l'emoji lui-meme s'il n'est
+// pas encore dans la table. Permet de convertir les icones de menu par
+// remplacement mecanique, sans risque pour celles qui ne sont pas couvertes.
+function IconeOuEmoji({e,taille=17,couleur="currentColor"}){
+  const trace=EMOJI_TRACE[e];
+  return trace
+    ?<Icone nom={trace} taille={taille} couleur={couleur} epaisseur={1.9}/>
+    :<span style={{fontSize:taille-1,lineHeight:1}}>{e}</span>;
+}
+
 function PageHeader({icon,title,sub,action}){
   const trace=EMOJI_TRACE[icon];
   return <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
@@ -6926,7 +6936,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
     const demoUnlockedSection="bulletin";
     return <div className="fi">
       <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
-        {sousOnglets.map(s=>{const unlocked=s.id===demoUnlockedSection;return <button key={s.id}onClick={()=>setSection(s.id)}style={{padding:"8px 16px",border:"none",background:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",color:section===s.id?"var(--T)":(unlocked?"var(--b)":"var(--l)"),borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6,opacity:unlocked?1:.7}}><span>{s.ic}</span><span>{s.l}</span>{!unlocked&&<span style={{fontSize:11}}>🔒</span>}</button>;})}
+        {sousOnglets.map(s=>{const unlocked=s.id===demoUnlockedSection;return <button key={s.id}onClick={()=>setSection(s.id)}style={{padding:"8px 16px",border:"none",background:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,flexShrink:0,whiteSpace:"nowrap",color:section===s.id?"var(--T)":(unlocked?"var(--b)":"var(--l)"),borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6,opacity:unlocked?1:.7}}><IconeOuEmoji e={s.ic}/><span>{s.l}</span>{!unlocked&&<span style={{fontSize:11}}>🔒</span>}</button>;})}
       </div>
       {section==="bulletin"
         ? <div>
@@ -6968,7 +6978,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
           color:section===s.id?"var(--T)":"var(--b)",
           borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
-        }}><span>{s.ic}</span><span>{s.l}</span></button>)}
+        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
       </div>
     </>:<div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
       {sousOnglets.map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
@@ -6977,7 +6987,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
         color:section===s.id?"var(--T)":"var(--b)",
         borderBottom:section===s.id?"2.5px solid var(--T)":"2.5px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
-      }}><span>{s.ic}</span><span>{s.l}</span></button>)}
+      }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>}
     {section==="facturation"&&(proActif
       ?<Facturation enfants={enfants}role={role}pEId={pEId}user={user}pointagesDB={pointagesDB}/>
@@ -7032,7 +7042,7 @@ function Journal({enfants,role,pEId,user}){
         color:sousOnglet===s.id?"var(--T)":"var(--b)",
         borderBottom:sousOnglet===s.id?"2px solid var(--T)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
-      }}><span>{s.ic}</span><span>{s.l}</span></button>)}
+      }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>
     {sousOnglet==="journal"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
     {sousOnglet==="bilan"&&<RecitIA enfants={liste}role={role}pEId={pEId}/>}
@@ -7240,7 +7250,7 @@ function Eveil({enfants,role,pEId}){
           color:section===s.id?"var(--S)":"var(--l)",
           borderBottom:section===s.id?"2px solid var(--S)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
-        }}><span>{s.ic}</span><span>{s.l}</span></button>
+        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
       )}
     </div>
     {section==="portfolio"&&<Portfolio enfants={liste}role={role}pEId={selId}/>}
@@ -9121,7 +9131,7 @@ function JournalAvecBilans({enfant,liste,role,pEId,user}){
           color:sousSec===s.id?"var(--P)":"var(--l)",
           borderBottom:sousSec===s.id?"2px solid var(--P)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:4
-        }}><span>{s.ic}</span><span>{s.l}</span></button>
+        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
       )}
     </div>
     {sousSec==="messages"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
@@ -9453,7 +9463,7 @@ function JournalComplet({enfants,role,pEId,user}){
         color:sec===s.id?"var(--T)":"var(--b)",
         borderBottom:sec===s.id?"2px solid var(--T)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
-      }}><span>{s.ic}</span><span>{s.l}</span></button>)}
+      }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>
     {sec==="repas"&&<RepasChanges enfants={liste}role={role}pEId={selId}/>}
     {sec==="sommeil"&&<Sommeil enfants={liste}role={role}pEId={selId}/>}
@@ -9552,7 +9562,7 @@ function SanteComplete({enfants,role,pEId,user}){
         borderBottom:sec===s.id?"2px solid var(--R)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}>
-        <span>{s.ic}</span><span>{s.l}</span>
+        <IconeOuEmoji e={s.ic}/><span>{s.l}</span>
         {s.badge>0&&<span style={{background:"var(--R)",color:"#fff",borderRadius:10,
           padding:"1px 5px",fontSize:11,fontWeight:700}}>{s.badge}</span>}
       </button>)}
@@ -9624,7 +9634,7 @@ function EveilComplet({enfants,role,pEId}){
           color:sec===s.id?"var(--S)":"var(--b)",
           borderBottom:sec===s.id?"2px solid var(--S)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
-        }}><span>{s.ic}</span><span>{s.l}</span></button>
+        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
       )}
     </div>
     {sec==="portfolio"&&<Portfolio enfants={liste}role={role}pEId={selId}/>}
@@ -9645,7 +9655,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
           color:sec===s.id?"var(--T)":"var(--b)",
           borderBottom:sec===s.id?"2px solid var(--G)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
-        }}><span>{s.ic}</span><span>{s.l}</span></button>
+        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
       )}
     </div>
     {sec==="documents"&&<Documents enfants={enfants}role={role}pEId={pEId}user={user}/>}
@@ -11614,7 +11624,7 @@ function BilansExports({enfants,role,pEId,user,pointagesDB}){
           color:sec===s.id?"var(--T)":"var(--b)",
           borderBottom:sec===s.id?"2px solid var(--G)":"2px solid transparent",
           marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
-        }}><span>{s.ic}</span><span>{s.l}</span></button>
+        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
       )}
     </div>
     {sec==="rapport"&&(estPro(user)
@@ -11811,7 +11821,7 @@ function BottomNav({groups,page,setPage,pmiNonLus,flat}){
             background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
             fontWeight:on?700:500,fontSize:14,
           }}>
-            <span style={{fontSize:19,width:28,textAlign:"center",flexShrink:0}}>{s.ic}</span>
+            <span style={{width:28,display:"flex",justifyContent:"center",flexShrink:0}}><IconeOuEmoji e={s.ic} taille={19}/></span>
             <span style={{flex:1,minWidth:0}}>
               <span style={{display:"block"}}>{s.l}</span>
               {s.d&&<span style={{display:"block",fontSize:11.5,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
@@ -12045,7 +12055,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
             transform:(isActive||isOpen)?"scale(1.03)":"scale(1)",
             letterSpacing:".1px",position:"relative",
           }}>
-            <span style={{fontSize:17,lineHeight:1}}>{g.ic}</span>
+            <IconeOuEmoji e={g.ic}/>
             <span>{g.l}</span>
             {g.subs&&<span style={{fontSize:11,opacity:.6,marginLeft:2,transform:isOpen?"rotate(180deg)":"rotate(0)",display:"inline-block",transition:"transform .2s"}}>▼</span>}
             {hasAdminBadge&&<span style={{
@@ -12070,7 +12080,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
               }}
                 onMouseEnter={e=>{if(!on)e.currentTarget.style.background="var(--c)";}}
                 onMouseLeave={e=>{if(!on)e.currentTarget.style.background="transparent";}}>
-                <span style={{fontSize:18,width:26,textAlign:"center",flexShrink:0}}>{s.ic}</span>
+                <span style={{width:26,display:"flex",justifyContent:"center",flexShrink:0}}><IconeOuEmoji e={s.ic} taille={18}/></span>
                 <span style={{flex:1,minWidth:0}}>
                   <span style={{display:"block"}}>{s.l}</span>
                   {s.d&&<span style={{display:"block",fontSize:11,color:"var(--l)",fontWeight:400,marginTop:1,lineHeight:1.4}}>{s.d}</span>}
