@@ -185,6 +185,55 @@ const TRACES = {
   enfant:'<circle cx="12" cy="9" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
   admin:'<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/>',
   outils:'<path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8Z"/>',
+  reglages:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
+  courrier:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  signature:'<path d="M3 19c3 0 3-9 6-9s3 6 6 6 3-4 6-4"/><path d="M3 21h18"/>',
+  crayon:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  etoiles:'<path d="M12 3.5 13.7 8l4.5 1.7-4.5 1.7L12 16l-1.7-4.6L5.8 9.7 10.3 8Z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z"/>',
+  aide:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.1-2.5 3.6M12 17.5h.01"/>',
+  pousse:'<path d="M12 21v-8"/><path d="M12 13c0-3.3 2.7-6 6-6 0 3.3-2.7 6-6 6Z"/><path d="M12 15c0-2.8-2.2-5-5-5 0 2.8 2.2 5 5 5Z"/>',
+  feuille:'<path d="M4 20c8 0 16-4 16-15C10 5 4 10 4 20Z"/><path d="M4 20c3-5 7-8 11-9.5"/>',
+  repas:'<path d="M6 3v8a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 3c-1.5 1.5-2 3.5-2 5.5 0 1.4.6 2.5 2 2.5v10"/>',
+  cadeau:'<rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18M12 9v12"/><path d="M12 9c-1.5-3-3-4-4.5-3S6 9 12 9Zm0 0c1.5-3 3-4 4.5-3S18 9 12 9Z"/>',
+  activite:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.1"/><circle cx="15" cy="10" r="1.1"/><circle cx="10" cy="15" r="1.1"/><circle cx="14.5" cy="14" r="1.1"/>',
+  fin:'<path d="M5 21V4"/><path d="M5 5h11l-2 3 2 3H5"/>',
+  institution:'<path d="M3 10h18"/><path d="m12 3 9 5H3Z"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/><path d="M3 21h18"/>',
+  sante:'<path d="M4.5 6.5A4 4 0 0 1 12 8a4 4 0 0 1 7.5-1.5c1.4 2.8-.5 5.9-7.5 11.5-7-5.6-8.9-8.7-7.5-11.5Z"/>',
+  fille:'<circle cx="12" cy="8" r="4"/><path d="M6 21c0-3.3 2.7-6 6-6s6 2.7 6 6"/>',
+  famille:'<circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M3 20c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M14 20c0-2.2 1.5-4 3.5-4S21 17.8 21 20"/>',
+  vaccin:'<path d="m18 2 4 4"/><path d="m17 7 3-3-4-4-3 3"/><path d="M10.5 6.5 17 13l-6.5 6.5-3-3L3 21l-1-1 4.5-4.5-3-3Z"/>',
+  idee:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6V16h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3Z"/>',
+  document:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+  graphique:'<path d="M3 21h18"/><rect x="5" y="12" width="3.5" height="6" rx="1"/><rect x="10.5" y="8" width="3.5" height="10" rx="1"/><rect x="16" y="4" width="3.5" height="14" rx="1"/>',
+  liste:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  regle:'<path d="m3 15 6-6 6 6-6 6Z"/><path d="M15 9 21 3"/><path d="M7 11l1.5 1.5M9.5 8.5 11 10M12 6l1.5 1.5"/>',
+  parchemin:'<path d="M6 3h11a2 2 0 0 1 2 2v13a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6"/><path d="M4 6h4"/><path d="M9 8h7M9 12h7M9 16h4"/>',
+  colis:'<path d="M3 8.5 12 3.5l9 5v7l-9 5-9-5Z"/><path d="M3 8.5 12 13.5l9-5M12 13.5V21"/>',
+  boite:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 12h5l1.5 2.5h5L16 12h5"/><path d="m6 7 2-3h8l2 3"/>',
+  cadenas:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  dossier:'<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/>',
+  sommeil:'<path d="M20.5 14A8.5 8.5 0 1 1 10 3.5 7 7 0 0 0 20.5 14Z"/>',
+  bus:'<rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 10h16"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M8 4v6M16 4v6"/>',
+  voiture:'<path d="M5 17h14"/><path d="M6 17V11l2-4h8l2 4v6"/><path d="M4 11h16"/><circle cx="8" cy="17.5" r="1.6"/><circle cx="16" cy="17.5" r="1.6"/>',
+  urgence:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/>',
+  panier:'<path d="M3 5h2l2.6 10.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/>',
+  calcul:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+  facture:'<path d="M5 3h14v18l-2.3-1.5L14.4 21l-2.4-1.5L9.6 21l-2.3-1.5L5 21Z"/><path d="M9 8h6M9 12h6"/>',
+};
+
+// Correspondance entre les emoji encore presents dans le code et les traces.
+// Un emoji sans equivalent reste affiche tel quel : la table peut se completer
+// sans jamais casser un ecran.
+const EMOJI_TRACE = {
+  "⏰":"pointer","⚙️":"reglages","✉️":"courrier","✍️":"signature","✏️":"crayon",
+  "✨":"etoiles","❓":"aide","⭐":"outils","🌱":"pousse","🌿":"feuille",
+  "🍽️":"repas","🎁":"cadeau","🎨":"activite","🏁":"fin","🏛️":"institution",
+  "🏥":"sante","👧":"fille","👪":"famille","👶":"enfant","💉":"vaccin",
+  "💡":"idee","💬":"messages","💶":"paie","📄":"document","📅":"planning",
+  "📊":"graphique","📋":"liste","📏":"regle","📔":"cahier","📜":"parchemin",
+  "📝":"crayon","📦":"colis","📬":"boite","🔒":"cadenas","🗂️":"dossier",
+  "😴":"sommeil","🚌":"bus","🚗":"voiture","🚨":"urgence","🛒":"panier",
+  "🧮":"calcul","🧾":"facture","🏠":"accueil",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -368,7 +417,14 @@ function Styles(){return(
     .pf{font-family:'Cormorant Garamond','Georgia',serif}
     /* Aucun element cliquable ne doit descendre sous 24 px : c'est le minimum
        fixe par le WCAG 2.5.8. Le bouton Deconnexion mesurait 19 x 20 px. */
-    button,a[role="button"]{min-height:24px}
+    /* Les cibles restantes etaient des onglets et des puces de filtre poses en
+       style en ligne, entre 26 et 35 px de haut : trop nombreux et trop
+       disperses pour etre repris un par un, mais tous justiciables du meme
+       plancher. 40 px est la hauteur d'un doigt sans etre celle d'un bouton
+       plein, et le WCAG 2.5.8 n'exige que 24 px. */
+    button,a[role="button"]{min-height:40px}
+    /* Les fleches de navigation mesuraient 24 a 35 px de large. */
+    .btn{min-width:40px}
     /* Les icones de la barre du haut sont les cibles les plus utilisees et les
        plus proches du bord de l'ecran : elles montent a 40 px. */
     .ico-btn{min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r3);background:none;border:none;cursor:pointer;padding:0;transition:background var(--tap) ease}
@@ -975,9 +1031,19 @@ function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on
 function Toast({msg,onClose}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
   return <div className="toast"><span>✅</span>{msg}</div>}
 
-function PageHeader({icon,title,sub,action}){return <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-  <div><div className="pf"style={{fontSize:17,fontWeight:700,color:"var(--b)",marginBottom:2}}>{icon} {title}</div>
-  {sub&&<div style={{fontSize:12,color:"var(--l)"}}>{sub}</div>}</div>{action}</div>}
+function PageHeader({icon,title,sub,action}){
+  const trace=EMOJI_TRACE[icon];
+  return <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+    <div>
+      <div className="pf"style={{fontSize:17,fontWeight:700,color:"var(--b)",marginBottom:2,display:"flex",alignItems:"center",gap:8}}>
+        {trace?<Icone nom={trace} taille={19} couleur="var(--B)" epaisseur={1.9}/>:<span>{icon}</span>}
+        <span>{title}</span>
+      </div>
+      {sub&&<div style={{fontSize:12,color:"var(--l)"}}>{sub}</div>}
+    </div>
+    {action}
+  </div>;
+}
 
 // ECHEANCIER DECLARATION PAJEMPLOI - rappel mensuel par enfant (depuis janvier 2026 : declaration mensuelle obligatoire, une par enfant, avant le 5 du mois suivant)
 // Fenetres : parent visible du 25 au 5 (preparation + fenetre) ; assmat visible du 1er au 5 seulement.
@@ -3792,7 +3858,7 @@ function Sante({enfants,role,pEId,user}){
             {urgences.map((u,i)=>
               <a key={u.l+i}href={"tel:"+String(u.v).replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none",flexWrap:"wrap"}}>
                 <span style={{fontSize:17}}>{u.ic}</span>
-                <span style={{fontSize:12.5,color:"#7F1D1D",flex:1,fontWeight:600,minWidth:70,lineHeight:1.3}}>{u.l}</span>
+                <span style={{fontSize:12.5,color:"#7F1D1D",flex:1,fontWeight:600,minWidth:130,lineHeight:1.3,overflowWrap:"normal"}}>{u.l}</span>
                 <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
           </div>
@@ -8781,6 +8847,7 @@ function PolitiqueConfidentialite(){
       ["Journaux de connexion","12 mois","Sécurité"],
       ["Consentements","5 ans","Preuve de conformité CNIL"],
       ["Données de l'enfant et registres professionnels","Fixée par l'assistante maternelle","TiMat n'en est que l'hébergeur"],
+      ["Fin de l'abonnement","Restitution ou suppression, au choix","RGPD art. 28.3.g"],
     ],
     "5. Vos droits":[
       ["Droit","Comment l'exercer"],
@@ -10902,11 +10969,10 @@ function SimulateurCout({enfants,pEId}){
   const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
   // CMG 2026 - REFORME 1er sept 2025 : calcul horaire par taux d'effort (barème PSU), parametres assmat 2026
   // Bareme CMG au 1er avril 2026, verifie sur les publications Urssaf et CNAF.
-  // Le plancher de ressources est la seule valeur que les sources consultees ne
-  // donnent pas a l'identique : 814,02 ou 814,62 EUR selon les publications.
-  // L'ecart joue sur quelques centimes d'aide mensuelle ; a confirmer aupres de
-  // la CAF avant de s'en servir comme argument.
-  const PLANCHER_RESSOURCES=814.62, PLAFOND_RESSOURCES=8500;
+  // Le plancher de ressources avait ete releve a 814,62 EUR sur la foi d'une
+  // seule source ; deux verifications ulterieures donnent 814,02 EUR et aucune
+  // ne confirme la premiere valeur.
+  const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
   const CHR_AM=4.91;        // cout horaire de reference assmat 2026
   const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
   const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
@@ -13817,6 +13883,10 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <p style={{marginTop:10}}><strong>Données dont l'assistante maternelle est responsable</strong></p>
               <p>Le dossier de l'enfant, les pointages, les contrats et les bulletins sont conservés aussi longtemps qu'elle en a l'usage, et effacés à sa demande ou avec son compte. TiMat ne les supprime pas d'office à la fin d'un accueil : ces pièces justifient les bulletins de salaire, et un salarié dispose de trois ans pour réclamer un rappel de salaire. Les effacer automatiquement priverait l'assistante maternelle de ses propres preuves.</p>
               <p style={{marginTop:8}}>Un parent qui supprime son compte est détaché du dossier sans que celui-ci soit détruit, pour la même raison.</p>
+              <p style={{marginTop:10}}><strong>À la fin de votre abonnement</strong></p>
+              <p>Le RGPD (article 28.3.g) impose à TiMat, en tant que sous-traitante, de vous <strong>restituer ou supprimer</strong> vos données professionnelles à la fin de la prestation, <strong>à votre choix</strong>, et de détruire les copies existantes.</p>
+              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à support@timat.app.</p>
+              <p style={{marginTop:8,fontSize:12,color:"#5F7A86"}}>Les pièces relevant d'une obligation légale de conservation — la facturation de TiMat notamment — échappent à cette suppression, comme le prévoit ce même article.</p>
               <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont appliquées automatiquement, chaque mois, et non seulement annoncées.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
