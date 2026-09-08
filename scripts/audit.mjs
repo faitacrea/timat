@@ -379,6 +379,36 @@ if (libellesEmoji.length) {
   signale("icônes", `${libellesEmoji.length} libellé(s) de bouton commencent par un emoji au lieu d'une icône dessinée`);
 }
 
+// --- themes du calendrier : un seul vocabulaire ---
+// Pourquoi : la couleur et l'icone de chaque type d'evenement etaient recopiees
+// dans quatre rendus. L'un d'eux comparait a « conge » quand le reste du code
+// ecrit « cng » : les conges y sortaient en bleu neutre, et rien ne le disait.
+// La table TYPES_EV est desormais le seul endroit ou ce vocabulaire existe.
+if (!/const TYPES_EV=\{/.test(appSrc)) {
+  signale("calendrier", "la table TYPES_EV a disparu : les couleurs d'événement ne sont plus définies à un seul endroit");
+}
+const ternairesCouleur = [...appSrc.matchAll(/ev\.type===\s*"[^"]+"\s*\?\s*"var\(--[GRBSPT]p?\)"/g)];
+if (ternairesCouleur.length) {
+  signale("calendrier", `${ternairesCouleur.length} endroit(s) recalculent la couleur d'un événement au lieu de passer par typeEv() — c'est ainsi qu'un « conge » écrit pour « cng » est passé inaperçu`);
+}
+// Chaque theme propose au parent doit ouvrir un formulaire qui existe : ceux
+// qui portent un motif passent par le formulaire d'absence, seul a compter les
+// heures et a prevenir l'assistante maternelle.
+const blocThemes = (appSrc.match(/const THEMES_CAL=\{[\s\S]*?\n\};/) || [""])[0];
+const motifsThemes = [...blocThemes.matchAll(/motif:"([^"]+)"/g)].map((m) => m[1]);
+const motifsFormulaire = (appSrc.match(/\["Maladie"[^\]]*\]/) || [""])[0];
+const motifsOrphelins = [...new Set(motifsThemes)].filter((m) => !motifsFormulaire.includes(`"${m}"`));
+if (motifsOrphelins.length) {
+  signale("calendrier", `motif(s) proposé(s) au parent mais absent(s) de la liste du formulaire d'absence : ${motifsOrphelins.join(", ")}`);
+}
+// Chaque theme doit designer un type que la table connait.
+const typesThemes = [...blocThemes.matchAll(/\{t:"(\w+)"/g)].map((m) => m[1]);
+const tableTypes = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];
+const typesOrphelins = [...new Set(typesThemes)].filter((t) => !new RegExp(`^\\s*${t}:\\{`, "m").test(tableTypes));
+if (typesOrphelins.length) {
+  signale("calendrier", `thème(s) du calendrier pointant vers un type inconnu de TYPES_EV : ${typesOrphelins.join(", ")}`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

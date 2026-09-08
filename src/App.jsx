@@ -169,6 +169,43 @@ const EMAIL_TEMPLATES={
 // parent employeur, sauge pour la MAM et la creche a venir. Ces valeurs sont
 // posees sur la pastille d'avatar sous du texte blanc : elles doivent tenir
 // 4,5:1, ce que ne faisaient ni #E49178 (2,44) ni #B8622F (4,35).
+// Les themes d'evenement du calendrier. Une seule table : la couleur, l'icone
+// et le libelle etaient recopies dans quatre rendus differents, et l'un d'eux
+// testait « conge » quand le code ecrit « cng » — les conges y sortaient donc
+// en bleu neutre au lieu du vert, sans que rien ne le signale.
+const TYPES_EV={
+  rdv:{l:"Rendez-vous",ic:"📌",fond:"var(--Bp)",texte:"var(--B)"},
+  cng:{l:"Congé",ic:"🌴",fond:"var(--Gp)",texte:"var(--G)"},
+  abs:{l:"Absence",ic:"🤒",fond:"var(--Rp)",texte:"var(--R)"},
+  mal:{l:"Maladie",ic:"🤒",fond:"var(--Rp)",texte:"var(--R)"},
+  fer:{l:"Fermeture",ic:"🏠",fond:"var(--Rp)",texte:"var(--R)"},
+  form:{l:"Formation",ic:"📔",fond:"var(--Pp)",texte:"var(--P)"},
+  sor:{l:"Sortie",ic:"🚌",fond:"var(--Sp)",texte:"var(--S)"},
+  ferie:{l:"Jour férié",ic:"🏛️",fond:"var(--Rp)",texte:"var(--R)"},
+  anniv:{l:"Anniversaire",ic:"🎁",fond:"var(--Tp)",texte:"var(--T)"},
+};
+const typeEv=(t)=>TYPES_EV[t]||TYPES_EV.rdv;
+
+// Ce que chaque role peut ajouter au calendrier. Cote parent, les themes qui
+// portent un « motif » ouvrent le formulaire d'absence : lui seul compte les
+// heures et previent l'assistante maternelle.
+const THEMES_CAL={
+  asmat:[
+    {t:"rdv",aide:"Réunion, visite PMI, rendez-vous"},
+    {t:"cng",aide:"Vos congés"},
+    {t:"fer",aide:"Journée sans accueil"},
+    {t:"form",aide:"Formation professionnelle"},
+    {t:"sor",aide:"Sortie avec les enfants"},
+  ],
+  parent:[
+    {t:"mal",motif:"Maladie",aide:"Votre enfant est malade"},
+    {t:"cng",motif:"Congés parents",aide:"Vous gardez votre enfant"},
+    {t:"abs",motif:"Rendez-vous médical",l:"Rendez-vous médical",ic:"🏥",aide:"Absence pour un rendez-vous"},
+    {t:"abs",motif:"Autre",l:"Autre absence",aide:"Une autre raison"},
+    {t:"rdv",aide:"Un rendez-vous à noter, sans absence"},
+  ],
+};
+
 const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#B85536",mam:"#4E6B57"};
 
 // Icones dessinees, en remplacement des emoji. Un emoji change d'aspect selon
@@ -239,6 +276,8 @@ const TRACES = {
   sablier:'<path d="M7 3h10M7 21h10"/><path d="M8 3v3.5c0 2 4 3.7 4 5.5s-4 3.5-4 5.5V21"/><path d="M16 3v3.5c0 2-4 3.7-4 5.5s4 3.5 4 5.5V21"/>',
   annonce:'<path d="M4 10v4a1 1 0 0 0 1 1h3l6 4V5L8 9H5a1 1 0 0 0-1 1Z"/><path d="M18 9.5a4 4 0 0 1 0 5"/>',
   fusee:'<path d="M12 3c3.5 2.5 5 6 5 9l-2.5 2.5h-5L7 12c0-3 1.5-6.5 5-9Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 17 8 21l3-1.5M14.5 17l1.5 4-3-1.5"/>',
+  punaise:'<path d="M9 3h6"/><path d="M10 3v6L7.5 13h9L14 9V3"/><path d="M12 13v8"/>',
+  valise:'<rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M9 7.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2.5"/><path d="M3 13h18"/>',
   imprimante:'<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M7 14h10v6H7Z"/>',
   main:'<path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a1.5 1.5 0 0 1 3 0"/>',
 };
@@ -258,7 +297,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","📢":"annonce","🚀":"fusee","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -1577,8 +1616,8 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             onMouseEnter={ev2=>ev2.currentTarget.style.background="var(--c)"}
             onMouseLeave={ev2=>ev2.currentTarget.style.background="transparent"}>
             <span className="badge"style={{
-              background:ev.type==="abs"?"var(--Rp)":ev.type==="conge"?"var(--Gp)":"var(--Bp)",
-              color:ev.type==="abs"?"var(--R)":ev.type==="conge"?"var(--G)":"var(--B)",
+              background:typeEv(ev.type).fond,
+              color:typeEv(ev.type).texte,
               whiteSpace:"nowrap",fontSize:11,fontWeight:700,padding:"4px 9px",borderRadius:8}}>
               {fmt(ev.date)}
             </span>
@@ -1703,7 +1742,7 @@ function AccueilParent({enfant,setPage,user}){
             <input type="number"className="inp"placeholder="ex: 9"value={absence.heures}onChange={e=>setAbsence(a=>({...a,heures:e.target.value}))} min="0"max="12"step="0.5"/>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <input type="checkbox"id="indem"checked={absence.indemnise}onChange={e=>setAbsence(a=>({...a,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer"}}/>
+            <input type="checkbox"id="indem"checked={absence.indemnise}onChange={e=>setAbsence(a=>({...a,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
             <label htmlFor="indem"style={{fontSize:13,color:"var(--b)",cursor:"pointer"}}>
               Absence indemnisée (selon contrat)
             </label>
@@ -2780,6 +2819,7 @@ function Calendrier({enfants,role,pEId}){
   const [vue,setVue]=useState("semaine");
   const [semOffset,setSemOffset]=useState(0);
   const [showEvModal,setShowEvModal]=useState(false);
+  const [showThemes,setShowThemes]=useState(false);
   const [evForm,setEvForm]=useState({date:"",type:"rdv",txt:""});
   const [isMobile,setIsMobile]=useState(typeof window!=="undefined"&&window.innerWidth<640);
   const [jourLarge,setJourLarge]=useState(null);
@@ -2897,10 +2937,6 @@ function Calendrier({enfants,role,pEId}){
     <PageHeader icon="📅"
       title={role==="parent"?"Mon calendrier":"Calendrier"}
       sub={role==="parent"?"Jours d'accueil, congés et jours fériés":"Accueil, congés, anniversaires, vacances scolaires Zone C"}
-      action={role==="parent"&&<button className="btn bT"style={{padding:"10px 18px"}}
-        onClick={()=>{setAbsForm(f=>({...f,date:ds(todayDate.getDate())}));setShowAbsenceModal(true);}}>
-        <IconeOuEmoji e="🤒"/> Déclarer une absence
-      </button>}
     />
 
     {/* Modale absence parent */}
@@ -2938,7 +2974,7 @@ function Calendrier({enfants,role,pEId}){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <input type="checkbox"id="indem2"checked={absForm.indemnise}
-              onChange={e=>setAbsForm(f=>({...f,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer"}}/>
+              onChange={e=>setAbsForm(f=>({...f,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
             <label htmlFor="indem2"style={{fontSize:13,color:"var(--b)",cursor:"pointer"}}>Absence indemnisée (selon contrat)</label>
           </div>
         </div>
@@ -2951,14 +2987,50 @@ function Calendrier({enfants,role,pEId}){
       </div>
     </div>}
 
+    {/* Le choix du theme vient avant le formulaire : « ajouter » ne veut pas
+        dire la meme chose selon ce qu'on ajoute, et selon le role. Cote parent,
+        un theme qui porte un motif ouvre le formulaire d'absence — lui seul
+        compte les heures et previent l'assistante maternelle. */}
+    {showThemes&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={e=>e.target===e.currentTarget&&setShowThemes(false)}>
+      <div className="card" style={{width:"100%",maxWidth:400,padding:"var(--pad-carte-l)",maxHeight:"85vh",overflowY:"auto"}}>
+        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="➕"/> Qu'ajoutez-vous ?</div>
+        <div style={{fontSize:12,color:"var(--l)",marginBottom:16}}>{role==="parent"?"Une absence est transmise à votre assistante maternelle et comptée dans les heures.":"Ce que vous ajoutez apparaît aussi dans le calendrier des parents."}</div>
+        <div style={{display:"grid",gap:8}}>
+          {(THEMES_CAL[role]||THEMES_CAL.asmat).map((th,i)=>{
+            const T=typeEv(th.t);
+            return <button key={i} onClick={()=>{
+              setShowThemes(false);
+              if(th.motif){
+                setAbsForm(f=>({...f,date:dsDate(new Date()),motif:th.motif}));
+                setShowAbsenceModal(true);
+              }else{
+                setEvForm({date:dsDate(new Date()),type:th.t,txt:""});
+                setShowEvModal(true);
+              }
+            }} style={{display:"flex",alignItems:"center",gap:12,textAlign:"left",width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid var(--br)",background:"var(--w)",cursor:"pointer",fontFamily:"inherit",transition:"background .15s,border-color .15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background=T.fond;e.currentTarget.style.borderColor=T.texte;}}
+              onMouseLeave={e=>{e.currentTarget.style.background="var(--w)";e.currentTarget.style.borderColor="var(--br)";}}>
+              <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:36,height:36,borderRadius:10,background:T.fond,color:T.texte,flexShrink:0}}><IconeOuEmoji e={th.ic||T.ic} taille={19}/></span>
+              <span style={{flex:1}}>
+                <span style={{display:"block",fontSize:13.5,fontWeight:700,color:"var(--b)"}}>{th.l||T.l}</span>
+                <span style={{display:"block",fontSize:11.5,color:"var(--l)",marginTop:1}}>{th.aide}</span>
+              </span>
+            </button>;
+          })}
+        </div>
+        <button className="btn bG" style={{width:"100%",marginTop:14}} onClick={()=>setShowThemes(false)}>Annuler</button>
+      </div>
+    </div>}
+
     {showEvModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}} onClick={e=>e.target===e.currentTarget&&setShowEvModal(false)}>
       <div className="card" style={{width:"100%",maxWidth:400,padding:"var(--pad-carte-l)"}}>
-        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="➕"/> Nouvel événement</div>
+        <div style={{fontWeight:700,fontSize:17,color:"var(--b)",marginBottom:4,display:"flex",alignItems:"center",gap:8}}>
+          <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:30,height:30,borderRadius:9,background:typeEv(evForm.type).fond,color:typeEv(evForm.type).texte}}><IconeOuEmoji e={typeEv(evForm.type).ic} taille={17}/></span>
+          {typeEv(evForm.type).l}
+        </div>
+        <button onClick={()=>{setShowEvModal(false);setShowThemes(true);}} style={{background:"none",border:"none",padding:0,marginBottom:14,fontSize:12,color:"var(--accent)",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>‹ Changer de thème</button>
         <div style={{display:"grid",gap:12}}>
           <div><label className="lbl">Date</label><input type="date" className="inp" value={evForm.date} onChange={e=>setEvForm(f=>({...f,date:e.target.value}))}/></div>
-          <div><label className="lbl">Type</label><select className="sel" value={evForm.type} onChange={e=>setEvForm(f=>({...f,type:e.target.value}))}>
-            <option value="rdv">📌 Rendez-vous</option><option value="cng">🌴 Congé</option><option value="abs">🤒 Absence / fermeture</option>
-          </select></div>
           <div><label className="lbl">Description</label><input className="inp" placeholder="Ex : RDV médecin, sortie au parc…" value={evForm.txt} onChange={e=>setEvForm(f=>({...f,txt:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addEvModal()}/></div>
         </div>
         <div style={{display:"flex",gap:8,marginTop:18}}>
@@ -2971,7 +3043,7 @@ function Calendrier({enfants,role,pEId}){
     {/* Bascule Semaine / Mois + ajout d'événement */}
     <div style={{display:"flex",gap:6,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
       {[["semaine","Semaine"],["mois","Mois entier"]].map(([k,l])=><button key={k} onClick={()=>setVue(k)} style={{padding:"8px 18px",borderRadius:10,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",background:vue===k?"var(--accent)":"#fff",color:vue===k?"#fff":"var(--accent)",borderColor:vue===k?"var(--accent)":"var(--accent-pale)"}}>{l}</button>)}
-      {role==="asmat"&&<button className="btn bT" style={{marginLeft:"auto",padding:"8px 14px"}} onClick={()=>{setEvForm({date:dsDate(joursDeLaSemaine[0]),type:"rdv",txt:""});setShowEvModal(true);}}><IconeOuEmoji e="➕"/> Événement</button>}
+      <button className="btn bT" style={{marginLeft:"auto",padding:"8px 14px"}} onClick={()=>setShowThemes(true)}><IconeOuEmoji e="➕"/> Ajouter</button>
     </div>
 
     {/* ===== VUE SEMAINE — agenda pleine largeur (type Google Agenda) ===== */}
@@ -2998,7 +3070,7 @@ function Calendrier({enfants,role,pEId}){
             </div>
           </div>
           {ferie&&<div style={{fontSize:12,background:"var(--Rp)",color:"var(--R)",borderRadius:8,padding:"6px 10px",marginBottom:8,fontWeight:700}}>🎉 {ferie}</div>}
-          {ev2.map(ev=><div key={ev.id} style={{fontSize:12.5,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:8,padding:"6px 10px",marginBottom:6,fontWeight:600}}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
+          {ev2.map(ev=><div key={ev.id} style={{fontSize:12.5,background:typeEv(ev.type).fond,color:typeEv(ev.type).texte,borderRadius:8,padding:"6px 10px",marginBottom:6,fontWeight:600}}><IconeOuEmoji e={typeEv(ev.type).ic} taille={14}/> {ev.txt}</div>)}
           <div style={{display:"grid",gridTemplateColumns:"48px 1fr",marginTop:8}}>
             <div style={{position:"relative",height:H}}>
               {heures.map((h,i)=><div key={h} style={{position:"absolute",top:i*PXH-6,right:6,fontSize:11,color:"var(--l)"}}>{h}h</div>)}
@@ -3052,7 +3124,7 @@ function Calendrier({enfants,role,pEId}){
             <div/>
             {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:14}}>
               {ferie&&<div style={{fontSize:11,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
-              {ev2.map(ev=><div key={ev.id} style={{fontSize:11,background:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",color:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.type==="cng"?"🌴":ev.type==="abs"?"🤒":"📌"} {ev.txt}</div>)}
+              {ev2.map(ev=><div key={ev.id} style={{fontSize:11,background:typeEv(ev.type).fond,color:typeEv(ev.type).texte,borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.txt}</div>)}
               {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:11,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom}</div>;})}
             </div>;})}
             <div style={{position:"relative",height:H}}>
@@ -3091,7 +3163,7 @@ function Calendrier({enfants,role,pEId}){
             {e.contrat&&e.contrat.horaires&&<span style={{fontSize:11.5,color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{e.contrat.horaires}</span>}
           </div>;})}
         </div>
-        <div style={{fontSize:11,color:"var(--l)",marginTop:8,textAlign:"center"}}>{role==="asmat"?"« ➕ Événement » pour ajouter un rendez-vous ou un congé":"Les congés et rendez-vous ajoutés par votre assmat apparaissent ici"}</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:8,textAlign:"center"}}>« ➕ Ajouter » pour signaler une absence, un congé ou un rendez-vous</div>
       </div>;
     })()}
 
@@ -3125,7 +3197,7 @@ function Calendrier({enfants,role,pEId}){
               const items=[];
               if(ferie&&dMois)items.push({key:"f",bg:"#FCE7F0",fg:"#B83280",txt:ferie});
               if(bday)items.push({key:"b",bg:colorEnf(bday.id)+"26",fg:"var(--b)",txt:"🎂 "+bday.prenom});
-              evs2.forEach(ev=>items.push({key:ev.id,bg:ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":"var(--Bp)",fg:ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":"var(--B)",txt:(ev.type==="cng"?"🌴 ":ev.type==="abs"?"🤒 ":"")+ev.txt}));
+              evs2.forEach(ev=>items.push({key:ev.id,bg:typeEv(ev.type).fond,fg:typeEv(ev.type).texte,txt:ev.txt}));
               const maxShow=3;
               return <div key={k} onClick={()=>{if(dMois)setSel(sel===dNum?null:dNum);}}
                 style={{minHeight:isMobile?86:76,borderRight:!isMobile&&(k%7)<6?"1px solid var(--br)":"none",borderTop:k>=7?"1px solid var(--br)":"none",padding:isMobile?"5px 3px":"4px 5px",background:isSel?"var(--Tp)":(!dMois?(isMobile?"#fff":"rgba(0,0,0,.02)"):colWE&&!isMobile?"rgba(0,0,0,.03)":"#fff"),cursor:dMois?"pointer":"default",position:"relative",overflow:"hidden"}}>
@@ -3233,8 +3305,8 @@ function Calendrier({enfants,role,pEId}){
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:8}}>
         {moisEvs.map(ev=><div key={ev.id}style={{display:"flex",gap:8,padding:"8px 10px",borderRadius:10,background:"var(--c)",alignItems:"center"}}>
           <span className="badge"style={{
-            background:ev.type==="ferie"?"var(--Rp)":ev.type==="cng"?"var(--Gp)":ev.type==="abs"?"var(--Rp)":ev.type==="anniv"?"var(--Tp)":"var(--Bp)",
-            color:ev.type==="ferie"?"var(--R)":ev.type==="cng"?"var(--G)":ev.type==="abs"?"var(--R)":ev.type==="anniv"?"var(--T)":"var(--B)",
+            background:typeEv(ev.type).fond,
+            color:typeEv(ev.type).texte,
             whiteSpace:"nowrap",fontSize:11}}>
             {ev.date.slice(8)} {noms[mois].slice(0,3).toLowerCase()}
           </span>
