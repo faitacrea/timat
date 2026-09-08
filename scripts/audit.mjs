@@ -319,6 +319,48 @@ if (/creditImpot\s*=\s*Math\.min\([^;]*?\*\s*0?\.5\s*,\s*3500/.test(sourcesChiff
   signale("chiffre", "le plafond de 3 500 € est appliqué au crédit d'impôt et non aux dépenses : le crédit annoncé vaut le double du réel");
 }
 
+// --- mise en page : une seule grammaire de carte et de bouton ---
+// Pourquoi : chaque ecran avait fini par redefinir sa propre densite. Onze
+// paddings de carte differents et vingt-deux gabarits de bouton coexistaient,
+// ce qui donnait l'impression que les onglets n'appartenaient pas a la meme
+// application. La densite vit desormais dans .card et .btn ; on verifie que
+// personne ne la contourne a nouveau en dur dans un style en ligne.
+const balisesOuvrantes = (motif) => {
+  const res = [];
+  const re = new RegExp(motif, "g");
+  let m;
+  while ((m = re.exec(appSrc))) {
+    let prof = 0, fin = -1;
+    for (let k = m.index; k < appSrc.length; k++) {
+      const c = appSrc[k];
+      if (c === "{") prof++;
+      else if (c === "}") prof--;
+      else if (c === '"' || c === "'") { const q = c; k++; while (k < appSrc.length && appSrc[k] !== q) { if (appSrc[k] === "\\") k++; k++; } }
+      else if (c === ">" && prof === 0) { fin = k; break; }
+    }
+    if (fin > 0) res.push(appSrc.slice(m.index, fin));
+  }
+  return res;
+};
+// Cartes : seules les valeurs du systeme sont admises. padding:0 reste permis
+// (cartes a bord perdu qui contiennent une liste ou un tableau).
+const cartesHorsSysteme = balisesOuvrantes('className="card[^"]*"')
+  .filter((b) => /padding:(?!\s*0\s*[,}])(?!\s*"var\(--pad-carte)/.test(b));
+if (cartesHorsSysteme.length) {
+  signale("mise en page", `${cartesHorsSysteme.length} carte(s) redefinissent leur padding en dur au lieu de --pad-carte`);
+}
+// Boutons : .btn porte la taille (13px/600) et ses deux variantes .s et .l.
+const boutonsHorsSysteme = balisesOuvrantes('className=(?:"btn[^"]*"|\\{[^}]*"btn[^}]*\\})')
+  .filter((b) => /fontSize:\s*\d|fontWeight:\s*\d/.test(b));
+if (boutonsHorsSysteme.length) {
+  signale("mise en page", `${boutonsHorsSysteme.length} bouton(s) .btn redefinissent taille ou graisse en ligne au lieu d'utiliser .btn / .btn.s / .btn.l`);
+}
+// L'ombre de l'action principale doit suivre la couleur du role : une ombre
+// corail sous un bouton bleu se voyait sur l'ecran d'une assistante maternelle.
+if (/ActionBar[\s\S]{0,1200}boxShadow:"0 8px 22px rgba\(/.test(appSrc)) {
+  signale("mise en page", "l'action principale porte une ombre codee en dur : elle ne suit plus la couleur du role");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
