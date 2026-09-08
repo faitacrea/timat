@@ -1914,6 +1914,104 @@ const CRS={
   ],
 };
 
+// Compose le resume d'une journee a partir de ce qui a reellement ete saisi.
+// La version precedente tirait un texte dans une liste figee, sans regarder la
+// journee : le meme paragraphe revenait, quel que soit l'enfant et quoi qu'il
+// se soit passe. Ici tout ce qui est ecrit vient des donnees, et rien n'est
+// affirme sans une saisie derriere.
+const MOTS_HUMEUR={
+  "😄":"rayonnant","😊":"de bonne humeur","🥰":"très câlin","😐":"plutôt calme",
+  "😴":"fatigué","😢":"chagriné","😠":"contrarié","😬":"un peu tendu","🤒":"patraque",
+};
+const accorde=(mot,f)=>{
+  if(!f)return mot;
+  const feminin={rayonnant:"rayonnante",fatigué:"fatiguée",chagriné:"chagrinée",
+    contrarié:"contrariée",patraque:"patraque","très câlin":"très câline",
+    "un peu tendu":"un peu tendue","plutôt calme":"plutôt calme","de bonne humeur":"de bonne humeur"};
+  return feminin[mot]||mot;
+};
+const heureCourte=(h)=>String(h||"").slice(0,5).replace(":"," h ").trim();
+const dureeEnMots=(minutes)=>{
+  const m=Math.max(0,Math.round(Number(minutes)||0));
+  const h=Math.floor(m/60), r=m%60;
+  if(!m)return null;
+  if(!h)return r+" min";
+  return r?h+" h "+String(r).padStart(2,"0"):h+" h";
+};
+const listeFr=(items)=>{
+  const l=items.filter(Boolean);
+  if(l.length<=1)return l[0]||"";
+  return l.slice(0,-1).join(", ")+" et "+l[l.length-1];
+};
+
+// j : { prenom, feminin, arrivee, depart, minutes, humeur, motDuJour,
+//       repas:{dejeuner,gouter,biberon,qualite,notes}, siestes:[{debut,fin,duree}],
+//       changes:[{heure,type,note}], activites:[{titre,description}], transmissions:[...] }
+function composerResume(j){
+  if(!j||!j.prenom)return "";
+  const p=j.prenom, f=!!j.feminin, phrases=[];
+
+  // Ouverture : les horaires, s'ils ont ete pointes.
+  if(j.arrivee){
+    const d=dureeEnMots(j.minutes);
+    if(j.depart&&d)phrases.push(p+" est arrivé"+(f?"e":"")+" à "+heureCourte(j.arrivee)+" et reparti"+(f?"e":"")+" à "+heureCourte(j.depart)+", soit "+d+" d'accueil.");
+    else phrases.push(p+" est arrivé"+(f?"e":"")+" à "+heureCourte(j.arrivee)+".");
+  }
+
+  // Humeur : seulement si elle a ete saisie, et accordee au prenom.
+  const mot=MOTS_HUMEUR[j.humeur];
+  if(mot)phrases.push(p+" était "+accorde(mot,f)+".");
+
+  // Repas.
+  if(j.repas){
+    const r=j.repas, bouts=[];
+    if(r.dejeuner)bouts.push("au déjeuner, "+String(r.dejeuner).toLowerCase());
+    if(r.gouter)bouts.push("au goûter, "+String(r.gouter).toLowerCase());
+    if(r.biberon)bouts.push("biberon "+String(r.biberon).toLowerCase());
+    if(bouts.length){
+      let ph="Côté repas : "+listeFr(bouts)+".";
+      if(r.qualite==="peu")ph+=" L'appétit était plus discret que d'habitude.";
+      else if(r.qualite==="bien")ph+=" Bel appétit.";
+      phrases.push(ph);
+      if(r.notes)phrases.push(String(r.notes).trim().replace(/\.?$/,"."));
+    }
+  }
+
+  // Siestes.
+  const siestes=(j.siestes||[]).filter(s=>s&&(s.duree||s.debut));
+  if(siestes.length){
+    const total=siestes.reduce((t,s)=>t+(Number(s.duree)||0),0);
+    const d=dureeEnMots(total);
+    if(siestes.length===1&&siestes[0].debut&&siestes[0].fin)
+      phrases.push("Sieste de "+heureCourte(siestes[0].debut)+" à "+heureCourte(siestes[0].fin)+(d?" ("+d+")":"")+".");
+    else phrases.push(siestes.length+" siestes"+(d?", "+d+" au total":"")+".");
+  }
+
+  // Changes : un compte, pas un journal.
+  const changes=(j.changes||[]).filter(Boolean);
+  if(changes.length){
+    const notes=changes.map(c=>c.note).filter(Boolean);
+    let ph=changes.length+" change"+(changes.length>1?"s":"")+" dans la journée.";
+    if(notes.length)ph+=" "+notes.join(" ").trim().replace(/\.?$/,".");
+    phrases.push(ph);
+  }
+
+  // Activites du jour.
+  const act=(j.activites||[]).filter(a=>a&&a.titre);
+  if(act.length){
+    phrases.push("Au programme : "+listeFr(act.map(a=>String(a.titre).toLowerCase()))+".");
+    const desc=act.map(a=>a.description).filter(Boolean)[0];
+    if(desc)phrases.push(String(desc).trim().replace(/\.?$/,"."));
+  }
+
+  // Le mot du jour de l'assistante maternelle passe en dernier : c'est le sien.
+  if(j.motDuJour)phrases.push(String(j.motDuJour).trim().replace(/\.?$/,"."));
+
+  if(!phrases.length)
+    return "Rien n'a encore été noté pour "+p+" aujourd'hui. Renseignez le pointage, les repas ou les siestes, et le résumé se composera tout seul.";
+  return phrases.join(" ");
+}
+
 function RecitIA({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [idx,setIdx]=useState(0);
@@ -1923,21 +2021,73 @@ function RecitIA({enfants,role,pEId}){
   const [envoye,setEnvoye]=useState(false);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const estDemo=["e1","e2","e3"].includes(enfant?.id);
   const tx=D.transmissions.filter(t=>t.eId===enfant?.id&&t.date===TODAY_STR);
   const rep=D.repas.find(r=>r.eId===enfant?.id&&r.date===TODAY_STR);
   const ch=D.changes.filter(c=>c.eId===enfant?.id&&c.date===TODAY_STR);
   const pf=D.portfolio.filter(p=>p.eId===enfant?.id).slice(-1)[0];
   const parent=D.parents.find(p=>p.id===enfant?.parentId);
 
+  // Les donnees reelles de la journee, chargees pour l'enfant selectionne.
+  // La version precedente lisait le jeu de demonstration meme pour un vrai
+  // compte : le contexte affiche ne correspondait a aucun enfant reel.
+  const [jour,setJour]=useState(null);
+  useEffect(()=>{
+    if(!enfant?.id||estDemo){setJour(null);return;}
+    let annule=false;
+    (async()=>{
+      try{
+        const eid=enfant.id;
+        const [pointage,repas,siestes,changes,cahier,activites]=await Promise.all([
+          supabase.from("pointages").select("arrivee,depart,total_minutes").eq("enfant_id",eid).eq("date",TODAY_STR).maybeSingle(),
+          supabase.from("repas").select("dejeuner,gouter,biberon,notes,qualite").eq("enfant_id",eid).eq("date",TODAY_STR).maybeSingle(),
+          supabase.from("sommeil").select("debut,fin,duree").eq("enfant_id",eid).eq("date",TODAY_STR),
+          supabase.from("changes_couches").select("heure,type,note").eq("enfant_id",eid).eq("date",TODAY_STR),
+          supabase.from("cahier_jour").select("mot_du_jour,humeur").eq("enfant_id",eid).eq("date",TODAY_STR).maybeSingle(),
+          supabase.from("portfolio").select("titre,description").eq("enfant_id",eid).eq("date",TODAY_STR),
+        ]);
+        if(annule)return;
+        setJour({
+          arrivee:pointage.data?.arrivee||null,
+          depart:pointage.data?.depart||null,
+          minutes:pointage.data?.total_minutes||0,
+          repas:repas.data||null,
+          siestes:siestes.data||[],
+          changes:changes.data||[],
+          motDuJour:cahier.data?.mot_du_jour||"",
+          humeur:cahier.data?.humeur||"",
+          activites:activites.data||[],
+        });
+      }catch(e){ if(!annule)setJour(null); }
+    })();
+    return()=>{annule=true;};
+  },[enfant?.id,estDemo,recit===""]);
+
+  // Rassemble ce qui a ete saisi aujourd'hui, en base ou en demonstration.
+  const donneesDuJour=()=>{
+    const base={prenom:enfant?.prenom||"L'enfant",feminin:/[ae]$/i.test(enfant?.prenom||"")};
+    if(estDemo){
+      const p=D.pointages.find(x=>x.eId===enfant?.id&&x.date===TODAY_STR);
+      const min=p&&p.tot?(Number(String(p.tot).split("h")[0])*60+Number(String(p.tot).split("h")[1]||0)):0;
+      return {...base,
+        arrivee:p?.arr?.replace("h",":"),depart:p?.dep?.replace("h",":"),minutes:min,
+        repas:rep?{dejeuner:rep.dej,gouter:rep.gou,biberon:rep.bib,notes:rep.notes,qualite:rep.q}:null,
+        siestes:[],changes:ch.map(c=>({heure:c.h,type:c.type,note:c.n})),
+        motDuJour:tx.filter(t=>t.auteur==="asmat").slice(-1)[0]?.txt||"",
+        humeur:tx.filter(t=>t.auteur==="asmat").slice(-1)[0]?.mood||"",
+        activites:pf?[{titre:pf.titre,description:pf.desc}]:[]};
+    }
+    return {...base,...(jour||{})};
+  };
+
   const generer=()=>{
     setLoading(true);setRecit("");setEnvoye(false);
+    // Le delai n'imite plus une reflexion : il laisse simplement voir que le
+    // texte vient d'etre recompose.
     setTimeout(()=>{
-      const bilans=BILANS[enfant?.id]||BILANS["e1"];
-      const nextIdx=(idx+1)%bilans.length;
-      setIdx(nextIdx);
-      setRecit(bilans[nextIdx]);
+      setRecit(composerResume(donneesDuJour()));
       setLoading(false);
-    },1800);
+    },350);
   };
 
   return <div className="fi">
@@ -1972,18 +2122,25 @@ function RecitIA({enfants,role,pEId}){
           </div>}
 
           {recit&&<div>
-            <div style={{fontSize:14,color:"var(--b)",lineHeight:1.9,fontStyle:"italic",whiteSpace:"pre-wrap",fontFamily:"'Playfair Display',serif"}}>
-              {recit}
-            </div>
+            {role==="asmat"
+              ?<textarea className="ta" value={recit} onChange={e=>setRecit(e.target.value)}
+                 aria-label="Résumé de la journée, modifiable avant envoi"
+                 style={{fontSize:14,color:"var(--b)",lineHeight:1.8,minHeight:150,fontFamily:"'Playfair Display',serif",fontStyle:"italic"}}/>
+              :<div style={{fontSize:14,color:"var(--b)",lineHeight:1.9,fontStyle:"italic",whiteSpace:"pre-wrap",fontFamily:"'Playfair Display',serif"}}>
+                 {recit}
+               </div>}
+            {role==="asmat"&&<div style={{fontSize:11.5,color:"var(--l)",marginTop:6}}>
+              Composé à partir de vos saisies du jour. Corrigez librement avant d'envoyer.
+            </div>}
             <div style={{marginTop:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-              {role==="asmat"&&!envoye&&<button className="btn bS"onClick={()=>{setEnvoye(true);setToast("Bilan envoyé à "+parent?.prenom+" "+parent?.nom+" ✓");}}>
+              {role==="asmat"&&!envoye&&<button className="btn bS"onClick={()=>{setEnvoye(true);setToast("Résumé envoyé à "+(parent?.prenom||"la famille")+" ✓");}}>
                 📩 Envoyer aux parents
               </button>}
               {role==="asmat"&&envoye&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:"var(--Sp)",borderRadius:10,border:"1px solid var(--Sl)"}}>
                 <span style={{fontSize:14}}>✅</span>
                 <span style={{fontSize:13,fontWeight:700,color:"var(--S)"}}>Envoyé à {parent?.prenom} {parent?.nom}</span>
               </div>}
-              <button className="btn bP"onClick={generer}>🔄 Régénérer</button>
+              <button className="btn bP"onClick={generer}>🔄 Recomposer</button>
               <button className="btn bG"onClick={()=>navigator.clipboard?.writeText(recit)}>📋 Copier</button>
             </div>
           </div>}
