@@ -330,8 +330,12 @@ function Styles(){return(
       /* --- or : mise en avant --- */
       --P:#8A6A16;--Pb:#D4B068;--Pp:#F8F2E4;
 
-      /* --- couleurs de role, d'apres les logos --- */
+      /* --- couleurs de role, d'apres les logos. --accent est la teinte de
+             l'espace ouvert : la navigation, les raccourcis et les etats
+             actifs la suivent, pour qu'un parent ne voie pas une barre bleue
+             sous un avatar corail. --- */
       --role-am:var(--B);--role-parent:var(--T);--role-mam:var(--S);
+      --accent:var(--B);--accent-pale:var(--Bp);--accent-voile:var(--Tl);
 
       /* --- echelle typographique : six tailles, plus 39 valeurs eparpillees --- */
       --t1:24px;  /* titre d'ecran */
@@ -453,7 +457,9 @@ function Styles(){return(
     .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(184,85,54,.36)}
     .bS{background:var(--S);color:#fff;box-shadow:0 2px 10px rgba(78,107,87,.28)}
     .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(78,107,87,.36)}
-    .bO{background:transparent;color:var(--B);border:1.5px solid var(--B)}
+    .bA{background:var(--accent);color:#fff}
+    .bA:hover{transform:translateY(-1px);filter:brightness(1.06)}
+    .bO{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
     .bO:hover{background:var(--hover-veil)}
     .bG{background:var(--hover-veil);color:var(--m);border:1px solid var(--br)}
     .bG:hover{background:var(--tap-veil)}
@@ -542,17 +548,20 @@ function Styles(){return(
        L'etat actif porte trois signaux -- pastille, gras, teinte -- pour rester
        lisible en noir et blanc et en cas de daltonisme. */
     .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;cursor:pointer;padding:6px 2px;border-radius:var(--r2);transition:background var(--tap) ease,transform var(--tap) ease;font-family:inherit;min-width:0;position:relative;-webkit-tap-highlight-color:transparent}
-    .bnav-btn::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%) scaleX(0);width:24px;height:3px;border-radius:3px;background:var(--B);transition:transform .3s var(--ease)}
+    .bnav-btn::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%) scaleX(0);width:24px;height:3px;border-radius:3px;background:var(--accent);transition:transform .3s var(--ease)}
     .bnav-btn.active::before{transform:translateX(-50%) scaleX(1)}
-    .bnav-btn.active{background:var(--Bp)}
+    .bnav-btn.active{background:var(--accent-pale)}
     .bnav-btn:active{background:var(--tap-veil);transform:scale(.94)}
     @media(hover:hover){.bnav-btn:hover:not(.active){background:var(--hover-veil)}}
     .dark .bnav-btn.active{background:rgba(122,170,224,.18)!important}
+    /* L'espace parent et l'espace MAM prennent la teinte de leur logo. */
+    .espace-parent{--accent:var(--T);--accent-pale:var(--Tp)}
+    .espace-mam{--accent:var(--S);--accent-pale:var(--Sp)}
     .bnav-btn .bnav-ic{font-size:22px;line-height:1;color:var(--l);transition:transform .3s var(--ease),color .15s}
-    .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.08);color:var(--B)}
+    .bnav-btn.active .bnav-ic{transform:translateY(-1px) scale(1.08);color:var(--accent)}
     .bnav-btn:active .bnav-ic{transform:scale(.82)}
     .bnav-btn .bnav-lbl{font-size:11px;font-weight:600;letter-spacing:.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;color:var(--l);transition:color .15s,font-weight .15s}
-    .bnav-btn.active .bnav-lbl{color:var(--B);font-weight:700}
+    .bnav-btn.active .bnav-lbl{color:var(--accent);font-weight:700}
     @media(max-width:768px){.bottom-nav{display:flex}}
     .demo-bnav .bottom-nav{position:static!important;display:flex!important;box-shadow:none;z-index:auto;padding-bottom:0}
     @media(hover:none){.card-lift:active{transform:scale(.98)}.btn:active{transform:scale(.96)!important}}
@@ -1218,7 +1227,7 @@ function PointageRapide({enfants,role,user,demo}){
         const st=status[e.id]||{};
         const fini=st.arrivee&&st.depart;
         const enCours=st.arrivee&&!st.depart;
-        const label=fini?"Journée terminée":enCours?"🏁 Départ":"✅ Arrivée";
+        const label=fini?"Journée terminée":enCours?"Noter le départ":"Noter l'arrivée";
         const dotC=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
         const dotT=fini?"Terminée":enCours?"Présent":"Absent";
         return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:16,padding:"14px",display:"flex",gap:12,alignItems:"center"}}>
@@ -1233,7 +1242,7 @@ function PointageRapide({enfants,role,user,demo}){
               {(st.arrivee||st.depart)&&<span style={{color:"var(--l)"}}>· {st.arrivee?("→ "+hhmm(st.arrivee)):""}{st.depart?(" ← "+hhmm(st.depart)):""}</span>}
             </div>
             <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-              <button className={fini?"btn bG":enCours?"btn bB":"btn bG2"} disabled={fini||busy===e.id}
+              <button className={fini?"btn bG":"btn bA"} disabled={fini||busy===e.id}
                 style={{fontSize:12,padding:"7px 12px",opacity:(fini||busy===e.id)?0.55:1,whiteSpace:"nowrap"}}
                 onClick={()=>pointer(e)}>{busy===e.id?"…":label}</button>
               {showQR&&<button onClick={()=>setQrFor(e)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--B)",fontSize:11,fontWeight:600,fontFamily:"inherit",padding:2}}>📱 QR</button>}
@@ -11798,7 +11807,7 @@ function Support({role,user}){
   </div>;
 }
 
-function BottomNav({groups,page,setPage,pmiNonLus,flat}){
+function BottomNav({groups,page,setPage,pmiNonLus,flat,role="asmat"}){
   const activeGroup=findGroup(groups,page);
   const [open,setOpen]=useState(null);
   useEffect(()=>{setOpen(null);},[page]);
@@ -18994,7 +19003,7 @@ export default function App(){
   return(
     <>
       <Styles/>
-      <div className={"app"+(dark?" dark":"")+""}>
+      <div className={"app"+(dark?" dark":"")+(role==="parent"?" espace-parent":role==="mam"?" espace-mam":"")}>
         {qrScan&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(0,0,0,.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setQrScan(null)}>
           <div className="card" style={{maxWidth:360,width:"100%",padding:24,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
             {qrScan.success?<>
@@ -19030,7 +19039,7 @@ export default function App(){
           </button>)}
         </div>}
         <div className="content"><ActionBar page={page} setPage={setPage} role={role}/>{renderPage()}</div>
-        <BottomNav groups={groups} page={page} setPage={setPage} pmiNonLus={role==="parent"?0:pmiNonLus}/>
+        <BottomNav groups={groups} page={page} setPage={setPage} role={role} pmiNonLus={role==="parent"?0:pmiNonLus}/>
         {showWelcome&&<BienvenueOnboarding role={role} user={user} setPage={setPage} onClose={closeWelcome}/>}
         {gToast&&<Toast msg={gToast} onClose={()=>setGToast("")}/>}
       </div>
