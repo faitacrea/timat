@@ -17187,8 +17187,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                         <span style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px"}}>{b.type==="h3"?"Titre":b.type==="callout"?"Encadré":b.type==="list"?"Liste":"Paragraphe"}</span>
                         <div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
-                          <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
+                          <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
+                          <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
                           <button onClick={()=>removeBlk(i,bi)}title="Supprimer"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,color:"#C84B31",fontFamily:"inherit"}}>🗑</button>
                         </div>
                       </div>
@@ -17358,8 +17358,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 return <div key={id} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 10px",marginBottom:7,background:on?"var(--w)":"var(--c)",border:"1px solid var(--br)",borderRadius:10}}>
                   <span style={{fontSize:11,fontWeight:700,color:"var(--l)",width:14,textAlign:"center",flexShrink:0}}>{i+1}</span>
                   <div style={{display:"flex",flexDirection:"column",gap:3,flexShrink:0}}>
-                    <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:28,height:19,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
-                    <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:28,height:19,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
+                    <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
+                    <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
                   </div>
                   <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:on?"var(--b)":"var(--l)"}}>{meta.l}{!on&&<span style={{fontSize:11,fontWeight:700,color:"var(--l)",marginLeft:7}}>· masquée</span>}</span>
                   <div onClick={()=>setSV(id,!on)}title={on?"Masquer":"Afficher"}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
@@ -18165,7 +18165,7 @@ function SitePages(){
     {urls&&urls.map((u,i)=>{const s=status[u];return <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 14px",marginBottom:8}}>
       <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(u)}</span>
       {s!==undefined&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:20,background:(s>=400||s===0)?"#FBF1EF":"#EAF7F1",color:(s>=400||s===0)?"#C84B31":"#1F8A5B"}}>{s===0?"erreur":s}</span>}
-      <a href={u} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"#B85C38",fontWeight:700,textDecoration:"none",flexShrink:0}}>Ouvrir ↗</a>
+      <a href={u} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"var(--T)",fontWeight:700,textDecoration:"none",flexShrink:0,padding:"11px 10px",display:"inline-flex",alignItems:"center"}}>Ouvrir ↗</a>
     </div>;})}
     {urls&&urls.length===0&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Aucune URL trouvée dans le sitemap.</div>}
   </div>;
@@ -18260,7 +18260,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
       .bo-foot .mail{color:#EDE4DE;font-weight:600;display:block;margin-bottom:7px;word-break:break-all;}
       .bo-main{flex:1;min-width:0;display:flex;flex-direction:column;}
       .bo-mbar{display:none;align-items:center;gap:12px;padding:11px 14px;background:#fff;border-bottom:1px solid #EAE0E8;position:sticky;top:0;z-index:15;}
-      .bo-burger{background:none;border:none;font-size:23px;cursor:pointer;color:#2E4A5A;line-height:1;padding:0;}
+      .bo-burger{background:none;border:none;font-size:23px;cursor:pointer;color:#2E4A5A;line-height:1;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
       .bo-scrim{display:none;}
       .bo-subnav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px 0;background:#FDFBF8;}
       .bo-subbtn{padding:7px 12px;border-radius:20px;border:1px solid #EAE0E8;background:#fff;color:#6B4F5A;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
@@ -18303,7 +18303,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
         <div className="bo-mbar">
           <button className="bo-burger" onClick={()=>setDrawer(true)}>☰</button>
           <span style={{fontWeight:800,fontSize:15,color:"#2E4A5A"}}>TiMat · Admin</span>
-          <a href="/" style={{marginLeft:"auto",fontSize:12.5,color:"#6B4F5A",textDecoration:"none",fontWeight:600}}>← Site</a>
+          <a href="/" style={{marginLeft:"auto",fontSize:12.5,color:"#6B4F5A",textDecoration:"none",fontWeight:600,padding:"11px 8px",display:"inline-flex",alignItems:"center"}}>← Site</a>
         </div>
         {top==="contenu"&&<div className="bo-subnav">{CONTENU_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}>{s.ic} {s.l}</button>)}</div>}
         {top==="sections"&&<div className="bo-subnav">{SECTIONS_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}>{s.ic} {s.l}</button>)}</div>}
