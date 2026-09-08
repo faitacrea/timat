@@ -5727,7 +5727,11 @@ function BulletinSalaire({enfants,role,pEId,user}){
     else if(hJ>=8){jPlein++;abMois+=baseMult*SMIC_H;}            // journee pleine
     else{jPart++;abMois+=(baseMult*SMIC_H/8)*hJ;}               // journee courte : prorata
   });
-  const abattementMois=Math.round(abMois*100)/100;
+  // Plafond legal : l'abattement ne peut exceder le total des sommes versees
+  // (CGI art. 80 sexies). Sans ce plafond, le bulletin affichait un abattement
+  // superieur a la base, meme si le net imposable restait juste.
+  const baseAbattable=netImposable+entretien+repasMois;
+  const abattementMois=Math.min(Math.round(abMois*100)/100,Math.round(baseAbattable*100)/100);
   // Libelle dynamique honnete selon la composition du mois
   let abLabel;
   if(jPart===0&&jNuit===0){abLabel=baseMult+"×SMIC × "+jPlein+" j";}
@@ -10941,8 +10945,9 @@ function RecapFiscalAssmat({enfants,user}){
       const jh=joursParEnfant[eid]||[];
       let abatt=0,jPlein=0,jPart=0,jNuit=0;
       jh.forEach(({date,h})=>{const smic=smicHoraireAu(date);if(h>=23.5){jNuit++;abatt+=(baseMult+1)*smic;}else if(h>=8){jPlein++;abatt+=baseMult*smic;}else{jPart++;abatt+=(baseMult*smic/8)*h;}});
-      abatt=Math.round(abatt*100)/100;
       const baseImposable=salaireImp+entretienTot;
+      // Même plafond légal que sur le bulletin.
+      abatt=Math.min(Math.round(abatt*100)/100,Math.round(baseImposable*100)/100);
       const netApres=Math.max(0,Math.round((baseImposable-abatt)*100)/100);
       return{eid,prenom:prenomMap[eid]||"Enfant",salaireImp,entretienTot,baseImposable,abatt,netApres,moisCouverts,jours:jh.length,jPlein,jPart,jNuit};
     });
