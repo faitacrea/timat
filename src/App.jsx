@@ -468,8 +468,8 @@ function Styles(){return(
        l'ecran, une seule), contour (les actions secondaires), discrete (tout le
        reste). Les degrades sont retires : ils eclaircissaient le bas du bouton
        sous le texte blanc, ou le contraste tombait le plus bas. */
-    .bT{background:var(--T);color:#fff;box-shadow:0 2px 10px rgba(184,85,54,.28)}
-    .bT:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(184,85,54,.36)}
+    .bT{background:var(--accent);color:#fff}
+    .bT:hover{transform:translateY(-1px);filter:brightness(1.06)}
     .bS{background:var(--S);color:#fff;box-shadow:0 2px 10px rgba(78,107,87,.28)}
     .bS:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(78,107,87,.36)}
     .bA{background:var(--accent);color:#fff}
@@ -615,7 +615,7 @@ function Styles(){return(
 
     /* - NAV TABS - */
     .ntab{padding:6px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--b);transition:all .15s}
-    .ntab.on{background:var(--Sp);color:var(--S);font-weight:700}
+    .ntab.on{background:var(--accent-pale);color:var(--accent);font-weight:700}
   `}</style>
 );}
 
@@ -929,8 +929,8 @@ function AvatarPicker({emoji,photo,onEmoji,onPhoto}){
         {photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:34}}>{emoji||"👶"}</span>}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-start"}}>
-        <button type="button" onClick={()=>fileRef.current&&fileRef.current.click()} disabled={busy} style={{padding:"7px 12px",borderRadius:9,border:"1.5px solid var(--T)",background:"var(--Tp)",color:"var(--T)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{busy?"…":(photo?"📷 Changer la photo":"📷 Ajouter une photo")}</button>
-        {photo&&<button type="button" onClick={()=>onPhoto(null)} style={{padding:"2px 4px",borderRadius:9,border:"none",background:"none",color:"var(--R)",fontSize:11.5,cursor:"pointer",fontFamily:"inherit"}}>Retirer la photo</button>}
+        <button type="button" onClick={()=>fileRef.current&&fileRef.current.click()} disabled={busy} style={{padding:"7px 12px",borderRadius:10,border:"1.5px solid var(--T)",background:"var(--Tp)",color:"var(--T)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{busy?"…":(photo?"📷 Changer la photo":"📷 Ajouter une photo")}</button>
+        {photo&&<button type="button" onClick={()=>onPhoto(null)} style={{padding:"2px 4px",borderRadius:10,border:"none",background:"none",color:"var(--R)",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Retirer la photo</button>}
       </div>
       <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>choisir(e.target.files&&e.target.files[0])}/>
     </div>
@@ -1005,10 +1005,11 @@ function SegBar({v,setV,items}){
   return <div style={{padding:"16px 20px 0",maxWidth:900,margin:"0 auto",width:"100%"}}>
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
       {items.map((it,i)=><button key={i} onClick={()=>setV(i)} style={{
-        padding:"9px 16px",borderRadius:22,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",
-        background:v===i?"var(--T)":"#fff",color:v===i?"#fff":"var(--T)",borderColor:v===i?"var(--T)":"var(--Tp)",
-        boxShadow:v===i?"0 2px 8px rgba(228,145,120,.35)":"none",transition:"all .15s"
-      }}>{it.ic} {it.l}</button>)}
+        padding:"9px 16px",borderRadius:"var(--r2)",border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",
+        display:"inline-flex",alignItems:"center",gap:7,
+        background:v===i?"var(--accent)":"var(--w)",color:v===i?"#fff":"var(--b)",
+        borderColor:v===i?"var(--accent)":"var(--br)",transition:"all .15s"
+      }}><IconeOuEmoji e={it.ic} couleur={v===i?"#fff":"var(--accent)"}/> {it.l}</button>)}
     </div>
   </div>;
 }
@@ -1540,13 +1541,13 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             </div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
               {none&&<button className="btn bP"style={{fontSize:11,padding:"6px 12px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
-              {onlyA&&<button className="btn bB"style={{fontSize:11.5,padding:"6px 11px"}}disabled={["sending","sent"].includes(rappelState[ct.id])}onClick={()=>rappelSignature(e)}>
+              {onlyA&&<button className="btn bB"style={{fontSize:11,padding:"6px 11px"}}disabled={["sending","sent"].includes(rappelState[ct.id])}onClick={()=>rappelSignature(e)}>
                 {rappelState[ct.id]==="sent"?"✅ Rappel envoyé":rappelState[ct.id]==="sending"?"Envoi…":rappelState[ct.id]==="noemail"?"⚠️ Email parent manquant":"📧 Relancer le parent"}
               </button>}
-              {(both||onlyA)&&<button className="btn bG"style={{fontSize:11.5,padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
+              {(both||onlyA)&&<button className="btn bG"style={{fontSize:11,padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
                 {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}
               </button>}
-              {both&&<button className="btn bT"style={{fontSize:11.5,padding:"6px 11px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
+              {both&&<button className="btn bT"style={{fontSize:11,padding:"6px 11px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
             </div>
           </div>;
         })}
@@ -2152,7 +2153,7 @@ function RecitIA({enfants,role,pEId}){
             <div style={{fontSize:14,color:"var(--m)",lineHeight:1.6,marginBottom:16}}>
               Générez un bilan chaleureux et personnalisé<br/>de la journée de <strong>{enfant?.prenom}</strong>.
             </div>
-            <button className="btn bP"style={{fontSize:14,padding:"11px 22px"}}onClick={generer}>
+            <button className="btn bP"style={{fontSize:13,padding:"11px 22px"}}onClick={generer}>
               ✨ Générer le bilan
             </button>
           </div>}
@@ -2722,7 +2723,7 @@ function RepasChanges({enfants,role,pEId}){
               <div style={{display:"flex",gap:6}}>
                 {[["Change","🔄 Change","var(--G)"],["Propre","✅ Propre","var(--S)"],["Selles","💩 Selles","#B8892A"]].map(([v,l,c])=>{
                   const on=nch.type===v;
-                  return <button key={v} type="button" onClick={()=>setNch(p=>({...p,type:v}))} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:11.5,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
+                  return <button key={v} type="button" onClick={()=>setNch(p=>({...p,type:v}))} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
                 })}
               </div>
             </div>
@@ -3022,12 +3023,12 @@ function Calendrier({enfants,role,pEId}){
       // ----- VUE SEMAINE (vue d'ensemble) -----
       return <div className="card" style={{padding:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:8}}>
-          <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
+          <button className="btn bG" style={{padding:"6px 12px",fontSize:15}} onClick={()=>setSemOffset(o=>o-1)}>‹</button>
           <div style={{textAlign:"center"}}>
             <div className="pf" style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>{labelSemaine}</div>
             {semOffset!==0&&<button onClick={()=>setSemOffset(0)} style={{background:"none",border:"none",color:"var(--T)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",padding:2}}>↺ Cette semaine</button>}
           </div>
-          <button className="btn bG" style={{padding:"6px 12px",fontSize:16}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
+          <button className="btn bG" style={{padding:"6px 12px",fontSize:15}} onClick={()=>setSemOffset(o=>o+1)}>›</button>
         </div>
         <div style={{fontSize:11,color:"var(--l)",textAlign:"center",marginBottom:8,fontWeight:600}}>👆 Touchez un jour pour l'ouvrir en grand</div>
         <div style={{overflowX:"hidden"}}>
@@ -3087,9 +3088,9 @@ function Calendrier({enfants,role,pEId}){
     {vue==="mois"&&<div>
       <div className="card"style={{padding:18}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
+          <button className="btn bG"style={{padding:"6px 12px",fontSize:15}}onClick={()=>{if(mois===0){setMois(11);setAn(a=>a-1)}else setMois(m=>m-1)}}>‹</button>
           <div className="pf"style={{fontWeight:600,fontSize:18,color:"var(--b)"}}>{noms[mois]} {an}</div>
-          <button className="btn bG"style={{padding:"6px 12px",fontSize:16}}onClick={()=>{if(mois===11){setMois(0);setAn(a=>a+1)}else setMois(m=>m+1)}}>›</button>
+          <button className="btn bG"style={{padding:"6px 12px",fontSize:15}}onClick={()=>{if(mois===11){setMois(0);setAn(a=>a+1)}else setMois(m=>m+1)}}>›</button>
         </div>
         {/* En-têtes jours façon Apple */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
@@ -3344,7 +3345,7 @@ function Messagerie({enfants,role,pEId,user}){
         <div style={{display:"flex",gap:8,padding:"12px 14px",borderTop:"1px solid var(--br)",alignItems:"center",background:"#fff"}}>
           <input id="timat-msg-input" className="inp"value={txt}onChange={e=>setTxt(e.target.value)}
             onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Votre message…"style={{flex:1,borderRadius:22}}/>
-          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--T)":"var(--br)",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
+          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--T)":"var(--br)",color:"#fff",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
         </div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -4138,7 +4139,7 @@ function Portfolio({enfants,role,pEId}){
       <div className="g2"style={{marginBottom:10}}>
         <div><label className="lbl">Titre</label><input className="inp"value={nf.titre}onChange={e=>setNf(p=>({...p,titre:e.target.value}))}placeholder="Nom de l'activité"/></div>
         <div><label className="lbl">Emoji</label><div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {emojis.map(em=><button key={em}className={"moo "+(nf.emoji===em?"on":"")}onClick={()=>setNf(p=>({...p,emoji:em}))}style={{fontSize:16,padding:"5px 8px"}}>{em}</button>)}</div></div>
+          {emojis.map(em=><button key={em}className={"moo "+(nf.emoji===em?"on":"")}onClick={()=>setNf(p=>({...p,emoji:em}))}style={{fontSize:15,padding:"5px 8px"}}>{em}</button>)}</div></div>
       </div>
       <div style={{marginBottom:10}}><label className="lbl">Description</label><textarea className="ta"value={nf.desc}onChange={e=>setNf(p=>({...p,desc:e.target.value}))}placeholder="Ce que l'enfant a appris, réalisé..."style={{minHeight:60}}/></div>
       <div style={{marginBottom:10}}><label className="lbl">Compétences (séparées par virgule)</label><input className="inp"value={nf.competences}onChange={e=>setNf(p=>({...p,competences:e.target.value}))}placeholder="Motricité fine, Créativité..."/></div>
@@ -4961,7 +4962,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           <button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>setViewing(b)}>👁️ Voir</button>
           {/* PDF BILAN P9 - export PDF rapide depuis la liste, sur bilans envoyés uniquement */}
-          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,background:"var(--T)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
+          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,background:"var(--T)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
           {role==="asmat"&&!b.envoye&&<button className="btn"style={{padding:"6px 10px",fontSize:12}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
           {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
           {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
@@ -5571,7 +5572,7 @@ function Documents({enfants,role,pEId,user}){
               <div style={{fontWeight:700,fontSize:15}}>{doc.icone} {doc.nom}</div>
               <div style={{fontSize:11,opacity:.8,marginTop:2}}>{doc.sous} · {doc.date.split("-").reverse().join("/")} · {doc.taille}</div>
             </div>
-            <button onClick={()=>setApercu(null)}style={{background:"rgba(255,255,255,.2)",border:"none",color:"#fff",cursor:"pointer",borderRadius:8,padding:"6px 10px",fontSize:14}}>✕</button>
+            <button onClick={()=>setApercu(null)}style={{background:"rgba(255,255,255,.2)",border:"none",color:"#fff",cursor:"pointer",borderRadius:10,padding:"6px 10px",fontSize:13}}>✕</button>
           </div>
           <div style={{padding:24}}>
             <div style={{background:"var(--c)",borderRadius:12,padding:20,minHeight:200,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,textAlign:"center"}}>
@@ -6587,13 +6588,13 @@ function Parrainage({user}){
       </div>
       <div style={{display:"flex",gap:8,alignItems:"center",background:"rgba(255,255,255,.08)",borderRadius:8,padding:"8px 12px",marginBottom:12}}>
         <span style={{fontSize:11,color:"rgba(255,255,255,.6)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{lien}</span>
-        <button onClick={copy}style={{background:copied?"var(--S)":"rgba(255,255,255,.2)",color:"#fff",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700,flexShrink:0}}>
+        <button onClick={copy}style={{background:copied?"var(--S)":"rgba(255,255,255,.2)",color:"#fff",border:"none",borderRadius:10,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700,flexShrink:0}}>
           {copied?"✓ Copié":"Copier"}
         </button>
       </div>
       <div style={{display:"flex",gap:8}}>
-        <button onClick={()=>setToast("Message SMS préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="📱"/> SMS</button>
-        <button onClick={()=>setToast("Message WhatsApp préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="💬"/> WhatsApp</button>
+        <button onClick={()=>setToast("Message SMS préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="📱"/> SMS</button>
+        <button onClick={()=>setToast("Message WhatsApp préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="💬"/> WhatsApp</button>
       </div>
     </div>
     <div className="card"style={{padding:18,marginBottom:16}}>
@@ -6825,8 +6826,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                   <div style={{fontSize:11,color:"var(--m)"}}>Dû {fmtEur(m.du)} · Versé {fmtEur(m.verse)}{m.ecart>1?(" · reste "+fmtEur(m.ecart)):""}</div>
                 </div>
                 {m.statut!=="paye"&&(role==="parent"
-                  ? <button onClick={()=>prefillVersement(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>+ Enregistrer</button>
-                  : <button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:8,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>Relancer</button>)}
+                  ? <button onClick={()=>prefillVersement(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>+ Enregistrer</button>
+                  : <button onClick={()=>relancer(m)}style={{flexShrink:0,padding:"6px 12px",borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,background:"var(--T)",color:"#fff"}}>Relancer</button>)}
               </div>)}
             </div>
           </div>}
@@ -6861,7 +6862,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
               <label style={labelStyle}>Note (optionnel)</label>
               <input type="text"placeholder="ex. virement reçu en retard"value={fNote}onChange={e=>setFNote(e.target.value)}style={inputStyle}/>
             </div>
-            <button onClick={ajouterVersement}disabled={saving}style={{width:"100%",padding:"11px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,background:saving?"var(--c)":"var(--T)",color:saving?"var(--m)":"#fff"}}>{saving?"Enregistrement…":"Enregistrer le versement"}</button>
+            <button onClick={ajouterVersement}disabled={saving}style={{width:"100%",padding:"11px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:saving?"var(--c)":"var(--T)",color:saving?"var(--m)":"#fff"}}>{saving?"Enregistrement…":"Enregistrer le versement"}</button>
           </div>}
 
           {/* Liste */}
@@ -6877,8 +6878,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
                       {v.note&&<div style={{fontSize:12,color:"var(--l)",marginTop:2,fontStyle:"italic"}}>{v.note}</div>}
                     </div>
                     {role==="parent"&&<div style={{display:"flex",gap:6,flexShrink:0}}>
-                      <button onClick={()=>openEdit(v)}style={{padding:"6px 10px",borderRadius:8,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:"var(--m)"}}>Modifier</button>
-                      <button onClick={()=>supprimerVersement(v.id)}style={{padding:"6px 10px",borderRadius:8,border:"1.5px solid #E3B7B2",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:"#B5524A"}}>Supprimer</button>
+                      <button onClick={()=>openEdit(v)}style={{padding:"6px 10px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:"var(--m)"}}>Modifier</button>
+                      <button onClick={()=>supprimerVersement(v.id)}style={{padding:"6px 10px",borderRadius:10,border:"1.5px solid #E3B7B2",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:12,color:"#B5524A"}}>Supprimer</button>
                     </div>}
                   </div>)}
                 </div>}
@@ -6915,8 +6916,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
           <input type="text"value={fNote}onChange={e=>setFNote(e.target.value)}style={inputStyle}/>
         </div>
         <div style={{display:"flex",gap:10}}>
-          <button onClick={()=>{setEditId(null);resetForm();}}style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,color:"var(--m)"}}>Annuler</button>
-          <button onClick={modifierVersement}disabled={savingEdit}style={{flex:1,padding:"11px",borderRadius:10,border:"none",cursor:savingEdit?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,background:savingEdit?"var(--c)":"var(--T)",color:savingEdit?"var(--m)":"#fff"}}>{savingEdit?"Enregistrement…":"Enregistrer"}</button>
+          <button onClick={()=>{setEditId(null);resetForm();}}style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid var(--br)",background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,color:"var(--m)"}}>Annuler</button>
+          <button onClick={modifierVersement}disabled={savingEdit}style={{flex:1,padding:"11px",borderRadius:10,border:"none",cursor:savingEdit?"default":"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:13,background:savingEdit?"var(--c)":"var(--T)",color:savingEdit?"var(--m)":"#fff"}}>{savingEdit?"Enregistrement…":"Enregistrer"}</button>
         </div>
       </div>
     </div>}
@@ -6995,7 +6996,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
   return <div className="fi">
     {role==="asmat"?<>
       <div style={{display:"flex",gap:6,marginBottom:12}}>
-        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:11,border:"1.5px solid",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--T)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--T)",borderColor:groupeActif.id===g.id?"var(--T)":"var(--Tp)"}}>{g.ic} {g.l}</button>)}
+        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--T)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--T)",borderColor:groupeActif.id===g.id?"var(--T)":"var(--Tp)"}}>{g.ic} {g.l}</button>)}
       </div>
       <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
         {sousOnglets.filter(s=>groupeActif.tabs.includes(s.id)).map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
@@ -7934,10 +7935,10 @@ function ActivitesSuggerees({enfants,role,pEId}){
         </div>
         {(()=>{const f=faitDe(a.titre);return <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid var(--br)",display:"flex",alignItems:"center",gap:8,justifyContent:"space-between"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            {role==="asmat"?<button onClick={()=>toggleFait(a.titre)} style={{fontSize:12,fontWeight:600,padding:"5px 11px",borderRadius:8,cursor:"pointer",background:f?"var(--G)":"transparent",color:f?"#fff":"var(--G)",border:"1.5px solid var(--G)"}}>{f?"✓ Faite ce jour":"Marquer faite"}</button>
+            {role==="asmat"?<button onClick={()=>toggleFait(a.titre)} style={{fontSize:12,fontWeight:600,padding:"5px 11px",borderRadius:10,cursor:"pointer",background:f?"var(--G)":"transparent",color:f?"#fff":"var(--G)",border:"1.5px solid var(--G)"}}>{f?"✓ Faite ce jour":"Marquer faite"}</button>
               :f?<span style={{fontSize:12,color:"var(--G)",fontWeight:700}}>✓ Faite ce jour</span>:<span style={{fontSize:12,color:"var(--l)"}}>—</span>}
           </div>
-          {a._perso&&role==="asmat"&&<button onClick={()=>supprimer(a.id)} title="Supprimer activité perso" style={{background:"none",border:"none",cursor:"pointer",fontSize:14,opacity:.6}}>🗑️</button>}
+          {a._perso&&role==="asmat"&&<button onClick={()=>supprimer(a.id)} title="Supprimer activité perso" style={{background:"none",border:"none",cursor:"pointer",fontSize:13,opacity:.6}}>🗑️</button>}
         </div>;})()}
       </div>)}
       {activites.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",padding:"30px 0",color:"var(--l)"}}>
@@ -8153,7 +8154,7 @@ function InstallGuide({isIOS,onClose}){
             <div><div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div><div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
           </div>)}
       </div>}
-      <button onClick={onClose} style={{width:"100%",background:"var(--T)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"inherit"}}>Compris ✓</button>
+      <button onClick={onClose} style={{width:"100%",background:"var(--T)",color:"#fff",border:"none",borderRadius:12,padding:"13px",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit"}}>Compris ✓</button>
     </div>
   </div>;
 }
@@ -8186,7 +8187,7 @@ function BandeauInstall(){
         style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:11,fontWeight:700,color:"#fff",flexShrink:0}}>
         Installer
       </button>
-      <button onClick={()=>setShow(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.7)",cursor:"pointer",fontSize:16,padding:4}}>✕</button>
+      <button onClick={()=>setShow(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.7)",cursor:"pointer",fontSize:15,padding:4}}>✕</button>
     </div>
     {showGuide&&<InstallGuide isIOS={isIOS} onClose={()=>setShowGuide(false)}/>}
   </>;
@@ -8214,7 +8215,7 @@ function BandeauHorsLigne(){
     <span style={{fontSize:14}}>{online?syncing?"🔄":"✅":"📵"}</span>
     {online?syncing?"Synchronisation en cours...":"Données synchronisées"
       :"Hors ligne - les données sont sauvegardées localement"}
-    {!online&&<button onClick={sync}style={{marginLeft:"auto",background:"none",border:"1px solid #FCD34D",color:"#92400E",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontSize:11}}>
+    {!online&&<button onClick={sync}style={{marginLeft:"auto",background:"none",border:"1px solid #FCD34D",color:"#92400E",borderRadius:10,padding:"3px 8px",cursor:"pointer",fontSize:11}}>
       Réessayer
     </button>}
   </div>;
@@ -8289,7 +8290,7 @@ function SupprimerCompte({onDeleted}){
       <div style={{fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>
         La suppression est <strong>définitive et irréversible</strong>. Toutes vos données (enfants, contrats, transmissions, photos, bilans) seront effacées immédiatement conformément au RGPD.
       </div>
-      <button onClick={()=>setEtape("confirm1")}style={{background:"none",border:"1.5px solid var(--R)",color:"var(--R)",borderRadius:8,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:600}}>
+      <button onClick={()=>setEtape("confirm1")}style={{background:"none",border:"1.5px solid var(--R)",color:"var(--R)",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:600}}>
         Supprimer mon compte et toutes mes données
       </button>
     </div>
@@ -8707,7 +8708,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             <div style={{fontSize:26,fontWeight:700,color:"var(--T)",fontFamily:"'DM Sans',sans-serif"}}>9,99€<span style={{fontSize:13,color:"var(--l)",fontWeight:400}}>/mois</span></div>
             <div style={{fontSize:11,color:"var(--l)"}}>2 mois gratuits · Premier paiement à J+60 · Résiliable à tout moment</div>
           </div>
-          <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:14,padding:"13px"}}
+          <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:13,padding:"13px"}}
             onClick={lancerCheckout||undefined}>
             🚀 Passer à Pro - Commencer mon essai gratuit
           </button>
@@ -9459,7 +9460,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
       {/* Écrire dans le cahier (fusion Journal → Cahier) */}
       <div style={{marginTop:14,borderTop:"1px solid var(--br)",paddingTop:12}}>
         <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
-          {["😊","😴","😋","😢","🤒","🎨"].map(m=><button key={m}onClick={()=>setMoodTx(moodTx===m?"":m)}className={"moo"+(moodTx===m?" on":"")}style={{fontSize:16}}>{m}</button>)}
+          {["😊","😴","😋","😢","🤒","🎨"].map(m=><button key={m}onClick={()=>setMoodTx(moodTx===m?"":m)}className={"moo"+(moodTx===m?" on":"")}style={{fontSize:15}}>{m}</button>)}
         </div>
         <textarea className="ta" value={msgTx} onChange={e=>setMsgTx(e.target.value)} placeholder={role==="parent"?"Un mot pour l'assistante maternelle… (transmission du matin, info utile)":"Un mot pour les parents…"} rows={2} style={{width:"100%",boxSizing:"border-box",marginBottom:8}}/>
         <button className="btn bT" disabled={sendingTx||!msgTx.trim()} style={{width:"100%",justifyContent:"center",opacity:(sendingTx||!msgTx.trim())?0.55:1}} onClick={envoyerMsg}>{sendingTx?"…":"Envoyer"}</button>
@@ -10315,7 +10316,7 @@ function SignatureContratParent({enfants,pEId,user}){
     </div>
 
     {/* Bouton valider */}
-    <button className="btn bS"style={{width:"100%",justifyContent:"center",fontSize:14,padding:"13px",
+    <button className="btn bS"style={{width:"100%",justifyContent:"center",fontSize:13,padding:"13px",
       opacity:lu&&hasSig?1:.5}}
       onClick={valider}disabled={!lu||!hasSig}>
       ✅ Valider et signer le contrat
@@ -11969,7 +11970,7 @@ function ActionBar({page,setPage,role}){
   }[p];
   if(!A)return null;
   return <div style={{maxWidth:1100,margin:"0 auto",padding:"0 4px 14px",display:"flex",justifyContent:"flex-end"}}>
-    <button onClick={A.fn} style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,var(--T),#C84B31)",color:"#fff",border:"none",borderRadius:14,padding:"12px 22px",fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 22px rgba(228,145,120,.35)",transition:"transform .12s"}}
+    <button onClick={A.fn} style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,var(--T),#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 22px rgba(228,145,120,.35)",transition:"transform .12s"}}
       onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>
       <span style={{fontSize:16}}>{A.ic}</span>{A.l}
     </button>
@@ -12039,7 +12040,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,marginTop:2}}>
                 {!n.lu&&<div style={{width:7,height:7,borderRadius:"50%",background:"var(--T)"}}/>}
-                <button onClick={e=>{e.stopPropagation();setNotifs&&setNotifs(p=>p.filter(x=>x.id!==n.id));supabase.from("notifications").delete().eq("id",n.id).then(()=>{}).catch(()=>{});}}title="Supprimer"style={{background:"none",border:"none",cursor:"pointer",color:"var(--l)",fontSize:14,lineHeight:1,padding:2}}>✕</button>
+                <button onClick={e=>{e.stopPropagation();setNotifs&&setNotifs(p=>p.filter(x=>x.id!==n.id));supabase.from("notifications").delete().eq("id",n.id).then(()=>{}).catch(()=>{});}}title="Supprimer"style={{background:"none",border:"none",cursor:"pointer",color:"var(--l)",fontSize:13,lineHeight:1,padding:2}}>✕</button>
               </div>
             </div>)}
             {notifs.filter(n=>!n.roles||n.roles.includes(role)).length>0&&<div onClick={()=>{const ids=notifs.map(x=>x.id);setNotifs&&setNotifs([]);supabase.from("notifications").delete().in("id",ids).then(()=>{}).catch(()=>{});}}style={{padding:"11px 16px",textAlign:"center",fontSize:12,fontWeight:700,color:"#C84B31",cursor:"pointer",borderTop:"1px solid var(--br)"}}>🗑️ Tout effacer</div>}
@@ -12311,7 +12312,7 @@ const DEMO_SCREENS=[
           <div style={{fontSize:11,color:"#5DA9A1",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
           <div style={{fontSize:12,color:"#2E4859",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
-            <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:16,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}>{liked?"❤️":"🤍"}</button>
+            <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:15,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}>{liked?"❤️":"🤍"}</button>
           </div>
         </div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #E49178"}}>
@@ -12527,10 +12528,10 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
       {err&&<div style={{background:"rgba(200,75,49,.92)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12,lineHeight:1.5}}>
         {err}
         {errAction==="connexion"&&<>
-          <button type="button" onClick={()=>{setMode("connexion");setErr("");setErrAction(null);}} style={{display:"block",width:"100%",marginTop:9,background:"#fff",color:"#C84B31",border:"none",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Se connecter avec cet email →</button>
+          <button type="button" onClick={()=>{setMode("connexion");setErr("");setErrAction(null);}} style={{display:"block",width:"100%",marginTop:9,background:"#fff",color:"#C84B31",border:"none",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Se connecter avec cet email →</button>
           {/@(gmail|googlemail)\.com\s*$/i.test(form.email||"")&&<div style={{marginTop:9,fontSize:11,lineHeight:1.5,opacity:.95}}><IconeOuEmoji e="💡"/> Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici.</div>}
         </>}
-        {errAction==="reset"&&<button type="button" onClick={envoyerReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
+        {errAction==="reset"&&<button type="button" onClick={envoyerReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
       </div>}
       {mode==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#fff",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0,opacity:.9}}>Mot de passe oublié ?</button></div>}
 
@@ -12656,7 +12657,7 @@ function OutilsGratuits({onClose,onCta}){
             <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}><IconeOuEmoji e="🧮"/> Outils & Simulateurs gratuits</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,.85)",marginTop:4,maxWidth:560,lineHeight:1.5}}>Gratuits et sans inscription, pour les assistantes maternelles et les parents employeurs. Choisissez un outil ci-dessous.</div>
           </div>
-          <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#fff",fontWeight:700,transition:"background .15s"}}onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.35)"}onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.2)"}>✕</button>
+          <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700,transition:"background .15s"}}onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.35)"}onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.2)"}>✕</button>
         </div>
       </div>
       <div style={{padding:"22px 28px"}}>
@@ -12713,7 +12714,7 @@ function OutilsGratuits({onClose,onCta}){
           <div style={{padding:18}}>
             <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
               {[["Brut → Net","brutnet"],["Net → Brut","netbrut"]].map(([lab,v])=>
-                <button key={v}onClick={()=>setSensSal(v)}style={{padding:"7px 15px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12.5,fontWeight:700,background:sensSal===v?"#E49178":"#fff",color:sensSal===v?"#fff":"#5F7A86",borderColor:sensSal===v?"#E49178":"#E8E4E0",transition:"all .15s"}}>{lab}</button>)}
+                <button key={v}onClick={()=>setSensSal(v)}style={{padding:"7px 15px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:700,background:sensSal===v?"#E49178":"#fff",color:sensSal===v?"#fff":"#5F7A86",borderColor:sensSal===v?"#E49178":"#E8E4E0",transition:"all .15s"}}>{lab}</button>)}
             </div>
             <div style={grid}>
               <Field lab={sensSal==="brutnet"?"Salaire BRUT mensuel":"Salaire NET mensuel"}val={montantSal}setter={setMontantSal}step={1}suf="€"/>
@@ -12818,7 +12819,7 @@ function OutilsGratuits({onClose,onCta}){
         <div style={{marginTop:22,background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:16,padding:"20px 22px",textAlign:"center"}}>
           <div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:fTitle,marginBottom:4}}>Envie d'aller plus loin ?</div>
           <div style={{fontSize:13,color:"rgba(255,255,255,.9)",marginBottom:14,lineHeight:1.5}}>TiMat calcule tout automatiquement à partir de vos pointages réels : bulletins, déclarations, contrats… Testez gratuitement.</div>
-          <button onClick={onCta}style={{background:"#fff",color:"#C84B31",border:"none",borderRadius:11,padding:"11px 26px",fontSize:14,fontWeight:800,cursor:"pointer",transition:"transform .12s"}}onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}onMouseLeave={e=>e.currentTarget.style.transform="none"}>Découvrir TiMat →</button>
+          <button onClick={onCta}style={{background:"#fff",color:"#C84B31",border:"none",borderRadius:12,padding:"11px 26px",fontSize:13,fontWeight:800,cursor:"pointer",transition:"transform .12s"}}onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}onMouseLeave={e=>e.currentTarget.style.transform="none"}>Découvrir TiMat →</button>
         </div>
       </div>
     </div>
@@ -12833,14 +12834,14 @@ function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   return <div style={{color:"#C84B31",fontSize:12,marginBottom:12,padding:"10px 12px",background:"#FEF2F2",borderRadius:8,lineHeight:1.55}}>
     {err}
     {errAction==="connexion"&&<>
-      <button type="button" onClick={onSwitch} style={{display:"block",width:"100%",marginTop:9,background:"#C84B31",color:"#fff",border:"none",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+      <button type="button" onClick={onSwitch} style={{display:"block",width:"100%",marginTop:9,background:"#C84B31",color:"#fff",border:"none",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
         Se connecter avec cet email →
       </button>
       {gmail&&<div style={{marginTop:9,color:"#6B4F5A",fontSize:11,lineHeight:1.5}}>
         💡 Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici. Vérifiez l'adresse exacte utilisée à la création.
       </div>}
     </>}
-    {errAction==="reset"&&<button type="button" onClick={onReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#C84B31",border:"1.5px solid #C84B31",borderRadius:8,padding:"9px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+    {errAction==="reset"&&<button type="button" onClick={onReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#C84B31",border:"1.5px solid #C84B31",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
       Mot de passe oublié ? Recevoir un lien
     </button>}
   </div>;
@@ -13135,7 +13136,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ display:"flex", marginBottom:16, background:"#F6F7F6", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
-                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); setErrAction(null); setResetInfo(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); setErrAction(null); setResetInfo(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:10, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
               </div>
               <form onSubmit={e=>{e.preventDefault(); if(loading||(modeAuth==="inscription"&&!consentValide))return; modeAuth==="connexion"?connexion():inscription();}}>
@@ -13171,7 +13172,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
-              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
@@ -13183,7 +13184,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
-                  <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                  <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:10, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
                   </button>
@@ -13792,7 +13793,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
           ))}
           {(config.faqLanding||DEFAULT_CONFIG.faqLanding).length>5&&(
             <div style={{ textAlign:"center", marginTop:18 }}>
-              <button onClick={()=>setShowAllFaq(v=>!v)} style={{ background:"transparent", border:"1.5px solid rgba(228,145,120,.5)", color:"#C84B31", fontWeight:700, fontSize:13.5, padding:"11px 22px", borderRadius:24, cursor:"pointer", fontFamily:"inherit" }}>
+              <button onClick={()=>setShowAllFaq(v=>!v)} style={{ background:"transparent", border:"1.5px solid rgba(228,145,120,.5)", color:"#C84B31", fontWeight:700, fontSize:13, padding:"11px 22px", borderRadius:24, cursor:"pointer", fontFamily:"inherit" }}>
                 {showAllFaq?"Réduire les questions ↑":"Voir les "+((config.faqLanding||DEFAULT_CONFIG.faqLanding).length-5)+" autres questions ↓"}
               </button>
             </div>
@@ -13839,7 +13840,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
             <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}><IconeOuEmoji e="🛒"/> Boutique TiMat</div>
-            <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
+            <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
@@ -13859,7 +13860,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.5,flex:1,marginBottom:10}}>{p.desc}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} €</span>
-                  <button onClick={()=>{if(p.link){window.open(p.link,"_blank");}else{alert("Lien de paiement non configure. Allez dans le Backoffice > App > Boutique pour ajouter vos liens Stripe.");}}}style={{background:p.color,color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>Acheter →</button>
+                  <button onClick={()=>{if(p.link){window.open(p.link,"_blank");}else{alert("Lien de paiement non configure. Allez dans le Backoffice > App > Boutique pour ajouter vos liens Stripe.");}}}style={{background:p.color,color:"#fff",border:"none",borderRadius:10,padding:"8px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>Acheter →</button>
                 </div>
               </div>
             </div>)}
@@ -13933,7 +13934,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               {showLegal==="cgu"&&"📜 Conditions générales d'utilisation"}
               {showLegal==="confidentialite"&&"🔒 Politique de confidentialité"}
             </div>
-            <button onClick={()=>setShowLegal(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"#2E4859",fontWeight:700}}>✕</button>
+            <button onClick={()=>setShowLegal(null)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           {/* Contenu scrollable */}
           <div style={{padding:"24px",overflowY:"auto",fontSize:13,color:"#2E4859",lineHeight:1.8}}>
@@ -14163,7 +14164,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ display:"flex", marginBottom:16, background:"#F6F7F6", borderRadius:10, padding:3 }}>
                 {["inscription","connexion"].map(m => (
-                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); setErrAction(null); setResetInfo(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:8, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
+                  <button key={m} onClick={() => { setModeAuth(m); setErr(""); setErrAction(null); setResetInfo(""); }} style={{ flex:1, padding:"8px", border:"none", cursor:"pointer", borderRadius:10, background: modeAuth===m ? (role==="asmat"?"#C76754":"#2E4859") : "transparent", color: modeAuth===m ? "#fff" : "#6B4F3A", fontWeight:600, fontSize:12, fontFamily:"inherit", transition:"all .15s" }}>{m==="inscription" ? "Créer un compte" : "Se connecter"}</button>
                 ))}
               </div>
               <form onSubmit={e=>{e.preventDefault(); if(loading||(modeAuth==="inscription"&&!consentValide))return; modeAuth==="connexion"?connexion():inscription();}}>
@@ -14199,7 +14200,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
-              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
@@ -14211,7 +14212,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <div style={{ fontSize:11, color:"#6B4F3A", marginBottom:10, lineHeight:1.5 }}>Toute l'application avec des données d'exemple. Aucune inscription, aucune carte bancaire.</div>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>{role==="asmat" ? "Compte assistante maternelle" : "Comptes parents"}</div>
                 {demos.filter(d=>d.role===role).map(d => (
-                  <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:8, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
+                  <button key={d.id} onClick={()=>onLogin({...d,isDemo:true})} style={{ display:"block", width:"100%", textAlign:"left", padding:"8px 10px", background:"none", border:"none", cursor:"pointer", borderRadius:10, fontFamily:"inherit", fontSize:13, color:"#2C1F14", fontWeight:600 }} onMouseEnter={e=>e.currentTarget.style.background="#DDD5C8"} onMouseLeave={e=>e.currentTarget.style.background="none"}>
                     {d.role==="asmat"?"👩👧":"👪"} {d.label}
                     <span style={{ fontSize:11, color:"#A68970", display:"block", paddingLeft:18 }}>{d.email}</span>
                   </button>
@@ -14479,7 +14480,7 @@ function OnboardingWizard({user,onFinish}){
                 await demanderPush(user.id);setPushDone(true);setToast("Notifications activées ✓");
               }}>Activer</button>
             </div>}
-            <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:14,padding:13}}onClick={onFinish}>
+            <button className="btn bT"style={{width:"100%",justifyContent:"center",fontSize:13,padding:13}}onClick={onFinish}>
               Découvrir TiMat 🌿
             </button>
           </div>}
@@ -15290,7 +15291,7 @@ function AlerteEcart({ecarts,role,onMaj}){
         {e.champ} ici : <b>{e.fiche}</b><br/>{e.champ} du profil : <b>{e.profil}</b>
       </div>)}
     </div>
-    {role==="parent"&&<button className="btn"style={{marginTop:8,background:"var(--R)",color:"#fff",border:"none",fontSize:11.5,fontWeight:700}}onClick={onMaj}>
+    {role==="parent"&&<button className="btn"style={{marginTop:8,background:"var(--R)",color:"#fff",border:"none",fontSize:11,fontWeight:700}}onClick={onMaj}>
       Mettre à jour depuis mon profil
     </button>}
   </div>;
@@ -15565,8 +15566,8 @@ function FicheUrgence({enfants,role,pEId,user}){
           {role==="parent"&&!hasData&&parentLive&&<div style={{background:"var(--Tp)",border:"1px dashed var(--Tl)",borderRadius:10,padding:"11px 12px",marginBottom:11,fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>
             💡 Pré-remplir avec les infos de votre profil TiMat ? Indiquez simplement qui vous êtes.
             <div style={{display:"flex",gap:8,marginTop:9}}>
-              <button className="btn"style={{flex:1,background:"var(--w)",border:"1px solid var(--Tl)",color:"var(--m)",fontSize:11.5,fontWeight:700,justifyContent:"center"}}onClick={()=>prefillDepuisProfil("mere")}>Je suis la mère</button>
-              <button className="btn"style={{flex:1,background:"var(--w)",border:"1px solid var(--Tl)",color:"var(--m)",fontSize:11.5,fontWeight:700,justifyContent:"center"}}onClick={()=>prefillDepuisProfil("pere")}>Je suis le père</button>
+              <button className="btn"style={{flex:1,background:"var(--w)",border:"1px solid var(--Tl)",color:"var(--m)",fontSize:11,fontWeight:700,justifyContent:"center"}}onClick={()=>prefillDepuisProfil("mere")}>Je suis la mère</button>
+              <button className="btn"style={{flex:1,background:"var(--w)",border:"1px solid var(--Tl)",color:"var(--m)",fontSize:11,fontWeight:700,justifyContent:"center"}}onClick={()=>prefillDepuisProfil("pere")}>Je suis le père</button>
             </div>
           </div>}
           {blocParent==="mere"&&ecarts.length>0&&<AlerteEcart ecarts={ecarts}role={role}onMaj={majDepuisProfil}/>}
@@ -15601,9 +15602,9 @@ function FicheUrgence({enfants,role,pEId,user}){
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {role==="parent"&&(editing
-            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px",fontSize:14}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
-            : <button className="btn bG"style={{width:"100%",padding:"14px",fontSize:14}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
-          <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>📥 Télécharger la fiche PDF</button>
+            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px",fontSize:13}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
+            : <button className="btn bG"style={{width:"100%",padding:"14px",fontSize:13}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
+          <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:13}}onClick={genererPDF}>📥 Télécharger la fiche PDF</button>
         </div>
       </div>
     </div>}
@@ -15832,9 +15833,9 @@ function ProjetAccueil({user,role}){
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {role!=="parent"&&(editing
-            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px",fontSize:14}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
-            : <button className="btn bG"style={{width:"100%",padding:"14px",fontSize:14}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
-          <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:14}}onClick={genererPDF}>📥 Télécharger le PDF</button>
+            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px",fontSize:13}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
+            : <button className="btn bG"style={{width:"100%",padding:"14px",fontSize:13}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
+          <button className="btn bT"style={{width:"100%",padding:"14px",fontSize:13}}onClick={genererPDF}>📥 Télécharger le PDF</button>
         </div>
       </div>
     </div>
@@ -16217,7 +16218,7 @@ function Login({onLogin}){
             onChange={e=>{setEmail(e.target.value);setErr("");}}onKeyDown={e=>e.key==="Enter"&&tenter()}/>
           {err&&<div style={{color:"var(--R)",fontSize:12,marginTop:4}}>{err}</div>}
         </div>
-        <button className="btn bT"style={{width:"100%",justifyContent:"center",padding:"12px",fontSize:14,marginBottom:18}}onClick={tenter}>
+        <button className="btn bT"style={{width:"100%",justifyContent:"center",padding:"12px",fontSize:13,marginBottom:18}}onClick={tenter}>
           Se connecter
         </button>
         <div style={{background:"var(--c)",borderRadius:10,padding:14}}>
@@ -16738,7 +16739,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <div style={{fontSize:15,fontWeight:800,color:"var(--b)"}}>👁 Contenu de la sauvegarde</div>
             <div style={{fontSize:11,color:"var(--m)",marginTop:2}}>{new Date(showJsonModal.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
           </div>
-          <button onClick={()=>setShowJsonModal(null)} style={{background:"var(--c)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:14,color:"var(--b)",fontWeight:700,fontFamily:"inherit"}}>✕</button>
+          <button onClick={()=>setShowJsonModal(null)} style={{background:"var(--c)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"var(--b)",fontWeight:700,fontFamily:"inherit"}}>✕</button>
         </div>
         <pre style={{margin:0,padding:"16px 20px",overflow:"auto",fontSize:11,lineHeight:1.5,color:"var(--b)",background:"var(--c)",whiteSpace:"pre-wrap",wordBreak:"break-word",flex:1,fontFamily:"ui-monospace,Menlo,monospace"}}>{prettyConfig(showJsonModal.config)}</pre>
         <div style={{display:"flex",gap:8,justifyContent:"flex-end",padding:"12px 20px",borderTop:"1px solid var(--br)",flexShrink:0}}>
@@ -16756,9 +16757,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
         <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
       </div>}
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
-        <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
-        <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
+        <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
+        <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
+        <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
         <button className="btn bG"style={{fontSize:11,padding:"5px 12px"}}onClick={reset}>↺ Reset</button>
         <button className="btn bT"style={{fontSize:11,padding:"5px 14px"}}onClick={sauvegarder}disabled={saving}>{saving?"⏳":"💾 Sauvegarder"}</button>
       </div>
@@ -16766,7 +16767,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
     {/* Bascule mobile Champs / Apercu (ecrans etroits uniquement) */}
     {!isWide&&<div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"var(--c)"}}>
-      {[["champs","📝 Champs"],["apercu","👁 Aperçu"]].map(([k,l])=><button key={k}onClick={()=>setMView(k)}style={{flex:1,padding:"10px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13.5,background:mView===k?"var(--T)":"rgba(0,0,0,.05)",color:mView===k?"#fff":"var(--m)"}}>{l}</button>)}
+      {[["champs","📝 Champs"],["apercu","👁 Aperçu"]].map(([k,l])=><button key={k}onClick={()=>setMView(k)}style={{flex:1,padding:"10px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,background:mView===k?"var(--T)":"rgba(0,0,0,.05)",color:mView===k?"#fff":"var(--m)"}}>{l}</button>)}
     </div>}
 
     <div style={{display:isWide?"flex":"block",height:isWide?"calc(100vh - 52px)":"auto",overflow:isWide?"hidden":"visible"}}>
@@ -16787,7 +16788,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="URL de l'image" hint="Laisser vide = pas d'image de fond">
               <div style={{display:"flex",gap:4}}>
                 <BOTextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="https://... ou vide pour supprimer"/>
-                {cfg.landing.heroImg&&<button onClick={()=>setLand("heroImg","")}style={{background:"#FEE",border:"1px solid #FCC",borderRadius:6,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#C00",flexShrink:0}}>🗑️</button>}
+                {cfg.landing.heroImg&&<button onClick={()=>setLand("heroImg","")}style={{background:"#FEE",border:"1px solid #FCC",borderRadius:10,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#C00",flexShrink:0}}>🗑️</button>}
               </div>
             </BOField>
             {cfg.landing.heroImg&&<>
@@ -16853,7 +16854,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                   </div>
                 );
               })}
-              <button type="button"onClick={()=>setLand("logoSizes",{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64})}style={{marginTop:6,padding:"6px 12px",fontSize:11,background:"transparent",border:"1px solid var(--b)",borderRadius:6,color:"var(--l)",cursor:"pointer"}}>↺ Réinitialiser les tailles</button>
+              <button type="button"onClick={()=>setLand("logoSizes",{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64})}style={{marginTop:6,padding:"6px 12px",fontSize:11,background:"transparent",border:"1px solid var(--b)",borderRadius:10,color:"var(--l)",cursor:"pointer"}}>↺ Réinitialiser les tailles</button>
             </div>
           </BOCard>
 
@@ -17139,7 +17140,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               <div key={i}style={{marginBottom:12,paddingBottom:12,borderBottom:"1px solid var(--br)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                   <span style={{fontSize:11,fontWeight:700,color:"var(--m)"}}>Question {i+1}</span>
-                  <button onClick={()=>removeFaqL(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
+                  <button onClick={()=>removeFaqL(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
                 </div>
                 <input value={item.q}onChange={e=>setFaqL(i,"q",e.target.value)}placeholder="Question"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
                 <textarea value={item.a}onChange={e=>setFaqL(i,"a",e.target.value)}placeholder="Réponse"rows={3}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
@@ -17158,7 +17159,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             {((cfg.footer||{}).rgpd||[]).map((line,i)=>(
               <div key={i}style={{display:"flex",gap:6,marginBottom:6}}>
                 <input value={line}onChange={e=>setFooterRgpd(i,e.target.value)}style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                <button onClick={()=>removeFooterRgpd(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"0 10px",fontSize:13,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
+                <button onClick={()=>removeFooterRgpd(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"0 10px",fontSize:13,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
               </div>
             ))}
             <button onClick={addFooterRgpd}style={{width:"100%",padding:"8px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginTop:2}}>+ Ajouter une ligne RGPD</button>
@@ -17170,7 +17171,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               <div key={i}style={{marginBottom:14,paddingBottom:14,borderBottom:"1px solid var(--br)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                   <span style={{fontSize:11,fontWeight:700,color:"var(--m)"}}>Article {i+1}</span>
-                  <button onClick={()=>removeBlog(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:8,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
+                  <button onClick={()=>removeBlog(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
                 </div>
                 <div style={{display:"flex",gap:6,marginBottom:6}}>
                   <input value={art.emoji||""}onChange={e=>setBlog(i,"emoji",e.target.value)}placeholder="🧮"style={{width:52,textAlign:"center",padding:"8px 6px",borderRadius:8,border:"1px solid var(--br)",fontSize:18,boxSizing:"border-box",fontFamily:"inherit"}}/>
@@ -17179,7 +17180,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 </div>
                 <input value={art.title||""}onChange={e=>setBlog(i,"title",e.target.value)}placeholder="Titre de l'article"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
                 <textarea value={art.excerpt||""}onChange={e=>setBlog(i,"excerpt",e.target.value)}placeholder="Extrait (résumé court)"rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
-                <button onClick={()=>setOpenBlocks(openBlocks===i?null:i)}style={{marginTop:6,width:"100%",padding:"7px",borderRadius:8,border:"1px solid var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📝"/> Contenu de l'article ({(art.blocks||[]).length} bloc{(art.blocks||[]).length>1?"s":""}) {openBlocks===i?"▲":"▼"}</button>
+                <button onClick={()=>setOpenBlocks(openBlocks===i?null:i)}style={{marginTop:6,width:"100%",padding:"7px",borderRadius:10,border:"1px solid var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📝"/> Contenu de l'article ({(art.blocks||[]).length} bloc{(art.blocks||[]).length>1?"s":""}) {openBlocks===i?"▲":"▼"}</button>
                 {openBlocks===i&&<div style={{marginTop:8,padding:10,background:"var(--c)",borderRadius:10}}>
                   {(art.blocks||[]).length===0&&<div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>Aucun bloc : cet article affiche son contenu d'origine. Dès que vous ajoutez un bloc, le contenu par blocs remplace l'original.</div>}
                   {(art.blocks||[]).map((b,bi)=>(
@@ -17187,9 +17188,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                         <span style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px"}}>{b.type==="h3"?"Titre":b.type==="callout"?"Encadré":b.type==="list"?"Liste":"Paragraphe"}</span>
                         <div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
-                          <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
-                          <button onClick={()=>removeBlk(i,bi)}title="Supprimer"style={{background:"none",border:"1px solid var(--br)",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:11,color:"#C84B31",fontFamily:"inherit"}}>🗑</button>
+                          <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
+                          <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
+                          <button onClick={()=>removeBlk(i,bi)}title="Supprimer"style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"2px 7px",cursor:"pointer",fontSize:11,color:"#C84B31",fontFamily:"inherit"}}>🗑</button>
                         </div>
                       </div>
                       {b.type==="h3"&&<div style={{display:"flex",gap:6}}>
@@ -17208,16 +17209,16 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                         {(b.items||[]).map((it,ii)=>(
                           <div key={ii}style={{display:"flex",gap:6,marginBottom:5}}>
                             <input value={it}onChange={e=>setBlkItem(i,bi,ii,e.target.value)}placeholder="Point de liste"style={{flex:1,padding:"6px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                            <button onClick={()=>removeBlkItem(i,bi,ii)}style={{background:"none",border:"1px solid var(--br)",borderRadius:7,padding:"0 9px",fontSize:12,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
+                            <button onClick={()=>removeBlkItem(i,bi,ii)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"0 9px",fontSize:12,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
                           </div>
                         ))}
-                        <button onClick={()=>addBlkItem(i,bi)}style={{fontSize:11,padding:"5px 10px",borderRadius:7,border:"1px dashed var(--br)",background:"var(--c)",color:"var(--b)",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>+ point</button>
+                        <button onClick={()=>addBlkItem(i,bi)}style={{fontSize:11,padding:"5px 10px",borderRadius:10,border:"1px dashed var(--br)",background:"var(--c)",color:"var(--b)",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>+ point</button>
                       </div>}
                     </div>
                   ))}
                   <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:4}}>
                     {[["h3","+ Titre"],["p","+ Paragraphe"],["callout","+ Encadré"],["list","+ Liste"]].map(([t,l])=>
-                      <button key={t}onClick={()=>addBlk(i,t)}style={{flex:"1 1 45%",padding:"7px",borderRadius:8,border:"1.5px dashed var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+                      <button key={t}onClick={()=>addBlk(i,t)}style={{flex:"1 1 45%",padding:"7px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
                     )}
                   </div>
                 </div>}
@@ -17237,7 +17238,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               <div style={{display:"flex",gap:4,marginBottom:4}}>
                 <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={p.ic}onChange={e=>setPain(i,"ic",e.target.value)}/>
                 <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={p.titre}onChange={e=>setPain(i,"titre",e.target.value)}placeholder="Titre"/>
-                <button onClick={()=>removePain(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#c00"}}>✕</button>
+                <button onClick={()=>removePain(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#c00"}}>✕</button>
               </div>
               <textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={p.desc}onChange={e=>setPain(i,"desc",e.target.value)}/>
             </div>)}
@@ -17247,7 +17248,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             {(cfg.testimonials||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontSize:11,fontWeight:700,color:"var(--b)"}}>⭐ Témoignage {i+1}</div>
-                <button onClick={()=>removeTesti(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 8px",color:"#c00"}}>✕</button>
+                <button onClick={()=>removeTesti(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 8px",color:"#c00"}}>✕</button>
               </div>
               {[["nom","Nom"],["ville","Ville"],["avant","Avant (citation)"],["apres","Après (témoignage)"]].map(([k,l])=>
                 <div key={k}style={{marginBottom:5}}>
@@ -17265,7 +17266,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             {(cfg.freeItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input type="checkbox"checked={item[0]}onChange={e=>setFreeItem(i,0,e.target.checked)}style={{width:16,height:16,cursor:"pointer",flexShrink:0}}/>
               <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item[1]}onChange={e=>setFreeItem(i,1,e.target.value)}/>
-              <button onClick={()=>removeFreeItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
+              <button onClick={()=>removeFreeItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
             <button onClick={addFreeItem}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
           </BOCard>
@@ -17274,7 +17275,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Emoji + texte sur une ligne. Les 3 premières sont en gras automatiquement.</div>
             {(cfg.proItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setProItem(i,e.target.value)}placeholder="✨ Emoji + description"/>
-              <button onClick={()=>removeProItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
+              <button onClick={()=>removeProItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
             <button onClick={addProItem}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
           </BOCard>
@@ -17283,7 +17284,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Les petits points de réassurance affichés sous les tarifs.</div>
             {(cfg.guarantees||DEFAULT_CONFIG.guarantees).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
               <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setGuarantee(i,e.target.value)}placeholder="✅ Texte garantie"/>
-              <button onClick={()=>removeGuarantee(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:6,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
+              <button onClick={()=>removeGuarantee(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
             </div>)}
             <button onClick={addGuarantee}className="btn bG"style={{fontSize:11,padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une garantie</button>
           </BOCard>
@@ -17358,8 +17359,8 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 return <div key={id} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 10px",marginBottom:7,background:on?"var(--w)":"var(--c)",border:"1px solid var(--br)",borderRadius:10}}>
                   <span style={{fontSize:11,fontWeight:700,color:"var(--l)",width:14,textAlign:"center",flexShrink:0}}>{i+1}</span>
                   <div style={{display:"flex",flexDirection:"column",gap:3,flexShrink:0}}>
-                    <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
-                    <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:6,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
+                    <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:10,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
+                    <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:10,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
                   </div>
                   <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:on?"var(--b)":"var(--l)"}}>{meta.l}{!on&&<span style={{fontSize:11,fontWeight:700,color:"var(--l)",marginLeft:7}}>· masquée</span>}</span>
                   <div onClick={()=>setSV(id,!on)}title={on?"Masquer":"Afficher"}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
@@ -17368,7 +17369,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 </div>;
               });
             })()}
-            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--Tp)",color:"#B85C38",fontSize:12.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="✏️"/> Renommer / modifier le contenu d'une section</button>
+            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--Tp)",color:"#B85C38",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="✏️"/> Renommer / modifier le contenu d'une section</button>
           </BOCard>
           <BOCard title="Vagues entre sections" icon="🌊">
             <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Ajoute une transition en vague en haut de chaque section. Désactive si tu préfères des séparations nettes.</div>
@@ -17401,7 +17402,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <div style={{fontSize:11,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
               Les 20 dernières sauvegardes automatiques de votre configuration. Cliquez sur <b>Restaurer</b> pour revenir à une version antérieure (la config actuelle sera automatiquement sauvegardée avant).
             </div>
-            <button onClick={loadBackups} disabled={loadingBackups} style={{padding:"6px 14px",fontSize:11,fontWeight:600,borderRadius:8,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",cursor:loadingBackups?"wait":"pointer",marginBottom:12,fontFamily:"inherit"}}>
+            <button onClick={loadBackups} disabled={loadingBackups} style={{padding:"6px 14px",fontSize:11,fontWeight:600,borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",cursor:loadingBackups?"wait":"pointer",marginBottom:12,fontFamily:"inherit"}}>
               {loadingBackups?"⏳ Chargement…":"↻ Rafraîchir"}
             </button>
             {!loadingBackups&&backupList.length===0&&
@@ -17992,7 +17993,7 @@ function SearchConsole(){
     {!loading&&err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}<br/><span style={{fontSize:12,color:"#6B4F5A"}}>Vérifie que le compte de service est bien ajouté dans Search Console et que les variables Vercel sont correctes.</span></div>}
     {!loading&&data&&data.configured===false&&<SearchConsoleSetup/>}
     {!loading&&data&&data.configured&&<>
-      <button onClick={load} style={{background:"none",border:"1px solid #EAE0E8",borderRadius:10,padding:"7px 14px",fontSize:12.5,fontWeight:700,color:"#6B4F5A",cursor:"pointer",fontFamily:"inherit",marginBottom:14}}>↻ Rafraîchir</button>
+      <button onClick={load} style={{background:"none",border:"1px solid #EAE0E8",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,color:"#6B4F5A",cursor:"pointer",fontFamily:"inherit",marginBottom:14}}>↻ Rafraîchir</button>
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
         <div style={cardS}><div style={numS}>{num(data.totals.clicks)}</div><div style={lblS}>Clics</div></div>
         <div style={cardS}><div style={numS}>{num(data.totals.impressions)}</div><div style={lblS}>Impressions</div></div>
@@ -18057,7 +18058,7 @@ function SeoAudit(){
   return <div>
     <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Santé SEO</div>
     <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Audit de tes propres pages : titres, meta description, H1/H2, Open Graph, liens morts et contenu lisible par les robots. Relançable à tout moment.</div>
-    <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:14,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
+    <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:13,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
     {err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}</div>}
     {history&&history.ok&&history.history.length>0&&<div className="bo-card" style={{marginBottom:16}}>
       <h3>Historique des audits</h3>
@@ -18159,7 +18160,7 @@ function SitePages(){
     </div>}
     {orphans&&orphans.ok&&orphans.orphans&&orphans.orphans.length===0&&<div className="bo-card"><h3>Pages orphelines</h3><p>✅ Aucune page orpheline détectée : tous les fichiers de public/ sont dans le sitemap.</p></div>}
     {orphans&&!orphans.ok&&<div className="bo-card"><h3>Pages orphelines</h3><p>⚠️ {orphans.error||"GITHUB_TOKEN non configuré dans Vercel."}</p></div>}
-    <button onClick={check} disabled={checking||!urls||!urls.length} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"11px 18px",fontSize:13.5,fontWeight:700,cursor:checking?"wait":"pointer",fontFamily:"inherit",marginBottom:14}}>{checking?"⏳ Vérification…":"🔎 Vérifier le statut des pages"}</button>
+    <button onClick={check} disabled={checking||!urls||!urls.length} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"11px 18px",fontSize:13,fontWeight:700,cursor:checking?"wait":"pointer",fontFamily:"inherit",marginBottom:14}}>{checking?"⏳ Vérification…":"🔎 Vérifier le statut des pages"}</button>
     {err&&<div style={{color:"#C84B31",fontSize:13,marginBottom:12}}>{err}</div>}
     {!urls&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Chargement du sitemap…</div>}
     {urls&&urls.map((u,i)=>{const s=status[u];return <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 14px",marginBottom:8}}>
