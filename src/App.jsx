@@ -1769,7 +1769,7 @@ function AccueilParent({enfant,setPage,user}){
         {rep.dej&&<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>🥗 {rep.dej}</span>}
         {rep.gou&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)"}}>🍎 {rep.gou}</span>}
         {rep.bib&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}>🍼 {rep.bib}</span>}
-        <span className="badge"style={{background:rep.q==="bien"?"var(--Sp)":"var(--Gp)",color:rep.q==="bien"?"var(--S)":"var(--G)"}}>
+        <span className="badge"style={{background:rep.q==="bien"?"var(--Gp)":"var(--c)",color:rep.q==="bien"?"var(--G)":"var(--G)"}}>
           {rep.q==="bien"?"✅ Bon appétit":rep.q==="peu"?"🟡 Peu mangé":"🔴 Refus"}</span>
       </div>
       <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>Voir le détail →</div>
@@ -2474,7 +2474,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
             {/* POINTAGE WORKFLOW P14E - boutons d'action selon l'etat */}
             {!ptJ?<div>
               <div style={{fontSize:11,color:"var(--l)",marginBottom:8,textAlign:"center"}}>L'enfant arrive ?</div>
-              <button className="btn bS"style={{width:"100%",padding:"16px",fontSize:15,justifyContent:"center"}}onClick={pointerArrivee}disabled={saving}>
+              <button className="btn bT"style={{width:"100%",padding:"16px",fontSize:15,justifyContent:"center"}}onClick={pointerArrivee}disabled={saving}>
                 {saving?"⏳ ...":"📍 Pointer l'arrivée maintenant"}
               </button>
             </div>:!ptJ.dep?<div>
@@ -2572,7 +2572,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   <span style={{color:"var(--T)"}}>{p.dep?"↘"+p.dep:""}</span>
                   <span style={{fontWeight:700,color:"var(--b)"}}>{p.tot||"-"}</span>
                 </div>
-                {role!=="parent"&&<span style={{fontSize:13,color:p.valide_parent?"var(--S)":"var(--l)"}}>
+                {role!=="parent"&&<span style={{fontSize:13,color:p.valide_parent?"var(--G)":"var(--l)"}}>
                   {p.valide_parent?"✅":"⏳"}
                 </span>}
               </div>
@@ -2707,7 +2707,7 @@ function RepasChanges({enfants,role,pEId}){
           {echs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun change.</div>}
           {echs.map(c=><div key={c.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"var(--c)",borderRadius:9}}>
             <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.h}</span>
-            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":c.type==="Selles"?"#FBF0DD":"var(--Gp)",color:c.type==="Propre"?"var(--S)":c.type==="Selles"?"#B8892A":"var(--G)"}}>
+            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":c.type==="Selles"?"#FBF0DD":"var(--Gp)",color:c.type==="Propre"?"var(--G)":c.type==="Selles"?"#B8892A":"var(--G)"}}>
               {c.type==="Propre"?"✅ Propre":c.type==="Selles"?"💩 Selles":"🔄 Change"}</span>
             {c.n&&<span style={{fontSize:11,color:"var(--m)",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.n}</span>}
           </div>)}
@@ -3510,7 +3510,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{fmt(a.date)} - {a.motif}</div>
               <div style={{fontSize:11,color:"var(--l)"}}>{a.heures}h · {a.indemnise?"Indemnisée":"Non indemnisée"}</div>
             </div>
-            <span className="badge"style={{background:a.indemnise?"var(--Sp)":"var(--Rp)",color:a.indemnise?"var(--S)":"var(--R)"}}>
+            <span className="badge"style={{background:a.indemnise?"var(--Gp)":"var(--Rp)",color:a.indemnise?"var(--G)":"var(--R)"}}>
               {a.indemnise?"+"+((a.heures*(contrat.tauxHoraire*contrat.indemniteAbsence)).toFixed(2))+"€":"0€"}</span>
           </div>)}
           {role==="asmat"&&<button className="btn bG"style={{width:"100%",marginTop:12}}>+ Déclarer une absence</button>}
@@ -3520,7 +3520,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
           {isDemoFact?histFactDemo.map(([m,s,v])=>
             <div key={m}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
               <span style={{fontSize:13,color:"var(--b)",fontWeight:600}}>{m}</span>
-              <span className="badge"style={{background:s==="Payée"?"var(--Sp)":"var(--Gp)",color:s==="Payée"?"var(--S)":"var(--G)"}}>{s}</span>
+              <span className="badge"style={{background:s==="Payée"?"var(--Gp)":"var(--c)",color:s==="Payée"?"var(--G)":"var(--G)"}}>{s}</span>
               <span style={{fontWeight:700,color:"var(--b)"}}>{v}</span>
             </div>)
           :<div style={{fontSize:12,color:"var(--l)",textAlign:"center",padding:"16px 0"}}>L'historique apparaîtra ici au fil des mois.</div>}
@@ -3759,7 +3759,7 @@ function Contrats({enfants,role,pEId,user}){
           <div style={{background:signes[enfant?.id]?"linear-gradient(135deg,var(--Sp),var(--Gp))":"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
               <div style={{minWidth:0}}>
-                <div style={{fontSize:11,fontWeight:700,color:signes[enfant?.id]?"var(--S)":"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat · {enfant?.prenom}</div>
+                <div style={{fontSize:11,fontWeight:700,color:signes[enfant?.id]?"var(--G)":"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat · {enfant?.prenom}</div>
                 <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}>{signes[enfant?.id]?"✅ Signé":"⏳ En attente de signature"}</div>
                 <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{fmt(contrat.debut)} → {fmt(contrat.fin)} · {contrat.heuresHebdo}h/sem</div>
               </div>
@@ -3909,7 +3909,9 @@ function Contrats({enfants,role,pEId,user}){
 
 //
 function Sante({enfants,role,pEId,user}){
-  const [selId,setSelId]=useState(enfants[0]?.id);
+  // La selection vient de l'ecran englobant : deux selections independantes
+  // pouvaient afficher deux enfants differents sur le meme ecran.
+  const selId=pEId||enfants[0]?.id;
   const [newAllergie,setNewAllergie]=useState(""); // ALLERGIES P6
   const [fiche,setFiche]=useState(null); // fiche d'urgence (remplie par le parent)
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
@@ -3992,8 +3994,6 @@ function Sante({enfants,role,pEId,user}){
 
   return <div className="fi">
     <PageHeader icon="🏥" title="Carnet de santé" sub="Informations médicales, vaccins, allergies"/>
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
     {enfant&&<>
       {/* En-tete enfant + groupe sanguin */}
@@ -6616,7 +6616,7 @@ function Parrainage({user}){
           <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.prenom} - {f.ville}</div>
           <div style={{fontSize:11,color:"var(--l)"}}>{f.date}</div>
         </div>
-        <span className="badge"style={{background:f.statut==="actif"?"var(--Sp)":"var(--Gp)",color:f.statut==="actif"?"var(--S)":"var(--G)"}}>{f.gain}</span>
+        <span className="badge"style={{background:f.statut==="actif"?"var(--Gp)":"var(--c)",color:f.statut==="actif"?"var(--G)":"var(--G)"}}>{f.gain}</span>
       </div>)}
     </div>
   </div>;
@@ -9585,8 +9585,8 @@ function SanteComplete({enfants,role,pEId,user}){
       {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
         padding:"7px 16px",border:"none",background:"none",cursor:"pointer",
         fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,position:"relative",
-        color:sec===s.id?"var(--R)":"var(--b)",
-        borderBottom:sec===s.id?"2px solid var(--R)":"2px solid transparent",
+        color:sec===s.id?"var(--accent)":"var(--b)",
+        borderBottom:sec===s.id?"2px solid var(--accent)":"2px solid transparent",
         marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:5
       }}>
         <IconeOuEmoji e={s.ic}/><span>{s.l}</span>
@@ -11845,7 +11845,7 @@ function BottomNav({groups,page,setPage,pmiNonLus,flat,role="asmat"}){
           return <button key={s.id}onClick={()=>{setPage(s.id);setOpen(null);}}style={{
             width:"100%",display:"flex",alignItems:"center",gap:12,padding:"12px 12px",
             borderRadius:12,border:"none",cursor:"pointer",textAlign:"left",
-            background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
+            background:on?"var(--accent-pale)":"transparent",color:on?"var(--accent)":"var(--b)",
             fontWeight:on?700:500,fontSize:14,
           }}>
             <span style={{width:28,display:"flex",justifyContent:"center",flexShrink:0}}><IconeOuEmoji e={s.ic} taille={19}/></span>
@@ -11970,7 +11970,7 @@ function ActionBar({page,setPage,role}){
   }[p];
   if(!A)return null;
   return <div style={{maxWidth:1100,margin:"0 auto",padding:"0 4px 14px",display:"flex",justifyContent:"flex-end"}}>
-    <button onClick={A.fn} style={{display:"inline-flex",alignItems:"center",gap:8,background:"linear-gradient(135deg,var(--accent),#C84B31)",color:"#fff",border:"none",borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 22px rgba(228,145,120,.35)",transition:"transform .12s"}}
+    <button onClick={A.fn} style={{display:"inline-flex",alignItems:"center",gap:8,background:"var(--accent)",color:"#fff",border:"none",borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:"0 8px 22px rgba(228,145,120,.35)",transition:"transform .12s"}}
       onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>
       <span style={{fontSize:16}}>{A.ic}</span>{A.l}
     </button>
@@ -12102,7 +12102,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
               return <button key={s.id}onClick={()=>{setPage(s.id);setSubOpen(null);}}style={{
                 width:"100%",display:"flex",alignItems:"center",gap:12,padding:"11px 12px",
                 borderRadius:11,border:"none",cursor:"pointer",textAlign:"left",
-                background:on?"var(--Sp)":"transparent",color:on?"var(--S)":"var(--b)",
+                background:on?"var(--accent-pale)":"transparent",color:on?"var(--accent)":"var(--b)",
                 fontWeight:on?700:500,fontSize:13.5,transition:"background .15s",
               }}
                 onMouseEnter={e=>{if(!on)e.currentTarget.style.background="var(--c)";}}
@@ -15237,7 +15237,7 @@ const jsPDF=await chargerJsPDF();
           <div style={{padding:12,background:"var(--c)",borderRadius:10,marginBottom:14,fontSize:12,lineHeight:1.7}}>
             <div style={{fontWeight:700,marginBottom:6,color:"var(--b)",display:"flex",justifyContent:"space-between"}}>
               <span>Récapitulatif {annee}</span>
-              <span style={{fontSize:11,fontWeight:400,color:hasReal?"var(--S)":"var(--l)",fontStyle:"italic"}}>{sourceLabel}</span>
+              <span style={{fontSize:11,fontWeight:400,color:hasReal?"var(--G)":"var(--l)",fontStyle:"italic"}}>{sourceLabel}</span>
             </div>
             {hasReal?<>
               <div style={{display:"flex",justifyContent:"space-between"}}><span>Nombre de versements</span><strong>{versementsList.length}</strong></div>
