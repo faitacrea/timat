@@ -171,6 +171,26 @@ const EMAIL_TEMPLATES={
 // 4,5:1, ce que ne faisaient ni #E49178 (2,44) ni #B8622F (4,35).
 const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#B85536",mam:"#4E6B57"};
 
+// Bareme de l'indemnite d'entretien, indexe sur le minimum garanti (MG).
+// CCN 3239 : l'indemnite ne peut etre inferieure a 90 % du MG par journee de
+// neuf heures d'accueil, avec un plancher absolu de 2,65 EUR par journee.
+// MG a 4,35 EUR depuis le 1er juin 2026, donc 90 % x 4,35 = 3,92 EUR pour 9 h,
+// soit 0,435 EUR par heure. Le plancher joue en dessous de 6 h 05.
+const MINIMUM_GARANTI = 4.35;
+const IE_TAUX_HORAIRE = Math.round((MINIMUM_GARANTI * 0.9 / 9) * 1000) / 1000; // 0,435
+const IE_PLANCHER_JOUR = 2.65;
+// Indemnite d'entretien minimale pour une journee d'accueil de n heures.
+const indemniteEntretienMin = (heures) =>
+  Math.max(IE_PLANCHER_JOUR, Math.round(IE_TAUX_HORAIRE * (Number(heures) || 0) * 100) / 100);
+
+// Credit d'impot pour frais de garde hors domicile (CGI art. 200 quater B) :
+// 50 % des depenses, dans la limite de 3 500 EUR de DEPENSES par enfant de
+// moins de six ans. Le plafond porte donc sur les depenses, pas sur le credit :
+// le credit lui-meme ne peut pas depasser 1 750 EUR par an et par enfant.
+const CI_PLAFOND_DEPENSES = 3500;
+const CI_TAUX = 0.5;
+const CI_PLAFOND_CREDIT = CI_PLAFOND_DEPENSES * CI_TAUX; // 1 750
+
 const isoJour=(d)=>{
   if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
   const t=String(d||"").slice(0,10);
@@ -10300,8 +10320,9 @@ function RapportAnnuel({enfants,role,pEId,user}){
   // Entretien = jours travailles * indemnite jour
   const entretienAnnuel=Math.round(joursAnnuels*entretienJour);
   const totalAnnuel=salaireAnnuel+entretienAnnuel;
-  // Credit impot = 50% du total, plafonne a 3500€ par enfant
-  const creditImpot=Math.min(Math.round(totalAnnuel*0.5),3500);
+  // Le plafond de 3 500 EUR porte sur les DEPENSES, pas sur le credit : le
+  // credit etait donc plafonne au double de son maximum reel (1 750 EUR).
+  const creditImpot=Math.round(Math.min(totalAnnuel,CI_PLAFOND_DEPENSES)*CI_TAUX);
   const sourceLabel=realStats?.paiements>0?"(données réelles)":"(estimées)";
 
   // RAPPORT P14B - Helper PDF jsPDF natif (rendu identique cross-browser, pas de troncature)
@@ -10844,6 +10865,12 @@ function SimulateurCout({enfants,pEId}){
   const cotPat=salBrut*0.275;
   const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
   // CMG 2026 - REFORME 1er sept 2025 : calcul horaire par taux d'effort (barème PSU), parametres assmat 2026
+  // Bareme CMG au 1er avril 2026, verifie sur les publications Urssaf et CNAF.
+  // Le plancher de ressources est la seule valeur que les sources consultees ne
+  // donnent pas a l'identique : 814,02 ou 814,62 EUR selon les publications.
+  // L'ecart joue sur quelques centimes d'aide mensuelle ; a confirmer aupres de
+  // la CAF avant de s'en servir comme argument.
+  const PLANCHER_RESSOURCES=814.62, PLAFOND_RESSOURCES=8500;
   const CHR_AM=4.91;        // cout horaire de reference assmat 2026
   const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
   const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
@@ -10853,12 +10880,15 @@ function SimulateurCout({enfants,pEId}){
   const tarifRetenu=Math.min(taux,PLAFOND_H);
   const coutGardeCMG=tarifRetenu*heuresMois;
   const cmgCapped=Math.min(taux,PLAFOND_H)<taux; // tarif au-dela du plafond -> surcout integral parent
-  let cmgMensuel=coutGardeCMG*(1-(Math.max(814.62,Math.min(revenus/12,8500))*TE/CHR_AM)); // plancher 814,62 / plafond 8500 (ressources mensuelles 2026)
+  let cmgMensuel=coutGardeCMG*(1-(Math.max(PLANCHER_RESSOURCES,Math.min(revenus/12,PLAFOND_RESSOURCES))*TE/CHR_AM));
   cmgMensuel=Math.max(0,Math.min(cmgMensuel,coutGardeCMG,CMG_MAX));
   cmgMensuel=Math.round(cmgMensuel*100)/100;
   const cmgPlafonne=cmgMensuel>=CMG_MAX-0.01;
-  // Credit d'impot : 50% des depenses (salaire+cotisations) nettes du CMG, plafond 3500€/an/enfant <6 ans
-  const creditImpot=Math.min((coutTotal-cmgMensuel)*0.5,3500/12);
+  // 50 % des depenses nettes du CMG, dans la limite de 3 500 EUR de depenses
+  // par an et par enfant de moins de six ans -- soit 1 750 EUR de credit au
+  // plus. Le plafond etait applique au credit et non aux depenses, ce qui
+  // doublait l'aide annoncee aux parents.
+  const creditImpot=Math.min(Math.max(0,coutTotal-cmgMensuel),CI_PLAFOND_DEPENSES/12)*CI_TAUX;
   const resteCharge=Math.max(0,coutTotal-cmgMensuel-creditImpot);
 
   const fmt2=(n)=>Math.round(n).toLocaleString("fr-FR")+"€";
@@ -12265,9 +12295,11 @@ function OutilsGratuits({onClose,onCta}){
   const [ieJour,setIeJour]=useState(4.50);
   const [hJourIe,setHJourIe]=useState(9);
   const [joursIe,setJoursIe]=useState(20);
-  // Minimum conventionnel indicatif CCN 3239 : ~2,65 EUR pour 9h d'accueil (proportionnel au-dela)
-  const IE_MIN_9H=2.65;
-  const ieMinJour=hJourIe<=9?IE_MIN_9H:(IE_MIN_9H/9)*hJourIe;
+  // 2,65 EUR n'est pas le minimum pour neuf heures mais le plancher absolu,
+  // qui ne joue qu'en dessous de 6 h 05. Pour neuf heures le minimum est de
+  // 3,92 EUR. L'ancienne formule annoncait donc un minimum inferieur d'un tiers
+  // au minimum conventionnel, et proratisait au-dela sur cette base fausse.
+  const ieMinJour=indemniteEntretienMin(hJourIe);
   const ieMoisTotal=ieJour*joursIe;
   const ieSousMin=ieJour<ieMinJour-0.001;
   // --- Plafond CMG (seuil journalier = 5 x SMIC horaire brut) ---

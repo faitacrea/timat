@@ -216,6 +216,34 @@ for (const [, role, hex] of (roles ? roles[1] : "").matchAll(/(\w+):"(#[0-9A-Fa-
   if (r < 4.5) signale("contraste", `couleur du role ${role} (${hex}) ne tient que ${r.toFixed(2)}:1 sous le texte blanc de l'avatar`);
 }
 
+// --- chiffres reglementaires ---
+// Le SMIC etait fige a 11,88 EUR, soit deux revalorisations de retard, et le
+// plafond du credit d'impot etait applique au credit au lieu des depenses.
+// Ces valeurs ne se verifient pas a l'oeil : on les controle ici, avec la date
+// a laquelle chacune a ete verifiee a la source.
+const BAREME = [
+  { nom: "SMIC horaire brut",              motif: /\["2026-06-01",\s*12\.31\]/,     source: "info.gouv.fr, 1er juin 2026" },
+  { nom: "minimum garanti",                motif: /MINIMUM_GARANTI\s*=\s*4\.35\b/,  source: "revalorisation du 1er juin 2026" },
+  { nom: "plancher indemnite d'entretien", motif: /IE_PLANCHER_JOUR\s*=\s*2\.65\b/, source: "CCN 3239, plancher journalier" },
+  { nom: "plafond depenses credit impot",  motif: /CI_PLAFOND_DEPENSES\s*=\s*3500\b/, source: "CGI art. 200 quater B" },
+  { nom: "cout horaire de reference CMG",  motif: /CHR_AM\s*=\s*4\.91\b/,           source: "Urssaf, 1er avril 2026" },
+  { nom: "plafond horaire CMG",            motif: /PLAFOND_H\s*=\s*8\.09\b/,        source: "Urssaf, 1er avril 2026" },
+  { nom: "plafond mensuel CMG",            motif: /CMG_MAX\s*=\s*825\.16\b/,        source: "CNAF, 1er avril 2026" },
+  { nom: "minimum conventionnel brut",     motif: /MINIMUM_CONV\s*=\s*4\.2\b/,      source: "CCN 3239, 1er juin 2026" },
+];
+const sourcesChiffres = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
+  + readFileSync(new URL("./generate-local.mjs", import.meta.url), "utf8");
+for (const { nom, motif, source } of BAREME) {
+  if (!motif.test(sourcesChiffres)) {
+    signale("chiffre", `${nom} ne vaut plus la valeur vérifiée (${source}) — vérifier à la source avant de modifier`);
+  }
+}
+// Le plafond du credit d'impot porte sur les depenses : un credit plafonne a
+// 3 500 EUR vaudrait le double du maximum reel.
+if (/creditImpot\s*=\s*Math\.min\([^;]*?\*\s*0?\.5\s*,\s*3500/.test(sourcesChiffres)) {
+  signale("chiffre", "le plafond de 3 500 € est appliqué au crédit d'impôt et non aux dépenses : le crédit annoncé vaut le double du réel");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
