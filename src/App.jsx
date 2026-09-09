@@ -487,6 +487,28 @@ const isoJour=(d)=>{
   return /^\d{4}-\d{2}-\d{2}$/.test(t)?t:isoJour(new Date());
 };
 
+// Le mois courant, au format AAAA-MM. Meme piege que ci-dessus : passer par
+// toISOString() sur une date locale renvoyait le mois precedent entre minuit
+// et 2 h du matin le 1er du mois — le selecteur des frais kilometriques
+// s'ouvrait alors sur le mois d'avant, sans rien afficher.
+// En francais, la virgule separe les decimales. L'application ecrivait
+// « 4.20 € » partout, avec un point : c'est une notation anglaise. On commence
+// ici, sur les montants nouvellement affiches.
+const nb2=(n)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const nb3=(n)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:3,maximumFractionDigits:3});
+
+const isoMois=(d)=>isoJour(d).slice(0,7);
+
+// Reculer ou avancer d'un mois, sur la chaine elle-meme. Passer par un objet
+// Date pour cela remelangeait UTC et heure locale a chaque clic sur les
+// fleches du selecteur de mois.
+const decalerMois=(mois,pas)=>{
+  const[a,m]=String(mois||"").split("-").map(Number);
+  if(!a||!m)return isoMois(new Date());
+  const t=(a*12+(m-1))+pas;
+  return String(Math.floor(t/12))+"-"+String((t%12)+1).padStart(2,"0");
+};
+
 // Dates du jeu de demonstration. Elles etaient figees en 2024 : en 2026, la
 // demonstration publique de la page d'accueil montrait donc des contrats
 // expires depuis deux ans et des « prochains evenements » deja passes. Elles
@@ -11578,9 +11600,34 @@ function RecapFiscalAssmat({enfants,user}){
 
 const BAREME_KM_2026={3:0.529,4:0.606,5:0.636,6:0.665,7:0.697}; // voiture, <=5000 km/an, baremes 2026 (geles)
 
+// La convention encadre l'indemnite kilometrique par DEUX bornes, pas une :
+// elle ne peut pas depasser le bareme fiscal (ci-dessus), et elle ne peut pas
+// etre inferieure au bareme de l'administration. L'application ne connaissait
+// que le plafond : un taux saisi sous le plancher passait sans un mot.
+// Arrete du 29 mai 2026 (majoration temporaire des taux de l'article 10 du
+// decret n° 2006-781), tranche jusqu'a 2 000 km, du 1er juin au 31 decembre
+// 2026. Sans texte nouveau, les taux anterieurs redeviennent applicables au
+// 1er janvier 2027.
+const PLANCHER_KM_CONV={3:0.33,4:0.33,5:0.33,6:0.42,7:0.42};
+const PLANCHER_KM_FIN="2026-12-31";
+
+function AlerteTauxKm({taux,cv}){
+  const plancher=PLANCHER_KM_CONV[cv];
+  const t=Number(taux)||0;
+  if(!plancher||t<=0||t>=plancher)return null;
+  return <div style={{display:"flex",gap:9,alignItems:"flex-start",background:"var(--Rp)",
+    border:"1px solid var(--R)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
+    fontSize:12.5,color:"var(--R)",lineHeight:1.55}}>
+    <IconeOuEmoji e="⚠️" taille={16}/>
+    <span><b>Taux kilométrique sous le minimum.</b> {nb3(t)} €/km, alors que la convention
+    {" "}interdit de descendre sous {nb2(plancher)} €/km pour un véhicule de {cv>=6?"6 ou 7 CV":cv+" CV"}
+    {" "}(arrêté du 29 mai 2026, applicable jusqu'au 31 décembre 2026).</span>
+  </div>;
+}
+
 function IndemnitesKilometriques({enfants,role,user}){
   const asmatId=user?.id||enfants[0]?.asmat_id;
-  const [mois,setMois]=useState(new Date().toISOString().slice(0,7));
+  const [mois,setMois]=useState(isoMois(new Date()));
   const [cv,setCv]=useState(5);
   const [trajets,setTrajets]=useState([]);
   const [loading,setLoading]=useState(false);
@@ -11630,9 +11677,9 @@ function IndemnitesKilometriques({enfants,role,user}){
     <PageHeader icon="🚗" title="Frais kilométriques (IK)" sub="Trajets, barème 2026 et feuille de route Pajemploi"/>
 
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-      <button className="btn" onClick={()=>{const d=new Date(mois+"-01");d.setMonth(d.getMonth()-1);setMois(d.toISOString().slice(0,7));}} style={{padding:"6px 12px"}}>←</button>
+      <button className="btn" onClick={()=>setMois(decalerMois(mois,-1))} style={{padding:"6px 12px"}}>←</button>
       <div style={{fontWeight:700,color:"var(--b)",textTransform:"capitalize",minWidth:150,textAlign:"center"}}>{moisLabel}</div>
-      <button className="btn" onClick={()=>{const d=new Date(mois+"-01");d.setMonth(d.getMonth()+1);setMois(d.toISOString().slice(0,7));}} style={{padding:"6px 12px"}}>→</button>
+      <button className="btn" onClick={()=>setMois(decalerMois(mois,1))} style={{padding:"6px 12px"}}>→</button>
     </div>
 
     <div className="g2" style={{marginBottom:14}}>
@@ -11655,7 +11702,7 @@ function IndemnitesKilometriques({enfants,role,user}){
         </select>
         <span style={{fontSize:13,color:"var(--G)",fontWeight:700}}>→ {BAREME_KM_2026[cv].toFixed(3)} €/km</span>
       </div>
-      <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.5}}>Barème kilométrique 2026 (gelé) — voiture, tranche jusqu'à 5 000 km/an. Le taux pré-remplit chaque trajet ; tu peux l'ajuster.</div>
+      <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.5}}>Barème kilométrique 2026 (gelé) — voiture, tranche jusqu'à 5 000 km/an. Le taux pré-remplit chaque trajet ; tu peux l'ajuster, sans descendre sous {nb2(PLANCHER_KM_CONV[cv])} €/km (barème de l'administration, minimum imposé par la convention).</div>
     </div>
 
     <div className="card" style={{marginBottom:14}}>
@@ -11673,6 +11720,7 @@ function IndemnitesKilometriques({enfants,role,user}){
         <input placeholder="Taux €/km" inputMode="decimal" value={nt.taux} onChange={e=>setNt({...nt,taux:e.target.value})} style={inp}/>
         <button className="btn bG" onClick={ajouter} disabled={saving||!nt.km} style={{whiteSpace:"nowrap"}}>{saving?"…":"Ajouter"}</button>
       </div>
+      <AlerteTauxKm taux={nt.taux} cv={cv}/>
     </div>
 
     <div className="card" style={{marginBottom:14}}>
