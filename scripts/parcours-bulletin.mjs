@@ -63,12 +63,15 @@ await page.route("**/rest/v1/**", (r) => {
   if (t === "profiles") return r.fulfill(json([{ id: UID, role: "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
   if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
   if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.05, entretien: 3.8, jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
-  // Trois absences de l'assistante maternelle : 8 h de maladie, 8 h de
-  // formation, 8 h de fermeture. Seules la maladie et la fermeture se deduisent.
+  // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
+  // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
+  // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
+  // l'allocation, qui n'est PAS une ligne de salaire.
   if (t === "evenements") return r.fulfill(json([
     { id: "e-mal", asmat_id: UID, date: `${mk}-03`, type: "mal", texte: "Maladie", heures: 8 },
     { id: "e-frm", asmat_id: UID, date: `${mk}-10`, type: "form", texte: "Formation", heures: 8 },
     { id: "e-fer", asmat_id: UID, date: `${mk}-17`, type: "fer", texte: "Fermeture", heures: 8 },
+    { id: "e-fmh", asmat_id: UID, date: `${mk}-24`, type: "formh", texte: "Formation du soir", heures: 6 },
   ]));
   return r.fulfill(json([]));
 });
@@ -110,6 +113,8 @@ const m = await page.evaluate(() => {
     art111: /art\. 111/.test(t),
     // Une cotisation prise au hasard doit etre assise sur le brut APRES retenue.
     vieillesse: nb(/Vieillesse plafonnée\s*\n?\s*([\d.,]+)€/),
+    alloc: nb(/Allocation de formation — ([\d.,]+) €/),
+    allocHorsBulletin: /versée par IPERIA/i.test(t) && !/RÉMUNÉRATION[\s\S]{0,600}Allocation de formation/.test(t),
   };
 });
 await nav.close();
@@ -133,6 +138,10 @@ attendu("salaire de base", m.base, 700.65);
 attendu("montant de la retenue", m.montant, 64.8);
 attendu("salaire brut après retenue", m.brut, 635.85);
 attendu("vieillesse plafonnée assise sur le brut après retenue", m.vieillesse, +(635.85 * 0.069).toFixed(2), 0.02);
+// 6 h x 5,57 EUR = 33,42 EUR, affichés à côté du bulletin et non dedans.
+attendu("allocation de formation hors temps d'accueil", m.alloc, 33.42);
+console.log(`  ${m.allocHorsBulletin ? "ok " : "KO "} l'allocation reste hors du bulletin (versée par IPERIA)`);
+if (!m.allocHorsBulletin) ecarts.push("l'allocation apparaît dans la rémunération");
 console.log(`\nerreurs JavaScript : ${erreurs.length}`);
 for (const e of erreurs) console.log("    " + e);
 console.log(ecarts.length || erreurs.length ? `\n${ecarts.length} écart(s)\n` : "\nTout est conforme.\n");
