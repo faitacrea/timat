@@ -68,7 +68,106 @@ for (const c of casAlloc) {
   console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
 }
 
-let ko = koAlloc;
+// Salaire horaire minimum : le plus favorable entre le minimum conventionnel
+// (table datee) et le minimum legal indexe sur le SMIC (0,281 x SMIC). Le titre
+// professionnel AM-GE majore le conventionnel de 4 % (CCN 3239, art. 113 et
+// annexe 5).
+const bloc = (nom) => (src.match(new RegExp(`const ${nom}=(\\[[\\s\\S]*?\\]);`)) || [])[1];
+const extraitMin = src.match(/const minimumHoraireAu=\([\s\S]*?\n\};/);
+const contexte = `
+  const isoJour=(d)=>d instanceof Date?new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10):String(d).slice(0,10);
+  const SMIC_HORAIRE_HISTO=${bloc("SMIC_HORAIRE_HISTO")};
+  const MINIMUM_CONV_HISTO=${bloc("MINIMUM_CONV_HISTO")};
+  const smicHoraireAu=(d)=>{const j=isoJour(d);for(const[a,v]of SMIC_HORAIRE_HISTO)if(j>=a)return v;return SMIC_HORAIRE_HISTO[SMIC_HORAIRE_HISTO.length-1][1];};
+  const COEF_MINIMUM_LEGAL=${(src.match(/const COEF_MINIMUM_LEGAL=([\d.]+)/) || [])[1]};
+  const MAJORATION_TITRE_AMGE=${(src.match(/const MAJORATION_TITRE_AMGE=([\d.]+)/) || [])[1]};
+  ${extraitMin ? extraitMin[0] : ""}
+  return minimumHoraireAu;`;
+const minimumHoraireAu = eval(`(function(){${contexte}})()`);
+
+const casMin = [
+  { d: "2026-09-01", t: false, a: 4.20, n: "aujourd'hui, sans le titre" },
+  { d: "2026-09-01", t: true, a: 4.37, n: "aujourd'hui, avec le titre AM-GE (+4 %)" },
+  { d: "2026-05-31", t: false, a: 3.64, n: "avant l'avenant du 1er juin 2026" },
+  { d: "2026-05-31", t: true, a: 3.79, n: "avant l'avenant, avec le titre" },
+];
+let koMin = 0;
+console.log("\n=== SALAIRE HORAIRE MINIMUM — CCN 3239 ===\n");
+for (const c of casMin) {
+  const r = minimumHoraireAu(c.d, c.t);
+  const ok = Math.abs(r - c.a) < 0.011;
+  if (!ok) koMin++;
+  console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.a.toFixed(2)} €)`);
+}
+// Le legal ne doit jamais l'emporter tant que le conventionnel est au-dessus.
+const legalAujourdhui = Math.round(12.31 * 0.281 * 100) / 100;
+const legalIgnore = minimumHoraireAu("2026-09-01", false) > legalAujourdhui;
+if (!legalIgnore) koMin++;
+console.log(`  ${legalIgnore ? "ok " : "KO "} ${"le conventionnel l'emporte sur le légal".padEnd(48)} ${legalAujourdhui.toFixed(2)} € écarté`);
+
+// --- Fin de contrat : preavis, conges payes, indemnite de rupture ---
+const fn = (nom, motif) => {
+  const m = src.match(motif);
+  if (!m) { console.error(`\n  KO  ${nom} est introuvable dans src/App.jsx\n`); process.exit(1); }
+  return m[0];
+};
+const finContrat = eval(`(function(){
+  ${fn("preavisJours", /const preavisJours=\([\s\S]*?\n\};/)}
+  ${fn("CP_PAR_MOIS", /const CP_PAR_MOIS=[\d.]+;/)}
+  ${fn("CP_MAX_AN", /const CP_MAX_AN=\d+;/)}
+  ${fn("congesAcquis", /const congesAcquis=\([\s\S]*?;\n/)}
+  ${fn("TAUX_DIXIEME", /const TAUX_DIXIEME=[\d.]+;/)}
+  ${fn("iccpCalcul", /const iccpCalcul=\(\{[\s\S]*?\n\};/)}
+  ${fn("DIVISEUR_INDEMNITE_RUPTURE", /const DIVISEUR_INDEMNITE_RUPTURE=\d+;/)}
+  ${fn("ANCIENNETE_MIN_RUPTURE_MOIS", /const ANCIENNETE_MIN_RUPTURE_MOIS=\d+;/)}
+  ${fn("indemniteRupture", /const indemniteRupture=\(\{[\s\S]*?\n\};/)}
+  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture};
+})()`);
+
+let koFin = 0;
+const v = (n, r, a, tol = 0.011) => {
+  const ok = typeof a === "string" ? r === a : Math.abs(r - a) <= tol;
+  if (!ok) koFin++;
+  console.log(`  ${ok ? "ok " : "KO "} ${n.padEnd(52)} ${typeof r === "number" ? r.toFixed(2) : r} (attendu ${typeof a === "number" ? a.toFixed(2) : a})`);
+};
+
+console.log("\n=== FIN DE CONTRAT — CCN 3239 ===\n");
+console.log("  préavis, en jours calendaires");
+v("moins de 3 mois d'ancienneté", finContrat.preavisJours(2), 8, 0);
+v("2 mois et demi", finContrat.preavisJours(2.9), 8, 0);
+v("pile 3 mois", finContrat.preavisJours(3), 15, 0);
+v("11 mois", finContrat.preavisJours(11), 15, 0);
+v("pile 1 an", finContrat.preavisJours(12), 30, 0);
+v("5 ans", finContrat.preavisJours(60), 30, 0);
+
+console.log("\n  congés payés acquis (2,5 j ouvrables par mois, plafond 30)");
+v("4 mois travaillés", finContrat.congesAcquis(4), 10, 0);
+v("12 mois travaillés", finContrat.congesAcquis(12), 30, 0);
+v("18 mois : plafonné à 30", finContrat.congesAcquis(18), 30, 0);
+v("aucun mois", finContrat.congesAcquis(0), 0, 0);
+
+console.log("\n  indemnité compensatrice : la méthode la plus favorable");
+// 10 mois à 700 EUR = 7 000 EUR de brut ; 25 j acquis, 5 pris, 26,92 EUR/jour.
+const cpA = finContrat.iccpCalcul({ brutPeriode: 7000, joursAcquis: 25, joursPris: 5, salaireJournalier: 26.92 });
+v("jours restants", cpA.restants, 20, 0);
+v("règle du dixième", cpA.dixieme, 700);
+v("maintien de salaire", cpA.maintien, 538.4);
+v("montant retenu = le plus favorable", cpA.montant, 700);
+v("méthode annoncée", cpA.methode, "dixième");
+// Cas inverse : peu de brut, beaucoup de jours restants.
+const cpB = finContrat.iccpCalcul({ brutPeriode: 2000, joursAcquis: 30, joursPris: 0, salaireJournalier: 40 });
+v("le maintien l'emporte", cpB.montant, 1200);
+v("méthode annoncée", cpB.methode, "maintien de salaire");
+v("aucun jour restant", finContrat.iccpCalcul({ brutPeriode: 0, joursAcquis: 3, joursPris: 5, salaireJournalier: 30 }).restants, 0, 0);
+
+console.log("\n  indemnité de rupture (1/80 du brut, dès 9 mois)");
+v("12 mois, rupture par le parent", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 12 }), 100);
+v("pile 9 mois", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 9 }), 100);
+v("8 mois : pas due", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 8 }), 0);
+v("démission de l'assmat : pas due", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 24, parEmployeur: false }), 0);
+v("faute grave : pas due", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 24, fauteGrave: true }), 0);
+
+let ko = koAlloc + koMin + koFin;
 console.log("\n=== RETENUE POUR ABSENCE — CCN 3239 art. 111 ===\n");
 for (const c of cas) {
   const r = retenueAbsence(c.a);
@@ -76,6 +175,6 @@ for (const c of cas) {
   if (!ok) ko++;
   console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
 }
-const total = cas.length + casAlloc.length;
+const total = cas.length + casAlloc.length + casMin.length + 1 + 21;
 console.log(ko ? `\n${ko} cas en échec\n` : `\n${total} cas sur ${total} conformes\n`);
 process.exit(ko ? 1 : 0);

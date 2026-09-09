@@ -218,8 +218,8 @@ function Pastille({couleur,taille=9}){
 // Avertit quand le taux horaire du contrat passe sous le plancher legal.
 // C'est le genre d'erreur qu'une assistante maternelle ne peut pas rattraper
 // seule : elle produit des bulletins entiers sur une remuneration illegale.
-function AlerteTauxMinimum({taux,date}){
-  const mini=minimumHoraireAu(date||new Date());
+function AlerteTauxMinimum({taux,date,titreAmge}){
+  const mini=minimumHoraireAu(date||new Date(),titreAmge);
   const t=Number(taux)||0;
   if(t<=0||t>=mini)return null;
   return <div style={{display:"flex",gap:9,alignItems:"flex-start",background:"var(--Rp)",
@@ -227,7 +227,7 @@ function AlerteTauxMinimum({taux,date}){
     fontSize:12.5,color:"var(--R)",lineHeight:1.55}}>
     <IconeOuEmoji e="⚠️" taille={16}/>
     <span><b>Taux horaire sous le minimum légal.</b> {t.toFixed(2)} € par heure et par enfant,
-    alors que le minimum est de {mini.toFixed(2)} € à cette date (convention collective IDCC 3239).
+    alors que le minimum est de {mini.toFixed(2)} € à cette date{titreAmge?" avec le titre AM-GE (+ 4 %)":""} (convention collective IDCC 3239).
     Un avenant est nécessaire pour régulariser.</span>
   </div>;
 }
@@ -4063,7 +4063,7 @@ function Contrats({enfants,role,pEId,user}){
 
         <div className="card"style={{marginBottom:12}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Détail du contrat</div>
-          <AlerteTauxMinimum taux={contrat.tauxHoraire} date={contrat.debut}/>
+          <AlerteTauxMinimum taux={contrat.tauxHoraire} date={contrat.debut} titreAmge={user?.titre_amge}/>
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",(contrat.jours||[]).join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
@@ -5505,10 +5505,70 @@ const MINIMUM_CONV_HISTO=[
   ["2024-01-01",3.64],
 ];
 const COEF_MINIMUM_LEGAL=0.281;
-const minimumHoraireAu=(d)=>{
+// Titre professionnel « Assistant maternel - Garde d'enfants » : le minimum
+// conventionnel est majore de 4 % (CCN 3239, article 113 et annexe 5), soit
+// 4,37 EUR brut au lieu de 4,20 EUR. Sans ce cas, l'application aurait declare
+// conforme un taux de 4,25 EUR pourtant sous le plancher d'une titulaire.
+const MAJORATION_TITRE_AMGE=0.04;
+
+// --- Fin de contrat : preavis, conges payes, indemnite de rupture ---
+//
+// L'ecran de solde de tout compte etait entierement fictif : six jours de
+// conges et un an et demi d'anciennete ecrits en dur, quels que soient le
+// contrat et la personne. Le preavis valait 30, 60 ou 90 jours ; la convention
+// en prevoit 8, 15 ou 30. Et l'indemnite de rupture, due des neuf mois
+// d'anciennete, n'etait pas calculee du tout — de l'argent que l'assistante
+// maternelle ne reclamait pas.
+//
+// Preavis en jours calendaires, identique quel que soit le motif
+// (CCN 3239) : moins de 3 mois d'anciennete -> 8 jours ; de 3 mois a 1 an ->
+// 15 jours ; a partir d'un an -> 1 mois.
+const preavisJours=(moisAnciennete)=>{
+  const m=Number(moisAnciennete)||0;
+  if(m<3)return 8;
+  if(m<12)return 15;
+  return 30;
+};
+
+// Conges payes acquis : 2,5 jours ouvrables par mois de travail effectif,
+// plafonnes a 30 jours ouvrables par periode de reference (art. L. 3141-3 du
+// code du travail).
+const CP_PAR_MOIS=2.5;
+const CP_MAX_AN=30;
+const congesAcquis=(moisTravailles)=>
+  Math.min(CP_MAX_AN,Math.round((Math.max(0,Number(moisTravailles)||0)*CP_PAR_MOIS)*100)/100);
+
+// Indemnite compensatrice de conges payes : la methode la plus favorable a la
+// salariee entre la regle du dixieme (10 % du brut total de la periode) et le
+// maintien de salaire. Ce principe est d'ordre public : il ne peut pas etre
+// ecarte par le contrat.
+const TAUX_DIXIEME=0.10;
+const iccpCalcul=({brutPeriode=0,joursAcquis=0,joursPris=0,salaireJournalier=0})=>{
+  const restants=Math.max(0,(Number(joursAcquis)||0)-(Number(joursPris)||0));
+  const dixieme=Math.round((Number(brutPeriode)||0)*TAUX_DIXIEME*100)/100;
+  const maintien=Math.round(restants*(Number(salaireJournalier)||0)*100)/100;
+  return{restants,dixieme,maintien,
+    montant:Math.max(dixieme,maintien),
+    methode:dixieme>=maintien?"dixième":"maintien de salaire"};
+};
+
+// Indemnite de rupture : 1/80 du total des salaires bruts percus depuis le
+// debut du contrat, due a partir de 9 mois d'anciennete quand la rupture vient
+// du particulier employeur (retrait de l'enfant), sauf faute grave. Elle
+// n'entre pas dans l'assiette des cotisations et n'est pas imposable, et elle
+// exclut les indemnites d'entretien, de repas et kilometriques.
+const DIVISEUR_INDEMNITE_RUPTURE=80;
+const ANCIENNETE_MIN_RUPTURE_MOIS=9;
+const indemniteRupture=({brutTotal=0,moisAnciennete=0,parEmployeur=true,fauteGrave=false})=>{
+  if(!parEmployeur||fauteGrave)return 0;
+  if((Number(moisAnciennete)||0)<ANCIENNETE_MIN_RUPTURE_MOIS)return 0;
+  return Math.round(((Number(brutTotal)||0)/DIVISEUR_INDEMNITE_RUPTURE)*100)/100;
+};
+const minimumHoraireAu=(d,titreAmge=false)=>{
   const j=isoJour(d);
   let conv=MINIMUM_CONV_HISTO[MINIMUM_CONV_HISTO.length-1][1];
   for(const[debut,valeur]of MINIMUM_CONV_HISTO)if(j>=debut){conv=valeur;break;}
+  if(titreAmge)conv=Math.round(conv*(1+MAJORATION_TITRE_AMGE)*100)/100;
   const legal=Math.round(smicHoraireAu(d)*COEF_MINIMUM_LEGAL*100)/100;
   return Math.max(conv,legal);
 };
@@ -6471,7 +6531,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
 
       {/* Rémunération */}
       <div style={{marginBottom:14}}>
-        <AlerteTauxMinimum taux={tauxH} date={moisSelKey?moisSelKey+"-15":new Date()}/>
+        <AlerteTauxMinimum taux={tauxH} date={moisSelKey?moisSelKey+"-15":new Date()} titreAmge={user?.titre_amge}/>
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
@@ -9260,6 +9320,25 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           {user?.numero_agrement&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
             <IconeOuEmoji e="✅"/> Numéro enregistré : {user.numero_agrement}
           </div>}
+          {/* Le titre AM-GE majore de 4 % le salaire horaire minimum (CCN 3239,
+              article 113 et annexe 5). Sans cette information, l'application
+              declarerait conforme un taux pourtant sous le plancher. */}
+          <label style={{display:"flex",alignItems:"flex-start",gap:9,marginTop:14,cursor:"pointer"}}>
+            <input type="checkbox" checked={!!user?.titre_amge} style={{marginTop:2,width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}
+              onChange={async(e)=>{
+                const v=e.target.checked;
+                const{error}=await supabase.from("profiles").update({titre_amge:v}).eq("id",user.id);
+                if(error){setToast("Erreur : "+error.message);return;}
+                setUser&&setUser(u=>({...u,titre_amge:v}));
+                setToast(v?"Titre AM-GE enregistré — minimum majoré de 4 % ✓":"Titre AM-GE retiré ✓");
+              }}/>
+            <span style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>
+              Je suis titulaire du titre professionnel <b>Assistant maternel – Garde d'enfants</b>
+              <span style={{display:"block",fontSize:11.5,color:"var(--m)",marginTop:2}}>
+                Votre salaire horaire minimum est alors majoré de 4 % : {minimumHoraireAu(new Date(),true).toFixed(2)} € au lieu de {minimumHoraireAu(new Date(),false).toFixed(2)} €.
+              </span>
+            </span>
+          </label>
         </div>}
         {/* Code postal — nécessaire pour détecter la PMI */}
         {user?.role==="asmat"&&<div style={{marginTop:12}}>
@@ -11743,18 +11822,34 @@ function SoldeDeCompte({enfants,role,pEId,user}){
 
   const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée","Autre"];
 
-  // Calculs solde
-  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
+  // --- Solde de tout compte, sur les données réelles du contrat ---
+  // Tout ce bloc était écrit en dur : six jours de congés, un an et demi
+  // d'ancienneté, un préavis de 30/60/90 jours. Il est maintenant calculé.
+  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date(),user?.titre_amge);
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
   const salMensuel=heuresMois*tauxH;
-  // Congés payés : 2.5j par mois travaillé, simulation 8 mois
-  const congesRestants=6; // jours
-  const iccp=congesRestants*(heuresMois/20)*tauxH;
-  // Préavis selon durée du contrat
-  const dureeAns=1.5;
-  const preavis=dureeAns<1?30:dureeAns<2?60:90;
-  const indemPreavis=(preavis/30)*salMensuel;
-  const total=iccp+indemPreavis;
+  // Ancienneté réelle, du début du contrat à la date de fin saisie.
+  const finRetenue=dateFin||isoJour(new Date());
+  const moisAnciennete=(()=>{
+    if(!contrat.debut)return 0;
+    const d=new Date(contrat.debut+"T12:00:00"), f=new Date(finRetenue+"T12:00:00");
+    if(isNaN(d)||isNaN(f)||f<d)return 0;
+    return Math.max(0,(f.getFullYear()-d.getFullYear())*12+(f.getMonth()-d.getMonth())+(f.getDate()>=d.getDate()?0:-1));
+  })();
+  const [cpPris,setCpPris]=useState(0);
+  const [ruptureParEmployeur,setRuptureParEmployeur]=useState(true);
+  // Un jour ouvrable de congé vaut une journée d'accueil habituelle. Le mois
+  // conventionnel compte 26 jours ouvrables.
+  const salaireJournalier=Math.round((salMensuel/26)*100)/100;
+  const cpAcquisFin=congesAcquis(moisAnciennete);
+  const brutTotal=Math.round(salMensuel*moisAnciennete*100)/100;
+  const cp=iccpCalcul({brutPeriode:brutTotal,joursAcquis:cpAcquisFin,joursPris:cpPris,salaireJournalier});
+  const iccp=cp.montant;
+  const congesRestants=cp.restants;
+  const preavis=preavisJours(moisAnciennete);
+  const indemPreavis=Math.round((preavis/30)*salMensuel*100)/100;
+  const indemRupture=indemniteRupture({brutTotal,moisAnciennete,parEmployeur:ruptureParEmployeur});
+  const total=Math.round((iccp+indemPreavis+indemRupture)*100)/100;
 
   const today=new Date().toLocaleDateString("fr-FR");
   const asmatNom=((user?.prenom||"")+" "+(user?.nom||"")).trim()||"[Assistante maternelle]";
@@ -11818,9 +11913,38 @@ function SoldeDeCompte({enfants,role,pEId,user}){
       {calcule&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
         <div className="card"style={{border:"2px solid var(--G)"}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--G)",marginBottom:16}}><IconeOuEmoji e="💶"/> Solde de tout compte - {enfant?.prenom}</div>
+          {/* Deux réglages qui changent le résultat et que seule l'utilisatrice
+              connaît : les congés déjà pris, et qui rompt le contrat. */}
+          <div style={{display:"flex",gap:14,flexWrap:"wrap",alignItems:"center",marginBottom:14,padding:"10px 12px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
+            <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)"}}>
+              Jours de congés déjà pris
+              <input type="number" min="0" max={cpAcquisFin} step="0.5" value={cpPris}
+                onChange={e=>setCpPris(Math.max(0,Number(e.target.value)||0))}
+                style={{width:72,padding:"5px 8px",borderRadius:7,border:"1px solid var(--br)",fontFamily:"inherit",fontSize:13}}/>
+            </label>
+            <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)",cursor:"pointer"}}>
+              <input type="checkbox" checked={ruptureParEmployeur} onChange={e=>setRuptureParEmployeur(e.target.checked)}
+                style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
+              Rupture à l'initiative du parent (retrait de l'enfant)
+            </label>
+          </div>
+          <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6,padding:"9px 12px",background:"var(--Bp)",borderRadius:9}}>
+            Ancienneté retenue : <b>{moisAnciennete} mois</b> ({contrat.debut?fmt(contrat.debut):"début inconnu"} → {fmt(finRetenue)}).
+            Congés acquis : <b>{cpAcquisFin} jours ouvrables</b> (2,5 par mois, plafonnés à 30).
+          </div>
           {[
-            ["Indemnité compensatrice de congés payés",congesRestants+" jours × "+(heuresMois/20*tauxH).toFixed(2)+"€",iccp.toFixed(2)+"€","var(--S)"],
-            ["Indemnité de préavis ("+preavis+"j)",preavis+" jours selon CCN",indemPreavis.toFixed(2)+"€","var(--B)"],
+            ["Indemnité compensatrice de congés payés",
+              congesRestants+" jours restants · méthode retenue : "+cp.methode+" (dixième "+cp.dixieme.toFixed(2)+"€ / maintien "+cp.maintien.toFixed(2)+"€)",
+              iccp.toFixed(2)+"€","var(--S)"],
+            ["Indemnité de préavis ("+preavis+" jours)",
+              preavis+" jours calendaires — "+(moisAnciennete<3?"moins de 3 mois d'ancienneté":moisAnciennete<12?"de 3 mois à 1 an":"1 an et plus")+" (CCN 3239)",
+              indemPreavis.toFixed(2)+"€","var(--B)"],
+            ...(indemRupture>0?[["Indemnité de rupture",
+              "1/80 du brut total perçu ("+brutTotal.toFixed(2)+"€) — due à partir de 9 mois d'ancienneté, ni cotisée ni imposable",
+              indemRupture.toFixed(2)+"€","var(--T)"]]
+              :[["Indemnité de rupture",
+              ruptureParEmployeur?"Non due : "+moisAnciennete+" mois d'ancienneté, il en faut 9":"Non due : la rupture ne vient pas du parent employeur",
+              "0.00€","var(--l)"]]),
           ].map(([l,d,v,c])=><div key={l}style={{padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
               <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{l}</span>

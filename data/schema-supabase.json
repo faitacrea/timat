@@ -303,7 +303,8 @@
     "subscription_end_date",
     "subscription_status",
     "subscription_updated_at",
-    "telephone"
+    "telephone",
+    "titre_amge"
   ],
   "projet_accueil": [
     "asmat_id",
