@@ -401,6 +401,40 @@ const motifsOrphelins = [...new Set(motifsThemes)].filter((m) => !motifsFormulai
 if (motifsOrphelins.length) {
   signale("calendrier", `motif(s) proposé(s) au parent mais absent(s) de la liste du formulaire d'absence : ${motifsOrphelins.join(", ")}`);
 }
+// Les evenements de demonstration doivent parler le meme vocabulaire que la
+// table : ils portaient « conge » et « hol », inconnus de TYPES_EV, donc
+// affiches dans la couleur par defaut sans que rien ne le signale.
+const blocDemoEv = (appSrc.match(/evenements:\[[\s\S]*?\n  \],/) || [""])[0];
+const typesDemo = [...blocDemoEv.matchAll(/type:"(\w+)"/g)].map((m) => m[1]);
+const tableTypesDemo = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];
+const demoOrphelins = [...new Set(typesDemo)].filter((t) => !new RegExp(`^\\s*${t}:\\{`, "m").test(tableTypesDemo));
+if (demoOrphelins.length) {
+  signale("calendrier", `événement(s) de démonstration d'un type inconnu de TYPES_EV : ${demoOrphelins.join(", ")}`);
+}
+// La formation ne se deduit jamais du salaire : suivie sur le temps d'accueil,
+// la remuneration est maintenue et l'employeur facilitateur est rembourse.
+// L'inscrire comme retenue couterait a l'assistante maternelle un salaire du.
+if (!/RETENUE_TYPES=\{[^}]*form:false/.test(appSrc)) {
+  signale("calendrier", "la formation n'est plus exclue des retenues pour absence : une formation suivie sur le temps d'accueil est pourtant rémunérée (CCN 3239)");
+}
+// La retenue ne doit s'appliquer que sur un salaire mensualise : sur des
+// pointages reels, la journee absente est deja hors des heures comptees.
+if (!/const retenue=useRealHours\?0:retenueAbsence\(/.test(appSrc)) {
+  signale("calendrier", "la retenue pour absence ne dépend plus du mode mensualisé : sur des pointages réels, elle retirerait deux fois la même journée");
+}
+// L'assiette des cotisations doit rester unique. Elle etait recalculee dans
+// quatre rendus (totaux, ecran, PDF, HTML) : la retenue pour absence
+// n'apparaissait que dans les totaux, et le detail affichait des cotisations
+// calculees sur un salaire jamais verse.
+const assiettesRecalculees = [...appSrc.matchAll(/brut\*\(t\.base/g)];
+if (assiettesRecalculees.length) {
+  signale("paie", `${assiettesRecalculees.length} endroit(s) recalculent l'assiette des cotisations au lieu de passer par cotisation() — le détail et les totaux peuvent diverger`);
+}
+// Le brut affiche doit etre celui apres retenue, sinon le bulletin annonce un
+// salaire que l'assistante maternelle n'a pas percu.
+if (/SALAIRE BRUT MENSUEL[^]{0,120}\bbrut\.toFixed/.test(appSrc)) {
+  signale("paie", "le salaire brut du bulletin est affiché avant retenue pour absence");
+}
 // Chaque theme doit designer un type que la table connait.
 const typesThemes = [...blocThemes.matchAll(/\{t:"(\w+)"/g)].map((m) => m[1]);
 const tableTypes = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];

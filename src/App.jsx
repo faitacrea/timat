@@ -186,15 +186,47 @@ const TYPES_EV={
 };
 const typeEv=(t)=>TYPES_EV[t]||TYPES_EV.rdv;
 
+// Retenue pour absence de l'assistante maternelle.
+// Convention collective de la branche du secteur des particuliers employeurs
+// et de l'emploi a domicile (IDCC 3239), article 111 « Deduction des periodes
+// d'absence » : deux formules, selon que l'accueil porte sur une annee
+// complete (52 semaines) ou incomplete (46 semaines ou moins).
+//
+//   annee complete   : salaire mensualise x heures non travaillees / heures
+//                      qui auraient ete reellement travaillees dans le mois
+//   annee incomplete : salaire mensualise x jours non travailles / jours qui
+//                      auraient du etre reellement travailles
+//
+// Les periodes d'absence, les semaines de non-accueil et les jours feries
+// chomes correspondant a un jour habituellement travaille sont comptes dans le
+// denominateur : c'est ce qui rend la retenue plus faible qu'une simple regle
+// de trois sur les heures effectivement faites.
+//
+// La formation n'entre PAS dans ce calcul. Suivie sur le temps d'accueil, la
+// remuneration de l'assistante maternelle est maintenue, et l'employeur
+// facilitateur est rembourse ; la deduire couterait a l'assistante maternelle
+// un salaire auquel elle a droit.
+const RETENUE_TYPES={mal:true,fer:true,form:false,cng:false,rdv:false,sor:false,abs:false};
+const retenueAbsence=({salaireMensualise=0,anneeComplete=true,heuresAbsence=0,heuresMois=0,joursAbsence=0,joursMois=0})=>{
+  const base=Number(salaireMensualise)||0;
+  if(base<=0)return 0;
+  const ratio=anneeComplete
+    ? (heuresMois>0?heuresAbsence/heuresMois:0)
+    : (joursMois>0?joursAbsence/joursMois:0);
+  if(!(ratio>0))return 0;
+  return Math.round(base*Math.min(ratio,1)*100)/100;
+};
+
 // Ce que chaque role peut ajouter au calendrier. Cote parent, les themes qui
 // portent un « motif » ouvrent le formulaire d'absence : lui seul compte les
 // heures et previent l'assistante maternelle.
 const THEMES_CAL={
   asmat:[
-    {t:"rdv",aide:"Réunion, visite PMI, rendez-vous"},
+    {t:"mal",l:"Maladie",aide:"Vous êtes malade et n'accueillez pas",paie:"retenue"},
+    {t:"fer",aide:"Journée sans accueil de votre fait",paie:"retenue"},
+    {t:"form",aide:"Formation professionnelle",paie:"maintien"},
     {t:"cng",aide:"Vos congés"},
-    {t:"fer",aide:"Journée sans accueil"},
-    {t:"form",aide:"Formation professionnelle"},
+    {t:"rdv",aide:"Réunion, visite PMI, rendez-vous"},
     {t:"sor",aide:"Sortie avec les enfants"},
   ],
   parent:[
@@ -736,10 +768,14 @@ const D = {
     {id:"ab3",eId:"e3",date:jourDecale(-15),motif:"Congés parents",indemnise:false,heures:9},
   ],
   evenements:[
-    {id:"ev1",date:jourDecale(8),type:"conge",txt:"Congés assmat",},
+    // Les types doivent appartenir a TYPES_EV. « conge » et « hol » y etaient
+    // inconnus : ils tombaient dans la couleur par defaut, et c'est ce qui
+    // rendait le defaut de la carte « Prochains evenements » invisible.
+    {id:"ev1",date:jourDecale(8),type:"cng",txt:"Congés assmat"},
     {id:"ev2",date:jourDecale(13),type:"rdv",txt:"Réunion parents Emma"},
-    {id:"ev3",date:jourDecale(18),type:"hol",txt:"Sortie au parc"},
+    {id:"ev3",date:jourDecale(18),type:"sor",txt:"Sortie au parc"},
     {id:"ev4",date:jourDecale(25),type:"abs",txt:"Absent - Léo"},
+    {id:"ev5",date:jourDecale(-2),type:"mal",txt:"Maladie - journée non assurée",heures:8},
   ],
   portfolio:[
     {id:"pf1",eId:"e1",date:TODAY_STR,titre:"Peinture cerisier",desc:"Coton-tige et peinture rose, inspiration japonaise",emoji:"🌸",competences:["Motricité fine","Créativité"]},
@@ -2812,7 +2848,7 @@ const VACANCES_2024=[
 const isVacances=(ds)=>VACANCES_2024.some(v=>ds>=v.debut&&ds<=v.fin);
 const nomVacances=(ds)=>VACANCES_2024.find(v=>ds>=v.debut&&ds<=v.fin)?.nom||"";
 
-function Calendrier({enfants,role,pEId}){
+function Calendrier({enfants,role,pEId,user}){
   const [mois,setMois]=useState(new Date().getMonth());
   const [an,setAn]=useState(new Date().getFullYear());
   const [sel,setSel]=useState(null);
@@ -2829,7 +2865,14 @@ function Calendrier({enfants,role,pEId}){
   // Initialiser les événements après le chargement des enfants
   useEffect(()=>{
     if(enfants.length===0)return;
-    setEvs(isDemoUser?D.evenements:[]);
+    if(isDemoUser||role!=="asmat"){setEvs(isDemoUser?D.evenements:[]);return;}
+    let vivant=true;
+    (async()=>{
+      const{data,error}=await supabase.from("evenements").select("*").order("date",{ascending:true});
+      if(!vivant||error||!data)return;
+      setEvs(data.map(e=>({id:e.id,date:e.date,type:e.type,txt:e.texte,...(e.heures!=null?{heures:Number(e.heures)}:{})})));
+    })();
+    return()=>{vivant=false;};
   },[isDemoUser,enfants.length]);
   const [newEv,setNewEv]=useState({type:"rdv",txt:""});
   const [showAbsenceModal,setShowAbsenceModal]=useState(false);
@@ -2925,9 +2968,21 @@ function Calendrier({enfants,role,pEId}){
     return [s,e];
   };
   const horaireLignes=(str)=>{if(!str)return["",""];const parts=String(str).split(/\s*(?:–|—|-|à)\s*/);if(parts.length>=2)return[parts[0].trim(),parts.slice(1).join("-").trim()];return[String(str).trim(),""];};
+  // Ce qu'une journee d'accueil represente d'apres le contrat : c'est la base
+  // de la retenue, et la valeur proposee par defaut.
+  const contratRef=enfants[0]?.contrat;
+  const heuresJourContrat=Math.round(((contratRef?.heuresHebdo||40)/((contratRef?.jours?.length)||5))*10)/10;
+
   const addEvModal=()=>{
     if(!evForm.date||!evForm.txt.trim())return;
-    setEvs(p=>[...p,{id:"ev"+Date.now(),date:evForm.date,type:evForm.type,txt:evForm.txt.trim()}]);
+    const heures=RETENUE_TYPES[evForm.type]?(parseFloat(evForm.heures)||heuresJourContrat):null;
+    const nouveau={id:"ev"+Date.now(),date:evForm.date,type:evForm.type,txt:evForm.txt.trim(),...(heures!=null?{heures}:{})};
+    setEvs(p=>[...p,nouveau]);
+    if(!isDemoUser&&role==="asmat")supabase.from("evenements")
+      .insert({asmat_id:user?.id,date:evForm.date,type:evForm.type,texte:evForm.txt.trim(),heures})
+      .select().single()
+      .then(({data})=>{ if(data)setEvs(p=>p.map(x=>x.id===nouveau.id?{...x,id:data.id}:x)); })
+      .catch(()=>{});
     setShowEvModal(false);setEvForm({date:"",type:"rdv",txt:""});
     setToast("Événement ajouté ✓");
   };
@@ -3004,7 +3059,7 @@ function Calendrier({enfants,role,pEId}){
                 setAbsForm(f=>({...f,date:dsDate(new Date()),motif:th.motif}));
                 setShowAbsenceModal(true);
               }else{
-                setEvForm({date:dsDate(new Date()),type:th.t,txt:""});
+                setEvForm({date:dsDate(new Date()),type:th.t,txt:"",heures:String(heuresJourContrat)});
                 setShowEvModal(true);
               }
             }} style={{display:"flex",alignItems:"center",gap:12,textAlign:"left",width:"100%",padding:"12px 14px",borderRadius:12,border:"1px solid var(--br)",background:"var(--w)",cursor:"pointer",fontFamily:"inherit",transition:"background .15s,border-color .15s"}}
@@ -3032,6 +3087,17 @@ function Calendrier({enfants,role,pEId}){
         <div style={{display:"grid",gap:12}}>
           <div><label className="lbl">Date</label><input type="date" className="inp" value={evForm.date} onChange={e=>setEvForm(f=>({...f,date:e.target.value}))}/></div>
           <div><label className="lbl">Description</label><input className="inp" placeholder="Ex : RDV médecin, sortie au parc…" value={evForm.txt} onChange={e=>setEvForm(f=>({...f,txt:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addEvModal()}/></div>
+          {RETENUE_TYPES[evForm.type]&&<div>
+            <label className="lbl">Heures d'accueil perdues ce jour</label>
+            <input type="number" className="inp" min="0" max="24" step="0.5" value={evForm.heures??heuresJourContrat}
+              onChange={e=>setEvForm(f=>({...f,heures:e.target.value}))}/>
+            <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
+              Servira à calculer la retenue sur le salaire mensualisé, selon l'article 111 de la convention collective.
+            </div>
+          </div>}
+          {evForm.type==="form"&&<div style={{background:"var(--Pp)",color:"var(--P)",borderRadius:10,padding:"10px 12px",fontSize:12,lineHeight:1.55}}>
+            Suivie sur le temps d'accueil, une formation ne se déduit pas : votre rémunération est maintenue et l'employeur facilitateur est remboursé.
+          </div>}
         </div>
         <div style={{display:"flex",gap:8,marginTop:18}}>
           <button className="btn bG" style={{flex:1}} onClick={()=>setShowEvModal(false)}>Annuler</button>
@@ -5729,6 +5795,26 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const [moisSel,setMoisSel]=useState(()=>moisDisponibles[0]?.label||"");
   const moisSelKey=moisDisponibles.find(m=>m.label===moisSel)?.key;
 
+  // Absences de l'assistante maternelle elle-meme, prises dans le calendrier.
+  // Elles ne se confondent pas avec celles de l'enfant : ce sont les journees
+  // ou c'est elle qui n'accueille pas.
+  const [absAsmat,setAbsAsmat]=useState([]);
+  useEffect(()=>{
+    if(!moisSelKey){setAbsAsmat([]);return;}
+    if(isDemoBull){
+      setAbsAsmat(D.evenements.filter(e=>RETENUE_TYPES[e.type]&&String(e.date).startsWith(moisSelKey)));
+      return;
+    }
+    let vivant=true;
+    (async()=>{
+      const{data}=await supabase.from("evenements").select("*")
+        .gte("date",moisSelKey+"-01").lte("date",moisSelKey+"-31");
+      if(!vivant)return;
+      setAbsAsmat((data||[]).filter(e=>RETENUE_TYPES[e.type]).map(e=>({...e,heures:Number(e.heures)||0})));
+    })();
+    return()=>{vivant=false;};
+  },[moisSelKey,isDemoBull]);
+
   // BULLETIN HISTORIQUE P14C - charger les heures reelles du mois selectionne
   useEffect(()=>{
     if(!enfant?.id||!moisSelKey||isDemoBull){setHeuresMoisReel(null);return;}
@@ -5779,6 +5865,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
     ?(D.heures[enfant?.id]||{real:160,prev:174})
     :{real:useRealHours?heuresMoisReel.heures:hMens,prev:hMens};
   const tauxH=contrat.tauxHoraire||4.05;
+  const heuresJourRef=Math.round(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))*10)/10;
   const heuresNorm=Math.min(h.real,45*4);
   const hSupp=Math.max(0,h.real-heuresNorm);
   const salBase=heuresNorm*tauxH;
@@ -5786,12 +5873,36 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const brut=salBase+salSupp;
   const joursTravailles=useRealHours?heuresMoisReel.jours:Math.round(h.real/8);
   const entretien=(contrat.entretien||3.92)*joursTravailles;
-  const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?brut*(t.base||1)*t.sal/100:0),0);
-  const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?brut*(t.base||1)*t.pat/100:0),0);
-  const netPaye=brut-totalCotSal;
-  const netImposable=Math.round((netPaye+brut*0.9825*0.029)*100)/100; // net fiscal = brut - cotisations deductibles (CSG ND + CRDS non deductibles, reintegrees)
-  const coutEmployeur=brut+totalCotPat;
-  const netSocial=Math.round((brut-totalCotSal)*100)/100; // mention obligatoire (brut - cotisations salariales, hors indemnites)
+  // --- Retenue pour absence de l'assistante maternelle (CCN 3239, art. 111) ---
+  // Elle ne s'applique QUE sur un salaire mensualise. Des que le bulletin est
+  // bati sur les pointages reels, la journee non travaillee ne figure deja plus
+  // dans les heures : la deduire une seconde fois retirerait deux fois la meme
+  // journee. C'est le piege principal de ce calcul.
+  const heuresAbsAsmat=absAsmat.reduce((t,a)=>t+(Number(a.heures)||0),0);
+  const joursAbsAsmat=absAsmat.length;
+  const anneeComplete=contrat.anneeComplete!==false;
+  const retenue=useRealHours?0:retenueAbsence({
+    salaireMensualise:brut,
+    anneeComplete,
+    heuresAbsence:heuresAbsAsmat,
+    // Denominateur : les heures qui auraient ete travaillees dans le mois si
+    // elle n'avait pas ete absente — les heures d'absence en font partie.
+    heuresMois:hMens,
+    joursAbsence:joursAbsAsmat,
+    joursMois:Math.round(hMens/Math.max(1,heuresJourRef)),
+  });
+  const brutApresRetenue=Math.round((brut-retenue)*100)/100;
+  // Les cotisations sont dues sur le brut apres retenue : une journee non
+  // travaillee ne genere ni salaire ni cotisation.
+  const cotisation=(t,part)=>brutApresRetenue*(t.base||1)*(t[part]||0)/100;
+  const totalCotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?cotisation(t,"sal"):0),0);
+  const totalCotPat=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.pat>0?cotisation(t,"pat"):0),0);
+  const netPaye=brutApresRetenue-totalCotSal;
+  const netImposable=Math.round((netPaye+brutApresRetenue*0.9825*0.029)*100)/100; // net fiscal = brut - cotisations deductibles (CSG ND + CRDS non deductibles, reintegrees)
+  const coutEmployeur=brutApresRetenue+totalCotPat;
+  const netSocial=Math.round((brutApresRetenue-totalCotSal)*100)/100; // mention obligatoire (brut - cotisations salariales, hors indemnites)
+  // Indemnite de repas optionnelle (non soumise a cotisations, hors brut/net social/net imposable)
+  const repasMois=Math.round((Number(repasJour)||0)*joursTravailles*100)/100;
   const cpAcquis=2.5; // jours ouvrables acquis par mois travaille (CCN particuliers employeurs, 30j/an)
   // Regime fiscal special assmat (CGI art. 80 sexies / BOI-RSA-CHAMP-10-20-10) : abattement par jour et par enfant.
   // Journee >=8h : 3 x SMIC horaire. Journee <8h : proratise = (3 x SMIC / 8) x heures reelles.
@@ -5825,8 +5936,6 @@ function BulletinSalaire({enfants,role,pEId,user}){
     if(jNuit)parts.push(jNuit+" j 24h ("+(baseMult+1)+"×SMIC)");
     abLabel=parts.join(" + ");
   }
-  // Indemnite de repas optionnelle (non soumise a cotisations, hors brut/net social/net imposable)
-  const repasMois=Math.round((Number(repasJour)||0)*joursTravailles*100)/100;
   const netImpApresAbattement=Math.max(0,Math.round((netImposable+entretien+repasMois-abattementMois)*100)/100);
 
   // BULLETIN HISTORIQUE P14C - generer et stocker le bulletin (PDF + DB + email)
@@ -5887,17 +5996,18 @@ function BulletinSalaire({enfants,role,pEId,user}){
       if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",(tauxH*1.25).toFixed(4)+" euros/h",salSupp.toFixed(2)+" euros");
       ligne("Indemnite d entretien",joursTravailles+" jours",(contrat.entretien||3.92).toFixed(2)+" euros/j",entretien.toFixed(2)+" euros");
       if(repasMois>0)ligne("Indemnite de repas",joursTravailles+" jours",(Number(repasJour)||0).toFixed(2)+" euros/j",repasMois.toFixed(2)+" euros");
+      if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"annee complete":"annee incomplete","- "+retenue.toFixed(2)+" euros");
       doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
       doc.text("SALAIRE BRUT MENSUEL",MX+2,y+5);
-      doc.text(brut.toFixed(2)+" euros",PW-MX-2,y+5,{align:"right"});
+      doc.text(brutApresRetenue.toFixed(2)+" euros",PW-MX-2,y+5,{align:"right"});
       y+=10;
       // Section : Cotisations
       section("COTISATIONS SOCIALES");
       Object.entries(TAUX_COTISATIONS).forEach(([nom,t])=>{
         if(t.sal>0||t.pat>0){
-          const cs=brut*(t.base||1)*t.sal/100;
-          const cp=brut*(t.base||1)*t.pat/100;
+          const cs=cotisation(t,"sal");
+          const cp=cotisation(t,"pat");
           ligne(nom,t.sal>0?"-"+cs.toFixed(2):"",t.pat>0?cp.toFixed(2):"","");
         }
       });
@@ -5915,7 +6025,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       // Section : Recap net
       if(y>240){doc.addPage();y=15;}
       section("RECAPITULATIF NET");
-      ligne("Salaire brut","","",brut.toFixed(2)+" euros");
+      ligne("Salaire brut","","",brutApresRetenue.toFixed(2)+" euros");
       doc.setTextColor(196,74,106);
       ligne("Cotisations salariales","","","- "+totalCotSal.toFixed(2)+" euros");
       doc.setTextColor(...noir);
@@ -6101,7 +6211,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{joursTravailles} jour{joursTravailles>1?"s":""} d'accueil · {Math.round(h.real)} h ce mois{useRealHours?" (pointages réels)":""}</div>
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
-        {[["Salaire brut",brut.toFixed(2)+" €","var(--B)","var(--Bp)"],
+        {[["Salaire brut",brutApresRetenue.toFixed(2)+" €","var(--B)","var(--Bp)"],
           ["Indemnités",(entretien+repasMois).toFixed(2)+" €","var(--T)","var(--Tp)"],
           ["Coût employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+" €","var(--m)","var(--c)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
@@ -6138,13 +6248,14 @@ function BulletinSalaire({enfants,role,pEId,user}){
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
           ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.92)+"€",entretien.toFixed(2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+(Number(repasJour)||0).toFixed(2)+"€",repasMois.toFixed(2)+"€"]]:[]),
+          ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+retenue.toFixed(2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
           <span style={{color:"var(--b)",flex:2}}>{l}</span>
           <span style={{color:"var(--l)",flex:2,textAlign:"center"}}>{d}</span>
           <span style={{fontWeight:600,flex:1,textAlign:"right"}}>{v}</span>
         </div>)}
         <div style={{display:"flex",justifyContent:"space-between",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid var(--b)",fontSize:13}}>
-          <span>SALAIRE BRUT</span><span style={{color:"var(--b)"}}>{brut.toFixed(2)} €</span>
+          <span>SALAIRE BRUT</span><span style={{color:"var(--b)"}}>{brutApresRetenue.toFixed(2)} €</span>
         </div>
       </div>
 
@@ -6155,8 +6266,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
           {["Libellé","Salarié","Employeur"].map(h2=><div key={h2}style={{fontWeight:700,color:"var(--l)",padding:"3px 0",borderBottom:"1px solid var(--br)"}}>{h2}</div>)}
           {Object.entries(TAUX_COTISATIONS).flatMap(([nom,t])=>[
             <div key={nom+"l"}style={{fontSize:11,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
-            <div key={nom+"s"}style={{fontSize:11,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?(brut*(t.base||1)*t.sal/100).toFixed(2)+"€":"-"}</div>,
-            <div key={nom+"p"}style={{fontSize:11,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?(brut*(t.base||1)*t.pat/100).toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"s"}style={{fontSize:11,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?cotisation(t,"sal").toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"p"}style={{fontSize:11,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?cotisation(t,"pat").toFixed(2)+"€":"-"}</div>,
           ])}
           <div style={{fontWeight:700,fontSize:11,padding:"4px 0",borderTop:"1px solid var(--b)"}}>TOTAL</div>
           <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotSal.toFixed(2)}€</div>
@@ -6167,7 +6278,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
 
       {/* Net */}
       <div style={{background:"var(--c)",borderRadius:10,padding:14,marginBottom:16}}>
-        {[["Salaire brut",brut.toFixed(2)+"€","var(--b)"],
+        {[["Salaire brut",brutApresRetenue.toFixed(2)+"€","var(--b)"],
           ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
           borderBottom:"1px solid var(--br)",fontSize:12}}>
@@ -6199,8 +6310,8 @@ function BulletinSalaire({enfants,role,pEId,user}){
         const cotisDetails=Object.entries(TAUX_COTISATIONS).map(function(entry){
           var nom=entry[0],t=entry[1];
           return "<tr><td>"+nom+"</td>"
-            +"<td class=\"right\">"+(t.sal>0?(brut*(t.base||1)*t.sal/100).toFixed(2)+"€":"-")+"</td>"
-            +"<td class=\"right\">"+(t.pat>0?(brut*(t.base||1)*t.pat/100).toFixed(2)+"€":"-")+"</td></tr>";
+            +"<td class=\"right\">"+(t.sal>0?cotisation(t,"sal").toFixed(2)+"€":"-")+"</td>"
+            +"<td class=\"right\">"+(t.pat>0?cotisation(t,"pat").toFixed(2)+"€":"-")+"</td></tr>";
         }).join("");
         var hSuppRow=hSupp>0?"<tr><td>Heures compl. (maj. 25%)</td><td class=\"right\">"+hSupp+" h</td><td class=\"right\">"+(tauxH*1.25).toFixed(4)+" €/h</td><td class=\"right\">"+salSupp.toFixed(2)+" €</td></tr>":"";
         var htmlParts=[
@@ -6244,8 +6355,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+tauxH.toFixed(4)+" euros/h</td><td class=\"right\">"+salBase.toFixed(2)+" euros</td></tr>",
           hSuppRow,
           "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+(contrat.entretien||3.92).toFixed(2)+" euros/j</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
+          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"annee incomplete")+"</td><td class=\"right\">- "+retenue.toFixed(2)+" euros</td></tr>":"")+
           (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+(Number(repasJour)||0).toFixed(2)+" euros/j</td><td class=\"right\">"+repasMois.toFixed(2)+" euros</td></tr>":""),
-          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
+          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+brutApresRetenue.toFixed(2)+" euros</td></tr>",
           "</table>",
           "<div class=\"st\">COTISATIONS SOCIALES</div>",
           "<table><tr><th>Cotisation</th><th class=\"right\">Part salarie</th><th class=\"right\">Part employeur</th></tr>",
@@ -6255,7 +6367,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<div style=\"font-size:11px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.</div>",
           "<div class=\"st\">RECAPITULATIF NET</div>",
           "<table>",
-          "<tr><td>Salaire brut</td><td class=\"right\">"+brut.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Salaire brut</td><td class=\"right\">"+brutApresRetenue.toFixed(2)+" euros</td></tr>",
           "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
           "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
           "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
@@ -19077,7 +19189,7 @@ export default function App(){
       case "recap_fiscal": return isPro?<RecapFiscalAssmat enfants={enfants} user={user}/>:<VerrouPro titre="Le récapitulatif fiscal" desc="Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."/>;
       case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
-      case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId}/>;
+      case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
