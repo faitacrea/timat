@@ -572,6 +572,17 @@ if (lecturesRisquees.length) {
   signale("robustesse", `${lecturesRisquees.length} lecture(s) de champ nullable sans garde : ${lecturesRisquees.join(", ")} — un tableau absent fait tomber tout l'écran`);
 }
 
+// --- protection des PDF ---
+// Pourquoi : jsPDF bascule une ligne entiere en UTF-16 des qu'elle contient un
+// caractere hors WinAnsi, et la police standard n'en connait aucun. Le symbole
+// ET le texte de la ligne disparaissent. Comme le contenu vient aussi de ce que
+// les familles tapent, chaque document doit passer par le filtre.
+const docsPdf = [...appSrc.matchAll(/(\w+)\s*=\s*new jsPDF\(/g)];
+const docsNonProteges = docsPdf.filter((m) => !/protegerPdf\(\s*new jsPDF\(/.test(appSrc.slice(Math.max(0, m.index - 20), m.index + 30)));
+if (docsNonProteges.length) {
+  signale("pdf", `${docsNonProteges.length} document(s) PDF créé(s) sans protegerPdf() : un emoji tapé par une famille ferait disparaître la ligne entière`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
