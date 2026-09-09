@@ -34,7 +34,41 @@ const cas = [
   { n: "heures négatives (saisie aberrante)", a: { salaireMensualise: 700, anneeComplete: true, heuresAbsence: -8, heuresMois: 173 }, attendu: 0 },
 ];
 
-let ko = 0;
+// Allocation de formation : forfait de 5,57 EUR nets l'heure depuis le
+// 1er avril 2025, plafonne a 58 h par an (plan de developpement des
+// competences). Elle ne concerne que les heures suivies HORS temps d'accueil.
+const extraitAlloc = src.match(/const allocationFormation = \([\s\S]*?\n\};/);
+if (!extraitAlloc) {
+  console.error("allocationFormation introuvable dans src/App.jsx");
+  process.exit(1);
+}
+const TAUX_ALLOC = parseFloat((src.match(/ALLOC_FORMATION_H = ([\d.]+)/) || [])[1]);
+const PLAFOND_ALLOC = parseFloat((src.match(/ALLOC_FORMATION_PLAFOND_H = (\d+)/) || [])[1]);
+const allocationFormation = eval(
+  `(function(){const ALLOC_FORMATION_H=${TAUX_ALLOC};const ALLOC_FORMATION_PLAFOND_H=${PLAFOND_ALLOC};`
+  + extraitAlloc[0].replace(/^const allocationFormation = /, "return ").replace(/;$/, "") + "})()"
+);
+
+const casAlloc = [
+  { n: "14 h de formation hors accueil", h: 14, attendu: +(14 * TAUX_ALLOC).toFixed(2) },
+  { n: "une seule heure", h: 1, attendu: TAUX_ALLOC },
+  { n: "aucune heure", h: 0, attendu: 0 },
+  { n: "au-delà du plafond annuel de 58 h", h: 70, attendu: +(PLAFOND_ALLOC * TAUX_ALLOC).toFixed(2) },
+  { n: "pile au plafond", h: PLAFOND_ALLOC, attendu: +(PLAFOND_ALLOC * TAUX_ALLOC).toFixed(2) },
+  { n: "heures négatives (saisie aberrante)", h: -5, attendu: 0 },
+  { n: "valeur non numérique", h: "abc", attendu: 0 },
+];
+
+let koAlloc = 0;
+console.log("\n=== ALLOCATION DE FORMATION — hors temps d'accueil ===\n");
+for (const c of casAlloc) {
+  const r = allocationFormation(c.h);
+  const ok = Math.abs(r - c.attendu) < 0.011;
+  if (!ok) koAlloc++;
+  console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
+}
+
+let ko = koAlloc;
 console.log("\n=== RETENUE POUR ABSENCE — CCN 3239 art. 111 ===\n");
 for (const c of cas) {
   const r = retenueAbsence(c.a);
@@ -42,5 +76,6 @@ for (const c of cas) {
   if (!ok) ko++;
   console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
 }
-console.log(ko ? `\n${ko} cas en échec\n` : `\n${cas.length} cas sur ${cas.length} conformes\n`);
+const total = cas.length + casAlloc.length;
+console.log(ko ? `\n${ko} cas en échec\n` : `\n${total} cas sur ${total} conformes\n`);
 process.exit(ko ? 1 : 0);

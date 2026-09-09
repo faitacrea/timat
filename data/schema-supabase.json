@@ -165,8 +165,10 @@
   ],
   "evenements": [
     "asmat_id",
+    "auteur_id",
     "created_at",
     "date",
+    "enfant_id",
     "heures",
     "id",
     "texte",

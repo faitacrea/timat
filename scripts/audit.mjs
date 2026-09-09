@@ -273,6 +273,8 @@ const BAREME = [
   { nom: "cout horaire de reference CMG",  motif: /CHR_AM\s*=\s*4\.91\b/,           source: "Urssaf, 1er avril 2026" },
   { nom: "plafond horaire CMG",            motif: /PLAFOND_H\s*=\s*8\.09\b/,        source: "Urssaf, 1er avril 2026" },
   { nom: "plafond mensuel CMG",            motif: /CMG_MAX\s*=\s*825\.16\b/,        source: "CNAF, 1er avril 2026" },
+  { nom: "allocation de formation horaire",  motif: /ALLOC_FORMATION_H = 5\.57\b/, source: "IPERIA / France Emploi Domicile, 1er avril 2025" },
+  { nom: "plafond annuel formation",         motif: /ALLOC_FORMATION_PLAFOND_H = 58\b/, source: "plan de développement des compétences, 58 h/an" },
   { nom: "minimum conventionnel brut",     motif: /MINIMUM_CONV\s*=\s*4\.2\b/,      source: "CCN 3239, 1er juin 2026" },
   { nom: "barème kilométrique 3 CV",       motif: /3:\s*0\.529\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "barème kilométrique 4 CV",       motif: /4:\s*0\.606\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
@@ -435,12 +437,77 @@ if (assiettesRecalculees.length) {
 if (/SALAIRE BRUT MENSUEL[^]{0,120}\bbrut\.toFixed/.test(appSrc)) {
   signale("paie", "le salaire brut du bulletin est affiché avant retenue pour absence");
 }
+// L'allocation de formation est versee par IPERIA, pas par le particulier
+// employeur : la faire entrer dans le brut ou le net reviendrait a facturer au
+// parent une somme qu'il ne doit pas.
+if (/(?:brut|netPaye|netImposable|totalCot\w*)\s*[-+]\s*allocFormation|allocFormation\s*[-+]\s*(?:brut|netPaye)/.test(appSrc)) {
+  signale("paie", "l'allocation de formation entre dans le calcul du salaire : elle est versée par IPERIA, pas par le parent employeur");
+}
+// La formation hors temps d'accueil ne se deduit pas davantage que celle
+// suivie sur le temps d'accueil : dans les deux cas il n'y a rien a retenir.
+if (!/RETENUE_TYPES=\{[^}]*formh:false/.test(appSrc)) {
+  signale("calendrier", "la formation hors temps d'accueil n'est plus exclue des retenues : il n'y a pourtant aucun salaire à déduire");
+}
 // Chaque theme doit designer un type que la table connait.
 const typesThemes = [...blocThemes.matchAll(/\{t:"(\w+)"/g)].map((m) => m[1]);
 const tableTypes = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];
 const typesOrphelins = [...new Set(typesThemes)].filter((t) => !new RegExp(`^\\s*${t}:\\{`, "m").test(tableTypes));
 if (typesOrphelins.length) {
   signale("calendrier", `thème(s) du calendrier pointant vers un type inconnu de TYPES_EV : ${typesOrphelins.join(", ")}`);
+}
+
+// --- icones des onglets et des menus ---
+// Pourquoi : l'icone d'un onglet est une donnee (« ic »), et les rendus se
+// partageaient en deux camps — ceux qui la passaient a <IconeOuEmoji>, et ceux
+// qui l'imprimaient telle quelle. C'est ce second camp qui laissait des emoji
+// systeme dans les onglets.
+const icBruts = [...appSrc.matchAll(/(?<!e=)\{\s*(?:[A-Za-z_][A-Za-z0-9_]*\.ic|ic)\s*\}/g)]
+  // Une <option> ne rend que du texte : un SVG y disparaitrait, l'emoji y reste.
+  .filter((m) => !/<option[^>]*>\s*$/.test(appSrc.slice(Math.max(0, m.index - 120), m.index)));
+if (icBruts.length) {
+  signale("icônes", `${icBruts.length} onglet(s) ou menu(s) affichent leur icône brute au lieu de passer par <IconeOuEmoji>`);
+}
+// Chaque icone de donnee doit avoir un trace dessine, sinon elle retombe
+// silencieusement sur l'emoji du systeme.
+const blocTrace = (appSrc.match(/const EMOJI_TRACE = \{([\s\S]*?)\n\};/) || ["", ""])[1];
+const correspondances = new Map([...blocTrace.matchAll(/"([^"]+)":"(\w+)"/g)].map((m) => [m[1], m[2]]));
+const dessins = new Set([...(appSrc.match(/const TRACES = \{([\s\S]*?)\n\};/) || ["", ""])[1].matchAll(/^\s*(\w+):/gm)].map((m) => m[1]));
+const EMO_IC = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u;
+const icones = [...new Set([...appSrc.matchAll(/ic:"([^"]+)"/g)].map((m) => m[1]))].filter((i) => EMO_IC.test(i));
+const sansTrace = icones.filter((i) => !correspondances.has(i));
+if (sansTrace.length) {
+  signale("icônes", `${sansTrace.length} icône(s) d'onglet sans tracé dessiné, elles retombent sur l'emoji du système : ${sansTrace.join(" ")}`);
+}
+const renvoisMorts = [...correspondances].filter(([, nom]) => !dessins.has(nom));
+if (renvoisMorts.length) {
+  signale("icônes", `${renvoisMorts.length} correspondance(s) pointent vers un dessin inexistant : ${renvoisMorts.map(([e, n]) => e + "→" + n).join(" ")}`);
+}
+
+// --- champs nullables lus sans garde ---
+// Pourquoi : « enfants.allergies » et « contrats.jours » sont des tableaux
+// nullables en base. Lus sans garde, ils ne cassaient pas une ligne mais tout
+// l'ecran — l'accueil du parent ne s'affichait pas du tout tant que la fiche
+// sante n'etait pas remplie, et un contrat sans jours renseignes faisait
+// tomber l'ecran du contrat. Les donnees de demonstration renseignent toujours
+// ces champs : c'est ce qui a garde le defaut invisible.
+//
+// On ne regarde que les lectures faites sur une donnee venue de la base
+// (« enfant. », « contrat. », « ct. », « sel.contrat. »), pas sur un etat local
+// de formulaire, qui est toujours initialise a un tableau.
+const lecturesRisquees = [];
+for (const champ of ["allergies", "jours"]) {
+  const re = new RegExp(`\\b(?:enfant|contrat|ct|d\\.contrat|sel\\.contrat)(?:\\.contrat)?\\??\\.${champ}\\.(?:length|map|join|filter|slice|forEach)`, "g");
+  for (const m of appSrc.matchAll(re)) {
+    const avant = appSrc.slice(Math.max(0, m.index - 90), m.index);
+    // Deja protege : « || [] », « x.champ && x.champ. », « Array.isArray(...) ».
+    if (/\|\|\s*\[\]\s*\)?\s*$/.test(avant)) continue;
+    if (new RegExp(`\\.${champ}\\s*&&\\s*$`).test(avant)) continue;
+    if (/Array\.isArray\([^)]*\)\s*\?\s*$/.test(avant)) continue;
+    lecturesRisquees.push(`${champ} (ligne ${appSrc.slice(0, m.index).split("\n").length})`);
+  }
+}
+if (lecturesRisquees.length) {
+  signale("robustesse", `${lecturesRisquees.length} lecture(s) de champ nullable sans garde : ${lecturesRisquees.join(", ")} — un tableau absent fait tomber tout l'écran`);
 }
 
 // --- rapport ---

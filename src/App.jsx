@@ -175,11 +175,12 @@ const EMAIL_TEMPLATES={
 // en bleu neutre au lieu du vert, sans que rien ne le signale.
 const TYPES_EV={
   rdv:{l:"Rendez-vous",ic:"📌",fond:"var(--Bp)",texte:"var(--B)"},
-  cng:{l:"Congé",ic:"🌴",fond:"var(--Gp)",texte:"var(--G)"},
+  cng:{l:"Congé",ic:"🌴",fond:"var(--Gp)",texte:"var(--G)",sansAccueil:true},
   abs:{l:"Absence",ic:"🤒",fond:"var(--Rp)",texte:"var(--R)"},
-  mal:{l:"Maladie",ic:"🤒",fond:"var(--Rp)",texte:"var(--R)"},
-  fer:{l:"Fermeture",ic:"🏠",fond:"var(--Rp)",texte:"var(--R)"},
-  form:{l:"Formation",ic:"📔",fond:"var(--Pp)",texte:"var(--P)"},
+  mal:{l:"Maladie",ic:"🤒",fond:"var(--Rp)",texte:"var(--R)",sansAccueil:true},
+  fer:{l:"Fermeture",ic:"🏠",fond:"var(--Rp)",texte:"var(--R)",sansAccueil:true},
+  form:{l:"Formation (temps d'accueil)",ic:"📔",fond:"var(--Pp)",texte:"var(--P)",sansAccueil:true},
+  formh:{l:"Formation (hors accueil)",ic:"📔",fond:"var(--Pp)",texte:"var(--P)"},
   sor:{l:"Sortie",ic:"🚌",fond:"var(--Sp)",texte:"var(--S)"},
   ferie:{l:"Jour férié",ic:"🏛️",fond:"var(--Rp)",texte:"var(--R)"},
   anniv:{l:"Anniversaire",ic:"🎁",fond:"var(--Tp)",texte:"var(--T)"},
@@ -206,7 +207,28 @@ const typeEv=(t)=>TYPES_EV[t]||TYPES_EV.rdv;
 // remuneration de l'assistante maternelle est maintenue, et l'employeur
 // facilitateur est rembourse ; la deduire couterait a l'assistante maternelle
 // un salaire auquel elle a droit.
-const RETENUE_TYPES={mal:true,fer:true,form:false,cng:false,rdv:false,sor:false,abs:false};
+const RETENUE_TYPES={mal:true,fer:true,form:false,formh:false,cng:false,rdv:false,sor:false,abs:false};
+
+// Allocation de formation de l'assistante maternelle.
+// Elle ne concerne QUE les heures de formation suivies hors du temps d'accueil :
+// sur le temps d'accueil, c'est le salaire qui est maintenu. Ce n'est pas une
+// ligne de bulletin — elle est versee par IPERIA a l'issue du parcours, pas par
+// le particulier employeur. L'application ne fait donc que l'estimer.
+// Montant : 5,57 EUR nets par heure depuis le 1er avril 2025 (forfait, et non
+// un pourcentage du salaire : ce pourcentage vaut pour la branche des salaries
+// du particulier employeur, pas pour les assistants maternels).
+// Types qui demandent un nombre d'heures a la saisie. Ce n'est pas la meme
+// liste que RETENUE_TYPES : une formation se compte en heures sans donner lieu
+// a retenue.
+const HEURES_TYPES={mal:true,fer:true,form:true,formh:true};
+
+const ALLOC_FORMATION_H = 5.57;
+// Plan de developpement des competences : jusqu'a 58 heures par an.
+const ALLOC_FORMATION_PLAFOND_H = 58;
+const allocationFormation = (heures) => {
+  const h = Math.max(0, Number(heures) || 0);
+  return Math.round(Math.min(h, ALLOC_FORMATION_PLAFOND_H) * ALLOC_FORMATION_H * 100) / 100;
+};
 const retenueAbsence=({salaireMensualise=0,anneeComplete=true,heuresAbsence=0,heuresMois=0,joursAbsence=0,joursMois=0})=>{
   const base=Number(salaireMensualise)||0;
   if(base<=0)return 0;
@@ -224,7 +246,8 @@ const THEMES_CAL={
   asmat:[
     {t:"mal",l:"Maladie",aide:"Vous êtes malade et n'accueillez pas",paie:"retenue"},
     {t:"fer",aide:"Journée sans accueil de votre fait",paie:"retenue"},
-    {t:"form",aide:"Formation professionnelle",paie:"maintien"},
+    {t:"form",aide:"Sur vos heures d'accueil — salaire maintenu",paie:"maintien"},
+    {t:"formh",aide:"En dehors de vos heures — allocation de formation",paie:"allocation"},
     {t:"cng",aide:"Vos congés"},
     {t:"rdv",aide:"Réunion, visite PMI, rendez-vous"},
     {t:"sor",aide:"Sortie avec les enfants"},
@@ -310,6 +333,31 @@ const TRACES = {
   fusee:'<path d="M12 3c3.5 2.5 5 6 5 9l-2.5 2.5h-5L7 12c0-3 1.5-6.5 5-9Z"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 17 8 21l3-1.5M14.5 17l1.5 4-3-1.5"/>',
   punaise:'<path d="M9 3h6"/><path d="M10 3v6L7.5 13h9L14 9V3"/><path d="M12 13v8"/>',
   valise:'<rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M9 7.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2.5"/><path d="M3 13h18"/>',
+  croix:'<path d="m6 6 12 12M18 6 6 18"/>',
+  ambulance:'<path d="M3 16V8a1 1 0 0 1 1-1h10v9"/><path d="M14 10h3.5l2.5 3v3h-2"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/><path d="M8 9v3M6.5 10.5h3"/>',
+  pompier:'<path d="M12 3c2.5 3 3.5 5 3.5 7a3.5 3.5 0 0 1-7 0c0-1 .3-1.9.8-2.8"/><path d="M6 13c-.6 1.2-1 2.4-1 3.6A7 7 0 0 0 19 16.6c0-1.2-.4-2.4-1-3.6"/>',
+  police:'<path d="M12 3l7 3v5c0 4.2-2.9 7.9-7 9-4.1-1.1-7-4.8-7-9V6Z"/><path d="M9.5 12.5 11 14l3.5-3.5"/>',
+  telephone:'<path d="M6 3h3l1.5 4.5-2 1.5a12 12 0 0 0 6.5 6.5l1.5-2L21 15v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 5.2 2 2 0 0 1 6 3Z"/>',
+  bouee:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6 9 9M15 15l3.4 3.4M18.4 5.6 15 9M9 15l-3.4 3.4"/>',
+  coeur:'<path d="M12 20s-7-4.4-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7-.8c0 4.8-7 12.8-7 12.8Z"/>',
+  medecin:'<circle cx="12" cy="7.5" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/><path d="M12 14.5v4M10 16.5h4"/>',
+  dossier:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+  plage:'<path d="M12 21V11"/><path d="M4 11a8 8 0 0 1 16 0Z"/><path d="M12 21c1.5-1.5 4-1.5 5.5 0"/>',
+  sourire:'<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+  pomme:'<path d="M12 8c-1.5-1.5-4-1.6-5.5 0S5 13 6.5 16.5 10 21 12 20c2 1 4-.5 5.5-3.5S19 9.5 17.5 8 13.5 6.5 12 8Z"/><path d="M12 8V5.5M12 5.5c1.5 0 2.5-1 2.5-2.5-1.5 0-2.5 1-2.5 2.5Z"/>',
+  biberon:'<path d="M10 3h4l-.5 2.5h-3Z"/><path d="M9.5 5.5h5L15 9v9a3 3 0 0 1-3 3 3 3 0 0 1-3-3V9Z"/><path d="M9.5 12h5M9.5 15h5"/>',
+  aube:'<circle cx="12" cy="14" r="3.5"/><path d="M3 19h18"/><path d="M12 7v2M5.5 11 7 12.2M18.5 11 17 12.2"/>',
+  crepuscule:'<circle cx="12" cy="14" r="3.5"/><path d="M3 19h18"/><path d="M12 21v-2"/><path d="M5 15H3M21 15h-2"/>',
+  enveloppe_recue:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/><path d="M12 13v5"/>',
+  bouton:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+  typo:'<path d="M5 6h14"/><path d="M12 6v12"/><path d="M9 18h6"/>',
+  oeil:'<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/>',
+  horloge:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/>',
+  bouclier:'<path d="M12 3l7 3v5.5c0 4.2-2.9 7.9-7 9.5-4.1-1.6-7-5.3-7-9.5V6Z"/>',
+  balance:'<path d="M12 4v16M7 20h10"/><path d="M4 8h16M12 4 6 8l-2.5 4a3.5 3.5 0 0 0 5 0Z"/><path d="m12 4 6 4 2.5 4a3.5 3.5 0 0 1-5 0Z"/>',
+  silence:'<path d="M11 5 6.5 9H3v6h3.5L11 19Z"/><path d="m16 9.5 4 5M20 9.5l-4 5"/>',
+  piece:'<path d="M9 4h6v3.5a1.5 1.5 0 0 0 3 0V4"/><path d="M4 9v6h3.5a1.5 1.5 0 0 1 0 3H4v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9h-2.5a1.5 1.5 0 0 1 0-3H20V5a1 1 0 0 0-1-1"/>',
+  loupe:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/>',
   imprimante:'<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M7 14h10v6H7Z"/>',
   main:'<path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a1.5 1.5 0 0 1 3 0"/>',
 };
@@ -329,7 +377,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -1623,7 +1671,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
             </button>
             <div style={{flex:1,minWidth:120}}>
               <div style={{fontWeight:700,color:"var(--b)",fontSize:13.5}}>{e.prenom}</div>
-              <div style={{color:status.c,fontWeight:600,fontSize:11.5,marginTop:2}}>{status.ic} {status.l}</div>
+              <div style={{color:status.c,fontWeight:600,fontSize:11.5,marginTop:2}}><IconeOuEmoji e={status.ic}/> {status.l}</div>
             </div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
               {none&&<button className="btn bP s"style={{padding:"6px 12px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
@@ -1804,8 +1852,11 @@ function AccueilParent({enfant,setPage,user}){
           <AvatarEnfant e={enfant} size={84}/>
           <div><div className="pf"style={{fontSize:20,fontWeight:600,color:"var(--b)"}}>{enfant.prenom} {enfant.nom}</div>
             <div style={{fontSize:13,color:"var(--l)"}}>{age(enfant.naissance)}</div>
-            {enfant.allergies.length>0&&<div style={{marginTop:6,cursor:"pointer"}}onClick={()=>setPage&&setPage("sante_complet")}>
-              {enfant.allergies.map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",marginRight:4,cursor:"pointer"}}>⚠️ {a}</span>)}
+            {/* « allergies » est nul tant que la fiche n'est pas remplie : sans
+                garde, l'accueil du parent ne s'affichait pas du tout. Les
+                données de démonstration en ont toujours, d'où l'angle mort. */}
+            {(enfant.allergies||[]).length>0&&<div style={{marginTop:6,cursor:"pointer"}}onClick={()=>setPage&&setPage("sante_complet")}>
+              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",marginRight:4,cursor:"pointer"}}>⚠️ {a}</span>)}
             </div>}
           </div>
         </div>
@@ -2865,12 +2916,12 @@ function Calendrier({enfants,role,pEId,user}){
   // Initialiser les événements après le chargement des enfants
   useEffect(()=>{
     if(enfants.length===0)return;
-    if(isDemoUser||role!=="asmat"){setEvs(isDemoUser?D.evenements:[]);return;}
+    if(isDemoUser){setEvs(D.evenements);return;}
     let vivant=true;
     (async()=>{
       const{data,error}=await supabase.from("evenements").select("*").order("date",{ascending:true});
       if(!vivant||error||!data)return;
-      setEvs(data.map(e=>({id:e.id,date:e.date,type:e.type,txt:e.texte,...(e.heures!=null?{heures:Number(e.heures)}:{})})));
+      setEvs(data.map(e=>({id:e.id,date:e.date,type:e.type,txt:e.texte,auteurId:e.auteur_id,eId:e.enfant_id,...(e.heures!=null?{heures:Number(e.heures)}:{})})));
     })();
     return()=>{vivant=false;};
   },[isDemoUser,enfants.length]);
@@ -2900,10 +2951,16 @@ function Calendrier({enfants,role,pEId,user}){
   // Filtrage selon le rôle
   const evsFiltres=role==="parent"
     ? evs.filter(e=>{
-        // Parent voit : ses propres absences + congés de l'assmat (cng) + fériés
-        if(e.type==="cng")return true; // Mes congés → toujours visible
+        // Toute journée sans accueil concerne le parent au premier chef :
+        // congé, fermeture, maladie ou formation de l'assistante maternelle,
+        // ce sont les jours où il devra trouver une solution.
+        if(typeEv(e.type).sansAccueil)return true;
+        // Une sortie est une information utile, pas une contrainte.
+        if(e.type==="sor")return true;
+        // Ses propres notes, et les absences de son enfant.
+        if(e.auteurId&&user?.id&&e.auteurId===user.id)return true;
+        if(e.eId&&pEId&&e.eId===pEId)return true;
         if(e.type==="abs"&&enfants.some(en=>e.txt&&e.txt.includes(en.prenom)))return true;
-        if(e.type==="abs"&&pEId&&e.eId===pEId)return true;
         return false;
       })
     : evs;
@@ -2975,11 +3032,16 @@ function Calendrier({enfants,role,pEId,user}){
 
   const addEvModal=()=>{
     if(!evForm.date||!evForm.txt.trim())return;
-    const heures=RETENUE_TYPES[evForm.type]?(parseFloat(evForm.heures)||heuresJourContrat):null;
+    const heures=HEURES_TYPES[evForm.type]?(parseFloat(evForm.heures)||heuresJourContrat):null;
     const nouveau={id:"ev"+Date.now(),date:evForm.date,type:evForm.type,txt:evForm.txt.trim(),...(heures!=null?{heures}:{})};
     setEvs(p=>[...p,nouveau]);
-    if(!isDemoUser&&role==="asmat")supabase.from("evenements")
-      .insert({asmat_id:user?.id,date:evForm.date,type:evForm.type,texte:evForm.txt.trim(),heures})
+    // L'assistante maternelle ecrit dans son propre calendrier ; le parent
+    // ecrit dans celui de l'assistante maternelle de son enfant, en son nom.
+    const asmatDuCalendrier=role==="asmat"?user?.id:(enfants.find(e=>e.id===(pEId||enfants[0]?.id))?.asmat_id||enfants[0]?.asmat_id);
+    if(!isDemoUser&&user?.id&&asmatDuCalendrier)supabase.from("evenements")
+      .insert({asmat_id:asmatDuCalendrier,auteur_id:user.id,
+        enfant_id:role==="parent"?(pEId||enfants[0]?.id||null):null,
+        date:evForm.date,type:evForm.type,texte:evForm.txt.trim(),heures})
       .select().single()
       .then(({data})=>{ if(data)setEvs(p=>p.map(x=>x.id===nouveau.id?{...x,id:data.id}:x)); })
       .catch(()=>{});
@@ -3087,16 +3149,21 @@ function Calendrier({enfants,role,pEId,user}){
         <div style={{display:"grid",gap:12}}>
           <div><label className="lbl">Date</label><input type="date" className="inp" value={evForm.date} onChange={e=>setEvForm(f=>({...f,date:e.target.value}))}/></div>
           <div><label className="lbl">Description</label><input className="inp" placeholder="Ex : RDV médecin, sortie au parc…" value={evForm.txt} onChange={e=>setEvForm(f=>({...f,txt:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addEvModal()}/></div>
-          {RETENUE_TYPES[evForm.type]&&<div>
-            <label className="lbl">Heures d'accueil perdues ce jour</label>
+          {HEURES_TYPES[evForm.type]&&<div>
+            <label className="lbl">{evForm.type==="formh"?"Heures de formation ce jour":"Heures d'accueil perdues ce jour"}</label>
             <input type="number" className="inp" min="0" max="24" step="0.5" value={evForm.heures??heuresJourContrat}
               onChange={e=>setEvForm(f=>({...f,heures:e.target.value}))}/>
             <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
-              Servira à calculer la retenue sur le salaire mensualisé, selon l'article 111 de la convention collective.
+              {RETENUE_TYPES[evForm.type]
+                ? "Servira à calculer la retenue sur le salaire mensualisé, selon l'article 111 de la convention collective."
+                : "Servira à estimer votre allocation de formation."}
             </div>
           </div>}
           {evForm.type==="form"&&<div style={{background:"var(--Pp)",color:"var(--P)",borderRadius:10,padding:"10px 12px",fontSize:12,lineHeight:1.55}}>
             Suivie sur le temps d'accueil, une formation ne se déduit pas : votre rémunération est maintenue et l'employeur facilitateur est remboursé.
+          </div>}
+          {evForm.type==="formh"&&<div style={{background:"var(--Pp)",color:"var(--P)",borderRadius:10,padding:"10px 12px",fontSize:12,lineHeight:1.55}}>
+            Hors temps d'accueil, il n'y a pas de salaire mais une allocation de formation de {ALLOC_FORMATION_H.toFixed(2).replace(".",",")} € nets par heure, versée par IPERIA à l'issue du parcours — pas par le parent employeur.
           </div>}
         </div>
         <div style={{display:"flex",gap:8,marginTop:18}}>
@@ -3923,7 +3990,7 @@ function Contrats({enfants,role,pEId,user}){
         <div className="card"style={{marginBottom:12}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Détail du contrat</div>
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
-            ["Jours",contrat.jours.join(", ")],["Horaires",contrat.horaires],
+            ["Jours",(contrat.jours||[]).join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
             ["Taux horaire",contrat.tauxHoraire.toFixed(2)+" €/h"],
             ["Indemnité entretien",contrat.entretien.toFixed(2)+" €/jour"],
@@ -4200,7 +4267,7 @@ function Sante({enfants,role,pEId,user}){
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {urgences.map((u,i)=>
               <a key={u.l+i}href={"tel:"+String(u.v).replace(/\s/g,"")}style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#fff",border:"1px solid #FCA5A5",borderRadius:11,textDecoration:"none",flexWrap:"wrap"}}>
-                <span style={{fontSize:17}}>{u.ic}</span>
+                <span style={{fontSize:17}}><IconeOuEmoji e={u.ic}/></span>
                 <span style={{fontSize:12.5,color:"#7F1D1D",flex:1,fontWeight:600,minWidth:130,lineHeight:1.3,overflowWrap:"normal"}}>{u.l}</span>
                 <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
@@ -5151,7 +5218,7 @@ function Recap({enfants,role,pEId}){
         ["🌱","Étapes atteintes",ms.filter(m=>m.ok).length+" / "+ms.length+" jalons","var(--P)"],
         ["📋","Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges","var(--T)"],
       ].map(([ic,ti,su,c])=><div key={ti}className="card"style={{display:"flex",gap:10,alignItems:"center"}}>
-        <div style={{fontSize:26}}>{ic}</div>
+        <div style={{fontSize:26}}><IconeOuEmoji e={ic}/></div>
         <div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{ti}</div>
           <div className="pf"style={{fontSize:15,color:c,fontWeight:700}}>{su}</div></div>
       </div>)}
@@ -5177,7 +5244,7 @@ function Recap({enfants,role,pEId}){
         </div>
         <div style={{background:"#f8f4ef",padding:10,borderRadius:6,marginBottom:12}}>
           <div style={{fontWeight:700,marginBottom:4}}>👶 {enfant.prenom} {enfant.nom} - {age(enfant.naissance)}</div>
-          <div style={{fontSize:11,color:"#666"}}>Période d'accueil : {enfant.contrat?.horaires} · {enfant.contrat?.jours.join(", ")}</div>
+          <div style={{fontSize:11,color:"#666"}}>Période d'accueil : {enfant.contrat?.horaires} · {(enfant.contrat?.jours||[]).join(", ")}</div>
         </div>
         <table>
           <thead><tr><th>Section</th><th>Détail</th><th>Valeur</th></tr></thead>
@@ -5635,7 +5702,7 @@ function Documents({enfants,role,pEId,user}){
           background:cat===c.key?c.c||"var(--b)":"transparent",
           color:cat===c.key?"#fff":c.c||"var(--m)",
           borderColor:cat===c.key?c.c||"var(--b)":c.bg||"var(--br)",
-        }}>{c.ic} {c.l}</button>
+        }}><IconeOuEmoji e={c.ic}/> {c.l}</button>
       ))}
       {/* Enfant filter pour asmat */}
       {role==="asmat"&&<select value={eId}onChange={e=>setEId(e.target.value)}className="sel"style={{width:"auto",padding:"5px 10px",fontSize:12}}>
@@ -5661,7 +5728,7 @@ function Documents({enfants,role,pEId,user}){
       <div key={c.key}style={{marginBottom:20}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
           <div style={{padding:"4px 12px",borderRadius:20,background:c.bg,color:c.c,fontSize:12,fontWeight:700,border:"1px solid "+c.c+"33"}}>
-            {c.ic} {c.l}
+            <IconeOuEmoji e={c.ic}/> {c.l}
           </div>
           <div style={{flex:1,height:1,background:"linear-gradient(90deg,var(--br),transparent)"}}/>
           <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{c.count}</span>
@@ -5802,7 +5869,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
   useEffect(()=>{
     if(!moisSelKey){setAbsAsmat([]);return;}
     if(isDemoBull){
-      setAbsAsmat(D.evenements.filter(e=>RETENUE_TYPES[e.type]&&String(e.date).startsWith(moisSelKey)));
+      setAbsAsmat(D.evenements.filter(e=>HEURES_TYPES[e.type]&&String(e.date).startsWith(moisSelKey)));
       return;
     }
     let vivant=true;
@@ -5810,7 +5877,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       const{data}=await supabase.from("evenements").select("*")
         .gte("date",moisSelKey+"-01").lte("date",moisSelKey+"-31");
       if(!vivant)return;
-      setAbsAsmat((data||[]).filter(e=>RETENUE_TYPES[e.type]).map(e=>({...e,heures:Number(e.heures)||0})));
+      setAbsAsmat((data||[]).filter(e=>HEURES_TYPES[e.type]).map(e=>({...e,heures:Number(e.heures)||0})));
     })();
     return()=>{vivant=false;};
   },[moisSelKey,isDemoBull]);
@@ -5878,8 +5945,14 @@ function BulletinSalaire({enfants,role,pEId,user}){
   // bati sur les pointages reels, la journee non travaillee ne figure deja plus
   // dans les heures : la deduire une seconde fois retirerait deux fois la meme
   // journee. C'est le piege principal de ce calcul.
-  const heuresAbsAsmat=absAsmat.reduce((t,a)=>t+(Number(a.heures)||0),0);
-  const joursAbsAsmat=absAsmat.length;
+  const absRetenue=absAsmat.filter(a=>RETENUE_TYPES[a.type]);
+  const heuresAbsAsmat=absRetenue.reduce((t,a)=>t+(Number(a.heures)||0),0);
+  const joursAbsAsmat=absRetenue.length;
+  // Formation hors temps d'accueil : pas de salaire, mais une allocation.
+  // Elle n'est pas versee par le parent employeur : elle ne peut donc pas etre
+  // une ligne du bulletin, seulement une estimation affichee a cote.
+  const heuresFormationHors=absAsmat.filter(a=>a.type==="formh").reduce((t,a)=>t+(Number(a.heures)||0),0);
+  const allocFormation=allocationFormation(heuresFormationHors);
   const anneeComplete=contrat.anneeComplete!==false;
   const retenue=useRealHours?0:retenueAbsence({
     salaireMensualise:brut,
@@ -6185,6 +6258,20 @@ function BulletinSalaire({enfants,role,pEId,user}){
       ⏳ Bulletin non encore envoyé pour ce mois
       {useRealHours?<span style={{marginLeft:8,fontSize:11,color:"var(--S)"}}>· {heuresMoisReel.heures} h pointées sur {heuresMoisReel.jours} j</span>
         :<span style={{marginLeft:8,fontSize:11,color:"var(--l)",fontStyle:"italic"}}>· basé sur le contrat (aucun pointage)</span>}
+    </div>}
+
+    {/* L'allocation de formation n'est pas une ligne de salaire : elle est
+        versée par IPERIA, pas par le parent employeur. Elle s'affiche donc à
+        côté du bulletin, jamais dedans. */}
+    {allocFormation>0&&<div style={{background:"var(--Pp)",border:"1px solid var(--P)",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+      <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:4,display:"flex",alignItems:"center",gap:7}}>
+        <IconeOuEmoji e="📔"/> Allocation de formation — {allocFormation.toFixed(2)} €
+      </div>
+      <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55}}>
+        {heuresFormationHors} h de formation hors temps d'accueil × {ALLOC_FORMATION_H.toFixed(2).replace(".",",")} € nets.
+        Versée par IPERIA à l'issue de votre parcours — elle ne figure pas sur le bulletin et n'est pas payée par le parent employeur.
+        {heuresFormationHors>ALLOC_FORMATION_PLAFOND_H&&" Plafonnée à "+ALLOC_FORMATION_PLAFOND_H+" h par an."}
+      </div>
     </div>}
 
     {/* BULLETIN #9b - reglages abattement : AEEH + indemnite repas */}
@@ -6638,7 +6725,7 @@ function CourriersTypes({enfants,pEId,user}){
         {filtres.map(c=><div key={c.id}className="card card-lift"onClick={()=>setSelId(c.id)}style={{cursor:"pointer",borderLeft:(c.cat==="Financier"?"4px solid var(--R)":c.cat==="PMI"?"4px solid var(--B)":c.cat==="Congés"?"4px solid var(--G)":"4px solid var(--T)")}}>
           <div style={{display:"flex",gap:10,alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",gap:10,alignItems:"center"}}>
-              <span style={{fontSize:18}}>{c.ic}</span>
+              <span style={{fontSize:18}}><IconeOuEmoji e={c.ic}/></span>
               <div>
                 <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.titre}</div>
                 <span className="badge"style={{background:"var(--c)",color:"var(--l)",fontSize:11,marginTop:3}}>{c.cat}</span>
@@ -6651,7 +6738,7 @@ function CourriersTypes({enfants,pEId,user}){
     </>:<>
       <button onClick={()=>setSelId(null)}style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontWeight:700,fontSize:13,marginBottom:12,padding:0}}>← Retour aux modèles</button>
       <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{sel.ic} {sel.titre}</div>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e={sel.ic}/> {sel.titre}</div>
         <div style={{fontSize:11,color:"var(--l)"}}>{sel.cat} · contexte rempli automatiquement (nom, agrément, enfant)</div>
       </div>
       {placeholders.length>0&&<div className="card"style={{marginBottom:14}}>
@@ -6805,7 +6892,7 @@ function Parrainage({user}){
         <div key={n}style={{display:"flex",gap:12,alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
           <div style={{width:28,height:28,borderRadius:"50%",background:"var(--Tp)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:"var(--T)",fontSize:13,flexShrink:0}}>{n}</div>
           <span style={{flex:1,fontSize:13,color:"var(--b)"}}>{t}</span>
-          <span style={{fontSize:18}}>{ic}</span>
+          <span style={{fontSize:18}}><IconeOuEmoji e={ic}/></span>
         </div>)}
     </div>
     <div className="card">
@@ -7198,7 +7285,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
   return <div className="fi">
     {role==="asmat"?<>
       <div style={{display:"flex",gap:6,marginBottom:12}}>
-        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--accent)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--accent)",borderColor:groupeActif.id===g.id?"var(--accent)":"var(--accent-pale)"}}>{g.ic} {g.l}</button>)}
+        {GROUPES_FIN.map(g=><button key={g.id} onClick={()=>choisirGroupe(g.id)} style={{padding:"9px 22px",borderRadius:12,border:"1.5px solid",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",background:groupeActif.id===g.id?"var(--accent)":"#fff",color:groupeActif.id===g.id?"#fff":"var(--accent)",borderColor:groupeActif.id===g.id?"var(--accent)":"var(--accent-pale)"}}><IconeOuEmoji e={g.ic}/> {g.l}</button>)}
       </div>
       <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)",overflowX:"auto",scrollbarWidth:"none"}}>
         {sousOnglets.filter(s=>groupeActif.tabs.includes(s.id)).map(s=><button key={s.id}onClick={()=>setSection(s.id)}style={{
@@ -7708,7 +7795,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
         {ic:"⏰",v:totalH+"h",l:"Heures ce mois",c:"var(--S)",p:"admin_finances"},
         {ic:"😊",v:avg+"/5",l:"Humeur moyenne",c:avgColor,p:"journal_complet"},
       ].map(k=><div key={k.l}className="card card-lift"onClick={()=>setPage&&setPage(k.p)}style={{textAlign:"center",cursor:"pointer"}}>
-        <div style={{fontSize:22,marginBottom:4}}>{k.ic}</div>
+        <div style={{fontSize:22,marginBottom:4}}><IconeOuEmoji e={k.ic}/></div>
         <div className="pf"style={{fontSize:22,fontWeight:600,color:k.c}}>{k.v}</div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:3,lineHeight:1.3}}>{k.l}</div>
       </div>)}
@@ -9183,7 +9270,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           <div key={p}onClick={()=>setPage(p)}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)",cursor:"pointer"}}
             onMouseEnter={e=>e.currentTarget.style.background="var(--c)"}
             onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <span style={{fontSize:13,color:"var(--b)"}}>{ic} {l}</span>
+            <span style={{fontSize:13,color:"var(--b)"}}><IconeOuEmoji e={ic}/> {l}</span>
             <span style={{color:"var(--l)",fontSize:12}}>→</span>
           </div>)}
         <div style={{marginTop:12,padding:"10px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
@@ -9575,7 +9662,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     {/* Coup d'oeil - rythme de la journee en un regard (facon Pandi-Panda) */}
     <div className="card"style={{padding:"var(--pad-carte-conteneur)",marginBottom:12,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:0,overflow:"hidden"}}>
       {coupOeil.map((k,i)=><div key={k.l}style={{padding:"12px 6px",textAlign:"center",borderLeft:i>0?"1px solid var(--br)":"none"}}>
-        <div style={{fontSize:20,lineHeight:1}}>{k.ic}</div>
+        <div style={{fontSize:20,lineHeight:1}}><IconeOuEmoji e={k.ic}/></div>
         {k.v&&<div className="pf"style={{fontSize:14,fontWeight:700,color:k.c,marginTop:5,lineHeight:1.1,wordBreak:"break-word"}}>{k.v}</div>}
         <div style={{fontSize:11,color:"var(--l)",marginTop:3,fontWeight:600,textTransform:"uppercase",letterSpacing:".3px"}}>{k.l}</div>
       </div>)}
@@ -9609,7 +9696,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
         :<div>
           {moments.map((m,i)=><div key={i}style={{display:"flex",gap:12}}>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
-              <div style={{width:34,height:34,borderRadius:"50%",background:m.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{m.ic}</div>
+              <div style={{width:34,height:34,borderRadius:"50%",background:m.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}><IconeOuEmoji e={m.ic}/></div>
               {i<moments.length-1&&<div style={{flex:1,width:2,background:"var(--br)",margin:"3px 0"}}/>}
             </div>
             <div style={{flex:1,paddingBottom:i<moments.length-1?14:2}}>
@@ -10024,7 +10111,7 @@ function ListeAttente({role,enfants,user}){
                 </span>
               </div>
               <div style={{fontSize:12,color:"var(--m)"}}>
-                Pour <strong>{d.enfant.prenom}</strong> · {ageEnfant(d.enfant.naissance)} · {d.contrat.jours.length}j/sem · {d.contrat.heuresHebdo}h/sem
+                Pour <strong>{d.enfant.prenom}</strong> · {ageEnfant(d.enfant.naissance)} · {(d.contrat.jours||[]).length}j/sem · {d.contrat.heuresHebdo}h/sem
               </div>
               <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>
                 Souhaite commencer le {fmt(d.contrat.debut)}
@@ -10074,7 +10161,7 @@ function ListeAttente({role,enfants,user}){
           <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginTop:14,marginBottom:8}}>Contrat souhaité</div>
           {[
             ["📅 Début",fmt(sel.contrat.debut)],
-            ["📆 Jours",sel.contrat.jours.join(", ")],
+            ["📆 Jours",(sel.contrat.jours||[]).join(", ")],
             ["⏰ Horaires",sel.contrat.heureArrivee+" → "+sel.contrat.heureDepart],
             ["⏱ Heures/semaine",sel.contrat.heuresHebdo+"h"],
             ["📋 Durée",sel.contrat.anneeComplete?"Année complète":"Partielle"],
@@ -10574,7 +10661,7 @@ function PlanningPeriscolaire({enfants,role,pEId}){
       {PERIODES.map(per=><div key={per.id}className="card"style={{borderLeft:"4px solid var(--B)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div>
-            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{per.ic} {per.l}</div>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e={per.ic}/> {per.l}</div>
             <div style={{fontSize:12,color:"var(--l)"}}>{per.h}</div>
           </div>
           {typeof p[per.id]==="boolean"&&<label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
@@ -10619,7 +10706,7 @@ function PlanningPeriscolaire({enfants,role,pEId}){
             return <div key={per.id}style={{
               background:"var(--Bp)",borderRadius:6,padding:"3px 4px",
               fontSize:11,color:"var(--B)",fontWeight:600,marginBottom:3
-            }}>{per.ic}</div>;
+            }}><IconeOuEmoji e={per.ic}/></div>;
           })}
           {j==="Mercredi"&&p.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:11,color:"var(--S)",fontWeight:600}}>Journée</div>}
         </div>)}
@@ -11028,7 +11115,7 @@ const jsPDF=await chargerJsPDF();
             ["✅","Récapitulatif Pajemploi par mois"],
             ["✅","Bilan pédagogique annuel de l'enfant"],
           ].map(([ic,t])=><div key={t}style={{display:"flex",gap:10,padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-            <span style={{color:"var(--S)"}}>{ic}</span>
+            <span style={{color:"var(--S)"}}><IconeOuEmoji e={ic}/></span>
             <span style={{color:"var(--m)"}}>{t}</span>
           </div>)}
         </div>
@@ -12028,7 +12115,7 @@ function Support({role,user}){
       <div style={{marginTop:14,display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
         {[["📧","support@timat.app"],["⏱️",isPro?"Réponse < 12h":"Réponse < 24h"],["📚","Centre d'aide 24/7"]].map(([ic,t])=>
           <div key={t}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:10,padding:"10px 16px",fontSize:12,color:"var(--m)",display:"flex",gap:8,alignItems:"center"}}>
-            <span>{ic}</span><span>{t}</span>
+            <span><IconeOuEmoji e={ic}/></span><span>{t}</span>
           </div>)}
       </div>
     </div>}
@@ -12104,7 +12191,7 @@ function OutilsHub({setPage}){
         style={{textAlign:"left",background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:18,cursor:"pointer",transition:"transform .15s,box-shadow .15s,border-color .15s",display:"flex",flexDirection:"column",gap:10,minHeight:170}}
         onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 30px "+o.c+"22";e.currentTarget.style.borderColor=o.c;}}
         onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor="var(--br)";}}>
-        <div style={{width:52,height:52,borderRadius:15,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:27}}>{o.ic}</div>
+        <div style={{width:52,height:52,borderRadius:15,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:27}}><IconeOuEmoji e={o.ic}/></div>
         <div>
           <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:4}}>{o.t}</div>
           <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>{o.d}</div>
@@ -12253,7 +12340,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
             }}
               onMouseEnter={e=>e.currentTarget.style.background="var(--c)"}
               onMouseLeave={e=>e.currentTarget.style.background=n.lu?"transparent":"var(--Tp)"}>
-              <span style={{fontSize:16,flexShrink:0}}>{n.ic}</span>
+              <span style={{fontSize:16,flexShrink:0}}><IconeOuEmoji e={n.ic}/></span>
               <div style={{flex:1}}>
                 <div style={{fontSize:12,color:"var(--b)",fontWeight:n.lu?400:700,lineHeight:1.4}}>{n.txt}</div>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Aujourd'hui</div>
@@ -12388,7 +12475,7 @@ function DemoScreen({page}){
       <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
       <div style={{display:"flex",gap:6,marginTop:10}}>{["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:28,height:28,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>{e}</span>)}</div>
     </div>
-    {[["⏰","Pointage du jour","à jour","#5DA9A1"],["✍️","1 contrat","à signer","#E49178"],["📩","Message du parent","nouveau","#2E4859"]].map(([ic,a,b,c],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={chip(c)}>{b}</span></div>)}
+    {[["⏰","Pointage du jour","à jour","#5DA9A1"],["✍️","1 contrat","à signer","#E49178"],["📩","Message du parent","nouveau","#2E4859"]].map(([ic,a,b,c],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={chip(c)}>{b}</span></div>)}
   </div>;
   if(page==="calendrier")return <div>
     <Title>Planning de la semaine</Title>
@@ -12402,7 +12489,7 @@ function DemoScreen({page}){
       <div style={{fontSize:26,fontWeight:800,fontFamily:"'Fraunces',serif",marginTop:2}}>1 248,60 €</div>
       <div style={{fontSize:11.5,opacity:.85,marginTop:2}}>Mensualisation + heures + indemnités</div>
     </div>
-    {[["🧮","Indemnités d'entretien","64,00 €"],["🍽️","Repas","33,00 €"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={{fontSize:11,fontWeight:700,color:"#5DA9A1"}}>{b}</span></div>)}
+    {[["🧮","Indemnités d'entretien","64,00 €"],["🍽️","Repas","33,00 €"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={{fontSize:11,fontWeight:700,color:"#5DA9A1"}}>{b}</span></div>)}
   </div>;
   if(page==="messagerie")return <div>
     <Title>Échange avec Marie 💬</Title>
@@ -12416,7 +12503,7 @@ function DemoScreen({page}){
   if(page==="sante_complet")return <div>
     <Title>Santé & urgences 🩺</Title>
     <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Allergie : arachides<br/>💊 Aucun traitement en cours</div></div>
-    {[["🚑","SAMU","15"],["🧑‍⚕️","Médecin traitant","01 23 45 67"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8,borderColor:"#FCA5A5"}}><span style={{fontSize:16}}>{ic}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#7F1D1D"}}>{a}</span><span style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>{b}</span></div>)}
+    {[["🚑","SAMU","15"],["🧑‍⚕️","Médecin traitant","01 23 45 67"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8,borderColor:"#FCA5A5"}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#7F1D1D"}}>{a}</span><span style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>{b}</span></div>)}
   </div>;
   return <div style={{padding:20,textAlign:"center",color:"#8A7A70",fontSize:12}}>Écran disponible dans l'application.</div>;
 }
@@ -12461,7 +12548,7 @@ function HeroPhone({screen}){
           {/* mini lignes */}
           {[["⏰","Pointage","à jour"],["💶","Salaire du mois","calculé"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=>
             <div key={i}style={{margin:"8px 12px 0",background:"#fff",border:"1px solid #EFE7DF",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:17}}>{ic}</span>
+              <span style={{fontSize:17}}><IconeOuEmoji e={ic}/></span>
               <span style={{flex:1,fontSize:12,color:"#2E4859",fontWeight:600}}>{a}</span>
               <span style={{fontSize:11,color:"#5DA9A1",fontWeight:700,background:"#5DA9A118",padding:"2px 8px",borderRadius:8}}>{b}</span>
             </div>
@@ -12486,7 +12573,7 @@ function NotifBulle({slot,pool,i}){
   const n=pool[idx%pool.length];
   return (
       <div style={{position:"absolute",top:slot.top,left:slot.left,maxWidth:150,background:"#fff",borderRadius:12,padding:"8px 12px",boxShadow:"0 12px 32px rgba(13,27,42,.22)",display:"flex",alignItems:"center",gap:8,zIndex:3,opacity:0,animation:"notifpop 4.2s ease-in-out infinite",animationDelay:slot.d,animationFillMode:"backwards"}}>
-        <span style={{fontSize:15,flexShrink:0}}>{n.ic}</span>
+        <span style={{fontSize:15,flexShrink:0}}><IconeOuEmoji e={n.ic}/></span>
         <span style={{fontSize:11.5,fontWeight:700,color:"#2E4859",lineHeight:1.25}}>{n.t}</span>
       </div>
   );
@@ -12887,7 +12974,7 @@ function OutilsGratuits({onClose,onCta}){
             style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"16px 12px",cursor:"pointer",textAlign:"center",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
             onMouseEnter={e=>{if(!on){e.currentTarget.style.borderColor=o.c+"88";e.currentTarget.style.transform="translateY(-1px)";}}}
             onMouseLeave={e=>{if(!on){e.currentTarget.style.borderColor="#E8E4E0";e.currentTarget.style.transform="none";}}}>
-            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}>{o.ic}</div>
+            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}><IconeOuEmoji e={o.ic}/></div>
             <div style={{fontWeight:700,fontSize:13.5,color:on?o.c:"#2E4859"}}>{o.t}</div>
           </button>;})}
         </div>
@@ -13551,7 +13638,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <button key={target} onClick={()=>{setMenuOpen(false);if(target==="parents-page")window.location.href="/parents";else if(target==="outils")window.location.href="/outils.html";else if(target==="boutique")window.location.href="/boutique.html";else if(target==="login")setShowModal(true);else if(target==="blog-section")window.location.href="/blog";else document.getElementById(target)?.scrollIntoView({behavior:"smooth"});}}
                   style={{ width:"100%",background: "transparent", color: "#2E4859", border: "none", padding: "11px 12px", cursor: "pointer", textAlign: "left", borderRadius: 12, display:"flex", alignItems:"center", gap:13, transition:"background .15s, transform .12s, box-shadow .15s" }}
                   onMouseEnter={e=>{e.currentTarget.style.background=c+"14";e.currentTarget.style.transform="translateX(4px)";e.currentTarget.style.boxShadow="0 4px 14px "+c+"22";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
-                  <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{ic}</span>
+                  <span style={{fontSize:22,width:42,height:42,borderRadius:12,background:c+"1A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><IconeOuEmoji e={ic}/></span>
                   <span style={{minWidth:0}}>
                     <span style={{display:"block",fontSize:14.5,fontWeight:700}}>{label}</span>
                     <span style={{display:"block",fontSize:12,color:"#5F7A86",marginTop:1}}>{desc}</span>
@@ -13641,7 +13728,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               return <FadeIn key={i} delay={i*60}>
                 <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid rgba(255,255,255,.08)" }}>
                   <div style={{ padding:"12px 12px", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#fff", lineHeight:1.3 }}>{ic} {t}</span>
+                    <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#fff", lineHeight:1.3 }}><IconeOuEmoji e={ic}/> {t}</span>
                     {st&&<span style={{ display:"block", fontSize:11, color:L.tableSubColor||"rgba(255,255,255,.5)", marginTop:2, lineHeight:1.35 }}>{st}</span>}
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
@@ -13686,7 +13773,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div className="demo-tabs">
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
                   style={{display:"flex",alignItems:"center",gap:9,padding:"12px 13px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#E49178,#C84B31)":"rgba(255,255,255,.06)",color:on?"#fff":"rgba(255,255,255,.72)",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(255,255,255,.06)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
-                  <span style={{fontSize:on?20:18,flexShrink:0,transition:"font-size .2s"}}>{s.ic}</span>
+                  <span style={{fontSize:on?20:18,flexShrink:0,transition:"font-size .2s"}}><IconeOuEmoji e={s.ic}/></span>
                   <span style={{fontSize:13,fontWeight:700,lineHeight:1.2}}>{s.label}</span>
                 </button>;})}
               </div>
@@ -13790,7 +13877,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
                   <summary onClick={e=>{if(isWeb)e.preventDefault();}} style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px", cursor:isWeb?"default":"pointer", listStyle:"none" }}>
-                    <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}>{d.ic}</span>
+                    <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}><IconeOuEmoji e={d.ic}/></span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
                       <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
@@ -13830,7 +13917,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   <div key={st.n} style={{ display:"flex", gap:12, alignItems:"flex-start", background:"#FAF6F1", borderRadius:12, border:"1px solid #F0E7DC", padding:"12px 14px" }}>
                     <span style={{ width:24, height:24, borderRadius:"50%", background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", fontSize:12, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{st.n}</span>
                     <span style={{ flex:1, minWidth:0 }}>
-                      <span style={{ display:"block", fontFamily:fTitle, fontSize:14.5, fontWeight:700, color:"#2E4859", marginBottom:2 }}>{st.ic} {st.t}</span>
+                      <span style={{ display:"block", fontFamily:fTitle, fontSize:14.5, fontWeight:700, color:"#2E4859", marginBottom:2 }}><IconeOuEmoji e={st.ic}/> {st.t}</span>
                       <span style={{ display:"block", fontSize:12.5, color:"#7A6A60", lineHeight:1.55 }}>{st.d}</span>
                     </span>
                   </div>
@@ -14308,7 +14395,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8,margin:"12px 0"}}>
                 {[["📋","Droit d'accès","Obtenir une copie de vos données"],["✏️","Droit de rectification","Corriger vos informations"],["🗑️","Droit à l'effacement","Supprimer votre compte et vos données"],["📦","Droit à la portabilité","Exporter vos données au format standard"],["🚫","Droit d'opposition","Vous opposer à certains traitements"],["⏸️","Droit à la limitation","Limiter temporairement le traitement"]].map(([ic,titre,desc])=>
                   <div key={titre}style={{background:"#F4F7FA",borderRadius:10,padding:12}}>
-                    <div style={{fontSize:16,marginBottom:4}}>{ic}</div>
+                    <div style={{fontSize:16,marginBottom:4}}><IconeOuEmoji e={ic}/></div>
                     <div style={{fontSize:12,fontWeight:700,color:"#2E4859"}}>{titre}</div>
                     <div style={{fontSize:11,color:"#5F7A86"}}>{desc}</div>
                   </div>
@@ -14752,7 +14839,7 @@ function AjouterEnfantModale({user,onClose}){
   const toggleJour=(j)=>setContrat(c=>({...c,jours:c.jours.includes(j)?c.jours.filter(x=>x!==j):[...c.jours,j]}));
 
   const valideEtape0=()=>enfant.prenom.trim()&&enfant.naissance;
-  const valideEtape1=()=>contrat.debut&&contrat.heuresHebdo>0&&contrat.tauxHoraire>0&&contrat.jours.length>0;
+  const valideEtape1=()=>contrat.debut&&contrat.heuresHebdo>0&&contrat.tauxHoraire>0&&(contrat.jours||[]).length>0;
 
   const sauvegarder=async()=>{
     if(!valideEtape0()||!valideEtape1()){
@@ -16999,7 +17086,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
           {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
             padding:"5px 10px",borderRadius:14,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11,
             background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",color:sec===s.id?"#fff":"var(--m)",transition:"all .15s"
-          }}>{s.ic} {s.l}</button>)}
+          }}><IconeOuEmoji e={s.ic}/> {s.l}</button>)}
         </div>}
 
         {/* ====================== HERO ====================== */}
@@ -17520,7 +17607,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               {k:"periscolaire",l:"Planning périscolaire",ic:"🚌"},
               {k:"rappelsVaccins",l:"Rappels vaccins",ic:"💉"},
             ].map(({k,l,ic})=><div key={k}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
-              <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{ic} {l}</span>
+              <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}><IconeOuEmoji e={ic}/> {l}</span>
               <div onClick={()=>setFeat(k,!cfg.feats[k])}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:cfg.feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"}}>
                 <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
               </div>
@@ -17640,7 +17727,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               return <div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,padding:"12px 14px",border:"1px solid var(--br)",borderRadius:10,marginBottom:8,background:"var(--w)"}}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
-                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,background:reasonInfo.bg,color:reasonInfo.col}}>{reasonInfo.ic} {reasonInfo.l}</span>
+                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,background:reasonInfo.bg,color:reasonInfo.col}}><IconeOuEmoji e={reasonInfo.ic}/> {reasonInfo.l}</span>
                     <span style={{fontSize:11,color:"var(--l)"}}>{sizeKo} ko</span>
                   </div>
                   <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{dateStr}</div>
@@ -18512,7 +18599,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
         {GROUPS.map(g=><div key={g.grp}>
           <div className="bo-grp">{g.grp}</div>
           {g.items.map(it=><button key={it.id} className={"bo-tab"+(top===it.id?" on":"")} onClick={()=>pickTop(it.id)}>
-            <span className="ic">{it.ic}</span>{it.l}{it.soon&&<span className="soon">à venir</span>}
+            <span className="ic"><IconeOuEmoji e={it.ic}/></span>{it.l}{it.soon&&<span className="soon">à venir</span>}
           </button>)}
         </div>)}
         <div className="bo-foot">
@@ -18526,8 +18613,8 @@ function BackofficeShell({user,appConfig,setAppConfig}){
           <span style={{fontWeight:800,fontSize:15,color:"#2E4A5A"}}>TiMat · Admin</span>
           <a href="/" style={{marginLeft:"auto",fontSize:12.5,color:"#6B4F5A",textDecoration:"none",fontWeight:600,padding:"11px 8px",display:"inline-flex",alignItems:"center"}}>← Site</a>
         </div>
-        {top==="contenu"&&<div className="bo-subnav">{CONTENU_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}>{s.ic} {s.l}</button>)}</div>}
-        {top==="sections"&&<div className="bo-subnav">{SECTIONS_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}>{s.ic} {s.l}</button>)}</div>}
+        {top==="contenu"&&<div className="bo-subnav">{CONTENU_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}><IconeOuEmoji e={s.ic}/> {s.l}</button>)}</div>}
+        {top==="sections"&&<div className="bo-subnav">{SECTIONS_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}><IconeOuEmoji e={s.ic}/> {s.l}</button>)}</div>}
         <div style={{display:isBO?"block":"none",flex:1,minWidth:0}}>
           <Backoffice user={user} appConfig={appConfig} setAppConfig={setAppConfig} secProp={sec} setSecProp={setSec} hideTabBar setPage={goSite}/>
         </div>

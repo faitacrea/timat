@@ -16,7 +16,8 @@
     "parcours:parent": "node scripts/parcours-visuel.mjs http://localhost:4173 /tmp/timat-parent parent",
     "parcours:backoffice": "node scripts/parcours-backoffice.mjs",
     "test:retenue": "node scripts/test-retenue.mjs",
-    "parcours:bulletin": "node scripts/parcours-bulletin.mjs"
+    "parcours:bulletin": "node scripts/parcours-bulletin.mjs",
+    "parcours:calendrier-parent": "node scripts/parcours-calendrier-parent.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
