@@ -4802,7 +4802,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
     setToast("⏳ Génération du PDF…");
     try{
       const jsPDF=await chargerJsPDF();
-      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
       // === Constantes layout ===
       const PW=210,PH=297,MX=18,MTOP=15,MBOT=20;
       const CW=PW-2*MX; // largeur contenu = 174mm
@@ -4823,6 +4823,13 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       const setFill=(c)=>doc.setFillColor(c[0],c[1],c[2]);
       const setText=(c)=>doc.setTextColor(c[0],c[1],c[2]);
       const setDraw=(c)=>doc.setDrawColor(c[0],c[1],c[2]);
+      // jsPDF ecrit avec une police standard encodee sur un seul octet
+      // (WinAnsi). Un caractere hors de ce jeu — « ▸ » (U+25B8), « ✓ » (U+2713)
+      // — fait basculer TOUTE la ligne en UTF-16 : ni le symbole ni le texte
+      // qui suit ne s'impriment. On dessine donc ces deux marques au trait.
+      const puceTriangle=(x,yy,c)=>{doc.setFillColor(c[0],c[1],c[2]);doc.triangle(x,yy-2.3,x,yy+0.5,x+2.5,yy-0.9,"F");};
+      const marqueCoche=(x,yy,c)=>{const l=doc.getLineWidth();setDraw(c);doc.setLineWidth(0.5);
+        doc.line(x,yy-1.3,x+1.2,yy-0.1);doc.line(x+1.2,yy-0.1,x+3.4,yy-3.2);doc.setLineWidth(l);};
       const ensureSpace=(h)=>{if(y+h>PH-MBOT){doc.addPage();y=MTOP;}};
       const sectionHeader=(num,title)=>{
         ensureSpace(14);
@@ -4949,13 +4956,15 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
         Object.entries(jalParCat).forEach(([cat,items])=>{
           ensureSpace(8);
           doc.setFontSize(10);doc.setFont("helvetica","bold");setText(C.terra);
-          doc.text("▸ "+cat+" ("+items.length+")",MX,y);
+          puceTriangle(MX,y,C.terra);
+          doc.text(cat+" ("+items.length+")",MX+4.5,y);
           y+=5;
           doc.setFontSize(9);doc.setFont("helvetica","normal");
           items.forEach(j=>{
             ensureSpace(5);
             setText(C.txt);
-            doc.text("✓ "+(j.texte||""),MX+6,y);
+            marqueCoche(MX+6,y,C.vert);
+            doc.text(j.texte||"",MX+11,y);
             setText(C.gris);doc.setFontSize(8);
             doc.text(fmtDate(j.date),PW-MX-2,y,{align:"right"});
             doc.setFontSize(9);
@@ -5431,6 +5440,26 @@ const smicHoraireAu=(d)=>{
 // depuis un CDN : le PDF continue de ne peser sur aucun chargement de page
 // (Vite en fait un morceau separe), tout en restant generable hors ligne et
 // sans dependre d'un tiers dont on ne maitrise ni la version ni la duree de vie.
+// Tout texte qui part dans un PDF passe par ce filtre.
+//
+// jsPDF ecrit avec une police standard codee sur un seul octet (WinAnsi). Des
+// qu'une chaine contient un caractere hors de ce jeu, il bascule la LIGNE
+// ENTIERE en UTF-16, que la police ne connait pas : ni le symbole ni le texte
+// autour ne s'impriment. Un parent qui ecrit « Super journee 🎉 » dans une
+// transmission faisait donc disparaitre toute la ligne du bilan envoye.
+//
+// On retire le caractere fautif et on garde le reste : mieux vaut un emoji en
+// moins qu'une phrase entiere perdue.
+const CAR_PDF_INTERDITS = /[^\x09\x0A\x0D\x20-\x7E\u00A0-\u00FF\u20AC\u2018\u2019\u201C\u201D\u2013\u2014\u2026\u2022]/g;
+const nettoyerPdf = (t) => (t === null || t === undefined ? t : String(t).replace(CAR_PDF_INTERDITS, ""));
+const protegerPdf = (doc) => {
+  const ecrire = doc.text.bind(doc);
+  doc.text = (t, ...reste) => ecrire(Array.isArray(t) ? t.map(nettoyerPdf) : nettoyerPdf(t), ...reste);
+  const decouper = doc.splitTextToSize.bind(doc);
+  doc.splitTextToSize = (t, ...reste) => decouper(nettoyerPdf(t), ...reste);
+  return doc;
+};
+
 let jsPDFPromesse=null;
 const chargerJsPDF=()=>(jsPDFPromesse||(jsPDFPromesse=import("jspdf").then(m=>m.jsPDF)));
 
@@ -6040,7 +6069,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
     try{
       // 1. Generer le PDF en jsPDF natif
       const jsPDF=await chargerJsPDF();
-      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
       const PW=210,MX=15;let y=15;
       const orange=[184,98,47];const noir=[40,40,40];const gris=[120,120,120];const vert=[42,157,143];
       // re-fetch signature
@@ -8767,7 +8796,7 @@ async function generateAndStoreContratPDF(contratId){
 
     // 2. Charger jsPDF si pas deja charge
 const jsPDF=await chargerJsPDF();
-    const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+    const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
 
     // 3. Genenrer le PDF
     let y=20;
@@ -10945,7 +10974,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
       }
       // Charger jsPDF si pas deja charge
 const jsPDF=await chargerJsPDF();
-      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
       const PW=210,MX=18;let y=20;
       // Couleurs
       const orange=[184,98,47];const noir=[40,40,40];const gris=[120,120,120];
@@ -15324,7 +15353,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
         if(fresh){userSig=fresh.signature_base64||userSig;userAgrement=fresh.numero_agrement||userAgrement;}
       }
 const jsPDF=await chargerJsPDF();
-      const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait"});
+      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
       const PW=210,MX=18;let y=20;
       const vert=[42,157,143];const noir=[40,40,40];const gris=[120,120,120];const bleuFonce=[38,70,83];
       // Titre
