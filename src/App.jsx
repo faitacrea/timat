@@ -187,6 +187,44 @@ const TYPES_EV={
 };
 const typeEv=(t)=>TYPES_EV[t]||TYPES_EV.rdv;
 
+// Qualite du repas. Le libelle, la couleur et la pastille etaient recopies
+// dans cinq rendus, chacun avec sa propre logique — et deux d'entre eux se
+// trompaient de couleur : l'un ecrivait la meme dans les deux branches de son
+// ternaire, l'autre affichait « Peu mange » en vert. La pastille remplace
+// l'emoji 🟡, jaune vif sur tous les telephones et etranger a la palette : une
+// pastille CSS prend la couleur du theme et suit le mode sombre.
+const QUALITE_REPAS={
+  bien:{l:"Bon appétit",teinte:"var(--S)",fond:"var(--Sp)"},
+  peu:{l:"Peu mangé",teinte:"var(--P)",fond:"var(--Pp)"},
+  refus:{l:"Refus",teinte:"var(--R)",fond:"var(--Rp)"},
+};
+// Une pastille de couleur, lisible en mode sombre et alignee sur la palette.
+// Elle remplace les emoji 🟠 / 🔴 / 🟡, dont la teinte est fixee par le
+// telephone et jure avec le reste de l'interface.
+// Qualite de la sieste. Meme histoire que les repas : le vocabulaire etait
+// recopie a deux endroits, avec un ambre ecrit en dur et « Agitee » affichee
+// en vert dans l'un des deux.
+const QUALITE_SIESTE={
+  bien:{l:"Bonne sieste",court:"Bonne",teinte:"var(--S)",fond:"var(--Sp)"},
+  agite:{l:"Agitée",court:"Agitée",teinte:"var(--P)",fond:"var(--Pp)"},
+  court:{l:"Courte",court:"Courte",teinte:"var(--R)",fond:"var(--Rp)"},
+};
+
+function Pastille({couleur,taille=9}){
+  return <span style={{width:taille,height:taille,borderRadius:"50%",background:couleur,
+    display:"inline-block",flex:"0 0 auto",verticalAlign:"middle"}}/>;
+}
+
+function PastilleRepas({q,taille=12}){
+  const etat=QUALITE_REPAS[q];
+  if(!etat)return null;
+  return <span className="badge"style={{background:etat.fond,color:etat.teinte,fontSize:taille,
+    display:"inline-flex",alignItems:"center",gap:7,fontWeight:600}}>
+    <Pastille couleur={etat.teinte}/>
+    {etat.l}
+  </span>;
+}
+
 // Retenue pour absence de l'assistante maternelle.
 // Convention collective de la branche du secteur des particuliers employeurs
 // et de l'emploi a domicile (IDCC 3239), article 111 « Deduction des periodes
@@ -396,7 +434,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","🟡":"point","🔴":"point","🔵":"point","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🚨":"urgence","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🚨":"urgence","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -1573,7 +1611,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   ]:[
     {icon:"⏱️",val:stats.heuresSemaine+" h",lbl:"Heures cette semaine",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
     {icon:"💰",val:stats.revenuMois+" €",lbl:"Revenu estimé du mois",c:"var(--G)",page:"admin_finances",hint:"→ Paie"},
-    {icon:"🟢",val:stats.presencesJour.length+"/"+nbEnfants,lbl:"Présents maintenant",c:"var(--S)",page:"pointage",hint:"→ Pointage"},
+    {icon:"👶",val:stats.presencesJour.length+"/"+nbEnfants,lbl:"Présents maintenant",c:"var(--S)",page:"pointage",hint:"→ Pointage"},
     {icon:"💬",val:stats.messagesNonLus,lbl:"Messages non lus",c:stats.messagesNonLus>0?"var(--R)":"var(--B)",page:"messagerie",hint:"→ Messagerie"},
   ];
 
@@ -1925,8 +1963,7 @@ function AccueilParent({enfant,setPage,user}){
         {rep.dej&&<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}><IconeOuEmoji e="🥗"/> {rep.dej}</span>}
         {rep.gou&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)"}}><IconeOuEmoji e="🍎"/> {rep.gou}</span>}
         {rep.bib&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}><IconeOuEmoji e="🍼"/> {rep.bib}</span>}
-        <span className="badge"style={{background:rep.q==="bien"?"var(--Gp)":"var(--c)",color:rep.q==="bien"?"var(--G)":"var(--G)"}}>
-          {rep.q==="bien"?"✅ Bon appétit":rep.q==="peu"?"🟡 Peu mangé":"🔴 Refus"}</span>
+        <PastilleRepas q={rep.q}/>
       </div>
       <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>Voir le détail →</div>
     </div>}
@@ -2815,7 +2852,6 @@ function RepasChanges({enfants,role,pEId}){
     }
   };
 
-  const qc={"bien":"var(--S)","peu":"var(--G)","refus":"var(--R)"};
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="🍽️" title="Repas & Changes" sub="Suivi alimentaire et hygiène du jour"/>
@@ -2831,8 +2867,7 @@ function RepasChanges({enfants,role,pEId}){
                 <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{v}</div></div></div>)}
           <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
             <span style={{fontSize:12,color:"var(--l)"}}>Appétit :</span>
-            <span className="badge"style={{background:qc[erp.q]+"22",color:qc[erp.q]}}>
-              {erp.q==="bien"?"✅ Bon appétit":erp.q==="peu"?"🟡 Peu mangé":"🔴 Refus"}</span>
+            <PastilleRepas q={erp.q}/>
           </div>
           {erp.notes&&<div style={{fontSize:12,color:"var(--m)",marginTop:6,fontStyle:"italic"}}>{erp.notes}</div>}
         </div>:<div style={{fontSize:13,color:"var(--l)"}}>Non renseigné.</div>}
@@ -2847,7 +2882,7 @@ function RepasChanges({enfants,role,pEId}){
           <div style={{marginBottom:10}}>
             <label className="lbl">Appétit</label>
             <div style={{display:"flex",gap:6}}>
-              {[["bien","✅ Bon","var(--S)"],["peu","🟡 Peu","#B8892A"],["refus","🔴 Refus","var(--R)"]].map(([v,l,c])=>{
+              {Object.entries(QUALITE_REPAS).map(([v,e])=>{const l=e.l,c=e.teinte;
                 const on=(re.q??erp?.q??"bien")===v;
                 return <button key={v} type="button" onClick={()=>setRe(p=>({...p,q:v}))} style={{flex:1,padding:"10px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
               })}
@@ -3423,10 +3458,10 @@ function Calendrier({enfants,role,pEId,user}){
             <IconeOuEmoji e="⭐"/> Jour férié - {getFerie(sel)}
           </div>}
           {getUserEv(sel)?.type==="cng"&&<div style={{padding:"6px 10px",background:"var(--Gp)",borderRadius:8,fontSize:12,color:"var(--G)",fontWeight:600,marginBottom:6}}>
-            <IconeOuEmoji e="🟡"/> Congé - {getUserEv(sel).txt}
+            <Pastille couleur="var(--G)"/> Congé - {getUserEv(sel).txt}
           </div>}
           {getUserEv(sel)?.type==="abs"&&<div style={{padding:"6px 10px",background:"var(--Rp)",borderRadius:8,fontSize:12,color:"var(--R)",fontWeight:600,marginBottom:6}}>
-            <IconeOuEmoji e="🔴"/> {getUserEv(sel).txt}
+            <Pastille couleur="var(--R)"/> {getUserEv(sel).txt}
           </div>}
           {getAccueil(sel).length>0&&!([0,6].includes(jourIdx(sel)))&&<div style={{marginBottom:6}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Enfants accueillis :</div>
@@ -3758,7 +3793,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
           {isDemoFact?histFactDemo.map(([m,s,v])=>
             <div key={m}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
               <span style={{fontSize:13,color:"var(--b)",fontWeight:600}}>{m}</span>
-              <span className="badge"style={{background:s==="Payée"?"var(--Gp)":"var(--c)",color:s==="Payée"?"var(--G)":"var(--G)"}}>{s}</span>
+              <span className="badge"style={{background:s==="Payée"?"var(--Gp)":"var(--c)",color:s==="Payée"?"var(--G)":"var(--m)"}}>{s}</span>
               <span style={{fontWeight:700,color:"var(--b)"}}>{v}</span>
             </div>)
           :<div style={{fontSize:12,color:"var(--l)",textAlign:"center",padding:"16px 0"}}>L'historique apparaîtra ici au fil des mois.</div>}
@@ -6956,7 +6991,7 @@ function Parrainage({user}){
           <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.prenom} - {f.ville}</div>
           <div style={{fontSize:11,color:"var(--l)"}}>{f.date}</div>
         </div>
-        <span className="badge"style={{background:f.statut==="actif"?"var(--Gp)":"var(--c)",color:f.statut==="actif"?"var(--G)":"var(--G)"}}>{f.gain}</span>
+        <span className="badge"style={{background:f.statut==="actif"?"var(--Gp)":"var(--c)",color:f.statut==="actif"?"var(--G)":"var(--m)"}}>{f.gain}</span>
       </div>)}
     </div>
   </div>;
@@ -7162,7 +7197,8 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {suivi.lignes.map(m=><div key={m.key}style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"8px 10px",borderRadius:8,background:m.statut==="impaye"?"#FDECEC":m.statut==="partiel"?"#FFF6E9":"var(--c)"}}>
                 <div style={{minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{m.statut==="paye"?"✅":m.statut==="partiel"?"🟠":"🔴"} {m.label}</div>
+                  <div style={{fontSize:13,fontWeight:600,color:"var(--b)",display:"flex",alignItems:"center",gap:7}}>
+                    <Pastille couleur={m.statut==="paye"?"var(--S)":m.statut==="partiel"?"var(--P)":"var(--R)"}/>{m.label}</div>
                   <div style={{fontSize:11,color:"var(--m)"}}>Dû {fmtEur(m.du)} · Versé {fmtEur(m.verse)}{m.ecart>1?(" · reste "+fmtEur(m.ecart)):""}</div>
                 </div>
                 {m.statut!=="paye"&&(role==="parent"
@@ -7707,8 +7743,8 @@ function Sommeil({enfants,role,pEId}){
     setToast("Sieste supprimée ✓");
   };
 
-  const qColor={bien:"var(--S)",agite:"var(--G)",court:"var(--R)"};
-  const qLabel={bien:"✅ Bonne sieste",agite:"🟡 Agitée",court:"🔴 Courte"};
+  const qColor=Object.fromEntries(Object.entries(QUALITE_SIESTE).map(([k,e])=>[k,e.teinte]));
+  const qLabel=Object.fromEntries(Object.entries(QUALITE_SIESTE).map(([k,e])=>[k,e.l]));
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -7741,7 +7777,7 @@ function Sommeil({enfants,role,pEId}){
           <div style={{marginBottom:12}}>
             <label className="lbl">Qualité</label>
             <div style={{display:"flex",gap:6}}>
-              {[["bien","✅ Bonne","var(--S)"],["agite","🟡 Agitée","#B8892A"],["court","🔴 Courte","var(--R)"]].map(([v,l,c])=>{
+              {Object.entries(QUALITE_SIESTE).map(([v,e])=>{const l=e.court,c=e.teinte;
                 const on=nS.qualite===v;
                 return <button key={v} type="button" onClick={()=>setNS(p=>({...p,qualite:v}))} style={{flex:1,padding:"10px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
               })}
@@ -7919,16 +7955,13 @@ function TableauDeBord({enfants,role,pEId,setPage}){
         <div style={{fontWeight:600,fontSize:11,color:"var(--m)",marginBottom:8,textTransform:"uppercase",letterSpacing:".5px"}}>Repas</div>
         {D.repas.filter(r=>r.date===TODAY_STR).map(r=>{
           const e=liste.find(x=>x.id===r.eId);
-          const c={"bien":"var(--S)","peu":"var(--G)","refus":"var(--R)"};
           if(!e)return null;
           return <div key={r.id}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
             <div style={{display:"flex",gap:6,alignItems:"center"}}>
               <span>{e.emoji}</span>
               <span style={{fontSize:13,color:"var(--b)"}}>{e.prenom}</span>
             </div>
-            <span className="badge"style={{background:(c[r.q]||"var(--l)")+"22",color:c[r.q]||"var(--l)",fontSize:11}}>
-              {r.q==="bien"?"✅ Bon appétit":r.q==="peu"?"🟡 Peu mangé":"🔴 Refus"}
-            </span>
+            <PastilleRepas q={r.q} taille={11}/>
           </div>;
         })}
         {D.repas.filter(r=>r.date===TODAY_STR).length===0&&<div style={{fontSize:12,color:"var(--l)",marginBottom:10}}>Aucun repas saisi.</div>}
@@ -9648,7 +9681,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
 
   const dateLabel=(()=>{try{return new Date(dateSel+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});}catch(e){return dateSel;}})();
   const HUMEURS=["😄","😊","😐","😴","😢","🥰"];
-  const qLabel=(q)=>q==="bien"?"✅ Bon appétit":q==="peu"?"🟡 Peu mangé":q==="refus"?"🔴 Refus":"";
+  const qLabel=(q)=>QUALITE_REPAS[q]?<PastilleRepas q={q} taille={11.5}/>:"";
   const qCol=(q)=>q==="bien"?"var(--S)":q==="peu"?"var(--G)":"var(--R)";
   const nbChanges=changes.filter(c=>c.type==="Change").length;
   const humeurAff=cahier?.humeur||(role==="asmat"?humeur:"");
@@ -9668,9 +9701,10 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
   const pctJour=Math.round(100*remplis.filter(Boolean).length/remplis.length);
   const sommeilMin=siestes.reduce((t,s)=>{const m=String(s.duree||"").match(/(\d+)\s*h\s*(\d+)?/);return t+(m?(parseInt(m[1])*60+(parseInt(m[2])||0)):0);},0);
   const sommeilTxt=sommeilMin>0?(Math.floor(sommeilMin/60)+"h"+String(sommeilMin%60).padStart(2,"0")):"—";
-  const appLabel=(repas&&repas.q)?({bien:"Bon",peu:"Peu",refus:"Refus"}[repas.q]||"—"):"—";
-  const appIc=(repas&&repas.q)?({bien:"🍽️",peu:"🍽️",refus:"🍽️"}[repas.q]):"🍽️";
-  const appColor=(repas&&repas.q)?({bien:"var(--S)",peu:"#B8892A",refus:"var(--R)"}[repas.q]):"var(--l)";
+  const appEtat=repas&&QUALITE_REPAS[repas.q];
+  const appLabel=appEtat?appEtat.l:"—";
+  const appIc="🍽️";
+  const appColor=appEtat?appEtat.teinte:"var(--l)";
   const coupOeil=[
     {ic:appIc,v:appLabel,l:"Appétit",c:appColor},
     {ic:"😴",v:sommeilTxt,l:"Sommeil",c:"var(--B)"},
@@ -10081,7 +10115,10 @@ function ListeAttente({role,enfants,user}){
   const [toast,setToast]=useState("");
   const sel=demandes.find(d=>d.id===selId);
 
-  const statutLabel={nouveau:"🔵 Nouveau",en_discussion:"🟡 En discussion",accepte:"🟢 Accepté",refuse:"🔴 Refusé"};
+  // Le libelle porte la pastille, pour que la couleur suive le theme.
+  const STATUT_DEMANDE={nouveau:{l:"Nouveau",c:"var(--B)"},en_discussion:{l:"En discussion",c:"var(--P)"},
+    accepte:{l:"Accepté",c:"var(--S)"},refuse:{l:"Refusé",c:"var(--R)"}};
+  const statutLabel=Object.fromEntries(Object.entries(STATUT_DEMANDE).map(([k,e])=>[k,<><Pastille couleur={e.c}/> {e.l}</>]));
   const statutColor={nouveau:"var(--B)",en_discussion:"var(--G)",accepte:"var(--S)",refuse:"var(--R)"};
   const statutBg={nouveau:"var(--Bp)",en_discussion:"var(--Gp)",accepte:"var(--Sp)",refuse:"var(--Rp)"};
 
@@ -12675,7 +12712,7 @@ const DEMO_SCREENS=[
         </div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #E49178"}}>
           <div style={{fontSize:11,color:"#E49178",fontWeight:700,marginBottom:3}}><IconeOuEmoji e="🍽️"/> Repas</div>
-          <div style={{fontSize:12,color:"#2E4859"}}><IconeOuEmoji e="🥗"/> Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
+          <div style={{fontSize:12,color:"#2E4859"}}><IconeOuEmoji e="🥗"/> Purée de légumes · <PastilleRepas q="bien" taille={11}/> · <IconeOuEmoji e="🍼"/> 250ml</div>
         </div>
         <div style={{marginTop:12,display:"flex",gap:6,alignItems:"center"}}>
           <span style={{fontSize:11,color:"#8FA3AD"}}>Humeur :</span>
@@ -12737,7 +12774,8 @@ const DEMO_SCREENS=[
         </div>
         {selDay&&<div style={{background:"#F4F7FA",borderRadius:10,padding:10,fontSize:11,color:"#2E4859"}}>
           <div style={{fontWeight:700,marginBottom:4}}><IconeOuEmoji e="📌"/> {selDay} mars</div>
-          <div>🦁 Léo : 07h30 — 17h30 {selDay%7!==0&&selDay%7!==6?"✅":"🔴 Repos"}</div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>🦁 Léo : 07h30 — 17h30
+            {selDay%7!==0&&selDay%7!==6?<IconeOuEmoji e="✅" taille={14}/>:<><Pastille couleur="var(--R)"/> Repos</>}</div>
           {selDay%3===0&&<div>🌸 Emma : 08h00 — 16h30 ✅</div>}
         </div>}
       </div>);
@@ -16973,7 +17011,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
       }else if(!errJsonb&&errText){
         report+="\n💡 Ta colonne config est de type JSONB. OK.";
       }else if(errJsonb&&errText){
-        report+="\n🔴 Aucun format ne marche. Problème RLS probable.\n\nExécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
+        report+="\nÉCHEC — aucun format ne marche. Problème RLS probable.\n\nExécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
       }
 
       alert(report);
