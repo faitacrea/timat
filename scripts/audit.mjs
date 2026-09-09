@@ -462,6 +462,20 @@ const optionsAvecIcone = [...appSrc.matchAll(/<option[^>]*>[^<]{0,80}<IconeOuEmo
 if (optionsAvecIcone.length) {
   signale("icônes", `${optionsAvecIcone.length} <option> contiennent une icône dessinée : elle n'y sera pas affichée`);
 }
+// La qualite du repas doit passer par une seule table. Elle etait recopiee
+// dans cinq rendus, et deux se trompaient de couleur : l'un ecrivait la meme
+// dans les deux branches de son ternaire, l'autre affichait « Peu mange » en
+// vert. Le libelle ne doit plus apparaitre en dur.
+const blocRepas = appSrc.match(/const QUALITE_REPAS=\{[\s\S]*?\n\};/);
+const debutRepas = blocRepas ? appSrc.indexOf(blocRepas[0]) : -1;
+const finRepas = debutRepas >= 0 ? debutRepas + blocRepas[0].length : -1;
+const libellesRepas = [...appSrc.matchAll(/"(?:Bon appétit|Peu mangé|Refus)"/g)]
+  .filter((m) => !(m.index >= debutRepas && m.index <= finRepas));
+if (debutRepas < 0) signale("repas", "la table QUALITE_REPAS a disparu");
+if (libellesRepas.length) {
+  signale("repas", `${libellesRepas.length} libellé(s) de qualité de repas écrits en dur au lieu de passer par QUALITE_REPAS / <PastilleRepas>`);
+}
+
 // Chaque theme doit designer un type que la table connait.
 const typesThemes = [...blocThemes.matchAll(/\{t:"(\w+)"/g)].map((m) => m[1]);
 const tableTypes = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];
@@ -581,6 +595,26 @@ const docsPdf = [...appSrc.matchAll(/(\w+)\s*=\s*new jsPDF\(/g)];
 const docsNonProteges = docsPdf.filter((m) => !/protegerPdf\(\s*new jsPDF\(/.test(appSrc.slice(Math.max(0, m.index - 20), m.index + 30)));
 if (docsNonProteges.length) {
   signale("pdf", `${docsNonProteges.length} document(s) PDF créé(s) sans protegerPdf() : un emoji tapé par une famille ferait disparaître la ligne entière`);
+}
+
+// --- ternaires sans effet ---
+// Pourquoi : trois fois dans cette base, un badge choisissait sa couleur avec
+// un ternaire dont les deux branches etaient identiques. Un versement impaye
+// s'affichait donc en vert, comme un versement paye. La condition ne servait a
+// rien et personne ne pouvait le voir a la lecture.
+const ternairesMorts = [...appSrc.matchAll(/\?\s*("[^"]{1,40}"|'[^']{1,40}')\s*:\s*("[^"]{1,40}"|'[^']{1,40}')/g)]
+  .filter((m) => m[1] === m[2]);
+if (ternairesMorts.length) {
+  signale("robustesse", `${ternairesMorts.length} ternaire(s) dont les deux branches donnent la même valeur : la condition ne sert à rien, et l'état affiché est faux dans un cas sur deux`);
+}
+// Les pastilles de couleur passent par <Pastille> : un emoji rond prend la
+// teinte du telephone et ne suit pas le mode sombre.
+// On ignore les commentaires : ils citent ces caracteres pour expliquer
+// pourquoi ils ne doivent plus etre utilises.
+const sansCommentaires = appSrc.replace(/^\s*\/\/.*$/gm, "");
+const emojiRonds = [...sansCommentaires.matchAll(/[\u{1F534}\u{1F535}\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{26AB}\u{26AA}]/gu)];
+if (emojiRonds.length) {
+  signale("icônes", `${emojiRonds.length} pastille(s) emoji au lieu de <Pastille> : leur teinte dépend du téléphone et ne suit pas le mode sombre`);
 }
 
 // --- rapport ---
