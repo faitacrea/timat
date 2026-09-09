@@ -93,6 +93,7 @@
   "contrats": [
     "actif",
     "aeeh",
+    "annee_complete",
     "asmat_id",
     "created_at",
     "date_signature_asmat",
@@ -112,6 +113,7 @@
     "pdf_storage_path",
     "repas",
     "salarie_snapshot",
+    "semaines_accueil",
     "signature_asmat_data",
     "signature_parent_data",
     "signe_asmat",

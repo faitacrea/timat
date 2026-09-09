@@ -18,6 +18,10 @@ import path from "node:path";
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 // Passe « sous-minimum » : le contrat porte un taux illegal, l'alerte doit sortir.
 const SOUS_MINIMUM = process.argv[3] === "sous-minimum";
+// Passe « annee-incomplete » : accueil sur 36 semaines. La mensualisation doit
+// tomber a 504 EUR au lieu de 728 — l'application appliquait 52 semaines a tous
+// les contrats.
+const ANNEE_INCOMPLETE = process.argv[3] === "annee-incomplete";
 const SORTIE = "/tmp/timat-bulletin";
 const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
@@ -64,7 +68,7 @@ await page.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/([a-z_]+)/) || [])[1];
   if (t === "profiles") return r.fulfill(json([{ id: UID, role: "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
   if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: SOUS_MINIMUM ? 3.5 : 4.20, entretien: 3.8, jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
+  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: SOUS_MINIMUM ? 3.5 : 4.20, annee_complete: !ANNEE_INCOMPLETE, semaines_accueil: ANNEE_INCOMPLETE ? 36 : null, entretien: 3.8, jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
   // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
@@ -114,6 +118,8 @@ const m = await page.evaluate(() => {
     base: nb(/Salaire de base[^\n]*\n[^\n]*\n\s*([\d.,]+)€/),
     art111: /art\. 111/.test(t),
     alerteMini: /sous le minimum légal/i.test(t),
+    semainesAffichees: (t.match(/Mensualisation en année (?:in)?complète\s*:\s*(\d+) semaines/) || [])[1],
+    modeAffiche: /Mensualisation en année incomplète/.test(t) ? "incomplète" : /Mensualisation en année complète/.test(t) ? "complète" : null,
     // Une cotisation prise au hasard doit etre assise sur le brut APRES retenue.
     vieillesse: nb(/Vieillesse plafonnée\s*\n?\s*([\d.,]+)€/),
     alloc: nb(/Allocation de formation — ([\d.,]+) €/),
@@ -126,7 +132,7 @@ const ecarts = [];
 // En mode « sous-minimum » on ne vérifie que l'alerte : les montants changent
 // forcément puisque le taux n'est pas le même.
 const attendu = (nom, val, cible, tol = 0.02) => {
-  if (SOUS_MINIMUM) return;
+  if (SOUS_MINIMUM || ANNEE_INCOMPLETE) return;
   const ok = val != null && Math.abs(val - cible) <= tol;
   if (!ok) ecarts.push(`${nom} : ${val} au lieu de ${cible}`);
   console.log(`  ${ok ? "ok " : "KO "} ${nom.padEnd(46)} ${val} (attendu ${cible})`);
@@ -148,6 +154,13 @@ attendu("vieillesse plafonnée assise sur le brut après retenue", m.vieillesse,
 attendu("allocation de formation hors temps d'accueil", m.alloc, 33.42);
 console.log(`  ${m.allocHorsBulletin ? "ok " : "KO "} l'allocation reste hors du bulletin (versée par IPERIA)`);
 if (!m.allocHorsBulletin) ecarts.push("l'allocation apparaît dans la rémunération");
+{
+  const modeAttendu = ANNEE_INCOMPLETE ? "incomplète" : "complète";
+  const semAttendues = ANNEE_INCOMPLETE ? "36" : "52";
+  const okMode = m.modeAffiche === modeAttendu && m.semainesAffichees === semAttendues;
+  if (!okMode) ecarts.push(`mensualisation : ${m.modeAffiche} sur ${m.semainesAffichees} semaines`);
+  console.log(`  ${okMode ? "ok " : "KO "} mensualisation annoncée : ${m.modeAffiche} sur ${m.semainesAffichees} semaines`);
+}
 console.log(`  ${m.alerteMini === SOUS_MINIMUM ? "ok " : "KO "} l'alerte « taux sous le minimum légal » ${SOUS_MINIMUM ? "s'affiche sur un taux de 3,50 €" : "reste absente sur un taux conforme"}`);
 if (m.alerteMini !== SOUS_MINIMUM) ecarts.push("alerte de taux minimum incorrecte");
 console.log(`\nerreurs JavaScript : ${erreurs.length}`);

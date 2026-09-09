@@ -105,6 +105,51 @@ const legalIgnore = minimumHoraireAu("2026-09-01", false) > legalAujourdhui;
 if (!legalIgnore) koMin++;
 console.log(`  ${legalIgnore ? "ok " : "KO "} ${"le conventionnel l'emporte sur le légal".padEnd(48)} ${legalAujourdhui.toFixed(2)} € écarté`);
 
+// --- Mensualisation : deux formules, pas une ---
+const mens = eval(`(function(){
+  ${(src.match(/const SEMAINES_ANNEE_COMPLETE=\d+;/) || [""])[0]}
+  ${(src.match(/const SEMAINES_MAX_ANNEE_INCOMPLETE=\d+;/) || [""])[0]}
+  ${(src.match(/const MOIS_PAR_AN=\d+;/) || [""])[0]}
+  ${(src.match(/const estAnneeComplete=\([\s\S]*?;\n/) || [""])[0]}
+  ${(src.match(/const semainesDuContrat=\([\s\S]*?\n\};/) || [""])[0]}
+  ${(src.match(/const heuresMensualisees=\([\s\S]*?\n\};/) || [""])[0]}
+  ${(src.match(/const salaireMensualise=\([\s\S]*?\n\};/) || [""])[0]}
+  return {semainesDuContrat, heuresMensualisees, salaireMensualise, estAnneeComplete};
+})()`);
+
+let koMens = 0;
+const m = (n, r, a, tol = 0.011) => {
+  const ok = Math.abs(r - a) <= tol;
+  if (!ok) koMens++;
+  console.log(`  ${ok ? "ok " : "KO "} ${n.padEnd(52)} ${r.toFixed(2)} (attendu ${a.toFixed(2)})`);
+};
+
+console.log("\n=== MENSUALISATION — CCN 3239 ===\n");
+// Annee complete : 40 h x 52 / 12 = 173,33 -> 173 h ; x 4,20 = 728,00 EUR.
+const complet = { heuresHebdo: 40, tauxHoraire: 4.20 };
+m("année complète — semaines retenues", mens.semainesDuContrat(complet), 52, 0);
+m("année complète — heures par mois", mens.heuresMensualisees(complet), 173, 0);
+m("année complète — salaire mensualisé", mens.salaireMensualise(complet), 728.00);
+
+// Annee scolaire : 40 h x 46 / 12 = 153,33 -> 153 h ; x 4,20 = 644,00 EUR.
+const scolaire = { heuresHebdo: 40, tauxHoraire: 4.20, anneeComplete: false, semainesAccueil: 46 };
+m("année incomplète 46 sem. — semaines", mens.semainesDuContrat(scolaire), 46, 0);
+m("année incomplète 46 sem. — heures", mens.heuresMensualisees(scolaire), 153, 0);
+m("année incomplète 46 sem. — salaire", mens.salaireMensualise(scolaire), 644.00);
+
+// 36 semaines : le cas ou l'ecart est le plus fort.
+const court = { heuresHebdo: 40, tauxHoraire: 4.20, anneeComplete: false, semainesAccueil: 36 };
+m("année incomplète 36 sem. — salaire", mens.salaireMensualise(court), 504.00);
+const ecart = mens.salaireMensualise(complet) / mens.salaireMensualise(court);
+m("écart avec la formule des 52 semaines", ecart, 52 / 36, 0.001);
+
+// Garde-fous : un contrat sans information reste en annee complete.
+m("contrat sans mode — reste en année complète", mens.semainesDuContrat({ heuresHebdo: 40 }), 52, 0);
+m("année incomplète sans nombre — plafond 46", mens.semainesDuContrat({ heuresHebdo: 40, anneeComplete: false }), 46, 0);
+m("plus de 52 semaines — ramené à 52", mens.semainesDuContrat({ heuresHebdo: 40, anneeComplete: false, semainesAccueil: 60 }), 52, 0);
+m("colonnes en base (annee_complete/semaines_accueil)", mens.semainesDuContrat({ heures_hebdo: 40, annee_complete: false, semaines_accueil: 40 }), 40, 0);
+m("heures nulles", mens.salaireMensualise({ heuresHebdo: 0, tauxHoraire: 4.2 }), 0);
+
 // --- Fin de contrat : preavis, conges payes, indemnite de rupture ---
 const fn = (nom, motif) => {
   const m = src.match(motif);
@@ -167,7 +212,7 @@ v("8 mois : pas due", finContrat.indemniteRupture({ brutTotal: 8000, moisAncienn
 v("démission de l'assmat : pas due", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 24, parEmployeur: false }), 0);
 v("faute grave : pas due", finContrat.indemniteRupture({ brutTotal: 8000, moisAnciennete: 24, fauteGrave: true }), 0);
 
-let ko = koAlloc + koMin + koFin;
+let ko = koAlloc + koMin + koFin + koMens;
 console.log("\n=== RETENUE POUR ABSENCE — CCN 3239 art. 111 ===\n");
 for (const c of cas) {
   const r = retenueAbsence(c.a);
@@ -175,6 +220,6 @@ for (const c of cas) {
   if (!ok) ko++;
   console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
 }
-const total = cas.length + casAlloc.length + casMin.length + 1 + 21;
+const total = cas.length + casAlloc.length + casMin.length + 1 + 21 + 13;
 console.log(ko ? `\n${ko} cas en échec\n` : `\n${total} cas sur ${total} conformes\n`);
 process.exit(ko ? 1 : 0);
