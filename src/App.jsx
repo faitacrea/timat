@@ -2259,7 +2259,7 @@ function composerResume(j){
   return phrases.join(" ");
 }
 
-function RecitIA({enfants,role,pEId}){
+function ResumeJournee({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [idx,setIdx]=useState(0);
   const [recit,setRecit]=useState("");
@@ -2462,7 +2462,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
 
   // Calcul bilan mensuel
   const heuresMois=pts.filter(p=>p.eId===enfant?.id&&p.totMin).reduce((s,p)=>s+(p.totMin||0),0);
-  const heuresPrev=Math.round((enfant?.contrat?.heuresHebdo||40)*52/12);
+  const heuresPrev=heuresMensualisees(enfant?.contrat);
   const soldeMin=heuresMois-heuresPrev*60;
 
   // POINTAGE WORKFLOW P14E - pointer l'arrivee maintenant (heure auto)
@@ -3677,11 +3677,11 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
   const isDemoFact=enfants.every(e=>["e1","e2","e3"].includes(e.id));
   // Calculate hours from real pointages or fallback to demo
   const calcHeures=()=>{
-    if(isDemoFact)return D.heures[enfant?.id]||{real:0,prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
-    if(!pointagesDB||!enfant?.id)return{real:0,prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
+    if(isDemoFact)return D.heures[enfant?.id]||{real:0,prev:heuresMensualisees(contrat)};
+    if(!pointagesDB||!enfant?.id)return{real:0,prev:heuresMensualisees(contrat)};
     const moisPointages=pointagesDB.filter(p=>p.enfant_id===enfant.id);
     const totalMin=moisPointages.reduce((s,p)=>s+(p.total_minutes||0),0);
-    return{real:Math.round(totalMin/60),prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
+    return{real:Math.round(totalMin/60),prev:heuresMensualisees(contrat)};
   };
   const h=calcHeures();
   const salBrut=contrat?(h.real*contrat.tauxHoraire+(h.real/5*contrat.entretien)):0;
@@ -3696,7 +3696,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     const w=window.open('','_blank');
     if(!w){setToast('Autorisez les popups');return;}
     const mois=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-    const hMens=Math.round((contrat?.heuresHebdo||40)*52/12);
+    const hMens=heuresMensualisees(contrat);
     const salNet=(totalBrut*0.78).toFixed(2);
     const joursTrav=Math.round(h.real/((contrat?.heuresHebdo||40)/5));
     const htmlPaj=[
@@ -4054,7 +4054,7 @@ function Contrats({enfants,role,pEId,user}){
                 <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{fmt(contrat.debut)} → {fmt(contrat.fin)} · {contrat.heuresHebdo}h/sem</div>
               </div>
               <div style={{textAlign:"right",flexShrink:0}}>
-                <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {(contrat.heuresHebdo*contrat.tauxHoraire*52/12).toFixed(0)} €</div>
+                <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {salaireMensualise(contrat).toFixed(0)} €</div>
                 <div style={{fontSize:11,color:"var(--m)",fontWeight:600,marginTop:2}}>brut / mois</div>
               </div>
             </div>
@@ -4069,7 +4069,7 @@ function Contrats({enfants,role,pEId,user}){
             ["Heures / semaine",contrat.heuresHebdo+"h"],
             ["Taux horaire",contrat.tauxHoraire.toFixed(2)+" €/h"],
             ["Indemnité entretien",contrat.entretien.toFixed(2)+" €/jour"],
-            ["Salaire mensuel brut","≈ "+(contrat.heuresHebdo*contrat.tauxHoraire*52/12).toFixed(0)+" €"],
+            ["Salaire mensuel brut","≈ "+salaireMensualise(contrat).toFixed(0)+" €"],
           ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
             <span style={{fontSize:12,color:"var(--l)",fontWeight:700}}>{l}</span>
             <span style={{fontSize:13,fontWeight:600,color:"var(--b)",textAlign:"right",maxWidth:"60%"}}>{v}</span>
@@ -5285,7 +5285,7 @@ function Recap({enfants,role,pEId}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
   const isDemoRecap=enfants.every(e=>["e1","e2","e3"].includes(e.id));
-  const h=isDemoRecap?(D.heures[enfant?.id]||{real:0,prev:0}):{real:0,prev:Math.round((contrat?.heuresHebdo||40)*52/12)};
+  const h=isDemoRecap?(D.heures[enfant?.id]||{real:0,prev:0}):{real:0,prev:heuresMensualisees(contrat)};
   const rep=D.repas.filter(r=>r.eId===enfant?.id);
   const ms=D.milestones[enfant?.id]||[];
 
@@ -5510,6 +5510,47 @@ const COEF_MINIMUM_LEGAL=0.281;
 // 4,37 EUR brut au lieu de 4,20 EUR. Sans ce cas, l'application aurait declare
 // conforme un taux de 4,25 EUR pourtant sous le plancher d'une titulaire.
 const MAJORATION_TITRE_AMGE=0.04;
+
+// --- Mensualisation ---
+//
+// La convention collective (IDCC 3239) prevoit DEUX calculs, et l'application
+// n'en appliquait qu'un : celui des 52 semaines, a tous les contrats.
+//
+//   annee complete (52 semaines) : taux x heures/semaine x 52 / 12.
+//     Les conges payes sont inclus dans le lissage.
+//   annee incomplete (46 semaines ou moins) : taux x heures/semaine x semaines
+//     programmees / 12. Les conges payes sont payes separement.
+//
+// Pour un accueil sur l'annee scolaire — 36 a 46 semaines, le cas le plus
+// frequent — l'application annoncait jusqu'a 13 % de trop, et les conges payes
+// se retrouvaient comptes deux fois : une fois dans le lissage, une fois verses
+// a part.
+const SEMAINES_ANNEE_COMPLETE=52;
+const SEMAINES_MAX_ANNEE_INCOMPLETE=46;
+const MOIS_PAR_AN=12;
+
+// Un contrat est en annee complete tant qu'on n'a pas dit le contraire : c'est
+// le comportement d'avant, et il ne faut pas requalifier en silence un contrat
+// deja saisi.
+const estAnneeComplete=(contrat)=>(contrat?.anneeComplete??contrat?.annee_complete)!==false;
+
+const semainesDuContrat=(contrat)=>{
+  if(estAnneeComplete(contrat))return SEMAINES_ANNEE_COMPLETE;
+  const s=Number(contrat?.semainesAccueil??contrat?.semaines_accueil);
+  if(!(s>0))return SEMAINES_MAX_ANNEE_INCOMPLETE;
+  return Math.min(s,SEMAINES_ANNEE_COMPLETE);
+};
+
+const heuresMensualisees=(contrat)=>{
+  const h=Number(contrat?.heuresHebdo??contrat?.heures_hebdo)||0;
+  return Math.round((h*semainesDuContrat(contrat))/MOIS_PAR_AN);
+};
+
+const salaireMensualise=(contrat,taux)=>{
+  const t=Number(taux??contrat?.tauxHoraire??contrat?.taux_horaire)||0;
+  const h=Number(contrat?.heuresHebdo??contrat?.heures_hebdo)||0;
+  return Math.round(((t*h*semainesDuContrat(contrat))/MOIS_PAR_AN)*100)/100;
+};
 
 // --- Fin de contrat : preavis, conges payes, indemnite de rupture ---
 //
@@ -6126,7 +6167,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
     setRepasJour(Number(c.repas||c.indemniteRepas||0)||0);
   },[selId]);
 
-  const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
+  const hMens=heuresMensualisees(contrat);
   // Si heures reelles disponibles : utiliser. Sinon : estimation contrat
   const useRealHours=heuresMoisReel&&heuresMoisReel.heures>0;
   const h=isDemoBull
@@ -6532,6 +6573,14 @@ function BulletinSalaire({enfants,role,pEId,user}){
       {/* Rémunération */}
       <div style={{marginBottom:14}}>
         <AlerteTauxMinimum taux={tauxH} date={moisSelKey?moisSelKey+"-15":new Date()} titreAmge={user?.titre_amge}/>
+        {/* Le mode de mensualisation change le montant de plus de 10 % : il doit
+            etre lisible sur le bulletin, pas seulement dans le contrat. */}
+        <div style={{fontSize:11.5,color:"var(--m)",marginBottom:10,lineHeight:1.5}}>
+          Mensualisation {estAnneeComplete(contrat)?"en année complète":"en année incomplète"} :
+          {" "}{semainesDuContrat(contrat)} semaines × {contrat.heuresHebdo||0} h ÷ 12 = <b>{heuresMensualisees(contrat)} h/mois</b>.
+          {estAnneeComplete(contrat)?" Les congés payés sont inclus dans ce lissage."
+            :" Les congés payés sont versés séparément."}
+        </div>
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
@@ -7151,10 +7200,10 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
 
   // #5 - Suivi du / verse par mois (mensualisation de reference)
   const suivi=useMemo(()=>{
-    const hMens=Math.round((contrat.heuresHebdo||0)*52/12);
+    const hMens=heuresMensualisees(contrat);
     const tx=contrat.tauxHoraire||0;
     const joursSem=(contrat.jours&&contrat.jours.length)||5;
-    const joursMois=Math.round(joursSem*52/12);
+    const joursMois=Math.round(joursSem*semainesDuContrat(contrat)/12);
     const duMensuel=Math.round((hMens*tx+joursMois*(contrat.entretien||0))*100)/100;
     if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0};
     const lignes=moisDisponibles.map(m=>{
@@ -7564,7 +7613,7 @@ function Journal({enfants,role,pEId,user}){
       }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>)}
     </div>
     {sousOnglet==="journal"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
-    {sousOnglet==="bilan"&&<RecitIA enfants={liste}role={role}pEId={pEId}/>}
+    {sousOnglet==="bilan"&&<ResumeJournee enfants={liste}role={role}pEId={pEId}/>}
     {sousOnglet==="cr"&&<CompteRenduTrimestriel enfants={liste}role={role}pEId={pEId}/>}
   </div>;
 }
@@ -9542,7 +9591,7 @@ function PolitiqueConfidentialite(){
       ["Données","Durée","Justification"],
       ["Compte actif","Durée de l'abonnement","Nécessité du service"],
       ["Après suppression du compte","Effacement immédiat","Droit à l'effacement (RGPD art. 17)"],
-      ["Compte inactif","Signalé à 2 ans, supprimé après avertissement","Recommandation CNIL"],
+      ["Compte inactif","Signalé à 2 ans ; supprimé seulement après un avertissement resté sans réponse","Recommandation CNIL"],
       ["Facturation et comptabilité TiMat","10 ans","Code de commerce, art. L123-22"],
       ["Prospects","3 ans après le dernier contact","Norme CNIL prospection"],
       ["Messages de support","2 ans","Suivi de la demande"],
@@ -9670,7 +9719,7 @@ function JournalAvecBilans({enfant,liste,role,pEId,user}){
       )}
     </div>
     {sousSec==="messages"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
-    {sousSec==="bilan"&&<RecitIA enfants={liste}role={role}pEId={enfant?.id}/>}
+    {sousSec==="bilan"&&<ResumeJournee enfants={liste}role={role}pEId={enfant?.id}/>}
     {sousSec==="cr"&&<CompteRenduTrimestriel enfants={liste}role={role}pEId={enfant?.id}/>}
   </div>;
 }
@@ -10487,7 +10536,7 @@ function KitCMG({enfants,role,pEId,user}){
   );
 
   // Calcul salaire net estimé
-  const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
+  const heuresMois=heuresMensualisees(contrat);
   const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*1.1*10)/10;
   const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
 
@@ -11117,7 +11166,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
   },[enfant?.id,annee,contrat?.id]);
 
   // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
-  const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
+  const heuresMois=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const entretienJour=contrat.entretien||3.92;
   const heuresAnnuelles=realStats?.heures||(heuresMois*12);
@@ -11681,6 +11730,16 @@ function SimulateurCout({enfants,pEId}){
   // Le plancher de ressources avait ete releve a 814,62 EUR sur la foi d'une
   // seule source ; deux verifications ulterieures donnent 814,02 EUR et aucune
   // ne confirme la premiere valeur.
+  // Plancher et plafond de ressources retenus pour le CMG.
+  //
+  // Le plancher a longtemps ete le seul chiffre non verrouille de
+  // l'application : deux valeurs circulaient, 814,02 et 814,62 EUR. Trois
+  // sources independantes donnent 814,02 ; une seule donnait 814,62. C'est donc
+  // 814,02 qui est retenu, et desormais verrouille.
+  //
+  // Reserve : les sites officiels qui trancheraient definitivement — urssaf.fr,
+  // caf.fr, service-public.gouv.fr — ne sont pas joignables depuis
+  // l'environnement de developpement. Un appel a la CAF confirmerait.
   const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
   const CHR_AM=4.91;        // cout horaire de reference assmat 2026
   const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
@@ -11826,7 +11885,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   // Tout ce bloc était écrit en dur : six jours de congés, un an et demi
   // d'ancienneté, un préavis de 30/60/90 jours. Il est maintenant calculé.
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date(),user?.titre_amge);
-  const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
+  const heuresMois=heuresMensualisees(contrat);
   const salMensuel=heuresMois*tauxH;
   // Ancienneté réelle, du début du contrat à la date de fin saisie.
   const finRetenue=dateFin||isoJour(new Date());
@@ -14967,6 +15026,37 @@ function OnboardingWizard({user,onFinish}){
               <div><label className="lbl">Taux horaire net (€)</label>
                 <input type="number"step="0.05"className="inp"value={contrat.tauxHoraire}onChange={e=>setContrat(c=>({...c,tauxHoraire:parseFloat(e.target.value)||4.05}))}/></div>
             </div>
+            {/* Le mode de mensualisation change le salaire de plus de 10 % :
+                52 semaines conges inclus, ou les semaines reellement programmees
+                avec des conges payes verses a part (CCN 3239). */}
+            <div style={{marginBottom:12,padding:"11px 13px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
+              <label className="lbl" style={{marginBottom:7}}>Rythme d'accueil</label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {[[true,"Année complète","52 semaines, congés inclus dans le salaire"],
+                  [false,"Année incomplète","semaines programmées, congés payés à part"]].map(([v,l,d])=>{
+                  const on=(contrat.anneeComplete!==false)===v;
+                  return <button key={String(v)} type="button" onClick={()=>setContrat(c=>({...c,anneeComplete:v,semainesAccueil:v?null:(c.semainesAccueil||46)}))}
+                    style={{flex:"1 1 150px",textAlign:"left",padding:"9px 11px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",
+                      border:"1.5px solid "+(on?"var(--accent)":"var(--br)"),background:on?"var(--accent-pale)":"var(--w)"}}>
+                    <span style={{display:"block",fontSize:12.5,fontWeight:700,color:on?"var(--accent)":"var(--b)"}}>{l}</span>
+                    <span style={{display:"block",fontSize:11,color:"var(--m)",marginTop:2,lineHeight:1.4}}>{d}</span>
+                  </button>;
+                })}
+              </div>
+              {contrat.anneeComplete===false&&<div style={{marginTop:10}}>
+                <label className="lbl">Semaines d'accueil dans l'année</label>
+                <input type="number" min="1" max="46" step="1" className="inp" style={{maxWidth:130}}
+                  value={contrat.semainesAccueil??46}
+                  onChange={e=>setContrat(c=>({...c,semainesAccueil:Math.min(46,Math.max(1,parseFloat(e.target.value)||46))}))}/>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
+                  Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant sera confié.
+                </div>
+              </div>}
+              <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
+                Salaire mensualisé : <b style={{color:"var(--b)"}}>{salaireMensualise(contrat).toFixed(2)} €</b>
+                {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
+              </div>
+            </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Indemnité entretien (€/j)</label>
                 <input type="number"step="0.05"className="inp"value={contrat.entretien}onChange={e=>setContrat(c=>({...c,entretien:parseFloat(e.target.value)||3.80}))}/></div>
@@ -14991,7 +15081,7 @@ function OnboardingWizard({user,onFinish}){
                 }}>{j.slice(0,2)}</button>)}
               </div></div>
             <div style={{background:"var(--Sp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:12,color:"var(--S)",fontWeight:600}}>
-              Salaire mensuel estimé : {Math.round(contrat.heuresHebdo*52/12*contrat.tauxHoraire)}€ net + {Math.round(contrat.entretien*contrat.heuresHebdo/8*52/12)}€ entretien
+              Salaire mensuel estimé : {Math.round(salaireMensualise(contrat))}€ net + {Math.round(contrat.entretien*contrat.heuresHebdo/8*52/12)}€ entretien
             </div>
             <div style={{display:"flex",gap:8}}>
               <button className="btn bG"style={{flex:1}}onClick={()=>setStep(0)}>← Retour</button>
@@ -15154,6 +15244,8 @@ function AjouterEnfantModale({user,onClose}){
         debut:contrat.debut,
         fin:contrat.fin||null,
         heures_hebdo:Number(contrat.heuresHebdo)||40,
+        annee_complete:contrat.anneeComplete!==false,
+        semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||46):null,
         taux_horaire:Number(contrat.tauxHoraire)||minimumHoraireAu(new Date()),
         entretien:Number(contrat.entretien)||3.80,
         jours:contrat.jours,
@@ -15324,7 +15416,7 @@ function AjouterEnfantModale({user,onClose}){
           </div>
           {/* Apercu salaire */}
           {valideEtape1()&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--G)"}}>
-            <strong>Salaire mensuel brut estime :</strong> {Math.round(Number(contrat.heuresHebdo)*Number(contrat.tauxHoraire)*52/12)} € / mois
+            <strong>Salaire mensuel brut estime :</strong> {Math.round(salaireMensualise(contrat))} € / mois
           </div>}
           <div style={{display:"flex",gap:8}}>
             <button className="btn" onClick={()=>setStep(0)}
@@ -15400,7 +15492,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
   const contrat=enfant.contrat||{};
   const motifs=["Fin de contrat","Démission du parent","Retrait de l'enfant","Rupture conventionnelle","Retraite","Autre"];
   const parent=(D.parents||[]).find(p=>p.id===enfant.parentId)||{};
-  const salRef=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||minimumHoraireAu(new Date())));
+  const salRef=Math.round(salaireMensualise(contrat,contrat.tauxHoraire||minimumHoraireAu(new Date())));
   const [form,setForm]=useState({});
   useEffect(()=>{
     setForm({
@@ -15539,7 +15631,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
   },[enfant?.id,annee,contrat?.id]);
 
   // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
-  const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
+  const hMens=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const entretienJour=contrat.entretien||3.92;
   const hasReal=realStats?.paiements>0;
@@ -19265,6 +19357,8 @@ export default function App(){
                 fin:ct.fin,
                 heuresHebdo:ct.heures_hebdo,
                 tauxHoraire:ct.taux_horaire,
+                anneeComplete:ct.annee_complete,
+                semainesAccueil:ct.semaines_accueil,
                 entretien:ct.entretien,
                 aeeh:!!ct.aeeh,
                 repas:Number(ct.repas)||0,

@@ -273,10 +273,14 @@ const BAREME = [
   { nom: "cout horaire de reference CMG",  motif: /CHR_AM\s*=\s*4\.91\b/,           source: "Urssaf, 1er avril 2026" },
   { nom: "plafond horaire CMG",            motif: /PLAFOND_H\s*=\s*8\.09\b/,        source: "Urssaf, 1er avril 2026" },
   { nom: "plafond mensuel CMG",            motif: /CMG_MAX\s*=\s*825\.16\b/,        source: "CNAF, 1er avril 2026" },
+  { nom: "plancher de ressources CMG",     motif: /PLANCHER_RESSOURCES=814\.02\b/, source: "CAF/Urssaf 2026, trois sources concordantes" },
+  { nom: "plafond de ressources CMG",      motif: /PLAFOND_RESSOURCES=8500\b/,     source: "CAF/Urssaf 2026" },
   { nom: "allocation de formation horaire",  motif: /ALLOC_FORMATION_H = 5\.57\b/, source: "IPERIA / France Emploi Domicile, 1er avril 2025" },
   { nom: "plafond annuel formation",         motif: /ALLOC_FORMATION_PLAFOND_H = 58\b/, source: "plan de développement des compétences, 58 h/an" },
   { nom: "minimum conventionnel assmat",     motif: /\["2026-06-01",4\.20\]/,       source: "CCN 3239, avenant n° 10, 1er juin 2026" },
   { nom: "majoration du titre AM-GE",       motif: /MAJORATION_TITRE_AMGE=0\.04/,   source: "CCN 3239, art. 113 et annexe 5 : + 4 %" },
+  { nom: "semaines année complète",        motif: /const SEMAINES_ANNEE_COMPLETE=52;/, source: "CCN 3239 : 52 semaines, congés inclus" },
+  { nom: "seuil année incomplète",         motif: /const SEMAINES_MAX_ANNEE_INCOMPLETE=46;/, source: "CCN 3239 : 46 semaines ou moins" },
   { nom: "préavis fin de contrat",         motif: /if\(m<3\)return 8;\s*\n?\s*if\(m<12\)return 15;/, source: "CCN 3239 : 8 j, 15 j, 1 mois selon ancienneté" },
   { nom: "congés payés par mois",          motif: /const CP_PAR_MOIS=2\.5;/,       source: "code du travail art. L. 3141-3" },
   { nom: "plafond annuel de congés",       motif: /const CP_MAX_AN=30;/,           source: "30 jours ouvrables par période de référence" },
@@ -647,6 +651,28 @@ if (!miniCourant) {
 const posesAlerte = [...appSrc.matchAll(/<AlerteTauxMinimum\b/g)].length;
 if (posesAlerte < 2) {
   signale("chiffre", `l'alerte de taux minimum n'est posée qu'à ${posesAlerte} endroit(s) : elle doit l'être sur le bulletin et sur le contrat`);
+}
+
+// --- mensualisation ---
+// Pourquoi : la convention prevoit deux calculs, et l'application n'en
+// appliquait qu'un — celui des 52 semaines, a tous les contrats. Sur un accueil
+// en annee scolaire de 36 semaines, elle annoncait 728 EUR au lieu de 504, soit
+// 44 % de trop, et les conges payes se retrouvaient comptes deux fois.
+const finAppMens = appSrc.indexOf("function LandingPage");
+const zoneAppMens = finAppMens > 0 ? appSrc.slice(0, finAppMens) : appSrc;
+const posHelpers = zoneAppMens.indexOf("const SEMAINES_ANNEE_COMPLETE=");
+// On ignore les commentaires (ils citent la formule pour l'expliquer) et le
+// simulateur CMG public, ou le visiteur saisit ses heures et ou 52 est la
+// bonne hypothese generale. On ne retient que les calculs faits SUR UN CONTRAT.
+const sansComm = zoneAppMens.replace(/^\s*\/\/.*$/gm, "");
+const mensEnDur = [...sansComm.matchAll(/52\s*\/\s*12/g)]
+  .filter((m) => /contrat/i.test(sansComm.slice(Math.max(0, m.index - 90), m.index + 20)))
+  .filter((m) => m.index < posHelpers || m.index > posHelpers + 1600);
+if (mensEnDur.length) {
+  signale("paie", `${mensEnDur.length} calcul(s) de mensualisation encore figés sur 52 semaines : un accueil en année incomplète serait surévalué de plus de 10 %`);
+}
+if (!/const salaireMensualise=/.test(appSrc) || !/const semainesDuContrat=/.test(appSrc)) {
+  signale("paie", "les fonctions de mensualisation ont disparu : les deux formules ne sont plus distinguées");
 }
 
 // --- rapport ---
