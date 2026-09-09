@@ -113,7 +113,7 @@ const EMAIL_TEMPLATES={
     html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
       +"<p>"+v.asmat_prenom+" vient de signer electroniquement le contrat de "+v.enfant_prenom+".</p>"
       +"<p>Connectez-vous a TiMat pour le signer a votre tour :</p>"
-      +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
+      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
   },
   signature_parent_signed:{
     subject:"Le parent a signe le contrat",
@@ -124,7 +124,7 @@ const EMAIL_TEMPLATES={
   signature_reminder:{
     subject:"Rappel : signature de contrat en attente",
     html:(v)=>"<p>Le contrat de "+v.enfant_prenom+" attend votre signature depuis le "+v.date+".</p>"
-      +"<p><a href='"+v.url+"'>Signer maintenant</a></p>",
+      +"<p><a href='"+H(v.url)+"'>Signer maintenant</a></p>",
   },
   bulletin_sent:{
     subject:"Votre bulletin de salaire est disponible",
@@ -136,7 +136,7 @@ const EMAIL_TEMPLATES={
     html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
       +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
       +"<p>C'est 100% gratuit pour vous, sans carte bancaire.</p>"
-      +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
+      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
       +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://www.timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
   },
   // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
@@ -146,20 +146,20 @@ const EMAIL_TEMPLATES={
       +"<p>L'assistante maternelle a enregistre le pointage de "+v.enfant_prenom+" du "+v.date+".</p>"
       +"<p>Duree d'accueil : <strong>"+v.duree+"</strong></p>"
       +"<p>Merci de valider ce pointage dans votre application :</p>"
-      +"<p><a href='"+v.url+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
+      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
       +"<p style='font-size:11px;color:#888;margin-top:24px'>Si vous oubliez, un rappel automatique sera envoye sous 3 jours.</p>",
   },
   pointage_rappel:{
     subject:"Rappel : pointage en attente de validation depuis 3 jours",
     html:(v)=>"<p>Bonjour "+v.parent_prenom+",</p>"
       +"<p>Un pointage de "+v.enfant_prenom+" est en attente de votre validation depuis le "+v.date+".</p>"
-      +"<p><a href='"+v.url+"'>Valider maintenant</a></p>",
+      +"<p><a href='"+H(v.url)+"'>Valider maintenant</a></p>",
   },
   // VERSEMENTS P34 - notification d'un versement enregistre (parent->assmat ou assmat->parent)
   versement_recu:{
     subject:"Nouveau versement enregistre sur TiMat",
-    html:(v)=>"<h2>Bonjour "+v.prenom+",</h2>"
-      +"<p>"+v.qui+" a enregistre un versement de <strong>"+v.montant+"</strong>"+(v.enfant_prenom?(" pour "+v.enfant_prenom):"")+" le "+v.date+".</p>"
+    html:(v)=>"<h2>Bonjour "+H(v.prenom)+",</h2>"
+      +"<p>"+H(v.qui)+" a enregistre un versement de <strong>"+v.montant+"</strong>"+(v.enfant_prenom?(" pour "+v.enfant_prenom):"")+" le "+v.date+".</p>"
       +"<p>Retrouvez le detail dans l'onglet Versements de votre espace TiMat.</p>",
   },
 };
@@ -213,6 +213,23 @@ const QUALITE_SIESTE={
 function Pastille({couleur,taille=9}){
   return <span style={{width:taille,height:taille,borderRadius:"50%",background:couleur,
     display:"inline-block",flex:"0 0 auto",verticalAlign:"middle"}}/>;
+}
+
+// Avertit quand le taux horaire du contrat passe sous le plancher legal.
+// C'est le genre d'erreur qu'une assistante maternelle ne peut pas rattraper
+// seule : elle produit des bulletins entiers sur une remuneration illegale.
+function AlerteTauxMinimum({taux,date}){
+  const mini=minimumHoraireAu(date||new Date());
+  const t=Number(taux)||0;
+  if(t<=0||t>=mini)return null;
+  return <div style={{display:"flex",gap:9,alignItems:"flex-start",background:"var(--Rp)",
+    border:"1px solid var(--R)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
+    fontSize:12.5,color:"var(--R)",lineHeight:1.55}}>
+    <IconeOuEmoji e="⚠️" taille={16}/>
+    <span><b>Taux horaire sous le minimum légal.</b> {t.toFixed(2)} € par heure et par enfant,
+    alors que le minimum est de {mini.toFixed(2)} € à cette date (convention collective IDCC 3239).
+    Un avenant est nécessaire pour régulariser.</span>
+  </div>;
 }
 
 function PastilleRepas({q,taille=12}){
@@ -820,17 +837,17 @@ const D = {
     {id:"e1",prenom:"Léo",nom:"Martin",parentId:"p1",naissance:NAISSANCES.e1,couleur:"#3A72A8",emoji:"🦁",
       allergies:["Arachides","Noix de cajou"],groupe_sanguin:"A+",medecin:"Dr. Lefebvre - 01 23 45 67",
       vaccins:[{nom:"DTP",date:apresNaissance(NAISSANCES.e1,6),ok:true},{nom:"ROR",date:apresNaissance(NAISSANCES.e1,12),ok:true},{nom:"Méningite B",date:apresNaissance(NAISSANCES.e1,18),ok:false}],
-      contrat:{debut:ANNEE_SCOLAIRE.debut,fin:ANNEE_SCOLAIRE.fin,heuresHebdo:40,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h30–17h30",entretien:3.8,indemniteAbsence:0.5},
+      contrat:{debut:ANNEE_SCOLAIRE.debut,fin:ANNEE_SCOLAIRE.fin,heuresHebdo:40,tauxHoraire:4.20,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h30–17h30",entretien:3.8,indemniteAbsence:0.5},
       signe:false},
     {id:"e2",prenom:"Emma",nom:"Bernard",parentId:"p2",naissance:NAISSANCES.e2,couleur:"#4E7A5C",emoji:"🌸",
       allergies:["Lactose"],groupe_sanguin:"O+",medecin:"Dr. Martin - 01 34 56 78",
       vaccins:[{nom:"DTP",date:apresNaissance(NAISSANCES.e2,6),ok:true},{nom:"ROR",date:apresNaissance(NAISSANCES.e2,12),ok:true},{nom:"Méningite B",date:apresNaissance(NAISSANCES.e2,18),ok:true}],
-      contrat:{debut:ANNEE_SCOLAIRE.debut,fin:ANNEE_SCOLAIRE.fin,heuresHebdo:35,tauxHoraire:4.05,jours:["Lundi","Mardi","Jeudi","Vendredi"],horaires:"08h00–18h00",entretien:3.8,indemniteAbsence:0.5},
+      contrat:{debut:ANNEE_SCOLAIRE.debut,fin:ANNEE_SCOLAIRE.fin,heuresHebdo:35,tauxHoraire:4.20,jours:["Lundi","Mardi","Jeudi","Vendredi"],horaires:"08h00–18h00",entretien:3.8,indemniteAbsence:0.5},
       signe:true},
     {id:"e3",prenom:"Noah",nom:"Petit",parentId:"p3",naissance:NAISSANCES.e3,couleur:"#BC4869",emoji:"⭐",
       allergies:[],groupe_sanguin:"B+",medecin:"Dr. Durand - 01 45 67 89",
       vaccins:[{nom:"DTP",date:apresNaissance(NAISSANCES.e3,6),ok:true},{nom:"ROR",date:apresNaissance(NAISSANCES.e3,12),ok:false},{nom:"Hépatite B",date:apresNaissance(NAISSANCES.e3,6),ok:true}],
-      contrat:{debut:jourDecale(-240),fin:jourDecale(125),heuresHebdo:45,tauxHoraire:4.05,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h00–18h00",entretien:3.8,indemniteAbsence:0.5},
+      contrat:{debut:jourDecale(-240),fin:jourDecale(125),heuresHebdo:45,tauxHoraire:4.20,jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],horaires:"07h00–18h00",entretien:3.8,indemniteAbsence:0.5},
       signe:false},
   ],
   transmissions:[
@@ -1526,14 +1543,14 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       try{
         // Bornes temporelles
         const now=new Date();
-        const todayIso=now.toISOString().slice(0,10);
+        const todayIso=isoJour(now);
         // Lundi de la semaine (lundi = 1, dimanche = 0 → on calcule l'offset)
         const dayOfWeek=now.getDay();
         const offset=dayOfWeek===0?6:dayOfWeek-1;
         const lundi=new Date(now);lundi.setDate(now.getDate()-offset);lundi.setHours(0,0,0,0);
-        const lundiIso=lundi.toISOString().slice(0,10);
+        const lundiIso=isoJour(lundi);
         // Debut du mois
-        const debutMois=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+        const debutMois=isoJour(new Date(now.getFullYear(),now.getMonth(),1));
         const enfantIds=enfants.map(e=>e.id);
 
         // 1. Pointages de la semaine
@@ -3669,7 +3686,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
   const h=calcHeures();
   const salBrut=contrat?(h.real*contrat.tauxHoraire+(h.real/5*contrat.entretien)):0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
-  const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||4.05)*(contrat?.indemniteAbsence||0.5)),0);
+  const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||minimumHoraireAu(new Date()))*(contrat?.indemniteAbsence||0.5)),0);
   const totalBrut=salBrut+indemAbs;
   const moisCourant=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
   const netEstime=totalBrut*0.78;
@@ -4046,6 +4063,7 @@ function Contrats({enfants,role,pEId,user}){
 
         <div className="card"style={{marginBottom:12}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Détail du contrat</div>
+          <AlerteTauxMinimum taux={contrat.tauxHoraire} date={contrat.debut}/>
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",(contrat.jours||[]).join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
@@ -4217,7 +4235,7 @@ function Sante({enfants,role,pEId,user}){
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const [croissance,setCroissance]=useState([]);
-  const [mesForm,setMesForm]=useState({date:new Date().toISOString().slice(0,10),poids:"",taille:""});
+  const [mesForm,setMesForm]=useState({date:isoJour(new Date()),poids:"",taille:""});
   useEffect(()=>{
     if(!enfant?.id||["e1","e2","e3"].includes(enfant.id)){setCroissance([]);return;}
     supabase.from("croissance").select("*").eq("enfant_id",enfant.id).order("date",{ascending:true}).then(({data})=>setCroissance(data||[]));
@@ -4231,7 +4249,7 @@ function Sante({enfants,role,pEId,user}){
     if(!mesForm.date||(!p&&!t)){alert("Indiquez au moins le poids ou la taille.");return;}
     const{error}=await supabase.from("croissance").insert({enfant_id:enfant.id,date:mesForm.date,poids:p,taille:t,age_mois:ageMois(mesForm.date)});
     if(error){alert("Erreur : "+error.message);return;}
-    setMesForm({date:new Date().toISOString().slice(0,10),poids:"",taille:""});
+    setMesForm({date:isoJour(new Date()),poids:"",taille:""});
     rechargerCroissance();
   };
   const delMesure=async(id)=>{
@@ -4582,7 +4600,7 @@ function Developpement({enfants,role,pEId}){
     const row=items.find(m=>m.id===id);
     if(!row)return;
     const newAcquis=!row.acquis;
-    const newAcquisAt=newAcquis?new Date().toISOString().slice(0,10):null;
+    const newAcquisAt=newAcquis?isoJour(new Date()):null;
     setMs(p=>({...p,[enfant.id]:p[enfant.id].map(m=>m.id===id?{...m,acquis:newAcquis,acquis_at:newAcquisAt}:m)}));
     const {error}=await supabase.from("jalons").update({acquis:newAcquis,acquis_at:newAcquisAt}).eq("id",id);
     if(error){
@@ -4709,16 +4727,16 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
     if(type==="mensuel"){
       const s=new Date(today.getFullYear(),today.getMonth(),1);
       const e=new Date(today.getFullYear(),today.getMonth()+1,0);
-      return{date_debut:s.toISOString().slice(0,10),date_fin:e.toISOString().slice(0,10)};
+      return{date_debut:isoJour(s),date_fin:isoJour(e)};
     }
     if(type==="trimestriel"){
       const tStart=Math.floor(today.getMonth()/3)*3;
       const s=new Date(today.getFullYear(),tStart,1);
       const e=new Date(today.getFullYear(),tStart+3,0);
-      return{date_debut:s.toISOString().slice(0,10),date_fin:e.toISOString().slice(0,10)};
+      return{date_debut:isoJour(s),date_fin:isoJour(e)};
     }
     const s=new Date(today);s.setMonth(today.getMonth()-3);
-    return{date_debut:s.toISOString().slice(0,10),date_fin:today.toISOString().slice(0,10)};
+    return{date_debut:isoJour(s),date_fin:isoJour(today)};
   };
 
   const emptySections=()=>({
@@ -5052,7 +5070,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       }
       // === SAUVEGARDE ===
       const slug=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase();
-      const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||new Date().toISOString().slice(0,10))+".pdf";
+      const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||isoJour(new Date()))+".pdf";
       doc.save(filename);
       setToast("✅ PDF téléchargé");
     }catch(err){
@@ -5318,7 +5336,7 @@ function Recap({enfants,role,pEId}){
             <tr><td>Heures prévues</td><td>Contrat mensuel</td><td><strong>{h.prev}h</strong></td></tr>
             <tr><td>Heures réalisées</td><td>Pointage validé</td><td><strong>{h.real}h</strong></td></tr>
             <tr><td>Solde</td><td>Différence</td><td style={{color:h.real-h.prev<0?"#DC2626":"#16A34A"}}><strong>{h.real-h.prev}h</strong></td></tr>
-            <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{(h.real*(contrat?.tauxHoraire||4.05)).toFixed(2)}€</strong></td></tr>
+            <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{(h.real*(contrat?.tauxHoraire||minimumHoraireAu(new Date()))).toFixed(2)}€</strong></td></tr>
             <tr><td>Repas suivis</td><td>Journaux renseignés</td><td><strong>{rep.length} jours</strong></td></tr>
             <tr><td>Étapes dév.</td><td>Jalons OMS</td><td><strong>{ms.filter(m=>m.ok).length}/{ms.length}</strong></td></tr>
           </tbody>
@@ -5400,7 +5418,7 @@ function CompteRenduTrimestriel({enfants,role,pEId}){
           {cr&&<div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,lineHeight:2,color:"var(--b)",whiteSpace:"pre-wrap"}}>{cr}</div>
             <div style={{display:"flex",gap:8,marginTop:16,flexWrap:"wrap",alignItems:"center"}}>
-              {role==="asmat"&&!envoye&&<button className="btn bS"onClick={()=>{setEnvoye(true);setToast("CR "+trim+" envoyé à "+parent?.prenom+" "+parent?.nom+" ✓");}}>
+              {role==="asmat"&&!envoye&&<button className="btn bS"onClick={()=>{setEnvoye(true);setToast("CR "+trim+" envoyé à "+H(parent?.prenom)+" "+H(parent?.nom)+" ✓");}}>
                 <IconeOuEmoji e="📩"/> Envoyer aux parents
               </button>}
               {role==="asmat"&&envoye&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:"var(--Sp)",borderRadius:10,border:"1px solid var(--Sl)"}}>
@@ -5471,6 +5489,30 @@ const smicHoraireAu=(d)=>{
   return SMIC_HORAIRE_HISTO[SMIC_HORAIRE_HISTO.length-1][1];
 };
 
+// Salaire horaire minimum d'une assistante maternelle, par enfant et par heure.
+//
+// Deux planchers coexistent, et c'est le plus favorable qui s'applique :
+//   - le minimum LEGAL, indexe sur le SMIC : 0,281 x SMIC horaire brut
+//     (article D. 423-9 du code de l'action sociale et des familles) ;
+//   - le minimum CONVENTIONNEL, fixe par avenant a la CCN 3239 : 4,20 EUR
+//     brut depuis le 1er juin 2026 (avenant n° 10), contre 3,64 EUR avant.
+//
+// Aujourd'hui c'est le conventionnel qui l'emporte (4,20 contre 3,46).
+// L'application ne verifiait ce plancher nulle part : un taux saisi en dessous
+// produisait des bulletins entiers sur une remuneration illegale, sans un mot.
+const MINIMUM_CONV_HISTO=[
+  ["2026-06-01",4.20],
+  ["2024-01-01",3.64],
+];
+const COEF_MINIMUM_LEGAL=0.281;
+const minimumHoraireAu=(d)=>{
+  const j=isoJour(d);
+  let conv=MINIMUM_CONV_HISTO[MINIMUM_CONV_HISTO.length-1][1];
+  for(const[debut,valeur]of MINIMUM_CONV_HISTO)if(j>=debut){conv=valeur;break;}
+  const legal=Math.round(smicHoraireAu(d)*COEF_MINIMUM_LEGAL*100)/100;
+  return Math.max(conv,legal);
+};
+
 // jsPDF est charge a la demande, mais depuis le paquet installe et non plus
 // depuis un CDN : le PDF continue de ne peser sur aucun chargement de page
 // (Vite en fait un morceau separe), tout en restant generable hors ligne et
@@ -5494,6 +5536,19 @@ const protegerPdf = (doc) => {
   doc.splitTextToSize = (t, ...reste) => decouper(nettoyerPdf(t), ...reste);
   return doc;
 };
+
+// Echappement HTML pour les documents que l'application ouvre dans une
+// nouvelle fenetre (attestation, fiche d'urgence, recap Pajemploi, e-mails).
+//
+// Ces documents sont assembles a la main, chaine par chaine, et y injectaient
+// telles quelles des valeurs tapees par les familles : un prenom, une adresse,
+// le nom d'un medecin. Deux consequences : une apostrophe ou un « < » dans un
+// nom cassait la mise en page du document, et un texte saisi par un parent
+// pouvait faire executer du code dans la fenetre que l'assistante maternelle
+// ouvre pour imprimer.
+const H = (v) => String(v === null || v === undefined ? "" : v)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 let jsPDFPromesse=null;
 const chargerJsPDF=()=>(jsPDFPromesse||(jsPDFPromesse=import("jspdf").then(m=>m.jsPDF)));
@@ -5976,7 +6031,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       const debut=moisSelKey+"-01";
       const[year,month]=moisSelKey.split("-").map(Number);
       const finDate=new Date(year,month,0); // dernier jour du mois
-      const fin=finDate.toISOString().slice(0,10);
+      const fin=isoJour(finDate);
       const{data:pts}=await supabase.from("pointages").select("total_minutes,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
       // Regrouper par date : une "journee d'accueil" = somme des pointages du meme jour (matin+apres-midi)
@@ -6017,7 +6072,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const h=isDemoBull
     ?(D.heures[enfant?.id]||{real:160,prev:174})
     :{real:useRealHours?heuresMoisReel.heures:hMens,prev:hMens};
-  const tauxH=contrat.tauxHoraire||4.05;
+  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const heuresJourRef=Math.round(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))*10)/10;
   const heuresNorm=Math.min(h.real,45*4);
   const hSupp=Math.max(0,h.real-heuresNorm);
@@ -6416,6 +6471,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
 
       {/* Rémunération */}
       <div style={{marginBottom:14}}>
+        <AlerteTauxMinimum taux={tauxH} date={moisSelKey?moisSelKey+"-15":new Date()}/>
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
@@ -6482,7 +6538,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         const prenomEmp=enfant?.prenomParent||(enfant?.parentId?"Parent employeur":"Parent");
         const cotisDetails=Object.entries(TAUX_COTISATIONS).map(function(entry){
           var nom=entry[0],t=entry[1];
-          return "<tr><td>"+nom+"</td>"
+          return "<tr><td>"+H(nom)+"</td>"
             +"<td class=\"right\">"+(t.sal>0?cotisation(t,"sal").toFixed(2)+"€":"-")+"</td>"
             +"<td class=\"right\">"+(t.pat>0?cotisation(t,"pat").toFixed(2)+"€":"-")+"</td></tr>";
         }).join("");
@@ -6796,7 +6852,7 @@ function CourriersTypes({enfants,pEId,user}){
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour le PDF");return;}
     const corps=texte.split("\n").map(l=>l.trim()?("<p>"+l.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>"):"<br/>").join("");
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${sel.titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(sel.titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast("PDF généré ✓");
   };
 
@@ -6909,7 +6965,7 @@ function ImportContrat({onFinish}){
             <div><label className="lbl">Heures / semaine</label><input type="number"className="inp"placeholder="40"value={data.heures}onChange={e=>setData(d=>({...d,heures:e.target.value}))}/></div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-            <div><label className="lbl">Taux horaire net (€)</label><input type="number"step="0.05"className="inp"placeholder="4.05"value={data.taux}onChange={e=>setData(d=>({...d,taux:e.target.value}))}/></div>
+            <div><label className="lbl">Taux horaire net (€)</label><input type="number"step="0.05"className="inp"placeholder="4.20"value={data.taux}onChange={e=>setData(d=>({...d,taux:e.target.value}))}/></div>
             <div><label className="lbl">Indemnité entretien (€/j)</label><input type="number"step="0.05"className="inp"placeholder="3.80"value={data.entretien}onChange={e=>setData(d=>({...d,entretien:e.target.value}))}/></div>
           </div>
           <div style={{marginBottom:14}}>
@@ -7016,7 +7072,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
   const [savingEdit,setSavingEdit]=useState(false);
 
   // Champs du formulaire
-  const todayStr=new Date().toISOString().slice(0,10);
+  const todayStr=isoJour(new Date());
   const [fDate,setFDate]=useState(todayStr);
   const [fMontant,setFMontant]=useState("");
   const [fMode,setFMode]=useState("virement");
@@ -7468,7 +7524,7 @@ function TransmissionsContent({enfant,role,user}){
     const loadPhotos=async()=>{
       setPhotosLoading(true);
       try{
-        const today=new Date().toISOString().slice(0,10);
+        const today=isoJour(new Date());
         const path=`${user?.id||'anon'}/${enfant.id}/${today}`;
         const{data:files,error}=await supabase.storage.from('photos').list(path,{limit:50});
         if(!error&&files?.length>0){
@@ -7496,7 +7552,7 @@ function TransmissionsContent({enfant,role,user}){
       return;
     }
     // Upload to Supabase Storage
-    const today=new Date().toISOString().slice(0,10);
+    const today=isoJour(new Date());
     const ext=file.name.split('.').pop()||'jpg';
     const fileName=`${Date.now()}.${ext}`;
     const path=`${user?.id||'anon'}/${enfant.id}/${today}/${fileName}`;
@@ -7665,17 +7721,17 @@ function Eveil({enfants,role,pEId}){
 const SOMMEIL_DEMO={
   "e1":[
     {id:"s1",date:TODAY_STR,debut:"13h05",fin:"14h45",duree:"1h40",qualite:"bien"},
-    {id:"s2",date:new Date(Date.now()-86400000).toISOString().slice(0,10),debut:"12h55",fin:"14h30",duree:"1h35",qualite:"bien"},
-    {id:"s3",date:new Date(Date.now()-172800000).toISOString().slice(0,10),debut:"13h20",fin:"14h10",duree:"0h50",qualite:"agite"},
+    {id:"s2",date:isoJour(new Date(Date.now()-86400000)),debut:"12h55",fin:"14h30",duree:"1h35",qualite:"bien"},
+    {id:"s3",date:isoJour(new Date(Date.now()-172800000)),debut:"13h20",fin:"14h10",duree:"0h50",qualite:"agite"},
   ],
   "e2":[
     {id:"s4",date:TODAY_STR,debut:"13h10",fin:"13h55",duree:"0h45",qualite:"agite"},
-    {id:"s5",date:new Date(Date.now()-86400000).toISOString().slice(0,10),debut:"13h00",fin:"15h00",duree:"2h00",qualite:"bien"},
+    {id:"s5",date:isoJour(new Date(Date.now()-86400000)),debut:"13h00",fin:"15h00",duree:"2h00",qualite:"bien"},
   ],
   "e3":[
     {id:"s6",date:TODAY_STR,debut:"11h30",fin:"13h30",duree:"2h00",qualite:"bien"},
-    {id:"s7",date:new Date(Date.now()-86400000).toISOString().slice(0,10),debut:"11h45",fin:"13h50",duree:"2h05",qualite:"bien"},
-    {id:"s8",date:new Date(Date.now()-172800000).toISOString().slice(0,10),debut:"12h00",fin:"13h20",duree:"1h20",qualite:"court"},
+    {id:"s7",date:isoJour(new Date(Date.now()-86400000)),debut:"11h45",fin:"13h50",duree:"2h05",qualite:"bien"},
+    {id:"s8",date:isoJour(new Date(Date.now()-172800000)),debut:"12h00",fin:"13h20",duree:"1h20",qualite:"court"},
   ],
 };
 
@@ -8031,7 +8087,7 @@ function CourbeCroissance({enfants,role,pEId}){
   const ajouter=async()=>{
     if(!newM.poids&&!newM.taille)return;
     if(!enfant)return;
-    const d=newM.date||new Date().toISOString().slice(0,10);
+    const d=newM.date||isoJour(new Date());
     const n=new Date(enfant.naissance),mDate=new Date(d);
     const mois=Math.max(0,(mDate.getFullYear()-n.getFullYear())*12+(mDate.getMonth()-n.getMonth()));
     const poids=parseFloat(String(newM.poids).replace(",","."))||null;
@@ -8177,7 +8233,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
   const [catFilt,setCatFilt]=useState("tous");
   const [ageFilt,setAgeFilt]=useState("tous");
   const [faitFilt,setFaitFilt]=useState("tous");
-  const [jour,setJour]=useState(new Date().toISOString().slice(0,10));
+  const [jour,setJour]=useState(isoJour(new Date()));
   const [faites,setFaites]=useState([]);
   const [perso,setPerso]=useState([]);
   const [showForm,setShowForm]=useState(false);
@@ -8326,9 +8382,9 @@ function ActivitesSuggerees({enfants,role,pEId}){
 
 //
 const PMI_MESSAGES=[
-  {id:"pmi1",de:"PMI",h:"09h15",date:new Date(Date.now()-7*86400000).toISOString().slice(0,10),txt:"Bonjour Madame Dupont, nous organisons une réunion d'information le 15 avril à 14h à la mairie. Votre présence est souhaitée.",lu:true},
-  {id:"pmi2",de:"asmat",h:"10h30",date:new Date(Date.now()-7*86400000).toISOString().slice(0,10),txt:"Bonjour, je confirme ma présence le 15 avril. Merci pour l'invitation.",lu:true},
-  {id:"pmi3",de:"PMI",h:"14h20",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),txt:"Votre agrément arrive à renouvellement en juin 2024. Merci de nous contacter pour planifier la visite de renouvellement.",lu:false},
+  {id:"pmi1",de:"PMI",h:"09h15",date:isoJour(new Date(Date.now()-7*86400000)),txt:"Bonjour Madame Dupont, nous organisons une réunion d'information le 15 avril à 14h à la mairie. Votre présence est souhaitée.",lu:true},
+  {id:"pmi2",de:"asmat",h:"10h30",date:isoJour(new Date(Date.now()-7*86400000)),txt:"Bonjour, je confirme ma présence le 15 avril. Merci pour l'invitation.",lu:true},
+  {id:"pmi3",de:"PMI",h:"14h20",date:isoJour(new Date(Date.now()-2*86400000)),txt:"Votre agrément arrive à renouvellement en juin 2024. Merci de nous contacter pour planifier la visite de renouvellement.",lu:false},
 ];
 
 
@@ -9674,7 +9730,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
 
   const changeJour=(delta)=>{
     const d=new Date(dateSel+"T12:00:00");d.setDate(d.getDate()+delta);
-    const ns=d.toISOString().slice(0,10);
+    const ns=isoJour(d);
     if(ns>TODAY_STR)return;
     setDateSel(ns);
   };
@@ -10068,7 +10124,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
 //
 const DEMANDES_DEMO=[
   {
-    id:"d1",statut:"nouveau",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),
+    id:"d1",statut:"nouveau",date:isoJour(new Date(Date.now()-2*86400000)),
     parent:{prenom:"Camille",nom:"Moreau",email:"camille.moreau@gmail.com",tel:"06 12 34 56 78",profession:"Infirmière"},
     enfant:{prenom:"Chloé",naissance:"2023-08-14",allergies:"Aucune connue",dejaCrèche:false},
     contrat:{debut:"2024-09-02",jours:["Lundi","Mardi","Mercredi","Jeudi"],
@@ -10077,7 +10133,7 @@ const DEMANDES_DEMO=[
     message:"Bonjour Madame Dupont, nous avons trouvé votre profil sur monenfant.fr. Notre fille Chloé aura 1 an en août et nous cherchons une assistante maternelle de confiance pour la rentrée. Votre profil nous correspond parfaitement.",
   },
   {
-    id:"d2",statut:"en_discussion",date:new Date(Date.now()-5*86400000).toISOString().slice(0,10),
+    id:"d2",statut:"en_discussion",date:isoJour(new Date(Date.now()-5*86400000)),
     parent:{prenom:"Antoine",nom:"Lefebvre",email:"antoine.lefebvre@hotmail.fr",tel:"07 89 01 23 45",profession:"Comptable"},
     enfant:{prenom:"Mathieu",naissance:"2022-11-03",allergies:"Lactose",dejaCrèche:true},
     contrat:{debut:"2024-10-01",jours:["Lundi","Mercredi","Vendredi"],
@@ -10086,7 +10142,7 @@ const DEMANDES_DEMO=[
     message:"Bonjour, mon fils Mathieu est actuellement à la crèche mais nous souhaitons le confier à une assistante maternelle à partir d'octobre. Il a une intolérance au lactose. Serait-il possible d'échanger ?",
   },
   {
-    id:"d3",statut:"accepte",date:new Date(Date.now()-12*86400000).toISOString().slice(0,10),
+    id:"d3",statut:"accepte",date:isoJour(new Date(Date.now()-12*86400000)),
     parent:{prenom:"Lucie",nom:"Bernard",email:"lucie.b@orange.fr",tel:"06 55 44 33 22",profession:"Enseignante"},
     enfant:{prenom:"Tom",naissance:"2021-04-20",allergies:"Aucune",dejaCrèche:false},
     contrat:{debut:"2024-09-02",jours:["Lundi","Mardi","Jeudi","Vendredi"],
@@ -10095,7 +10151,7 @@ const DEMANDES_DEMO=[
     message:"Bonjour, je suis enseignante et je cherche une assistante maternelle pour mon fils Tom. Vos horaires correspondent parfaitement aux miens.",
   },
   {
-    id:"d4",statut:"refuse",date:new Date(Date.now()-20*86400000).toISOString().slice(0,10),
+    id:"d4",statut:"refuse",date:isoJour(new Date(Date.now()-20*86400000)),
     parent:{prenom:"Marc",nom:"Petit",email:"marc.petit@sfr.fr",tel:"06 11 22 33 44",profession:"Commercial"},
     enfant:{prenom:"Emma",naissance:"2024-01-15",allergies:"Aucune",dejaCrèche:false},
     contrat:{debut:"2024-06-01",jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
@@ -10270,7 +10326,7 @@ function ListeAttente({role,enfants,user}){
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="💬"/> Répondre</div>
           <textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
-            placeholder={"Bonjour "+sel.parent.prenom+",\n\nMerci pour votre message..."}
+            placeholder={"Bonjour "+H(sel.parent.prenom)+",\n\nMerci pour votre message..."}
             style={{width:"100%",minHeight:90,marginBottom:10,resize:"vertical"}}/>
           <button className="btn bT"style={{width:"100%",marginBottom:10}}onClick={envoyerReponse}
             disabled={!repTxt.trim()}>
@@ -10353,7 +10409,7 @@ function KitCMG({enfants,role,pEId,user}){
 
   // Calcul salaire net estimé
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
-  const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||4.05)*1.1*10)/10;
+  const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*1.1*10)/10;
   const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
 
   return <div className="fi">
@@ -10414,7 +10470,7 @@ function KitCMG({enfants,role,pEId,user}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
-          <InfoRow label="Taux horaire net" value={(contrat.tauxHoraire||4.05).toFixed(2)+"€/h"} copyKey="taux"/>
+          <InfoRow label="Taux horaire net" value={(contrat.tauxHoraire||minimumHoraireAu(new Date())).toFixed(2)+"€/h"} copyKey="taux"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
           <InfoRow label="Indemnité d'entretien/jour" value={(contrat.entretien||3.92).toFixed(2)+"€"} copyKey="entretien"/>
           <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
@@ -10983,7 +11039,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
 
   // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
-  const tauxH=contrat.tauxHoraire||4.05;
+  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const entretienJour=contrat.entretien||3.92;
   const heuresAnnuelles=realStats?.heures||(heuresMois*12);
   const joursAnnuels=realStats?.jours||(heuresAnnuelles/8);
@@ -11330,7 +11386,7 @@ function RecapFiscalAssmat({enfants,user}){
 
   const imprimer=()=>{
     const w=window.open("","_blank");if(!w)return;
-    const rows=lignes.map(l=>"<tr><td>"+l.prenom+"</td><td class=r>"+l.jours+"</td><td class=r>"+eur(l.baseImposable)+"</td><td class=r>- "+eur(l.abatt)+"</td><td class=r><b>"+eur(l.netApres)+"</b></td></tr>").join("");
+    const rows=lignes.map(l=>"<tr><td>"+H(l.prenom)+"</td><td class=r>"+l.jours+"</td><td class=r>"+eur(l.baseImposable)+"</td><td class=r>- "+eur(l.abatt)+"</td><td class=r><b>"+eur(l.netApres)+"</b></td></tr>").join("");
     w.document.write("<html><head><meta charset='utf-8'><title>Recap fiscal "+annee+"</title><style>body{font-family:Arial,sans-serif;color:#2E4A5A;padding:28px;font-size:13px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin:14px 0}th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}.r{text-align:right}thead{background:#f3efe9}.tot{background:#eef5f2;font-weight:700}.note{font-size:11px;color:#666;margin-top:16px;line-height:1.6}</style></head><body>"+
       "<h1>Recap fiscal annuel "+annee+" — Assistante maternelle</h1>"+
       "<p>Revenu imposable apres abattement (regime special, CGI art. 80 sexies), a reporter sur la <b>declaration 2042 C PRO</b> (rubrique traitements et salaires).</p>"+
@@ -11401,7 +11457,7 @@ function IndemnitesKilometriques({enfants,role,user}){
   const [trajets,setTrajets]=useState([]);
   const [loading,setLoading]=useState(false);
   const [saving,setSaving]=useState(false);
-  const blank={date:new Date().toISOString().slice(0,10),enfant_id:enfants[0]?.id||"",km:"",motif:"",taux:BAREME_KM_2026[5]};
+  const blank={date:isoJour(new Date()),enfant_id:enfants[0]?.id||"",km:"",motif:"",taux:BAREME_KM_2026[5]};
   const [nt,setNt]=useState(blank);
   const inp={width:"100%",padding:"9px 11px",borderRadius:8,border:"1.5px solid var(--br)",fontSize:13,fontFamily:"inherit",boxSizing:"border-box",background:"var(--w)"};
 
@@ -11410,7 +11466,7 @@ function IndemnitesKilometriques({enfants,role,user}){
     setLoading(true);
     const debut=mois+"-01";
     const d=new Date(mois+"-01"); d.setMonth(d.getMonth()+1);
-    const finExcl=d.toISOString().slice(0,10);
+    const finExcl=isoJour(d);
     const{data}=await supabase.from("trajets").select("*").gte("date",debut).lt("date",finExcl).order("date",{ascending:true});
     if(data)setTrajets(data);
     setLoading(false);
@@ -11526,7 +11582,7 @@ function IndemnitesKilometriques({enfants,role,user}){
 
 function SimulateurCout({enfants,pEId}){
   const enfant=enfants.find(e=>e.id===pEId)||enfants[0];
-  const [taux,setTaux]=useState(4.05);
+  const [taux,setTaux]=useState(minimumHoraireAu(new Date()));
   const [heures,setHeures]=useState(40);
   const [semaines,setSemaines]=useState(47);
   const [entretien,setEntretien]=useState(3.80);
@@ -11688,7 +11744,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée","Autre"];
 
   // Calculs solde
-  const tauxH=contrat.tauxHoraire||4.05;
+  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const heuresMois=Math.round((contrat.heuresHebdo||40)*52/12);
   const salMensuel=heuresMois*tauxH;
   // Congés payés : 2.5j par mois travaillé, simulation 8 mois
@@ -11706,12 +11762,12 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   const printDoc=(titre,corps)=>{
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour générer le document");return;}
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast(titre+" généré ✓");
   };
-  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${enfant?.prenom||"[Prénom]"}</b>, pour le motif suivant : <b>${motif}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
-  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${enfant?.prenom||"[Prénom]"}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
-  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${enfant?.prenom||"[Prénom]"}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${total.toFixed(2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${iccp.toFixed(2)} € + indemnité de préavis ${indemPreavis.toFixed(2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature de la salariée</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
+  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${total.toFixed(2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${iccp.toFixed(2)} € + indemnité de préavis ${indemPreavis.toFixed(2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature de la salariée</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -11888,7 +11944,7 @@ function ExportDonnees({enfants,user,role}){
       }
 
       // 4. Generer le fichier
-      const fileName="export-timat-"+(user?.email||"user").replace(/[^a-z0-9]/gi,"_")+"-"+new Date().toISOString().slice(0,10)+"."+format;
+      const fileName="export-timat-"+(user?.email||"user").replace(/[^a-z0-9]/gi,"_")+"-"+isoJour(new Date())+"."+format;
 
       if(format==="json"){
         const blob=new Blob([JSON.stringify(exportData,null,2)],{type:"application/json"});
@@ -12730,7 +12786,7 @@ const DEMO_SCREENS=[
       const [mois,setMois]=useState("Mars");
       const data={Mars:{h:160,supp:8,ent:20},Fev:{h:152,supp:4,ent:19},Jan:{h:168,supp:12,ent:21}};
       const m=data[mois]||data.Mars;
-      const brut=(m.h*4.05+m.supp*5.06+m.ent*3.80);
+      const brut=(m.h*4.20+m.supp*5.25+m.ent*3.80);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="💰"/> Salaire — Léo 🦁</div>
@@ -12740,7 +12796,7 @@ const DEMO_SCREENS=[
             background:mois===mo?"#E49178":"#F4F7FA",color:mois===mo?"#fff":"#2E4859",transition:"all .15s"
           }}>{mo} 2024</button>)}
         </div>
-        {[["Heures réalisées",m.h+"h × 4,05€",(m.h*4.05).toFixed(2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",(m.ent*3.80).toFixed(2)+"€"],["Heures majorées",m.supp+"h × 5,06€",(m.supp*5.06).toFixed(2)+"€"]].map(([l,d,v])=>(
+        {[["Heures réalisées",m.h+"h × 4,20€",(m.h*4.20).toFixed(2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",(m.ent*3.80).toFixed(2)+"€"],["Heures majorées",m.supp+"h × 5,06€",(m.supp*5.06).toFixed(2)+"€"]].map(([l,d,v])=>(
           <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
             <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:11,color:"#8FA3AD"}}>{d}</div></div>
             <div style={{fontWeight:700,color:"#5DA9A1"}}>{v}</div>
@@ -14649,9 +14705,9 @@ function OnboardingWizard({user,onFinish}){
   const [step,setStep]=useState(0);
   const [enfant,setEnfant]=useState({prenom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
-    heuresHebdo:40,tauxHoraire:4.05,entretien:3.80,
+    heuresHebdo:40,tauxHoraire:4.20,entretien:3.80,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
-    horaires:"07h30–17h30",debut:new Date().toISOString().slice(0,10)
+    horaires:"07h30–17h30",debut:isoJour(new Date())
   });
   const [parentEmail,setParentEmail]=useState("");
   const [saving,setSaving]=useState(false);
@@ -14722,9 +14778,9 @@ function OnboardingWizard({user,onFinish}){
       const{error:errContrat}=await withRetry(()=>supabase.from('contrats').insert({
         enfant_id:enfantData.id,
         asmat_id:user.id,
-        debut:contrat.debut||new Date().toISOString().slice(0,10),
+        debut:contrat.debut||isoJour(new Date()),
         heures_hebdo:contrat.heuresHebdo||40,
-        taux_horaire:contrat.tauxHoraire||4.05,
+        taux_horaire:contrat.tauxHoraire||minimumHoraireAu(new Date()),
         entretien:contrat.entretien||3.92,
         jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
         horaires:contrat.horaires||'07h30–17h30',
@@ -14911,10 +14967,10 @@ function AjouterEnfantModale({user,onClose}){
   const [step,setStep]=useState(0);
   const [enfant,setEnfant]=useState({prenom:"",nom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
-    debut:new Date().toISOString().slice(0,10),
+    debut:isoJour(new Date()),
     fin:"",
     heuresHebdo:40,
-    tauxHoraire:4.05,
+    tauxHoraire:4.20,
     entretien:3.80,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
     horaires:"07h30–17h30",
@@ -14974,7 +15030,7 @@ function AjouterEnfantModale({user,onClose}){
         debut:contrat.debut,
         fin:contrat.fin||null,
         heures_hebdo:Number(contrat.heuresHebdo)||40,
-        taux_horaire:Number(contrat.tauxHoraire)||4.05,
+        taux_horaire:Number(contrat.tauxHoraire)||minimumHoraireAu(new Date()),
         entretien:Number(contrat.entretien)||3.80,
         jours:contrat.jours,
         horaires:contrat.horaires||"07h30–17h30",
@@ -15220,7 +15276,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
   const contrat=enfant.contrat||{};
   const motifs=["Fin de contrat","Démission du parent","Retrait de l'enfant","Rupture conventionnelle","Retraite","Autre"];
   const parent=(D.parents||[]).find(p=>p.id===enfant.parentId)||{};
-  const salRef=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||4.05));
+  const salRef=Math.round((contrat.heuresHebdo||40)*52/12*(contrat.tauxHoraire||minimumHoraireAu(new Date())));
   const [form,setForm]=useState({});
   useEffect(()=>{
     setForm({
@@ -15360,7 +15416,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
 
   // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
   const hMens=Math.round((contrat.heuresHebdo||40)*52/12);
-  const tauxH=contrat.tauxHoraire||4.05;
+  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const entretienJour=contrat.entretien||3.92;
   const hasReal=realStats?.paiements>0;
   const moisTravailles=12;
@@ -15460,7 +15516,7 @@ const jsPDF=await chargerJsPDF();
           y+=8;
         };
         ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
-        ligneSimple("Taux horaire brut",(contrat.tauxHoraire||4.05)+" euros/h");
+        ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" euros/h");
         ligneSimple("Salaire mensuel brut estime",salMensBrut.toFixed(2)+" euros");
         ligneSimple("Salaire mensuel net estime",(salMensBrut*0.78).toFixed(2)+" euros");
         ligneSimple("Mois travailles","12 mois");
@@ -15585,7 +15641,7 @@ const jsPDF=await chargerJsPDF();
           : '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Éléments du contrat (base d\'estimation)</h3>'
             +'<table>'
             +'<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>'
-            +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||4.05)+' €/h</td></tr>'
+            +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||minimumHoraireAu(new Date()))+' €/h</td></tr>'
             +'<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+salMensBrut.toFixed(2)+' €</td></tr>'
             +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+(salMensBrut*0.78).toFixed(2)+' €</td></tr>'
             +'<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>'
@@ -15668,7 +15724,7 @@ const jsPDF=await chargerJsPDF();
         {contrat.debut?<div style={{fontSize:12,lineHeight:2}}>
           <div>Début : <strong>{contrat.debut}</strong></div>
           <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
-          <div>Taux horaire : <strong>{contrat.tauxHoraire||4.05} €</strong></div>
+          <div>Taux horaire : <strong>{contrat.tauxHoraire||minimumHoraireAu(new Date())} €</strong></div>
           <div>Entretien : <strong>{contrat.entretien||3.92} €/jour</strong></div>
         </div>:<div style={{fontSize:12,color:"var(--l)"}}>Aucun contrat trouvé pour cet enfant.</div>}
       </div>
@@ -15801,7 +15857,7 @@ function FicheUrgence({enfants,role,pEId,user}){
       ["Sorties exterieures",f.authSorties],["Transport en voiture",f.authVoiture],["Photos (usage interne)",f.authPhotos]
     ].map(([l,v])=>"<div style='margin:6px 0;font-size:13px'><span style='color:"+(v?"#5DA9A1":"#C84B31")+";font-weight:700'>"+(v?"[X] Oui  [ ] Non":"[ ] Oui  [X] Non")+"</span>  "+l+"</div>").join("");
     const html=[
-      "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Fiche urgence - "+f.prenom+"</title>",
+      "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Fiche urgence - "+H(f.prenom)+"</title>",
       "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#2E4859;font-size:13px;line-height:1.8}",
       "h1{font-size:22px;text-align:center;letter-spacing:3px;color:#2E4859;margin-bottom:2px}",
       ".sub{text-align:center;color:#5DA9A1;font-size:14px;margin-bottom:4px}",
@@ -15820,14 +15876,14 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Telephone :</b> "+f.asmatTel+"</div>",
       "<div class='line'><b>N. d'agrement :</b> "+f.asmatAgrement+"</div>",
       "<div class='sh'>01  Identite de l'enfant</div>",
-      "<div class='line'><b>Nom :</b> "+f.nom+"</div>",
-      "<div class='line'><b>Prenom :</b> "+f.prenom+"</div>",
+      "<div class='line'><b>Nom :</b> "+H(f.nom)+"</div>",
+      "<div class='line'><b>Prenom :</b> "+H(f.prenom)+"</div>",
       "<div class='line'><b>Date de naissance :</b> "+f.naissance+"</div>",
       "<div class='line'><b>Sexe :</b> "+f.sexe+"</div>",
-      "<div class='line'><b>Adresse :</b> "+f.adresse+"</div>",
+      "<div class='line'><b>Adresse :</b> "+H(f.adresse)+"</div>",
       "<div class='sh'>02  Coordonnees des parents</div>",
       (parentLive?("<div class='urg' style='background:#EFF7F6'><b>Contact parent (compte TiMat, a jour le "+new Date().toLocaleDateString("fr-FR")+")</b><br/>"
-        +(nomLive||"-")+((parentLive.telephone)?" &mdash; <span style='color:#2C6F68'>"+parentLive.telephone+"</span>":"")
+        +(nomLive||"-")+((parentLive.telephone)?" &mdash; <span style='color:#2C6F68'>"+H(parentLive.telephone)+"</span>":"")
         +(parentLive.email?"<br/>"+parentLive.email:"")
         +(parentLive.adresse?"<br/>"+String(parentLive.adresse).replace(/\n/g,", "):"")
         +"</div>"):""),
@@ -15844,7 +15900,7 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<div class='sh'>03  Personnes autorisees</div>",
       ...[1,2,3].map(n=>"<div class='stt'>Personne "+n+"</div><div class='line'><b>Nom :</b> "+f["p"+n+"Nom"]+"</div><div class='line'><b>Lien :</b> "+f["p"+n+"Lien"]+"</div><div class='line'><b>Tel :</b> "+f["p"+n+"Tel"]+"</div>"),
       "<div class='sh'>04  Informations medicales</div>",
-      "<div class='line'><b>Medecin :</b> "+f.medecin+"</div>",
+      "<div class='line'><b>Medecin :</b> "+H(f.medecin)+"</div>",
       "<div class='line'><b>Tel medecin :</b> "+f.medecinTel+"</div>",
       "<div class='line'><b>Groupe sanguin :</b> "+f.groupe+"</div>",
       "<div class='line'><b>Vaccins a jour :</b> "+f.vaccins+"</div>",
@@ -16097,11 +16153,11 @@ function ProjetAccueil({user,role}){
       "<h1>PROJET D'ACCUEIL</h1>",
       "<div class='sub'>Assistante maternelle agreee</div>",
       "<div style='border-top:3px solid #5DA9A1;border-bottom:3px solid #5DA9A1;padding:16px 0;margin:40px 0'>",
-      "<div class='line' style='font-weight:700;font-size:18px'>"+f.nom+"</div>",
-      "<div class='label'>Adresse</div><div class='line'>"+f.adresse+"</div>",
-      "<div class='label'>Telephone</div><div class='line'>"+f.tel+"</div>",
-      "<div class='label'>Email</div><div class='line'>"+f.email+"</div>",
-      "<div class='label'>Agrement</div><div class='line'>"+f.agrement+"</div>",
+      "<div class='line' style='font-weight:700;font-size:18px'>"+H(f.nom)+"</div>",
+      "<div class='label'>Adresse</div><div class='line'>"+H(f.adresse)+"</div>",
+      "<div class='label'>Telephone</div><div class='line'>"+H(f.tel)+"</div>",
+      "<div class='label'>Email</div><div class='line'>"+H(f.email)+"</div>",
+      "<div class='label'>Agrement</div><div class='line'>"+H(f.agrement)+"</div>",
       "</div>",
       "<div style='color:#5DA9A1;font-size:16px;font-weight:700'>"+new Date().getFullYear()+"</div>",
       "</div>",
@@ -19110,7 +19166,7 @@ export default function App(){
           const debut=new Date();debut.setDate(1);
           const{data:p}=await supabase.from("pointages").select("*")
             .in("enfant_id",enfantIds)
-            .gte("date",debut.toISOString().slice(0,10));
+            .gte("date",isoJour(debut));
           setPointagesDB(p||[]);
           // Charger transmissions du jour
           const{data:t}=await supabase.from("transmissions").select("*")
@@ -19192,7 +19248,7 @@ export default function App(){
     if(now.getDate()>5)return; // fenetre de declaration fermee (1er au 5 du mois)
     let cancelled=false;
     (async()=>{
-      const debutMois=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+      const debutMois=isoJour(new Date(now.getFullYear(),now.getMonth(),1));
       const{data:exist,error}=await supabase.from("notifications").select("id")
         .eq("user_id",user.id).eq("type","declaration_rappel").gte("created_at",debutMois).limit(1);
       if(cancelled||error||(exist&&exist.length))return; // deja cree ce mois-ci
