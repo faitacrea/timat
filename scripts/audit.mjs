@@ -275,6 +275,9 @@ const BAREME = [
   { nom: "plafond mensuel CMG",            motif: /CMG_MAX\s*=\s*825\.16\b/,        source: "CNAF, 1er avril 2026" },
   { nom: "allocation de formation horaire",  motif: /ALLOC_FORMATION_H = 5\.57\b/, source: "IPERIA / France Emploi Domicile, 1er avril 2025" },
   { nom: "plafond annuel formation",         motif: /ALLOC_FORMATION_PLAFOND_H = 58\b/, source: "plan de développement des compétences, 58 h/an" },
+  { nom: "minimum conventionnel assmat",     motif: /\["2026-06-01",4\.20\]/,       source: "CCN 3239, avenant n° 10, 1er juin 2026" },
+  { nom: "coefficient du minimum légal",     motif: /COEF_MINIMUM_LEGAL=0\.281\b/,   source: "CASF art. D. 423-9 : 0,281 × SMIC" },
+  { nom: "taux du crédit d'impôt",           motif: /CI_TAUX\s*=\s*0\.5\b/,          source: "CGI art. 200 quater B : 50 %" },
   { nom: "minimum conventionnel brut",     motif: /MINIMUM_CONV\s*=\s*4\.2\b/,      source: "CCN 3239, 1er juin 2026" },
   { nom: "barème kilométrique 3 CV",       motif: /3:\s*0\.529\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "barème kilométrique 4 CV",       motif: /4:\s*0\.606\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
@@ -615,6 +618,28 @@ const sansCommentaires = appSrc.replace(/^\s*\/\/.*$/gm, "");
 const emojiRonds = [...sansCommentaires.matchAll(/[\u{1F534}\u{1F535}\u{1F7E0}\u{1F7E1}\u{1F7E2}\u{1F7E3}\u{1F7E4}\u{26AB}\u{26AA}]/gu)];
 if (emojiRonds.length) {
   signale("icônes", `${emojiRonds.length} pastille(s) emoji au lieu de <Pastille> : leur teinte dépend du téléphone et ne suit pas le mode sombre`);
+}
+
+// --- taux horaire par defaut ---
+// Pourquoi : la valeur de repli de l'application etait 4,05 EUR, sous le
+// minimum conventionnel de 4,20 EUR entre en vigueur le 1er juin 2026. Un
+// contrat cree sans taux saisi partait donc sur une remuneration illegale, et
+// la demonstration en enseignait une.
+const miniTable = appSrc.match(/const MINIMUM_CONV_HISTO=\[\s*\["[\d-]+",([\d.]+)\]/);
+const miniCourant = miniTable ? parseFloat(miniTable[1]) : null;
+if (!miniCourant) {
+  signale("chiffre", "la table MINIMUM_CONV_HISTO est introuvable : le plancher de rémunération n'est plus vérifié");
+} else {
+  const repli = [...appSrc.matchAll(/tauxHoraire\s*(?::|\|\|)\s*([\d.]+)/g)].map((m) => parseFloat(m[1]));
+  const sousLePlancher = repli.filter((v) => v > 0 && v < miniCourant);
+  if (sousLePlancher.length) {
+    signale("chiffre", `${sousLePlancher.length} taux horaire par défaut sous le minimum de ${miniCourant} € (${[...new Set(sousLePlancher)].join(", ")}) : un contrat créé sans saisie partirait sur une rémunération illégale`);
+  }
+}
+// L'alerte doit exister et etre posee sur le bulletin comme sur le contrat.
+const posesAlerte = [...appSrc.matchAll(/<AlerteTauxMinimum\b/g)].length;
+if (posesAlerte < 2) {
+  signale("chiffre", `l'alerte de taux minimum n'est posée qu'à ${posesAlerte} endroit(s) : elle doit l'être sur le bulletin et sur le contrat`);
 }
 
 // --- rapport ---
