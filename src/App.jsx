@@ -1543,14 +1543,14 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       try{
         // Bornes temporelles
         const now=new Date();
-        const todayIso=now.toISOString().slice(0,10);
+        const todayIso=isoJour(now);
         // Lundi de la semaine (lundi = 1, dimanche = 0 → on calcule l'offset)
         const dayOfWeek=now.getDay();
         const offset=dayOfWeek===0?6:dayOfWeek-1;
         const lundi=new Date(now);lundi.setDate(now.getDate()-offset);lundi.setHours(0,0,0,0);
-        const lundiIso=lundi.toISOString().slice(0,10);
+        const lundiIso=isoJour(lundi);
         // Debut du mois
-        const debutMois=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+        const debutMois=isoJour(new Date(now.getFullYear(),now.getMonth(),1));
         const enfantIds=enfants.map(e=>e.id);
 
         // 1. Pointages de la semaine
@@ -4235,7 +4235,7 @@ function Sante({enfants,role,pEId,user}){
     window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
   const [croissance,setCroissance]=useState([]);
-  const [mesForm,setMesForm]=useState({date:new Date().toISOString().slice(0,10),poids:"",taille:""});
+  const [mesForm,setMesForm]=useState({date:isoJour(new Date()),poids:"",taille:""});
   useEffect(()=>{
     if(!enfant?.id||["e1","e2","e3"].includes(enfant.id)){setCroissance([]);return;}
     supabase.from("croissance").select("*").eq("enfant_id",enfant.id).order("date",{ascending:true}).then(({data})=>setCroissance(data||[]));
@@ -4249,7 +4249,7 @@ function Sante({enfants,role,pEId,user}){
     if(!mesForm.date||(!p&&!t)){alert("Indiquez au moins le poids ou la taille.");return;}
     const{error}=await supabase.from("croissance").insert({enfant_id:enfant.id,date:mesForm.date,poids:p,taille:t,age_mois:ageMois(mesForm.date)});
     if(error){alert("Erreur : "+error.message);return;}
-    setMesForm({date:new Date().toISOString().slice(0,10),poids:"",taille:""});
+    setMesForm({date:isoJour(new Date()),poids:"",taille:""});
     rechargerCroissance();
   };
   const delMesure=async(id)=>{
@@ -4600,7 +4600,7 @@ function Developpement({enfants,role,pEId}){
     const row=items.find(m=>m.id===id);
     if(!row)return;
     const newAcquis=!row.acquis;
-    const newAcquisAt=newAcquis?new Date().toISOString().slice(0,10):null;
+    const newAcquisAt=newAcquis?isoJour(new Date()):null;
     setMs(p=>({...p,[enfant.id]:p[enfant.id].map(m=>m.id===id?{...m,acquis:newAcquis,acquis_at:newAcquisAt}:m)}));
     const {error}=await supabase.from("jalons").update({acquis:newAcquis,acquis_at:newAcquisAt}).eq("id",id);
     if(error){
@@ -4727,16 +4727,16 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
     if(type==="mensuel"){
       const s=new Date(today.getFullYear(),today.getMonth(),1);
       const e=new Date(today.getFullYear(),today.getMonth()+1,0);
-      return{date_debut:s.toISOString().slice(0,10),date_fin:e.toISOString().slice(0,10)};
+      return{date_debut:isoJour(s),date_fin:isoJour(e)};
     }
     if(type==="trimestriel"){
       const tStart=Math.floor(today.getMonth()/3)*3;
       const s=new Date(today.getFullYear(),tStart,1);
       const e=new Date(today.getFullYear(),tStart+3,0);
-      return{date_debut:s.toISOString().slice(0,10),date_fin:e.toISOString().slice(0,10)};
+      return{date_debut:isoJour(s),date_fin:isoJour(e)};
     }
     const s=new Date(today);s.setMonth(today.getMonth()-3);
-    return{date_debut:s.toISOString().slice(0,10),date_fin:today.toISOString().slice(0,10)};
+    return{date_debut:isoJour(s),date_fin:isoJour(today)};
   };
 
   const emptySections=()=>({
@@ -5070,7 +5070,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       }
       // === SAUVEGARDE ===
       const slug=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase();
-      const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||new Date().toISOString().slice(0,10))+".pdf";
+      const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||isoJour(new Date()))+".pdf";
       doc.save(filename);
       setToast("✅ PDF téléchargé");
     }catch(err){
@@ -6031,7 +6031,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       const debut=moisSelKey+"-01";
       const[year,month]=moisSelKey.split("-").map(Number);
       const finDate=new Date(year,month,0); // dernier jour du mois
-      const fin=finDate.toISOString().slice(0,10);
+      const fin=isoJour(finDate);
       const{data:pts}=await supabase.from("pointages").select("total_minutes,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
       // Regrouper par date : une "journee d'accueil" = somme des pointages du meme jour (matin+apres-midi)
@@ -7072,7 +7072,7 @@ function Versements({enfants,role,pEId,user,demoMode=false}){
   const [savingEdit,setSavingEdit]=useState(false);
 
   // Champs du formulaire
-  const todayStr=new Date().toISOString().slice(0,10);
+  const todayStr=isoJour(new Date());
   const [fDate,setFDate]=useState(todayStr);
   const [fMontant,setFMontant]=useState("");
   const [fMode,setFMode]=useState("virement");
@@ -7524,7 +7524,7 @@ function TransmissionsContent({enfant,role,user}){
     const loadPhotos=async()=>{
       setPhotosLoading(true);
       try{
-        const today=new Date().toISOString().slice(0,10);
+        const today=isoJour(new Date());
         const path=`${user?.id||'anon'}/${enfant.id}/${today}`;
         const{data:files,error}=await supabase.storage.from('photos').list(path,{limit:50});
         if(!error&&files?.length>0){
@@ -7552,7 +7552,7 @@ function TransmissionsContent({enfant,role,user}){
       return;
     }
     // Upload to Supabase Storage
-    const today=new Date().toISOString().slice(0,10);
+    const today=isoJour(new Date());
     const ext=file.name.split('.').pop()||'jpg';
     const fileName=`${Date.now()}.${ext}`;
     const path=`${user?.id||'anon'}/${enfant.id}/${today}/${fileName}`;
@@ -7721,17 +7721,17 @@ function Eveil({enfants,role,pEId}){
 const SOMMEIL_DEMO={
   "e1":[
     {id:"s1",date:TODAY_STR,debut:"13h05",fin:"14h45",duree:"1h40",qualite:"bien"},
-    {id:"s2",date:new Date(Date.now()-86400000).toISOString().slice(0,10),debut:"12h55",fin:"14h30",duree:"1h35",qualite:"bien"},
-    {id:"s3",date:new Date(Date.now()-172800000).toISOString().slice(0,10),debut:"13h20",fin:"14h10",duree:"0h50",qualite:"agite"},
+    {id:"s2",date:isoJour(new Date(Date.now()-86400000)),debut:"12h55",fin:"14h30",duree:"1h35",qualite:"bien"},
+    {id:"s3",date:isoJour(new Date(Date.now()-172800000)),debut:"13h20",fin:"14h10",duree:"0h50",qualite:"agite"},
   ],
   "e2":[
     {id:"s4",date:TODAY_STR,debut:"13h10",fin:"13h55",duree:"0h45",qualite:"agite"},
-    {id:"s5",date:new Date(Date.now()-86400000).toISOString().slice(0,10),debut:"13h00",fin:"15h00",duree:"2h00",qualite:"bien"},
+    {id:"s5",date:isoJour(new Date(Date.now()-86400000)),debut:"13h00",fin:"15h00",duree:"2h00",qualite:"bien"},
   ],
   "e3":[
     {id:"s6",date:TODAY_STR,debut:"11h30",fin:"13h30",duree:"2h00",qualite:"bien"},
-    {id:"s7",date:new Date(Date.now()-86400000).toISOString().slice(0,10),debut:"11h45",fin:"13h50",duree:"2h05",qualite:"bien"},
-    {id:"s8",date:new Date(Date.now()-172800000).toISOString().slice(0,10),debut:"12h00",fin:"13h20",duree:"1h20",qualite:"court"},
+    {id:"s7",date:isoJour(new Date(Date.now()-86400000)),debut:"11h45",fin:"13h50",duree:"2h05",qualite:"bien"},
+    {id:"s8",date:isoJour(new Date(Date.now()-172800000)),debut:"12h00",fin:"13h20",duree:"1h20",qualite:"court"},
   ],
 };
 
@@ -8087,7 +8087,7 @@ function CourbeCroissance({enfants,role,pEId}){
   const ajouter=async()=>{
     if(!newM.poids&&!newM.taille)return;
     if(!enfant)return;
-    const d=newM.date||new Date().toISOString().slice(0,10);
+    const d=newM.date||isoJour(new Date());
     const n=new Date(enfant.naissance),mDate=new Date(d);
     const mois=Math.max(0,(mDate.getFullYear()-n.getFullYear())*12+(mDate.getMonth()-n.getMonth()));
     const poids=parseFloat(String(newM.poids).replace(",","."))||null;
@@ -8233,7 +8233,7 @@ function ActivitesSuggerees({enfants,role,pEId}){
   const [catFilt,setCatFilt]=useState("tous");
   const [ageFilt,setAgeFilt]=useState("tous");
   const [faitFilt,setFaitFilt]=useState("tous");
-  const [jour,setJour]=useState(new Date().toISOString().slice(0,10));
+  const [jour,setJour]=useState(isoJour(new Date()));
   const [faites,setFaites]=useState([]);
   const [perso,setPerso]=useState([]);
   const [showForm,setShowForm]=useState(false);
@@ -8382,9 +8382,9 @@ function ActivitesSuggerees({enfants,role,pEId}){
 
 //
 const PMI_MESSAGES=[
-  {id:"pmi1",de:"PMI",h:"09h15",date:new Date(Date.now()-7*86400000).toISOString().slice(0,10),txt:"Bonjour Madame Dupont, nous organisons une réunion d'information le 15 avril à 14h à la mairie. Votre présence est souhaitée.",lu:true},
-  {id:"pmi2",de:"asmat",h:"10h30",date:new Date(Date.now()-7*86400000).toISOString().slice(0,10),txt:"Bonjour, je confirme ma présence le 15 avril. Merci pour l'invitation.",lu:true},
-  {id:"pmi3",de:"PMI",h:"14h20",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),txt:"Votre agrément arrive à renouvellement en juin 2024. Merci de nous contacter pour planifier la visite de renouvellement.",lu:false},
+  {id:"pmi1",de:"PMI",h:"09h15",date:isoJour(new Date(Date.now()-7*86400000)),txt:"Bonjour Madame Dupont, nous organisons une réunion d'information le 15 avril à 14h à la mairie. Votre présence est souhaitée.",lu:true},
+  {id:"pmi2",de:"asmat",h:"10h30",date:isoJour(new Date(Date.now()-7*86400000)),txt:"Bonjour, je confirme ma présence le 15 avril. Merci pour l'invitation.",lu:true},
+  {id:"pmi3",de:"PMI",h:"14h20",date:isoJour(new Date(Date.now()-2*86400000)),txt:"Votre agrément arrive à renouvellement en juin 2024. Merci de nous contacter pour planifier la visite de renouvellement.",lu:false},
 ];
 
 
@@ -9730,7 +9730,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
 
   const changeJour=(delta)=>{
     const d=new Date(dateSel+"T12:00:00");d.setDate(d.getDate()+delta);
-    const ns=d.toISOString().slice(0,10);
+    const ns=isoJour(d);
     if(ns>TODAY_STR)return;
     setDateSel(ns);
   };
@@ -10124,7 +10124,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
 //
 const DEMANDES_DEMO=[
   {
-    id:"d1",statut:"nouveau",date:new Date(Date.now()-2*86400000).toISOString().slice(0,10),
+    id:"d1",statut:"nouveau",date:isoJour(new Date(Date.now()-2*86400000)),
     parent:{prenom:"Camille",nom:"Moreau",email:"camille.moreau@gmail.com",tel:"06 12 34 56 78",profession:"Infirmière"},
     enfant:{prenom:"Chloé",naissance:"2023-08-14",allergies:"Aucune connue",dejaCrèche:false},
     contrat:{debut:"2024-09-02",jours:["Lundi","Mardi","Mercredi","Jeudi"],
@@ -10133,7 +10133,7 @@ const DEMANDES_DEMO=[
     message:"Bonjour Madame Dupont, nous avons trouvé votre profil sur monenfant.fr. Notre fille Chloé aura 1 an en août et nous cherchons une assistante maternelle de confiance pour la rentrée. Votre profil nous correspond parfaitement.",
   },
   {
-    id:"d2",statut:"en_discussion",date:new Date(Date.now()-5*86400000).toISOString().slice(0,10),
+    id:"d2",statut:"en_discussion",date:isoJour(new Date(Date.now()-5*86400000)),
     parent:{prenom:"Antoine",nom:"Lefebvre",email:"antoine.lefebvre@hotmail.fr",tel:"07 89 01 23 45",profession:"Comptable"},
     enfant:{prenom:"Mathieu",naissance:"2022-11-03",allergies:"Lactose",dejaCrèche:true},
     contrat:{debut:"2024-10-01",jours:["Lundi","Mercredi","Vendredi"],
@@ -10142,7 +10142,7 @@ const DEMANDES_DEMO=[
     message:"Bonjour, mon fils Mathieu est actuellement à la crèche mais nous souhaitons le confier à une assistante maternelle à partir d'octobre. Il a une intolérance au lactose. Serait-il possible d'échanger ?",
   },
   {
-    id:"d3",statut:"accepte",date:new Date(Date.now()-12*86400000).toISOString().slice(0,10),
+    id:"d3",statut:"accepte",date:isoJour(new Date(Date.now()-12*86400000)),
     parent:{prenom:"Lucie",nom:"Bernard",email:"lucie.b@orange.fr",tel:"06 55 44 33 22",profession:"Enseignante"},
     enfant:{prenom:"Tom",naissance:"2021-04-20",allergies:"Aucune",dejaCrèche:false},
     contrat:{debut:"2024-09-02",jours:["Lundi","Mardi","Jeudi","Vendredi"],
@@ -10151,7 +10151,7 @@ const DEMANDES_DEMO=[
     message:"Bonjour, je suis enseignante et je cherche une assistante maternelle pour mon fils Tom. Vos horaires correspondent parfaitement aux miens.",
   },
   {
-    id:"d4",statut:"refuse",date:new Date(Date.now()-20*86400000).toISOString().slice(0,10),
+    id:"d4",statut:"refuse",date:isoJour(new Date(Date.now()-20*86400000)),
     parent:{prenom:"Marc",nom:"Petit",email:"marc.petit@sfr.fr",tel:"06 11 22 33 44",profession:"Commercial"},
     enfant:{prenom:"Emma",naissance:"2024-01-15",allergies:"Aucune",dejaCrèche:false},
     contrat:{debut:"2024-06-01",jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
@@ -11457,7 +11457,7 @@ function IndemnitesKilometriques({enfants,role,user}){
   const [trajets,setTrajets]=useState([]);
   const [loading,setLoading]=useState(false);
   const [saving,setSaving]=useState(false);
-  const blank={date:new Date().toISOString().slice(0,10),enfant_id:enfants[0]?.id||"",km:"",motif:"",taux:BAREME_KM_2026[5]};
+  const blank={date:isoJour(new Date()),enfant_id:enfants[0]?.id||"",km:"",motif:"",taux:BAREME_KM_2026[5]};
   const [nt,setNt]=useState(blank);
   const inp={width:"100%",padding:"9px 11px",borderRadius:8,border:"1.5px solid var(--br)",fontSize:13,fontFamily:"inherit",boxSizing:"border-box",background:"var(--w)"};
 
@@ -11466,7 +11466,7 @@ function IndemnitesKilometriques({enfants,role,user}){
     setLoading(true);
     const debut=mois+"-01";
     const d=new Date(mois+"-01"); d.setMonth(d.getMonth()+1);
-    const finExcl=d.toISOString().slice(0,10);
+    const finExcl=isoJour(d);
     const{data}=await supabase.from("trajets").select("*").gte("date",debut).lt("date",finExcl).order("date",{ascending:true});
     if(data)setTrajets(data);
     setLoading(false);
@@ -11944,7 +11944,7 @@ function ExportDonnees({enfants,user,role}){
       }
 
       // 4. Generer le fichier
-      const fileName="export-timat-"+(user?.email||"user").replace(/[^a-z0-9]/gi,"_")+"-"+new Date().toISOString().slice(0,10)+"."+format;
+      const fileName="export-timat-"+(user?.email||"user").replace(/[^a-z0-9]/gi,"_")+"-"+isoJour(new Date())+"."+format;
 
       if(format==="json"){
         const blob=new Blob([JSON.stringify(exportData,null,2)],{type:"application/json"});
@@ -14707,7 +14707,7 @@ function OnboardingWizard({user,onFinish}){
   const [contrat,setContrat]=useState({
     heuresHebdo:40,tauxHoraire:4.20,entretien:3.80,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
-    horaires:"07h30–17h30",debut:new Date().toISOString().slice(0,10)
+    horaires:"07h30–17h30",debut:isoJour(new Date())
   });
   const [parentEmail,setParentEmail]=useState("");
   const [saving,setSaving]=useState(false);
@@ -14778,7 +14778,7 @@ function OnboardingWizard({user,onFinish}){
       const{error:errContrat}=await withRetry(()=>supabase.from('contrats').insert({
         enfant_id:enfantData.id,
         asmat_id:user.id,
-        debut:contrat.debut||new Date().toISOString().slice(0,10),
+        debut:contrat.debut||isoJour(new Date()),
         heures_hebdo:contrat.heuresHebdo||40,
         taux_horaire:contrat.tauxHoraire||minimumHoraireAu(new Date()),
         entretien:contrat.entretien||3.92,
@@ -14967,7 +14967,7 @@ function AjouterEnfantModale({user,onClose}){
   const [step,setStep]=useState(0);
   const [enfant,setEnfant]=useState({prenom:"",nom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
-    debut:new Date().toISOString().slice(0,10),
+    debut:isoJour(new Date()),
     fin:"",
     heuresHebdo:40,
     tauxHoraire:4.20,
@@ -19166,7 +19166,7 @@ export default function App(){
           const debut=new Date();debut.setDate(1);
           const{data:p}=await supabase.from("pointages").select("*")
             .in("enfant_id",enfantIds)
-            .gte("date",debut.toISOString().slice(0,10));
+            .gte("date",isoJour(debut));
           setPointagesDB(p||[]);
           // Charger transmissions du jour
           const{data:t}=await supabase.from("transmissions").select("*")
@@ -19248,7 +19248,7 @@ export default function App(){
     if(now.getDate()>5)return; // fenetre de declaration fermee (1er au 5 du mois)
     let cancelled=false;
     (async()=>{
-      const debutMois=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+      const debutMois=isoJour(new Date(now.getFullYear(),now.getMonth(),1));
       const{data:exist,error}=await supabase.from("notifications").select("id")
         .eq("user_id",user.id).eq("type","declaration_rappel").gte("created_at",debutMois).limit(1);
       if(cancelled||error||(exist&&exist.length))return; // deja cree ce mois-ci
