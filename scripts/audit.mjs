@@ -295,6 +295,8 @@ const BAREME = [
   { nom: "barème kilométrique 5 CV",       motif: /5:\s*0\.636\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "barème kilométrique 6 CV",       motif: /6:\s*0\.665\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "barème kilométrique 7 CV",       motif: /7:\s*0\.697\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
+  { nom: "plancher kilométrique 3 à 5 CV", motif: /PLANCHER_KM_CONV=\{3:0\.33,4:0\.33,5:0\.33,/, source: "arrêté du 29 mai 2026, art. 10 du décret 2006-781 (Légifrance JORFTEXT000054154617)" },
+  { nom: "plancher kilométrique 6 et 7 CV", motif: /PLANCHER_KM_CONV=\{.*6:0\.42,7:0\.42\}/,     source: "arrêté du 29 mai 2026, art. 10 du décret 2006-781 (Légifrance JORFTEXT000054154617)" },
   { nom: "abattement AEEH (4× au lieu de 3×)", motif: /baseMult\s*=\s*aeeh\s*\?\s*4\s*:\s*3/, source: "CGI art. 80 sexies, vérifié sur Légifrance" },
 ];
 const sourcesChiffres = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
