@@ -448,12 +448,74 @@ if (/(?:brut|netPaye|netImposable|totalCot\w*)\s*[-+]\s*allocFormation|allocForm
 if (!/RETENUE_TYPES=\{[^}]*formh:false/.test(appSrc)) {
   signale("calendrier", "la formation hors temps d'accueil n'est plus exclue des retenues : il n'y a pourtant aucun salaire à déduire");
 }
+// Les listes deroulantes de type d'evenement doivent parler le meme
+// vocabulaire : « hol » y survivait, inconnu de TYPES_EV, et l'evenement cree
+// ressortait dans la couleur par defaut.
+const optionsType = [...appSrc.matchAll(/<option value="(\w+)">(?:Rendez-vous|Absence|Congé|Sortie|Maladie|Fermeture|Formation)[^<]*<\/option>/g)].map((m) => m[1]);
+const tableTypesOpt = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];
+const optionsOrphelines = [...new Set(optionsType)].filter((t) => !new RegExp(`^\\s*${t}:\\{`, "m").test(tableTypesOpt));
+if (optionsOrphelines.length) {
+  signale("calendrier", `type(s) d'événement proposé(s) dans une liste déroulante mais inconnu(s) de TYPES_EV : ${optionsOrphelines.join(", ")}`);
+}
+// Une <option> ne rend que du texte : un composant y disparait.
+const optionsAvecIcone = [...appSrc.matchAll(/<option[^>]*>[^<]{0,80}<IconeOuEmoji/g)];
+if (optionsAvecIcone.length) {
+  signale("icônes", `${optionsAvecIcone.length} <option> contiennent une icône dessinée : elle n'y sera pas affichée`);
+}
 // Chaque theme doit designer un type que la table connait.
 const typesThemes = [...blocThemes.matchAll(/\{t:"(\w+)"/g)].map((m) => m[1]);
 const tableTypes = (appSrc.match(/const TYPES_EV=\{([\s\S]*?)\n\};/) || ["", ""])[1];
 const typesOrphelins = [...new Set(typesThemes)].filter((t) => !new RegExp(`^\\s*${t}:\\{`, "m").test(tableTypes));
 if (typesOrphelins.length) {
   signale("calendrier", `thème(s) du calendrier pointant vers un type inconnu de TYPES_EV : ${typesOrphelins.join(", ")}`);
+}
+
+// --- emoji restants dans l'interface ---
+// Pourquoi : les emoji systeme changent de dessin selon le telephone, ne
+// suivent pas la couleur du role et rendent flou a l'impression. Deux motifs
+// restaient apres les passes precedentes : un emoji en tete d'un texte affiche
+// (« 💡 Astuce »), et un emoji seul dans un <span> decoratif.
+//
+// Ce controle ne regarde QUE l'application, pas la page d'accueil publique :
+// la landing assume ses emoji, c'est son identite de marque. Il ignore aussi
+// les chaines qui partent dans un PDF ou un e-mail HTML, ou un composant React
+// n'existe pas, et les signes typographiques (✓ ✕ → ×) qui ne sont pas des
+// icones.
+const finApp = appSrc.indexOf("function LandingPage");
+const zoneApp = finApp > 0 ? appSrc.slice(0, finApp) : appSrc;
+const EMO_UI = "[\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{2B00}-\\u{2BFF}\\u{2139}]\\u{FE0F}?";
+const tracesConnues = new Set([...(appSrc.match(/const EMOJI_TRACE = \{([\s\S]*?)\n\};/) || ["", ""])[1]
+  .matchAll(/"([^"]+)":"\w+"/g)].map((m) => m[1]));
+
+const enTete = [...zoneApp.matchAll(new RegExp(`[>}]\\s*(${EMO_UI})\\s+(?=[A-Za-zÀ-ÿ0-9«{<])`, "gu"))]
+  .filter((m) => tracesConnues.has(m[1]))
+  .filter((m) => {
+    const ligne = zoneApp.slice(zoneApp.lastIndexOf("\n", m.index) + 1, zoneApp.indexOf("\n", m.index));
+    return !/doc\.text\(|doc\.setFont|"<tr|"<div|"<td|htmlPaj|innerHTML/.test(ligne);
+  });
+if (enTete.length) {
+  signale("icônes", `${enTete.length} emoji en tête d'un texte affiché alors qu'un tracé dessiné existe : ${[...new Set(enTete.map((m) => m[1]))].join(" ")}`);
+}
+// Un SVG ne suit pas le « fontSize » de son parent. Quand la taille de
+// l'ancienne icône venait de là, il faut la porter sur « taille », sinon
+// l'icône rétrécit silencieusement à sa valeur par défaut.
+const taillesPerdues = [...appSrc.matchAll(/fontSize:\s*(\d{2,})[^>]{0,120}?>\s*<IconeOuEmoji e=(?:"[^"]+"|\{[^}]+\})\s*\/>/g)]
+  .filter((m) => Number(m[1]) >= 20);
+if (taillesPerdues.length) {
+  signale("icônes", `${taillesPerdues.length} icône(s) dont la taille venait d'un fontSize sans « taille » : elles s'affichent plus petites qu'avant`);
+}
+
+// Un ternaire qui choisit entre deux emoji est une icône d'état : elle doit
+// passer par le composant, comme les autres.
+const ternaires = [...zoneApp.matchAll(new RegExp(`(?<!e=)\\{[^{}?]{1,60}\\?"(${EMO_UI})":"(${EMO_UI})"\\}`, "gu"))]
+  .filter((m) => tracesConnues.has(m[1]) && tracesConnues.has(m[2]));
+if (ternaires.length) {
+  signale("icônes", `${ternaires.length} icône(s) d'état choisie(s) entre deux emoji sans passer par <IconeOuEmoji>`);
+}
+const spansSeuls = [...zoneApp.matchAll(new RegExp(`<span(?:\\s+style=\\{\\{[^}]*\\}\\})?>(${EMO_UI})</span>`, "gu"))]
+  .filter((m) => tracesConnues.has(m[1]));
+if (spansSeuls.length) {
+  signale("icônes", `${spansSeuls.length} emoji décoratif(s) seul(s) dans un <span> alors qu'un tracé dessiné existe : ${[...new Set(spansSeuls.map((m) => m[1]))].join(" ")}`);
 }
 
 // --- icones des onglets et des menus ---

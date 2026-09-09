@@ -358,6 +358,25 @@ const TRACES = {
   silence:'<path d="M11 5 6.5 9H3v6h3.5L11 19Z"/><path d="m16 9.5 4 5M20 9.5l-4 5"/>',
   piece:'<path d="M9 4h6v3.5a1.5 1.5 0 0 0 3 0V4"/><path d="M4 9v6h3.5a1.5 1.5 0 0 1 0 3H4v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9h-2.5a1.5 1.5 0 0 1 0-3H20V5a1 1 0 0 0-1-1"/>',
   loupe:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4.5 4.5"/>',
+  billets:'<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 10v4M18 10v4"/>',
+  fleche_bas:'<path d="M12 4v14"/><path d="m6.5 12.5 5.5 5.5 5.5-5.5"/>',
+  appareil_photo:'<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.6"/>',
+  gateau:'<path d="M4 20h16v-6a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3Z"/><path d="M4 16h16"/><path d="M9 8V5.5M12 8V5M15 8V5.5"/>',
+  point:'<circle cx="12" cy="12" r="5"/>',
+  trombone:'<path d="M17 8.5v6.8a5 5 0 0 1-10 0V7a3.2 3.2 0 0 1 6.4 0v8a1.6 1.6 0 0 1-3.2 0V8.5"/>',
+  etoile_pleine:'<path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9L3.5 9.7l5.9-.8Z"/>',
+  carte_bancaire:'<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M6 14.5h4"/>',
+  fete:'<path d="M4 20.5 8.5 8l7.5 7.5Z"/><path d="M14 4.5c1.5 0 2 1 2 2M17.5 7c1.2-.5 2.2 0 2.7 1M13 9.5c.8-1.2 2.2-1.6 3.4-1"/>',
+  personne:'<circle cx="12" cy="8" r="3.8"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+  personnes:'<circle cx="9" cy="8" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 5.6M17.5 14.5a6 6 0 0 1 4 5.5"/>',
+  cadenas_ferme:'<rect x="4.5" y="10" width="15" height="10.5" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.4"/>',
+  ballon:'<path d="M12 3a4.5 5.5 0 0 1 0 11 4.5 5.5 0 0 1 0-11Z"/><path d="M12 14v2.5"/><path d="M12 16.5c-1 .8-1 2 0 2.8s1 2 0 2.7"/>',
+  voiture_ecole:'<path d="M4 16v-3.5L6 8h12l2 4.5V16"/><path d="M3 16h18v2.5h-3V16H6v2.5H3Z"/><circle cx="7.5" cy="16" r="1.4"/><circle cx="16.5" cy="16" r="1.4"/>',
+  medicament:'<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="m9 9 6 6"/>',
+  salade:'<path d="M3.5 12h17a8.5 8.5 0 0 1-17 0Z"/><path d="M7 8.5c1-2 3-3 5-3s4 1 5 3"/><path d="M12 20.5v-2"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.8h.01"/>',
+  carte_identite:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><circle cx="8.5" cy="11" r="2.2"/><path d="M5.5 16.2a3.4 3.4 0 0 1 6 0"/><path d="M14 10h4M14 13.5h4"/>',
+  fleche_droite:'<path d="M4 12h14"/><path d="m12.5 6.5 5.5 5.5-5.5 5.5"/>',
   imprimante:'<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M7 14h10v6H7Z"/>',
   main:'<path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 11V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6v-3a1.5 1.5 0 0 1 3 0"/>',
 };
@@ -377,7 +396,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","🟡":"point","🔴":"point","🔵":"point","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🚨":"urgence","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -969,7 +988,7 @@ function GestionStockage({ user }) {
     {!q ? <div style={{ fontSize: 12.5, color: "var(--l)" }}>Mesure en cours…</div> : <>
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--b)" }}>
-          <span>📷 Photos</span>
+          <span><IconeOuEmoji e="📷"/> Photos</span>
           <span style={{ fontWeight: 700 }}>{q.photosNb}{lim.photos === Infinity ? " — sans limite" : " / " + lim.photos}</span>
         </div>
         {barre(q.photosNb, lim.photos)}
@@ -978,7 +997,7 @@ function GestionStockage({ user }) {
       </div>
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "var(--b)" }}>
-          <span>🗂️ Documents</span>
+          <span><IconeOuEmoji e="🗂️"/> Documents</span>
           <span style={{ fontWeight: 700 }}>{enMo(q.docsOctets)} / {enMo(lim.documentsOctets)}</span>
         </div>
         {barre(q.docsOctets, lim.documentsOctets)}
@@ -1118,14 +1137,14 @@ function FichesEnfants({enfants,user,setPage}){
         {list.map(e=><div key={e.id} className="card" style={{display:"flex",gap:14,alignItems:"center"}}>
           <button type="button" onClick={()=>setEditAvatar(e)} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",flexShrink:0,lineHeight:0}}>
             <AvatarEnfant e={e} size={76}/>
-            <span style={{position:"absolute",bottom:-2,right:-2,fontSize:12,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 4px rgba(0,0,0,.25)",width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center"}}>📷</span>
+            <IconeOuEmoji e="📷"/>
           </button>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontWeight:700,fontSize:16,color:"var(--b)"}}>{e.prenom} {e.nom||""}</div>
             <div style={{fontSize:12.5,color:"var(--l)",marginTop:2}}>{e.naissance?age(e.naissance)+" · né(e) le "+new Date(e.naissance).toLocaleDateString("fr-FR"):"Date de naissance non renseignée"}</div>
             <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
-              <button className="btn bG s" style={{padding:"5px 10px"}} onClick={()=>setEditAvatar(e)}>📷 Photo / emoji</button>
-              <button className="btn bT s" style={{padding:"5px 10px"}} onClick={()=>setPage&&setPage("admin_finances")}>🧾 Contrat & paie</button>
+              <button className="btn bG s" style={{padding:"5px 10px"}} onClick={()=>setEditAvatar(e)}><IconeOuEmoji e="📷"/> Photo / emoji</button>
+              <button className="btn bT s" style={{padding:"5px 10px"}} onClick={()=>setPage&&setPage("admin_finances")}><IconeOuEmoji e="🧾"/> Contrat & paie</button>
             </div>
           </div>
         </div>)}
@@ -1188,7 +1207,7 @@ function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on
   <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div>{badge&&<span style={{position:"absolute",top:-6,right:-6}}>{badge}</span>}</div>}
 
 function Toast({msg,onClose}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
-  return <div className="toast"><span>✅</span>{msg}</div>}
+  return <div className="toast"><IconeOuEmoji e="✅"/>{msg}</div>}
 
 // Affiche le trace correspondant a un emoji, ou l'emoji lui-meme s'il n'est
 // pas encore dans la table. Permet de convertir les icones de menu par
@@ -1310,8 +1329,8 @@ function EcheancierDeclaration({enfants,role,user,demo}){
         const okStyle={...base,background:"var(--Sp)",border:"1px solid var(--S)",color:"var(--S)",fontWeight:700};
         const todoStyle={...base,background:"#fff",border:"1px solid var(--br)",color:"var(--m)"};
         if(role==="parent")
-          return <button key={e.id} onClick={()=>toggleDeclare(e.id)} disabled={busy===e.id} style={{...(ok?okStyle:todoStyle),cursor:"pointer"}} title={ok?"Annuler":"Marquer comme déclaré"}>👶 {label}</button>;
-        return <span key={e.id} style={ok?okStyle:todoStyle}>👶 {label}</span>;
+          return <button key={e.id} onClick={()=>toggleDeclare(e.id)} disabled={busy===e.id} style={{...(ok?okStyle:todoStyle),cursor:"pointer"}} title={ok?"Annuler":"Marquer comme déclaré"}><IconeOuEmoji e="👶"/> {label}</button>;
+        return <span key={e.id} style={ok?okStyle:todoStyle}><IconeOuEmoji e="👶"/> {label}</span>;
       })}
     </div>
     <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -1385,7 +1404,7 @@ function PointageRapide({enfants,role,user,demo}){
         return <div key={e.id} style={{background:"#fff",border:"1px solid var(--br)",borderRadius:16,padding:"14px",display:"flex",gap:12,alignItems:"center"}}>
           {showQR?<button type="button" onClick={()=>setEditAvatar(e)} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",flexShrink:0,lineHeight:0}}>
             <AvatarEnfant e={e} size={60}/>
-            <span style={{position:"absolute",bottom:-2,right:-3,fontSize:11,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 4px rgba(0,0,0,.25)",width:21,height:21,display:"flex",alignItems:"center",justifyContent:"center"}}>📷</span>
+            <IconeOuEmoji e="📷"/>
           </button>:<div style={{flexShrink:0,lineHeight:0}}><AvatarEnfant e={e} size={60}/></div>}
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>{e.prenom||"Enfant"}</div>
@@ -1409,7 +1428,7 @@ function PointageRapide({enfants,role,user,demo}){
         <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>Le parent le flashe avec l'appareil photo : <b>1er scan = arrivée</b>, <b>2e scan = départ</b>. Réutilisable chaque jour.</div>
         <img alt="QR" src={qrUrl(qrFor,220)} style={{width:200,height:200,borderRadius:12,border:"3px solid var(--br)",background:"#fff"}}/>
         <div style={{display:"flex",gap:8,marginTop:14}}>
-          <button className="btn bG" style={{flex:1,justifyContent:"center"}} onClick={()=>imprimerQR(qrFor)}>🖨️ Imprimer</button>
+          <button className="btn bG" style={{flex:1,justifyContent:"center"}} onClick={()=>imprimerQR(qrFor)}><IconeOuEmoji e="🖨️"/> Imprimer</button>
           <button className="btn bT" style={{flex:1,justifyContent:"center"}} onClick={()=>setQrFor(null)}>Fermer</button>
         </div>
       </div>
@@ -1578,7 +1597,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     {/* Guide de demarrage — prise en main des nouveaux comptes (0 enfant) */}
     {nbEnfants===0&&!demoStats&&<div className="card"style={{padding:0,marginBottom:18,overflow:"hidden",border:"1.5px solid var(--T)"}}>
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
-        <div className="pf"style={{fontSize:18,fontWeight:800,color:"var(--b)"}}>🚀 Bienvenue sur TiMat !</div>
+        <div className="pf"style={{fontSize:18,fontWeight:800,color:"var(--b)"}}><IconeOuEmoji e="🚀"/> Bienvenue sur TiMat !</div>
         <div style={{fontSize:12.5,color:"var(--m)",marginTop:3}}>3 étapes pour démarrer sereinement.</div>
       </div>
       <div style={{padding:14,display:"flex",flexDirection:"column",gap:10}}>
@@ -1667,7 +1686,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
           return <div key={e.id}style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:"var(--c)",borderRadius:14,flexWrap:"wrap"}}>
             <button type="button" onClick={()=>setEditAvatar({...e,...(avatarOv[e.id]||{})})} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",lineHeight:0,flexShrink:0}}>
               <AvatarEnfant e={{...e,...(avatarOv[e.id]||{})}} size={38}/>
-              <span style={{position:"absolute",bottom:-4,right:-5,fontSize:11,background:"var(--w)",borderRadius:"50%",boxShadow:"0 1px 3px rgba(0,0,0,.2)",padding:"1px 2px"}}>📷</span>
+              <IconeOuEmoji e="📷"/>
             </button>
             <div style={{flex:1,minWidth:120}}>
               <div style={{fontWeight:700,color:"var(--b)",fontSize:13.5}}>{e.prenom}</div>
@@ -1681,7 +1700,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
               {(both||onlyA)&&<button className="btn bG s"style={{padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
                 {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}
               </button>}
-              {both&&<button className="btn bT s"style={{padding:"6px 11px"}}onClick={()=>setPage("documents")}>📄 Documents</button>}
+              {both&&<button className="btn bT s"style={{padding:"6px 11px"}}onClick={()=>setPage("documents")}><IconeOuEmoji e="📄"/> Documents</button>}
             </div>
           </div>;
         })}
@@ -1692,7 +1711,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     {/* Prochains événements */}
     <div className="card">
       <div style={{fontWeight:700,fontSize:15,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}>
-        <span style={{fontSize:18}}>📅</span> Prochains événements
+        <IconeOuEmoji e="📅"/> Prochains événements
       </div>
       {isDemoUser
         ? D.evenements.slice(0,4).map(ev=><div key={ev.id}onClick={()=>setPage("calendrier")}
@@ -1785,7 +1804,7 @@ function AccueilParent({enfant,setPage,user}){
       onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:26}}>📔</span>
+          <IconeOuEmoji e="📔"/>
           <div>
             <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Cahier du jour de {enfant.prenom}</div>
             <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Repas, siestes, activités, photos et le mot du jour →</div>
@@ -1804,7 +1823,7 @@ function AccueilParent({enfant,setPage,user}){
           <button onClick={()=>setShowAbsence(false)}style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--l)"}}>✕</button>
         </div>
         <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"var(--B)"}}>
-          📢 {enfant?.prenomAsmat||"L'assmat"} sera notifiée immédiatement. L'absence sera notée dans le calendrier et prise en compte dans le décompte des heures.
+          <IconeOuEmoji e="📢"/> {enfant?.prenomAsmat||"L'assmat"} sera notifiée immédiatement. L'absence sera notée dans le calendrier et prise en compte dans le décompte des heures.
         </div>
         <div style={{display:"grid",gap:12}}>
           <div>
@@ -1842,7 +1861,7 @@ function AccueilParent({enfant,setPage,user}){
     </div>}
 
     {absEnvoyee&&<div style={{background:"var(--Rp)",border:"1.5px solid var(--R)",borderRadius:12,padding:"10px 16px",marginBottom:14,fontSize:13,color:"var(--R)",fontWeight:600}}>
-      ✅ Absence déclarée et notée dans le calendrier et le décompte des heures.
+      <IconeOuEmoji e="✅"/> Absence déclarée et notée dans le calendrier et le décompte des heures.
     </div>}
 
     <div className="g2"style={{marginBottom:12}}>
@@ -1856,13 +1875,13 @@ function AccueilParent({enfant,setPage,user}){
                 garde, l'accueil du parent ne s'affichait pas du tout. Les
                 données de démonstration en ont toujours, d'où l'angle mort. */}
             {(enfant.allergies||[]).length>0&&<div style={{marginTop:6,cursor:"pointer"}}onClick={()=>setPage&&setPage("sante_complet")}>
-              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",marginRight:4,cursor:"pointer"}}>⚠️ {a}</span>)}
+              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",marginRight:4,cursor:"pointer"}}><IconeOuEmoji e="⚠️"/> {a}</span>)}
             </div>}
           </div>
         </div>
         {recentMs&&<div onClick={()=>setPage&&setPage("eveil_complet")}
           style={{background:"var(--Sp)",borderRadius:9,padding:"8px 12px",fontSize:13,color:"var(--S)",fontWeight:600,cursor:"pointer"}}>
-          🌱 Dernière étape : {recentMs.txt} →
+          <IconeOuEmoji e="🌱"/> Dernière étape : {recentMs.txt} →
         </div>}
       </div>
       {/* Pointage */}
@@ -1903,9 +1922,9 @@ function AccueilParent({enfant,setPage,user}){
       onMouseLeave={e=>e.currentTarget.style.boxShadow="var(--sh)"}>
       <div style={{fontWeight:700,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="🍽️"/> Repas du jour</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {rep.dej&&<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}>🥗 {rep.dej}</span>}
-        {rep.gou&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)"}}>🍎 {rep.gou}</span>}
-        {rep.bib&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}>🍼 {rep.bib}</span>}
+        {rep.dej&&<span className="badge"style={{background:"var(--Sp)",color:"var(--S)"}}><IconeOuEmoji e="🥗"/> {rep.dej}</span>}
+        {rep.gou&&<span className="badge"style={{background:"var(--Gp)",color:"var(--G)"}}><IconeOuEmoji e="🍎"/> {rep.gou}</span>}
+        {rep.bib&&<span className="badge"style={{background:"var(--Bp)",color:"var(--B)"}}><IconeOuEmoji e="🍼"/> {rep.bib}</span>}
         <span className="badge"style={{background:rep.q==="bien"?"var(--Gp)":"var(--c)",color:rep.q==="bien"?"var(--G)":"var(--G)"}}>
           {rep.q==="bien"?"✅ Bon appétit":rep.q==="peu"?"🟡 Peu mangé":"🔴 Refus"}</span>
       </div>
@@ -2005,7 +2024,7 @@ function Transmissions({enfants,role,pEId,user}){
               {b.txt}
             </div>
             <button className="btn bG s"style={{marginTop:10}}onClick={()=>navigator.clipboard?.writeText(b.txt)}>
-              📋 Copier
+              <IconeOuEmoji e="📋"/> Copier
             </button>
           </div>}
         </div>)}
@@ -2308,14 +2327,14 @@ function RecitIA({enfants,role,pEId}){
             </div>}
             <div style={{marginTop:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
               {role==="asmat"&&!envoye&&<button className="btn bS"onClick={()=>{setEnvoye(true);setToast("Résumé envoyé à "+(parent?.prenom||"la famille")+" ✓");}}>
-                📩 Envoyer aux parents
+                <IconeOuEmoji e="📩"/> Envoyer aux parents
               </button>}
               {role==="asmat"&&envoye&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:"var(--Sp)",borderRadius:10,border:"1px solid var(--Sl)"}}>
-                <span style={{fontSize:14}}>✅</span>
+                <IconeOuEmoji e="✅"/>
                 <span style={{fontSize:13,fontWeight:700,color:"var(--S)"}}>Envoyé à {parent?.prenom} {parent?.nom}</span>
               </div>}
               <button className="btn bP"onClick={generer}><IconeOuEmoji e="🔄"/> Recomposer</button>
-              <button className="btn bG"onClick={()=>navigator.clipboard?.writeText(recit)}>📋 Copier</button>
+              <button className="btn bG"onClick={()=>navigator.clipboard?.writeText(recit)}><IconeOuEmoji e="📋"/> Copier</button>
             </div>
           </div>}
         </div>
@@ -2548,7 +2567,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     {modifParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
       <div className="card" style={{padding:0,maxWidth:480,width:"100%"}}>
         <div style={{padding:"14px 18px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:14,color:"var(--b)"}}>
-          ✏️ Corriger les heures du {new Date(modifParent.date).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
+          <IconeOuEmoji e="✏️"/> Corriger les heures du {new Date(modifParent.date).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
           <div style={{fontSize:11,color:"var(--l)",fontWeight:400,marginTop:4}}>
             Vous pouvez ajuster les heures saisies par l'assistante maternelle si elles sont incorrectes.
           </div>
@@ -2567,7 +2586,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
             </div>
           </div>
           <div style={{padding:"10px 12px",background:"var(--Bp)",borderRadius:8,fontSize:11,color:"var(--B)",lineHeight:1.5,marginBottom:14}}>
-            ℹ️ En enregistrant, vous validez le pointage avec ces nouvelles heures.
+            <IconeOuEmoji e="ℹ️"/> En enregistrant, vous validez le pointage avec ces nouvelles heures.
             {user?.signature_base64?" Votre signature sera apposée automatiquement.":" Aucune signature ne sera apposée (vous pouvez en créer une dans Paramètres)."}
           </div>
           <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
@@ -2599,7 +2618,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
           </div>
         </div>
         <div className="card">
-          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}>📍 Aujourd'hui</div>
+          <div style={{fontWeight:700,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📍"/> Aujourd'hui</div>
           {ptJ?<div style={{background:"var(--Sp)",borderRadius:10,padding:12,border:"1px solid var(--Sl)",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               {[["Arrivée",ptJ.arr,"var(--S)"],["→","","var(--l)"],["Départ",ptJ.dep||"En cours","var(--T)"],["Total",ptJ.tot||"-","var(--b)"]].map(([l,v,c])=>
@@ -2616,20 +2635,20 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
               </button>
             </div>:!ptJ.dep?<div>
               <div style={{fontSize:11,color:"var(--S)",marginBottom:8,textAlign:"center",fontWeight:600}}>
-                ✅ Arrivée pointée à {ptJ.arr} — Accueil en cours
+                <IconeOuEmoji e="✅"/> Arrivée pointée à {ptJ.arr} — Accueil en cours
               </div>
               <button className="btn bT l"style={{width:"100%",padding:"16px",justifyContent:"center"}}onClick={pointerDepart}disabled={saving}>
                 {saving?"⏳ ...":"🏁 Pointer le départ maintenant"}
               </button>
             </div>:<div style={{padding:"12px",background:"var(--Sp)",borderRadius:10,textAlign:"center",fontSize:13,color:"var(--S)",fontWeight:600}}>
-              ✅ Journée terminée — {ptJ.tot} d'accueil
+              <IconeOuEmoji e="✅"/> Journée terminée — {ptJ.tot} d'accueil
               {!ptJ.valide_parent&&<div style={{fontSize:11,color:"var(--l)",marginTop:4,fontWeight:400}}>En attente de validation du parent</div>}
             </div>}
 
             {/* POINTAGE WORKFLOW P14E - rectifier une heure manuellement (si oubli) */}
             <details style={{marginTop:12,background:"var(--c)",borderRadius:10,overflow:"hidden"}}>
               <summary style={{padding:"10px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:"var(--m)",listStyle:"none",display:"flex",alignItems:"center",gap:8}}>
-                <span>✏️</span> Rectifier les heures (oubli, erreur)
+                <IconeOuEmoji e="✏️"/> Rectifier les heures (oubli, erreur)
               </summary>
               <div style={{padding:"12px 14px"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -2644,7 +2663,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   {saving?"⏳ ...":"Enregistrer la correction"}
                 </button>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:6}}>
-                  💡 Utile si tu as oublié de pointer en direct.
+                  <IconeOuEmoji e="💡"/> Utile si tu as oublié de pointer en direct.
                 </div>
               </div>
             </details>
@@ -2652,7 +2671,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
             {/* QR Code pour le parent (si present physiquement) */}
             <details style={{marginTop:10,background:"var(--c)",borderRadius:10,overflow:"hidden"}}>
               <summary style={{padding:"10px 14px",cursor:"pointer",fontSize:12,fontWeight:600,color:"var(--B)",listStyle:"none",display:"flex",alignItems:"center",gap:8}}>
-                <span>📱</span> QR Code parent — {enfant?.prenom}
+                <IconeOuEmoji e="📱"/> QR Code parent — {enfant?.prenom}
               </summary>
               <div style={{padding:"12px 14px",textAlign:"center"}}>
                 <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.6}}>
@@ -2673,10 +2692,10 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                     );
                     setToast("Lien copié ✓");
                   }}><IconeOuEmoji e="📋"/> Copier le lien</button>
-                  <button className="btn bG s"onClick={()=>window.print()}>🖨️ Imprimer</button>
+                  <button className="btn bG s"onClick={()=>window.print()}><IconeOuEmoji e="🖨️"/> Imprimer</button>
                 </div>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
-                  🔒 QR propre à {enfant?.prenom}. Imprimable une fois : il enregistre toujours le pointage du jour.
+                  <IconeOuEmoji e="🔒"/> QR propre à {enfant?.prenom}. Imprimable une fois : il enregistre toujours le pointage du jour.
                 </div>
               </div>
             </details>
@@ -2710,21 +2729,21 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   <span style={{fontWeight:700,color:"var(--b)"}}>{p.tot||"-"}</span>
                 </div>
                 {role!=="parent"&&<span style={{fontSize:13,color:p.valide_parent?"var(--G)":"var(--l)"}}>
-                  {p.valide_parent?"✅":"⏳"}
+                  <IconeOuEmoji e={p.valide_parent?"✅":"⏳"}/>
                 </span>}
               </div>
               {role==="parent"&&!p.valide_parent&&<div style={{display:"flex",gap:6}}>
                 <button onClick={()=>validerPointage(p.id)}
                   style={{flex:1,background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
-                  ✅ Je valide
+                  <IconeOuEmoji e="✅"/> Je valide
                 </button>
                 <button onClick={()=>setModifParent({id:p.id,date:p.date,arr:p.arr_raw||p.arr||"",dep:p.dep_raw||p.dep||""})}
                   style={{flex:1,background:"transparent",color:"var(--T)",border:"1px solid var(--T)",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
-                  ✏️ Modifier
+                  <IconeOuEmoji e="✏️"/> Modifier
                 </button>
               </div>}
               {p.valide_parent&&p.date_validation&&<div style={{fontSize:11,color:"var(--S)",fontStyle:"italic"}}>
-                ✅ Validé le {new Date(p.date_validation).toLocaleDateString("fr-FR")}
+                <IconeOuEmoji e="✅"/> Validé le {new Date(p.date_validation).toLocaleDateString("fr-FR")}
                 {p.modified_by_parent&&<span style={{marginLeft:6,color:"var(--T)"}}>· ✏️ heures corrigées</span>}
               </div>}
             </div>;
@@ -2735,7 +2754,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
           marginTop:10,padding:"8px 12px",background:"var(--Gp)",borderRadius:8,
           fontSize:12,color:"var(--G)",fontWeight:600
         }}>
-          ⚠️ {ptH.filter(p=>!p.valide_parent).length} pointage(s) en attente de validation
+          <IconeOuEmoji e="⚠️"/> {ptH.filter(p=>!p.valide_parent).length} pointage(s) en attente de validation
         </div>}
       </div>
     </div>
@@ -3202,7 +3221,7 @@ function Calendrier({enfants,role,pEId,user}){
               <button className="btn bG l" style={{padding:"6px 10px"}} onClick={()=>decaler(1)}>›</button>
             </div>
           </div>
-          {ferie&&<div style={{fontSize:12,background:"var(--Rp)",color:"var(--R)",borderRadius:8,padding:"6px 10px",marginBottom:8,fontWeight:700}}>🎉 {ferie}</div>}
+          {ferie&&<div style={{fontSize:12,background:"var(--Rp)",color:"var(--R)",borderRadius:8,padding:"6px 10px",marginBottom:8,fontWeight:700}}><IconeOuEmoji e="🎉"/> {ferie}</div>}
           {ev2.map(ev=><div key={ev.id} style={{fontSize:12.5,background:typeEv(ev.type).fond,color:typeEv(ev.type).texte,borderRadius:8,padding:"6px 10px",marginBottom:6,fontWeight:600}}><IconeOuEmoji e={typeEv(ev.type).ic} taille={14}/> {ev.txt}</div>)}
           <div style={{display:"grid",gridTemplateColumns:"48px 1fr",marginTop:8}}>
             <div style={{position:"relative",height:H}}>
@@ -3256,7 +3275,7 @@ function Calendrier({enfants,role,pEId,user}){
             </div>;})}
             <div/>
             {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:14}}>
-              {ferie&&<div style={{fontSize:11,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🎉 {ferie}</div>}
+              {ferie&&<div style={{fontSize:11,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><IconeOuEmoji e="🎉"/> {ferie}</div>}
               {ev2.map(ev=><div key={ev.id} style={{fontSize:11,background:typeEv(ev.type).fond,color:typeEv(ev.type).texte,borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.txt}</div>)}
               {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:11,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom}</div>;})}
             </div>;})}
@@ -3375,17 +3394,20 @@ function Calendrier({enfants,role,pEId,user}){
         {/* Formulaire ajout événement - asmat uniquement */}
         {sel&&role==="asmat"&&<div className="card">
           <div style={{fontWeight:600,fontSize:13,marginBottom:10,color:"var(--b)"}}>
-            ➕ {sel} {noms[mois]} {an}
-            {getFerie(sel)&&<span style={{fontSize:11,color:"var(--R)",marginLeft:8}}>⭐ Jour férié</span>}
-            {getBirthday(sel)&&<span style={{fontSize:11,color:"var(--T)",marginLeft:8}}>🎂 Anniversaire</span>}
+            <IconeOuEmoji e="➕"/> {sel} {noms[mois]} {an}
+            {getFerie(sel)&&<span style={{fontSize:11,color:"var(--R)",marginLeft:8}}><IconeOuEmoji e="⭐"/> Jour férié</span>}
+            {getBirthday(sel)&&<span style={{fontSize:11,color:"var(--T)",marginLeft:8}}><IconeOuEmoji e="🎂"/> Anniversaire</span>}
           </div>
           <div style={{marginBottom:8}}>
             <label className="lbl">Type</label>
             <select className="sel"value={newEv.type}onChange={e=>setNewEv(p=>({...p,type:e.target.value}))}>
-              <option value="rdv">📌 Rendez-vous</option>
-              <option value="abs">🔴 Absence enfant</option>
-              <option value="cng">🟡 Congé assmat</option>
-              <option value="hol">🔵 Sortie / activité</option>
+              {/* Une <option> ne rend que du texte : ni emoji ni icône dessinée.
+                  Et « hol » n'existait pas dans TYPES_EV — un événement créé ici
+                  ressortait dans la couleur par défaut. */}
+              <option value="rdv">Rendez-vous</option>
+              <option value="abs">Absence enfant</option>
+              <option value="cng">Congé assmat</option>
+              <option value="sor">Sortie / activité</option>
             </select>
           </div>
           <input className="inp"style={{marginBottom:8}}placeholder="Description..."value={newEv.txt}onChange={e=>setNewEv(p=>({...p,txt:e.target.value}))}/>
@@ -3395,16 +3417,16 @@ function Calendrier({enfants,role,pEId,user}){
         {/* Détail jour sélectionné */}
         {sel&&<div className="card">
           <div style={{fontWeight:600,fontSize:13,marginBottom:10,color:"var(--b)"}}>
-            📍 {sel} {noms[mois]} {an}
+            <IconeOuEmoji e="📍"/> {sel} {noms[mois]} {an}
           </div>
           {getFerie(sel)&&<div style={{padding:"6px 10px",background:"var(--Rp)",borderRadius:8,fontSize:12,color:"var(--R)",fontWeight:600,marginBottom:6}}>
-            ⭐ Jour férié - {getFerie(sel)}
+            <IconeOuEmoji e="⭐"/> Jour férié - {getFerie(sel)}
           </div>}
           {getUserEv(sel)?.type==="cng"&&<div style={{padding:"6px 10px",background:"var(--Gp)",borderRadius:8,fontSize:12,color:"var(--G)",fontWeight:600,marginBottom:6}}>
-            🟡 Congé - {getUserEv(sel).txt}
+            <IconeOuEmoji e="🟡"/> Congé - {getUserEv(sel).txt}
           </div>}
           {getUserEv(sel)?.type==="abs"&&<div style={{padding:"6px 10px",background:"var(--Rp)",borderRadius:8,fontSize:12,color:"var(--R)",fontWeight:600,marginBottom:6}}>
-            🔴 {getUserEv(sel).txt}
+            <IconeOuEmoji e="🔴"/> {getUserEv(sel).txt}
           </div>}
           {getAccueil(sel).length>0&&!([0,6].includes(jourIdx(sel)))&&<div style={{marginBottom:6}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Enfants accueillis :</div>
@@ -3415,10 +3437,10 @@ function Calendrier({enfants,role,pEId,user}){
             </div>)}
           </div>}
           {isVacances(ds(sel))&&<div style={{padding:"6px 10px",background:"var(--Bp)",borderRadius:8,fontSize:12,color:"var(--B)",fontWeight:600,marginBottom:6}}>
-            🏖️ Vacances scolaires {nomVacances(ds(sel))} - Zone C
+            <IconeOuEmoji e="🏖️"/> Vacances scolaires {nomVacances(ds(sel))} - Zone C
           </div>}
           {getBirthday(sel)&&<div style={{padding:"6px 10px",background:"var(--Tp)",borderRadius:8,fontSize:12,color:"var(--T)",fontWeight:600}}>
-            🎂 Anniversaire de {getBirthday(sel)?.prenom} !
+            <IconeOuEmoji e="🎂"/> Anniversaire de {getBirthday(sel)?.prenom} !
           </div>}
           {!getFerie(sel)&&!getUserEv(sel)&&!getAccueil(sel).length&&!isVacances(ds(sel))&&!getBirthday(sel)&&
             <div style={{fontSize:12,color:"var(--l)"}}>Aucun événement ce jour.</div>}
@@ -3448,7 +3470,7 @@ function Calendrier({enfants,role,pEId,user}){
       </div>
       {VACANCES_2024.filter(v=>v.debut.startsWith(moisStr)||v.fin.startsWith(moisStr)||(v.debut<moisStr+"-99"&&v.fin>moisStr)).map(v=>
         <div key={v.nom} style={{marginTop:10,padding:12,background:"var(--Bp)",borderRadius:10,border:"1px solid rgba(46,95,138,.3)"}}>
-          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}>🏖️ Vacances {v.nom} - Zone C</div>
+          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}><IconeOuEmoji e="🏖️"/> Vacances {v.nom} - Zone C</div>
           <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(v.fin)}</div>
         </div>)}
     </div>
@@ -3640,7 +3662,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '.steps h3{font-size:12px;color:#5DA9A1;margin-bottom:10px}',
       '.steps ol{padding-left:20px;font-size:11px;line-height:2}',
       '@media print{.noprint{display:none}}</style></head><body>',
-      '<h1>🏛️ Récapitulatif Pajemploi</h1>',
+      '<h1><IconeOuEmoji e="🏛️"/> Récapitulatif Pajemploi</h1>',
       '<div class="sub">'+mois+' — À reporter sur pajemploi.urssaf.fr</div>',
       '<div class="box"><h2>👩👧 Assistante maternelle</h2>',
       '<table><tr><td>Nom</td><td>'+((enfant?.prenomAsmat||"")+" "+(enfant?.nomAsmat||"")).trim()||'[Votre nom]'+'</td></tr>',
@@ -3652,13 +3674,13 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<tr><td>Heures complémentaires / supplémentaires</td><td>'+Math.max(0,h.real-hMens)+' h</td></tr>',
       '<tr><td>Jours d\'activité</td><td>'+joursTrav+' jours</td></tr>',
       '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table></div>',
-      '<div class="box"><h2>💰 Salaire à déclarer</h2>',
+      '<div class="box"><h2><IconeOuEmoji e="💰"/> Salaire à déclarer</h2>',
       '<table><tr><td>Salaire net horaire</td><td>'+(totalBrut*0.78/h.real).toFixed(4)+' €/h</td></tr>',
       '<tr><td>Salaire net total</td><td>'+salNet+' €</td></tr>',
       '<tr><td>Indemnité d\'entretien</td><td>'+(h.real/5*contrat.entretien).toFixed(2)+' €</td></tr>',
       '<tr><td>Indemnité de repas</td><td>0,00 €</td></tr>',
-      '<tr class="hl"><td>💶 TOTAL NET À DÉCLARER</td><td>'+salNet+' €</td></tr></table></div>',
-      '<div class="steps"><h3>📝 Comment déclarer sur Pajemploi :</h3>',
+      '<tr class="hl"><td><IconeOuEmoji e="💶"/> TOTAL NET À DÉCLARER</td><td>'+salNet+' €</td></tr></table></div>',
+      '<div class="steps"><h3><IconeOuEmoji e="📝"/> Comment déclarer sur Pajemploi :</h3>',
       '<ol><li>Connectez-vous sur <strong>pajemploi.urssaf.fr</strong></li>',
       '<li>Cliquez sur <strong>"Déclarer"</strong> > sélectionnez votre assistante maternelle</li>',
       '<li>Entrez le nombre d\'heures : <strong>'+h.real+'h</strong></li>',
@@ -3666,8 +3688,8 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<li>Entrez le salaire net total : <strong>'+salNet+' €</strong></li>',
       '<li>Entrez l\'indemnité d\'entretien : <strong>'+(h.real/5*contrat.entretien).toFixed(2)+' €</strong></li>',
       '<li>Validez la déclaration</li></ol></div>',
-      '<div class="note">📌 Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
-      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
+      '<div class="note"><IconeOuEmoji e="📌"/> Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
+      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700"><IconeOuEmoji e="🖨️"/> Imprimer / Sauvegarder en PDF</button></div>',
       '</body></html>'
     ].join('');
     w.document.write(htmlPaj);
@@ -4016,7 +4038,7 @@ function Contrats({enfants,role,pEId,user}){
             </button>
           </div>}
           {role==="asmat"&&!sigStandard&&<div style={{marginTop:8,fontSize:11,color:"var(--l)",textAlign:"center"}}>
-            💡 Astuce : enregistrez une signature standard dans Paramètres pour la réutiliser en 1 clic.
+            <IconeOuEmoji e="💡"/> Astuce : enregistrez une signature standard dans Paramètres pour la réutiliser en 1 clic.
           </div>}
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <button className="btn bG"onClick={clearSig}>Effacer</button>
@@ -4094,11 +4116,11 @@ function Contrats({enfants,role,pEId,user}){
               {m.date_decision?" · décidé le "+fmt(m.date_decision.slice(0,10)):""}
             </div>
             {peutRepondre&&<div style={{display:"flex",gap:6,marginTop:8}}>
-              <button className="btn bS s"style={{padding:"5px 10px"}}onClick={()=>repondre(m.id,true)}>✅ Accepter</button>
-              <button className="btn bG s"style={{padding:"5px 10px",color:"var(--R)"}}onClick={()=>repondre(m.id,false)}>❌ Refuser</button>
+              <button className="btn bS s"style={{padding:"5px 10px"}}onClick={()=>repondre(m.id,true)}><IconeOuEmoji e="✅"/> Accepter</button>
+              <button className="btn bG s"style={{padding:"5px 10px",color:"var(--R)"}}onClick={()=>repondre(m.id,false)}><IconeOuEmoji e="❌"/> Refuser</button>
             </div>}
             {peutSupprimer&&<div style={{display:"flex",gap:6,marginTop:8}}>
-              <button className="btn bG s"style={{padding:"5px 10px",color:"var(--R)"}}onClick={()=>supprimerMod(m.id)}>🗑️ Supprimer</button>
+              <button className="btn bG s"style={{padding:"5px 10px",color:"var(--R)"}}onClick={()=>supprimerMod(m.id)}><IconeOuEmoji e="🗑️"/> Supprimer</button>
             </div>}
           </div>;
         })}
@@ -4230,14 +4252,14 @@ function Sante({enfants,role,pEId,user}){
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {/* Identité médicale - connectée à la fiche d'urgence */}
         <div className="card">
-          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>🪪</span> Identité médicale</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="🪪"/> Identité médicale</div>
           {[["Groupe sanguin",grp||"—"],["Médecin traitant",medNom||"—"],["Tél. médecin",medTel||"—"]].map(([l,v],i,arr)=>
             <div key={l}style={{display:"flex",justifyContent:"space-between",gap:10,padding:"9px 0",borderBottom:i<arr.length-1?"1px solid var(--br)":"none"}}>
               <span style={{fontSize:12,color:"var(--l)",fontWeight:600}}>{l}</span>
               <span style={{fontSize:13,fontWeight:600,color:"var(--b)",textAlign:"right"}}>{v}</span>
             </div>)}
           <div style={{marginTop:12,fontSize:11,color:"var(--l)",display:"flex",alignItems:"flex-start",gap:6,lineHeight:1.5}}>
-            <span>🔗</span>
+            <IconeOuEmoji e="🔗"/>
             <span>{role==="parent"
               ?<>Ces informations proviennent de la <b>Fiche d'urgence</b>. Tenez-la à jour pour que votre assistante maternelle ait toujours le bon groupe sanguin et le bon médecin.{!ficheAJour&&<span style={{color:"var(--R)"}}> (fiche non renseignée)</span>}</>
               :<>Renseigné par le parent via la <b>Fiche d'urgence</b>.{!ficheAJour&&<span style={{color:"var(--m)"}}> Elle n'a pas encore été remplie.</span>}</>}</span>
@@ -4246,23 +4268,23 @@ function Sante({enfants,role,pEId,user}){
 
         {/* Allergies ALLERGIES P6 */}
         <div className="card">
-          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>⚠️</span> Allergies</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:14,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="⚠️"/> Allergies</div>
           {(enfant.allergies||[]).length===0
             ?<div style={{display:"inline-flex",alignItems:"center",gap:7,background:"var(--Sp)",color:"var(--S)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600}}><IconeOuEmoji e="✅"/> Aucune allergie connue</div>
             :<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-              {(enfant.allergies||[]).map(a=><span key={a}style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,fontWeight:600,padding:"6px 13px",borderRadius:10,display:"inline-flex",alignItems:"center",gap:7}}>⚠️ {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
+              {(enfant.allergies||[]).map(a=><span key={a}style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,fontWeight:600,padding:"6px 13px",borderRadius:10,display:"inline-flex",alignItems:"center",gap:7}}><IconeOuEmoji e="⚠️"/> {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
             </div>}
           {role==="parent"?<div style={{marginTop:14,display:"flex",gap:8}}>
             <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
             <button className="btn bT"style={{padding:"0 16px"}}onClick={addAllergie}>+</button>
-          </div>:<div style={{marginTop:12,fontSize:11,color:"var(--l)"}}>ℹ️ Renseignées et tenues à jour par le parent.</div>}
+          </div>:<div style={{marginTop:12,fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="ℹ️"/> Renseignées et tenues à jour par le parent.</div>}
         </div>
       </div>
 
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {/* Urgences - numeros cliquables */}
         <div className="card"style={{background:"#FFF5F5",border:"1px solid #FCA5A5"}}>
-          <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"#DC2626",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>🚨</span> En cas d'urgence</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:6,color:"#DC2626",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="🚨"/> En cas d'urgence</div>
           <div style={{fontSize:11,color:"#9B5757",marginBottom:12}}>Touchez un numéro pour appeler directement.</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {urgences.map((u,i)=>
@@ -4272,12 +4294,12 @@ function Sante({enfants,role,pEId,user}){
                 <span className="pf"style={{fontWeight:700,color:"#DC2626",fontSize:14,whiteSpace:"nowrap"}}>{u.v}</span>
               </a>)}
           </div>
-          {!pmiTel&&<div style={{marginTop:10,fontSize:11.5,color:"#9B5757",lineHeight:1.5}}>ℹ️ Ajoutez le numéro direct de votre PMI dans <b>Paramètres → Mon profil</b> pour l'avoir ici en un appui.</div>}
+          {!pmiTel&&<div style={{marginTop:10,fontSize:11.5,color:"#9B5757",lineHeight:1.5}}><IconeOuEmoji e="ℹ️"/> Ajoutez le numéro direct de votre PMI dans <b>Paramètres → Mon profil</b> pour l'avoir ici en un appui.</div>}
         </div>
 
         {/* Suivi medical - acces autres onglets */}
         <div className="card">
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:17}}>📑</span> Suivi médical</div>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="📑"/> Suivi médical</div>
           <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>Le <b>calendrier vaccinal</b> et la <b>courbe de croissance</b> sont disponibles dans les onglets dédiés ci-dessus.</div>
         </div>
       </div>
@@ -4378,7 +4400,7 @@ function Portfolio({enfants,role,pEId}){
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
             {(pf.competences||[]).map(c=><span key={c}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:11}}>{c}</span>)}
           </div>
-          {role==="asmat"&&<button className="btn bG s"style={{padding:"5px 10px",color:"var(--R)",alignSelf:"flex-start",marginTop:4}}onClick={()=>supprimer(pf.id)}>🗑️ Supprimer</button>}
+          {role==="asmat"&&<button className="btn bG s"style={{padding:"5px 10px",color:"var(--R)",alignSelf:"flex-start",marginTop:4}}onClick={()=>supprimer(pf.id)}><IconeOuEmoji e="🗑️"/> Supprimer</button>}
         </div>;})}
     </div>
   </div>;
@@ -5107,7 +5129,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       <PageHeader icon="✨" title={viewing.trimestre||(viewing.type==="mensuel"?"Bilan mensuel":"Bilan")} sub={(p?.date_debut||"")+(p?.date_fin?" → "+p.date_fin:"")}
         action={<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           {/* PDF BILAN P9 - bouton export PDF */}
-          <button className="btn" style={{background:"var(--accent)",color:"#fff",border:"none"}} onClick={()=>exporterBilanPDF(viewing)}>📥 PDF</button>
+          <button className="btn" style={{background:"var(--accent)",color:"#fff",border:"none"}} onClick={()=>exporterBilanPDF(viewing)}><IconeOuEmoji e="📥"/> PDF</button>
           <button className="btn" onClick={()=>setViewing(null)}>← Retour</button>
         </div>}/>
       {!p&&<div className="card">{viewing.contenu}</div>}
@@ -5167,7 +5189,7 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
       const periode=p?(p.date_debut+" → "+p.date_fin):b.date;
       const titre=b.trimestre||(b.type==="mensuel"?"Bilan mensuel":b.type==="libre"?"Bilan libre":"Bilan");
       return <div key={b.id}className="card"style={{marginBottom:10,display:"flex",gap:12,alignItems:"center"}}>
-        <div style={{fontSize:28}}>{b.envoye?"✅":"✏️"}</div>
+        <div style={{fontSize:28}}><IconeOuEmoji e={b.envoye?"✅":"✏️"} taille={28}/></div>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{titre}</div>
           <div style={{fontSize:12,color:"var(--l)"}}>{periode}</div>
@@ -5176,10 +5198,10 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
           </div>
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button className="btn s"style={{padding:"6px 10px"}}onClick={()=>setViewing(b)}>👁️ Voir</button>
+          <button className="btn s"style={{padding:"6px 10px"}}onClick={()=>setViewing(b)}><IconeOuEmoji e="👁️"/> Voir</button>
           {/* PDF BILAN P9 - export PDF rapide depuis la liste, sur bilans envoyés uniquement */}
           {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,background:"var(--accent)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
-          {role==="asmat"&&!b.envoye&&<button className="btn s"style={{padding:"6px 10px"}}onClick={()=>editBilan(b)}>✏️ Modifier</button>}
+          {role==="asmat"&&!b.envoye&&<button className="btn s"style={{padding:"6px 10px"}}onClick={()=>editBilan(b)}><IconeOuEmoji e="✏️"/> Modifier</button>}
           {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
           {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
             padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",
@@ -5208,7 +5230,7 @@ function Recap({enfants,role,pEId}){
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📊" title="Récapitulatif mensuel PDF" sub="Bilan complet automatique - exclusivité TiMat"
-      action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> 👁️ Aperçu PDF</button>}/>
+      action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> <IconeOuEmoji e="👁️"/> Aperçu PDF</button>}/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
 
@@ -5218,7 +5240,7 @@ function Recap({enfants,role,pEId}){
         ["🌱","Étapes atteintes",ms.filter(m=>m.ok).length+" / "+ms.length+" jalons","var(--P)"],
         ["📋","Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges","var(--T)"],
       ].map(([ic,ti,su,c])=><div key={ti}className="card"style={{display:"flex",gap:10,alignItems:"center"}}>
-        <div style={{fontSize:26}}><IconeOuEmoji e={ic}/></div>
+        <div style={{fontSize:26}}><IconeOuEmoji e={ic} taille={26}/></div>
         <div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{ti}</div>
           <div className="pf"style={{fontSize:15,color:c,fontWeight:700}}>{su}</div></div>
       </div>)}
@@ -5228,8 +5250,8 @@ function Recap({enfants,role,pEId}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Aperçu du récapitulatif</div>
         <div style={{display:"flex",gap:8}}>
-          <button className="btn bP"onClick={()=>setToast("PDF généré et envoyé par email ✓")}>📧 Envoyer par email</button>
-          <button className="btn bS"onClick={()=>setToast("Téléchargement en cours ✓")}>⬇️ Télécharger PDF</button>
+          <button className="btn bP"onClick={()=>setToast("PDF généré et envoyé par email ✓")}><IconeOuEmoji e="📧"/> Envoyer par email</button>
+          <button className="btn bS"onClick={()=>setToast("Téléchargement en cours ✓")}><IconeOuEmoji e="⬇️"/> Télécharger PDF</button>
         </div>
       </div>
       <div className="pdf-preview">
@@ -5243,7 +5265,7 @@ function Recap({enfants,role,pEId}){
           </div>
         </div>
         <div style={{background:"#f8f4ef",padding:10,borderRadius:6,marginBottom:12}}>
-          <div style={{fontWeight:700,marginBottom:4}}>👶 {enfant.prenom} {enfant.nom} - {age(enfant.naissance)}</div>
+          <div style={{fontWeight:700,marginBottom:4}}><IconeOuEmoji e="👶"/> {enfant.prenom} {enfant.nom} - {age(enfant.naissance)}</div>
           <div style={{fontSize:11,color:"#666"}}>Période d'accueil : {enfant.contrat?.horaires} · {(enfant.contrat?.jours||[]).join(", ")}</div>
         </div>
         <table>
@@ -5335,14 +5357,14 @@ function CompteRenduTrimestriel({enfants,role,pEId}){
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,lineHeight:2,color:"var(--b)",whiteSpace:"pre-wrap"}}>{cr}</div>
             <div style={{display:"flex",gap:8,marginTop:16,flexWrap:"wrap",alignItems:"center"}}>
               {role==="asmat"&&!envoye&&<button className="btn bS"onClick={()=>{setEnvoye(true);setToast("CR "+trim+" envoyé à "+parent?.prenom+" "+parent?.nom+" ✓");}}>
-                📩 Envoyer aux parents
+                <IconeOuEmoji e="📩"/> Envoyer aux parents
               </button>}
               {role==="asmat"&&envoye&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:"var(--Sp)",borderRadius:10,border:"1px solid var(--Sl)"}}>
-                <span style={{fontSize:14}}>✅</span>
+                <IconeOuEmoji e="✅"/>
                 <span style={{fontSize:13,fontWeight:700,color:"var(--S)"}}>CR envoyé à {parent?.prenom} {parent?.nom}</span>
               </div>}
               <button className="btn bP"onClick={generer}><IconeOuEmoji e="🔄"/> Régénérer</button>
-              <button className="btn bG"onClick={()=>navigator.clipboard?.writeText(cr)}>📋 Copier</button>
+              <button className="btn bG"onClick={()=>navigator.clipboard?.writeText(cr)}><IconeOuEmoji e="📋"/> Copier</button>
             </div>
           </div>}
         </div>
@@ -5643,7 +5665,7 @@ function Documents({enfants,role,pEId,user}){
 
     {/* Formulaire ajout */}
     {showUpload&&<div className="card"style={{marginBottom:16,border:"1.5px solid var(--T)"}}>
-      <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}>📎 Ajouter un document</div>
+      <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📎"/> Ajouter un document</div>
       <div className="g2"style={{marginBottom:10}}>
         <div>
           <label className="lbl">Nom du fichier</label>
@@ -5677,8 +5699,8 @@ function Documents({enfants,role,pEId,user}){
         <input ref={uploadRef}type="file"accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"style={{display:"none"}}
           onChange={e=>{const f=e.target.files?.[0];if(f){setNewFile(f);if(!newDoc.nom.trim())setNewDoc(p=>({...p,nom:f.name.replace(/\.[^.]+$/,'')}));}}}/>
         {newFile
-          ?<div style={{fontSize:12,color:"var(--S)"}}>📎 {newFile.name} ({(newFile.size/1024).toFixed(0)} Ko) <span style={{color:"var(--l)"}}>— cliquer pour changer</span></div>
-          :<div style={{fontSize:12,color:"var(--l)"}}>📁 Cliquer pour sélectionner un fichier (PDF, image, doc...)</div>}
+          ?<div style={{fontSize:12,color:"var(--S)"}}><IconeOuEmoji e="📎"/> {newFile.name} ({(newFile.size/1024).toFixed(0)} Ko) <span style={{color:"var(--l)"}}>— cliquer pour changer</span></div>
+          :<div style={{fontSize:12,color:"var(--l)"}}><IconeOuEmoji e="📁"/> Cliquer pour sélectionner un fichier (PDF, image, doc...)</div>}
       </div>
     </div>}
 
@@ -5798,8 +5820,8 @@ function Documents({enfants,role,pEId,user}){
               <div style={{fontSize:11,color:"var(--l)"}}>{(doc.storagePath||doc.url)?"Le fichier s'ouvre dans un nouvel onglet":""}</div>
             </div>
             <div style={{display:"flex",gap:8,marginTop:16,justifyContent:"flex-end"}}>
-              <button className="btn bG"onClick={()=>{if(doc.storagePath||doc.url)telechargerDoc(doc);else window.print();}}>🖨️ Imprimer</button>
-              <button className="btn bT"onClick={()=>telechargerDoc(doc)}>⬇️ Télécharger</button>
+              <button className="btn bG"onClick={()=>{if(doc.storagePath||doc.url)telechargerDoc(doc);else window.print();}}><IconeOuEmoji e="🖨️"/> Imprimer</button>
+              <button className="btn bT"onClick={()=>telechargerDoc(doc)}><IconeOuEmoji e="⬇️"/> Télécharger</button>
             </div>
           </div>
         </div>;
@@ -6252,7 +6274,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
     </div>
     {/* BULLETIN HISTORIQUE P14C - statut du mois selectionne */}
     {moisSelKey&&bulletinsEnvoyes[moisSelKey]?.envoye_au_parent&&<div style={{padding:"10px 14px",background:"var(--Sp)",border:"1px solid var(--S)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--S)",display:"flex",alignItems:"center",gap:8}}>
-      ✅ <strong>Bulletin envoyé au parent</strong> le {new Date(bulletinsEnvoyes[moisSelKey].date_envoi).toLocaleDateString("fr-FR")} — disponible dans Documents
+      <IconeOuEmoji e="✅"/> <strong>Bulletin envoyé au parent</strong> le {new Date(bulletinsEnvoyes[moisSelKey].date_envoi).toLocaleDateString("fr-FR")} — disponible dans Documents
     </div>}
     {moisSelKey&&!bulletinsEnvoyes[moisSelKey]&&!isDemoBull&&<div style={{padding:"10px 14px",background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--B)"}}>
       ⏳ Bulletin non encore envoyé pour ce mois
@@ -6547,7 +6569,7 @@ function DemandesAvenants({enfants,role,pEId}){
 
     <div className="card"style={{marginBottom:16}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>
-        ➕ Nouvelle demande d'avenant
+        <IconeOuEmoji e="➕"/> Nouvelle demande d'avenant
       </div>
       <div style={{display:"grid",gap:12}}>
         <div>
@@ -6652,7 +6674,7 @@ function ContratsTypes({enfants}){
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>setSelModele(null)}>Annuler</button>
         <button className="btn bT"style={{flex:2}}onClick={()=>setToast((m.avenant?"Avenant généré ✓":"Contrat généré ✓"))}>
-          📄 Générer le document
+          <IconeOuEmoji e="📄"/> Générer le document
         </button>
       </div>
     </div>}
@@ -6710,7 +6732,7 @@ function CourriersTypes({enfants,pEId,user}){
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour le PDF");return;}
     const corps=texte.split("\n").map(l=>l.trim()?("<p>"+l.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>"):"<br/>").join("");
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${sel.titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${sel.titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast("PDF généré ✓");
   };
 
@@ -6751,7 +6773,7 @@ function CourriersTypes({enfants,pEId,user}){
         </div>
       </div>}
       <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>👁️ Aperçu</div>
+        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}><IconeOuEmoji e="👁️"/> Aperçu</div>
         <div style={{whiteSpace:"pre-wrap",fontSize:13,lineHeight:1.7,color:"var(--b)",background:"var(--c)",borderRadius:10,padding:14,maxHeight:340,overflowY:"auto"}}>{texte}</div>
         {reste>0&&<div style={{fontSize:11,color:"var(--T)",marginTop:8}}>Les champs non remplis restent entre [crochets] dans le document.</div>}
       </div>
@@ -6783,7 +6805,7 @@ function ImportContrat({onFinish}){
       </div>
       <div className="card"style={{padding:"var(--pad-carte-l)"}}>
         {step===1&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="📦"/> Importer votre contrat</div>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="📦" taille={20}/> Importer votre contrat</div>
           <div style={{fontSize:13,color:"var(--l)",marginBottom:20,lineHeight:1.6}}>Basculez depuis votre ancien outil en 3 minutes. Toutes vos données reprises automatiquement.</div>
           <div style={{marginBottom:14}}>
             <label className="lbl">Depuis quel outil ?</label>
@@ -6802,7 +6824,7 @@ function ImportContrat({onFinish}){
           <button className="btn bT"style={{width:"100%"}}onClick={()=>setStep(2)}disabled={!data.prenomAsmat||!data.emailAsmat}>Continuer →</button>
         </>}
         {step===2&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="👶"/> L'enfant & le parent</div>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="👶" taille={20}/> L'enfant & le parent</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <div><label className="lbl">Prénom de l'enfant</label><input className="inp"placeholder="Léo"value={data.prenomEnfant}onChange={e=>setData(d=>({...d,prenomEnfant:e.target.value}))}/></div>
             <div><label className="lbl">Date de naissance</label><input type="date"className="inp"value={data.dateNaiss}onChange={e=>setData(d=>({...d,dateNaiss:e.target.value}))}/></div>
@@ -6817,7 +6839,7 @@ function ImportContrat({onFinish}){
           </div>
         </>}
         {step===3&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="📄"/> Les conditions du contrat</div>
+          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="📄" taille={20}/> Les conditions du contrat</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             <div><label className="lbl">Date de début</label><input type="date"className="inp"value={data.debut}onChange={e=>setData(d=>({...d,debut:e.target.value}))}/></div>
             <div><label className="lbl">Heures / semaine</label><input type="number"className="inp"placeholder="40"value={data.heures}onChange={e=>setData(d=>({...d,heures:e.target.value}))}/></div>
@@ -6836,7 +6858,7 @@ function ImportContrat({onFinish}){
             </div>
           </div>
           <div style={{background:"var(--Sp)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--S)"}}>
-            ✅ Ces données seront reprises immédiatement dans TiMat. Modifiables à tout moment.
+            <IconeOuEmoji e="✅"/> Ces données seront reprises immédiatement dans TiMat. Modifiables à tout moment.
           </div>
           <div style={{display:"flex",gap:8}}>
             <button className="btn bG"style={{flex:1}}onClick={()=>setStep(2)}>← Retour</button>
@@ -7270,7 +7292,7 @@ function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false}){
               <div style={{display:"flex",justifyContent:"space-between",borderTop:"2px solid var(--br)",paddingTop:12,fontSize:15}}><span style={{fontWeight:700,color:"var(--b)"}}>Net à payer</span><span style={{fontWeight:800,color:"var(--T)"}}>731,75 €</span></div>
               <div style={{display:"flex",gap:8,marginTop:16}}>
                 <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}><IconeOuEmoji e="📄"/> Aperçu PDF</div>
-                <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}>⬇️ Télécharger</div>
+                <div style={{flex:1,textAlign:"center",padding:"9px",borderRadius:10,background:"var(--c)",fontSize:12,fontWeight:700,color:"var(--m)"}}><IconeOuEmoji e="⬇️"/> Télécharger</div>
               </div>
             </div>
             <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:12}}>Exemple — calculé automatiquement à partir des pointages dans l'app réelle.</div>
@@ -7451,7 +7473,7 @@ function TransmissionsContent({enfant,role,user}){
     {/* Photos - galerie cliquable */}
     {(enfantPhotos.length>0||role==="asmat")&&<div className="card"style={{marginBottom:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📸 Photos du jour</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="📸"/> Photos du jour</div>
         {role==="asmat"&&<>
           <input ref={fileRef}type="file"accept="image/*"style={{display:"none"}}onChange={ajouterPhoto}/>
           <button className="btn bG s"style={{padding:"5px 12px"}}onClick={()=>fileRef.current?.click()}>
@@ -7795,7 +7817,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
         {ic:"⏰",v:totalH+"h",l:"Heures ce mois",c:"var(--S)",p:"admin_finances"},
         {ic:"😊",v:avg+"/5",l:"Humeur moyenne",c:avgColor,p:"journal_complet"},
       ].map(k=><div key={k.l}className="card card-lift"onClick={()=>setPage&&setPage(k.p)}style={{textAlign:"center",cursor:"pointer"}}>
-        <div style={{fontSize:22,marginBottom:4}}><IconeOuEmoji e={k.ic}/></div>
+        <div style={{fontSize:22,marginBottom:4}}><IconeOuEmoji e={k.ic} taille={22}/></div>
         <div className="pf"style={{fontSize:22,fontWeight:600,color:k.c}}>{k.v}</div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:3,lineHeight:1.3}}>{k.l}</div>
       </div>)}
@@ -7805,7 +7827,7 @@ function TableauDeBord({enfants,role,pEId,setPage}){
       {/* Courbe humeurs SVG */}
       <div className="card">
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>😊 Humeurs - {enfant?.prenom}</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}><IconeOuEmoji e="😊"/> Humeurs - {enfant?.prenom}</div>
           <span className="pf"style={{fontSize:18,fontWeight:700,color:avgColor}}>{avg}/5</span>
         </div>
         <svg width="100%"viewBox={"0 0 "+svgW+" "+svgH}style={{overflow:"visible"}}>
@@ -8212,13 +8234,13 @@ function ActivitesSuggerees({enfants,role,pEId}){
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
             <span className="badge"style={{background:(catColors[a.cat]||"var(--T)")+"22",color:catColors[a.cat]||"var(--T)",fontSize:11}}>{a.cat}</span>
-            {a._perso&&<span className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:11}}>✦ Perso</span>}
+            {a._perso&&<span className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:11}}><IconeOuEmoji e="✦"/> Perso</span>}
           </div>
           <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{a.duree?"⏱ "+a.duree:""}</span>
         </div>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{a.titre}</div>
         {a.desc&&<div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:8}}>{a.desc}</div>}
-        {a.materiel&&<div style={{fontSize:11,color:"var(--l)",marginBottom:6}}>📦 {a.materiel}</div>}
+        {a.materiel&&<div style={{fontSize:11,color:"var(--l)",marginBottom:6}}><IconeOuEmoji e="📦"/> {a.materiel}</div>}
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {(a.competences||[]).map((c,j)=><span key={j}className="badge"style={{background:"var(--c)",color:"var(--m)",fontSize:11}}>{c}</span>)}
         </div>
@@ -8297,14 +8319,14 @@ function CommunicationPMI({role,user,hasRealData}){
 
     {/* Explication du fonctionnement */}
     <div style={{background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:13,color:"var(--B)",lineHeight:1.6}}>
-      <strong>📧 Fonctionnement :</strong> vos messages sont envoyés par email à la PMI ({pmiEmail}). 
+      <strong><IconeOuEmoji e="📧"/> Fonctionnement :</strong> vos messages sont envoyés par email à la PMI ({pmiEmail}). 
       Leurs réponses arrivent automatiquement ici. Vous apparaissez comme expéditeur : {asmatEmail}.
-      <br/><strong>🏛️ {pmiInfo.nom}</strong> - {pmiInfo.tel} - {pmiInfo.adresse}
+      <br/><strong><IconeOuEmoji e="🏛️"/> {pmiInfo.nom}</strong> - {pmiInfo.tel} - {pmiInfo.adresse}
       <br/><span style={{fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="💡"/> Pour configurer votre PMI de secteur, renseignez votre code postal dans Paramètres → Profil</span>
     </div>
 
     {nonLus>0&&<div style={{background:"#EBF4FF",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
-      <span style={{fontSize:18}}>📬</span>
+      <IconeOuEmoji e="📬"/>
       <span style={{fontSize:13,fontWeight:700,color:"var(--B)"}}>{nonLus} nouveau{nonLus>1?"x":""} message{nonLus>1?"s":""} de la PMI</span>
       <button className="btn bG s"style={{marginLeft:"auto",padding:"4px 10px"}}onClick={()=>setMsgs(p=>p.map(m=>({...m,lu:true})))}>
         Tout marquer lu
@@ -8353,11 +8375,11 @@ function CommunicationPMI({role,user,hasRealData}){
               <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
             </div>)}
           <div style={{marginTop:10,padding:"8px 12px",background:"#EAF4EE",borderRadius:9,border:"1px solid var(--S)",fontSize:12,color:"var(--S)"}}>
-            💡 TiMat vous préviendra à l'approche du renouvellement de votre agrément.
+            <IconeOuEmoji e="💡"/> TiMat vous préviendra à l'approche du renouvellement de votre agrément.
           </div>
         </div>
         <div className="card">
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>📁 Documents officiels</div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📁"/> Documents officiels</div>
           {[["Agrément PMI "+(new Date().getFullYear()-3),"✅"],["Assurance RC Pro","✅"],["Formation Continue","⏳"]].map(([n,s])=>
             <div key={n}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
               <span style={{fontSize:13,color:"var(--b)"}}>{n}</span>
@@ -8365,7 +8387,7 @@ function CommunicationPMI({role,user,hasRealData}){
             </div>)}
         </div>
         <div className="card"style={{background:"var(--Bp)",border:"1px solid var(--B)"}}>
-          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}>📞 Contacts PMI</div>
+          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}><IconeOuEmoji e="📞"/> Contacts PMI</div>
           <div style={{fontSize:12,color:"var(--b)",lineHeight:1.7}}>
             Email : {pmiEmail}<br/>
             Tél : 01 XX XX XX XX<br/>
@@ -8412,7 +8434,7 @@ function InstallButton(){
   return <>
     <button className="btn bT" style={{width:"100%",justifyContent:"center"}}
       onClick={()=>install(()=>{if(!deferredPrompt)setShowGuide(true);})}>
-      📲 Installer TiMat sur cet appareil
+      <IconeOuEmoji e="📲"/> Installer TiMat sur cet appareil
     </button>
     {showGuide&&<InstallGuide isIOS={isIOS} onClose={()=>setShowGuide(false)}/>}
   </>;
@@ -8434,7 +8456,7 @@ function InstallGuide({isIOS,onClose}){
             <div><div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{t}</div><div style={{fontSize:11,color:"var(--l)"}}>{d}</div></div>
           </div>)}
         <div style={{padding:"10px 14px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)"}}>
-          💡 Fonctionne uniquement sur <strong>Safari</strong>
+          <IconeOuEmoji e="💡"/> Fonctionne uniquement sur <strong>Safari</strong>
         </div>
       </div>:<div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
         {[["1","⋮ Appuyez sur les 3 points","En haut à droite de Chrome"],["2","Ajouter à l'écran d'accueil","Dans le menu"],["3","Confirmer","L'icône TiMat apparaîtra"]].map(([n,t,d])=>
@@ -8467,7 +8489,7 @@ function BandeauInstall(){
 
   return <>
     <div style={{background:"linear-gradient(135deg,var(--T),var(--S))",padding:"8px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0,zIndex:50}}>
-      <span style={{fontSize:18}}>📲</span>
+      <IconeOuEmoji e="📲"/>
       <div style={{flex:1}}>
         <div style={{fontSize:12,fontWeight:700,color:"#fff"}}>Installer TiMat sur votre écran d'accueil</div>
         <div style={{fontSize:11,color:"rgba(255,255,255,.75)"}}>Accès rapide comme une vraie app</div>
@@ -8956,7 +8978,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
       {/* Abonnement - uniquement pour les assmats */}
       {user?.role==="asmat"&&<div className="card"style={{border:isPro?"2px solid var(--S)":"2px solid var(--T)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>💳 Mon abonnement</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="💳"/> Mon abonnement</div>
           <span style={{
             background:isPro?"var(--Sp)":"var(--Tp)",
             color:isPro?"var(--S)":"var(--T)",
@@ -8966,7 +8988,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
         {isPro?<>
           {isTrialing&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10,padding:"10px 14px",marginBottom:12,fontSize:12,color:"var(--G)"}}>
-            🎉 Vous bénéficiez de 2 mois d'essai gratuit. Aucun prélèvement avant la fin de l'essai.
+            <IconeOuEmoji e="🎉"/> Vous bénéficiez de 2 mois d'essai gratuit. Aucun prélèvement avant la fin de l'essai.
           </div>}
           <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:14}}>
             {isTrialing
@@ -9006,7 +9028,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
       {/* Profil - PROFIL EDITABLE P15 */}
       <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>👤 Mon profil</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="👤"/> Mon profil</div>
         <div style={{fontSize:11.5,color:"var(--l)",marginBottom:14,lineHeight:1.5}}>
           {estParent
             ?<>Ces informations apparaîtront comme <b>employeur</b> sur votre contrat de travail.</>
@@ -9069,7 +9091,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
         {estParent&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
           <div onClick={()=>setShowP2(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",gap:12}}>
             <div>
-              <div style={{fontWeight:600,fontSize:12.5,color:"var(--b)"}}>👥 Ajouter un 2e parent employeur</div>
+              <div style={{fontWeight:600,fontSize:12.5,color:"var(--b)"}}><IconeOuEmoji e="👥"/> Ajouter un 2e parent employeur</div>
               <div style={{fontSize:11,color:"var(--l)",marginTop:2,lineHeight:1.4}}>Si le contrat est cosigné par les deux parents</div>
             </div>
             <div style={{width:36,height:20,borderRadius:20,background:showP2?"var(--S)":"var(--br)",position:"relative",flexShrink:0,transition:"background .2s"}}>
@@ -9118,7 +9140,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             }}>Enregistrer</button>
           </div>
           {user?.numero_agrement&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            ✅ Numéro enregistré : {user.numero_agrement}
+            <IconeOuEmoji e="✅"/> Numéro enregistré : {user.numero_agrement}
           </div>}
         </div>}
         {/* Code postal — nécessaire pour détecter la PMI */}
@@ -9138,7 +9160,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             }}>Sauvegarder</button>
           </div>
           {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            ✅ Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
+            <IconeOuEmoji e="✅"/> Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
           </div>}
         </div>}
         {/* Numéro PMI direct — saisi manuellement (ex. donné en formation), prioritaire sur l'annuaire */}
@@ -9156,7 +9178,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             }}>Sauvegarder</button>
           </div>
           {user?.pmi_tel&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            ✅ Numéro PMI direct : {user.pmi_tel}
+            <IconeOuEmoji e="✅"/> Numéro PMI direct : {user.pmi_tel}
           </div>}
         </div>}
 
@@ -9193,7 +9215,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
       {/* SECURITE / MOT DE PASSE P16 */}
       <div className="card"style={{border:recovery?"1.5px solid var(--T)":undefined}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>🔐 Mot de passe</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="🔐"/> Mot de passe</div>
         {recovery
           ?<div style={{background:"var(--Tp)",border:"1px solid var(--Tl)",borderRadius:10,padding:"11px 12px",marginBottom:14,fontSize:11.5,color:"var(--m)",lineHeight:1.55}}>
             Vous êtes arrivé ici par un lien de récupération. Choisissez un nouveau mot de passe pour sécuriser votre compte.
@@ -9203,7 +9225,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
           </div>}
 
         {mdpOk&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:10,padding:"10px 12px",marginBottom:12,fontSize:11.5,color:"var(--S)"}}>
-          ✅ Mot de passe modifié. Il vous sera demandé à la prochaine connexion.
+          <IconeOuEmoji e="✅"/> Mot de passe modifié. Il vous sera demandé à la prochaine connexion.
         </div>}
 
         <div style={{marginBottom:12}}>
@@ -9244,7 +9266,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
       {/* Aide & prise en main */}
       <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>🎈 Aide & prise en main</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="🎈"/> Aide & prise en main</div>
         <div style={{fontSize:12,color:"var(--l)",marginBottom:12,lineHeight:1.6}}>
           Un petit guide pour (re)découvrir l'essentiel de TiMat en quelques secondes.
         </div>
@@ -9253,7 +9275,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
       {/* Installation PWA */}
       <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>📲 Installer TiMat sur votre téléphone</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📲"/> Installer TiMat sur votre téléphone</div>
         <div style={{fontSize:12,color:"var(--l)",marginBottom:12,lineHeight:1.6}}>
           Ajoutez TiMat sur votre écran d'accueil pour y accéder comme une vraie application, sans passer par le navigateur.
         </div>
@@ -9274,7 +9296,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             <span style={{color:"var(--l)",fontSize:12}}>→</span>
           </div>)}
         <div style={{marginTop:12,padding:"10px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
-          ✅ Données hébergées en France · Jamais vendues · Supprimables à tout moment
+          <IconeOuEmoji e="✅"/> Données hébergées en France · Jamais vendues · Supprimables à tout moment
         </div>
       </div>
 
@@ -9422,7 +9444,7 @@ function MentionsLegales(){
             </span>}
           </div>)}
           {info.siret.includes("[")&&<div style={{marginTop:10,padding:"8px 12px",background:"var(--Rp)",borderRadius:8,fontSize:11,color:"var(--R)"}}>
-            ⚠️ Ces informations doivent être complétées avant la mise en ligne de l'application. Cliquez sur "Modifier" pour renseigner vos données légales.
+            <IconeOuEmoji e="⚠️"/> Ces informations doivent être complétées avant la mise en ligne de l'application. Cliquez sur "Modifier" pour renseigner vos données légales.
           </div>}
         </div>
         :<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{b.contenu}</div>}
@@ -9662,7 +9684,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     {/* Coup d'oeil - rythme de la journee en un regard (facon Pandi-Panda) */}
     <div className="card"style={{padding:"var(--pad-carte-conteneur)",marginBottom:12,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:0,overflow:"hidden"}}>
       {coupOeil.map((k,i)=><div key={k.l}style={{padding:"12px 6px",textAlign:"center",borderLeft:i>0?"1px solid var(--br)":"none"}}>
-        <div style={{fontSize:20,lineHeight:1}}><IconeOuEmoji e={k.ic}/></div>
+        <div style={{fontSize:20,lineHeight:1}}><IconeOuEmoji e={k.ic} taille={20}/></div>
         {k.v&&<div className="pf"style={{fontSize:14,fontWeight:700,color:k.c,marginTop:5,lineHeight:1.1,wordBreak:"break-word"}}>{k.v}</div>}
         <div style={{fontSize:11,color:"var(--l)",marginTop:3,fontWeight:600,textTransform:"uppercase",letterSpacing:".3px"}}>{k.l}</div>
       </div>)}
@@ -9671,7 +9693,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     {/* Photos */}
     <div className="card"style={{marginBottom:12}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:photos.length?12:0}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>📸 Photos du jour</div>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="📸"/> Photos du jour</div>
         {role==="asmat"&&<label className="btn bT s"style={{padding:"6px 12px",cursor:"pointer",margin:0}}>
           + Photo<input type="file"accept="image/*"style={{display:"none"}}onChange={ajouterPhoto}/></label>}
       </div>
@@ -9714,7 +9736,7 @@ function CahierJour({enfants,role,pEId,user,pointagesDB}){
     {/* Mot du jour */}
     <div className="card"style={{marginBottom:12,border:"1.5px solid var(--P)"}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-        <span style={{fontSize:18}}>💬</span>
+        <IconeOuEmoji e="💬"/>
         <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Le mot du jour</div>
       </div>
       {role==="asmat"?<div>
@@ -9893,7 +9915,7 @@ function SanteComplete({enfants,role,pEId,user}){
       </div>
 
       {prochainsVaccins.length>0&&<div style={{background:"var(--Rp)",border:"1.5px solid var(--R)",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
-        <span style={{fontSize:20}}>⚠️</span>
+        <IconeOuEmoji e="⚠️"/>
         <div>
           <div style={{fontWeight:700,fontSize:13,color:"var(--R)",marginBottom:2}}>
             {prochainsVaccins.length} vaccin{prochainsVaccins.length>1?"s":""} à prévoir pour {enfant?.prenom}
@@ -9916,7 +9938,7 @@ function SanteComplete({enfants,role,pEId,user}){
             <div style={{flex:1}}>
               <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
               <div style={{fontSize:11,color:"var(--l)"}}>{v.quand||(v.age_mois+" mois")} · {v.reco?"Recommandé":"Obligatoire"} · {v.fait?"Fait ✓":enRetard?"En retard":proche?"À prévoir":"À venir"}</div>
-              {infoVac===i&&<div style={{fontSize:11.5,color:"var(--m)",marginTop:6,padding:"7px 10px",background:"var(--w)",borderRadius:8,border:"1px solid var(--br)",lineHeight:1.5}}>🛡️ Protège contre : {maladiesDe(v.nom)}</div>}
+              {infoVac===i&&<div style={{fontSize:11.5,color:"var(--m)",marginTop:6,padding:"7px 10px",background:"var(--w)",borderRadius:8,border:"1px solid var(--br)",lineHeight:1.5}}><IconeOuEmoji e="🛡️"/> Protège contre : {maladiesDe(v.nom)}</div>}
             </div>
             <button onClick={(e)=>{e.stopPropagation();setInfoVac(infoVac===i?null:i);}} title="À quoi sert ce vaccin ?" style={{width:24,height:24,borderRadius:"50%",border:"1.5px solid var(--B)",background:infoVac===i?"var(--B)":"transparent",color:infoVac===i?"#fff":"var(--B)",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0,fontFamily:"inherit",lineHeight:1}}>i</button>
             <div style={{width:22,height:22,borderRadius:6,border:"2px solid",
@@ -10063,7 +10085,7 @@ function ListeAttente({role,enfants,user}){
 
     {/* Info email public */}
     <div style={{background:"linear-gradient(135deg,var(--Bp),var(--Pp))",border:"1px solid var(--B)",borderRadius:14,padding:"14px 18px",marginBottom:20,display:"flex",gap:14,alignItems:"flex-start"}}>
-      <span style={{fontSize:24}}>💡</span>
+      <IconeOuEmoji e="💡"/>
       <div>
         <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}>Votre adresse de contact publique</div>
         <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--B)",fontWeight:600,marginBottom:6}}>
@@ -10077,7 +10099,7 @@ function ListeAttente({role,enfants,user}){
     </div>
 
     {nbNouveaux>0&&<div style={{background:"var(--Bp)",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
-      <span style={{fontSize:18}}>📬</span>
+      <IconeOuEmoji e="📬"/>
       <span style={{fontWeight:700,fontSize:13,color:"var(--B)"}}>{nbNouveaux} nouvelle{nbNouveaux>1?"s":""} demande{nbNouveaux>1?"s":""} en attente</span>
     </div>}
 
@@ -10131,7 +10153,7 @@ function ListeAttente({role,enfants,user}){
         {/* Infos famille */}
         <div className="card">
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
-            <span>👪</span> {sel.parent.prenom} {sel.parent.nom}
+            <IconeOuEmoji e="👪"/> {sel.parent.prenom} {sel.parent.nom}
             <span className="badge"style={{background:statutBg[sel.statut],color:statutColor[sel.statut],fontSize:11,marginLeft:4}}>
               {statutLabel[sel.statut]}
             </span>
@@ -10190,13 +10212,13 @@ function ListeAttente({role,enfants,user}){
           </button>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             {sel.statut!=="accepte"&&<button className="btn bS s"onClick={()=>changerStatut(sel.id,"accepte")}>
-              ✅ Accepter
+              <IconeOuEmoji e="✅"/> Accepter
             </button>}
             {sel.statut!=="refuse"&&<button className="btn bR s"onClick={()=>changerStatut(sel.id,"refuse")}>
-              ❌ Refuser
+              <IconeOuEmoji e="❌"/> Refuser
             </button>}
             {sel.statut==="accepte"&&<button className="btn bP s"onClick={()=>setToast("Redirection vers la création de contrat...")}>
-              📄 Créer le contrat
+              <IconeOuEmoji e="📄"/> Créer le contrat
             </button>}
           </div>
         </div>
@@ -10290,7 +10312,7 @@ function KitCMG({enfants,role,pEId,user}){
     </div>
 
     {infosManquantes&&<div style={{background:"#FFF8E6",border:"1px solid #E8B820",borderRadius:12,padding:"12px 16px",marginBottom:20,fontSize:12.5,color:"#7A5500",lineHeight:1.6}}>
-      ⚠️ Certaines infos de votre assistante maternelle (agrément, code postal…) ne sont pas encore renseignées. Demandez-lui de compléter son profil dans TiMat pour que ce kit soit prêt à copier-coller.
+      <IconeOuEmoji e="⚠️"/> Certaines infos de votre assistante maternelle (agrément, code postal…) ne sont pas encore renseignées. Demandez-lui de compléter son profil dans TiMat pour que ce kit soit prêt à copier-coller.
     </div>}
 
     <div className="g2">
@@ -10310,7 +10332,7 @@ function KitCMG({enfants,role,pEId,user}){
         {/* Infos contrat */}
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
-            <span>📄</span> Votre contrat
+            <IconeOuEmoji e="📄"/> Votre contrat
           </div>
           <InfoRow label="Date de début du contrat" value={fmt(contrat.debut||"2023-09-04")} copyKey="debut"/>
           <InfoRow label="Jours d'accueil" value={(contrat.jours||["Lu","Ma","Me","Je","Ve"]).join(", ")} copyKey="jours"/>
@@ -10324,14 +10346,14 @@ function KitCMG({enfants,role,pEId,user}){
         {/* Rémunération */}
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
-            <span>💰</span> Rémunération mensuelle
+            <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
           <InfoRow label="Taux horaire net" value={(contrat.tauxHoraire||4.05).toFixed(2)+"€/h"} copyKey="taux"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
           <InfoRow label="Indemnité d'entretien/jour" value={(contrat.entretien||3.92).toFixed(2)+"€"} copyKey="entretien"/>
           <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
-            💡 Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
+            <IconeOuEmoji e="💡"/> Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
           </div>
         </div>
 
@@ -10538,7 +10560,7 @@ function SignatureContratParent({enfants,pEId,user}){
       </button>)}
     </div>}
     <div style={{display:"flex",gap:10,alignItems:"flex-start",padding:"11px 14px",background:"var(--Bp)",border:"1px solid rgba(46,74,90,.25)",borderRadius:12,marginBottom:14,fontSize:12.5,color:"var(--B)",lineHeight:1.5}}>
-      <span style={{fontSize:16,flexShrink:0}}>📄</span>
+      <IconeOuEmoji e="📄"/>
       <span>Votre contrat (et ses bulletins de salaire) est toujours accessible dans <b>Administratif → Documents & Attestations</b>. Une fois signé, le PDF y apparaît automatiquement.</span>
     </div>
 
@@ -10546,7 +10568,7 @@ function SignatureContratParent({enfants,pEId,user}){
     <div className="card"style={{padding:0,marginBottom:16,overflow:"hidden"}}>
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat d'accueil · {enfant?.prenom}</div>
-        <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}><IconeOuEmoji e="✍️"/> À signer</div>
+        <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}><IconeOuEmoji e="✍️" taille={21}/> À signer</div>
         <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>Début {fmt(contrat.debut||"")} · {(contrat.tauxHoraire||0).toFixed(2)} €/h · {contrat.signe_asmat?"l'assistante maternelle a signé ✓":"en attente de la signature de l'assmat"}</div>
       </div>
     </div>
@@ -10611,7 +10633,7 @@ function SignatureContratParent({enfants,pEId,user}){
       <IconeOuEmoji e="✅"/> Valider et signer le contrat
     </button>
     <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:8}}>
-      🔒 Signature électronique conforme eIDAS - Valeur légale identique au papier
+      <IconeOuEmoji e="🔒"/> Signature électronique conforme eIDAS - Valeur légale identique au papier
     </div>
   </div>;
 }
@@ -10690,7 +10712,7 @@ function PlanningPeriscolaire({enfants,role,pEId}){
     {role==="asmat"&&<div style={{marginTop:16,display:"flex",gap:8,justifyContent:"flex-end"}}>
       <button className="btn bG">Imprimer le planning</button>
       <button className="btn bT"onClick={()=>setToast("Planning enregistré et partagé avec les parents ✓")}>
-        💾 Sauvegarder et partager
+        <IconeOuEmoji e="💾"/> Sauvegarder et partager
       </button>
     </div>}
 
@@ -10793,7 +10815,7 @@ function ForumCommunaute({role}){
         {postsFiltres.map(post=><div key={post.id}className="card card-lift"
           onClick={()=>setSelPost(selPost?.id===post.id?null:post)}
           style={{cursor:"pointer",borderLeft:post.epingle?"4px solid var(--G)":"4px solid var(--P)"}}>
-          {post.epingle&&<div style={{fontSize:11,fontWeight:700,color:"var(--G)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}>📌 Épinglé</div>}
+          {post.epingle&&<div style={{fontSize:11,fontWeight:700,color:"var(--G)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}><IconeOuEmoji e="📌"/> Épinglé</div>}
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6,lineHeight:1.4}}>{post.titre}</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5,marginBottom:8,
             overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",
@@ -10804,7 +10826,7 @@ function ForumCommunaute({role}){
             </div>
             <div style={{display:"flex",gap:12,fontSize:11,color:"var(--l)"}}>
               <span>👩 {post.auteur} · {post.ville}</span>
-              <span>💬 {post.reponses} réponse{post.reponses>1?"s":""}</span>
+              <span><IconeOuEmoji e="💬"/> {post.reponses} réponse{post.reponses>1?"s":""}</span>
               <span>{post.date}</span>
             </div>
           </div>
@@ -10818,7 +10840,7 @@ function ForumCommunaute({role}){
           {selPost.auteur} · {selPost.ville} · {selPost.date}
         </div>
         <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>
-          💬 {selPost.reponses} réponses
+          <IconeOuEmoji e="💬"/> {selPost.reponses} réponses
         </div>
         <div style={{background:"var(--c)",borderRadius:10,padding:12,marginBottom:12,fontSize:13,color:"var(--m)"}}>
           Les réponses de la communauté s'afficheront ici.
@@ -11035,7 +11057,7 @@ const jsPDF=await chargerJsPDF();
         +'@media print{.actions{display:none!important}}</style>'
         +'</head>'
         +'<body>'
-        +'<div class="actions"><button class="btn-print" onclick="window.print()">🖨️ Imprimer</button></div>'
+        +'<div class="actions"><button class="btn-print" onclick="window.print()"><IconeOuEmoji e="🖨️"/> Imprimer</button></div>'
         +'<h1>Rapport annuel '+annee+'</h1>'
         +'<p><strong>Assistante maternelle:</strong> '+(user?.prenom||"")+' '+(user?.nom||"")+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
@@ -11086,7 +11108,7 @@ const jsPDF=await chargerJsPDF();
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {/* Récap financier */}
         <div className="card">
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>💰 Récapitulatif financier {annee}</div>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="💰"/> Récapitulatif financier {annee}</div>
           {[
             ["Salaire net annuel estimé",salaireAnnuel+"€","var(--S)"],
             ["Indemnités d'entretien",""+entretienAnnuel+"€","var(--G)"],
@@ -11097,7 +11119,7 @@ const jsPDF=await chargerJsPDF();
             <span style={{fontSize:13,fontWeight:700,color:c}}>{v}</span>
           </div>)}
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)"}}>
-            💡 Ces montants sont estimés. Le rapport PDF contient les chiffres exacts basés sur vos pointages réels.
+            <IconeOuEmoji e="💡"/> Ces montants sont estimés. Le rapport PDF contient les chiffres exacts basés sur vos pointages réels.
           </div>
         </div>
 
@@ -11128,7 +11150,7 @@ const jsPDF=await chargerJsPDF();
           <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)",marginBottom:4}}>{enfant?.prenom} {enfant?.nom}</div>
           <div style={{fontSize:12,color:"var(--l)"}}>{age(enfant?.naissance||"")}</div>
           <div style={{marginTop:12,padding:"8px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
-            ✅ Contrat actif depuis {fmt(contrat.debut||"2023-09-04")}
+            <IconeOuEmoji e="✅"/> Contrat actif depuis {fmt(contrat.debut||"2023-09-04")}
           </div>
         </div>
 
@@ -11159,7 +11181,7 @@ const jsPDF=await chargerJsPDF();
             L'attestation fiscale peut être envoyée directement aux parents pour leur déclaration d'impôts (à remettre avant le 31 janvier).
           </div>
           <button className="btn bG"style={{width:"100%"}}onClick={()=>setToast("Attestation fiscale envoyée au parent ✓")}>
-            📧 Envoyer l'attestation au parent
+            <IconeOuEmoji e="📧"/> Envoyer l'attestation au parent
           </button>
         </div>}
       </div>
@@ -11268,7 +11290,7 @@ function RecapFiscalAssmat({enfants,user}){
     <>
       {lignes.map(l=><div key={l.eid} className="card" style={{marginBottom:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:10}}>
-          <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>👶 {l.prenom}</div>
+          <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}><IconeOuEmoji e="👶"/> {l.prenom}</div>
           <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"var(--b)",cursor:"pointer"}}>
             <input type="checkbox" checked={!!aeeh[l.eid]} onChange={e=>setAeeh(a=>({...a,[l.eid]:e.target.checked}))} style={{width:15,height:15,cursor:"pointer"}}/>
             Enfant handicapé (AEEH) — abattement 4×SMIC
@@ -11281,7 +11303,7 @@ function RecapFiscalAssmat({enfants,user}){
           <div key={lab} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
             <span style={{color:"var(--l)"}}>{lab}</span><span style={{fontWeight:700,color:col}}>{val}</span>
           </div>)}
-        {l.moisCouverts>0&&l.moisCouverts<12&&<div style={{marginTop:8,fontSize:11.5,color:"var(--R)"}}>⚠️ {l.moisCouverts}/12 mois de bulletins enregistrés — total incomplet tant que tous les bulletins ne sont pas émis.</div>}
+        {l.moisCouverts>0&&l.moisCouverts<12&&<div style={{marginTop:8,fontSize:11.5,color:"var(--R)"}}><IconeOuEmoji e="⚠️"/> {l.moisCouverts}/12 mois de bulletins enregistrés — total incomplet tant que tous les bulletins ne sont pas émis.</div>}
       </div>)}
 
       <div className="card" style={{padding:0,marginBottom:12,overflow:"hidden"}}>
@@ -11298,7 +11320,7 @@ function RecapFiscalAssmat({enfants,user}){
       </div>
 
       <div className="card" style={{fontSize:11.5,color:"var(--m)",lineHeight:1.7}}>
-        ℹ️ Récap <b>indicatif</b> calculé depuis vos bulletins enregistrés (salaire imposable + entretien) et vos pointages réels (abattement jour par jour). <b>Il ne remplace pas l'attestation fiscale Pajemploi.</b> La déclaration pré-remplie affiche souvent le brut <b>sans</b> abattement : à corriger manuellement. Les indemnités de repas ne sont pas incluses (à ajouter si vous les facturez){moisManquants?". Certains enfants ont moins de 12 mois de bulletins.":""}.
+        <IconeOuEmoji e="ℹ️"/> Récap <b>indicatif</b> calculé depuis vos bulletins enregistrés (salaire imposable + entretien) et vos pointages réels (abattement jour par jour). <b>Il ne remplace pas l'attestation fiscale Pajemploi.</b> La déclaration pré-remplie affiche souvent le brut <b>sans</b> abattement : à corriger manuellement. Les indemnités de repas ne sont pas incluses (à ajouter si vous les facturez){moisManquants?". Certains enfants ont moins de 12 mois de bulletins.":""}.
       </div>
     </>}
   </div>;
@@ -11375,7 +11397,7 @@ function IndemnitesKilometriques({enfants,role,user}){
     </div>
 
     <div className="card" style={{marginBottom:14}}>
-      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:8}}>🚙 Mon véhicule</div>
+      <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="🚙"/> Mon véhicule</div>
       <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
         <span style={{fontSize:13,color:"var(--m)"}}>Puissance fiscale :</span>
         <select value={cv} onChange={e=>setCv(+e.target.value)} style={{...inp,width:"auto"}}>
@@ -11431,7 +11453,7 @@ function IndemnitesKilometriques({enfants,role,user}){
     </div>}
 
     <div className="card" style={{background:"var(--Bp)",fontSize:12,color:"var(--b)",lineHeight:1.6}}>
-      💡 Les indemnités kilométriques sont <b>exonérées</b> dans la limite du barème fiscal, à condition de tenir une <b>feuille de route</b> mensuelle (date, motif, km). Elles se déclarent sur une <b>ligne distincte</b> dans Pajemploi, en plus du salaire et de l'indemnité d'entretien, et se répartissent entre les familles concernées.
+      <IconeOuEmoji e="💡"/> Les indemnités kilométriques sont <b>exonérées</b> dans la limite du barème fiscal, à condition de tenir une <b>feuille de route</b> mensuelle (date, motif, km). Elles se déclarent sur une <b>ligne distincte</b> dans Pajemploi, en plus du salaire et de l'indemnité d'entretien, et se répartissent entre les familles concernées.
     </div>
   </div>;
 }
@@ -11569,10 +11591,10 @@ function SimulateurCout({enfants,pEId}){
           </div>)}
         </div>
         {cmgPlafonne&&<div style={{fontSize:11,color:"var(--T)",background:"var(--Tp)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
-          ℹ️ CMG plafonné à {fmt2(CMG_MAX)}/mois (montant maximum assmat 2026).
+          <IconeOuEmoji e="ℹ️"/> CMG plafonné à {fmt2(CMG_MAX)}/mois (montant maximum assmat 2026).
         </div>}
         {cmgCapped&&<div style={{fontSize:11,color:"var(--m)",background:"var(--c)",border:"1px solid var(--br)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
-          ⚠️ Votre taux horaire dépasse le plafond CMG de {PLAFOND_H.toFixed(2)} €/h : le surcoût au-delà reste intégralement à votre charge.
+          <IconeOuEmoji e="⚠️"/> Votre taux horaire dépasse le plafond CMG de {PLAFOND_H.toFixed(2)} €/h : le surcoût au-delà reste intégralement à votre charge.
         </div>}
         <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"6px 0"}}>
           Calcul : CMG = (min(taux ; {PLAFOND_H.toFixed(2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {(TE*100).toFixed(4)} % ÷ {CHR_AM.toFixed(2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
@@ -11618,7 +11640,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   const printDoc=(titre,corps)=>{
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour générer le document");return;}
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${titre}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast(titre+" généré ✓");
   };
   const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${enfant?.prenom||"[Prénom]"}</b>, pour le motif suivant : <b>${motif}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
@@ -11657,7 +11679,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
             </div>)}
           </div>
           <button className="btn bT"style={{width:"100%"}}onClick={()=>{if(!dateFin)return;setCalcule(true);}}>
-            🧮 Calculer le solde de tout compte
+            <IconeOuEmoji e="🧮"/> Calculer le solde de tout compte
           </button>
         </div>
         <div className="card">
@@ -11694,7 +11716,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
         </div>
         <div style={{display:"flex",gap:8}}>
           <button className="btn bG"style={{flex:1}}onClick={genRecu}><IconeOuEmoji e="📥"/> Télécharger le reçu</button>
-          <button className="btn bT"style={{flex:1}}onClick={()=>setToast("Envoyé au parent ✓")}>📧 Envoyer au parent</button>
+          <button className="btn bT"style={{flex:1}}onClick={()=>setToast("Envoyé au parent ✓")}><IconeOuEmoji e="📧"/> Envoyer au parent</button>
         </div>
       </div>}
     </div>
@@ -11918,7 +11940,7 @@ function ExportDonnees({enfants,user,role}){
             </div>
           </div>
           <div style={{background:"var(--Bp)",borderRadius:10,padding:"10px 12px",marginBottom:14,fontSize:12,color:"var(--B)"}}>
-            🔒 Export conforme RGPD (article 20 - droit à la portabilité). Fichier téléchargé directement sur votre appareil. Aucune copie conservée sur nos serveurs.
+            <IconeOuEmoji e="🔒"/> Export conforme RGPD (article 20 - droit à la portabilité). Fichier téléchargé directement sur votre appareil. Aucune copie conservée sur nos serveurs.
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exporter}disabled={exporting}>
             {exporting?"⏳ Génération en cours...":"📥 Exporter mes données"}
@@ -12028,7 +12050,7 @@ function FAQ({role}){
       <div style={{fontSize:14,fontWeight:700,color:"var(--b)",marginBottom:6}}>Vous n'avez pas trouvé votre réponse ?</div>
       <div style={{fontSize:13,color:"var(--m)",marginBottom:12}}>Notre équipe répond en moins de 24h, du lundi au vendredi.</div>
       <button className="btn bT"onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"support"}))}>
-        💬 Contacter le support
+        <IconeOuEmoji e="💬"/> Contacter le support
       </button>
     </div>
   </div>;
@@ -12082,7 +12104,7 @@ function Support({role,user}){
   return <div className="fi">
     <PageHeader icon="💬" title="Support TiMat" sub={isPro?"Support prioritaire — réponse sous 12h":"Notre équipe répond sous 24h, du lundi au vendredi"}/>
     {isPro&&<div style={{background:"linear-gradient(135deg,#FFF8F3,#FFF0E6)",border:"1.5px solid #E49178",borderRadius:12,padding:"10px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:10,fontSize:12,color:"#C84B31",fontWeight:600}}>
-      ⭐ Vous bénéficiez du support prioritaire Pro — traitement en priorité
+      <IconeOuEmoji e="⭐"/> Vous bénéficiez du support prioritaire Pro — traitement en priorité
     </div>}
     {envoye?<div style={{textAlign:"center",padding:40}}>
       <div style={{fontSize:60,marginBottom:16}}>✅</div>
@@ -12191,7 +12213,7 @@ function OutilsHub({setPage}){
         style={{textAlign:"left",background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:18,cursor:"pointer",transition:"transform .15s,box-shadow .15s,border-color .15s",display:"flex",flexDirection:"column",gap:10,minHeight:170}}
         onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 30px "+o.c+"22";e.currentTarget.style.borderColor=o.c;}}
         onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor="var(--br)";}}>
-        <div style={{width:52,height:52,borderRadius:15,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:27}}><IconeOuEmoji e={o.ic}/></div>
+        <div style={{width:52,height:52,borderRadius:15,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:27}}><IconeOuEmoji e={o.ic} taille={27}/></div>
         <div>
           <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:4}}>{o.t}</div>
           <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>{o.d}</div>
@@ -12480,7 +12502,7 @@ function DemoScreen({page}){
   if(page==="calendrier")return <div>
     <Title>Planning de la semaine</Title>
     {[["Lun","Léo · Emma","8h–17h"],["Mar","Léo · Noah","8h–18h"],["Mer","Emma","9h–16h"],["Jeu","Léo · Emma · Noah","8h–17h"]].map(([j,who,h],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:7}}><span style={{width:34,height:34,borderRadius:9,background:"#5DA9A118",color:"#2E4859",fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{j}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{who}</span><span style={{fontSize:11.5,color:"#8A7A70",fontWeight:600}}>{h}</span></div>)}
-    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:2,background:"#FBEEE9",border:"1px solid #F3D3C7"}}><span>🌴</span><span style={{fontSize:11.5,color:"#C84B31",fontWeight:600}}>Vendredi — absence déclarée</span></div>
+    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:2,background:"#FBEEE9",border:"1px solid #F3D3C7"}}><IconeOuEmoji e="🌴"/><span style={{fontSize:11.5,color:"#C84B31",fontWeight:600}}>Vendredi — absence déclarée</span></div>
   </div>;
   if(page==="admin_finances")return <div>
     <Title>Salaire de juin</Title>
@@ -12498,11 +12520,11 @@ function DemoScreen({page}){
       <div style={{alignSelf:"flex-end",maxWidth:"85%",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",borderRadius:"14px 14px 4px 14px",padding:"9px 12px",fontSize:12}}>Super, merci Sophie ! Il a mangé ?</div>
       <div style={{alignSelf:"flex-start",maxWidth:"85%",background:"#fff",border:"1px solid #EFE7DF",borderRadius:"14px 14px 14px 4px",padding:"9px 12px",fontSize:12,color:"#2E4859"}}>Oui, tout mangé 🍎 Photo dans le cahier !</div>
     </div>
-    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:12,color:"#8A7A70"}}><span style={{flex:1,fontSize:11.5}}>Votre message…</span><span style={{width:28,height:28,borderRadius:"50%",background:"#E49178",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>➤</span></div>
+    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:12,color:"#8A7A70"}}><span style={{flex:1,fontSize:11.5}}>Votre message…</span><IconeOuEmoji e="➤"/></div>
   </div>;
   if(page==="sante_complet")return <div>
     <Title>Santé & urgences 🩺</Title>
-    <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Allergie : arachides<br/>💊 Aucun traitement en cours</div></div>
+    <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Allergie : arachides<br/><IconeOuEmoji e="💊"/> Aucun traitement en cours</div></div>
     {[["🚑","SAMU","15"],["🧑‍⚕️","Médecin traitant","01 23 45 67"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8,borderColor:"#FCA5A5"}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#7F1D1D"}}>{a}</span><span style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>{b}</span></div>)}
   </div>;
   return <div style={{padding:20,textAlign:"center",color:"#8A7A70",fontSize:12}}>Écran disponible dans l'application.</div>;
@@ -12619,12 +12641,12 @@ const DEMO_SCREENS=[
           <div style={{fontSize:11,color:"#5DA9A1",fontWeight:700,marginBottom:3}}>👩👧 Marie · 11h30</div>
           <div style={{fontSize:12,color:"#2E4859",lineHeight:1.6}}>Léo a découvert la peinture avec les doigts ce matin ! Il a réalisé un tableau qu'il a voulu offrir à sa maman. 🎨</div>
           <div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}>
-            <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:15,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}>{liked?"❤️":"🤍"}</button>
+            <button onClick={()=>setLiked(!liked)}style={{background:"none",border:"none",cursor:"pointer",fontSize:15,transition:"transform .2s",transform:liked?"scale(1.3)":"scale(1)"}}><IconeOuEmoji e={liked?"❤️":"🤍"}/></button>
           </div>
         </div>
         <div style={{background:"#FFF8F3",borderRadius:10,padding:12,borderLeft:"3px solid #E49178"}}>
           <div style={{fontSize:11,color:"#E49178",fontWeight:700,marginBottom:3}}><IconeOuEmoji e="🍽️"/> Repas</div>
-          <div style={{fontSize:12,color:"#2E4859"}}>🥗 Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
+          <div style={{fontSize:12,color:"#2E4859"}}><IconeOuEmoji e="🥗"/> Purée de légumes · ✅ Bon appétit · 🍼 250ml</div>
         </div>
         <div style={{marginTop:12,display:"flex",gap:6,alignItems:"center"}}>
           <span style={{fontSize:11,color:"#8FA3AD"}}>Humeur :</span>
@@ -12645,7 +12667,7 @@ const DEMO_SCREENS=[
       const brut=(m.h*4.05+m.supp*5.06+m.ent*3.80);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>💰 Salaire — Léo 🦁</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="💰"/> Salaire — Léo 🦁</div>
         <div style={{display:"flex",gap:4,marginBottom:12}}>
           {["Jan","Fev","Mars"].map(mo=><button key={mo}onClick={()=>setMois(mo)}style={{
             padding:"5px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,
@@ -12671,7 +12693,7 @@ const DEMO_SCREENS=[
       const [selDay,setSelDay]=useState(15);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}>📅 {new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</div>
+        <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="📅"/> {new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:12}}>
           {["L","M","Me","J","V","S","D"].map(j=><div key={j}style={{textAlign:"center",fontSize:11,fontWeight:700,color:"#8FA3AD",padding:4}}>{j}</div>)}
           {Array.from({length:31},(_,i)=>i+1).map(d=>{
@@ -12685,7 +12707,7 @@ const DEMO_SCREENS=[
           })}
         </div>
         {selDay&&<div style={{background:"#F4F7FA",borderRadius:10,padding:10,fontSize:11,color:"#2E4859"}}>
-          <div style={{fontWeight:700,marginBottom:4}}>📌 {selDay} mars</div>
+          <div style={{fontWeight:700,marginBottom:4}}><IconeOuEmoji e="📌"/> {selDay} mars</div>
           <div>🦁 Léo : 07h30 — 17h30 {selDay%7!==0&&selDay%7!==6?"✅":"🔴 Repos"}</div>
           {selDay%3===0&&<div>🌸 Emma : 08h00 — 16h30 ✅</div>}
         </div>}
@@ -12712,7 +12734,7 @@ const DEMO_SCREENS=[
           }}>{valide?"✅ Pointage validé":"Valider le pointage"}</button>
         </div>
         <div style={{background:"#F0FAF4",borderRadius:10,padding:10,fontSize:12,color:"#2E4859",lineHeight:1.5}}>
-          📋 Léo a peint un tableau et l'a offert à sa maman ! 🎨
+          <IconeOuEmoji e="📋"/> Léo a peint un tableau et l'a offert à sa maman ! 🎨
         </div>
       </div>);
     },
@@ -12831,7 +12853,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         <span>J'accepte la politique de confidentialité et les conditions générales d'utilisation.</span>
       </label>}
 
-      {resetInfo&&<div style={{background:"rgba(93,169,161,.95)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12,lineHeight:1.5}}>✉️ {resetInfo}</div>}
+      {resetInfo&&<div style={{background:"rgba(93,169,161,.95)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12,lineHeight:1.5}}><IconeOuEmoji e="✉️"/> {resetInfo}</div>}
       {err&&<div style={{background:"rgba(200,75,49,.92)",color:"#fff",fontSize:12.5,padding:"9px 12px",borderRadius:10,marginBottom:12,lineHeight:1.5}}>
         {err}
         {errAction==="connexion"&&<>
@@ -12961,7 +12983,7 @@ function OutilsGratuits({onClose,onCta}){
       <div style={{background:"linear-gradient(135deg,#2E4859,#5DA9A1)",padding:"24px 28px",position:"sticky",top:0,zIndex:2}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
           <div>
-            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}><IconeOuEmoji e="🧮"/> Outils & Simulateurs gratuits</div>
+            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}><IconeOuEmoji e="🧮" taille={23}/> Outils & Simulateurs gratuits</div>
             <div style={{fontSize:13,color:"rgba(255,255,255,.85)",marginTop:4,maxWidth:560,lineHeight:1.5}}>Gratuits et sans inscription, pour les assistantes maternelles et les parents employeurs. Choisissez un outil ci-dessous.</div>
           </div>
           <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700,transition:"background .15s"}}onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.35)"}onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.2)"}>✕</button>
@@ -12974,7 +12996,7 @@ function OutilsGratuits({onClose,onCta}){
             style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"16px 12px",cursor:"pointer",textAlign:"center",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
             onMouseEnter={e=>{if(!on){e.currentTarget.style.borderColor=o.c+"88";e.currentTarget.style.transform="translateY(-1px)";}}}
             onMouseLeave={e=>{if(!on){e.currentTarget.style.borderColor="#E8E4E0";e.currentTarget.style.transform="none";}}}>
-            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}><IconeOuEmoji e={o.ic}/></div>
+            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}><IconeOuEmoji e={o.ic} taille={28}/></div>
             <div style={{fontWeight:700,fontSize:13.5,color:on?o.c:"#2E4859"}}>{o.t}</div>
           </button>;})}
         </div>
@@ -13008,7 +13030,7 @@ function OutilsGratuits({onClose,onCta}){
                 <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(totalM)}</div>
               </div>
             </div>
-            <div style={note}>ℹ️ Estimation indicative. En année complète, les congés payés sont inclus dans la mensualisation ; en année incomplète, ils sont payés en plus.</div>
+            <div style={note}><IconeOuEmoji e="ℹ️"/> Estimation indicative. En année complète, les congés payés sont inclus dans la mensualisation ; en année incomplète, ils sont payés en plus.</div>
           </div>
         </div>}
 
@@ -13037,7 +13059,7 @@ function OutilsGratuits({onClose,onCta}){
                 <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(sensSal==="brutnet"?netSal:brutSal)}</div>
               </div>
             </div>
-            <div style={note}>ℹ️ Estimation hors CSG/CRDS spécifiques et hors cas particuliers. Le net réel figure sur le bulletin Pajemploi. Taux salarial appliqué : 21,8803 %.</div>
+            <div style={note}><IconeOuEmoji e="ℹ️"/> Estimation hors CSG/CRDS spécifiques et hors cas particuliers. Le net réel figure sur le bulletin Pajemploi. Taux salarial appliqué : 21,8803 %.</div>
           </div>
         </div>}
 
@@ -13065,7 +13087,7 @@ function OutilsGratuits({onClose,onCta}){
               </div>
             </div>
             {ieSousMin&&<div style={{marginTop:10,padding:"9px 13px",background:"#FFF3F0",borderRadius:10,border:"1px solid #E8B6AC",fontSize:11.5,color:"#A33D28",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Le montant saisi semble inférieur au minimum conventionnel indicatif pour {hJourIe} h d'accueil.</div>}
-            <div style={note}>ℹ️ Les IE couvrent les frais (jeux, eau, électricité, chauffage…). Minimum conventionnel indicatif ≈ 2,65 € pour 9 h d'accueil, proportionnel au-delà (CCN 3239). Vérifiez le montant en vigueur.</div>
+            <div style={note}><IconeOuEmoji e="ℹ️"/> Les IE couvrent les frais (jeux, eau, électricité, chauffage…). Minimum conventionnel indicatif ≈ 2,65 € pour 9 h d'accueil, proportionnel au-delà (CCN 3239). Vérifiez le montant en vigueur.</div>
           </div>
         </div>}
 
@@ -13093,7 +13115,7 @@ function OutilsGratuits({onClose,onCta}){
                 <Stat l="Crédit d'impôt (50 %)"v={"-"+eur(creditImpotCmg)}c="#C09553"/>
               </div>
             </div>
-            <div style={note}>ℹ️ Calcul selon la réforme du 1ᵉʳ sept. 2025 (barème par taux d'effort, paramètres CNAF 2026). Estimation indicative : le montant exact dépend de votre situation CAF. Plafond CMG mensuel : {eur(CMG_MAX)}.</div>
+            <div style={note}><IconeOuEmoji e="ℹ️"/> Calcul selon la réforme du 1ᵉʳ sept. 2025 (barème par taux d'effort, paramètres CNAF 2026). Estimation indicative : le montant exact dépend de votre situation CAF. Plafond CMG mensuel : {eur(CMG_MAX)}.</div>
           </div>
         </div>}
 
@@ -13118,7 +13140,7 @@ function OutilsGratuits({onClose,onCta}){
                 <div style={{fontSize:16,fontWeight:800,color:cmgOk?"#3C7A6E":"#C84B31"}}>{cmgOk?"✅ Sous le plafond — CMG maintenu":"⚠️ Au-dessus du plafond — CMG susceptible d'être réduit"}</div>
               </div>
             </div>
-            <div style={note}>ℹ️ La CAF n'accorde pas le CMG si la rémunération journalière dépasse 5 × le SMIC horaire brut. Le montant exact du CMG dépend ensuite de vos revenus, du nombre et de l'âge des enfants (réforme du 1ᵉʳ sept. 2025). Pour une estimation complète, utilisez le simulateur intégré à TiMat.</div>
+            <div style={note}><IconeOuEmoji e="ℹ️"/> La CAF n'accorde pas le CMG si la rémunération journalière dépasse 5 × le SMIC horaire brut. Le montant exact du CMG dépend ensuite de vos revenus, du nombre et de l'âge des enfants (réforme du 1ᵉʳ sept. 2025). Pour une estimation complète, utilisez le simulateur intégré à TiMat.</div>
           </div>
         </div>}
 
@@ -13136,7 +13158,7 @@ function OutilsGratuits({onClose,onCta}){
 // BLOC ERREUR AUTH P16 - message + action contextuelle (basculer en connexion, ou renvoyer un lien)
 function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   const gmail=/@(gmail|googlemail)\.com\s*$/i.test(email||"");
-  if(resetInfo)return <div style={{color:"#2C6F68",fontSize:12,marginBottom:12,padding:"10px 12px",background:"#EFF7F6",borderRadius:8,lineHeight:1.55}}>✉️ {resetInfo}</div>;
+  if(resetInfo)return <div style={{color:"#2C6F68",fontSize:12,marginBottom:12,padding:"10px 12px",background:"#EFF7F6",borderRadius:8,lineHeight:1.55}}><IconeOuEmoji e="✉️"/> {resetInfo}</div>;
   if(!err)return null;
   return <div style={{color:"#C84B31",fontSize:12,marginBottom:12,padding:"10px 12px",background:"#FEF2F2",borderRadius:8,lineHeight:1.55}}>
     {err}
@@ -13145,7 +13167,7 @@ function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
         Se connecter avec cet email →
       </button>
       {gmail&&<div style={{marginTop:9,color:"#6B4F5A",fontSize:11,lineHeight:1.5}}>
-        💡 Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici. Vérifiez l'adresse exacte utilisée à la création.
+        <IconeOuEmoji e="💡"/> Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici. Vérifiez l'adresse exacte utilisée à la création.
       </div>}
     </>}
     {errAction==="reset"&&<button type="button" onClick={onReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#C84B31",border:"1.5px solid #C84B31",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
@@ -13877,7 +13899,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
                   <summary onClick={e=>{if(isWeb)e.preventDefault();}} style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px", cursor:isWeb?"default":"pointer", listStyle:"none" }}>
-                    <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}><IconeOuEmoji e={d.ic}/></span>
+                    <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}><IconeOuEmoji e={d.ic} taille={26}/></span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
                       <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
@@ -14146,7 +14168,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}><IconeOuEmoji e="🛒"/> Boutique TiMat</div>
+            <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}><IconeOuEmoji e="🛒" taille={22}/> Boutique TiMat</div>
             <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
           <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
