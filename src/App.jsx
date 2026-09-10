@@ -468,6 +468,43 @@ function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 })
 // soit 0,435 EUR par heure. Le plancher joue en dessous de 6 h 05.
 const MINIMUM_GARANTI = 4.35;
 const IE_TAUX_HORAIRE = Math.round((MINIMUM_GARANTI * 0.9 / 9) * 1000) / 1000; // 0,435
+// la recopier : deux endroits ne peuvent pas diverger s'il n'y en a qu'un.
+const TAUX_COTISATIONS={
+  "Maladie-maternité":{sal:0,pat:13},
+  "Vieillesse plafonnée":{sal:6.9,pat:8.55},
+  "Vieillesse déplafonnée":{sal:0.4,pat:2.11},
+  "Retraite complémentaire ARRCO":{sal:3.15,pat:4.72},
+  "Contribution équilibre général (CEG)":{sal:0.86,pat:1.29},
+  "Prévoyance Ircem":{sal:1.04,pat:2.15},
+  "Assurance chômage":{sal:0,pat:4.05},
+  "Allocations familiales":{sal:0,pat:5.25},
+  "Accidents du travail":{sal:0,pat:1.5},
+  "Formation professionnelle":{sal:0,pat:0.5},
+  "Fonds emploi à domicile (Fived, paritarisme)":{sal:0,pat:1.25},
+  "CSG déductible":{sal:6.8,pat:0,base:0.9825},
+  "CSG non déductible":{sal:2.4,pat:0,base:0.9825},
+  "CRDS":{sal:0.5,pat:0,base:0.9825},
+};
+
+// BRUT ET NET.
+// Le taux horaire enregistre au contrat est un taux BRUT : c'est sur lui que le
+// bulletin assied les cotisations, et c'est a lui que se compare le minimum
+// conventionnel (4,20 EUR brut). Pourtant la moitie de l'application l'affichait
+// sous le libelle « taux horaire NET » — sur le contrat, sur l'ecran du parent,
+// dans les formulaires de saisie. La meme valeur etait donc annoncee comme du
+// net ici et declaree comme du brut sur l'attestation France Travail. Un ecart
+// de pres de 22 % sur le chiffre le plus important de l'application.
+//
+// netDepuisBrut() est la seule conversion : elle applique les vraies
+// cotisations salariales, celles du bulletin, au lieu du coefficient 0,78
+// invente qui trainait dans le recapitulatif Pajemploi.
+const netDepuisBrut=(brut)=>{
+  const b=Number(brut)||0;
+  if(b<=0)return 0;
+  const cotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?b*(t.base||1)*t.sal/100:0),0);
+  return Math.round((b-cotSal)*100)/100;
+};
+
 const IE_PLANCHER_JOUR = 2.65;
 // Indemnite d'entretien minimale pour une journee d'accueil de n heures.
 const indemniteEntretienMin = (heures) =>
@@ -3713,12 +3750,23 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     return{real:Math.round(totalMin/60),prev:heuresMensualisees(contrat)};
   };
   const h=calcHeures();
-  const salBrut=contrat?(h.real*contrat.tauxHoraire+(h.real/5*contrat.entretien)):0;
+  // L'indemnite d'entretien n'est PAS du salaire : elle ne se cotise pas, ne
+  // s'impose pas, et se declare sur une ligne distincte. Elle etait pourtant
+  // additionnee au brut, puis le tout etait multiplie par 0,78 comme s'il
+  // s'agissait de salaire — l'indemnite ressortait donc amputee de 22 % sur le
+  // recapitulatif Pajemploi.
+  // Le nombre de jours d'accueil se comptait aussi de DEUX facons sur le meme
+  // document : heures/5 pour l'entretien, heures/(hebdo/5) pour les « jours
+  // d'activite ». Un seul compte desormais.
+  const joursAccueil=contrat?Math.max(0,Math.round(h.real/(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))||8))):0;
+  const salBrut=contrat?h.real*contrat.tauxHoraire:0;
+  const entretienMois=contrat?Math.round((contrat.entretien||0)*joursAccueil*100)/100:0;
+  const repasMoisPaj=contrat&&contrat.repasFourniPar!=="employeur"?Math.round((Number(contrat.repas)||0)*joursAccueil*100)/100:0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
   const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||minimumHoraireAu(new Date()))*(contrat?.indemniteAbsence||0.5)),0);
   const totalBrut=salBrut+indemAbs;
   const moisCourant=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
-  const netEstime=totalBrut*0.78;
+  const netEstime=netDepuisBrut(totalBrut);
   const histFactDemo=(()=>{const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];const now=new Date();const vals=["672.40€","698.10€","654.80€"];const stat=["Émise","Payée","Payée"];return [1,2,3].map(k=>{const d=new Date(now.getFullYear(),now.getMonth()-k,1);return [noms[d.getMonth()]+" "+d.getFullYear(),stat[k-1],vals[k-1]];});})();
 
   const exportPajemploi=()=>{
@@ -3726,8 +3774,10 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     if(!w){setToast('Autorisez les popups');return;}
     const mois=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
     const hMens=heuresMensualisees(contrat);
-    const salNet=nbf((totalBrut*0.78),2);
-    const joursTrav=Math.round(h.real/((contrat?.heuresHebdo||40)/5));
+    const netMois=netDepuisBrut(totalBrut);
+    const salNet=nbf(netMois,2);
+    const totalVerse=Math.round((netMois+entretienMois+repasMoisPaj)*100)/100;
+    const nomAsmat=((user?.prenom||"")+" "+(user?.nom||"")).trim();
     const htmlPaj=[
       '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Récap Pajemploi - '+mois+'</title>',
       '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:800px;margin:30px auto;padding:20px;color:#222;font-size:12px}',
@@ -3743,34 +3793,48 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '.steps h3{font-size:12px;color:#5DA9A1;margin-bottom:10px}',
       '.steps ol{padding-left:20px;font-size:11px;line-height:2}',
       '@media print{.noprint{display:none}}</style></head><body>',
-      '<h1><IconeOuEmoji e="🏛️"/> Récapitulatif Pajemploi</h1>',
+      '<h1>🏛️ Récapitulatif Pajemploi</h1>',
       '<div class="sub">'+mois+' — À reporter sur pajemploi.urssaf.fr</div>',
       '<div class="box"><h2>👩👧 Assistante maternelle</h2>',
-      '<table><tr><td>Nom</td><td>'+((enfant?.prenomAsmat||"")+" "+(enfant?.nomAsmat||"")).trim()||'[Votre nom]'+'</td></tr>',
+      // Le nom se lisait sur des champs qui n'existent pas (enfant.prenomAsmat),
+      // et la parenthese manquante faisait gagner le « || » sur le « + » : la
+      // balise </td></tr> disparaissait avec le nom.
+      '<table><tr><td>Nom</td><td>'+H(nomAsmat||'[Votre nom]')+'</td></tr>',
       '<tr><td>Enfant gardé</td><td>'+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'</td></tr>',
       '<tr><td>Période</td><td>'+mois+'</td></tr></table></div>',
       '<div class="box"><h2>⏰ Heures à déclarer</h2>',
       '<table><tr><td>Heures mensualisées (contrat)</td><td>'+hMens+' h</td></tr>',
       '<tr><td>Heures réellement effectuées</td><td>'+h.real+' h</td></tr>',
       '<tr><td>Heures complémentaires / supplémentaires</td><td>'+Math.max(0,h.real-hMens)+' h</td></tr>',
-      '<tr><td>Jours d\'activité</td><td>'+joursTrav+' jours</td></tr>',
-      '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table></div>',
-      '<div class="box"><h2><IconeOuEmoji e="💰"/> Salaire à déclarer</h2>',
-      '<table><tr><td>Salaire net horaire</td><td>'+nbf((totalBrut*0.78/h.real),4)+' €/h</td></tr>',
-      '<tr><td>Salaire net total</td><td>'+salNet+' €</td></tr>',
-      '<tr><td>Indemnité d\'entretien</td><td>'+nbf((h.real/5*contrat.entretien),2)+' €</td></tr>',
-      '<tr><td>Indemnité de repas</td><td>0,00 €</td></tr>',
-      '<tr class="hl"><td><IconeOuEmoji e="💶"/> TOTAL NET À DÉCLARER</td><td>'+salNet+' €</td></tr></table></div>',
-      '<div class="steps"><h3><IconeOuEmoji e="📝"/> Comment déclarer sur Pajemploi :</h3>',
+      '<tr><td>Jours d\'activité</td><td>'+joursAccueil+' jours</td></tr>',
+      '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table>',
+      // Le recapitulatif calcule sur les heures POINTEES. Un contrat mensualise
+      // se declare sur les heures mensualisees, meme si le pointage est
+      // incomplet. Quand les deux divergent, le document le dit au lieu de
+      // laisser croire que le chiffre est celui a declarer.
+      (h.real!==hMens
+        ? '<p style="font-size:10.5px;color:#B8452F;margin-top:8px;line-height:1.5">Attention : ce calcul part des heures <strong>pointées</strong> ('+h.real+' h), qui diffèrent des heures <strong>mensualisées</strong> du contrat ('+hMens+' h). Un contrat mensualisé se déclare normalement sur les heures mensualisées, quel que soit le pointage. Vérifiez laquelle des deux correspond à ce mois avant de déclarer.</p>'
+        : ''),
+      '</div>',
+      '<div class="box"><h2>💰 Salaire à déclarer</h2>',
+      '<table><tr><td>Taux horaire brut (contrat)</td><td>'+nbf((contrat?.tauxHoraire||0),2)+' €/h</td></tr>',
+      '<tr><td>Salaire brut du mois</td><td>'+nbf(totalBrut,2)+' €</td></tr>',
+      '<tr class="hl"><td>Salaire NET à déclarer</td><td>'+salNet+' €</td></tr>',
+      '<tr><td>Indemnité d\'entretien (ligne distincte)</td><td>'+nbf(entretienMois,2)+' €</td></tr>',
+      '<tr><td>Indemnité de repas (ligne distincte)</td><td>'+nbf(repasMoisPaj,2)+' €</td></tr>',
+      '<tr class="hl"><td>💶 TOTAL VERSÉ À L\'ASSISTANTE MATERNELLE</td><td>'+nbf(totalVerse,2)+' €</td></tr></table>',
+      '<p style="font-size:10.5px;color:#777;margin-top:8px;line-height:1.5">Les indemnités d\'entretien et de repas ne sont pas du salaire : elles ne supportent pas de cotisations et se saisissent sur leur propre ligne dans Pajemploi, jamais dans le salaire.</p></div>',
+      '<div class="steps"><h3>📝 Comment déclarer sur Pajemploi :</h3>',
       '<ol><li>Connectez-vous sur <strong>pajemploi.urssaf.fr</strong></li>',
       '<li>Cliquez sur <strong>"Déclarer"</strong> > sélectionnez votre assistante maternelle</li>',
       '<li>Entrez le nombre d\'heures : <strong>'+h.real+'h</strong></li>',
-      '<li>Entrez le nombre de jours d\'activité : <strong>'+joursTrav+'</strong></li>',
-      '<li>Entrez le salaire net total : <strong>'+salNet+' €</strong></li>',
-      '<li>Entrez l\'indemnité d\'entretien : <strong>'+nbf((h.real/5*contrat.entretien),2)+' €</strong></li>',
+      '<li>Entrez le nombre de jours d\'activité : <strong>'+joursAccueil+'</strong></li>',
+      '<li>Entrez le salaire net : <strong>'+salNet+' €</strong> (sans les indemnités)</li>',
+      '<li>Entrez l\'indemnité d\'entretien : <strong>'+nbf(entretienMois,2)+' €</strong></li>',
+      (repasMoisPaj>0?'<li>Entrez l\'indemnité de repas : <strong>'+nbf(repasMoisPaj,2)+' €</strong></li>':''),
       '<li>Validez la déclaration</li></ol></div>',
-      '<div class="note"><IconeOuEmoji e="📌"/> Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
-      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700"><IconeOuEmoji e="🖨️"/> Imprimer / Sauvegarder en PDF</button></div>',
+      '<div class="note">📌 Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
+      '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">🖨️ Imprimer / Sauvegarder en PDF</button></div>',
       '</body></html>'
     ].join('');
     w.document.write(htmlPaj);
@@ -6140,23 +6204,6 @@ function Documents({enfants,role,pEId,user}){
 
 //
 // Somme des taux patronaux de la table ci-dessous. On la calcule plutot que de
-// la recopier : deux endroits ne peuvent pas diverger s'il n'y en a qu'un.
-const TAUX_COTISATIONS={
-  "Maladie-maternité":{sal:0,pat:13},
-  "Vieillesse plafonnée":{sal:6.9,pat:8.55},
-  "Vieillesse déplafonnée":{sal:0.4,pat:2.11},
-  "Retraite complémentaire ARRCO":{sal:3.15,pat:4.72},
-  "Contribution équilibre général (CEG)":{sal:0.86,pat:1.29},
-  "Prévoyance Ircem":{sal:1.04,pat:2.15},
-  "Assurance chômage":{sal:0,pat:4.05},
-  "Allocations familiales":{sal:0,pat:5.25},
-  "Accidents du travail":{sal:0,pat:1.5},
-  "Formation professionnelle":{sal:0,pat:0.5},
-  "Fonds emploi à domicile (Fived, paritarisme)":{sal:0,pat:1.25},
-  "CSG déductible":{sal:6.8,pat:0,base:0.9825},
-  "CSG non déductible":{sal:2.4,pat:0,base:0.9825},
-  "CRDS":{sal:0.5,pat:0,base:0.9825},
-};
 const TAUX_PATRONAL_TOTAL = Object.values(TAUX_COTISATIONS)
   .reduce((s, t) => s + (t.pat > 0 ? t.pat * (t.base || 1) : 0), 0) / 100;
 
@@ -7110,7 +7157,7 @@ function CourriersTypes({enfants,pEId,user}){
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour le PDF");return;}
     const corps=texte.split("\n").map(l=>l.trim()?("<p>"+l.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>"):"<br/>").join("");
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(sel.titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(sel.titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast("PDF généré ✓");
   };
 
@@ -7223,7 +7270,7 @@ function ImportContrat({onFinish}){
             <div><label className="lbl">Heures / semaine</label><input type="number"className="inp"placeholder="40"value={data.heures}onChange={e=>setData(d=>({...d,heures:e.target.value}))}/></div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-            <div><label className="lbl">Taux horaire net (€)</label><input type="number"step="0.05"className="inp"placeholder="4.20"value={data.taux}onChange={e=>setData(d=>({...d,taux:e.target.value}))}/></div>
+            <div><label className="lbl">Taux horaire brut (€)</label><input type="number"step="0.05"className="inp"placeholder="4.20"value={data.taux}onChange={e=>setData(d=>({...d,taux:e.target.value}))}/></div>
             <div><label className="lbl">Indemnité entretien (€/j)</label><input type="number"step="0.05"className="inp"placeholder="3.80"value={data.entretien}onChange={e=>setData(d=>({...d,entretien:e.target.value}))}/></div>
           </div>
           <div style={{marginBottom:14}}>
@@ -9328,10 +9375,12 @@ const jsPDF=await chargerJsPDF();
     R.texte("Toute heure effectuée au-delà de la durée hebdomadaire convenue est une heure complémentaire, rémunérée en sus du salaire mensualisé. Au-delà de 45 heures par semaine, les heures sont majorées selon le taux fixé par la convention collective. Toute modification durable des jours ou des horaires fait l'objet d'un avenant écrit signé des deux parties.",{taille:8.5});
 
     R.article(5,"RÉMUNÉRATION");
-    R.champ("Salaire horaire net",nbf(ct.taux_horaire||0,2)+" € par heure et par enfant");
+    R.champ("Salaire horaire brut",nbf(ct.taux_horaire||0,2)+" € par heure et par enfant");
+    R.champ("Soit, net, environ",nbf(netDepuisBrut(ct.taux_horaire||0),2)+" € par heure");
     R.champ("Mode de mensualisation",complete?"Année complète":"Année incomplète");
     R.champ("Calcul",(ct.heures_hebdo||0)+" h x "+semaines+" semaines ÷ 12 mois = "+hMois+" h par mois");
-    R.champ("Salaire mensuel net de base",nbf(salMois,2)+" €");
+    R.champ("Salaire mensuel brut de base",nbf(salMois,2)+" €");
+    R.champ("Soit, net, environ",nbf(netDepuisBrut(salMois),2)+" €");
     R.texte(complete
       ? "Le salaire est mensualisé sur 52 semaines : le même montant est versé chaque mois, quel que soit le nombre de jours d'accueil du mois, et la rémunération des congés payés est incluse dans ce montant."
       : "Le salaire est mensualisé sur les "+semaines+" semaines d'accueil programmées : le même montant est versé chaque mois d'accueil. La rémunération des congés payés n'est PAS comprise dans ce montant ; elle est versée à part, selon les modalités de l'article 7.",{taille:8.5});
@@ -10875,7 +10924,11 @@ function KitCMG({enfants,role,pEId,user}){
 
   // Calcul salaire net estimé
   const heuresMois=heuresMensualisees(contrat);
-  const salaireNet=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*1.1*10)/10;
+  // Le « salaire net » du parent etait le brut multiplie par 1,1 — un coefficient
+  // qui ne correspond a rien : il AUGMENTE le brut au lieu d'en retirer les
+  // cotisations. On passe par le calcul du bulletin.
+  const salaireBrutMois=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*100)/100;
+  const salaireNet=nbf(netDepuisBrut(salaireBrutMois),2);
   const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
 
   return <div className="fi">
@@ -10936,7 +10989,9 @@ function KitCMG({enfants,role,pEId,user}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
-          <InfoRow label="Taux horaire net" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
+          <InfoRow label="Taux horaire brut" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
+          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="tauxNet"/>
+          <InfoRow label="Salaire brut mensuel (estimé)" value={nbf(salaireBrutMois,2)+"€"} copyKey="salaireBrut"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
           <InfoRow label="Indemnité d'entretien/jour" value={nbf((contrat.entretien||3.92),2)+"€"} copyKey="entretien"/>
           <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
@@ -11334,7 +11389,7 @@ function SignatureContratParent({enfants,pEId,user}){
         ["Début du contrat",fmt(contrat.debut||"")],
         ["Jours d'accueil",(contrat.jours||[]).join(", ")],
         ["Horaires",contrat.horaires||"-"],
-        ["Taux horaire net",nbf((contrat.tauxHoraire||0),2)+"€/h"],
+        ["Taux horaire brut",nbf((contrat.tauxHoraire||0),2)+"€/h"],
         ["Indemnité entretien",nbf((contrat.entretien||0),2)+"€/jour"],
         ["Statut signature asmat",contrat.signe_asmat?"✅ Signé le "+(contrat.date_signature_asmat?fmt(contrat.date_signature_asmat.slice(0,10)):"-"):"⏳ En attente"],
       ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
@@ -11676,7 +11731,7 @@ function RapportAnnuel({enfants,role,pEId,user}){
   const joursAnnuels=realStats?.jours||(heuresAnnuelles/8);
   // Salaire brut = heures * taux (avec majoration 25% au dessus de 45h/sem si pas mensualise)
   const salaireBrutCalc=Math.round(heuresAnnuelles*tauxH);
-  const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(salaireBrutCalc*0.78);
+  const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(netDepuisBrut(salaireBrutCalc));
   const salaireAnnuel=salaireNet;
   // Entretien = jours travailles * indemnite jour
   const entretienAnnuel=Math.round(joursAnnuels*entretienJour);
@@ -11810,7 +11865,7 @@ const jsPDF=await chargerJsPDF();
         +'@media print{.actions{display:none!important}}</style>'
         +'</head>'
         +'<body>'
-        +'<div class="actions"><button class="btn-print" onclick="window.print()"><IconeOuEmoji e="🖨️"/> Imprimer</button></div>'
+        +'<div class="actions"><button class="btn-print" onclick="window.print()">🖨️ Imprimer</button></div>'
         +'<h1>Rapport annuel '+annee+'</h1>'
         +'<p><strong>Assistante maternelle:</strong> '+(user?.prenom||"")+' '+(user?.nom||"")+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
@@ -12445,7 +12500,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   const printDoc=(titre,corps)=>{
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour générer le document");return;}
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer"><IconeOuEmoji e="🖨️"/> Imprimer / PDF</button></div></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast(titre+" généré ✓");
   };
   const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
@@ -15559,7 +15614,7 @@ function OnboardingWizard({user,onFinish}){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Heures / semaine</label>
                 <input type="number"className="inp"value={contrat.heuresHebdo}onChange={e=>setContrat(c=>({...c,heuresHebdo:parseFloat(e.target.value)||40}))}/></div>
-              <div><label className="lbl">Taux horaire net (€)</label>
+              <div><label className="lbl">Taux horaire brut (€)</label>
                 <input type="number"step="0.05"className="inp"value={contrat.tauxHoraire}onChange={e=>setContrat(c=>({...c,tauxHoraire:parseFloat(e.target.value)||4.05}))}/></div>
             </div>
             {/* Le mode de mensualisation change le salaire de plus de 10 % :
@@ -15617,7 +15672,7 @@ function OnboardingWizard({user,onFinish}){
                 }}>{j.slice(0,2)}</button>)}
               </div></div>
             <div style={{background:"var(--Sp)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:12,color:"var(--S)",fontWeight:600}}>
-              Salaire mensuel estimé : {Math.round(salaireMensualise(contrat))}€ net + {Math.round(contrat.entretien*contrat.heuresHebdo/8*52/12)}€ entretien
+              Salaire mensuel estimé : {Math.round(salaireMensualise(contrat))}€ brut ({Math.round(netDepuisBrut(salaireMensualise(contrat)))}€ net) + {Math.round(contrat.entretien*contrat.heuresHebdo/8*52/12)}€ entretien
             </div>
             <div style={{display:"flex",gap:8}}>
               <button className="btn bG"style={{flex:1}}onClick={()=>setStep(0)}>← Retour</button>
@@ -16206,7 +16261,7 @@ function AttestationFiscale({enfants,role,pEId,user}){
   const moisTravailles=12;
   const versementsList=realStats?.versements||[];
   // Estimation indicative (à défaut de versements réels)
-  const estSalNet=hMens*tauxH*0.78*moisTravailles;
+  const estSalNet=netDepuisBrut(hMens*tauxH)*moisTravailles;
   const estEntretien=entretienJour*Math.round(hMens/8)*moisTravailles;
   // En mode réel : total = somme RÉELLEMENT versée (on ne rajoute PAS d'entretien estimé -> pas de double comptage)
   const totalReel=hasReal?realStats.paiements:0;
@@ -16302,7 +16357,7 @@ const jsPDF=await chargerJsPDF();
         ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
         ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" euros/h");
         ligneSimple("Salaire mensuel brut estime",nbf(salMensBrut,2)+" euros");
-        ligneSimple("Salaire mensuel net estime",nbf((salMensBrut*0.78),2)+" euros");
+        ligneSimple("Salaire mensuel net estime",nbf(netDepuisBrut(salMensBrut),2)+" euros");
         ligneSimple("Mois travailles","12 mois");
         y+=8;
       }
@@ -16427,7 +16482,7 @@ const jsPDF=await chargerJsPDF();
             +'<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>'
             +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||minimumHoraireAu(new Date()))+' €/h</td></tr>'
             +'<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+nbf(salMensBrut,2)+' €</td></tr>'
-            +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+nbf((salMensBrut*0.78),2)+' €</td></tr>'
+            +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+nbf(netDepuisBrut(salMensBrut),2)+' €</td></tr>'
             +'<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>'
             +'</table>'),
         '<div class="note">',

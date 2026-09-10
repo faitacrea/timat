@@ -520,8 +520,20 @@ const tracesConnues = new Set([...(appSrc.match(/const EMOJI_TRACE = \{([\s\S]*?
 const enTete = [...zoneApp.matchAll(new RegExp(`[>}]\\s*(${EMO_UI})\\s+(?=[A-Za-zÀ-ÿ0-9«{<])`, "gu"))]
   .filter((m) => tracesConnues.has(m[1]))
   .filter((m) => {
-    const ligne = zoneApp.slice(zoneApp.lastIndexOf("\n", m.index) + 1, zoneApp.indexOf("\n", m.index));
-    return !/doc\.text\(|doc\.setFont|"<tr|"<div|"<td|htmlPaj|innerHTML/.test(ligne);
+    const debut = zoneApp.lastIndexOf("\n", m.index) + 1;
+    const ligne = zoneApp.slice(debut, zoneApp.indexOf("\n", m.index));
+    if (/doc\.text\(|doc\.setFont|htmlPaj|innerHTML/.test(ligne)) return false;
+    // Un emoji place DANS une chaine part dans un document imprime ou un
+    // courriel, ou <IconeOuEmoji/> ne s'affiche pas du tout. La liste des
+    // ouvertures de balise ne suffisait pas : elle ne connaissait que les
+    // guillemets doubles, et le recapitulatif Pajemploi est ecrit en simples.
+    let q = null;
+    for (let i = 0; i < m.index - debut; i++) {
+      const c = ligne[i];
+      if (q) { if (c === "\\") { i++; continue; } if (c === q) q = null; }
+      else if (c === '"' || c === "'" || c === "`") q = c;
+    }
+    return q === null;
   });
 if (enTete.length) {
   signale("icônes", `${enTete.length} emoji en tête d'un texte affiché alors qu'un tracé dessiné existe : ${[...new Set(enTete.map((m) => m[1]))].join(" ")}`);
@@ -735,6 +747,55 @@ if (/IDCC\s*2395|IDCC\s*2111/.test(appSrc)) {
 // de l'EMPLOYEUR, et suivre ce conseil ferait perdre des preuves de retraite.
 if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
+}
+
+// --- brut et net ---
+// Pourquoi : le taux horaire enregistre au contrat est un taux BRUT — le
+// bulletin y assied les cotisations, et le minimum conventionnel (4,20 EUR) est
+// un brut. La moitie de l'application l'affichait pourtant sous le libelle
+// « taux horaire NET » : sur le contrat, sur l'ecran du parent, dans les
+// formulaires. La meme valeur etait annoncee comme du net ici et declaree comme
+// du brut sur l'attestation France Travail. Pres de 22 % d'ecart sur le chiffre
+// le plus important de l'application.
+{
+  const mauvaisLibelle = [...appSrc.matchAll(/["'](?:Taux|Salaire)[^"']{0,30}\bnet\b[^"']{0,20}["'][^\n]{0,120}(?:contrat[?.]?\.tauxHoraire|ct\.taux_horaire|salaireMensualise\()/gi)]
+    .map((m) => appSrc.slice(0, m.index).split("\n").length);
+  if (mauvaisLibelle.length) {
+    signale("chiffre", `${mauvaisLibelle.length} libellé(s) appellent « net » le taux ou le salaire du contrat, qui est un BRUT (lignes ${mauvaisLibelle.join(", ")})`);
+  }
+  // Le coefficient 0,78 etait une approximation inventee du rapport net/brut,
+  // appliquee y compris a l'indemnite d'entretien qui n'est pas du salaire.
+  if (/\*\s*0\.78\b/.test(appSrc)) {
+    signale("chiffre", "le coefficient 0,78 est de retour : le net se calcule avec les vraies cotisations, via netDepuisBrut()");
+  }
+  if (!/const netDepuisBrut=/.test(appSrc)) {
+    signale("chiffre", "netDepuisBrut() a disparu : chaque écran refera son propre calcul du net");
+  }
+}
+
+// --- composants React ecrits dans des documents imprimes ---
+// Pourquoi : la conversion des emoji en icones a remplace les caracteres par
+// <IconeOuEmoji/> partout, y compris DANS des chaines HTML ecrites avec
+// document.write. Le navigateur y voit une balise inconnue et n'affiche rien :
+// six icones avaient ainsi disparu du recapitulatif Pajemploi, celui qu'on
+// imprime pour declarer. Le composant n'existe que dans du JSX.
+{
+  const dansUneChaine = [];
+  for (const [n, l] of appSrc.split("\n").entries()) {
+    if (!l.includes("<IconeOuEmoji")) continue;
+    const dans = new Array(l.length).fill(false);
+    let q = null;
+    for (let i = 0; i < l.length; i++) {
+      const c = l[i];
+      if (q) { dans[i] = true; if (c === "\\") { i++; continue; } if (c === q) q = null; }
+      else if (c === '"' || c === "'" || c === "`") { q = c; dans[i] = true; }
+    }
+    const i = l.indexOf("<IconeOuEmoji");
+    if (dans[i]) dansUneChaine.push(n + 1);
+  }
+  if (dansUneChaine.length) {
+    signale("icônes", `${dansUneChaine.length} icône(s) écrites comme composant React dans une chaîne HTML (lignes ${dansUneChaine.join(", ")}) — elles ne s'affichent pas du tout dans le document imprimé`);
+  }
 }
 
 // --- documents deja produits ---
