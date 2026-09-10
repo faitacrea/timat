@@ -3858,7 +3858,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
         {[["Heures × taux",nbf((h.real*contrat.tauxHoraire),2)+" €","var(--B)","var(--Bp)"],
-          ["Entretien",nbf((h.real/5*contrat.entretien),2)+" €","var(--S)","var(--Sp)"],
+          ["Entretien",nbf(entretienMois,2)+" €","var(--S)","var(--Sp)"],
           ["Net estimé",nbf(netEstime,2)+" €","var(--T)","var(--Tp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
@@ -6320,7 +6320,12 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const salBase=heuresNorm*tauxH;
   const salSupp=hSupp*tauxH*1.25;
   const brut=salBase+salSupp;
-  const joursTravailles=useRealHours?heuresMoisReel.jours:Math.round(h.real/8);
+  // Le nombre de jours d'accueil se deduisait des heures divisees par 8, et
+  // les trois rendus du bulletin — ecran, page imprimable, PDF — n'affichaient
+  // pas le meme. Une seule origine : les jours reellement pointes, sinon ceux
+  // prevus au contrat.
+  const joursTravailles=useRealHours?heuresMoisReel.jours
+    :Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN);
   const entretien=(contrat.entretien||3.92)*joursTravailles;
   // --- Retenue pour absence de l'assistante maternelle (CCN 3239, art. 111) ---
   // Elle ne s'applique QUE sur un salaire mensualise. Des que le bulletin est
@@ -6785,7 +6790,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",nbf(salBase,2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+nbf((tauxH*1.25),2)+"€",nbf(salSupp,2)+"€"]]:[]),
-          ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.92)+"€",nbf(entretien,2)+"€"],
+          ["Indemnité d'entretien",joursTravailles+" j × "+nb2(contrat.entretien||3.92)+"€",nbf(entretien,2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+nbf((Number(repasJour)||0),2)+"€",nbf(repasMois,2)+"€"]]:[]),
           ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+nbf(retenue,2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
@@ -6898,7 +6903,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<table><tr><th>Libellé</th><th>Heures / Jours</th><th>Taux</th><th class=\"right\">Montant brut</th></tr>",
           "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+nbf(tauxH,4)+" euros/h</td><td class=\"right\">"+nbf(salBase,2)+" euros</td></tr>",
           hSuppRow,
-          "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+nbf((contrat.entretien||3.92),2)+" euros/j</td><td class=\"right\">"+nbf(entretien,2)+" euros</td></tr>",
+          "<tr><td>Indemnité d'entretien</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((contrat.entretien||3.92),2)+" €/j</td><td class=\"right\">"+nbf(entretien,2)+" euros</td></tr>",
           (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"annee incomplete")+"</td><td class=\"right\">- "+nbf(retenue,2)+" euros</td></tr>":"")+
           (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((Number(repasJour)||0),2)+" euros/j</td><td class=\"right\">"+nbf(repasMois,2)+" euros</td></tr>":""),
           "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" euros</td></tr>",
@@ -7121,13 +7126,13 @@ const COURRIERS_DATA=[
   {id:"r1",cat:"Contrat",ic:"📄",titre:"Demande de rendez-vous d'embauche",
    contenu:"Madame, Monsieur,\n\nSuite à notre prise de contact, je vous confirme ma disponibilité pour accueillir [Prénom] à compter du [Date de début].\n\nJe vous propose un rendez-vous le [Date RDV] à [Heure] pour finaliser les modalités et signer le contrat.\n\nCordialement,\n[Votre nom]"},
   {id:"r2",cat:"Contrat",ic:"📄",titre:"Lettre de rupture de contrat",
-   contenu:"Madame, Monsieur,\n\nJe vous informe que je mets fin au contrat d'accueil de [Prénom] à compter du [Date de fin], conformément au préavis de [Durée] prévu au contrat.\n\nLe solde de tout compte vous sera transmis dans les délais légaux.\n\nCordialement,\n[Votre nom]"},
+   contenu:"Envoi recommandé avec avis de réception\n\nMadame, Monsieur,\n\nJe vous informe que je mets fin au contrat d'accueil de [Prénom], pour le motif suivant : [Motif].\n\nLe préavis de [Durée] court à compter de la première présentation de ce courrier ; le contrat prendra donc fin le [Date de fin].\n\nÀ cette date, je vous remercie de me remettre le solde de tout compte, le certificat de travail et l'attestation destinée à France Travail, que vous générez depuis votre espace Pajemploi.\n\nCordialement,\n[Votre nom]"},
   {id:"r3",cat:"Financier",ic:"💶",titre:"Mise en demeure de paiement de salaire",
-   contenu:"Madame, Monsieur,\n\nLe salaire de [Mois] d'un montant de [Montant]€ reste impayé à ce jour.\n\nJe vous mets en demeure de procéder au règlement dans un délai de 8 jours. Passé ce délai, je me verrai contrainte de saisir le Conseil de Prud'hommes.\n\nCordialement,\n[Votre nom]"},
+   contenu:"Envoi recommandé avec avis de réception\n\nMadame, Monsieur,\n\nLe salaire de [Mois], d'un montant de [Montant] €, reste impayé à ce jour.\n\nJe vous mets en demeure de procéder au règlement dans un délai de 8 jours à compter de la première présentation de ce courrier. Passé ce délai, je me verrai contraint(e) de saisir le conseil de prud'hommes.\n\nCordialement,\n[Votre nom]"},
   {id:"r4",cat:"PMI",ic:"🏛️",titre:"Compte-rendu de visite PMI",
    contenu:"Objet : Compte-rendu de la visite du [Date]\n\nSuite à la visite de [Nom puéricultrice] le [Date], je vous adresse ce compte-rendu.\n\nPoints abordés : conditions d'accueil, suivi des enfants, documentation administrative.\n\nObservations : [Observations]\nActions engagées : [Actions]\n\nCordialement,\n[Votre nom] - Asmat agréée n° [Numéro agrément]"},
   {id:"r5",cat:"Congés",ic:"🏖️",titre:"Déclaration de congés annuels",
-   contenu:"Madame, Monsieur,\n\nJe vous informe que je prendrai mes congés du [Date début] au [Date fin] inclus.\n\nDurant cette période, je ne pourrai pas assurer l'accueil de [Prénom].\n\nCordialement,\n[Votre nom]"},
+   contenu:"Madame, Monsieur,\n\nConformément à la convention collective, qui invite les parties à fixer les dates d'un commun accord au plus tard le 1er mars, je vous confirme que je prendrai mes congés du [Date début] au [Date fin] inclus.\n\nDurant cette période, je ne pourrai pas assurer l'accueil de [Prénom].\n\nCordialement,\n[Votre nom]"},
   {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d'avenant aux horaires",
    contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l'avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
   {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
@@ -7166,7 +7171,9 @@ function CourriersTypes({enfants,pEId,user}){
     if(!sel)return;
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour le PDF");return;}
-    const corps=texte.split("\n").map(l=>l.trim()?("<p>"+l.replace(/&/g,"&amp;").replace(/</g,"&lt;")+"</p>"):"<br/>").join("");
+    // L'echappement ne couvrait que & et < : le meme travail se fait deja une
+    // seule fois, dans H().
+    const corps=texte.split("\n").map(l=>l.trim()?("<p>"+H(l)+"</p>"):"<br/>").join("");
     w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(sel.titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.8}p{margin:8px 0}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast("PDF généré ✓");
   };
@@ -11798,8 +11805,11 @@ function RapportAnnuel({enfants,role,pEId,user}){
   const heuresMois=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const entretienJour=contrat.entretien||3.92;
-  const heuresAnnuelles=realStats?.heures||(heuresMois*12);
-  const joursAnnuels=realStats?.jours||(heuresAnnuelles/8);
+  const heuresAnnuelles=realStats?.heures||Math.round(((contrat.heuresHebdo)||0)*semainesDuContrat(contrat));
+  // Quatrieme facon de compter les jours d'accueil dans l'application, apres
+  // celles du recapitulatif Pajemploi et du recapitulatif des versements. On
+  // part des jours prevus au contrat.
+  const joursAnnuels=realStats?.jours||Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat));
   // Salaire brut = heures * taux (avec majoration 25% au dessus de 45h/sem si pas mensualise)
   const salaireBrutCalc=Math.round(heuresAnnuelles*tauxH);
   const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(netDepuisBrut(salaireBrutCalc));
@@ -11868,7 +11878,7 @@ const jsPDF=await chargerJsPDF();
         ["Salaire net annuel"+(realStats?.paiements?" (donnees reelles)":" (estime)"),salaireAnnuel+" euros"],
         ["Indemnites d entretien (estimees)",entretienAnnuel+" euros"],
         ["Total verse",totalAnnuel+" euros"],
-        ["Credit d impot estime (50%)",creditImpot+" euros"],
+        ["Crédit d'impôt estimé du parent (" + nbf(CI_TAUX*100,0) + " %)",nbf(creditImpot,0)+" € — enfant de moins de 6 ans, dépenses plafonnées à 3 500 €"],
       ];
       doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,8,"F");
       doc.setFont("helvetica","bold");
@@ -11951,7 +11961,7 @@ const jsPDF=await chargerJsPDF();
         +'<tr><td>Salaire net annuel'+(realStats?.paiements?" (donnees reelles)":" (estime)")+'</td><td>'+salaireAnnuel+'€</td></tr>'
         +"<tr><td>Indemnites d'entretien (estimees)</td><td>"+entretienAnnuel+"€</td></tr>"
         +'<tr class="total"><td>Total verse</td><td>'+totalAnnuel+'€</td></tr>'
-        +"<tr><td>Credit d'impot estime (50%)</td><td>"+creditImpot+"€</td></tr>"
+        +"<tr><td>Crédit d'impôt estimé du parent (" + nbf(CI_TAUX*100,0) + " %)</td><td>"+nbf(creditImpot,0)+" € <span style=\"font-size:11px;color:#777\">(enfant de moins de 6 ans, dépenses plafonnées à 3 500 €)</span></td></tr>"
         +'</table>'
         +(userSig
           ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:11px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
@@ -11992,7 +12002,7 @@ const jsPDF=await chargerJsPDF();
             ["Salaire net annuel estimé",salaireAnnuel+"€","var(--S)"],
             ["Indemnités d'entretien",""+entretienAnnuel+"€","var(--G)"],
             ["Total versé par les parents",""+totalAnnuel+"€","var(--b)"],
-            ["Crédit d'impôt estimé (50%)",""+creditImpot+"€ remboursé","var(--B)"],
+            ["Crédit d'impôt du parent",nbf(creditImpot,0)+"€ si l'enfant a moins de 6 ans","var(--B)"],
           ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
             <span style={{fontSize:13,color:"var(--m)"}}>{l}</span>
             <span style={{fontSize:13,fontWeight:700,color:c}}>{v}</span>
@@ -12057,7 +12067,7 @@ const jsPDF=await chargerJsPDF();
         {role==="asmat"&&<div className="card"style={{background:"var(--Gp)",border:"1px solid var(--G)"}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}><IconeOuEmoji e="📧"/> Envoi au parent</div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
-            L'attestation fiscale peut être envoyée directement aux parents pour leur déclaration d'impôts (à remettre avant le 31 janvier).
+            Ce récapitulatif peut être envoyé aux parents comme justificatif. Il ne remplace pas leur attestation fiscale officielle, que Pajemploi met à leur disposition dans leur espace en ligne, courant avril.
           </div>
           <button className="btn bG"style={{width:"100%"}}onClick={()=>setToast("Attestation fiscale envoyée au parent ✓")}>
             <IconeOuEmoji e="📧"/> Envoyer l'attestation au parent
