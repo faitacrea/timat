@@ -22,6 +22,10 @@ const SOUS_MINIMUM = process.argv[3] === "sous-minimum";
 // tomber a 504 EUR au lieu de 728 — l'application appliquait 52 semaines a tous
 // les contrats.
 const ANNEE_INCOMPLETE = process.argv[3] === "annee-incomplete";
+// Passe « envoye » : le bulletin du mois a deja ete envoye au parent. Le
+// bandeau annoncait « disponible dans Documents » sans donner le moyen de
+// l'ouvrir : il fallait quitter l'ecran pour relire ce qu'on venait d'envoyer.
+const DEJA_ENVOYE = process.argv[3] === "envoye";
 const SORTIE = "/tmp/timat-bulletin";
 const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
@@ -79,6 +83,11 @@ await page.route("**/rest/v1/**", (r) => {
     { id: "e-fer", asmat_id: UID, date: `${mk}-17`, type: "fer", texte: "Fermeture", heures: 8 },
     { id: "e-fmh", asmat_id: UID, date: `${mk}-24`, type: "formh", texte: "Formation du soir", heures: 6 },
   ]));
+  if (t === "bulletins" && DEJA_ENVOYE) return r.fulfill(json([{
+    mois: mk, annee: Number(mk.slice(0, 4)), contrat_id: "c1", enfant_id: EID,
+    envoye_au_parent: true, date_envoi: new Date().toISOString(),
+    pdf_storage_path: UID + "/bulletins/" + mk + ".pdf",
+  }]));
   return r.fulfill(json([]));
 });
 
@@ -124,15 +133,26 @@ const m = await page.evaluate(() => {
     vieillesse: nb(/Vieillesse plafonnée\s*\n?\s*([\d.,]+)€/),
     alloc: nb(/Allocation de formation — ([\d.,]+) €/),
     allocHorsBulletin: /versée par IPERIA/i.test(t) && !/RÉMUNÉRATION[\s\S]{0,600}Allocation de formation/.test(t),
+    // Le bulletin deja envoye doit pouvoir se relire d'ici, sans passer par
+    // l'ecran Documents.
+    bandeauEnvoye: /Bulletin envoyé au parent/.test(t),
+    boutonPdf: /Ouvrir le bulletin \(PDF\)/.test(t),
+    renvoiSecheDocuments: /disponible dans Documents/.test(t),
   };
 });
 await nav.close();
 
 const ecarts = [];
+if (DEJA_ENVOYE) {
+  const dire = (ok, quoi, detail = "") => { if (!ok) ecarts.push(quoi); console.log(`  ${ok ? "ok " : "KO "} ${quoi.padEnd(52)} ${detail}`); };
+  dire(m.bandeauEnvoye, "le bandeau « envoyé au parent » s'affiche");
+  dire(m.boutonPdf, "le bulletin s'ouvre depuis l'écran, sans passer par Documents");
+  dire(!m.renvoiSecheDocuments, "plus de renvoi sec vers Documents quand le PDF existe");
+}
 // En mode « sous-minimum » on ne vérifie que l'alerte : les montants changent
 // forcément puisque le taux n'est pas le même.
 const attendu = (nom, val, cible, tol = 0.02) => {
-  if (SOUS_MINIMUM || ANNEE_INCOMPLETE) return;
+  if (SOUS_MINIMUM || ANNEE_INCOMPLETE || DEJA_ENVOYE) return;
   const ok = val != null && Math.abs(val - cible) <= tol;
   if (!ok) ecarts.push(`${nom} : ${val} au lieu de ${cible}`);
   console.log(`  ${ok ? "ok " : "KO "} ${nom.padEnd(46)} ${val} (attendu ${cible})`);

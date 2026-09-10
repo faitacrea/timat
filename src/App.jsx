@@ -5798,7 +5798,10 @@ function Documents({enfants,role,pEId,user}){
   const docConvention={
     id:"ccn3239", eId:null, cat:"agrement", sous:"Convention collective",
     nom:"Convention collective IDCC 3239 (texte officiel)",
-    date:TODAY_STR, annee:annee==="tous"?String(new Date().getFullYear()):annee,
+    // La date affichee est celle de la convention elle-meme, pas celle du jour :
+    // un document de reference qui se date d'aujourd'hui change tous les matins.
+    // L'annee de classement suit le filtre courant pour qu'elle reste visible.
+    date:"2021-03-15", annee:annee==="tous"?String(new Date().getFullYear()):annee,
     taille:"Légifrance", icone:"🏛️", partage:true, url:URL_CONVENTION,
     storagePath:null, permanent:true,
   };
@@ -6589,8 +6592,17 @@ function BulletinSalaire({enfants,role,pEId,user}){
       })}
     </div>
     {/* BULLETIN HISTORIQUE P14C - statut du mois selectionne */}
-    {moisSelKey&&bulletinsEnvoyes[moisSelKey]?.envoye_au_parent&&<div style={{padding:"10px 14px",background:"var(--Sp)",border:"1px solid var(--S)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--S)",display:"flex",alignItems:"center",gap:8}}>
-      <IconeOuEmoji e="✅"/> <strong>Bulletin envoyé au parent</strong> le {new Date(bulletinsEnvoyes[moisSelKey].date_envoi).toLocaleDateString("fr-FR")} — disponible dans Documents
+    {/* Le bandeau annoncait « disponible dans Documents » et s'arretait la :
+        il fallait quitter l'ecran pour relire le bulletin qu'on venait
+        d'envoyer. Le PDF s'ouvre maintenant d'ici, comme le contrat. */}
+    {moisSelKey&&bulletinsEnvoyes[moisSelKey]?.envoye_au_parent&&<div style={{padding:"10px 14px",background:"var(--Sp)",border:"1px solid var(--S)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--S)",display:"flex",alignItems:"center",gap:9,flexWrap:"wrap"}}>
+      <span style={{display:"inline-flex",alignItems:"center",gap:8}}>
+        <IconeOuEmoji e="✅"/> <strong>Bulletin envoyé au parent</strong> le {new Date(bulletinsEnvoyes[moisSelKey].date_envoi).toLocaleDateString("fr-FR")}
+      </span>
+      {bulletinsEnvoyes[moisSelKey].pdf_storage_path
+        ?<BoutonPdfStocke path={bulletinsEnvoyes[moisSelKey].pdf_storage_path} onErr={(m)=>setToast(m)} compact icone="📜"
+          label="Ouvrir le bulletin (PDF)" erreur="❌ Bulletin indisponible (droits d'accès) — réessayez dans un instant."/>
+        :<span style={{color:"var(--m)"}}>— disponible dans Documents</span>}
     </div>}
     {moisSelKey&&!bulletinsEnvoyes[moisSelKey]&&!isDemoBull&&<div style={{padding:"10px 14px",background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--B)"}}>
       ⏳ Bulletin non encore envoyé pour ce mois
@@ -10953,23 +10965,33 @@ function RythmeAccueil({contrat,role,onSaved,onErr}){
   </div>;
 }
 
-function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon contrat (PDF)"}){
+//
+// OUVRIR UN DOCUMENT RANGE DANS LE STOCKAGE (URL signee 1 h).
+// Le contrat avait son bouton, le bulletin non : une fois envoye, l'application
+// annoncait « disponible dans Documents » et laissait l'utilisatrice aller le
+// chercher ailleurs. Un seul composant sert les deux, pour qu'ils ne divergent
+// pas comme les vocabulaires de couleur l'ont fait.
+function BoutonPdfStocke({path,onErr,compact=false,label="Ouvrir le document (PDF)",icone="📄",erreur="❌ Document indisponible (droits d'accès) — réessayez plus tard."}){
   const [busy,setBusy]=useState(false);
-  const path=contrat?.pdf_storage_path;
   if(!path)return null;
   const ouvrir=async()=>{
     setBusy(true);
     try{
       const{data,error}=await supabase.storage.from("documents").createSignedUrl(path,3600);
-      if(error||!data?.signedUrl){onErr?.("❌ Document indisponible (droits d'accès) — réessayez après signature ou contactez votre assistante maternelle.");}
+      if(error||!data?.signedUrl)onErr?.(erreur);
       else window.open(data.signedUrl+(data.signedUrl.includes("?")?"&":"?")+"t="+Date.now(),"_blank","noopener");
-    }catch(e){onErr?.("❌ Erreur ouverture du contrat");}
+    }catch(e){onErr?.(erreur);}
     setBusy(false);
   };
   return <button className="btn bT" onClick={ouvrir} disabled={busy}
     style={{fontSize:compact?12:13,padding:compact?"7px 14px":"9px 18px",display:"inline-flex",alignItems:"center",gap:6,opacity:busy?0.6:1}}>
-    <IconeOuEmoji e="📄"/> {busy?"Ouverture…":label}
+    <IconeOuEmoji e={icone}/> {busy?"Ouverture…":label}
   </button>;
+}
+
+function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon contrat (PDF)"}){
+  return <BoutonPdfStocke path={contrat?.pdf_storage_path} onErr={onErr} compact={compact} label={label}
+    erreur="❌ Contrat indisponible (droits d'accès) — réessayez après signature ou contactez votre assistante maternelle."/>;
 }
 
 function SignatureContratParent({enfants,pEId,user}){
