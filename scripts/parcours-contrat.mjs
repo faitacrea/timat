@@ -15,6 +15,9 @@ import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
+// Passe « pdf-ancien » : le PDF stocke date d'avant la refonte du contrat. Il
+// est relu tel quel, jamais recalcule : l'application doit le dire.
+const PDF_ANCIEN = process.argv[3] === "pdf-ancien";
 const SORTIE = "/tmp/timat-contrat";
 const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
@@ -61,7 +64,7 @@ await page.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/([a-z_]+)/) || [])[1];
   if (t === "profiles") return r.fulfill(json([{ id: UID, role: "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
   if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
+  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : "2026-09-30T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
   // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
@@ -151,6 +154,14 @@ dire(/Semaines d'accueil dans l'année/i.test(t1), "le champ des semaines appara
 const apercu = (t1.match(/Nouveau salaire mensualisé\s*:\s*([\d,]+)\s*€/) || [])[1];
 dire(!!apercu && apercu !== avant, "l'aperçu du nouveau salaire s'affiche", `${avant} € → ${apercu} €`);
 dire(/Enregistrer ce rythme/.test(t1) && /Annuler/.test(t1), "le changement se confirme, il ne s'applique pas tout seul");
+
+const tf = await txt();
+if (PDF_ANCIEN) {
+  dire(/Mettre à jour le PDF/.test(tf), "un PDF périmé est signalé, avec un bouton pour le refaire");
+  dire(/version précédente/.test(tf), "l'écran explique pourquoi le document est périmé");
+} else {
+  dire(!/Mettre à jour le PDF/.test(tf), "un PDF à jour ne propose pas de mise à jour");
+}
 
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 await nav.close();
