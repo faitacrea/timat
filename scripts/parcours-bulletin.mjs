@@ -25,7 +25,10 @@ const ANNEE_INCOMPLETE = process.argv[3] === "annee-incomplete";
 // Passe « envoye » : le bulletin du mois a deja ete envoye au parent. Le
 // bandeau annoncait « disponible dans Documents » sans donner le moyen de
 // l'ouvrir : il fallait quitter l'ecran pour relire ce qu'on venait d'envoyer.
-const DEJA_ENVOYE = process.argv[3] === "envoye";
+const DEJA_ENVOYE = process.argv[3] === "envoye" || process.argv[3] === "envoye-ancien";
+// Passe « envoye-ancien » : le bulletin a ete envoye AVANT la refonte du
+// modele. Le PDF stocke n'est jamais recalcule : l'application doit le dire.
+const BULLETIN_ANCIEN = process.argv[3] === "envoye-ancien";
 const SORTIE = "/tmp/timat-bulletin";
 const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
@@ -85,7 +88,7 @@ await page.route("**/rest/v1/**", (r) => {
   ]));
   if (t === "bulletins" && DEJA_ENVOYE) return r.fulfill(json([{
     mois: mk, annee: Number(mk.slice(0, 4)), contrat_id: "c1", enfant_id: EID,
-    envoye_au_parent: true, date_envoi: new Date().toISOString(),
+    envoye_au_parent: true, date_envoi: BULLETIN_ANCIEN ? "2026-08-01T10:00:00Z" : new Date().toISOString(),
     pdf_storage_path: UID + "/bulletins/" + mk + ".pdf",
   }]));
   return r.fulfill(json([]));
@@ -138,6 +141,9 @@ const m = await page.evaluate(() => {
     bandeauEnvoye: /Bulletin envoyé au parent/.test(t),
     boutonPdf: /Ouvrir le bulletin \(PDF\)/.test(t),
     renvoiSecheDocuments: /disponible dans Documents/.test(t),
+    majProposee: /Mettre à jour le PDF/.test(t),
+    majExpliquee: /version précédente du bulletin/.test(t),
+    majSansRenotifier: /le parent n'est pas renotifié/.test(t),
   };
 });
 await nav.close();
@@ -148,6 +154,13 @@ if (DEJA_ENVOYE) {
   dire(m.bandeauEnvoye, "le bandeau « envoyé au parent » s'affiche");
   dire(m.boutonPdf, "le bulletin s'ouvre depuis l'écran, sans passer par Documents");
   dire(!m.renvoiSecheDocuments, "plus de renvoi sec vers Documents quand le PDF existe");
+  if (BULLETIN_ANCIEN) {
+    dire(m.majProposee, "un bulletin périmé propose sa mise à jour");
+    dire(m.majExpliquee, "l'écran dit ce qui manque à l'ancien PDF");
+    dire(m.majSansRenotifier, "la mise à jour annonce qu'elle ne renotifie pas le parent");
+  } else {
+    dire(!m.majProposee, "un bulletin à jour ne propose pas de mise à jour");
+  }
 }
 // En mode « sous-minimum » on ne vérifie que l'alerte : les montants changent
 // forcément puisque le taux n'est pas le même.

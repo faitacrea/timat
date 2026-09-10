@@ -3865,6 +3865,7 @@ function Contrats({enfants,role,pEId,user}){
   // PARTAGE CONTRAT - suivi du partage et du panneau deroulant, par enfant
   const [partages,setPartages]=useState({});
   const [partageOuvert,setPartageOuvert]=useState({});
+  const [majPdf,setMajPdf]=useState("");
   // SIGNATURE STANDARD ASMAT P10 - signature de reference du profil (chargee depuis profiles.signature_base64)
   const [sigStandard,setSigStandard]=useState(user?.signature_base64||null);
   const canvasRef=useRef(null);
@@ -3994,6 +3995,18 @@ function Contrats({enfants,role,pEId,user}){
   };
   // PARTAGE CONTRAT - rendre le contrat visible (ou non) au parent.
   // Au partage : notification + email au parent. Retrait possible tant qu'il n'a pas signe.
+  // MISE A JOUR DU PDF - reecrit le fichier a partir des donnees en base et des
+  // signatures deja enregistrees. Rien d'autre ne change : ni le contenu du
+  // contrat, ni les signatures, ni les dates.
+  const majContratPdf=async()=>{
+    if(!contrat?.id)return;
+    setMajPdf("pending");
+    const r=await generateAndStoreContratPDF(contrat.id);
+    setMajPdf(r.success?"done":"error");
+    setToast(r.success?"Contrat mis à jour ✓":"Erreur : "+(r.error||"mise à jour impossible"));
+    if(r.success)window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
+
   const partagerContrat=async(enf,nouvelEtat)=>{
     const ct=enf?.contrat;
     if(!ct?.id){setToast("Aucun contrat a partager");return;}
@@ -4092,11 +4105,21 @@ function Contrats({enfants,role,pEId,user}){
                   <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>
                     Signé le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · <IconeOuEmoji e="🔒" taille={12}/> conforme eIDAS
                   </div>
-                  <div style={{marginTop:10}}>
+                  <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                     {contrat?.pdf_storage_path
                       ?<BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
                       :<span style={{fontSize:11.5,color:"var(--m)"}}>Le PDF est en cours de préparation — il apparaîtra ici et dans Documents.</span>}
+                    {contrat?.pdf_storage_path&&pdfPerime(contrat.pdf_generated_at)&&
+                      <button className="btn bS s" disabled={majPdf==="pending"} onClick={majContratPdf}>
+                        {majPdf==="pending"?"Mise à jour…":"↻ Mettre à jour le PDF"}
+                      </button>}
                   </div>
+                  {contrat?.pdf_storage_path&&pdfPerime(contrat.pdf_generated_at)&&
+                    <div style={{marginTop:8,fontSize:11.5,color:"var(--R)",lineHeight:1.5,maxWidth:420}}>
+                      Ce PDF a été produit par une version précédente : il ne contient pas les douze
+                      articles du contrat actuel. Le mettre à jour le réécrit avec les mêmes données
+                      et les mêmes signatures.
+                    </div>}
                 </>}
               </div>
               <div style={{textAlign:"right",flexShrink:0}}>
@@ -6315,7 +6338,11 @@ function BulletinSalaire({enfants,role,pEId,user}){
   const netImpApresAbattement=Math.max(0,Math.round((netImposable+entretien+repasMois-abattementMois)*100)/100);
 
   // BULLETIN HISTORIQUE P14C - generer et stocker le bulletin (PDF + DB + email)
-  const envoyerAuParent=async()=>{
+  // « notifier » distingue les deux usages : l'envoi au parent (courriel +
+  // notification) et la simple reecriture du PDF quand le modele a change. Sans
+  // cette distinction, mettre a jour un bulletin aurait renvoye un courriel au
+  // parent pour un document qu'il a deja recu.
+  const envoyerAuParent=async(notifier=true)=>{
     if(!contrat?.id||!enfant?.id||!moisSelKey){setToast("Contrat ou enfant manquant");return;}
     setEnvoyer(true);
     try{
@@ -6546,9 +6573,9 @@ function BulletinSalaire({enfants,role,pEId,user}){
           taille:Math.round(blob.size/1024)+" Ko",
         });
       }
-      await logAction("send_bulletin",{table_name:"bulletins",record_id:contrat.id});
+      await logAction(notifier?"send_bulletin":"regen_bulletin",{table_name:"bulletins",record_id:contrat.id});
       // 6. Email parent (silencieux si Resend pas configure)
-      if(contrat.parent_id){
+      if(notifier&&contrat.parent_id){
         createNotification({userId:contrat.parent_id,type:"bulletin_sent",titre:"Nouveau bulletin de salaire disponible"+(moisSel?(" — "+moisSel):""),page:"admin_finances"});
         supabase.rpc("get_recipient_email",{p_user_id:contrat.parent_id}).then(({data:p})=>{
           if(p?.email){
@@ -6564,7 +6591,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       }
       // 7. Refresh local
       setBulletinsEnvoyes(b=>({...b,[moisSelKey]:{mois:moisSelKey,envoye_au_parent:true,date_envoi:new Date().toISOString(),pdf_storage_path:path}}));
-      setToast("Bulletin envoyé au parent ✓ et archivé dans Documents");
+      setToast(notifier?"Bulletin envoyé au parent ✓ et archivé dans Documents":"Bulletin mis à jour ✓ — le parent n'a pas été renotifié");
     }catch(e){
       setToast("Erreur : "+e.message);
     }
@@ -6603,7 +6630,17 @@ function BulletinSalaire({enfants,role,pEId,user}){
         ?<BoutonPdfStocke path={bulletinsEnvoyes[moisSelKey].pdf_storage_path} onErr={(m)=>setToast(m)} compact icone="📜"
           label="Ouvrir le bulletin (PDF)" erreur="❌ Bulletin indisponible (droits d'accès) — réessayez dans un instant."/>
         :<span style={{color:"var(--m)"}}>— disponible dans Documents</span>}
+      {pdfPerime(bulletinsEnvoyes[moisSelKey].date_envoi)&&
+        <button className="btn bS s" disabled={envoyer} onClick={()=>envoyerAuParent(false)}>
+          {envoyer?"Mise à jour…":"↻ Mettre à jour le PDF"}
+        </button>}
     </div>}
+    {moisSelKey&&bulletinsEnvoyes[moisSelKey]?.envoye_au_parent&&pdfPerime(bulletinsEnvoyes[moisSelKey].date_envoi)&&
+      <div style={{fontSize:11.5,color:"var(--R)",lineHeight:1.5,marginBottom:12,marginTop:-6}}>
+        Ce PDF a été produit par une version précédente du bulletin : il lui manque la base de
+        mensualisation, le solde de congés payés et la mention légale de conservation. Le mettre
+        à jour le réécrit avec les mêmes chiffres — le parent n'est pas renotifié.
+      </div>}
     {moisSelKey&&!bulletinsEnvoyes[moisSelKey]&&!isDemoBull&&<div style={{padding:"10px 14px",background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--B)"}}>
       ⏳ Bulletin non encore envoyé pour ce mois
       {useRealHours?<span style={{marginLeft:8,fontSize:11,color:"var(--S)"}}>· {heuresMoisReel.heures} h pointées sur {heuresMoisReel.jours} j</span>
@@ -6847,7 +6884,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         w.document.close();
         setToast('Bulletin ouvert dans un nouvel onglet ✓');
       }}><IconeOuEmoji e="📥"/> Télécharger PDF</button>
-        {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={envoyerAuParent}disabled={envoyer||isDemoBull}>
+        {role==="asmat"&&<button className="btn bT"style={{flex:1}}onClick={()=>envoyerAuParent(true)}disabled={envoyer||isDemoBull}>
           {envoyer?"⏳ Envoi en cours...":(bulletinsEnvoyes[moisSelKey]?.envoye_au_parent?"🔄 Renvoyer au parent":"📧 Envoyer au parent")}
         </button>}
       </div>
@@ -9169,6 +9206,20 @@ function redacteurPdf(doc,{titre,sousTitre}){
 // vers lui plutot que d'embarquer une copie PDF : une copie se perime, et
 // c'est justement le texte qui tranche tout ce que le contrat ne dit pas.
 const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000044594539";
+
+// DOCUMENTS PERIMES.
+// Le PDF n'est pas recalcule a l'ouverture : il est ecrit une fois, a la
+// signature pour le contrat, a l'envoi pour le bulletin, puis relu tel quel.
+// Refondre le generateur ne touche donc PAS les fichiers deja produits :
+// l'application affichait le nouveau contrat pour les nouvelles signatures, et
+// l'ancien pour toutes les autres, sans que rien ne le signale.
+// Cette date est celle de la refonte des deux documents. Un fichier ecrit avant
+// est perime : l'application le dit et propose de le refaire.
+const DOCUMENTS_REFONTE="2026-09-10";
+const pdfPerime=(dateGeneration)=>{
+  const j=String(dateGeneration||"").slice(0,10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(j)&&j<DOCUMENTS_REFONTE;
+};
 
 const fmtDatePdf=(d)=>{
   const t=String(d||"").slice(0,10);

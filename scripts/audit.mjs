@@ -721,6 +721,32 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- documents deja produits ---
+// Pourquoi : un PDF est ecrit une fois puis relu tel quel. Refondre le
+// generateur ne touche pas les fichiers deja produits — l'application montrait
+// le nouveau contrat aux nouvelles signatures et l'ancien a toutes les autres,
+// sans que rien ne le signale. Les deux ecrans doivent donc detecter un
+// document perime et proposer de le refaire.
+if (!/const pdfPerime=/.test(appSrc)) {
+  signale("pdf", "la détection des PDF périmés a disparu : refondre un document laisserait les fichiers déjà produits en place, en silence");
+} else {
+  for (const [nom, garde] of [
+    ["le contrat", /pdfPerime\(contrat\.pdf_generated_at\)/],
+    ["le bulletin", /pdfPerime\(bulletinsEnvoyes\[moisSelKey\]\.date_envoi\)/],
+  ]) {
+    if (!garde.test(appSrc)) signale("pdf", `${nom} ne vérifie plus si son PDF est périmé : l'utilisatrice rouvrirait l'ancienne version sans le savoir`);
+  }
+  // La date de refonte doit suivre la derniere refonte, sinon le controle
+  // laisse passer les fichiers qu'il devrait signaler.
+  const refonte = (appSrc.match(/const DOCUMENTS_REFONTE="(\d{4}-\d{2}-\d{2})"/) || [])[1];
+  if (!refonte) signale("pdf", "la date de refonte des documents est absente ou mal formée");
+}
+// Regenerer un bulletin ne doit pas renvoyer un courriel au parent pour un
+// document qu'il a deja recu.
+if (/const envoyerAuParent=async\(\)/.test(appSrc)) {
+  signale("pdf", "envoyerAuParent() ne distingue plus l'envoi de la simple mise à jour : régénérer un bulletin renotifierait le parent");
+}
+
 // --- notation des nombres ---
 // Pourquoi : toFixed() ecrit « 4.20 », avec le point anglais. Une assistante
 // maternelle qui recopie un montant dans Pajemploi le recopie tel quel.
