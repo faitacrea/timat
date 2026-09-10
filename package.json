@@ -20,7 +20,9 @@
     "parcours:calendrier-parent": "node scripts/parcours-calendrier-parent.mjs",
     "test:pdf": "node scripts/test-pdf-encodage.mjs",
     "test:echappement": "node scripts/test-echappement.mjs",
-    "test:dates": "TZ=Europe/Paris node scripts/test-dates.mjs"
+    "test:dates": "TZ=Europe/Paris node scripts/test-dates.mjs",
+    "parcours:contrat": "node scripts/parcours-contrat.mjs",
+    "parcours:frais-km": "node scripts/parcours-frais-km.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

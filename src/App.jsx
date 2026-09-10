@@ -226,8 +226,8 @@ function AlerteTauxMinimum({taux,date,titreAmge}){
     border:"1px solid var(--R)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
     fontSize:12.5,color:"var(--R)",lineHeight:1.55}}>
     <IconeOuEmoji e="⚠️" taille={16}/>
-    <span><b>Taux horaire sous le minimum légal.</b> {t.toFixed(2)} € par heure et par enfant,
-    alors que le minimum est de {mini.toFixed(2)} € à cette date{titreAmge?" avec le titre AM-GE (+ 4 %)":""} (convention collective IDCC 3239).
+    <span><b>Taux horaire sous le minimum légal.</b> {nbf(t,2)} € par heure et par enfant,
+    alors que le minimum est de {nbf(mini,2)} € à cette date{titreAmge?" avec le titre AM-GE (+ 4 %)":""} (convention collective IDCC 3239).
     Un avenant est nécessaire pour régulariser.</span>
   </div>;
 }
@@ -492,10 +492,17 @@ const isoJour=(d)=>{
 // et 2 h du matin le 1er du mois — le selecteur des frais kilometriques
 // s'ouvrait alors sur le mois d'avant, sans rien afficher.
 // En francais, la virgule separe les decimales. L'application ecrivait
-// « 4.20 € » partout, avec un point : c'est une notation anglaise. On commence
-// ici, sur les montants nouvellement affiches.
-const nb2=(n)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2});
-const nb3=(n)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:3,maximumFractionDigits:3});
+// « 4.20 € » partout, avec un point : c'est une notation anglaise, et une
+// assistante maternelle qui recopie un montant dans Pajemploi le recopie avec.
+//
+// nbf() remplace toFixed() partout. Deux precautions :
+//  - useGrouping desactive. Le separateur de milliers francais est une espace
+//    fine insecable (U+202F), absente du jeu WinAnsi : elle ferait disparaitre
+//    la ligne entiere des PDF, exactement le bug deja corrige sur les emoji.
+//  - une valeur illisible donne 0 plutot qu'un « NaN » affiche a l'ecran.
+const nbf=(n,d=2)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false});
+const nb2=(n)=>nbf(n,2);
+const nb3=(n)=>nbf(n,3);
 
 const isoMois=(d)=>isoJour(d).slice(0,7);
 
@@ -983,8 +990,8 @@ const QUOTAS = {
 };
 const quotaDe = (u) => (estPro(u) ? QUOTAS.pro : QUOTAS.gratuit);
 const enMo = (o) => (o >= 1024 * 1024 * 1024
-  ? (o / 1024 / 1024 / 1024).toFixed(1) + " Go"
-  : (o / 1024 / 1024).toFixed(1) + " Mo");
+  ? nbf((o / 1024 / 1024 / 1024),1) + " Go"
+  : nbf((o / 1024 / 1024),1) + " Mo");
 
 async function lireQuota() {
   try {
@@ -3256,7 +3263,7 @@ function Calendrier({enfants,role,pEId,user}){
             Suivie sur le temps d'accueil, une formation ne se déduit pas : votre rémunération est maintenue et l'employeur facilitateur est remboursé.
           </div>}
           {evForm.type==="formh"&&<div style={{background:"var(--Pp)",color:"var(--P)",borderRadius:10,padding:"10px 12px",fontSize:12,lineHeight:1.55}}>
-            Hors temps d'accueil, il n'y a pas de salaire mais une allocation de formation de {ALLOC_FORMATION_H.toFixed(2).replace(".",",")} € nets par heure, versée par IPERIA à l'issue du parcours — pas par le parent employeur.
+            Hors temps d'accueil, il n'y a pas de salaire mais une allocation de formation de {nbf(ALLOC_FORMATION_H,2)} € nets par heure, versée par IPERIA à l'issue du parcours — pas par le parent employeur.
           </div>}
         </div>
         <div style={{display:"flex",gap:8,marginTop:18}}>
@@ -3719,7 +3726,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     if(!w){setToast('Autorisez les popups');return;}
     const mois=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
     const hMens=heuresMensualisees(contrat);
-    const salNet=(totalBrut*0.78).toFixed(2);
+    const salNet=nbf((totalBrut*0.78),2);
     const joursTrav=Math.round(h.real/((contrat?.heuresHebdo||40)/5));
     const htmlPaj=[
       '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Récap Pajemploi - '+mois+'</title>',
@@ -3749,9 +3756,9 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<tr><td>Jours d\'activité</td><td>'+joursTrav+' jours</td></tr>',
       '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table></div>',
       '<div class="box"><h2><IconeOuEmoji e="💰"/> Salaire à déclarer</h2>',
-      '<table><tr><td>Salaire net horaire</td><td>'+(totalBrut*0.78/h.real).toFixed(4)+' €/h</td></tr>',
+      '<table><tr><td>Salaire net horaire</td><td>'+nbf((totalBrut*0.78/h.real),4)+' €/h</td></tr>',
       '<tr><td>Salaire net total</td><td>'+salNet+' €</td></tr>',
-      '<tr><td>Indemnité d\'entretien</td><td>'+(h.real/5*contrat.entretien).toFixed(2)+' €</td></tr>',
+      '<tr><td>Indemnité d\'entretien</td><td>'+nbf((h.real/5*contrat.entretien),2)+' €</td></tr>',
       '<tr><td>Indemnité de repas</td><td>0,00 €</td></tr>',
       '<tr class="hl"><td><IconeOuEmoji e="💶"/> TOTAL NET À DÉCLARER</td><td>'+salNet+' €</td></tr></table></div>',
       '<div class="steps"><h3><IconeOuEmoji e="📝"/> Comment déclarer sur Pajemploi :</h3>',
@@ -3760,7 +3767,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<li>Entrez le nombre d\'heures : <strong>'+h.real+'h</strong></li>',
       '<li>Entrez le nombre de jours d\'activité : <strong>'+joursTrav+'</strong></li>',
       '<li>Entrez le salaire net total : <strong>'+salNet+' €</strong></li>',
-      '<li>Entrez l\'indemnité d\'entretien : <strong>'+(h.real/5*contrat.entretien).toFixed(2)+' €</strong></li>',
+      '<li>Entrez l\'indemnité d\'entretien : <strong>'+nbf((h.real/5*contrat.entretien),2)+' €</strong></li>',
       '<li>Validez la déclaration</li></ol></div>',
       '<div class="note"><IconeOuEmoji e="📌"/> Ce récapitulatif est généré par TiMat à partir des pointages réels du mois. Les montants sont indicatifs — vérifiez sur pajemploi.urssaf.fr avant validation.<br/>Généré le '+new Date().toLocaleDateString('fr-FR')+' — TiMat · timat.app</div>',
       '<div style="text-align:center;margin-top:16px"><button class="noprint" onclick="window.print()" style="background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700"><IconeOuEmoji e="🖨️"/> Imprimer / Sauvegarder en PDF</button></div>',
@@ -3781,14 +3788,14 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
     {contrat&&<div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Total brut · {moisCourant}</div>
-        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{totalBrut.toFixed(2)} €</div>
-        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{h.real} h{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {netEstime.toFixed(2)} €</div>
-        {indemAbs>0&&<div style={{fontSize:11,color:"var(--m)",marginTop:2}}>dont absences indemnisées : +{indemAbs.toFixed(2)} € ({absMois.filter(a=>a.indemnise).length} j)</div>}
+        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{nbf(totalBrut,2)} €</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{h.real} h{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {nbf(netEstime,2)} €</div>
+        {indemAbs>0&&<div style={{fontSize:11,color:"var(--m)",marginTop:2}}>dont absences indemnisées : +{nbf(indemAbs,2)} € ({absMois.filter(a=>a.indemnise).length} j)</div>}
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
-        {[["Heures × taux",(h.real*contrat.tauxHoraire).toFixed(2)+" €","var(--B)","var(--Bp)"],
-          ["Entretien",(h.real/5*contrat.entretien).toFixed(2)+" €","var(--S)","var(--Sp)"],
-          ["Net estimé",netEstime.toFixed(2)+" €","var(--T)","var(--Tp)"],
+        {[["Heures × taux",nbf((h.real*contrat.tauxHoraire),2)+" €","var(--B)","var(--Bp)"],
+          ["Entretien",nbf((h.real/5*contrat.entretien),2)+" €","var(--S)","var(--Sp)"],
+          ["Net estimé",nbf(netEstime,2)+" €","var(--T)","var(--Tp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
           <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
@@ -3806,7 +3813,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:11,color:"var(--l)"}}>Export direct vers l'URSSAF</div></div>
           </div>
           <div style={{fontSize:13,color:"var(--b)",marginBottom:12,lineHeight:1.6}}>
-            Heures : <strong>{h.real}h</strong> · Salaire net : <strong>{netEstime.toFixed(2)}€</strong> · Mois : <strong>{moisCourant}</strong>
+            Heures : <strong>{h.real}h</strong> · Salaire net : <strong>{nbf(netEstime,2)}€</strong> · Mois : <strong>{moisCourant}</strong>
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exportPajemploi}>
             <IconeOuEmoji e="🏛️"/> Exporter vers Pajemploi
@@ -3823,7 +3830,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:11,color:"var(--l)"}}>{a.heures}h · {a.indemnise?"Indemnisée":"Non indemnisée"}</div>
             </div>
             <span className="badge"style={{background:a.indemnise?"var(--Gp)":"var(--Rp)",color:a.indemnise?"var(--G)":"var(--R)"}}>
-              {a.indemnise?"+"+((a.heures*(contrat.tauxHoraire*contrat.indemniteAbsence)).toFixed(2))+"€":"0€"}</span>
+              {a.indemnise?"+"+(nbf((a.heures*(contrat.tauxHoraire*contrat.indemniteAbsence)),2))+"€":"0€"}</span>
           </div>)}
           {role==="asmat"&&<button className="btn bG"style={{width:"100%",marginTop:12}}>+ Déclarer une absence</button>}
         </div>
@@ -3972,7 +3979,11 @@ function Contrats({enfants,role,pEId,user}){
     // PDF CONTRAT COMBINE P11 - generer et stocker le PDF dans Documents apres signature asmat
     if(contrat?.id){
       generateAndStoreContratPDF(contrat.id).then(r=>{
-        if(!r.success)console.log("PDF gen warn:",r.error);
+        if(!r.success){console.log("PDF gen warn:",r.error);return;}
+        // Le rafraichissement ci-dessous part avant que le PDF soit ecrit :
+        // sans ce second appel, le bouton « Ouvrir le contrat signe » n'apparait
+        // qu'apres un rechargement de la page.
+        window.dispatchEvent(new CustomEvent("timat:refresh-data"));
       });
     }
     // NOTE: la notification "contrat pret a signer" au parent est desormais
@@ -4074,9 +4085,12 @@ function Contrats({enfants,role,pEId,user}){
                 <div style={{fontSize:11,fontWeight:700,color:signes[enfant?.id]?"var(--G)":"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat · {enfant?.prenom}</div>
                 <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}>{signes[enfant?.id]?<><IconeOuEmoji e="✅"/> Signé</>:<><IconeOuEmoji e="⏳"/> En attente de signature</>}</div>
                 <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{fmt(contrat.debut)} → {fmt(contrat.fin)} · {contrat.heuresHebdo}h/sem</div>
+                {signes[enfant?.id]&&<div style={{marginTop:10}}>
+                  <BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
+                </div>}
               </div>
               <div style={{textAlign:"right",flexShrink:0}}>
-                <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {salaireMensualise(contrat).toFixed(0)} €</div>
+                <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {nbf(salaireMensualise(contrat),0)} €</div>
                 <div style={{fontSize:11,color:"var(--m)",fontWeight:600,marginTop:2}}>brut / mois</div>
               </div>
             </div>
@@ -4089,14 +4103,19 @@ function Contrats({enfants,role,pEId,user}){
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",(contrat.jours||[]).join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],
-            ["Taux horaire",contrat.tauxHoraire.toFixed(2)+" €/h"],
-            ["Indemnité entretien",contrat.entretien.toFixed(2)+" €/jour"],
-            ["Salaire mensuel brut","≈ "+salaireMensualise(contrat).toFixed(0)+" €"],
+            ["Rythme d'accueil",estAnneeComplete(contrat)?"Année complète (52 semaines)":"Année incomplète ("+semainesDuContrat(contrat)+" semaines)"],
+            ["Taux horaire",nbf(contrat.tauxHoraire,2)+" €/h"],
+            ["Indemnité entretien",nbf(contrat.entretien,2)+" €/jour"],
+            ["Salaire mensuel brut","≈ "+nbf(salaireMensualise(contrat),0)+" €"],
           ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)"}}>
             <span style={{fontSize:12,color:"var(--l)",fontWeight:700}}>{l}</span>
             <span style={{fontSize:13,fontWeight:600,color:"var(--b)",textAlign:"right",maxWidth:"60%"}}>{v}</span>
           </div>)}
         </div>
+
+        <RythmeAccueil contrat={contrat} role={role}
+          onSaved={()=>{setToast("Rythme d'accueil enregistré ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}}
+          onErr={(m)=>setToast(m)}/>
 
         {/* Signature électronique */}
         {!signes[enfant?.id]&&<div className="card"style={{border:"1.5px solid var(--P)"}}>
@@ -4129,6 +4148,13 @@ function Contrats({enfants,role,pEId,user}){
           <div style={{fontSize:24,marginBottom:4}}>✅</div>
           <div style={{fontWeight:700,color:"var(--S)"}}>Contrat signé électroniquement</div>
           <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · Conforme eIDAS</div>
+          {/* Signer menait a un accuse de reception, jamais au contrat lui-meme.
+              Le PDF existe pourtant depuis la signature : il manquait le lien. */}
+          <div style={{marginTop:10}}>
+            {contrat?.pdf_storage_path
+              ?<BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
+              :<span style={{fontSize:11.5,color:"var(--l)"}}>Le PDF est en cours de préparation — il apparaîtra ici et dans Documents.</span>}
+          </div>
         </div>}
         {role==="asmat"&&signes[enfant?.id]&&<div className="card" style={{padding:0,marginTop:12,overflow:"hidden"}}>
           <div onClick={()=>setPartageOuvert(p=>({...p,[enfant?.id]:!p[enfant?.id]}))} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 15px",cursor:"pointer",userSelect:"none"}}>
@@ -5358,7 +5384,7 @@ function Recap({enfants,role,pEId}){
             <tr><td>Heures prévues</td><td>Contrat mensuel</td><td><strong>{h.prev}h</strong></td></tr>
             <tr><td>Heures réalisées</td><td>Pointage validé</td><td><strong>{h.real}h</strong></td></tr>
             <tr><td>Solde</td><td>Différence</td><td style={{color:h.real-h.prev<0?"#DC2626":"#16A34A"}}><strong>{h.real-h.prev}h</strong></td></tr>
-            <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{(h.real*(contrat?.tauxHoraire||minimumHoraireAu(new Date()))).toFixed(2)}€</strong></td></tr>
+            <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{nbf((h.real*(contrat?.tauxHoraire||minimumHoraireAu(new Date()))),2)}€</strong></td></tr>
             <tr><td>Repas suivis</td><td>Journaux renseignés</td><td><strong>{rep.length} jours</strong></td></tr>
             <tr><td>Étapes dév.</td><td>Jalons OMS</td><td><strong>{ms.filter(m=>m.ok).length}/{ms.length}</strong></td></tr>
           </tbody>
@@ -5821,7 +5847,7 @@ function Documents({enfants,role,pEId,user}){
         sous:newDoc.sous||CATS[newDoc.cat]?.l,
         nom:newDoc.nom+(newDoc.nom.endsWith(".pdf")?"":".pdf"),
         date:TODAY_STR,annee:new Date().getFullYear().toString(),
-        taille:newFile?(newFile.size>1024*1024?(newFile.size/1024/1024).toFixed(1)+" Mo":(newFile.size/1024).toFixed(0)+" Ko"):"-",
+        taille:newFile?(newFile.size>1024*1024?nbf((newFile.size/1024/1024),1)+" Mo":nbf((newFile.size/1024),0)+" Ko"):"-",
         icone:CATS[newDoc.cat]?.ic||"📄",partage:true,url:null
       }]);
       setToast("Document ajouté ✓"+(newFile?"":" (sans fichier - ajoutez un fichier pour le stockage permanent)"));
@@ -5845,7 +5871,7 @@ function Documents({enfants,role,pEId,user}){
 
       // BUCKETS PRIVES P3: ne pas stocker d'URL en DB (signed URL = expire)
       // L'URL sera regeneree a la demande via getSignedUrl(storagePath)
-      const taille=newFile.size>1024*1024?(newFile.size/1024/1024).toFixed(1)+" Mo":(newFile.size/1024).toFixed(0)+" Ko";
+      const taille=newFile.size>1024*1024?nbf((newFile.size/1024/1024),1)+" Mo":nbf((newFile.size/1024),0)+" Ko";
 
       // Save metadata
       const meta={
@@ -5941,7 +5967,7 @@ function Documents({enfants,role,pEId,user}){
         <input ref={uploadRef}type="file"accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"style={{display:"none"}}
           onChange={e=>{const f=e.target.files?.[0];if(f){setNewFile(f);if(!newDoc.nom.trim())setNewDoc(p=>({...p,nom:f.name.replace(/\.[^.]+$/,'')}));}}}/>
         {newFile
-          ?<div style={{fontSize:12,color:"var(--S)"}}><IconeOuEmoji e="📎"/> {newFile.name} ({(newFile.size/1024).toFixed(0)} Ko) <span style={{color:"var(--l)"}}>— cliquer pour changer</span></div>
+          ?<div style={{fontSize:12,color:"var(--S)"}}><IconeOuEmoji e="📎"/> {newFile.name} ({nbf((newFile.size/1024),0)} Ko) <span style={{color:"var(--l)"}}>— cliquer pour changer</span></div>
           :<div style={{fontSize:12,color:"var(--l)"}}><IconeOuEmoji e="📁"/> Cliquer pour sélectionner un fichier (PDF, image, doc...)</div>}
       </div>
     </div>}
@@ -6329,15 +6355,15 @@ function BulletinSalaire({enfants,role,pEId,user}){
         y+=6;
       };
       section("REMUNERATION");
-      ligne("Salaire de base (heures normales)",heuresNorm+" h",tauxH.toFixed(4)+" euros/h",salBase.toFixed(2)+" euros");
-      if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",(tauxH*1.25).toFixed(4)+" euros/h",salSupp.toFixed(2)+" euros");
-      ligne("Indemnite d entretien",joursTravailles+" jours",(contrat.entretien||3.92).toFixed(2)+" euros/j",entretien.toFixed(2)+" euros");
-      if(repasMois>0)ligne("Indemnite de repas",joursTravailles+" jours",(Number(repasJour)||0).toFixed(2)+" euros/j",repasMois.toFixed(2)+" euros");
-      if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"annee complete":"annee incomplete","- "+retenue.toFixed(2)+" euros");
+      ligne("Salaire de base (heures normales)",heuresNorm+" h",nbf(tauxH,4)+" euros/h",nbf(salBase,2)+" euros");
+      if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",nbf((tauxH*1.25),4)+" euros/h",nbf(salSupp,2)+" euros");
+      ligne("Indemnite d entretien",joursTravailles+" jours",nbf((contrat.entretien||3.92),2)+" euros/j",nbf(entretien,2)+" euros");
+      if(repasMois>0)ligne("Indemnite de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" euros/j",nbf(repasMois,2)+" euros");
+      if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"annee complete":"annee incomplete","- "+nbf(retenue,2)+" euros");
       doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
       doc.text("SALAIRE BRUT MENSUEL",MX+2,y+5);
-      doc.text(brutApresRetenue.toFixed(2)+" euros",PW-MX-2,y+5,{align:"right"});
+      doc.text(nbf(brutApresRetenue,2)+" euros",PW-MX-2,y+5,{align:"right"});
       y+=10;
       // Section : Cotisations
       section("COTISATIONS SOCIALES");
@@ -6345,16 +6371,16 @@ function BulletinSalaire({enfants,role,pEId,user}){
         if(t.sal>0||t.pat>0){
           const cs=cotisation(t,"sal");
           const cp=cotisation(t,"pat");
-          ligne(nom,t.sal>0?"-"+cs.toFixed(2):"",t.pat>0?cp.toFixed(2):"","");
+          ligne(nom,t.sal>0?"-"+nbf(cs,2):"",t.pat>0?nbf(cp,2):"","");
         }
       });
       doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
       doc.text("TOTAL COTISATIONS",MX+2,y+5);
       doc.setTextColor(196,74,106);
-      doc.text("-"+totalCotSal.toFixed(2)+" euros",MX+95,y+5);
+      doc.text("-"+nbf(totalCotSal,2)+" euros",MX+95,y+5);
       doc.setTextColor(...noir);
-      doc.text(totalCotPat.toFixed(2)+" euros",MX+130,y+5);
+      doc.text(nbf(totalCotPat,2)+" euros",MX+130,y+5);
       y+=10;
       doc.setFont("helvetica","italic");doc.setFontSize(7);doc.setTextColor(...gris);
       doc.text("\" - \" = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.",MX+2,y);
@@ -6362,43 +6388,43 @@ function BulletinSalaire({enfants,role,pEId,user}){
       // Section : Recap net
       if(y>240){doc.addPage();y=15;}
       section("RECAPITULATIF NET");
-      ligne("Salaire brut","","",brutApresRetenue.toFixed(2)+" euros");
+      ligne("Salaire brut","","",nbf(brutApresRetenue,2)+" euros");
       doc.setTextColor(196,74,106);
-      ligne("Cotisations salariales","","","- "+totalCotSal.toFixed(2)+" euros");
+      ligne("Cotisations salariales","","","- "+nbf(totalCotSal,2)+" euros");
       doc.setTextColor(...noir);
       doc.setFillColor(...orange);doc.rect(MX,y,PW-2*MX,8,"F");
       doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(11);
       doc.text("NET A PAYER",MX+2,y+5.5);
-      doc.text(netPaye.toFixed(2)+" euros",PW-MX-2,y+5.5,{align:"right"});
+      doc.text(nbf(netPaye,2)+" euros",PW-MX-2,y+5.5,{align:"right"});
       y+=10;
       doc.setTextColor(...noir);doc.setFontSize(8);
       doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
       doc.text("Net imposable",MX+2,y+4);
-      doc.text(netImposable.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text(nbf(netImposable,2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");doc.setFontSize(8);
-      ligne("Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")","","","- "+abattementMois.toFixed(2)+" euros");
+      ligne("Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")","","","- "+nbf(abattementMois,2)+" euros");
       doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
       doc.text("Net imposable apres abattement",MX+2,y+4);
-      doc.text(netImpApresAbattement.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text(nbf(netImpApresAbattement,2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setFillColor(232,240,247);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(46,72,89);
       doc.text("Montant net social",MX+2,y+4);
-      doc.text(netSocial.toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text(nbf(netSocial,2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setTextColor(...gris);doc.setFont("helvetica","normal");doc.setFontSize(7);
       doc.text("Reference RSA / prime d activite (hors indemnites). Conges payes acquis ce mois : "+cpAcquis+" jours ouvrables.",MX+2,y+3);
       y+=6;doc.setFontSize(8);
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");
-      ligne("Indemnite entretien (non imposable)","","",entretien.toFixed(2)+" euros");
-      if(repasMois>0)ligne("Indemnite repas (non imposable)","","",repasMois.toFixed(2)+" euros");
+      ligne("Indemnite entretien (non imposable)","","",nbf(entretien,2)+" euros");
+      if(repasMois>0)ligne("Indemnite repas (non imposable)","","",nbf(repasMois,2)+" euros");
       doc.setFillColor(245,240,255);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");
       doc.text("Cout total employeur",MX+2,y+4);
-      doc.text((coutEmployeur+entretien+repasMois).toFixed(2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text(nbf((coutEmployeur+entretien+repasMois),2)+" euros",PW-MX-2,y+4,{align:"right"});
       y+=12;
       // Signature
       if(y>250){doc.addPage();y=15;}
@@ -6529,10 +6555,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
         côté du bulletin, jamais dedans. */}
     {allocFormation>0&&<div style={{background:"var(--Pp)",border:"1px solid var(--P)",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
       <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:4,display:"flex",alignItems:"center",gap:7}}>
-        <IconeOuEmoji e="📔"/> Allocation de formation — {allocFormation.toFixed(2)} €
+        <IconeOuEmoji e="📔"/> Allocation de formation — {nbf(allocFormation,2)} €
       </div>
       <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55}}>
-        {heuresFormationHors} h de formation hors temps d'accueil × {ALLOC_FORMATION_H.toFixed(2).replace(".",",")} € nets.
+        {heuresFormationHors} h de formation hors temps d'accueil × {nbf(ALLOC_FORMATION_H,2)} € nets.
         Versée par IPERIA à l'issue de votre parcours — elle ne figure pas sur le bulletin et n'est pas payée par le parent employeur.
         {heuresFormationHors>ALLOC_FORMATION_PLAFOND_H&&" Plafonnée à "+ALLOC_FORMATION_PLAFOND_H+" h par an."}
       </div>
@@ -6558,13 +6584,13 @@ function BulletinSalaire({enfants,role,pEId,user}){
     <div className="card"style={{padding:0,marginBottom:14,overflow:"hidden"}}>
       <div style={{background:"linear-gradient(135deg,var(--Sp),var(--Bp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--B)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Net à payer · {moisSel}</div>
-        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{netPaye.toFixed(2)} €</div>
+        <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{nbf(netPaye,2)} €</div>
         <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{joursTravailles} jour{joursTravailles>1?"s":""} d'accueil · {Math.round(h.real)} h ce mois{useRealHours?" (pointages réels)":""}</div>
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
-        {[["Salaire brut",brutApresRetenue.toFixed(2)+" €","var(--B)","var(--Bp)"],
-          ["Indemnités",(entretien+repasMois).toFixed(2)+" €","var(--T)","var(--Tp)"],
-          ["Coût employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+" €","var(--m)","var(--c)"],
+        {[["Salaire brut",nbf(brutApresRetenue,2)+" €","var(--B)","var(--Bp)"],
+          ["Indemnités",nbf((entretien+repasMois),2)+" €","var(--T)","var(--Tp)"],
+          ["Coût employeur",nbf((coutEmployeur+entretien+repasMois),2)+" €","var(--m)","var(--c)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
           <div className="pf"style={{fontSize:15,fontWeight:800,color:c,lineHeight:1.15,overflow:"hidden",textOverflow:"ellipsis"}}>{v}</div>
           <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontWeight:600}}>{l}</div>
@@ -6604,18 +6630,18 @@ function BulletinSalaire({enfants,role,pEId,user}){
             :" Les congés payés sont versés séparément."}
         </div>
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
-        {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",salBase.toFixed(2)+"€"],
-          ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+(tauxH*1.25).toFixed(2)+"€",salSupp.toFixed(2)+"€"]]:[]),
-          ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.92)+"€",entretien.toFixed(2)+"€"],
-          ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+(Number(repasJour)||0).toFixed(2)+"€",repasMois.toFixed(2)+"€"]]:[]),
-          ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+retenue.toFixed(2)+"€"]]:[]),
+        {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",nbf(salBase,2)+"€"],
+          ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+nbf((tauxH*1.25),2)+"€",nbf(salSupp,2)+"€"]]:[]),
+          ["Indemnité d'entretien",Math.round(h.real/8)+" j × "+(contrat.entretien||3.92)+"€",nbf(entretien,2)+"€"],
+          ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+nbf((Number(repasJour)||0),2)+"€",nbf(repasMois,2)+"€"]]:[]),
+          ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+nbf(retenue,2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
           <span style={{color:"var(--b)",flex:2}}>{l}</span>
           <span style={{color:"var(--l)",flex:2,textAlign:"center"}}>{d}</span>
           <span style={{fontWeight:600,flex:1,textAlign:"right"}}>{v}</span>
         </div>)}
         <div style={{display:"flex",justifyContent:"space-between",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid var(--b)",fontSize:13}}>
-          <span>SALAIRE BRUT</span><span style={{color:"var(--b)"}}>{brutApresRetenue.toFixed(2)} €</span>
+          <span>SALAIRE BRUT</span><span style={{color:"var(--b)"}}>{nbf(brutApresRetenue,2)} €</span>
         </div>
       </div>
 
@@ -6626,33 +6652,33 @@ function BulletinSalaire({enfants,role,pEId,user}){
           {["Libellé","Salarié","Employeur"].map(h2=><div key={h2}style={{fontWeight:700,color:"var(--l)",padding:"3px 0",borderBottom:"1px solid var(--br)"}}>{h2}</div>)}
           {Object.entries(TAUX_COTISATIONS).flatMap(([nom,t])=>[
             <div key={nom+"l"}style={{fontSize:11,color:"var(--m)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{nom}</div>,
-            <div key={nom+"s"}style={{fontSize:11,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?cotisation(t,"sal").toFixed(2)+"€":"-"}</div>,
-            <div key={nom+"p"}style={{fontSize:11,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?cotisation(t,"pat").toFixed(2)+"€":"-"}</div>,
+            <div key={nom+"s"}style={{fontSize:11,textAlign:"right",color:"var(--R)",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.sal>0?nbf(cotisation(t,"sal"),2)+"€":"-"}</div>,
+            <div key={nom+"p"}style={{fontSize:11,textAlign:"right",padding:"2px 0",borderBottom:"1px dotted var(--br)"}}>{t.pat>0?nbf(cotisation(t,"pat"),2)+"€":"-"}</div>,
           ])}
           <div style={{fontWeight:700,fontSize:11,padding:"4px 0",borderTop:"1px solid var(--b)"}}>TOTAL</div>
-          <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotSal.toFixed(2)}€</div>
-          <div style={{fontWeight:700,fontSize:11,textAlign:"right",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{totalCotPat.toFixed(2)}€</div>
+          <div style={{fontWeight:700,fontSize:11,textAlign:"right",color:"var(--R)",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{nbf(totalCotSal,2)}€</div>
+          <div style={{fontWeight:700,fontSize:11,textAlign:"right",padding:"4px 0",borderTop:"1px solid var(--b)"}}>{nbf(totalCotPat,2)}€</div>
         </div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:4,fontStyle:"italic"}}>« - » = pas de cotisation sur cette part. CSG/CRDS calculées sur 98,25 % du brut.</div>
       </div>
 
       {/* Net */}
       <div style={{background:"var(--c)",borderRadius:10,padding:14,marginBottom:16}}>
-        {[["Salaire brut",brutApresRetenue.toFixed(2)+"€","var(--b)"],
-          ["Cotisations salariales","-"+totalCotSal.toFixed(2)+"€","var(--R)"],
+        {[["Salaire brut",nbf(brutApresRetenue,2)+"€","var(--b)"],
+          ["Cotisations salariales","-"+nbf(totalCotSal,2)+"€","var(--R)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
           borderBottom:"1px solid var(--br)",fontSize:12}}>
           <span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:700,color:c}}>{v}</span>
         </div>)}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"var(--Sp)",borderRadius:10,padding:"12px 14px",margin:"10px 0"}}>
           <span style={{fontSize:13,fontWeight:800,color:"var(--S)",textTransform:"uppercase",letterSpacing:".3px"}}>Net à payer</span>
-          <span className="pf"style={{fontSize:20,fontWeight:800,color:"var(--S)"}}>{netPaye.toFixed(2)} €</span>
+          <span className="pf"style={{fontSize:20,fontWeight:800,color:"var(--S)"}}>{nbf(netPaye,2)} €</span>
         </div>
-        {[["Net imposable",netImposable.toFixed(2)+"€","var(--B)"],
-          ["Abattement régime spécifique ("+abLabel+")","- "+abattementMois.toFixed(2)+"€","var(--m)"],
-          ["Net imposable après abattement",netImpApresAbattement.toFixed(2)+"€","var(--B)"],
-          ["Montant net social",netSocial.toFixed(2)+"€","var(--B)"],
-          ["Coût total pour l'employeur",(coutEmployeur+entretien+repasMois).toFixed(2)+"€","var(--m)"],
+        {[["Net imposable",nbf(netImposable,2)+"€","var(--B)"],
+          ["Abattement régime spécifique ("+abLabel+")","- "+nbf(abattementMois,2)+"€","var(--m)"],
+          ["Net imposable après abattement",nbf(netImpApresAbattement,2)+"€","var(--B)"],
+          ["Montant net social",nbf(netSocial,2)+"€","var(--B)"],
+          ["Coût total pour l'employeur",nbf((coutEmployeur+entretien+repasMois),2)+"€","var(--m)"],
         ].map(([l,v,c])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",
           borderBottom:"1px solid var(--br)",fontSize:12}}>
           <span style={{color:"var(--m)"}}>{l}</span><span style={{fontWeight:700,color:c}}>{v}</span>
@@ -6660,7 +6686,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       </div>
 
       <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire ({SMIC_H.toFixed(2).replace(".",",")} €) par journée d'accueil ≥ 8 h, soit {(baseMult*SMIC_H).toFixed(2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire ({nbf(SMIC_H,2)} €) par journée d'accueil ≥ 8 h, soit {nbf((baseMult*SMIC_H),2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -6670,10 +6696,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
         const cotisDetails=Object.entries(TAUX_COTISATIONS).map(function(entry){
           var nom=entry[0],t=entry[1];
           return "<tr><td>"+H(nom)+"</td>"
-            +"<td class=\"right\">"+(t.sal>0?cotisation(t,"sal").toFixed(2)+"€":"-")+"</td>"
-            +"<td class=\"right\">"+(t.pat>0?cotisation(t,"pat").toFixed(2)+"€":"-")+"</td></tr>";
+            +"<td class=\"right\">"+(t.sal>0?nbf(cotisation(t,"sal"),2)+"€":"-")+"</td>"
+            +"<td class=\"right\">"+(t.pat>0?nbf(cotisation(t,"pat"),2)+"€":"-")+"</td></tr>";
         }).join("");
-        var hSuppRow=hSupp>0?"<tr><td>Heures compl. (maj. 25%)</td><td class=\"right\">"+hSupp+" h</td><td class=\"right\">"+(tauxH*1.25).toFixed(4)+" €/h</td><td class=\"right\">"+salSupp.toFixed(2)+" €</td></tr>":"";
+        var hSuppRow=hSupp>0?"<tr><td>Heures compl. (maj. 25%)</td><td class=\"right\">"+hSupp+" h</td><td class=\"right\">"+nbf((tauxH*1.25),4)+" €/h</td><td class=\"right\">"+nbf(salSupp,2)+" €</td></tr>":"";
         var htmlParts=[
           "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"UTF-8\"/>",
           "<title>Bulletin de salaire "+moisSel+"</title>",
@@ -6712,32 +6738,32 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "</div>",
           "<div class=\"st\">REMUNERATION</div>",
           "<table><tr><th>Libellé</th><th>Heures / Jours</th><th>Taux</th><th class=\"right\">Montant brut</th></tr>",
-          "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+tauxH.toFixed(4)+" euros/h</td><td class=\"right\">"+salBase.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+nbf(tauxH,4)+" euros/h</td><td class=\"right\">"+nbf(salBase,2)+" euros</td></tr>",
           hSuppRow,
-          "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+(contrat.entretien||3.92).toFixed(2)+" euros/j</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
-          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"annee incomplete")+"</td><td class=\"right\">- "+retenue.toFixed(2)+" euros</td></tr>":"")+
-          (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+(Number(repasJour)||0).toFixed(2)+" euros/j</td><td class=\"right\">"+repasMois.toFixed(2)+" euros</td></tr>":""),
-          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+brutApresRetenue.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Indemnite d entretien</td><td class=\"right\">"+Math.round(h.real/8)+" jours</td><td class=\"right\">"+nbf((contrat.entretien||3.92),2)+" euros/j</td><td class=\"right\">"+nbf(entretien,2)+" euros</td></tr>",
+          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"annee incomplete")+"</td><td class=\"right\">- "+nbf(retenue,2)+" euros</td></tr>":"")+
+          (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((Number(repasJour)||0),2)+" euros/j</td><td class=\"right\">"+nbf(repasMois,2)+" euros</td></tr>":""),
+          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" euros</td></tr>",
           "</table>",
           "<div class=\"st\">COTISATIONS SOCIALES</div>",
           "<table><tr><th>Cotisation</th><th class=\"right\">Part salarie</th><th class=\"right\">Part employeur</th></tr>",
           cotisDetails,
-          "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+totalCotSal.toFixed(2)+" euros</td><td class=\"right\">"+totalCotPat.toFixed(2)+" euros</td></tr>",
+          "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+nbf(totalCotSal,2)+" euros</td><td class=\"right\">"+nbf(totalCotPat,2)+" euros</td></tr>",
           "</table>",
           "<div style=\"font-size:11px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.</div>",
           "<div class=\"st\">RECAPITULATIF NET</div>",
           "<table>",
-          "<tr><td>Salaire brut</td><td class=\"right\">"+brutApresRetenue.toFixed(2)+" euros</td></tr>",
-          "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+totalCotSal.toFixed(2)+" euros</td></tr>",
-          "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+netPaye.toFixed(2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+netImposable.toFixed(2)+" euros</td></tr>",
-          "<tr><td>Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")</td><td class=\"right\">- "+abattementMois.toFixed(2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+netImpApresAbattement.toFixed(2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+netSocial.toFixed(2)+" euros</td></tr>",
+          "<tr><td>Salaire brut</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" euros</td></tr>",
+          "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+nbf(totalCotSal,2)+" euros</td></tr>",
+          "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+nbf(netPaye,2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+nbf(netImposable,2)+" euros</td></tr>",
+          "<tr><td>Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")</td><td class=\"right\">- "+nbf(abattementMois,2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+nbf(netImpApresAbattement,2)+" euros</td></tr>",
+          "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+nbf(netSocial,2)+" euros</td></tr>",
           "<tr><td>Conges payes acquis ce mois</td><td class=\"right\">"+cpAcquis+" jours ouvrables</td></tr>",
-          "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+entretien.toFixed(2)+" euros</td></tr>",
-          (repasMois>0?"<tr><td>Indemnite repas (non imposable)</td><td class=\"right\">"+repasMois.toFixed(2)+" euros</td></tr>":""),
-          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+(coutEmployeur+entretien+repasMois).toFixed(2)+" euros</td></tr>",
+          "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+nbf(entretien,2)+" euros</td></tr>",
+          (repasMois>0?"<tr><td>Indemnite repas (non imposable)</td><td class=\"right\">"+nbf(repasMois,2)+" euros</td></tr>":""),
+          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+nbf((coutEmployeur+entretien+repasMois),2)+" euros</td></tr>",
           "</table>",
           "<div class=\"sz\">",
           "<div><div style=\"font-size:11px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
@@ -9074,8 +9100,8 @@ const jsPDF=await chargerJsPDF();
     doc.text("Heures hebdomadaires : "+(ct.heures_hebdo||0)+" h",20,y);y+=5;
     doc.text("Jours d'accueil : "+(Array.isArray(ct.jours)?ct.jours.join(", "):(ct.jours||"-")),20,y);y+=5;
     doc.text("Horaires : "+(ct.horaires||"-"),20,y);y+=5;
-    doc.text("Taux horaire net : "+(ct.taux_horaire||0).toFixed(2)+" euros/h",20,y);y+=5;
-    doc.text("Indemnite d'entretien : "+(ct.entretien||0).toFixed(2)+" euros/jour",20,y);y+=5;
+    doc.text("Taux horaire net : "+nbf((ct.taux_horaire||0),2)+" euros/h",20,y);y+=5;
+    doc.text("Indemnite d'entretien : "+nbf((ct.entretien||0),2)+" euros/jour",20,y);y+=5;
     y+=8;
 
     doc.setFontSize(9);doc.setFont("helvetica","italic");
@@ -9406,7 +9432,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
             <span style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>
               Je suis titulaire du titre professionnel <b>Assistant maternel – Garde d'enfants</b>
               <span style={{display:"block",fontSize:11.5,color:"var(--m)",marginTop:2}}>
-                Votre salaire horaire minimum est alors majoré de 4 % : {minimumHoraireAu(new Date(),true).toFixed(2)} € au lieu de {minimumHoraireAu(new Date(),false).toFixed(2)} €.
+                Votre salaire horaire minimum est alors majoré de 4 % : {nbf(minimumHoraireAu(new Date(),true),2)} € au lieu de {nbf(minimumHoraireAu(new Date(),false),2)} €.
               </span>
             </span>
           </label>
@@ -10620,9 +10646,9 @@ function KitCMG({enfants,role,pEId,user}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
-          <InfoRow label="Taux horaire net" value={(contrat.tauxHoraire||minimumHoraireAu(new Date())).toFixed(2)+"€/h"} copyKey="taux"/>
+          <InfoRow label="Taux horaire net" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
-          <InfoRow label="Indemnité d'entretien/jour" value={(contrat.entretien||3.92).toFixed(2)+"€"} copyKey="entretien"/>
+          <InfoRow label="Indemnité d'entretien/jour" value={nbf((contrat.entretien||3.92),2)+"€"} copyKey="entretien"/>
           <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
             <IconeOuEmoji e="💡"/> Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
@@ -10658,6 +10684,76 @@ function KitCMG({enfants,role,pEId,user}){
 
 //
 // CONTRAT PDF - bouton d'ouverture du PDF contrat depuis le storage (URL signee 1h). Reutilisable parent + assmat.
+//
+// RYTHME D'ACCUEIL - annee complete (52 semaines) ou incomplete (semaines
+// programmees). Il decide de la mensualisation, donc du salaire : sur un
+// contrat scolaire de 36 semaines, l'ecart depasse 40 %.
+// Le choix n'existait que dans l'assistant de creation du tout premier enfant.
+// Un contrat deja enregistre restait donc en annee complete sans aucun moyen de
+// le corriger — et ce sont justement ceux-la qui en avaient besoin.
+function RythmeAccueil({contrat,role,onSaved,onErr}){
+  const complete=estAnneeComplete(contrat);
+  const [semaines,setSemaines]=useState(contrat?.semainesAccueil??contrat?.semaines_accueil??46);
+  const [busy,setBusy]=useState(false);
+  const [ouvert,setOuvert]=useState(false);
+  const signe=!!(contrat?.signe_asmat||contrat?.signe_parent);
+  const lecture=role!=="asmat";
+
+  const enregistrer=async(estComplete,nbSemaines)=>{
+    if(!contrat?.id)return;
+    setBusy(true);
+    const nb=estComplete?null:Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(nbSemaines)||SEMAINES_MAX_ANNEE_INCOMPLETE));
+    const{error}=await supabase.from("contrats").update({
+      annee_complete:estComplete,
+      semaines_accueil:nb,
+    }).eq("id",contrat.id);
+    setBusy(false);
+    if(error){onErr?.("Erreur : "+error.message);return;}
+    onSaved?.();
+  };
+
+  const apercu={...contrat,anneeComplete:complete,semainesAccueil:complete?undefined:semaines};
+  return <div className="card" style={{marginBottom:12}}>
+    <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="🗓️"/> Rythme d'accueil</div>
+    <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55,marginBottom:12}}>
+      C'est lui qui fixe le salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
+      {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines).
+    </div>
+    {lecture
+      ?<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{complete?"Année complète — 52 semaines, congés inclus dans le salaire":"Année incomplète — "+semainesDuContrat(contrat)+" semaines, congés payés versés à part"}</div>
+      :<>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {[[true,"Année complète","52 semaines, congés inclus dans le salaire"],
+          [false,"Année incomplète","semaines programmées, congés payés à part"]].map(([v,l,d])=>{
+          const on=complete===v;
+          return <button key={String(v)} type="button" disabled={busy}
+            onClick={()=>{ if(on)return; if(v)enregistrer(true,null); else setOuvert(true); }}
+            style={{flex:"1 1 150px",textAlign:"left",padding:"9px 11px",borderRadius:10,cursor:busy?"wait":"pointer",fontFamily:"inherit",
+              border:"1.5px solid "+(on?"var(--accent)":"var(--br)"),background:on?"var(--accent-pale)":"var(--w)"}}>
+            <span style={{display:"block",fontSize:12.5,fontWeight:700,color:on?"var(--accent)":"var(--b)"}}>{l}</span>
+            <span style={{display:"block",fontSize:11,color:"var(--m)",marginTop:2,lineHeight:1.4}}>{d}</span>
+          </button>;
+        })}
+      </div>
+      {(!complete||ouvert)&&<div style={{marginTop:12}}>
+        <label className="lbl">Semaines d'accueil dans l'année</label>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          <input type="number" min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} step="1" className="inp" style={{maxWidth:120}}
+            value={semaines} onChange={e=>setSemaines(Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,parseFloat(e.target.value)||SEMAINES_MAX_ANNEE_INCOMPLETE)))}/>
+          <button className="btn bS s" disabled={busy} onClick={()=>{setOuvert(false);enregistrer(false,semaines);}}>{busy?"…":"Enregistrer"}</button>
+          <span style={{fontSize:12,color:"var(--m)"}}>→ {nb2(salaireMensualise({...apercu,anneeComplete:false,semainesAccueil:semaines}))} €/mois</span>
+        </div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
+          Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant vous sera confié.
+        </div>
+      </div>}
+      {signe&&<div style={{fontSize:11.5,color:"var(--R)",marginTop:10,lineHeight:1.5}}>
+        <IconeOuEmoji e="⚠️" taille={13}/> Ce contrat est déjà signé : modifier le rythme change le salaire, cela demande un <b>avenant</b> signé des deux côtés.
+      </div>}
+    </>}
+  </div>;
+}
+
 function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon contrat (PDF)"}){
   const [busy,setBusy]=useState(false);
   const path=contrat?.pdf_storage_path;
@@ -10841,7 +10937,7 @@ function SignatureContratParent({enfants,pEId,user}){
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat d'accueil · {enfant?.prenom}</div>
         <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}><IconeOuEmoji e="✍️" taille={21}/> À signer</div>
-        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>Début {fmt(contrat.debut||"")} · {(contrat.tauxHoraire||0).toFixed(2)} €/h · {contrat.signe_asmat?"l'assistante maternelle a signé ✓":"en attente de la signature de l'assmat"}</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>Début {fmt(contrat.debut||"")} · {nbf((contrat.tauxHoraire||0),2)} €/h · {contrat.signe_asmat?"l'assistante maternelle a signé ✓":"en attente de la signature de l'assmat"}</div>
       </div>
     </div>
 
@@ -10853,8 +10949,8 @@ function SignatureContratParent({enfants,pEId,user}){
         ["Début du contrat",fmt(contrat.debut||"")],
         ["Jours d'accueil",(contrat.jours||[]).join(", ")],
         ["Horaires",contrat.horaires||"-"],
-        ["Taux horaire net",(contrat.tauxHoraire||0).toFixed(2)+"€/h"],
-        ["Indemnité entretien",(contrat.entretien||0).toFixed(2)+"€/jour"],
+        ["Taux horaire net",nbf((contrat.tauxHoraire||0),2)+"€/h"],
+        ["Indemnité entretien",nbf((contrat.entretien||0),2)+"€/jour"],
         ["Statut signature asmat",contrat.signe_asmat?"✅ Signé le "+(contrat.date_signature_asmat?fmt(contrat.date_signature_asmat.slice(0,10)):"-"):"⏳ En attente"],
       ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
         <span style={{color:"var(--l)"}}>{l}</span>
@@ -11666,8 +11762,8 @@ function IndemnitesKilometriques({enfants,role,user}){
   const moisLabel=new Date(mois+"-01").toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
 
   const imprimer=()=>{
-    const lignes=trajets.map(t=>"<tr><td>"+new Date(t.date).toLocaleDateString("fr-FR")+"</td><td>"+enfNom(t.enfant_id)+"</td><td>"+(t.motif||"")+"</td><td style='text-align:right'>"+(+t.km).toFixed(1)+"</td><td style='text-align:right'>"+(+t.taux).toFixed(3)+"</td><td style='text-align:right'>"+((+t.km)*(+t.taux)).toFixed(2)+" &euro;</td></tr>").join("");
-    const html="<html><head><meta charset='utf-8'><title>Feuille de route "+moisLabel+"</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#2E4A5A}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px}th{background:#f0ece4;text-align:left}tfoot td{font-weight:bold}</style></head><body><h1>Feuille de route kilom&eacute;trique &mdash; "+moisLabel+"</h1><p>Assistante maternelle : "+(user?.prenom||"")+" "+(user?.nom||"")+"</p><table><thead><tr><th>Date</th><th>Enfant</th><th>Motif</th><th>Km</th><th>Taux &euro;/km</th><th>Montant</th></tr></thead><tbody>"+lignes+"</tbody><tfoot><tr><td colspan='3'>Total</td><td style='text-align:right'>"+totalKm.toFixed(1)+" km</td><td></td><td style='text-align:right'>"+totalEur.toFixed(2)+" &euro;</td></tr></tfoot></table><p style='margin-top:16px;font-size:11px;color:#777'>Indemnit&eacute;s kilom&eacute;triques exon&eacute;r&eacute;es dans la limite du bar&egrave;me fiscal. &Agrave; reporter sur une ligne distincte de la d&eacute;claration Pajemploi. Bar&egrave;me 2026 (gel&eacute;) voiture, &le;5000 km/an.</p></body></html>";
+    const lignes=trajets.map(t=>"<tr><td>"+new Date(t.date).toLocaleDateString("fr-FR")+"</td><td>"+enfNom(t.enfant_id)+"</td><td>"+(t.motif||"")+"</td><td style='text-align:right'>"+nbf((+t.km),1)+"</td><td style='text-align:right'>"+nbf((+t.taux),3)+"</td><td style='text-align:right'>"+nbf(((+t.km)*(+t.taux)),2)+" &euro;</td></tr>").join("");
+    const html="<html><head><meta charset='utf-8'><title>Feuille de route "+moisLabel+"</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#2E4A5A}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px}th{background:#f0ece4;text-align:left}tfoot td{font-weight:bold}</style></head><body><h1>Feuille de route kilom&eacute;trique &mdash; "+moisLabel+"</h1><p>Assistante maternelle : "+(user?.prenom||"")+" "+(user?.nom||"")+"</p><table><thead><tr><th>Date</th><th>Enfant</th><th>Motif</th><th>Km</th><th>Taux &euro;/km</th><th>Montant</th></tr></thead><tbody>"+lignes+"</tbody><tfoot><tr><td colspan='3'>Total</td><td style='text-align:right'>"+nbf(totalKm,1)+" km</td><td></td><td style='text-align:right'>"+nbf(totalEur,2)+" &euro;</td></tr></tfoot></table><p style='margin-top:16px;font-size:11px;color:#777'>Indemnit&eacute;s kilom&eacute;triques exon&eacute;r&eacute;es dans la limite du bar&egrave;me fiscal. &Agrave; reporter sur une ligne distincte de la d&eacute;claration Pajemploi. Bar&egrave;me 2026 (gel&eacute;) voiture, &le;5000 km/an.</p></body></html>";
     const w=window.open("","_blank"); if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),300);}
   };
 
@@ -11684,11 +11780,11 @@ function IndemnitesKilometriques({enfants,role,user}){
 
     <div className="g2" style={{marginBottom:14}}>
       <div className="card" style={{textAlign:"center"}}>
-        <div className="pf" style={{fontSize:24,fontWeight:600,color:"var(--T)"}}>{totalKm.toFixed(1)} km</div>
+        <div className="pf" style={{fontSize:24,fontWeight:600,color:"var(--T)"}}>{nbf(totalKm,1)} km</div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Total du mois</div>
       </div>
       <div className="card" style={{textAlign:"center"}}>
-        <div className="pf" style={{fontSize:24,fontWeight:600,color:"var(--G)"}}>{totalEur.toFixed(2)} €</div>
+        <div className="pf" style={{fontSize:24,fontWeight:600,color:"var(--G)"}}>{nbf(totalEur,2)} €</div>
         <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Indemnité totale</div>
       </div>
     </div>
@@ -11700,7 +11796,7 @@ function IndemnitesKilometriques({enfants,role,user}){
         <select value={cv} onChange={e=>setCv(+e.target.value)} style={{...inp,width:"auto"}}>
           {[3,4,5,6,7].map(c=><option key={c}value={c}>{c===7?"7 CV et +":c+" CV"}</option>)}
         </select>
-        <span style={{fontSize:13,color:"var(--G)",fontWeight:700}}>→ {BAREME_KM_2026[cv].toFixed(3)} €/km</span>
+        <span style={{fontSize:13,color:"var(--G)",fontWeight:700}}>→ {nbf(BAREME_KM_2026[cv],3)} €/km</span>
       </div>
       <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.5}}>Barème kilométrique 2026 (gelé) — voiture, tranche jusqu'à 5 000 km/an. Le taux pré-remplit chaque trajet ; tu peux l'ajuster, sans descendre sous {nb2(PLANCHER_KM_CONV[cv])} €/km (barème de l'administration, minimum imposé par la convention).</div>
     </div>
@@ -11735,8 +11831,8 @@ function IndemnitesKilometriques({enfants,role,user}){
           <span style={{color:"var(--m)",minWidth:54,fontFamily:"'DM Mono',monospace",fontSize:12}}>{new Date(t.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})}</span>
           <span style={{fontWeight:600,color:"var(--b)",minWidth:54}}>{enfNom(t.enfant_id)}</span>
           <span style={{color:"var(--m)",flex:1,minWidth:90}}>{t.motif||"—"}</span>
-          <span style={{color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{(+t.km).toFixed(1)} km</span>
-          <span style={{fontWeight:700,color:"var(--G)",minWidth:60,textAlign:"right"}}>{((+t.km)*(+t.taux)).toFixed(2)} €</span>
+          <span style={{color:"var(--m)",fontFamily:"'DM Mono',monospace"}}>{nbf((+t.km),1)} km</span>
+          <span style={{fontWeight:700,color:"var(--G)",minWidth:60,textAlign:"right"}}>{nbf(((+t.km)*(+t.taux)),2)} €</span>
           <button onClick={()=>supprimer(t.id)} style={{background:"none",border:"none",cursor:"pointer",opacity:.5}}>🗑️</button>
         </div>)}
       </div>}
@@ -11746,7 +11842,7 @@ function IndemnitesKilometriques({enfants,role,user}){
       <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:10}}>Répartition par famille</div>
       {Object.entries(parEnfant).map(([k,v])=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
         <span style={{color:"var(--b)",fontWeight:600}}>{enfNom(k==="_"?null:k)}</span>
-        <span style={{color:"var(--G)",fontWeight:700}}>{v.toFixed(2)} €</span>
+        <span style={{color:"var(--G)",fontWeight:700}}>{nbf(v,2)} €</span>
       </div>)}
     </div>}
 
@@ -11830,7 +11926,7 @@ function SimulateurCout({enfants,pEId}){
         </div>)}
       </div>
       <div style={{padding:"0 14px 12px",fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>
-        Le coût brut inclut {(TAUX_PATRONAL_TOTAL*100).toFixed(2).replace(".",",")} % de cotisations patronales.
+        Le coût brut inclut {nbf((TAUX_PATRONAL_TOTAL*100),2)} % de cotisations patronales.
         Si vous percevez le CMG, la CAF les règle directement à l'Urssaf dans la limite du plafond
         journalier : elles ne sont pas prélevées sur votre compte.
       </div>
@@ -11840,7 +11936,7 @@ function SimulateurCout({enfants,pEId}){
         <div className="card">
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="⚙️"/> Les paramètres de garde</div>
           {[
-            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+(taux/0.7822).toFixed(2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
+            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+nbf((taux/0.7822),2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
             {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
             {l:"Semaines d'accueil par an",v:semaines,set:setSemaines,min:30,max:52,step:1},
             {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Indemnité exonérée de cotisations : ni brut ni net, c'est un montant forfaitaire."},
@@ -11902,10 +11998,10 @@ function SimulateurCout({enfants,pEId}){
           <IconeOuEmoji e="ℹ️"/> CMG plafonné à {fmt2(CMG_MAX)}/mois (montant maximum assmat 2026).
         </div>}
         {cmgCapped&&<div style={{fontSize:11,color:"var(--m)",background:"var(--c)",border:"1px solid var(--br)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
-          <IconeOuEmoji e="⚠️"/> Votre taux horaire dépasse le plafond CMG de {PLAFOND_H.toFixed(2)} €/h : le surcoût au-delà reste intégralement à votre charge.
+          <IconeOuEmoji e="⚠️"/> Votre taux horaire dépasse le plafond CMG de {nbf(PLAFOND_H,2)} €/h : le surcoût au-delà reste intégralement à votre charge.
         </div>}
         <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,padding:"6px 0"}}>
-          Calcul : CMG = (min(taux ; {PLAFOND_H.toFixed(2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {(TE*100).toFixed(4)} % ÷ {CHR_AM.toFixed(2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
+          Calcul : CMG = (min(taux ; {nbf(PLAFOND_H,2)} €) × {Math.round(heuresMois)} h) × (1 − (revenus mensuels × {nbf((TE*100),4)} % ÷ {nbf(CHR_AM,2)} €)). Taux d'effort pour {enfEff} enfant{enfEff>1?"s":""}{aeeh>0?" (AEEH inclus)":""}.
         </div>
         <div style={{fontSize:13,color:"#7a3a00",lineHeight:1.65,padding:"16px 18px",marginTop:14,background:"#FFE7C2",border:"2.5px solid #E8943A",borderRadius:14,boxShadow:"0 4px 16px rgba(232,148,58,.28)"}}>
           <div style={{fontWeight:800,marginBottom:8,fontSize:15.5,color:"#B45309",display:"flex",alignItems:"center",gap:8}}><IconeOuEmoji e="⚠️"/> Ne vous fiez pas à ces chiffres</div>
@@ -11969,7 +12065,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   };
   const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
   const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
-  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${total.toFixed(2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${iccp.toFixed(2)} € + indemnité de préavis ${indemPreavis.toFixed(2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature de la salariée</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} € + indemnité de préavis ${nbf(indemPreavis,2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature de la salariée</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -11996,7 +12092,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
             {[
               ["Enfant",(enfant?.prenom||"-")+" "+(enfant?.nom||"")],
               ["Début",fmt(contrat.debut||"2023-09-04")],
-              ["Taux horaire",tauxH.toFixed(2)+"€/h"],
+              ["Taux horaire",nbf(tauxH,2)+"€/h"],
               ["Heures/semaine",(contrat.heuresHebdo||40)+"h"],
             ].map(([l,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"3px 0"}}>
               <span style={{color:"var(--l)"}}>{l}</span><span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
@@ -12041,14 +12137,14 @@ function SoldeDeCompte({enfants,role,pEId,user}){
           </div>
           {[
             ["Indemnité compensatrice de congés payés",
-              congesRestants+" jours restants · méthode retenue : "+cp.methode+" (dixième "+cp.dixieme.toFixed(2)+"€ / maintien "+cp.maintien.toFixed(2)+"€)",
-              iccp.toFixed(2)+"€","var(--S)"],
+              congesRestants+" jours restants · méthode retenue : "+cp.methode+" (dixième "+nbf(cp.dixieme,2)+"€ / maintien "+nbf(cp.maintien,2)+"€)",
+              nbf(iccp,2)+"€","var(--S)"],
             ["Indemnité de préavis ("+preavis+" jours)",
               preavis+" jours calendaires — "+(moisAnciennete<3?"moins de 3 mois d'ancienneté":moisAnciennete<12?"de 3 mois à 1 an":"1 an et plus")+" (CCN 3239)",
-              indemPreavis.toFixed(2)+"€","var(--B)"],
+              nbf(indemPreavis,2)+"€","var(--B)"],
             ...(indemRupture>0?[["Indemnité de rupture",
-              "1/80 du brut total perçu ("+brutTotal.toFixed(2)+"€) — due à partir de 9 mois d'ancienneté, ni cotisée ni imposable",
-              indemRupture.toFixed(2)+"€","var(--T)"]]
+              "1/80 du brut total perçu ("+nbf(brutTotal,2)+"€) — due à partir de 9 mois d'ancienneté, ni cotisée ni imposable",
+              nbf(indemRupture,2)+"€","var(--T)"]]
               :[["Indemnité de rupture",
               ruptureParEmployeur?"Non due : "+moisAnciennete+" mois d'ancienneté, il en faut 9":"Non due : la rupture ne vient pas du parent employeur",
               "0.00€","var(--l)"]]),
@@ -12061,7 +12157,7 @@ function SoldeDeCompte({enfants,role,pEId,user}){
           </div>)}
           <div style={{marginTop:14,padding:14,background:"var(--Gp)",borderRadius:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span className="pf"style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>TOTAL SOLDE DE TOUT COMPTE</span>
-            <span className="pf"style={{fontSize:28,fontWeight:700,color:"var(--G)"}}>{total.toFixed(2)} €</span>
+            <span className="pf"style={{fontSize:28,fontWeight:700,color:"var(--G)"}}>{nbf(total,2)} €</span>
           </div>
           <div style={{fontSize:11,color:"var(--l)",marginTop:12,lineHeight:1.6}}>
             Calcul conforme à la CCN des particuliers employeurs. L'ICCP est calculée sur la base des congés non pris. Le préavis dépend de l'ancienneté. Ces montants sont indicatifs - vérifiez avec votre syndicat ou le RPE.
@@ -13027,7 +13123,7 @@ const DEMO_SCREENS=[
             background:mois===mo?"#E49178":"#F4F7FA",color:mois===mo?"#fff":"#2E4859",transition:"all .15s"
           }}>{mo} 2024</button>)}
         </div>
-        {[["Heures réalisées",m.h+"h × 4,20€",(m.h*4.20).toFixed(2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",(m.ent*3.80).toFixed(2)+"€"],["Heures majorées",m.supp+"h × 5,06€",(m.supp*5.06).toFixed(2)+"€"]].map(([l,d,v])=>(
+        {[["Heures réalisées",m.h+"h × 4,20€",nbf((m.h*4.20),2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",nbf((m.ent*3.80),2)+"€"],["Heures majorées",m.supp+"h × 5,06€",nbf((m.supp*5.06),2)+"€"]].map(([l,d,v])=>(
           <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
             <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:11,color:"#8FA3AD"}}>{d}</div></div>
             <div style={{fontWeight:700,color:"#5DA9A1"}}>{v}</div>
@@ -13035,7 +13131,7 @@ const DEMO_SCREENS=[
         ))}
         <div style={{marginTop:10,padding:"10px 12px",background:"#FFF8F3",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontSize:13,fontWeight:700,color:"#2E4859"}}>Total brut</span>
-          <span style={{fontSize:20,fontWeight:700,color:"#E49178"}}>{brut.toFixed(2)} €</span>
+          <span style={{fontSize:20,fontWeight:700,color:"#E49178"}}>{nbf(brut,2)} €</span>
         </div>
       </div>);
     },
@@ -15013,6 +15109,10 @@ function OnboardingWizard({user,onFinish}){
         heures_hebdo:contrat.heuresHebdo||40,
         taux_horaire:contrat.tauxHoraire||minimumHoraireAu(new Date()),
         entretien:contrat.entretien||3.92,
+        // L'assistant posait la question du rythme et jetait la reponse :
+        // le contrat repartait en annee complete quoi qu'on ait choisi.
+        annee_complete:contrat.anneeComplete!==false,
+        semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE):null,
         jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
         horaires:contrat.horaires||'07h30–17h30',
         aeeh:!!contrat.aeeh,
@@ -15101,7 +15201,7 @@ function OnboardingWizard({user,onFinish}){
                 </div>
               </div>}
               <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
-                Salaire mensualisé : <b style={{color:"var(--b)"}}>{salaireMensualise(contrat).toFixed(2)} €</b>
+                Salaire mensualisé : <b style={{color:"var(--b)"}}>{nbf(salaireMensualise(contrat),2)} €</b>
                 {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
               </div>
             </div>
@@ -15234,6 +15334,8 @@ function AjouterEnfantModale({user,onClose}){
     heuresHebdo:40,
     tauxHoraire:4.20,
     entretien:3.80,
+    anneeComplete:true,
+    semainesAccueil:null,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
     horaires:"07h30–17h30",
   });
@@ -15430,6 +15532,33 @@ function AjouterEnfantModale({user,onClose}){
               <label className="lbl">Taux horaire (€) *</label>
               <input type="number" className="inp" step="0.01" min="0" value={contrat.tauxHoraire}
                 onChange={e=>setContrat(c=>({...c,tauxHoraire:e.target.value}))}/>
+            </div>
+          </div>
+          {/* Le rythme n'etait demande que dans l'assistant du premier enfant :
+              tout enfant ajoute ensuite partait en annee complete en silence. */}
+          <div style={{marginBottom:14,padding:"11px 13px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
+            <label className="lbl" style={{marginBottom:7}}>Rythme d'accueil</label>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {[[true,"Année complète","52 semaines, congés inclus"],
+                [false,"Année incomplète","semaines programmées, congés à part"]].map(([v,l,d])=>{
+                const on=(contrat.anneeComplete!==false)===v;
+                return <button key={String(v)} type="button" onClick={()=>setContrat(c=>({...c,anneeComplete:v,semainesAccueil:v?null:(c.semainesAccueil||46)}))}
+                  style={{flex:"1 1 150px",textAlign:"left",padding:"9px 11px",borderRadius:10,cursor:"pointer",fontFamily:"inherit",
+                    border:"1.5px solid "+(on?"var(--accent)":"var(--br)"),background:on?"var(--accent-pale)":"var(--w)"}}>
+                  <span style={{display:"block",fontSize:12.5,fontWeight:700,color:on?"var(--accent)":"var(--b)"}}>{l}</span>
+                  <span style={{display:"block",fontSize:11,color:"var(--m)",marginTop:2,lineHeight:1.4}}>{d}</span>
+                </button>;
+              })}
+            </div>
+            {contrat.anneeComplete===false&&<div style={{marginTop:10}}>
+              <label className="lbl">Semaines d'accueil dans l'année</label>
+              <input type="number" min="1" max="46" step="1" className="inp" style={{maxWidth:130}}
+                value={contrat.semainesAccueil??46}
+                onChange={e=>setContrat(c=>({...c,semainesAccueil:Math.min(46,Math.max(1,parseFloat(e.target.value)||46))}))}/>
+            </div>}
+            <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
+              Salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
+              {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
             </div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
@@ -15747,11 +15876,11 @@ const jsPDF=await chargerJsPDF();
       };
       if(hasReal){
         ligne("Nombre de versements",String(versementsList.length));
-        ligne("TOTAL REELLEMENT VERSE EN "+annee,totalReel.toFixed(2)+" euros",true);
+        ligne("TOTAL REELLEMENT VERSE EN "+annee,nbf(totalReel,2)+" euros",true);
       }else{
-        ligne("Salaire net estime (12 mois)",estSalNet.toFixed(2)+" euros");
-        ligne("Indemnites d entretien estimees",estEntretien.toFixed(2)+" euros");
-        ligne("TOTAL ESTIME",totalEstime.toFixed(2)+" euros",true);
+        ligne("Salaire net estime (12 mois)",nbf(estSalNet,2)+" euros");
+        ligne("Indemnites d entretien estimees",nbf(estEntretien,2)+" euros");
+        ligne("TOTAL ESTIME",nbf(totalEstime,2)+" euros",true);
       }
       y+=8;
       // Detail des versements (mode reel) ou elements du contrat (estimation)
@@ -15769,7 +15898,7 @@ const jsPDF=await chargerJsPDF();
           doc.text(fmtD(v.date),MX+3,y+5);
           doc.text(String(MODE_LBL[v.mode]||v.mode||"-"),MX+42,y+5);
           doc.text(String(v.periode||"-").slice(0,24),MX+85,y+5);
-          doc.text((parseFloat(v.montant)||0).toFixed(2)+" euros",PW-MX-3,y+5,{align:"right"});
+          doc.text(nbf((parseFloat(v.montant)||0),2)+" euros",PW-MX-3,y+5,{align:"right"});
           y+=7;
         });
         y+=6;
@@ -15781,8 +15910,8 @@ const jsPDF=await chargerJsPDF();
         };
         ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
         ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" euros/h");
-        ligneSimple("Salaire mensuel brut estime",salMensBrut.toFixed(2)+" euros");
-        ligneSimple("Salaire mensuel net estime",(salMensBrut*0.78).toFixed(2)+" euros");
+        ligneSimple("Salaire mensuel brut estime",nbf(salMensBrut,2)+" euros");
+        ligneSimple("Salaire mensuel net estime",nbf((salMensBrut*0.78),2)+" euros");
         ligneSimple("Mois travailles","12 mois");
         y+=8;
       }
@@ -15892,22 +16021,22 @@ const jsPDF=await chargerJsPDF();
         '<table>',
         (hasReal
           ? '<tr><td>Nombre de versements</td><td style="text-align:right">'+versementsList.length+'</td></tr>'
-            +'<tr class="total"><td>TOTAL RÉELLEMENT VERSÉ EN '+annee+'</td><td style="text-align:right">'+totalReel.toFixed(2)+' €</td></tr>'
-          : '<tr><td>Salaire net estimé (12 mois)</td><td style="text-align:right">'+estSalNet.toFixed(2)+' €</td></tr>'
-            +'<tr><td>Indemnités d\'entretien estimées</td><td style="text-align:right">'+estEntretien.toFixed(2)+' €</td></tr>'
-            +'<tr class="total"><td>TOTAL ESTIMÉ</td><td style="text-align:right">'+totalEstime.toFixed(2)+' €</td></tr>'),
+            +'<tr class="total"><td>TOTAL RÉELLEMENT VERSÉ EN '+annee+'</td><td style="text-align:right">'+nbf(totalReel,2)+' €</td></tr>'
+          : '<tr><td>Salaire net estimé (12 mois)</td><td style="text-align:right">'+nbf(estSalNet,2)+' €</td></tr>'
+            +'<tr><td>Indemnités d\'entretien estimées</td><td style="text-align:right">'+nbf(estEntretien,2)+' €</td></tr>'
+            +'<tr class="total"><td>TOTAL ESTIMÉ</td><td style="text-align:right">'+nbf(totalEstime,2)+' €</td></tr>'),
         '</table>',
         (hasReal
           ? '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📋 Détail des versements</h3>'
             +'<table><tr><td style="background:#F4F7FA">Date</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Mode</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Période</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859;text-align:right">Montant</td></tr>'
-            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+(parseFloat(v.montant)||0).toFixed(2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:11px">↳ '+v.note+'</td></tr>':'');}).join('')
+            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+nbf((parseFloat(v.montant)||0),2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:11px">↳ '+v.note+'</td></tr>':'');}).join('')
             +'</table>'
           : '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Éléments du contrat (base d\'estimation)</h3>'
             +'<table>'
             +'<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>'
             +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||minimumHoraireAu(new Date()))+' €/h</td></tr>'
-            +'<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+salMensBrut.toFixed(2)+' €</td></tr>'
-            +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+(salMensBrut*0.78).toFixed(2)+' €</td></tr>'
+            +'<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+nbf(salMensBrut,2)+' €</td></tr>'
+            +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+nbf((salMensBrut*0.78),2)+' €</td></tr>'
             +'<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>'
             +'</table>'),
         '<div class="note">',
@@ -16734,7 +16863,7 @@ function Boutique({user}){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
               {isPro&&<span style={{fontSize:11,color:"var(--l)",textDecoration:"line-through",marginRight:6}}>{p.price} EUR</span>}
-              <span style={{fontSize:18,fontWeight:700,color:p.color}}>{isPro?(parseFloat(p.price.replace(",","."))*0.8).toFixed(2).replace(".",","):p.price} EUR</span>
+              <span style={{fontSize:18,fontWeight:700,color:p.color}}>{isPro?nbf((parseFloat(p.price.replace(",","."))*0.8),2):p.price} EUR</span>
             </div>
             <button className="btn bT s"style={{padding:"8px 16px"}}onClick={()=>acheter(p)}>Acheter</button>
           </div>
