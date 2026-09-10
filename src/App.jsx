@@ -110,31 +110,31 @@ async function sendNotificationEmail({type,to,subject,template,vars={}}){
 const EMAIL_TEMPLATES={
   signature_asmat_signed:{
     subject:"Votre assistante maternelle a signe le contrat",
-    html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
-      +"<p>"+v.asmat_prenom+" vient de signer electroniquement le contrat de "+v.enfant_prenom+".</p>"
+    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
+      +"<p>"+H(v.asmat_prenom)+" vient de signer electroniquement le contrat de "+H(v.enfant_prenom)+".</p>"
       +"<p>Connectez-vous a TiMat pour le signer a votre tour :</p>"
       +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
   },
   signature_parent_signed:{
     subject:"Le parent a signe le contrat",
-    html:(v)=>"<h2>Bonjour "+v.asmat_prenom+",</h2>"
-      +"<p>"+v.parent_prenom+" "+v.parent_nom+" vient de signer le contrat de "+v.enfant_prenom+".</p>"
+    html:(v)=>"<h2>Bonjour "+H(v.asmat_prenom)+",</h2>"
+      +"<p>"+H(v.parent_prenom)+" "+H(v.parent_nom)+" vient de signer le contrat de "+H(v.enfant_prenom)+".</p>"
       +"<p>Le contrat est finalise et archive dans vos documents.</p>",
   },
   signature_reminder:{
     subject:"Rappel : signature de contrat en attente",
-    html:(v)=>"<p>Le contrat de "+v.enfant_prenom+" attend votre signature depuis le "+v.date+".</p>"
+    html:(v)=>"<p>Le contrat de "+H(v.enfant_prenom)+" attend votre signature depuis le "+v.date+".</p>"
       +"<p><a href='"+H(v.url)+"'>Signer maintenant</a></p>",
   },
   bulletin_sent:{
     subject:"Votre bulletin de salaire est disponible",
-    html:(v)=>"<p>Bonjour "+v.parent_prenom+",</p>"
+    html:(v)=>"<p>Bonjour "+H(v.parent_prenom)+",</p>"
       +"<p>Le bulletin de salaire pour "+v.mois+" est disponible dans votre espace TiMat.</p>",
   },
   invitation_parent:{
     subject:"Invitation : votre assistante maternelle vous invite sur TiMat",
-    html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
-      +"<p>"+v.asmat_prenom+" vous invite a rejoindre TiMat pour suivre "+v.enfant_prenom+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
+    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
+      +"<p>"+H(v.asmat_prenom)+" vous invite a rejoindre TiMat pour suivre "+H(v.enfant_prenom)+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
       +"<p>C'est 100% gratuit pour vous, sans carte bancaire.</p>"
       +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
       +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://www.timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
@@ -142,8 +142,8 @@ const EMAIL_TEMPLATES={
   // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
   pointage_a_valider:{
     subject:"Un pointage attend votre validation",
-    html:(v)=>"<h2>Bonjour "+v.parent_prenom+",</h2>"
-      +"<p>L'assistante maternelle a enregistre le pointage de "+v.enfant_prenom+" du "+v.date+".</p>"
+    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
+      +"<p>L'assistante maternelle a enregistre le pointage de "+H(v.enfant_prenom)+" du "+v.date+".</p>"
       +"<p>Duree d'accueil : <strong>"+v.duree+"</strong></p>"
       +"<p>Merci de valider ce pointage dans votre application :</p>"
       +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
@@ -151,8 +151,8 @@ const EMAIL_TEMPLATES={
   },
   pointage_rappel:{
     subject:"Rappel : pointage en attente de validation depuis 3 jours",
-    html:(v)=>"<p>Bonjour "+v.parent_prenom+",</p>"
-      +"<p>Un pointage de "+v.enfant_prenom+" est en attente de votre validation depuis le "+v.date+".</p>"
+    html:(v)=>"<p>Bonjour "+H(v.parent_prenom)+",</p>"
+      +"<p>Un pointage de "+H(v.enfant_prenom)+" est en attente de votre validation depuis le "+v.date+".</p>"
       +"<p><a href='"+H(v.url)+"'>Valider maintenant</a></p>",
   },
   // VERSEMENTS P34 - notification d'un versement enregistre (parent->assmat ou assmat->parent)
@@ -1504,7 +1504,7 @@ function PointageRapide({enfants,role,user,demo}){
   const qrUrl=(e,size)=>"https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&data="+encodeURIComponent(origin+"/?pointage=qr&enfant="+e.id);
   const imprimerQR=(e)=>{
     const w=window.open("","_blank","width=420,height=580");if(!w)return;
-    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2><img src='"+qrUrl(e,300)+"' style='width:300px;height:300px'/><p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
+    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2><img src='"+H(qrUrl(e,300))+"' style='width:300px;height:300px'/><p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
     w.document.close();setTimeout(()=>{try{w.print();}catch(x){}},400);
   };
   return <div className="card" style={{marginBottom:16,border:"1.5px solid var(--Sp)",background:"var(--c)"}}>
@@ -6883,8 +6883,13 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "<div style=\"font-size:12px;color:#B8622F;font-weight:700\">"+moisSel+"</div>",
           "</div>",
           "<div class=\"hg\">",
-          "<div><strong>EMPLOYEUR (Particulier)</strong><br/>"+prenomEmp+"<br/>",
-          "N° Pajemploi : PAJ-"+new Date().getFullYear()+"-"+Math.floor(Math.random()*99999)+"<br/>",
+          "<div><strong>EMPLOYEUR (Particulier)</strong><br/>"+H(prenomEmp)+"<br/>",
+          // Le numero Pajemploi etait FABRIQUE : « PAJ- » suivi de l'annee et
+          // d'un tirage au hasard, different a chaque impression. Sur un
+          // bulletin de paie, cela ressemble a un identifiant officiel et n'en
+          // est pas un. On imprime le vrai quand on le connait, une ligne a
+          // remplir sinon.
+          "N° Pajemploi : "+H(enfant?.parent?.numero_pajemploi||"________________")+"<br/>",
           "Emploi : Assistante maternelle agréée<br/>Code APE : 8891A</div>",
           "<div><strong>SALARIE(E)</strong><br/>"+(user?.prenom||"Prénom")+" "+(user?.nom||"Nom")+"<br/>",
           "Entree le : "+(contrat.debut||"-")+" - CDI</div>",
@@ -12282,7 +12287,7 @@ function IndemnitesKilometriques({enfants,role,user}){
   const moisLabel=new Date(mois+"-01").toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
 
   const imprimer=()=>{
-    const lignes=trajets.map(t=>"<tr><td>"+new Date(t.date).toLocaleDateString("fr-FR")+"</td><td>"+enfNom(t.enfant_id)+"</td><td>"+(t.motif||"")+"</td><td style='text-align:right'>"+nbf((+t.km),1)+"</td><td style='text-align:right'>"+nbf((+t.taux),3)+"</td><td style='text-align:right'>"+nbf(((+t.km)*(+t.taux)),2)+" &euro;</td></tr>").join("");
+    const lignes=trajets.map(t=>"<tr><td>"+new Date(t.date).toLocaleDateString("fr-FR")+"</td><td>"+H(enfNom(t.enfant_id))+"</td><td>"+(t.motif||"")+"</td><td style='text-align:right'>"+nbf((+t.km),1)+"</td><td style='text-align:right'>"+nbf((+t.taux),3)+"</td><td style='text-align:right'>"+nbf(((+t.km)*(+t.taux)),2)+" &euro;</td></tr>").join("");
     const html="<html><head><meta charset='utf-8'><title>Feuille de route "+moisLabel+"</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#2E4A5A}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px}th{background:#f0ece4;text-align:left}tfoot td{font-weight:bold}</style></head><body><h1>Feuille de route kilom&eacute;trique &mdash; "+moisLabel+"</h1><p>Assistante maternelle : "+(user?.prenom||"")+" "+(user?.nom||"")+"</p><table><thead><tr><th>Date</th><th>Enfant</th><th>Motif</th><th>Km</th><th>Taux &euro;/km</th><th>Montant</th></tr></thead><tbody>"+lignes+"</tbody><tfoot><tr><td colspan='3'>Total</td><td style='text-align:right'>"+nbf(totalKm,1)+" km</td><td></td><td style='text-align:right'>"+nbf(totalEur,2)+" &euro;</td></tr></tfoot></table><p style='margin-top:16px;font-size:11px;color:#777'>Indemnit&eacute;s kilom&eacute;triques exon&eacute;r&eacute;es dans la limite du bar&egrave;me fiscal. &Agrave; reporter sur une ligne distincte de la d&eacute;claration Pajemploi. Bar&egrave;me 2026 (gel&eacute;) voiture, &le;5000 km/an.</p></body></html>";
     const w=window.open("","_blank"); if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),300);}
   };
@@ -12575,7 +12580,9 @@ function SoldeDeCompte({enfants,role,pEId,user}){
   const total=Math.round((iccp+indemPreavis+indemRupture)*100)/100;
 
   const today=new Date().toLocaleDateString("fr-FR");
-  const asmatNom=((user?.prenom||"")+" "+(user?.nom||"")).trim()||"[Assistante maternelle]";
+  // Echappe des sa construction : il part dans trois lettres imprimees, et une
+  // apostrophe ou un chevron dans un nom y cassait la mise en page.
+  const asmatNomH=H(((user?.prenom||"")+" "+(user?.nom||"")).trim()||"[Assistant(e) maternel(le)]");
   const agr=user?.agrement||"[N° d'agrément]";
   const printDoc=(titre,corps)=>{
     const w=window.open("","_blank");
@@ -12583,9 +12590,9 @@ function SoldeDeCompte({enfants,role,pEId,user}){
     w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast(titre+" généré ✓");
   };
-  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
-  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
-  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} € + indemnité de préavis ${nbf(indemPreavis,2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature</span></div>`);
+  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNomH}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} € + indemnité de préavis ${nbf(indemPreavis,2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -16696,7 +16703,7 @@ function FicheUrgence({enfants,role,pEId,user}){
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
   const contrat=enfant.contrat||{};
   const [form,setForm]=useState({
-    asmatNom:role==="asmat"?((user?.prenom||"")+" "+(user?.nom||"")).trim():"",asmatTel:role==="asmat"?(user?.tel||""):"",asmatAgrement:role==="asmat"?(user?.agrement||""):"",
+    asmatNomH:role==="asmat"?((user?.prenom||"")+" "+(user?.nom||"")).trim():"",asmatTel:role==="asmat"?(user?.tel||""):"",asmatAgrement:role==="asmat"?(user?.agrement||""):"",
     nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",sexe:"",adresse:"",
     mereNom:"",mereTel:"",mereTravail:"",mereEmail:"",mereEmployeur:"",
     pereNom:"",pereTel:"",pereTravail:"",pereEmail:"",pereEmployeur:"",
@@ -16807,9 +16814,9 @@ function FicheUrgence({enfants,role,pEId,user}){
       "<h1>FICHE D'URGENCE</h1>",
       "<div class='sub'>Assistante maternelle agreee</div>",
       "<div class='note'>A remettre des le debut de l'accueil | A mettre a jour chaque annee</div>",
-      "<div class='line'><b>Assistante maternelle :</b> "+f.asmatNom+"</div>",
-      "<div class='line'><b>Telephone :</b> "+f.asmatTel+"</div>",
-      "<div class='line'><b>N. d'agrement :</b> "+f.asmatAgrement+"</div>",
+      "<div class='line'><b>Assistante maternelle :</b> "+H(f.asmatNomH)+"</div>",
+      "<div class='line'><b>Telephone :</b> "+H(f.asmatTel)+"</div>",
+      "<div class='line'><b>N. d'agrement :</b> "+H(f.asmatAgrement)+"</div>",
       "<div class='sh'>01  Identite de l'enfant</div>",
       "<div class='line'><b>Nom :</b> "+H(f.nom)+"</div>",
       "<div class='line'><b>Prenom :</b> "+H(f.prenom)+"</div>",
@@ -16823,26 +16830,26 @@ function FicheUrgence({enfants,role,pEId,user}){
         +(parentLive.adresse?"<br/>"+String(parentLive.adresse).replace(/\n/g,", "):"")
         +"</div>"):""),
       "<div class='stt'>Mere</div>",
-      "<div class='line'><b>Nom et prenom :</b> "+f.mereNom+"</div>",
-      "<div class='line'><b>Telephone :</b> "+f.mereTel+"</div>",
-      "<div class='line'><b>Email :</b> "+f.mereEmail+"</div>",
-      "<div class='line'><b>Employeur :</b> "+f.mereEmployeur+"</div>",
+      "<div class='line'><b>Nom et prenom :</b> "+H(f.mereNom)+"</div>",
+      "<div class='line'><b>Telephone :</b> "+H(f.mereTel)+"</div>",
+      "<div class='line'><b>Email :</b> "+H(f.mereEmail)+"</div>",
+      "<div class='line'><b>Employeur :</b> "+H(f.mereEmployeur)+"</div>",
       "<div class='stt'>Pere</div>",
-      "<div class='line'><b>Nom et prenom :</b> "+f.pereNom+"</div>",
-      "<div class='line'><b>Telephone :</b> "+f.pereTel+"</div>",
-      "<div class='line'><b>Email :</b> "+f.pereEmail+"</div>",
-      "<div class='line'><b>Employeur :</b> "+f.pereEmployeur+"</div>",
+      "<div class='line'><b>Nom et prenom :</b> "+H(f.pereNom)+"</div>",
+      "<div class='line'><b>Telephone :</b> "+H(f.pereTel)+"</div>",
+      "<div class='line'><b>Email :</b> "+H(f.pereEmail)+"</div>",
+      "<div class='line'><b>Employeur :</b> "+H(f.pereEmployeur)+"</div>",
       "<div class='sh'>03  Personnes autorisees</div>",
       ...[1,2,3].map(n=>"<div class='stt'>Personne "+n+"</div><div class='line'><b>Nom :</b> "+f["p"+n+"Nom"]+"</div><div class='line'><b>Lien :</b> "+f["p"+n+"Lien"]+"</div><div class='line'><b>Tel :</b> "+f["p"+n+"Tel"]+"</div>"),
       "<div class='sh'>04  Informations medicales</div>",
       "<div class='line'><b>Medecin :</b> "+H(f.medecin)+"</div>",
-      "<div class='line'><b>Tel medecin :</b> "+f.medecinTel+"</div>",
-      "<div class='line'><b>Groupe sanguin :</b> "+f.groupe+"</div>",
-      "<div class='line'><b>Vaccins a jour :</b> "+f.vaccins+"</div>",
-      "<div class='line'><b>PAI :</b> "+f.pai+"</div>",
-      "<div class='line'><b>Allergies :</b> "+f.allergies+"</div>",
-      "<div class='line'><b>Traitements :</b> "+f.traitements+"</div>",
-      "<div class='line'><b>Particularites :</b> "+f.particularites+"</div>",
+      "<div class='line'><b>Tel medecin :</b> "+H(f.medecinTel)+"</div>",
+      "<div class='line'><b>Groupe sanguin :</b> "+H(f.groupe)+"</div>",
+      "<div class='line'><b>Vaccins a jour :</b> "+H(f.vaccins)+"</div>",
+      "<div class='line'><b>PAI :</b> "+H(f.pai)+"</div>",
+      "<div class='line'><b>Allergies :</b> "+H(f.allergies)+"</div>",
+      "<div class='line'><b>Traitements :</b> "+H(f.traitements)+"</div>",
+      "<div class='line'><b>Particularites :</b> "+H(f.particularites)+"</div>",
       "<div class='sh'>05  Numeros d'urgence</div>",
       "<div class='urg'>SAMU : <span>15</span></div>",
       "<div class='urg'>Police / Gendarmerie : <span>17</span></div>",

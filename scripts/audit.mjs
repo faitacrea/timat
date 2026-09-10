@@ -368,8 +368,22 @@ if (cartesHorsSysteme.length) {
   signale("mise en page", `${cartesHorsSysteme.length} carte(s) redefinissent leur padding en dur au lieu de --pad-carte`);
 }
 // Boutons : .btn porte la taille (13px/600) et ses deux variantes .s et .l.
+// On ne regarde QUE l'attribut style de la balise. Le controle lisait la
+// balise entiere : quand un bouton porte tout son gestionnaire onClick en
+// ligne — et l'un d'eux contient la page HTML du bulletin — il y trouvait le
+// « fontSize » d'une feuille de style et signalait un bouton innocent.
+const styleDeBalise = (b) => {
+  const i = b.indexOf("style={{");
+  if (i < 0) return "";
+  let prof = 0;
+  for (let k = i + 6; k < b.length; k++) {
+    if (b[k] === "{") prof++;
+    else if (b[k] === "}") { prof--; if (prof === 0) return b.slice(i, k + 1); }
+  }
+  return b.slice(i);
+};
 const boutonsHorsSysteme = balisesOuvrantes('className=(?:"btn[^"]*"|\\{[^}]*"btn[^}]*\\})')
-  .filter((b) => /fontSize:\s*\d|fontWeight:\s*\d/.test(b));
+  .filter((b) => /fontSize:\s*\d|fontWeight:\s*\d/.test(styleDeBalise(b)));
 if (boutonsHorsSysteme.length) {
   signale("mise en page", `${boutonsHorsSysteme.length} bouton(s) .btn redefinissent taille ou graisse en ligne au lieu d'utiliser .btn / .btn.s / .btn.l`);
 }
