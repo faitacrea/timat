@@ -709,8 +709,14 @@ if (sansRythme.length) {
 if (!/const REPAS_TEXTE=\{/.test(appSrc) || !/repasPar\|\|A_COMPLETER/.test(appSrc)) {
   signale("pdf", "le contrat déduit à nouveau qui fournit les repas au lieu de l'imprimer tel qu'il a été convenu");
 }
-if (!/function FournitureRepas\(/.test(appSrc) || !/<FournitureRepas /.test(appSrc)) {
-  signale("pdf", "la fourniture des repas n'est plus modifiable sur un contrat : le choix ne peut plus être convenu");
+if (!/function IndemnitesJournalieres\(/.test(appSrc) || !/<IndemnitesJournalieres /.test(appSrc)) {
+  signale("pdf", "les indemnités journalières ne sont plus modifiables sur un contrat : ni l'entretien, ni le choix des repas");
+}
+// Modifier une indemnite convenue sur un contrat SIGNE touche a la
+// remuneration : cela demande un avenant. Aligner sur le minimum conventionnel,
+// en revanche, est automatique. L'ecran doit distinguer les deux cas.
+if (!/\bsimpleAlignement\b/.test(appSrc) || !/avenant signé des deux côtés/.test(appSrc)) {
+  signale("paie", "l'écran des indemnités ne distingue plus l'alignement automatique sur le minimum de la modification qui exige un avenant");
 }
 // Meme regle pour la duree de la periode d'essai : sans jours d'accueil saisis,
 // elle ne se deduit pas.
@@ -808,14 +814,14 @@ if (!/const pdfPerime=/.test(appSrc)) {
   signale("pdf", "la détection des PDF périmés a disparu : refondre un document laisserait les fichiers déjà produits en place, en silence");
 } else {
   for (const [nom, garde] of [
-    ["le contrat", /pdfPerime\(contrat\.pdf_generated_at\)/],
+    ["le contrat", /pdfPerime\(contrat\?\.pdf_generated_at,contrat\?\.updated_at\)/],
     ["le bulletin", /pdfPerime\(bulletinsEnvoyes\[moisSelKey\]\.date_envoi\)/],
   ]) {
     if (!garde.test(appSrc)) signale("pdf", `${nom} ne vérifie plus si son PDF est périmé : l'utilisatrice rouvrirait l'ancienne version sans le savoir`);
   }
   // La date de refonte doit suivre la derniere refonte, sinon le controle
   // laisse passer les fichiers qu'il devrait signaler.
-  const refonte = (appSrc.match(/const DOCUMENTS_REFONTE="(\d{4}-\d{2}-\d{2})"/) || [])[1];
+  const refonte = (appSrc.match(/const DOCUMENTS_REFONTE="(\d{4}-\d{2}-\d{2})/) || [])[1];
   if (!refonte) signale("pdf", "la date de refonte des documents est absente ou mal formée");
 }
 // Regenerer un bulletin ne doit pas renvoyer un courriel au parent pour un

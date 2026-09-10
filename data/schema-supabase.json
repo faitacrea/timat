@@ -119,7 +119,8 @@
     "signature_parent_data",
     "signe_asmat",
     "signe_parent",
-    "taux_horaire"
+    "taux_horaire",
+    "updated_at"
   ],
   "croissance": [
     "age_mois",
