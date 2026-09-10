@@ -42,22 +42,32 @@ for (const c of cas) {
 // --- 2. Aucune valeur saisie ne doit repartir sans échappement ---
 // On relit le source comme le ferait une relecture : toute interpolation d'un
 // champ saisi dans une chaîne HTML doit passer par H().
-const CHAMPS = /\b(prenom|nom|adresse|email|txt|texte|note|desc|titre|motif|message|commentaire|remarque|detail|libelle|objet|ville|agrement|telephone|medecin|allergie|url)\b/i;
-const TECHNIQUE = /toFixed|fmtEur|Math\.|length|getFullYear|\.slice\(|^H\(/;
+// Les noms de champ se cherchaient en MOT ENTIER. Le controle ne voyait donc
+// ni « f.asmatTel » (le nom est colle en camelCase), ni « f.allergies » (le
+// pluriel casse la limite de mot), ni « v.parent_prenom ». Trente-six valeurs
+// saisies partaient ainsi sans echappement — dans la fiche d'urgence, dans les
+// courriels et sur le bulletin imprimable — pendant que ce test passait au
+// vert. On cherche desormais les noms comme sous-chaines.
+const CHAMPS = /(prenom|nom|adresse|mail|tel|txt|texte|note|desc|titre|motif|message|commentaire|remarque|detail|libelle|objet|ville|agrement|medecin|allergie|traitement|particularite|vaccin|groupe|employeur|lien|pai|url)/i;
+const TECHNIQUE = /toFixed|nbf\(|fmtEur|Math\.|length|getFullYear|\.slice\(|new Date|JSON\.|\.map\(|\.join\(|^H\(/;
+// Convention : un nom terminé par « H » porte une valeur DÉJÀ échappée, à sa
+// construction. Le contrôle ne sait pas suivre une variable d'une ligne à
+// l'autre ; ce suffixe le lui dit. Il ne dispense de rien d'autre.
+const DEJA_ECHAPPE = /[a-z0-9]H$/;
 const oublis = [];
 
 for (const m of src.matchAll(/"\s*\+\s*([^+"]{1,70}?)\s*\+\s*"/g)) {
   const avant = src.slice(Math.max(0, m.index - 600), m.index);
   if (!/<(tr|td|div|p|h[1-6]|span|li|title|option|b)[ >]/.test(avant)) continue;
   const e = m[1].trim();
-  if (!CHAMPS.test(e) || TECHNIQUE.test(e)) continue;
+  if (!CHAMPS.test(e) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
   oublis.push(`ligne ${src.slice(0, m.index).split("\n").length} : ${e}`);
 }
 for (const m of src.matchAll(/\$\{([^}]{1,60})\}/g)) {
   const avant = src.slice(Math.max(0, m.index - 500), m.index);
   if (!/document\.write|<div|<td|<p>|<h[1-6]|<title/.test(avant)) continue;
   const e = m[1].trim();
-  if (!CHAMPS.test(e) || TECHNIQUE.test(e)) continue;
+  if (!CHAMPS.test(e) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
   oublis.push(`ligne ${src.slice(0, m.index).split("\n").length} : \${${e}}`);
 }
 
