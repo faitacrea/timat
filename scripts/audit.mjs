@@ -755,6 +755,27 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- cases de declaration de revenus ---
+// Pourquoi : l'application indiquait a l'assistante maternelle de porter son
+// revenu sur la « 2042 C PRO », en « famille 1GA ». Les deux etaient faux, sur
+// sa propre declaration : la 2042 C PRO sert aux revenus professionnels, et la
+// case 1GA ne porte que le MONTANT DE L'ABATTEMENT, a titre indicatif. Le
+// revenu apres abattement va en 1AA (employeur particulier) ou 1AJ (personne
+// morale). Ces reperes sont verifies : ils ne doivent pas rederiver.
+{
+  const zoneFiscale = appSrc.slice(
+    appSrc.indexOf("function RecapFiscalAssmat"),
+    appSrc.indexOf("function ", appSrc.indexOf("function RecapFiscalAssmat") + 30));
+  if (/2042 C PRO/.test(zoneFiscale.replace(/^\s*\/\/.*$/gm, ""))) {
+    signale("chiffre", "le récapitulatif fiscal renvoie de nouveau à la 2042 C PRO : un assistant maternel est un salarié, il déclare sur la 2042 (source : impots.gouv.fr)");
+  }
+  for (const [repere, quoi] of [["1AA", "la case du revenu après abattement"], ["1GA", "la case indicative de l'abattement"]]) {
+    if (!zoneFiscale.includes(repere)) {
+      signale("chiffre", `le récapitulatif fiscal ne cite plus ${repere} — ${quoi}`);
+    }
+  }
+}
+
 // --- documents imprimes : « euros » ecrit en toutes lettres ---
 // Pourquoi : les PDF s'ecrivaient sans accents et avec « euros » en toutes
 // lettres, par precaution contre un probleme d'encodage qui n'existe plus. Le
