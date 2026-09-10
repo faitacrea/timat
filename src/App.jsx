@@ -12065,7 +12065,17 @@ const jsPDF=await chargerJsPDF();
 
 //
 //
-// RECAP FISCAL ANNUEL ASSMAT - revenu imposable apres abattement (CGI art. 80 sexies), a reporter sur la 2042 C PRO.
+// RECAP FISCAL ANNUEL ASSMAT - revenu imposable apres abattement (CGI art. 80 sexies).
+//
+// L'ecran annoncait la « declaration 2042 C PRO » et la « famille 1GA ». Les
+// deux etaient faux, sur la declaration de revenus de l'utilisatrice :
+//  - la 2042 C PRO sert aux revenus professionnels (BIC, BNC). Un assistant
+//    maternel est un SALARIE : il declare sur la 2042 ordinaire ;
+//  - la case 1GA porte le MONTANT DE L'ABATTEMENT, a titre indicatif. Le revenu
+//    apres abattement va en 1AA (employeur particulier) ou 1AJ (personne
+//    morale). Mettre le revenu en 1GA, c'est le declarer nulle part.
+// Le montant prerempli par Pajemploi ne tient jamais compte de l'abattement :
+// il doit etre corrige a la baisse a la main.
 // Salaire imposable = somme des bulletins stockes (net_imposable + entretien). Abattement = recalcule jour par jour
 // depuis les pointages reels (prorata <8h, AEEH 4x, 24h 5x). AEEH non persiste -> toggle par enfant.
 function RecapFiscalAssmat({enfants,user}){
@@ -12139,18 +12149,18 @@ function RecapFiscalAssmat({enfants,user}){
   const imprimer=()=>{
     const w=window.open("","_blank");if(!w)return;
     const rows=lignes.map(l=>"<tr><td>"+H(l.prenom)+"</td><td class=r>"+l.jours+"</td><td class=r>"+eur(l.baseImposable)+"</td><td class=r>- "+eur(l.abatt)+"</td><td class=r><b>"+eur(l.netApres)+"</b></td></tr>").join("");
-    w.document.write("<html><head><meta charset='utf-8'><title>Recap fiscal "+annee+"</title><style>body{font-family:Arial,sans-serif;color:#2E4A5A;padding:28px;font-size:13px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin:14px 0}th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}.r{text-align:right}thead{background:#f3efe9}.tot{background:#eef5f2;font-weight:700}.note{font-size:11px;color:#666;margin-top:16px;line-height:1.6}</style></head><body>"+
-      "<h1>Recap fiscal annuel "+annee+" — Assistante maternelle</h1>"+
-      "<p>Revenu imposable apres abattement (regime special, CGI art. 80 sexies), a reporter sur la <b>declaration 2042 C PRO</b> (rubrique traitements et salaires).</p>"+
-      "<table><thead><tr><th>Enfant</th><th class=r>Jours d'accueil</th><th class=r>Base imposable (salaires + entretien)</th><th class=r>Abattement</th><th class=r>Net imposable apres abattement</th></tr></thead><tbody>"+rows+
+    w.document.write("<html><head><meta charset='utf-8'><title>Récapitulatif fiscal "+annee+"</title><style>body{font-family:Arial,sans-serif;color:#2E4A5A;padding:28px;font-size:13px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin:14px 0}th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}.r{text-align:right}thead{background:#f3efe9}.tot{background:#eef5f2;font-weight:700}.note{font-size:11px;color:#666;margin-top:16px;line-height:1.6}</style></head><body>"+
+      "<h1>Récapitulatif fiscal annuel "+annee+" — assistant maternel</h1>"+
+      "<p>Revenu imposable après abattement (régime spécial, CGI art. 80 sexies), à reporter sur la <b>déclaration 2042</b>, rubrique « traitements et salaires ».</p>"+
+      "<table><thead><tr><th>Enfant</th><th class=r>Jours d'accueil</th><th class=r>Base imposable (salaires + entretien)</th><th class=r>Abattement</th><th class=r>Net imposable après abattement</th></tr></thead><tbody>"+rows+
       "<tr class=tot><td>TOTAL</td><td class=r></td><td class=r>"+eur(totalBase)+"</td><td class=r>- "+eur(totalAbatt)+"</td><td class=r>"+eur(totalNet)+"</td></tr></tbody></table>"+
-      "<p class=note>Recapitulatif indicatif calcule a partir des bulletins enregistres et des pointages reels. Il ne remplace pas l'attestation fiscale officielle de Pajemploi. La declaration pre-remplie affiche souvent le brut sans abattement : verifiez et corrigez le montant imposable dans les cases blanches. Indemnites de repas non incluses (a ajouter si facturees). Conservez vos justificatifs (registre de presence) 5 ans.</p>"+
+      "<p class=note>Récapitulatif indicatif, calculé à partir des bulletins enregistrés et des pointages réels. Il ne remplace pas l'attestation fiscale officielle de Pajemploi. La déclaration préremplie ne tient jamais compte de l'abattement : corrigez le montant à la baisse dans la case blanche (1AA, ou 1AJ si l'employeur est une personne morale), et portez l'abattement en case 1GA, qui est seulement indicative. Indemnités de repas non incluses (à ajouter si vous en facturez). Conservez vos justificatifs (registre de présence) 5 ans.</p>"+
       "</body></html>");
     w.document.close();w.focus();setTimeout(()=>{try{w.print();}catch(e){}},300);
   };
 
   return <div className="fi">
-    <PageHeader icon="📋" title="Récap fiscal annuel" sub="Revenu imposable après abattement, à reporter sur la 2042 C PRO"/>
+    <PageHeader icon="📋" title="Récap fiscal annuel" sub="Revenu imposable après abattement, à reporter sur la déclaration 2042"/>
     <div className="card" style={{marginBottom:14,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
       <label className="lbl" style={{margin:0}}>Année des revenus</label>
       <select className="sel" style={{maxWidth:140}} value={annee} onChange={e=>setAnnee(Number(e.target.value))}>
@@ -12189,7 +12199,11 @@ function RecapFiscalAssmat({enfants,user}){
           <button className="btn bT" style={{flexShrink:0}} onClick={imprimer}><IconeOuEmoji e="🖨️"/> Version imprimable / PDF</button>
         </div>
         <div style={{padding:"12px 18px",fontSize:11.5,color:"var(--m)",lineHeight:1.6,borderTop:"1px solid var(--br)"}}>
-          À reporter sur la <b>déclaration 2042 C PRO</b> (rubrique « traitements et salaires », cases blanches de la famille <b>1GA</b> — vérifiez la case exacte sur votre déclaration). Sans la 2042 C PRO, le fisc applique l'abattement de 10 % par défaut, moins favorable.
+          Sur la <b>déclaration 2042</b>, rubrique « traitements et salaires » : portez le <b>net imposable après
+          abattement</b> en case <b>1AA</b> (employeur particulier) — 1AJ si votre employeur est une personne
+          morale. Le montant de l'abattement se reporte en case <b>1GA</b>, qui n'est qu'indicative et n'enlève
+          rien toute seule. Le montant prérempli par Pajemploi ne tient jamais compte de l'abattement :
+          il faut le corriger à la baisse dans la case blanche.
         </div>
       </div>
 
