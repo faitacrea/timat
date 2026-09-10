@@ -677,6 +677,40 @@ if (!/const salaireMensualise=/.test(appSrc) || !/const semainesDuContrat=/.test
   signale("paie", "les fonctions de mensualisation ont disparu : les deux formules ne sont plus distinguées");
 }
 
+// Le choix du rythme ne sert a rien s'il n'est pas ecrit en base. L'assistant
+// de creation posait la question et jetait la reponse : le contrat repartait en
+// annee complete quoi qu'on ait repondu. Tout endroit qui ecrit un contrat doit
+// donc ecrire aussi son rythme.
+const ecrituresContrat = [...appSrc.matchAll(/heures_hebdo\s*:/g)];
+const sansRythme = ecrituresContrat.filter((m) => {
+  const bloc = appSrc.slice(Math.max(0, m.index - 400), m.index + 900);
+  return !/annee_complete\s*:/.test(bloc);
+});
+if (sansRythme.length) {
+  signale("paie", `${sansRythme.length} enregistrement(s) de contrat n'écrivent pas annee_complete : le rythme choisi est perdu et la mensualisation repart sur 52 semaines`);
+}
+
+// Et le choix doit rester atteignable sur un contrat DEJA enregistre : il
+// n'existait que dans l'assistant du tout premier enfant.
+if (!/function RythmeAccueil\(/.test(appSrc) || !/<RythmeAccueil /.test(appSrc)) {
+  signale("paie", "le rythme d'accueil n'est plus modifiable sur un contrat existant : les contrats déjà créés restent bloqués en année complète");
+}
+
+// --- notation des nombres ---
+// Pourquoi : toFixed() ecrit « 4.20 », avec le point anglais. Une assistante
+// maternelle qui recopie un montant dans Pajemploi le recopie tel quel.
+// nbf() met la virgule francaise, sans separateur de milliers — l'espace fine
+// insecable du francais est absente du jeu WinAnsi et ferait disparaitre la
+// ligne entiere des PDF.
+const toFixedRestants = [...appSrc.matchAll(/\.toFixed\(/g)]
+  .filter((m) => !/^\s*\/\//.test(appSrc.slice(appSrc.lastIndexOf("\n", m.index) + 1, m.index)));
+if (toFixedRestants.length) {
+  signale("chiffre", `${toFixedRestants.length} nombre(s) affichés avec toFixed() : ils sortent avec un point anglais au lieu de la virgule — passer par nbf()`);
+}
+if (/useGrouping\s*:\s*true/.test(appSrc) || !/const nbf=/.test(appSrc)) {
+  signale("chiffre", "nbf() a disparu ou groupe les milliers : l'espace fine insécable du français casse les lignes de PDF");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
