@@ -81,6 +81,14 @@ await ctx.route("**/rest/v1/**", (r) => {
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
   // l'allocation, qui n'est PAS une ligne de salaire.
+  if (t === "versements") return r.fulfill(json([
+    { id: "v1", enfant_id: EID, montant: 728, date: `${mk}-05`, mode: "virement", periode: mk, note: "" },
+    { id: "v2", enfant_id: EID, montant: 728, date: `${mk}-05`, mode: "virement", periode: mk, note: "" },
+  ]));
+  if (t === "pointages") return r.fulfill(json([
+    { id: "p1", enfant_id: EID, date: `${mk}-02`, arrivee: "07:30", depart: "17:30", total_minutes: 600 },
+    { id: "p2", enfant_id: EID, date: `${mk}-03`, arrivee: "07:30", depart: "17:30", total_minutes: 600 },
+  ]));
   if (t === "evenements") return r.fulfill(json([
     { id: "e-mal", asmat_id: UID, date: `${mk}-03`, type: "mal", texte: "Maladie", heures: 8 },
     { id: "e-frm", asmat_id: UID, date: `${mk}-10`, type: "form", texte: "Formation", heures: 8 },
@@ -151,6 +159,23 @@ if (recap) {
   dire(/Marie Test/.test(recap.texte), "le nom de l'assistante maternelle s'affiche");
   dire(/<\/td><\/tr>/.test(recap.html), "le tableau du nom est bien refermé");
 }
+
+// --- Les autres documents imprimes, jamais ouverts jusqu'ici ---
+const defauts = (nom, d) => {
+  if (!d) return;
+  dire(!/IconeOuEmoji/.test(d.html), `${nom} : aucun composant React laissé dans le HTML`);
+  dire(!/undefined|NaN|Infinity/.test(d.texte), `${nom} : aucune valeur manquante affichée`);
+  dire(!/\d+\.\d{2}\s*€/.test(d.texte), `${nom} : les montants s'écrivent avec une virgule`);
+};
+
+const att = await ouvrirEtLire(["Administratif", "Documents & Rapports", "Att. France Travail"], "Voir / télécharger l'attestation", "attestation-france-travail");
+defauts("attestation France Travail", att);
+if (att) {
+  dire(/télétransmise via Pajemploi/i.test(att.texte), "l'attestation dit que l'officielle passe par Pajemploi");
+}
+
+const fin = await ouvrirEtLire(["Administratif", "Paie & Contrats", "Contrats", "Fin de contrat"], "Lettre de rupture", "lettre-rupture");
+defauts("lettre de rupture", fin);
 
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 await nav.close();
