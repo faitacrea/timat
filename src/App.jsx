@@ -6315,7 +6315,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       if(fresh?.signature_base64)userSig=fresh.signature_base64;
       // Header
       doc.setFontSize(8);doc.setTextColor(...gris);doc.setFont("helvetica","normal");
-      doc.text("Convention Collective Nationale - Particuliers Employeurs (IDCC 2395)",PW/2,y,{align:"center"});y+=5;
+      doc.text("Convention collective des particuliers employeurs et de l'emploi a domicile (IDCC 3239)",PW/2,y,{align:"center"});y+=5;
       doc.setFontSize(16);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
       doc.text("BULLETIN DE PAIE",PW/2,y,{align:"center"});y+=6;
       doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
@@ -6444,7 +6444,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       y+=30;
       // Footer
       doc.setFontSize(7);doc.setTextColor(...gris);
-      doc.text("Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN IDCC 2395 | A conserver 5 ans",PW/2,y,{align:"center"});
+      doc.text("Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN IDCC 3239 | A conserver 5 ans",PW/2,y,{align:"center"});
 
       // 2. Convertir en blob
       const blob=doc.output("blob");
@@ -6773,7 +6773,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
           "</div>",
           "</div>",
           "<p style=\"margin-top:16px;font-size:11px;color:#888;line-height:1.8\">",
-          "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN Particuliers Employeurs (IDCC 2395) | A conserver 5 ans",
+          "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN particuliers employeurs et emploi a domicile (IDCC 3239) | A conserver 5 ans",
           "</p>",
           "<div style=\"text-align:center;margin-top:12px\">",
           "<button class=\"nb\" onclick=\"window.print()\" style=\"background:#B8622F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700\">Imprimer / PDF</button>",
@@ -9023,6 +9023,93 @@ async function saveAsmatSignature(userId,base64){
 // PDF CONTRAT COMBINE P11 - genere le PDF du contrat avec les 2 signatures (asmat + parent si presente)
 // puis le stocke dans Supabase Storage et insere une ligne dans documents_meta.
 // Appele apres chaque signature de contrat. Idempotent (remplace si deja existant).
+//
+// MISE EN PAGE DU CONTRAT - un vrai contrat de travail, pas une fiche resume.
+//
+// Ce que l'application produisait tenait sur une page : les deux parties,
+// l'enfant, cinq lignes de conditions, deux cadres de signature. Un contrat de
+// travail d'assistante maternelle en compte bien davantage — la periode d'essai
+// et la periode d'adaptation, la mensualisation et sa formule, les conges
+// payes, les jours feries, les absences, le preavis, les autorisations de
+// deplacement. Sans ces clauses ecrites, c'est la convention qui s'applique par
+// defaut, et les deux parties decouvrent la regle le jour du desaccord.
+//
+// Les seuls chiffres ecrits en dur ici sont ceux verifies a la source et
+// verrouilles par l'audit. Tout le reste renvoie a la convention plutot que
+// d'inventer une valeur.
+const MARGE=20, LARGEUR=210, HAUTEUR=297, BAS=272;
+
+function redacteurPdf(doc,{titre,sousTitre}){
+  let y=0, page=0;
+  const pages=[];
+  const nouvellePage=(premiere)=>{
+    if(!premiere)doc.addPage();
+    page++;pages.push(page);
+    y=MARGE;
+    if(premiere){
+      doc.setFont("helvetica","bold");doc.setFontSize(15);
+      doc.text(titre,LARGEUR/2,y,{align:"center"});y+=6;
+      doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+      doc.text(sousTitre,LARGEUR/2,y,{align:"center"});y+=4;
+      doc.setDrawColor(180);doc.line(MARGE,y,LARGEUR-MARGE,y);y+=8;
+    }
+  };
+  const place=(h)=>{ if(y+h>BAS)nouvellePage(false); };
+  const api={
+    get y(){return y;}, set y(v){y=v;},
+    get page(){return page;},
+    nouvellePage,
+    place,
+    // Titre d'article, jamais seul en bas de page.
+    article(n,t){
+      place(16);
+      doc.setFillColor(240,236,228);doc.rect(MARGE,y-4.2,LARGEUR-2*MARGE,7,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.setTextColor(40,60,80);
+      doc.text("ARTICLE "+n+" — "+t,MARGE+2,y+1);
+      doc.setTextColor(0);y+=11;
+    },
+    // Ligne « libelle : valeur », la valeur alignee a droite.
+    champ(l,v){
+      place(6);
+      doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+      doc.text(String(l),MARGE+2,y);
+      doc.setFont("helvetica","bold");
+      doc.text(String(v==null||v===""?"-":v),LARGEUR-MARGE-2,y,{align:"right"});
+      doc.setFont("helvetica","normal");y+=5.6;
+    },
+    // Paragraphe de clause, coupe a la largeur utile.
+    texte(t,{italique=false,taille=9}={}){
+      doc.setFont("helvetica",italique?"italic":"normal");doc.setFontSize(taille);
+      for(const l of doc.splitTextToSize(String(t),LARGEUR-2*MARGE-4)){
+        place(5.4);doc.text(l,MARGE+2,y);y+=4.4;
+      }
+      doc.setFont("helvetica","normal");y+=2;
+    },
+    espace(h=4){y+=h;},
+    // Numerotation et paraphes, poses a la fin quand le total est connu.
+    finaliser(){
+      const total=doc.getNumberOfPages();
+      for(let p=1;p<=total;p++){
+        doc.setPage(p);
+        doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(120);
+        doc.text("Page "+p+" sur "+total,LARGEUR/2,HAUTEUR-10,{align:"center"});
+        doc.text("Paraphes : ......... / .........",LARGEUR-MARGE,HAUTEUR-10,{align:"right"});
+        doc.setTextColor(0);
+      }
+    },
+  };
+  nouvellePage(true);
+  return api;
+}
+
+// Les dates au format francais dans les PDF : « 2026-09-01 » ne se lit pas.
+const fmtDatePdf=(d)=>{
+  const t=String(d||"").slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(t))return t||"-";
+  const[a,m,j]=t.split("-");
+  return j+"/"+m+"/"+a;
+};
+
 async function generateAndStoreContratPDF(contratId){
   try{
     // 1. Recuperer toutes les donnees necessaires
@@ -9042,99 +9129,145 @@ async function generateAndStoreContratPDF(contratId){
 const jsPDF=await chargerJsPDF();
     const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
 
-    // 3. Genenrer le PDF
-    let y=20;
-    doc.setFontSize(16);doc.setFont("helvetica","bold");
-    doc.text("CONTRAT DE TRAVAIL",105,y,{align:"center"});y+=6;
-    doc.setFontSize(10);doc.setFont("helvetica","normal");
-    doc.text("Assistante maternelle agreee - CCN 3239",105,y,{align:"center"});y+=12;
-
-    // IDENTITE DES PARTIES P15
-    // Un contrat signe ne doit plus changer : si un snapshot a ete fige a la signature, il prime
-    // sur les donnees live du profil. Sinon (brouillon), on lit le profil a jour.
+    // 3. Le contrat
     const emp=ct.employeur_snapshot||parentProfile||{};
     const sal=ct.salarie_snapshot||asmatProfile||{};
-    const ligneAdresse=(a,x,yy)=>{
-      let yr=yy;
-      String(a||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach(l=>{doc.text(l,x,yr);yr+=5;});
-      return yr;
+    const A=(v)=>String(v||"").split(/\n+/).map(x=>x.trim()).filter(Boolean).join(", ");
+    const nom=(p,a,b)=>((p?.[a]||"")+" "+(p?.[b]||"")).trim();
+    const jours=Array.isArray(ct.jours)?ct.jours:(ct.jours?[ct.jours]:[]);
+    const nbJours=jours.length;
+    const cadre={...ct,anneeComplete:ct.annee_complete,semainesAccueil:ct.semaines_accueil,
+      heuresHebdo:ct.heures_hebdo,tauxHoraire:ct.taux_horaire};
+    const complete=estAnneeComplete(cadre);
+    const semaines=semainesDuContrat(cadre);
+    const hMois=heuresMensualisees(cadre);
+    const salMois=salaireMensualise(cadre);
+    // Deux mois si l'enfant est confie quatre jours ou plus par semaine, trois
+    // sinon (CCN 3239). La duree doit figurer au contrat : sans elle, il n'y a
+    // pas de periode d'essai du tout.
+    const essaiMois=nbJours>=4?2:3;
+
+    const R=redacteurPdf(doc,{
+      titre:"CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE",
+      sousTitre:"Assistant maternel agréé employé par un particulier — Convention collective IDCC 3239",
+    });
+
+    R.article(1,"LES PARTIES");
+    R.texte("Le présent contrat est conclu entre :");
+    R.champ("Le particulier employeur",nom(emp,"prenom","nom"));
+    if(emp?.parent2_prenom||emp?.parent2_nom)R.champ("Et",nom(emp,"parent2_prenom","parent2_nom"));
+    R.champ("Domicile",A(emp?.adresse));
+    R.champ("Téléphone",emp?.telephone);
+    R.champ("Courriel",emp?.email);
+    R.champ("Numéro Pajemploi",emp?.numero_pajemploi||"communiqué dès réception");
+    R.espace(3);
+    R.champ("Le salarié, assistant maternel agréé",nom(sal,"prenom","nom"));
+    R.champ("Domicile, lieu d'accueil",A(sal?.adresse));
+    R.champ("Téléphone",sal?.telephone);
+    R.champ("Courriel",sal?.email);
+    R.champ("Numéro d'agrément",sal?.numero_agrement);
+    R.espace(2);
+    R.texte("Le salarié déclare être titulaire d'un agrément en cours de validité délivré par le président du conseil départemental, et avoir souscrit une assurance responsabilité civile professionnelle ainsi qu'une assurance automobile couvrant le transport des enfants accueillis. Copie de ces documents est annexée au présent contrat.",{taille:8.5});
+
+    R.article(2,"L'ENFANT ACCUEILLI");
+    R.champ("Prénom et nom",((enfant.prenom||"")+" "+(enfant.nom||"")).trim());
+    R.champ("Date de naissance",enfant.naissance?fmtDatePdf(enfant.naissance):"-");
+
+    R.article(3,"DATE D'EMBAUCHE, PÉRIODE D'ESSAI ET PÉRIODE D'ADAPTATION");
+    R.champ("Premier jour d'accueil",ct.debut?fmtDatePdf(ct.debut):"-");
+    R.champ("Durée de la période d'essai",essaiMois+" mois");
+    R.texte("La période d'essai est de deux mois lorsque l'enfant est confié quatre jours calendaires ou plus par semaine, et de trois mois en deçà (convention collective IDCC 3239). Elle court à compter du premier jour d'accueil. Pendant cette période, chacune des parties peut rompre le contrat sans motif ni indemnité, en respectant le délai de prévenance prévu par la convention.",{taille:8.5});
+    R.texte("Une période d'adaptation de 30 jours calendaires au maximum, destinée à familiariser progressivement l'enfant à son nouveau mode d'accueil, s'ouvre au premier jour de travail effectif. Elle est comprise dans la période d'essai. Ses modalités (jours et horaires progressifs) sont convenues entre les parties ; le salaire y est calculé sur les heures réellement effectuées.",{taille:8.5});
+
+    R.article(4,"DURÉE ET HORAIRES DE L'ACCUEIL");
+    R.champ("Jours d'accueil",jours.length?jours.join(", "):"-");
+    R.champ("Nombre de jours par semaine",nbJours||"-");
+    R.champ("Horaires habituels",ct.horaires);
+    R.champ("Durée hebdomadaire d'accueil",(ct.heures_hebdo||0)+" heures");
+    R.champ("Rythme d'accueil",complete?"Année complète (52 semaines)":"Année incomplète ("+semaines+" semaines par an)");
+    if(ct.fin)R.champ("Fin prévue de l'accueil",fmtDatePdf(ct.fin));
+    R.texte("Toute heure effectuée au-delà de la durée hebdomadaire convenue est une heure complémentaire, rémunérée en sus du salaire mensualisé. Au-delà de 45 heures par semaine, les heures sont majorées selon le taux fixé par la convention collective. Toute modification durable des jours ou des horaires fait l'objet d'un avenant écrit signé des deux parties.",{taille:8.5});
+
+    R.article(5,"RÉMUNÉRATION");
+    R.champ("Salaire horaire net",nbf(ct.taux_horaire||0,2)+" € par heure et par enfant");
+    R.champ("Mode de mensualisation",complete?"Année complète":"Année incomplète");
+    R.champ("Calcul",(ct.heures_hebdo||0)+" h x "+semaines+" semaines ÷ 12 mois = "+hMois+" h par mois");
+    R.champ("Salaire mensuel net de base",nbf(salMois,2)+" €");
+    R.texte(complete
+      ? "Le salaire est mensualisé sur 52 semaines : le même montant est versé chaque mois, quel que soit le nombre de jours d'accueil du mois, et la rémunération des congés payés est incluse dans ce montant."
+      : "Le salaire est mensualisé sur les "+semaines+" semaines d'accueil programmées : le même montant est versé chaque mois d'accueil. La rémunération des congés payés n'est PAS comprise dans ce montant ; elle est versée à part, selon les modalités de l'article 7.",{taille:8.5});
+    R.texte("Le salaire est versé au plus tard à la fin du mois. Le particulier employeur déclare la rémunération chaque mois au service Pajemploi, qui édite le bulletin de paie. Le salaire horaire ne peut être inférieur au minimum conventionnel en vigueur.",{taille:8.5});
+
+    R.article(6,"INDEMNITÉS ET FRAIS");
+    R.champ("Indemnité d'entretien",nbf(ct.entretien||0,2)+" € par journée d'accueil");
+    R.texte("L'indemnité d'entretien couvre les matériels et produits de couchage, de puériculture, de jeu et d'hygiène, ainsi que la part afférente aux frais généraux du logement. Elle est due pour chaque journée d'accueil, n'est pas un salaire, et ne peut être inférieure au minimum fixé par la convention collective.",{taille:8.5});
+    R.champ("Fourniture des repas",Number(ct.repas)>0?"Fournis par l'assistant maternel : "+nbf(ct.repas,2)+" € par jour":"Fournis par le particulier employeur");
+    R.texte("Les déplacements effectués avec l'enfant pour le compte du particulier employeur donnent lieu à une indemnité kilométrique, convenue entre les parties. Elle ne peut être inférieure au barème de l'administration ni supérieure au barème fiscal. Une feuille de route mensuelle mentionnant la date, le motif et le kilométrage est tenue par le salarié.",{taille:8.5});
+
+    R.article(7,"CONGÉS PAYÉS");
+    R.texte("Le salarié acquiert 2,5 jours ouvrables de congés payés par mois de travail effectif, dans la limite de 30 jours ouvrables par an. La période de référence court du 1er juin au 31 mai.",{taille:8.5});
+    R.texte(complete
+      ? "L'accueil étant organisé sur l'année complète, la rémunération des congés payés est incluse dans le salaire mensualisé."
+      : "L'accueil étant organisé sur une année incomplète, la rémunération des congés payés est versée à part : soit en une fois au mois de juin, soit lors de la prise principale des congés, soit par fractionnement lors de chaque prise. Son montant est le plus favorable entre le dixième de la rémunération brute perçue sur la période de référence et le maintien du salaire.",{taille:8.5});
+    R.texte("Lorsque le salarié accueille les enfants de plusieurs particuliers employeurs, les parties s'efforcent de fixer d'un commun accord les dates de congés au plus tard le 1er mars de chaque année.",{taille:8.5});
+
+    R.article(8,"JOURS FÉRIÉS");
+    R.texte("Le 1er mai est chômé et payé lorsqu'il tombe un jour habituellement travaillé. Les autres jours fériés sont chômés et payés ou travaillés selon ce que les parties conviennent ; les jours fériés travaillés sont majorés conformément à la convention collective.",{taille:8.5});
+
+    R.article(9,"ABSENCES");
+    R.texte("Les absences du salarié qui ne sont pas rémunérées donnent lieu à une retenue sur le salaire mensualisé, proportionnelle à la durée de l'absence (article 111 de la convention collective).",{taille:8.5});
+    R.texte("En cas d'absence de l'enfant pour une raison autre que la maladie, le salaire est dû. En cas de maladie de l'enfant, l'absence n'est déduite que sur présentation d'un certificat médical et dans les conditions prévues par la convention collective. Les absences prévues sont annoncées dès que possible à l'autre partie.",{taille:8.5});
+    R.texte("Le salarié bénéficie chaque année d'un droit à la formation professionnelle. Lorsque la formation se déroule sur le temps d'accueil, le salaire est maintenu ; lorsqu'elle se déroule en dehors, elle ouvre droit à une allocation de formation versée par l'organisme collecteur, et non par le particulier employeur.",{taille:8.5});
+
+    R.article(10,"RUPTURE DU CONTRAT");
+    R.texte("Hors période d'essai, la partie qui souhaite rompre le contrat notifie sa décision à l'autre par lettre recommandée avec avis de réception, ou par lettre remise en main propre contre décharge. La date de première présentation fixe le point de départ du préavis.",{taille:8.5});
+    R.texte("Le préavis est de 8 jours calendaires pour une ancienneté inférieure à 3 mois, de 15 jours pour une ancienneté de 3 mois à moins d'un an, et d'un mois au-delà. Le retrait de l'enfant à l'initiative du particulier employeur ouvre droit, après 9 mois d'ancienneté et hors faute grave, à une indemnité de rupture égale au minimum à 1/80e du total des salaires nets perçus.",{taille:8.5});
+    R.texte("Au terme du contrat, le particulier employeur remet au salarié un certificat de travail, un solde de tout compte et une attestation destinée à France Travail. Le retrait de l'agrément du salarié entraîne la rupture de plein droit du contrat.",{taille:8.5});
+
+    R.article(11,"AUTORISATIONS DU PARTICULIER EMPLOYEUR");
+    R.texte("Le particulier employeur autorise le salarié à (cocher ou rayer les mentions inutiles) :",{taille:8.5});
+    for(const l of [
+      "transporter l'enfant en véhicule personnel, l'assurance automobile du salarié couvrant ce transport ;",
+      "sortir avec l'enfant hors du domicile (promenade, parc, relais petite enfance, bibliothèque) ;",
+      "confier ponctuellement l'enfant à une tierce personne désignée par écrit par le particulier employeur ;",
+      "administrer un traitement médical sur présentation d'une ordonnance nominative en cours de validité ;",
+      "appeler les secours et faire hospitaliser l'enfant en cas d'urgence, le particulier employeur étant prévenu sans délai ;",
+      "photographier l'enfant dans le cadre de l'accueil, sans diffusion en dehors du particulier employeur.",
+    ]){ R.place(6); doc.setFontSize(8.5); doc.text("[ ]",MARGE+2,R.y); for(const seg of doc.splitTextToSize(l,LARGEUR-2*MARGE-12)){ doc.text(seg,MARGE+9,R.y); R.y+=4.2; } R.y+=1.4; }
+
+    R.article(12,"DOCUMENTS ANNEXÉS ET DISPOSITIONS FINALES");
+    R.texte("Sont annexés au présent contrat : la copie de l'agrément du salarié, les attestations d'assurance responsabilité civile professionnelle et automobile, les autorisations parentales, ainsi que la fiche de renseignements et d'urgence concernant l'enfant.",{taille:8.5});
+    R.texte("Pour tout ce qui n'est pas prévu au présent contrat, les parties se réfèrent à la convention collective nationale des particuliers employeurs et de l'emploi à domicile (IDCC 3239) et au code du travail. Toute clause moins favorable au salarié que la convention collective est réputée non écrite.",{taille:8.5});
+    R.texte("Le présent contrat est établi en deux exemplaires originaux, un pour chaque partie. Il est daté, signé, et paraphé au bas de chaque page. Il est à conserver au moins cinq ans.",{taille:8.5});
+
+    // Signatures, jamais separees du dernier article par une page vide.
+    R.place(54);
+    R.espace(4);
+    doc.setFont("helvetica","bold");doc.setFontSize(10.5);
+    doc.text("SIGNATURES",MARGE,R.y);R.y+=3;
+    doc.setFont("helvetica","normal");doc.setFontSize(8);
+    doc.text("Précédées de la mention manuscrite « lu et approuve »",MARGE,R.y+3);R.y+=8;
+
+    const sigY=R.y, sigW=80, sigH=32;
+    const cadreSig=(x,titreSig,image,date,attente)=>{
+      doc.setDrawColor(120);doc.rect(x,sigY,sigW,sigH);
+      doc.setFontSize(8.5);doc.setFont("helvetica","bold");
+      doc.text(titreSig,x,sigY-2);doc.setFont("helvetica","normal");
+      if(image){
+        try{doc.addImage(image,"PNG",x+2,sigY+2,sigW-4,sigH-11);}catch(e){}
+        doc.setFontSize(7.5);
+        doc.text("Signé électroniquement le "+(date?fmtDatePdf(date.slice(0,10)):"-"),x+2,sigY+sigH-2.5);
+      }else{
+        doc.setFontSize(8);doc.setTextColor(140);
+        doc.text(attente,x+2,sigY+sigH/2);doc.setTextColor(0);
+      }
     };
+    cadreSig(MARGE,"L'assistant maternel",ct.signature_asmat_data,ct.date_signature_asmat,"Non signé");
+    cadreSig(LARGEUR-MARGE-sigW,"Le particulier employeur",ct.signature_parent_data,ct.date_signature_parent,"En attente de signature");
+    R.y=sigY+sigH+7;
+    R.texte("Signature électronique horodatée, de valeur légale identique à une signature manuscrite (règlement eIDAS n° 910/2014).",{italique:true,taille:7.5});
 
-    doc.setFontSize(11);doc.setFont("helvetica","bold");
-    doc.text("EMPLOYEUR (Particulier)",20,y);y+=6;
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    doc.text(((emp?.prenom||"")+" "+(emp?.nom||"")).trim()||"-",20,y);y+=5;
-    if(emp?.parent2_prenom||emp?.parent2_nom){
-      doc.text("Et : "+((emp.parent2_prenom||"")+" "+(emp.parent2_nom||"")).trim(),20,y);y+=5;
-    }
-    if(emp?.adresse)y=ligneAdresse(emp.adresse,20,y);
-    if(emp?.email)doc.text("Email : "+emp.email,20,y),y+=5;
-    if(emp?.telephone)doc.text("Tel : "+emp.telephone,20,y),y+=5;
-    doc.text("N Pajemploi : "+(emp?.numero_pajemploi||"communique des reception"),20,y);y+=5;
-    y+=4;
-
-    doc.setFontSize(11);doc.setFont("helvetica","bold");
-    doc.text("SALARIEE (Assistante maternelle)",20,y);y+=6;
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    doc.text(((sal?.prenom||"")+" "+(sal?.nom||"")).trim()||"-",20,y);y+=5;
-    if(sal?.numero_agrement)doc.text("N agrement : "+sal.numero_agrement,20,y),y+=5;
-    if(sal?.adresse)y=ligneAdresse(sal.adresse,20,y);
-    if(sal?.email)doc.text("Email : "+sal.email,20,y),y+=5;
-    if(sal?.telephone)doc.text("Tel : "+sal.telephone,20,y),y+=5;
-    y+=4;
-
-    doc.setFontSize(11);doc.setFont("helvetica","bold");
-    doc.text("ENFANT ACCUEILLI",20,y);y+=6;
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    doc.text("Prenom : "+(enfant.prenom||"-"),20,y);y+=5;
-    if(enfant.naissance)doc.text("Date de naissance : "+enfant.naissance,20,y),y+=5;
-    y+=4;
-
-    doc.setFontSize(11);doc.setFont("helvetica","bold");
-    doc.text("CONDITIONS D'ACCUEIL",20,y);y+=6;
-    doc.setFont("helvetica","normal");doc.setFontSize(10);
-    if(ct.debut)doc.text("Debut du contrat : "+ct.debut,20,y),y+=5;
-    if(ct.fin)doc.text("Fin du contrat : "+ct.fin,20,y),y+=5;
-    doc.text("Heures hebdomadaires : "+(ct.heures_hebdo||0)+" h",20,y);y+=5;
-    doc.text("Jours d'accueil : "+(Array.isArray(ct.jours)?ct.jours.join(", "):(ct.jours||"-")),20,y);y+=5;
-    doc.text("Horaires : "+(ct.horaires||"-"),20,y);y+=5;
-    doc.text("Taux horaire net : "+nbf((ct.taux_horaire||0),2)+" euros/h",20,y);y+=5;
-    doc.text("Indemnite d'entretien : "+nbf((ct.entretien||0),2)+" euros/jour",20,y);y+=5;
-    y+=8;
-
-    doc.setFontSize(9);doc.setFont("helvetica","italic");
-    doc.text("Contrat conforme a la convention collective nationale des particuliers employeurs (IDCC 2395).",20,y);y+=4;
-    doc.text("A conserver 5 ans minimum. Valeur legale identique au papier.",20,y);y+=10;
-
-    // Zone signatures
-    doc.setFontSize(11);doc.setFont("helvetica","bold");
-    doc.text("SIGNATURES",20,y);y+=6;
-    doc.setFont("helvetica","normal");doc.setFontSize(9);
-
-    const sigY=y;
-    const sigBoxW=80;const sigBoxH=30;
-
-    // Signature asmat (gauche)
-    doc.rect(20,sigY,sigBoxW,sigBoxH);
-    doc.text("Assistante maternelle",22,sigY-1);
-    if(ct.signature_asmat_data){
-      try{doc.addImage(ct.signature_asmat_data,"PNG",22,sigY+2,sigBoxW-4,sigBoxH-10);}catch(e){}
-      doc.setFontSize(8);
-      doc.text("Le "+(ct.date_signature_asmat?ct.date_signature_asmat.slice(0,10):"-"),22,sigY+sigBoxH-2);
-    }else{
-      doc.setFontSize(8);doc.text("Non signe",22,sigY+sigBoxH/2);
-    }
-
-    // Signature parent (droite)
-    doc.rect(110,sigY,sigBoxW,sigBoxH);
-    doc.setFontSize(9);doc.text("Parent employeur",112,sigY-1);
-    if(ct.signature_parent_data){
-      try{doc.addImage(ct.signature_parent_data,"PNG",112,sigY+2,sigBoxW-4,sigBoxH-10);}catch(e){}
-      doc.setFontSize(8);
-      doc.text("Le "+(ct.date_signature_parent?ct.date_signature_parent.slice(0,10):"-"),112,sigY+sigBoxH-2);
-    }else{
-      doc.setFontSize(8);doc.text("En attente de signature",112,sigY+sigBoxH/2);
-    }
+    R.finaliser();
 
     // 4. Convertir en blob et uploader
     const blob=doc.output("blob");
