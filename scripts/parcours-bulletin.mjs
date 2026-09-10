@@ -154,12 +154,15 @@ if (DEJA_ENVOYE) {
   dire(m.bandeauEnvoye, "le bandeau « envoyé au parent » s'affiche");
   dire(m.boutonPdf, "le bulletin s'ouvre depuis l'écran, sans passer par Documents");
   dire(!m.renvoiSecheDocuments, "plus de renvoi sec vers Documents quand le PDF existe");
+  // Le bouton reste accessible en permanence : le contrat peut avoir change
+  // depuis l'envoi, et le bulletin doit pouvoir etre refait autant de fois
+  // qu'il le faut. Seul l'avertissement depend de l'anciennete du fichier.
+  dire(m.majProposee, "le bouton de mise à jour est toujours accessible");
   if (BULLETIN_ANCIEN) {
-    dire(m.majProposee, "un bulletin périmé propose sa mise à jour");
     dire(m.majExpliquee, "l'écran dit ce qui manque à l'ancien PDF");
     dire(m.majSansRenotifier, "la mise à jour annonce qu'elle ne renotifie pas le parent");
   } else {
-    dire(!m.majProposee, "un bulletin à jour ne propose pas de mise à jour");
+    dire(!m.majExpliquee, "un bulletin à jour n'affiche pas d'avertissement");
   }
 }
 // En mode « sous-minimum » on ne vérifie que l'alerte : les montants changent

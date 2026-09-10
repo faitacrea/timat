@@ -3936,6 +3936,8 @@ function Contrats({enfants,role,pEId,user}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
+  // Le PDF est en retard des que le contrat a change depuis son ecriture.
+  const contratPerime=pdfPerime(contrat?.pdf_generated_at,contrat?.updated_at);
 
   // FIX: Synchroniser signes/datesSignature avec les données réelles à chaque changement de la liste enfants
   useEffect(()=>{
@@ -4169,20 +4171,23 @@ function Contrats({enfants,role,pEId,user}){
                   <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>
                     Signé le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · <IconeOuEmoji e="🔒" taille={12}/> conforme eIDAS
                   </div>
+                  {/* Le bouton de mise a jour reste toujours accessible : le PDF
+                      doit pouvoir etre refait apres chaque modification du
+                      contrat, pas une seule fois. L'avertissement rouge, lui,
+                      ne sort que lorsque le fichier est reellement en retard. */}
                   <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                     {contrat?.pdf_storage_path
-                      ?<BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
+                      ?<><BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
+                        <button className={"btn s "+(contratPerime?"bS":"")} disabled={majPdf==="pending"} onClick={majContratPdf}>
+                          {majPdf==="pending"?"Mise à jour…":"↻ Mettre à jour le PDF"}
+                        </button></>
                       :<span style={{fontSize:11.5,color:"var(--m)"}}>Le PDF est en cours de préparation — il apparaîtra ici et dans Documents.</span>}
-                    {contrat?.pdf_storage_path&&pdfPerime(contrat.pdf_generated_at)&&
-                      <button className="btn bS s" disabled={majPdf==="pending"} onClick={majContratPdf}>
-                        {majPdf==="pending"?"Mise à jour…":"↻ Mettre à jour le PDF"}
-                      </button>}
                   </div>
-                  {contrat?.pdf_storage_path&&pdfPerime(contrat.pdf_generated_at)&&
+                  {contrat?.pdf_storage_path&&contratPerime&&
                     <div style={{marginTop:8,fontSize:11.5,color:"var(--R)",lineHeight:1.5,maxWidth:420}}>
-                      Ce PDF a été produit par une version précédente : il ne contient pas les douze
-                      articles du contrat actuel. Le mettre à jour le réécrit avec les mêmes données
-                      et les mêmes signatures.
+                      <IconeOuEmoji e="⚠️" taille={13}/> Le contrat a été modifié depuis que ce PDF a été
+                      produit : le fichier ne reflète plus les valeurs actuelles. Le mettre à jour le
+                      réécrit avec les mêmes signatures.
                     </div>}
                 </>}
               </div>
@@ -4214,8 +4219,8 @@ function Contrats({enfants,role,pEId,user}){
           onSaved={()=>{setToast("Rythme d'accueil enregistré ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}}
           onErr={(m)=>setToast(m)}/>
 
-        <FournitureRepas contrat={contrat} role={role}
-          onSaved={()=>{setToast("Fourniture des repas enregistrée ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}}
+        <IndemnitesJournalieres contrat={contrat} role={role}
+          onSaved={()=>{setToast("Indemnités enregistrées ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}}
           onErr={(m)=>setToast(m)}/>
 
         {/* Signature électronique */}
@@ -6681,10 +6686,10 @@ function BulletinSalaire({enfants,role,pEId,user}){
         ?<BoutonPdfStocke path={bulletinsEnvoyes[moisSelKey].pdf_storage_path} onErr={(m)=>setToast(m)} compact icone="📜"
           label="Ouvrir le bulletin (PDF)" erreur="❌ Bulletin indisponible (droits d'accès) — réessayez dans un instant."/>
         :<span style={{color:"var(--m)"}}>— disponible dans Documents</span>}
-      {pdfPerime(bulletinsEnvoyes[moisSelKey].date_envoi)&&
-        <button className="btn bS s" disabled={envoyer} onClick={()=>envoyerAuParent(false)}>
-          {envoyer?"Mise à jour…":"↻ Mettre à jour le PDF"}
-        </button>}
+      {/* Toujours accessible : le contrat peut avoir change depuis l'envoi. */}
+      <button className={"btn s "+(pdfPerime(bulletinsEnvoyes[moisSelKey].date_envoi)?"bS":"")} disabled={envoyer} onClick={()=>envoyerAuParent(false)}>
+        {envoyer?"Mise à jour…":"↻ Mettre à jour le PDF"}
+      </button>
     </div>}
     {moisSelKey&&bulletinsEnvoyes[moisSelKey]?.envoye_au_parent&&pdfPerime(bulletinsEnvoyes[moisSelKey].date_envoi)&&
       <div style={{fontSize:11.5,color:"var(--R)",lineHeight:1.5,marginBottom:12,marginTop:-6}}>
@@ -9266,10 +9271,17 @@ const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000044
 // l'ancien pour toutes les autres, sans que rien ne le signale.
 // Cette date est celle de la refonte des deux documents. Un fichier ecrit avant
 // est perime : l'application le dit et propose de le refaire.
-const DOCUMENTS_REFONTE="2026-09-10";
-const pdfPerime=(dateGeneration)=>{
-  const j=String(dateGeneration||"").slice(0,10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(j)&&j<DOCUMENTS_REFONTE;
+const DOCUMENTS_REFONTE="2026-09-10T00:00:00Z";
+// Le PDF est perime s'il a ete ecrit AVANT la derniere modification du contrat,
+// ou avant la refonte des documents. La premiere comparaison est la vraie :
+// sans elle, une fois le fichier refait le bouton disparaissait pour de bon, et
+// toute modification ulterieure du contrat — les indemnites, le rythme
+// d'accueil, qui fournit les repas — restait absente du PDF sans recours.
+const pdfPerime=(dateGeneration,dateModification)=>{
+  const gen=String(dateGeneration||"");
+  if(!gen)return false;
+  const seuils=[DOCUMENTS_REFONTE,String(dateModification||"")].filter(Boolean);
+  return seuils.some((s)=>gen<s);
 };
 
 const fmtDatePdf=(d)=>{
@@ -11049,44 +11061,87 @@ const REPAS_CHOIX=[
   ["mixte","Les deux","À détailler dans le contrat (goûter, lait…)."],
 ];
 
-function FournitureRepas({contrat,role,onSaved,onErr}){
-  const enregistre=contrat?.repasFourniPar??contrat?.repas_fourni_par??null;
-  const montantEnregistre=Number(contrat?.repas)||0;
-  const [choix,setChoix]=useState(enregistre);
-  const [montant,setMontant]=useState(montantEnregistre);
+function IndemnitesJournalieres({contrat,role,onSaved,onErr}){
+  const repasEnregistre=contrat?.repasFourniPar??contrat?.repas_fourni_par??null;
+  const repasMontantEnr=Number(contrat?.repas)||0;
+  const entretienEnr=Number(contrat?.entretien)||0;
+  const heuresJour=Math.round(((Number(contrat?.heuresHebdo)||0)/((contrat?.jours?.length)||5))*10)/10;
+
+  const [qui,setQui]=useState(repasEnregistre);
+  const [repas,setRepas]=useState(repasMontantEnr);
+  const [entretien,setEntretien]=useState(entretienEnr);
   const [busy,setBusy]=useState(false);
   const lecture=role!=="asmat";
-  useEffect(()=>{setChoix(enregistre);setMontant(montantEnregistre);},[contrat?.id,enregistre,montantEnregistre]);
+  const signe=!!(contrat?.signe_asmat||contrat?.signe_parent);
+  useEffect(()=>{setQui(repasEnregistre);setRepas(repasMontantEnr);setEntretien(entretienEnr);},
+    [contrat?.id,repasEnregistre,repasMontantEnr,entretienEnr]);
 
-  const modifie=choix!==enregistre||(choix!=="employeur"&&Number(montant)!==montantEnregistre);
+  // Le minimum d'entretien depend de la duree de la journee d'accueil : 0,435 EUR
+  // par heure, jamais moins de 2,65 EUR par journee.
+  const miniEntretien=indemniteEntretienMin(heuresJour||9);
+  const sousMini=entretien>0&&entretien<miniEntretien;
+
+  const modifie=qui!==repasEnregistre
+    ||(qui!=="employeur"&&Number(repas)!==repasMontantEnr)
+    ||Number(entretien)!==entretienEnr;
+  // Aligner une indemnite sur le minimum legal est automatique : la convention
+  // le prevoit, aucun avenant n'est necessaire. Toute AUTRE modification touche
+  // a la remuneration convenue et demande un avenant signe des deux cotes.
+  const simpleAlignement=qui===repasEnregistre
+    &&(qui==="employeur"||Number(repas)===repasMontantEnr)
+    &&Number(entretien)>entretienEnr&&Number(entretien)<=miniEntretien;
+
   const enregistrer=async()=>{
-    if(!contrat?.id||!choix)return;
+    if(!contrat?.id)return;
     setBusy(true);
-    const m=choix==="employeur"?0:Math.max(0,Number(montant)||0);
-    const{error}=await supabase.from("contrats").update({repas_fourni_par:choix,repas:m}).eq("id",contrat.id);
+    const m=qui==="employeur"?0:Math.max(0,Number(repas)||0);
+    const maj={entretien:Math.max(0,Number(entretien)||0),repas:m};
+    if(qui)maj.repas_fourni_par=qui;
+    const{error}=await supabase.from("contrats").update(maj).eq("id",contrat.id);
     setBusy(false);
     if(error){onErr?.("Erreur : "+error.message);return;}
     onSaved?.();
   };
+  const annuler=()=>{setQui(repasEnregistre);setRepas(repasMontantEnr);setEntretien(entretienEnr);};
 
   return <div className="card" style={{marginBottom:12}}>
-    <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="🍽️"/> Qui fournit les repas</div>
+    <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="🧺"/> Indemnités journalières</div>
     <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55,marginBottom:12}}>
-      La convention laisse les deux parties en décider ensemble, et demande que le choix figure au contrat.
+      Elles ne sont pas du salaire : elles remboursent des frais, ne supportent pas de cotisations,
+      et se déclarent sur leur propre ligne dans Pajemploi.
     </div>
+
     {lecture
-      ?<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>
-        {enregistre?(REPAS_CHOIX.find(c=>c[0]===enregistre)||[])[1]:"Non encore convenu"}
-        {enregistre!=="employeur"&&montantEnregistre>0?" — "+nb2(montantEnregistre)+" € par journée":""}
+      ?<div style={{fontSize:13,color:"var(--b)",lineHeight:1.8}}>
+        <div><b>Entretien</b> : {nb2(entretienEnr)} € par journée d'accueil</div>
+        <div><b>Repas</b> : {repasEnregistre?(REPAS_CHOIX.find(c=>c[0]===repasEnregistre)||[])[1]:"non encore convenu"}
+          {repasEnregistre!=="employeur"&&repasMontantEnr>0?" — "+nb2(repasMontantEnr)+" € par journée":""}</div>
       </div>
       :<>
-      {!enregistre&&<div style={{fontSize:11.5,color:"var(--R)",marginBottom:10,lineHeight:1.5}}>
+      <label className="lbl">Indemnité d'entretien (€ par journée d'accueil)</label>
+      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+        <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
+          value={entretien} onChange={e=>setEntretien(Math.max(0,parseFloat(e.target.value)||0))}/>
+        <span style={{fontSize:12,color:"var(--m)"}}>
+          minimum {nb2(miniEntretien)} € pour une journée de {heuresJour||9} h
+        </span>
+      </div>
+      {sousMini&&<div style={{fontSize:11.5,color:"var(--R)",marginTop:8,lineHeight:1.5}}>
+        <IconeOuEmoji e="⚠️" taille={13}/> Sous le minimum conventionnel : {nb2(miniEntretien)} € pour
+        une journée de {heuresJour||9} h (0,435 € l'heure, jamais moins de 2,65 € par journée).
+      </div>}
+
+      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"16px 0 6px"}}>Qui fournit les repas</div>
+      <div style={{fontSize:11.5,color:"var(--m)",marginBottom:9,lineHeight:1.5}}>
+        La convention laisse les deux parties en décider ensemble, et demande que le choix figure au contrat.
+      </div>
+      {!repasEnregistre&&<div style={{fontSize:11.5,color:"var(--R)",marginBottom:10,lineHeight:1.5}}>
         <IconeOuEmoji e="⚠️" taille={13}/> Ce n'est pas encore convenu : le contrat imprime une ligne à compléter à la main.
       </div>}
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         {REPAS_CHOIX.map(([v,l,d])=>{
-          const on=choix===v;
-          return <button key={v} type="button" disabled={busy} onClick={()=>setChoix(v)}
+          const on=qui===v;
+          return <button key={v} type="button" disabled={busy} onClick={()=>setQui(v)}
             style={{flex:"1 1 130px",textAlign:"left",padding:"9px 11px",borderRadius:10,cursor:busy?"wait":"pointer",fontFamily:"inherit",
               border:"1.5px solid "+(on?"var(--accent)":"var(--br)"),background:on?"var(--accent-pale)":"var(--w)"}}>
             <span style={{display:"block",fontSize:12.5,fontWeight:700,color:on?"var(--accent)":"var(--b)"}}>{l}</span>
@@ -11094,17 +11149,28 @@ function FournitureRepas({contrat,role,onSaved,onErr}){
           </button>;
         })}
       </div>
-      {choix&&choix!=="employeur"&&<div style={{marginTop:12}}>
+      {qui&&qui!=="employeur"&&<div style={{marginTop:12}}>
         <label className="lbl">Indemnité de repas (€ par journée d'accueil)</label>
         <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
-          value={montant} onChange={e=>setMontant(Math.max(0,parseFloat(e.target.value)||0))}/>
+          value={repas} onChange={e=>setRepas(Math.max(0,parseFloat(e.target.value)||0))}/>
         <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
           Elle ne peut pas descendre sous le minimum conventionnel. La nature des repas convenue se précise sur le contrat imprimé.
         </div>
       </div>}
-      {modifie&&<div style={{marginTop:12,display:"flex",gap:8,flexWrap:"wrap"}}>
-        <button className="btn bS s" disabled={busy||!choix} onClick={enregistrer}>{busy?"…":"Enregistrer"}</button>
-        <button className="btn s" disabled={busy} onClick={()=>{setChoix(enregistre);setMontant(montantEnregistre);}}>Annuler</button>
+
+      {modifie&&<div style={{marginTop:14,padding:"11px 13px",background:signe&&!simpleAlignement?"var(--Rp)":"var(--Gp)",
+        border:"1px solid "+(signe&&!simpleAlignement?"var(--R)":"var(--G)"),borderRadius:10}}>
+        <div style={{fontSize:12.5,color:signe&&!simpleAlignement?"var(--R)":"var(--b)",lineHeight:1.55,marginBottom:9}}>
+          {!signe
+            ? "Le contrat n'est pas encore signé : la modification s'applique directement."
+            : simpleAlignement
+              ? <>Il s'agit d'un alignement sur le minimum conventionnel : la revalorisation est <b>automatique</b>, aucun avenant n'est nécessaire.</>
+              : <><IconeOuEmoji e="⚠️" taille={13}/> Ce contrat est signé. Modifier une indemnité convenue touche à la rémunération : cela demande un <b>avenant signé des deux côtés</b>. Enregistrer ici met à jour l'application, mais ne remplace pas l'accord du parent employeur.</>}
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button className="btn bS s" disabled={busy} onClick={enregistrer}>{busy?"…":"Enregistrer"}</button>
+          <button className="btn s" disabled={busy} onClick={annuler}>Annuler</button>
+        </div>
       </div>}
     </>}
   </div>;
@@ -20000,6 +20066,7 @@ export default function App(){
                 parent_id:ct.parent_id||null,
                 pdf_storage_path:ct.pdf_storage_path||null,
                 pdf_generated_at:ct.pdf_generated_at||null,
+                updated_at:ct.updated_at||null,
               }:null,
             };
           });

@@ -64,7 +64,7 @@ await page.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/([a-z_]+)/) || [])[1];
   if (t === "profiles") return r.fulfill(json([{ id: UID, role: "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
   if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : "2026-09-30T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
+  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : "2026-09-30T10:00:00Z", updated_at: PDF_ANCIEN ? "2026-08-15T10:00:00Z" : "2026-09-01T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
   // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
@@ -156,15 +156,20 @@ dire(!!apercu && apercu !== avant, "l'aperçu du nouveau salaire s'affiche", `${
 dire(/Enregistrer ce rythme/.test(t1) && /Annuler/.test(t1), "le changement se confirme, il ne s'applique pas tout seul");
 
 const tf = await txt();
+// Le bouton doit rester accessible EN PERMANENCE : le contrat se modifie
+// plusieurs fois, et chaque modification rend le PDF a refaire.
+dire(/Mettre à jour le PDF/.test(tf), "le bouton de mise à jour est toujours accessible");
 if (PDF_ANCIEN) {
-  dire(/Mettre à jour le PDF/.test(tf), "un PDF périmé est signalé, avec un bouton pour le refaire");
-  dire(/version précédente/.test(tf), "l'écran explique pourquoi le document est périmé");
+  dire(/a été modifié depuis que ce PDF/.test(tf), "un PDF en retard est signalé en rouge");
 } else {
-  dire(!/Mettre à jour le PDF/.test(tf), "un PDF à jour ne propose pas de mise à jour");
+  dire(!/a été modifié depuis que ce PDF/.test(tf), "un PDF à jour n'affiche pas d'avertissement");
 }
 
 // La fourniture des repas se convient, elle ne se deduit pas d'un montant.
-dire(/Qui fournit les repas/.test(tf), "le bloc « Qui fournit les repas » est présent");
+dire(/Indemnités journalières/.test(tf), "le bloc « Indemnités journalières » est présent");
+dire(/Indemnité d'entretien \(€ par journée d'accueil\)/i.test(tf), "l'indemnité d'entretien est modifiable");
+dire(/minimum .* € pour une journée de/.test(tf), "le minimum conventionnel de l'entretien est annoncé");
+dire(/Qui fournit les repas/.test(tf), "le choix des repas est au même endroit");
 dire(/pas encore convenu/i.test(tf), "un contrat sans accord sur les repas le signale");
 await page.evaluate(() => {
   const b = [...document.querySelectorAll("button")].find((x) => x.innerText.startsWith("Moi"));
@@ -180,6 +185,22 @@ await page.evaluate(() => {
 await page.waitForTimeout(600);
 const te = await txt();
 dire(/Aucune indemnité n'est due/.test(te), "choisir le parent employeur dit qu'aucune indemnité n'est due");
+
+// Modifier une indemnite convenue sur un contrat SIGNE demande un avenant ;
+// aligner sur le minimum conventionnel est automatique. Les deux doivent se
+// distinguer a l'ecran.
+await page.evaluate(() => {
+  const i = [...document.querySelectorAll("input[type=number]")].find((x) => x.closest("div")?.parentElement?.innerText?.includes("entretien"));
+  if (i) {
+    const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    set.call(i, "7.50");
+    i.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+});
+await page.waitForTimeout(700);
+const ta = await txt();
+dire(/avenant signé des deux côtés/.test(ta), "hausser une indemnité sur un contrat signé exige un avenant");
+dire(/Enregistrer/.test(ta) && /Annuler/.test(ta), "la modification se confirme explicitement");
 
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 await nav.close();
