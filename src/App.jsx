@@ -5790,7 +5790,19 @@ function Documents({enfants,role,pEId,user}){
     return()=>{alive=false;};
   },[(enfants||[]).map(e=>e?.contrat?.id).join(",")]);
   const seenPaths=new Set(baseList.map(d=>d.storagePath).filter(Boolean));
-  const liste=[...baseList,...contratDocs.filter(d=>!seenPaths.has(d.storagePath)),...bulletinDocs.filter(d=>!seenPaths.has(d.storagePath))];
+  // LA CONVENTION COLLECTIVE - c'est elle qui tranche tout ce que le contrat ne
+  // dit pas, et le contrat y renvoie explicitement. Elle etait pourtant
+  // introuvable depuis l'application. On pointe vers le texte officiel de
+  // Legifrance, gratuit et toujours a jour, plutot que d'embarquer une copie
+  // PDF qui se perimerait au premier avenant.
+  const docConvention={
+    id:"ccn3239", eId:null, cat:"agrement", sous:"Convention collective",
+    nom:"Convention collective IDCC 3239 (texte officiel)",
+    date:TODAY_STR, annee:annee==="tous"?String(new Date().getFullYear()):annee,
+    taille:"Légifrance", icone:"🏛️", partage:true, url:URL_CONVENTION,
+    storagePath:null, permanent:true,
+  };
+  const liste=[...baseList,...contratDocs.filter(d=>!seenPaths.has(d.storagePath)),...bulletinDocs.filter(d=>!seenPaths.has(d.storagePath)),docConvention];
 
   const filtres=liste.filter(d=>{
     if(annee!=="tous"&&d.annee!==annee)return false;
@@ -6057,7 +6069,7 @@ function Documents({enfants,role,pEId,user}){
                 <button className="btn bG s"style={{padding:"6px 10px"}}
                   onClick={()=>{if(doc.storagePath||doc.url)telechargerDoc(doc);else setToast("Impression: "+doc.nom);}}
                   title="Imprimer">🖨️</button>
-                {role==="asmat"&&<button className="btn bG s"style={{padding:"6px 10px",color:"var(--R)"}}
+                {role==="asmat"&&!doc.permanent&&<button className="btn bG s"style={{padding:"6px 10px",color:"var(--R)"}}
                   onClick={()=>supprimerDoc(doc)}
                   title="Supprimer">🗑️</button>}
               </div>
@@ -6315,7 +6327,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       if(fresh?.signature_base64)userSig=fresh.signature_base64;
       // Header
       doc.setFontSize(8);doc.setTextColor(...gris);doc.setFont("helvetica","normal");
-      doc.text("Convention collective des particuliers employeurs et de l'emploi a domicile (IDCC 3239)",PW/2,y,{align:"center"});y+=5;
+      doc.text("Convention collective des particuliers employeurs et de l'emploi à domicile (IDCC 3239)",PW/2,y,{align:"center"});y+=5;
       doc.setFontSize(16);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
       doc.text("BULLETIN DE PAIE",PW/2,y,{align:"center"});y+=6;
       doc.setFontSize(11);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
@@ -6325,18 +6337,37 @@ function BulletinSalaire({enfants,role,pEId,user}){
       const prenomEmp=parentP?.prenom?(parentP.prenom+" "+(parentP.nom||"")):"Parent employeur";
       doc.setFillColor(248,248,248);doc.rect(MX,y,PW-2*MX,22,"F");
       doc.setFontSize(9);doc.setFont("helvetica","bold");
-      doc.text("EMPLOYEUR (Particulier)",MX+2,y+5);
-      doc.text("SALARIEE (Asmat agreee)",MX+(PW-2*MX)/2+2,y+5);
+      doc.text("EMPLOYEUR (particulier)",MX+2,y+5);
+      doc.text("SALARIÉ (assistant maternel agréé)",MX+(PW-2*MX)/2+2,y+5);
       doc.setFont("helvetica","normal");doc.setFontSize(9);
       doc.text(prenomEmp,MX+2,y+11);
       doc.text((user?.prenom||"")+" "+(user?.nom||""),MX+(PW-2*MX)/2+2,y+11);
       doc.setFontSize(8);
       doc.text("Code APE : 8891A",MX+2,y+16);
-      if(fresh?.numero_agrement)doc.text("N agrement : "+fresh.numero_agrement,MX+(PW-2*MX)/2+2,y+16);
-      doc.text("Entree le : "+(contrat.debut||"-")+" - CDI",MX+(PW-2*MX)/2+2,y+20);
-      y+=28;
+      if(fresh?.numero_agrement)doc.text("N° agrément : "+fresh.numero_agrement,MX+(PW-2*MX)/2+2,y+16);
+      doc.text("Entré le : "+(contrat.debut?fmtDatePdf(contrat.debut):"-")+" — CDI",MX+(PW-2*MX)/2+2,y+20);
+      y+=26;
+      // Le bulletin ne disait pas sur quelle base il etait calcule : c'est
+      // pourtant ce qui explique pourquoi le montant est le meme chaque mois,
+      // et la question que pose tout parent employeur.
+      doc.setFontSize(7.5);doc.setTextColor(...gris);doc.setFont("helvetica","normal");
+      doc.text("Emploi : assistant maternel agréé — accueil de "+(enfant?.prenom||"l'enfant")
+        +". Mensualisation en "+(anneeComplete?"année complète":"année incomplète")+" : "
+        +semainesDuContrat(contrat)+" semaines × "+(contrat.heuresHebdo||0)+" h ÷ 12 = "
+        +heuresMensualisees(contrat)+" h par mois.",MX+2,y);
+      doc.setTextColor(...noir);doc.setFontSize(8);
+      y+=6;
+      // GARDE DE PAGE - jsPDF n'avertit pas : ce qui depasse le bas de la page
+      // est ecrit dans le vide et disparait, en silence. La ligne « Cout total
+      // employeur » manquait ainsi sur un bulletin charge, sans que rien ne le
+      // signale. Toute la mise en page passe par section() et ligne() : c'est
+      // le seul endroit ou poser le controle.
+      const BAS_BULLETIN=258;
+      const placer=(h)=>{ if(y+h>BAS_BULLETIN){doc.addPage();y=15;} };
+
       // Section : Remuneration
       const section=(t)=>{
+        placer(14);
         doc.setFillColor(...orange);doc.rect(MX,y,PW-2*MX,6,"F");
         doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);
         doc.text(t,MX+2,y+4);
@@ -6344,6 +6375,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
         doc.setTextColor(...noir);
       };
       const ligne=(l,col2,col3,col4,bold)=>{
+        placer(6);
         doc.setDrawColor(220,220,220);doc.rect(MX,y,PW-2*MX,6);
         doc.setFontSize(8);doc.setFont("helvetica",bold?"bold":"normal");
         doc.text(l,MX+2,y+4);
@@ -6352,16 +6384,16 @@ function BulletinSalaire({enfants,role,pEId,user}){
         if(col4)doc.text(col4,PW-MX-2,y+4,{align:"right"});
         y+=6;
       };
-      section("REMUNERATION");
-      ligne("Salaire de base (heures normales)",heuresNorm+" h",nbf(tauxH,4)+" euros/h",nbf(salBase,2)+" euros");
-      if(hSupp>0)ligne("Heures supplementaires (+25%)",hSupp+" h",nbf((tauxH*1.25),4)+" euros/h",nbf(salSupp,2)+" euros");
-      ligne("Indemnite d entretien",joursTravailles+" jours",nbf((contrat.entretien||3.92),2)+" euros/j",nbf(entretien,2)+" euros");
-      if(repasMois>0)ligne("Indemnite de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" euros/j",nbf(repasMois,2)+" euros");
-      if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"annee complete":"annee incomplete","- "+nbf(retenue,2)+" euros");
-      doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
+      section("RÉMUNÉRATION");
+      ligne("Salaire de base (heures normales)",heuresNorm+" h",nbf(tauxH,4)+" €/h",nbf(salBase,2)+" €");
+      if(hSupp>0)ligne("Heures supplémentaires (+ 25 %)",hSupp+" h",nbf((tauxH*1.25),4)+" €/h",nbf(salSupp,2)+" €");
+      ligne("Indemnité d'entretien",joursTravailles+" jours",nbf((contrat.entretien||3.92),2)+" €/j",nbf(entretien,2)+" €");
+      if(repasMois>0)ligne("Indemnité de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" €/j",nbf(repasMois,2)+" €");
+      if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"année complète":"année incomplète","- "+nbf(retenue,2)+" €");
+      placer(9);doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
       doc.text("SALAIRE BRUT MENSUEL",MX+2,y+5);
-      doc.text(nbf(brutApresRetenue,2)+" euros",PW-MX-2,y+5,{align:"right"});
+      doc.text(nbf(brutApresRetenue,2)+" €",PW-MX-2,y+5,{align:"right"});
       y+=10;
       // Section : Cotisations
       section("COTISATIONS SOCIALES");
@@ -6369,70 +6401,74 @@ function BulletinSalaire({enfants,role,pEId,user}){
         if(t.sal>0||t.pat>0){
           const cs=cotisation(t,"sal");
           const cp=cotisation(t,"pat");
-          ligne(nom,t.sal>0?"-"+nbf(cs,2):"",t.pat>0?nbf(cp,2):"","");
+          ligne(nom,t.sal>0?"- "+nbf(cs,2):"—",t.pat>0?nbf(cp,2):"—","");
         }
       });
-      doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,7,"F");
+      placer(9);doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,7,"F");
       doc.setFont("helvetica","bold");doc.setFontSize(9);
       doc.text("TOTAL COTISATIONS",MX+2,y+5);
       doc.setTextColor(196,74,106);
-      doc.text("-"+nbf(totalCotSal,2)+" euros",MX+95,y+5);
+      doc.text("- "+nbf(totalCotSal,2)+" €",MX+95,y+5);
       doc.setTextColor(...noir);
-      doc.text(nbf(totalCotPat,2)+" euros",MX+130,y+5);
+      doc.text(nbf(totalCotPat,2)+" €",MX+130,y+5);
       y+=10;
       doc.setFont("helvetica","italic");doc.setFontSize(7);doc.setTextColor(...gris);
-      doc.text("\" - \" = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.",MX+2,y);
+      doc.text("« — » : pas de cotisation sur cette part. CSG/CRDS calculées sur 98,25 % du brut.",MX+2,y);
       y+=5;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...noir);
       // Section : Recap net
       if(y>240){doc.addPage();y=15;}
-      section("RECAPITULATIF NET");
-      ligne("Salaire brut","","",nbf(brutApresRetenue,2)+" euros");
+      placer(62);
+      section("RÉCAPITULATIF NET");
+      ligne("Salaire brut","","",nbf(brutApresRetenue,2)+" €");
       doc.setTextColor(196,74,106);
-      ligne("Cotisations salariales","","","- "+nbf(totalCotSal,2)+" euros");
+      ligne("Cotisations salariales","","","- "+nbf(totalCotSal,2)+" €");
       doc.setTextColor(...noir);
-      doc.setFillColor(...orange);doc.rect(MX,y,PW-2*MX,8,"F");
+      placer(9);doc.setFillColor(...orange);doc.rect(MX,y,PW-2*MX,8,"F");
       doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(11);
-      doc.text("NET A PAYER",MX+2,y+5.5);
-      doc.text(nbf(netPaye,2)+" euros",PW-MX-2,y+5.5,{align:"right"});
+      doc.text("NET À PAYER",MX+2,y+5.5);
+      doc.text(nbf(netPaye,2)+" €",PW-MX-2,y+5.5,{align:"right"});
       y+=10;
       doc.setTextColor(...noir);doc.setFontSize(8);
-      doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
+      placer(7);doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
       doc.text("Net imposable",MX+2,y+4);
-      doc.text(nbf(netImposable,2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text(nbf(netImposable,2)+" €",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");doc.setFontSize(8);
-      ligne("Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")","","","- "+nbf(abattementMois,2)+" euros");
-      doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
+      ligne("Abattement régime spécial assistant maternel ("+abLabel+")","","","- "+nbf(abattementMois,2)+" €");
+      placer(7);doc.setFillColor(234,244,238);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(61,107,80);
-      doc.text("Net imposable apres abattement",MX+2,y+4);
-      doc.text(nbf(netImpApresAbattement,2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text("Net imposable après abattement",MX+2,y+4);
+      doc.text(nbf(netImpApresAbattement,2)+" €",PW-MX-2,y+4,{align:"right"});
       y+=7;
-      doc.setFillColor(232,240,247);doc.rect(MX,y,PW-2*MX,6,"F");
+      placer(7);doc.setFillColor(232,240,247);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");doc.setTextColor(46,72,89);
       doc.text("Montant net social",MX+2,y+4);
-      doc.text(nbf(netSocial,2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text(nbf(netSocial,2)+" €",PW-MX-2,y+4,{align:"right"});
       y+=7;
       doc.setTextColor(...gris);doc.setFont("helvetica","normal");doc.setFontSize(7);
-      doc.text("Reference RSA / prime d activite (hors indemnites). Conges payes acquis ce mois : "+cpAcquis+" jours ouvrables.",MX+2,y+3);
+      doc.text("Référence RSA / prime d'activité, hors indemnités d'entretien et de repas.",MX+2,y+3);
       y+=6;doc.setFontSize(8);
       doc.setTextColor(...noir);doc.setFont("helvetica","normal");
-      ligne("Indemnite entretien (non imposable)","","",nbf(entretien,2)+" euros");
-      if(repasMois>0)ligne("Indemnite repas (non imposable)","","",nbf(repasMois,2)+" euros");
-      doc.setFillColor(245,240,255);doc.rect(MX,y,PW-2*MX,6,"F");
+      ligne("Indemnité d'entretien (non imposable)","","",nbf(entretien,2)+" €");
+      if(repasMois>0)ligne("Indemnité de repas (non imposable)","","",nbf(repasMois,2)+" €");
+      // Le solde de conges payes ne figurait nulle part : c'est pourtant la
+      // rubrique que l'on cherche sur un bulletin quand on pose ses dates.
+      ligne("Congés payés acquis ce mois","","",nbf(cpAcquis,1)+" jours ouvrables");
+      placer(7);doc.setFillColor(245,240,255);doc.rect(MX,y,PW-2*MX,6,"F");
       doc.setFont("helvetica","bold");
-      doc.text("Cout total employeur",MX+2,y+4);
-      doc.text(nbf((coutEmployeur+entretien+repasMois),2)+" euros",PW-MX-2,y+4,{align:"right"});
+      doc.text("Coût total employeur",MX+2,y+4);
+      doc.text(nbf((coutEmployeur+entretien+repasMois),2)+" €",PW-MX-2,y+4,{align:"right"});
       y+=12;
       // Signature
-      if(y>250){doc.addPage();y=15;}
+      placer(34);
       const sigW=(PW-2*MX-5)/2;
       doc.setDrawColor(220,220,220);
       doc.rect(MX,y,sigW,25);
       doc.rect(MX+sigW+5,y,sigW,25);
       doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
-      doc.text("Signature de l employeur",MX+2,y+4);
-      doc.text("Signature de la salariee",MX+sigW+7,y+4);
+      doc.text("Signature de l'employeur",MX+2,y+4);
+      doc.text("Signature du salarié",MX+sigW+7,y+4);
       doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
       doc.text("Date : __________",MX+2,y+22);
       if(userSig){
@@ -6444,7 +6480,21 @@ function BulletinSalaire({enfants,role,pEId,user}){
       y+=30;
       // Footer
       doc.setFontSize(7);doc.setTextColor(...gris);
-      doc.text("Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN IDCC 3239 | A conserver 5 ans",PW/2,y,{align:"center"});
+      doc.setFont("helvetica","bold");
+      doc.text("Dans votre intérêt et pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.",PW/2,y,{align:"center"});
+      doc.setFont("helvetica","normal");y+=3.5;
+      doc.text("Article R. 3243-5 du code du travail. L'employeur en conserve un double pendant cinq ans (article L. 3243-4).",PW/2,y,{align:"center"});y+=3.5;
+      doc.text("Établi le "+new Date().toLocaleDateString("fr-FR")+" — Convention collective IDCC 3239 — Déclaration Pajemploi (Urssaf).",PW/2,y,{align:"center"});
+      const totalPages=doc.getNumberOfPages();
+      for(let pg=1;pg<=totalPages;pg++){
+        doc.setPage(pg);
+        doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(...gris);
+        doc.text("Page "+pg+" sur "+totalPages,PW-MX,292,{align:"right"});
+        if(pg>1){
+          doc.text("Bulletin de paie — "+moisSel+" — "+((user?.prenom||"")+" "+(user?.nom||"")).trim(),MX,292);
+        }
+        doc.setTextColor(...noir);
+      }
 
       // 2. Convertir en blob
       const blob=doc.output("blob");
@@ -9103,6 +9153,11 @@ function redacteurPdf(doc,{titre,sousTitre}){
 }
 
 // Les dates au format francais dans les PDF : « 2026-09-01 » ne se lit pas.
+// Le texte officiel de la convention, gratuit et toujours a jour. On renvoie
+// vers lui plutot que d'embarquer une copie PDF : une copie se perime, et
+// c'est justement le texte qui tranche tout ce que le contrat ne dit pas.
+const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICONT000044594539";
+
 const fmtDatePdf=(d)=>{
   const t=String(d||"").slice(0,10);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(t))return t||"-";
@@ -9237,7 +9292,9 @@ const jsPDF=await chargerJsPDF();
 
     R.article(12,"DOCUMENTS ANNEXÉS ET DISPOSITIONS FINALES");
     R.texte("Sont annexés au présent contrat : la copie de l'agrément du salarié, les attestations d'assurance responsabilité civile professionnelle et automobile, les autorisations parentales, ainsi que la fiche de renseignements et d'urgence concernant l'enfant.",{taille:8.5});
-    R.texte("Pour tout ce qui n'est pas prévu au présent contrat, les parties se réfèrent à la convention collective nationale des particuliers employeurs et de l'emploi à domicile (IDCC 3239) et au code du travail. Toute clause moins favorable au salarié que la convention collective est réputée non écrite.",{taille:8.5});
+    R.texte("Tout ce qui n'est PAS écrit dans le présent contrat est régi par la convention collective nationale des particuliers employeurs et de l'emploi à domicile (IDCC 3239) et par le code du travail. C'est elle qui tranche, et les deux parties sont réputées en avoir pris connaissance. Toute clause du contrat moins favorable au salarié que la convention collective est réputée non écrite.",{taille:8.5});
+    R.texte("Le texte intégral et à jour de la convention est consultable gratuitement sur Légifrance :",{taille:8.5});
+    R.texte(URL_CONVENTION,{taille:8.5});
     R.texte("Le présent contrat est établi en deux exemplaires originaux, un pour chaque partie. Il est daté, signé, et paraphé au bas de chaque page. Il est à conserver au moins cinq ans.",{taille:8.5});
 
     // Signatures, jamais separees du dernier article par une page vide.

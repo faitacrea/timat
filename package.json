@@ -24,7 +24,8 @@
     "parcours:contrat": "node scripts/parcours-contrat.mjs",
     "parcours:frais-km": "node scripts/parcours-frais-km.mjs",
     "pdf:contrat": "node scripts/rendre-contrat.mjs",
-    "pdf:relire": "node scripts/relire-pdf.mjs"
+    "pdf:relire": "node scripts/relire-pdf.mjs",
+    "pdf:bulletin": "node scripts/rendre-bulletin.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
