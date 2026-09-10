@@ -27,7 +27,8 @@
     "pdf:relire": "node scripts/relire-pdf.mjs",
     "pdf:bulletin": "node scripts/rendre-bulletin.mjs",
     "parcours:documents": "node scripts/parcours-documents.mjs",
-    "parcours:imprimes": "node scripts/parcours-documents-imprimes.mjs"
+    "parcours:imprimes": "node scripts/parcours-documents-imprimes.mjs",
+    "pdf:recap": "node scripts/rendre-recap-versements.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
