@@ -755,6 +755,26 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- documents imprimes : dates et formulations ---
+// Pourquoi : l'attestation destinee a France Travail imprimait la date
+// d'embauche telle qu'elle est stockee — « 2026-01-01 » — sur un document
+// juridique. Elle designait aussi le salarie au feminin, alors que le metier
+// n'y est pas reserve et que le document se signe.
+{
+  const zonesDoc = [...appSrc.matchAll(/(?:document\.write|const html\s*=|html\s*\+=)[\s\S]{0,4000}?<\/html>/g)].map((m) => m[0]).join("\n");
+  const feminins = ["la salariée", "Signature de la salariée", "assistante maternelle agréée</td>"];
+  const trouves = feminins.filter((f) => zonesDoc.toLowerCase().includes(f.toLowerCase()));
+  if (trouves.length) {
+    signale("document", `un document imprimé désigne le salarié au féminin (${trouves.join(", ")}) : le métier n'y est pas réservé`);
+  }
+  // Une date brute AAAA-MM-JJ interpolee dans un document destine a etre lu.
+  const datesBrutes = [...appSrc.matchAll(/<td>\s*["']\s*\+\s*g\((form\.date[A-Za-z]+)\)/g)]
+    .map((m) => m[1]);
+  if (datesBrutes.length) {
+    signale("document", `${datesBrutes.length} date(s) imprimées au format brut sur un document (${datesBrutes.join(", ")}) — passer par fmtDatePdf()`);
+  }
+}
+
 // --- brut et net ---
 // Pourquoi : le taux horaire enregistre au contrat est un taux BRUT — le
 // bulletin y assied les cotisations, et le minimum conventionnel (4,20 EUR) est

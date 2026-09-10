@@ -12570,8 +12570,8 @@ function SoldeDeCompte({enfants,role,pEId,user}){
     w.document.close();setToast(titre+" généré ✓");
   };
   const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature</span></div>`);
-  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
-  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistante maternelle agréée (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} € + indemnité de préavis ${nbf(indemPreavis,2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature de la salariée</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+  const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNom}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNom}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNom}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} € + indemnité de préavis ${nbf(indemPreavis,2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNom}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -16220,24 +16220,24 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
       +'<tr><td>Adresse</td><td>'+g(form.empAdresse)+'</td></tr>'
       +'<tr><td>Email</td><td>'+g(form.empEmail)+'</td></tr>'
       +'<tr><td>N° Pajemploi</td><td>'+g(form.empPajemploi)+'</td></tr></table>'
-      +'<h2>La salariée</h2>'
+      +'<h2>Le salarié</h2>'
       +'<table><tr><td>Nom et prénom</td><td>'+g(form.salNom)+'</td></tr>'
-      +'<tr><td>Emploi</td><td>Assistante maternelle agréée</td></tr>'
+      +'<tr><td>Emploi</td><td>Assistant maternel agréé</td></tr>'
       +'<tr><td>N° d\'agrément</td><td>'+g(form.salAgrement)+'</td></tr>'
       +'<tr><td>Enfant accueilli</td><td>'+g(form.enfantNom)+'</td></tr></table>'
       +'<h2>Contrat de travail</h2>'
-      +"<table><tr><td>Date d'embauche</td><td>"+g(form.dateEmbauche)+"</td></tr>"
-      +'<tr><td>Date de fin du contrat</td><td>'+g(form.dateFin)+'</td></tr>'
+      +"<table><tr><td>Date d'embauche</td><td>"+g(form.dateEmbauche?fmtDatePdf(form.dateEmbauche):"")+"</td></tr>"
+      +'<tr><td>Date de fin du contrat</td><td>'+g(form.dateFin?fmtDatePdf(form.dateFin):"")+'</td></tr>'
       +'<tr><td>Motif de la rupture</td><td>'+g(form.motif)+'</td></tr>'
       +'<tr><td>Heures par semaine</td><td>'+g(form.heuresHebdo)+(form.heuresHebdo?' h':'')+'</td></tr>'
-      +'<tr><td>Dernier salaire mensuel</td><td>'+g(form.dernierSalaire)+(form.dernierSalaire?' €':'')+'</td></tr></table>'
+      +'<tr><td>Dernier salaire mensuel brut</td><td>'+g(form.dernierSalaire)+(form.dernierSalaire?' €':'')+'</td></tr></table>'
       +'<h2>Sommes versées à la rupture</h2>'
       +'<table><tr><td>Salaire du dernier mois</td><td>'+g(form.salDernierMois)+(form.salDernierMois?' €':'')+'</td></tr>'
       +'<tr><td>Indemnité compensatrice de congés payés</td><td>'+g(form.iccp)+(form.iccp?' €':'')+'</td></tr>'
       +'<tr><td>Indemnité de préavis</td><td>'+g(form.indemPreavis)+(form.indemPreavis?' €':'')+'</td></tr></table>'
       +'<p style="margin-top:18px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd">Je soussigné(e) certifie sur l\'honneur l\'exactitude des renseignements portés sur cette attestation.</p>'
       +'<div class="sig"><div class="sig-box">Fait à ___________, le '+today+'<br/><br/><br/>Signature de l\'employeur</div>'
-      +'<div class="sig-box">Reçu le '+today+'<br/><br/><br/>Signature de la salariée</div></div>'
+      +'<div class="sig-box">Reçu le ___________<br/><br/><br/>Signature du salarié</div></div>'
       +'<div class="note"><b>Document indicatif.</b> L\'attestation officielle prise en compte par France Travail est en général <b>télétransmise via Pajemploi</b> (findecontrat-pajemploi.urssaf.fr) par le parent employeur — de nombreuses agences refusent les versions papier. Ce document sert de brouillon pré-rempli et de justificatif.</div>'
       +'<button onclick="window.print()" style="margin-top:14px;background:#C76754;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimer / PDF</button>'
       +'</body></html>';
@@ -16259,7 +16259,7 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
       {inp("Date d'embauche","dateEmbauche","date")}{inp("Date de fin du contrat","dateFin","date")}
       <div style={{marginBottom:10}}><label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>Motif de la rupture</label>
         <select className="sel"disabled={ro}value={form.motif||"Fin de contrat"}onChange={e=>set("motif",e.target.value)}>{motifs.map(m=><option key={m}>{m}</option>)}</select></div>
-      {inp("Heures par semaine","heuresHebdo")}{inp("Dernier salaire mensuel (€)","dernierSalaire")}
+      {inp("Heures par semaine","heuresHebdo")}{inp("Dernier salaire mensuel brut (€)","dernierSalaire")}
       <div style={{fontWeight:700,fontSize:13,color:"var(--b)",margin:"14px 0 10px"}}><IconeOuEmoji e="💶"/> Sommes versées à la rupture</div>
       {inp("Salaire du dernier mois (€)","salDernierMois")}{inp("Indemnité congés payés (€)","iccp")}{inp("Indemnité de préavis (€)","indemPreavis")}
     </div>
