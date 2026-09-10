@@ -4085,9 +4085,19 @@ function Contrats({enfants,role,pEId,user}){
                 <div style={{fontSize:11,fontWeight:700,color:signes[enfant?.id]?"var(--G)":"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Contrat · {enfant?.prenom}</div>
                 <div className="pf"style={{fontSize:21,fontWeight:800,color:"var(--b)",lineHeight:1.15}}>{signes[enfant?.id]?<><IconeOuEmoji e="✅"/> Signé</>:<><IconeOuEmoji e="⏳"/> En attente de signature</>}</div>
                 <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{fmt(contrat.debut)} → {fmt(contrat.fin)} · {contrat.heuresHebdo}h/sem</div>
-                {signes[enfant?.id]&&<div style={{marginTop:10}}>
-                  <BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
-                </div>}
+                {/* Le statut, la date de signature et le contrat lui-meme etaient
+                    annonces deux fois sur le meme ecran : ici, et dans un encart
+                    vert plus bas. Tout est reuni dans ce seul bandeau. */}
+                {signes[enfant?.id]&&<>
+                  <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>
+                    Signé le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · <IconeOuEmoji e="🔒" taille={12}/> conforme eIDAS
+                  </div>
+                  <div style={{marginTop:10}}>
+                    {contrat?.pdf_storage_path
+                      ?<BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
+                      :<span style={{fontSize:11.5,color:"var(--m)"}}>Le PDF est en cours de préparation — il apparaîtra ici et dans Documents.</span>}
+                  </div>
+                </>}
               </div>
               <div style={{textAlign:"right",flexShrink:0}}>
                 <div className="pf"style={{fontSize:20,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>≈ {nbf(salaireMensualise(contrat),0)} €</div>
@@ -4142,18 +4152,6 @@ function Contrats({enfants,role,pEId,user}){
           </div>
           <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
             <IconeOuEmoji e="🔒" taille={13}/> Signature horodatée et sécurisée - valeur légale conforme eIDAS
-          </div>
-        </div>}
-        {signes[enfant?.id]&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:12,padding:14,textAlign:"center"}}>
-          <div style={{fontSize:24,marginBottom:4}}>✅</div>
-          <div style={{fontWeight:700,color:"var(--S)"}}>Contrat signé électroniquement</div>
-          <div style={{fontSize:12,color:"var(--l)",marginTop:2}}>Le {datesSignature[enfant?.id]?fmt(datesSignature[enfant?.id].slice(0,10)):"—"} · Conforme eIDAS</div>
-          {/* Signer menait a un accuse de reception, jamais au contrat lui-meme.
-              Le PDF existe pourtant depuis la signature : il manquait le lien. */}
-          <div style={{marginTop:10}}>
-            {contrat?.pdf_storage_path
-              ?<BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
-              :<span style={{fontSize:11.5,color:"var(--l)"}}>Le PDF est en cours de préparation — il apparaîtra ici et dans Documents.</span>}
           </div>
         </div>}
         {role==="asmat"&&signes[enfant?.id]&&<div className="card" style={{padding:0,marginTop:12,overflow:"hidden"}}>
@@ -10692,27 +10690,32 @@ function KitCMG({enfants,role,pEId,user}){
 // Un contrat deja enregistre restait donc en annee complete sans aucun moyen de
 // le corriger — et ce sont justement ceux-la qui en avaient besoin.
 function RythmeAccueil({contrat,role,onSaved,onErr}){
-  const complete=estAnneeComplete(contrat);
-  const [semaines,setSemaines]=useState(contrat?.semainesAccueil??contrat?.semaines_accueil??46);
+  const enregistre=estAnneeComplete(contrat);
+  const semainesEnregistrees=Number(contrat?.semainesAccueil??contrat?.semaines_accueil)||SEMAINES_MAX_ANNEE_INCOMPLETE;
+  // Le bouton suivait la valeur ENREGISTREE, pas le clic : appuyer sur
+  // « annee incomplete » ouvrait le champ des semaines mais laissait la
+  // selection sur « annee complete ». On tient donc un choix local, qui suit le
+  // clic tout de suite, et un bouton d'enregistrement quand il differe.
+  const [choix,setChoix]=useState(enregistre);
+  const [semaines,setSemaines]=useState(semainesEnregistrees);
   const [busy,setBusy]=useState(false);
-  const [ouvert,setOuvert]=useState(false);
   const signe=!!(contrat?.signe_asmat||contrat?.signe_parent);
   const lecture=role!=="asmat";
+  useEffect(()=>{setChoix(enregistre);setSemaines(semainesEnregistrees);},[contrat?.id,enregistre,semainesEnregistrees]);
 
-  const enregistrer=async(estComplete,nbSemaines)=>{
+  const modifie=choix!==enregistre||(!choix&&semaines!==semainesEnregistrees);
+  const apercu={...contrat,anneeComplete:choix,semainesAccueil:choix?undefined:semaines};
+
+  const enregistrer=async()=>{
     if(!contrat?.id)return;
     setBusy(true);
-    const nb=estComplete?null:Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(nbSemaines)||SEMAINES_MAX_ANNEE_INCOMPLETE));
-    const{error}=await supabase.from("contrats").update({
-      annee_complete:estComplete,
-      semaines_accueil:nb,
-    }).eq("id",contrat.id);
+    const nb=choix?null:Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(semaines)||SEMAINES_MAX_ANNEE_INCOMPLETE));
+    const{error}=await supabase.from("contrats").update({annee_complete:choix,semaines_accueil:nb}).eq("id",contrat.id);
     setBusy(false);
     if(error){onErr?.("Erreur : "+error.message);return;}
     onSaved?.();
   };
 
-  const apercu={...contrat,anneeComplete:complete,semainesAccueil:complete?undefined:semaines};
   return <div className="card" style={{marginBottom:12}}>
     <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="🗓️"/> Rythme d'accueil</div>
     <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55,marginBottom:12}}>
@@ -10720,14 +10723,13 @@ function RythmeAccueil({contrat,role,onSaved,onErr}){
       {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines).
     </div>
     {lecture
-      ?<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{complete?"Année complète — 52 semaines, congés inclus dans le salaire":"Année incomplète — "+semainesDuContrat(contrat)+" semaines, congés payés versés à part"}</div>
+      ?<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{enregistre?"Année complète — 52 semaines, congés inclus dans le salaire":"Année incomplète — "+semainesDuContrat(contrat)+" semaines, congés payés versés à part"}</div>
       :<>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         {[[true,"Année complète","52 semaines, congés inclus dans le salaire"],
           [false,"Année incomplète","semaines programmées, congés payés à part"]].map(([v,l,d])=>{
-          const on=complete===v;
-          return <button key={String(v)} type="button" disabled={busy}
-            onClick={()=>{ if(on)return; if(v)enregistrer(true,null); else setOuvert(true); }}
+          const on=choix===v;
+          return <button key={String(v)} type="button" disabled={busy} onClick={()=>setChoix(v)}
             style={{flex:"1 1 150px",textAlign:"left",padding:"9px 11px",borderRadius:10,cursor:busy?"wait":"pointer",fontFamily:"inherit",
               border:"1.5px solid "+(on?"var(--accent)":"var(--br)"),background:on?"var(--accent-pale)":"var(--w)"}}>
             <span style={{display:"block",fontSize:12.5,fontWeight:700,color:on?"var(--accent)":"var(--b)"}}>{l}</span>
@@ -10735,16 +10737,23 @@ function RythmeAccueil({contrat,role,onSaved,onErr}){
           </button>;
         })}
       </div>
-      {(!complete||ouvert)&&<div style={{marginTop:12}}>
+      {!choix&&<div style={{marginTop:12}}>
         <label className="lbl">Semaines d'accueil dans l'année</label>
-        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-          <input type="number" min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} step="1" className="inp" style={{maxWidth:120}}
-            value={semaines} onChange={e=>setSemaines(Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,parseFloat(e.target.value)||SEMAINES_MAX_ANNEE_INCOMPLETE)))}/>
-          <button className="btn bS s" disabled={busy} onClick={()=>{setOuvert(false);enregistrer(false,semaines);}}>{busy?"…":"Enregistrer"}</button>
-          <span style={{fontSize:12,color:"var(--m)"}}>→ {nb2(salaireMensualise({...apercu,anneeComplete:false,semainesAccueil:semaines}))} €/mois</span>
-        </div>
+        <input type="number" min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} step="1" className="inp" style={{maxWidth:120}}
+          value={semaines} onChange={e=>setSemaines(Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,parseFloat(e.target.value)||SEMAINES_MAX_ANNEE_INCOMPLETE)))}/>
         <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
           Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant vous sera confié.
+        </div>
+      </div>}
+      {modifie&&<div style={{marginTop:12,padding:"11px 13px",background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10}}>
+        <div style={{fontSize:12.5,color:"var(--b)",lineHeight:1.55,marginBottom:9}}>
+          Nouveau salaire mensualisé : <b>{nb2(salaireMensualise(apercu))} €</b>
+          {" "}({heuresMensualisees(apercu)} h/mois sur {semainesDuContrat(apercu)} semaines),
+          {" "}au lieu de {nb2(salaireMensualise(contrat))} €.
+        </div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button className="btn bS s" disabled={busy} onClick={enregistrer}>{busy?"…":"Enregistrer ce rythme"}</button>
+          <button className="btn s" disabled={busy} onClick={()=>{setChoix(enregistre);setSemaines(semainesEnregistrees);}}>Annuler</button>
         </div>
       </div>}
       {signe&&<div style={{fontSize:11.5,color:"var(--R)",marginTop:10,lineHeight:1.5}}>
