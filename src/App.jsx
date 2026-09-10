@@ -4150,6 +4150,10 @@ function Contrats({enfants,role,pEId,user}){
           onSaved={()=>{setToast("Rythme d'accueil enregistré ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}}
           onErr={(m)=>setToast(m)}/>
 
+        <FournitureRepas contrat={contrat} role={role}
+          onSaved={()=>{setToast("Fourniture des repas enregistrée ✓");window.dispatchEvent(new CustomEvent("timat:refresh-data"));}}
+          onErr={(m)=>setToast(m)}/>
+
         {/* Signature électronique */}
         {!signes[enfant?.id]&&<div className="card"style={{border:"1.5px solid var(--P)"}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:4}}><IconeOuEmoji e="✍️"/> Signature électronique</div>
@@ -9263,7 +9267,24 @@ const jsPDF=await chargerJsPDF();
     // Deux mois si l'enfant est confie quatre jours ou plus par semaine, trois
     // sinon (CCN 3239). La duree doit figurer au contrat : sans elle, il n'y a
     // pas de periode d'essai du tout.
+    // La periode d'essai depend du nombre de jours d'accueil. Sans jours saisis,
+    // on ne peut pas la deduire : on laisse la ligne a remplir a la main plutot
+    // que d'imprimer une duree inventee.
     const essaiMois=nbJours>=4?2:3;
+    const A_COMPLETER="..............................  (à compléter et parapher)";
+
+    // QUI FOURNIT LES REPAS. La convention laisse les deux parties en decider,
+    // se mettre d'accord sur la nature des repas, et impose que ce choix soit
+    // precise au contrat. L'application ne connaissait que le MONTANT : un
+    // montant a zero pouvait vouloir dire « l'employeur fournit » comme
+    // « l'assistante maternelle fournit sans rien demander ». Le contrat
+    // tranchait donc a la place des parties.
+    const REPAS_TEXTE={
+      employeur:"Fournis par le particulier employeur",
+      assmat:"Fournis par l'assistant maternel",
+      mixte:"Partages entre les parties (voir detail ci-dessous)",
+    };
+    const repasPar=REPAS_TEXTE[ct.repas_fourni_par]||null;
 
     const R=redacteurPdf(doc,{
       titre:"CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE",
@@ -9285,7 +9306,7 @@ const jsPDF=await chargerJsPDF();
     R.champ("Courriel",sal?.email);
     R.champ("Numéro d'agrément",sal?.numero_agrement);
     R.espace(2);
-    R.texte("Le salarié déclare être titulaire d'un agrément en cours de validité délivré par le président du conseil départemental, et avoir souscrit une assurance responsabilité civile professionnelle ainsi qu'une assurance automobile couvrant le transport des enfants accueillis. Copie de ces documents est annexée au présent contrat.",{taille:8.5});
+    R.texte("Le salarié déclare être titulaire d'un agrément en cours de validité délivré par le président du conseil départemental, et avoir souscrit une assurance responsabilité civile professionnelle. S'il transporte l'enfant, il déclare disposer d'une assurance automobile couvrant ce transport. Les copies de ces documents sont annexées au présent contrat selon la liste de l'article 12.",{taille:8.5});
 
     R.article(2,"L'ENFANT ACCUEILLI");
     R.champ("Prénom et nom",((enfant.prenom||"")+" "+(enfant.nom||"")).trim());
@@ -9293,7 +9314,7 @@ const jsPDF=await chargerJsPDF();
 
     R.article(3,"DATE D'EMBAUCHE, PÉRIODE D'ESSAI ET PÉRIODE D'ADAPTATION");
     R.champ("Premier jour d'accueil",ct.debut?fmtDatePdf(ct.debut):"-");
-    R.champ("Durée de la période d'essai",essaiMois+" mois");
+    R.champ("Durée de la période d'essai",nbJours>0?essaiMois+" mois":A_COMPLETER);
     R.texte("La période d'essai est de deux mois lorsque l'enfant est confié quatre jours calendaires ou plus par semaine, et de trois mois en deçà (convention collective IDCC 3239). Elle court à compter du premier jour d'accueil. Pendant cette période, chacune des parties peut rompre le contrat sans motif ni indemnité, en respectant le délai de prévenance prévu par la convention.",{taille:8.5});
     R.texte("Une période d'adaptation de 30 jours calendaires au maximum, destinée à familiariser progressivement l'enfant à son nouveau mode d'accueil, s'ouvre au premier jour de travail effectif. Elle est comprise dans la période d'essai. Ses modalités (jours et horaires progressifs) sont convenues entre les parties ; le salaire y est calculé sur les heures réellement effectuées.",{taille:8.5});
 
@@ -9319,7 +9340,17 @@ const jsPDF=await chargerJsPDF();
     R.article(6,"INDEMNITÉS ET FRAIS");
     R.champ("Indemnité d'entretien",nbf(ct.entretien||0,2)+" € par journée d'accueil");
     R.texte("L'indemnité d'entretien couvre les matériels et produits de couchage, de puériculture, de jeu et d'hygiène, ainsi que la part afférente aux frais généraux du logement. Elle est due pour chaque journée d'accueil, n'est pas un salaire, et ne peut être inférieure au minimum fixé par la convention collective.",{taille:8.5});
-    R.champ("Fourniture des repas",Number(ct.repas)>0?"Fournis par l'assistant maternel : "+nbf(ct.repas,2)+" € par jour":"Fournis par le particulier employeur");
+    R.champ("Fourniture des repas",repasPar||A_COMPLETER);
+    if(ct.repas_fourni_par==="employeur"){
+      R.texte("Le particulier employeur fournit les repas de l'enfant. Aucune indemnité de repas n'est due au salarié.",{taille:8.5});
+    }else if(Number(ct.repas)>0){
+      R.champ("Indemnité de repas",nbf(ct.repas,2)+" € par journée d'accueil");
+    }else{
+      R.champ("Indemnité de repas",A_COMPLETER);
+    }
+    if(ct.repas_fourni_par!=="employeur"){
+      R.texte("Lorsque le salarié fournit tout ou partie des repas, les parties conviennent ensemble de leur nature (repas principaux, goûter, lait, régime particulier) et l'indemnité est fixée en conséquence. Elle ne peut être inférieure au minimum prévu par la convention collective. Nature des repas convenue : "+A_COMPLETER,{taille:8.5});
+    }
     R.texte("Les déplacements effectués avec l'enfant pour le compte du particulier employeur donnent lieu à une indemnité kilométrique, convenue entre les parties. Elle ne peut être inférieure au barème de l'administration ni supérieure au barème fiscal. Une feuille de route mensuelle mentionnant la date, le motif et le kilométrage est tenue par le salarié.",{taille:8.5});
 
     R.article(7,"CONGÉS PAYÉS");
@@ -9354,7 +9385,15 @@ const jsPDF=await chargerJsPDF();
     ]){ R.place(6); doc.setFontSize(8.5); doc.text("[ ]",MARGE+2,R.y); for(const seg of doc.splitTextToSize(l,LARGEUR-2*MARGE-12)){ doc.text(seg,MARGE+9,R.y); R.y+=4.2; } R.y+=1.4; }
 
     R.article(12,"DOCUMENTS ANNEXÉS ET DISPOSITIONS FINALES");
-    R.texte("Sont annexés au présent contrat : la copie de l'agrément du salarié, les attestations d'assurance responsabilité civile professionnelle et automobile, les autorisations parentales, ainsi que la fiche de renseignements et d'urgence concernant l'enfant.",{taille:8.5});
+    R.texte("Les documents suivants sont annexés au présent contrat (cocher ceux qui sont joints) :",{taille:8.5});
+    for(const l of [
+      "copie de l'agrément du salarié ;",
+      "attestation d'assurance responsabilité civile professionnelle du salarié ;",
+      "attestation d'assurance automobile, si le salarié transporte l'enfant ;",
+      "fiche de renseignements et d'urgence concernant l'enfant ;",
+      "autorisations parentales de l'article 11 ;",
+      "attestation d'assurance responsabilité civile du particulier employeur.",
+    ]){ R.place(6); doc.setFontSize(8.5); doc.text("[ ]",MARGE+2,R.y); for(const seg of doc.splitTextToSize(l,LARGEUR-2*MARGE-12)){ doc.text(seg,MARGE+9,R.y); R.y+=4.2; } R.y+=1.4; }
     R.texte("Tout ce qui n'est PAS écrit dans le présent contrat est régi par la convention collective nationale des particuliers employeurs et de l'emploi à domicile (IDCC 3239) et par le code du travail. C'est elle qui tranche, et les deux parties sont réputées en avoir pris connaissance. Toute clause du contrat moins favorable au salarié que la convention collective est réputée non écrite.",{taille:8.5});
     R.texte("Le texte intégral et à jour de la convention est consultable gratuitement sur Légifrance :",{taille:8.5});
     R.texte(URL_CONVENTION,{taille:8.5});
@@ -10942,6 +10981,80 @@ function KitCMG({enfants,role,pEId,user}){
 // Le choix n'existait que dans l'assistant de creation du tout premier enfant.
 // Un contrat deja enregistre restait donc en annee complete sans aucun moyen de
 // le corriger — et ce sont justement ceux-la qui en avaient besoin.
+//
+// QUI FOURNIT LES REPAS. La convention laisse les deux parties en decider et
+// impose que le choix figure au contrat. L'application ne stockait que le
+// montant de l'indemnite : a zero, elle en deduisait « c'est l'employeur qui
+// fournit » et l'ecrivait dans le contrat. C'etait une deduction, pas un
+// accord — l'assistante maternelle peut tres bien fournir les repas sans rien
+// demander, et le contrat affirmait alors le contraire.
+const REPAS_CHOIX=[
+  ["employeur","Le parent employeur","Il apporte les repas. Aucune indemnité n'est due."],
+  ["assmat","Moi","Je fournis les repas. Une indemnité est due."],
+  ["mixte","Les deux","À détailler dans le contrat (goûter, lait…)."],
+];
+
+function FournitureRepas({contrat,role,onSaved,onErr}){
+  const enregistre=contrat?.repasFourniPar??contrat?.repas_fourni_par??null;
+  const montantEnregistre=Number(contrat?.repas)||0;
+  const [choix,setChoix]=useState(enregistre);
+  const [montant,setMontant]=useState(montantEnregistre);
+  const [busy,setBusy]=useState(false);
+  const lecture=role!=="asmat";
+  useEffect(()=>{setChoix(enregistre);setMontant(montantEnregistre);},[contrat?.id,enregistre,montantEnregistre]);
+
+  const modifie=choix!==enregistre||(choix!=="employeur"&&Number(montant)!==montantEnregistre);
+  const enregistrer=async()=>{
+    if(!contrat?.id||!choix)return;
+    setBusy(true);
+    const m=choix==="employeur"?0:Math.max(0,Number(montant)||0);
+    const{error}=await supabase.from("contrats").update({repas_fourni_par:choix,repas:m}).eq("id",contrat.id);
+    setBusy(false);
+    if(error){onErr?.("Erreur : "+error.message);return;}
+    onSaved?.();
+  };
+
+  return <div className="card" style={{marginBottom:12}}>
+    <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="🍽️"/> Qui fournit les repas</div>
+    <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55,marginBottom:12}}>
+      La convention laisse les deux parties en décider ensemble, et demande que le choix figure au contrat.
+    </div>
+    {lecture
+      ?<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>
+        {enregistre?(REPAS_CHOIX.find(c=>c[0]===enregistre)||[])[1]:"Non encore convenu"}
+        {enregistre!=="employeur"&&montantEnregistre>0?" — "+nb2(montantEnregistre)+" € par journée":""}
+      </div>
+      :<>
+      {!enregistre&&<div style={{fontSize:11.5,color:"var(--R)",marginBottom:10,lineHeight:1.5}}>
+        <IconeOuEmoji e="⚠️" taille={13}/> Ce n'est pas encore convenu : le contrat imprime une ligne à compléter à la main.
+      </div>}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {REPAS_CHOIX.map(([v,l,d])=>{
+          const on=choix===v;
+          return <button key={v} type="button" disabled={busy} onClick={()=>setChoix(v)}
+            style={{flex:"1 1 130px",textAlign:"left",padding:"9px 11px",borderRadius:10,cursor:busy?"wait":"pointer",fontFamily:"inherit",
+              border:"1.5px solid "+(on?"var(--accent)":"var(--br)"),background:on?"var(--accent-pale)":"var(--w)"}}>
+            <span style={{display:"block",fontSize:12.5,fontWeight:700,color:on?"var(--accent)":"var(--b)"}}>{l}</span>
+            <span style={{display:"block",fontSize:11,color:"var(--m)",marginTop:2,lineHeight:1.4}}>{d}</span>
+          </button>;
+        })}
+      </div>
+      {choix&&choix!=="employeur"&&<div style={{marginTop:12}}>
+        <label className="lbl">Indemnité de repas (€ par journée d'accueil)</label>
+        <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
+          value={montant} onChange={e=>setMontant(Math.max(0,parseFloat(e.target.value)||0))}/>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
+          Elle ne peut pas descendre sous le minimum conventionnel. La nature des repas convenue se précise sur le contrat imprimé.
+        </div>
+      </div>}
+      {modifie&&<div style={{marginTop:12,display:"flex",gap:8,flexWrap:"wrap"}}>
+        <button className="btn bS s" disabled={busy||!choix} onClick={enregistrer}>{busy?"…":"Enregistrer"}</button>
+        <button className="btn s" disabled={busy} onClick={()=>{setChoix(enregistre);setMontant(montantEnregistre);}}>Annuler</button>
+      </div>}
+    </>}
+  </div>;
+}
+
 function RythmeAccueil({contrat,role,onSaved,onErr}){
   const enregistre=estAnneeComplete(contrat);
   const semainesEnregistrees=Number(contrat?.semainesAccueil??contrat?.semaines_accueil)||SEMAINES_MAX_ANNEE_INCOMPLETE;
@@ -15385,6 +15498,9 @@ function OnboardingWizard({user,onFinish}){
         // le contrat repartait en annee complete quoi qu'on ait choisi.
         annee_complete:contrat.anneeComplete!==false,
         semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE):null,
+        // Non renseigne a la creation : le contrat imprime une ligne a
+        // completer plutot que d'affirmer qui fournit les repas.
+        repas_fourni_par:contrat.repasFourniPar||null,
         jours:contrat.jours||['Lundi','Mardi','Mercredi','Jeudi','Vendredi'],
         horaires:contrat.horaires||'07h30–17h30',
         aeeh:!!contrat.aeeh,
@@ -15668,6 +15784,9 @@ function AjouterEnfantModale({user,onClose}){
         heures_hebdo:Number(contrat.heuresHebdo)||40,
         annee_complete:contrat.anneeComplete!==false,
         semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||46):null,
+        // Non renseigne a la creation : le contrat imprime une ligne a
+        // completer plutot que d'affirmer qui fournit les repas.
+        repas_fourni_par:contrat.repasFourniPar||null,
         taux_horaire:Number(contrat.tauxHoraire)||minimumHoraireAu(new Date()),
         entretien:Number(contrat.entretien)||3.80,
         jours:contrat.jours,
@@ -19807,6 +19926,7 @@ export default function App(){
                 heuresHebdo:ct.heures_hebdo,
                 tauxHoraire:ct.taux_horaire,
                 anneeComplete:ct.annee_complete,
+                repasFourniPar:ct.repas_fourni_par,
                 semainesAccueil:ct.semaines_accueil,
                 entretien:ct.entretien,
                 aeeh:!!ct.aeeh,

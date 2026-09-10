@@ -690,6 +690,22 @@ if (sansRythme.length) {
   signale("paie", `${sansRythme.length} enregistrement(s) de contrat n'écrivent pas annee_complete : le rythme choisi est perdu et la mensualisation repart sur 52 semaines`);
 }
 
+// Le contrat ne doit rien AFFIRMER que personne n'a saisi. Il deduisait qui
+// fournit les repas du seul montant de l'indemnite : a zero, il ecrivait « le
+// particulier employeur fournit ». C'etait une deduction imprimee comme un
+// accord, sur une clause que la convention demande aux parties de convenir.
+if (!/const REPAS_TEXTE=\{/.test(appSrc) || !/repasPar\|\|A_COMPLETER/.test(appSrc)) {
+  signale("pdf", "le contrat déduit à nouveau qui fournit les repas au lieu de l'imprimer tel qu'il a été convenu");
+}
+if (!/function FournitureRepas\(/.test(appSrc) || !/<FournitureRepas /.test(appSrc)) {
+  signale("pdf", "la fourniture des repas n'est plus modifiable sur un contrat : le choix ne peut plus être convenu");
+}
+// Meme regle pour la duree de la periode d'essai : sans jours d'accueil saisis,
+// elle ne se deduit pas.
+if (!/nbJours>0\?essaiMois\+" mois":A_COMPLETER/.test(appSrc)) {
+  signale("pdf", "le contrat imprime une durée de période d'essai déduite même sans jours d'accueil saisis");
+}
+
 // Et le choix doit rester atteignable sur un contrat DEJA enregistre : il
 // n'existait que dans l'assistant du tout premier enfant.
 if (!/function RythmeAccueil\(/.test(appSrc) || !/<RythmeAccueil /.test(appSrc)) {

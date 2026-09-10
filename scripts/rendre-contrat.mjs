@@ -12,6 +12,7 @@ const code = [
   bout(/const nbf=[\s\S]*?;\n/),
   bout(/const SEMAINES_ANNEE_COMPLETE=[\s\S]*?const salaireMensualise=[\s\S]*?\n\};/),
   bout(/const MARGE=20[\s\S]*?\nfunction redacteurPdf\(doc,\{titre,sousTitre\}\)\{[\s\S]*?\n\}\n/),
+  bout(/const URL_CONVENTION="[^"]*";/),
   bout(/const fmtDatePdf=\(d\)=>\{[\s\S]*?\n\};/),
 ].join("\n");
 const corps = src.slice(src.indexOf("    // 3. Le contrat"), src.indexOf("    // 4. Convertir en blob et uploader"));
@@ -21,6 +22,9 @@ const ct = {
   debut: "2026-09-01", fin: "", heures_hebdo: 40, taux_horaire: 4.20, entretien: 3.80, repas: 3.50,
   jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30-17h30",
   annee_complete: process.argv[2] !== "incomplete", semaines_accueil: process.argv[2] === "incomplete" ? 36 : null,
+  // Qui fournit les repas : "assmat", "employeur", "mixte", ou rien du tout —
+  // ce dernier cas doit imprimer une ligne a completer, pas une affirmation.
+  repas_fourni_par: process.argv[3] === "sans-repas" ? null : (process.argv[3] || "assmat"),
   date_signature_asmat: "2026-08-20T10:00:00Z", signature_asmat_data: null,
   date_signature_parent: null, signature_parent_data: null,
 };
@@ -34,6 +38,6 @@ ${corps}
 return doc;
 `);
 const doc = fn(jsPDF, enfant, ct, parentProfile, asmatProfile);
-const sortie = "/tmp/contrat-" + (process.argv[2] || "complete") + ".pdf";
+const sortie = "/tmp/contrat-" + (process.argv[2] || "complete") + (process.argv[3] ? "-" + process.argv[3] : "") + ".pdf";
 writeFileSync(sortie, Buffer.from(doc.output("arraybuffer")));
 console.log(sortie, "-", doc.getNumberOfPages(), "pages");
