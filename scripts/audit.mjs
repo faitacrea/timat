@@ -696,6 +696,31 @@ if (!/function RythmeAccueil\(/.test(appSrc) || !/<RythmeAccueil /.test(appSrc))
   signale("paie", "le rythme d'accueil n'est plus modifiable sur un contrat existant : les contrats déjà créés restent bloqués en année complète");
 }
 
+// --- documents imprimes : garde de page et convention citee ---
+// Pourquoi : jsPDF n'avertit pas. Ce qui depasse le bas de la page est ecrit
+// dans le vide et disparait sans un mot — la ligne « Cout total employeur »
+// manquait ainsi sur un bulletin charge. Les deux documents longs doivent donc
+// verifier la place restante avant d'ecrire.
+for (const [nom, marqueur, garde] of [
+  ["le contrat", "function redacteurPdf", /const place=\(h\)=>\{ if\(y\+h>BAS\)nouvellePage\(false\); \};/],
+  ["le bulletin", "const placer=", /const placer=\(h\)=>\{ if\(y\+h>BAS_BULLETIN\)\{doc\.addPage\(\);y=15;\} \};/],
+]) {
+  if (!appSrc.includes(marqueur) || !garde.test(appSrc)) {
+    signale("pdf", `${nom} n'a plus de garde de page : une ligne qui dépasse le bas serait écrite dans le vide, sans erreur`);
+  }
+}
+// L'IDCC 2395 a fusionne dans la 3239 au 1er janvier 2022. Les documents s'en
+// reclamaient encore : le contrat en pied de page, le bulletin deux fois.
+if (/IDCC\s*2395|IDCC\s*2111/.test(appSrc)) {
+  signale("chiffre", "un document cite une convention collective qui n'existe plus (2395 ou 2111 ont fusionné dans la 3239 au 1er janvier 2022)");
+}
+// La mention de conservation est obligatoire (art. R. 3243-5) et doit dire
+// « sans limitation de duree ». Le bulletin conseillait 5 ans : c'est le delai
+// de l'EMPLOYEUR, et suivre ce conseil ferait perdre des preuves de retraite.
+if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
+  signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
+}
+
 // --- notation des nombres ---
 // Pourquoi : toFixed() ecrit « 4.20 », avec le point anglais. Une assistante
 // maternelle qui recopie un montant dans Pajemploi le recopie tel quel.
