@@ -112,6 +112,7 @@
     "pdf_generated_at",
     "pdf_storage_path",
     "repas",
+    "repas_fourni_par",
     "salarie_snapshot",
     "semaines_accueil",
     "signature_asmat_data",

@@ -163,6 +163,24 @@ if (PDF_ANCIEN) {
   dire(!/Mettre à jour le PDF/.test(tf), "un PDF à jour ne propose pas de mise à jour");
 }
 
+// La fourniture des repas se convient, elle ne se deduit pas d'un montant.
+dire(/Qui fournit les repas/.test(tf), "le bloc « Qui fournit les repas » est présent");
+dire(/pas encore convenu/i.test(tf), "un contrat sans accord sur les repas le signale");
+await page.evaluate(() => {
+  const b = [...document.querySelectorAll("button")].find((x) => x.innerText.startsWith("Moi"));
+  if (b) b.click();
+});
+await page.waitForTimeout(600);
+const tr = await txt();
+dire(/Indemnité de repas/i.test(tr), "choisir « moi » demande le montant de l'indemnité");
+await page.evaluate(() => {
+  const b = [...document.querySelectorAll("button")].find((x) => x.innerText.startsWith("Le parent employeur"));
+  if (b) b.click();
+});
+await page.waitForTimeout(600);
+const te = await txt();
+dire(/Aucune indemnité n'est due/.test(te), "choisir le parent employeur dit qu'aucune indemnité n'est due");
+
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 await nav.close();
 console.log(ko ? `\n${ko} problème(s)\n` : `\nTout est conforme. Captures dans ${SORTIE}\n`);
