@@ -769,6 +769,26 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- comptage des jours d'accueil ---
+// Pourquoi : quatre ecrans deduisaient le nombre de jours d'accueil, chacun a
+// sa facon — heures/5, heures/(hebdo/5), heures mensualisees/8, heures/8. Sur
+// le meme contrat, le recapitulatif Pajemploi, le recapitulatif des versements
+// et le rapport annuel annonçaient donc trois nombres differents. Tous partent
+// desormais des jours prevus au contrat.
+{
+  const deductions = [...appSrc.matchAll(/(?:heuresAnnuelles|hMens|h\.real)\s*\/\s*(?:5|8)\b/g)]
+    .map((m) => appSrc.slice(0, m.index).split("\n").length);
+  if (deductions.length) {
+    signale("chiffre", `${deductions.length} endroit(s) déduisent encore les jours d'accueil en divisant des heures (lignes ${deductions.join(", ")}) — partir de contrat.jours`);
+  }
+}
+// Une echeance annoncee a l'utilisatrice doit exister. L'application affirmait
+// que l'attestation fiscale se remet aux parents « avant le 31 janvier » :
+// aucune obligation de ce genre, et Pajemploi la met a leur disposition en avril.
+if (/avant le 31 janvier/.test(appSrc)) {
+  signale("chiffre", "l'application réinvente une échéance au 31 janvier pour l'attestation fiscale : elle n'existe pas (Pajemploi la publie en avril)");
+}
+
 // --- cases de declaration de revenus ---
 // Pourquoi : l'application indiquait a l'assistante maternelle de porter son
 // revenu sur la « 2042 C PRO », en « famille 1GA ». Les deux etaient faux, sur
