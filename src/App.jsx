@@ -16324,11 +16324,24 @@ function AttestationFiscale({enfants,role,pEId,user}){
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const entretienJour=contrat.entretien||3.92;
   const hasReal=realStats?.paiements>0;
-  const moisTravailles=12;
+  // Le recapitulatif comptait 12 mois par principe. Un contrat qui commence en
+  // septembre n'en compte que quatre sur l'annee : l'estimation etait alors
+  // trois fois trop haute, sur un document qui sert a declarer.
+  const moisTravailles=(()=>{
+    const debut=String(contrat?.debut||"").slice(0,10);
+    const fin=String(contrat?.fin||"").slice(0,10);
+    const premier=debut&&debut.slice(0,4)===String(annee)?parseInt(debut.slice(5,7),10):1;
+    const dernier=fin&&fin.slice(0,4)===String(annee)?parseInt(fin.slice(5,7),10):12;
+    return Math.max(0,Math.min(12,dernier-premier+1));
+  })();
   const versementsList=realStats?.versements||[];
   // Estimation indicative (à défaut de versements réels)
   const estSalNet=netDepuisBrut(hMens*tauxH)*moisTravailles;
-  const estEntretien=entretienJour*Math.round(hMens/8)*moisTravailles;
+  // Les jours d'accueil se comptaient ici en divisant les heures mensualisees
+  // par 8 — un troisieme comptage, apres ceux du recapitulatif Pajemploi. On
+  // part du nombre de jours reellement prevus au contrat.
+  const joursMoisEstim=Math.round(((contrat.jours?.length)||5)*SEMAINES_ANNEE_COMPLETE/MOIS_PAR_AN);
+  const estEntretien=entretienJour*joursMoisEstim*moisTravailles;
   // En mode réel : total = somme RÉELLEMENT versée (on ne rajoute PAS d'entretien estimé -> pas de double comptage)
   const totalReel=hasReal?realStats.paiements:0;
   const totalEstime=estSalNet+estEntretien;
@@ -16357,27 +16370,27 @@ const jsPDF=await chargerJsPDF();
       const vert=[42,157,143];const noir=[40,40,40];const gris=[120,120,120];const bleuFonce=[38,70,83];
       // Titre
       doc.setFontSize(16);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
-      doc.text("RECAPITULATIF DES VERSEMENTS",PW/2,y,{align:"center"});y+=6;
+      doc.text("RÉCAPITULATIF DES VERSEMENTS",PW/2,y,{align:"center"});y+=6;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
-      doc.text("Annee "+annee+" - Sommes versees a l assistante maternelle (justificatif indicatif)",PW/2,y,{align:"center"});y+=4;
+      doc.text("Année "+annee+" — sommes versées à l'assistant maternel (justificatif indicatif)",PW/2,y,{align:"center"});y+=4;
       doc.setDrawColor(...vert);doc.setLineWidth(0.5);doc.line(MX,y,PW-MX,y);y+=10;
       // Header asmat + parent
       doc.setFillColor(244,247,250);doc.rect(MX,y,PW-2*MX,30,"F");
       doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(...vert);
-      doc.text("ASSISTANTE MATERNELLE AGREEE",MX+3,y+5);
+      doc.text("ASSISTANT MATERNEL AGRÉÉ",MX+3,y+5);
       doc.text("PARENT EMPLOYEUR",MX+(PW-2*MX)/2+3,y+5);
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       doc.text((user?.prenom||"")+" "+(user?.nom||""),MX+3,y+11);
       doc.text((enfant?.prenomParent||"Parent")+" "+(enfant?.nomParent||""),MX+(PW-2*MX)/2+3,y+11);
       doc.setFontSize(8);
       if(user?.email)doc.text("Email : "+user.email,MX+3,y+16);
-      doc.text("N agrement : "+(userAgrement||"[A renseigner dans Parametres]"),MX+3,y+21);
-      doc.text("Enfant garde : "+(enfant?.prenom||"-"),MX+(PW-2*MX)/2+3,y+16);
-      if(enfant?.naissance)doc.text("Ne(e) le : "+enfant.naissance,MX+(PW-2*MX)/2+3,y+21);
+      doc.text("N° d'agrément : "+(userAgrement||"[à renseigner dans Paramètres]"),MX+3,y+21);
+      doc.text("Enfant gardé : "+(enfant?.prenom||"-"),MX+(PW-2*MX)/2+3,y+16);
+      if(enfant?.naissance)doc.text("Né(e) le : "+fmtDatePdf(enfant.naissance),MX+(PW-2*MX)/2+3,y+21);
       y+=36;
       // Sommes versees
       doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
-      doc.text("Sommes versees en "+annee+" "+(hasReal?"(donnees reelles)":"(estimation indicative)"),MX,y);y+=7;
+      doc.text("Sommes versées en "+annee+" "+(hasReal?"(données réelles)":"(estimation indicative)"),MX,y);y+=7;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       const ligne=(l,v,isTotal)=>{
         if(isTotal){doc.setFillColor(...vert);doc.rect(MX,y,PW-2*MX,8,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");}
@@ -16388,21 +16401,21 @@ const jsPDF=await chargerJsPDF();
       };
       if(hasReal){
         ligne("Nombre de versements",String(versementsList.length));
-        ligne("TOTAL REELLEMENT VERSE EN "+annee,nbf(totalReel,2)+" euros",true);
+        ligne("TOTAL RÉELLEMENT VERSÉ EN "+annee,nbf(totalReel,2)+" €",true);
       }else{
-        ligne("Salaire net estime (12 mois)",nbf(estSalNet,2)+" euros");
-        ligne("Indemnites d entretien estimees",nbf(estEntretien,2)+" euros");
-        ligne("TOTAL ESTIME",nbf(totalEstime,2)+" euros",true);
+        ligne("Salaire net estimé ("+moisTravailles+" mois)",nbf(estSalNet,2)+" €");
+        ligne("Indemnités d'entretien estimées",nbf(estEntretien,2)+" €");
+        ligne("TOTAL ESTIMÉ",nbf(totalEstime,2)+" €",true);
       }
       y+=8;
       // Detail des versements (mode reel) ou elements du contrat (estimation)
       doc.setFontSize(12);doc.setFont("helvetica","bold");doc.setTextColor(...bleuFonce);
-      doc.text(hasReal?"Detail des versements":"Elements du contrat (base d estimation)",MX,y);y+=7;
+      doc.text(hasReal?"Détail des versements":"Éléments du contrat (base d'estimation)",MX,y);y+=7;
       doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       if(hasReal){
         doc.setFillColor(244,247,250);doc.rect(MX,y,PW-2*MX,7,"F");
         doc.setFont("helvetica","bold");
-        doc.text("Date",MX+3,y+5);doc.text("Mode",MX+42,y+5);doc.text("Periode",MX+85,y+5);doc.text("Montant",PW-MX-3,y+5,{align:"right"});
+        doc.text("Date",MX+3,y+5);doc.text("Mode",MX+42,y+5);doc.text("Période",MX+85,y+5);doc.text("Montant",PW-MX-3,y+5,{align:"right"});
         y+=7;doc.setFont("helvetica","normal");
         versementsList.forEach(v=>{
           if(y>262){doc.addPage();y=20;}
@@ -16410,7 +16423,7 @@ const jsPDF=await chargerJsPDF();
           doc.text(fmtD(v.date),MX+3,y+5);
           doc.text(String(MODE_LBL[v.mode]||v.mode||"-"),MX+42,y+5);
           doc.text(String(v.periode||"-").slice(0,24),MX+85,y+5);
-          doc.text(nbf((parseFloat(v.montant)||0),2)+" euros",PW-MX-3,y+5,{align:"right"});
+          doc.text(nbf((parseFloat(v.montant)||0),2)+" €",PW-MX-3,y+5,{align:"right"});
           y+=7;
         });
         y+=6;
@@ -16421,29 +16434,31 @@ const jsPDF=await chargerJsPDF();
           y+=8;
         };
         ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
-        ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" euros/h");
-        ligneSimple("Salaire mensuel brut estime",nbf(salMensBrut,2)+" euros");
-        ligneSimple("Salaire mensuel net estime",nbf(netDepuisBrut(salMensBrut),2)+" euros");
-        ligneSimple("Mois travailles","12 mois");
+        ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" €/h");
+        ligneSimple("Salaire mensuel brut estimé",nbf(salMensBrut,2)+" €");
+        ligneSimple("Salaire mensuel net estimé",nbf(netDepuisBrut(salMensBrut),2)+" €");
+        ligneSimple("Mois d'accueil retenus",moisTravailles+" mois");
         y+=8;
       }
       // Verifier qu'on a la place sinon nouvelle page
       if(y>232){doc.addPage();y=20;}
       // Note
-      doc.setFillColor(255,248,243);doc.rect(MX,y,PW-2*MX,34,"F");
-      doc.setDrawColor(255,214,179);doc.rect(MX,y,PW-2*MX,34);
+      doc.setFillColor(255,248,243);doc.rect(MX,y,PW-2*MX,40,"F");
+      doc.setDrawColor(255,214,179);doc.rect(MX,y,PW-2*MX,40);
       doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(...noir);
-      doc.text("Document indicatif - ne remplace pas l attestation Pajemploi :",MX+3,y+5);
+      doc.text("Document indicatif — il ne remplace pas l'attestation Pajemploi :",MX+3,y+5);
       doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
-      doc.text("Ce recapitulatif est un justificatif des sommes versees, fourni a titre indicatif.",MX+3,y+11);
-      doc.text("L attestation fiscale officielle est delivree par l Urssaf - service Pajemploi (espace en ligne du parent).",MX+3,y+16);
-      doc.text("Montant a reporter en case 7GA du formulaire 2042 RICI - la CMG y est deja deduite.",MX+3,y+21);
-      doc.text("Conservez ce document avec vos justificatifs.",MX+3,y+26);
+      doc.text("Ce récapitulatif justifie les sommes versées ; il est fourni à titre indicatif.",MX+3,y+11);
+      doc.text("L'attestation fiscale officielle est délivrée par l'Urssaf — service Pajemploi (espace en ligne du parent).",MX+3,y+16);
+      doc.text("Enfant de moins de 6 ans : à reporter en case 7GA du formulaire 2042 RICI (7GB, 7GC pour les",MX+3,y+21);
+      doc.text("enfants suivants). Crédit d'impôt de "+nbf(CI_TAUX*100,0)+" % des dépenses, retenues dans la limite de "+"3 500 € par enfant.",MX+3,y+25.5);
+      doc.text("Les aides déjà perçues, dont le complément de mode de garde, se déduisent de la base du crédit.",MX+3,y+30);
+      doc.text("Conservez ce document avec vos justificatifs.",MX+3,y+34.5);
       y+=40;
       // Signature
       if(y>250){doc.addPage();y=20;}
       doc.setFontSize(9);doc.setFont("helvetica","italic");doc.setTextColor(...noir);
-      doc.text("Je soussigne(e), "+(user?.prenom||"")+" "+(user?.nom||"")+", assistante maternelle agreee,",MX,y);y+=4;
+      doc.text("Je soussigné(e), "+(user?.prenom||"")+" "+(user?.nom||"")+", assistant(e) maternel(le) agréé(e),",MX,y);y+=4;
       doc.text("certifie exacts les renseignements ci-dessus.",MX,y);y+=8;
       // 2 zones signature
       const sigW=(PW-2*MX-10)/2;
@@ -16452,7 +16467,7 @@ const jsPDF=await chargerJsPDF();
       doc.line(MX+sigW+10,y,PW-MX,y);
       y+=4;
       doc.setFontSize(8);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
-      doc.text("Fait a ____________",MX,y);
+      doc.text("Fait à ____________",MX,y);
       doc.text("Remis au parent le :",MX+sigW+10,y);y+=4;
       doc.text("Le "+new Date().toLocaleDateString("fr-FR"),MX,y);
       doc.text("____________",MX+sigW+10,y);y+=6;
@@ -16463,11 +16478,11 @@ const jsPDF=await chargerJsPDF();
         try{doc.addImage(userSig,"PNG",MX,y,50,15);}catch(e){console.warn("addImage",e);}
       }else{
         doc.setFont("helvetica","italic");doc.setTextColor(...gris);
-        doc.text("(Aucune signature - voir Parametres)",MX,y+8);
+        doc.text("(aucune signature — voir Paramètres)",MX,y+8);
       }
       // Footer
       doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
-      doc.text("Genere par TiMat - "+new Date().toLocaleDateString("fr-FR"),PW/2,280,{align:"center"});
+      doc.text("Généré par TiMat — "+new Date().toLocaleDateString("fr-FR"),PW/2,280,{align:"center"});
       doc.save("recapitulatif-versements-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
       setToast("Recapitulatif telecharge ✓");
     }catch(e){
@@ -16555,7 +16570,8 @@ const jsPDF=await chargerJsPDF();
         '<strong>📌 Document indicatif — ne remplace pas l\'attestation Pajemploi :</strong><br/>',
         '• Ce récapitulatif est un justificatif des sommes versées, fourni à titre indicatif.<br/>',
         '• L\'attestation fiscale officielle est délivrée par l\'Urssaf — service Pajemploi, sur l\'espace en ligne du parent.<br/>',
-        '• Montant à reporter en case 7GA du formulaire 2042 RICI — la CMG y est déjà déduite.<br/>',
+        '• Enfant de moins de 6 ans : à reporter en case 7GA du formulaire 2042 RICI (7GB, 7GC pour les suivants).<br/>',
+        '• Crédit d\'impôt de '+nbf(CI_TAUX*100,0)+' % des dépenses, retenues dans la limite de '+nbf(CI_PLAFOND_DEPENSES,0)+' € par enfant. Les aides déjà perçues, dont le complément de mode de garde, se déduisent de la base.<br/>',
         '• Conservez ce document avec vos justificatifs.',
         '</div>',
         '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#2E4859">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
@@ -16621,7 +16637,7 @@ const jsPDF=await chargerJsPDF();
           </div>
         </div>
         <div style={{padding:12,background:"var(--Bp)",borderRadius:10,fontSize:12,color:"var(--B)",lineHeight:1.6}}>
-          💡 Récapitulatif indicatif des sommes versées. <strong>Il ne remplace pas l'attestation fiscale officielle de Pajemploi</strong> (espace en ligne du parent), à reporter en case 7GA du formulaire 2042 RICI — la CMG y est déjà déduite.
+          💡 Récapitulatif indicatif des sommes versées. <strong>Il ne remplace pas l'attestation fiscale officielle de Pajemploi</strong> (espace en ligne du parent), à reporter en case 7GA du formulaire 2042 RICI pour un enfant de moins de 6 ans. Le crédit vaut {nbf(CI_TAUX*100,0)} % des dépenses, plafonnées à {nbf(CI_PLAFOND_DEPENSES,0)} € par enfant, aides déjà perçues déduites.
         </div>
       </div>
       <div className="card">

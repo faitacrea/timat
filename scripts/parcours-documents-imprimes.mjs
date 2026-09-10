@@ -174,6 +174,14 @@ if (att) {
   dire(/télétransmise via Pajemploi/i.test(att.texte), "l'attestation dit que l'officielle passe par Pajemploi");
 }
 
+const recapVers = await ouvrirEtLire(["Administratif", "Documents & Rapports", "Récap. versements"], "Imprimer", "recap-versements");
+defauts("récapitulatif des versements", recapVers);
+if (recapVers) {
+  console.log("\n--- texte du récapitulatif des versements ---");
+  console.log(recapVers.texte.split("\n").filter(Boolean).slice(0, 40).join("\n"));
+  console.log("--- fin ---\n");
+}
+
 const fin = await ouvrirEtLire(["Administratif", "Paie & Contrats", "Contrats", "Fin de contrat"], "Lettre de rupture", "lettre-rupture");
 defauts("lettre de rupture", fin);
 

@@ -755,6 +755,23 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- documents imprimes : « euros » ecrit en toutes lettres ---
+// Pourquoi : les PDF s'ecrivaient sans accents et avec « euros » en toutes
+// lettres, par precaution contre un probleme d'encodage qui n'existe plus. Le
+// jeu WinAnsi accepte les accents et le signe euro (le test d'encodage le
+// demontre) : le contrat, le bulletin et le recapitulatif des versements ont
+// ete repris, aucun ne doit y revenir.
+{
+  const euros = [...appSrc.matchAll(/doc\.text\([^;\n]{0,160}?\+\s*" euros(?:\/[a-z])?"/g)]
+    .map((m) => appSrc.slice(0, m.index).split("\n").length);
+  const eurosLigne = [...appSrc.matchAll(/ligne(?:Simple)?\([^;\n]{0,160}?\+\s*" euros(?:\/[a-z])?"/g)]
+    .map((m) => appSrc.slice(0, m.index).split("\n").length);
+  const tous = [...euros, ...eurosLigne];
+  if (tous.length) {
+    signale("document", `${tous.length} montant(s) écrits « euros » en toutes lettres dans un PDF (lignes ${tous.join(", ")}) — le signe € et les accents passent en WinAnsi`);
+  }
+}
+
 // --- documents imprimes : dates et formulations ---
 // Pourquoi : l'attestation destinee a France Travail imprimait la date
 // d'embauche telle qu'elle est stockee — « 2026-01-01 » — sur un document
