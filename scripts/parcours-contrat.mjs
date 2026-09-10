@@ -109,6 +109,10 @@ dire(/Contrats? & Signatures|Détail du contrat/.test(t0), "l'écran du contrat 
 
 // 1. Le contrat réel, atteignable
 dire(/Ouvrir le contrat signé \(PDF\)/.test(t0), "le bouton « Ouvrir le contrat signé (PDF) » est là");
+// Il n'y en a qu'UN : le statut, la date et le PDF etaient annonces deux fois.
+dire((t0.match(/Ouvrir le contrat signé \(PDF\)/g) || []).length === 1, "le contrat n'est proposé qu'une fois");
+dire(!/Contrat signé électroniquement/.test(t0), "l'encart vert en double a disparu");
+dire(/Signé le .*eIDAS/i.test(t0.replace(/\n/g, " ")), "la date de signature et eIDAS sont dans le bandeau du haut");
 
 // 2. Le rythme d'accueil, présent et modifiable
 dire(/Rythme d'accueil/.test(t0), "le bloc « Rythme d'accueil » est présent");
@@ -127,16 +131,26 @@ console.log(`  ..  ${montants.length} montant(s) relevés : ${montants.slice(0, 
 
 // 4. Basculer en année incomplète change le salaire, sous les yeux.
 const avant = (t0.match(/salaire mensualisé\s*:\s*([\d,]+)\s*€/i) || [])[1];
+const styleDe = (debut) => page.evaluate((d) => {
+  const b = [...document.querySelectorAll("button")].find((x) => x.innerText.startsWith(d));
+  return b ? b.style.background : null;
+}, debut);
+const fondCompletAvant = await styleDe("Année complète");
 await page.evaluate(() => {
   const b = [...document.querySelectorAll("button")].find((x) => x.innerText.startsWith("Année incomplète"));
   if (b) b.click();
 });
 await page.waitForTimeout(900);
 const t1 = await txt();
+// La selection suivait la valeur ENREGISTREE, pas le clic : le bouton ne
+// bougeait pas quand on appuyait dessus.
+dire((await styleDe("Année incomplète")) === fondCompletAvant, "le bouton cliqué prend bien la sélection");
+dire((await styleDe("Année complète")) !== fondCompletAvant, "l'autre bouton la perd");
 // Le libellé est mis en capitales par la feuille de style : on compare sans casse.
 dire(/Semaines d'accueil dans l'année/i.test(t1), "le champ des semaines apparaît");
-const apercu = (t1.match(/→\s*([\d,]+)\s*€\/mois/) || [])[1];
-dire(!!apercu && apercu !== avant, "l'aperçu du salaire change avec le rythme", `${avant} € → ${apercu} €/mois`);
+const apercu = (t1.match(/Nouveau salaire mensualisé\s*:\s*([\d,]+)\s*€/) || [])[1];
+dire(!!apercu && apercu !== avant, "l'aperçu du nouveau salaire s'affiche", `${avant} € → ${apercu} €`);
+dire(/Enregistrer ce rythme/.test(t1) && /Annuler/.test(t1), "le changement se confirme, il ne s'applique pas tout seul");
 
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 await nav.close();
