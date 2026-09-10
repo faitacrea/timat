@@ -221,5 +221,49 @@ for (const c of cas) {
   console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
 }
 const total = cas.length + casAlloc.length + casMin.length + 1 + 21 + 13;
+
+// === BRUT ET NET ===
+// Pourquoi : le taux du contrat est un BRUT, et la moitie de l'application
+// l'affichait comme un NET. La conversion doit passer par les vraies
+// cotisations salariales, pas par le coefficient 0,78 qui trainait.
+{
+  const tc = src.match(/const TAUX_COTISATIONS=\{[\s\S]*?\n\};/);
+  const nd = src.match(/const netDepuisBrut=\(brut\)=>\{[\s\S]*?\n\};/);
+  if (!tc || !nd) {
+    console.error("\n  KO  netDepuisBrut() ou le barème des cotisations est introuvable\n");
+    process.exit(1);
+  }
+  const netDepuisBrut = eval(`(function(){${tc[0]}; ${nd[0]}; return netDepuisBrut;})()`);
+
+  console.log("\n=== BRUT ET NET — cotisations reelles, pas un coefficient ===\n");
+  const casNet = [
+    { b: 0, a: 0, n: "un brut nul donne un net nul" },
+    { b: -5, a: 0, n: "un brut negatif ne donne jamais de net" },
+  ];
+  for (const c of casNet) {
+    const r = netDepuisBrut(c.b);
+    const ok = r === c.a;
+    if (!ok) ko++;
+    console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(50)} ${r}`);
+  }
+  // Le minimum conventionnel est publie en brut ET en net : 4,20 brut, 3,28 net.
+  // C'est le seul point de controle exterieur dont on dispose.
+  const net420 = netDepuisBrut(4.20);
+  const proche = Math.abs(net420 - 3.28) <= 0.06;
+  if (!proche) ko++;
+  console.log(`  ${proche ? "ok " : "KO "} ${"4,20 € brut donne le net publie (3,28 €)".padEnd(50)} ${net420.toFixed(2)} €`);
+
+  // Le net doit rester strictement sous le brut, et croitre avec lui.
+  const croissant = netDepuisBrut(1000) > netDepuisBrut(500) && netDepuisBrut(1000) < 1000;
+  if (!croissant) ko++;
+  console.log(`  ${croissant ? "ok " : "KO "} ${"le net suit le brut sans jamais l'atteindre".padEnd(50)} ${netDepuisBrut(1000).toFixed(2)} € pour 1000 €`);
+
+  // Et il ne doit surtout plus valoir le coefficient invente.
+  const ecartCoef = Math.abs(netDepuisBrut(1000) - 780);
+  const distinct = ecartCoef > 1;
+  if (!distinct) ko++;
+  console.log(`  ${distinct ? "ok " : "KO "} ${"le calcul differe du coefficient 0,78 abandonne".padEnd(50)} ecart ${ecartCoef.toFixed(2)} €`);
+}
+
 console.log(ko ? `\n${ko} cas en échec\n` : `\n${total} cas sur ${total} conformes\n`);
 process.exit(ko ? 1 : 0);
