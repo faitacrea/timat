@@ -2,33 +2,6 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 
-// Hook générique : charge depuis Supabase, fallback local, sauvegarde auto
-function useSupabaseData(table, enfantId, isDemo, defaultData){
-  const [data, setDataState]=useState(defaultData);
-  const [loaded, setLoaded]=useState(false);
-
-  useEffect(()=>{
-    if(!enfantId||isDemo){setLoaded(true);return;}
-    supabase.from(table).select("*").eq("enfant_id",enfantId)
-      .order("created_at",{ascending:true})
-      .then(({data:rows})=>{
-        if(rows&&rows.length>0)setDataState(rows);
-        setLoaded(true);
-      });
-  },[enfantId,isDemo,table]);
-
-  const saveRow=async(row)=>{
-    if(isDemo||!enfantId)return;
-    await supabase.from(table).upsert({...row,enfant_id:enfantId},{onConflict:"id"});
-  };
-
-  const deleteRow=async(id)=>{
-    if(isDemo||!enfantId)return;
-    await supabase.from(table).delete().eq("id",id);
-  };
-
-  return[data,setDataState,saveRow,deleteRow,loaded];
-}
 
 // ========== AUDIT LOG + CONSENT P8 ==========
 // Helpers RGPD : logAction (audit_log append-only) et logConsent (consentements RGPD)
@@ -2053,151 +2026,6 @@ function AccueilParent({enfant,setPage,user}){
   </div>;
 }
 
-//
-function Transmissions({enfants,role,pEId,user}){
-  const [selId,setSelId]=useState(enfants[0]?.id);
-  const [msg,setMsg]=useState("");
-  const [mood,setMood]=useState("😊");
-  const [txs,setTxs]=useState([]);
-  const [sending,setSending]=useState(false);
-  const [docOuvert,setDocOuvert]=useState(null);
-  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const enfant=liste.find(e=>e.id===selId)||liste[0];
-
-  // Charger transmissions depuis Supabase
-  useEffect(()=>{
-    if(!enfant?.id)return;
-    const charger=async()=>{
-      const{data}=await supabase.from("transmissions")
-        .select("*").eq("enfant_id",enfant.id)
-        .order("created_at",{ascending:true}).limit(50);
-      if(data&&data.length>0){
-        setTxs(data.map(t=>({
-          id:t.id,eId:t.enfant_id,
-          auteur:t.auteur_role,
-          date:t.date,h:t.heure||"",
-          txt:t.texte,mood:t.mood||"😊"
-        })));
-      }else{
-        setTxs(D.transmissions.filter(t=>t.eId===enfant?.id));
-      }
-    };
-    charger();
-  },[enfant?.id]);
-
-  const msgs=txs.filter(t=>t.eId===enfant?.id).sort((a,b)=>a.id>b.id?1:-1);
-
-  // Bilans reçus de Marie (demo data)
-  const bilansRecus=role==="parent"?[
-    {id:"br1",type:"bilan",date:new Date(Date.now()-21*86400000).toLocaleDateString("fr-FR"),txt:BILANS[enfant?.id]?.[0]||""},
-    {id:"br2",type:"cr",trim:"T"+(Math.floor(new Date().getMonth()/3)+1)+" "+new Date().getFullYear(),txt:CRS[enfant?.id]?.[0]||""},
-  ].filter(b=>b.txt):[];
-
-  const send=async()=>{
-    if(!msg.trim()||!enfant)return;
-    setSending(true);
-    const{data:{user}}=await supabase.auth.getUser();
-    const{data,error}=await supabase.from("transmissions").insert({
-      enfant_id:enfant.id,
-      auteur_id:user?.id,
-      auteur_role:role,
-      date:TODAY_STR,
-      heure:TODAY_H,
-      texte:msg,
-      mood,
-    }).select().single();
-    if(!error&&data){
-      setTxs(p=>[...p,{id:data.id,eId:enfant.id,auteur:role,date:TODAY_STR,h:TODAY_H,txt:msg,mood}]);
-    }else{
-      // Fallback local si erreur
-      setTxs(p=>[...p,{id:"tn"+Date.now(),eId:enfant.id,auteur:role,date:TODAY_STR,h:TODAY_H,txt:msg,mood}]);
-    }
-    setMsg("");
-    setSending(false);
-  };
-
-  return <div className="fi">
-    <PageHeader icon="📋" title="Journal" sub={"Échanges quotidiens avec "+(enfant?.prenomAsmat||"votre assmat")}/>
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
-
-    {/* Documents reçus - parent seulement */}
-    {role==="parent"&&bilansRecus.length>0&&<div className="card"style={{marginBottom:14,border:"1.5px solid var(--P)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-        <div style={{width:28,height:28,borderRadius:"50%",background:"var(--Pp)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>✨</div>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--P)"}}>Documents reçus de {enfant?.prenomAsmat||"l'assmat"}</div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {bilansRecus.map(b=><div key={b.id}>
-          <div onClick={()=>setDocOuvert(docOuvert===b.id?null:b.id)}
-            style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"var(--Pp)",borderRadius:10,cursor:"pointer",border:"1px solid rgba(106,63,136,.2)"}}>
-            <div>
-              <div style={{fontWeight:700,fontSize:13,color:"var(--P)"}}>
-                {b.type==="bilan"?"✨ Résumé de la journée du "+b.date:"📝 CR Trimestriel - "+b.trim}
-              </div>
-              <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>Par {enfant?.prenomAsmat||"votre assmat"} · Cliquer pour lire</div>
-            </div>
-            <span style={{fontSize:16,color:"var(--P)"}}>{docOuvert===b.id?"▲":"▼"}</span>
-          </div>
-          {docOuvert===b.id&&<div style={{padding:"14px 16px",background:"var(--w)",borderRadius:"0 0 10px 10px",border:"1px solid rgba(106,63,136,.2)",borderTop:"none"}}>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,lineHeight:2,color:"var(--b)",whiteSpace:"pre-wrap",fontStyle:"italic"}}>
-              {b.txt}
-            </div>
-            <button className="btn bG s"style={{marginTop:10}}onClick={()=>navigator.clipboard?.writeText(b.txt)}>
-              <IconeOuEmoji e="📋"/> Copier
-            </button>
-          </div>}
-        </div>)}
-      </div>
-    </div>}
-
-    <div className="g2">
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>{enfant?.emoji} {enfant?.prenom} · Aujourd'hui</div>
-        <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:380,overflowY:"auto"}}>
-          {msgs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucune transmission.</div>}
-          {msgs.map(t=><div key={t.id}style={{display:"flex",gap:10}}>
-            <div style={{textAlign:"center",minWidth:38}}><div style={{fontSize:20}}>{t.mood}</div><div style={{fontSize:11,color:"var(--l)"}}>{t.h}</div></div>
-            <div style={{flex:1,background:t.auteur==="asmat"?"var(--Tp)":"var(--Bp)",borderRadius:10,padding:"9px 12px",
-              borderLeft:(t.auteur==="asmat"?"3px solid var(--T)":"3px solid var(--B)")}}>
-              <div style={{fontSize:11,fontWeight:700,color:t.auteur==="asmat"?"var(--T)":"var(--B)",marginBottom:3}}>
-                {t.auteur==="asmat"?"👩👧 "+(user?.prenom||"Marie"):"👪 Parent"}</div>
-              <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{t.txt}</div>
-            </div>
-          </div>)}
-        </div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="✏️"/> Nouvelle transmission</div>
-          <div style={{marginBottom:10}}>
-            <label className="lbl">Humeur</label>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {["😄","😊","😐","😴","😢","😠","🥰","😬"].map(h=><button key={h}className={"moo "+(mood===h?"on":"")}onClick={()=>setMood(h)}>{h}</button>)}
-            </div>
-          </div>
-          <div style={{marginBottom:10}}>
-            <label className="lbl">Message</label>
-            <textarea className="ta"value={msg}onChange={e=>setMsg(e.target.value)}
-              placeholder={role==="asmat"?("Racontez la journée de "+(enfant?.prenom||"")+"..."):"Informations pour la journée..."}/>
-          </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={send}>Envoyer ✉️</button>
-        </div>
-        {D.moodHistory[enfant?.id]&&<div className="card">
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📈"/> Humeurs - 15 derniers jours</div>
-          <div className="mood-bar">
-            {D.moodHistory[enfant.id].map((v,i)=><div key={i}className="mood-b"style={{
-              height:(v/5*100)+"%",width:"100%",
-              background:v>=4?"var(--S)":v>=3?"var(--G)":"var(--R)",opacity:.8}}/>)}
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:4}}>
-            <span>J-14</span><span>Aujourd'hui</span>
-          </div>
-        </div>}
-      </div>
-    </div>
-  </div>;
-}
 
 //
 //
@@ -7227,90 +7055,6 @@ function CourriersTypes({enfants,pEId,user}){
   </div>;
 }
 
-//
-function ImportContrat({onFinish}){
-  const [step,setStep]=useState(1);
-  const [data,setData]=useState({
-    prenomAsmat:"",emailAsmat:"",prenomEnfant:"",dateNaiss:"",
-    prenomParent:"",emailParent:"",debut:"",jours:[],
-    heures:"",taux:"",entretien:"3.92",source:"Top-Assmat"
-  });
-  const [toast,setToast]=useState("");
-  const toggle=(j)=>setData(d=>({...d,jours:d.jours.includes(j)?d.jours.filter(x=>x!==j):[...d.jours,j]}));
-
-  return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <div style={{width:"100%",maxWidth:520}}>
-      <div style={{display:"flex",gap:4,marginBottom:24}}>
-        {[1,2,3].map(s=><div key={s}style={{flex:1,height:4,borderRadius:2,
-          background:step>=s?"var(--T)":"var(--br)",transition:"background .3s"}}/>)}
-      </div>
-      <div className="card"style={{padding:"var(--pad-carte-l)"}}>
-        {step===1&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="📦" taille={20}/> Importer votre contrat</div>
-          <div style={{fontSize:13,color:"var(--l)",marginBottom:20,lineHeight:1.6}}>Basculez depuis votre ancien outil en 3 minutes. Toutes vos données reprises automatiquement.</div>
-          <div style={{marginBottom:14}}>
-            <label className="lbl">Depuis quel outil ?</label>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {["Top-Assmat","Nounou-Top","NannyFit","Pandi-Panda","Envola","Papier"].map(s=><button key={s}
-                onClick={()=>setData(d=>({...d,source:s}))}style={{
-                  padding:"6px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-                  background:data.source===s?"var(--T)":"transparent",color:data.source===s?"#fff":"var(--m)",
-                  borderColor:data.source===s?"var(--T)":"var(--br)"}}>{s}</button>)}
-            </div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-            <div><label className="lbl">Votre prénom</label><input className="inp"placeholder="Marie"value={data.prenomAsmat}onChange={e=>setData(d=>({...d,prenomAsmat:e.target.value}))}/></div>
-            <div><label className="lbl">Votre email</label><input type="email"className="inp"placeholder="marie@mail.fr"value={data.emailAsmat}onChange={e=>setData(d=>({...d,emailAsmat:e.target.value}))}/></div>
-          </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={()=>setStep(2)}disabled={!data.prenomAsmat||!data.emailAsmat}>Continuer →</button>
-        </>}
-        {step===2&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="👶" taille={20}/> L'enfant & le parent</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-            <div><label className="lbl">Prénom de l'enfant</label><input className="inp"placeholder="Léo"value={data.prenomEnfant}onChange={e=>setData(d=>({...d,prenomEnfant:e.target.value}))}/></div>
-            <div><label className="lbl">Date de naissance</label><input type="date"className="inp"value={data.dateNaiss}onChange={e=>setData(d=>({...d,dateNaiss:e.target.value}))}/></div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-            <div><label className="lbl">Prénom du parent</label><input className="inp"placeholder="Sophie"value={data.prenomParent}onChange={e=>setData(d=>({...d,prenomParent:e.target.value}))}/></div>
-            <div><label className="lbl">Email du parent</label><input type="email"className="inp"placeholder="parent@mail.fr"value={data.emailParent}onChange={e=>setData(d=>({...d,emailParent:e.target.value}))}/></div>
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn bG"style={{flex:1}}onClick={()=>setStep(1)}>← Retour</button>
-            <button className="btn bT"style={{flex:2}}onClick={()=>setStep(3)}disabled={!data.prenomEnfant||!data.prenomParent}>Continuer →</button>
-          </div>
-        </>}
-        {step===3&&<>
-          <div className="pf"style={{fontSize:20,fontWeight:700,color:"var(--b)",marginBottom:16}}><IconeOuEmoji e="📄" taille={20}/> Les conditions du contrat</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-            <div><label className="lbl">Date de début</label><input type="date"className="inp"value={data.debut}onChange={e=>setData(d=>({...d,debut:e.target.value}))}/></div>
-            <div><label className="lbl">Heures / semaine</label><input type="number"className="inp"placeholder="40"value={data.heures}onChange={e=>setData(d=>({...d,heures:e.target.value}))}/></div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-            <div><label className="lbl">Taux horaire brut (€)</label><input type="number"step="0.05"className="inp"placeholder="4.20"value={data.taux}onChange={e=>setData(d=>({...d,taux:e.target.value}))}/></div>
-            <div><label className="lbl">Indemnité entretien (€/j)</label><input type="number"step="0.05"className="inp"placeholder="3.80"value={data.entretien}onChange={e=>setData(d=>({...d,entretien:e.target.value}))}/></div>
-          </div>
-          <div style={{marginBottom:14}}>
-            <label className="lbl">Jours d'accueil</label>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {["Lundi","Mardi","Mercredi","Jeudi","Vendredi"].map(j=><button key={j}onClick={()=>toggle(j)}style={{
-                padding:"6px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-                background:data.jours.includes(j)?"var(--S)":"transparent",color:data.jours.includes(j)?"#fff":"var(--m)",
-                borderColor:data.jours.includes(j)?"var(--S)":"var(--br)"}}>{j.slice(0,2)}</button>)}
-            </div>
-          </div>
-          <div style={{background:"var(--Sp)",borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:"var(--S)"}}>
-            <IconeOuEmoji e="✅"/> Ces données seront reprises immédiatement dans TiMat. Modifiables à tout moment.
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn bG"style={{flex:1}}onClick={()=>setStep(2)}>← Retour</button>
-            <button className="btn bT"style={{flex:2}}onClick={()=>{setToast("Contrat importé ✓");setTimeout(()=>onFinish?.(),1500);}}><IconeOuEmoji e="✅"/> Importer dans TiMat</button>
-          </div>
-        </>}
-      </div>
-    </div>
-  </div>;
-}
 
 //
 function Parrainage({user}){
@@ -8014,30 +7758,6 @@ function TransmissionsContent({enfant,role,user}){
   </div>;
 }
 
-//
-function Eveil({enfants,role,pEId}){
-  const [selId,setSelId]=useState(enfants[0]?.id);
-  const [section,setSection]=useState("portfolio");
-  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  return <div className="fi">
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
-    </div>}
-    <div style={{display:"flex",gap:4,marginBottom:16,borderBottom:"2px solid var(--br)"}}>
-      {[{id:"portfolio",l:"Cahier de réussites",ic:"🎨"},{id:"developpement",l:"Développement",ic:"🌱"}].map(s=>
-        <button key={s.id}onClick={()=>setSection(s.id)}style={{
-          padding:"8px 16px",border:"none",background:"none",cursor:"pointer",
-          fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:13,
-          color:section===s.id?"var(--S)":"var(--l)",
-          borderBottom:section===s.id?"2px solid var(--S)":"2px solid transparent",
-          marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:6
-        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
-      )}
-    </div>
-    {section==="portfolio"&&<Portfolio enfants={liste}role={role}pEId={selId}/>}
-    {section==="developpement"&&<Developpement enfants={liste}role={role}pEId={selId}/>}
-  </div>;
-}
 
 //
 const SOMMEIL_DEMO={
@@ -10113,27 +9833,6 @@ function MentionsLegales(){
   </div>;
 }
 
-//
-function JournalAvecBilans({enfant,liste,role,pEId,user}){
-  const [sousSec,setSousSec]=useState("messages");
-  if(role!=="asmat") return <TransmissionsContent enfant={enfant}role={role}user={user}/>;
-  return <div>
-    <div style={{display:"flex",gap:2,marginBottom:14,borderBottom:"1.5px solid var(--br)"}}>
-      {[{id:"messages",l:"Messages",ic:"💬"},{id:"bilan",l:"Bilan du jour",ic:"✨"},{id:"cr",l:"CR Trimestriel",ic:"📝"}].map(s=>
-        <button key={s.id}onClick={()=>setSousSec(s.id)}style={{
-          padding:"6px 12px",border:"none",background:"none",cursor:"pointer",
-          fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,whiteSpace:"nowrap",
-          color:sousSec===s.id?"var(--P)":"var(--l)",
-          borderBottom:sousSec===s.id?"2px solid var(--P)":"2px solid transparent",
-          marginBottom:-2,transition:"all .15s",display:"flex",alignItems:"center",gap:4
-        }}><IconeOuEmoji e={s.ic}/><span>{s.l}</span></button>
-      )}
-    </div>
-    {sousSec==="messages"&&<TransmissionsContent enfant={enfant}role={role}user={user}/>}
-    {sousSec==="bilan"&&<ResumeJournee enfants={liste}role={role}pEId={enfant?.id}/>}
-    {sousSec==="cr"&&<CompteRenduTrimestriel enfants={liste}role={role}pEId={enfant?.id}/>}
-  </div>;
-}
 
 //
 function CahierJour({enfants,role,pEId,user,pointagesDB}){
@@ -13471,50 +13170,6 @@ function CounterNombre({target,suffix="",prefix="",duration=2000}){
   return <span ref={ref}>{prefix}{count.toLocaleString("fr-FR")}{suffix}</span>;
 }
 
-//
-function DemoScreen({page}){
-  const card={background:"#fff",border:"1px solid #EFE7DF",borderRadius:13,padding:"11px 13px"};
-  const chip=(c)=>({fontSize:11,fontWeight:700,color:c,background:c+"18",padding:"2px 8px",borderRadius:8});
-  const Title=({children})=><div style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:15,color:"#2E4859",margin:"2px 2px 12px"}}>{children}</div>;
-  if(page==="accueil")return <div>
-    <Title>Bonjour Sophie 👋</Title>
-    <div style={{background:"linear-gradient(135deg,#2E4859,#3E6B63)",borderRadius:15,padding:14,color:"#fff",marginBottom:10}}>
-      <div style={{fontSize:11,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
-      <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
-      <div style={{display:"flex",gap:6,marginTop:10}}>{["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:28,height:28,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>{e}</span>)}</div>
-    </div>
-    {[["⏰","Pointage du jour","à jour","#5DA9A1"],["✍️","1 contrat","à signer","#E49178"],["📩","Message du parent","nouveau","#2E4859"]].map(([ic,a,b,c],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={chip(c)}>{b}</span></div>)}
-  </div>;
-  if(page==="calendrier")return <div>
-    <Title>Planning de la semaine</Title>
-    {[["Lun","Léo · Emma","8h–17h"],["Mar","Léo · Noah","8h–18h"],["Mer","Emma","9h–16h"],["Jeu","Léo · Emma · Noah","8h–17h"]].map(([j,who,h],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:7}}><span style={{width:34,height:34,borderRadius:9,background:"#5DA9A118",color:"#2E4859",fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{j}</span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{who}</span><span style={{fontSize:11.5,color:"#8A7A70",fontWeight:600}}>{h}</span></div>)}
-    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:2,background:"#FBEEE9",border:"1px solid #F3D3C7"}}><IconeOuEmoji e="🌴"/><span style={{fontSize:11.5,color:"#C84B31",fontWeight:600}}>Vendredi — absence déclarée</span></div>
-  </div>;
-  if(page==="admin_finances")return <div>
-    <Title>Salaire de juin</Title>
-    <div style={{background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:15,padding:15,color:"#fff",marginBottom:10}}>
-      <div style={{fontSize:11,opacity:.85,fontWeight:600}}>NET À VERSER</div>
-      <div style={{fontSize:26,fontWeight:800,fontFamily:"'Fraunces',serif",marginTop:2}}>1 248,60 €</div>
-      <div style={{fontSize:11.5,opacity:.85,marginTop:2}}>Mensualisation + heures + indemnités</div>
-    </div>
-    {[["🧮","Indemnités d'entretien","64,00 €"],["🍽️","Repas","33,00 €"],["📄","Déclaration Pajemploi","prête"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#2E4859"}}>{a}</span><span style={{fontSize:11,fontWeight:700,color:"#5DA9A1"}}>{b}</span></div>)}
-  </div>;
-  if(page==="messagerie")return <div>
-    <Title>Échange avec Marie 💬</Title>
-    <div style={{display:"flex",flexDirection:"column",gap:9}}>
-      <div style={{alignSelf:"flex-start",maxWidth:"85%",background:"#fff",border:"1px solid #EFE7DF",borderRadius:"14px 14px 14px 4px",padding:"9px 12px",fontSize:12,color:"#2E4859"}}>Bonjour ! Léo a bien dormi ce matin 😊</div>
-      <div style={{alignSelf:"flex-end",maxWidth:"85%",background:"linear-gradient(135deg,#E49178,#C84B31)",color:"#fff",borderRadius:"14px 14px 4px 14px",padding:"9px 12px",fontSize:12}}>Super, merci Sophie ! Il a mangé ?</div>
-      <div style={{alignSelf:"flex-start",maxWidth:"85%",background:"#fff",border:"1px solid #EFE7DF",borderRadius:"14px 14px 14px 4px",padding:"9px 12px",fontSize:12,color:"#2E4859"}}>Oui, tout mangé 🍎 Photo dans le cahier !</div>
-    </div>
-    <div style={{...card,display:"flex",alignItems:"center",gap:8,marginTop:12,color:"#8A7A70"}}><span style={{flex:1,fontSize:11.5}}>Votre message…</span><IconeOuEmoji e="➤"/></div>
-  </div>;
-  if(page==="sante_complet")return <div>
-    <Title>Santé & urgences 🩺</Title>
-    <div style={{...card,marginBottom:9}}><div style={{fontSize:11,fontWeight:700,color:"#2E4859",marginBottom:4}}>Léo Martin · 2 ans</div><div style={{fontSize:11,color:"#8A7A70",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Allergie : arachides<br/><IconeOuEmoji e="💊"/> Aucun traitement en cours</div></div>
-    {[["🚑","SAMU","15"],["🧑‍⚕️","Médecin traitant","01 23 45 67"]].map(([ic,a,b],i)=><div key={i}style={{...card,display:"flex",alignItems:"center",gap:10,marginBottom:8,borderColor:"#FCA5A5"}}><span style={{fontSize:16}}><IconeOuEmoji e={ic}/></span><span style={{flex:1,fontSize:12,fontWeight:600,color:"#7F1D1D"}}>{a}</span><span style={{fontSize:12,fontWeight:800,color:"#DC2626"}}>{b}</span></div>)}
-  </div>;
-  return <div style={{padding:20,textAlign:"center",color:"#8A7A70",fontSize:12}}>Écran disponible dans l'application.</div>;
-}
 
 function HeroPhone({screen}){
   const pool=[
@@ -13743,14 +13398,6 @@ function fmtInline(text){
   }
   if(rest) parts.push(rest);
   return parts;
-}
-function RenderArticleBlocks({blocks}){
-  return <div>{(blocks||[]).map((b,i)=>{
-    if(b.type==="h3") return <h3 key={i} style={{fontSize:16,fontWeight:700,color:b.color||"#2E4859",margin:"20px 0 10px"}}>{b.text}</h3>;
-    if(b.type==="callout"){const col=b.color||"#5DA9A1"; return <div key={i} style={{background:col+"14",borderRadius:12,padding:16,margin:"16px 0",border:"1px solid "+col+"40"}}><div style={{fontWeight:700,color:col,marginBottom:6}}>{b.title}</div><div >{fmtInline(b.text)}</div></div>;}
-    if(b.type==="list") return <ul key={i} style={{paddingLeft:20,fontSize:13,lineHeight:1.9}}>{(b.items||[]).map((it,j)=><li key={j}>{fmtInline(it)}</li>)}</ul>;
-    return <p key={i} style={{marginBottom:8}}>{fmtInline(b.text)}</p>;
-  })}</div>;
 }
 function ParentInvitationScreen({onLogin,initialMode="inscription"}){
   const [mode,setMode]=useState(initialMode);
@@ -17491,159 +17138,7 @@ const ONBOARD_STEPS=[
   },
 ];
 
-function Onboarding({onFinish,user}){
-  const [step,setStep]=useState(0);
-  const s=ONBOARD_STEPS[step];
-  const isLast=step===ONBOARD_STEPS.length-1;
-  const pct=Math.round(((step+1)/ONBOARD_STEPS.length)*100);
 
-  return(
-    <div style={{minHeight:"100vh",background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",padding:20,transition:"background .5s"}}>
-      <div style={{width:"100%",maxWidth:480}}>
-
-        {/* Barre de progression */}
-        <div style={{display:"flex",gap:6,marginBottom:32,alignItems:"center"}}>
-          {ONBOARD_STEPS.map((_,i)=>(
-            <div key={i}style={{
-              flex:1,height:4,borderRadius:2,
-              background:i<=step?s.color:"rgba(0,0,0,.1)",
-              transition:"background .4s",
-            }}/>
-          ))}
-          <span style={{fontSize:11,color:"rgba(0,0,0,.35)",marginLeft:6,flexShrink:0}}>{pct}%</span>
-        </div>
-
-        <div style={{background:"#fff",borderRadius:24,overflow:"hidden",boxShadow:"0 8px 48px rgba(0,0,0,.08)"}}>
-
-          {/* Header coloré */}
-          <div style={{
-            background:s.bg,padding:"36px 32px 28px",textAlign:"center",
-            borderBottom:"1px solid rgba(0,0,0,.06)",
-          }}>
-            <div style={{
-              fontSize:72,marginBottom:12,lineHeight:1,
-              filter:"drop-shadow(0 4px 12px rgba(0,0,0,.1))",
-            }}>{s.illustration}</div>
-            <div style={{
-              display:"inline-flex",alignItems:"center",gap:6,
-              background:"rgba(255,255,255,.7)",borderRadius:20,
-              padding:"4px 14px",marginBottom:14,
-            }}>
-              <span style={{fontSize:14}}>{s.emoji}</span>
-              <span style={{fontSize:11,fontWeight:700,color:s.color,textTransform:"uppercase",letterSpacing:".8px"}}>{s.sousTitre}</span>
-            </div>
-            <div style={{
-              fontFamily:"'Fraunces',Georgia,serif",
-              fontSize:"clamp(20px,4vw,26px)",fontWeight:700,
-              color:"#0D1B2A",lineHeight:1.2,
-            }}>{s.titre}</div>
-          </div>
-
-          {/* Corps */}
-          <div style={{padding:"28px 32px 32px"}}>
-            <p style={{fontSize:14,color:"#4A3728",lineHeight:1.85,marginBottom:28,margin:"0 0 28px"}}>
-              {s.texte}
-            </p>
-
-            <button
-              onClick={()=>isLast?onFinish():setStep(p=>p+1)}
-              style={{
-                width:"100%",padding:"14px",borderRadius:12,border:"none",
-                background:"linear-gradient(135deg, "+s.color+", "+s.color+"CC)",
-                color:"#fff",fontWeight:700,fontSize:15,cursor:"pointer",
-                fontFamily:"inherit",letterSpacing:".2px",
-                boxShadow:"0 4px 20px "+s.color+"40",
-                transition:"all .2s",
-              }}
-              onMouseEnter={e=>e.currentTarget.style.transform="translateY(-1px)"}
-              onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}
-            >
-              {s.btn}
-            </button>
-
-            {!isLast&&(
-              <button
-                onClick={onFinish}
-                style={{
-                  display:"block",width:"100%",marginTop:12,
-                  background:"none",border:"none",
-                  fontSize:12,color:"rgba(0,0,0,.35)",
-                  cursor:"pointer",fontFamily:"inherit",
-                }}
-              >
-                Passer le tutoriel
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Prénom de l'utilisateur */}
-        {user?.prenom&&step===0&&(
-          <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"rgba(0,0,0,.45)"}}>
-            Bonjour {user.prenom} 👋 - ravi de vous accueillir
-          </div>
-        )}
-        <div style={{textAlign:"center",marginTop:10,fontSize:11,color:"rgba(0,0,0,.25)"}}>
-          {step+1} sur {ONBOARD_STEPS.length}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-//
-function Login({onLogin}){
-  const [email,setEmail]=useState("");const [err,setErr]=useState("");
-  const comptes=[
-    {...D.asmat,label:"Marie Dupont (AssMat)",hint:"marie.dupont@mail.fr"},
-    {...D.parents[0],label:"Sophie Martin - Léo",hint:"sophie.martin@mail.fr"},
-    {...D.parents[1],label:"Thomas Bernard - Emma",hint:"thomas.bernard@mail.fr"},
-    {...D.parents[2],label:"Camille Petit - Noah",hint:"camille.petit@mail.fr"},
-  ];
-  const tenter=()=>{const c=comptes.find(x=>x.email===email.trim().toLowerCase());
-    if(c)onLogin(c);else setErr("Email non reconnu.");};
-
-  return(
-    <>
-      <Styles/>
-      <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-    <div style={{width:"100%",maxWidth:420}}>
-      <div style={{textAlign:"center",marginBottom:32}}>
-        <img src="/logo.png" alt="TiMat" style={{height:(G?.landing?.logoSizes?.login)||80,marginBottom:8,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div style="font-size:56px;margin-bottom:8px">🌿</div><div class="pf" style="font-size:38px;font-weight:700;color:var(--T);font-style:italic;letter-spacing:-1px">TiMat</div>'}}/>
-        <div style={{fontSize:14,color:"var(--l)",marginTop:4}}>L'application qui réinvente l'assistante maternelle</div>
-        <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:12,flexWrap:"wrap"}}>
-          {["✨ Résumé de la journée","📝 CR Trimestriel","🏛️ Pajemploi","📑 Attestation fiscale"].map(t=>
-            <span key={t}className="badge"style={{background:"var(--Tp)",color:"var(--T)",fontSize:11}}>{t}</span>)}
-        </div>
-      </div>
-      <div className="card"style={{padding:"var(--pad-carte-l)"}}>
-        <div className="pf"style={{fontSize:17,fontWeight:700,color:"var(--b)",marginBottom:16}}>Connexion</div>
-        <div style={{marginBottom:14}}>
-          <label className="lbl">Email</label>
-          <input className="inp"type="email"placeholder="votre@email.fr"value={email}
-            onChange={e=>{setEmail(e.target.value);setErr("");}}onKeyDown={e=>e.key==="Enter"&&tenter()}/>
-          {err&&<div style={{color:"var(--R)",fontSize:12,marginTop:4}}>{err}</div>}
-        </div>
-        <button className="btn bT"style={{width:"100%",justifyContent:"center",padding:"12px",marginBottom:18}}onClick={tenter}>
-          Se connecter
-        </button>
-        <div style={{background:"var(--c)",borderRadius:10,padding:14}}>
-          <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:8,textTransform:"uppercase",letterSpacing:".5px"}}>Comptes démo</div>
-          {comptes.map(c=><button key={c.id}onClick={()=>{setEmail(c.email);setErr("");}}
-            style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",background:"none",border:"none",cursor:"pointer",borderRadius:8,transition:"background .15s"}}
-            onMouseEnter={e=>e.currentTarget.style.background="var(--br)"}
-            onMouseLeave={e=>e.currentTarget.style.background="none"}>
-            <span style={{fontWeight:700,color:c.role==="asmat"?"var(--T)":"var(--B)"}}>
-              {c.role==="asmat"?"👩👧":"👪"}</span> {c.label}
-            <span style={{fontSize:11,color:"var(--l)",display:"block",paddingLeft:18}}>{c.hint}</span>
-          </button>)}
-        </div>
-      </div>
-    </div>
-  </div>
-  </>
-  );
-}
 
 //
 //
@@ -19778,51 +19273,6 @@ function maintenanceBypass(){
     const t = parseInt(localStorage.getItem("timat:acces") || "0", 10);
     return t > 0 && (Date.now() - t) < 86400000;
   }catch(e){ return false; }
-}
-// Ecran de maintenance complet. Plus branche depuis le passage en mode vitrine :
-// conserve pour pouvoir refermer entierement le site en une ligne si besoin.
-function MaintenanceScreen(){
-  useEffect(()=>{
-    document.title = "TiMat - maintenance en cours";
-    let m = document.querySelector('meta[name="robots"]');
-    if(!m){ m = document.createElement("meta"); m.name = "robots"; document.head.appendChild(m); }
-    m.content = "noindex,nofollow";
-    return ()=>{ if(m) m.content = "index,follow"; };
-  },[]);
-  const C = DEFAULT_CONFIG.cols;
-  const S = {
-    wrap:{minHeight:"100vh",background:C.c,color:C.b,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 20px",position:"relative",overflow:"hidden",fontFamily:"-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif"},
-    b1:{position:"absolute",borderRadius:"50%",background:C.T,opacity:.9,width:280,height:280,top:-140,right:-90},
-    b2:{position:"absolute",borderRadius:"50%",background:C.T,opacity:.32,width:150,height:150,bottom:-80,left:-60},
-    inner:{position:"relative",zIndex:1,maxWidth:440,width:"100%",textAlign:"center"},
-    logo:{height:46,marginBottom:30},
-    h1:{fontSize:27,lineHeight:1.22,margin:"0 0 14px",fontWeight:700,letterSpacing:"-.01em"},
-    msg:{fontSize:16,lineHeight:1.55,color:"#4A6270",margin:"0 0 26px"},
-    card:{background:C.w,border:"1px solid #E8E4E0",borderRadius:14,padding:"16px 18px",textAlign:"left"},
-    ch:{fontSize:11,letterSpacing:".1em",textTransform:"uppercase",color:C.R,fontWeight:700,marginBottom:10},
-    a:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,textDecoration:"none",color:C.b,fontSize:14.5,fontWeight:600,padding:"9px 0",borderTop:"1px solid #E8E4E0"},
-    a0:{borderTop:"none"},
-    ar:{color:C.T,fontWeight:400},
-    foot:{marginTop:26,fontSize:12.5,color:"#6E8089"}
-  };
-  const liens = [["Les guides du blog","/blog"],["Les simulateurs gratuits","/outils.html"],["Calculer son CMG et son reste a charge","/simulateur-cmg-reste-a-charge.html"]];
-  return (
-    <div style={S.wrap}>
-      <div style={S.b1}/><div style={S.b2}/>
-      <div style={S.inner}>
-        <img src="/logo.png" alt="TiMat" style={S.logo}/>
-        <h1 style={S.h1}>On prepare quelque chose de mieux</h1>
-        <p style={S.msg}>TiMat est en maintenance le temps d'une mise a jour.<br/><strong style={{color:C.b,fontWeight:600}}>Vos donnees et vos contrats sont intacts.</strong><br/>Le service revient tres vite.</p>
-        <div style={S.card}>
-          <div style={S.ch}>Pendant ce temps, tout reste accessible</div>
-          {liens.map(([t,u],i)=>(
-            <a key={u} href={u} style={i===0?{...S.a,...S.a0}:S.a}><span>{t}</span><span style={S.ar}>&rarr;</span></a>
-          ))}
-        </div>
-        <p style={S.foot}>Une question ? <a href="mailto:contact@timat.app" style={{color:"#6E8089"}}>contact@timat.app</a></p>
-      </div>
-    </div>
-  );
 }
 
 export default function App(){
