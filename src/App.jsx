@@ -143,13 +143,26 @@ async function logAction(action, opts={}){
 // NOTIFICATIONS - helper generique reutilisable pour TOUT evenement (versement, signature, bulletin, pointage...).
 // Insert inter-comptes (un parent notifie son assmat et inversement) via la RPC SECURITY DEFINER
 // public.create_notification, qui verifie le lien parent<->assmat avant d'inserer. Echoue en silence.
-async function createNotification({userId,type="info",titre="",page="accueil",meta=null}){
+// LE point unique d'une notification. La notification dans l'application ET le
+// push partent d'ici, ensemble.
+//
+// Le push aurait pu etre ajoute aux huit endroits qui notifient. Ils auraient
+// diverge : c'est exactement ce qui s'est produit avec le decompte des jours,
+// recopie dans trois bulletins qui ne donnaient pas le meme resultat. En le
+// mettant ici, ajouter un neuvieme evenement demain ne peut plus revenir a
+// oublier le push.
+//
+// Le courriel reste a l'appelant : son contenu depend de l'evenement.
+async function createNotification({userId,type="info",titre="",page="accueil",meta=null,corps=""}){
   if(!userId)return;
   try{
     await supabase.rpc("create_notification",{
       p_user_id:userId, p_type:type, p_titre:titre, p_page:page, p_meta:meta,
     });
   }catch(e){ console.warn('[notification] non creee:', e?.message); }
+  // Sans attente : un push qui echoue ne doit jamais retenir l'action en cours.
+  envoyerPush({userId,titre,corps,url:"/?page="+encodeURIComponent(page),tag:type})
+    .catch(e=>console.warn('[push] non envoye:',e?.message));
 }
 
 async function logConsent(user_id, consents={}){
@@ -193,6 +206,120 @@ async function sendNotificationEmail({type,to,subject,template,vars={}}){
     return{success:false,error:e.message};
   }
 }
+
+/* ========== NOTIFICATIONS ==========
+
+   Le push ne s'envoie pas depuis les ecrans : il part de createNotification(),
+   qui est deja le point de passage de toute notification. Ajouter un evenement
+   demain ne peut donc pas revenir a oublier le push.
+
+   Ce qui atteint qui :
+     — dans l'application : toujours ;
+     — par courriel        : toujours, si le destinataire a une adresse ;
+     — par push            : seulement sur les appareils abonnes.
+
+   Le push ne remplace jamais le courriel. Sur iPhone il n'existe que si TiMat
+   a ete ajoute a l'ecran d'accueil : s'en remettre a lui seul reviendrait a ne
+   prevenir qu'une partie des gens, sans savoir laquelle. */
+
+const VAPID_PUBLIQUE="BGrkaQL78BMZ8LClsnl_t05IYDklLYrUN7I-GvXatBHomnvJ0dkB84xQaTP7RVdWtTmE6i5AVdz7cJ_QweB1U7g";
+
+// Le navigateur exige des octets, pas une chaine. L'ancienne version passait la
+// cle telle quelle, au format base64 ordinaire (avec + et /) : l'abonnement
+// echouait avant meme de commencer.
+const cleEnOctets=(base64url)=>{
+  const bourrage="=".repeat((4-base64url.length%4)%4);
+  const base64=(base64url+bourrage).replace(/-/g,"+").replace(/_/g,"/");
+  const brut=atob(base64);
+  const octets=new Uint8Array(brut.length);
+  for(let i=0;i<brut.length;i++)octets[i]=brut.charCodeAt(i);
+  return octets;
+};
+
+const estIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent||"");
+// Sur iPhone, Apple ne donne le push QU'AUX applications ajoutees a l'ecran
+// d'accueil. Ce n'est pas un choix de TiMat, et c'est la premiere chose a dire
+// a quelqu'un dont le bouton ne fait rien.
+const installeeEcranAccueil=()=>window.matchMedia("(display-mode: standalone)").matches
+  ||window.navigator.standalone===true;
+
+// Rend un etat precis, jamais un simple vrai/faux : chaque cas demande une
+// phrase differente a l'ecran.
+//   "pret" | "impossible-ios" | "non-supporte" | "refuse" | "erreur"
+const etatPush=()=>{
+  if(!("Notification" in window)||!("serviceWorker" in navigator)||!("PushManager" in window)){
+    return estIOS()&&!installeeEcranAccueil()?"impossible-ios":"non-supporte";
+  }
+  if(estIOS()&&!installeeEcranAccueil())return "impossible-ios";
+  if(Notification.permission==="denied")return "refuse";
+  return "pret";
+};
+
+const nomAppareil=()=>{
+  const ua=navigator.userAgent||"";
+  const systeme=/android/i.test(ua)?"Android":/iphone|ipad|ipod/i.test(ua)?"iPhone ou iPad"
+    :/mac os/i.test(ua)?"Mac":/windows/i.test(ua)?"Windows":"Ordinateur";
+  const navigateur=/edg\//i.test(ua)?"Edge":/chrome|crios/i.test(ua)?"Chrome"
+    :/firefox|fxios/i.test(ua)?"Firefox":/safari/i.test(ua)?"Safari":"navigateur";
+  return systeme+" · "+navigateur;
+};
+
+// Rend {etat, message}. L'appelant AFFICHE le message tel quel : c'est ce qui
+// empeche d'annoncer « Notifications activees » quand elles ne le sont pas.
+async function activerPush(userId){
+  const etat=etatPush();
+  if(etat==="impossible-ios")return{etat,message:"Sur iPhone, les notifications ne fonctionnent que si TiMat a été ajouté à votre écran d'accueil. Ajoutez-le, puis revenez ici."};
+  if(etat==="non-supporte")return{etat,message:"Ce navigateur ne gère pas les notifications. Vous continuerez à les recevoir par e-mail."};
+  if(etat==="refuse")return{etat,message:"Les notifications sont bloquées pour TiMat dans les réglages de votre navigateur. Il faut les y réautoriser."};
+  if(!userId)return{etat:"erreur",message:"Vous devez être connectée pour activer les notifications."};
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=="granted")return{etat:"refuse",message:"Notifications refusées. Vous continuerez à les recevoir par e-mail."};
+    const reg=await navigator.serviceWorker.ready;
+    const abo=await reg.pushManager.getSubscription()
+      ||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:cleEnOctets(VAPID_PUBLIQUE)});
+    const json=abo.toJSON();
+    const{error}=await supabase.from("push_subscriptions").upsert({
+      user_id:userId,endpoint:abo.endpoint,subscription:json,appareil:nomAppareil(),
+    },{onConflict:"endpoint"});
+    // L'enregistrement qui echoue est exactement ce qui se passait avant, en
+    // silence. Il doit se voir.
+    if(error)return{etat:"erreur",message:"L'abonnement n'a pas pu être enregistré : "+error.message};
+    return{etat:"actif",message:"Notifications activées sur cet appareil ("+nomAppareil()+")."};
+  }catch(e){
+    return{etat:"erreur",message:"Les notifications n'ont pas pu être activées : "+(e&&e.message||e)};
+  }
+}
+
+async function desactiverPush(userId){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const abo=await reg.pushManager.getSubscription();
+    if(abo){
+      await supabase.from("push_subscriptions").delete().eq("endpoint",abo.endpoint);
+      await abo.unsubscribe();
+    }
+    return{etat:"inactif",message:"Notifications désactivées sur cet appareil."};
+  }catch(e){return{etat:"erreur",message:String(e&&e.message||e)};}
+}
+
+// Envoi d'un push. Le serveur verifie le droit de notifier : on lui passe le
+// jeton de session, jamais une simple confiance dans le destinataire annonce.
+async function envoyerPush({userId,titre,corps,url,tag}){
+  if(!userId||!titre)return{envoyes:0};
+  try{
+    const{data:{session}}=await supabase.auth.getSession();
+    if(!session?.access_token)return{envoyes:0};
+    const rep=await fetch("/api/send-push",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},
+      body:JSON.stringify({userId,titre,corps,url,tag}),
+    });
+    if(!rep.ok)return{envoyes:0,erreur:"HTTP "+rep.status};
+    return await rep.json();
+  }catch(e){return{envoyes:0,erreur:String(e&&e.message||e)};}
+}
+
 
 // EMAILS TEMPLATES P13 - templates pretes a brancher (HTML simple, surchargeable depuis backoffice)
 const EMAIL_TEMPLATES={
@@ -8719,6 +8846,147 @@ const getPMI=(email)=>{
 // rappelle l'echeance et dit ou en est chaque famille.
 const DATE_ACCORD_CONGES = "03-01"; // 1er mars
 
+// Qui recoit quoi, et sur quels appareils.
+//
+// Les notifications etaient jusqu'ici invisibles : impossible de savoir si on
+// etait abonne, sur quel appareil, ni pourquoi le bouton d'activation ne
+// faisait rien sur iPhone. Un reglage qu'on ne peut pas verifier est un
+// reglage auquel on ne peut pas se fier.
+function MesAlertes({user}){
+  const [appareils,setAppareils]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const [message,setMessage]=useState("");
+  const [occupe,setOccupe]=useState(false);
+  const [etatIci,setEtatIci]=useState("");
+  const [endpointIci,setEndpointIci]=useState("");
+
+  const relire=async()=>{
+    setChargement(true);
+    setEtatIci(etatPush());
+    try{
+      const reg=await navigator.serviceWorker?.ready;
+      const abo=await reg?.pushManager?.getSubscription();
+      setEndpointIci(abo?.endpoint||"");
+    }catch{ setEndpointIci(""); }
+    if(!user?.id){setAppareils([]);setChargement(false);return;}
+    const{data}=await supabase.from("push_subscriptions")
+      .select("id,endpoint,appareil,created_at,derniere_utilisation")
+      .eq("user_id",user.id).order("created_at",{ascending:false});
+    setAppareils(data||[]);
+    setChargement(false);
+  };
+  useEffect(()=>{relire();},[user?.id]);
+
+  const activer=async()=>{
+    setOccupe(true);
+    const r=await activerPush(user?.id);
+    setMessage(r.message);
+    await relire();
+    setOccupe(false);
+  };
+  const couper=async()=>{
+    setOccupe(true);
+    const r=await desactiverPush(user?.id);
+    setMessage(r.message);
+    await relire();
+    setOccupe(false);
+  };
+  const retirer=async(id)=>{
+    await supabase.from("push_subscriptions").delete().eq("id",id);
+    setMessage("Appareil retiré.");
+    await relire();
+  };
+
+  const abonneIci=!!endpointIci&&appareils.some(a=>a.endpoint===endpointIci);
+
+  return <div className="fi">
+    <PageHeader icon="🔔" title="Mes alertes" sub="Ce que vous recevez, et sur quels appareils"/>
+
+    <div className="card" style={{marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>Ce qui vous est envoyé</div>
+      <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:10}}>
+        <IconeOuEmoji e="🔔" taille={16}/>
+        <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+          <strong>Dans l'application</strong> — toujours. La cloche en haut de l'écran garde tout.
+        </div>
+      </div>
+      <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:10}}>
+        <IconeOuEmoji e="📧" taille={16}/>
+        <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+          <strong>Par e-mail</strong> — toujours, à l'adresse de votre compte. Rien ne dépend
+          des notifications : même si vous les refusez, l'e-mail part.
+        </div>
+      </div>
+      <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+        <IconeOuEmoji e="📱" taille={16}/>
+        <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+          <strong>Sur votre téléphone</strong> — seulement sur les appareils listés ci-dessous.
+        </div>
+      </div>
+    </div>
+
+    {message&&<div className="card" style={{marginBottom:14,background:"var(--Sp)",borderColor:"var(--Sl)",fontSize:12.5,color:"var(--S)",fontWeight:600}}>
+      {message}
+    </div>}
+
+    <div className="card" style={{marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>Cet appareil</div>
+      {etatIci==="impossible-ios"&&<div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+        Vous êtes sur iPhone ou iPad, et TiMat n'est pas installé sur votre écran d'accueil.
+        Apple ne permet les notifications qu'aux applications installées — c'est une règle
+        d'Apple, pas un choix de TiMat.
+        <div style={{marginTop:8,fontWeight:600,color:"var(--b)"}}>
+          Pour les recevoir : bouton Partager dans Safari, puis « Sur l'écran d'accueil ».
+          Ouvrez TiMat depuis l'icône, et revenez ici.
+        </div>
+      </div>}
+      {etatIci==="non-supporte"&&<div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+        Ce navigateur ne gère pas les notifications. Vous continuez à tout recevoir par e-mail.
+      </div>}
+      {etatIci==="refuse"&&<div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+        Les notifications sont bloquées pour TiMat dans les réglages de votre navigateur.
+        TiMat ne peut pas les débloquer lui-même : il faut les réautoriser depuis le cadenas
+        à gauche de l'adresse du site.
+      </div>}
+      {etatIci==="pret"&&<>
+        <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
+          {abonneIci
+            ?"Cet appareil reçoit les notifications."
+            :"Cet appareil ne reçoit pas encore les notifications."}
+        </div>
+        <button className={abonneIci?"btn":"btn bT l"} disabled={occupe}
+          onClick={abonneIci?couper:activer} style={{width:"100%",justifyContent:"center",padding:"13px"}}>
+          {occupe?"…":abonneIci?"Ne plus recevoir sur cet appareil":"Recevoir les notifications ici"}
+        </button>
+      </>}
+    </div>
+
+    <div className="card">
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>
+        Vos appareils {appareils.length>0&&<span style={{fontWeight:400,color:"var(--l)"}}>({appareils.length})</span>}
+      </div>
+      {chargement?<div style={{fontSize:12.5,color:"var(--l)"}}>Chargement…</div>
+      :appareils.length===0?<div style={{fontSize:12.5,color:"var(--l)",lineHeight:1.6}}>
+        Aucun appareil abonné. Vous recevez tout par e-mail et dans l'application.
+      </div>
+      :appareils.map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderTop:"1px solid var(--br)"}}>
+        <IconeOuEmoji e="📱" taille={15}/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:12.5,fontWeight:600,color:"var(--b)"}}>
+            {a.appareil||"Appareil"}{a.endpoint===endpointIci?" — celui-ci":""}
+          </div>
+          <div style={{fontSize:11,color:"var(--l)"}}>
+            Ajouté le {new Date(a.created_at).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}
+          </div>
+        </div>
+        <button onClick={()=>retirer(a.id)} style={{background:"none",border:"1px solid var(--br)",borderRadius:9,padding:"4px 9px",cursor:"pointer",fontSize:11,color:"var(--m)"}}>
+          Retirer
+        </button>
+      </div>)}
+    </div>
+  </div>;
+}
+
 function MesEmployeurs({enfants,role,user}){
   const [mois,setMois]=useState(isoMois(new Date()));
   const [versements,setVersements]=useState([]);
@@ -13498,6 +13766,7 @@ const GROUPS_AM={
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
+    {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
   ]},
 };
@@ -13517,6 +13786,7 @@ const GROUPS_P={
     {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
     {id:"admin_finances",l:"Mon contrat",ic:"🧾",d:"Contrat, bulletins et paiements"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️",d:"Vos documents et attestations"},
+    {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Centre d'aide",ic:"❓",d:"Guides et contact"},
   ]},
 };
@@ -15763,23 +16033,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
 
 //
-async function demanderPush(userId){
-  if(!('Notification' in window)||!('serviceWorker' in navigator))return null;
-  const perm=await Notification.requestPermission();
-  if(perm!=='granted')return null;
-  try{
-    const reg=await navigator.serviceWorker.ready;
-    const VAPID_PUBLIC='BEl62iUYgUivxIkv69yViEuiBIa40HZa+FE+TgEFSCcg4sV3fD3CK+jNHOyHAHhGXCGGOEtmC5xSuWRInlVBOw==';
-    const sub=await reg.pushManager.subscribe({
-      userVisibleOnly:true,
-      applicationServerKey:VAPID_PUBLIC
-    });
-    await supabase.from('push_subscriptions').upsert({
-      user_id:userId,subscription:JSON.stringify(sub),created_at:new Date().toISOString()
-    });
-    return sub;
-  }catch(e){console.log('Push error:',e);return null;}
-}
 
 //
 function OnboardingWizard({user,onFinish}){
@@ -16045,10 +16298,13 @@ function OnboardingWizard({user,onFinish}){
               Commencez par votre premier pointage.
             </div>
             {'Notification' in window&&!pushDone&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:12,color:"var(--G)"}}>
-              <div style={{fontWeight:700,marginBottom:6}}><IconeOuEmoji e="🔔"/> Activer les notifications push ?</div>
-              <div style={{marginBottom:8}}>Recevez les alertes en temps réel sur votre téléphone Android.</div>
+              <div style={{fontWeight:700,marginBottom:6}}><IconeOuEmoji e="🔔"/> Activer les notifications ?</div>
+              <div style={{marginBottom:8}}>Les alertes importantes arrivent sur cet appareil. Vous les recevrez de toute façon par e-mail.</div>
               <button className="btn bG"style={{width:"100%"}}onClick={async()=>{
-                await demanderPush(user.id);setPushDone(true);setToast("Notifications activées ✓");
+                {/* On annonce ce qui s'est passe, pas ce qu'on esperait : le
+                    message vient de la fonction, qui sait si ca a marche. */}
+                const r=await activerPush(user.id);
+                setPushDone(true);setToast(r.message);
               }}>Activer</button>
             </div>}
             <button className="btn bT"style={{width:"100%",justifyContent:"center",padding:13}}onClick={onFinish}>
@@ -20406,6 +20662,7 @@ export default function App(){
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
       case "mes_employeurs": return isPro?<MesEmployeurs enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Vos employeurs" desc="Vos revenus du mois famille par famille, et vos congés à poser avec toutes. Cette fonction fait partie du forfait Pro."/>;
+      case "mes_alertes": return <MesAlertes user={user}/>;
       case "temps_travail": return isPro?<TempsDeTravail enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Votre temps de travail" desc="Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie du forfait Pro."/>;
       case "pmi": return isPro?<CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>:<VerrouPro titre="La communication avec la PMI" desc="Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;

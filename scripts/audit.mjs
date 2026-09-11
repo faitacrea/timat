@@ -1097,6 +1097,96 @@ if (/setSyncing\(true\);setTimeout/.test(appSrc)) {
   signale("hors-ligne", "le bouton de synchronisation est un simple minuteur : il n'envoie rien");
 }
 
+// --- notifications push ---
+// Pourquoi : le push a existe pendant des mois sans jamais fonctionner, et
+// sans que rien ne le dise. Aucun de ces defauts ne produit d'erreur visible.
+const cheminPush = path.join(RACINE, "api", "send-push.js");
+const pushSrc = existsSync(cheminPush) ? readFileSync(cheminPush, "utf8") : "";
+
+// 1. La cle d'exemple des tutoriels web-push circule dans des milliers de
+//    pages : sa partie privee est publique. L'employer laisserait n'importe qui
+//    envoyer des notifications au nom de TiMat.
+if (/BEl62iUYgUivxIkv69yViEuiBIa40HZa/.test(appSrc)) {
+  signale("push", "la cle VAPID des tutoriels est employee : sa partie privee est publique, n'importe qui pourrait notifier au nom de TiMat");
+}
+const cleVapid = (appSrc.match(/const VAPID_PUBLIQUE="([^"]+)"/) || [])[1];
+if (!cleVapid) {
+  signale("push", "la cle VAPID publique a disparu : aucun abonnement push ne peut etre cree");
+} else if (!/^[A-Za-z0-9_-]{80,90}$/.test(cleVapid)) {
+  signale("push", "la cle VAPID n'est pas au format base64url attendu : le navigateur refusera l'abonnement");
+}
+// La cle PRIVEE donne le droit de notifier tous les utilisateurs : elle ne doit
+// jamais entrer dans le depot.
+if (/VAPID_PRIVATE_KEY\s*[:=]\s*["'][A-Za-z0-9_-]{20,}["']/.test(appSrc + pushSrc)) {
+  signale("push", "une cle VAPID PRIVEE est ecrite en clair dans le code : elle permet de notifier tous les utilisateurs");
+}
+// Le navigateur veut des octets. Une chaine base64 passee telle quelle fait
+// echouer l'abonnement avant qu'il ne commence.
+if (!/const cleEnOctets=/.test(appSrc) || !/applicationServerKey:cleEnOctets\(/.test(appSrc)) {
+  signale("push", "la cle VAPID n'est plus convertie en octets : applicationServerKey refuse une chaine");
+}
+
+// 2. La route d'envoi a longtemps ete ouverte a tout internet, destinataire
+//    lu dans le corps du message. N'importe qui pouvait notifier n'importe qui.
+if (!pushSrc) {
+  signale("push", "api/send-push.js est absent : aucune notification ne peut partir");
+} else {
+  if (/Access-Control-Allow-Origin['"]?\s*,\s*['"]\*/.test(pushSrc)) {
+    signale("push", "api/send-push.js est ouvert a toutes les origines : n'importe qui pourrait notifier n'importe quel utilisateur");
+  }
+  if (!/headers\.authorization/i.test(pushSrc) || !/auth\.getUser\(\)/.test(pushSrc)) {
+    signale("push", "api/send-push.js ne verifie plus qui appelle : le destinataire annonce suffirait");
+  }
+  if (!/rpc\(['"]peut_notifier['"]/.test(pushSrc)) {
+    signale("push", "api/send-push.js ne demande plus a la base le droit de notifier : la regle du lien parent/assmat serait contournee");
+  }
+  // L'ordre compte : verifier apres avoir envoye ne protege de rien.
+  const iDroit = pushSrc.indexOf("peut_notifier");
+  const iEnvoi = pushSrc.indexOf("sendNotification");
+  if (iDroit >= 0 && iEnvoi >= 0 && iDroit > iEnvoi) {
+    signale("push", "api/send-push.js envoie avant de verifier le droit de notifier");
+  }
+  if (!/\[404, 410\]/.test(pushSrc)) {
+    signale("push", "api/send-push.js ne retire plus les abonnements morts : la table grossirait sans fin");
+  }
+}
+
+// 3. Sans gestionnaire dans le service worker, une notification qui arrive
+//    n'affiche rien — ou Chrome affiche un message generique a la place.
+if (swSrc && (!/addEventListener\('push'/.test(swSrc) || !/showNotification/.test(swSrc))) {
+  signale("push", "public/sw.js n'affiche plus les notifications recues : elles arriveraient sans rien montrer");
+}
+if (swSrc && !/addEventListener\('notificationclick'/.test(swSrc)) {
+  signale("push", "public/sw.js ne reagit plus a l'appui sur une notification");
+}
+
+// 4. Le bouton annoncait « Notifications activees ✓ » meme quand la personne
+//    refusait l'autorisation.
+if (/Notifications activ\u00e9es \u2713/.test(appSrc)) {
+  signale("push", "le succes des notifications est annonce sans avoir ete verifie");
+}
+if (!/const r=await activerPush\(/.test(appSrc)) {
+  signale("push", "activerPush() n'est plus appelee : le bouton d'activation ne ferait rien");
+}
+// Sur iPhone, Apple reserve le push aux applications installees sur l'ecran
+// d'accueil. C'est la premiere chose a dire a qui appuie sans effet.
+if (!/impossible-ios/.test(appSrc)) {
+  signale("push", "le cas de l'iPhone sans installation n'est plus traite : le bouton semblerait casse sans explication");
+}
+// 4bis. Les parents recoivent des notifications eux aussi. L'ecran n'etait
+//       d'abord que dans le menu de l'assistante maternelle : cote parent, il
+//       existait sans qu'aucun chemin n'y mene.
+const menusAvecAlertes = (appSrc.match(/id:"mes_alertes"/g) || []).length;
+if (menusAvecAlertes < 2) {
+  signale("push", "l'ecran « Mes alertes » manque dans un des deux menus : un role ne pourrait pas gerer ses notifications");
+}
+
+// 5. Le push doit partir du point unique des notifications. Reparti dans les
+//    ecrans, il serait oublie au prochain evenement ajoute.
+if (!/async function createNotification\([\s\S]{0,900}envoyerPush\(/.test(appSrc)) {
+  signale("push", "le push ne part plus de createNotification() : chaque nouvel evenement risquerait de l'oublier");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

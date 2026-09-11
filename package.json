@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/test-retenue.mjs && node scripts/test-pdf-encodage.mjs && node scripts/test-echappement.mjs && node scripts/test-hors-ligne.mjs && TZ=Europe/Paris node scripts/test-dates.mjs && node scripts/audit.mjs",
+    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/test-retenue.mjs && node scripts/test-pdf-encodage.mjs && node scripts/test-echappement.mjs && node scripts/test-hors-ligne.mjs && node scripts/test-push.mjs && TZ=Europe/Paris node scripts/test-dates.mjs && node scripts/audit.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
@@ -33,7 +33,9 @@
     "parcours:temps": "node scripts/parcours-temps-travail.mjs",
     "parcours:employeurs": "node scripts/parcours-mes-employeurs.mjs",
     "test:hors-ligne": "node scripts/test-hors-ligne.mjs",
-    "parcours:hors-ligne": "node scripts/parcours-hors-ligne.mjs"
+    "parcours:hors-ligne": "node scripts/parcours-hors-ligne.mjs",
+    "test:push": "node scripts/test-push.mjs",
+    "parcours:alertes": "node scripts/parcours-alertes.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
