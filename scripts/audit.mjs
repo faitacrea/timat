@@ -769,6 +769,26 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- composants morts ---
+// Pourquoi : neuf composants etaient definis et jamais rendus — un ecran de
+// connexion, un de maintenance, un d'onboarding, un d'import de contrat, tous
+// remplaces un jour par une version plus recente sans que l'ancienne soit
+// retiree. 542 lignes a relire, a maintenir et a auditer pour rien, et le
+// risque qu'une correction soit appliquee a la mauvaise copie.
+{
+  const definis = [...appSrc.matchAll(/^function ([A-Z][A-Za-z0-9]*)\(/gm)].map((m) => m[1]);
+  // On retire d'abord la ligne de definition : sans cela, « function X( » se
+  // comptait lui-meme comme un usage et le controle ne trouvait jamais rien.
+  const sansDefinitions = appSrc.replace(/^function [A-Z][A-Za-z0-9]*\(/gm, "function \u0000(");
+  const morts = definis.filter((nom) => {
+    const utilise = new RegExp(`<${nom}[\\s/>]|[^A-Za-z0-9_]${nom}\\(|["']${nom}["']`, "g");
+    return (sansDefinitions.match(utilise) || []).length === 0;
+  });
+  if (morts.length) {
+    signale("robustesse", `${morts.length} composant(s) défini(s) et jamais rendu(s) : ${morts.join(", ")} — code mort, à retirer ou à brancher`);
+  }
+}
+
 // --- comptage des jours d'accueil ---
 // Pourquoi : quatre ecrans deduisaient le nombre de jours d'accueil, chacun a
 // sa facon — heures/5, heures/(hebdo/5), heures mensualisees/8, heures/8. Sur
