@@ -105,3 +105,43 @@ self.addEventListener('fetch', (e) => {
     );
   }
 });
+
+// ---------- Notifications push ----------
+//
+// Sans ce gestionnaire, une notification qui arrive n'affiche RIEN — ou pire,
+// Chrome affiche a la place un message generique « Ce site a ete mis a jour en
+// arriere-plan », que personne ne comprend. Le service worker doit toujours
+// montrer quelque chose : c'est une obligation du navigateur, pas une option.
+
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { titre: e.data ? e.data.text() : '' }; }
+  const titre = d.titre || 'TiMat';
+  e.waitUntil(self.registration.showNotification(titre, {
+    body: d.corps || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    lang: 'fr',
+    // Un tag identique remplace la notification precedente au lieu d'en
+    // empiler une deuxieme : trois pointages a valider font une ligne, pas trois.
+    tag: d.tag || 'timat',
+    data: { url: d.url || '/' },
+  }));
+});
+
+// Un appui doit RAMENER sur l'onglet deja ouvert quand il y en a un, et non
+// ouvrir une deuxieme fois l'application par-dessus la premiere.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const cible = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenetres) => {
+      for (const f of fenetres) {
+        if (new URL(f.url).origin === self.location.origin) {
+          return f.focus().then(() => (f.navigate ? f.navigate(cible) : null)).catch(() => null);
+        }
+      }
+      return self.clients.openWindow(cible);
+    }),
+  );
+});
