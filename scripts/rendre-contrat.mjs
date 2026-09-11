@@ -12,6 +12,8 @@ const code = [
   bout(/const nbf=[\s\S]*?;\n/),
   bout(/const SEMAINES_ANNEE_COMPLETE=[\s\S]*?const salaireMensualise=[\s\S]*?\n\};/),
   bout(/const MARGE=20[\s\S]*?\nfunction redacteurPdf\(doc,\{titre,sousTitre\}\)\{[\s\S]*?\n\}\n/),
+  bout(/const TAUX_COTISATIONS=\{[\s\S]*?\n\};/),
+  bout(/const netDepuisBrut=\(brut\)=>\{[\s\S]*?\n\};/),
   bout(/const URL_CONVENTION="[^"]*";/),
   bout(/const fmtDatePdf=\(d\)=>\{[\s\S]*?\n\};/),
 ].join("\n");

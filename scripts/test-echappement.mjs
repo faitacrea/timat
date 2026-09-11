@@ -48,26 +48,46 @@ for (const c of cas) {
 // saisies partaient ainsi sans echappement — dans la fiche d'urgence, dans les
 // courriels et sur le bulletin imprimable — pendant que ce test passait au
 // vert. On cherche desormais les noms comme sous-chaines.
-const CHAMPS = /(prenom|nom|adresse|mail|tel|txt|texte|note|desc|titre|motif|message|commentaire|remarque|detail|libelle|objet|ville|agrement|medecin|allergie|traitement|particularite|vaccin|groupe|employeur|lien|pai|url)/i;
-const TECHNIQUE = /toFixed|nbf\(|fmtEur|Math\.|length|getFullYear|\.slice\(|new Date|JSON\.|\.map\(|\.join\(|^H\(/;
+// Deux listes, parce que deux risques opposes. Les noms longs se cherchent en
+// sous-chaine : c'est ce qui permet de voir « asmatTel » ou « allergies ».
+// Les noms courts et ambigus, eux, doivent etre delimites — sans quoi « pai »
+// (le projet d'accueil individualise) attrapait « paiements », et le controle
+// signalait un texte fige qui ne vient d'aucune saisie.
+const CHAMPS = /(prenom|nom|adresse|mail|texte|titre|motif|message|commentaire|remarque|libelle|ville|agrement|medecin|allergie|traitement|particularite|vaccin|employeur|url)/i;
+const CHAMPS_COURTS = new RegExp([
+  // en minuscules, delimite : f.tel, ["note"], .pai
+  "(^|[._\\[\\]\"'])(tel|txt|note|desc|detail|objet|groupe|lien|pai)([._\\[\\]\"']|$|[A-Z])",
+  // colle en camelCase : asmatTel, medecinTel, monGroupe — c'est la forme qui
+  // echappait au controle d'origine, il faut la nommer explicitement.
+  "[a-z](Tel|Txt|Note|Desc|Detail|Objet|Groupe|Lien|Pai)",
+].join("|"));
+// « g( » est l'helper de l'attestation France Travail : il echappe desormais
+// lui-meme, une fois, pour tous les champs du document.
+const TECHNIQUE = /toFixed|nbf\(|fmtEur|Math\.|length|getFullYear|\.slice\(|new Date|JSON\.|\.map\(|\.join\(|ageEnfant\(|^H\(|^g\(/;
 // Convention : un nom terminé par « H » porte une valeur DÉJÀ échappée, à sa
 // construction. Le contrôle ne sait pas suivre une variable d'une ligne à
 // l'autre ; ce suffixe le lui dit. Il ne dispense de rien d'autre.
 const DEJA_ECHAPPE = /[a-z0-9]H$/;
 const oublis = [];
 
-for (const m of src.matchAll(/"\s*\+\s*([^+"]{1,70}?)\s*\+\s*"/g)) {
+// Le controle ne lisait que les chaines a GUILLEMETS DOUBLES. Le
+// recapitulatif Pajemploi, l'export RGPD, le rapport annuel et l'attestation
+// destinee a France Travail sont ecrits en guillemets simples : dix-sept
+// valeurs saisies leur echappaient entierement, dont le nom, l'adresse et le
+// courriel du parent employeur sur un document juridique.
+for (const m of [...src.matchAll(/"\s*\+\s*([^+"]{1,70}?)\s*\+\s*"/g),
+                 ...src.matchAll(/'\s*\+\s*([^+']{1,70}?)\s*\+\s*'/g)]) {
   const avant = src.slice(Math.max(0, m.index - 600), m.index);
   if (!/<(tr|td|div|p|h[1-6]|span|li|title|option|b)[ >]/.test(avant)) continue;
   const e = m[1].trim();
-  if (!CHAMPS.test(e) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
+  if ((!CHAMPS.test(e) && !CHAMPS_COURTS.test(e)) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
   oublis.push(`ligne ${src.slice(0, m.index).split("\n").length} : ${e}`);
 }
 for (const m of src.matchAll(/\$\{([^}]{1,60})\}/g)) {
   const avant = src.slice(Math.max(0, m.index - 500), m.index);
   if (!/document\.write|<div|<td|<p>|<h[1-6]|<title/.test(avant)) continue;
   const e = m[1].trim();
-  if (!CHAMPS.test(e) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
+  if ((!CHAMPS.test(e) && !CHAMPS_COURTS.test(e)) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
   oublis.push(`ligne ${src.slice(0, m.index).split("\n").length} : \${${e}}`);
 }
 

@@ -5132,8 +5132,8 @@ function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
           ensureSpace(rowH);
           if(i%2===0){setFill(C.sablesBg);doc.rect(MX,y,CW,rowH,"F");}
           doc.text(fmtDate(m.date),colX[0]+2,y+4);
-          doc.text(m.poids?String(m.poids)+" kg":"—",colX[1]+2,y+4);
-          doc.text(m.taille?String(m.taille)+" cm":"—",colX[2]+2,y+4);
+          doc.text(m.poids?nbf(m.poids,1)+" kg":"—",colX[1]+2,y+4);
+          doc.text(m.taille?nbf(m.taille,1)+" cm":"—",colX[2]+2,y+4);
           doc.text(m.age_mois?String(m.age_mois)+" mois":"—",colX[3]+2,y+4);
           y+=rowH;
         });
@@ -6621,7 +6621,7 @@ function BulletinSalaire({enfants,role,pEId,user}){
       if(eIns){setToast("Erreur DB : "+eIns.message);setEnvoyer(false);return;}
       // 5. Upsert dans documents_meta
       const{data:existing}=await supabase.from("documents_meta").select("id").eq("storage_path",path).maybeSingle();
-      const nomDoc="Bulletin_"+(enfant.prenom||"enfant")+"_"+moisSelKey+".pdf";
+      const nomDoc="Bulletin_"+H(enfant.prenom||"enfant")+"_"+moisSelKey+".pdf";
       if(existing){
         await supabase.from("documents_meta").update({
           nom:nomDoc,categorie:"admin",sous_type:"Bulletin de salaire",
@@ -9521,7 +9521,7 @@ const jsPDF=await chargerJsPDF();
 
     // 6. Inserer/update dans documents_meta (idempotent via upsert sur cle storage_path)
     const metaId="contrat_"+contratId; // id stable pour upsert
-    const nomDoc="Contrat_"+(enfant.prenom||"enfant")+"_"+(ct.debut?.slice(0,7)||"")+".pdf";
+    const nomDoc="Contrat_"+H(enfant.prenom||"enfant")+"_"+(ct.debut?.slice(0,7)||"")+".pdf";
     const{data:existing}=await supabase.from("documents_meta").select("id").eq("storage_path",path).maybeSingle();
     if(existing){
       await supabase.from("documents_meta").update({
@@ -11948,7 +11948,7 @@ const jsPDF=await chargerJsPDF();
         +'<body>'
         +'<div class="actions"><button class="btn-print" onclick="window.print()">🖨️ Imprimer</button></div>'
         +'<h1>Rapport annuel '+annee+'</h1>'
-        +'<p><strong>Assistante maternelle:</strong> '+(user?.prenom||"")+' '+(user?.nom||"")+'</p>'
+        +'<p><strong>Assistante maternelle:</strong> '+H((user?.prenom||"")+" "+(user?.nom||""))+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
         +'<h2>Heures travaillees '+annee+'</h2>'
         +'<table><tr><th>Indicateur</th><th>Valeur</th></tr>'
@@ -11958,7 +11958,7 @@ const jsPDF=await chargerJsPDF();
         +'</table>'
         +'<h2>Recapitulatif financier</h2>'
         +'<table><tr><th>Poste</th><th>Montant</th></tr>'
-        +'<tr><td>Salaire net annuel'+(realStats?.paiements?" (donnees reelles)":" (estime)")+'</td><td>'+salaireAnnuel+'€</td></tr>'
+        +'<tr><td>Salaire net annuel'+(realStats?.paiements?" (données réelles)":" (estimé)")+'</td><td>'+nbf(salaireAnnuel,0)+' €</td></tr>'
         +"<tr><td>Indemnites d'entretien (estimees)</td><td>"+entretienAnnuel+"€</td></tr>"
         +'<tr class="total"><td>Total verse</td><td>'+totalAnnuel+'€</td></tr>'
         +"<tr><td>Crédit d'impôt estimé du parent (" + nbf(CI_TAUX*100,0) + " %)</td><td>"+nbf(creditImpot,0)+" € <span style=\"font-size:11px;color:#777\">(enfant de moins de 6 ans, dépenses plafonnées à 3 500 €)</span></td></tr>"
@@ -12857,9 +12857,9 @@ function ExportDonnees({enfants,user,role}){
           +'th{background:#f5f5f5}@media print{.nb{display:none}}</style></head><body>'
           +'<h1>Export RGPD - Synthese</h1>'
           +'<p>Exporte le : '+new Date().toLocaleString("fr-FR")+'</p>'
-          +'<p>Utilisateur : '+(user?.email||"-")+'</p>'
-          +'<p>Periode : '+periode+'</p>'
-          +'<p>Enfants : '+selEnfant+'</p>'
+          +'<p>Utilisateur : '+H(user?.email||"-")+'</p>'
+          +'<p>Période : '+H(periode)+'</p>'
+          +'<p>Enfants : '+H(selEnfant)+'</p>'
           +'<h2>Donnees exportees</h2>'
           +'<table><tr><th>Module</th><th>Nombre d enregistrements</th></tr>'+summary+'</table>'
           +'<p style="font-size:11px;color:#888;margin-top:20px">Le PDF est un resume. Pour les donnees brutes, utilisez l export JSON ou CSV.</p>'
@@ -16235,7 +16235,9 @@ function AttestationPoleEmploi({enfants,role,pEId,user}){
   const generer=()=>{
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les pop-ups pour générer le document");return;}
-    const g=x=>x&&String(x).trim()?String(x).trim():"________________";
+    // Toutes les valeurs saisies du document passent par ici : l'echappement s'y
+    // fait une fois. Elles partaient auparavant telles quelles dans le HTML.
+    const g=x=>x&&String(x).trim()?H(String(x).trim()):"________________";
     const today=new Date().toLocaleDateString("fr-FR");
     const html='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Attestation France Travail - '+(enfant.prenom||'')+'</title>'
       +'<style>body{font-family:Arial,sans-serif;max-width:800px;margin:36px auto;padding:20px;color:#222;font-size:13px}'
@@ -16570,7 +16572,7 @@ const jsPDF=await chargerJsPDF();
         '<div><h3>Assistante maternelle agréée</h3>',
         '<strong>'+(user?.prenom||'Prénom')+' '+(user?.nom||'Nom')+'</strong><br/>',
         'Email : '+(user?.email||'[email]')+'<br/>',
-        'N° agrément : '+(userAgrement||"[À renseigner dans Paramètres]")+'</div>',
+        'N° agrément : '+H(userAgrement||"[À renseigner dans Paramètres]")+'</div>',
         '<div><h3>Parent employeur</h3>',
         '<strong>'+(enfant?.prenomParent||'Parent')+' '+(enfant?.nomParent||'')+'</strong><br/>',
         'Enfant gardé : '+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'<br/>',
@@ -16587,7 +16589,7 @@ const jsPDF=await chargerJsPDF();
         (hasReal
           ? '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📋 Détail des versements</h3>'
             +'<table><tr><td style="background:#F4F7FA">Date</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Mode</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859">Période</td><td style="background:#F4F7FA;width:auto;font-weight:700;color:#2E4859;text-align:right">Montant</td></tr>'
-            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+nbf((parseFloat(v.montant)||0),2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:11px">↳ '+v.note+'</td></tr>':'');}).join('')
+            +versementsList.map(function(v){return '<tr><td style="background:#fff;font-weight:400;color:#222">'+fmtD(v.date)+'</td><td>'+(MODE_LBL[v.mode]||v.mode||'-')+'</td><td>'+(v.periode||'-')+'</td><td style="text-align:right">'+nbf((parseFloat(v.montant)||0),2)+' €</td></tr>'+(v.note?'<tr><td colspan="4" style="background:#fff;font-weight:400;color:#888;font-size:11px">↳ '+H(v.note)+'</td></tr>':'');}).join('')
             +'</table>'
           : '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Éléments du contrat (base d\'estimation)</h3>'
             +'<table>'
@@ -16613,7 +16615,7 @@ const jsPDF=await chargerJsPDF();
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:11px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
         '</div>',
-        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"recapitulatif-versements-'+annee+'-'+(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>',
+        '<script>function dlPdf(){var el=document.getElementById("doc");var opt={margin:0,filename:"recapitulatif-versements-'+annee+'-'+H(enfant.prenom||"enfant")+'.pdf",image:{type:"jpeg",quality:.95},html2canvas:{scale:2,useCORS:true,logging:false,windowWidth:780},jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},pagebreak:{mode:["css","legacy"]}};html2pdf().from(el).set(opt).save();}</script>',
         '</body></html>'
       ].join('');
       w.document.write(html);
