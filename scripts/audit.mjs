@@ -769,6 +769,28 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   signale("paie", "le bulletin ne porte plus la mention obligatoire de conservation sans limitation de durée (art. R. 3243-5)");
 }
 
+// --- temps de travail, tous employeurs confondus ---
+// Pourquoi : le temps de travail se compte du point de vue du SALARIE. Deux
+// enfants accueillis de 8 h a 17 h font neuf heures, pas dix-huit. Additionner
+// les heures de chaque contrat donne un total faux — et c'est ce total qui
+// decide si les plafonds legaux sont depasses.
+{
+  if (!/const unionMinutes = /.test(appSrc) || !/const journeesTravaillees = /.test(appSrc)) {
+    signale("chiffre", "le calcul du temps de travail réuni a disparu : les heures de plusieurs enfants seraient additionnées");
+  }
+  if (!/<TempsDeTravail /.test(appSrc)) {
+    signale("chiffre", "l'écran du temps de travail n'est plus branché : plus aucune vue tous employeurs confondus");
+  }
+  // Les trois plafonds sont verifies a la source : ils ne doivent pas deriver.
+  for (const [nom, motif, source] of [
+    ["plafond annuel", /PLAFOND_ANNUEL_HEURES = 2250\b/, "art. L. 423-22 du code de l'action sociale et des familles"],
+    ["plafond hebdomadaire", /PLAFOND_HEBDO_HEURES = 48\b/, "48 h en moyenne sur quatre mois"],
+    ["amplitude journalière", /PLAFOND_AMPLITUDE_JOUR = 13\b/, "art. 110 de la CCN 3239"],
+  ]) {
+    if (!motif.test(appSrc)) signale("chiffre", `le ${nom} ne vaut plus la valeur vérifiée (${source})`);
+  }
+}
+
 // --- composants morts ---
 // Pourquoi : neuf composants etaient definis et jamais rendus — un ecran de
 // connexion, un de maintenance, un d'onboarding, un d'import de contrat, tous
