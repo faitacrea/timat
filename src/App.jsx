@@ -478,6 +478,77 @@ const netDepuisBrut=(brut)=>{
   return Math.round((b-cotSal)*100)/100;
 };
 
+// DUREE DU TRAVAIL, TOUS EMPLOYEURS CONFONDUS.
+//
+// Une assistante maternelle accueille les enfants de plusieurs familles a la
+// fois. Chaque parent ne voit que SON contrat, et ne peut donc pas savoir si la
+// professionnelle depasse les plafonds legaux — c'est pourtant a elle que la
+// loi impose de les respecter, et a elle d'informer chaque employeur de ses
+// autres emplois.
+//
+// Le piege est dans le comptage. Additionner les heures de chaque contrat donne
+// un total faux : le temps de travail se compte du point de vue du SALARIE.
+// Deux enfants presents de 8 h a 17 h, cela fait neuf heures de travail, pas
+// dix-huit. Il faut donc reunir les intervalles de presence, pas les empiler.
+//
+// Sources : 2 250 h/an tous employeurs confondus (art. L. 423-22 du code de
+// l'action sociale et des familles) ; 48 h par semaine en moyenne sur quatre
+// mois ; amplitude journaliere de 13 h au plus (art. 110 de la CCN 3239).
+const PLAFOND_ANNUEL_HEURES = 2250;
+const PLAFOND_HEBDO_HEURES = 48;
+const PLAFOND_AMPLITUDE_JOUR = 13;
+const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
+
+// Reunit des intervalles [debut,fin) en minutes et renvoie leur duree totale.
+// C'est la seule facon juste de compter une journee ou plusieurs enfants se
+// chevauchent.
+const unionMinutes = (intervalles) => {
+  const v = (intervalles || [])
+    .map((i) => [Number(i[0]), Number(i[1])])
+    .filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b) && b > a)
+    .sort((x, y) => x[0] - y[0]);
+  let total = 0, debut = null, fin = null;
+  for (const [a, b] of v) {
+    if (debut === null) { debut = a; fin = b; continue; }
+    if (a <= fin) { if (b > fin) fin = b; continue; }
+    total += fin - debut; debut = a; fin = b;
+  }
+  if (debut !== null) total += fin - debut;
+  return total;
+};
+
+// "07:30" -> 450. Renvoie null sur une saisie qui n'est pas une heure.
+const minutesDepuisHeure = (h) => {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(h || "").trim());
+  if (!m) return null;
+  const hh = Number(m[1]), mm = Number(m[2]);
+  if (hh > 23 || mm > 59) return null;
+  return hh * 60 + mm;
+};
+
+// Duree reellement travaillee, par journee, tous enfants confondus.
+// Renvoie { "2026-09-01": { minutes, amplitude, enfants } }
+const journeesTravaillees = (pointages) => {
+  const parJour = {};
+  for (const p of pointages || []) {
+    const jour = String(p?.date || "").slice(0, 10);
+    const a = minutesDepuisHeure(p?.arrivee), b = minutesDepuisHeure(p?.depart);
+    if (!jour || a === null || b === null || b <= a) continue;
+    (parJour[jour] = parJour[jour] || { intervalles: [], enfants: new Set() });
+    parJour[jour].intervalles.push([a, b]);
+    if (p.enfant_id) parJour[jour].enfants.add(p.enfant_id);
+  }
+  const out = {};
+  for (const [jour, d] of Object.entries(parJour)) {
+    const minutes = unionMinutes(d.intervalles);
+    const amplitude = Math.max(...d.intervalles.map((i) => i[1])) - Math.min(...d.intervalles.map((i) => i[0]));
+    out[jour] = { minutes, amplitude, enfants: d.enfants.size };
+  }
+  return out;
+};
+
+const heuresDepuisMinutes = (m) => Math.round(((Number(m) || 0) / 60) * 10) / 10;
+
 const IE_PLANCHER_JOUR = 2.65;
 // Indemnite d'entretien minimale pour une journee d'accueil de n heures.
 const indemniteEntretienMin = (heures) =>
@@ -8453,6 +8524,133 @@ const getPMI=(email)=>{
   // Pour l'instant, on utilise le code postal du profil si disponible
   return PMI_PAR_DEP["default"];
 };
+//
+// MON TEMPS DE TRAVAIL - la vue qui manque quand on a plusieurs employeurs.
+// Chaque parent ne voit que son contrat ; personne ne voit le total. C'est
+// pourtant la professionnelle qui repond des plafonds legaux, et elle seule qui
+// peut les constater.
+function TempsDeTravail({enfants,role,user}){
+  const [pointages,setPointages]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const asmatId=user?.id;
+  const anneeEnCours=new Date().getFullYear();
+
+  useEffect(()=>{
+    if(role!=="asmat"||!asmatId){setChargement(false);return;}
+    let vivant=true;
+    (async()=>{
+      const{data}=await supabase.from("pointages")
+        .select("date,arrivee,depart,enfant_id")
+        .gte("date",anneeEnCours+"-01-01").lte("date",anneeEnCours+"-12-31");
+      if(!vivant)return;
+      setPointages(data||[]);setChargement(false);
+    })();
+    return()=>{vivant=false;};
+  },[asmatId,role,anneeEnCours]);
+
+  const bilan=useMemo(()=>{
+    const journees=journeesTravaillees(pointages);
+    const jours=Object.entries(journees).sort((a,b)=>a[0]<b[0]?-1:1);
+    const minutesAnnee=jours.reduce((s,[,d])=>s+d.minutes,0);
+    // La somme naive, celle qu'on obtient en additionnant les contrats : elle
+    // sert a montrer l'ecart, pas a compter.
+    const minutesNaives=(pointages||[]).reduce((s,p)=>{
+      const a=minutesDepuisHeure(p?.arrivee),b=minutesDepuisHeure(p?.depart);
+      return s+(a!==null&&b!==null&&b>a?b-a:0);
+    },0);
+    // Regroupement par semaine ISO, pour la moyenne et le plus fort.
+    const parSemaine={};
+    for(const[jour,d]of jours){
+      const t=new Date(jour+"T12:00:00Z");
+      const n=new Date(t); n.setUTCDate(t.getUTCDate()+4-((t.getUTCDay()||7)));
+      const cle=n.getUTCFullYear()+"-S"+String(Math.ceil((((n-new Date(Date.UTC(n.getUTCFullYear(),0,1)))/86400000)+1)/7)).padStart(2,"0");
+      parSemaine[cle]=(parSemaine[cle]||0)+d.minutes;
+    }
+    const semaines=Object.entries(parSemaine).sort((a,b)=>a[0]<b[0]?-1:1);
+    const recentes=semaines.slice(-SEMAINES_MOYENNE_HEBDO);
+    const moyenne=recentes.length?recentes.reduce((s,[,m])=>s+m,0)/recentes.length:0;
+    const pire=semaines.reduce((p,c)=>c[1]>(p?.[1]||0)?c:p,null);
+    const amplitudeMax=jours.reduce((p,[j,d])=>d.amplitude>(p?.d?.amplitude||0)?{j,d}:p,null);
+    const simultane=jours.filter(([,d])=>d.enfants>1).length;
+    return{jours,minutesAnnee,minutesNaives,semaines,moyenne,pire,amplitudeMax,simultane};
+  },[pointages]);
+
+  if(role!=="asmat")return <div className="fi"><PageHeader icon="⏰" title="Mon temps de travail"/>
+    <div className="card"style={{textAlign:"center",color:"var(--m)"}}>Section réservée à l'assistante maternelle.</div></div>;
+
+  const h=heuresDepuisMinutes;
+  const jauge=(valeur,plafond)=>Math.min(100,Math.round((valeur/plafond)*100));
+  const couleur=(pct)=>pct>=100?"var(--R)":pct>=85?"var(--G)":"var(--S)";
+
+  // Un plafond est un nombre rond : « 2 250 h » se lit, « 2250,00 h » non.
+  // L'espace des milliers est une espace ordinaire, sans risque a l'ecran.
+  const plafondLisible=(n)=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ");
+  const Jauge=({titre,valeur,plafond,unite,detail})=>{
+    const pct=jauge(valeur,plafond);
+    return <div className="card"style={{marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+        <span style={{fontSize:13,fontWeight:700,color:"var(--b)"}}>{titre}</span>
+        <span className="pf"style={{fontSize:19,fontWeight:800,color:couleur(pct)}}>{nb2(valeur)} {unite}</span>
+      </div>
+      <div style={{height:8,borderRadius:6,background:"var(--c)",marginTop:9,overflow:"hidden"}}>
+        <div style={{width:pct+"%",height:"100%",background:couleur(pct),transition:"width .3s"}}/>
+      </div>
+      <div style={{fontSize:11.5,color:"var(--m)",marginTop:7,lineHeight:1.5}}>
+        {detail} — plafond {plafondLisible(plafond)} {unite}.
+        {pct>=100&&<b style={{color:"var(--R)"}}> Plafond dépassé.</b>}
+      </div>
+    </div>;
+  };
+
+  return <div className="fi">
+    <PageHeader icon="⏰" title="Mon temps de travail" sub={"Tous employeurs confondus — année "+anneeEnCours}/>
+
+    <div className="card"style={{marginBottom:14,background:"var(--Bp)",border:"1px solid var(--B)"}}>
+      <div style={{fontSize:12.5,color:"var(--b)",lineHeight:1.6}}>
+        <IconeOuEmoji e="💡"/> Vos heures se <b>réunissent</b>, elles ne s'additionnent pas. Deux enfants
+        accueillis de 8 h à 17 h, cela fait <b>neuf heures de travail</b>, pas dix-huit. C'est de votre
+        point de vue que la loi compte, et c'est à vous — pas à chaque parent — qu'elle demande de
+        respecter les plafonds et d'informer chaque employeur de vos autres contrats.
+      </div>
+    </div>
+
+    {chargement?<div className="card"style={{color:"var(--l)",textAlign:"center"}}>Chargement…</div>
+     :bilan.jours.length===0?<div className="card"style={{color:"var(--l)",textAlign:"center"}}>
+       Aucun pointage enregistré en {anneeEnCours}. Les plafonds se calculent à partir de vos pointages.
+     </div>
+     :<>
+      <Jauge titre={"Heures travaillées en "+anneeEnCours} valeur={h(bilan.minutesAnnee)} plafond={PLAFOND_ANNUEL_HEURES}
+        unite="h" detail={bilan.jours.length+" journées d'accueil"}/>
+      <Jauge titre={"Moyenne hebdomadaire ("+Math.min(bilan.semaines.length,SEMAINES_MOYENNE_HEBDO)+" dernières semaines)"}
+        valeur={h(bilan.moyenne)} plafond={PLAFOND_HEBDO_HEURES} unite="h"
+        detail={bilan.semaines.length<SEMAINES_MOYENNE_HEBDO
+          ? "la loi retient la moyenne sur quatre mois ; vous n'avez que "+bilan.semaines.length+" semaine"+(bilan.semaines.length>1?"s":"")+" de pointage, la moyenne est donc partielle"
+          : "c'est la moyenne sur quatre mois qui compte, pas chaque semaine prise isolément"}/>
+      {bilan.pire&&<Jauge titre="Semaine la plus chargée" valeur={h(bilan.pire[1])} plafond={PLAFOND_HEBDO_HEURES}
+        unite="h" detail={"semaine "+bilan.pire[0]}/>}
+      {bilan.amplitudeMax&&<Jauge titre="Amplitude de la plus longue journée" valeur={h(bilan.amplitudeMax.d.amplitude)}
+        plafond={PLAFOND_AMPLITUDE_JOUR} unite="h" detail={"le "+fmt(bilan.amplitudeMax.j)+" — du premier arrivé au dernier parti"}/>}
+
+      {bilan.simultane>0&&<div className="card"style={{marginBottom:12}}>
+        <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="👶"/> Accueils simultanés</div>
+        <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+          Sur {bilan.jours.length} journées, <b>{bilan.simultane}</b> comptent plusieurs enfants en même temps.
+          En additionnant les contrats, on obtiendrait <b>{nb2(h(bilan.minutesNaives))} h</b> sur l'année ;
+          votre temps de travail réel est de <b style={{color:"var(--S)"}}>{nb2(h(bilan.minutesAnnee))} h</b>.
+          L'écart, {nb2(h(bilan.minutesNaives-bilan.minutesAnnee))} h, correspond aux heures comptées deux fois.
+        </div>
+      </div>}
+     </>}
+
+    <div className="card"style={{fontSize:11.5,color:"var(--m)",lineHeight:1.7}}>
+      <b>D'où viennent ces plafonds.</b> 2 250 heures par an tous employeurs confondus (article L. 423-22 du
+      code de l'action sociale et des familles) ; 48 heures par semaine en moyenne sur quatre mois ;
+      amplitude journalière de 13 heures au plus (article 110 de la convention collective IDCC 3239).
+      Ces chiffres sont indicatifs : ils se calculent sur vos pointages enregistrés, qui peuvent être incomplets.
+    </div>
+  </div>;
+}
+
 function CommunicationPMI({role,user,hasRealData}){
   const [msgs,setMsgs]=useState(hasRealData?[]:PMI_MESSAGES);
   const [txt,setTxt]=useState("");
@@ -12927,6 +13125,7 @@ const GROUPS_AM={
   outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
+    {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
   ]},
@@ -19835,6 +20034,7 @@ export default function App(){
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
+      case "temps_travail": return isPro?<TempsDeTravail enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Votre temps de travail" desc="Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie du forfait Pro."/>;
       case "pmi": return isPro?<CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>:<VerrouPro titre="La communication avec la PMI" desc="Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;

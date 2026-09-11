@@ -265,5 +265,74 @@ const total = cas.length + casAlloc.length + casMin.length + 1 + 21 + 13;
   console.log(`  ${distinct ? "ok " : "KO "} ${"le calcul differe du coefficient 0,78 abandonne".padEnd(50)} ecart ${ecartCoef.toFixed(2)} €`);
 }
 
+
+// === DUREE DU TRAVAIL, TOUS EMPLOYEURS CONFONDUS ===
+// Pourquoi : additionner les heures de chaque contrat donne un total faux. Le
+// temps de travail se compte du point de vue du salarie — deux enfants
+// presents de 8 h a 17 h, cela fait neuf heures, pas dix-huit. Aucun des
+// concurrents ne fait cette distinction, et c'est pourtant elle qui decide si
+// une assistante maternelle depasse les plafonds legaux.
+{
+  const ex = (re, nom) => { const m = src.match(re); if (!m) { console.error("\n  KO  " + nom + " introuvable\n"); process.exit(1); } return m[0]; };
+  const ctx = eval(`(function(){
+    ${ex(/const unionMinutes = \(intervalles\) => \{[\s\S]*?\n\};/, "unionMinutes")}
+    ${ex(/const minutesDepuisHeure = \(h\) => \{[\s\S]*?\n\};/, "minutesDepuisHeure")}
+    ${ex(/const journeesTravaillees = \(pointages\) => \{[\s\S]*?\n\};/, "journeesTravaillees")}
+    return { unionMinutes, minutesDepuisHeure, journeesTravaillees };
+  })()`);
+
+  console.log("\n=== DUREE DU TRAVAIL — les heures se reunissent, elles ne s'additionnent pas ===\n");
+  const casUnion = [
+    { i: [[480, 1020]], a: 540, n: "un seul enfant, 8 h - 17 h" },
+    { i: [[480, 1020], [480, 1020]], a: 540, n: "deux enfants aux memes heures : 9 h, pas 18 h" },
+    { i: [[480, 720], [660, 1020]], a: 540, n: "deux accueils qui se chevauchent" },
+    { i: [[480, 720], [840, 1020]], a: 420, n: "deux accueils separes : les heures s'ajoutent" },
+    { i: [[480, 1020], [540, 600]], a: 540, n: "un accueil entierement inclus dans l'autre" },
+    { i: [], a: 0, n: "aucun accueil" },
+    { i: [[600, 600]], a: 0, n: "arrivee et depart a la meme heure" },
+    { i: [[900, 600]], a: 0, n: "depart avant l'arrivee (saisie aberrante)" },
+  ];
+  for (const c of casUnion) {
+    const r = ctx.unionMinutes(c.i);
+    const ok = r === c.a;
+    if (!ok) ko++;
+    console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(52)} ${r} min (attendu ${c.a})`);
+  }
+
+  const casHeure = [["07:30", 450], ["00:00", 0], ["23:59", 1439], ["24:00", null], ["7h30", null], ["", null], [null, null]];
+  for (const [h, a] of casHeure) {
+    const r = ctx.minutesDepuisHeure(h);
+    const ok = r === a;
+    if (!ok) ko++;
+    console.log(`  ${ok ? "ok " : "KO "} ${("heure " + JSON.stringify(h)).padEnd(52)} ${r}`);
+  }
+
+  // Une vraie journee a trois enfants, comme elle se presente en pratique.
+  const j = ctx.journeesTravaillees([
+    { date: "2026-09-01", arrivee: "07:30", depart: "17:30", enfant_id: "a" },
+    { date: "2026-09-01", arrivee: "08:00", depart: "16:00", enfant_id: "b" },
+    { date: "2026-09-01", arrivee: "17:00", depart: "18:45", enfant_id: "c" },
+    { date: "2026-09-02", arrivee: "08:00", depart: "12:00", enfant_id: "a" },
+  ]);
+  const attendus = [
+    ["1er septembre : 07h30 -> 18h45 en continu", j["2026-09-01"]?.minutes, 675],
+    ["1er septembre : trois enfants comptes", j["2026-09-01"]?.enfants, 3],
+    ["1er septembre : amplitude de la journee", j["2026-09-01"]?.amplitude, 675],
+    ["2 septembre : une matinee", j["2026-09-02"]?.minutes, 240],
+  ];
+  for (const [nom, val, cible] of attendus) {
+    const ok = val === cible;
+    if (!ok) ko++;
+    console.log(`  ${ok ? "ok " : "KO "} ${nom.padEnd(52)} ${val} (attendu ${cible})`);
+  }
+
+  // La somme naive donnerait 18 h la ou la journee en fait 11,25.
+  const naive = (10 + 8 + 1.75) * 60;
+  const juste = j["2026-09-01"].minutes;
+  const ecart = naive > juste;
+  if (!ecart) ko++;
+  console.log(`  ${ecart ? "ok " : "KO "} ${"la somme naive surestime bien la journee".padEnd(52)} ${naive / 60} h contre ${juste / 60} h`);
+}
+
 console.log(ko ? `\n${ko} cas en échec\n` : `\n${total} cas sur ${total} conformes\n`);
 process.exit(ko ? 1 : 0);
