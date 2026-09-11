@@ -590,6 +590,14 @@ const isoMois=(d)=>isoJour(d).slice(0,7);
 // Reculer ou avancer d'un mois, sur la chaine elle-meme. Passer par un objet
 // Date pour cela remelangeait UTC et heure locale a chaque clic sur les
 // fleches du selecteur de mois.
+// « 2026-09 » -> « Septembre 2026 ».
+const fmtMoisLong=(mois)=>{
+  const[a,m]=String(mois||"").split("-").map(Number);
+  if(!a||!m)return String(mois||"");
+  const noms=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  return (noms[m-1]||"")+" "+a;
+};
+
 const decalerMois=(mois,pas)=>{
   const[a,m]=String(mois||"").split("-").map(Number);
   if(!a||!m)return isoMois(new Date());
@@ -8529,6 +8537,156 @@ const getPMI=(email)=>{
 // Chaque parent ne voit que son contrat ; personne ne voit le total. C'est
 // pourtant la professionnelle qui repond des plafonds legaux, et elle seule qui
 // peut les constater.
+//
+// MES EMPLOYEURS - la seconde vue qui manque quand on travaille pour plusieurs
+// familles : ce que chacune doit ce mois-ci, et les conges a poser avec toutes.
+//
+// La convention demande aux parties de fixer les dates d'un commun accord AU
+// PLUS TARD LE 1er MARS. Passe cette date sans accord, c'est l'assistante
+// maternelle qui fixe ses dates — mais elle doit toujours prevenir. L'ecran
+// rappelle l'echeance et dit ou en est chaque famille.
+const DATE_ACCORD_CONGES = "03-01"; // 1er mars
+
+function MesEmployeurs({enfants,role,user}){
+  const [mois,setMois]=useState(isoMois(new Date()));
+  const [versements,setVersements]=useState([]);
+  const [bulletins,setBulletins]=useState([]);
+  const [conges,setConges]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const asmatId=user?.id;
+  const annee=Number(mois.slice(0,4));
+
+  useEffect(()=>{
+    if(role!=="asmat"||!asmatId){setChargement(false);return;}
+    let vivant=true;
+    (async()=>{
+      setChargement(true);
+      const debut=mois+"-01", finExcl=decalerMois(mois,1)+"-01";
+      const[v,b,c]=await Promise.all([
+        supabase.from("versements").select("enfant_id,montant,date,mode").gte("date",debut).lt("date",finExcl),
+        supabase.from("bulletins").select("enfant_id,mois,salaire_net,entretien").eq("mois",mois),
+        supabase.from("evenements").select("date,type,texte,enfant_id").eq("type","cng")
+          .gte("date",annee+"-01-01").lte("date",annee+"-12-31"),
+      ]);
+      if(!vivant)return;
+      setVersements(v.data||[]);setBulletins(b.data||[]);setConges(c.data||[]);setChargement(false);
+    })();
+    return()=>{vivant=false;};
+  },[asmatId,role,mois,annee]);
+
+  const lignes=useMemo(()=>(enfants||[]).map(e=>{
+    const ct=e?.contrat||{};
+    const bul=bulletins.find(b=>b.enfant_id===e.id);
+    // Le bulletin fait foi quand il existe ; sinon on annonce une estimation
+    // fondee sur la mensualisation, et on le dit.
+    const sansContrat=!ct||!(Number(ct.heuresHebdo)>0&&Number(ct.tauxHoraire)>0);
+    const net=bul?Number(bul.salaire_net)||0:(sansContrat?0:netDepuisBrut(salaireMensualise(ct)));
+    const entretien=bul?Number(bul.entretien)||0:0;
+    const verse=versements.filter(v=>v.enfant_id===e.id).reduce((s,v)=>s+(Number(v.montant)||0),0);
+    const attendu=Math.round((net+entretien)*100)/100;
+    return{e,ct,sansContrat,estime:!bul&&!sansContrat,net,entretien,attendu,verse,ecart:Math.round((verse-attendu)*100)/100};
+  }),[enfants,bulletins,versements]);
+
+  const totalAttendu=lignes.reduce((s,l)=>s+l.attendu,0);
+  const totalVerse=lignes.reduce((s,l)=>s+l.verse,0);
+  const nbEstime=lignes.filter(l=>l.estime).length;
+
+  // Conges : on regroupe les journees en periodes continues.
+  const periodes=useMemo(()=>{
+    // Le filtre par type est demande au serveur, mais on le refait ici : si la
+    // requete change un jour, des absences pour maladie se retrouveraient
+    // affichees comme des conges.
+    const jours=[...new Set(conges.filter(c=>c.type==="cng").map(c=>String(c.date).slice(0,10)))].sort();
+    const out=[];
+    for(const j of jours){
+      const prec=out[out.length-1];
+      const veille=prec?isoJour(new Date(new Date(prec.fin+"T12:00:00Z").getTime()+86400000)):null;
+      if(prec&&veille===j)prec.fin=j; else out.push({debut:j,fin:j});
+    }
+    return out;
+  },[conges]);
+
+  const aujourdhui=isoJour(new Date());
+  const echeance=annee+"-"+DATE_ACCORD_CONGES;
+  const echeancePassee=aujourdhui>echeance;
+
+  if(role!=="asmat")return <div className="fi"><PageHeader icon="👪" title="Mes employeurs"/>
+    <div className="card"style={{textAlign:"center",color:"var(--m)"}}>Section réservée à l'assistante maternelle.</div></div>;
+
+  return <div className="fi">
+    <PageHeader icon="👪" title="Mes employeurs" sub={lignes.length+" famille"+(lignes.length>1?"s":"")+" — revenus du mois et congés"}/>
+
+    <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
+      <button className="btn s" onClick={()=>setMois(decalerMois(mois,-1))}>←</button>
+      <span className="pf"style={{fontWeight:700,color:"var(--b)",fontSize:15}}>{fmtMoisLong(mois)}</span>
+      <button className="btn s" onClick={()=>setMois(decalerMois(mois,1))}>→</button>
+    </div>
+
+    {chargement?<div className="card"style={{color:"var(--l)",textAlign:"center"}}>Chargement…</div>
+     :lignes.length===0?<div className="card"style={{color:"var(--l)",textAlign:"center"}}>Aucun enfant enregistré.</div>
+     :<>
+      <div className="card"style={{marginBottom:12}}>
+        <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="💶"/> Ce que chaque famille vous doit</div>
+        {lignes.map(l=><div key={l.e.id}style={{padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+            <span style={{fontWeight:600,color:"var(--b)",fontSize:13.5}}>
+              <IconeOuEmoji e={l.e.emoji||"👶"}/> {l.e.prenom}
+              {l.estime&&<span style={{fontSize:11,color:"var(--G)",marginLeft:7}}>estimation</span>}
+              {l.sansContrat&&<span style={{fontSize:11,color:"var(--R)",marginLeft:7}}>aucun contrat</span>}
+            </span>
+            <span className="pf"style={{fontWeight:700,color:"var(--b)"}}>{nb2(l.attendu)} €</span>
+          </div>
+          <div style={{fontSize:11.5,color:"var(--m)",marginTop:3,lineHeight:1.5}}>
+            {l.sansContrat?<span style={{color:"var(--R)"}}>aucun contrat enregistré pour cet enfant — rien ne peut être calculé</span>:<>salaire net {nb2(l.net)} €{l.entretien>0?" · entretien "+nb2(l.entretien)+" €":""}
+            {" · "}{l.verse>0
+              ?<span style={{color:l.ecart>=-0.01?"var(--S)":"var(--R)"}}>reçu {nb2(l.verse)} €{l.ecart<-0.01?" (il manque "+nb2(-l.ecart)+" €)":""}</span>
+              :<span style={{color:"var(--G)"}}>aucun versement enregistré</span>}</>}
+          </div>
+        </div>)}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",paddingTop:12,gap:10,flexWrap:"wrap"}}>
+          <span style={{fontWeight:700,color:"var(--b)",fontSize:13.5}}>Total du mois</span>
+          <span className="pf"style={{fontSize:21,fontWeight:800,color:"var(--S)"}}>{nb2(totalAttendu)} €</span>
+        </div>
+        {totalVerse>0&&<div style={{fontSize:11.5,color:"var(--m)",marginTop:4}}>
+          {nb2(totalVerse)} € déjà reçus, toutes familles confondues.
+        </div>}
+        {nbEstime>0&&<div style={{fontSize:11.5,color:"var(--G)",marginTop:8,lineHeight:1.5}}>
+          <IconeOuEmoji e="ℹ️" taille={13}/> {nbEstime} montant{nbEstime>1?"s":""} estimé{nbEstime>1?"s":""} à partir de la mensualisation :
+          le bulletin de ce mois n'est pas encore établi. Le chiffre exact viendra du bulletin.
+        </div>}
+      </div>
+
+      <div className="card"style={{marginBottom:12}}>
+        <div style={{fontSize:13,fontWeight:700,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="🌴"/> Mes congés {annee}</div>
+        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
+          Quand vous accueillez les enfants de plusieurs familles, la convention vous invite à fixer vos
+          dates <b>d'un commun accord avec toutes</b>, au plus tard le <b>1<sup>er</sup> mars</b>.
+        </div>
+        <div style={{fontSize:12,padding:"9px 12px",borderRadius:10,lineHeight:1.55,
+          background:echeancePassee?"var(--Gp)":"var(--Sp)",color:echeancePassee?"var(--b)":"var(--S)",
+          border:"1px solid "+(echeancePassee?"var(--G)":"var(--S)")}}>
+          {echeancePassee
+            ? <><IconeOuEmoji e="⏳" taille={13}/> Le 1<sup>er</sup> mars {annee} est passé. À défaut d'accord, vous fixez vos dates — en prévenant chaque famille par écrit.</>
+            : <><IconeOuEmoji e="📅" taille={13}/> Il vous reste jusqu'au 1<sup>er</sup> mars {annee} pour vous accorder avec vos {lignes.length} famille{lignes.length>1?"s":""}.</>}
+        </div>
+        {periodes.length===0
+          ?<div style={{fontSize:12.5,color:"var(--l)",marginTop:12}}>Aucun congé posé pour {annee}. Ils se déclarent depuis le calendrier.</div>
+          :<div style={{marginTop:12}}>
+            {periodes.slice(0,8).map((p,i)=><div key={i}style={{display:"flex",justifyContent:"space-between",gap:10,padding:"7px 0",borderBottom:"1px solid var(--br)",fontSize:12.5,flexWrap:"wrap"}}>
+              <span style={{color:"var(--b)",fontWeight:600}}>{p.debut===p.fin?fmt(p.debut):fmt(p.debut)+" → "+fmt(p.fin)}</span>
+              <span style={{color:"var(--m)"}}>concerne {lignes.length} famille{lignes.length>1?"s":""}</span>
+            </div>)}
+            {periodes.length>8&&<div style={{fontSize:11.5,color:"var(--l)",marginTop:8}}>et {periodes.length-8} autre{periodes.length-8>1?"s":""} période{periodes.length-8>1?"s":""}…</div>}
+            <div style={{fontSize:11.5,color:"var(--m)",marginTop:10,lineHeight:1.5}}>
+              Une absence vous concernant vaut pour toutes les familles : vous n'accueillez personne ce jour-là.
+              Le modèle « Déclaration de congés annuels » est dans Courriers types — à envoyer à chacune.
+            </div>
+          </div>}
+      </div>
+     </>}
+  </div>;
+}
+
 function TempsDeTravail({enfants,role,user}){
   const [pointages,setPointages]=useState([]);
   const [chargement,setChargement]=useState(true);
@@ -13125,6 +13283,7 @@ const GROUPS_AM={
   outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
+    {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
@@ -20034,6 +20193,7 @@ export default function App(){
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
+      case "mes_employeurs": return isPro?<MesEmployeurs enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Vos employeurs" desc="Vos revenus du mois famille par famille, et vos congés à poser avec toutes. Cette fonction fait partie du forfait Pro."/>;
       case "temps_travail": return isPro?<TempsDeTravail enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Votre temps de travail" desc="Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie du forfait Pro."/>;
       case "pmi": return isPro?<CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>:<VerrouPro titre="La communication avec la PMI" desc="Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;

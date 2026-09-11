@@ -791,6 +791,25 @@ if (!/conservez ce bulletin de paie sans limitation de durée/.test(appSrc)) {
   }
 }
 
+// --- vue multi-employeur ---
+// Pourquoi : quand on accueille les enfants de plusieurs familles, personne ne
+// voit le total — ni les parents, qui ne voient que leur contrat. Et la
+// convention demande de fixer les conges d'un commun accord avec TOUTES au plus
+// tard le 1er mars : cette echeance n'existait nulle part dans l'application.
+{
+  if (!/<MesEmployeurs /.test(appSrc)) {
+    signale("chiffre", "l'écran « Mes employeurs » n'est plus branché : plus de vue des revenus famille par famille");
+  }
+  if (!/const DATE_ACCORD_CONGES = "03-01"/.test(appSrc)) {
+    signale("chiffre", "l'échéance du 1er mars pour l'accord sur les congés a disparu (CCN 3239)");
+  }
+  // Un montant annonce sans bulletin doit se dire estime, et un enfant sans
+  // contrat ne doit produire aucune estimation.
+  if (!/sansContrat/.test(appSrc) || !/estime:!bul&&!sansContrat/.test(appSrc)) {
+    signale("chiffre", "l'écran des employeurs ne distingue plus le montant d'un bulletin, une estimation, et l'absence de contrat");
+  }
+}
+
 // --- composants morts ---
 // Pourquoi : neuf composants etaient definis et jamais rendus — un ecran de
 // connexion, un de maintenance, un d'onboarding, un d'import de contrat, tous
