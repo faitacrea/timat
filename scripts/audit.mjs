@@ -998,6 +998,105 @@ if (/useGrouping\s*:\s*true/.test(appSrc) || !/const nbf=/.test(appSrc)) {
   signale("chiffre", "nbf() a disparu ou groupe les milliers : l'espace fine insécable du français casse les lignes de PDF");
 }
 
+// --- mode hors ligne ---
+// Pourquoi : le hors ligne ne se voit pas. Quand il tombe, rien ne clignote —
+// une journee de pointage disparait en silence. Ces barrieres remplacent
+// l'observation, impossible ici.
+
+// 1. Le service worker EST le mode hors ligne. Pendant des mois l'application
+//    le desinscrivait a chaque demarrage, tout en affichant « donnees
+//    sauvegardees localement » : le bandeau mentait.
+const cheminSw = path.join(RACINE, "public", "sw.js");
+const swSrc = existsSync(cheminSw) ? readFileSync(cheminSw, "utf8") : "";
+if (!swSrc) {
+  signale("hors-ligne", "public/sw.js est absent : ni mode hors ligne ni notifications push ne peuvent exister");
+} else {
+  if (/registration\.unregister\(\)/.test(swSrc)) {
+    signale("hors-ligne", "public/sw.js se desinscrit lui-meme : le mode hors ligne ne demarrera jamais");
+  }
+  // La navigation DOIT aller au reseau d'abord, sinon une mise en ligne n'est
+  // jamais vue et Sophie reste bloquee sur une ancienne version.
+  if (!/req\.mode === 'navigate'/.test(swSrc) || !/fetch\(req\)\s*\n?\s*\.then/.test(swSrc)) {
+    signale("hors-ligne", "public/sw.js ne sert plus les pages par le reseau d'abord : une mise en ligne ne serait plus visible");
+  }
+  if (/caches\.match\(req\)/.test(swSrc) && !/\/assets\//.test(swSrc)) {
+    signale("hors-ligne", "public/sw.js sert du cache en dehors de /assets/ : seuls les fichiers a empreinte peuvent l'etre sans risque");
+  }
+}
+if (/getRegistrations\(\)[\s\S]{0,120}unregister\(\)/.test(appSrc)) {
+  signale("hors-ligne", "l'application desinscrit les service workers au demarrage : le mode hors ligne et le push sont annules");
+}
+if (!/navigator\.serviceWorker\.register\('\/sw\.js'\)/.test(appSrc)) {
+  signale("hors-ligne", "le service worker n'est plus enregistre : /sw.js ne sera jamais actif");
+}
+
+// 2. Les ecritures de pointage doivent TOUTES passer par enregistrerPointage().
+//    Un seul appel direct a supabase remet un chemin ou le pointage se perd.
+if (!/async function enregistrerPointage\(/.test(appSrc)) {
+  signale("hors-ligne", "enregistrerPointage() a disparu : les pointages ne sont plus mis en file quand le reseau manque");
+}
+if (!/async function rejouerFile\(/.test(appSrc)) {
+  signale("hors-ligne", "rejouerFile() a disparu : la file d'attente ne serait jamais envoyee");
+}
+// Les deux seules ecritures legitimes sont celles du module hors ligne
+// lui-meme (enregistrerPointage et rejouerFile) : on borne cette zone et on
+// compte tout ce qui est en dehors.
+const debutModuleHL = appSrc.indexOf('const CLE_HL="timat:hl:";');
+const ancreRejeu = appSrc.indexOf("async function rejouerFile(){");
+const finModuleHL = ancreRejeu >= 0 ? appSrc.indexOf("\n}\n", ancreRejeu) + 3 : -1;
+const ecrituresDirectes = [...appSrc.matchAll(/supabase\.from\("pointages"\)\.(upsert|update|insert)/g)]
+  .filter((m) => !(debutModuleHL >= 0 && finModuleHL > debutModuleHL && m.index > debutModuleHL && m.index < finModuleHL));
+if (ecrituresDirectes.length) {
+  signale("hors-ligne", `${ecrituresDirectes.length} ecriture(s) de pointage court-circuitent enregistrerPointage() : hors ligne, elles se perdent`);
+}
+
+// 3. Le rejeu ne doit jamais ecraser une correction faite par le parent
+//    pendant la coupure.
+// Presence du garde-fou ne suffit pas : c'est la COMPARAISON qui protege.
+// Il faut que le rejeu lise la correction du parent, la compare a l'heure du
+// pointage mis en file, et marque un conflit plutot que d'ecraser.
+const zoneRejeu = ancreRejeu >= 0 && finModuleHL > ancreRejeu ? appSrc.slice(ancreRejeu, finModuleHL) : "";
+if (!/modified_by_parent_at/.test(zoneRejeu)
+  || !/>\s*String\(e\.faitLe\)/.test(zoneRejeu)
+  || !/marquerConflit\(e\.id/.test(zoneRejeu)) {
+  signale("hors-ligne", "le rejeu ne compare plus la correction du parent a l'heure du pointage en file : la correction du parent serait ecrasee");
+}
+
+// 4. Une erreur metier mise en file echouerait indefiniment sans rien dire.
+if (!/const panneReseau=/.test(appSrc)) {
+  signale("hors-ligne", "panneReseau() a disparu : une erreur de droits serait mise en file et rejouee sans fin");
+}
+
+// 5. Une donnee hors ligne affichee sans sa date est une donnee qu'on croit
+//    fraiche a tort. C'est le seul vrai danger de la consultation hors ligne.
+if (/lireHorsLigne\(/.test(appSrc) && !/copie\.le/.test(appSrc)) {
+  signale("hors-ligne", "une copie hors ligne est relue sans que sa date soit affichee : elle passerait pour a jour");
+}
+if (/Affichage hors ligne/.test(appSrc) && !/fmtDateHeureCourte\(copieLe\)/.test(appSrc)) {
+  signale("hors-ligne", "le bandeau de consultation hors ligne n'affiche plus la date de la copie");
+}
+
+// 6bis. Mettre la seule page en reserve ne suffit pas : au premier chargement,
+//       les fichiers de /assets/ sont demandes avant que le service worker ne
+//       prenne les commandes. Sans mise en reserve explicite, l'application
+//       reste sur « Chargement... » hors ligne, sans jamais demarrer.
+if (swSrc && !/\/assets\/\[\^"'\]\+|matchAll\(/.test(swSrc)) {
+  signale("hors-ligne", "public/sw.js ne met plus le code de l'application en reserve : hors ligne, elle resterait sur « Chargement... »");
+}
+// L'en-tete Vary du serveur empeche de retrouver une reponse pourtant en
+// cache. C'est exactement le defaut qui faisait echouer le demarrage hors ligne.
+if (swSrc && /caches\.match\(/.test(swSrc) && !/ignoreVary: true/.test(swSrc)) {
+  signale("hors-ligne", "public/sw.js relit le cache sans ignoreVary : les fichiers en reserve ne seraient pas retrouves");
+}
+
+// 6. Le bandeau a longtemps annonce une sauvegarde locale qui n'existait pas.
+if (/sauvegard\u00e9es localement/.test(appSrc)) {
+  signale("hors-ligne", "le bandeau annonce « donnees sauvegardees localement » : ne l'ecrire que si la file existe vraiment");
+}
+if (/setSyncing\(true\);setTimeout/.test(appSrc)) {
+  signale("hors-ligne", "le bouton de synchronisation est un simple minuteur : il n'envoie rien");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

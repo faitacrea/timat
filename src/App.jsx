@@ -2,6 +2,121 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 
+/* ========== MODE HORS LIGNE ==========
+
+   Deux besoins distincts, donc deux mecanismes separes.
+
+   A. CONSULTER hors ligne — les donnees deja lues sont recopiees dans le
+      navigateur avec la DATE de la copie. Quand le reseau ne repond pas, on
+      les ressort en disant toujours de quand elles datent. Une donnee ancienne
+      affichee sans sa date est une donnee qu'on croit fraiche a tort : c'est
+      le seul vrai danger de la consultation hors ligne.
+
+   B. POINTER hors ligne — l'action part dans une file d'attente locale, puis
+      est rejouee des le retour du reseau. Une action en file n'est PAS
+      enregistree : l'application doit le dire, pas le laisser croire.
+
+   Le conflit est traite au moment du rejeu, jamais avant : si le parent a
+   touche au meme pointage pendant la coupure, la file ne l'ecrase pas. */
+
+const fmtDateHeureCourte=(iso)=>{
+  const d=new Date(iso);
+  if(isNaN(d))return String(iso||"");
+  return d.toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+};
+
+const CLE_HL="timat:hl:";
+const CLE_FILE=CLE_HL+"file";
+const MAX_FILE=200;
+
+const _lireJSON=(cle)=>{try{const t=localStorage.getItem(cle);return t?JSON.parse(t):null;}catch{return null;}};
+const _ecrireJSON=(cle,v)=>{try{localStorage.setItem(cle,JSON.stringify(v));return true;}catch{return false;}};
+
+// A. Copie locale des donnees consultables, horodatee.
+const memoriserHorsLigne=(cle,valeur)=>_ecrireJSON(CLE_HL+cle,{le:new Date().toISOString(),valeur});
+// Rend {le,valeur} ou null. L'appelant DOIT afficher `le` : c'est la regle.
+const lireHorsLigne=(cle)=>{
+  const o=_lireJSON(CLE_HL+cle);
+  return o&&o.le&&"valeur" in o?o:null;
+};
+const oublierHorsLigne=(cle)=>{try{localStorage.removeItem(CLE_HL+cle);}catch{}};
+
+// B. File d'attente des actions faites sans reseau.
+const fileHorsLigne=()=>{const f=_lireJSON(CLE_FILE);return Array.isArray(f)?f:[];};
+const _ecrireFile=(f)=>{
+  _ecrireJSON(CLE_FILE,f.slice(-MAX_FILE));
+  try{window.dispatchEvent(new CustomEvent("timat:file-hors-ligne"));}catch{}
+};
+const filerOperation=(op)=>{
+  const f=fileHorsLigne();
+  // Une seule entree par cle : re-pointer le meme jour remplace, n'empile pas.
+  const sansDoublon=op.cle?f.filter(x=>x.cle!==op.cle):f;
+  const entree={id:"hl"+Date.now()+"-"+Math.random().toString(36).slice(2,7),faitLe:new Date().toISOString(),conflit:null,...op};
+  sansDoublon.push(entree);
+  _ecrireFile(sansDoublon);
+  return entree;
+};
+const retirerDeLaFile=(id)=>_ecrireFile(fileHorsLigne().filter(x=>x.id!==id));
+const marquerConflit=(id,raison)=>_ecrireFile(fileHorsLigne().map(x=>x.id===id?{...x,conflit:raison}:x));
+
+// Le reseau a-t-il fait defaut ? Une erreur metier (droits, contrainte) n'est
+// PAS une coupure : la mettre en file la ferait echouer indefiniment.
+const panneReseau=(e)=>{
+  if(typeof navigator!=="undefined"&&navigator.onLine===false)return true;
+  const m=String(e&&(e.message||e)||"");
+  return /failed to fetch|networkerror|network request failed|load failed|fetch error|timeout/i.test(m);
+};
+
+// Le point de passage unique de l'enregistrement d'un pointage.
+// Rend {etat:"envoye"} ou {etat:"en-file"} ou {etat:"erreur",message}.
+async function enregistrerPointage(ligne){
+  const cle="pointage:"+ligne.enfant_id+":"+ligne.date;
+  if(typeof navigator!=="undefined"&&navigator.onLine===false){
+    filerOperation({table:"pointages",cle,charge:ligne});
+    return{etat:"en-file"};
+  }
+  try{
+    const{error}=await supabase.from("pointages").upsert(ligne,{onConflict:"enfant_id,date"});
+    if(error){
+      if(panneReseau(error)){filerOperation({table:"pointages",cle,charge:ligne});return{etat:"en-file"};}
+      return{etat:"erreur",message:error.message};
+    }
+    return{etat:"envoye"};
+  }catch(e){
+    if(panneReseau(e)){filerOperation({table:"pointages",cle,charge:ligne});return{etat:"en-file"};}
+    return{etat:"erreur",message:String(e&&e.message||e)};
+  }
+}
+
+// Rejeu de la file. Rend {envoyees,conflits,restantes}.
+async function rejouerFile(){
+  let envoyees=0,conflits=0;
+  for(const e of fileHorsLigne()){
+    if(e.table!=="pointages"){retirerDeLaFile(e.id);continue;}
+    try{
+      // Le parent a-t-il touche a ce pointage pendant la coupure ?
+      const{data:existant}=await supabase.from("pointages")
+        .select("modified_by_parent_at,valide_parent")
+        .eq("enfant_id",e.charge.enfant_id).eq("date",e.charge.date).maybeSingle();
+      const touchePar=existant&&existant.modified_by_parent_at;
+      if(touchePar&&String(touchePar)>String(e.faitLe)){
+        marquerConflit(e.id,"Le parent a corrige ce pointage pendant la coupure.");
+        conflits++;continue;
+      }
+      const{error}=await supabase.from("pointages").upsert(e.charge,{onConflict:"enfant_id,date"});
+      if(error){
+        if(panneReseau(error))break; // toujours coupe : on s'arrete, la file reste
+        marquerConflit(e.id,error.message);conflits++;continue;
+      }
+      retirerDeLaFile(e.id);envoyees++;
+    }catch(err){
+      if(panneReseau(err))break;
+      marquerConflit(e.id,String(err&&err.message||err));conflits++;
+    }
+  }
+  return{envoyees,conflits,restantes:fileHorsLigne().length};
+}
+
 
 // ========== AUDIT LOG + CONSENT P8 ==========
 // Helpers RGPD : logAction (audit_log append-only) et logConsent (consentements RGPD)
@@ -346,6 +461,7 @@ const TRACES = {
   mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
   sauver:'<path d="M5 3h11l3 3v15H5Z"/><path d="M8 3v6h7V3M8 21v-6h8v6"/>',
   mobile:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  hors_ligne:'<path d="M7.5 18.5h9.2a3.8 3.8 0 0 0 .5-7.6 5.6 5.6 0 0 0-8.4-3.6"/><path d="M6.8 11.1a3.8 3.8 0 0 0 .7 7.4"/><path d="M4 3.5 20 20"/>',
   fievre:'<path d="M10 13V5a2 2 0 1 1 4 0v8a4.5 4.5 0 1 1-4 0Z"/><path d="M12 16.5v.01"/>',
   cloche:'<path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6Z"/><path d="M10.5 20a2 2 0 0 0 3 0"/>',
   lien:'<path d="M10 13a4 4 0 0 0 5.7.3l3-3A4 4 0 0 0 13 4.7l-1.7 1.7"/><path d="M14 11a4 4 0 0 0-5.7-.3l-3 3A4 4 0 0 0 11 19.3l1.7-1.7"/>',
@@ -424,7 +540,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🚨":"urgence","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","👆":"main","👉":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🚨":"urgence","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","📵":"hors_ligne","👆":"main","👉":"main",
 };
 function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -1379,8 +1495,11 @@ function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,backg
 function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9,position:"relative"}}>
   <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div>{badge&&<span style={{position:"absolute",top:-6,right:-6}}>{badge}</span>}</div>}
 
-function Toast({msg,onClose}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
-  return <div className="toast"><IconeOuEmoji e="✅"/>{msg}</div>}
+// L'icone du toast etait figee sur ✅. Un message annoncant un pointage EN
+// ATTENTE sortait donc avec une coche verte : l'icone disait « enregistre »
+// pendant que le texte disait le contraire.
+function Toast({msg,onClose,icone="✅"}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
+  return <div className="toast"><IconeOuEmoji e={icone}/>{msg}</div>}
 
 // Affiche le trace correspondant a un emoji, ou l'emoji lui-meme s'il n'est
 // pas encore dans la table. Permet de convertir les icones de menu par
@@ -2398,6 +2517,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
   const [showQR,setShowQR]=useState(false);
   // POINTAGE WORKFLOW P14E - mode edition manuelle si besoin (rectifier une heure)
   const [editMode,setEditMode]=useState(false);
+  const [copieLe,setCopieLe]=useState("");
   const [arrEdit,setArrEdit]=useState("");
   const [depEdit,setDepEdit]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
@@ -2408,9 +2528,23 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     if(!enfant?.id)return;
     if(demoMode){setPts(D.pointages.filter(p=>p.eId===enfant?.id));return;}
     const charger=async()=>{
-      const{data}=await supabase.from("pointages")
-        .select("*").eq("enfant_id",enfant.id)
-        .order("date",{ascending:false}).limit(30);
+      const cleHL="pointages:"+enfant.id;
+      let data=null;
+      try{
+        const r=await supabase.from("pointages")
+          .select("*").eq("enfant_id",enfant.id)
+          .order("date",{ascending:false}).limit(30);
+        if(r.error)throw r.error;
+        data=r.data;
+        // Copie locale : c'est elle qu'on relira si le reseau manque demain.
+        if(data)memoriserHorsLigne(cleHL,data);
+        setCopieLe("");
+      }catch(e){
+        const copie=lireHorsLigne(cleHL);
+        if(!copie)return;               // rien en reserve : on n'invente pas
+        data=copie.valeur;
+        setCopieLe(copie.le);           // et on dit de quand elle date
+      }
       if(data&&data.length>0){
         setPts(data.map(p=>({
           id:p.id,eId:p.enfant_id,date:p.date,
@@ -2430,11 +2564,34 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     charger();
   },[enfant?.id,demoMode]);
 
-  const ptJ=pts.find(p=>p.eId===enfant?.id&&p.date===TODAY_STR);
-  const ptH=pts.filter(p=>p.eId===enfant?.id).sort((a,b)=>b.date>a.date?-1:1);
+  // Les pointages encore en file font partie de ce qui est affiche. Sans cela,
+  // l'ecran repasse a « pas encore pointe » des qu'il se recharge : la personne
+  // croit avoir rate son geste et pointe une seconde fois.
+  const [fileLocale,setFileLocale]=useState([]);
+  useEffect(()=>{
+    const relire=()=>setFileLocale(fileHorsLigne());
+    relire();
+    window.addEventListener("timat:file-hors-ligne",relire);
+    return()=>window.removeEventListener("timat:file-hors-ligne",relire);
+  },[]);
+  const ptsAffiches=useMemo(()=>{
+    const attente=fileLocale
+      .filter(f=>f.table==="pointages"&&f.charge&&f.charge.enfant_id===enfant?.id)
+      .map(f=>{
+        const t=f.charge.total_minutes;
+        return{id:f.id,eId:f.charge.enfant_id,date:f.charge.date,
+          arr:f.charge.arrivee,dep:f.charge.depart,arr_raw:f.charge.arrivee,dep_raw:f.charge.depart,
+          tot:t?Math.floor(t/60)+"h"+String(t%60).padStart(2,"0"):null,totMin:t,
+          valide:true,valide_parent:false,mode_pointage:"asmat",enAttente:true};
+      });
+    const dates=new Set(attente.map(p=>p.date));
+    return[...attente,...pts.filter(p=>!dates.has(p.date))];
+  },[pts,fileLocale,enfant?.id]);
+  const ptJ=ptsAffiches.find(p=>p.eId===enfant?.id&&p.date===TODAY_STR);
+  const ptH=ptsAffiches.filter(p=>p.eId===enfant?.id).sort((a,b)=>b.date>a.date?-1:1);
 
   // Calcul bilan mensuel
-  const heuresMois=pts.filter(p=>p.eId===enfant?.id&&p.totMin).reduce((s,p)=>s+(p.totMin||0),0);
+  const heuresMois=ptsAffiches.filter(p=>p.eId===enfant?.id&&p.totMin).reduce((s,p)=>s+(p.totMin||0),0);
   const heuresPrev=heuresMensualisees(enfant?.contrat);
   const soldeMin=heuresMois-heuresPrev*60;
 
@@ -2445,7 +2602,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     setSaving(true);
     const now=new Date();
     const heureArr=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
-    const{error,data}=await supabase.from("pointages").upsert({
+    const r=await enregistrerPointage({
       enfant_id:enfant.id,
       asmat_id:user?.id||(await supabase.auth.getUser()).data.user?.id,
       date:TODAY_STR,
@@ -2454,18 +2611,19 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
       total_minutes:null,
       valide_parent:false,
       mode_pointage:"asmat",
-    },{onConflict:"enfant_id,date"}).select().single();
-    if(error){
-      setToast("Erreur : "+error.message);setSaving(false);return;
+    });
+    if(r.etat==="erreur"){
+      setToast("Erreur : "+r.message);setSaving(false);return;
     }
+    const data=null;
     setPts(p=>{
       const filtered=p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR));
       return[{id:data?.id||"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,arr:heureArr,dep:null,arr_raw:heureArr,dep_raw:null,tot:null,totMin:null,valide:true,valide_parent:false,mode_pointage:"asmat"},...filtered];
     });
-    await logAction("pointage_arrivee",{table_name:"pointages",record_id:data?.id});
-    setToast("✅ Arrivée pointée à "+heureArr);
+    if(r.etat==="envoye")await logAction("pointage_arrivee",{table_name:"pointages",record_id:data?.id});
+    setToast(r.etat==="en-file"?"Arrivée notée à "+heureArr+" — en attente de réseau":"✅ Arrivée pointée à "+heureArr);
     setSaving(false);
-    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+    if(r.etat==="envoye")window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
 
   // POINTAGE WORKFLOW P14E - pointer le depart maintenant (heure auto, calcul total)
@@ -2479,18 +2637,26 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     const[h1,m1]=ptJ.arr.split(":").map(Number);
     const[h2,m2]=heureDep.split(":").map(Number);
     const totalMin=(h2*60+m2)-(h1*60+m1);
-    const{error}=await supabase.from("pointages").update({
+    const r=await enregistrerPointage({
+      enfant_id:enfant.id,
+      asmat_id:user?.id||(await supabase.auth.getUser()).data.user?.id,
+      date:TODAY_STR,
+      arrivee:ptJ.arr,
       depart:heureDep,
       total_minutes:totalMin,
-    }).eq("enfant_id",enfant.id).eq("date",TODAY_STR);
-    if(error){
-      setToast("Erreur : "+error.message);setSaving(false);return;
+      valide_parent:false,
+      mode_pointage:"asmat",
+    });
+    if(r.etat==="erreur"){
+      setToast("Erreur : "+r.message);setSaving(false);return;
     }
     const totStr=Math.floor(totalMin/60)+"h"+String(totalMin%60).padStart(2,"0");
     setPts(p=>p.map(x=>(x.eId===enfant.id&&x.date===TODAY_STR)?{...x,dep:heureDep,dep_raw:heureDep,tot:totStr,totMin:totalMin}:x));
-    await logAction("pointage_depart",{table_name:"pointages",record_id:ptJ.id});
-    // EMAIL NOTIF P14E - notifier le parent qu'un pointage est en attente de validation
-    if(enfant?.contrat?.parent_id||enfant?.parent_id){
+    if(r.etat==="envoye")await logAction("pointage_depart",{table_name:"pointages",record_id:ptJ.id});
+    // EMAIL NOTIF P14E - notifier le parent qu'un pointage est en attente de validation.
+    // Jamais quand le pointage est encore en file : on annoncerait au parent
+    // un pointage que le serveur n'a pas.
+    if(r.etat==="envoye"&&(enfant?.contrat?.parent_id||enfant?.parent_id)){
       const parentId=enfant.contrat?.parent_id||enfant.parent_id;
       createNotification({userId:parentId,type:"pointage_a_valider",titre:"Un pointage attend votre validation"+(enfant?.prenom?(" — "+enfant.prenom):""),page:"pointage"});
       supabase.rpc("get_recipient_email",{p_user_id:parentId}).then(({data:p})=>{
@@ -2505,9 +2671,9 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
         }
       });
     }
-    setToast("✅ Départ pointé à "+heureDep+" — "+totStr);
+    setToast(r.etat==="en-file"?"Départ noté à "+heureDep+" ("+totStr+") — en attente de réseau":"✅ Départ pointé à "+heureDep+" — "+totStr);
     setSaving(false);
-    window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+    if(r.etat==="envoye")window.dispatchEvent(new CustomEvent("timat:refresh-data"));
   };
 
   // POINTAGE WORKFLOW P14E - edition manuelle (rectifier une heure mal saisie)
@@ -2517,7 +2683,7 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     setSaving(true);
     const[h1,m1]=arrEdit.split(":").map(Number);
     const totalMin=depEdit?(()=>{const[h2,m2]=depEdit.split(":").map(Number);return(h2*60+m2)-(h1*60+m1);})():null;
-    const{error}=await supabase.from("pointages").upsert({
+    const r=await enregistrerPointage({
       enfant_id:enfant.id,
       asmat_id:user?.id||(await supabase.auth.getUser()).data.user?.id,
       date:TODAY_STR,
@@ -2526,15 +2692,15 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
       total_minutes:totalMin,
       valide_parent:false,
       mode_pointage:"asmat",
-    },{onConflict:"enfant_id,date"});
-    if(error){setToast("Erreur : "+error.message);setSaving(false);return;}
+    });
+    if(r.etat==="erreur"){setToast("Erreur : "+r.message);setSaving(false);return;}
     const totStr=totalMin?Math.floor(totalMin/60)+"h"+String(totalMin%60).padStart(2,"0"):null;
     setPts(p=>{
       const filtered=p.filter(x=>!(x.eId===enfant.id&&x.date===TODAY_STR));
       return[{id:"ptn"+Date.now(),eId:enfant.id,date:TODAY_STR,arr:arrEdit,dep:depEdit,arr_raw:arrEdit,dep_raw:depEdit,tot:totStr,totMin:totalMin,valide:true,valide_parent:false,mode_pointage:"asmat"},...filtered];
     });
     setArrEdit("");setDepEdit("");setEditMode(false);
-    setToast("Pointage corrigé ✓");
+    setToast(r.etat==="en-file"?"Correction notée — en attente de réseau":"Pointage corrigé ✓");
     setSaving(false);
   };
 
@@ -2589,7 +2755,11 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
   };
 
   return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}icone={/en attente de réseau/.test(toast)?"📵":"✅"}/>}
+    {/* Donnees hors ligne : on ne les affiche jamais sans dire de quand elles datent. */}
+    {copieLe&&<div style={{background:"#FEF9C3",border:"1px solid #FCD34D",color:"#92400E",borderRadius:12,padding:"8px 12px",fontSize:12,fontWeight:600,marginBottom:10}}>
+      <IconeOuEmoji e="📵"/> Affichage hors ligne — copie du {fmtDateHeureCourte(copieLe)}. Les pointages faits ailleurs depuis ne sont pas visibles.
+    </div>}
     {/* POINTAGE WORKFLOW P14G - modale modification heures parent */}
     {modifParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
       <div className="card" style={{padding:0,maxWidth:480,width:"100%"}}>
@@ -2662,7 +2832,9 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
               </button>
             </div>:!ptJ.dep?<div>
               <div style={{fontSize:11,color:"var(--S)",marginBottom:8,textAlign:"center",fontWeight:600}}>
-                <IconeOuEmoji e="✅"/> Arrivée pointée à {ptJ.arr} — Accueil en cours
+                {ptJ.enAttente
+                  ?<><IconeOuEmoji e="📵"/> Arrivée notée à {ptJ.arr} — pas encore enregistrée</>
+                  :<><IconeOuEmoji e="✅"/> Arrivée pointée à {ptJ.arr} — Accueil en cours</>}
               </div>
               <button className="btn bT l"style={{width:"100%",padding:"16px",justifyContent:"center"}}onClick={pointerDepart}disabled={saving}>
                 {saving?"⏳ ...":"🏁 Pointer le départ maintenant"}
@@ -9022,27 +9194,67 @@ function BandeauInstall(){
 
 function BandeauHorsLigne(){
   const [online,setOnline]=useState(true);
-  const [syncing,setSyncing]=useState(false);
+  const [file,setFile]=useState([]);
+  const [envoi,setEnvoi]=useState(false);
+  const [bilan,setBilan]=useState("");
+  const relire=()=>setFile(fileHorsLigne());
   useEffect(()=>{
     const up=()=>setOnline(true);
     const down=()=>setOnline(false);
     window.addEventListener("online",up);
     window.addEventListener("offline",down);
+    window.addEventListener("timat:file-hors-ligne",relire);
     setOnline(navigator.onLine);
-    return()=>{window.removeEventListener("online",up);window.removeEventListener("offline",down);};
+    relire();
+    return()=>{
+      window.removeEventListener("online",up);
+      window.removeEventListener("offline",down);
+      window.removeEventListener("timat:file-hors-ligne",relire);
+    };
   },[]);
-  const sync=()=>{setSyncing(true);setTimeout(()=>setSyncing(false),2000);};
-  if(online&&!syncing)return null;
+  const envoyer=async()=>{
+    if(envoi)return;
+    setEnvoi(true);setBilan("");
+    const r=await rejouerFile();
+    relire();
+    setBilan(r.envoyees?r.envoyees+(r.envoyees>1?" pointages envoyés":" pointage envoyé"):
+      r.restantes?"Toujours pas de réseau":"Rien à envoyer");
+    setEnvoi(false);
+    if(r.envoyees)window.dispatchEvent(new CustomEvent("timat:refresh-data"));
+  };
+  // Des le retour du reseau, la file part toute seule : personne ne doit avoir
+  // a penser a appuyer sur un bouton pour que son travail soit enregistre.
+  useEffect(()=>{if(online&&file.length&&!envoi)envoyer();},[online]);
+
+  const conflits=file.filter(x=>x.conflit);
+  if(online&&!file.length&&!envoi&&!bilan)return null;
+
+  const rouge=conflits.length>0;
+  const jaune=!online||file.length>0;
+  const fond=rouge?"#FEE2E2":jaune?"#FEF9C3":"var(--Sp)";
+  const bord=rouge?"#FCA5A5":jaune?"#FCD34D":"var(--Sl)";
+  const encre=rouge?"#991B1B":jaune?"#92400E":"var(--S)";
+  const enAttente=file.length-conflits.length;
+
+  let texte;
+  if(conflits.length) texte=conflits.length+(conflits.length>1?" pointages n'ont pas pu être envoyés":" pointage n'a pas pu être envoyé")+" — "+conflits[0].conflit;
+  else if(!online&&enAttente) texte="Hors ligne — "+(enAttente>1
+    ?enAttente+" pointages notés sur cet appareil, pas encore enregistrés"
+    :"1 pointage noté sur cet appareil, pas encore enregistré");
+  else if(!online) texte="Hors ligne — vous pouvez consulter et pointer, l'envoi se fera au retour du réseau";
+  else if(envoi) texte="Envoi de "+enAttente+(enAttente>1?" pointages...":" pointage...");
+  else if(enAttente) texte=enAttente+(enAttente>1?" pointages en attente d'envoi":" pointage en attente d'envoi");
+  else texte=bilan||"";
+
   return <div style={{
-    background:online?"var(--Sp)":"#FEF9C3",
-    borderBottom:"1px solid "+(online?"var(--Sl)":"#FCD34D"),
+    background:fond,borderBottom:"1px solid "+bord,
     padding:"6px 16px",display:"flex",alignItems:"center",gap:8,fontSize:12,fontWeight:600,
-    color:online?"var(--S)":"#92400E",flexShrink:0
+    color:encre,flexShrink:0
   }}>
-    <span style={{fontSize:14}}>{online?syncing?"🔄":"✅":"📵"}</span>
-    {online?syncing?"Synchronisation en cours...":"Données synchronisées"
-      :"Hors ligne - les données sont sauvegardées localement"}
-    {!online&&<button onClick={sync}style={{marginLeft:"auto",background:"none",border:"1px solid #FCD34D",color:"#92400E",borderRadius:10,padding:"3px 8px",cursor:"pointer",fontSize:11}}>
+    <IconeOuEmoji e={rouge?"⚠️":!online?"📵":envoi?"🔄":enAttente?"⏳":"✅"} taille={15}/>
+    <span>{texte}</span>
+    {(enAttente>0||conflits.length>0)&&online&&!envoi&&<button onClick={envoyer}
+      style={{marginLeft:"auto",background:"none",border:"1px solid "+bord,color:encre,borderRadius:10,padding:"3px 8px",cursor:"pointer",fontSize:11}}>
       Réessayer
     </button>}
   </div>;
@@ -19700,13 +19912,13 @@ export default function App(){
   const [qrScan,setQrScan]=useState(null);
   const qrScanHandled=useRef(false);
 
-  // //  Dsactiver le service worker bloqu
+  // Le service worker porte le mode hors ligne (public/sw.js) et, demain, les
+  // notifications push : sans lui enregistre, ni l'un ni l'autre n'existe.
+  // Il a longtemps ete desinscrit ici a chaque demarrage — c'est pour cela que
+  // le bandeau « donnees sauvegardees localement » ne sauvegardait rien.
   useEffect(()=>{
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.getRegistrations().then(regs=>{
-        regs.forEach(reg=>reg.unregister());
-      });
-    }
+    if(!('serviceWorker' in navigator))return;
+    navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('[sw]',e?.message));
   },[]);
 
   // Favicon dynamique selon role connecte (asmat=bleu marine, parent=terracotta)
