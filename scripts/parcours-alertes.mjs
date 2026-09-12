@@ -46,7 +46,7 @@ const session = {
 mkdirSync(SORTIE, { recursive: true });
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
 const ctx = await nav.newContext({
-  viewport: { width: 420, height: 900 }, deviceScaleFactor: 2,
+  viewport: { width: 420, height: 900 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris",
   // Un iPhone, pour la passe qui teste la regle d'Apple.
   userAgent: PASSE === "iphone"
     ? "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"

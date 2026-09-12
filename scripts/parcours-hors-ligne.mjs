@@ -44,7 +44,7 @@ const session = {
 
 mkdirSync(SORTIE, { recursive: true });
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
-const ctx = await nav.newContext({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2 });
+const ctx = await nav.newContext({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 const page = await ctx.newPage();
 const erreurs = [];
 page.on("pageerror", (e) => erreurs.push(e.message.slice(0, 200)));

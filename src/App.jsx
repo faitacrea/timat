@@ -1625,8 +1625,13 @@ function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on
 // L'icone du toast etait figee sur ✅. Un message annoncant un pointage EN
 // ATTENTE sortait donc avec une coche verte : l'icone disait « enregistre »
 // pendant que le texte disait le contraire.
-function Toast({msg,onClose,icone="✅"}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
-  return <div className="toast"><IconeOuEmoji e={icone}/>{msg}</div>}
+// L'icone etait figee sur ✅. Un message d'erreur sortait donc avec une coche
+// verte : l'icone disait « c'est fait » pendant que le texte disait l'inverse.
+// La reconnaissance se fait ici, une fois, plutot que dans les ~150 appels.
+const ICONE_MESSAGE=(msg)=>/^(erreur|échec|impossible)|erreur\s*:/i.test(String(msg||""))?"⚠️"
+  :/en attente de réseau|hors ligne/i.test(String(msg||""))?"📵":"✅";
+function Toast({msg,onClose,icone}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
+  return <div className="toast"><IconeOuEmoji e={icone||ICONE_MESSAGE(msg)}/>{msg}</div>}
 
 // Affiche le trace correspondant a un emoji, ou l'emoji lui-meme s'il n'est
 // pas encore dans la table. Permet de convertir les icones de menu par
@@ -4384,16 +4389,21 @@ function Contrats({enfants,role,pEId,user}){
                   <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
                     {contrat?.pdf_storage_path
                       ?<><BoutonContratPdf contrat={contrat} onErr={(m)=>setToast(m)} compact label="Ouvrir le contrat signé (PDF)"/>
-                        <button className={"btn s "+(contratPerime?"bS":"")} disabled={majPdf==="pending"} onClick={majContratPdf}>
-                          {majPdf==="pending"?"Mise à jour…":"↻ Mettre à jour le PDF"}
-                        </button></>
+                        {/* Le fichier vit dans l'espace de l'assistante maternelle :
+                            elle seule peut le reecrire. Proposer le bouton au parent
+                            revenait a lui offrir une action qui echouait a coup sur. */}
+                        {role!=="parent"&&
+                          <button className={"btn s "+(contratPerime?"bS":"")} disabled={majPdf==="pending"} onClick={majContratPdf}>
+                            {majPdf==="pending"?"Mise à jour…":"↻ Mettre à jour le PDF"}
+                          </button>}</>
                       :<span style={{fontSize:11.5,color:"var(--m)"}}>Le PDF est en cours de préparation — il apparaîtra ici et dans Documents.</span>}
                   </div>
                   {contrat?.pdf_storage_path&&contratPerime&&
                     <div style={{marginTop:8,fontSize:11.5,color:"var(--R)",lineHeight:1.5,maxWidth:420}}>
                       <IconeOuEmoji e="⚠️" taille={13}/> Le contrat a été modifié depuis que ce PDF a été
-                      produit : le fichier ne reflète plus les valeurs actuelles. Le mettre à jour le
-                      réécrit avec les mêmes signatures.
+                      produit : le fichier ne reflète plus les valeurs actuelles.{role==="parent"
+                        ?" Demandez à votre assistante maternelle de le mettre à jour — le document est produit depuis son espace."
+                        :" Le mettre à jour le réécrit avec les mêmes signatures."}
                     </div>}
                 </>}
               </div>
@@ -9864,6 +9874,19 @@ async function generateAndStoreContratPDF(contratId){
     // 1. Recuperer toutes les donnees necessaires
     const{data:ct,error:eCt}=await supabase.from("contrats").select("*").eq("id",contratId).single();
     if(eCt||!ct)return{success:false,error:"Contrat introuvable"};
+
+    // Le PDF s'ecrit dans l'espace de stockage de l'assistante maternelle, et
+    // la regle de securite exige que le premier dossier du chemin soit celui
+    // de la personne qui ecrit. Un parent employeur ne peut donc PAS produire
+    // ce fichier : la tentative remontait jusqu'ici sous la forme
+    // « new row violates row-level security policy », un message de base de
+    // donnees qui ne veut rien dire pour qui le lit.
+    //
+    // On refuse ici, une seule fois, plutot que dans chaque ecran qui appelle.
+    const{data:{user:moi}}=await supabase.auth.getUser();
+    if(moi?.id&&ct.asmat_id&&moi.id!==ct.asmat_id){
+      return{success:false,error:"Seule l'assistante maternelle peut mettre ce PDF à jour : le document est produit depuis son espace."};
+    }
     const{data:enfant}=await supabase.from("enfants").select("*").eq("id",ct.enfant_id).single();
     if(!enfant)return{success:false,error:"Enfant introuvable"};
     const{data:asmatProfile}=await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_agrement").eq("id",ct.asmat_id).maybeSingle();

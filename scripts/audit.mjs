@@ -1097,6 +1097,30 @@ if (/setSyncing\(true\);setTimeout/.test(appSrc)) {
   signale("hors-ligne", "le bouton de synchronisation est un simple minuteur : il n'envoie rien");
 }
 
+// --- ecriture des documents ---
+// Le PDF du contrat s'ecrit dans l'espace de stockage de l'assistante
+// maternelle. La regle de securite du stockage exige que le premier dossier du
+// chemin soit celui de la personne qui ecrit : un parent employeur ne peut donc
+// PAS produire ce fichier. Le bouton lui etait pourtant propose, et echouait
+// avec « new row violates row-level security policy » — un message de base de
+// donnees affiche tel quel a l'ecran.
+if (!/Seule l'assistante maternelle peut mettre ce PDF/.test(appSrc)) {
+  signale("documents", "generateAndStoreContratPDF() ne refuse plus un appelant qui n'est pas l'assistante maternelle : l'erreur brute de la base remonterait a l'ecran");
+}
+if (!/role!=="parent"&&\s*\n?\s*<button className=\{"btn s "\+\(contratPerime/.test(appSrc)) {
+  signale("documents", "le bouton « Mettre a jour le PDF » est de nouveau propose au parent : il echouera a coup sur");
+}
+if (!/Demandez à votre assistante maternelle de le mettre à jour/.test(appSrc)) {
+  signale("documents", "le parent n'est plus oriente quand son PDF de contrat est perime : il resterait sans issue");
+}
+
+// --- ce que le bandeau de message affiche ---
+// L'icone du Toast etait figee sur une coche verte. Un message d'erreur
+// sortait donc avec le signe de la reussite.
+if (/function Toast\(\{msg,onClose\}\)/.test(appSrc) || !/const ICONE_MESSAGE=/.test(appSrc)) {
+  signale("message", "le bandeau de message affiche une coche verte quelle que soit la nature du message, y compris sur une erreur");
+}
+
 // --- notifications push ---
 // Pourquoi : le push a existe pendant des mois sans jamais fonctionner, et
 // sans que rien ne le dise. Aucun de ces defauts ne produit d'erreur visible.

@@ -44,7 +44,7 @@ const session = {
 };
 
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
-const page = await nav.newPage({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2 });
+const page = await nav.newPage({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 const erreurs = [];
 page.on("pageerror", (e) => erreurs.push(e.message.slice(0, 160) + " @ " + String(e.stack || "").split(String.fromCharCode(10)).slice(1, 3).join(" ")));
 
