@@ -73,7 +73,7 @@ const ECRANS = ESPACE === "parent" ? ECRANS_PARENT : ECRANS_ASMAT;
 
 mkdirSync(SORTIE, { recursive: true });
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
-const page = await nav.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const page = await nav.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 let erreurs = [];
 page.on("pageerror", (e) => erreurs.push(e.message.slice(0, 140)));
 

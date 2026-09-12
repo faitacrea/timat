@@ -17,7 +17,13 @@ import path from "node:path";
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 // Passe « pdf-ancien » : le PDF stocke date d'avant la refonte du contrat. Il
 // est relu tel quel, jamais recalcule : l'application doit le dire.
-const PDF_ANCIEN = process.argv[3] === "pdf-ancien";
+const PDF_ANCIEN = process.argv[3] === "pdf-ancien" || process.argv[3] === "parent";
+// Passe « parent » : le PDF du contrat vit dans l'espace de l'assistante
+// maternelle, et la regle de securite du stockage exige que le premier dossier
+// du chemin soit celui de la personne qui ecrit. Le parent ne peut donc PAS
+// reecrire ce fichier. Le bouton lui etait pourtant propose, et echouait avec
+// « new row violates row-level security policy ».
+const PARENT = process.argv[3] === "parent";
 const SORTIE = "/tmp/timat-contrat";
 const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
@@ -41,13 +47,13 @@ const session = {
   access_token: "faux", token_type: "bearer", expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: "faux",
   user: { id: UID, aud: "authenticated", role: "authenticated", email: "marie@test.fr",
-    app_metadata: {}, user_metadata: { prenom: "Marie", nom: "Test", role: "asmat" },
+    app_metadata: {}, user_metadata: { prenom: "Marie", nom: "Test", role: process.argv[3] === "parent" ? "parent" : "asmat" },
     created_at: new Date().toISOString() },
 };
 
 mkdirSync(SORTIE, { recursive: true });
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
-const page = await nav.newPage({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2 });
+const page = await nav.newPage({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 const erreurs = [];
 page.on("pageerror", (e) => erreurs.push(e.message.slice(0, 200)));
 
@@ -62,9 +68,9 @@ const json = (b) => ({ status: 200, contentType: "application/json", body: JSON.
 await page.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...session.user })));
 await page.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/([a-z_]+)/) || [])[1];
-  if (t === "profiles") return r.fulfill(json([{ id: UID, role: "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
-  if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : "2026-09-30T10:00:00Z", updated_at: PDF_ANCIEN ? "2026-08-15T10:00:00Z" : "2026-09-01T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
+  if (t === "profiles") return r.fulfill(json([{ id: UID, role: PARENT ? "parent" : "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
+  if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: PARENT ? "asmat-autre" : UID, parent_id: PARENT ? UID : null, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
+  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: PARENT ? "asmat-autre" : UID, parent_id: PARENT ? UID : null, partage_parent: true, signe_parent: PARENT, date_signature_parent: PARENT ? new Date().toISOString() : null, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : "2026-09-30T10:00:00Z", updated_at: PDF_ANCIEN ? "2026-08-15T10:00:00Z" : "2026-09-01T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
   // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
@@ -96,8 +102,8 @@ const clic = (t) => page.evaluate((t) => {
 }, t);
 
 await clic("Administratif"); await page.waitForTimeout(500);
-await clic("Paie & Contrats"); await page.waitForTimeout(2000);
-await clic("Contrats"); await page.waitForTimeout(1200);
+if (PARENT) { await clic("Mon contrat"); await page.waitForTimeout(2000); }
+else { await clic("Paie & Contrats"); await page.waitForTimeout(2000); await clic("Contrats"); await page.waitForTimeout(1200); }
 await clic("Contrats & avenants"); await page.waitForTimeout(2000);
 await passer();
 await page.screenshot({ path: `${SORTIE}/contrat.png`, fullPage: true });
@@ -109,6 +115,23 @@ const txt = () => page.evaluate(() => document.body.innerText);
 console.log("\n=== CONTRAT — le PDF et le rythme d'accueil ===\n");
 const t0 = await txt();
 dire(/Contrats? & Signatures|Détail du contrat/.test(t0), "l'écran du contrat s'ouvre");
+
+// --- Cote parent : le bouton qui echouait toujours ---
+if (PARENT) {
+  await page.screenshot({ path: `${SORTIE}/contrat-parent.png`, fullPage: true });
+  dire(/Ouvrir le contrat signé \(PDF\)/.test(t0), "le parent peut ouvrir le PDF du contrat");
+  // Le defaut signale : le bouton menait a « new row violates row-level
+  // security policy », un message de base de donnees incomprehensible.
+  dire(!/Mettre à jour le PDF/.test(t0),
+    "le bouton « Mettre à jour le PDF » n'est PAS proposé au parent");
+  dire(/Demandez à votre assistante maternelle de le mettre à jour/.test(t0),
+    "l'écran dit au parent quoi faire à la place");
+  dire(!/row-level security/.test(t0), "aucun message de base de données n'atteint l'écran");
+  dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
+  await nav.close();
+  console.log(ko ? `\n${ko} problème(s)\n` : `\nTout est conforme. Capture dans ${SORTIE}\n`);
+  process.exit(ko ? 1 : 0);
+}
 
 // 1. Le contrat réel, atteignable
 dire(/Ouvrir le contrat signé \(PDF\)/.test(t0), "le bouton « Ouvrir le contrat signé (PDF) » est là");

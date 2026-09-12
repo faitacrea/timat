@@ -85,7 +85,7 @@ const chercherChromium = () => {
   return undefined;
 };
 const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
-const page = await navigateur.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const page = await navigateur.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 
 const erreurs = [];
 page.on("pageerror", (e) => erreurs.push("erreur JS : " + e.message.slice(0, 200)));
