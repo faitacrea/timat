@@ -29,7 +29,19 @@ La clé publique ci-dessus est **déjà dans le code de l'application** : c'est
 normal, elle est publique par nature. Les deux doivent être **la même paire** —
 une clé publique qui ne correspond pas à la privée fait échouer tous les envois.
 
-## Vérifier que c'est bon
+## Vérifier que c'est bon, sans rien envoyer
+
+Ouvrir dans un navigateur : **https://www.timat.app/api/send-push**
+
+| Réponse | Ce que ça veut dire |
+|---|---|
+| `"pret": true` | Tout est en place. |
+| `"manquants": [...]` | Ces variables ne sont pas posées, ou le redéploiement n'a pas eu lieu. |
+| `"paireCoherente": false` | Les deux clés ne vont pas ensemble. Reposer **la paire complète**, puis redéployer. |
+
+Cette page ne révèle aucune clé : seulement l'état du réglage.
+
+## Vérifier sur un vrai téléphone
 
 1. Ouvrir TiMat → **Outils Pro** → **Mes alertes** (côté parent :
    **Administratif** → **Mes alertes**).

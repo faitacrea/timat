@@ -19,7 +19,24 @@
 // grossir et chaque envoi perdrait du temps sur des adresses mortes.
 
 import webpush from 'web-push';
+import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+
+// Les deux cles VAPID forment une PAIRE. Si la privee posee chez Vercel ne
+// correspond pas a la publique qu'embarque l'application, chaque envoi echoue
+// avec une erreur de signature — un defaut invisible, qui ne se manifeste
+// qu'au premier envoi reel et ne dit pas d'ou il vient.
+//
+// La cle publique se DEDUIT de la privee : on peut donc verifier la
+// correspondance sans jamais reveler quoi que ce soit.
+const octets = (b64url) => Buffer.from(String(b64url || '').replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+function pairePpCoherente() {
+  try {
+    const ec = crypto.createECDH('prime256v1');
+    ec.setPrivateKey(octets(process.env.VAPID_PRIVATE_KEY));
+    return ec.getPublicKey().equals(octets(process.env.VAPID_PUBLIC_KEY));
+  } catch { return false; }
+}
 
 const URL_SUPABASE = process.env.VITE_SUPABASE_URL;
 const CLE_SERVICE = process.env.SUPABASE_SERVICE_KEY;
@@ -29,18 +46,39 @@ const CLE_SERVICE = process.env.SUPABASE_SERVICE_KEY;
 const CLE_PUBLIABLE = process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_KEY;
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ erreur: 'Méthode non autorisée' });
-
-  // Sans ces trois reglages, l'envoi ne peut pas fonctionner. Le dire
-  // franchement vaut mieux qu'un 500 que personne ne saura interpreter.
+  // Sans ces reglages, l'envoi ne peut pas fonctionner. Le dire franchement
+  // vaut mieux qu'un 500 que personne ne saura interpreter.
   const manquants = [
     !process.env.VAPID_PUBLIC_KEY && 'VAPID_PUBLIC_KEY',
     !process.env.VAPID_PRIVATE_KEY && 'VAPID_PRIVATE_KEY',
     !CLE_SERVICE && 'SUPABASE_SERVICE_KEY',
     !CLE_PUBLIABLE && 'VITE_SUPABASE_KEY (ou VITE_SUPABASE_ANON_KEY)',
   ].filter(Boolean);
+  const paireOk = !manquants.length && pairePpCoherente();
+
+  // Un point de controle : savoir si le push est pret sans rien envoyer.
+  // Ne revele aucune cle, seulement l'etat du reglage.
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      pret: !manquants.length && paireOk,
+      manquants,
+      paireCoherente: paireOk,
+      message: manquants.length ? 'Réglages manquants chez Vercel'
+        : paireOk ? 'Notifications push prêtes'
+        : 'La clé privée ne correspond pas à la clé publique de l\'application : aucun envoi ne peut aboutir',
+    });
+  }
+
+  if (req.method !== 'POST') return res.status(405).json({ erreur: 'Méthode non autorisée' });
+
   if (manquants.length) {
     return res.status(503).json({ erreur: 'Envoi push non configuré', manquants });
+  }
+  if (!paireOk) {
+    return res.status(503).json({
+      erreur: "La clé VAPID privée ne correspond pas à la clé publique de l'application",
+      remede: 'Reposer la paire complète chez Vercel (voir docs/notifications-push.md), puis redéployer',
+    });
   }
 
   const jeton = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');

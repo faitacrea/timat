@@ -1151,6 +1151,16 @@ if (!pushSrc) {
   }
 }
 
+// 2bis. Les deux cles forment une paire. Une privee qui ne correspond pas a la
+//       publique fait echouer chaque envoi avec une erreur de signature, sans
+//       jamais dire d'ou vient le probleme.
+if (pushSrc && !/function pairePpCoherente\(\)/.test(pushSrc)) {
+  signale("push", "la coherence de la paire de cles VAPID n'est plus verifiee : une cle privee qui ne correspond pas ferait echouer tous les envois en silence");
+}
+if (pushSrc && /function pairePpCoherente\(\)/.test(pushSrc) && !/!paireOk/.test(pushSrc)) {
+  signale("push", "la coherence de la paire est calculee mais l'envoi part quand meme : le controle ne sert a rien");
+}
+
 // 3. Sans gestionnaire dans le service worker, une notification qui arrive
 //    n'affiche rien — ou Chrome affiche un message generique a la place.
 if (swSrc && (!/addEventListener\('push'/.test(swSrc) || !/showNotification/.test(swSrc))) {

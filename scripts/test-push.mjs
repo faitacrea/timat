@@ -78,6 +78,42 @@ verifie("le destinataire du corps du message ne suffit jamais",
 verifie("les abonnements morts sont retirés",
   /\[404, 410\]/.test(routeSrc) && /\.delete\(\)/.test(routeSrc), true);
 
+console.log("\nLA PAIRE DE CLES");
+
+// Une cle privee qui ne correspond pas a la publique fait echouer chaque envoi
+// avec une erreur de signature, sans jamais dire d'ou vient le probleme. La
+// publique se DEDUIT de la privee : la correspondance est donc verifiable, et
+// sans rien reveler.
+const extraitPaire = routeSrc.match(/function pairePpCoherente\(\)[\s\S]*?\n\}/);
+verifie("la cohérence de la paire est vérifiée", !!extraitPaire, true);
+if (extraitPaire) {
+  const crypto = await import("node:crypto");
+  const octets = (b) => Buffer.from(String(b || "").replace(/-/g, "+").replace(/_/g, "/"), "base64");
+  const paire = (pub, priv) => {
+    try {
+      const ec = crypto.createECDH("prime256v1");
+      ec.setPrivateKey(octets(priv));
+      return ec.getPublicKey().equals(octets(pub));
+    } catch { return false; }
+  };
+  const ref = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const pubRef = ref.publicKey.export({ type: "spki", format: "der" }).subarray(-65);
+  const privRef = ref.privateKey.export({ type: "pkcs8", format: "der" }).subarray(36, 68);
+  const b64u = (b) => Buffer.from(b).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  verifie("une paire cohérente est acceptée", paire(b64u(pubRef), b64u(privRef)), true);
+  // Le cas qui compte : deux cles valides, mais qui ne vont pas ensemble.
+  const autre = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const autrePub = autre.publicKey.export({ type: "spki", format: "der" }).subarray(-65);
+  verifie("une paire qui ne correspond pas est refusée", paire(b64u(autrePub), b64u(privRef)), false);
+  verifie("une clé privée illisible est refusée, pas acceptée par défaut", paire(b64u(pubRef), "n'importe quoi"), false);
+}
+verifie("l'incohérence est annoncée, jamais envoyée quand même",
+  /paireOk[\s\S]{0,200}503/.test(routeSrc), true);
+verifie("un point de contrôle permet de le savoir sans rien envoyer",
+  /req\.method === 'GET'/.test(routeSrc) && /pret:/.test(routeSrc), true);
+verifie("ce point de contrôle ne révèle aucune clé",
+  /VAPID_PRIVATE_KEY/.test(routeSrc.slice(routeSrc.indexOf("req.method === 'GET'"), routeSrc.indexOf("if (req.method !== 'POST')"))), false);
+
 console.log("\nCE QUE LE TELEPHONE AFFICHE");
 
 // Sans gestionnaire 'push', une notification qui arrive n'affiche rien — ou
