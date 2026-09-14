@@ -734,6 +734,17 @@ const netDepuisBrut=(brut)=>{
   return Math.round((b-cotSal)*100)/100;
 };
 
+// La conversion inverse, net -> brut. Le simulateur de cout parent divisait par
+// un coefficient invente ecrit en dur — le meme genre de nombre que
+// netDepuisBrut() avait deja chasse du recapitulatif Pajemploi. Il derivera a la
+// premiere revalorisation des cotisations ; celle-ci, non, elle sort de la table.
+const TAUX_SALARIAL_TOTAL = Object.values(TAUX_COTISATIONS)
+  .reduce((s, t) => s + (t.sal > 0 ? (t.base || 1) * t.sal / 100 : 0), 0);
+const brutDepuisNet = (net) => {
+  const n = Number(net) || 0;
+  return n > 0 ? Math.round((n / (1 - TAUX_SALARIAL_TOTAL)) * 100) / 100 : 0;
+};
+
 // DUREE DU TRAVAIL, TOUS EMPLOYEURS CONFONDUS.
 //
 // Une assistante maternelle accueille les enfants de plusieurs familles a la
@@ -805,6 +816,9 @@ const journeesTravaillees = (pointages) => {
 
 const heuresDepuisMinutes = (m) => Math.round(((Number(m) || 0) / 60) * 10) / 10;
 
+// Cinq journees d'accueil par semaine : l'hypothese par defaut des
+// simulateurs, faute d'un calendrier reel.
+const JOURS_SEMAINE_TYPE = 5;
 const IE_PLANCHER_JOUR = 2.65;
 // Indemnite d'entretien minimale pour une journee d'accueil de n heures.
 const indemniteEntretienMin = (heures) =>
@@ -13007,11 +13021,17 @@ function SimulateurCout({enfants,pEId}){
 
   // Calculs
   const heuresMois=heures*semaines/12;
-  const salBrut=(heures*taux*semaines/12)*1.1; // brut mensuel estimé (taux net + ~10% CP)
+  // Le curseur donne un taux NET. Les cotisations patronales s'assoient sur le
+  // BRUT : les appliquer au net revenait a sous-estimer le cout de garde d'un
+  // bon quart. La conversion passe par brutDepuisNet(), la table du bulletin.
+  const salBrut=(heures*brutDepuisNet(taux)*semaines/12)*1.1; // + ~10 % de congés payés
   // Le taux vient de la table du bulletin, plus d'un nombre en dur : le
   // simulateur annoncait 27,5 % la ou le bulletin en calculait 44,37 %.
   const cotPat=salBrut*TAUX_PATRONAL_TOTAL;
-  const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
+  // Cinq journees d'accueil par semaine, comme partout ailleurs dans
+  // l'application. Cet endroit supposait des journees de huit heures : sous
+  // 40 h par semaine, il comptait donc moins de journees qu'il n'y en a.
+  const coutTotal=salBrut+cotPat+(entretien*JOURS_SEMAINE_TYPE*semaines/12);
   // CMG 2026 (reforme du 1er sept 2025) : bareme et calcul au point unique,
   // partages avec l'outil pro « CMG (reforme 2025) ». Voir montantCMG().
   const _cmg=montantCMG({tauxHoraire:taux,heuresMois,revenusAnnuels:revenus,nbEnfants:enfants2,aeeh});
@@ -13020,6 +13040,9 @@ function SimulateurCout({enfants,pEId}){
   const cmgCapped=_cmg.tarifDepasse; // tarif au-dela du plafond -> surcout integral parent
   const cmgMensuel=_cmg.montant;
   const cmgPlafonne=_cmg.plafonne;
+  // Repris pour la ligne « Calcul : ... » affichee sous le resultat.
+  const enfEff=Math.min(8,Math.max(1,enfants2+aeeh));
+  const TE=tauxEffortCMG(enfants2,aeeh);
   // 50 % des depenses nettes du CMG, dans la limite de 3 500 EUR de depenses
   // par an et par enfant de moins de six ans -- soit 1 750 EUR de credit au
   // plus. Le plafond etait applique au credit et non aux depenses, ce qui
@@ -13058,10 +13081,10 @@ function SimulateurCout({enfants,pEId}){
         <div className="card">
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="⚙️"/> Les paramètres de garde</div>
           {[
-            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+nbf((taux/0.7822),2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
+            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+nbf(brutDepuisNet(taux),2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
             {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
             {l:"Semaines d'accueil par an",v:semaines,set:setSemaines,min:30,max:52,step:1},
-            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Exonérée de cotisations : ni brut ni net, c'est un forfait. Minimum conventionnel "+nbf(indemniteEntretienMin(heures/5),2)+" € pour une journée de "+nbf(heures/5,1)+" h."},
+            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Exonérée de cotisations : ni brut ni net, c'est un forfait. Minimum conventionnel "+nbf(indemniteEntretienMin(heures/JOURS_SEMAINE_TYPE),2)+" € pour une journée de "+nbf(heures/JOURS_SEMAINE_TYPE,1)+" h."},
           ].map(({l,v,set,min,max,step,hint})=><div key={l}style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <label className="lbl"style={{marginBottom:0}}>{l}</label>

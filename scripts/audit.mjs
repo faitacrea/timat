@@ -347,6 +347,7 @@ const PERIMEES = [
   { motif: /814[.,]62/,   quoi: "plancher de ressources CMG périmé (814,62)", bon: "814,02" },
   { motif: /≈ 2,65 € pour 9 ?h/, quoi: "minimum d'entretien annoncé à 2,65 € pour 9 h", bon: "3,92 € pour 9 h ; 2,65 € est le plancher absolu" },
   { motif: /\*\s*0\.275\b/, quoi: "cotisations patronales figées à 27,5 %", bon: "TAUX_PATRONAL_TOTAL, calculé depuis la table des cotisations" },
+  { motif: /0\.7822|0,7822/, quoi: "coefficient net/brut inventé (0,7822)", bon: "brutDepuisNet(), calculé depuis la table des cotisations" },
 ];
 for (const rel of PORTEE_PERIMEES) {
   let texte;
