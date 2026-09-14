@@ -364,6 +364,43 @@ if (occurrencesCHR !== 1) {
   signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/App.jsx — il doit l'être une seule, sans quoi les copies divergent`);
 }
 
+// --- routes serveur que plus personne n'appelle ---
+//
+// Vercel deploie automatiquement tout fichier de api/. api/pointage-qr.js y
+// dormait : aucune authentification, la CLE DE SERVICE — qui contourne toutes
+// les regles de securite — et un enfant_id lu dans le corps de la requete. Le
+// GET renvoyait le prenom de l'enfant et ses heures du jour sans connexion, le
+// POST ecrivait un pointage marque « valide par le parent ». Personne ne
+// l'appelait : l'application passe par la RPC pointage_qr, sous la session de
+// l'utilisateur, donc soumise aux regles. Meme classe que la route d'envoi de
+// notifications ouverte a tout internet.
+//
+// Une route que rien n'appelle n'a pas a etre en ligne. Celles que des tiers
+// appellent sont nommees ici, une par une, avec la raison.
+const ROUTES_TIERCES = new Map([
+  ["webhook", "appelée par Stripe, jamais par l'application"],
+]);
+const toutFichier = (dir, out = []) => {
+  for (const e of readdirSync(dir)) {
+    const q = path.join(dir, e);
+    if (statSync(q).isDirectory()) toutFichier(q, out); else out.push(q);
+  }
+  return out;
+};
+const refsRoutes = ["../src", "../public", "../scripts", "../api"]
+  .flatMap((d) => { try { return toutFichier(path.join(RACINE, d.slice(3))); } catch { return []; } })
+  .filter((f) => /\.(js|jsx|mjs|html|json)$/.test(f) && path.basename(f) !== "audit.mjs")
+  .map((f) => { try { return readFileSync(f, "utf8"); } catch { return ""; } })
+  .join("\n") + readFileSync(new URL("../vercel.json", import.meta.url), "utf8");
+for (const f of readdirSync(new URL("../api/", import.meta.url))) {
+  if (!f.endsWith(".js") || f.startsWith("_")) continue;
+  const nom = f.slice(0, -3);
+  if (ROUTES_TIERCES.has(nom)) continue;
+  if (!refsRoutes.includes("api/" + nom) && !refsRoutes.includes("./" + nom + ".js")) {
+    signale("serveur", `api/${f} n'est appelée de nulle part et reste pourtant déployée — la supprimer, ou l'inscrire dans ROUTES_TIERCES avec sa raison`);
+  }
+}
+
 // --- variables d'environnement annoncees mais jamais lues ---
 //
 // .env.example annoncait une cle Anthropic « pour les bilans IA ». Aucune ligne
