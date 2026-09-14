@@ -25,6 +25,19 @@ const fmtDateHeureCourte=(iso)=>{
   return d.toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
 };
 
+// Regle unique du mot de passe. Elle doit rester alignee sur le reglage
+// Supabase (8 caracteres minimum, lettres et chiffres requis) : sans ce point
+// de passage unique, l'application acceptait 6 caracteres puis le serveur
+// refusait avec un message en anglais.
+const MDP_MIN = 8;
+const MDP_AIDE = "8 caractères minimum, lettres et chiffres";
+const verifierMotDePasse = (mdp) => {
+  const m = mdp || "";
+  if (m.length < MDP_MIN) return `Le mot de passe doit faire au moins ${MDP_MIN} caractères.`;
+  if (!/[a-zA-Z]/.test(m) || !/[0-9]/.test(m)) return "Le mot de passe doit contenir au moins une lettre et un chiffre.";
+  return null;
+};
+
 const CLE_HL="timat:hl:";
 const CLE_FILE=CLE_HL+"file";
 const MAX_FILE=200;
@@ -10137,7 +10150,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
   const [mdpOk,setMdpOk]=useState(false);
   const changerMotDePasse=async()=>{
     if(savingMdp)return;
-    if(mdp.a.length<8){setToast("❌ 8 caractères minimum");return;}
+    const pbMdp=verifierMotDePasse(mdp.a); if(pbMdp){setToast("❌ "+pbMdp);return;}
     if(mdp.a!==mdp.b){setToast("❌ Les deux mots de passe ne correspondent pas");return;}
     setSavingMdp(true);
     const{error}=await supabase.auth.updateUser({password:mdp.a});
@@ -10466,7 +10479,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
         <div style={{marginBottom:12}}>
           <label className="lbl">Nouveau mot de passe</label>
-          <input type="password" autoComplete="new-password" className="inp" value={mdp.a} placeholder="8 caractères minimum"
+          <input type="password" autoComplete="new-password" className="inp" value={mdp.a} placeholder={MDP_AIDE}
             onChange={e=>{setMdp(m=>({...m,a:e.target.value}));setMdpOk(false);}}/>
         </div>
         <div style={{marginBottom:4}}>
@@ -14306,7 +14319,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
 
   const inscription=async()=>{
     if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs obligatoires.");return;}
-    if(form.password.length<6){setErr("Le mot de passe doit faire au moins 6 caractères.");return;}
+    const pbMdp=verifierMotDePasse(form.password); if(pbMdp){setErr(pbMdp);return;}
     if(!consent){setErr("Accepte la politique de confidentialité et les CGU pour continuer.");return;}
     setLoading(true);setErr("");
     try{
@@ -14895,7 +14908,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
   const inscription = async () => {
     if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
-    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
+    const pbMdp = verifierMotDePasse(form.password); if (pbMdp) { setErr(pbMdp); return; }
     if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
     setLoading(true); setErr(""); setErrAction(null); setResetInfo("");
     try {
@@ -14984,7 +14997,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? MDP_AIDE : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
@@ -16012,7 +16025,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? MDP_AIDE : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
