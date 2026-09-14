@@ -364,6 +364,22 @@ if (occurrencesCHR !== 1) {
   signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/App.jsx — il doit l'être une seule, sans quoi les copies divergent`);
 }
 
+// --- variables d'environnement annoncees mais jamais lues ---
+//
+// .env.example annoncait une cle Anthropic « pour les bilans IA ». Aucune ligne
+// ne la lisait : la fonctionnalite n'existe pas. C'est la meme classe de defaut
+// que le bandeau promettant une sauvegarde inexistante — annoncer comme acquis
+// ce que personne n'a fait, sauf qu'ici c'est le futur mainteneur qu'on trompe.
+const exemple = readFileSync(new URL("../.env.example", import.meta.url), "utf8");
+const codeClient = ["../src/App.jsx", "../lib/supabase.js"]
+  .map((f) => { try { return readFileSync(new URL(f, import.meta.url), "utf8"); } catch { return ""; } })
+  .join("\n");
+for (const nom of new Set([...exemple.matchAll(/^#?\s*(VITE_[A-Z0-9_]+)\s*=/gm)].map((m) => m[1]))) {
+  if (!codeClient.includes(nom)) {
+    signale("environnement", `.env.example annonce ${nom}, qu'aucune ligne de l'application ne lit — l'écrire ou retirer la mention`);
+  }
+}
+
 // Les deux taux de cotisations doivent venir de la meme table. Le simulateur
 // utilisait 27,5 % en dur la ou le bulletin en calculait 44,37 % : la meme
 // application annoncait deux couts employeur differents.
