@@ -233,7 +233,24 @@ footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;pa
 footer a{color:#fff}
 `;
 
+// Google coupe un titre au-dela d'une soixantaine de caracteres : la fin
+// disparait dans les resultats de recherche. Quatorze pages depassaient, toutes
+// a cause de noms de departements longs (Alpes-de-Haute-Provence,
+// Pyrenees-Atlantiques) auxquels s'ajoutait le suffixe « | TiMat ».
+//
+// Le suffixe est ce qu'on peut perdre sans rien perdre : le nom du site est
+// deja affiche sous le titre par Google. On le retire donc uniquement quand le
+// titre est trop long — ailleurs il reste.
+const LONGUEUR_TITRE = 65;
+const titreCourt = (t) => {
+  const s = String(t || "");
+  return s.length > LONGUEUR_TITRE && s.endsWith(" | TiMat")
+    ? s.slice(0, -" | TiMat".length)
+    : s;
+};
+
 function page({ titre, description, canonical, jsonLd, corps }) {
+  titre = titreCourt(titre);
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -811,9 +828,9 @@ function pageDocuments(docs) {
 </main>`;
 
   return page({
-    titre: "Les documents d'une assistante maternelle : obligatoires, officiels, utiles",
+    titre: "Les documents d'une assistante maternelle : la liste complète",
     description:
-      "Registre des médicaments, attestation d'honorabilité, contrat, convention collective, projet d'accueil : ce qu'un texte impose vraiment et ce qui relève du confort de travail.",
+      "Registre des médicaments, attestation d'honorabilité, contrat, convention : ce qu'un texte impose vraiment, et ce qui relève du confort de travail.",
     canonical: url,
     corps,
   });

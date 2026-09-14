@@ -1140,6 +1140,43 @@ if (/function Toast\(\{msg,onClose\}\)/.test(appSrc) || !/const ICONE_MESSAGE=/.
   signale("message", "le bandeau de message affiche une coche verte quelle que soit la nature du message, y compris sur une erreur");
 }
 
+// --- titres et descriptions vus dans Google ---
+// Google coupe un titre au-dela d'une soixantaine de caracteres et une
+// description au-dela de ~160 : la fin disparait des resultats de recherche.
+// Quatorze pages depassaient, toutes a cause de noms de departements longs
+// auxquels s'ajoutait « | TiMat ». Le suffixe est desormais retire quand le
+// titre est trop long (scripts/generate-local.mjs).
+//
+// Le seuil d'alerte est pose a 70, non a 65 : la coupure se fait sur la
+// largeur en pixels, pas sur un nombre exact de caracteres, et alerter des la
+// limite theorique ferait crier la barriere en permanence pour rien.
+const TITRE_MAX = 70;
+const DESCRIPTION_MAX = 170;
+const titresLongs = [];
+const descriptionsLongues = [];
+for (const p of pages) {
+  const html = lire(p);
+  // Les pages en noindex ne paraissent jamais dans Google : leur titre et leur
+  // description n'y sont pas affiches.
+  if (/<meta[^>]+robots[^>]+noindex/i.test(html)) continue;
+  const t = (html.match(/<title>([\s\S]*?)<\/title>/) || [])[1];
+  if (t) {
+    const propre = t.replace(/&#39;|&rsquo;/g, "'").replace(/&amp;/g, "&").trim();
+    if (propre.length > TITRE_MAX) titresLongs.push(`${routeDe(p)} (${propre.length})`);
+  }
+  const d = (html.match(/<meta\s+name="description"\s+content="([\s\S]*?)"/) || [])[1];
+  if (d) {
+    const propre = d.replace(/&#39;|&rsquo;/g, "'").replace(/&amp;/g, "&").trim();
+    if (propre.length > DESCRIPTION_MAX) descriptionsLongues.push(`${routeDe(p)} (${propre.length})`);
+  }
+}
+if (titresLongs.length) {
+  signale("référencement", `${titresLongs.length} titre(s) coupé(s) dans les résultats Google : ${titresLongs.slice(0, 3).join(", ")}`);
+}
+if (descriptionsLongues.length) {
+  signale("référencement", `${descriptionsLongues.length} description(s) coupée(s) dans les résultats Google : ${descriptionsLongues.slice(0, 3).join(", ")}`);
+}
+
 // --- en-tetes de securite du site ---
 // Le site ne posait AUCUN en-tete de securite. Le plus grave manquait :
 // rien n'empechait d'enfermer TiMat dans un cadre invisible sur un autre site.

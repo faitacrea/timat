@@ -102,3 +102,38 @@ create policy fiche_urgence_lecture on public.fiche_urgence
 -- Les supprimer serait une regression le jour ou il y aura de vraies donnees.
 -- idx_sommeil_enfant_id est meme un index de cle etrangere — exactement ce
 -- qu'on vient d'ajouter 31 fois.
+
+-- ═══ 5. Complement du 14 septembre (apres relecture des 17 fonctions) ═══
+--
+-- J'avais verifie 4 fonctions sur 17. En les relisant TOUTES, une seule ne
+-- verifiait pas qui l'appelle : invitation_par_token. Elle rend l'adresse
+-- e-mail du parent sur simple presentation d'un jeton, et n'est appelee nulle
+-- part — ni application, ni fonction serveur, ni regle de securite.
+revoke execute on function public.invitation_par_token(text) from public, anon, authenticated;
+
+-- ATTENTION — piege evite de justesse : peut_acceder_enfant() est citee par
+-- QUATRE regles de securite (documents_meta, messages x3). Une regle qui
+-- appelle une fonction exige que le role interrogeant puisse l'executer.
+-- Lui retirer ce droit, comme le suggerait l'avertissement, aurait casse
+-- TOUTES les lectures de documents et de messages. Elle reste accessible.
+-- Verifie apres coup : documents 4 lignes, messages 3 lignes, toujours lus.
+
+-- Les quatre tables « sans regle » etaient deja fermees a tous : sans regle,
+-- la securite au niveau ligne refuse tout. Mais cette fermeture etait
+-- IMPLICITE — elle tenait a une absence, invisible a la lecture du schema.
+-- Quelqu'un ajoutant une regle permissive demain ouvrirait la table sans s'en
+-- rendre compte. On ecrit donc l'intention noir sur blanc, en RESTRICTIVE.
+create policy achats_boutique_serveur_seul on public.achats_boutique
+  as restrictive for all to public using (false) with check (false);
+create policy prospects_serveur_seul on public.prospects
+  as restrictive for all to public using (false) with check (false);
+create policy seo_audit_history_serveur_seul on public.seo_audit_history
+  as restrictive for all to public using (false) with check (false);
+create policy support_messages_serveur_seul on public.support_messages
+  as restrictive for all to public using (false) with check (false);
+
+-- ═══ Les 12 index « inutilises » : mesure, pas opinion ═══
+-- Verifie un par un : AUCUN n'est redondant. Pour chacun, les colonnes qu'il
+-- couvre ne sont le prefixe d'aucun autre index de la meme table. Les
+-- supprimer ferait donc perdre un chemin d'acces reel, sans rien gagner
+-- d'autre qu'un avertissement en moins. Ils restent.

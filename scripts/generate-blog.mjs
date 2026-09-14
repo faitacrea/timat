@@ -446,6 +446,24 @@ footer a{color:${T.mauve};text-decoration:none}
 }
 `;
 
+// Google coupe une description au-dela d'environ 160 caracteres : la fin
+// disparait des resultats de recherche.
+//
+// La description vient du champ seoDescription du Studio quand il est rempli,
+// sinon du chapo de l'article ou de la description de la rubrique — c'est-a-dire
+// d'un TEXTE ECRIT POUR ETRE LU, qui a toutes les raisons d'etre plus long.
+// On ne le raccourcit donc pas : on raccourcit la seule balise, a la coupure
+// d'un mot, en terminant par une ellipse. Le texte affiche sur la page reste
+// entier.
+const DESCRIPTION_MAX = 158;
+const descriptionCourte = (d) => {
+  const s = String(d || "").trim();
+  if (s.length <= DESCRIPTION_MAX) return s;
+  const coupe = s.slice(0, DESCRIPTION_MAX);
+  const espace = coupe.lastIndexOf(" ");
+  return (espace > 100 ? coupe.slice(0, espace) : coupe).replace(/[\s,;:.\u2026-]+$/, "") + "\u2026";
+};
+
 function layout({ title, description, canonical, ogImage, jsonLd, body, wide, script }) {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -453,13 +471,13 @@ function layout({ title, description, canonical, ogImage, jsonLd, body, wide, sc
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
-<meta name="description" content="${escAttr(description)}">
+<meta name="description" content="${escAttr(descriptionCourte(description))}">
 <link rel="canonical" href="${escAttr(canonical)}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="TiMat">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:title" content="${escAttr(title)}">
-<meta property="og:description" content="${escAttr(description)}">
+<meta property="og:description" content="${escAttr(descriptionCourte(description))}">
 <meta property="og:url" content="${escAttr(canonical)}">
 ${ogImage ? `<meta property="og:image" content="${escAttr(ogImage)}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
