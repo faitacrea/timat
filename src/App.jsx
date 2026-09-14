@@ -14453,6 +14453,103 @@ function ScrollTopBtn(){
 // mais que la prochaine reprise aurait pu remettre a l'ecran. Le calcul du CMG
 // vit desormais au point unique montantCMG(), en haut du fichier.
 
+// COMPARATEUR DE LA PAGE TARIFS.
+//
+// La note « Un seul prix, quel que soit votre nombre de contrats » disait deja
+// la bonne chose, mais en une ligne que personne ne lit. L'argument est
+// structurel et il se demontre : notre forfait ne bouge pas, une facturation
+// par contrat monte a chaque enfant accueilli.
+//
+// Deux precautions volontaires :
+//  - AUCUN concurrent n'est nomme. La publicite comparative (article L. 122-1
+//    du code de la consommation) exige des chiffres objectifs et verifiables ;
+//    les grilles des concurrents n'ont pas pu etre lues a la source. On compare
+//    donc deux FACONS DE FACTURER, pas deux marques, avec un exemple annonce
+//    comme tel. Tous les chiffres affiches sont les notres.
+//  - la comparaison porte sur ce que paient l'assistante maternelle ET ses
+//    familles reunies. C'est la seule honnete quand l'autre modele facture
+//    aussi le parent, et c'est celle ou l'espace parent gratuit se voit.
+//
+// Le prix vient de T.prixMensuel, deja reglable au back-office ; l'exemple de
+// comparaison de compBasePro / compParContrat, ajoutes au meme endroit, pour
+// qu'il se corrige sans passer par le code.
+function ComparateurTarifs({T,fTitle}){
+  const [n,setN]=useState(3);
+  const forfait=Math.max(0,parseFloat(String(T.prixMensuel||"9,99").replace(",","."))||0);
+  const basePro=Math.max(0,parseFloat(String(T.compBasePro||"7,99").replace(",","."))||0);
+  const parContrat=Math.max(0,parseFloat(String(T.compParContrat||"2,99").replace(",","."))||0);
+  const MAX_ENFANTS=6;
+
+  const concurrent=basePro+parContrat*n;
+  const ecart=concurrent-forfait;
+  const maxJauge=basePro+parContrat*MAX_ENFANTS;
+  const eur=(v)=>nbf(v,2)+" €";
+
+  const stat=(v,l,calme)=>(
+    <div key={l} style={{display:"flex",flexDirection:"column",gap:1}}>
+      <span style={{fontFamily:fTitle,fontSize:26,fontWeight:700,lineHeight:1.05,fontVariantNumeric:"tabular-nums",color:calme?"#2E4859":"#B8622F"}}>{v}</span>
+      <span style={{fontSize:11.5,color:"#5A6B72",lineHeight:1.35}}>{l}</span>
+    </div>
+  );
+
+  const ligne=(nom,detail,montant,largeur,moi)=>(
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:10,alignItems:"center",fontSize:13.5}}>
+      <div style={{display:"flex",flexDirection:"column",gap:3,minWidth:0}}>
+        <b style={{fontWeight:600,color:"#2C1F14"}}>{nom}</b>
+        <span style={{fontSize:11.5,color:"#5A6B72"}}>{detail}</span>
+        <span style={{height:7,borderRadius:4,background:"#EDE4DA",overflow:"hidden",marginTop:3}}>
+          <i style={{display:"block",height:"100%",borderRadius:4,width:largeur+"%",background:moi?"#3D6B50":"#E49178"}}/>
+        </span>
+      </div>
+      <span style={{fontFamily:fTitle,fontSize:16,fontWeight:700,fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",color:moi?"#3D6B50":"#2C1F14"}}>{montant}</span>
+    </div>
+  );
+
+  return <div style={{width:"100%",maxWidth:620,margin:"26px auto 0",background:"#fff",border:"1px solid #E8E0D5",borderRadius:12,padding:"20px 20px 18px",display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
+    <h3 style={{fontFamily:fTitle,fontSize:17,fontWeight:600,margin:0,color:"#2E4859",lineHeight:1.3}}>Combien coûte TiMat, vraiment ?</h3>
+
+    <div style={{display:"flex",flexDirection:"column",gap:7}}>
+      <label htmlFor="comp-enfants-1" style={{fontSize:12.5,color:"#5A6B72"}}>J'accueille combien d'enfants ?</label>
+      <div id="comp-enfants" role="group" aria-label="Nombre d'enfants accueillis"
+        style={{display:"grid",gridTemplateColumns:"repeat("+MAX_ENFANTS+",minmax(0,1fr))",gap:7}}>
+        {Array.from({length:MAX_ENFANTS},(_,i)=>i+1).map(v=>{
+          const on=v===n;
+          return <button key={v} id={"comp-enfants-"+v} type="button" onClick={()=>setN(v)} aria-pressed={on}
+            aria-label={v+(v>1?" enfants":" enfant")}
+            style={{fontFamily:"inherit",fontSize:14,fontWeight:600,width:"100%",height:38,borderRadius:9,cursor:"pointer",
+              border:"1.5px solid "+(on?"#B8622F":"#E8E0D5"),background:on?"#B8622F":"#fff",color:on?"#fff":"#6B4F3A",
+              transition:"background .14s,border-color .14s,color .14s"}}>{v}</button>;
+        })}
+      </div>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,background:"#FBF7F3",borderRadius:10,padding:"16px 16px 14px"}}>
+      {stat(eur(forfait/n),"par contrat et par mois",false)}
+      {stat("0 €","pour chacune des familles",true)}
+      {stat(eur(forfait*12),"par an, quel que soit le nombre",true)}
+    </div>
+
+    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+      {ligne("TiMat — forfait unique",
+        eur(forfait)+" par mois, contrats illimités, espace parent gratuit",
+        eur(forfait), Math.min(100,(forfait/maxJauge)*100), true)}
+      {ligne("Une offre facturée par contrat",
+        "exemple : "+eur(basePro)+" pour la professionnelle + "+eur(parContrat)+" par famille",
+        eur(concurrent), Math.min(100,(concurrent/maxJauge)*100), false)}
+    </div>
+
+    <p style={{margin:0,fontSize:13.5,color:"#2E4859",background:"#EAF2EE",borderLeft:"3px solid #3D6B50",borderRadius:"0 8px 8px 0",padding:"10px 13px",lineHeight:1.5}}>
+      {ecart>0.005
+        ? <>À {n===1?"un contrat":n+" contrats"}, une facturation par contrat coûte <b>{eur(ecart)} de plus chaque mois</b> à l'ensemble assistante maternelle + familles — soit <b>{eur(ecart*12)} par an</b>. Chez TiMat, l'enfant suivant ne coûte rien de plus.</>
+        : <>À {n===1?"un seul contrat":n+" contrats"}, les deux se valent à peu de chose près. L'écart se creuse dès le contrat suivant, et il ne se referme jamais.</>}
+    </p>
+
+    <p style={{margin:0,fontSize:11,color:"#5A6B72",lineHeight:1.5}}>
+      Exemple de facturation par contrat donné à titre indicatif, à partir de grilles publiques du marché. TiMat : {eur(forfait)}/mois TTC, essai {T.prixEssai||"2 mois"} sans carte bancaire, sans reconduction automatique.
+    </p>
+  </div>;
+}
+
 // BLOC ERREUR AUTH P16 - message + action contextuelle (basculer en connexion, ou renvoyer un lien)
 function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   const gmail=/@(gmail|googlemail)\.com\s*$/i.test(email||"");
@@ -15375,9 +15472,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
           <FadeIn>
-            <div style={{ maxWidth:620, margin:"26px auto 0", background:L.tarifCompareBg||"#FFFFFF", border:"1px solid #E8E0D5", borderRadius:12, padding:"14px 18px", fontSize:13, color:"#5A6B72", lineHeight:1.55, textAlign:"center" }}>
-              💡 <b style={{color:"#2E4859"}}>Un seul prix, quel que soit votre nombre de contrats</b> — aucun surcoût par enfant. Essai 2 mois sans carte bancaire, et <b style={{color:"#2E4859"}}>aucune reconduction automatique</b> : vous résiliez en 1 clic, sans prélèvement surprise.
-            </div>
+            <ComparateurTarifs T={T} fTitle={fTitle}/>
           </FadeIn>
         </div>
       </div>}
@@ -18479,6 +18574,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               {k:"s6Align",l:"Alignement du texte",type:"align"},
               {k:"s6Title",l:"Titre",type:"txt"},
               {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
+              {k:"compBasePro",l:"Comparateur — forfait pro concurrent (€)",type:"txt",inTxts:true},{k:"compParContrat",l:"Comparateur — coût par contrat (€)",type:"txt",inTxts:true},
               {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
               {k:"freeLabel",l:"Label Gratuit",type:"txt",inTxts:true},
               {k:"section6Bg",l:"Fond section",type:"col"},{k:"s6TitleColor",l:"Couleur titre",type:"col"},
@@ -19040,6 +19136,8 @@ const DEFAULT_CONFIG = {
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
+    compBasePro:"7,99",
+    compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
     heroSubDesc:"L'app des assistantes maternelles et des parents employeurs.",
