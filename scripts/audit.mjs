@@ -169,15 +169,34 @@ for (const p of pages) {
 //
 // La convention emploie le meme terme pour l'indemnite d'entretien, dont le
 // minimum n'a rien a voir (2,65 € par journee, ou 0,435 € par heure au-dela de
-// six heures). Ces occurrences-la sont ecartees avant le controle, sinon un
-// texte exact sur l'entretien serait signale a tort — c'est arrive.
-const MIN_CONV_ENTRETIEN = /minimum conventionnel\s+d(?:e l)?'\s*indemnité\s+d'\s*entretien/gi;
+// six heures). Ces occurrences-la doivent etre ecartees, sinon un texte exact
+// sur l'entretien est signale a tort — c'est arrive deux fois.
+//
+// La premiere version n'ecartait qu'une seule tournure, « minimum conventionnel
+// de l'indemnite d'entretien ». Un article ecrivant la meme chose dans l'autre
+// sens — « l'indemnite d'entretien a un minimum conventionnel » — passait au
+// travers et etait signale alors qu'il etait juste.
+//
+// On regarde donc le VOISINAGE de chaque occurrence : si la phrase parle
+// d'entretien, c'est l'autre minimum, et on l'ecarte.
+//
+// Le chiffre, lui, se cherche sur la PAGE ENTIERE et non dans le voisinage.
+// J'avais d'abord resserre le controle occurrence par occurrence : il a
+// signale 94 pages departementales pourtant irreprochables, qui annoncent
+// « Minimum conventionnel — 4,20 € brut » dans un tableau dedie puis
+// emploient l'expression seule plus loin (« dans le respect du minimum
+// conventionnel »). Le lecteur a bien le chiffre ; exiger qu'il soit repete
+// a chaque phrase n'apporte rien et noie les vraies alertes.
+const VOISINAGE = 320;
 
 for (const p of pages) {
-  // Les apostrophes sont echappees a la generation : les normaliser d'abord,
-  // sans quoi la mention d'entretien passe au travers du filtre.
-  const html = lire(p).replace(/&#39;|&rsquo;|’/g, "'").replace(MIN_CONV_ENTRETIEN, "");
-  if (!/minimum conventionnel/i.test(html)) continue;
+  // Les apostrophes sont echappees a la generation : les normaliser d'abord.
+  const html = lire(p).replace(/&#39;|&rsquo;|’/g, "'");
+  const parleDuSalaire = [...html.matchAll(/minimum conventionnel/gi)].some((m) => {
+    const autour = html.slice(Math.max(0, m.index - VOISINAGE), m.index + VOISINAGE);
+    return !/entretien/i.test(autour);
+  });
+  if (!parleDuSalaire) continue;
   if (!/4,20\s*(&nbsp;|\s)?€/.test(html)) {
     signale("montant", `${routeDe(p)} cite le minimum conventionnel sans le chiffrer à 4,20 €`);
   }
