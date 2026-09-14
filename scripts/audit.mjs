@@ -1121,6 +1121,49 @@ if (/function Toast\(\{msg,onClose\}\)/.test(appSrc) || !/const ICONE_MESSAGE=/.
   signale("message", "le bandeau de message affiche une coche verte quelle que soit la nature du message, y compris sur une erreur");
 }
 
+// --- en-tetes de securite du site ---
+// Le site ne posait AUCUN en-tete de securite. Le plus grave manquait :
+// rien n'empechait d'enfermer TiMat dans un cadre invisible sur un autre site.
+// Un site malveillant pouvait superposer un cadre transparent et faire cliquer
+// quelqu'un sur « Signer le contrat » sans qu'il le sache.
+// Second point : l'adresse complete de la page partait dans l'en-tete Referer
+// de chaque lien sortant — or elle peut porter une cle d'acces ou un jeton de
+// partage.
+const enTetesAttendus = {
+  "X-Frame-Options": /DENY|SAMEORIGIN/,
+  "Content-Security-Policy": /frame-ancestors/,
+  "X-Content-Type-Options": /nosniff/,
+  "Referrer-Policy": /strict-origin|no-referrer/,
+  "Permissions-Policy": /microphone=\(\)/,
+};
+const blocsEnTetes = (vercel.headers || []).flatMap((b) => b.headers || []);
+for (const [cle, motif] of Object.entries(enTetesAttendus)) {
+  const pose = blocsEnTetes.find((h) => h.key === cle);
+  if (!pose) signale("en-têtes", `vercel.json ne pose plus l'en-tete ${cle}`);
+  else if (!motif.test(pose.value)) signale("en-têtes", `vercel.json pose ${cle} avec une valeur inattendue : « ${pose.value} »`);
+}
+
+// --- vues SQL et donnees personnelles ---
+// Une vue en SECURITY DEFINER contourne les regles de securite des tables
+// qu'elle lit. public.abonnements_actifs, ecrite ainsi et lisible par le role
+// « anon », exposait a tout visiteur non connecte le nom, l'adresse e-mail et
+// l'identifiant Stripe de chaque abonne. Elle n'etait appelee nulle part.
+//
+// Toute vue creee par une migration doit donc etre explicitement en
+// security_invoker : elle s'execute alors avec les droits de celui qui
+// l'interroge, et les regles de la table s'appliquent normalement.
+const dossierSql = path.join(RACINE, "sql");
+if (existsSync(dossierSql)) {
+  for (const f of readdirSync(dossierSql).filter((x) => x.endsWith(".sql"))) {
+    const sql = readFileSync(path.join(dossierSql, f), "utf8");
+    for (const m of sql.matchAll(/create\s+(or\s+replace\s+)?view\s+([a-z_.]+)([\s\S]{0,200})/gi)) {
+      if (!/security_invoker\s*=\s*(true|on)/i.test(m[3])) {
+        signale("sql", `sql/${f} cree la vue « ${m[2]} » sans security_invoker : elle contournerait les regles de securite des tables qu'elle lit`);
+      }
+    }
+  }
+}
+
 // --- notifications push ---
 // Pourquoi : le push a existe pendant des mois sans jamais fonctionner, et
 // sans que rien ne le dise. Aucun de ces defauts ne produit d'erreur visible.
