@@ -325,6 +325,44 @@ for (const { nom, motif, source } of BAREME) {
     signale("chiffre", `${nom} ne vaut plus la valeur vérifiée (${source}) — vérifier à la source avant de modifier`);
   }
 }
+// --- valeurs perimees : l'interdiction, pas seulement la presence ---
+//
+// BAREME ci-dessus verifie qu'une valeur juste EXISTE quelque part. Il ne dit
+// rien des copies restees fausses ailleurs : le plancher CMG etait verrouille a
+// 814,02 dans le simulateur parent pendant que quatre autres endroits — dont un
+// outil pro et deux simulateurs publics — calculaient encore sur 814,62. L'audit
+// annoncait « aucune anomalie » et l'application donnait deux reponses.
+//
+// On interdit donc la valeur perimee elle-meme, partout, y compris dans les
+// pages statiques de public/ que BAREME ne lisait pas.
+const PORTEE_PERIMEES = [
+  "../src/App.jsx",
+  "./generate-local.mjs",
+  "./generate-blog.mjs",
+  ...readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => "../public/" + f),
+];
+const PERIMEES = [
+  { motif: /814[.,]62/,   quoi: "plancher de ressources CMG périmé (814,62)", bon: "814,02" },
+  { motif: /≈ 2,65 € pour 9 ?h/, quoi: "minimum d'entretien annoncé à 2,65 € pour 9 h", bon: "3,92 € pour 9 h ; 2,65 € est le plancher absolu" },
+  { motif: /\*\s*0\.275\b/, quoi: "cotisations patronales figées à 27,5 %", bon: "TAUX_PATRONAL_TOTAL, calculé depuis la table des cotisations" },
+];
+for (const rel of PORTEE_PERIMEES) {
+  let texte;
+  try { texte = readFileSync(new URL(rel, import.meta.url), "utf8"); } catch { continue; }
+  for (const { motif, quoi, bon } of PERIMEES) {
+    if (motif.test(texte)) signale("chiffre", `${rel} : ${quoi} — attendu : ${bon}`);
+  }
+}
+
+// Le bareme CMG ne doit exister qu'en un exemplaire dans l'application : deux
+// copies avaient deja diverge sur le plancher de ressources.
+const occurrencesCHR = (readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/CHR_AM\s*=/g) || []).length;
+if (occurrencesCHR !== 1) {
+  signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/App.jsx — il doit l'être une seule, sans quoi les copies divergent`);
+}
+
 // Les deux taux de cotisations doivent venir de la meme table. Le simulateur
 // utilisait 27,5 % en dur la ou le bulletin en calculait 44,37 % : la meme
 // application annoncait deux couts employeur differents.

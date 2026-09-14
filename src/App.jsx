@@ -818,6 +818,43 @@ const CI_PLAFOND_DEPENSES = 3500;
 const CI_TAUX = 0.5;
 const CI_PLAFOND_CREDIT = CI_PLAFOND_DEPENSES * CI_TAUX; // 1 750
 
+// --- Bareme du CMG (Urssaf / CNAF, revalorisation du 1er avril 2026) ---
+//
+// Ce bareme existait en DEUX exemplaires : celui du simulateur parent et celui
+// de l'outil pro « CMG (reforme 2025) ». Les copies avaient diverge en silence
+// sur deux chiffres, et l'outil pro annoncait donc un reste a charge faux :
+//   - un plancher de ressources plus eleve que celui retenu ci-dessous ;
+//   - cotisations patronales a 27,5 % au lieu des 44,37 % du bulletin.
+// Il n'y a plus qu'un exemplaire. Toute revalorisation se fait ici, une fois.
+//
+// Plancher de ressources : deux valeurs ont circule. Trois sources
+// independantes donnent 814,02 EUR, une seule donnait un montant superieur ;
+// c'est donc 814,02 qui est retenu, et l'autre valeur est desormais interdite
+// dans tout le depot par scripts/audit.mjs. Reserve : urssaf.fr, caf.fr et
+// service-public.gouv.fr
+// ne sont pas joignables depuis l'environnement de developpement. Un appel a la
+// CAF trancherait definitivement.
+const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
+const CHR_AM=4.91;        // cout horaire de reference assmat 2026
+const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
+const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
+// Taux d'effort horaire = bareme PSU accueil collectif (CNAF 2026) :
+// 1 enfant -> 0,0619 ; 2 -> 0,0516 ; 3 -> 0,0413 ; 4 a 7 -> 0,0310 ; 8+ -> 0,0206.
+const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206};
+// AEEH : la tranche immediatement inferieure s'applique, autant de fois qu'il y
+// a d'enfants concernes — d'ou un enfant fictif ajoute par AEEH.
+const tauxEffortCMG=(nbEnfants,aeeh=0)=>TE_BAREME[Math.min(8,Math.max(1,(Number(nbEnfants)||1)+(Number(aeeh)||0)))];
+// Montant mensuel du CMG. Retourne aussi le cout de garde retenu, qui sert de
+// plafond au CMG : le CMG ne rembourse jamais plus que la garde elle-meme.
+const montantCMG=({tauxHoraire,heuresMois,revenusAnnuels,nbEnfants=1,aeeh=0})=>{
+  const tarifRetenu=Math.min(Number(tauxHoraire)||0,PLAFOND_H);
+  const coutGarde=tarifRetenu*(Number(heuresMois)||0);
+  const ressources=Math.max(PLANCHER_RESSOURCES,Math.min((Number(revenusAnnuels)||0)/12,PLAFOND_RESSOURCES));
+  const brut=coutGarde*(1-(ressources*tauxEffortCMG(nbEnfants,aeeh)/CHR_AM));
+  const montant=Math.round(Math.max(0,Math.min(brut,coutGarde,CMG_MAX))*100)/100;
+  return {montant,tarifRetenu,coutGarde,plafonne:montant>=CMG_MAX-0.01,tarifDepasse:tarifRetenu<(Number(tauxHoraire)||0)};
+};
+
 const isoJour=(d)=>{
   if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
   const t=String(d||"").slice(0,10);
@@ -12975,35 +13012,14 @@ function SimulateurCout({enfants,pEId}){
   // simulateur annoncait 27,5 % la ou le bulletin en calculait 44,37 %.
   const cotPat=salBrut*TAUX_PATRONAL_TOTAL;
   const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
-  // CMG 2026 - REFORME 1er sept 2025 : calcul horaire par taux d'effort (barème PSU), parametres assmat 2026
-  // Bareme CMG au 1er avril 2026, verifie sur les publications Urssaf et CNAF.
-  // Le plancher de ressources avait ete releve a 814,62 EUR sur la foi d'une
-  // seule source ; deux verifications ulterieures donnent 814,02 EUR et aucune
-  // ne confirme la premiere valeur.
-  // Plancher et plafond de ressources retenus pour le CMG.
-  //
-  // Le plancher a longtemps ete le seul chiffre non verrouille de
-  // l'application : deux valeurs circulaient, 814,02 et 814,62 EUR. Trois
-  // sources independantes donnent 814,02 ; une seule donnait 814,62. C'est donc
-  // 814,02 qui est retenu, et desormais verrouille.
-  //
-  // Reserve : les sites officiels qui trancheraient definitivement — urssaf.fr,
-  // caf.fr, service-public.gouv.fr — ne sont pas joignables depuis
-  // l'environnement de developpement. Un appel a la CAF confirmerait.
-  const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
-  const CHR_AM=4.91;        // cout horaire de reference assmat 2026
-  const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
-  const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
-  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206}; // taux d'effort horaire CMG = bareme PSU accueil collectif (CNAF 2026) : 1->0,0619 ; 2->0,0516 ; 3->0,0413 ; 4-7->0,0310 ; 8+->0,0206
-  const enfEff=Math.min(8,Math.max(1,enfants2+aeeh)); // AEEH = tranche inferieure (+1 enfant fictif par AEEH)
-  const TE=TE_BAREME[enfEff];
-  const tarifRetenu=Math.min(taux,PLAFOND_H);
-  const coutGardeCMG=tarifRetenu*heuresMois;
-  const cmgCapped=Math.min(taux,PLAFOND_H)<taux; // tarif au-dela du plafond -> surcout integral parent
-  let cmgMensuel=coutGardeCMG*(1-(Math.max(PLANCHER_RESSOURCES,Math.min(revenus/12,PLAFOND_RESSOURCES))*TE/CHR_AM));
-  cmgMensuel=Math.max(0,Math.min(cmgMensuel,coutGardeCMG,CMG_MAX));
-  cmgMensuel=Math.round(cmgMensuel*100)/100;
-  const cmgPlafonne=cmgMensuel>=CMG_MAX-0.01;
+  // CMG 2026 (reforme du 1er sept 2025) : bareme et calcul au point unique,
+  // partages avec l'outil pro « CMG (reforme 2025) ». Voir montantCMG().
+  const _cmg=montantCMG({tauxHoraire:taux,heuresMois,revenusAnnuels:revenus,nbEnfants:enfants2,aeeh});
+  const tarifRetenu=_cmg.tarifRetenu;
+  const coutGardeCMG=_cmg.coutGarde;
+  const cmgCapped=_cmg.tarifDepasse; // tarif au-dela du plafond -> surcout integral parent
+  const cmgMensuel=_cmg.montant;
+  const cmgPlafonne=_cmg.plafonne;
   // 50 % des depenses nettes du CMG, dans la limite de 3 500 EUR de depenses
   // par an et par enfant de moins de six ans -- soit 1 750 EUR de credit au
   // plus. Le plafond etait applique au credit et non aux depenses, ce qui
@@ -13045,7 +13061,7 @@ function SimulateurCout({enfants,pEId}){
             {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+nbf((taux/0.7822),2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
             {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
             {l:"Semaines d'accueil par an",v:semaines,set:setSemaines,min:30,max:52,step:1},
-            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Indemnité exonérée de cotisations : ni brut ni net, c'est un montant forfaitaire."},
+            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Exonérée de cotisations : ni brut ni net, c'est un forfait. Minimum conventionnel "+nbf(indemniteEntretienMin(heures/5),2)+" € pour une journée de "+nbf(heures/5,1)+" h."},
           ].map(({l,v,set,min,max,step,hint})=><div key={l}style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <label className="lbl"style={{marginBottom:0}}>{l}</label>
@@ -14405,265 +14421,14 @@ function ScrollTopBtn(){
     style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#90A093,#5F7360)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(95,115,96,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
 }
 
-function OutilsGratuits({onClose,onCta}){
-  const [outil,setOutil]=useState("mensu");
-  const fTitle="'Fraunces',Georgia,serif";
-  const fMono="'DM Mono',monospace";
-  const eur=n=>(isFinite(n)?n:0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
-  // --- Mensualisation ---
-  const [hSem,setHSem]=useState(40);
-  const [sem,setSem]=useState(52);
-  const [tauxM,setTauxM]=useState(4.50);
-  const [ieM,setIeM]=useState(4.50);
-  const [joursM,setJoursM]=useState(20);
-  const hMois=(hSem*sem)/12;
-  const salaireBrutM=hMois*tauxM;
-  const ieMoisM=ieM*joursM;
-  const totalM=salaireBrutM+ieMoisM;
-  // --- Salaire net/brut (cotisations salariales 2026 : 21,8803%) ---
-  const TX_SAL=0.218803;
-  const [sensSal,setSensSal]=useState("brutnet");
-  const [montantSal,setMontantSal]=useState(1200);
-  const netSal=sensSal==="brutnet"?montantSal*(1-TX_SAL):montantSal;
-  const brutSal=sensSal==="brutnet"?montantSal:montantSal/(1-TX_SAL);
-  // --- Indemnites d'entretien ---
-  const [ieJour,setIeJour]=useState(4.50);
-  const [hJourIe,setHJourIe]=useState(9);
-  const [joursIe,setJoursIe]=useState(20);
-  // 2,65 EUR n'est pas le minimum pour neuf heures mais le plancher absolu,
-  // qui ne joue qu'en dessous de 6 h 05. Pour neuf heures le minimum est de
-  // 3,92 EUR. L'ancienne formule annoncait donc un minimum inferieur d'un tiers
-  // au minimum conventionnel, et proratisait au-dela sur cette base fausse.
-  const ieMinJour=indemniteEntretienMin(hJourIe);
-  const ieMoisTotal=ieJour*joursIe;
-  const ieSousMin=ieJour<ieMinJour-0.001;
-  // --- Plafond CMG (seuil journalier = 5 x SMIC horaire brut) ---
-  const [smic,setSmic]=useState(smicHoraireAu(new Date()));
-  const [coutJour,setCoutJour]=useState(50);
-  const plafondCMG=5*smic;
-  const cmgOk=coutJour<=plafondCMG;
-  // --- CMG complet (reforme 1er sept 2025, bareme CNAF 2026) ---
-  const [revCmg,setRevCmg]=useState(45000);
-  const [nbEnfCmg,setNbEnfCmg]=useState(1);
-  const [hSemCmg,setHSemCmg]=useState(40);
-  const [tauxCmg,setTauxCmg]=useState(4.50);
-  const CHR_AM=4.91, PLAFOND_H=8.09, CMG_MAX=825.16;
-  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206};
-  const hMoisCmg=hSemCmg*52/12;
-  const salBrutCmg=(hSemCmg*tauxCmg*52/12)*1.1;
-  const coutTotalCmg=salBrutCmg+salBrutCmg*0.275;
-  const TEcmg=TE_BAREME[Math.min(8,Math.max(1,nbEnfCmg))];
-  const tarifRetenuCmg=Math.min(tauxCmg,PLAFOND_H);
-  const coutGardeCmg=tarifRetenuCmg*hMoisCmg;
-  let cmgComplet=coutGardeCmg*(1-(Math.max(814.62,Math.min(revCmg/12,8500))*TEcmg/CHR_AM));
-  cmgComplet=Math.round(Math.max(0,Math.min(cmgComplet,coutGardeCmg,CMG_MAX))*100)/100;
-  const creditImpotCmg=Math.min((coutTotalCmg-cmgComplet)*0.5,3500/12);
-  const resteChargeCmg=Math.max(0,coutTotalCmg-cmgComplet-creditImpotCmg);
-
-  const outils=[
-    {id:"mensu",ic:"🧮",t:"Mensualisation",c:"#5DA9A1"},
-    {id:"salaire",ic:"💶",t:"Salaire net / brut",c:"#E49178"},
-    {id:"ie",ic:"🍽️",t:"Indemnités d'entretien",c:"#C09553"},
-    {id:"cmgfull",ic:"🏛️",t:"CMG (réforme 2025)",c:"#2E4859"},
-    {id:"cmg",ic:"📊",t:"Plafond CMG",c:"#7A8B92"},
-  ];
-  const Field=({lab,val,setter,step=1,suf=""})=>(
-    <div>
-      <label style={{fontSize:11,fontWeight:700,color:"#5F7A86",display:"block",marginBottom:5}}>{lab}</label>
-      <div style={{display:"flex",alignItems:"center",border:"1.5px solid #E8E4E0",borderRadius:10,overflow:"hidden",transition:"border-color .15s"}}>
-        <input type="number"step={step}value={val}onChange={e=>setter(parseFloat(e.target.value)||0)}
-          onFocus={e=>e.target.parentNode.style.borderColor="#5DA9A1"} onBlur={e=>e.target.parentNode.style.borderColor="#E8E4E0"}
-          style={{flex:1,border:"none",padding:"9px 11px",fontSize:14,fontWeight:600,color:"#2E4859",outline:"none",width:"100%",fontFamily:fMono,background:"transparent"}}/>
-        {suf&&<span style={{padding:"0 11px",fontSize:12,color:"#9AAAB2",fontWeight:600}}>{suf}</span>}
-      </div>
-    </div>
-  );
-  const Stat=({l,v,c})=>(
-    <div style={{textAlign:"center"}}>
-      <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:fMono,lineHeight:1.1}}>{v}</div>
-      <div style={{fontSize:11.5,color:"#5F7A86",marginTop:3,fontWeight:600}}>{l}</div>
-    </div>
-  );
-  const grid={display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14,marginBottom:16};
-  const resBox={background:"linear-gradient(135deg,#5DA9A118,#E4917815)",borderRadius:14,padding:18};
-  const note={fontSize:11.5,color:"#9AAAB2",marginTop:10,lineHeight:1.5};
-
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:260,padding:20}}>
-    <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:880,maxHeight:"92vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
-      <div style={{background:"linear-gradient(135deg,#2E4859,#5DA9A1)",padding:"24px 28px",position:"sticky",top:0,zIndex:2}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
-          <div>
-            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}><IconeOuEmoji e="🧮" taille={23}/> Outils & Simulateurs gratuits</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,.85)",marginTop:4,maxWidth:560,lineHeight:1.5}}>Gratuits et sans inscription, pour les assistantes maternelles et les parents employeurs. Choisissez un outil ci-dessous.</div>
-          </div>
-          <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700,transition:"background .15s"}}onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.35)"}onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.2)"}>✕</button>
-        </div>
-      </div>
-      <div style={{padding:"22px 28px"}}>
-        {/* Selecteur d'outils */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:22}}>
-          {outils.map(o=>{const on=outil===o.id;return <button key={o.id}onClick={()=>setOutil(o.id)}
-            style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"16px 12px",cursor:"pointer",textAlign:"center",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
-            onMouseEnter={e=>{if(!on){e.currentTarget.style.borderColor=o.c+"88";e.currentTarget.style.transform="translateY(-1px)";}}}
-            onMouseLeave={e=>{if(!on){e.currentTarget.style.borderColor="#E8E4E0";e.currentTarget.style.transform="none";}}}>
-            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}><IconeOuEmoji e={o.ic} taille={28}/></div>
-            <div style={{fontWeight:700,fontSize:13.5,color:on?o.c:"#2E4859"}}>{o.t}</div>
-          </button>;})}
-        </div>
-
-        {/* ----- MENSUALISATION ----- */}
-        {outil==="mensu"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #5DA9A1",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#5DA9A115,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🧮"/> Simulateur de mensualisation</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Heures mensualisées et salaire brut de base, année complète ou incomplète.</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Heures par semaine"val={hSem}setter={setHSem}suf="h"/>
-              <Field lab="Semaines / an"val={sem}setter={setSem}suf="sem"/>
-              <Field lab="Taux horaire brut"val={tauxM}setter={setTauxM}step={0.05}suf="€"/>
-              <Field lab="Indemnité entretien / jour"val={ieM}setter={setIeM}step={0.05}suf="€"/>
-              <Field lab="Jours d'accueil / mois"val={joursM}setter={setJoursM}suf="j"/>
-            </div>
-            <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-              {[["Année complète (52 sem)",52],["Année incomplète (46 sem)",46],["40 semaines",40]].map(([lab,v])=>
-                <button key={v}onClick={()=>setSem(v)}style={{padding:"6px 13px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:sem===v?"#2E4859":"#fff",color:sem===v?"#fff":"#5F7A86",borderColor:sem===v?"#2E4859":"#E8E4E0",transition:"all .15s"}}>{lab}</button>)}
-            </div>
-            <div style={resBox}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="Heures mensualisées"v={hMois.toLocaleString('fr-FR',{maximumFractionDigits:2})+" h"}c="#2E4859"/>
-                <Stat l="Salaire brut de base"v={eur(salaireBrutM)}c="#5DA9A1"/>
-                <Stat l="Indemnités entretien"v={eur(ieMoisM)}c="#C09553"/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>Total mensuel estimé (salaire + indemnités)</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(totalM)}</div>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Estimation indicative. En année complète, les congés payés sont inclus dans la mensualisation ; en année incomplète, ils sont payés en plus.</div>
-          </div>
-        </div>}
-
-        {/* ----- SALAIRE NET / BRUT ----- */}
-        {outil==="salaire"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #E49178",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#E4917815,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="💶"/> Salaire net ↔ brut</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Conversion avec le taux de cotisations salariales 2026 (21,88 %).</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-              {[["Brut → Net","brutnet"],["Net → Brut","netbrut"]].map(([lab,v])=>
-                <button key={v}onClick={()=>setSensSal(v)}style={{padding:"7px 15px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:700,background:sensSal===v?"#E49178":"#fff",color:sensSal===v?"#fff":"#5F7A86",borderColor:sensSal===v?"#E49178":"#E8E4E0",transition:"all .15s"}}>{lab}</button>)}
-            </div>
-            <div style={grid}>
-              <Field lab={sensSal==="brutnet"?"Salaire BRUT mensuel":"Salaire NET mensuel"}val={montantSal}setter={setMontantSal}step={1}suf="€"/>
-            </div>
-            <div style={resBox}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="Salaire brut"v={eur(brutSal)}c="#2E4859"/>
-                <Stat l="Cotisations (21,88 %)"v={"-"+eur(brutSal*TX_SAL)}c="#C84B31"/>
-                <Stat l="Salaire net"v={eur(netSal)}c="#5DA9A1"/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>{sensSal==="brutnet"?"Salaire NET à verser":"Salaire BRUT à déclarer"}</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(sensSal==="brutnet"?netSal:brutSal)}</div>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Estimation hors CSG/CRDS spécifiques et hors cas particuliers. Le net réel figure sur le bulletin Pajemploi. Taux salarial appliqué : 21,8803 %.</div>
-          </div>
-        </div>}
-
-        {/* ----- INDEMNITES D'ENTRETIEN ----- */}
-        {outil==="ie"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #C09553",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#C0955315,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🍽️"/> Indemnités d'entretien</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Montant mensuel des IE et vérification du minimum conventionnel.</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Montant IE / jour"val={ieJour}setter={setIeJour}step={0.05}suf="€"/>
-              <Field lab="Heures d'accueil / jour"val={hJourIe}setter={setHJourIe}step={0.5}suf="h"/>
-              <Field lab="Jours d'accueil / mois"val={joursIe}setter={setJoursIe}suf="j"/>
-            </div>
-            <div style={resBox}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="IE par jour"v={eur(ieJour)}c="#C09553"/>
-                <Stat l="Minimum conventionnel"v={eur(ieMinJour)+" / j"}c={ieSousMin?"#C84B31":"#5DA9A1"}/>
-                <Stat l="IE par mois"v={eur(ieMoisTotal)}c="#2E4859"/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>Total indemnités d'entretien / mois</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(ieMoisTotal)}</div>
-              </div>
-            </div>
-            {ieSousMin&&<div style={{marginTop:10,padding:"9px 13px",background:"#FFF3F0",borderRadius:10,border:"1px solid #E8B6AC",fontSize:11.5,color:"#A33D28",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Le montant saisi semble inférieur au minimum conventionnel indicatif pour {hJourIe} h d'accueil.</div>}
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Les IE couvrent les frais (jeux, eau, électricité, chauffage…). Minimum conventionnel indicatif ≈ 2,65 € pour 9 h d'accueil, proportionnel au-delà (CCN 3239). Vérifiez le montant en vigueur.</div>
-          </div>
-        </div>}
-
-        {/* ----- CMG REFORME 2025 (complet) ----- */}
-        {outil==="cmgfull"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🏛️"/> CMG & reste à charge (réforme 2025)</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Estimez l'aide CMG, le crédit d'impôt et ce qu'il vous reste à payer.</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Revenus annuels du foyer"val={revCmg}setter={setRevCmg}step={500}suf="€"/>
-              <Field lab="Enfants à charge"val={nbEnfCmg}setter={setNbEnfCmg}suf=""/>
-              <Field lab="Heures par semaine"val={hSemCmg}setter={setHSemCmg}suf="h"/>
-              <Field lab="Taux horaire net"val={tauxCmg}setter={setTauxCmg}step={0.05}suf="€"/>
-            </div>
-            <div style={resBox}>
-              <div style={{textAlign:"center",marginBottom:14}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>Reste à charge estimé / mois</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(resteChargeCmg)}</div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12}}>
-                <Stat l="Coût total (employeur)"v={eur(coutTotalCmg)}c="#2E4859"/>
-                <Stat l="Aide CMG"v={"-"+eur(cmgComplet)}c="#5DA9A1"/>
-                <Stat l="Crédit d'impôt (50 %)"v={"-"+eur(creditImpotCmg)}c="#C09553"/>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Calcul selon la réforme du 1ᵉʳ sept. 2025 (barème par taux d'effort, paramètres CNAF 2026). Estimation indicative : le montant exact dépend de votre situation CAF. Plafond CMG mensuel : {eur(CMG_MAX)}.</div>
-          </div>
-        </div>}
-
-        {/* ----- PLAFOND CMG ----- */}
-        {outil==="cmg"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🏛️"/> Plafond CMG (seuil journalier)</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Vérifiez si le coût journalier respecte le plafond CAF (5 × SMIC horaire).</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Coût (salaire) par jour"val={coutJour}setter={setCoutJour}step={0.5}suf="€"/>
-              <Field lab="SMIC horaire brut"val={smic}setter={setSmic}step={0.01}suf="€"/>
-            </div>
-            <div style={{...resBox,background:cmgOk?"linear-gradient(135deg,#5DA9A118,#2E485910)":"linear-gradient(135deg,#C84B3118,#E4917815)"}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="Plafond journalier"v={eur(plafondCMG)}c="#2E4859"/>
-                <Stat l="Votre coût / jour"v={eur(coutJour)}c={cmgOk?"#5DA9A1":"#C84B31"}/>
-                <Stat l="Marge"v={eur(plafondCMG-coutJour)}c={cmgOk?"#5DA9A1":"#C84B31"}/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:16,fontWeight:800,color:cmgOk?"#3C7A6E":"#C84B31"}}>{cmgOk?"✅ Sous le plafond — CMG maintenu":"⚠️ Au-dessus du plafond — CMG susceptible d'être réduit"}</div>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> La CAF n'accorde pas le CMG si la rémunération journalière dépasse 5 × le SMIC horaire brut. Le montant exact du CMG dépend ensuite de vos revenus, du nombre et de l'âge des enfants (réforme du 1ᵉʳ sept. 2025). Pour une estimation complète, utilisez le simulateur intégré à TiMat.</div>
-          </div>
-        </div>}
-
-        {/* CTA */}
-        <div style={{marginTop:22,background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:16,padding:"20px 22px",textAlign:"center"}}>
-          <div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:fTitle,marginBottom:4}}>Envie d'aller plus loin ?</div>
-          <div style={{fontSize:13,color:"rgba(255,255,255,.9)",marginBottom:14,lineHeight:1.5}}>TiMat calcule tout automatiquement à partir de vos pointages réels : bulletins, déclarations, contrats… Testez gratuitement.</div>
-          <button onClick={onCta}style={{background:"#fff",color:"#C84B31",border:"none",borderRadius:12,padding:"11px 26px",fontSize:13,fontWeight:800,cursor:"pointer",transition:"transform .12s"}}onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}onMouseLeave={e=>e.currentTarget.style.transform="none"}>Découvrir TiMat →</button>
-        </div>
-      </div>
-    </div>
-  </div>;
-}
+// Le composant OutilsGratuits (mensualisation, salaire net/brut, indemnites
+// d'entretien, CMG) vivait ici sur 263 lignes, sans qu'aucun chemin ne puisse
+// l'afficher : son etat showOutils n'etait jamais mis a true, et l'entree
+// « Outils gratuits » de la navigation ouvre /outils.html, la page statique.
+// Il portait encore le plancher CMG perime et 27,5 % de cotisations patronales
+// la ou le bulletin en calcule 44,37 % : du faux que personne ne pouvait voir,
+// mais que la prochaine reprise aurait pu remettre a l'ecran. Le calcul du CMG
+// vit desormais au point unique montantCMG(), en haut du fichier.
 
 // BLOC ERREUR AUTH P16 - message + action contextuelle (basculer en connexion, ou renvoyer un lien)
 function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
@@ -14698,7 +14463,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const [showLegal, setShowLegal] = useState(null);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
-  const [showOutils, setShowOutils] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(()=>{
@@ -15673,7 +15437,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
 
       {/* BOUTIQUE MODAL */}
-      {showOutils&&<OutilsGratuits onClose={()=>setShowOutils(false)} onCta={()=>{setShowOutils(false);setShowModal(true);setRole("asmat");}}/>}
       <ScrollTopBtn/>
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
