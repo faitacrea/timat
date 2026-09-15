@@ -1926,6 +1926,345 @@ function PointageRapide({enfants,role,user,demo}){
 }
 
 //
+//
+// MODE BORNE — l'ecran de pointage pose dans l'entree.
+//
+// Trois facons de s'en servir, un seul ecran : un appareil dedie, le telephone
+// de l'assistante maternelle tendu au parent, ou plus tard un QR au mur. Le
+// materiel n'est pas le sujet.
+//
+// L'IDENTITE, c'est le point delicat. Une borne dans une entree ne peut pas
+// demander a chaque parent de se connecter, et une adresse ouverte qui accepte
+// n'importe quel pointage, on en a deja supprime une. La solution evite les
+// deux : la borne tourne sous la session de l'assistante maternelle, qui l'a
+// ouverte depuis son compte, et le code a quatre chiffres dit QUI a touche
+// l'ecran. Aucune nouvelle adresse publique, aucune cle de service.
+//
+// Le code est verifie PAR LE SERVEUR (RPC pointage_borne) et ne descend jamais
+// dans le navigateur : la borne peut donc etre tendue a un parent sans lui
+// livrer les codes des autres familles.
+//
+// Ce que le code ne fait pas : il ne protege pas de l'assistante maternelle
+// elle-meme, qui peut deja pointer depuis son application. Il protege de
+// l'erreur. La valeur de preuve vient de l'etape suivante — le parent voit le
+// pointage aussitot et peut le contester, trace a l'appui.
+const BORNE_CLE_ACTIVE="timat:borne:active";
+const BORNE_CLE_SORTIE="timat:borne:sortie";
+const BORNE_ESSAIS_MAX=3;
+const BORNE_BLOCAGE_MS=60000;
+
+const borneActive=()=>{try{return localStorage.getItem(BORNE_CLE_ACTIVE)==="1";}catch(e){return false;}};
+const borneCodeSortie=()=>{try{return localStorage.getItem(BORNE_CLE_SORTIE)||"";}catch(e){return"";}};
+const borneOuvrir=(codeSortie)=>{try{localStorage.setItem(BORNE_CLE_SORTIE,String(codeSortie||""));localStorage.setItem(BORNE_CLE_ACTIVE,"1");}catch(e){}};
+const borneFermer=()=>{try{localStorage.removeItem(BORNE_CLE_ACTIVE);}catch(e){}};
+
+function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
+  const tape=(c)=>{if(valeur.length<longueur)setValeur(valeur+c);};
+  const touche=(contenu,action,util)=>(
+    <button type="button" key={String(contenu)} onClick={action}
+      style={{background:"#fff",border:"1.5px solid var(--br)",borderRadius:12,padding:"16px 0",
+        fontFamily:"inherit",fontSize:util?15:22,fontWeight:util?500:600,
+        color:util?"var(--m)":"var(--b)",cursor:"pointer",minHeight:56}}>{contenu}</button>
+  );
+  return <>
+    <div style={{display:"flex",justifyContent:"center",gap:14,padding:"14px 0 6px"}}>
+      {Array.from({length:longueur},(_,i)=>
+        <span key={i} style={{width:15,height:15,borderRadius:15,display:"block",
+          border:"2px solid var(--br)",background:i<valeur.length?"var(--b)":"transparent",
+          borderColor:i<valeur.length?"var(--b)":"var(--br)"}}/>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>
+      {["1","2","3","4","5","6","7","8","9"].map(c=>touche(c,()=>tape(c)))}
+      {touche(libelleAnnuler,onAnnuler,true)}
+      {touche("0",()=>tape("0"))}
+      {touche("⌫",()=>setValeur(valeur.slice(0,-1)),true)}
+    </div>
+  </>;
+}
+
+// Reglages de la borne, cote assistante maternelle : le code de sortie de
+// l'appareil, et le code de chaque famille.
+function ReglagesBorne({enfants,user,onDemarrer}){
+  const [contrats,setContrats]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const [toast,setToast]=useState("");
+  const [sortie,setSortie]=useState(()=>borneCodeSortie());
+  const list=(enfants||[]).filter(Boolean);
+
+  const relire=async()=>{
+    if(!user?.id){setChargement(false);return;}
+    const{data,error}=await supabase.from("contrats")
+      .select("id,enfant_id,code_borne,actif").eq("asmat_id",user.id);
+    setChargement(false);
+    if(error){setToast("❌ "+error.message);return;}
+    setContrats(data||[]);
+  };
+  useEffect(()=>{relire();/* eslint-disable-next-line */},[user?.id]);
+
+  const codeDe=(enfantId)=>(contrats.find(c=>c.enfant_id===enfantId&&c.actif!==false)||{}).code_borne||"";
+
+  // Quatre chiffres tires au hasard, sans suite evidente : 0000, 1234 et 1111
+  // sont les premiers qu'on essaie.
+  const tirerCode=()=>{
+    const interdits=new Set(["0000","1111","2222","3333","4444","5555","6666","7777","8888","9999","1234","0123","4321","2580"]);
+    for(let i=0;i<50;i++){
+      const c=String(Math.floor(Math.random()*10000)).padStart(4,"0");
+      if(!interdits.has(c))return c;
+    }
+    return "7391";
+  };
+
+  const attribuer=async(enfantId)=>{
+    const c=contrats.find(x=>x.enfant_id===enfantId&&x.actif!==false);
+    if(!c){setToast("❌ Aucun contrat actif pour cet enfant");return;}
+    const code=tirerCode();
+    const{error}=await supabase.from("contrats").update({code_borne:code}).eq("id",c.id);
+    if(error){setToast("❌ "+error.message);return;}
+    setToast("✅ Nouveau code : "+code);
+    relire();
+  };
+
+  const demarrer=()=>{
+    if(!/^[0-9]{4}$/.test(sortie)){setToast("❌ Le code de sortie doit faire 4 chiffres");return;}
+    const sansCode=list.filter(e=>!codeDe(e.id));
+    if(sansCode.length){setToast("❌ Donnez d'abord un code à : "+sansCode.map(e=>e.prenom||"Enfant").join(", "));return;}
+    borneOuvrir(sortie);
+    onDemarrer();
+  };
+
+  const carte={background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:16,
+    display:"flex",flexDirection:"column",gap:10,marginBottom:12};
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}><IconeOuEmoji e="🚪"/> La borne d'entrée</div>
+      <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+        L'appareil se verrouille sur l'écran de pointage : plus de menu, plus rien d'autre.
+        Chaque parent touche le prénom de son enfant et tape le code de sa famille.
+        Le pointage part sous votre compte, et compte comme validé par le parent.
+      </p>
+      <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+        Ça marche sur un appareil posé dans l'entrée, ou sur <b>votre propre téléphone</b>,
+        que vous tendez au parent à l'arrivée. Rien à acheter.
+      </p>
+    </div>
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Votre code de sortie</div>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        Quatre chiffres, à vous, demandés pour quitter le mode borne. Ne le donnez à personne.
+      </p>
+      <input inputMode="numeric" maxLength={4} value={sortie} className="inp"
+        onChange={e=>setSortie(e.target.value.replace(/[^0-9]/g,"").slice(0,4))}
+        placeholder="4 chiffres" style={{maxWidth:150,fontSize:18,letterSpacing:"0.3em",fontVariantNumeric:"tabular-nums"}}/>
+      <p style={{margin:0,fontSize:11.5,color:"var(--l)",lineHeight:1.5}}>
+        Il est gardé sur cet appareil, pas dans votre compte : il empêche un parent de sortir
+        de la borne et de se promener dans votre espace. Il ne remplace pas le verrouillage
+        de l'appareil lui-même.
+      </p>
+    </div>
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Le code de chaque famille</div>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        À communiquer aux parents. Il dit qui a touché l'écran — il ne protège pas contre vous,
+        qui pouvez déjà pointer depuis votre espace, mais contre l'erreur : la mauvaise vignette,
+        l'enfant d'à côté.
+      </p>
+      {chargement?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Chargement…</p>
+      :!list.length?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Aucun enfant accueilli.</p>
+      :list.map(e=>{
+        const c=codeDe(e.id);
+        return <div key={e.id} style={{display:"flex",alignItems:"center",gap:11,padding:"9px 0",
+          borderBottom:"1px solid var(--br)"}}>
+          <span style={{fontSize:22,flexShrink:0}}>{e.emoji||"👶"}</span>
+          <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:600,color:"var(--b)"}}>{e.prenom||"Enfant"}</span>
+          <span style={{fontFamily:"ui-monospace,monospace",fontSize:17,fontWeight:700,
+            letterSpacing:"0.18em",color:c?"var(--b)":"var(--l)",fontVariantNumeric:"tabular-nums"}}>
+            {c||"—"}
+          </span>
+          <button type="button" onClick={()=>attribuer(e.id)} className="btn bG s">
+            {c?"Changer":"Donner un code"}
+          </button>
+        </div>;
+      })}
+    </div>
+
+    <button type="button" onClick={demarrer} className="btn bT l"
+      style={{width:"100%",justifyContent:"center"}}>
+      Démarrer le mode borne →
+    </button>
+    <p style={{fontSize:11.5,color:"var(--l)",lineHeight:1.55,margin:"10px 2px 0",textAlign:"center"}}>
+      Les notifications de l'application disparaissent pendant que la borne est ouverte.
+      En revanche, une page web ne peut pas empêcher votre téléphone d'afficher une bannière :
+      si vous tendez le vôtre, activez « Ne pas déranger ».
+    </p>
+  </div>;
+}
+
+function ModeBorne({enfants,user,onQuitter}){
+  const list=(enfants||[]).filter(Boolean);
+  const [statut,setStatut]=useState({});
+  const [choisi,setChoisi]=useState(null);   // enfant en cours de pointage
+  const [code,setCode]=useState("");
+  const [erreur,setErreur]=useState("");
+  const [fait,setFait]=useState(null);       // {prenom,emoji,action,heure}
+  const [sortie,setSortie]=useState(false);  // pave de sortie ouvert
+  const [codeSortie,setCodeSortie]=useState("");
+  const [enLigne,setEnLigne]=useState(()=>typeof navigator==="undefined"||navigator.onLine!==false);
+  const [heure,setHeure]=useState(()=>new Date().toTimeString().slice(0,5));
+  const essais=useRef({});                   // {enfantId:{n,bloqueJusqu}}
+  const ids=list.map(e=>e.id).join(",");
+
+  useEffect(()=>{
+    const t=setInterval(()=>setHeure(new Date().toTimeString().slice(0,5)),20000);
+    const on=()=>setEnLigne(true), off=()=>setEnLigne(false);
+    window.addEventListener("online",on); window.addEventListener("offline",off);
+    return()=>{clearInterval(t);window.removeEventListener("online",on);window.removeEventListener("offline",off);};
+  },[]);
+
+  const relireStatut=async()=>{
+    if(!user?.id||!list.length)return;
+    const{data,error}=await supabase.from("pointages")
+      .select("enfant_id,arrivee,depart").in("enfant_id",list.map(e=>e.id)).eq("date",TODAY_STR);
+    if(error)return;
+    const m={};(data||[]).forEach(p=>{m[p.enfant_id]={arrivee:p.arrivee,depart:p.depart};});
+    setStatut(m);
+  };
+  useEffect(()=>{relireStatut();/* eslint-disable-next-line */},[ids,user?.id]);
+  // Un autre appareil peut pointer pendant que la borne est ouverte.
+  useEffect(()=>{const t=setInterval(relireStatut,60000);return()=>clearInterval(t);/* eslint-disable-next-line */},[ids,user?.id]);
+
+  const hhmm=(t)=>{if(!t)return"";const s=String(t);return s.includes("T")?s.split("T")[1].slice(0,5):s.slice(0,5);};
+
+  const valider=async()=>{
+    if(!choisi||code.length!==4)return;
+    const e=choisi;
+    const suivi=essais.current[e.id]||{n:0,bloqueJusqu:0};
+    if(Date.now()<suivi.bloqueJusqu){
+      setErreur("Trop d'essais. Réessayez dans un instant.");setCode("");return;
+    }
+    // Pas de reseau : on le DIT, on ne fait pas semblant d'enregistrer. Le code
+    // se verifie sur le serveur ; sans lui, il n'y a rien a valider.
+    if(typeof navigator!=="undefined"&&navigator.onLine===false){
+      setErreur("Pas de réseau. Le pointage n'a pas été enregistré — prévenez l'assistante maternelle.");
+      setCode("");return;
+    }
+    const{data,error}=await supabase.rpc("pointage_borne",{p_enfant_id:e.id,p_code:code});
+    if(error||!data?.success){
+      const msg=error?.message||data?.error||"Enregistrement impossible";
+      if(/code incorrect/i.test(msg)){
+        const n=suivi.n+1;
+        essais.current[e.id]={n,bloqueJusqu:n>=BORNE_ESSAIS_MAX?Date.now()+BORNE_BLOCAGE_MS:0};
+        setErreur(n>=BORNE_ESSAIS_MAX
+          ?"Code incorrect. Bloqué une minute."
+          :"Code incorrect. Il reste "+(BORNE_ESSAIS_MAX-n)+" essai"+(BORNE_ESSAIS_MAX-n>1?"s":"")+".");
+      }else setErreur(msg);
+      setCode("");return;
+    }
+    essais.current[e.id]={n:0,bloqueJusqu:0};
+    setFait({prenom:e.prenom||"Enfant",emoji:e.emoji||"👶",action:data.action,heure:data.heure});
+    setChoisi(null);setCode("");setErreur("");
+    await relireStatut();
+  };
+  useEffect(()=>{if(code.length===4)valider();/* eslint-disable-next-line */},[code]);
+  useEffect(()=>{if(!fait)return;const t=setTimeout(()=>setFait(null),4000);return()=>clearTimeout(t);},[fait]);
+
+  const tenterSortie=()=>{
+    if(codeSortie!==borneCodeSortie()){setErreur("Code de sortie incorrect.");setCodeSortie("");return;}
+    borneFermer();onQuitter();
+  };
+  useEffect(()=>{if(sortie&&codeSortie.length===4)tenterSortie();/* eslint-disable-next-line */},[codeSortie]);
+
+  const cadre={minHeight:"100dvh",background:"var(--c)",display:"flex",flexDirection:"column"};
+  const barre={background:"#2E4859",color:"#fff",padding:"12px 16px",display:"flex",
+    justifyContent:"space-between",alignItems:"center",flexShrink:0};
+  const corps={padding:16,display:"flex",flexDirection:"column",gap:11,flex:1,maxWidth:520,
+    width:"100%",margin:"0 auto"};
+
+  return <div style={cadre}>
+    <div style={barre}>
+      <span style={{fontWeight:700,fontSize:15}}>
+        {choisi?((choisi.emoji||"👶")+" "+(choisi.prenom||"Enfant")):"Pointage"}
+      </span>
+      <span style={{fontSize:13,fontVariantNumeric:"tabular-nums",opacity:.75}}>{heure}</span>
+    </div>
+
+    {!enLigne&&<div style={{background:"#FBF1DC",borderBottom:"1px solid #E5D3A8",color:"#8A6420",
+      fontSize:12.5,padding:"9px 16px",lineHeight:1.45,textAlign:"center"}}>
+      <IconeOuEmoji e="⚠️"/> Pas de réseau. Le pointage est impossible tant que la connexion n'est pas revenue.
+    </div>}
+
+    <div style={corps}>
+      {fait?<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:14,
+          padding:"26px 18px",textAlign:"center",display:"flex",flexDirection:"column",gap:7}}>
+          <span style={{fontSize:40,fontWeight:800,color:"var(--S)",lineHeight:1,fontVariantNumeric:"tabular-nums"}}>{fait.heure}</span>
+          <span style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>
+            {fait.emoji} {fait.prenom} {fait.action==="depart"?"est reparti":"est arrivé"}
+          </span>
+          <span style={{fontSize:12.5,color:"var(--m)"}}>Enregistré. Ses parents le voient déjà dans l'application.</span>
+        </div>
+
+      :choisi?<>
+        <p style={{textAlign:"center",fontSize:13.5,color:"var(--m)",margin:0}}>Code de la famille</p>
+        <PaveNumerique valeur={code} setValeur={v=>{setErreur("");setCode(v);}}
+          onAnnuler={()=>{setChoisi(null);setCode("");setErreur("");}}/>
+        {erreur&&<p style={{textAlign:"center",fontSize:12.5,color:"var(--R)",margin:0,lineHeight:1.45}}>{erreur}</p>}
+      </>
+
+      :sortie?<>
+        <p style={{textAlign:"center",fontSize:13.5,color:"var(--m)",margin:0}}>Code de sortie du mode borne</p>
+        <PaveNumerique valeur={codeSortie} setValeur={v=>{setErreur("");setCodeSortie(v);}}
+          onAnnuler={()=>{setSortie(false);setCodeSortie("");setErreur("");}} libelleAnnuler="Retour"/>
+        {erreur&&<p style={{textAlign:"center",fontSize:12.5,color:"var(--R)",margin:0}}>{erreur}</p>}
+      </>
+
+      :<>
+        <p style={{textAlign:"center",fontSize:13.5,color:"var(--m)",margin:"2px 0 4px"}}>
+          Touchez le prénom de votre enfant
+        </p>
+        {!list.length&&<p style={{textAlign:"center",fontSize:13,color:"var(--l)"}}>Aucun enfant accueilli.</p>}
+        {list.map(e=>{
+          const st=statut[e.id]||{};
+          const fini=st.arrivee&&st.depart, enCours=st.arrivee&&!st.depart;
+          const etat=fini?(hhmm(st.arrivee)+" → "+hhmm(st.depart))
+                    :enCours?("arrivé à "+hhmm(st.arrivee))
+                    :"pas encore arrivé";
+          const pastille=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
+          return <button key={e.id} type="button" disabled={!!fini}
+            onClick={()=>{setChoisi(e);setCode("");setErreur("");}}
+            style={{background:"#fff",border:"1.5px solid var(--br)",borderRadius:14,padding:"13px 14px",
+              display:"flex",alignItems:"center",gap:13,cursor:fini?"default":"pointer",
+              opacity:fini?.65:1,textAlign:"left",fontFamily:"inherit",width:"100%"}}>
+            <span style={{width:46,height:46,borderRadius:14,background:"var(--c)",display:"flex",
+              alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{e.emoji||"👶"}</span>
+            <span style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:2}}>
+              <b style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>{e.prenom||"Enfant"}</b>
+              <span style={{fontSize:12,color:"var(--m)",display:"flex",alignItems:"center",gap:6}}>
+                <i style={{width:7,height:7,borderRadius:7,background:pastille,flexShrink:0,display:"block"}}/>{etat}
+              </span>
+            </span>
+            <span style={{fontSize:12.5,fontWeight:700,padding:"8px 12px",borderRadius:9,whiteSpace:"nowrap",
+              background:fini?"var(--c)":enCours?"#B8622F":"#2E4859",color:fini?"var(--m)":"#fff"}}>
+              {fini?"Terminé":enCours?"Départ":"Arrivée"}
+            </span>
+          </button>;
+        })}
+      </>}
+    </div>
+
+    {!sortie&&!choisi&&<div style={{padding:"10px 16px 18px",textAlign:"center",flexShrink:0}}>
+      <button type="button" onClick={()=>{setSortie(true);setCodeSortie("");setErreur("");}}
+        style={{background:"none",border:"none",color:"var(--l)",fontSize:12,cursor:"pointer",
+          fontFamily:"inherit",padding:"10px 14px",minHeight:40}}>
+        Quitter le mode borne
+      </button>
+    </div>}
+  </div>;
+}
+
 function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [showAjout,setShowAjout]=useState(false);
   const [editAvatar,setEditAvatar]=useState(null);
@@ -13840,6 +14179,7 @@ const GROUPS_AM={
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
+    {id:"mode_borne",l:"Borne d'entrée",ic:"🚪",d:"Les parents pointent eux-mêmes, avec le code de leur famille"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
     {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
@@ -20051,6 +20391,10 @@ export default function App(){
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
   const [gToast,setGToast]=useState("");
+  // Mode borne : verrouille l'appareil sur l'ecran de pointage. Lu au demarrage
+  // pour qu'un rechargement — ou une extinction d'ecran — ne rouvre pas
+  // l'application entiere devant un parent.
+  const [borne,setBorne]=useState(()=>borneActive());
   // LIEN INVITATION quand une session existe deja : parent connecte -> rattachement auto ; assmat -> message
   useEffect(()=>{
     if(!user?.id||!user?.role)return;
@@ -20601,6 +20945,7 @@ export default function App(){
       case "faq": return <VueAideSupport role={role} user={user}/>;
       case "aides_simulateurs": return <VueAidesSimulateurs enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "inviter_parent": return <InviterParent enfants={enfants} user={user}/>;
+      case "mode_borne": return <ReglagesBorne enfants={enfants} user={user} onDemarrer={()=>setBorne(true)}/>;
       case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
@@ -20626,6 +20971,20 @@ export default function App(){
       default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
     }
   };
+
+  // MODE BORNE : l'appareil est pose dans l'entree, ou tendu a un parent. On
+  // remplace TOUTE l'application — pas de barre du haut, pas de menu, pas de
+  // notifications a l'ecran. Reserve a l'assistante maternelle : c'est sa
+  // session qui ecrit, et le code de la famille dit qui a touche l'ecran.
+  //
+  // Reserve honnete : les notifications DANS l'application disparaissent, mais
+  // une page web ne peut pas empecher le systeme d'afficher une banniere push
+  // sur l'ecran. Le reglage le dit et conseille « Ne pas deranger ».
+  if(borne&&role==="asmat"){
+    return <><Styles/><div className={"app"+(dark?" dark":"")}>
+      <ModeBorne enfants={enfants} user={user} onQuitter={()=>setBorne(false)}/>
+    </div></>;
+  }
 
   return(
     <>
