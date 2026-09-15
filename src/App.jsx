@@ -102,9 +102,38 @@ async function enregistrerPointage(ligne){
 }
 
 // Rejeu de la file. Rend {envoyees,conflits,restantes}.
+// Un seul rejeu a la fois.
+//
+// Deux rejeux simultanes renvoient la MEME entree deux fois, et pointage_borne()
+// bascule arrivee -> depart : le second appel refermerait la journee a l'heure
+// de l'arrivee, soit zero minute travaillee. Deux evenements « online » de suite
+// suffisent a le declencher, et un reseau qui vacille en envoie plus que ca.
+let _rejeuEnCours=null;
 async function rejouerFile(){
+  if(_rejeuEnCours)return _rejeuEnCours;
+  const course=(async()=>{
   let envoyees=0,conflits=0;
   for(const e of fileHorsLigne()){
+    // Pointage fait a la borne pendant une coupure. Il part par la meme
+    // fonction serveur qu'en ligne — donc le code est verifie pour de bon — et
+    // il porte L'HEURE OU LE PARENT A TOUCHE L'ECRAN, pas celle du rejeu.
+    if(e.rpc==="pointage_borne"){
+      try{
+        const{data,error}=await supabase.rpc("pointage_borne",{
+          p_enfant_id:e.charge.enfant_id,p_code:e.charge.code,
+          p_heure:e.charge.heure,p_date:e.charge.date});
+        if(error){
+          if(panneReseau(error))break;
+          marquerConflit(e.id,error.message);conflits++;continue;
+        }
+        if(!data?.success){marquerConflit(e.id,data?.error||"refusé au rejeu");conflits++;continue;}
+        retirerDeLaFile(e.id);envoyees++;
+      }catch(err){
+        if(panneReseau(err))break;
+        marquerConflit(e.id,String(err&&err.message||err));conflits++;
+      }
+      continue;
+    }
     if(e.table!=="pointages"){retirerDeLaFile(e.id);continue;}
     try{
       // Le parent a-t-il touche a ce pointage pendant la coupure ?
@@ -128,6 +157,9 @@ async function rejouerFile(){
     }
   }
   return{envoyees,conflits,restantes:fileHorsLigne().length};
+  })();
+  _rejeuEnCours=course;
+  try{return await course;}finally{_rejeuEnCours=null;}
 }
 
 
@@ -1950,6 +1982,22 @@ function PointageRapide({enfants,role,user,demo}){
 // elle-meme, qui peut deja pointer depuis son application. Il protege de
 // l'erreur. La valeur de preuve vient de l'etape suivante — le parent voit le
 // pointage aussitot et peut le contester, trace a l'appui.
+// Les empreintes des codes de famille, gardees sur l'appareil de la borne.
+//
+// Sans reseau, le serveur ne peut pas verifier le code — et un pointage envoye
+// a l'aveugle, refuse une heure plus tard au rejeu, c'est promettre un
+// enregistrement qui n'aura pas lieu. La borne verifie donc elle-meme, contre
+// une EMPREINTE : les codes en clair ne sont jamais ecrits sur l'appareil.
+// En ligne, c'est le serveur qui tranche, comme avant.
+const BORNE_CLE_EMPREINTES="timat:borne:empreintes";
+const empreinteCode=async(enfantId,code)=>{
+  const octets=new TextEncoder().encode("timat:borne:"+enfantId+":"+code);
+  const h=await crypto.subtle.digest("SHA-256",octets);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+};
+const borneEmpreintes=()=>_lireJSON(BORNE_CLE_EMPREINTES)||{};
+const borneMemoriserEmpreintes=(m)=>_ecrireJSON(BORNE_CLE_EMPREINTES,m);
+
 const BORNE_CLE_ACTIVE="timat:borne:active";
 const BORNE_CLE_SORTIE="timat:borne:sortie";
 const BORNE_ESSAIS_MAX=3;
@@ -2026,10 +2074,17 @@ function ReglagesBorne({enfants,user,onDemarrer}){
     relire();
   };
 
-  const demarrer=()=>{
+  const demarrer=async()=>{
     if(!/^[0-9]{4}$/.test(sortie)){setToast("❌ Le code de sortie doit faire 4 chiffres");return;}
     const sansCode=list.filter(e=>!codeDe(e.id));
     if(sansCode.length){setToast("❌ Donnez d'abord un code à : "+sansCode.map(e=>e.prenom||"Enfant").join(", "));return;}
+    // Les empreintes, jamais les codes en clair : c'est ce qui permet a la borne
+    // de verifier un code sans reseau sans rien garder de lisible sur l'appareil.
+    try{
+      const m={};
+      for(const e of list)m[e.id]=await empreinteCode(e.id,codeDe(e.id));
+      borneMemoriserEmpreintes(m);
+    }catch(err){setToast("❌ Empreintes des codes impossibles à calculer : "+String(err&&err.message||err));return;}
     borneOuvrir(sortie);
     onDemarrer();
   };
@@ -2050,6 +2105,11 @@ function ReglagesBorne({enfants,user,onDemarrer}){
       <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
         Ça marche sur un appareil posé dans l'entrée, ou sur <b>votre propre téléphone</b>,
         que vous tendez au parent à l'arrivée. Rien à acheter.
+      </p>
+      <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+        Sans réseau, le pointage est gardé sur l'appareil et part au retour de la connexion,
+        avec l'heure où le parent a touché l'écran. L'écran dit « en attente d'envoi »
+        plutôt que « enregistré ».
       </p>
     </div>
 
@@ -2120,11 +2180,30 @@ function ModeBorne({enfants,user,onQuitter}){
   const essais=useRef({});                   // {enfantId:{n,bloqueJusqu}}
   const ids=list.map(e=>e.id).join(",");
 
+  const [enFile,setEnFile]=useState(()=>fileHorsLigne().length);
   useEffect(()=>{
     const t=setInterval(()=>setHeure(new Date().toTimeString().slice(0,5)),20000);
-    const on=()=>setEnLigne(true), off=()=>setEnLigne(false);
+    // La borne remplace TOUTE l'application : le bandeau hors ligne, qui rejoue
+    // la file au retour du reseau, n'est pas rendu. Sans le rejeu ci-dessous, un
+    // pointage mis en file dormirait tant que la borne reste ouverte, donc toute
+    // la journee.
+    const vider=async()=>{
+      if(!fileHorsLigne().length)return;
+      const r=await rejouerFile();
+      setEnFile(r.restantes);
+      if(r.envoyees)relireStatut();
+    };
+    const on=()=>{setEnLigne(true);vider();};
+    const off=()=>setEnLigne(false);
+    const maj=()=>setEnFile(fileHorsLigne().length);
     window.addEventListener("online",on); window.addEventListener("offline",off);
-    return()=>{clearInterval(t);window.removeEventListener("online",on);window.removeEventListener("offline",off);};
+    window.addEventListener("timat:file-hors-ligne",maj);
+    const rappel=setInterval(()=>{if(navigator.onLine!==false)vider();},120000);
+    if(navigator.onLine!==false)vider();
+    return()=>{clearInterval(t);clearInterval(rappel);
+      window.removeEventListener("online",on);window.removeEventListener("offline",off);
+      window.removeEventListener("timat:file-hors-ligne",maj);};
+    /* eslint-disable-next-line */
   },[]);
 
   const relireStatut=async()=>{
@@ -2148,11 +2227,32 @@ function ModeBorne({enfants,user,onQuitter}){
     if(Date.now()<suivi.bloqueJusqu){
       setErreur("Trop d'essais. Réessayez dans un instant.");setCode("");return;
     }
-    // Pas de reseau : on le DIT, on ne fait pas semblant d'enregistrer. Le code
-    // se verifie sur le serveur ; sans lui, il n'y a rien a valider.
+    // Pas de reseau : le code est verifie ICI, contre l'empreinte gardee sur
+    // l'appareil, puis le pointage part en file d'attente avec L'HEURE DE
+    // MAINTENANT. L'ecran dit « en attente d'envoi », jamais « enregistré ».
     if(typeof navigator!=="undefined"&&navigator.onLine===false){
-      setErreur("Pas de réseau. Le pointage n'a pas été enregistré — prévenez l'assistante maternelle.");
-      setCode("");return;
+      const attendue=borneEmpreintes()[e.id];
+      if(!attendue){
+        setErreur("Pas de réseau, et cet enfant n'a pas de code sur cet appareil. Prévenez l'assistante maternelle.");
+        setCode("");return;
+      }
+      const donnee=await empreinteCode(e.id,code);
+      if(donnee!==attendue){
+        const n=suivi.n+1;
+        essais.current[e.id]={n,bloqueJusqu:n>=BORNE_ESSAIS_MAX?Date.now()+BORNE_BLOCAGE_MS:0};
+        setErreur(n>=BORNE_ESSAIS_MAX?"Code incorrect. Bloqué une minute.":"Code incorrect.");
+        setCode("");return;
+      }
+      const maintenant=new Date().toTimeString().slice(0,5);
+      const st=statut[e.id]||{};
+      filerOperation({rpc:"pointage_borne",cle:"borne:"+e.id+":"+TODAY_STR,
+        charge:{enfant_id:e.id,code,heure:maintenant,date:TODAY_STR}});
+      essais.current[e.id]={n:0,bloqueJusqu:0};
+      setFait({prenom:e.prenom||"Enfant",emoji:e.emoji||"👶",
+        action:st.arrivee?"depart":"arrivee",heure:maintenant,enFile:true});
+      setStatut(m=>({...m,[e.id]:st.arrivee?{...st,depart:maintenant}:{arrivee:maintenant}}));
+      setChoisi(null);setCode("");setErreur("");
+      return;
     }
     const{data,error}=await supabase.rpc("pointage_borne",{p_enfant_id:e.id,p_code:code});
     if(error||!data?.success){
@@ -2194,9 +2294,13 @@ function ModeBorne({enfants,user,onQuitter}){
       <span style={{fontSize:13,fontVariantNumeric:"tabular-nums",opacity:.75}}>{heure}</span>
     </div>
 
+    {enLigne&&enFile>0&&<div style={{background:"#FBF1DC",borderBottom:"1px solid #E5D3A8",color:"#8A6420",
+      fontSize:12.5,padding:"9px 16px",lineHeight:1.45,textAlign:"center"}}>
+      <IconeOuEmoji e="⏳"/> {enFile} pointage{enFile>1?"s":""} en attente d'envoi.
+    </div>}
     {!enLigne&&<div style={{background:"#FBF1DC",borderBottom:"1px solid #E5D3A8",color:"#8A6420",
       fontSize:12.5,padding:"9px 16px",lineHeight:1.45,textAlign:"center"}}>
-      <IconeOuEmoji e="⚠️"/> Pas de réseau. Le pointage est impossible tant que la connexion n'est pas revenue.
+      <IconeOuEmoji e="📵"/> Pas de réseau. Les pointages sont gardés sur l'appareil et partiront au retour de la connexion.
     </div>}
 
     <div style={corps}>
@@ -2206,7 +2310,11 @@ function ModeBorne({enfants,user,onQuitter}){
           <span style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>
             {fait.emoji} {fait.prenom} {fait.action==="depart"?"est reparti":"est arrivé"}
           </span>
-          <span style={{fontSize:12.5,color:"var(--m)"}}>Enregistré. Ses parents le voient déjà dans l'application.</span>
+          <span style={{fontSize:12.5,color:"var(--m)"}}>
+            {fait.enFile
+              ?"Gardé sur l'appareil : pas de réseau. Il partira dès que la connexion revient."
+              :"Enregistré. Ses parents le voient déjà dans l'application."}
+          </span>
         </div>
 
       :choisi?<>
