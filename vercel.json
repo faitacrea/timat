@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/p/:jeton",
+      "destination": "/api/pointage-public?j=:jeton"
+    },
+    {
       "source": "/parents",
       "destination": "/pour-les-parents.html"
     },

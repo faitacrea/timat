@@ -5,7 +5,7 @@
   "par le code existent réellement. C'est la classe de bug qui rendait",
   "delete_user_account inopérante — elle visait « sommeils » et « documents »,",
   "deux tables qui n'existent pas, et l'erreur ne se voyait qu'à l'exécution.",
-  "À rafraîchir volontairement après toute migration."
+  "À rafraîchir volontairement après toute migration. Dernier rafraîchissement : 15 septembre 2026 (mode borne)."
  ],
  "absences": [
   "asmat_id",
@@ -49,6 +49,12 @@
   "trimestre",
   "type"
  ],
+ "borne_tentatives": [
+  "bloque_jusqu",
+  "dernier_echec",
+  "echecs",
+  "jeton"
+ ],
  "bulletins": [
   "annee",
   "asmat_id",
@@ -90,11 +96,26 @@
   "note",
   "type"
  ],
+ "contestations_pointage": [
+  "asmat_id",
+  "champ",
+  "created_at",
+  "etat",
+  "heure_enregistree",
+  "heure_proposee",
+  "id",
+  "motif",
+  "parent_id",
+  "pointage_id",
+  "reponse_asmat",
+  "resolue_at"
+ ],
  "contrats": [
   "actif",
   "aeeh",
   "annee_complete",
   "asmat_id",
+  "code_borne",
   "created_at",
   "date_signature_asmat",
   "date_signature_parent",
@@ -106,6 +127,7 @@
   "heures_hebdo",
   "horaires",
   "id",
+  "jeton_borne",
   "jours",
   "parent_id",
   "partage_parent",

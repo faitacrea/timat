@@ -148,6 +148,24 @@ serveur.coupe = true;
 const r9 = await M.rejouerFile();
 verifie("rejeu sans reseau : rien d'envoye, rien de perdu", [r9.envoyees, r9.restantes], [0, 1]);
 
+// Deux rejeux lances en meme temps ne doivent envoyer qu'une fois. Sans verrou,
+// les deux lisent la meme file et renvoient la meme entree : pointage_borne()
+// bascule arrivee -> depart, donc le second appel refermerait la journee a
+// l'heure de l'arrivee. Deux evenements « online » de suite suffisent.
+console.log("\nUN SEUL REJEU A LA FOIS");
+serveur.coupe = true;
+memoire.clear();
+await M.enregistrerPointage({ enfant_id: "e-verrou", date: "2026-09-15", arrivee: "08:00" });
+serveur.coupe = false;
+serveur.lignes.length = 0;
+{
+  const [a, b] = await Promise.all([M.rejouerFile(), M.rejouerFile()]);
+  verifie("deux rejeux simultanes : une seule ligne ecrite", serveur.lignes.length, 1);
+  verifie("deux rejeux simultanes : le second partage le resultat du premier", a === b, true);
+  verifie("deux rejeux simultanes : un seul envoi compte", a.envoyees, 1);
+  verifie("deux rejeux simultanes : file vide", M.fileHorsLigne().length, 0);
+}
+
 console.log("\nCOPIE LOCALE POUR CONSULTATION");
 
 // 10. Toute copie porte sa date : c'est ce qui empeche de la croire fraiche.

@@ -325,6 +325,98 @@ for (const { nom, motif, source } of BAREME) {
     signale("chiffre", `${nom} ne vaut plus la valeur vérifiée (${source}) — vérifier à la source avant de modifier`);
   }
 }
+// --- valeurs perimees : l'interdiction, pas seulement la presence ---
+//
+// BAREME ci-dessus verifie qu'une valeur juste EXISTE quelque part. Il ne dit
+// rien des copies restees fausses ailleurs : le plancher CMG etait verrouille a
+// 814,02 dans le simulateur parent pendant que quatre autres endroits — dont un
+// outil pro et deux simulateurs publics — calculaient encore sur 814,62. L'audit
+// annoncait « aucune anomalie » et l'application donnait deux reponses.
+//
+// On interdit donc la valeur perimee elle-meme, partout, y compris dans les
+// pages statiques de public/ que BAREME ne lisait pas.
+const PORTEE_PERIMEES = [
+  "../src/App.jsx",
+  "./generate-local.mjs",
+  "./generate-blog.mjs",
+  ...readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => "../public/" + f),
+];
+const PERIMEES = [
+  { motif: /814[.,]62/,   quoi: "plancher de ressources CMG périmé (814,62)", bon: "814,02" },
+  { motif: /≈ 2,65 € pour 9 ?h/, quoi: "minimum d'entretien annoncé à 2,65 € pour 9 h", bon: "3,92 € pour 9 h ; 2,65 € est le plancher absolu" },
+  { motif: /\*\s*0\.275\b/, quoi: "cotisations patronales figées à 27,5 %", bon: "TAUX_PATRONAL_TOTAL, calculé depuis la table des cotisations" },
+  { motif: /0\.7822|0,7822/, quoi: "coefficient net/brut inventé (0,7822)", bon: "brutDepuisNet(), calculé depuis la table des cotisations" },
+];
+for (const rel of PORTEE_PERIMEES) {
+  let texte;
+  try { texte = readFileSync(new URL(rel, import.meta.url), "utf8"); } catch { continue; }
+  for (const { motif, quoi, bon } of PERIMEES) {
+    if (motif.test(texte)) signale("chiffre", `${rel} : ${quoi} — attendu : ${bon}`);
+  }
+}
+
+// Le bareme CMG ne doit exister qu'en un exemplaire dans l'application : deux
+// copies avaient deja diverge sur le plancher de ressources.
+const occurrencesCHR = (readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/CHR_AM\s*=/g) || []).length;
+if (occurrencesCHR !== 1) {
+  signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/App.jsx — il doit l'être une seule, sans quoi les copies divergent`);
+}
+
+// --- routes serveur que plus personne n'appelle ---
+//
+// Vercel deploie automatiquement tout fichier de api/. api/pointage-qr.js y
+// dormait : aucune authentification, la CLE DE SERVICE — qui contourne toutes
+// les regles de securite — et un enfant_id lu dans le corps de la requete. Le
+// GET renvoyait le prenom de l'enfant et ses heures du jour sans connexion, le
+// POST ecrivait un pointage marque « valide par le parent ». Personne ne
+// l'appelait : l'application passe par la RPC pointage_qr, sous la session de
+// l'utilisateur, donc soumise aux regles. Meme classe que la route d'envoi de
+// notifications ouverte a tout internet.
+//
+// Une route que rien n'appelle n'a pas a etre en ligne. Celles que des tiers
+// appellent sont nommees ici, une par une, avec la raison.
+const ROUTES_TIERCES = new Map([
+  ["webhook", "appelée par Stripe, jamais par l'application"],
+]);
+const toutFichier = (dir, out = []) => {
+  for (const e of readdirSync(dir)) {
+    const q = path.join(dir, e);
+    if (statSync(q).isDirectory()) toutFichier(q, out); else out.push(q);
+  }
+  return out;
+};
+const refsRoutes = ["../src", "../public", "../scripts", "../api"]
+  .flatMap((d) => { try { return toutFichier(path.join(RACINE, d.slice(3))); } catch { return []; } })
+  .filter((f) => /\.(js|jsx|mjs|html|json)$/.test(f) && path.basename(f) !== "audit.mjs")
+  .map((f) => { try { return readFileSync(f, "utf8"); } catch { return ""; } })
+  .join("\n") + readFileSync(new URL("../vercel.json", import.meta.url), "utf8");
+for (const f of readdirSync(new URL("../api/", import.meta.url))) {
+  if (!f.endsWith(".js") || f.startsWith("_")) continue;
+  const nom = f.slice(0, -3);
+  if (ROUTES_TIERCES.has(nom)) continue;
+  if (!refsRoutes.includes("api/" + nom) && !refsRoutes.includes("./" + nom + ".js")) {
+    signale("serveur", `api/${f} n'est appelée de nulle part et reste pourtant déployée — la supprimer, ou l'inscrire dans ROUTES_TIERCES avec sa raison`);
+  }
+}
+
+// --- variables d'environnement annoncees mais jamais lues ---
+//
+// .env.example annoncait une cle Anthropic « pour les bilans IA ». Aucune ligne
+// ne la lisait : la fonctionnalite n'existe pas. C'est la meme classe de defaut
+// que le bandeau promettant une sauvegarde inexistante — annoncer comme acquis
+// ce que personne n'a fait, sauf qu'ici c'est le futur mainteneur qu'on trompe.
+const exemple = readFileSync(new URL("../.env.example", import.meta.url), "utf8");
+const codeClient = ["../src/App.jsx", "../lib/supabase.js"]
+  .map((f) => { try { return readFileSync(new URL(f, import.meta.url), "utf8"); } catch { return ""; } })
+  .join("\n");
+for (const nom of new Set([...exemple.matchAll(/^#?\s*(VITE_[A-Z0-9_]+)\s*=/gm)].map((m) => m[1]))) {
+  if (!codeClient.includes(nom)) {
+    signale("environnement", `.env.example annonce ${nom}, qu'aucune ligne de l'application ne lit — l'écrire ou retirer la mention`);
+  }
+}
+
 // Les deux taux de cotisations doivent venir de la meme table. Le simulateur
 // utilisait 27,5 % en dur la ou le bulletin en calculait 44,37 % : la meme
 // application annoncait deux couts employeur differents.

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
+import qrcode from "qrcode-generator";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -23,6 +24,70 @@ const fmtDateHeureCourte=(iso)=>{
   const d=new Date(iso);
   if(isNaN(d))return String(iso||"");
   return d.toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+};
+
+// Regle unique du mot de passe. Elle doit rester alignee sur le reglage
+// Supabase (8 caracteres minimum, lettres et chiffres requis) : sans ce point
+// de passage unique, l'application acceptait 6 caracteres puis le serveur
+// refusait avec un message en anglais.
+const MDP_MIN = 8;
+const MDP_AIDE = "8 caractères minimum, lettres et chiffres";
+// LES MOTS DE PASSE DEJA FUITES.
+//
+// Supabase sait refuser un mot de passe qui figure dans les fuites connues,
+// mais reserve la fonction a son plan Pro. La meme technique est realisable
+// ici, et gratuitement.
+//
+// CE QUI PART, EXACTEMENT : les CINQ PREMIERS caracteres de l'empreinte SHA-1
+// du mot de passe. Jamais le mot de passe, jamais l'empreinte entiere. Ces cinq
+// caracteres correspondent a des centaines de milliers de mots de passe
+// differents ; le service renvoie toute la liste des empreintes qui commencent
+// ainsi, et c'est NOTRE page qui cherche dedans. Le service ne peut pas savoir
+// laquelle nous interessait. L'en-tete Add-Padding fait en sorte que la taille
+// de la reponse ne le trahisse pas non plus.
+//
+// ON LAISSE PASSER EN CAS DE PANNE. Un controle qui empeche de creer un compte
+// parce qu'un service tiers est lent, c'est pire que pas de controle du tout :
+// il faut que l'inscription marche toujours. D'ou le delai court et le
+// « verifie:false » qui ne bloque rien.
+const MDP_FUITE_DELAI_MS = 3000;
+const MDP_FUITE_URL = "https://api.pwnedpasswords.com/range/";
+const motDePasseCompromis = async (mdp) => {
+  const raté = { verifie: false, occurrences: 0 };
+  try {
+    if (!mdp || typeof crypto === "undefined" || !crypto.subtle) return raté;
+    const brut = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(mdp));
+    const sha = Array.from(new Uint8Array(brut)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+    const prefixe = sha.slice(0, 5), suffixe = sha.slice(5);
+    const minuteur = new AbortController();
+    const t = setTimeout(() => minuteur.abort(), MDP_FUITE_DELAI_MS);
+    let reponse;
+    try {
+      reponse = await fetch(MDP_FUITE_URL + prefixe, {
+        headers: { "Add-Padding": "true" },
+        signal: minuteur.signal,
+      });
+    } finally { clearTimeout(t); }
+    if (!reponse || !reponse.ok) return raté;
+    const corps = await reponse.text();
+    for (const ligne of corps.split("\n")) {
+      const [s, n] = ligne.trim().split(":");
+      if (s === suffixe) return { verifie: true, occurrences: Number(n) || 0 };
+    }
+    return { verifie: true, occurrences: 0 };
+  } catch (e) { return raté; }
+};
+
+// Le message. Separe de la verification pour qu'il n'existe qu'une fois.
+const messageMotDePasseFuite = (occurrences) =>
+  "Ce mot de passe figure dans " + (occurrences > 1000 ? "plus de mille" : occurrences)
+  + " fuite" + (occurrences > 1 ? "s" : "") + " de données connues. Il est essayé en premier par ceux qui forcent les comptes : choisissez-en un autre.";
+
+const verifierMotDePasse = (mdp) => {
+  const m = mdp || "";
+  if (m.length < MDP_MIN) return `Le mot de passe doit faire au moins ${MDP_MIN} caractères.`;
+  if (!/[a-zA-Z]/.test(m) || !/[0-9]/.test(m)) return "Le mot de passe doit contenir au moins une lettre et un chiffre.";
+  return null;
 };
 
 const CLE_HL="timat:hl:";
@@ -89,9 +154,38 @@ async function enregistrerPointage(ligne){
 }
 
 // Rejeu de la file. Rend {envoyees,conflits,restantes}.
+// Un seul rejeu a la fois.
+//
+// Deux rejeux simultanes renvoient la MEME entree deux fois, et pointage_borne()
+// bascule arrivee -> depart : le second appel refermerait la journee a l'heure
+// de l'arrivee, soit zero minute travaillee. Deux evenements « online » de suite
+// suffisent a le declencher, et un reseau qui vacille en envoie plus que ca.
+let _rejeuEnCours=null;
 async function rejouerFile(){
+  if(_rejeuEnCours)return _rejeuEnCours;
+  const course=(async()=>{
   let envoyees=0,conflits=0;
   for(const e of fileHorsLigne()){
+    // Pointage fait a la borne pendant une coupure. Il part par la meme
+    // fonction serveur qu'en ligne — donc le code est verifie pour de bon — et
+    // il porte L'HEURE OU LE PARENT A TOUCHE L'ECRAN, pas celle du rejeu.
+    if(e.rpc==="pointage_borne"){
+      try{
+        const{data,error}=await supabase.rpc("pointage_borne",{
+          p_enfant_id:e.charge.enfant_id,p_code:e.charge.code,
+          p_heure:e.charge.heure,p_date:e.charge.date});
+        if(error){
+          if(panneReseau(error))break;
+          marquerConflit(e.id,error.message);conflits++;continue;
+        }
+        if(!data?.success){marquerConflit(e.id,data?.error||"refusé au rejeu");conflits++;continue;}
+        retirerDeLaFile(e.id);envoyees++;
+      }catch(err){
+        if(panneReseau(err))break;
+        marquerConflit(e.id,String(err&&err.message||err));conflits++;
+      }
+      continue;
+    }
     if(e.table!=="pointages"){retirerDeLaFile(e.id);continue;}
     try{
       // Le parent a-t-il touche a ce pointage pendant la coupure ?
@@ -115,6 +209,9 @@ async function rejouerFile(){
     }
   }
   return{envoyees,conflits,restantes:fileHorsLigne().length};
+  })();
+  _rejeuEnCours=course;
+  try{return await course;}finally{_rejeuEnCours=null;}
 }
 
 
@@ -721,6 +818,17 @@ const netDepuisBrut=(brut)=>{
   return Math.round((b-cotSal)*100)/100;
 };
 
+// La conversion inverse, net -> brut. Le simulateur de cout parent divisait par
+// un coefficient invente ecrit en dur — le meme genre de nombre que
+// netDepuisBrut() avait deja chasse du recapitulatif Pajemploi. Il derivera a la
+// premiere revalorisation des cotisations ; celle-ci, non, elle sort de la table.
+const TAUX_SALARIAL_TOTAL = Object.values(TAUX_COTISATIONS)
+  .reduce((s, t) => s + (t.sal > 0 ? (t.base || 1) * t.sal / 100 : 0), 0);
+const brutDepuisNet = (net) => {
+  const n = Number(net) || 0;
+  return n > 0 ? Math.round((n / (1 - TAUX_SALARIAL_TOTAL)) * 100) / 100 : 0;
+};
+
 // DUREE DU TRAVAIL, TOUS EMPLOYEURS CONFONDUS.
 //
 // Une assistante maternelle accueille les enfants de plusieurs familles a la
@@ -792,6 +900,9 @@ const journeesTravaillees = (pointages) => {
 
 const heuresDepuisMinutes = (m) => Math.round(((Number(m) || 0) / 60) * 10) / 10;
 
+// Cinq journees d'accueil par semaine : l'hypothese par defaut des
+// simulateurs, faute d'un calendrier reel.
+const JOURS_SEMAINE_TYPE = 5;
 const IE_PLANCHER_JOUR = 2.65;
 // Indemnite d'entretien minimale pour une journee d'accueil de n heures.
 const indemniteEntretienMin = (heures) =>
@@ -804,6 +915,43 @@ const indemniteEntretienMin = (heures) =>
 const CI_PLAFOND_DEPENSES = 3500;
 const CI_TAUX = 0.5;
 const CI_PLAFOND_CREDIT = CI_PLAFOND_DEPENSES * CI_TAUX; // 1 750
+
+// --- Bareme du CMG (Urssaf / CNAF, revalorisation du 1er avril 2026) ---
+//
+// Ce bareme existait en DEUX exemplaires : celui du simulateur parent et celui
+// de l'outil pro « CMG (reforme 2025) ». Les copies avaient diverge en silence
+// sur deux chiffres, et l'outil pro annoncait donc un reste a charge faux :
+//   - un plancher de ressources plus eleve que celui retenu ci-dessous ;
+//   - cotisations patronales a 27,5 % au lieu des 44,37 % du bulletin.
+// Il n'y a plus qu'un exemplaire. Toute revalorisation se fait ici, une fois.
+//
+// Plancher de ressources : deux valeurs ont circule. Trois sources
+// independantes donnent 814,02 EUR, une seule donnait un montant superieur ;
+// c'est donc 814,02 qui est retenu, et l'autre valeur est desormais interdite
+// dans tout le depot par scripts/audit.mjs. Reserve : urssaf.fr, caf.fr et
+// service-public.gouv.fr
+// ne sont pas joignables depuis l'environnement de developpement. Un appel a la
+// CAF trancherait definitivement.
+const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
+const CHR_AM=4.91;        // cout horaire de reference assmat 2026
+const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
+const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
+// Taux d'effort horaire = bareme PSU accueil collectif (CNAF 2026) :
+// 1 enfant -> 0,0619 ; 2 -> 0,0516 ; 3 -> 0,0413 ; 4 a 7 -> 0,0310 ; 8+ -> 0,0206.
+const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206};
+// AEEH : la tranche immediatement inferieure s'applique, autant de fois qu'il y
+// a d'enfants concernes — d'ou un enfant fictif ajoute par AEEH.
+const tauxEffortCMG=(nbEnfants,aeeh=0)=>TE_BAREME[Math.min(8,Math.max(1,(Number(nbEnfants)||1)+(Number(aeeh)||0)))];
+// Montant mensuel du CMG. Retourne aussi le cout de garde retenu, qui sert de
+// plafond au CMG : le CMG ne rembourse jamais plus que la garde elle-meme.
+const montantCMG=({tauxHoraire,heuresMois,revenusAnnuels,nbEnfants=1,aeeh=0})=>{
+  const tarifRetenu=Math.min(Number(tauxHoraire)||0,PLAFOND_H);
+  const coutGarde=tarifRetenu*(Number(heuresMois)||0);
+  const ressources=Math.max(PLANCHER_RESSOURCES,Math.min((Number(revenusAnnuels)||0)/12,PLAFOND_RESSOURCES));
+  const brut=coutGarde*(1-(ressources*tauxEffortCMG(nbEnfants,aeeh)/CHR_AM));
+  const montant=Math.round(Math.max(0,Math.min(brut,coutGarde,CMG_MAX))*100)/100;
+  return {montant,tarifRetenu,coutGarde,plafonne:montant>=CMG_MAX-0.01,tarifDepasse:tarifRetenu<(Number(tauxHoraire)||0)};
+};
 
 const isoJour=(d)=>{
   if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -1232,6 +1380,8 @@ const D = {
     {id:"pt4",eId:"e1",date:jourDecale(-7),arr:"07h40",dep:"17h25",tot:"9h45",valide:true},
     {id:"pt5",eId:"e2",date:jourDecale(-7),arr:"08h00",dep:"18h00",tot:"10h00",valide:true},
     {id:"pt6",eId:"e3",date:jourDecale(-7),arr:"07h05",dep:"17h10",tot:"10h05",valide:true},
+    {id:"pt7",eId:"e1",date:jourDecale(-1),arr:"08h30",dep:"17h00",tot:"8h30",valide:true,
+     valide_parent:true,mode_pointage:"borne",date_validation:jourDecale(-1)+"T08:30:00Z"},
   ],
   repas:[
     {id:"r1",eId:"e1",date:TODAY_STR,dej:"Tout mangé",gou:"Yaourt + compote",bib:null,notes:"",q:"bien"},
@@ -1764,6 +1914,47 @@ function EcheancierDeclaration({enfants,role,user,demo}){
   </div>;
 }
 
+// LE QR DE POINTAGE, FABRIQUE DANS LA PAGE.
+//
+// L'image etait demandee a api.qrserver.com, un service exterieur, en lui
+// passant dans l'adresse l'identifiant de l'enfant concerne. Ce service
+// recevait donc, a chaque affichage et a chaque impression, un identifiant qui
+// designe un enfant precis — sur une application qui promet des donnees
+// hebergees en France. L'identifiant seul ne donne acces a rien, mais c'est un
+// transfert vers un tiers non declare, et il etait evitable.
+//
+// Consequence utile au passage : le QR s'affiche et s'imprime sans reseau, et
+// en vectoriel — donc net a n'importe quelle taille de papier.
+const qrChemin=(valeur,module=4,marge=4)=>{
+  const q=qrcode(0,"M");
+  q.addData(String(valeur||""));
+  q.make();
+  const n=q.getModuleCount();
+  let d="";
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    if(q.isDark(y,x))d+="M"+((x+marge)*module)+" "+((y+marge)*module)+"h"+module+"v"+module+"h-"+module+"z";
+  }
+  return{d,cote:(n+marge*2)*module};
+};
+
+function QRPointage({valeur,taille=180,style}){
+  const{d,cote}=useMemo(()=>qrChemin(valeur),[valeur]);
+  return <svg role="img" aria-label="QR code de pointage"
+    viewBox={"0 0 "+cote+" "+cote} width={taille} height={taille}
+    style={{background:"#fff",display:"block",...style}}>
+    <rect width={cote} height={cote} fill="#fff"/>
+    <path d={d} fill="#000"/>
+  </svg>;
+}
+
+// Le meme QR, en balisage brut, pour la fenetre d'impression — qui est un document a
+// part et ne partage pas le rendu React.
+const qrSvgBalise=(valeur,cote=300)=>{
+  const{d,cote:c}=qrChemin(valeur);
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+c+' '+c+'" width="'+cote+'" height="'+cote+'">'
+    +'<rect width="'+c+'" height="'+c+'" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>';
+};
+
 //
 // POINTAGE RAPIDE - pointer arrivee/depart en 1 tap directement depuis l'espace (parent OU assmat),
 // via la meme RPC pointage_qr que le scan. Statut du jour en direct, sans chercher ni scanner.
@@ -1804,10 +1995,10 @@ function PointageRapide({enfants,role,user,demo}){
   if(!list.length)return null;
   const origin=(typeof window!=="undefined"&&window.location.origin)||"https://www.timat.app";
   const showQR=role==="asmat"&&!demo;
-  const qrUrl=(e,size)=>"https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&data="+encodeURIComponent(origin+"/?pointage=qr&enfant="+e.id);
+  const qrCible=(e)=>origin+"/?pointage=qr&enfant="+e.id;
   const imprimerQR=(e)=>{
     const w=window.open("","_blank","width=420,height=580");if(!w)return;
-    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2><img src='"+H(qrUrl(e,300))+"' style='width:300px;height:300px'/><p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
+    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2>"+qrSvgBalise(qrCible(e),300)+"<p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
     w.document.close();setTimeout(()=>{try{w.print();}catch(x){}},400);
   };
   return <div className="card" style={{marginBottom:16,border:"1.5px solid var(--Sp)",background:"var(--c)"}}>
@@ -1850,7 +2041,7 @@ function PointageRapide({enfants,role,user,demo}){
       <div className="card" style={{maxWidth:320,width:"100%",textAlign:"center"}}>
         <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{qrFor.emoji||"👶"} QR de {qrFor.prenom||"l'enfant"}</div>
         <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>Le parent le flashe avec l'appareil photo : <b>1er scan = arrivée</b>, <b>2e scan = départ</b>. Réutilisable chaque jour.</div>
-        <img alt="QR" src={qrUrl(qrFor,220)} style={{width:200,height:200,borderRadius:12,border:"3px solid var(--br)",background:"#fff"}}/>
+        <QRPointage valeur={qrCible(qrFor)} taille={200} style={{borderRadius:12,border:"3px solid var(--br)"}}/>
         <div style={{display:"flex",gap:8,marginTop:14}}>
           <button className="btn bG" style={{flex:1,justifyContent:"center"}} onClick={()=>imprimerQR(qrFor)}><IconeOuEmoji e="🖨️"/> Imprimer</button>
           <button className="btn bT" style={{flex:1,justifyContent:"center"}} onClick={()=>setQrFor(null)}>Fermer</button>
@@ -1862,6 +2053,529 @@ function PointageRapide({enfants,role,user,demo}){
 }
 
 //
+//
+// MODE BORNE — l'ecran de pointage pose dans l'entree.
+//
+// Trois facons de s'en servir, un seul ecran : un appareil dedie, le telephone
+// de l'assistante maternelle tendu au parent, ou plus tard un QR au mur. Le
+// materiel n'est pas le sujet.
+//
+// L'IDENTITE, c'est le point delicat. Une borne dans une entree ne peut pas
+// demander a chaque parent de se connecter, et une adresse ouverte qui accepte
+// n'importe quel pointage, on en a deja supprime une. La solution evite les
+// deux : la borne tourne sous la session de l'assistante maternelle, qui l'a
+// ouverte depuis son compte, et le code a quatre chiffres dit QUI a touche
+// l'ecran. Aucune nouvelle adresse publique, aucune cle de service.
+//
+// Le code est verifie PAR LE SERVEUR (RPC pointage_borne) et ne descend jamais
+// dans le navigateur : la borne peut donc etre tendue a un parent sans lui
+// livrer les codes des autres familles.
+//
+// Ce que le code ne fait pas : il ne protege pas de l'assistante maternelle
+// elle-meme, qui peut deja pointer depuis son application. Il protege de
+// l'erreur. La valeur de preuve vient de l'etape suivante — le parent voit le
+// pointage aussitot et peut le contester, trace a l'appui.
+// Les empreintes des codes de famille, gardees sur l'appareil de la borne.
+//
+// Sans reseau, le serveur ne peut pas verifier le code — et un pointage envoye
+// a l'aveugle, refuse une heure plus tard au rejeu, c'est promettre un
+// enregistrement qui n'aura pas lieu. La borne verifie donc elle-meme, contre
+// une EMPREINTE : les codes en clair ne sont jamais ecrits sur l'appareil.
+// En ligne, c'est le serveur qui tranche, comme avant.
+const BORNE_CLE_EMPREINTES="timat:borne:empreintes";
+const empreinteCode=async(enfantId,code)=>{
+  const octets=new TextEncoder().encode("timat:borne:"+enfantId+":"+code);
+  const h=await crypto.subtle.digest("SHA-256",octets);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+};
+const borneEmpreintes=()=>_lireJSON(BORNE_CLE_EMPREINTES)||{};
+const borneMemoriserEmpreintes=(m)=>_ecrireJSON(BORNE_CLE_EMPREINTES,m);
+
+const BORNE_CLE_ACTIVE="timat:borne:active";
+const BORNE_CLE_SORTIE="timat:borne:sortie";
+const BORNE_ESSAIS_MAX=3;
+const BORNE_BLOCAGE_MS=60000;
+
+const borneActive=()=>{try{return localStorage.getItem(BORNE_CLE_ACTIVE)==="1";}catch(e){return false;}};
+const borneCodeSortie=()=>{try{return localStorage.getItem(BORNE_CLE_SORTIE)||"";}catch(e){return"";}};
+const borneOuvrir=(codeSortie)=>{try{localStorage.setItem(BORNE_CLE_SORTIE,String(codeSortie||""));localStorage.setItem(BORNE_CLE_ACTIVE,"1");}catch(e){}};
+const borneFermer=()=>{try{localStorage.removeItem(BORNE_CLE_ACTIVE);}catch(e){}};
+
+function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
+  const tape=(c)=>{if(valeur.length<longueur)setValeur(valeur+c);};
+  const touche=(contenu,action,util)=>(
+    <button type="button" key={String(contenu)} onClick={action}
+      style={{background:"#fff",border:"1.5px solid var(--br)",borderRadius:12,padding:"16px 0",
+        fontFamily:"inherit",fontSize:util?15:22,fontWeight:util?500:600,
+        color:util?"var(--m)":"var(--b)",cursor:"pointer",minHeight:56}}>{contenu}</button>
+  );
+  return <>
+    <div style={{display:"flex",justifyContent:"center",gap:14,padding:"14px 0 6px"}}>
+      {Array.from({length:longueur},(_,i)=>
+        <span key={i} style={{width:15,height:15,borderRadius:15,display:"block",
+          border:"2px solid var(--br)",background:i<valeur.length?"var(--b)":"transparent",
+          borderColor:i<valeur.length?"var(--b)":"var(--br)"}}/>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>
+      {["1","2","3","4","5","6","7","8","9"].map(c=>touche(c,()=>tape(c)))}
+      {touche(libelleAnnuler,onAnnuler,true)}
+      {touche("0",()=>tape("0"))}
+      {touche("⌫",()=>setValeur(valeur.slice(0,-1)),true)}
+    </div>
+  </>;
+}
+
+// Le jeton du QR affiche a l'entree.
+//
+// Il ne porte PAS l'identifiant de l'enfant : un identifiant ne se revoque pas,
+// un QR imprime reste au mur des annees. Le jeton, lui, se regenere — et le QR
+// de la veille ne vaut plus rien. 32 caracteres tires du generateur
+// cryptographique du navigateur, soit 192 bits : on ne le devine pas.
+const JETON_BORNE_ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+const tirerJetonBorne=()=>{
+  const o=new Uint8Array(32);
+  (window.crypto||window.msCrypto).getRandomValues(o);
+  return Array.from(o,(n)=>JETON_BORNE_ALPHABET[n&63]).join("");
+};
+
+// Reglages de la borne, cote assistante maternelle : le code de sortie de
+// l'appareil, le code de chaque famille, et le QR a afficher a l'entree.
+function ReglagesBorne({enfants,user,onDemarrer}){
+  const [contrats,setContrats]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const [toast,setToast]=useState("");
+  const [sortie,setSortie]=useState(()=>borneCodeSortie());
+  const [qr,setQr]=useState(null);   // enfant dont le QR est affiche en grand
+  const list=(enfants||[]).filter(Boolean);
+
+  const relire=async()=>{
+    if(!user?.id){setChargement(false);return;}
+    const{data,error}=await supabase.from("contrats")
+      .select("id,enfant_id,code_borne,jeton_borne,actif").eq("asmat_id",user.id);
+    setChargement(false);
+    if(error){setToast("❌ "+error.message);return;}
+    setContrats(data||[]);
+  };
+  useEffect(()=>{relire();/* eslint-disable-next-line */},[user?.id]);
+
+  const codeDe=(enfantId)=>(contrats.find(c=>c.enfant_id===enfantId&&c.actif!==false)||{}).code_borne||"";
+  const jetonDe=(enfantId)=>(contrats.find(c=>c.enfant_id===enfantId&&c.actif!==false)||{}).jeton_borne||"";
+
+  // Quatre chiffres tires au hasard, sans suite evidente : 0000, 1234 et 1111
+  // sont les premiers qu'on essaie.
+  const tirerCode=()=>{
+    const interdits=new Set(["0000","1111","2222","3333","4444","5555","6666","7777","8888","9999","1234","0123","4321","2580"]);
+    for(let i=0;i<50;i++){
+      const c=String(Math.floor(Math.random()*10000)).padStart(4,"0");
+      if(!interdits.has(c))return c;
+    }
+    return "7391";
+  };
+
+  const attribuer=async(enfantId)=>{
+    const c=contrats.find(x=>x.enfant_id===enfantId&&x.actif!==false);
+    if(!c){setToast("❌ Aucun contrat actif pour cet enfant");return;}
+    const code=tirerCode();
+    const{error}=await supabase.from("contrats").update({code_borne:code}).eq("id",c.id);
+    if(error){setToast("❌ "+error.message);return;}
+    setToast("✅ Nouveau code : "+code);
+    relire();
+  };
+
+  // Regenerer remplace le jeton : le QR imprime la veille cesse de fonctionner
+  // le temps que la base ecrive. C'est exactement ce qu'on veut d'une affiche
+  // qu'on a perdue, ou d'un parent parti.
+  const donnerJeton=async(enfantId)=>{
+    const c=contrats.find(x=>x.enfant_id===enfantId&&x.actif!==false);
+    if(!c){setToast("❌ Aucun contrat actif pour cet enfant");return;}
+    if(!c.code_borne){setToast("❌ Donnez d'abord un code à cette famille");return;}
+    const j=tirerJetonBorne();
+    const{error}=await supabase.from("contrats").update({jeton_borne:j}).eq("id",c.id);
+    if(error){setToast("❌ "+error.message);return;}
+    setToast(c.jeton_borne?"✅ Nouveau QR — l'ancien ne marche plus":"✅ QR créé");
+    relire();
+  };
+
+  const retirerJeton=async(enfantId)=>{
+    const c=contrats.find(x=>x.enfant_id===enfantId&&x.actif!==false);
+    if(!c)return;
+    const{error}=await supabase.from("contrats").update({jeton_borne:null}).eq("id",c.id);
+    if(error){setToast("❌ "+error.message);return;}
+    setToast("✅ QR désactivé");setQr(null);relire();
+  };
+
+  const cibleQr=(j)=>((typeof window!=="undefined"&&window.location.origin)||"https://www.timat.app")+"/p/"+j;
+
+  const imprimerQr=(e,j)=>{
+    const w=window.open("","_blank","width=440,height=620");if(!w)return;
+    w.document.write("<html><head><meta charset='utf-8'><title>Pointage "+H(e.prenom||"Enfant")
+      +"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'>"
+      +"<h2>"+H(e.emoji||"👶")+" "+H(e.prenom||"Enfant")+"</h2>"+qrSvgBalise(cibleQr(j),300)
+      +"<p style='color:#555;font-size:14px;max-width:320px;margin:16px auto;line-height:1.6'>"
+      +"Scannez, puis tapez le code à 4 chiffres de votre famille.<br>"
+      +"1er passage = arrivée · 2e passage = départ.</p></body></html>");
+    w.document.close();setTimeout(()=>{try{w.print();}catch(x){}},400);
+  };
+
+  const demarrer=async()=>{
+    if(!/^[0-9]{4}$/.test(sortie)){setToast("❌ Le code de sortie doit faire 4 chiffres");return;}
+    const sansCode=list.filter(e=>!codeDe(e.id));
+    if(sansCode.length){setToast("❌ Donnez d'abord un code à : "+sansCode.map(e=>e.prenom||"Enfant").join(", "));return;}
+    // Les empreintes, jamais les codes en clair : c'est ce qui permet a la borne
+    // de verifier un code sans reseau sans rien garder de lisible sur l'appareil.
+    try{
+      const m={};
+      for(const e of list)m[e.id]=await empreinteCode(e.id,codeDe(e.id));
+      borneMemoriserEmpreintes(m);
+    }catch(err){setToast("❌ Empreintes des codes impossibles à calculer : "+String(err&&err.message||err));return;}
+    borneOuvrir(sortie);
+    onDemarrer();
+  };
+
+  const carte={background:"#fff",border:"1px solid var(--br)",borderRadius:14,padding:16,
+    display:"flex",flexDirection:"column",gap:10,marginBottom:12};
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}><IconeOuEmoji e="🚪"/> La borne d'entrée</div>
+      <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+        L'appareil se verrouille sur l'écran de pointage : plus de menu, plus rien d'autre.
+        Chaque parent touche le prénom de son enfant et tape le code de sa famille.
+        Le pointage part sous votre compte, et compte comme validé par le parent.
+      </p>
+      <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+        Ça marche sur un appareil posé dans l'entrée, ou sur <b>votre propre téléphone</b>,
+        que vous tendez au parent à l'arrivée. Rien à acheter.
+      </p>
+      <p style={{margin:0,fontSize:13,color:"var(--m)",lineHeight:1.6}}>
+        Sans réseau, le pointage est gardé sur l'appareil et part au retour de la connexion,
+        avec l'heure où le parent a touché l'écran. L'écran dit « en attente d'envoi »
+        plutôt que « enregistré ».
+      </p>
+    </div>
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Votre code de sortie</div>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        Quatre chiffres, à vous, demandés pour quitter le mode borne. Ne le donnez à personne.
+      </p>
+      <input inputMode="numeric" maxLength={4} value={sortie} className="inp"
+        onChange={e=>setSortie(e.target.value.replace(/[^0-9]/g,"").slice(0,4))}
+        placeholder="4 chiffres" style={{maxWidth:150,fontSize:18,letterSpacing:"0.3em",fontVariantNumeric:"tabular-nums"}}/>
+      <p style={{margin:0,fontSize:11.5,color:"var(--l)",lineHeight:1.5}}>
+        Il est gardé sur cet appareil, pas dans votre compte : il empêche un parent de sortir
+        de la borne et de se promener dans votre espace. Il ne remplace pas le verrouillage
+        de l'appareil lui-même.
+      </p>
+    </div>
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Le code de chaque famille</div>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        À communiquer aux parents. Il dit qui a touché l'écran — il ne protège pas contre vous,
+        qui pouvez déjà pointer depuis votre espace, mais contre l'erreur : la mauvaise vignette,
+        l'enfant d'à côté.
+      </p>
+      {chargement?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Chargement…</p>
+      :!list.length?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Aucun enfant accueilli.</p>
+      :list.map(e=>{
+        const c=codeDe(e.id);
+        return <div key={e.id} style={{display:"flex",alignItems:"center",gap:11,padding:"9px 0",
+          borderBottom:"1px solid var(--br)"}}>
+          <span style={{fontSize:22,flexShrink:0}}>{e.emoji||"👶"}</span>
+          <span style={{flex:1,minWidth:0,fontSize:14,fontWeight:600,color:"var(--b)"}}>{e.prenom||"Enfant"}</span>
+          <span style={{fontFamily:"ui-monospace,monospace",fontSize:17,fontWeight:700,
+            letterSpacing:"0.18em",color:c?"var(--b)":"var(--l)",fontVariantNumeric:"tabular-nums"}}>
+            {c||"—"}
+          </span>
+          <button type="button" onClick={()=>attribuer(e.id)} className="btn bG s">
+            {c?"Changer":"Donner un code"}
+          </button>
+        </div>;
+      })}
+    </div>
+
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Le QR à afficher à l'entrée</div>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        L'autre façon de faire, sans appareil à poser : une feuille au mur. Le parent la scanne
+        avec son propre téléphone, tape le code de sa famille, c'est enregistré. Rien à installer,
+        aucun compte à créer.
+      </p>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        La page ne dit rien tant que le code n'est pas bon : ni le prénom, ni les heures.
+        Au bout de cinq codes faux, elle se ferme un quart d'heure.
+      </p>
+      {chargement?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Chargement…</p>
+      :!list.length?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Aucun enfant accueilli.</p>
+      :list.map(e=>{
+        const j=jetonDe(e.id);
+        return <div key={e.id} style={{display:"flex",alignItems:"center",gap:11,padding:"9px 0",
+          borderBottom:"1px solid var(--br)",flexWrap:"wrap"}}>
+          <span style={{fontSize:22,flexShrink:0}}>{e.emoji||"👶"}</span>
+          <span style={{flex:1,minWidth:90,fontSize:14,fontWeight:600,color:"var(--b)"}}>{e.prenom||"Enfant"}</span>
+          {j
+            ?<button type="button" onClick={()=>setQr(e)} className="btn bG s">Voir le QR</button>
+            :<button type="button" onClick={()=>donnerJeton(e.id)} className="btn bG s">Créer le QR</button>}
+        </div>;
+      })}
+      <p style={{margin:0,fontSize:11.5,color:"var(--l)",lineHeight:1.5}}>
+        Le QR ne contient pas le nom de l'enfant, seulement une suite de caractères tirée au hasard.
+        Si l'affiche est perdue, regénérez-la : celle qui traîne cesse aussitôt de fonctionner.
+      </p>
+    </div>
+
+    <button type="button" onClick={demarrer} className="btn bT l"
+      style={{width:"100%",justifyContent:"center"}}>
+      Démarrer le mode borne →
+    </button>
+    <p style={{fontSize:11.5,color:"var(--l)",lineHeight:1.55,margin:"10px 2px 0",textAlign:"center"}}>
+      Les notifications de l'application disparaissent pendant que la borne est ouverte.
+      En revanche, une page web ne peut pas empêcher votre téléphone d'afficher une bannière :
+      si vous tendez le vôtre, activez « Ne pas déranger ».
+    </p>
+
+    {qr&&jetonDe(qr.id)&&<div onClick={ev=>{if(ev.target===ev.currentTarget)setQr(null);}}
+      style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(20,30,40,.55)",
+      display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="card" style={{maxWidth:330,width:"100%",textAlign:"center"}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>
+          {qr.emoji||"👶"} QR de {qr.prenom||"l'enfant"}
+        </div>
+        <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
+          À imprimer et afficher à l'entrée. Le parent scanne, tape <b>{codeDe(qr.id)||"son code"}</b>,
+          et son arrivée puis son départ sont enregistrés.
+        </div>
+        <QRPointage valeur={cibleQr(jetonDe(qr.id))} taille={200}
+          style={{borderRadius:12,border:"3px solid var(--br)"}}/>
+        <div style={{display:"flex",gap:8,marginTop:14}}>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>imprimerQr(qr,jetonDe(qr.id))}><IconeOuEmoji e="🖨️"/> Imprimer</button>
+          <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>setQr(null)}>Fermer</button>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:8}}>
+          <button type="button" className="btn bG s" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>donnerJeton(qr.id)}>Regénérer</button>
+          <button type="button" className="btn bG s" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>retirerJeton(qr.id)}>Désactiver</button>
+        </div>
+      </div>
+    </div>}
+  </div>;
+}
+
+function ModeBorne({enfants,user,onQuitter}){
+  const list=(enfants||[]).filter(Boolean);
+  const [statut,setStatut]=useState({});
+  const [choisi,setChoisi]=useState(null);   // enfant en cours de pointage
+  const [code,setCode]=useState("");
+  const [erreur,setErreur]=useState("");
+  const [fait,setFait]=useState(null);       // {prenom,emoji,action,heure}
+  const [sortie,setSortie]=useState(false);  // pave de sortie ouvert
+  const [codeSortie,setCodeSortie]=useState("");
+  const [enLigne,setEnLigne]=useState(()=>typeof navigator==="undefined"||navigator.onLine!==false);
+  const [heure,setHeure]=useState(()=>new Date().toTimeString().slice(0,5));
+  const essais=useRef({});                   // {enfantId:{n,bloqueJusqu}}
+  const ids=list.map(e=>e.id).join(",");
+
+  const [enFile,setEnFile]=useState(()=>fileHorsLigne().length);
+  useEffect(()=>{
+    const t=setInterval(()=>setHeure(new Date().toTimeString().slice(0,5)),20000);
+    // La borne remplace TOUTE l'application : le bandeau hors ligne, qui rejoue
+    // la file au retour du reseau, n'est pas rendu. Sans le rejeu ci-dessous, un
+    // pointage mis en file dormirait tant que la borne reste ouverte, donc toute
+    // la journee.
+    const vider=async()=>{
+      if(!fileHorsLigne().length)return;
+      const r=await rejouerFile();
+      setEnFile(r.restantes);
+      if(r.envoyees)relireStatut();
+    };
+    const on=()=>{setEnLigne(true);vider();};
+    const off=()=>setEnLigne(false);
+    const maj=()=>setEnFile(fileHorsLigne().length);
+    window.addEventListener("online",on); window.addEventListener("offline",off);
+    window.addEventListener("timat:file-hors-ligne",maj);
+    const rappel=setInterval(()=>{if(navigator.onLine!==false)vider();},120000);
+    if(navigator.onLine!==false)vider();
+    return()=>{clearInterval(t);clearInterval(rappel);
+      window.removeEventListener("online",on);window.removeEventListener("offline",off);
+      window.removeEventListener("timat:file-hors-ligne",maj);};
+    /* eslint-disable-next-line */
+  },[]);
+
+  const relireStatut=async()=>{
+    if(!user?.id||!list.length)return;
+    const{data,error}=await supabase.from("pointages")
+      .select("enfant_id,arrivee,depart").in("enfant_id",list.map(e=>e.id)).eq("date",TODAY_STR);
+    if(error)return;
+    const m={};(data||[]).forEach(p=>{m[p.enfant_id]={arrivee:p.arrivee,depart:p.depart};});
+    setStatut(m);
+  };
+  useEffect(()=>{relireStatut();/* eslint-disable-next-line */},[ids,user?.id]);
+  // Un autre appareil peut pointer pendant que la borne est ouverte.
+  useEffect(()=>{const t=setInterval(relireStatut,60000);return()=>clearInterval(t);/* eslint-disable-next-line */},[ids,user?.id]);
+
+  const hhmm=(t)=>{if(!t)return"";const s=String(t);return s.includes("T")?s.split("T")[1].slice(0,5):s.slice(0,5);};
+
+  const valider=async()=>{
+    if(!choisi||code.length!==4)return;
+    const e=choisi;
+    const suivi=essais.current[e.id]||{n:0,bloqueJusqu:0};
+    if(Date.now()<suivi.bloqueJusqu){
+      setErreur("Trop d'essais. Réessayez dans un instant.");setCode("");return;
+    }
+    // Pas de reseau : le code est verifie ICI, contre l'empreinte gardee sur
+    // l'appareil, puis le pointage part en file d'attente avec L'HEURE DE
+    // MAINTENANT. L'ecran dit « en attente d'envoi », jamais « enregistré ».
+    if(typeof navigator!=="undefined"&&navigator.onLine===false){
+      const attendue=borneEmpreintes()[e.id];
+      if(!attendue){
+        setErreur("Pas de réseau, et cet enfant n'a pas de code sur cet appareil. Prévenez l'assistante maternelle.");
+        setCode("");return;
+      }
+      const donnee=await empreinteCode(e.id,code);
+      if(donnee!==attendue){
+        const n=suivi.n+1;
+        essais.current[e.id]={n,bloqueJusqu:n>=BORNE_ESSAIS_MAX?Date.now()+BORNE_BLOCAGE_MS:0};
+        setErreur(n>=BORNE_ESSAIS_MAX?"Code incorrect. Bloqué une minute.":"Code incorrect.");
+        setCode("");return;
+      }
+      const maintenant=new Date().toTimeString().slice(0,5);
+      const st=statut[e.id]||{};
+      filerOperation({rpc:"pointage_borne",cle:"borne:"+e.id+":"+TODAY_STR,
+        charge:{enfant_id:e.id,code,heure:maintenant,date:TODAY_STR}});
+      essais.current[e.id]={n:0,bloqueJusqu:0};
+      setFait({prenom:e.prenom||"Enfant",emoji:e.emoji||"👶",
+        action:st.arrivee?"depart":"arrivee",heure:maintenant,enFile:true});
+      setStatut(m=>({...m,[e.id]:st.arrivee?{...st,depart:maintenant}:{arrivee:maintenant}}));
+      setChoisi(null);setCode("");setErreur("");
+      return;
+    }
+    const{data,error}=await supabase.rpc("pointage_borne",{p_enfant_id:e.id,p_code:code});
+    if(error||!data?.success){
+      const msg=error?.message||data?.error||"Enregistrement impossible";
+      if(/code incorrect/i.test(msg)){
+        const n=suivi.n+1;
+        essais.current[e.id]={n,bloqueJusqu:n>=BORNE_ESSAIS_MAX?Date.now()+BORNE_BLOCAGE_MS:0};
+        setErreur(n>=BORNE_ESSAIS_MAX
+          ?"Code incorrect. Bloqué une minute."
+          :"Code incorrect. Il reste "+(BORNE_ESSAIS_MAX-n)+" essai"+(BORNE_ESSAIS_MAX-n>1?"s":"")+".");
+      }else setErreur(msg);
+      setCode("");return;
+    }
+    essais.current[e.id]={n:0,bloqueJusqu:0};
+    setFait({prenom:e.prenom||"Enfant",emoji:e.emoji||"👶",action:data.action,heure:data.heure});
+    setChoisi(null);setCode("");setErreur("");
+    await relireStatut();
+  };
+  useEffect(()=>{if(code.length===4)valider();/* eslint-disable-next-line */},[code]);
+  useEffect(()=>{if(!fait)return;const t=setTimeout(()=>setFait(null),4000);return()=>clearTimeout(t);},[fait]);
+
+  const tenterSortie=()=>{
+    if(codeSortie!==borneCodeSortie()){setErreur("Code de sortie incorrect.");setCodeSortie("");return;}
+    borneFermer();onQuitter();
+  };
+  useEffect(()=>{if(sortie&&codeSortie.length===4)tenterSortie();/* eslint-disable-next-line */},[codeSortie]);
+
+  const cadre={minHeight:"100dvh",background:"var(--c)",display:"flex",flexDirection:"column"};
+  const barre={background:"#2E4859",color:"#fff",padding:"12px 16px",display:"flex",
+    justifyContent:"space-between",alignItems:"center",flexShrink:0};
+  const corps={padding:16,display:"flex",flexDirection:"column",gap:11,flex:1,maxWidth:520,
+    width:"100%",margin:"0 auto"};
+
+  return <div style={cadre}>
+    <div style={barre}>
+      <span style={{fontWeight:700,fontSize:15}}>
+        {choisi?((choisi.emoji||"👶")+" "+(choisi.prenom||"Enfant")):"Pointage"}
+      </span>
+      <span style={{fontSize:13,fontVariantNumeric:"tabular-nums",opacity:.75}}>{heure}</span>
+    </div>
+
+    {enLigne&&enFile>0&&<div style={{background:"#FBF1DC",borderBottom:"1px solid #E5D3A8",color:"#8A6420",
+      fontSize:12.5,padding:"9px 16px",lineHeight:1.45,textAlign:"center"}}>
+      <IconeOuEmoji e="⏳"/> {enFile} pointage{enFile>1?"s":""} en attente d'envoi.
+    </div>}
+    {!enLigne&&<div style={{background:"#FBF1DC",borderBottom:"1px solid #E5D3A8",color:"#8A6420",
+      fontSize:12.5,padding:"9px 16px",lineHeight:1.45,textAlign:"center"}}>
+      <IconeOuEmoji e="📵"/> Pas de réseau. Les pointages sont gardés sur l'appareil et partiront au retour de la connexion.
+    </div>}
+
+    <div style={corps}>
+      {fait?<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:14,
+          padding:"26px 18px",textAlign:"center",display:"flex",flexDirection:"column",gap:7}}>
+          <span style={{fontSize:40,fontWeight:800,color:"var(--S)",lineHeight:1,fontVariantNumeric:"tabular-nums"}}>{fait.heure}</span>
+          <span style={{fontSize:15,fontWeight:700,color:"var(--b)"}}>
+            {fait.emoji} {fait.prenom} {fait.action==="depart"?"est reparti":"est arrivé"}
+          </span>
+          <span style={{fontSize:12.5,color:"var(--m)"}}>
+            {fait.enFile
+              ?"Gardé sur l'appareil : pas de réseau. Il partira dès que la connexion revient."
+              :"Enregistré. Ses parents le voient déjà dans l'application."}
+          </span>
+        </div>
+
+      :choisi?<>
+        <p style={{textAlign:"center",fontSize:13.5,color:"var(--m)",margin:0}}>Code de la famille</p>
+        <PaveNumerique valeur={code} setValeur={v=>{setErreur("");setCode(v);}}
+          onAnnuler={()=>{setChoisi(null);setCode("");setErreur("");}}/>
+        {erreur&&<p style={{textAlign:"center",fontSize:12.5,color:"var(--R)",margin:0,lineHeight:1.45}}>{erreur}</p>}
+      </>
+
+      :sortie?<>
+        <p style={{textAlign:"center",fontSize:13.5,color:"var(--m)",margin:0}}>Code de sortie du mode borne</p>
+        <PaveNumerique valeur={codeSortie} setValeur={v=>{setErreur("");setCodeSortie(v);}}
+          onAnnuler={()=>{setSortie(false);setCodeSortie("");setErreur("");}} libelleAnnuler="Retour"/>
+        {erreur&&<p style={{textAlign:"center",fontSize:12.5,color:"var(--R)",margin:0}}>{erreur}</p>}
+      </>
+
+      :<>
+        <p style={{textAlign:"center",fontSize:13.5,color:"var(--m)",margin:"2px 0 4px"}}>
+          Touchez le prénom de votre enfant
+        </p>
+        {!list.length&&<p style={{textAlign:"center",fontSize:13,color:"var(--l)"}}>Aucun enfant accueilli.</p>}
+        {list.map(e=>{
+          const st=statut[e.id]||{};
+          const fini=st.arrivee&&st.depart, enCours=st.arrivee&&!st.depart;
+          const etat=fini?(hhmm(st.arrivee)+" → "+hhmm(st.depart))
+                    :enCours?("arrivé à "+hhmm(st.arrivee))
+                    :"pas encore arrivé";
+          const pastille=fini?"var(--l)":enCours?"var(--S)":"var(--br)";
+          return <button key={e.id} type="button" disabled={!!fini}
+            onClick={()=>{setChoisi(e);setCode("");setErreur("");}}
+            style={{background:"#fff",border:"1.5px solid var(--br)",borderRadius:14,padding:"13px 14px",
+              display:"flex",alignItems:"center",gap:13,cursor:fini?"default":"pointer",
+              opacity:fini?.65:1,textAlign:"left",fontFamily:"inherit",width:"100%"}}>
+            <span style={{width:46,height:46,borderRadius:14,background:"var(--c)",display:"flex",
+              alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{e.emoji||"👶"}</span>
+            <span style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:2}}>
+              <b style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>{e.prenom||"Enfant"}</b>
+              <span style={{fontSize:12,color:"var(--m)",display:"flex",alignItems:"center",gap:6}}>
+                <i style={{width:7,height:7,borderRadius:7,background:pastille,flexShrink:0,display:"block"}}/>{etat}
+              </span>
+            </span>
+            <span style={{fontSize:12.5,fontWeight:700,padding:"8px 12px",borderRadius:9,whiteSpace:"nowrap",
+              background:fini?"var(--c)":enCours?"#B8622F":"#2E4859",color:fini?"var(--m)":"#fff"}}>
+              {fini?"Terminé":enCours?"Départ":"Arrivée"}
+            </span>
+          </button>;
+        })}
+      </>}
+    </div>
+
+    {!sortie&&!choisi&&<div style={{padding:"10px 16px 18px",textAlign:"center",flexShrink:0}}>
+      <button type="button" onClick={()=>{setSortie(true);setCodeSortie("");setErreur("");}}
+        style={{background:"none",border:"none",color:"var(--l)",fontSize:12,cursor:"pointer",
+          fontFamily:"inherit",padding:"10px 14px",minHeight:40}}>
+        Quitter le mode borne
+      </button>
+    </div>}
+  </div>;
+}
+
 function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const [showAjout,setShowAjout]=useState(false);
   const [editAvatar,setEditAvatar]=useState(null);
@@ -2860,6 +3574,85 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
 
   // POINTAGE WORKFLOW P14G - state pour modale modification + validation parent
   const [modifParent,setModifParent]=useState(null); // {ptId, arr, dep}
+  // CONTESTATION D'UN POINTAGE.
+  //
+  // Un releve de presence fait foi devant la PMI et aux prud'hommes. Un releve
+  // qu'une seule partie fabrique, non. Le pointage de la borne arrive DEJA
+  // valide — c'est le parent qui a tape le code — donc les boutons
+  // « Je valide / Modifier » ne s'affichent pas : sans ce qui suit, le parent
+  // n'avait plus aucun moyen de dire qu'une heure est fausse.
+  //
+  // La trace reste apres reglement : la table n'a aucune regle DELETE, et on ne
+  // change que l'etat. C'est elle qui transforme un releve unilateral en releve
+  // contradictoire.
+  const [conts,setConts]=useState([]);          // contestations des pointages affiches
+  const [contester,setContester]=useState(null); // {pointage, champ, heure}
+  const [contMotif,setContMotif]=useState("");
+  const [contHeure,setContHeure]=useState("");
+  const [repondre,setRepondre]=useState(null);   // cote assmat
+  const [contReponse,setContReponse]=useState("");
+
+  const chargerContestations=async(ids)=>{
+    if(demoMode||!ids?.length){setConts([]);return;}
+    const{data,error}=await supabase.from("contestations_pointage")
+      .select("*").in("pointage_id",ids).order("created_at",{ascending:false});
+    if(!error)setConts(data||[]);
+  };
+  const contsDe=(ptId)=>conts.filter(c=>c.pointage_id===ptId);
+  const idsPts=pts.map(x=>x.id).filter(Boolean).join(",");
+  useEffect(()=>{chargerContestations(idsPts?idsPts.split(","):[]);/* eslint-disable-next-line */},[idsPts,demoMode]);
+
+  const versHHMM=(h)=>String(h||"").replace("h",":").slice(0,5);
+
+  const envoyerContestation=async()=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
+    const c=contester; if(!c)return;
+    if(contHeure&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(contHeure)){setToast("❌ Heure attendue au format 08:30");return;}
+    const{error}=await supabase.from("contestations_pointage").insert({
+      pointage_id:c.pointage.id,
+      asmat_id:c.pointage.asmat_id,
+      parent_id:user?.id,
+      champ:c.champ,
+      heure_enregistree:c.heure||null,
+      heure_proposee:contHeure||null,
+      motif:contMotif||null,
+    });
+    if(error){setToast("Erreur : "+error.message);return;}
+    setToast("Signalement envoyé ✓");
+    setContester(null);setContMotif("");setContHeure("");
+    await chargerContestations(pts.map(x=>x.id));
+  };
+
+  // Cote assistante maternelle : accepter corrige l'heure ET regle la
+  // contestation ; refuser la regle en laissant l'heure. Dans les deux cas la
+  // ligne reste, avec sa reponse.
+  const reglerContestation=async(accepte)=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
+    const c=repondre; if(!c)return;
+    if(accepte&&c.heure_proposee){
+      const pt=pts.find(x=>x.id===c.pointage_id);
+      const maj=c.champ==="arrivee"?{arrivee:c.heure_proposee}:{depart:c.heure_proposee};
+      const arr=c.champ==="arrivee"?c.heure_proposee:(pt?.arr_raw||pt?.arr||null);
+      const dep=c.champ==="depart"?c.heure_proposee:(pt?.dep_raw||pt?.dep||null);
+      if(arr&&dep){
+        const m=(h)=>Number(String(h).split(":")[0])*60+Number(String(h).split(":")[1]);
+        maj.total_minutes=Math.max(0,m(dep)-m(arr));
+      }
+      const r=await enregistrerPointage({enfant_id:pt?.eId||pt?.enfant_id,date:pt?.date,asmat_id:user?.id,...maj});
+      if(r.etat==="erreur"){setToast("Erreur : "+r.message);return;}
+      if(r.etat==="en-file"){setToast("📵 Correction en attente de réseau");}
+    }
+    const{error:e2}=await supabase.from("contestations_pointage").update({
+      etat:accepte?"acceptee":"refusee",
+      reponse_asmat:contReponse||null,
+      resolue_at:new Date().toISOString(),
+    }).eq("id",c.id);
+    if(e2){setToast("Erreur : "+e2.message);return;}
+    setToast(accepte?"Heure corrigée ✓":"Signalement clos ✓");
+    setRepondre(null);setContReponse("");
+    await chargerContestations(pts.map(x=>x.id));
+  };
+
 
   // POINTAGE WORKFLOW P14G - modifier ET valider en une fois (parent)
   const modifierEtValider=async()=>{
@@ -2892,6 +3685,71 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     {copieLe&&<div style={{background:"#FEF9C3",border:"1px solid #FCD34D",color:"#92400E",borderRadius:12,padding:"8px 12px",fontSize:12,fontWeight:600,marginBottom:10}}>
       <IconeOuEmoji e="📵"/> Affichage hors ligne — copie du {fmtDateHeureCourte(copieLe)}. Les pointages faits ailleurs depuis ne sont pas visibles.
     </div>}
+    {/* Signaler une heure fausse — cote parent. */}
+    {contester&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+      <div className="card" style={{maxWidth:440,width:"100%",display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>
+          <IconeOuEmoji e="🔎"/> Signaler {contester.champ==="arrivee"?"l'arrivée":"le départ"} du{" "}
+          {new Date(contester.pointage.date).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
+        </div>
+        <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+          Heure enregistrée : <b>{contester.heure||"—"}</b>. Indiquez l'heure que vous pensez juste ;
+          l'assistante maternelle la corrige ou vous répond. <b>Le signalement reste inscrit dans l'historique
+          une fois réglé</b> — c'est ce qui donne sa valeur au relevé.
+        </p>
+        <div>
+          <label className="lbl" htmlFor="cont-heure">Heure que vous proposez</label>
+          <input id="cont-heure" className="inp" value={contHeure} placeholder="08:30" inputMode="numeric"
+            onChange={e=>setContHeure(e.target.value)} style={{maxWidth:130}}/>
+        </div>
+        <div>
+          <label className="lbl" htmlFor="cont-motif">Ce que vous voulez expliquer (facultatif)</label>
+          <textarea id="cont-motif" className="inp" rows={3} value={contMotif}
+            onChange={e=>setContMotif(e.target.value)} style={{resize:"vertical",lineHeight:1.5}}
+            placeholder="Je suis arrivé vers 8 h 15, pas 8 h 30."/>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>{setContester(null);setContMotif("");setContHeure("");}}>Annuler</button>
+          <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
+            onClick={envoyerContestation}>Envoyer</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* Repondre a un signalement — cote assistante maternelle. */}
+    {repondre&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+      <div className="card" style={{maxWidth:440,width:"100%",display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>
+          <IconeOuEmoji e="🔎"/> Signalement sur {repondre.champ==="arrivee"?"l'arrivée":"le départ"}
+        </div>
+        <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+          Enregistré à <b>{repondre.heure_enregistree||"—"}</b>
+          {repondre.heure_proposee?<> — le parent propose <b>{repondre.heure_proposee}</b></>:null}.
+          {repondre.motif?<span style={{display:"block",marginTop:4}}>« {repondre.motif} »</span>:null}
+        </p>
+        <div>
+          <label className="lbl" htmlFor="cont-reponse">Votre réponse (facultative)</label>
+          <textarea id="cont-reponse" className="inp" rows={3} value={contReponse}
+            onChange={e=>setContReponse(e.target.value)} style={{resize:"vertical",lineHeight:1.5}}/>
+        </div>
+        <p style={{margin:0,fontSize:11.5,color:"var(--l)",lineHeight:1.5}}>
+          Accepter corrige l'heure du pointage. Dans les deux cas, le signalement et votre réponse
+          restent inscrits dans l'historique.
+        </p>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>{setRepondre(null);setContReponse("");}}>Fermer</button>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>reglerContestation(false)}>Maintenir l'heure</button>
+          <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>reglerContestation(true)} disabled={!repondre.heure_proposee}>
+            Corriger
+          </button>
+        </div>
+      </div>
+    </div>}
+
     {/* POINTAGE WORKFLOW P14G - modale modification heures parent */}
     {modifParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
       <div className="card" style={{padding:0,maxWidth:480,width:"100%"}}>
@@ -3009,12 +3867,10 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   Le parent flashe ce QR avec l'appareil photo de son téléphone : ça enregistre l'<strong>arrivée</strong>, puis le <strong>départ</strong> au second scan.<br/>
                   Vous pouvez aussi le scanner vous-même.
                 </div>
-                <img
-                  src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
-                    (window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id
-                  )}
-                  alt="QR Pointage"
-                  style={{width:180,height:180,borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
+                <QRPointage
+                  valeur={(window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id}
+                  taille={180}
+                  style={{borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
                 />
                 <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
                   <button className="btn bG s"onClick={()=>{
@@ -3063,6 +3919,33 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   <IconeOuEmoji e={p.valide_parent?"✅":"⏳"}/>
                 </span>}
               </div>
+              {p.mode_pointage==="borne"&&<div style={{fontSize:11,color:"var(--m)"}}>
+                <IconeOuEmoji e="🚪"/> Saisi à la borne d'entrée, avec le code de la famille
+              </div>}
+              {contsDe(p.id).map(c=><div key={c.id} style={{
+                fontSize:11.5,lineHeight:1.5,borderRadius:7,padding:"7px 9px",
+                background:c.etat==="ouverte"?"#FBF1DC":c.etat==="acceptee"?"var(--Sp)":"var(--c)",
+                border:"1px solid "+(c.etat==="ouverte"?"#E5D3A8":"var(--br)"),
+                color:c.etat==="ouverte"?"#8A6420":"var(--m)"}}>
+                <b style={{fontWeight:700}}>
+                  {c.etat==="ouverte"?"Signalement en attente":c.etat==="acceptee"?"Signalement accepté":"Signalement refusé"}
+                </b>
+                {" — "}{c.champ==="arrivee"?"arrivée":"départ"}
+                {c.heure_enregistree?" enregistré à "+c.heure_enregistree:""}
+                {c.heure_proposee?", "+ (c.etat==="acceptee"?"corrigé":"proposé") +" à "+c.heure_proposee:""}.
+                {c.motif?<div style={{marginTop:3}}>« {c.motif} »</div>:null}
+                {c.reponse_asmat?<div style={{marginTop:3,fontStyle:"italic"}}>Réponse : {c.reponse_asmat}</div>:null}
+                {role!=="parent"&&c.etat==="ouverte"&&<button type="button" onClick={()=>{setRepondre(c);setContReponse("");}}
+                  className="btn bT s" style={{marginTop:7}}>Répondre</button>}
+              </div>)}
+              {/* Le pointage de la borne arrive deja valide : sans ce bouton, le
+                  parent n'a aucun moyen de dire qu'une heure est fausse. */}
+              {role==="parent"&&p.valide_parent&&!contsDe(p.id).some(c=>c.etat==="ouverte")&&<div style={{display:"flex",gap:6}}>
+                {p.arr&&<button type="button" onClick={()=>{setContester({pointage:p,champ:"arrivee",heure:p.arr_raw||p.arr});setContHeure(versHHMM(p.arr_raw||p.arr));setContMotif("");}}
+                  className="btn bG s" style={{flex:1,justifyContent:"center"}}>Signaler l'arrivée</button>}
+                {p.dep&&<button type="button" onClick={()=>{setContester({pointage:p,champ:"depart",heure:p.dep_raw||p.dep});setContHeure(versHHMM(p.dep_raw||p.dep));setContMotif("");}}
+                  className="btn bG s" style={{flex:1,justifyContent:"center"}}>Signaler le départ</button>}
+              </div>}
               {role==="parent"&&!p.valide_parent&&<div style={{display:"flex",gap:6}}>
                 <button onClick={()=>validerPointage(p.id)}
                   style={{flex:1,background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
@@ -10137,7 +11020,9 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
   const [mdpOk,setMdpOk]=useState(false);
   const changerMotDePasse=async()=>{
     if(savingMdp)return;
-    if(mdp.a.length<8){setToast("❌ 8 caractères minimum");return;}
+    const pbMdp=verifierMotDePasse(mdp.a); if(pbMdp){setToast("❌ "+pbMdp);return;}
+    const fuite=await motDePasseCompromis(mdp.a);
+    if(fuite.verifie&&fuite.occurrences>0){setToast("❌ "+messageMotDePasseFuite(fuite.occurrences));return;}
     if(mdp.a!==mdp.b){setToast("❌ Les deux mots de passe ne correspondent pas");return;}
     setSavingMdp(true);
     const{error}=await supabase.auth.updateUser({password:mdp.a});
@@ -10466,7 +11351,7 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
 
         <div style={{marginBottom:12}}>
           <label className="lbl">Nouveau mot de passe</label>
-          <input type="password" autoComplete="new-password" className="inp" value={mdp.a} placeholder="8 caractères minimum"
+          <input type="password" autoComplete="new-password" className="inp" value={mdp.a} placeholder={MDP_AIDE}
             onChange={e=>{setMdp(m=>({...m,a:e.target.value}));setMdpOk(false);}}/>
         </div>
         <div style={{marginBottom:4}}>
@@ -12957,40 +13842,28 @@ function SimulateurCout({enfants,pEId}){
 
   // Calculs
   const heuresMois=heures*semaines/12;
-  const salBrut=(heures*taux*semaines/12)*1.1; // brut mensuel estimé (taux net + ~10% CP)
+  // Le curseur donne un taux NET. Les cotisations patronales s'assoient sur le
+  // BRUT : les appliquer au net revenait a sous-estimer le cout de garde d'un
+  // bon quart. La conversion passe par brutDepuisNet(), la table du bulletin.
+  const salBrut=(heures*brutDepuisNet(taux)*semaines/12)*1.1; // + ~10 % de congés payés
   // Le taux vient de la table du bulletin, plus d'un nombre en dur : le
   // simulateur annoncait 27,5 % la ou le bulletin en calculait 44,37 %.
   const cotPat=salBrut*TAUX_PATRONAL_TOTAL;
-  const coutTotal=salBrut+cotPat+(entretien*heures/8*semaines/12);
-  // CMG 2026 - REFORME 1er sept 2025 : calcul horaire par taux d'effort (barème PSU), parametres assmat 2026
-  // Bareme CMG au 1er avril 2026, verifie sur les publications Urssaf et CNAF.
-  // Le plancher de ressources avait ete releve a 814,62 EUR sur la foi d'une
-  // seule source ; deux verifications ulterieures donnent 814,02 EUR et aucune
-  // ne confirme la premiere valeur.
-  // Plancher et plafond de ressources retenus pour le CMG.
-  //
-  // Le plancher a longtemps ete le seul chiffre non verrouille de
-  // l'application : deux valeurs circulaient, 814,02 et 814,62 EUR. Trois
-  // sources independantes donnent 814,02 ; une seule donnait 814,62. C'est donc
-  // 814,02 qui est retenu, et desormais verrouille.
-  //
-  // Reserve : les sites officiels qui trancheraient definitivement — urssaf.fr,
-  // caf.fr, service-public.gouv.fr — ne sont pas joignables depuis
-  // l'environnement de developpement. Un appel a la CAF confirmerait.
-  const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
-  const CHR_AM=4.91;        // cout horaire de reference assmat 2026
-  const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
-  const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
-  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206}; // taux d'effort horaire CMG = bareme PSU accueil collectif (CNAF 2026) : 1->0,0619 ; 2->0,0516 ; 3->0,0413 ; 4-7->0,0310 ; 8+->0,0206
-  const enfEff=Math.min(8,Math.max(1,enfants2+aeeh)); // AEEH = tranche inferieure (+1 enfant fictif par AEEH)
-  const TE=TE_BAREME[enfEff];
-  const tarifRetenu=Math.min(taux,PLAFOND_H);
-  const coutGardeCMG=tarifRetenu*heuresMois;
-  const cmgCapped=Math.min(taux,PLAFOND_H)<taux; // tarif au-dela du plafond -> surcout integral parent
-  let cmgMensuel=coutGardeCMG*(1-(Math.max(PLANCHER_RESSOURCES,Math.min(revenus/12,PLAFOND_RESSOURCES))*TE/CHR_AM));
-  cmgMensuel=Math.max(0,Math.min(cmgMensuel,coutGardeCMG,CMG_MAX));
-  cmgMensuel=Math.round(cmgMensuel*100)/100;
-  const cmgPlafonne=cmgMensuel>=CMG_MAX-0.01;
+  // Cinq journees d'accueil par semaine, comme partout ailleurs dans
+  // l'application. Cet endroit supposait des journees de huit heures : sous
+  // 40 h par semaine, il comptait donc moins de journees qu'il n'y en a.
+  const coutTotal=salBrut+cotPat+(entretien*JOURS_SEMAINE_TYPE*semaines/12);
+  // CMG 2026 (reforme du 1er sept 2025) : bareme et calcul au point unique,
+  // partages avec l'outil pro « CMG (reforme 2025) ». Voir montantCMG().
+  const _cmg=montantCMG({tauxHoraire:taux,heuresMois,revenusAnnuels:revenus,nbEnfants:enfants2,aeeh});
+  const tarifRetenu=_cmg.tarifRetenu;
+  const coutGardeCMG=_cmg.coutGarde;
+  const cmgCapped=_cmg.tarifDepasse; // tarif au-dela du plafond -> surcout integral parent
+  const cmgMensuel=_cmg.montant;
+  const cmgPlafonne=_cmg.plafonne;
+  // Repris pour la ligne « Calcul : ... » affichee sous le resultat.
+  const enfEff=Math.min(8,Math.max(1,enfants2+aeeh));
+  const TE=tauxEffortCMG(enfants2,aeeh);
   // 50 % des depenses nettes du CMG, dans la limite de 3 500 EUR de depenses
   // par an et par enfant de moins de six ans -- soit 1 750 EUR de credit au
   // plus. Le plafond etait applique au credit et non aux depenses, ce qui
@@ -13029,10 +13902,10 @@ function SimulateurCout({enfants,pEId}){
         <div className="card">
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="⚙️"/> Les paramètres de garde</div>
           {[
-            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+nbf((taux/0.7822),2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
+            {l:"Taux horaire net (€/h)",v:taux,set:setTaux,min:3.5,max:8,step:0.05,hint:"≈ "+nbf(brutDepuisNet(taux),2)+" €/h brut (le brut, c'est ce que vous déclarez ; le net, ce que touche l'assistante maternelle)"},
             {l:"Heures d'accueil par semaine",v:heures,set:setHeures,min:5,max:60,step:1},
             {l:"Semaines d'accueil par an",v:semaines,set:setSemaines,min:30,max:52,step:1},
-            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Indemnité exonérée de cotisations : ni brut ni net, c'est un montant forfaitaire."},
+            {l:"Indemnité entretien (€/jour)",v:entretien,set:setEntretien,min:2.65,max:8,step:0.05,hint:"Exonérée de cotisations : ni brut ni net, c'est un forfait. Minimum conventionnel "+nbf(indemniteEntretienMin(heures/JOURS_SEMAINE_TYPE),2)+" € pour une journée de "+nbf(heures/JOURS_SEMAINE_TYPE,1)+" h."},
           ].map(({l,v,set,min,max,step,hint})=><div key={l}style={{marginBottom:14}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <label className="lbl"style={{marginBottom:0}}>{l}</label>
@@ -13788,6 +14661,7 @@ const GROUPS_AM={
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
+    {id:"mode_borne",l:"Borne d'entrée",ic:"🚪",d:"Les parents pointent eux-mêmes, avec le code de leur famille"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
     {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
@@ -14306,7 +15180,9 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
 
   const inscription=async()=>{
     if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs obligatoires.");return;}
-    if(form.password.length<6){setErr("Le mot de passe doit faire au moins 6 caractères.");return;}
+    const pbMdp=verifierMotDePasse(form.password); if(pbMdp){setErr(pbMdp);return;}
+    const fuite=await motDePasseCompromis(form.password);
+    if(fuite.verifie&&fuite.occurrences>0){setErr(messageMotDePasseFuite(fuite.occurrences));return;}
     if(!consent){setErr("Accepte la politique de confidentialité et les CGU pour continuer.");return;}
     setLoading(true);setErr("");
     try{
@@ -14392,263 +15268,109 @@ function ScrollTopBtn(){
     style={{position:"fixed",right:18,bottom:"calc(90px + env(safe-area-inset-bottom,0px))",zIndex:300,width:48,height:48,borderRadius:"50%",border:"none",cursor:"pointer",background:"linear-gradient(135deg,#90A093,#5F7360)",color:"#fff",fontSize:21,fontWeight:700,boxShadow:"0 8px 26px rgba(95,115,96,.42)",display:"flex",alignItems:"center",justifyContent:"center",opacity:show?1:0,transform:show?"translateY(0) scale(1)":"translateY(18px) scale(.8)",pointerEvents:show?"auto":"none",transition:"opacity .25s ease, transform .25s ease"}}>↑</button>;
 }
 
-function OutilsGratuits({onClose,onCta}){
-  const [outil,setOutil]=useState("mensu");
-  const fTitle="'Fraunces',Georgia,serif";
-  const fMono="'DM Mono',monospace";
-  const eur=n=>(isFinite(n)?n:0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
-  // --- Mensualisation ---
-  const [hSem,setHSem]=useState(40);
-  const [sem,setSem]=useState(52);
-  const [tauxM,setTauxM]=useState(4.50);
-  const [ieM,setIeM]=useState(4.50);
-  const [joursM,setJoursM]=useState(20);
-  const hMois=(hSem*sem)/12;
-  const salaireBrutM=hMois*tauxM;
-  const ieMoisM=ieM*joursM;
-  const totalM=salaireBrutM+ieMoisM;
-  // --- Salaire net/brut (cotisations salariales 2026 : 21,8803%) ---
-  const TX_SAL=0.218803;
-  const [sensSal,setSensSal]=useState("brutnet");
-  const [montantSal,setMontantSal]=useState(1200);
-  const netSal=sensSal==="brutnet"?montantSal*(1-TX_SAL):montantSal;
-  const brutSal=sensSal==="brutnet"?montantSal:montantSal/(1-TX_SAL);
-  // --- Indemnites d'entretien ---
-  const [ieJour,setIeJour]=useState(4.50);
-  const [hJourIe,setHJourIe]=useState(9);
-  const [joursIe,setJoursIe]=useState(20);
-  // 2,65 EUR n'est pas le minimum pour neuf heures mais le plancher absolu,
-  // qui ne joue qu'en dessous de 6 h 05. Pour neuf heures le minimum est de
-  // 3,92 EUR. L'ancienne formule annoncait donc un minimum inferieur d'un tiers
-  // au minimum conventionnel, et proratisait au-dela sur cette base fausse.
-  const ieMinJour=indemniteEntretienMin(hJourIe);
-  const ieMoisTotal=ieJour*joursIe;
-  const ieSousMin=ieJour<ieMinJour-0.001;
-  // --- Plafond CMG (seuil journalier = 5 x SMIC horaire brut) ---
-  const [smic,setSmic]=useState(smicHoraireAu(new Date()));
-  const [coutJour,setCoutJour]=useState(50);
-  const plafondCMG=5*smic;
-  const cmgOk=coutJour<=plafondCMG;
-  // --- CMG complet (reforme 1er sept 2025, bareme CNAF 2026) ---
-  const [revCmg,setRevCmg]=useState(45000);
-  const [nbEnfCmg,setNbEnfCmg]=useState(1);
-  const [hSemCmg,setHSemCmg]=useState(40);
-  const [tauxCmg,setTauxCmg]=useState(4.50);
-  const CHR_AM=4.91, PLAFOND_H=8.09, CMG_MAX=825.16;
-  const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206};
-  const hMoisCmg=hSemCmg*52/12;
-  const salBrutCmg=(hSemCmg*tauxCmg*52/12)*1.1;
-  const coutTotalCmg=salBrutCmg+salBrutCmg*0.275;
-  const TEcmg=TE_BAREME[Math.min(8,Math.max(1,nbEnfCmg))];
-  const tarifRetenuCmg=Math.min(tauxCmg,PLAFOND_H);
-  const coutGardeCmg=tarifRetenuCmg*hMoisCmg;
-  let cmgComplet=coutGardeCmg*(1-(Math.max(814.62,Math.min(revCmg/12,8500))*TEcmg/CHR_AM));
-  cmgComplet=Math.round(Math.max(0,Math.min(cmgComplet,coutGardeCmg,CMG_MAX))*100)/100;
-  const creditImpotCmg=Math.min((coutTotalCmg-cmgComplet)*0.5,3500/12);
-  const resteChargeCmg=Math.max(0,coutTotalCmg-cmgComplet-creditImpotCmg);
+// Le composant OutilsGratuits (mensualisation, salaire net/brut, indemnites
+// d'entretien, CMG) vivait ici sur 263 lignes, sans qu'aucun chemin ne puisse
+// l'afficher : son etat showOutils n'etait jamais mis a true, et l'entree
+// « Outils gratuits » de la navigation ouvre /outils.html, la page statique.
+// Il portait encore le plancher CMG perime et 27,5 % de cotisations patronales
+// la ou le bulletin en calcule 44,37 % : du faux que personne ne pouvait voir,
+// mais que la prochaine reprise aurait pu remettre a l'ecran. Le calcul du CMG
+// vit desormais au point unique montantCMG(), en haut du fichier.
 
-  const outils=[
-    {id:"mensu",ic:"🧮",t:"Mensualisation",c:"#5DA9A1"},
-    {id:"salaire",ic:"💶",t:"Salaire net / brut",c:"#E49178"},
-    {id:"ie",ic:"🍽️",t:"Indemnités d'entretien",c:"#C09553"},
-    {id:"cmgfull",ic:"🏛️",t:"CMG (réforme 2025)",c:"#2E4859"},
-    {id:"cmg",ic:"📊",t:"Plafond CMG",c:"#7A8B92"},
-  ];
-  const Field=({lab,val,setter,step=1,suf=""})=>(
-    <div>
-      <label style={{fontSize:11,fontWeight:700,color:"#5F7A86",display:"block",marginBottom:5}}>{lab}</label>
-      <div style={{display:"flex",alignItems:"center",border:"1.5px solid #E8E4E0",borderRadius:10,overflow:"hidden",transition:"border-color .15s"}}>
-        <input type="number"step={step}value={val}onChange={e=>setter(parseFloat(e.target.value)||0)}
-          onFocus={e=>e.target.parentNode.style.borderColor="#5DA9A1"} onBlur={e=>e.target.parentNode.style.borderColor="#E8E4E0"}
-          style={{flex:1,border:"none",padding:"9px 11px",fontSize:14,fontWeight:600,color:"#2E4859",outline:"none",width:"100%",fontFamily:fMono,background:"transparent"}}/>
-        {suf&&<span style={{padding:"0 11px",fontSize:12,color:"#9AAAB2",fontWeight:600}}>{suf}</span>}
-      </div>
+// COMPARATEUR DE LA PAGE TARIFS.
+//
+// La note « Un seul prix, quel que soit votre nombre de contrats » disait deja
+// la bonne chose, mais en une ligne que personne ne lit. L'argument est
+// structurel et il se demontre : notre forfait ne bouge pas, une facturation
+// par contrat monte a chaque enfant accueilli.
+//
+// Deux precautions volontaires :
+//  - AUCUN concurrent n'est nomme. La publicite comparative (article L. 122-1
+//    du code de la consommation) exige des chiffres objectifs et verifiables ;
+//    les grilles des concurrents n'ont pas pu etre lues a la source. On compare
+//    donc deux FACONS DE FACTURER, pas deux marques, avec un exemple annonce
+//    comme tel. Tous les chiffres affiches sont les notres.
+//  - la comparaison porte sur ce que paient l'assistante maternelle ET ses
+//    familles reunies. C'est la seule honnete quand l'autre modele facture
+//    aussi le parent, et c'est celle ou l'espace parent gratuit se voit.
+//
+// Le prix vient de T.prixMensuel, deja reglable au back-office ; l'exemple de
+// comparaison de compBasePro / compParContrat, ajoutes au meme endroit, pour
+// qu'il se corrige sans passer par le code.
+function ComparateurTarifs({T,fTitle}){
+  const [n,setN]=useState(3);
+  const forfait=Math.max(0,parseFloat(String(T.prixMensuel||"9,99").replace(",","."))||0);
+  const basePro=Math.max(0,parseFloat(String(T.compBasePro||"7,99").replace(",","."))||0);
+  const parContrat=Math.max(0,parseFloat(String(T.compParContrat||"2,99").replace(",","."))||0);
+  const MAX_ENFANTS=6;
+
+  const concurrent=basePro+parContrat*n;
+  const ecart=concurrent-forfait;
+  const maxJauge=basePro+parContrat*MAX_ENFANTS;
+  const eur=(v)=>nbf(v,2)+" €";
+
+  const stat=(v,l,calme)=>(
+    <div key={l} style={{display:"flex",flexDirection:"column",gap:1}}>
+      <span style={{fontFamily:fTitle,fontSize:26,fontWeight:700,lineHeight:1.05,fontVariantNumeric:"tabular-nums",color:calme?"#2E4859":"#B8622F"}}>{v}</span>
+      <span style={{fontSize:11.5,color:"#5A6B72",lineHeight:1.35}}>{l}</span>
     </div>
   );
-  const Stat=({l,v,c})=>(
-    <div style={{textAlign:"center"}}>
-      <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:fMono,lineHeight:1.1}}>{v}</div>
-      <div style={{fontSize:11.5,color:"#5F7A86",marginTop:3,fontWeight:600}}>{l}</div>
+
+  const ligne=(nom,detail,montant,largeur,moi)=>(
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) auto",gap:10,alignItems:"center",fontSize:13.5}}>
+      <div style={{display:"flex",flexDirection:"column",gap:3,minWidth:0}}>
+        <b style={{fontWeight:600,color:"#2C1F14"}}>{nom}</b>
+        <span style={{fontSize:11.5,color:"#5A6B72"}}>{detail}</span>
+        <span style={{height:7,borderRadius:4,background:"#EDE4DA",overflow:"hidden",marginTop:3}}>
+          <i style={{display:"block",height:"100%",borderRadius:4,width:largeur+"%",background:moi?"#3D6B50":"#E49178"}}/>
+        </span>
+      </div>
+      <span style={{fontFamily:fTitle,fontSize:16,fontWeight:700,fontVariantNumeric:"tabular-nums",whiteSpace:"nowrap",color:moi?"#3D6B50":"#2C1F14"}}>{montant}</span>
     </div>
   );
-  const grid={display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:14,marginBottom:16};
-  const resBox={background:"linear-gradient(135deg,#5DA9A118,#E4917815)",borderRadius:14,padding:18};
-  const note={fontSize:11.5,color:"#9AAAB2",marginTop:10,lineHeight:1.5};
 
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:260,padding:20}}>
-    <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:880,maxHeight:"92vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)"}}>
-      <div style={{background:"linear-gradient(135deg,#2E4859,#5DA9A1)",padding:"24px 28px",position:"sticky",top:0,zIndex:2}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
-          <div>
-            <div style={{fontFamily:fTitle,fontSize:23,fontWeight:700,color:"#fff"}}><IconeOuEmoji e="🧮" taille={23}/> Outils & Simulateurs gratuits</div>
-            <div style={{fontSize:13,color:"rgba(255,255,255,.85)",marginTop:4,maxWidth:560,lineHeight:1.5}}>Gratuits et sans inscription, pour les assistantes maternelles et les parents employeurs. Choisissez un outil ci-dessous.</div>
-          </div>
-          <button onClick={onClose}style={{flexShrink:0,background:"rgba(255,255,255,.2)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700,transition:"background .15s"}}onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.35)"}onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.2)"}>✕</button>
-        </div>
-      </div>
-      <div style={{padding:"22px 28px"}}>
-        {/* Selecteur d'outils */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:22}}>
-          {outils.map(o=>{const on=outil===o.id;return <button key={o.id}onClick={()=>setOutil(o.id)}
-            style={{background:on?"#fff":"#FFFFFF",borderRadius:14,border:"2px solid "+(on?o.c:"#E8E4E0"),padding:"16px 12px",cursor:"pointer",textAlign:"center",transition:"transform .12s, border-color .15s, box-shadow .15s",boxShadow:on?("0 6px 18px "+o.c+"33"):"none",transform:on?"translateY(-2px)":"none"}}
-            onMouseEnter={e=>{if(!on){e.currentTarget.style.borderColor=o.c+"88";e.currentTarget.style.transform="translateY(-1px)";}}}
-            onMouseLeave={e=>{if(!on){e.currentTarget.style.borderColor="#E8E4E0";e.currentTarget.style.transform="none";}}}>
-            <div style={{width:52,height:52,borderRadius:14,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 10px"}}><IconeOuEmoji e={o.ic} taille={28}/></div>
-            <div style={{fontWeight:700,fontSize:13.5,color:on?o.c:"#2E4859"}}>{o.t}</div>
-          </button>;})}
-        </div>
+  return <div style={{width:"100%",maxWidth:620,margin:"26px auto 0",background:"#fff",border:"1px solid #E8E0D5",borderRadius:12,padding:"20px 20px 18px",display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
+    <h3 style={{fontFamily:fTitle,fontSize:17,fontWeight:600,margin:0,color:"#2E4859",lineHeight:1.3}}>Combien coûte TiMat, vraiment ?</h3>
 
-        {/* ----- MENSUALISATION ----- */}
-        {outil==="mensu"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #5DA9A1",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#5DA9A115,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🧮"/> Simulateur de mensualisation</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Heures mensualisées et salaire brut de base, année complète ou incomplète.</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Heures par semaine"val={hSem}setter={setHSem}suf="h"/>
-              <Field lab="Semaines / an"val={sem}setter={setSem}suf="sem"/>
-              <Field lab="Taux horaire brut"val={tauxM}setter={setTauxM}step={0.05}suf="€"/>
-              <Field lab="Indemnité entretien / jour"val={ieM}setter={setIeM}step={0.05}suf="€"/>
-              <Field lab="Jours d'accueil / mois"val={joursM}setter={setJoursM}suf="j"/>
-            </div>
-            <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-              {[["Année complète (52 sem)",52],["Année incomplète (46 sem)",46],["40 semaines",40]].map(([lab,v])=>
-                <button key={v}onClick={()=>setSem(v)}style={{padding:"6px 13px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,background:sem===v?"#2E4859":"#fff",color:sem===v?"#fff":"#5F7A86",borderColor:sem===v?"#2E4859":"#E8E4E0",transition:"all .15s"}}>{lab}</button>)}
-            </div>
-            <div style={resBox}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="Heures mensualisées"v={hMois.toLocaleString('fr-FR',{maximumFractionDigits:2})+" h"}c="#2E4859"/>
-                <Stat l="Salaire brut de base"v={eur(salaireBrutM)}c="#5DA9A1"/>
-                <Stat l="Indemnités entretien"v={eur(ieMoisM)}c="#C09553"/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>Total mensuel estimé (salaire + indemnités)</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(totalM)}</div>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Estimation indicative. En année complète, les congés payés sont inclus dans la mensualisation ; en année incomplète, ils sont payés en plus.</div>
-          </div>
-        </div>}
-
-        {/* ----- SALAIRE NET / BRUT ----- */}
-        {outil==="salaire"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #E49178",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#E4917815,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="💶"/> Salaire net ↔ brut</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Conversion avec le taux de cotisations salariales 2026 (21,88 %).</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-              {[["Brut → Net","brutnet"],["Net → Brut","netbrut"]].map(([lab,v])=>
-                <button key={v}onClick={()=>setSensSal(v)}style={{padding:"7px 15px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:700,background:sensSal===v?"#E49178":"#fff",color:sensSal===v?"#fff":"#5F7A86",borderColor:sensSal===v?"#E49178":"#E8E4E0",transition:"all .15s"}}>{lab}</button>)}
-            </div>
-            <div style={grid}>
-              <Field lab={sensSal==="brutnet"?"Salaire BRUT mensuel":"Salaire NET mensuel"}val={montantSal}setter={setMontantSal}step={1}suf="€"/>
-            </div>
-            <div style={resBox}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="Salaire brut"v={eur(brutSal)}c="#2E4859"/>
-                <Stat l="Cotisations (21,88 %)"v={"-"+eur(brutSal*TX_SAL)}c="#C84B31"/>
-                <Stat l="Salaire net"v={eur(netSal)}c="#5DA9A1"/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>{sensSal==="brutnet"?"Salaire NET à verser":"Salaire BRUT à déclarer"}</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(sensSal==="brutnet"?netSal:brutSal)}</div>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Estimation hors CSG/CRDS spécifiques et hors cas particuliers. Le net réel figure sur le bulletin Pajemploi. Taux salarial appliqué : 21,8803 %.</div>
-          </div>
-        </div>}
-
-        {/* ----- INDEMNITES D'ENTRETIEN ----- */}
-        {outil==="ie"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #C09553",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#C0955315,#2E485910)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🍽️"/> Indemnités d'entretien</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Montant mensuel des IE et vérification du minimum conventionnel.</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Montant IE / jour"val={ieJour}setter={setIeJour}step={0.05}suf="€"/>
-              <Field lab="Heures d'accueil / jour"val={hJourIe}setter={setHJourIe}step={0.5}suf="h"/>
-              <Field lab="Jours d'accueil / mois"val={joursIe}setter={setJoursIe}suf="j"/>
-            </div>
-            <div style={resBox}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="IE par jour"v={eur(ieJour)}c="#C09553"/>
-                <Stat l="Minimum conventionnel"v={eur(ieMinJour)+" / j"}c={ieSousMin?"#C84B31":"#5DA9A1"}/>
-                <Stat l="IE par mois"v={eur(ieMoisTotal)}c="#2E4859"/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>Total indemnités d'entretien / mois</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(ieMoisTotal)}</div>
-              </div>
-            </div>
-            {ieSousMin&&<div style={{marginTop:10,padding:"9px 13px",background:"#FFF3F0",borderRadius:10,border:"1px solid #E8B6AC",fontSize:11.5,color:"#A33D28",lineHeight:1.5}}><IconeOuEmoji e="⚠️"/> Le montant saisi semble inférieur au minimum conventionnel indicatif pour {hJourIe} h d'accueil.</div>}
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Les IE couvrent les frais (jeux, eau, électricité, chauffage…). Minimum conventionnel indicatif ≈ 2,65 € pour 9 h d'accueil, proportionnel au-delà (CCN 3239). Vérifiez le montant en vigueur.</div>
-          </div>
-        </div>}
-
-        {/* ----- CMG REFORME 2025 (complet) ----- */}
-        {outil==="cmgfull"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🏛️"/> CMG & reste à charge (réforme 2025)</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Estimez l'aide CMG, le crédit d'impôt et ce qu'il vous reste à payer.</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Revenus annuels du foyer"val={revCmg}setter={setRevCmg}step={500}suf="€"/>
-              <Field lab="Enfants à charge"val={nbEnfCmg}setter={setNbEnfCmg}suf=""/>
-              <Field lab="Heures par semaine"val={hSemCmg}setter={setHSemCmg}suf="h"/>
-              <Field lab="Taux horaire net"val={tauxCmg}setter={setTauxCmg}step={0.05}suf="€"/>
-            </div>
-            <div style={resBox}>
-              <div style={{textAlign:"center",marginBottom:14}}>
-                <div style={{fontSize:12,color:"#5F7A86"}}>Reste à charge estimé / mois</div>
-                <div style={{fontSize:30,fontWeight:800,color:"#2E4859",fontFamily:fMono}}>{eur(resteChargeCmg)}</div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12}}>
-                <Stat l="Coût total (employeur)"v={eur(coutTotalCmg)}c="#2E4859"/>
-                <Stat l="Aide CMG"v={"-"+eur(cmgComplet)}c="#5DA9A1"/>
-                <Stat l="Crédit d'impôt (50 %)"v={"-"+eur(creditImpotCmg)}c="#C09553"/>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> Calcul selon la réforme du 1ᵉʳ sept. 2025 (barème par taux d'effort, paramètres CNAF 2026). Estimation indicative : le montant exact dépend de votre situation CAF. Plafond CMG mensuel : {eur(CMG_MAX)}.</div>
-          </div>
-        </div>}
-
-        {/* ----- PLAFOND CMG ----- */}
-        {outil==="cmg"&&<div style={{background:"#fff",borderRadius:16,border:"2px solid #2E4859",overflow:"hidden"}}>
-          <div style={{background:"linear-gradient(135deg,#2E485915,#5DA9A110)",padding:"16px 18px",borderBottom:"1px solid #E8E4E0"}}>
-            <div style={{fontWeight:800,fontSize:16,color:"#2E4859",fontFamily:fTitle}}><IconeOuEmoji e="🏛️"/> Plafond CMG (seuil journalier)</div>
-            <div style={{fontSize:12,color:"#5F7A86",marginTop:2}}>Vérifiez si le coût journalier respecte le plafond CAF (5 × SMIC horaire).</div>
-          </div>
-          <div style={{padding:18}}>
-            <div style={grid}>
-              <Field lab="Coût (salaire) par jour"val={coutJour}setter={setCoutJour}step={0.5}suf="€"/>
-              <Field lab="SMIC horaire brut"val={smic}setter={setSmic}step={0.01}suf="€"/>
-            </div>
-            <div style={{...resBox,background:cmgOk?"linear-gradient(135deg,#5DA9A118,#2E485910)":"linear-gradient(135deg,#C84B3118,#E4917815)"}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:12}}>
-                <Stat l="Plafond journalier"v={eur(plafondCMG)}c="#2E4859"/>
-                <Stat l="Votre coût / jour"v={eur(coutJour)}c={cmgOk?"#5DA9A1":"#C84B31"}/>
-                <Stat l="Marge"v={eur(plafondCMG-coutJour)}c={cmgOk?"#5DA9A1":"#C84B31"}/>
-              </div>
-              <div style={{textAlign:"center",borderTop:"1px solid rgba(0,0,0,.08)",paddingTop:12}}>
-                <div style={{fontSize:16,fontWeight:800,color:cmgOk?"#3C7A6E":"#C84B31"}}>{cmgOk?"✅ Sous le plafond — CMG maintenu":"⚠️ Au-dessus du plafond — CMG susceptible d'être réduit"}</div>
-              </div>
-            </div>
-            <div style={note}><IconeOuEmoji e="ℹ️"/> La CAF n'accorde pas le CMG si la rémunération journalière dépasse 5 × le SMIC horaire brut. Le montant exact du CMG dépend ensuite de vos revenus, du nombre et de l'âge des enfants (réforme du 1ᵉʳ sept. 2025). Pour une estimation complète, utilisez le simulateur intégré à TiMat.</div>
-          </div>
-        </div>}
-
-        {/* CTA */}
-        <div style={{marginTop:22,background:"linear-gradient(135deg,#E49178,#C84B31)",borderRadius:16,padding:"20px 22px",textAlign:"center"}}>
-          <div style={{fontSize:16,fontWeight:800,color:"#fff",fontFamily:fTitle,marginBottom:4}}>Envie d'aller plus loin ?</div>
-          <div style={{fontSize:13,color:"rgba(255,255,255,.9)",marginBottom:14,lineHeight:1.5}}>TiMat calcule tout automatiquement à partir de vos pointages réels : bulletins, déclarations, contrats… Testez gratuitement.</div>
-          <button onClick={onCta}style={{background:"#fff",color:"#C84B31",border:"none",borderRadius:12,padding:"11px 26px",fontSize:13,fontWeight:800,cursor:"pointer",transition:"transform .12s"}}onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}onMouseLeave={e=>e.currentTarget.style.transform="none"}>Découvrir TiMat →</button>
-        </div>
+    <div style={{display:"flex",flexDirection:"column",gap:7}}>
+      <label htmlFor="comp-enfants-1" style={{fontSize:12.5,color:"#5A6B72"}}>J'accueille combien d'enfants ?</label>
+      <div id="comp-enfants" role="group" aria-label="Nombre d'enfants accueillis"
+        style={{display:"grid",gridTemplateColumns:"repeat("+MAX_ENFANTS+",minmax(0,1fr))",gap:7}}>
+        {Array.from({length:MAX_ENFANTS},(_,i)=>i+1).map(v=>{
+          const on=v===n;
+          return <button key={v} id={"comp-enfants-"+v} type="button" onClick={()=>setN(v)} aria-pressed={on}
+            aria-label={v+(v>1?" enfants":" enfant")}
+            style={{fontFamily:"inherit",fontSize:14,fontWeight:600,width:"100%",height:38,borderRadius:9,cursor:"pointer",
+              border:"1.5px solid "+(on?"#B8622F":"#E8E0D5"),background:on?"#B8622F":"#fff",color:on?"#fff":"#6B4F3A",
+              transition:"background .14s,border-color .14s,color .14s"}}>{v}</button>;
+        })}
       </div>
     </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,background:"#FBF7F3",borderRadius:10,padding:"16px 16px 14px"}}>
+      {stat(eur(forfait/n),"par contrat et par mois",false)}
+      {stat("0 €","pour chacune des familles",true)}
+      {stat(eur(forfait*12),"par an, quel que soit le nombre",true)}
+    </div>
+
+    <div style={{display:"flex",flexDirection:"column",gap:9}}>
+      {ligne("TiMat — forfait unique",
+        eur(forfait)+" par mois, contrats illimités, espace parent gratuit",
+        eur(forfait), Math.min(100,(forfait/maxJauge)*100), true)}
+      {ligne("Une offre facturée par contrat",
+        "exemple : "+eur(basePro)+" pour la professionnelle + "+eur(parContrat)+" par famille",
+        eur(concurrent), Math.min(100,(concurrent/maxJauge)*100), false)}
+    </div>
+
+    <p style={{margin:0,fontSize:13.5,color:"#2E4859",background:"#EAF2EE",borderLeft:"3px solid #3D6B50",borderRadius:"0 8px 8px 0",padding:"10px 13px",lineHeight:1.5}}>
+      {ecart>0.005
+        ? <>À {n===1?"un contrat":n+" contrats"}, une facturation par contrat coûte <b>{eur(ecart)} de plus chaque mois</b> à l'ensemble assistante maternelle + familles — soit <b>{eur(ecart*12)} par an</b>. Chez TiMat, l'enfant suivant ne coûte rien de plus.</>
+        : <>À {n===1?"un seul contrat":n+" contrats"}, les deux se valent à peu de chose près. L'écart se creuse dès le contrat suivant, et il ne se referme jamais.</>}
+    </p>
+
+    <p style={{margin:0,fontSize:11,color:"#5A6B72",lineHeight:1.5}}>
+      Exemple de facturation par contrat donné à titre indicatif, à partir de grilles publiques du marché. TiMat : {eur(forfait)}/mois TTC, essai {T.prixEssai||"2 mois"} sans carte bancaire, sans reconduction automatique.
+    </p>
   </div>;
 }
 
@@ -14685,7 +15407,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const [showLegal, setShowLegal] = useState(null);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
-  const [showOutils, setShowOutils] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(()=>{
@@ -14895,7 +15616,9 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
   const inscription = async () => {
     if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
-    if (form.password.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
+    const pbMdp = verifierMotDePasse(form.password); if (pbMdp) { setErr(pbMdp); return; }
+    const fuite = await motDePasseCompromis(form.password);
+    if (fuite.verifie && fuite.occurrences > 0) { setErr(messageMotDePasseFuite(fuite.occurrences)); return; }
     if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
     setLoading(true); setErr(""); setErrAction(null); setResetInfo("");
     try {
@@ -14984,7 +15707,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? MDP_AIDE : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
@@ -15575,9 +16298,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
           <FadeIn>
-            <div style={{ maxWidth:620, margin:"26px auto 0", background:L.tarifCompareBg||"#FFFFFF", border:"1px solid #E8E0D5", borderRadius:12, padding:"14px 18px", fontSize:13, color:"#5A6B72", lineHeight:1.55, textAlign:"center" }}>
-              💡 <b style={{color:"#2E4859"}}>Un seul prix, quel que soit votre nombre de contrats</b> — aucun surcoût par enfant. Essai 2 mois sans carte bancaire, et <b style={{color:"#2E4859"}}>aucune reconduction automatique</b> : vous résiliez en 1 clic, sans prélèvement surprise.
-            </div>
+            <ComparateurTarifs T={T} fTitle={fTitle}/>
           </FadeIn>
         </div>
       </div>}
@@ -15660,7 +16381,6 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
 
 
       {/* BOUTIQUE MODAL */}
-      {showOutils&&<OutilsGratuits onClose={()=>setShowOutils(false)} onCta={()=>{setShowOutils(false);setShowModal(true);setRole("asmat");}}/>}
       <ScrollTopBtn/>
       {showBoutique&&<div onClick={e=>e.target===e.currentTarget&&setShowBoutique(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
         <div style={{background:"#FDFBF8",borderRadius:20,width:"100%",maxWidth:800,maxHeight:"90vh",overflow:"auto",boxShadow:"0 24px 80px rgba(0,0,0,.3)",padding:32}}>
@@ -15929,9 +16649,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   <div>Supabase</div><div>Base de données</div><div>🇫🇷 Paris, France</div>
                   <div>Vercel</div><div>Hébergement web</div><div>🇪🇺 Europe (CDN)</div>
                   <div>Stripe</div><div>Paiement</div><div>🇪🇺 Europe (Dublin)</div>
+                  <div>Have I Been Pwned</div><div>Contrôle des mots de passe fuités</div><div>🌍 Cloudflare (mondial)</div>
                 </div>
               </div>
               <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
+              <div style={{background:"#F0FAF4",border:"1px solid #B7E4C7",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:1.7}}>
+                <strong>Le contrôle des mots de passe fuités, en détail.</strong> À l'inscription et au changement de mot
+                de passe, votre navigateur interroge le service <em>Have I Been Pwned</em> pour vérifier que le mot de
+                passe choisi ne figure pas dans une fuite de données connue. <strong>Votre mot de passe ne quitte jamais
+                votre appareil</strong> : seuls les <strong>cinq premiers caractères</strong> de son empreinte SHA-1 sont
+                transmis. Ces cinq caractères correspondent à des centaines de milliers de mots de passe différents ;
+                le service renvoie la liste complète des empreintes commençant ainsi, et c'est votre navigateur qui
+                cherche dedans. Le service ne peut donc pas savoir laquelle vous concernait, ni même si vous en avez
+                trouvé une. Si le service est injoignable, l'inscription se poursuit normalement.
+              </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>8. Transferts hors UE</h3>
               <p>Les données sont hébergées en France et en Europe. En cas de transfert vers les États-Unis (CDN Vercel), celui-ci est encadré par les clauses contractuelles types de la Commission européenne.</p>
@@ -16012,7 +16743,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               </div>
               <div style={{ marginBottom: modeAuth==="inscription" ? 14 : 20 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:4, textTransform:"uppercase", letterSpacing:".5px" }}>Mot de passe *</div>
-                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? "6 caractères minimum" : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
+                <input type="password" name="password" autoComplete={modeAuth==="inscription"?"new-password":"current-password"} value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={modeAuth==="inscription" ? MDP_AIDE : "Votre mot de passe"} style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #DDD5C8", fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }} />
               </div>
               {modeAuth === "inscription" && <div style={{ background:"#F6F7F6", borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:"#A68970", marginBottom:8, textTransform:"uppercase", letterSpacing:".5px" }}>Vos données</div>
@@ -18680,6 +19411,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               {k:"s6Align",l:"Alignement du texte",type:"align"},
               {k:"s6Title",l:"Titre",type:"txt"},
               {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
+              {k:"compBasePro",l:"Comparateur — forfait pro concurrent (€)",type:"txt",inTxts:true},{k:"compParContrat",l:"Comparateur — coût par contrat (€)",type:"txt",inTxts:true},
               {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
               {k:"freeLabel",l:"Label Gratuit",type:"txt",inTxts:true},
               {k:"section6Bg",l:"Fond section",type:"col"},{k:"s6TitleColor",l:"Couleur titre",type:"col"},
@@ -19241,6 +19973,8 @@ const DEFAULT_CONFIG = {
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
+    compBasePro:"7,99",
+    compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
     heroSubDesc:"L'app des assistantes maternelles et des parents employeurs.",
@@ -20154,6 +20888,10 @@ export default function App(){
   const [showNotifs,setShowNotifs]=useState(false);
   const [onboarded,setOnboarded]=useState(false);
   const [gToast,setGToast]=useState("");
+  // Mode borne : verrouille l'appareil sur l'ecran de pointage. Lu au demarrage
+  // pour qu'un rechargement — ou une extinction d'ecran — ne rouvre pas
+  // l'application entiere devant un parent.
+  const [borne,setBorne]=useState(()=>borneActive());
   // LIEN INVITATION quand une session existe deja : parent connecte -> rattachement auto ; assmat -> message
   useEffect(()=>{
     if(!user?.id||!user?.role)return;
@@ -20704,6 +21442,7 @@ export default function App(){
       case "faq": return <VueAideSupport role={role} user={user}/>;
       case "aides_simulateurs": return <VueAidesSimulateurs enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "inviter_parent": return <InviterParent enfants={enfants} user={user}/>;
+      case "mode_borne": return <ReglagesBorne enfants={enfants} user={user} onDemarrer={()=>setBorne(true)}/>;
       case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
@@ -20729,6 +21468,20 @@ export default function App(){
       default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
     }
   };
+
+  // MODE BORNE : l'appareil est pose dans l'entree, ou tendu a un parent. On
+  // remplace TOUTE l'application — pas de barre du haut, pas de menu, pas de
+  // notifications a l'ecran. Reserve a l'assistante maternelle : c'est sa
+  // session qui ecrit, et le code de la famille dit qui a touche l'ecran.
+  //
+  // Reserve honnete : les notifications DANS l'application disparaissent, mais
+  // une page web ne peut pas empecher le systeme d'afficher une banniere push
+  // sur l'ecran. Le reglage le dit et conseille « Ne pas deranger ».
+  if(borne&&role==="asmat"){
+    return <><Styles/><div className={"app"+(dark?" dark":"")}>
+      <ModeBorne enfants={enfants} user={user} onQuitter={()=>setBorne(false)}/>
+    </div></>;
+  }
 
   return(
     <>
