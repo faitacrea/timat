@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
+import qrcode from "qrcode-generator";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -1862,6 +1863,47 @@ function EcheancierDeclaration({enfants,role,user,demo}){
   </div>;
 }
 
+// LE QR DE POINTAGE, FABRIQUE DANS LA PAGE.
+//
+// L'image etait demandee a api.qrserver.com, un service exterieur, en lui
+// passant dans l'adresse l'identifiant de l'enfant concerne. Ce service
+// recevait donc, a chaque affichage et a chaque impression, un identifiant qui
+// designe un enfant precis — sur une application qui promet des donnees
+// hebergees en France. L'identifiant seul ne donne acces a rien, mais c'est un
+// transfert vers un tiers non declare, et il etait evitable.
+//
+// Consequence utile au passage : le QR s'affiche et s'imprime sans reseau, et
+// en vectoriel — donc net a n'importe quelle taille de papier.
+const qrChemin=(valeur,module=4,marge=4)=>{
+  const q=qrcode(0,"M");
+  q.addData(String(valeur||""));
+  q.make();
+  const n=q.getModuleCount();
+  let d="";
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    if(q.isDark(y,x))d+="M"+((x+marge)*module)+" "+((y+marge)*module)+"h"+module+"v"+module+"h-"+module+"z";
+  }
+  return{d,cote:(n+marge*2)*module};
+};
+
+function QRPointage({valeur,taille=180,style}){
+  const{d,cote}=useMemo(()=>qrChemin(valeur),[valeur]);
+  return <svg role="img" aria-label="QR code de pointage"
+    viewBox={"0 0 "+cote+" "+cote} width={taille} height={taille}
+    style={{background:"#fff",display:"block",...style}}>
+    <rect width={cote} height={cote} fill="#fff"/>
+    <path d={d} fill="#000"/>
+  </svg>;
+}
+
+// Le meme QR, en balisage brut, pour la fenetre d'impression — qui est un document a
+// part et ne partage pas le rendu React.
+const qrSvgBalise=(valeur,cote=300)=>{
+  const{d,cote:c}=qrChemin(valeur);
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+c+' '+c+'" width="'+cote+'" height="'+cote+'">'
+    +'<rect width="'+c+'" height="'+c+'" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>';
+};
+
 //
 // POINTAGE RAPIDE - pointer arrivee/depart en 1 tap directement depuis l'espace (parent OU assmat),
 // via la meme RPC pointage_qr que le scan. Statut du jour en direct, sans chercher ni scanner.
@@ -1902,10 +1944,10 @@ function PointageRapide({enfants,role,user,demo}){
   if(!list.length)return null;
   const origin=(typeof window!=="undefined"&&window.location.origin)||"https://www.timat.app";
   const showQR=role==="asmat"&&!demo;
-  const qrUrl=(e,size)=>"https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&data="+encodeURIComponent(origin+"/?pointage=qr&enfant="+e.id);
+  const qrCible=(e)=>origin+"/?pointage=qr&enfant="+e.id;
   const imprimerQR=(e)=>{
     const w=window.open("","_blank","width=420,height=580");if(!w)return;
-    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2><img src='"+H(qrUrl(e,300))+"' style='width:300px;height:300px'/><p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
+    w.document.write("<html><head><title>QR "+(e.prenom||"Enfant")+"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'><h2>"+(e.emoji||"👶")+" "+(e.prenom||"Enfant")+"</h2>"+qrSvgBalise(qrCible(e),300)+"<p style='color:#555;font-size:14px;max-width:300px;margin:16px auto'>1er scan = arrivée · 2e scan = départ. À afficher à l'entrée du lieu d'accueil.</p></body></html>");
     w.document.close();setTimeout(()=>{try{w.print();}catch(x){}},400);
   };
   return <div className="card" style={{marginBottom:16,border:"1.5px solid var(--Sp)",background:"var(--c)"}}>
@@ -1948,7 +1990,7 @@ function PointageRapide({enfants,role,user,demo}){
       <div className="card" style={{maxWidth:320,width:"100%",textAlign:"center"}}>
         <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>{qrFor.emoji||"👶"} QR de {qrFor.prenom||"l'enfant"}</div>
         <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>Le parent le flashe avec l'appareil photo : <b>1er scan = arrivée</b>, <b>2e scan = départ</b>. Réutilisable chaque jour.</div>
-        <img alt="QR" src={qrUrl(qrFor,220)} style={{width:200,height:200,borderRadius:12,border:"3px solid var(--br)",background:"#fff"}}/>
+        <QRPointage valeur={qrCible(qrFor)} taille={200} style={{borderRadius:12,border:"3px solid var(--br)"}}/>
         <div style={{display:"flex",gap:8,marginTop:14}}>
           <button className="btn bG" style={{flex:1,justifyContent:"center"}} onClick={()=>imprimerQR(qrFor)}><IconeOuEmoji e="🖨️"/> Imprimer</button>
           <button className="btn bT" style={{flex:1,justifyContent:"center"}} onClick={()=>setQrFor(null)}>Fermer</button>
@@ -3666,12 +3708,10 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   Le parent flashe ce QR avec l'appareil photo de son téléphone : ça enregistre l'<strong>arrivée</strong>, puis le <strong>départ</strong> au second scan.<br/>
                   Vous pouvez aussi le scanner vous-même.
                 </div>
-                <img
-                  src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(
-                    (window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id
-                  )}
-                  alt="QR Pointage"
-                  style={{width:180,height:180,borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
+                <QRPointage
+                  valeur={(window.location.origin||"https://www.timat.app")+"/?pointage=qr&enfant="+enfant?.id}
+                  taille={180}
+                  style={{borderRadius:12,border:"3px solid var(--br)",margin:"0 auto"}}
                 />
                 <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
                   <button className="btn bG s"onClick={()=>{
