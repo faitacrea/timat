@@ -32,6 +32,57 @@ const fmtDateHeureCourte=(iso)=>{
 // refusait avec un message en anglais.
 const MDP_MIN = 8;
 const MDP_AIDE = "8 caractères minimum, lettres et chiffres";
+// LES MOTS DE PASSE DEJA FUITES.
+//
+// Supabase sait refuser un mot de passe qui figure dans les fuites connues,
+// mais reserve la fonction a son plan Pro. La meme technique est realisable
+// ici, et gratuitement.
+//
+// CE QUI PART, EXACTEMENT : les CINQ PREMIERS caracteres de l'empreinte SHA-1
+// du mot de passe. Jamais le mot de passe, jamais l'empreinte entiere. Ces cinq
+// caracteres correspondent a des centaines de milliers de mots de passe
+// differents ; le service renvoie toute la liste des empreintes qui commencent
+// ainsi, et c'est NOTRE page qui cherche dedans. Le service ne peut pas savoir
+// laquelle nous interessait. L'en-tete Add-Padding fait en sorte que la taille
+// de la reponse ne le trahisse pas non plus.
+//
+// ON LAISSE PASSER EN CAS DE PANNE. Un controle qui empeche de creer un compte
+// parce qu'un service tiers est lent, c'est pire que pas de controle du tout :
+// il faut que l'inscription marche toujours. D'ou le delai court et le
+// « verifie:false » qui ne bloque rien.
+const MDP_FUITE_DELAI_MS = 3000;
+const MDP_FUITE_URL = "https://api.pwnedpasswords.com/range/";
+const motDePasseCompromis = async (mdp) => {
+  const raté = { verifie: false, occurrences: 0 };
+  try {
+    if (!mdp || typeof crypto === "undefined" || !crypto.subtle) return raté;
+    const brut = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(mdp));
+    const sha = Array.from(new Uint8Array(brut)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+    const prefixe = sha.slice(0, 5), suffixe = sha.slice(5);
+    const minuteur = new AbortController();
+    const t = setTimeout(() => minuteur.abort(), MDP_FUITE_DELAI_MS);
+    let reponse;
+    try {
+      reponse = await fetch(MDP_FUITE_URL + prefixe, {
+        headers: { "Add-Padding": "true" },
+        signal: minuteur.signal,
+      });
+    } finally { clearTimeout(t); }
+    if (!reponse || !reponse.ok) return raté;
+    const corps = await reponse.text();
+    for (const ligne of corps.split("\n")) {
+      const [s, n] = ligne.trim().split(":");
+      if (s === suffixe) return { verifie: true, occurrences: Number(n) || 0 };
+    }
+    return { verifie: true, occurrences: 0 };
+  } catch (e) { return raté; }
+};
+
+// Le message. Separe de la verification pour qu'il n'existe qu'une fois.
+const messageMotDePasseFuite = (occurrences) =>
+  "Ce mot de passe figure dans " + (occurrences > 1000 ? "plus de mille" : occurrences)
+  + " fuite" + (occurrences > 1 ? "s" : "") + " de données connues. Il est essayé en premier par ceux qui forcent les comptes : choisissez-en un autre.";
+
 const verifierMotDePasse = (mdp) => {
   const m = mdp || "";
   if (m.length < MDP_MIN) return `Le mot de passe doit faire au moins ${MDP_MIN} caractères.`;
@@ -10862,6 +10913,8 @@ function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvri
   const changerMotDePasse=async()=>{
     if(savingMdp)return;
     const pbMdp=verifierMotDePasse(mdp.a); if(pbMdp){setToast("❌ "+pbMdp);return;}
+    const fuite=await motDePasseCompromis(mdp.a);
+    if(fuite.verifie&&fuite.occurrences>0){setToast("❌ "+messageMotDePasseFuite(fuite.occurrences));return;}
     if(mdp.a!==mdp.b){setToast("❌ Les deux mots de passe ne correspondent pas");return;}
     setSavingMdp(true);
     const{error}=await supabase.auth.updateUser({password:mdp.a});
@@ -15020,6 +15073,8 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
   const inscription=async()=>{
     if(!form.email||!form.password||!form.prenom){setErr("Remplis tous les champs obligatoires.");return;}
     const pbMdp=verifierMotDePasse(form.password); if(pbMdp){setErr(pbMdp);return;}
+    const fuite=await motDePasseCompromis(form.password);
+    if(fuite.verifie&&fuite.occurrences>0){setErr(messageMotDePasseFuite(fuite.occurrences));return;}
     if(!consent){setErr("Accepte la politique de confidentialité et les CGU pour continuer.");return;}
     setLoading(true);setErr("");
     try{
@@ -15454,6 +15509,8 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
   const inscription = async () => {
     if (!form.email || !form.password || !form.prenom) { setErr("Remplis tous les champs obligatoires."); return; }
     const pbMdp = verifierMotDePasse(form.password); if (pbMdp) { setErr(pbMdp); return; }
+    const fuite = await motDePasseCompromis(form.password);
+    if (fuite.verifie && fuite.occurrences > 0) { setErr(messageMotDePasseFuite(fuite.occurrences)); return; }
     if (!consentValide) { setErr("Accepte la politique de confidentialité et les CGU pour continuer."); return; }
     setLoading(true); setErr(""); setErrAction(null); setResetInfo("");
     try {
@@ -16484,9 +16541,20 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   <div>Supabase</div><div>Base de données</div><div>🇫🇷 Paris, France</div>
                   <div>Vercel</div><div>Hébergement web</div><div>🇪🇺 Europe (CDN)</div>
                   <div>Stripe</div><div>Paiement</div><div>🇪🇺 Europe (Dublin)</div>
+                  <div>Have I Been Pwned</div><div>Contrôle des mots de passe fuités</div><div>🌍 Cloudflare (mondial)</div>
                 </div>
               </div>
               <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
+              <div style={{background:"#F0FAF4",border:"1px solid #B7E4C7",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:1.7}}>
+                <strong>Le contrôle des mots de passe fuités, en détail.</strong> À l'inscription et au changement de mot
+                de passe, votre navigateur interroge le service <em>Have I Been Pwned</em> pour vérifier que le mot de
+                passe choisi ne figure pas dans une fuite de données connue. <strong>Votre mot de passe ne quitte jamais
+                votre appareil</strong> : seuls les <strong>cinq premiers caractères</strong> de son empreinte SHA-1 sont
+                transmis. Ces cinq caractères correspondent à des centaines de milliers de mots de passe différents ;
+                le service renvoie la liste complète des empreintes commençant ainsi, et c'est votre navigateur qui
+                cherche dedans. Le service ne peut donc pas savoir laquelle vous concernait, ni même si vous en avez
+                trouvé une. Si le service est injoignable, l'inscription se poursuit normalement.
+              </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>8. Transferts hors UE</h3>
               <p>Les données sont hébergées en France et en Europe. En cas de transfert vers les États-Unis (CDN Vercel), celui-ci est encadré par les clauses contractuelles types de la Commission européenne.</p>
