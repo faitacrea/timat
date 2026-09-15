@@ -1296,6 +1296,8 @@ const D = {
     {id:"pt4",eId:"e1",date:jourDecale(-7),arr:"07h40",dep:"17h25",tot:"9h45",valide:true},
     {id:"pt5",eId:"e2",date:jourDecale(-7),arr:"08h00",dep:"18h00",tot:"10h00",valide:true},
     {id:"pt6",eId:"e3",date:jourDecale(-7),arr:"07h05",dep:"17h10",tot:"10h05",valide:true},
+    {id:"pt7",eId:"e1",date:jourDecale(-1),arr:"08h30",dep:"17h00",tot:"8h30",valide:true,
+     valide_parent:true,mode_pointage:"borne",date_validation:jourDecale(-1)+"T08:30:00Z"},
   ],
   repas:[
     {id:"r1",eId:"e1",date:TODAY_STR,dej:"Tout mangé",gou:"Yaourt + compote",bib:null,notes:"",q:"bien"},
@@ -3263,6 +3265,85 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
 
   // POINTAGE WORKFLOW P14G - state pour modale modification + validation parent
   const [modifParent,setModifParent]=useState(null); // {ptId, arr, dep}
+  // CONTESTATION D'UN POINTAGE.
+  //
+  // Un releve de presence fait foi devant la PMI et aux prud'hommes. Un releve
+  // qu'une seule partie fabrique, non. Le pointage de la borne arrive DEJA
+  // valide — c'est le parent qui a tape le code — donc les boutons
+  // « Je valide / Modifier » ne s'affichent pas : sans ce qui suit, le parent
+  // n'avait plus aucun moyen de dire qu'une heure est fausse.
+  //
+  // La trace reste apres reglement : la table n'a aucune regle DELETE, et on ne
+  // change que l'etat. C'est elle qui transforme un releve unilateral en releve
+  // contradictoire.
+  const [conts,setConts]=useState([]);          // contestations des pointages affiches
+  const [contester,setContester]=useState(null); // {pointage, champ, heure}
+  const [contMotif,setContMotif]=useState("");
+  const [contHeure,setContHeure]=useState("");
+  const [repondre,setRepondre]=useState(null);   // cote assmat
+  const [contReponse,setContReponse]=useState("");
+
+  const chargerContestations=async(ids)=>{
+    if(demoMode||!ids?.length){setConts([]);return;}
+    const{data,error}=await supabase.from("contestations_pointage")
+      .select("*").in("pointage_id",ids).order("created_at",{ascending:false});
+    if(!error)setConts(data||[]);
+  };
+  const contsDe=(ptId)=>conts.filter(c=>c.pointage_id===ptId);
+  const idsPts=pts.map(x=>x.id).filter(Boolean).join(",");
+  useEffect(()=>{chargerContestations(idsPts?idsPts.split(","):[]);/* eslint-disable-next-line */},[idsPts,demoMode]);
+
+  const versHHMM=(h)=>String(h||"").replace("h",":").slice(0,5);
+
+  const envoyerContestation=async()=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
+    const c=contester; if(!c)return;
+    if(contHeure&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(contHeure)){setToast("❌ Heure attendue au format 08:30");return;}
+    const{error}=await supabase.from("contestations_pointage").insert({
+      pointage_id:c.pointage.id,
+      asmat_id:c.pointage.asmat_id,
+      parent_id:user?.id,
+      champ:c.champ,
+      heure_enregistree:c.heure||null,
+      heure_proposee:contHeure||null,
+      motif:contMotif||null,
+    });
+    if(error){setToast("Erreur : "+error.message);return;}
+    setToast("Signalement envoyé ✓");
+    setContester(null);setContMotif("");setContHeure("");
+    await chargerContestations(pts.map(x=>x.id));
+  };
+
+  // Cote assistante maternelle : accepter corrige l'heure ET regle la
+  // contestation ; refuser la regle en laissant l'heure. Dans les deux cas la
+  // ligne reste, avec sa reponse.
+  const reglerContestation=async(accepte)=>{
+    if(demoMode){setToast("Démo : action désactivée");return;}
+    const c=repondre; if(!c)return;
+    if(accepte&&c.heure_proposee){
+      const pt=pts.find(x=>x.id===c.pointage_id);
+      const maj=c.champ==="arrivee"?{arrivee:c.heure_proposee}:{depart:c.heure_proposee};
+      const arr=c.champ==="arrivee"?c.heure_proposee:(pt?.arr_raw||pt?.arr||null);
+      const dep=c.champ==="depart"?c.heure_proposee:(pt?.dep_raw||pt?.dep||null);
+      if(arr&&dep){
+        const m=(h)=>Number(String(h).split(":")[0])*60+Number(String(h).split(":")[1]);
+        maj.total_minutes=Math.max(0,m(dep)-m(arr));
+      }
+      const r=await enregistrerPointage({enfant_id:pt?.eId||pt?.enfant_id,date:pt?.date,asmat_id:user?.id,...maj});
+      if(r.etat==="erreur"){setToast("Erreur : "+r.message);return;}
+      if(r.etat==="en-file"){setToast("📵 Correction en attente de réseau");}
+    }
+    const{error:e2}=await supabase.from("contestations_pointage").update({
+      etat:accepte?"acceptee":"refusee",
+      reponse_asmat:contReponse||null,
+      resolue_at:new Date().toISOString(),
+    }).eq("id",c.id);
+    if(e2){setToast("Erreur : "+e2.message);return;}
+    setToast(accepte?"Heure corrigée ✓":"Signalement clos ✓");
+    setRepondre(null);setContReponse("");
+    await chargerContestations(pts.map(x=>x.id));
+  };
+
 
   // POINTAGE WORKFLOW P14G - modifier ET valider en une fois (parent)
   const modifierEtValider=async()=>{
@@ -3295,6 +3376,71 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
     {copieLe&&<div style={{background:"#FEF9C3",border:"1px solid #FCD34D",color:"#92400E",borderRadius:12,padding:"8px 12px",fontSize:12,fontWeight:600,marginBottom:10}}>
       <IconeOuEmoji e="📵"/> Affichage hors ligne — copie du {fmtDateHeureCourte(copieLe)}. Les pointages faits ailleurs depuis ne sont pas visibles.
     </div>}
+    {/* Signaler une heure fausse — cote parent. */}
+    {contester&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+      <div className="card" style={{maxWidth:440,width:"100%",display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>
+          <IconeOuEmoji e="🔎"/> Signaler {contester.champ==="arrivee"?"l'arrivée":"le départ"} du{" "}
+          {new Date(contester.pointage.date).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
+        </div>
+        <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+          Heure enregistrée : <b>{contester.heure||"—"}</b>. Indiquez l'heure que vous pensez juste ;
+          l'assistante maternelle la corrige ou vous répond. <b>Le signalement reste inscrit dans l'historique
+          une fois réglé</b> — c'est ce qui donne sa valeur au relevé.
+        </p>
+        <div>
+          <label className="lbl" htmlFor="cont-heure">Heure que vous proposez</label>
+          <input id="cont-heure" className="inp" value={contHeure} placeholder="08:30" inputMode="numeric"
+            onChange={e=>setContHeure(e.target.value)} style={{maxWidth:130}}/>
+        </div>
+        <div>
+          <label className="lbl" htmlFor="cont-motif">Ce que vous voulez expliquer (facultatif)</label>
+          <textarea id="cont-motif" className="inp" rows={3} value={contMotif}
+            onChange={e=>setContMotif(e.target.value)} style={{resize:"vertical",lineHeight:1.5}}
+            placeholder="Je suis arrivé vers 8 h 15, pas 8 h 30."/>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>{setContester(null);setContMotif("");setContHeure("");}}>Annuler</button>
+          <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
+            onClick={envoyerContestation}>Envoyer</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* Repondre a un signalement — cote assistante maternelle. */}
+    {repondre&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
+      <div className="card" style={{maxWidth:440,width:"100%",display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)"}}>
+          <IconeOuEmoji e="🔎"/> Signalement sur {repondre.champ==="arrivee"?"l'arrivée":"le départ"}
+        </div>
+        <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+          Enregistré à <b>{repondre.heure_enregistree||"—"}</b>
+          {repondre.heure_proposee?<> — le parent propose <b>{repondre.heure_proposee}</b></>:null}.
+          {repondre.motif?<span style={{display:"block",marginTop:4}}>« {repondre.motif} »</span>:null}
+        </p>
+        <div>
+          <label className="lbl" htmlFor="cont-reponse">Votre réponse (facultative)</label>
+          <textarea id="cont-reponse" className="inp" rows={3} value={contReponse}
+            onChange={e=>setContReponse(e.target.value)} style={{resize:"vertical",lineHeight:1.5}}/>
+        </div>
+        <p style={{margin:0,fontSize:11.5,color:"var(--l)",lineHeight:1.5}}>
+          Accepter corrige l'heure du pointage. Dans les deux cas, le signalement et votre réponse
+          restent inscrits dans l'historique.
+        </p>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>{setRepondre(null);setContReponse("");}}>Fermer</button>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>reglerContestation(false)}>Maintenir l'heure</button>
+          <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>reglerContestation(true)} disabled={!repondre.heure_proposee}>
+            Corriger
+          </button>
+        </div>
+      </div>
+    </div>}
+
     {/* POINTAGE WORKFLOW P14G - modale modification heures parent */}
     {modifParent&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
       <div className="card" style={{padding:0,maxWidth:480,width:"100%"}}>
@@ -3466,6 +3612,33 @@ function Pointage({enfants,role,pEId,user,demoMode=false}){
                   <IconeOuEmoji e={p.valide_parent?"✅":"⏳"}/>
                 </span>}
               </div>
+              {p.mode_pointage==="borne"&&<div style={{fontSize:11,color:"var(--m)"}}>
+                <IconeOuEmoji e="🚪"/> Saisi à la borne d'entrée, avec le code de la famille
+              </div>}
+              {contsDe(p.id).map(c=><div key={c.id} style={{
+                fontSize:11.5,lineHeight:1.5,borderRadius:7,padding:"7px 9px",
+                background:c.etat==="ouverte"?"#FBF1DC":c.etat==="acceptee"?"var(--Sp)":"var(--c)",
+                border:"1px solid "+(c.etat==="ouverte"?"#E5D3A8":"var(--br)"),
+                color:c.etat==="ouverte"?"#8A6420":"var(--m)"}}>
+                <b style={{fontWeight:700}}>
+                  {c.etat==="ouverte"?"Signalement en attente":c.etat==="acceptee"?"Signalement accepté":"Signalement refusé"}
+                </b>
+                {" — "}{c.champ==="arrivee"?"arrivée":"départ"}
+                {c.heure_enregistree?" enregistré à "+c.heure_enregistree:""}
+                {c.heure_proposee?", "+ (c.etat==="acceptee"?"corrigé":"proposé") +" à "+c.heure_proposee:""}.
+                {c.motif?<div style={{marginTop:3}}>« {c.motif} »</div>:null}
+                {c.reponse_asmat?<div style={{marginTop:3,fontStyle:"italic"}}>Réponse : {c.reponse_asmat}</div>:null}
+                {role!=="parent"&&c.etat==="ouverte"&&<button type="button" onClick={()=>{setRepondre(c);setContReponse("");}}
+                  className="btn bT s" style={{marginTop:7}}>Répondre</button>}
+              </div>)}
+              {/* Le pointage de la borne arrive deja valide : sans ce bouton, le
+                  parent n'a aucun moyen de dire qu'une heure est fausse. */}
+              {role==="parent"&&p.valide_parent&&!contsDe(p.id).some(c=>c.etat==="ouverte")&&<div style={{display:"flex",gap:6}}>
+                {p.arr&&<button type="button" onClick={()=>{setContester({pointage:p,champ:"arrivee",heure:p.arr_raw||p.arr});setContHeure(versHHMM(p.arr_raw||p.arr));setContMotif("");}}
+                  className="btn bG s" style={{flex:1,justifyContent:"center"}}>Signaler l'arrivée</button>}
+                {p.dep&&<button type="button" onClick={()=>{setContester({pointage:p,champ:"depart",heure:p.dep_raw||p.dep});setContHeure(versHHMM(p.dep_raw||p.dep));setContMotif("");}}
+                  className="btn bG s" style={{flex:1,justifyContent:"center"}}>Signaler le départ</button>}
+              </div>}
               {role==="parent"&&!p.valide_parent&&<div style={{display:"flex",gap:6}}>
                 <button onClick={()=>validerPointage(p.id)}
                   style={{flex:1,background:"var(--G)",color:"#fff",border:"none",borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontWeight:700}}>
