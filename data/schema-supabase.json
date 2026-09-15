@@ -49,6 +49,12 @@
   "trimestre",
   "type"
  ],
+ "borne_tentatives": [
+  "bloque_jusqu",
+  "dernier_echec",
+  "echecs",
+  "jeton"
+ ],
  "bulletins": [
   "annee",
   "asmat_id",
@@ -121,6 +127,7 @@
   "heures_hebdo",
   "horaires",
   "id",
+  "jeton_borne",
   "jours",
   "parent_id",
   "partage_parent",

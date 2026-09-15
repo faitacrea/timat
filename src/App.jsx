@@ -2125,19 +2125,33 @@ function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="An
   </>;
 }
 
+// Le jeton du QR affiche a l'entree.
+//
+// Il ne porte PAS l'identifiant de l'enfant : un identifiant ne se revoque pas,
+// un QR imprime reste au mur des annees. Le jeton, lui, se regenere — et le QR
+// de la veille ne vaut plus rien. 32 caracteres tires du generateur
+// cryptographique du navigateur, soit 192 bits : on ne le devine pas.
+const JETON_BORNE_ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+const tirerJetonBorne=()=>{
+  const o=new Uint8Array(32);
+  (window.crypto||window.msCrypto).getRandomValues(o);
+  return Array.from(o,(n)=>JETON_BORNE_ALPHABET[n&63]).join("");
+};
+
 // Reglages de la borne, cote assistante maternelle : le code de sortie de
-// l'appareil, et le code de chaque famille.
+// l'appareil, le code de chaque famille, et le QR a afficher a l'entree.
 function ReglagesBorne({enfants,user,onDemarrer}){
   const [contrats,setContrats]=useState([]);
   const [chargement,setChargement]=useState(true);
   const [toast,setToast]=useState("");
   const [sortie,setSortie]=useState(()=>borneCodeSortie());
+  const [qr,setQr]=useState(null);   // enfant dont le QR est affiche en grand
   const list=(enfants||[]).filter(Boolean);
 
   const relire=async()=>{
     if(!user?.id){setChargement(false);return;}
     const{data,error}=await supabase.from("contrats")
-      .select("id,enfant_id,code_borne,actif").eq("asmat_id",user.id);
+      .select("id,enfant_id,code_borne,jeton_borne,actif").eq("asmat_id",user.id);
     setChargement(false);
     if(error){setToast("❌ "+error.message);return;}
     setContrats(data||[]);
@@ -2145,6 +2159,7 @@ function ReglagesBorne({enfants,user,onDemarrer}){
   useEffect(()=>{relire();/* eslint-disable-next-line */},[user?.id]);
 
   const codeDe=(enfantId)=>(contrats.find(c=>c.enfant_id===enfantId&&c.actif!==false)||{}).code_borne||"";
+  const jetonDe=(enfantId)=>(contrats.find(c=>c.enfant_id===enfantId&&c.actif!==false)||{}).jeton_borne||"";
 
   // Quatre chiffres tires au hasard, sans suite evidente : 0000, 1234 et 1111
   // sont les premiers qu'on essaie.
@@ -2165,6 +2180,41 @@ function ReglagesBorne({enfants,user,onDemarrer}){
     if(error){setToast("❌ "+error.message);return;}
     setToast("✅ Nouveau code : "+code);
     relire();
+  };
+
+  // Regenerer remplace le jeton : le QR imprime la veille cesse de fonctionner
+  // le temps que la base ecrive. C'est exactement ce qu'on veut d'une affiche
+  // qu'on a perdue, ou d'un parent parti.
+  const donnerJeton=async(enfantId)=>{
+    const c=contrats.find(x=>x.enfant_id===enfantId&&x.actif!==false);
+    if(!c){setToast("❌ Aucun contrat actif pour cet enfant");return;}
+    if(!c.code_borne){setToast("❌ Donnez d'abord un code à cette famille");return;}
+    const j=tirerJetonBorne();
+    const{error}=await supabase.from("contrats").update({jeton_borne:j}).eq("id",c.id);
+    if(error){setToast("❌ "+error.message);return;}
+    setToast(c.jeton_borne?"✅ Nouveau QR — l'ancien ne marche plus":"✅ QR créé");
+    relire();
+  };
+
+  const retirerJeton=async(enfantId)=>{
+    const c=contrats.find(x=>x.enfant_id===enfantId&&x.actif!==false);
+    if(!c)return;
+    const{error}=await supabase.from("contrats").update({jeton_borne:null}).eq("id",c.id);
+    if(error){setToast("❌ "+error.message);return;}
+    setToast("✅ QR désactivé");setQr(null);relire();
+  };
+
+  const cibleQr=(j)=>((typeof window!=="undefined"&&window.location.origin)||"https://www.timat.app")+"/p/"+j;
+
+  const imprimerQr=(e,j)=>{
+    const w=window.open("","_blank","width=440,height=620");if(!w)return;
+    w.document.write("<html><head><meta charset='utf-8'><title>Pointage "+H(e.prenom||"Enfant")
+      +"</title></head><body style='font-family:sans-serif;text-align:center;padding:30px'>"
+      +"<h2>"+H(e.emoji||"👶")+" "+H(e.prenom||"Enfant")+"</h2>"+qrSvgBalise(cibleQr(j),300)
+      +"<p style='color:#555;font-size:14px;max-width:320px;margin:16px auto;line-height:1.6'>"
+      +"Scannez, puis tapez le code à 4 chiffres de votre famille.<br>"
+      +"1er passage = arrivée · 2e passage = départ.</p></body></html>");
+    w.document.close();setTimeout(()=>{try{w.print();}catch(x){}},400);
   };
 
   const demarrer=async()=>{
@@ -2247,6 +2297,36 @@ function ReglagesBorne({enfants,user,onDemarrer}){
       })}
     </div>
 
+    <div style={carte}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Le QR à afficher à l'entrée</div>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        L'autre façon de faire, sans appareil à poser : une feuille au mur. Le parent la scanne
+        avec son propre téléphone, tape le code de sa famille, c'est enregistré. Rien à installer,
+        aucun compte à créer.
+      </p>
+      <p style={{margin:0,fontSize:12.5,color:"var(--m)",lineHeight:1.55}}>
+        La page ne dit rien tant que le code n'est pas bon : ni le prénom, ni les heures.
+        Au bout de cinq codes faux, elle se ferme un quart d'heure.
+      </p>
+      {chargement?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Chargement…</p>
+      :!list.length?<p style={{fontSize:13,color:"var(--l)",margin:0}}>Aucun enfant accueilli.</p>
+      :list.map(e=>{
+        const j=jetonDe(e.id);
+        return <div key={e.id} style={{display:"flex",alignItems:"center",gap:11,padding:"9px 0",
+          borderBottom:"1px solid var(--br)",flexWrap:"wrap"}}>
+          <span style={{fontSize:22,flexShrink:0}}>{e.emoji||"👶"}</span>
+          <span style={{flex:1,minWidth:90,fontSize:14,fontWeight:600,color:"var(--b)"}}>{e.prenom||"Enfant"}</span>
+          {j
+            ?<button type="button" onClick={()=>setQr(e)} className="btn bG s">Voir le QR</button>
+            :<button type="button" onClick={()=>donnerJeton(e.id)} className="btn bG s">Créer le QR</button>}
+        </div>;
+      })}
+      <p style={{margin:0,fontSize:11.5,color:"var(--l)",lineHeight:1.5}}>
+        Le QR ne contient pas le nom de l'enfant, seulement une suite de caractères tirée au hasard.
+        Si l'affiche est perdue, regénérez-la : celle qui traîne cesse aussitôt de fonctionner.
+      </p>
+    </div>
+
     <button type="button" onClick={demarrer} className="btn bT l"
       style={{width:"100%",justifyContent:"center"}}>
       Démarrer le mode borne →
@@ -2256,6 +2336,34 @@ function ReglagesBorne({enfants,user,onDemarrer}){
       En revanche, une page web ne peut pas empêcher votre téléphone d'afficher une bannière :
       si vous tendez le vôtre, activez « Ne pas déranger ».
     </p>
+
+    {qr&&jetonDe(qr.id)&&<div onClick={ev=>{if(ev.target===ev.currentTarget)setQr(null);}}
+      style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(20,30,40,.55)",
+      display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="card" style={{maxWidth:330,width:"100%",textAlign:"center"}}>
+        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:4}}>
+          {qr.emoji||"👶"} QR de {qr.prenom||"l'enfant"}
+        </div>
+        <div style={{fontSize:11.5,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
+          À imprimer et afficher à l'entrée. Le parent scanne, tape <b>{codeDe(qr.id)||"son code"}</b>,
+          et son arrivée puis son départ sont enregistrés.
+        </div>
+        <QRPointage valeur={cibleQr(jetonDe(qr.id))} taille={200}
+          style={{borderRadius:12,border:"3px solid var(--br)"}}/>
+        <div style={{display:"flex",gap:8,marginTop:14}}>
+          <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>imprimerQr(qr,jetonDe(qr.id))}><IconeOuEmoji e="🖨️"/> Imprimer</button>
+          <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>setQr(null)}>Fermer</button>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:8}}>
+          <button type="button" className="btn bG s" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>donnerJeton(qr.id)}>Regénérer</button>
+          <button type="button" className="btn bG s" style={{flex:1,justifyContent:"center"}}
+            onClick={()=>retirerJeton(qr.id)}>Désactiver</button>
+        </div>
+      </div>
+    </div>}
   </div>;
 }
 
