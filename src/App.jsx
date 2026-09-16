@@ -14657,11 +14657,11 @@ const GROUPS_AM={
     {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️",d:"Attestations et exports"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
+    {id:"mode_borne",l:"Borne & QR de pointage",ic:"🚪",d:"Les parents pointent eux-mêmes : écran d'entrée, ou QR affiché au mur"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
-    {id:"mode_borne",l:"Borne d'entrée",ic:"🚪",d:"Les parents pointent eux-mêmes, avec le code de leur famille"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
     {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
@@ -15209,7 +15209,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
     <div style={{position:"absolute",inset:0,backdropFilter:"blur(2px)",background:"radial-gradient(circle at 30% 20%,rgba(255,255,255,.25),transparent 42%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.14),transparent 42%)"}}/>
     <div style={{position:"relative",width:"100%",maxWidth:420,background:"rgba(255,255,255,.2)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,.4)",borderRadius:24,padding:"30px 26px",boxShadow:"0 20px 60px rgba(0,0,0,.28)"}}>
       <div style={{textAlign:"center",marginBottom:18}}>
-        <img src="/logo.png" alt="TiMat" style={{height:46,marginBottom:10}}/>
+        <img src="/logo.webp" alt="TiMat" style={{height:46,marginBottom:10}}/>
         <div style={{fontSize:21,fontWeight:700,color:"#fff",fontFamily:"'Fraunces',Georgia,serif"}}>Bienvenue sur TiMat</div>
         <div style={{fontSize:13,color:"rgba(255,255,255,.92)",marginTop:6,lineHeight:1.5}}>{mode==="inscription"?"Votre assistante maternelle vous a invité·e. Créez votre espace parent pour suivre le quotidien de votre enfant.":"Connectez-vous à votre espace parent."}</div>
       </div>
@@ -15820,7 +15820,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* Sticky nav — apparait quand on descend */}
       <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, transform:scrolled?"translateY(0)":"translateY(-110%)", transition:"transform .35s cubic-bezier(.22,1,.36,1)", background:"rgba(253,251,248,.9)", backdropFilter:"blur(14px)", borderBottom:"1px solid rgba(46,72,89,.08)", boxShadow:scrolled?"0 4px 24px rgba(46,72,89,.08)":"none" }}>
         <div style={{ maxWidth:1120, margin:"0 auto", padding:"9px 20px", display:"flex", alignItems:"center", gap:18 }}>
-          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:32,objectFit:"contain",flexShrink:0,cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
+          <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:32,objectFit:"contain",flexShrink:0,cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
@@ -15840,7 +15840,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1200, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav : onglets visibles + Se connecter */}
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
@@ -15901,7 +15901,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               {T.heroTitle}<br/>
               {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </div>
-            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>{T.heroSub}</div>
+            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600, whiteSpace: "pre-line" }}>{T.heroSub}</div>
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             {/* Hero stats (deplaces sous le titre) */}
         <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
@@ -16283,7 +16283,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
                 <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
               </div>
-              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
+              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>
+                {T.proSubtxt}
+                {(() => {
+                  // Le prix par contrat est ce qu'une assistante maternelle compare a ce
+                  // qu'elle facture a une famille. Il se derive du forfait : l'ecrire en
+                  // dur le ferait diverger au premier changement de tarif.
+                  const f = parseFloat(String(T.prixMensuel||"").replace(",", "."));
+                  if (!(f > 0)) return null;
+                  return <span style={{ display: "block", marginTop: 3 }}>
+                    soit <b>{nbf(f/3, 2)} € par contrat</b> à trois familles
+                  </span>;
+                })()}
+              </div>
               <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
               {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
@@ -16423,7 +16435,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain",filter:"brightness(0) invert(1)"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain",filter:"brightness(0) invert(1)"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 {F.description}
@@ -19969,7 +19981,7 @@ const DEFAULT_CONFIG = {
   txts: {
     heroTitle:"Assistante maternelle,",
     heroTitleAccent:"pas comptable.",
-    heroSub:"Salaire, congés, Pajemploi : calculés tout seuls.",
+    heroSub:"TiMat gère votre contrat, votre paie et vos heures d'accueil.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
@@ -19977,7 +19989,7 @@ const DEFAULT_CONFIG = {
     compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
-    heroSubDesc:"L'app des assistantes maternelles et des parents employeurs.",
+    heroSubDesc:"Mensualisation, congés payés, indemnités, déclaration Pajemploi, pointage des présences : calculés tout seuls — et des heures que personne ne pourra contester.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
@@ -20156,12 +20168,14 @@ const DEFAULT_CONFIG = {
     "🏥 Communication PMI",
     "🗂️ 5 Go de documents",
     "👶 Enfants illimités",
+    "🏛️ Compatible Pajemploi+",
     "📋 Solde de tout compte",
     "✉️ Courriers types",
     "❓ Centre d'aide prioritaire",
   ],
   guarantees:[
     "✅ Résiliable en 1 clic, sans reconduction",
+    "✅ Pointages et messages opposables",
     "✅ Données en France 🇫🇷",
   ],
   feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
@@ -21085,12 +21099,23 @@ export default function App(){
   // //  Charger les donnes relles depuis Supabase
   // FIX P10: attendre que le profil soit charge depuis profiles (_needsProfileFetch=false)
   // sinon user.role peut valoir "asmat" par defaut alors que c'est un parent → filtre asmat_id qui retourne []
-  // Empêcher le zoom automatique iOS (focus champ) : forcer la balise viewport
+  // La balise viewport : viewport-fit=cover pour les telephones a encoche, et le
+  // zoom LAISSE POSSIBLE.
+  //
+  // Cette ligne portait maximum-scale=1, ce qui interdit d'agrandir la page.
+  // L'intention etait d'empecher iOS de zoomer tout seul quand on touche un
+  // champ — mais iOS ne fait cela que si la police du champ descend sous 16 px,
+  // et tous les champs sont deja en font-size:16px!important. La protection
+  // etait donc inutile, et elle privait de zoom des utilisatrices qui lisent
+  // des montants sur un bulletin de salaire. Lighthouse le signalait en
+  // accessibilite ; c'est surtout une gene reelle.
+  //
+  // maximum-scale=5 est le minimum exige pour que le controle passe.
   useEffect(()=>{
     try{
       let m=document.querySelector('meta[name="viewport"]');
       if(!m){m=document.createElement("meta");m.setAttribute("name","viewport");document.head.appendChild(m);}
-      m.setAttribute("content","width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+      m.setAttribute("content","width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover");
     }catch(e){}
   },[]);
   useEffect(()=>{

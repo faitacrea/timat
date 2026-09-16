@@ -1412,6 +1412,65 @@ if (!/async function createNotification\([\s\S]{0,900}envoyerPush\(/.test(appSrc
   signale("push", "le push ne part plus de createNotification() : chaque nouvel evenement risquerait de l'oublier");
 }
 
+// --- politiques RLS de type ALL sans WITH CHECK ---
+//
+// Quand WITH CHECK est absent, Postgres reutilise la condition de LECTURE
+// comme condition d'ECRITURE. C'est sans danger pour une condition symetrique
+// (« c'est ma ligne »), et exploitable sinon : public.messages autorisait
+// « expediteur OU destinataire », donc on pouvait inserer un message attribue
+// a quelqu'un d'autre, et reecrire le texte d'un message recu. Les deux ont
+// ete reproduits le 16 septembre 2026, puis fermes.
+//
+// Cette barriere ne remplace PAS un relevé dans Supabase : elle verifie que
+// chaque politique de la liste porte un verdict motive, et que la table
+// messages n'y est jamais reintroduite.
+{
+  let rls;
+  try { rls = JSON.parse(readFileSync(new URL("../data/politiques-rls.json", import.meta.url), "utf8")); }
+  catch { rls = null; }
+  if (!rls) {
+    signale("rls", "data/politiques-rls.json est introuvable ou illisible : le relevé des politiques ALL sans WITH CHECK n'est plus tenu");
+  } else {
+    const relues = rls.all_sans_with_check_relues || [];
+    if (!relues.length) signale("rls", "le relevé des politiques ALL sans WITH CHECK est vide — il n'a probablement pas été rejoué");
+    for (const p of relues) {
+      if (!p.verdict || !/sym\u00e9trique/i.test(p.verdict)) {
+        signale("rls", `la politique ${p.table}.${p.politique} n'a pas de verdict « symétrique » : une condition asymétrique laisse écrire une ligne attribuée à autrui`);
+      }
+      if (p.table === "messages") {
+        signale("rls", "public.messages est revenue dans les politiques ALL sans WITH CHECK : c'est la faille du 16 septembre 2026, rouverte");
+      }
+    }
+  }
+}
+
+// --- le zoom doit rester possible ---
+//
+// L'application forcait maximum-scale=1 a l'execution pour empecher iOS de
+// zoomer tout seul au focus d'un champ. Mais iOS ne fait cela que sous 16 px,
+// et tous les champs sont deja en font-size:16px!important : la protection ne
+// servait a rien et privait de zoom des utilisatrices qui lisent des montants
+// sur un bulletin. Lighthouse l'a signale en accessibilite le 16 septembre 2026.
+// On ignore les commentaires : ils ont le droit de raconter d'ou l'on vient,
+// et le commentaire qui explique ce correctif cite justement maximum-scale=1.
+const horsCommentaires = (t) => t.split("\n").filter((l) => !/^\s*(\/\/|\*|<!--)/.test(l)).join("\n");
+for (const brut of [appSrc, readFileSync(new URL("../index.html", import.meta.url), "utf8")]) {
+  const src = horsCommentaires(brut);
+  if (/user-scalable\s*=\s*no/.test(src)) {
+    signale("accessibilité", "le zoom est desactive par user-scalable=no : une utilisatrice malvoyante ne peut plus agrandir la page");
+  }
+  for (const m of src.matchAll(/maximum-scale\s*=\s*([\d.]+)/g)) {
+    if (parseFloat(m[1]) < 5) {
+      signale("accessibilité", `maximum-scale=${m[1]} empeche d'agrandir la page : le minimum acceptable est 5`);
+    }
+  }
+}
+// Si cette regle saute, c'est que les champs sont repasses sous 16 px : le zoom
+// automatique d'iOS reviendrait, et la tentation de le bloquer avec.
+if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
+  signale("accessibilité", "les champs ne sont plus forces a 16 px : iOS va zoomer au focus, et la parade habituelle est de desactiver le zoom");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

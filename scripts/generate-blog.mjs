@@ -491,7 +491,7 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
 <body>
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="/" aria-label="TiMat"><img src="/logo.png" alt="TiMat" width="95" height="30" onerror="this.outerHTML='<span class=&quot;wm&quot;>Ti<span>Mat</span></span>'"></a>
+    <a class="brand" href="/" aria-label="TiMat"><img src="/logo.webp" alt="TiMat" width="95" height="30" onerror="this.outerHTML='<span class=&quot;wm&quot;>Ti<span>Mat</span></span>'"></a>
     <nav class="topnav">
       <a href="${indexTarget().url}">Blog</a>
       <a href="/boutique.html">Boutique</a>
