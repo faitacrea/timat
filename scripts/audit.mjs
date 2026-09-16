@@ -1412,6 +1412,38 @@ if (!/async function createNotification\([\s\S]{0,900}envoyerPush\(/.test(appSrc
   signale("push", "le push ne part plus de createNotification() : chaque nouvel evenement risquerait de l'oublier");
 }
 
+// --- politiques RLS de type ALL sans WITH CHECK ---
+//
+// Quand WITH CHECK est absent, Postgres reutilise la condition de LECTURE
+// comme condition d'ECRITURE. C'est sans danger pour une condition symetrique
+// (« c'est ma ligne »), et exploitable sinon : public.messages autorisait
+// « expediteur OU destinataire », donc on pouvait inserer un message attribue
+// a quelqu'un d'autre, et reecrire le texte d'un message recu. Les deux ont
+// ete reproduits le 16 septembre 2026, puis fermes.
+//
+// Cette barriere ne remplace PAS un relevé dans Supabase : elle verifie que
+// chaque politique de la liste porte un verdict motive, et que la table
+// messages n'y est jamais reintroduite.
+{
+  let rls;
+  try { rls = JSON.parse(readFileSync(new URL("../data/politiques-rls.json", import.meta.url), "utf8")); }
+  catch { rls = null; }
+  if (!rls) {
+    signale("rls", "data/politiques-rls.json est introuvable ou illisible : le relevé des politiques ALL sans WITH CHECK n'est plus tenu");
+  } else {
+    const relues = rls.all_sans_with_check_relues || [];
+    if (!relues.length) signale("rls", "le relevé des politiques ALL sans WITH CHECK est vide — il n'a probablement pas été rejoué");
+    for (const p of relues) {
+      if (!p.verdict || !/sym\u00e9trique/i.test(p.verdict)) {
+        signale("rls", `la politique ${p.table}.${p.politique} n'a pas de verdict « symétrique » : une condition asymétrique laisse écrire une ligne attribuée à autrui`);
+      }
+      if (p.table === "messages") {
+        signale("rls", "public.messages est revenue dans les politiques ALL sans WITH CHECK : c'est la faille du 16 septembre 2026, rouverte");
+      }
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

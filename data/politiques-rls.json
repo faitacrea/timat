@@ -1,0 +1,15 @@
+{
+  "_commentaire": "Politiques RLS de type ALL sans WITH CHECK, relevées dans Supabase et RELUES une par une. Quand WITH CHECK est absent, Postgres réutilise la condition de lecture comme condition d'écriture. Ce n'est sans danger que si la condition est SYMÉTRIQUE — « c'est ma ligne ». Une condition du type « expéditeur OU destinataire » ne l'est pas : elle laisse écrire une ligne attribuée à l'autre. C'est exactement ce qui a été trouvé et reproduit sur public.messages le 16 septembre 2026.",
+  "_limite": "Cette liste est un relevé manuel. L'audit compare le code à ce fichier, il n'interroge pas Supabase : une politique ajoutée directement dans l'interface Supabase n'y apparaîtra pas. La requête à rejouer est dans _requete.",
+  "_requete": "select tablename, policyname, cmd from pg_policies where schemaname='public' and cmd='ALL' and with_check is null order by tablename;",
+  "all_sans_with_check_relues": [
+    { "table": "absences",     "politique": "asmat_absences",       "condition": "asmat_id = uid OU enfant parmi mes enfants", "verdict": "symétrique — on n'écrit que pour soi ou son enfant" },
+    { "table": "consentements","politique": "consentements_own",    "condition": "uid = user_id",   "verdict": "symétrique" },
+    { "table": "invitations",  "politique": "asmat_invitations",    "condition": "asmat_id = uid",  "verdict": "symétrique" },
+    { "table": "messages_pmi", "politique": "messages_pmi_access",  "condition": "asmat_id = uid",  "verdict": "symétrique" },
+    { "table": "profiles",     "politique": "profiles_own",         "condition": "uid = id",        "verdict": "symétrique" }
+  ],
+  "corrigees": [
+    { "table": "messages", "politique": "asmat_messages", "condition": "expediteur_id = uid OU destinataire_id = uid", "verdict": "ASYMÉTRIQUE — exploitable", "corrige_le": "2026-09-16", "remplacee_par": "select_messages / insert_messages / update_messages_lu + déclencheur messages_immuables, aucune politique DELETE" }
+  ]
+}
