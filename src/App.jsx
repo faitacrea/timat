@@ -15901,7 +15901,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
               {T.heroTitle}<br/>
               {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </div>
-            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>{T.heroSub}</div>
+            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600, whiteSpace: "pre-line" }}>{T.heroSub}</div>
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
             {/* Hero stats (deplaces sous le titre) */}
         <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
@@ -16283,7 +16283,19 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
                 <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
               </div>
-              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>{T.proSubtxt}</div>
+              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>
+                {T.proSubtxt}
+                {(() => {
+                  // Le prix par contrat est ce qu'une assistante maternelle compare a ce
+                  // qu'elle facture a une famille. Il se derive du forfait : l'ecrire en
+                  // dur le ferait diverger au premier changement de tarif.
+                  const f = parseFloat(String(T.prixMensuel||"").replace(",", "."));
+                  if (!(f > 0)) return null;
+                  return <span style={{ display: "block", marginTop: 3 }}>
+                    soit <b>{(f/3).toFixed(2).replace(".", ",")} € par contrat</b> à trois familles
+                  </span>;
+                })()}
+              </div>
               <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
               {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
@@ -19969,7 +19981,7 @@ const DEFAULT_CONFIG = {
   txts: {
     heroTitle:"Assistante maternelle,",
     heroTitleAccent:"pas comptable.",
-    heroSub:"Salaire, congés, Pajemploi : calculés tout seuls.",
+    heroSub:"Salaire, congés, Pajemploi : calculés tout seuls.\nEt des heures que personne ne pourra contester.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
@@ -20156,12 +20168,14 @@ const DEFAULT_CONFIG = {
     "🏥 Communication PMI",
     "🗂️ 5 Go de documents",
     "👶 Enfants illimités",
+    "🏛️ Compatible Pajemploi+",
     "📋 Solde de tout compte",
     "✉️ Courriers types",
     "❓ Centre d'aide prioritaire",
   ],
   guarantees:[
     "✅ Résiliable en 1 clic, sans reconduction",
+    "✅ Pointages et messages opposables",
     "✅ Données en France 🇫🇷",
   ],
   feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
