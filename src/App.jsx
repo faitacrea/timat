@@ -15209,7 +15209,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
     <div style={{position:"absolute",inset:0,backdropFilter:"blur(2px)",background:"radial-gradient(circle at 30% 20%,rgba(255,255,255,.25),transparent 42%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.14),transparent 42%)"}}/>
     <div style={{position:"relative",width:"100%",maxWidth:420,background:"rgba(255,255,255,.2)",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,.4)",borderRadius:24,padding:"30px 26px",boxShadow:"0 20px 60px rgba(0,0,0,.28)"}}>
       <div style={{textAlign:"center",marginBottom:18}}>
-        <img src="/logo.png" alt="TiMat" style={{height:46,marginBottom:10}}/>
+        <img src="/logo.webp" alt="TiMat" style={{height:46,marginBottom:10}}/>
         <div style={{fontSize:21,fontWeight:700,color:"#fff",fontFamily:"'Fraunces',Georgia,serif"}}>Bienvenue sur TiMat</div>
         <div style={{fontSize:13,color:"rgba(255,255,255,.92)",marginTop:6,lineHeight:1.5}}>{mode==="inscription"?"Votre assistante maternelle vous a invité·e. Créez votre espace parent pour suivre le quotidien de votre enfant.":"Connectez-vous à votre espace parent."}</div>
       </div>
@@ -15820,7 +15820,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
       {/* Sticky nav — apparait quand on descend */}
       <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, transform:scrolled?"translateY(0)":"translateY(-110%)", transition:"transform .35s cubic-bezier(.22,1,.36,1)", background:"rgba(253,251,248,.9)", backdropFilter:"blur(14px)", borderBottom:"1px solid rgba(46,72,89,.08)", boxShadow:scrolled?"0 4px 24px rgba(46,72,89,.08)":"none" }}>
         <div style={{ maxWidth:1120, margin:"0 auto", padding:"9px 20px", display:"flex", alignItems:"center", gap:18 }}>
-          <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:32,objectFit:"contain",flexShrink:0,cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
+          <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:32,objectFit:"contain",flexShrink:0,cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const f=document.createElement("span"); f.style.color="#2E4859"; f.style.fontWeight="700"; f.style.fontSize="20px"; f.style.fontFamily=fTitle; f.textContent="TiMat"; e.target.parentNode.appendChild(f);}}/>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginLeft:"auto" }}>
             <nav className="sticky-links" style={{ display:"flex", alignItems:"center", gap:2 }}>
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
@@ -15840,7 +15840,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1200, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo.png"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav : onglets visibles + Se connecter */}
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
@@ -16292,7 +16292,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
                   const f = parseFloat(String(T.prixMensuel||"").replace(",", "."));
                   if (!(f > 0)) return null;
                   return <span style={{ display: "block", marginTop: 3 }}>
-                    soit <b>{(f/3).toFixed(2).replace(".", ",")} € par contrat</b> à trois familles
+                    soit <b>{nbf(f/3, 2)} € par contrat</b> à trois familles
                   </span>;
                 })()}
               </div>
@@ -16435,7 +16435,7 @@ function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,a
             {/* Logo + description */}
             <div>
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
-                <img src={L?.logoUrl || "/logo.png"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain",filter:"brightness(0) invert(1)"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+                <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain",filter:"brightness(0) invert(1)"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
                 {F.description}
@@ -19981,7 +19981,7 @@ const DEFAULT_CONFIG = {
   txts: {
     heroTitle:"Assistante maternelle,",
     heroTitleAccent:"pas comptable.",
-    heroSub:"Salaire, congés, Pajemploi : calculés tout seuls.\nEt des heures que personne ne pourra contester.",
+    heroSub:"L'application qui gère votre contrat, votre paie et vos heures — et l'espace parent qui va avec.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
@@ -19989,7 +19989,7 @@ const DEFAULT_CONFIG = {
     compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
-    heroSubDesc:"L'app des assistantes maternelles et des parents employeurs.",
+    heroSubDesc:"Mensualisation, congés payés, indemnités, déclaration Pajemploi, pointage des présences : calculés tout seuls. Et des heures que personne ne pourra contester.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
