@@ -59,6 +59,55 @@ const GROQ = `*[_type == "article"]{
  * croire au cron que la publication a échoué et la ferait rejouer demain sur
  * l'article suivant, en laissant celui-ci invisible pour toujours.
  */
+/**
+ * La file de publication s'epuise en silence.
+ *
+ * Quand plus aucun brouillon n'attend, ce cron repond « Rien a publier
+ * aujourd'hui » avec un code 200 et personne ne le lit jamais. Le blog
+ * s'arreterait donc un matin sans que rien ne le signale — un mois plus tard on
+ * decouvrirait que la publication quotidienne est morte depuis trente jours.
+ *
+ * On previent AVANT la panne, pas apres : des qu'il reste PREVENIR_SOUS jours
+ * de reserve. L'alerte n'est jamais fatale : elle ne doit pas empecher la
+ * publication du jour, qui, elle, a reussi.
+ */
+const PREVENIR_SOUS = 5;
+
+async function prevenirFileBasse(restants) {
+  if (restants > PREVENIR_SOUS) return { envoye: false, raison: "file suffisante" };
+  const cle = process.env.RESEND_API_KEY;
+  if (!cle) {
+    console.warn("[publier-article] file basse (%d) mais RESEND_API_KEY absente : personne ne sera prevenu.", restants);
+    return { envoye: false, raison: "RESEND_API_KEY absente" };
+  }
+  const sujet = restants === 0
+    ? "TiMat — le blog n'a plus rien a publier"
+    : `TiMat — plus que ${restants} article${restants > 1 ? "s" : ""} en reserve`;
+  const corps = restants === 0
+    ? "La file de publication du blog est vide. Le cron quotidien continue de tourner mais ne publie plus rien.\n\nPour repartir : ecrire des articles dans Sanity avec le statut « brouillon », puis ajouter leur slug dans data/ordre-publication.js."
+    : `Il reste ${restants} article(s) en brouillon dans la file de publication, soit ${restants} jour(s) avant l'arret du blog.\n\nPour reapprovisionner : ecrire des articles dans Sanity avec le statut « brouillon », puis ajouter leur slug dans data/ordre-publication.js.`;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${cle}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "TiMat <noreply@timat.app>",
+        to: ["support@timat.app"],
+        subject: sujet,
+        text: corps,
+      }),
+    });
+    if (!res.ok) {
+      console.error("[publier-article] alerte file basse refusee :", res.status);
+      return { envoye: false, raison: `Resend a repondu ${res.status}` };
+    }
+    return { envoye: true };
+  } catch (e) {
+    console.error("[publier-article] alerte file basse injoignable :", e.message);
+    return { envoye: false, raison: e.message };
+  }
+}
+
 async function redeployer() {
   const hook = process.env.VERCEL_DEPLOY_HOOK;
   if (!hook) {
@@ -151,11 +200,14 @@ export default async function handler(req, res) {
     }
 
     if (!cible) {
+      const restants = ordre.filter((s) => !publies.has(s)).length;
+      const alerte = await prevenirFileBasse(restants);
       return res.status(200).json({
         publie: null,
         message: "Rien à publier aujourd'hui.",
         sautes,
-        restants: ordre.filter((s) => !publies.has(s)).length,
+        restants,
+        alerte,
       });
     }
 
@@ -214,6 +266,10 @@ export default async function handler(req, res) {
     const deploiement = await redeployer();
 
     console.log(`[publier-article] publié : ${cible.slug}`);
+    const restants = ordre.filter((s) => !publies.has(s) && s !== cible.slug).length;
+    // Apres la publication, jamais avant : une alerte qui echoue ne doit pas
+    // faire croire au cron que la publication du jour a rate.
+    const alerte = await prevenirFileBasse(restants);
     return res.status(200).json({
       publie: cible.slug,
       url: `https://www.timat.app/blog/${cible.slug}`,
@@ -221,7 +277,8 @@ export default async function handler(req, res) {
       deploiement,
       limbes: [...limbes],
       sautes,
-      restants: ordre.filter((s) => !publies.has(s) && s !== cible.slug).length,
+      restants,
+      alerte,
     });
   } catch (e) {
     console.error("[publier-article]", e);
