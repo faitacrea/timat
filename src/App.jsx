@@ -19981,7 +19981,7 @@ const DEFAULT_CONFIG = {
   txts: {
     heroTitle:"Assistante maternelle,",
     heroTitleAccent:"pas comptable.",
-    heroSub:"L'application qui gère votre contrat, votre paie et vos heures — et l'espace parent qui va avec.",
+    heroSub:"TiMat gère votre contrat, votre paie et vos heures d'accueil.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
@@ -19989,7 +19989,7 @@ const DEFAULT_CONFIG = {
     compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
-    heroSubDesc:"Mensualisation, congés payés, indemnités, déclaration Pajemploi, pointage des présences : calculés tout seuls. Et des heures que personne ne pourra contester.",
+    heroSubDesc:"Mensualisation, congés payés, indemnités, déclaration Pajemploi, pointage des présences : calculés tout seuls — et des heures que personne ne pourra contester.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
