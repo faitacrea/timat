@@ -21099,12 +21099,23 @@ export default function App(){
   // //  Charger les donnes relles depuis Supabase
   // FIX P10: attendre que le profil soit charge depuis profiles (_needsProfileFetch=false)
   // sinon user.role peut valoir "asmat" par defaut alors que c'est un parent → filtre asmat_id qui retourne []
-  // Empêcher le zoom automatique iOS (focus champ) : forcer la balise viewport
+  // La balise viewport : viewport-fit=cover pour les telephones a encoche, et le
+  // zoom LAISSE POSSIBLE.
+  //
+  // Cette ligne portait maximum-scale=1, ce qui interdit d'agrandir la page.
+  // L'intention etait d'empecher iOS de zoomer tout seul quand on touche un
+  // champ — mais iOS ne fait cela que si la police du champ descend sous 16 px,
+  // et tous les champs sont deja en font-size:16px!important. La protection
+  // etait donc inutile, et elle privait de zoom des utilisatrices qui lisent
+  // des montants sur un bulletin de salaire. Lighthouse le signalait en
+  // accessibilite ; c'est surtout une gene reelle.
+  //
+  // maximum-scale=5 est le minimum exige pour que le controle passe.
   useEffect(()=>{
     try{
       let m=document.querySelector('meta[name="viewport"]');
       if(!m){m=document.createElement("meta");m.setAttribute("name","viewport");document.head.appendChild(m);}
-      m.setAttribute("content","width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+      m.setAttribute("content","width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover");
     }catch(e){}
   },[]);
   useEffect(()=>{
