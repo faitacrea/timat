@@ -14657,11 +14657,11 @@ const GROUPS_AM={
     {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️",d:"Attestations et exports"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
+    {id:"mode_borne",l:"Borne & QR de pointage",ic:"🚪",d:"Les parents pointent eux-mêmes : écran d'entrée, ou QR affiché au mur"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
-    {id:"mode_borne",l:"Borne d'entrée",ic:"🚪",d:"Les parents pointent eux-mêmes, avec le code de leur famille"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
     {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},

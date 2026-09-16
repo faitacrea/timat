@@ -34,5 +34,28 @@ export const ordre = [
   "demenagement-agrement-contrats-assistante-maternelle",
   "developpement-moteur-motricite-libre-assistante-maternelle",
   "declaration-revenus-assistante-maternelle-abattement",
+
+  // Ajoutés le 16 septembre 2026, après un relevé des sujets absents des 45
+  // articles publiés. Classés par urgence : d'abord une obligation légale que
+  // le blog n'évoquait nulle part, puis l'erreur de calcul la plus coûteuse,
+  // puis un droit que personne ne réclame.
+  //
+  // Aucun ne cite d'article de blog : ils n'ont donc aucune dépendance et
+  // peuvent se publier dans cet ordre sans attendre.
+  //
+  // Un dixième sujet — les majorations d'horaires atypiques et de nuit — a été
+  // écarté volontairement : les sources consultées se contredisent, et la règle
+  // trouvée visait les salariés du particulier employeur à domicile, pas les
+  // assistants maternels. Publier une majoration fausse sur une paie serait
+  // pire que ne rien publier.
+  "assurance-responsabilite-civile-professionnelle-assistante-maternelle",
+  "annee-complete-incomplete-assistante-maternelle",
+  "retraite-assistante-maternelle-trimestres-ircem",
+  "aeeh-majoration-cmg-enfant-handicap-assistante-maternelle",
+  "transport-enfants-voiture-assistante-maternelle",
+  "releve-heures-assistante-maternelle-preuve",
+  "demission-assistante-maternelle-preavis-procedure",
+  "formation-obligatoire-120-heures-assistante-maternelle",
+  "prevoyance-ircem-assistante-maternelle",
 ];
 export default ordre;
