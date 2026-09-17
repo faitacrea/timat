@@ -16,6 +16,18 @@ import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import fs from "node:fs";
 import path from "node:path";
 
+// L'application a longtemps tenu dans un seul fichier, et tout l'audit lisait
+// « ../src/App.jsx » en dur. Le jour où le back-office est parti dans son
+// propre module pour sortir du morceau principal, ses 1 700 lignes ont cessé
+// d'être auditées sans que rien ne le signale : l'audit annonçait toujours
+// « aucune anomalie », en regardant un fichier plus petit. On énumère donc le
+// dossier, pour qu'un fichier nouveau soit couvert du jour où il existe.
+const FICHIERS_APP = readdirSync(new URL("../src/", import.meta.url))
+  .filter((f) => f.endsWith(".jsx") || f.endsWith(".js"))
+  .sort()
+  .map((f) => "../src/" + f);
+const lireApp = () => FICHIERS_APP.map((f) => readFileSync(new URL(f, import.meta.url), "utf8")).join("\n");
+
 const RACINE = process.cwd();
 const DIST = path.join(RACINE, "dist");
 const SITE = "https://www.timat.app";
@@ -217,7 +229,7 @@ const contraste = (a, b) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-const appSrc = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const appSrc = lireApp();
 const racine = appSrc.slice(appSrc.indexOf(":root{"), appSrc.indexOf("}", appSrc.indexOf(":root{")));
 const jeton = (nom) => (racine.match(new RegExp("--" + nom + ":(#[0-9A-Fa-f]{6})")) || [])[1];
 
@@ -242,7 +254,7 @@ for (const [, role, hex] of (roles ? roles[1] : "").matchAll(/(\w+):"(#[0-9A-Fa-
 // n'effacait rien. Ce controle compare ce que le code cite a l'empreinte du
 // schema, pour que ce genre d'ecart se voie a la construction.
 const schemaConnu = JSON.parse(readFileSync(new URL("../data/schema-supabase.json", import.meta.url), "utf8"));
-const sourcesDonnees = [new URL("../src/App.jsx", import.meta.url)]
+const sourcesDonnees = FICHIERS_APP.map((f) => new URL(f, import.meta.url))
   .concat(fs.readdirSync(new URL("../api/", import.meta.url)).filter((f) => f.endsWith(".js")).map((f) => new URL("../api/" + f, import.meta.url)))
   .map((u) => readFileSync(u, "utf8")).join("\n")
   // Un compartiment de stockage n'est pas une table : storage.from("documents")
@@ -275,7 +287,7 @@ for (const [t, cols] of citees) {
 // silencieusement vide : l'erreur ne remonte pas jusqu'a l'utilisatrice.
 const apiMail = readFileSync(new URL("../api/send-email.js", import.meta.url), "utf8");
 const modelesApi = new Set([...apiMail.matchAll(/^\s{2}([a-z_]+):\s*\{/gm)].map((m) => m[1]));
-for (const m of new Set([...readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").matchAll(/template:"([a-z_]+)"/g)].map((x) => x[1]))) {
+for (const m of new Set([...lireApp().matchAll(/template:"([a-z_]+)"/g)].map((x) => x[1]))) {
   if (!modelesApi.has(m)) signale("courriel", `le modèle « ${m} » est demandé par l'application mais inconnu de api/send-email.js`);
 }
 
@@ -318,7 +330,7 @@ const BAREME = [
   { nom: "plancher kilométrique 6 et 7 CV", motif: /PLANCHER_KM_CONV=\{.*6:0\.42,7:0\.42\}/,     source: "arrêté du 29 mai 2026, art. 10 du décret 2006-781 (Légifrance JORFTEXT000054154617)" },
   { nom: "abattement AEEH (4× au lieu de 3×)", motif: /baseMult\s*=\s*aeeh\s*\?\s*4\s*:\s*3/, source: "CGI art. 80 sexies, vérifié sur Légifrance" },
 ];
-const sourcesChiffres = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
+const sourcesChiffres = lireApp()
   + readFileSync(new URL("./generate-local.mjs", import.meta.url), "utf8");
 for (const { nom, motif, source } of BAREME) {
   if (!motif.test(sourcesChiffres)) {
@@ -336,7 +348,7 @@ for (const { nom, motif, source } of BAREME) {
 // On interdit donc la valeur perimee elle-meme, partout, y compris dans les
 // pages statiques de public/ que BAREME ne lisait pas.
 const PORTEE_PERIMEES = [
-  "../src/App.jsx",
+  ...FICHIERS_APP,
   "./generate-local.mjs",
   "./generate-blog.mjs",
   ...readdirSync(new URL("../public/", import.meta.url))
@@ -359,9 +371,9 @@ for (const rel of PORTEE_PERIMEES) {
 
 // Le bareme CMG ne doit exister qu'en un exemplaire dans l'application : deux
 // copies avaient deja diverge sur le plancher de ressources.
-const occurrencesCHR = (readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/CHR_AM\s*=/g) || []).length;
+const occurrencesCHR = (lireApp().match(/CHR_AM\s*=/g) || []).length;
 if (occurrencesCHR !== 1) {
-  signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/App.jsx — il doit l'être une seule, sans quoi les copies divergent`);
+  signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/ — il doit l'être une seule dans src/, sans quoi les copies divergent`);
 }
 
 // --- routes serveur que plus personne n'appelle ---
@@ -408,7 +420,7 @@ for (const f of readdirSync(new URL("../api/", import.meta.url))) {
 // que le bandeau promettant une sauvegarde inexistante — annoncer comme acquis
 // ce que personne n'a fait, sauf qu'ici c'est le futur mainteneur qu'on trompe.
 const exemple = readFileSync(new URL("../.env.example", import.meta.url), "utf8");
-const codeClient = ["../src/App.jsx", "../lib/supabase.js"]
+const codeClient = [...FICHIERS_APP, "../lib/supabase.js"]
   .map((f) => { try { return readFileSync(new URL(f, import.meta.url), "utf8"); } catch { return ""; } })
   .join("\n");
 for (const nom of new Set([...exemple.matchAll(/^#?\s*(VITE_[A-Z0-9_]+)\s*=/gm)].map((m) => m[1]))) {
