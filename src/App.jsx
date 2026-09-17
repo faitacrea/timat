@@ -19979,17 +19979,17 @@ const BLOG_DEFAULT=[
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#B85C38",c:"#FDFBF8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
-    heroTitle:"Assistante maternelle,",
-    heroTitleAccent:"pas comptable.",
-    heroSub:"TiMat gère votre contrat, votre paie et vos heures d'accueil.",
+    heroTitle:"Application pour assistantes maternelles",
+    heroTitleAccent:"et parents employeurs.",
+    heroSub:"Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     compBasePro:"7,99",
     compParContrat:"2,99",
     heroDesc:"",
-    heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
-    heroSubDesc:"Mensualisation, congés payés, indemnités, déclaration Pajemploi, pointage des présences : calculés tout seuls — et des heures que personne ne pourra contester.",
+    heroBadge:"🧸 Conçue par une professionnelle de la petite enfance",
+    heroSubDesc:"À jour de la convention collective au 1ᵉʳ juin 2026.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
@@ -21285,13 +21285,29 @@ export default function App(){
   // Le backoffice reste ouvert, ainsi que le blog et les simulateurs (fichiers statiques).
   {
     let _boRoute=false; try{ _boRoute=window.location.pathname.replace(/\/+$/,"")==="/backoffice"; }catch(e){}
-    // configLoaded est indispensable ici : sans lui, la vitrine s'affiche d'abord
-    // avec DEFAULT_CONFIG — les textes figes dans le bundle, donc l'ancienne
-    // version de la page — puis se redessine quand la config Supabase arrive.
-    // C'est ce clignotement que voyaient les visiteurs. Tant que la config n'est
-    // pas la, on laisse la main a l'ecran de chargement ci-dessous, que le
-    // useEffect libere de toute facon au bout de 3 s meme si Supabase ne repond pas.
-    if(MAINTENANCE && !maintOk && !_boRoute && configLoaded)
+    // On n'attend PLUS configLoaded ici, et c'est un arbitrage assume.
+    //
+    // Ce verrou avait ete pose pour eviter un clignotement : la vitrine
+    // s'affichait avec DEFAULT_CONFIG — les textes figes dans le bundle — puis
+    // se redessinait quand la config Supabase arrivait. Le remede coutait plus
+    // cher que le mal : chaque visiteuse attendait un aller-retour reseau, ou
+    // le repli de 3 s quand Supabase ne repondait pas, devant un ecran
+    // « Chargement… ». Lighthouse mesurait exactement cela, et le disait dans
+    // la repartition du LCP : « delai d'affichage de l'element, 1520 ms », sans
+    // aucune phase de chargement de ressource — donc une attente pure.
+    //
+    // Deux raisons de renverser l'arbitrage :
+    //   1. app_config ne contient AUCUNE surcharge de texte de landing. Le
+    //      rendu immediat affiche donc exactement ce que la config aurait
+    //      donne : il n'y a pas de clignotement a eviter aujourd'hui ;
+    //   2. si une surcharge est ajoutee un jour au back-office, le pire devient
+    //      un remplacement de texte de quelques centaines de millisecondes —
+    //      a comparer aux trois secondes d'ecran vide qu'on payait pour lui.
+    //
+    // Le jour ou l'on voudra les deux, la solution est d'injecter la config
+    // dans index.html au moment de la construction, comme le blog le fait deja
+    // avec Sanity. Pas d'attendre le reseau devant une page blanche.
+    if(MAINTENANCE && !maintOk && !_boRoute)
       return <><Styles/><div className={"app"+(dark?" dark":"")}><LandingPage vitrine onLogin={()=>{}} dark={dark} setDark={setDark} config={appConfig}/></div></>;
   }
 
