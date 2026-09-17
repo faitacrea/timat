@@ -19979,17 +19979,17 @@ const BLOG_DEFAULT=[
 const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#B85C38",c:"#FDFBF8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
-    heroTitle:"L'application des assistantes maternelles",
-    heroTitleAccent:"et des parents employeurs.",
-    heroSub:"Vous saisissez vos heures. Le reste se calcule.",
+    heroTitle:"Assistantes maternelles",
+    heroTitleAccent:"et parents employeurs.",
+    heroSub:"Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois gratuits",
     compBasePro:"7,99",
     compParContrat:"2,99",
     heroDesc:"",
-    heroBadge:"🧸 L'app des assmats, créée en France 🇫🇷",
-    heroSubDesc:"Contrat, salaire, congés, Pajemploi. À jour de la convention collective au 1ᵉʳ juin 2026.",
+    heroBadge:"🧸 L'application conçue par une professionnelle de la petite enfance",
+    heroSubDesc:"À jour de la convention collective au 1ᵉʳ juin 2026.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
