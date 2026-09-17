@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
@@ -31,7 +31,7 @@ const fmtDateHeureCourte=(iso)=>{
 // de passage unique, l'application acceptait 6 caracteres puis le serveur
 // refusait avec un message en anglais.
 const MDP_MIN = 8;
-const MDP_AIDE = "8 caractères minimum, lettres et chiffres";
+export const MDP_AIDE = "8 caractères minimum, lettres et chiffres";
 // LES MOTS DE PASSE DEJA FUITES.
 //
 // Supabase sait refuser un mot de passe qui figure dans les fuites connues,
@@ -52,7 +52,7 @@ const MDP_AIDE = "8 caractères minimum, lettres et chiffres";
 // « verifie:false » qui ne bloque rien.
 const MDP_FUITE_DELAI_MS = 3000;
 const MDP_FUITE_URL = "https://api.pwnedpasswords.com/range/";
-const motDePasseCompromis = async (mdp) => {
+export const motDePasseCompromis = async (mdp) => {
   const raté = { verifie: false, occurrences: 0 };
   try {
     if (!mdp || typeof crypto === "undefined" || !crypto.subtle) return raté;
@@ -79,11 +79,11 @@ const motDePasseCompromis = async (mdp) => {
 };
 
 // Le message. Separe de la verification pour qu'il n'existe qu'une fois.
-const messageMotDePasseFuite = (occurrences) =>
+export const messageMotDePasseFuite = (occurrences) =>
   "Ce mot de passe figure dans " + (occurrences > 1000 ? "plus de mille" : occurrences)
   + " fuite" + (occurrences > 1 ? "s" : "") + " de données connues. Il est essayé en premier par ceux qui forcent les comptes : choisissez-en un autre.";
 
-const verifierMotDePasse = (mdp) => {
+export const verifierMotDePasse = (mdp) => {
   const m = mdp || "";
   if (m.length < MDP_MIN) return `Le mot de passe doit faire au moins ${MDP_MIN} caractères.`;
   if (!/[a-zA-Z]/.test(m) || !/[0-9]/.test(m)) return "Le mot de passe doit contenir au moins une lettre et un chiffre.";
@@ -522,7 +522,7 @@ const QUALITE_SIESTE={
   court:{l:"Courte",court:"Courte",teinte:"var(--R)",fond:"var(--Rp)"},
 };
 
-function Pastille({couleur,taille=9}){
+export function Pastille({couleur,taille=9}){
   return <span style={{width:taille,height:taille,borderRadius:"50%",background:couleur,
     display:"inline-block",flex:"0 0 auto",verticalAlign:"middle"}}/>;
 }
@@ -953,7 +953,7 @@ const montantCMG=({tauxHoraire,heuresMois,revenusAnnuels,nbEnfants=1,aeeh=0})=>{
   return {montant,tarifRetenu,coutGarde,plafonne:montant>=CMG_MAX-0.01,tarifDepasse:tarifRetenu<(Number(tauxHoraire)||0)};
 };
 
-const isoJour=(d)=>{
+export const isoJour=(d)=>{
   if(d instanceof Date)return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
   const t=String(d||"").slice(0,10);
   return /^\d{4}-\d{2}-\d{2}$/.test(t)?t:isoJour(new Date());
@@ -972,7 +972,7 @@ const isoJour=(d)=>{
 //    fine insecable (U+202F), absente du jeu WinAnsi : elle ferait disparaitre
 //    la ligne entiere des PDF, exactement le bug deja corrige sur les emoji.
 //  - une valeur illisible donne 0 plutot qu'un « NaN » affiche a l'ecran.
-const nbf=(n,d=2)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false});
+export const nbf=(n,d=2)=>(Number(n)||0).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false});
 const nb2=(n)=>nbf(n,2);
 const nb3=(n)=>nbf(n,3);
 
@@ -1017,7 +1017,7 @@ var TODAY_MONTH=String(_D.getMonth()+1).padStart(2,"0");
 var TODAY_YEAR=String(_D.getFullYear());
 
 
-function Styles(){return(
+export function Styles(){return(
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1335,7 +1335,7 @@ function Styles(){return(
 
 const NAISSANCES={e1:neIlYa(30),e2:neIlYa(34),e3:neIlYa(14)};
 
-const D = {
+export const D = {
   asmat:{id:"am1",role:"asmat",prenom:"Marie",nom:"Dupont",email:"marie.dupont@mail.fr",agrement:"AGR-"+(new Date().getFullYear()-3)+"-0042",couleur:COULEUR_ROLE.asmat},
   parents:[
     {id:"p1",role:"parent",prenom:"Sophie",nom:"Martin",email:"sophie.martin@mail.fr",couleur:"#3A72A8"},
@@ -1514,7 +1514,7 @@ async function placeDisponible(user, type, octets = 0) {
 
 // L'espace occupe, et de quoi faire de la place sans chercher soi-meme quels
 // fichiers supprimer. Sans cet ecran, une limite atteinte serait une impasse.
-function GestionStockage({ user }) {
+export function GestionStockage({ user }) {
   const [q, setQ] = useState(null);
   const [anciens, setAnciens] = useState(null);
   const [bucket, setBucket] = useState("photos");
@@ -1609,7 +1609,7 @@ function VerrouPro({ titre, desc, cta = "Voir le forfait Pro" }) {
 }
 
 const age=(d)=>{const n=new Date(d),t=new Date(),m=(t.getFullYear()-n.getFullYear())*12+(t.getMonth()-n.getMonth());return m>=24?Math.floor(m/12)+" ans":m+" mois"};
-const fmt=(s)=>s?new Date(s).toLocaleDateString("fr-FR"):"-";
+export const fmt=(s)=>s?new Date(s).toLocaleDateString("fr-FR"):"-";
 const ini=(p,n)=>(p[0]+n[0]).toUpperCase();
 // ===== LOT C — Avatar enfant : emoji OU photo (miniature base64 stockée dans enfants.photo_url, protégée par RLS) =====
 function AvatarEnfant({e,size=24,style={}}){
@@ -1769,7 +1769,7 @@ const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"�
 
 //
 function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,background:c+"22",color:c,fontSize:Math.max(11,s*.34),minWidth:s}}>{t}</div>}
-function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9,position:"relative"}}>
+export function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9,position:"relative"}}>
   <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div>{badge&&<span style={{position:"absolute",top:-6,right:-6}}>{badge}</span>}</div>}
 
 // L'icone du toast etait figee sur ✅. Un message annoncant un pointage EN
@@ -1780,13 +1780,13 @@ function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on
 // La reconnaissance se fait ici, une fois, plutot que dans les ~150 appels.
 const ICONE_MESSAGE=(msg)=>/^(erreur|échec|impossible)|erreur\s*:/i.test(String(msg||""))?"⚠️"
   :/en attente de réseau|hors ligne/i.test(String(msg||""))?"📵":"✅";
-function Toast({msg,onClose,icone}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
+export function Toast({msg,onClose,icone}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
   return <div className="toast"><IconeOuEmoji e={icone||ICONE_MESSAGE(msg)}/>{msg}</div>}
 
 // Affiche le trace correspondant a un emoji, ou l'emoji lui-meme s'il n'est
 // pas encore dans la table. Permet de convertir les icones de menu par
 // remplacement mecanique, sans risque pour celles qui ne sont pas couvertes.
-function IconeOuEmoji({e,taille=17,couleur="currentColor"}){
+export function IconeOuEmoji({e,taille=17,couleur="currentColor"}){
   const trace=EMOJI_TRACE[e];
   return trace
     ?<span style={{display:"inline-block",verticalAlign:"-0.16em",lineHeight:0}}>
@@ -1795,7 +1795,7 @@ function IconeOuEmoji({e,taille=17,couleur="currentColor"}){
     :<span style={{fontSize:taille-1,lineHeight:1}}>{e}</span>;
 }
 
-function PageHeader({icon,title,sub,action}){
+export function PageHeader({icon,title,sub,action}){
   const trace=EMOJI_TRACE[icon];
   return <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
     <div>
@@ -3073,7 +3073,7 @@ function AccueilParent({enfant,setPage,user}){
 
 //
 //
-const BILANS={
+export const BILANS={
   "e1":[
     "Ce matin, Léo est arrivé les yeux encore un peu lourds de sommeil, mais le sourire n'a pas tardé à illuminer son visage. Nous avons commencé la journée en douceur avec quelques livres imagiers, et très vite son entrain habituel est revenu. L'activité peinture de l'après-midi a été un vrai moment de magie - il a trempé ses petits doigts dans le rouge et le jaune avec une concentration et une fierté visibles.\n\nLe repas de midi s'est très bien passé : Léo a tout mangé sans hésitation, ce qui est toujours un plaisir à observer. Sa sieste a duré 1h30, un sommeil profond et réparateur. Au réveil, il était de nouveau rayonnant, prêt à profiter du goûter et des jeux du soir.\n\nEn fin de journée, j'ai remarqué comme Léo cherche de plus en plus à communiquer avec les mots - il pointe, nomme, demande. C'est un plaisir de l'accompagner dans cet éveil du langage. Bonne soirée à vous !",
     "La journée de Léo a débuté sur une note douce et apaisée. Il est entré dans la maison en tenant fermement son doudou, signe qu'une petite période d'adaptation était nécessaire ce matin. Mais en quelques minutes, il s'est élancé vers les jouets avec son enthousiasme caractéristique.\n\nNous avons beaucoup joué dehors avant le déjeuner - Léo adore observer les fourmis et les feuilles qui tombent. Son repas a été excellent, et sa sieste longue et paisible. L'après-midi, nous avons planté des radis ensemble : il a tenu la petite graine avec soin et l'a déposée dans la terre avec une attention touchante.\n\nLéo est un enfant curieux et plein de vie. Chaque journée avec lui est une nouvelle aventure. Je suis fière des progrès qu'il fait semaine après semaine. À demain !",
@@ -4688,7 +4688,7 @@ function Calendrier({enfants,role,pEId,user}){
     </div>
   </div>;
 }
-function Messagerie({enfants,role,pEId,user}){
+export function Messagerie({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   useEffect(()=>{
     const h=(e)=>{ if(e.detail==="nouveau_message"){ const el=document.getElementById("timat-msg-input"); if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.focus();} } };
@@ -5008,7 +5008,7 @@ function Facturation({enfants,role,pEId,user,pointagesDB}){
 }
 
 //
-function Contrats({enfants,role,pEId,user}){
+export function Contrats({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   // FIX: state hydraté depuis les props (qui viennent de Supabase) au lieu de D.enfants
   const [signes,setSignes]=useState({});
@@ -5440,7 +5440,7 @@ function Contrats({enfants,role,pEId,user}){
 }
 
 //
-function Sante({enfants,role,pEId,user}){
+export function Sante({enfants,role,pEId,user}){
   // La selection vient de l'ecran englobant : deux selections independantes
   // pouvaient afficher deux enfants differents sur le meme ecran.
   const selId=pEId||enfants[0]?.id;
@@ -5768,7 +5768,7 @@ function parseAgeAttendu(str){ // FILTRE AGE P8
   const m=String(str).match(/(\d+)\s*-\s*(\d+)/);
   return m ? {min:parseInt(m[1],10), max:parseInt(m[2],10)} : {min:0, max:36};
 }
-function ageEnMois(naissance){ // FILTRE AGE P8
+export function ageEnMois(naissance){ // FILTRE AGE P8
   if(!naissance) return null;
   const d=new Date(naissance);
   if(isNaN(d.getTime())) return null;
@@ -5934,590 +5934,8 @@ function Developpement({enfants,role,pEId}){
 
 //
 // BILANS P8 - Composant complet pour créer/visualiser/éditer des bilans périodiques
-function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
-  const [selId,setSelId]=useState(enfants[0]?.id);
-  const [bilans,setBilans]=useState([]);
-  const [loading,setLoading]=useState(true);
-  const [editor,setEditor]=useState(null);
-  const [viewing,setViewing]=useState(null);
-  const [autoFilling,setAutoFilling]=useState(false);
-  const [saving,setSaving]=useState(false);
-  const [toast,setToast]=useState("");
-  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const enfant=liste.find(e=>e.id===selId)||liste[0];
-  const isRealChild=enfant && !["e1","e2","e3"].includes(enfant.id);
-
-  useEffect(()=>{
-    if(!enfant?.id||!isRealChild){setBilans([]);setLoading(false);return;}
-    let cancelled=false;
-    (async()=>{
-      setLoading(true);
-      const{data,error}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
-      if(cancelled)return;
-      if(error){console.error("[BILANS P8] fetch",error);setBilans([]);}
-      else setBilans(data||[]);
-      setLoading(false);
-    })();
-    return()=>{cancelled=true;};
-  },[enfant?.id,isRealChild]);
-
-  const parseContenu=(c)=>{try{const o=JSON.parse(c);return o&&typeof o==="object"?o:null;}catch{return null;}};
-
-  const getDefaultDates=(type)=>{
-    const today=new Date();
-    if(type==="mensuel"){
-      const s=new Date(today.getFullYear(),today.getMonth(),1);
-      const e=new Date(today.getFullYear(),today.getMonth()+1,0);
-      return{date_debut:isoJour(s),date_fin:isoJour(e)};
-    }
-    if(type==="trimestriel"){
-      const tStart=Math.floor(today.getMonth()/3)*3;
-      const s=new Date(today.getFullYear(),tStart,1);
-      const e=new Date(today.getFullYear(),tStart+3,0);
-      return{date_debut:isoJour(s),date_fin:isoJour(e)};
-    }
-    const s=new Date(today);s.setMonth(today.getMonth()-3);
-    return{date_debut:isoJour(s),date_fin:isoJour(today)};
-  };
-
-  const emptySections=()=>({
-    notes:{observations:"",axes:""},
-    alimentation_sommeil:{commentaire:"",stats:null},
-    croissance:{commentaire:"",mesures:[]},
-    jalons:{commentaire:"",acquis:[]},
-  });
-
-  const newBilan=()=>{
-    const t="trimestriel";const d=getDefaultDates(t);
-    setEditor({type:t,date_debut:d.date_debut,date_fin:d.date_fin,sections:emptySections()});
-  };
-
-  const editBilan=(b)=>{
-    const p=parseContenu(b.contenu);
-    setEditor({
-      id:b.id,
-      type:b.type||"trimestriel",
-      date_debut:p?.date_debut||b.date,
-      date_fin:p?.date_fin||b.date,
-      sections:p?.sections||{...emptySections(),notes:{observations:b.contenu||"",axes:""}},
-    });
-  };
-
-  const changeType=(t)=>{
-    const d=getDefaultDates(t);
-    setEditor(p=>({...p,type:t,date_debut:d.date_debut,date_fin:d.date_fin}));
-  };
-
-  const autoFill=async()=>{
-    if(!editor||!enfant)return;
-    setAutoFilling(true);
-    const{date_debut,date_fin}=editor;
-    try{
-      const[jR,cR,rR,sR]=await Promise.all([
-        supabase.from("jalons").select("*").eq("enfant_id",enfant.id).eq("acquis",true).gte("acquis_at",date_debut).lte("acquis_at",date_fin),
-        supabase.from("croissance").select("*").eq("enfant_id",enfant.id).gte("date",date_debut).lte("date",date_fin).order("date",{ascending:true}),
-        supabase.from("repas").select("*").eq("enfant_id",enfant.id).gte("date",date_debut).lte("date",date_fin),
-        supabase.from("sommeil").select("*").eq("enfant_id",enfant.id).gte("date",date_debut).lte("date",date_fin),
-      ]);
-      const acquis=(jR.data||[]).map(j=>({categorie:j.categorie,texte:j.texte,date:j.acquis_at}));
-      const mesures=(cR.data||[]).map(m=>({date:m.date,poids:m.poids,taille:m.taille,age_mois:m.age_mois}));
-      const repasCount=rR.data?.length||0;
-      const sommeilCount=sR.data?.length||0;
-      const isGood=q=>q&&(String(q).toLowerCase().includes("bonne")||String(q).toLowerCase().includes("excellent"));
-      const repasGood=(rR.data||[]).filter(r=>isGood(r.qualite)).length;
-      const sommeilGood=(sR.data||[]).filter(s=>isGood(s.qualite)).length;
-      setEditor(p=>({...p,sections:{...p.sections,
-        alimentation_sommeil:{...p.sections.alimentation_sommeil,stats:{
-          repasCount,sommeilCount,
-          repasQualitePct:repasCount?Math.round(repasGood/repasCount*100):null,
-          sommeilQualitePct:sommeilCount?Math.round(sommeilGood/sommeilCount*100):null,
-        }},
-        croissance:{...p.sections.croissance,mesures},
-        jalons:{...p.sections.jalons,acquis},
-      }}));
-      setToast("✨ Données auto-remplies sur la période");
-    }catch(e){console.error("[BILANS P8] autoFill",e);setToast("Erreur : "+e.message);}
-    finally{setAutoFilling(false);}
-  };
-
-  const saveBilan=async(opts={})=>{
-    if(!editor||!enfant)return;
-    const send=opts.send===true; // SEND BILAN P9
-    if(send&&!window.confirm("Envoyer ce bilan au parent ?\n\nUne fois envoyé, tu ne pourras plus le modifier ni le supprimer."))return; // SEND BILAN P9
-    setSaving(true);
-    const contenu=JSON.stringify({date_debut:editor.date_debut,date_fin:editor.date_fin,sections:editor.sections});
-    const d0=new Date(editor.date_debut);
-    const trimestre=editor.type==="trimestriel"?`T${Math.floor(d0.getMonth()/3)+1} ${d0.getFullYear()}`:null;
-    const payload={enfant_id:enfant.id,date:editor.date_fin,type:editor.type,trimestre,contenu};
-    if(send){payload.envoye=true;payload.envoye_at=new Date().toISOString();} // SEND BILAN P9
-    try{
-      let bilanId=editor.id;
-      if(editor.id){
-        const{error}=await supabase.from("bilans").update(payload).eq("id",editor.id);
-        if(error)throw error;
-      } else {
-        const{data:ins,error}=await supabase.from("bilans").insert(payload).select().single(); // SEND BILAN P9 (.select().single() pour récupérer l'id en cas d'envoi)
-        if(error)throw error;
-        bilanId=ins?.id;
-      }
-      if(send&&bilanId)logAction("send_bilan",{table_name:"bilans",record_id:bilanId}); // SEND BILAN P9
-      const{data}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
-      setBilans(data||[]);
-      setEditor(null);
-      setToast(send?"✅ Bilan envoyé au parent":(editor.id?"✓ Bilan modifié":"✓ Bilan enregistré (brouillon)")); // SEND BILAN P9
-    }catch(e){console.error("[BILANS P8] save",e);setToast("Erreur : "+e.message);}
-    finally{setSaving(false);}
-  };
-
-  const deleteBilan=async(id)=>{
-    if(!window.confirm("Supprimer ce bilan ?"))return;
-    const{error}=await supabase.from("bilans").delete().eq("id",id);
-    if(error){alert("Erreur : "+error.message);return;}
-    setBilans(p=>p.filter(b=>b.id!==id));
-    setToast("Bilan supprimé");
-  };
-
-  // SEND BILAN P9 - envoi d'un bilan brouillon directement depuis la liste
-  const sendBilan=async(b)=>{
-    if(b.envoye)return; // safety : déjà envoyé
-    if(!window.confirm("Envoyer ce bilan au parent ?\n\nUne fois envoyé, tu ne pourras plus le modifier ni le supprimer."))return;
-    const now=new Date().toISOString();
-    const{error}=await supabase.from("bilans").update({envoye:true,envoye_at:now}).eq("id",b.id);
-    if(error){alert("Erreur : "+error.message);return;}
-    logAction("send_bilan",{table_name:"bilans",record_id:b.id});
-    setBilans(p=>p.map(x=>x.id===b.id?{...x,envoye:true,envoye_at:now}:x));
-    setToast("✅ Bilan envoyé au parent");
-  };
-
-  // PDF BILAN P9 - export PDF via window.print (cohérent avec les 8 autres PDFs du projet)
-  // PDF BILAN P9 - Refacto jsPDF natif (Phase 1) : rendu identique cross-browser, texte sélectionnable, fichier léger
-  const exporterBilanPDF=async(bilan)=>{
-    if(!bilan||!enfant){setToast("Erreur : bilan ou enfant introuvable");return;}
-    setToast("⏳ Génération du PDF…");
-    try{
-      const jsPDF=await chargerJsPDF();
-      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"portrait"}));
-      // === Constantes layout ===
-      const PW=210,PH=297,MX=18,MTOP=15,MBOT=20;
-      const CW=PW-2*MX; // largeur contenu = 174mm
-      let y=MTOP;
-      // === Données ===
-      const p=parseContenu(bilan.contenu);
-      const sec=p?.sections;
-      const titre=bilan.trimestre||(bilan.type==="mensuel"?"Bilan mensuel":bilan.type==="libre"?"Bilan libre":"Bilan");
-      const fmtDate=(iso)=>{if(!iso)return"—";const d=new Date(iso);return isNaN(d)?String(iso):d.toLocaleDateString("fr-FR");};
-      const periode=p?(fmtDate(p.date_debut)+" → "+fmtDate(p.date_fin)):fmtDate(bilan.date);
-      const ageDeb=p?.date_debut&&enfant.naissance?ageEnMois(enfant.naissance):null;
-      const ageFin=p?.date_fin&&enfant.naissance?(()=>{const d=new Date(p.date_fin),n=new Date(enfant.naissance);return Math.max(0,(d.getFullYear()-n.getFullYear())*12+(d.getMonth()-n.getMonth()));})():null;
-      const ageStr=ageDeb!=null&&ageFin!=null?(ageDeb===ageFin?ageDeb+" mois":ageDeb+" → "+ageFin+" mois"):"";
-      // === Helpers couleurs (hex → RGB) ===
-      const rgb=(hex)=>{const h=hex.replace("#","");return[parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];};
-      const C={terra:rgb("B8622F"),brun:rgb("5C3A22"),mauve:rgb("FBF6F0"),beige:rgb("F0E5D6"),mauveD:rgb("FDFBF8"),vertBg:rgb("E8F4EC"),vert:rgb("2A7A50"),orangeBg:rgb("FFF3E8"),txt:rgb("444444"),gris:rgb("999999"),grisL:rgb("CCCCCC"),hdrTbl:rgb("F8F4EE"),sablesBg:rgb("FAFAFA"),lin:rgb("EEEEEE")};
-      // === Helpers de mise en page ===
-      const setFill=(c)=>doc.setFillColor(c[0],c[1],c[2]);
-      const setText=(c)=>doc.setTextColor(c[0],c[1],c[2]);
-      const setDraw=(c)=>doc.setDrawColor(c[0],c[1],c[2]);
-      // jsPDF ecrit avec une police standard encodee sur un seul octet
-      // (WinAnsi). Un caractere hors de ce jeu — « ▸ » (U+25B8), « ✓ » (U+2713)
-      // — fait basculer TOUTE la ligne en UTF-16 : ni le symbole ni le texte
-      // qui suit ne s'impriment. On dessine donc ces deux marques au trait.
-      const puceTriangle=(x,yy,c)=>{doc.setFillColor(c[0],c[1],c[2]);doc.triangle(x,yy-2.3,x,yy+0.5,x+2.5,yy-0.9,"F");};
-      const marqueCoche=(x,yy,c)=>{const l=doc.getLineWidth();setDraw(c);doc.setLineWidth(0.5);
-        doc.line(x,yy-1.3,x+1.2,yy-0.1);doc.line(x+1.2,yy-0.1,x+3.4,yy-3.2);doc.setLineWidth(l);};
-      const ensureSpace=(h)=>{if(y+h>PH-MBOT){doc.addPage();y=MTOP;}};
-      const sectionHeader=(num,title)=>{
-        ensureSpace(14);
-        setFill(C.terra);doc.rect(MX,y,2,7,"F");
-        doc.setFontSize(12);doc.setFont("helvetica","bold");setText(C.brun);
-        doc.text(num+". "+title,MX+5,y+5);
-        y+=11;
-      };
-      const paragraph=(text,opts)=>{
-        opts=opts||{};
-        const empty=!text||String(text).trim()==="";
-        const t=empty?"(non renseigné)":String(text);
-        doc.setFontSize(opts.size||10);
-        doc.setFont("helvetica",opts.italic||empty?"italic":"normal");
-        setText(empty?C.gris:C.txt);
-        const lines=doc.splitTextToSize(t,opts.width||CW);
-        ensureSpace(lines.length*5+3);
-        doc.text(lines,opts.x||MX,y);
-        y+=lines.length*5+3;
-      };
-      const labeledLine=(label,value,x,w)=>{
-        doc.setFontSize(7);doc.setFont("helvetica","bold");setText(C.brun);
-        doc.text(label.toUpperCase(),x,y);
-        doc.setFontSize(10);doc.setFont("helvetica","normal");setText(C.txt);
-        const v=value||"—";
-        const lines=doc.splitTextToSize(v,w);
-        doc.text(lines[0],x,y+4.5); // 1 seule ligne pour la valeur (cellule meta)
-      };
-      // === HEADER : titre + pastille statut ===
-      doc.setFontSize(18);doc.setFont("helvetica","bold");setText(C.terra);
-      doc.text(titre,MX,y+5);
-      // Pastille statut
-      const statusW=24,statusH=6;
-      const statusX=PW-MX-statusW;
-      if(bilan.envoye){setFill(C.vertBg);}else{setFill(C.orangeBg);}
-      doc.roundedRect(statusX,y-1,statusW,statusH+1,1.5,1.5,"F");
-      doc.setFontSize(8);doc.setFont("helvetica","bold");
-      if(bilan.envoye){setText(C.vert);}else{setText(C.terra);}
-      doc.text(bilan.envoye?"ENVOYÉ":"BROUILLON",statusX+statusW/2,y+3,{align:"center"});
-      y+=8;
-      // Ligne sous titre
-      setDraw(C.terra);doc.setLineWidth(0.7);
-      doc.line(MX,y,PW-MX,y);
-      y+=6;
-      // Sous-titre période + âge
-      doc.setFontSize(9);doc.setFont("helvetica","normal");setText(C.gris);
-      doc.text("Période : "+periode+(ageStr?"  ·  Âge enfant : "+ageStr:""),MX,y);
-      y+=8;
-      // === BLOC META ===
-      const metaH=24;
-      setFill(C.mauveD);setDraw(C.beige);doc.setLineWidth(0.3);
-      doc.roundedRect(MX,y,CW,metaH,2,2,"FD");
-      const colW=CW/2-8;
-      labeledLine("Assistante maternelle",((user?.prenom||"")+" "+(user?.nom||"")).trim()||"—",MX+4,colW);
-      labeledLine("Enfant",(enfant.prenom||"—")+(enfant.naissance?" (né(e) le "+fmtDate(enfant.naissance)+")":""),MX+4+CW/2,colW);
-      y+=11;
-      labeledLine("Date du bilan",fmtDate(bilan.date),MX+4,colW);
-      labeledLine("Type",bilan.type==="trimestriel"?"Trimestriel":bilan.type==="mensuel"?"Mensuel":"Période libre",MX+4+CW/2,colW);
-      y+=15;
-      // === SECTION 1 : Observations ===
-      sectionHeader(1,"Observations & axes à travailler");
-      paragraph(sec?.notes?.observations);
-      if(sec?.notes?.axes){
-        doc.setFontSize(8);doc.setFont("helvetica","bold");setText(C.brun);
-        doc.text("AXES À TRAVAILLER",MX,y);
-        y+=4;
-        doc.setFontSize(10);doc.setFont("helvetica","italic");setText(C.brun);
-        const lines=doc.splitTextToSize(String(sec.notes.axes),CW-8);
-        const blockH=lines.length*5+4;
-        ensureSpace(blockH);
-        setFill(C.mauve);doc.rect(MX,y,CW,blockH,"F");
-        setFill(C.terra);doc.rect(MX,y,1.5,blockH,"F"); // barre verticale gauche
-        doc.text(lines,MX+5,y+4);
-        y+=blockH+5;
-      }
-      // === SECTION 2 : Alimentation & sommeil ===
-      sectionHeader(2,"Alimentation & sommeil");
-      const alimStats=sec?.alimentation_sommeil?.stats;
-      if(alimStats){
-        const sH=12;
-        ensureSpace(sH+3);
-        setFill(rgb("F4F7FA"));doc.rect(MX,y,CW,sH,"F");
-        doc.setFontSize(9);doc.setFont("helvetica","normal");setText(rgb("264653"));
-        const l1=(alimStats.repasCount||0)+" jours de repas suivis"+(alimStats.repasQualitePct!=null?" · qualité bonne "+alimStats.repasQualitePct+"%":"");
-        const l2=(alimStats.sommeilCount||0)+" siestes enregistrées"+(alimStats.sommeilQualitePct!=null?" · qualité bonne "+alimStats.sommeilQualitePct+"%":"");
-        doc.text(l1,MX+3,y+4.5);
-        doc.text(l2,MX+3,y+9);
-        y+=sH+3;
-      }
-      paragraph(sec?.alimentation_sommeil?.commentaire);
-      // === SECTION 3 : Croissance ===
-      sectionHeader(3,"Croissance");
-      const croisMes=sec?.croissance?.mesures||[];
-      if(croisMes.length>0){
-        const colX=[MX,MX+45,MX+85,MX+125];
-        const rowH=6;
-        ensureSpace(rowH);
-        setFill(C.hdrTbl);doc.rect(MX,y,CW,rowH,"F");
-        doc.setFontSize(7);doc.setFont("helvetica","bold");setText(C.brun);
-        doc.text("DATE",colX[0]+2,y+4);doc.text("POIDS",colX[1]+2,y+4);
-        doc.text("TAILLE",colX[2]+2,y+4);doc.text("ÂGE",colX[3]+2,y+4);
-        y+=rowH;
-        doc.setFontSize(9);doc.setFont("helvetica","normal");setText(C.txt);
-        croisMes.forEach((m,i)=>{
-          ensureSpace(rowH);
-          if(i%2===0){setFill(C.sablesBg);doc.rect(MX,y,CW,rowH,"F");}
-          doc.text(fmtDate(m.date),colX[0]+2,y+4);
-          doc.text(m.poids?nbf(m.poids,1)+" kg":"—",colX[1]+2,y+4);
-          doc.text(m.taille?nbf(m.taille,1)+" cm":"—",colX[2]+2,y+4);
-          doc.text(m.age_mois?String(m.age_mois)+" mois":"—",colX[3]+2,y+4);
-          y+=rowH;
-        });
-        y+=4;
-      } else {
-        paragraph("",{italic:true});
-      }
-      if(sec?.croissance?.commentaire){paragraph(sec.croissance.commentaire);}
-      // === SECTION 4 : Jalons ===
-      const jalAcquis=sec?.jalons?.acquis||[];
-      sectionHeader(4,"Jalons acquis ("+jalAcquis.length+")");
-      if(jalAcquis.length>0){
-        const jalParCat={};
-        jalAcquis.forEach(j=>{const c=j.categorie||"Divers";if(!jalParCat[c])jalParCat[c]=[];jalParCat[c].push(j);});
-        Object.entries(jalParCat).forEach(([cat,items])=>{
-          ensureSpace(8);
-          doc.setFontSize(10);doc.setFont("helvetica","bold");setText(C.terra);
-          puceTriangle(MX,y,C.terra);
-          doc.text(cat+" ("+items.length+")",MX+4.5,y);
-          y+=5;
-          doc.setFontSize(9);doc.setFont("helvetica","normal");
-          items.forEach(j=>{
-            ensureSpace(5);
-            setText(C.txt);
-            marqueCoche(MX+6,y,C.vert);
-            doc.text(j.texte||"",MX+11,y);
-            setText(C.gris);doc.setFontSize(8);
-            doc.text(fmtDate(j.date),PW-MX-2,y,{align:"right"});
-            doc.setFontSize(9);
-            y+=5;
-          });
-          y+=2;
-        });
-        y+=2;
-      } else {
-        paragraph("",{italic:true});
-      }
-      if(sec?.jalons?.commentaire){paragraph(sec.jalons.commentaire);}
-      // === SIGNATURES ===
-      ensureSpace(35);
-      y+=4;
-      setDraw(C.brun);doc.setLineWidth(0.3);
-      doc.line(MX,y,PW-MX,y);
-      y+=5;
-      doc.setFontSize(9);doc.setFont("helvetica","normal");setText(C.brun);
-      const sigW=(CW-10)/2;
-      const sigBoxX1=MX,sigBoxX2=MX+sigW+10;
-      // Asmat
-      doc.text("Fait à ____________________",sigBoxX1,y);
-      doc.text("Le "+new Date().toLocaleDateString("fr-FR"),sigBoxX1,y+5);
-      doc.text("Signature de l'assistante maternelle :",sigBoxX1,y+12);
-      setDraw(C.grisL);doc.setLineWidth(0.2);
-      doc.line(sigBoxX1,y+24,sigBoxX1+sigW-5,y+24);
-      // Parent
-      doc.text("Reçu par le parent",sigBoxX2,y);
-      doc.text("Le ____________________",sigBoxX2,y+5);
-      doc.text("Signature du parent :",sigBoxX2,y+12);
-      doc.line(sigBoxX2,y+24,PW-MX,y+24);
-      y+=30;
-      // === FOOTER ===
-      ensureSpace(8);
-      setDraw(C.lin);doc.setLineWidth(0.2);
-      doc.line(MX,y,PW-MX,y);
-      y+=4;
-      doc.setFontSize(8);setText(rgb("AAAAAA"));doc.setFont("helvetica","italic");
-      const dateGen=new Date().toLocaleDateString("fr-FR")+" à "+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-      doc.text("Bilan généré par TiMat — timat.app — "+dateGen,PW/2,y,{align:"center"});
-      // === PAGINATION (si plusieurs pages) ===
-      const pageCount=doc.internal.getNumberOfPages();
-      if(pageCount>1){
-        for(let i=1;i<=pageCount;i++){
-          doc.setPage(i);
-          doc.setFontSize(8);setText(rgb("AAAAAA"));doc.setFont("helvetica","normal");
-          doc.text("Page "+i+" / "+pageCount,PW-MX,PH-8,{align:"right"});
-        }
-      }
-      // === SAUVEGARDE ===
-      const slug=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase();
-      const filename="bilan-"+slug(titre)+"-"+slug(enfant.prenom||"enfant")+"-"+(bilan.date||isoJour(new Date()))+".pdf";
-      doc.save(filename);
-      setToast("✅ PDF téléchargé");
-    }catch(err){
-      console.error("[PDF BILAN P9]",err);
-      setToast("Erreur PDF : "+(err?.message||"inconnue"));
-    }
-  };
-
-  // ===== ÉDITEUR =====
-  if(editor){
-    const s=editor.sections;
-    const updS=(key,upd)=>setEditor(p=>({...p,sections:{...p.sections,[key]:{...p.sections[key],...upd}}}));
-    return <div className="fi">
-      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-      <PageHeader icon="✨" title={editor.id?"Modifier le bilan":"Nouveau bilan"} sub={enfant?.prenom||""}
-        action={<button className="btn"onClick={()=>setEditor(null)}>← Retour</button>}/>
-
-      {/* Périodicité + dates */}
-      <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>Période du bilan</div>
-        <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-          {[["mensuel","📅 Mensuel"],["trimestriel","📊 Trimestriel"],["libre","✏️ Période libre"]].map(([id,lbl])=>
-            <button key={id}onClick={()=>changeType(id)}style={{
-              padding:"7px 14px",borderRadius:18,border:"none",cursor:"pointer",
-              fontWeight:600,fontSize:12,
-              background:editor.type===id?"var(--T)":"var(--Sp)",
-              color:editor.type===id?"#fff":"var(--m)",
-            }}>{lbl}</button>)}
-        </div>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <label style={{flex:1,minWidth:140}}>
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:3}}>Du</div>
-            <input type="date"className="inp"value={editor.date_debut}
-              onChange={e=>setEditor(p=>({...p,date_debut:e.target.value}))}/>
-          </label>
-          <label style={{flex:1,minWidth:140}}>
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:3}}>Au</div>
-            <input type="date"className="inp"value={editor.date_fin}
-              onChange={e=>setEditor(p=>({...p,date_fin:e.target.value}))}/>
-          </label>
-        </div>
-        <button className="btn bT"style={{marginTop:12,width:"100%"}}
-          onClick={autoFill}disabled={autoFilling}>
-          {autoFilling?"Chargement…":"✨ Auto-remplir avec les données"}
-        </button>
-      </div>
-
-      {/* Section 1 : Notes libres */}
-      <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📝"/> Observations & axes à travailler</div>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:4}}>Vos observations sur la période</div>
-        <textarea className="inp"rows={4}placeholder="Comportement, humeur, intégration, points forts, progrès remarqués..."
-          value={s.notes.observations}onChange={e=>updS("notes",{observations:e.target.value})}
-          style={{marginBottom:10,resize:"vertical"}}/>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:4}}>Axes à travailler le prochain trimestre</div>
-        <textarea className="inp"rows={3}placeholder="Pistes pédagogiques pour la suite..."
-          value={s.notes.axes}onChange={e=>updS("notes",{axes:e.target.value})}
-          style={{resize:"vertical"}}/>
-      </div>
-
-      {/* Section 2 : Alimentation & sommeil */}
-      <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="🍽️"/> Alimentation & sommeil</div>
-        {s.alimentation_sommeil.stats?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
-          <div><b>{s.alimentation_sommeil.stats.repasCount}</b> jours de repas suivis{s.alimentation_sommeil.stats.repasQualitePct!==null?` · qualité bonne ${s.alimentation_sommeil.stats.repasQualitePct}%`:""}</div>
-          <div><b>{s.alimentation_sommeil.stats.sommeilCount}</b> siestes enregistrées{s.alimentation_sommeil.stats.sommeilQualitePct!==null?` · qualité bonne ${s.alimentation_sommeil.stats.sommeilQualitePct}%`:""}</div>
-        </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Cliquez sur "Auto-remplir" pour récupérer les statistiques</div>}
-        <textarea className="inp"rows={3}placeholder="Commentaire sur l'alimentation et le sommeil..."
-          value={s.alimentation_sommeil.commentaire}onChange={e=>updS("alimentation_sommeil",{commentaire:e.target.value})}
-          style={{resize:"vertical"}}/>
-      </div>
-
-      {/* Section 3 : Croissance */}
-      <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📏"/> Croissance</div>
-        {s.croissance.mesures.length>0?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
-          {s.croissance.mesures.map((m,i)=><div key={i}>{m.date} : {m.poids?`${m.poids} kg`:""}{m.poids&&m.taille?" · ":""}{m.taille?`${m.taille} cm`:""}{m.age_mois?` (${m.age_mois} mois)`:""}</div>)}
-        </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Aucune mesure sur la période. Cliquez sur "Auto-remplir" si des mesures existent.</div>}
-        <textarea className="inp"rows={2}placeholder="Commentaire sur la croissance..."
-          value={s.croissance.commentaire}onChange={e=>updS("croissance",{commentaire:e.target.value})}
-          style={{resize:"vertical"}}/>
-      </div>
-
-      {/* Section 4 : Jalons */}
-      <div className="card"style={{marginBottom:14}}>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="🌱"/> Jalons acquis sur la période</div>
-        {s.jalons.acquis.length>0?<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12,maxHeight:200,overflowY:"auto"}}>
-          {s.jalons.acquis.map((j,i)=><div key={i}style={{marginBottom:3}}>✓ <b>{j.categorie}</b> — {j.texte} <span style={{color:"var(--l)"}}>({j.date})</span></div>)}
-          <div style={{marginTop:6,fontWeight:700,color:"var(--T)"}}>{s.jalons.acquis.length} jalon{s.jalons.acquis.length>1?"s":""} acquis</div>
-        </div>:<div style={{fontSize:11,color:"var(--l)",marginBottom:8,fontStyle:"italic"}}>Aucun jalon acquis sur cette période. Cliquez sur "Auto-remplir" pour vérifier.</div>}
-        <textarea className="inp"rows={2}placeholder="Commentaire sur les acquisitions..."
-          value={s.jalons.commentaire}onChange={e=>updS("jalons",{commentaire:e.target.value})}
-          style={{resize:"vertical"}}/>
-      </div>
-
-      <div style={{display:"flex",gap:8,marginBottom:30,flexWrap:"wrap"}}>
-        <button className="btn"style={{flex:"1 1 90px"}}onClick={()=>setEditor(null)}disabled={saving}>Annuler</button>
-        <button className="btn bT"style={{flex:"1 1 140px"}}onClick={()=>saveBilan()}disabled={saving}>
-          {saving?"Enregistrement…":"💾 Brouillon"}
-        </button>
-        {/* SEND BILAN P9 - bouton d'envoi direct depuis l'éditeur */}
-        <button onClick={()=>saveBilan({send:true})}disabled={saving}style={{
-          flex:"2 1 180px",padding:"10px 14px",borderRadius:10,border:"none",cursor:saving?"default":"pointer",
-          fontWeight:700,fontSize:13,background:"var(--G)",color:"#fff",opacity:saving?.6:1,
-        }}>
-          {saving?"Envoi…":<><IconeOuEmoji e="📤"/> Enregistrer & envoyer au parent</>}
-        </button>
-      </div>
-    </div>;
-  }
-
-  // ===== VIEWER (lecture seule) =====
-  if(viewing){
-    const p=parseContenu(viewing.contenu);
-    const sec=p?.sections;
-    return <div className="fi">
-      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-      <PageHeader icon="✨" title={viewing.trimestre||(viewing.type==="mensuel"?"Bilan mensuel":"Bilan")} sub={(p?.date_debut||"")+(p?.date_fin?" → "+p.date_fin:"")}
-        action={<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {/* PDF BILAN P9 - bouton export PDF */}
-          <button className="btn" style={{background:"var(--accent)",color:"#fff",border:"none"}} onClick={()=>exporterBilanPDF(viewing)}><IconeOuEmoji e="📥"/> PDF</button>
-          <button className="btn" onClick={()=>setViewing(null)}>← Retour</button>
-        </div>}/>
-      {!p&&<div className="card">{viewing.contenu}</div>}
-      {sec&&<>
-        <div className="card"style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="📝"/> Observations</div>
-          <div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.notes?.observations||<i>(vide)</i>}</div>
-          {sec.notes?.axes&&<><div style={{fontWeight:700,fontSize:12,marginTop:12,color:"var(--b)"}}>Axes à travailler</div>
-            <div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.notes.axes}</div></>}
-        </div>
-        <div className="card"style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="🍽️"/> Alimentation & sommeil</div>
-          {sec.alimentation_sommeil?.stats&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
-            <div><b>{sec.alimentation_sommeil.stats.repasCount}</b> jours suivis · qualité bonne {sec.alimentation_sommeil.stats.repasQualitePct||0}%</div>
-            <div><b>{sec.alimentation_sommeil.stats.sommeilCount}</b> siestes · qualité bonne {sec.alimentation_sommeil.stats.sommeilQualitePct||0}%</div>
-          </div>}
-          {sec.alimentation_sommeil?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.alimentation_sommeil.commentaire}</div>}
-        </div>
-        <div className="card"style={{marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="📏"/> Croissance</div>
-          {sec.croissance?.mesures?.length>0&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12}}>
-            {sec.croissance.mesures.map((m,i)=><div key={i}>{m.date} : {m.poids?`${m.poids} kg`:""}{m.poids&&m.taille?" · ":""}{m.taille?`${m.taille} cm`:""}</div>)}
-          </div>}
-          {sec.croissance?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.croissance.commentaire}</div>}
-        </div>
-        <div className="card"style={{marginBottom:30}}>
-          <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"var(--b)"}}><IconeOuEmoji e="🌱"/> Jalons acquis ({sec.jalons?.acquis?.length||0})</div>
-          {sec.jalons?.acquis?.length>0&&<div style={{padding:10,background:"var(--Sp)",borderRadius:8,marginBottom:10,fontSize:12,maxHeight:240,overflowY:"auto"}}>
-            {sec.jalons.acquis.map((j,i)=><div key={i}>✓ <b>{j.categorie}</b> — {j.texte}</div>)}
-          </div>}
-          {sec.jalons?.commentaire&&<div style={{fontSize:13,whiteSpace:"pre-wrap",color:"var(--m)"}}>{sec.jalons.commentaire}</div>}
-        </div>
-      </>}
-    </div>;
-  }
-
-  // ===== LISTE =====
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="✨" title="Bilans périodiques" sub="Synthèses pour les parents"
-      action={role==="asmat"&&isRealChild?<button className="btn bT"onClick={newBilan}>+ Nouveau bilan</button>:null}/>
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
-
-    {!isRealChild&&<div className="card"style={{textAlign:"center",color:"var(--l)"}}>
-      Les bilans sont disponibles pour les enfants réels. Sélectionne un enfant que tu accueilles.
-    </div>}
-    {isRealChild&&loading&&<div className="card"style={{textAlign:"center",color:"var(--l)"}}>Chargement…</div>}
-    {isRealChild&&!loading&&bilans.length===0&&<div className="card"style={{padding:"var(--pad-carte-l)",textAlign:"center"}}>
-      <div style={{fontSize:42,marginBottom:8}}>✨</div>
-      <div style={{fontWeight:700,color:"var(--b)",marginBottom:6}}>Aucun bilan pour {enfant?.prenom}</div>
-      <div style={{fontSize:13,color:"var(--l)",marginBottom:14}}>Crée un premier bilan pour synthétiser le développement de l'enfant et le partager aux parents.</div>
-      {role==="asmat"&&<button className="btn bT"onClick={newBilan}>+ Créer un bilan</button>}
-    </div>}
-    {isRealChild&&!loading&&bilans.map(b=>{
-      const p=parseContenu(b.contenu);
-      const periode=p?(p.date_debut+" → "+p.date_fin):b.date;
-      const titre=b.trimestre||(b.type==="mensuel"?"Bilan mensuel":b.type==="libre"?"Bilan libre":"Bilan");
-      return <div key={b.id}className="card"style={{marginBottom:10,display:"flex",gap:12,alignItems:"center"}}>
-        <div style={{fontSize:28}}><IconeOuEmoji e={b.envoye?"✅":"✏️"} taille={28}/></div>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{titre}</div>
-          <div style={{fontSize:12,color:"var(--l)"}}>{periode}</div>
-          <div style={{fontSize:11,color:b.envoye?"var(--G)":"var(--T)",marginTop:2,fontWeight:600}}>
-            {b.envoye?"Envoyé au parent":"Brouillon"}
-          </div>
-        </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button className="btn s"style={{padding:"6px 10px"}}onClick={()=>setViewing(b)}><IconeOuEmoji e="👁️"/> Voir</button>
-          {/* PDF BILAN P9 - export PDF rapide depuis la liste, sur bilans envoyés uniquement */}
-          {b.envoye&&<button onClick={()=>exporterBilanPDF(b)}style={{padding:"6px 10px",fontSize:12,borderRadius:10,border:"none",cursor:"pointer",fontWeight:700,background:"var(--accent)",color:"#fff"}}><IconeOuEmoji e="📥"/> PDF</button>}
-          {role==="asmat"&&!b.envoye&&<button className="btn s"style={{padding:"6px 10px"}}onClick={()=>editBilan(b)}><IconeOuEmoji e="✏️"/> Modifier</button>}
-          {/* SEND BILAN P9 - envoi direct depuis la liste pour les brouillons */}
-          {role==="asmat"&&!b.envoye&&<button onClick={()=>sendBilan(b)}style={{
-            padding:"6px 10px",fontSize:12,borderRadius:8,border:"none",cursor:"pointer",
-            fontWeight:700,background:"var(--G)",color:"#fff",
-          }}><IconeOuEmoji e="📤"/> Envoyer</button>}
-          {role==="asmat"&&!b.envoye&&<button className="btn s"style={{padding:"6px 10px",color:"#c00"}}onClick={()=>deleteBilan(b.id)}>🗑️</button>}
-        </div>
-      </div>;
-    })}
-  </div>;
-}
-
-//
+// Bilans, Paramètres, Liste d'attente, Périscolaire, Forum et Projet d'accueil
+// vivent dans src/ecrans-secondaires.jsx : le routeur les charge à la demande.
 function Recap({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [showPrev,setShowPrev]=useState(false);
@@ -6846,7 +6264,7 @@ const indemniteRupture=({brutTotal=0,moisAnciennete=0,parEmployeur=true,fauteGra
   if((Number(moisAnciennete)||0)<ANCIENNETE_MIN_RUPTURE_MOIS)return 0;
   return Math.round(((Number(brutTotal)||0)/DIVISEUR_INDEMNITE_RUPTURE)*100)/100;
 };
-const minimumHoraireAu=(d,titreAmge=false)=>{
+export const minimumHoraireAu=(d,titreAmge=false)=>{
   const j=isoJour(d);
   let conv=MINIMUM_CONV_HISTO[MINIMUM_CONV_HISTO.length-1][1];
   for(const[debut,valeur]of MINIMUM_CONV_HISTO)if(j>=debut){conv=valeur;break;}
@@ -6871,7 +6289,7 @@ const minimumHoraireAu=(d,titreAmge=false)=>{
 // moins qu'une phrase entiere perdue.
 const CAR_PDF_INTERDITS = /[^\x09\x0A\x0D\x20-\x7E\u00A0-\u00FF\u20AC\u2018\u2019\u201C\u201D\u2013\u2014\u2026\u2022]/g;
 const nettoyerPdf = (t) => (t === null || t === undefined ? t : String(t).replace(CAR_PDF_INTERDITS, ""));
-const protegerPdf = (doc) => {
+export const protegerPdf = (doc) => {
   const ecrire = doc.text.bind(doc);
   doc.text = (t, ...reste) => ecrire(Array.isArray(t) ? t.map(nettoyerPdf) : nettoyerPdf(t), ...reste);
   const decouper = doc.splitTextToSize.bind(doc);
@@ -6888,12 +6306,12 @@ const protegerPdf = (doc) => {
 // nom cassait la mise en page du document, et un texte saisi par un parent
 // pouvait faire executer du code dans la fenetre que l'assistante maternelle
 // ouvre pour imprimer.
-const H = (v) => String(v === null || v === undefined ? "" : v)
+export const H = (v) => String(v === null || v === undefined ? "" : v)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 let jsPDFPromesse=null;
-const chargerJsPDF=()=>(jsPDFPromesse||(jsPDFPromesse=import("jspdf").then(m=>m.jsPDF)));
+export const chargerJsPDF=()=>(jsPDFPromesse||(jsPDFPromesse=import("jspdf").then(m=>m.jsPDF)));
 
 const CATS={
   medical:{l:"Médical",ic:"🏥",c:"#B84060",bg:"#FAEEF2"},
@@ -8328,7 +7746,7 @@ function CourriersTypes({enfants,pEId,user}){
 
 
 //
-function Parrainage({user}){
+export function Parrainage({user}){
   const [copied,setCopied]=useState(false);
   const [toast,setToast]=useState("");
   const prefix=(user?.prenom||"MARIE").toUpperCase().slice(0,4);
@@ -9048,7 +8466,7 @@ const SOMMEIL_DEMO={
   ],
 };
 
-function Sommeil({enfants,role,pEId}){
+export function Sommeil({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sommeils,setSommeils]=useState({});
   const [nS,setNS]=useState({debut:"",fin:"",qualite:"bien"});
@@ -10274,7 +9692,7 @@ function useInstallPWA(){
   return{deferredPrompt,isInstalled,isIOS,install};
 }
 
-function InstallButton(){
+export function InstallButton(){
   const {deferredPrompt,isInstalled,isIOS,install}=useInstallPWA();
   const [showGuide,setShowGuide]=useState(false);
 
@@ -10454,7 +9872,7 @@ async function viderStockageDuCompte(userId){
   }
 }
 
-function SupprimerCompte({onDeleted}){
+export function SupprimerCompte({onDeleted}){
   const [etape,setEtape]=useState("idle");
   const [confirmation,setConfirmation]=useState("");
   const [erreur,setErreur]=useState("");
@@ -10553,7 +9971,7 @@ function SupprimerCompte({onDeleted}){
 
 // SIGNATURE STANDARD ASMAT P10 - composant reutilisable de capture de signature
 // Utilise dans Parametres (signature de reference du profil) et dans Contrats (pre-remplissage)
-function SignaturePad({initialValue,onSave,onCancel}){
+export function SignaturePad({initialValue,onSave,onCancel}){
   const canvasRef=useRef(null);
   const [drawing,setDrawing]=useState(false);
   const [hasDrawn,setHasDrawn]=useState(false);
@@ -11009,429 +10427,6 @@ const jsPDF=await chargerJsPDF();
   }catch(e){
     return{success:false,error:e.message};
   }
-}
-
-//
-function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser,openWelcome,recovery=false,clearRecovery}){
-  const [toast,setToast]=useState("");
-  // MOT DE PASSE P16 - changement depuis l'app (usage courant + retour de lien de reinitialisation)
-  const [mdp,setMdp]=useState({a:"",b:""});
-  const [savingMdp,setSavingMdp]=useState(false);
-  const [mdpOk,setMdpOk]=useState(false);
-  const changerMotDePasse=async()=>{
-    if(savingMdp)return;
-    const pbMdp=verifierMotDePasse(mdp.a); if(pbMdp){setToast("❌ "+pbMdp);return;}
-    const fuite=await motDePasseCompromis(mdp.a);
-    if(fuite.verifie&&fuite.occurrences>0){setToast("❌ "+messageMotDePasseFuite(fuite.occurrences));return;}
-    if(mdp.a!==mdp.b){setToast("❌ Les deux mots de passe ne correspondent pas");return;}
-    setSavingMdp(true);
-    const{error}=await supabase.auth.updateUser({password:mdp.a});
-    setSavingMdp(false);
-    if(error){setToast("❌ "+(error.message||"Modification impossible"));return;}
-    setMdp({a:"",b:""});setMdpOk(true);
-    clearRecovery&&clearRecovery();
-    setToast("✅ Mot de passe modifié");
-  };
-  // SIGNATURE STANDARD ASMAT P10 - state pour gestion signature de reference
-  const [showSigPad,setShowSigPad]=useState(false);
-  const [currentSig,setCurrentSig]=useState(user?.signature_base64||null);
-  // PROFIL EDITABLE P15 - formulaire identite (prenom/nom/tel/adresse + specifique parent employeur)
-  // IMPORTANT : tous les hooks restent en haut du composant, avant tout return conditionnel.
-  const [pf,setPf]=useState({prenom:"",nom:"",telephone:"",adresse:"",numero_pajemploi:"",parent2_prenom:"",parent2_nom:"",parent2_email:""});
-  const [showP2,setShowP2]=useState(false);
-  const [savingPf,setSavingPf]=useState(false);
-  useEffect(()=>{setCurrentSig(user?.signature_base64||null);},[user?.signature_base64]);
-  useEffect(()=>{
-    setPf({
-      prenom:user?.prenom||"",nom:user?.nom||"",telephone:user?.telephone||"",adresse:user?.adresse||"",
-      numero_pajemploi:user?.numero_pajemploi||"",
-      parent2_prenom:user?.parent2_prenom||"",parent2_nom:user?.parent2_nom||"",parent2_email:user?.parent2_email||"",
-    });
-    setShowP2(!!(user?.parent2_prenom||user?.parent2_nom||user?.parent2_email));
-  },[user?.id,user?.prenom,user?.nom,user?.telephone,user?.adresse,user?.numero_pajemploi,user?.parent2_prenom,user?.parent2_nom,user?.parent2_email]);
-  const estParent=user?.role!=="asmat";
-  const champsRequis=estParent?["prenom","nom","telephone","adresse","numero_pajemploi"]:["prenom","nom","telephone","adresse"];
-  const nbRemplis=champsRequis.filter(k=>(pf[k]||"").trim()).length;
-  const enregistrerProfil=async()=>{
-    if(savingPf)return;
-    setSavingPf(true);
-    const nettoie=v=>{const s=(v||"").trim();return s||null;};
-    const patch={
-      prenom:nettoie(pf.prenom),nom:nettoie(pf.nom),
-      telephone:nettoie(pf.telephone),adresse:nettoie(pf.adresse),
-    };
-    if(estParent){
-      patch.numero_pajemploi=nettoie(pf.numero_pajemploi);
-      patch.parent2_prenom=showP2?nettoie(pf.parent2_prenom):null;
-      patch.parent2_nom=showP2?nettoie(pf.parent2_nom):null;
-      patch.parent2_email=showP2?nettoie(pf.parent2_email):null;
-    }
-    const{error}=await supabase.from("profiles").update(patch).eq("id",user.id);
-    setSavingPf(false);
-    if(error){setToast("❌ Erreur : "+error.message);return;}
-    setUser&&setUser(u=>({...u,...patch}));
-    setToast("✅ Profil enregistré");
-  };
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="⚙️" title="Paramètres" sub="Votre compte et vos données"/>
-    <div style={{maxWidth:600,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
-
-      {/* Abonnement - uniquement pour les assmats */}
-      {user?.role==="asmat"&&<div className="card"style={{border:isPro?"2px solid var(--S)":"2px solid var(--T)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="💳"/> Mon abonnement</div>
-          <span style={{
-            background:isPro?"var(--Sp)":"var(--Tp)",
-            color:isPro?"var(--S)":"var(--T)",
-            borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:700
-          }}>{isTrialing?"✨ Essai gratuit":isPro?"✅ Pro actif":"🔓 Gratuit"}</span>
-        </div>
-
-        {isPro?<>
-          {isTrialing&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10,padding:"10px 14px",marginBottom:12,fontSize:12,color:"var(--G)"}}>
-            <IconeOuEmoji e="🎉"/> Vous bénéficiez de 2 mois d'essai gratuit. Aucun prélèvement avant la fin de l'essai.
-          </div>}
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:14}}>
-            {isTrialing
-              ? "Votre abonnement Pro démarrera automatiquement à la fin de votre période d'essai."
-              : "Votre abonnement Pro est actif. Toutes les fonctionnalités sont débloquées."}
-          </div>
-          <button className="btn bG"style={{width:"100%",justifyContent:"center"}}onClick={ouvrirPortail||undefined}>
-            <IconeOuEmoji e="⚙️"/> Gérer mon abonnement (facturation, résiliation)
-          </button>
-          <div style={{fontSize:11,color:"var(--l)",marginTop:6,textAlign:"center"}}>
-            Vous serez redirigée vers le portail Stripe sécurisé.
-          </div>
-        </>:<>
-          <div style={{marginBottom:14}}>
-            {[
-              "✨ Bilans de journée automatiques",
-              "📜 Bulletins de salaire complets",
-              "🏛️ Export Pajemploi en 1 clic",
-              "📋 Contrats, avenants, courriers illimités",
-              "👶 Enfants illimités",
-              "❓ Support prioritaire",
-            ].map(f=><div key={f}style={{display:"flex",gap:8,padding:"5px 0",fontSize:13,borderBottom:"1px solid var(--br)"}}>
-              <span style={{color:"var(--S)"}}>✓</span>
-              <span style={{color:"var(--b)"}}>{f}</span>
-            </div>)}
-          </div>
-          <div style={{textAlign:"center",marginBottom:12}}>
-            <div style={{fontSize:26,fontWeight:700,color:"var(--T)",fontFamily:"'DM Sans',sans-serif"}}>9,99€<span style={{fontSize:13,color:"var(--l)",fontWeight:400}}>/mois</span></div>
-            <div style={{fontSize:11,color:"var(--l)"}}>2 mois gratuits · Premier paiement à J+60 · Résiliable à tout moment</div>
-          </div>
-          <button className="btn bT"style={{width:"100%",justifyContent:"center",padding:"13px"}}
-            onClick={lancerCheckout||undefined}>
-            <IconeOuEmoji e="🚀"/> Passer à Pro - Commencer mon essai gratuit
-          </button>
-        </>}
-      </div>}
-
-      {/* Profil - PROFIL EDITABLE P15 */}
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="👤"/> Mon profil</div>
-        <div style={{fontSize:11.5,color:"var(--l)",marginBottom:14,lineHeight:1.5}}>
-          {estParent
-            ?<>Ces informations apparaîtront comme <b>employeur</b> sur votre contrat de travail.</>
-            :<>Ces informations apparaissent sur vos contrats, attestations et bulletins.</>}
-        </div>
-
-        {/* Jauge de completion */}
-        <div style={{marginBottom:14}}>
-          <div style={{height:6,background:"var(--br)",borderRadius:4,overflow:"hidden"}}>
-            <div style={{height:"100%",width:Math.round((nbRemplis/champsRequis.length)*100)+"%",background:nbRemplis===champsRequis.length?"var(--S)":"var(--T)",borderRadius:4,transition:"width .3s"}}/>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--l)",marginTop:5}}>
-            <span>{nbRemplis} / {champsRequis.length} champs complétés</span>
-            <span>{estParent?"Pour un contrat conforme":"Pour vos documents"}</span>
-          </div>
-        </div>
-
-        <div style={{display:"flex",gap:10}}>
-          <div style={{flex:1,marginBottom:12}}>
-            <label className="lbl">Prénom</label>
-            <input className="inp" value={pf.prenom} placeholder="Votre prénom"
-              onChange={e=>setPf(p=>({...p,prenom:e.target.value}))}/>
-          </div>
-          <div style={{flex:1,marginBottom:12}}>
-            <label className="lbl">Nom</label>
-            <input className="inp" value={pf.nom} placeholder="Votre nom"
-              onChange={e=>setPf(p=>({...p,nom:e.target.value}))}/>
-          </div>
-        </div>
-
-        <div style={{marginBottom:12}}>
-          <label className="lbl">Email</label>
-          <input className="inp" value={user?.email||""} disabled style={{color:"var(--l)",background:"#F3F1EE",cursor:"not-allowed"}}/>
-          <div style={{fontSize:11.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}><IconeOuEmoji e="🔒"/> L'email de connexion ne se modifie pas ici — écrivez au support si nécessaire.</div>
-        </div>
-
-        <div style={{marginBottom:12}}>
-          <label className="lbl">Téléphone</label>
-          <input className="inp" value={pf.telephone} placeholder="06 12 34 56 78"
-            onChange={e=>setPf(p=>({...p,telephone:e.target.value}))}/>
-        </div>
-
-        <div style={{marginBottom:12}}>
-          <label className="lbl">Adresse postale</label>
-          <textarea className="inp" value={pf.adresse} placeholder="Numéro et rue, code postal, ville"
-            style={{minHeight:56,resize:"vertical",fontFamily:"inherit"}}
-            onChange={e=>setPf(p=>({...p,adresse:e.target.value}))}/>
-          {!(pf.adresse||"").trim()&&<div style={{fontSize:11,color:"var(--R)",marginTop:5}}><IconeOuEmoji e="⚠️"/> Obligatoire sur le contrat de travail</div>}
-        </div>
-
-        {estParent&&<div style={{marginBottom:12}}>
-          <label className="lbl">N° d'identification Pajemploi <span style={{fontWeight:400,color:"var(--l)"}}>(si déjà attribué)</span></label>
-          <input className="inp" value={pf.numero_pajemploi} placeholder="ex: 123456789012"
-            onChange={e=>setPf(p=>({...p,numero_pajemploi:e.target.value}))}/>
-          <div style={{fontSize:11.5,color:"var(--l)",marginTop:5,lineHeight:1.4}}>
-            Attribué par l'URSSAF à l'ouverture de votre compte Pajemploi. S'il n'est pas encore connu, le contrat mentionnera qu'il sera communiqué dès réception.
-          </div>
-        </div>}
-
-        {estParent&&<div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
-          <div onClick={()=>setShowP2(v=>!v)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",gap:12}}>
-            <div>
-              <div style={{fontWeight:600,fontSize:12.5,color:"var(--b)"}}><IconeOuEmoji e="👥"/> Ajouter un 2e parent employeur</div>
-              <div style={{fontSize:11,color:"var(--l)",marginTop:2,lineHeight:1.4}}>Si le contrat est cosigné par les deux parents</div>
-            </div>
-            <div style={{width:36,height:20,borderRadius:20,background:showP2?"var(--S)":"var(--br)",position:"relative",flexShrink:0,transition:"background .2s"}}>
-              <div style={{position:"absolute",top:2,left:showP2?18:2,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left .2s"}}/>
-            </div>
-          </div>
-          {showP2&&<div style={{marginTop:12,paddingTop:12,borderTop:"1px dashed var(--br)"}}>
-            <div style={{display:"flex",gap:10}}>
-              <div style={{flex:1,marginBottom:12}}>
-                <label className="lbl">Prénom</label>
-                <input className="inp" value={pf.parent2_prenom} placeholder="Prénom du 2e parent"
-                  onChange={e=>setPf(p=>({...p,parent2_prenom:e.target.value}))}/>
-              </div>
-              <div style={{flex:1,marginBottom:12}}>
-                <label className="lbl">Nom</label>
-                <input className="inp" value={pf.parent2_nom} placeholder="Nom du 2e parent"
-                  onChange={e=>setPf(p=>({...p,parent2_nom:e.target.value}))}/>
-              </div>
-            </div>
-            <div>
-              <label className="lbl">Email <span style={{fontWeight:400,color:"var(--l)"}}>(facultatif)</span></label>
-              <input type="email" className="inp" value={pf.parent2_email} placeholder="parent2@email.fr"
-                onChange={e=>setPf(p=>({...p,parent2_email:e.target.value}))}/>
-            </div>
-          </div>}
-        </div>}
-
-        <button className="btn bT" style={{width:"100%",justifyContent:"center",padding:12,marginTop:14}}
-          disabled={savingPf} onClick={enregistrerProfil}>
-          {savingPf?"⏳ Enregistrement…":"Enregistrer mon profil"}
-        </button>
-
-        <div style={{fontSize:11,color:"var(--l)",marginTop:10,lineHeight:1.5,textAlign:"center"}}>
-          Rôle : <b style={{color:"var(--b)"}}>{user?.role==="asmat"?"Assistante maternelle":"Parent employeur"}</b>
-        </div>
-        {user?.role==="asmat"&&<div style={{marginTop:12}}>
-          <label className="lbl">N° d'agrément (apparaît sur attestations et contrats)</label>
-          <div style={{display:"flex",gap:8}}>
-            <input className="inp" defaultValue={user?.numero_agrement||""} id="agr-input" placeholder="ex: 75-2023-AM-0042" style={{flex:1}}/>
-            <button className="btn bT s" onClick={async()=>{
-              const agr=document.getElementById("agr-input")?.value?.trim();
-              const{error}=await supabase.from("profiles").update({numero_agrement:agr||null}).eq("id",user.id);
-              if(error){setToast("Erreur : "+error.message);return;}
-              setUser&&setUser(u=>({...u,numero_agrement:agr}));
-              setToast("N° d'agrément enregistré ✓");
-            }}>Enregistrer</button>
-          </div>
-          {user?.numero_agrement&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            <IconeOuEmoji e="✅"/> Numéro enregistré : {user.numero_agrement}
-          </div>}
-          {/* Le titre AM-GE majore de 4 % le salaire horaire minimum (CCN 3239,
-              article 113 et annexe 5). Sans cette information, l'application
-              declarerait conforme un taux pourtant sous le plancher. */}
-          <label style={{display:"flex",alignItems:"flex-start",gap:9,marginTop:14,cursor:"pointer"}}>
-            <input type="checkbox" checked={!!user?.titre_amge} style={{marginTop:2,width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}
-              onChange={async(e)=>{
-                const v=e.target.checked;
-                const{error}=await supabase.from("profiles").update({titre_amge:v}).eq("id",user.id);
-                if(error){setToast("Erreur : "+error.message);return;}
-                setUser&&setUser(u=>({...u,titre_amge:v}));
-                setToast(v?"Titre AM-GE enregistré — minimum majoré de 4 % ✓":"Titre AM-GE retiré ✓");
-              }}/>
-            <span style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>
-              Je suis titulaire du titre professionnel <b>Assistant maternel – Garde d'enfants</b>
-              <span style={{display:"block",fontSize:11.5,color:"var(--m)",marginTop:2}}>
-                Votre salaire horaire minimum est alors majoré de 4 % : {nbf(minimumHoraireAu(new Date(),true),2)} € au lieu de {nbf(minimumHoraireAu(new Date(),false),2)} €.
-              </span>
-            </span>
-          </label>
-        </div>}
-        {/* Code postal — nécessaire pour détecter la PMI */}
-        {user?.role==="asmat"&&<div style={{marginTop:12}}>
-          <label className="lbl">Code postal (pour votre PMI)</label>
-          <div style={{display:"flex",gap:8}}>
-            <input className="inp" defaultValue={user?.code_postal||""} id="cp-input" placeholder="ex: 94230" style={{flex:1}}/>
-            <button className="btn bT s" onClick={async()=>{
-              const cp=document.getElementById("cp-input")?.value?.trim();
-              if(!cp)return;
-              await supabase.from("profiles").update({code_postal:cp}).eq("id",user.id);
-              setUser&&setUser(u=>({...u,code_postal:cp}));
-              // Forcer rechargement page PMI
-              const dep=cp.slice(0,2);
-              const pmi={"75":"PMI Paris 75","92":"PMI Hauts-de-Seine 92","93":"PMI Seine-Saint-Denis 93","94":"PMI Val-de-Marne 94 (L'Haÿ-les-Roses)","91":"PMI Essonne 91","95":"PMI Val-d'Oise 95","77":"PMI Seine-et-Marne 77","78":"PMI Yvelines 78","69":"PMI Métropole de Lyon 69","13":"PMI Bouches-du-Rhône 13","31":"PMI Haute-Garonne 31","33":"PMI Gironde 33","67":"PMI Bas-Rhin 67","59":"PMI Nord 59"}[dep]||"PMI détectée selon département "+dep;
-              setToast("✅ Code postal "+cp+" enregistré — "+pmi+" — Allez dans Outils Pro → PMI pour voir les contacts");
-            }}>Sauvegarder</button>
-          </div>
-          {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            <IconeOuEmoji e="✅"/> Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
-          </div>}
-        </div>}
-        {/* Numéro PMI direct — saisi manuellement (ex. donné en formation), prioritaire sur l'annuaire */}
-        {user?.role==="asmat"&&<div style={{marginTop:12}}>
-          <label className="lbl">Numéro direct de votre PMI (facultatif)</label>
-          <div style={{fontSize:11,color:"var(--l)",marginBottom:6,lineHeight:1.5}}>Le numéro de contact réel de votre PMI (souvent communiqué en formation). S'il est renseigné, c'est lui qui apparaîtra dans les numéros d'urgence du carnet de santé, à la place du numéro générique.</div>
-          <div style={{display:"flex",gap:8}}>
-            <input className="inp" defaultValue={user?.pmi_tel||""} id="pmitel-input" placeholder="ex: 01 43 99 12 34" style={{flex:1}}/>
-            <button className="btn bT s" onClick={async()=>{
-              const t=document.getElementById("pmitel-input")?.value?.trim()||"";
-              const{error}=await supabase.from("profiles").update({pmi_tel:t||null}).eq("id",user.id);
-              if(error){setToast("❌ Erreur : "+error.message);return;}
-              setUser&&setUser(u=>({...u,pmi_tel:t||null}));
-              setToast(t?"✅ Numéro PMI enregistré — visible dans le carnet de santé":"✅ Numéro PMI effacé — retour au numéro générique");
-            }}>Sauvegarder</button>
-          </div>
-          {user?.pmi_tel&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            <IconeOuEmoji e="✅"/> Numéro PMI direct : {user.pmi_tel}
-          </div>}
-        </div>}
-
-        {/* SIGNATURE ELECTRONIQUE P14F - section accessible asmat ET parent */}
-        <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid var(--br)"}}>
-          <label className="lbl"><IconeOuEmoji e="✍️" taille={15}/> Ma signature électronique</label>
-          <div style={{fontSize:12,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>
-            {user?.role==="asmat"
-              ?"Dessinez-la une fois ici. Elle sera proposée automatiquement sur les contrats, bulletins et attestations."
-              :"Dessinez-la une fois ici. Elle sera utilisée pour signer le contrat et valider les pointages."}
-          </div>
-          {currentSig?<div>
-            <div style={{display:"inline-block",border:"1px solid var(--br)",borderRadius:8,padding:8,background:"#FDFAF6",marginBottom:8}}>
-              <img src={currentSig} alt="Ma signature" style={{maxWidth:280,maxHeight:80,display:"block"}}/>
-            </div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              <button className="btn bG s" onClick={()=>setShowSigPad(true)}>Modifier</button>
-              <button className="btn bG s" style={{color:"var(--R)"}} onClick={async()=>{
-                if(!window.confirm("Supprimer votre signature enregistrée ?"))return;
-                try{
-                  await saveAsmatSignature(user.id,null);
-                  setCurrentSig(null);
-                  setUser&&setUser(u=>({...u,signature_base64:null}));
-                  setToast("Signature supprimée");
-                }catch(e){setToast("Erreur : "+e.message);}
-              }}>Supprimer</button>
-            </div>
-          </div>:<div>
-            <div style={{fontSize:12,color:"var(--l)",fontStyle:"italic",marginBottom:8}}>Aucune signature enregistrée pour le moment.</div>
-            <button className="btn bT s" onClick={()=>setShowSigPad(true)}>+ Créer ma signature</button>
-          </div>}
-        </div>
-      </div>
-
-      {/* SECURITE / MOT DE PASSE P16 */}
-      <div className="card"style={{border:recovery?"1.5px solid var(--T)":undefined}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="🔐"/> Mot de passe</div>
-        {recovery
-          ?<div style={{background:"var(--Tp)",border:"1px solid var(--Tl)",borderRadius:10,padding:"11px 12px",marginBottom:14,fontSize:11.5,color:"var(--m)",lineHeight:1.55}}>
-            Vous êtes arrivé ici par un lien de récupération. Choisissez un nouveau mot de passe pour sécuriser votre compte.
-          </div>
-          :<div style={{fontSize:11.5,color:"var(--l)",marginBottom:14,lineHeight:1.5}}>
-            Choisissez un mot de passe que vous n'utilisez nulle part ailleurs.
-          </div>}
-
-        {mdpOk&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:10,padding:"10px 12px",marginBottom:12,fontSize:11.5,color:"var(--S)"}}>
-          <IconeOuEmoji e="✅"/> Mot de passe modifié. Il vous sera demandé à la prochaine connexion.
-        </div>}
-
-        <div style={{marginBottom:12}}>
-          <label className="lbl">Nouveau mot de passe</label>
-          <input type="password" autoComplete="new-password" className="inp" value={mdp.a} placeholder={MDP_AIDE}
-            onChange={e=>{setMdp(m=>({...m,a:e.target.value}));setMdpOk(false);}}/>
-        </div>
-        <div style={{marginBottom:4}}>
-          <label className="lbl">Confirmer le mot de passe</label>
-          <input type="password" autoComplete="new-password" className="inp" value={mdp.b} placeholder="Retapez le mot de passe"
-            onChange={e=>{setMdp(m=>({...m,b:e.target.value}));setMdpOk(false);}}/>
-          {mdp.b&&mdp.a!==mdp.b&&<div style={{fontSize:11,color:"var(--R)",marginTop:5}}>Les deux mots de passe ne correspondent pas</div>}
-        </div>
-
-        <button className="btn bT" style={{width:"100%",justifyContent:"center",padding:12,marginTop:12}}
-          disabled={savingMdp||!mdp.a||mdp.a!==mdp.b} onClick={changerMotDePasse}>
-          {savingMdp?"⏳ Modification…":"Modifier mon mot de passe"}
-        </button>
-      </div>
-
-      {/* SIGNATURE STANDARD ASMAT P10 - modale de capture */}
-      {showSigPad&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:16}}>
-        <div className="card" style={{padding:0,maxWidth:700,width:"100%",maxHeight:"90vh",overflow:"auto"}}>
-          <div style={{padding:"16px 20px",borderBottom:"1px solid var(--br)",fontWeight:700,fontSize:15,color:"var(--b)"}}>
-            <IconeOuEmoji e="✍️"/> Ma signature électronique
-          </div>
-          <SignaturePad initialValue={currentSig} onCancel={()=>setShowSigPad(false)} onSave={async(dataUrl)=>{
-            try{
-              await saveAsmatSignature(user.id,dataUrl);
-              setCurrentSig(dataUrl);
-              setUser&&setUser(u=>({...u,signature_base64:dataUrl}));
-              setShowSigPad(false);
-              setToast("Signature enregistrée ✓");
-            }catch(e){setToast("Erreur : "+e.message);}
-          }}/>
-        </div>
-      </div>}
-
-      {/* Aide & prise en main */}
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="🎈"/> Aide & prise en main</div>
-        <div style={{fontSize:12,color:"var(--l)",marginBottom:12,lineHeight:1.6}}>
-          Un petit guide pour (re)découvrir l'essentiel de TiMat en quelques secondes.
-        </div>
-        <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={()=>openWelcome&&openWelcome()}>Revoir le guide de bienvenue</button>
-      </div>
-
-      {/* Installation PWA */}
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}><IconeOuEmoji e="📲"/> Installer TiMat sur votre téléphone</div>
-        <div style={{fontSize:12,color:"var(--l)",marginBottom:12,lineHeight:1.6}}>
-          Ajoutez TiMat sur votre écran d'accueil pour y accéder comme une vraie application, sans passer par le navigateur.
-        </div>
-        <InstallButton/>
-      </div>
-      <GestionStockage user={user}/>
-
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Légal & RGPD</div>
-        {[
-          ["🔒","Politique de confidentialité","politique_confidentialite"],
-          ["📋","Mentions légales","mentions_legales"],
-        ].map(([ic,l,p])=>
-          <div key={p}onClick={()=>setPage(p)}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)",cursor:"pointer"}}
-            onMouseEnter={e=>e.currentTarget.style.background="var(--c)"}
-            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <span style={{fontSize:13,color:"var(--b)"}}><IconeOuEmoji e={ic}/> {l}</span>
-            <span style={{color:"var(--l)",fontSize:12}}>→</span>
-          </div>)}
-        <div style={{marginTop:12,padding:"10px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
-          <IconeOuEmoji e="✅"/> Données hébergées en France · Jamais vendues · Supprimables à tout moment
-        </div>
-      </div>
-
-      {/* Déconnexion */}
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="🚪"/> Session</div>
-        <button className="btn bG"style={{width:"100%",justifyContent:"center"}}onClick={onLogout}>
-          Se déconnecter
-        </button>
-      </div>
-
-      <SupprimerCompte onDeleted={onLogout}/>
-    </div>
-  </div>;
 }
 
 //
@@ -12104,7 +11099,7 @@ function DocumentsComplet({enfants,role,pEId,user}){
 }
 
 //
-const DEMANDES_DEMO=[
+export const DEMANDES_DEMO=[
   {
     id:"d1",statut:"nouveau",date:isoJour(new Date(Date.now()-2*86400000)),
     parent:{prenom:"Camille",nom:"Moreau",email:"camille.moreau@gmail.com",tel:"06 12 34 56 78",profession:"Infirmière"},
@@ -12142,199 +11137,6 @@ const DEMANDES_DEMO=[
     message:"Bonjour, nous cherchons une solution d'urgence pour notre bébé Emma dès le 1er juin.",
   },
 ];
-
-//
-function ListeAttente({role,enfants,user}){
-  const isDemoMode=(enfants||[]).every(e=>["e1","e2","e3"].includes(e.id));
-  const [demandes,setDemandes]=useState(isDemoMode?DEMANDES_DEMO:[]);
-  const [selId,setSelId]=useState(null);
-  const [filtre,setFiltre]=useState("tous");
-  const [repTxt,setRepTxt]=useState("");
-  const [toast,setToast]=useState("");
-  const sel=demandes.find(d=>d.id===selId);
-
-  // Le libelle porte la pastille, pour que la couleur suive le theme.
-  const STATUT_DEMANDE={nouveau:{l:"Nouveau",c:"var(--B)"},en_discussion:{l:"En discussion",c:"var(--P)"},
-    accepte:{l:"Accepté",c:"var(--S)"},refuse:{l:"Refusé",c:"var(--R)"}};
-  const statutLabel=Object.fromEntries(Object.entries(STATUT_DEMANDE).map(([k,e])=>[k,<><Pastille couleur={e.c}/> {e.l}</>]));
-  const statutColor={nouveau:"var(--B)",en_discussion:"var(--G)",accepte:"var(--S)",refuse:"var(--R)"};
-  const statutBg={nouveau:"var(--Bp)",en_discussion:"var(--Gp)",accepte:"var(--Sp)",refuse:"var(--Rp)"};
-
-  const changerStatut=(id,statut)=>{
-    setDemandes(p=>p.map(d=>d.id===id?{...d,statut}:d));
-    if(statut==="accepte")setToast("Demande acceptée - un contrat peut maintenant être créé ✓");
-    if(statut==="refuse")setToast("Demande refusée - un email sera envoyé aux parents.");
-  };
-
-  const envoyerReponse=()=>{
-    if(!repTxt.trim())return;
-    setToast("Réponse envoyée à "+sel?.parent.email+" ✓");
-    setRepTxt("");
-    changerStatut(selId,"en_discussion");
-  };
-
-  const demandesFiltrees=filtre==="tous"?demandes:demandes.filter(d=>d.statut===filtre);
-  const nbNouveaux=demandes.filter(d=>d.statut==="nouveau").length;
-
-  const ageEnfant=(naiss)=>{
-    const n=new Date(naiss),now=new Date();
-    const mois=(now.getFullYear()-n.getFullYear())*12+(now.getMonth()-n.getMonth());
-    return mois<12?mois+" mois":Math.floor(mois/12)+" an"+(mois>=24?"s":"");
-  };
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="📬" title="Demandes de contact"
-      sub="Parents qui souhaitent vous confier leur enfant via votre profil TiMat"/>
-
-    {/* Info email public */}
-    <div style={{background:"linear-gradient(135deg,var(--Bp),var(--Pp))",border:"1px solid var(--B)",borderRadius:14,padding:"14px 18px",marginBottom:20,display:"flex",gap:14,alignItems:"flex-start"}}>
-      <IconeOuEmoji e="💡"/>
-      <div>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}>Votre adresse de contact publique</div>
-        <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--B)",fontWeight:600,marginBottom:6}}>
-          {user?.email||"votre-email@timat.app"}
-        </div>
-        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
-          Mettez cette adresse sur votre profil <strong>monenfant.fr</strong>. 
-          Les parents qui vous écrivent arrivent sur votre formulaire TiMat et vous voyez leur demande complète ici.
-        </div>
-      </div>
-    </div>
-
-    {nbNouveaux>0&&<div style={{background:"var(--Bp)",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
-      <IconeOuEmoji e="📬"/>
-      <span style={{fontWeight:700,fontSize:13,color:"var(--B)"}}>{nbNouveaux} nouvelle{nbNouveaux>1?"s":""} demande{nbNouveaux>1?"s":""} en attente</span>
-    </div>}
-
-    {/* Filtres */}
-    <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
-      {[["tous","Toutes"],["nouveau","Nouvelles"],["en_discussion","En discussion"],["accepte","Acceptées"],["refuse","Refusées"]].map(([v,l])=>
-        <button key={v}onClick={()=>setFiltre(v)}style={{
-          padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-          background:filtre===v?"var(--b)":"transparent",
-          color:filtre===v?"#fff":"var(--m)",
-          borderColor:filtre===v?"var(--b)":"var(--br)"
-        }}>{l} {v==="tous"?"("+demandes.length+")":v==="nouveau"&&nbNouveaux>0?"("+nbNouveaux+")":""}</button>)}
-    </div>
-
-    <div className="g2">
-      {/* Liste des demandes */}
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {demandesFiltrees.length===0&&<div className="card"style={{textAlign:"center",color:"var(--l)",fontSize:13}}>
-          Aucune demande dans cette catégorie.
-        </div>}
-        {demandesFiltrees.map(d=><div key={d.id}className="card card-lift"
-          onClick={()=>setSelId(selId===d.id?null:d.id)}
-          style={{cursor:"pointer",borderLeft:"4px solid "+statutColor[d.statut],
-            boxShadow:selId===d.id?"var(--sh2)":"var(--sh)"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
-                <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{d.parent.prenom} {d.parent.nom}</span>
-                <span className="badge"style={{background:statutBg[d.statut],color:statutColor[d.statut],fontSize:11}}>
-                  {statutLabel[d.statut]}
-                </span>
-              </div>
-              <div style={{fontSize:12,color:"var(--m)"}}>
-                Pour <strong>{d.enfant.prenom}</strong> · {ageEnfant(d.enfant.naissance)} · {(d.contrat.jours||[]).length}j/sem · {d.contrat.heuresHebdo}h/sem
-              </div>
-              <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>
-                Souhaite commencer le {fmt(d.contrat.debut)}
-              </div>
-            </div>
-            <div style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",flexShrink:0}}>{fmt(d.date)}</div>
-          </div>
-          {d.statut==="nouveau"&&<div style={{marginTop:8,fontSize:12,color:"var(--m)",fontStyle:"italic",lineHeight:1.5,
-            overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>
-            "{d.message}"
-          </div>}
-        </div>)}
-      </div>
-
-      {/* Détail demande sélectionnée */}
-      {sel?<div style={{display:"flex",flexDirection:"column",gap:12}}>
-        {/* Infos famille */}
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
-            <IconeOuEmoji e="👪"/> {sel.parent.prenom} {sel.parent.nom}
-            <span className="badge"style={{background:statutBg[sel.statut],color:statutColor[sel.statut],fontSize:11,marginLeft:4}}>
-              {statutLabel[sel.statut]}
-            </span>
-          </div>
-          {/* Parent */}
-          <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>Le parent</div>
-          {[["📧 Email",sel.parent.email],["📞 Téléphone",sel.parent.tel],["💼 Profession",sel.parent.profession]].map(([l,v])=>
-            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-              <span style={{color:"var(--l)"}}>{l}</span>
-              <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
-            </div>)}
-
-          {/* Enfant */}
-          <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginTop:14,marginBottom:8}}>L'enfant</div>
-          {[
-            ["👶 Prénom",sel.enfant.prenom],
-            ["🎂 Naissance",fmt(sel.enfant.naissance)+" ("+ageEnfant(sel.enfant.naissance)+")"],
-            ["⚠️ Allergies",sel.enfant.allergies],
-            ["🏠 Actuellement",sel.enfant.dejaCrèche?"En crèche":"À domicile"],
-          ].map(([l,v])=>
-            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-              <span style={{color:"var(--l)"}}>{l}</span>
-              <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
-            </div>)}
-
-          {/* Contrat souhaité */}
-          <div style={{fontSize:12,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginTop:14,marginBottom:8}}>Contrat souhaité</div>
-          {[
-            ["📅 Début",fmt(sel.contrat.debut)],
-            ["📆 Jours",(sel.contrat.jours||[]).join(", ")],
-            ["⏰ Horaires",sel.contrat.heureArrivee+" → "+sel.contrat.heureDepart],
-            ["⏱ Heures/semaine",sel.contrat.heuresHebdo+"h"],
-            ["📋 Durée",sel.contrat.anneeComplete?"Année complète":"Partielle"],
-            ["🏖 Vacances",sel.contrat.vacances],
-          ].map(([l,v])=>
-            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-              <span style={{color:"var(--l)"}}>{l}</span>
-              <span style={{fontWeight:600,color:"var(--b)",textAlign:"right",maxWidth:"55%"}}>{v}</span>
-            </div>)}
-
-          {/* Message */}
-          <div style={{marginTop:14,padding:"12px 14px",background:"var(--c)",borderRadius:10,fontSize:13,color:"var(--m)",lineHeight:1.7,fontStyle:"italic"}}>
-            "{sel.message}"
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="💬"/> Répondre</div>
-          <textarea className="ta"value={repTxt}onChange={e=>setRepTxt(e.target.value)}
-            placeholder={"Bonjour "+H(sel.parent.prenom)+",\n\nMerci pour votre message..."}
-            style={{width:"100%",minHeight:90,marginBottom:10,resize:"vertical"}}/>
-          <button className="btn bT"style={{width:"100%",marginBottom:10}}onClick={envoyerReponse}
-            disabled={!repTxt.trim()}>
-            <IconeOuEmoji e="📧"/> Envoyer par email
-          </button>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {sel.statut!=="accepte"&&<button className="btn bS s"onClick={()=>changerStatut(sel.id,"accepte")}>
-              <IconeOuEmoji e="✅"/> Accepter
-            </button>}
-            {sel.statut!=="refuse"&&<button className="btn bR s"onClick={()=>changerStatut(sel.id,"refuse")}>
-              <IconeOuEmoji e="❌"/> Refuser
-            </button>}
-            {sel.statut==="accepte"&&<button className="btn bP s"onClick={()=>setToast("Redirection vers la création de contrat...")}>
-              <IconeOuEmoji e="📄"/> Créer le contrat
-            </button>}
-          </div>
-        </div>
-      </div>
-
-      :<div className="card"style={{padding:"var(--pad-carte-l)",textAlign:"center",color:"var(--l)"}}>
-        <div style={{fontSize:36,marginBottom:12}}>👈</div>
-        <div >Sélectionnez une demande pour voir le détail</div>
-      </div>}
-    </div>
-  </div>;
-}
 
 //
 function KitCMG({enfants,role,pEId,user}){
@@ -12968,8 +11770,8 @@ function SignatureContratParent({enfants,pEId,user}){
 }
 
 //
-const JOURS_SEM=["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
-const PERIODES=[
+export const JOURS_SEM=["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
+export const PERIODES=[
   {id:"matin",l:"Matin",h:"07h00–08h30",ic:"🌅"},
   {id:"midi",l:"Méridien",h:"11h30–13h30",ic:"☀️"},
   {id:"soir",l:"Soir",h:"16h30–19h00",ic:"🌆"},
@@ -12977,97 +11779,7 @@ const PERIODES=[
   {id:"vacances",l:"Vacances scolaires",h:"Selon planning",ic:"🏖️"},
 ];
 
-function PlanningPeriscolaire({enfants,role,pEId}){
-  const [selId,setSelId]=useState(enfants[0]?.id);
-  const [planning,setPlanning]=useState(()=>{
-    const p={};
-    enfants.forEach(e=>{
-      p[e.id]={matin:["Lundi","Mercredi"],midi:[],soir:["Lundi","Mardi","Jeudi","Vendredi"],mercredi:true,vacances:false};
-    });
-    return p;
-  });
-  const [toast,setToast]=useState("");
-  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const enfant=liste.find(e=>e.id===selId)||liste[0];
-  const p=planning[enfant?.id]||{};
-
-  const toggleJour=(periode,jour)=>{
-    setPlanning(prev=>({...prev,[enfant.id]:{...p,
-      [periode]:Array.isArray(p[periode])
-        ?p[periode].includes(jour)?p[periode].filter(j=>j!==jour):[...p[periode],jour]
-        :p[periode]
-    }}));
-  };
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🚌" title="Planning périscolaire"
-      sub="Gestion des accueils matin, midi, soir, mercredis et vacances"/>
-
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
-    </div>}
-
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      {PERIODES.map(per=><div key={per.id}className="card"style={{borderLeft:"4px solid var(--B)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <div>
-            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e={per.ic}/> {per.l}</div>
-            <div style={{fontSize:12,color:"var(--l)"}}>{per.h}</div>
-          </div>
-          {typeof p[per.id]==="boolean"&&<label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
-            <span style={{fontSize:12,color:"var(--m)"}}>Accueil</span>
-            <div onClick={()=>{if(role==="asmat")setPlanning(prev=>({...prev,[enfant.id]:{...p,[per.id]:!p[per.id]}}));}}
-              style={{width:44,height:24,borderRadius:12,background:p[per.id]?"var(--S)":"var(--br)",
-                position:"relative",cursor:role==="asmat"?"pointer":"default",transition:"background .2s"}}>
-              <div style={{position:"absolute",top:2,left:p[per.id]?20:2,width:20,height:20,
-                borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,.2)"}}/>
-            </div>
-          </label>}
-        </div>
-        {Array.isArray(p[per.id])&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {JOURS_SEM.filter(j=>j!=="Mercredi"||per.id!=="mercredi").map(jour=>{
-            const actif=p[per.id]?.includes(jour);
-            return <button key={jour}onClick={()=>role==="asmat"&&toggleJour(per.id,jour)}style={{
-              padding:"6px 14px",borderRadius:20,border:(actif?"1.5px solid var(--B)":"1.5px solid var(--br)"),
-              background:actif?"var(--Bp)":"transparent",color:actif?"var(--B)":"var(--l)",
-              fontWeight:actif?700:400,fontSize:13,cursor:role==="asmat"?"pointer":"default",transition:"all .15s"
-            }}>{jour.slice(0,2)}</button>;
-          })}
-        </div>}
-      </div>)}
-    </div>
-
-    {role==="asmat"&&<div style={{marginTop:16,display:"flex",gap:8,justifyContent:"flex-end"}}>
-      <button className="btn bG">Imprimer le planning</button>
-      <button className="btn bT"onClick={()=>setToast("Planning enregistré et partagé avec les parents ✓")}>
-        <IconeOuEmoji e="💾"/> Sauvegarder et partager
-      </button>
-    </div>}
-
-    {/* Vue hebdo synthèse */}
-    <div className="card"style={{marginTop:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Récapitulatif semaine type - {enfant?.prenom}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
-        {JOURS_SEM.map(j=><div key={j}style={{textAlign:"center"}}>
-          <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>{j.slice(0,2)}</div>
-          {PERIODES.filter(per=>per.id!=="vacances"&&per.id!=="mercredi").map(per=>{
-            const actif=Array.isArray(p[per.id])?p[per.id].includes(j):false;
-            if(!actif)return null;
-            return <div key={per.id}style={{
-              background:"var(--Bp)",borderRadius:6,padding:"3px 4px",
-              fontSize:11,color:"var(--B)",fontWeight:600,marginBottom:3
-            }}><IconeOuEmoji e={per.ic}/></div>;
-          })}
-          {j==="Mercredi"&&p.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:11,color:"var(--S)",fontWeight:600}}>Journée</div>}
-        </div>)}
-      </div>
-    </div>
-  </div>;
-}
-
-//
-const FORUM_POSTS=[
+export const FORUM_POSTS=[
   {id:"p1",auteur:"Sylvie M.",ville:"Lyon",date:"Il y a 2h",titre:"Pajemploi - Régularisation fin d'année : comment vous faites ?",
     contenu:"Bonjour à toutes, je me retrouve avec une régularisation positive de 180€ pour une famille. Est-ce que vous la prélevez en une fois ou étalez sur 2-3 mois ?",
     reponses:8,tags:["Pajemploi","Salaire"],epingle:true},
@@ -13085,112 +11797,6 @@ const FORUM_POSTS=[
     reponses:3,tags:["MAM","Réseau"],epingle:false},
 ];
 
-function ForumCommunaute({role}){
-  const [posts,setPosts]=useState(FORUM_POSTS);
-  const [filtre,setFiltre]=useState("tous");
-  const [newPost,setNewPost]=useState({titre:"",contenu:"",tag:"Pajemploi"});
-  const [showNew,setShowNew]=useState(false);
-  const [selPost,setSelPost]=useState(null);
-  const [reponse,setReponse]=useState("");
-  const [toast,setToast]=useState("");
-  const tags=["tous","Pajemploi","Contrat","Activités","Juridique","PMI","MAM","Réseau"];
-  const postsFiltres=filtre==="tous"?posts:posts.filter(p=>p.tags.includes(filtre));
-
-  const poster=()=>{
-    if(!newPost.titre.trim()||!newPost.contenu.trim())return;
-    setPosts(p=>[{id:"p"+Date.now(),auteur:"Marie D.",ville:"Paris",date:"À l'instant",
-      titre:newPost.titre,contenu:newPost.contenu,reponses:0,tags:[newPost.tag],epingle:false},...p]);
-    setNewPost({titre:"",contenu:"",tag:"Pajemploi"});
-    setShowNew(false);
-    setToast("Votre question a été publiée ✓");
-  };
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="💬" title="Communauté assmats"
-      sub="Entraidez-vous · Partagez vos expériences · Posez vos questions"/>
-
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        {tags.map(t=><button key={t}onClick={()=>setFiltre(t)}style={{
-          padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-          background:filtre===t?"var(--P)":"transparent",
-          color:filtre===t?"#fff":"var(--m)",
-          borderColor:filtre===t?"var(--P)":"var(--br)"
-        }}>{t}</button>)}
-      </div>
-      <button className="btn bT"onClick={()=>setShowNew(p=>!p)}>
-        {showNew?"✕ Annuler":"✏️ Poser une question"}
-      </button>
-    </div>
-
-    {showNew&&<div className="card"style={{marginBottom:16,border:"2px solid var(--T)"}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="✏️"/> Nouvelle question</div>
-      <input className="inp"placeholder="Titre de votre question..."value={newPost.titre}
-        onChange={e=>setNewPost(p=>({...p,titre:e.target.value}))}style={{marginBottom:10}}/>
-      <textarea className="ta"placeholder="Décrivez votre situation..."value={newPost.contenu}
-        onChange={e=>setNewPost(p=>({...p,contenu:e.target.value}))}
-        style={{width:"100%",minHeight:80,resize:"vertical",marginBottom:10}}/>
-      <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        <select className="sel"style={{flex:1}}value={newPost.tag}onChange={e=>setNewPost(p=>({...p,tag:e.target.value}))}>
-          {tags.filter(t=>t!=="tous").map(t=><option key={t}>{t}</option>)}
-        </select>
-        <button className="btn bT"onClick={poster}>Publier →</button>
-      </div>
-    </div>}
-
-    <div className="g2">
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {postsFiltres.map(post=><div key={post.id}className="card card-lift"
-          onClick={()=>setSelPost(selPost?.id===post.id?null:post)}
-          style={{cursor:"pointer",borderLeft:post.epingle?"4px solid var(--G)":"4px solid var(--P)"}}>
-          {post.epingle&&<div style={{fontSize:11,fontWeight:700,color:"var(--G)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}><IconeOuEmoji e="📌"/> Épinglé</div>}
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6,lineHeight:1.4}}>{post.titre}</div>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5,marginBottom:8,
-            overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",
-            WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{post.contenu}</div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {post.tags.map(t=><span key={t}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:11}}>{t}</span>)}
-            </div>
-            <div style={{display:"flex",gap:12,fontSize:11,color:"var(--l)"}}>
-              <span>👩 {post.auteur} · {post.ville}</span>
-              <span><IconeOuEmoji e="💬"/> {post.reponses} réponse{post.reponses>1?"s":""}</span>
-              <span>{post.date}</span>
-            </div>
-          </div>
-        </div>)}
-      </div>
-
-      {selPost?<div className="card">
-        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:8}}>{selPost.titre}</div>
-        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:12}}>{selPost.contenu}</div>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:16,paddingBottom:12,borderBottom:"1px solid var(--br)"}}>
-          {selPost.auteur} · {selPost.ville} · {selPost.date}
-        </div>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>
-          <IconeOuEmoji e="💬"/> {selPost.reponses} réponses
-        </div>
-        <div style={{background:"var(--c)",borderRadius:10,padding:12,marginBottom:12,fontSize:13,color:"var(--m)"}}>
-          Les réponses de la communauté s'afficheront ici.
-        </div>
-        <textarea className="ta"value={reponse}onChange={e=>setReponse(e.target.value)}
-          placeholder="Votre réponse..."style={{width:"100%",minHeight:70,resize:"vertical",marginBottom:8}}/>
-        <button className="btn bP"style={{width:"100%"}}onClick={()=>{
-          if(!reponse.trim())return;
-          setPosts(p=>p.map(post=>post.id===selPost.id?{...post,reponses:post.reponses+1}:post));
-          setReponse("");setToast("Réponse publiée ✓");
-        }}>Publier ma réponse</button>
-      </div>
-      :<div className="card"style={{padding:"var(--pad-carte-l)",textAlign:"center",color:"var(--l)"}}>
-        <div style={{fontSize:36,marginBottom:8}}>💬</div>
-        <div >Sélectionnez un sujet pour lire les réponses et participer</div>
-      </div>}
-    </div>
-  </div>;
-}
-
-//
 function RapportAnnuel({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   // ANNEES DYNAMIQUES P12 - liste calculee depuis les contrats
@@ -14424,7 +13030,7 @@ const FAQ_DATA=[
    r:"Dans Parrainage, copiez votre lien personnel. Quand une collègue s'inscrit et passe au Pro, vous gagnez chacune 1 mois gratuit. Vos filleules apparaissent dans votre tableau de parrainage."},
 ];
 
-function FAQ({role}){
+export function FAQ({role}){
   const [filtre,setFiltre]=useState("Tous");
   const [open,setOpen]=useState(null);
   const [search,setSearch]=useState("");
@@ -14474,7 +13080,7 @@ function FAQ({role}){
 }
 
 //
-function Support({role,user}){
+export function Support({role,user}){
   const [msg,setMsg]=useState("");
   const [sujet,setSujet]=useState("Question générale");
   const [envoye,setEnvoye]=useState(false);
@@ -15395,7 +14001,7 @@ function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   </div>;
 }
 
-function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
+export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModalBrut, setShowModalBrut] = useState(false);
   const [showBientot, setShowBientot] = useState(false);
@@ -18257,237 +16863,6 @@ function FicheUrgence({enfants,role,pEId,user}){
 }
 
 // ========== PROJET D'ACCUEIL (dans l'app) ==========
-function ProjetAccueil({user,role}){
-  const [toast,setToast]=useState("");
-  const [editing,setEditing]=useState(false);
-  const [loaded,setLoaded]=useState(false);
-  const [hasData,setHasData]=useState(false);
-  const [saving,setSaving]=useState(false);
-  const [form,setForm]=useState({
-    nom:(user?.prenom||"")+" "+(user?.nom||""),adresse:"",tel:user?.tel||"",email:user?.email||"",agrement:"",
-    intro:"",parcours:"",agrementDetail:"",domicile:"",
-    valeursPerso:"",
-    horaires:[
-      {h:"7h30 - 9h00",d:"Accueil echelonne, jeu libre, transmissions"},
-      {h:"9h00 - 9h30",d:"Collation du matin"},
-      {h:"9h30 - 11h00",d:"Activites d'eveil, sorties"},
-      {h:"11h30 - 12h30",d:"Repas"},
-      {h:"12h30 - 15h00",d:"Sieste"},
-      {h:"15h00 - 15h30",d:"Reveil, gouter"},
-      {h:"15h30 - 17h00",d:"Activites, motricite"},
-      {h:"17h00 - 18h30",d:"Jeu libre, retrouvailles, transmissions"},
-    ],
-    alimentationPerso:"",sommeilPerso:"",activitesPerso:"",communicationPerso:"",conclusion:"",
-  });
-  // Charger le projet enregistre (assmat = le sien ; parent = celui de son assmat via RLS)
-  useEffect(()=>{
-    let cancelled=false;
-    (async()=>{
-      try{
-        let row=null;
-        if(role==="parent"){
-          const{data}=await supabase.from("projet_accueil").select("data").limit(1).maybeSingle();
-          row=data;
-        }else if(user?.id){
-          const{data}=await supabase.from("projet_accueil").select("data").eq("asmat_id",user.id).maybeSingle();
-          row=data;
-        }
-        if(cancelled)return;
-        if(row&&row.data&&Object.keys(row.data).length){setForm(f=>({...f,...row.data}));setHasData(true);setEditing(false);}
-        else{setHasData(false);if(role!=="parent")setEditing(true);}
-      }catch(e){console.warn("projet_accueil load",e);}
-      if(!cancelled)setLoaded(true);
-    })();
-    return()=>{cancelled=true;};
-  },[user?.id,role]);
-  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
-  const setHoraire=(i,field,v)=>setForm(p=>{const h=[...p.horaires];h[i]={...h[i],[field]:v};return{...p,horaires:h};});
-  const ro=role==="parent"||!editing;
-  const sauvegarder=async()=>{
-    if(!user?.id)return;
-    setSaving(true);
-    const{error}=await supabase.from("projet_accueil").upsert({asmat_id:user.id,data:form,updated_at:new Date().toISOString()});
-    setSaving(false);
-    if(error){setToast("❌ Erreur enregistrement : "+error.message);return;}
-    setHasData(true);setEditing(false);setToast("✅ Projet d'accueil enregistré");
-  };
-
-  const inp=(label,key,ph)=><div style={{marginBottom:10}}>
-    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
-    <input className="inp"disabled={ro}value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}/>
-  </div>;
-  const ta=(label,key,ph,rows)=><div style={{marginBottom:10}}>
-    <label style={{fontSize:11,fontWeight:600,color:"var(--l)",display:"block",marginBottom:3}}>{label}</label>
-    <textarea className="ta"disabled={ro}value={form[key]}onChange={e=>set(key,e.target.value)}placeholder={ph||""}style={{width:"100%",minHeight:(rows||3)*28,resize:"vertical"}}/>
-  </div>;
-
-  const genererPDF=()=>{
-    const w=window.open("","_blank");
-    if(!w){setToast("Autorisez les popups");return;}
-    const f=form;
-    const horairesHTML=f.horaires.map(h=>"<tr><td style='background:#F4F7FA;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>"+h.h+"</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>"+h.d+"</td></tr>").join("");
-    const html=[
-      "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Projet d'accueil</title>",
-      "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:780px;margin:0 auto;padding:30px;color:#2E4859;font-size:13px;line-height:1.9}",
-      "h1{font-size:28px;text-align:center;letter-spacing:4px;color:#2E4859;margin-bottom:4px}",
-      ".sub{text-align:center;color:#5DA9A1;font-size:15px;margin-bottom:20px}",
-      ".info{text-align:center;color:#aaa;font-size:12px;margin-bottom:4px}",
-      ".sh{font-size:15px;font-weight:700;color:#2E4859;letter-spacing:2px;border-bottom:3px solid #5DA9A1;padding-bottom:6px;margin:30px 0 14px;text-transform:uppercase}",
-      ".stt{font-weight:700;color:#5DA9A1;font-size:14px;margin:18px 0 8px}",
-      "p{margin:6px 0}ul{padding-left:22px;margin:6px 0}li{margin:4px 0}",
-      "table{width:100%;border-collapse:collapse;margin:12px 0}",
-      ".cover{page-break-after:always;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;text-align:center}",
-      ".cover h1{font-size:36px;letter-spacing:8px;margin-bottom:8px}",
-      ".cover .line{border-bottom:1px solid #d0d0d0;width:300px;margin:8px auto;padding:8px 0;font-size:15px;color:#2E4859}",
-      ".cover .label{color:#aaa;font-size:11px;margin-top:16px}",
-      "@media print{.noprint{display:none}.cover{min-height:100vh}}</style></head><body>",
-      // PAGE DE GARDE
-      "<div class='cover'>",
-      "<h1>PROJET D'ACCUEIL</h1>",
-      "<div class='sub'>Assistante maternelle agreee</div>",
-      "<div style='border-top:3px solid #5DA9A1;border-bottom:3px solid #5DA9A1;padding:16px 0;margin:40px 0'>",
-      "<div class='line' style='font-weight:700;font-size:18px'>"+H(f.nom)+"</div>",
-      "<div class='label'>Adresse</div><div class='line'>"+H(f.adresse)+"</div>",
-      "<div class='label'>Telephone</div><div class='line'>"+H(f.tel)+"</div>",
-      "<div class='label'>Email</div><div class='line'>"+H(f.email)+"</div>",
-      "<div class='label'>Agrement</div><div class='line'>"+H(f.agrement)+"</div>",
-      "</div>",
-      "<div style='color:#5DA9A1;font-size:16px;font-weight:700'>"+new Date().getFullYear()+"</div>",
-      "</div>",
-      // CONTENU
-      "<div class='sh'>01  Introduction</div>",
-      "<p>Ce projet d'accueil a pour objectif de vous presenter ma pratique professionnelle, mes valeurs educatives et l'organisation quotidienne de l'accueil de votre enfant a mon domicile.</p>",
-      f.intro?"<p>"+f.intro.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>02  Presentation</div>",
-      "<div class='stt'>Mon parcours</div>",
-      f.parcours?"<p>"+f.parcours.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='stt'>Mon agrement</div>",
-      f.agrementDetail?"<p>"+f.agrementDetail.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='stt'>Mon domicile</div>",
-      f.domicile?"<p>"+f.domicile.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>03  Valeurs educatives</div>",
-      "<div class='stt'>Bienveillance et respect du rythme</div>",
-      "<p>Chaque enfant est unique et se developpe a son propre rythme. Je m'engage a respecter ses besoins sans forcer ni comparer.</p>",
-      "<div class='stt'>Autonomie progressive</div>",
-      "<p>J'encourage l'enfant a faire par lui-meme dans un cadre securise.</p>",
-      "<div class='stt'>Attachement securise</div>",
-      "<p>Je m'engage a etre presente, reactive et previsible pour que l'enfant se sente en securite.</p>",
-      "<div class='stt'>Communication bienveillante</div>",
-      "<p>Face a un comportement difficile, je mets des mots sur les emotions et je pose des limites claires.</p>",
-      f.valeursPerso?"<div class='stt'>Mes valeurs complementaires</div><p>"+f.valeursPerso.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>04  Organisation de la journee</div>",
-      "<table>"+horairesHTML+"</table>",
-      "<div class='sh'>05  Alimentation</div>",
-      "<ul><li>Repas faits maison avec des produits frais et de saison</li><li>Respect des regimes alimentaires et allergies</li><li>Introduction alimentaire progressive</li><li>Ambiance calme et bienveillante a table</li></ul>",
-      f.alimentationPerso?"<p>"+f.alimentationPerso.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>06  Sommeil et repos</div>",
-      "<ul><li>Espace calme, securise et personnel</li><li>Rituel d'endormissement individualise</li><li>Surveillance reguliere pendant le sommeil</li><li>Pas de reveil impose</li></ul>",
-      f.sommeilPerso?"<p>"+f.sommeilPerso.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>07  Activites et eveil</div>",
-      "<ul><li>Motricite globale : parcours, danse, ballon, jardin</li><li>Motricite fine : gommettes, pate a modeler, dessin</li><li>Eveil sensoriel : jeux d'eau, bacs sensoriels, peinture</li><li>Eveil musical : comptines, instruments</li><li>Langage : albums, imagiers, jeux de doigts</li><li>Sorties : parc, bibliotheque, RAM</li></ul>",
-      f.activitesPerso?"<p>"+f.activitesPerso.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>08  Sante et securite</div>",
-      "<ul><li>Domicile securise selon les recommandations de la PMI</li><li>Formee aux gestes de premiers secours</li><li>En cas de maladie : parents prevenus, ordonnance obligatoire</li><li>En cas d'urgence : appel du 15 et parents prevenus</li></ul>",
-      "<div class='sh'>09  Partenariat avec les parents</div>",
-      "<ul><li>Transmissions quotidiennes : repas, sommeil, activites, humeur</li><li>Disponible pour les questions, joignable en cas d'urgence</li><li>Respect mutuel des choix educatifs</li></ul>",
-      f.communicationPerso?"<p>"+f.communicationPerso.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div class='sh'>10  Periode d'adaptation</div>",
-      "<p>L'adaptation dure generalement 1 a 2 semaines.</p>",
-      "<table>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 1</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h avec le parent present</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 2-3</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h sans le parent, separation courte</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 4-5</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>2-3h, premier repas</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Semaine 2</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>Demi-journees puis journees completes</td></tr>",
-      "</table>",
-      "<div class='sh'>Pour conclure</div>",
-      "<p>Ce projet d'accueil est un document vivant. N'hesitez pas a en discuter avec moi a tout moment.</p>",
-      f.conclusion?"<p>"+f.conclusion.replace(/\n/g,"<br/>")+"</p>":"",
-      "<div style='margin-top:30px'><p><b>Fait a :</b> ________________________   <b>Le :</b> ________________________</p></div>",
-      "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px'>",
-      "<div><p style='font-weight:700'>L'assistante maternelle :</p><div style='height:80px'></div></div>",
-      "<div><p style='font-weight:700'>Les parents :</p><div style='height:80px'></div></div></div>",
-      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:30px'>Genere par TiMat - timat.app</p>",
-      "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
-      "</body></html>"
-    ].join("");
-    w.document.write(html);w.document.close();
-    setToast("Projet d'accueil genere ✓");
-  };
-
-  // Parent sans projet encore publie -> message d'attente
-  if(role==="parent"&&loaded&&!hasData){
-    return <div className="fi">
-      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-      <PageHeader icon="🌿" title="Projet d'accueil" sub="Le projet d'accueil de votre assistante maternelle"/>
-      <div className="card"style={{textAlign:"center"}}>
-        <div style={{fontSize:48,marginBottom:16}}>🌿</div>
-        <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Pas encore disponible</div>
-        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>
-          Votre assistante maternelle n'a pas encore publié son projet d'accueil dans TiMat. Il décrit ses valeurs éducatives, l'organisation de la journée et ses pratiques.
-        </div>
-        <div style={{padding:14,background:"var(--Bp)",borderRadius:12,fontSize:12,color:"var(--B)",lineHeight:1.7}}>
-          💡 Demandez-lui de le compléter et de l'enregistrer — il apparaîtra ici automatiquement.
-        </div>
-      </div>
-    </div>;
-  }
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🌿" title="Projet d'accueil" sub={role==="parent"?"Le projet d'accueil de votre assistante maternelle":(editing?"Rédigez et enregistrez votre projet d'accueil":"Cliquez Modifier pour l'éditer · Télécharger pour le PDF")}/>
-    <div className="g2">
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>👩 Mes informations</div>
-          {inp("Nom et prenom","nom")}{inp("Adresse","adresse")}{inp("Telephone","tel")}{inp("Email","email")}{inp("Numero d'agrement","agrement")}
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📝"/> Mon introduction</div>
-          {ta("Pourquoi j'aime ce metier, ce qui me motive","intro","Depuis X ans, j'exerce le metier d'assistante maternelle avec passion...",4)}
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🎓 Ma presentation</div>
-          {ta("Mon parcours et mes formations","parcours","CAP AEPE, formations IPERIA, experiences professionnelles...",4)}
-          {ta("Mon agrement en detail","agrementDetail","Agree pour X enfants, de X mois a X ans, depuis le...",3)}
-          {ta("Mon domicile et ses amenagements","domicile","Maison avec jardin, espace de jeu dedie, chambre de repos...",4)}
-        </div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>💛 Mes valeurs</div>
-          <div style={{fontSize:11,color:"var(--l)",marginBottom:8,lineHeight:1.6}}>Les valeurs de base (bienveillance, autonomie, attachement, CNV) sont deja incluses. Ajoutez les votres ci-dessous.</div>
-          {ta("Mes valeurs complementaires","valeursPerso","Motricite libre, pedagogie Montessori, lien avec la nature...",3)}
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Ma journee type</div>
-          {form.horaires.map((h,i)=><div key={i}style={{display:"flex",gap:6,marginBottom:4}}>
-            <input className="inp"disabled={ro}style={{width:110,flexShrink:0,fontSize:11}}value={h.h}onChange={e=>setHoraire(i,"h",e.target.value)}/>
-            <input className="inp"disabled={ro}style={{flex:1,fontSize:11}}value={h.d}onChange={e=>setHoraire(i,"d",e.target.value)}/>
-          </div>)}
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="🍽️"/> Mes specificites</div>
-          {ta("Alimentation","alimentationPerso","Bio, potager, menus de la semaine...",2)}
-          {ta("Sommeil","sommeilPerso","Piece dediee, babyphone, gigoteuse...",2)}
-          {ta("Activites","activitesPerso","Yoga enfant, jardinage, sorties nature...",2)}
-          {ta("Communication avec les parents","communicationPerso","Application TiMat, cahier de liaison...",2)}
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="🌿"/> Conclusion</div>
-          {ta("Mon mot de conclusion","conclusion","Ce projet d'accueil est le reflet de mon engagement...",3)}
-        </div>
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {role!=="parent"&&(editing
-            ? <button className="btn bS"disabled={saving}style={{width:"100%",padding:"14px"}}onClick={sauvegarder}>{saving?"⏳ Enregistrement...":"💾 Sauvegarder"}</button>
-            : <button className="btn bG"style={{width:"100%",padding:"14px"}}onClick={()=>setEditing(true)}>✏️ Modifier</button>)}
-          <button className="btn bT"style={{width:"100%",padding:"14px"}}onClick={genererPDF}><IconeOuEmoji e="📥"/> Télécharger le PDF</button>
-        </div>
-      </div>
-    </div>
-  </div>;
-}
-
-// ========== BOUTIQUE ==========
 function InviterParent({enfants,user,demoMode=false}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [email,setEmail]=useState("");
@@ -18622,7 +16997,7 @@ function InviterParent({enfants,user,demoMode=false}){
   </div>;
 }
 
-function Boutique({user}){
+export function Boutique({user}){
   const [toast,setToast]=useState("");
   const isPro=user?.subscription_status==="pro";
   const products=[
@@ -18737,1216 +17112,8 @@ const ONBOARD_STEPS=[
 // Accessible uniquement à sophie@faitacreas.fr (ou l'email admin configuré)
 
 // --- Backoffice reusable components (outside to avoid re-mount on state change) ---
-const BOField=({label,children,hint})=>(
-  <div style={{marginBottom:10}}>
-    <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:3,textTransform:"uppercase",letterSpacing:".4px"}}>{label}</div>
-    {children}
-    {hint&&<div style={{fontSize:11,color:"var(--l)",marginTop:3,fontStyle:"italic"}}>{hint}</div>}
-  </div>
-);
-
-const BOColorInput=({k,state,setter})=>{
-  const v=state[k]||"";
-  const isSolid=/^#[0-9a-fA-F]{3,8}$/.test(v);
-  return (
-    <div style={{display:"flex",gap:4,alignItems:"center"}}>
-      {isSolid&&<input type="color"value={v.slice(0,7)}onChange={e=>setter(k,e.target.value)} style={{width:32,height:28,border:"none",borderRadius:6,cursor:"pointer",padding:1,flexShrink:0}}/>}
-      <input className="inp"style={{flex:1,fontSize:11,padding:"5px 7px",minWidth:0}}value={v}onChange={e=>setter(k,e.target.value)}placeholder="#rrggbb ou rgba(...) ou gradient"/>
-      <div style={{width:20,height:20,borderRadius:4,background:v||"transparent",border:"1px solid var(--br)",flexShrink:0}}/>
-    </div>
-  );
-};
-
-const BOTextInput=({k,state,setter,multi,placeholder})=>(
-  multi
-    ?<textarea className="inp"rows={3}style={{fontSize:11,padding:"6px 8px",resize:"vertical",width:"100%",boxSizing:"border-box",fontFamily:"inherit"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
-    :<input className="inp"style={{fontSize:11,padding:"6px 8px",width:"100%",boxSizing:"border-box"}}value={state[k]||""}onChange={e=>setter(k,e.target.value)}placeholder={placeholder}/>
-);
-
-const BOAlignInput=({k,state,setter})=>(
-  <div style={{display:"flex",gap:2}}>
-    {[["left","☰ Gauche"],["center","☰ Centre"],["right","☰ Droite"],["justify","☰ Justifié"]].map(([a,label])=><button key={a}onClick={()=>setter(k,a)}style={{
-      flex:1,padding:"5px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:600,
-      background:state[k]===a?"var(--S)":"var(--c)",color:state[k]===a?"#fff":"var(--m)",transition:"all .15s"
-    }}>{label}</button>)}
-  </div>
-);
-
-const BOCard=({title,icon,children})=>(
-  <div className="card"style={{marginBottom:10}}>
-    {title&&<div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"var(--b)",display:"flex",alignItems:"center",gap:6,paddingBottom:8,borderBottom:"1px solid var(--br)"}}>
-      {icon&&<span style={{fontSize:14}}>{icon}</span>}{title}
-    </div>}
-    {children}
-  </div>
-);
-
-function IframePreview({cfg,noBezel}){
-  const [device,setDevice]=useState("mobile");
-  const [body,setBody]=useState(null);
-  const initDoc=(ifr)=>{
-    if(!ifr)return;
-    const d=ifr.contentDocument||ifr.contentWindow?.document;
-    if(!d||!d.body)return;
-    try{ d.head.innerHTML=document.head.innerHTML; }catch(e){}
-    d.body.style.margin="0";
-    d.body.style.background="#fff";
-    setBody(d.body);
-  };
-  return <div style={{height:"100%",display:"flex",flexDirection:"column",background:"#d8d8d8"}}>
-    <div style={{display:"flex",gap:8,padding:"10px",justifyContent:"center",background:"#e8e8e8",flexShrink:0,alignItems:"center"}}>
-      <span style={{fontSize:11,fontWeight:700,color:"var(--S)",marginRight:4}}>👁 APERÇU LIVE</span>
-      {[["mobile","📱 Mobile"],["web","🖥 Web"]].map(([k,l])=>
-        <button key={k}onClick={()=>{setBody(null);setDevice(k);}}style={{padding:"6px 16px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",background:device===k?"var(--accent)":"#fff",color:device===k?"#fff":"var(--m)"}}>{l}</button>)}
-    </div>
-    <div style={{flex:1,overflow:"auto",display:"flex",justifyContent:"center",padding:(device==="mobile"&&!noBezel)?"20px":"0"}}>
-      <iframe key={device} ref={initDoc} onLoad={e=>initDoc(e.target)} title="Aperçu landing"
-        style={{width:(device==="mobile"&&!noBezel)?"390px":"100%",height:(device==="mobile"&&!noBezel)?"812px":"100%",maxWidth:"100%",flexShrink:0,border:(device==="mobile"&&!noBezel)?"10px solid #1a1a2e":"none",borderRadius:(device==="mobile"&&!noBezel)?32:0,background:"#fff"}}/>
-    </div>
-    {body&&createPortal(<div className="app"><Styles/><LandingPage onLogin={()=>{}}dark={false}setDark={()=>{}}config={cfg} preview/></div>, body)}
-  </div>;
-}
-
-function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hideTabBar}){
-  const [secI,setSecI]=useState("hero");
-  const sec=(secProp!==undefined&&secProp!==null)?secProp:secI;
-  const setSec=setSecProp||setSecI;
-  const [isWide,setIsWide]=useState(typeof window!=="undefined"&&window.innerWidth>=900);
-  useEffect(()=>{const f=()=>setIsWide(window.innerWidth>=900);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
-  const [mView,setMView]=useState("champs");
-  const [subSec,setSubSec]=useState("textes");
-  const [openBlocks,setOpenBlocks]=useState(null); // P32-3b : index de l'article dont l'éditeur de blocs est ouvert
-  const [dragSec,setDragSec]=useState(null); // P32-4 : index de section en cours de drag
-  const [saving,setSaving]=useState(false);
-  const [toast,setToast]=useState("");
-  const [stats,setStats]=useState({users:0,pro:0,enfants:0});
-  const [showPreview,setShowPreview]=useState(true);
-  const [search,setSearch]=useState("");
-  // P30C : modale de confirmation Reset (saisie "RESET" obligatoire)
-  const [showResetModal,setShowResetModal]=useState(false);
-  const [resetInput,setResetInput]=useState("");
-  const [resetting,setResetting]=useState(false);
-  // P30D : historique des backups + restauration 1-clic
-  const [backupList,setBackupList]=useState([]);
-  const [loadingBackups,setLoadingBackups]=useState(false);
-  const [restoringId,setRestoringId]=useState(null);
-  const [showRestoreModal,setShowRestoreModal]=useState(null);
-  const [showJsonModal,setShowJsonModal]=useState(null); // P31D : aperçu JSON d'une sauvegarde
-  const prettyConfig=(c)=>{ try{ return JSON.stringify(typeof c==="string"?JSON.parse(c):c,null,2); }catch(e){ return String(c); } };
-
-  const [cfg,setCfg]=useState(JSON.parse(JSON.stringify(appConfig||DEFAULT_CONFIG)));
-  // P30C : AUTOSAVE DÉSACTIVÉ (cause de l'incident Reset→écrasement prod).
-  // L'indicateur signale désormais "modifications non sauvegardées" et invite
-  // à cliquer Sauvegarder manuellement, mais N'ÉCRIT PLUS automatiquement en prod.
-  const [saveStatus, setSaveStatus] = useState("idle");
-  const _p21FirstRender = useRef(true);
-  useEffect(() => {
-    if (_p21FirstRender.current) { _p21FirstRender.current = false; return; }
-    setSaveStatus("dirty");
-  }, [cfg]);
-  useEffect(() => {
-    let el = document.getElementById("p21-save-indicator");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "p21-save-indicator";
-      el.style.cssText = "position:fixed;top:20px;right:20px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;transition:all .3s;font-family:system-ui;box-shadow:0 4px 12px rgba(0,0,0,0.15);opacity:0";
-      document.body.appendChild(el);
-    }
-    const map = {
-      idle:    { txt:"", show:false, bg:"transparent", col:"transparent" },
-      dirty:   { txt:"⚠️ Modifications non sauvegardées — clique 💾", bg:"#FEF3C7", col:"#92400E", show:true },
-      saving:  { txt:"Sauvegarde...",              bg:"#DBEAFE", col:"#1E40AF", show:true },
-      saved:   { txt:"✅ Sauvegardé",              bg:"#D1FAE5", col:"#065F46", show:true },
-      error:   { txt:"Erreur de sauvegarde",       bg:"#FEE2E2", col:"#991B1B", show:true },
-    };
-    const s = map[saveStatus] || map.idle;
-    el.textContent = s.txt;
-    el.style.background = s.bg;
-    el.style.color = s.col;
-    el.style.opacity = s.show ? "1" : "0";
-    el.style.pointerEvents = s.show ? "auto" : "none";
-  }, [saveStatus]);
-
-  useEffect(()=>{
-    const load=async()=>{
-      const {count:u}=await supabase.from('profiles').select('*',{count:'exact',head:true});
-      const {count:p}=await supabase.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','pro');
-      const {count:e}=await supabase.from('enfants').select('*',{count:'exact',head:true});
-      setStats({users:u||0,pro:p||0,enfants:e||0});
-    };
-    load();
-  },[]);
-
-  // Live preview: apply colors to DOM as cfg changes
-  useEffect(()=>{
-    applyColsToDOM(cfg.cols);
-  },[cfg.cols]);
-
-  // Helpers
-  const setCol=(k,v)=>setCfg(c=>({...c,cols:{...c.cols,[k]:v}}));
-  const setTxt=(k,v)=>setCfg(c=>({...c,txts:{...c.txts,[k]:v}}));
-  const setLand=(k,v)=>setCfg(c=>({...c,landing:{...c.landing,[k]:v}}));
-  const setFeat=(k,v)=>setCfg(c=>({...c,feats:{...c.feats,[k]:v}}));
-  const setSV=(k,v)=>setCfg(c=>({...c,sectionsVisibles:{...(c.sectionsVisibles||{}),[k]:v}}));
-  const moveSectionAt=(from,to)=>setCfg(c=>{const base=(c.sectionsOrder&&c.sectionsOrder.length)?c.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;const arr=[...base];if(from<0||from>=arr.length||to<0||to>=arr.length)return c;const[x]=arr.splice(from,1);arr.splice(to,0,x);return{...c,sectionsOrder:arr};});
-  const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
-  const setTesti=(idx,field,v)=>setCfg(c=>{const tt=[...(c.testimonials||[])];tt[idx]={...tt[idx],[field]:v};return{...c,testimonials:tt};});
-  const setStat=(which,idx,field,v)=>setCfg(c=>{const ss=[...(c[which]||[])];ss[idx]={...ss[idx],[field]:field==="n"?Number(v):v};return{...c,[which]:ss};});
-  const addPain=()=>setCfg(c=>({...c,painPoints:[...(c.painPoints||[]),{ic:"✨",titre:"Nouveau",desc:"Description"}]}));
-  const removePain=(idx)=>setCfg(c=>({...c,painPoints:(c.painPoints||[]).filter((_,i)=>i!==idx)}));
-  const addTesti=()=>setCfg(c=>({...c,testimonials:[...(c.testimonials||[]),{nom:"Nouveau",ville:"Ville",avant:"Avant...",apres:"Après..."}]}));
-  const removeTesti=(idx)=>setCfg(c=>({...c,testimonials:(c.testimonials||[]).filter((_,i)=>i!==idx)}));
-  // Free/Pro/Guarantees
-  const setFreeItem=(idx,pos,v)=>setCfg(c=>{const items=[...(c.freeItems||[])];const row=[...items[idx]];row[pos]=v;items[idx]=row;return{...c,freeItems:items};});
-  const addFreeItem=()=>setCfg(c=>({...c,freeItems:[...(c.freeItems||[]),[true,"Nouvelle fonctionnalité"]]}));
-  const removeFreeItem=(idx)=>setCfg(c=>({...c,freeItems:(c.freeItems||[]).filter((_,i)=>i!==idx)}));
-  const setProItem=(idx,v)=>setCfg(c=>{const items=[...(c.proItems||[])];items[idx]=v;return{...c,proItems:items};});
-  const addProItem=()=>setCfg(c=>({...c,proItems:[...(c.proItems||[]),"✨ Nouvelle fonctionnalité"]}));
-  const removeProItem=(idx)=>setCfg(c=>({...c,proItems:(c.proItems||[]).filter((_,i)=>i!==idx)}));
-  const setGuarantee=(idx,v)=>setCfg(c=>{const items=[...(c.guarantees||DEFAULT_CONFIG.guarantees)];items[idx]=v;return{...c,guarantees:items};});
-  const addGuarantee=()=>setCfg(c=>({...c,guarantees:[...(c.guarantees||DEFAULT_CONFIG.guarantees),"✅ Nouvelle garantie"]}));
-  const removeGuarantee=(idx)=>setCfg(c=>({...c,guarantees:(c.guarantees||DEFAULT_CONFIG.guarantees).filter((_,i)=>i!==idx)}));
-  const setFaqL=(idx,field,v)=>setCfg(c=>{const ff=[...(c.faqLanding||[])];ff[idx]={...ff[idx],[field]:v};return{...c,faqLanding:ff};});
-  const addFaqL=()=>setCfg(c=>({...c,faqLanding:[...(c.faqLanding||[]),{q:"Nouvelle question ?",a:"Réponse à compléter."}]}));
-  const removeFaqL=(idx)=>setCfg(c=>({...c,faqLanding:(c.faqLanding||[]).filter((_,i)=>i!==idx)}));
-  const setFooter=(k,v)=>setCfg(c=>({...c,footer:{...(c.footer||{}),[k]:v}}));
-  const setFooterRgpd=(idx,v)=>setCfg(c=>{const r=[...((c.footer||{}).rgpd||[])];r[idx]=v;return{...c,footer:{...(c.footer||{}),rgpd:r}};});
-  const addFooterRgpd=()=>setCfg(c=>({...c,footer:{...(c.footer||{}),rgpd:[...((c.footer||{}).rgpd||[]),"✅ Nouvelle ligne"]}}));
-  const removeFooterRgpd=(idx)=>setCfg(c=>({...c,footer:{...(c.footer||{}),rgpd:((c.footer||{}).rgpd||[]).filter((_,i)=>i!==idx)}}));
-  const setBlog=(idx,field,v)=>setCfg(c=>{const b=[...(c.blog||[])];b[idx]={...b[idx],[field]:v};return{...c,blog:b};});
-  const addBlog=()=>setCfg(c=>({...c,blog:[...(c.blog||[]),{id:"article-"+Date.now(),cat:"Administratif",catColor:"#E49178",emoji:"📝",title:"Nouvel article",excerpt:"Court résumé de l'article."}]}));
-  const removeBlog=(idx)=>setCfg(c=>({...c,blog:(c.blog||[]).filter((_,i)=>i!==idx)}));
-  const _newBlk=(type)=>type==="h3"?{type:"h3",text:"Titre de section",color:"#2E4859"}:type==="callout"?{type:"callout",title:"💡 À savoir",text:"Texte de l'encadré.",color:"#5DA9A1"}:type==="list"?{type:"list",items:["Premier point"]}:{type:"p",text:"Votre paragraphe. Utilisez **gras** ou *italique*."};
-  const setBlk=(ai,bi,field,v)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];arr[bi]={...arr[bi],[field]:v};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
-  const addBlk=(ai,type)=>setCfg(c=>{const bl=[...(c.blog||[])];bl[ai]={...bl[ai],blocks:[...(bl[ai].blocks||[]),_newBlk(type)]};return{...c,blog:bl};});
-  const removeBlk=(ai,bi)=>setCfg(c=>{const bl=[...(c.blog||[])];bl[ai]={...bl[ai],blocks:(bl[ai].blocks||[]).filter((_,i)=>i!==bi)};return{...c,blog:bl};});
-  const moveBlk=(ai,bi,dir)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];const ni=bi+dir;if(ni<0||ni>=arr.length)return c;[arr[bi],arr[ni]]=[arr[ni],arr[bi]];bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
-  const setBlkItem=(ai,bi,ii,v)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];const items=[...(arr[bi].items||[])];items[ii]=v;arr[bi]={...arr[bi],items};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
-  const addBlkItem=(ai,bi)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];arr[bi]={...arr[bi],items:[...(arr[bi].items||[]),"Nouveau point"]};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
-  const removeBlkItem=(ai,bi,ii)=>setCfg(c=>{const bl=[...(c.blog||[])];const arr=[...(bl[ai].blocks||[])];arr[bi]={...arr[bi],items:(arr[bi].items||[]).filter((_,i)=>i!==ii)};bl[ai]={...bl[ai],blocks:arr};return{...c,blog:bl};});
-
-  const sauvegarder=async()=>{
-    setSaving(true);
-    setSaveStatus("saving");
-    Object.assign(G, JSON.parse(JSON.stringify(cfg)));
-    applyColsToDOM(cfg.cols);
-    setAppConfig(JSON.parse(JSON.stringify(cfg)));
-    const result=await saveConfig();
-    if(result.ok){
-      if(result.backupOk===false){
-        setToast("✅ Sauvegardé — ⚠️ backup de sécurité échoué (voir console)");
-        console.warn("Backup échoué:", result.backupError);
-      }else{
-        setToast("✅ Sauvegardé ! Changements en ligne.");
-      }
-      setSaveStatus("saved");
-      setTimeout(()=>setSaveStatus("idle"),2500);
-    }else{
-      setToast("❌ Échec : "+result.error);
-      console.error("Échec sauvegarde:", result.error);
-      setSaveStatus("error");
-      setTimeout(()=>setSaveStatus("idle"),4000);
-    }
-    setSaving(false);
-  };
-
-  const reset=()=>{
-    setResetInput("");
-    setShowResetModal(true);
-  };
-
-  // P30C : exécuté quand l'utilisateur a tapé "RESET" et confirmé
-  const confirmReset=async()=>{
-    setResetting(true);
-    // 1. Backup explicite de la config actuelle AVANT réinitialisation
-    const backupRes=await backupCurrentConfig('before_reset');
-    if(backupRes.ok===false){
-      // Backup échoué : on alerte mais on NE réinitialise PAS (sécurité)
-      setToast("⚠️ Backup avant reset échoué — réinitialisation annulée (voir console)");
-      console.warn("Backup before_reset échoué:", backupRes.error);
-      setResetting(false);
-      setShowResetModal(false);
-      return;
-    }
-    // 2. Réinitialisation locale (n'écrit PAS en prod ; il faudra cliquer Sauvegarder)
-    setCfg(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
-    setToast("🔄 Config réinitialisée localement — clique 💾 Sauvegarder pour publier");
-    setResetting(false);
-    setShowResetModal(false);
-  };
-
-  // P30D : charger les 20 derniers backups depuis Supabase
-  const loadBackups=async()=>{
-    setLoadingBackups(true);
-    const {data,error}=await supabase
-      .from('app_config_backup')
-      .select('id,reason,created_at,created_by,config')
-      .order('created_at',{ascending:false})
-      .limit(20);
-    if(error){
-      setToast("❌ Erreur chargement historique : "+error.message);
-      console.error("[TiMat historique]",error);
-      setBackupList([]);
-    }else{
-      setBackupList(data||[]);
-    }
-    setLoadingBackups(false);
-  };
-
-  // P30D : restaurer un backup (crée un filet de sécurité 'manual' avant)
-  const restoreBackup=async(backup)=>{
-    setRestoringId(backup.id);
-    // 1. Filet : backup de la config ACTUELLE avant restauration
-    const safetyRes=await backupCurrentConfig('manual');
-    if(safetyRes.ok===false){
-      setToast("⚠️ Backup de sécurité échoué — restauration annulée (voir console)");
-      console.warn("[TiMat restauration] Safety backup échoué:",safetyRes.error);
-      setRestoringId(null);
-      setShowRestoreModal(null);
-      return;
-    }
-    // 2. UPDATE app_config avec le contenu du backup
-    const {error}=await supabase.from('app_config').upsert({
-      id:'main',
-      config:backup.config,
-      updated_at:new Date().toISOString()
-    });
-    if(error){
-      setToast("❌ Erreur restauration : "+error.message);
-      console.error("[TiMat restauration]",error);
-      setRestoringId(null);
-      setShowRestoreModal(null);
-      return;
-    }
-    // 3. Sync des states locaux pour refléter la restauration
-    const restored=JSON.parse(JSON.stringify(backup.config));
-    Object.assign(G,restored);
-    setCfg(restored);
-    setAppConfig(JSON.parse(JSON.stringify(restored)));
-    try{ applyColsToDOM(restored.cols); }catch(e){ console.warn(e); }
-    setSaveStatus("idle");
-    setToast("✅ Configuration restaurée depuis le "+new Date(backup.created_at).toLocaleString('fr-FR'));
-    console.log("[TiMat restauration] ✅ Config restaurée depuis backup",backup.id);
-    // 4. Recharger la liste (le filet 'manual' apparaîtra)
-    await loadBackups();
-    setRestoringId(null);
-    setShowRestoreModal(null);
-  };
-
-  // P30D : auto-charger l'historique quand on active l'onglet
-  useEffect(()=>{ if(sec==="historique") loadBackups(); },[sec]);
-
-  const rechargerDepuisSupabase=async()=>{
-    setSaving(true);
-    await loadConfig();
-    const fromDb=JSON.parse(JSON.stringify(G));
-    setCfg(fromDb);
-    setAppConfig(fromDb);
-    setToast("🔄 Config rechargée depuis Supabase");
-    setSaving(false);
-  };
-
-  const diagnostiquer=async()=>{
-    try{
-      let report="🔍 DIAGNOSTIC SUPABASE\n\n";
-
-      // 1. Test lecture
-      const {data:readData,error:readErr}=await supabase.from('app_config').select('*').eq('id','main').maybeSingle();
-      if(readErr){
-        report+="❌ LECTURE : "+readErr.message+"\n";
-        if(readErr.message.includes('relation')||readErr.message.includes('does not exist')){
-          report+="\n⚠️ La table n\'existe pas. Exécute dans Supabase SQL Editor :\n\nCREATE TABLE app_config (id TEXT PRIMARY KEY, config JSONB, updated_at TIMESTAMPTZ);\nALTER TABLE app_config ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
-        }else if(readErr.message.includes('policy')||readErr.message.includes('permission')){
-          report+="\n⚠️ Problème RLS. Exécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
-        }
-        alert(report);return;
-      }
-      if(!readData){
-        report+="⚠️ LECTURE : Table vide (aucune ligne avec id='main')\n\n";
-      }else{
-        let parsed;
-        try{
-          parsed=typeof readData.config==='string'?JSON.parse(readData.config):readData.config;
-        }catch(e){
-          parsed={_raw:readData.config,_parseError:e.message};
-        }
-        report+="✅ LECTURE OK\n";
-        report+="  Type colonne config : "+(typeof readData.config)+"\n";
-        report+="  Dernière maj : "+readData.updated_at+"\n";
-        if(parsed&&typeof parsed==='object'){
-          report+="  Clés : "+Object.keys(parsed).join(", ")+"\n";
-          report+="  landing : "+(parsed.landing?Object.keys(parsed.landing).length:0)+" champs\n";
-          report+="  txts : "+(parsed.txts?Object.keys(parsed.txts).length:0)+" champs\n\n";
-        }
-      }
-
-      // 2. Test écriture JSONB (objet)
-      const tsJsonb=Date.now();
-      const {error:errJsonb}=await supabase.from('app_config').upsert({id:'_diag_test_jsonb',config:{test:true,ts:tsJsonb},updated_at:new Date().toISOString()});
-      if(errJsonb){
-        report+="❌ ÉCRITURE JSONB (objet) : "+errJsonb.message+"\n";
-      }else{
-        report+="✅ ÉCRITURE JSONB OK\n";
-      }
-
-      // 3. Test écriture TEXT (string)
-      const {error:errText}=await supabase.from('app_config').upsert({id:'_diag_test_text',config:JSON.stringify({test:true}),updated_at:new Date().toISOString()});
-      if(errText){
-        report+="❌ ÉCRITURE TEXT (string) : "+errText.message+"\n";
-      }else{
-        report+="✅ ÉCRITURE TEXT OK\n";
-      }
-
-      // Cleanup test rows
-      try{
-        await supabase.from('app_config').delete().in('id',['_diag_test_jsonb','_diag_test_text']);
-      }catch(e){}
-
-      // Suggestions
-      if(errJsonb&&!errText){
-        report+="\n💡 Ta colonne config est de type TEXT, pas JSONB.\nL\'app gère ça automatiquement maintenant. Réessaie de sauvegarder.";
-      }else if(!errJsonb&&errText){
-        report+="\n💡 Ta colonne config est de type JSONB. OK.";
-      }else if(errJsonb&&errText){
-        report+="\nÉCHEC — aucun format ne marche. Problème RLS probable.\n\nExécute :\n\nDROP POLICY IF EXISTS \"admin_all\" ON app_config;\nDROP POLICY IF EXISTS \"app_config_all\" ON app_config;\nCREATE POLICY \"app_config_all\" ON app_config FOR ALL USING (true) WITH CHECK (true);";
-      }
-
-      alert(report);
-    }catch(e){
-      alert("❌ Exception dans le diagnostic : "+e.message+"\n\n"+e.stack);
-      console.error(e);
-    }
-  };
-
-  // Google Fonts presets
-  const FONT_PRESETS=[
-    {name:"Fraunces + Jakarta (défaut)",title:"\'Fraunces\', Georgia, serif",body:"\'Plus Jakarta Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,700&display=swap"},
-    {name:"Playfair + Inter",title:"\'Playfair Display\', serif",body:"\'Inter\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap"},
-    {name:"Cormorant + Lato",title:"\'Cormorant Garamond\', serif",body:"\'Lato\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Lato:wght@400;700&display=swap"},
-    {name:"DM Serif + DM Sans",title:"\'DM Serif Display\', serif",body:"\'DM Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap"},
-    {name:"Poppins partout",title:"\'Poppins\', sans-serif",body:"\'Poppins\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"},
-    {name:"Montserrat + Open Sans",title:"\'Montserrat\', sans-serif",body:"\'Open Sans\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&display=swap"},
-    {name:"Raleway + Roboto",title:"\'Raleway\', sans-serif",body:"\'Roboto\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Raleway:wght@600;700;800&family=Roboto:wght@400;500;700&display=swap"},
-    {name:"Merriweather + Source Sans",title:"\'Merriweather\', serif",body:"\'Source Sans Pro\', sans-serif",url:"https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Source+Sans+Pro:wght@400;600;700&display=swap"},
-  ];
-
-  const applyFontPreset=(p)=>{
-    setLand("fontTitle",p.title);
-    setLand("fontBody",p.body);
-    setLand("googleFontsUrl",p.url);
-    setToast("🎨 Police \""+p.name+"\" appliquée");
-  };
-
-  // --- Reusable components ---
-
-
-  // Helper to filter by search
-  const matches=(txt)=>!search||txt.toLowerCase().includes(search.toLowerCase());
-
-  // Main nav sections
-  const secs=[
-    {id:"hero",l:"Hero",ic:"🏠"},
-    {id:"sections",l:"Sections",ic:"📝"},
-    {id:"textes",l:"Textes",ic:"✏️"},
-    {id:"couleurs",l:"Couleurs",ic:"🎨"},
-    {id:"boutons",l:"Boutons",ic:"🔘"},
-    {id:"polices",l:"Polices",ic:"𝐓"},
-    {id:"contenu",l:"Contenu",ic:"📋"},
-    {id:"app",l:"App",ic:"⚙️"},
-    {id:"sectionsvis",l:"Sections visibles",ic:"👁"},
-    {id:"historique",l:"Historique",ic:"🕐"},
-  ];
-
-  return <div className="fi" style={{maxWidth:"100%",padding:0}}>
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-
-    {/* P30C : Modale de confirmation Reset (saisie "RESET" obligatoire) */}
-    {showResetModal&&<div onClick={()=>!resetting&&setShowResetModal(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"var(--w)",borderRadius:18,padding:24,maxWidth:420,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.25)",fontFamily:"inherit"}}>
-        <div style={{fontSize:34,textAlign:"center",marginBottom:8}}>⚠️</div>
-        <h3 style={{margin:"0 0 10px",fontSize:18,fontWeight:800,color:"var(--b)",textAlign:"center"}}>Réinitialiser toute la configuration ?</h3>
-        <p style={{fontSize:13,lineHeight:1.5,color:"var(--m)",margin:"0 0 16px",textAlign:"center"}}>
-          Cette action remet <b>tous les réglages du backoffice</b> à leurs valeurs par défaut (couleurs, textes, landing, tarifs…). Une sauvegarde de sécurité sera créée automatiquement avant.
-        </p>
-        <p style={{fontSize:12,color:"var(--m)",margin:"0 0 6px",fontWeight:600}}>Pour confirmer, tape <span style={{color:"var(--T)",fontWeight:800}}>RESET</span> ci-dessous :</p>
-        <input
-          autoFocus
-          className="inp"
-          value={resetInput}
-          onChange={e=>setResetInput(e.target.value)}
-          onKeyDown={e=>{if(e.key==="Enter"&&resetInput.trim().toUpperCase()==="RESET"&&!resetting)confirmReset();}}
-          placeholder="Tape RESET"
-          style={{width:"100%",fontSize:14,padding:"8px 12px",marginBottom:16,boxSizing:"border-box",textAlign:"center",letterSpacing:1}}
-        />
-        <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-          <button
-            onClick={()=>!resetting&&setShowResetModal(false)}
-            disabled={resetting}
-            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}
-          >Annuler</button>
-          <button
-            onClick={confirmReset}
-            disabled={resetInput.trim().toUpperCase()!=="RESET"||resetting}
-            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"none",
-              background:(resetInput.trim().toUpperCase()==="RESET"&&!resetting)?"#DC2626":"#FCA5A5",
-              color:"#fff",fontWeight:700,fontSize:14,
-              cursor:(resetInput.trim().toUpperCase()==="RESET"&&!resetting)?"pointer":"not-allowed",fontFamily:"inherit"}}
-          >{resetting?"⏳ …":"Réinitialiser"}</button>
-        </div>
-      </div>
-    </div>}
-
-    {/* P30D : Modale de confirmation Restauration */}
-    {showRestoreModal&&<div onClick={()=>!restoringId&&setShowRestoreModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"var(--w)",borderRadius:18,padding:24,maxWidth:440,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.25)",fontFamily:"inherit"}}>
-        <div style={{fontSize:34,textAlign:"center",marginBottom:8}}>🕐</div>
-        <h3 style={{margin:"0 0 10px",fontSize:18,fontWeight:800,color:"var(--b)",textAlign:"center"}}>Restaurer cette version ?</h3>
-        <p style={{fontSize:13,lineHeight:1.5,color:"var(--m)",margin:"0 0 8px",textAlign:"center"}}>
-          La configuration du<br/>
-          <b style={{color:"var(--b)"}}>{new Date(showRestoreModal.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</b><br/>
-          remplacera la configuration actuelle.
-        </p>
-        <p style={{fontSize:11,lineHeight:1.5,color:"var(--m)",margin:"0 0 16px",textAlign:"center",fontStyle:"italic"}}>
-          🛡️ Un filet de sécurité de la configuration actuelle sera créé automatiquement — vous pourrez donc revenir en arrière si besoin.
-        </p>
-        <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-          <button
-            onClick={()=>!restoringId&&setShowRestoreModal(null)}
-            disabled={restoringId!==null}
-            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:14,cursor:restoringId?"not-allowed":"pointer",fontFamily:"inherit"}}
-          >Annuler</button>
-          <button
-            onClick={()=>restoreBackup(showRestoreModal)}
-            disabled={restoringId!==null}
-            style={{flex:1,padding:"10px 16px",borderRadius:10,border:"none",background:restoringId?"var(--br)":"var(--T)",color:"#fff",fontWeight:700,fontSize:14,cursor:restoringId?"not-allowed":"pointer",fontFamily:"inherit"}}
-          >{restoringId?"⏳ Restauration…":"↺ Restaurer"}</button>
-        </div>
-      </div>
-    </div>}
-
-    {/* P31D : Modale aperçu JSON d'une sauvegarde */}
-    {showJsonModal&&<div onClick={()=>setShowJsonModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"var(--w)",borderRadius:18,maxWidth:640,width:"100%",maxHeight:"85vh",display:"flex",flexDirection:"column",boxShadow:"0 12px 40px rgba(0,0,0,.25)",fontFamily:"inherit",overflow:"hidden"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:"1px solid var(--br)",flexShrink:0}}>
-          <div>
-            <div style={{fontSize:15,fontWeight:800,color:"var(--b)"}}>👁 Contenu de la sauvegarde</div>
-            <div style={{fontSize:11,color:"var(--m)",marginTop:2}}>{new Date(showJsonModal.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-          </div>
-          <button onClick={()=>setShowJsonModal(null)} style={{background:"var(--c)",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"var(--b)",fontWeight:700,fontFamily:"inherit"}}>✕</button>
-        </div>
-        <pre style={{margin:0,padding:"16px 20px",overflow:"auto",fontSize:11,lineHeight:1.5,color:"var(--b)",background:"var(--c)",whiteSpace:"pre-wrap",wordBreak:"break-word",flex:1,fontFamily:"ui-monospace,Menlo,monospace"}}>{prettyConfig(showJsonModal.config)}</pre>
-        <div style={{display:"flex",gap:8,justifyContent:"flex-end",padding:"12px 20px",borderTop:"1px solid var(--br)",flexShrink:0}}>
-          <button onClick={()=>{navigator.clipboard?.writeText(prettyConfig(showJsonModal.config)).then(()=>setToast("✅ JSON copié")).catch(()=>setToast("❌ Copie impossible"));}} style={{padding:"9px 16px",borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📋"/> Copier</button>
-          <button onClick={()=>setShowJsonModal(null)} style={{padding:"9px 16px",borderRadius:10,border:"none",background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Fermer</button>
-        </div>
-      </div>
-    </div>}
-
-    {/* Top bar */}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid var(--br)",background:"var(--w)",flexWrap:"wrap",gap:8}}>
-      {(isWide||!hideTabBar)&&<div style={{display:"flex",alignItems:"center",gap:10}}>
-        <button className="btn bG s"style={{padding:"5px 12px"}}onClick={()=>setPage("accueil")}>← App</button>
-        <span style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>🔧 Backoffice</span>
-        <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
-      </div>}
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
-        <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
-        <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
-        <button className="btn bG s"style={{padding:"5px 12px"}}onClick={reset}>↺ Reset</button>
-        <button className="btn bT s"style={{padding:"5px 14px"}}onClick={sauvegarder}disabled={saving}>{saving?"⏳":"💾 Sauvegarder"}</button>
-      </div>
-    </div>
-
-    {/* Bascule mobile Champs / Apercu (ecrans etroits uniquement) */}
-    {!isWide&&<div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"var(--c)"}}>
-      {[["champs","📝 Champs"],["apercu","👁 Aperçu"]].map(([k,l])=><button key={k}onClick={()=>setMView(k)}style={{flex:1,padding:"10px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,background:mView===k?"var(--accent)":"rgba(0,0,0,.05)",color:mView===k?"#fff":"var(--m)"}}>{l}</button>)}
-    </div>}
-
-    <div style={{display:isWide?"flex":"block",height:isWide?"calc(100vh - 52px)":"auto",overflow:isWide?"hidden":"visible"}}>
-      {/* LEFT PANEL (champs) */}
-      {(isWide||mView==="champs")&&<div style={{width:(isWide&&showPreview)?"460px":"100%",minWidth:isWide?340:0,overflowY:isWide?"auto":"visible",padding:12,borderRight:isWide?"1px solid var(--br)":"none",background:"var(--c)",transition:"width .3s"}}>
-
-        {/* Main tabs */}
-        {!hideTabBar&&<div style={{display:"flex",gap:3,marginBottom:12,flexWrap:"wrap"}}>
-          {secs.map(s=><button key={s.id}onClick={()=>setSec(s.id)}style={{
-            padding:"5px 10px",borderRadius:14,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11,
-            background:sec===s.id?"var(--S)":"rgba(0,0,0,.05)",color:sec===s.id?"#fff":"var(--m)",transition:"all .15s"
-          }}><IconeOuEmoji e={s.ic}/> {s.l}</button>)}
-        </div>}
-
-        {/* ====================== HERO ====================== */}
-        {sec==="hero"&&<>
-          <BOCard title="Image de fond" icon="📸">
-            <BOField label="URL de l'image" hint="Laisser vide = pas d'image de fond">
-              <div style={{display:"flex",gap:4}}>
-                <BOTextInput k="heroImg" state={cfg.landing} setter={setLand} placeholder="https://... ou vide pour supprimer"/>
-                {cfg.landing.heroImg&&<button onClick={()=>setLand("heroImg","")}style={{background:"#FEE",border:"1px solid #FCC",borderRadius:10,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#C00",flexShrink:0}}>🗑️</button>}
-              </div>
-            </BOField>
-            {cfg.landing.heroImg&&<>
-              <BOField label={`Opacité (${Math.round((cfg.landing.heroImgOpacity||0.12)*100)}%)`}>
-                <input type="range"min="0"max="1"step="0.05"value={cfg.landing.heroImgOpacity||0.12} onChange={e=>setLand("heroImgOpacity",parseFloat(e.target.value))} style={{width:"100%"}}/>
-              </BOField>
-              <BOField label={`Flou (${cfg.landing.heroImgBlur||2}px)`}>
-                <input type="range"min="0"max="10"step="1"value={cfg.landing.heroImgBlur||2} onChange={e=>setLand("heroImgBlur",parseInt(e.target.value))} style={{width:"100%"}}/>
-              </BOField>
-              <BOField label="Position de l'image">
-                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:3}}>
-                  {[["top left","↖"],["top center","↑"],["top right","↗"],["center left","←"],["center center","⊡"],["center right","→"],["bottom left","↙"],["bottom center","↓"],["bottom right","↘"]].map(([pos,icon])=>
-                    <button key={pos}onClick={()=>setLand("heroImgPosition",pos)}style={{
-                      padding:"8px 0",border:"1px solid var(--br)",borderRadius:6,cursor:"pointer",fontSize:12,
-                      background:(cfg.landing.heroImgPosition||"center center")===pos?"var(--S)":"var(--c)",
-                      color:(cfg.landing.heroImgPosition||"center center")===pos?"#fff":"var(--m)",transition:"all .15s"
-                    }}>{icon}</button>
-                  )}
-                </div>
-              </BOField>
-              {/* Aperçu miniature */}
-              <div style={{height:80,borderRadius:8,overflow:"hidden",border:"1px solid var(--br)",marginTop:6,position:"relative"}}>
-                <div style={{position:"absolute",inset:0,backgroundImage:"url("+cfg.landing.heroImg+")",backgroundSize:"cover",backgroundPosition:cfg.landing.heroImgPosition||"center center",opacity:cfg.landing.heroImgOpacity||0.12,filter:"blur("+(cfg.landing.heroImgBlur||2)+"px)"}}/>
-                <div style={{position:"absolute",inset:0,background:cfg.landing.heroBg||"#2E4859",opacity:.7}}/>
-                <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",height:"100%",fontSize:11,color:"#fff",fontWeight:600}}>Aperçu du hero</div>
-              </div>
-            </>}
-            <BOField label="Fond hero (gradient / couleur)">
-              <BOColorInput k="heroBg" state={cfg.landing} setter={setLand}/>
-            </BOField>
-          </BOCard>
-
-          <BOCard title="Logo" icon="🌿">
-            <BOField label="Image du logo (URL)" hint="Laisse vide pour utiliser l'emoji">
-              <BOTextInput k="logoUrl" state={cfg.landing} setter={setLand} placeholder="https://... logo.png ou .svg"/>
-            </BOField>
-            <BOField label="Emoji du logo (si pas d'image)">
-              <BOTextInput k="logoEmoji" state={cfg.landing} setter={setLand} placeholder="🌿"/>
-            </BOField>
-            <div style={{marginTop:8,padding:10,background:"#2E4859",borderRadius:10,display:"flex",alignItems:"center",gap:8}}>
-              {cfg.landing.logoUrl
-                ?<img src={cfg.landing.logoUrl}alt="logo"style={{height:28,borderRadius:6,objectFit:"contain"}}onError={e=>{e.target.style.display="none"}}/>
-                :<div style={{width:28,height:28,borderRadius:8,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{cfg.landing.logoEmoji||"🌿"}</div>}
-              <span style={{color:"#fff",fontSize:16,fontWeight:700,fontFamily:cfg.landing.fontTitle}}>TiMat</span>
-              <span style={{fontSize:11,color:"rgba(255,255,255,.4)",marginLeft:"auto"}}>Aperçu</span>
-            </div>
-            <div style={{marginTop:14,paddingTop:12,borderTop:"1px solid var(--b)"}}>
-              <div style={{fontSize:11,color:"var(--l)",marginBottom:10,fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Tailles du logo (px)</div>
-              {[
-                {k:"topBar",label:"Barre du haut (app)",min:20,max:80,def:28},
-                {k:"landingHeader",label:"Landing — en-tête",min:20,max:120,def:44},
-                {k:"landingFooter",label:"Landing — pied de page",min:20,max:120,def:40},
-                {k:"login",label:"Page de connexion",min:40,max:200,def:80},
-                {k:"loading",label:"Écran de chargement",min:40,max:200,def:64},
-              ].map(({k,label,min,max,def})=>{
-                const sizes=cfg.landing.logoSizes||{};
-                const val=sizes[k]||def;
-                return(
-                  <div key={k}style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                    <span style={{fontSize:12,color:"var(--T)",minWidth:150,flexShrink:0}}>{label}</span>
-                    <input type="range"min={min}max={max}value={val}step="1"style={{flex:1}}onChange={e=>{const v=parseInt(e.target.value,10);const newSizes={...(cfg.landing.logoSizes||{}),[k]:v};setLand("logoSizes",newSizes);}}/>
-                    <span style={{fontSize:12,fontWeight:600,minWidth:44,textAlign:"right",color:"var(--T)"}}>{val}px</span>
-                  </div>
-                );
-              })}
-              <button type="button"onClick={()=>setLand("logoSizes",{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64})}style={{marginTop:6,padding:"6px 12px",fontSize:11,background:"transparent",border:"1px solid var(--b)",borderRadius:10,color:"var(--l)",cursor:"pointer"}}>↺ Réinitialiser les tailles</button>
-            </div>
-          </BOCard>
-
-          <BOCard title="Navigation" icon="🧭">
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Boutons desktop (défauts partagés)</div>
-            <BOField label="Fond par défaut (tous boutons)"><BOColorInput k="navBtnBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur texte (tous boutons)"><BOColorInput k="navBtnColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Bordure (tous boutons)"><BOColorInput k="navBtnBorder" state={cfg.landing} setter={setLand}/></BOField>
-            <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Boutons individuels (écrase le défaut)</div>
-            <BOField label="Fond — Fonctionnalités"><BOColorInput k="navFonctionBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond — Tarifs"><BOColorInput k="navTarifsBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond — Boutique"><BOColorInput k="navBoutiqueBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond — Connexion"><BOColorInput k="navConnexionBg" state={cfg.landing} setter={setLand}/></BOField>
-            <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Bouton CTA (Commencer)</div>
-            <BOField label="Fond CTA"><BOColorInput k="navCtaBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur texte CTA"><BOColorInput k="navCtaColor" state={cfg.landing} setter={setLand}/></BOField>
-            <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Hamburger mobile</div>
-            <BOField label="Fond hamburger"><BOColorInput k="navHamburgerBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur icone hamburger"><BOColorInput k="navHamburgerColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Bordure hamburger"><BOColorInput k="navHamburgerBorder" state={cfg.landing} setter={setLand}/></BOField>
-          </BOCard>
-
-          <BOCard title="Textes du hero" icon="📝">
-            <BOField label="Badge (bandeau jaune)"><BOTextInput k="heroBadge" state={cfg.txts} setter={setTxt}/></BOField>
-            <BOField label="Titre principal"><BOTextInput k="heroTitle" state={cfg.txts} setter={setTxt}/></BOField>
-            <BOField label="Accent du titre (en italique doré)" hint="Laisser vide pour masquer"><BOTextInput k="heroTitleAccent" state={cfg.txts} setter={setTxt}/></BOField>
-            <BOField label="Alignement du hero"><BOAlignInput k="heroAlign" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Sous-titre (grand)"><BOTextInput k="heroSub" state={cfg.txts} setter={setTxt}/></BOField>
-            <BOField label="Description sous titre" hint="Utilise \\n pour un retour à la ligne"><BOTextInput k="heroSubDesc" state={cfg.txts} setter={setTxt} multi/></BOField>
-            <BOField label="Tags (séparés par virgule)"><BOTextInput k="heroTags" state={cfg.txts} setter={setTxt}/></BOField>
-          </BOCard>
-
-          <BOCard title="Couleurs du hero" icon="🎨">
-            <BOField label="Couleur titre"><BOColorInput k="heroTitleColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur sous-titre"><BOColorInput k="heroSubColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur description"><BOColorInput k="heroSubDescColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur badge (texte)"><BOColorInput k="heroBadgeColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond badge"><BOColorInput k="heroBadgeBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur tags"><BOColorInput k="heroTagsColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur stats (chiffres)"><BOColorInput k="heroStatsColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Hero — largeur max du titre en web (px, force 2 lignes)"><BOTextInput k="heroTitleMaxW" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Hero stats — fond des cartes"><BOColorInput k="heroStatsCardBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Hero stats — bordure des cartes"><BOColorInput k="heroStatsCardBorder" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur labels stats"><BOColorInput k="heroStatsLabelColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur d\'accent (italique)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
-          </BOCard>
-        </>}
-
-        {/* ====================== SECTIONS ====================== */}
-        {sec==="sections"&&<>
-          {[
-            {key:"s1",titre:"Section 1 - Problématique",icon:"🔥",fields:[
-              {k:"s1Align",l:"Alignement du texte",type:"align"},
-              {k:"s1Title",l:"Titre",type:"txt"},{k:"s1Desc",l:"Description",type:"txt",multi:true},{k:"s1Quote",l:"Citation finale",type:"txt",multi:true},
-              {k:"section1Bg",l:"Fond section",type:"col"},{k:"s1TitleColor",l:"Couleur titre",type:"col"},{k:"s1DescColor",l:"Couleur description",type:"col"},
-              {k:"s1CardBg",l:"Fond des cards",type:"col"},{k:"s1CardTitleColor",l:"Couleur titre cards",type:"col"},{k:"s1CardDescColor",l:"Couleur texte cards",type:"col"},
-              {k:"s1QuoteBg",l:"Fond citation",type:"col"},{k:"s1QuoteColor",l:"Couleur citation",type:"col"},
-            ]},
-            {key:"s2",titre:"Section 2 - Démo interactive",icon:"🎬",fields:[
-              {k:"s2Align",l:"Alignement du texte",type:"align"},
-              {k:"s2Title",l:"Titre",type:"txt"},{k:"s2Desc",l:"Description",type:"txt"},
-              {k:"section2Bg",l:"Fond section",type:"col"},{k:"s2TitleColor",l:"Couleur titre",type:"col"},{k:"s2DescColor",l:"Couleur description",type:"col"},
-            ]},
-            {key:"s5",titre:"Section 5 - Témoignages",icon:"⭐",fields:[
-              {k:"s5Align",l:"Alignement du texte",type:"align"},
-              {k:"s5Title",l:"Titre",type:"txt"},
-              {k:"section5Bg",l:"Fond section",type:"col"},{k:"s5TitleColor",l:"Couleur titre",type:"col"},
-              {k:"testimonialBg",l:"Fond cards témoignages",type:"col"},{k:"testimonialNameColor",l:"Couleur nom",type:"col"},
-              {k:"testimonialCityColor",l:"Couleur ville",type:"col"},{k:"testimonialBeforeColor",l:"Couleur citation \"avant\"",type:"col"},
-              {k:"testimonialAfterColor",l:"Couleur citation \"après\"",type:"col"},{k:"testimonialStarColor",l:"Couleur étoiles",type:"col"},
-            ]},
-            {key:"s6",titre:"Section 6 - Tarifs",icon:"💰",fields:[
-              {k:"s6Align",l:"Alignement du texte",type:"align"},
-              {k:"s6Title",l:"Titre",type:"txt"},
-              {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
-              {k:"compBasePro",l:"Comparateur — forfait pro concurrent (€)",type:"txt",inTxts:true},{k:"compParContrat",l:"Comparateur — coût par contrat (€)",type:"txt",inTxts:true},
-              {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
-              {k:"freeLabel",l:"Label Gratuit",type:"txt",inTxts:true},
-              {k:"section6Bg",l:"Fond section",type:"col"},{k:"s6TitleColor",l:"Couleur titre",type:"col"},
-              {k:"freeBg",l:"Fond card Gratuit",type:"col"},{k:"freeLabelColor",l:"Couleur label Gratuit",type:"col"},
-              {k:"freePriceColor",l:"Couleur prix Gratuit",type:"col"},{k:"freeDescColor",l:"Couleur description Gratuit",type:"col"},
-              {k:"proBg",l:"Fond card Pro",type:"col"},{k:"proBorderColor",l:"Bordure Pro",type:"col"},
-              {k:"proLabelColor",l:"Couleur label Pro",type:"col"},{k:"proPriceColor",l:"Couleur prix Pro",type:"col"},
-              {k:"proSubColor",l:"Couleur texte sous prix",type:"col"},{k:"proDescColor",l:"Couleur description Pro",type:"col"},
-            ]},
-            {key:"cta",titre:"CTA Final",icon:"🎯",fields:[
-              {k:"ctaAlign",l:"Alignement du texte",type:"align"},
-              {k:"ctaTitle",l:"Titre (avec \\n)",type:"txt",multi:true},{k:"ctaTitleAccent",l:"Accent (italique)",type:"txt"},{k:"ctaSubTitle",l:"Sous-titre",type:"txt"},
-              {k:"ctaSub",l:"Texte descriptif",type:"txt",inTxts:true},{k:"ctaBtnTxt",l:"Texte bouton",type:"txt",inTxts:true},{k:"ctaFooter",l:"Footer",type:"txt",inTxts:true},
-              {k:"ctaBg",l:"Fond section",type:"col"},{k:"ctaTitleColor",l:"Couleur titre",type:"col"},
-              {k:"ctaSubTitleColor",l:"Couleur sous-titre",type:"col"},{k:"ctaSubColor",l:"Couleur descriptif",type:"col"},{k:"ctaFooterColor",l:"Couleur footer",type:"col"},
-            ]},
-          ].filter(s=>matches(s.titre)||s.fields.some(f=>matches(f.l))).map(s=>
-            <BOCard key={s.key} title={s.titre} icon={s.icon}>
-              {s.fields.filter(f=>!search||matches(f.l)).map(f=>
-                <BOField key={f.k} label={f.l}>
-                  {f.type==="align"?<BOAlignInput k={f.k} state={cfg.landing} setter={setLand}/>
-                  :f.type==="col"?<BOColorInput k={f.k} state={cfg.landing} setter={setLand}/>
-                  :<BOTextInput k={f.k} state={f.inTxts?cfg.txts:cfg.landing} setter={f.inTxts?setTxt:setLand} multi={f.multi}/>}
-                </BOField>
-              )}
-            </BOCard>
-          )}
-        </>}
-
-        {/* ====================== TEXTES (tous) ====================== */}
-        {sec==="textes"&&<>
-          <BOCard title="Hero" icon="🏠">
-            {[["heroBadge","Badge"],["heroTitle","Titre"],["heroTitleAccent","Titre - accent italique"],["heroSub","Sous-titre"],["heroSubDesc","Description",true],["heroTags","Tags (séparés par ,)"],["heroBtnPrimTxt","Texte bouton principal"],["heroBtnSecTxt","Texte bouton secondaire"],["heroBtnNavTxt","Texte bouton nav"]].filter(([,l])=>matches(l)).map(([k,l,m])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.txts} setter={setTxt} multi={m}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Sections" icon="📝">
-            {[["s1Title","Section 1 - Titre"],["s1Desc","Section 1 - Description",true],["s1Quote","Section 1 - Citation",true],
-              ["s2Title","Section 2 - Titre"],["s2Desc","Section 2 - Description"],
-              ["s5Title","Section 5 - Titre"],["s6Title","Section 6 - Titre"],
-              ["ctaTitle","CTA - Titre (\\n pour saut)",true],["ctaTitleAccent","CTA - Texte accent"],["ctaSubTitle","CTA - Sous-titre"]
-            ].filter(([,l])=>matches(l)).map(([k,l,m])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Tarifs et CTA" icon="💰">
-            {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freePrice","Gratuit - prix (ex: 0€)"],["freeDesc","Gratuit - description"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.txts} setter={setTxt}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Différenciateurs (Pourquoi TiMat)" icon="⭐">
-            {[
-              ["diff1Ic","Diff 1 - Emoji"],["diff1Badge","Diff 1 - Badge"],["diff1Titre","Diff 1 - Titre"],["diff1Puces","Diff 1 - Puces (1/ligne)",true],
-              ["diff2Ic","Diff 2 - Emoji"],["diff2Badge","Diff 2 - Badge"],["diff2Titre","Diff 2 - Titre"],["diff2Puces","Diff 2 - Puces (1/ligne)",true],
-              ["diff3Ic","Diff 3 - Emoji"],["diff3Badge","Diff 3 - Badge"],["diff3Titre","Diff 3 - Titre"],["diff3Puces","Diff 3 - Puces (1/ligne)",true],
-              ["diff4Ic","Diff 4 - Emoji"],["diff4Badge","Diff 4 - Badge"],["diff4Titre","Diff 4 - Titre"],["diff4Puces","Diff 4 - Puces (1/ligne)",true]
-            ].filter(([,l])=>matches(l)).map(([k,l,m])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Démo — phrases & puces" icon="📱">
-            {[
-              ["demoPhrase1","Le quotidien — phrase",false],["demoPuces1","Le quotidien — puces (1/ligne)",true],
-              ["demoPhrase2","Planning & présences — phrase",false],["demoPuces2","Planning & présences — puces",true],
-              ["demoPhrase3","Calculs & paie — phrase",false],["demoPuces3","Calculs & paie — puces",true],
-              ["demoPhrase4","Messagerie parents — phrase",false],["demoPuces4","Messagerie parents — puces",true]
-            ].filter(([,l])=>matches(l)).map(([k,l,multi])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={multi}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Problème → Solution (lignes)" icon="⚖️">
-            {[["comboLabelBefore","En-tête colonne gauche"],["comboLabelAfter","En-tête colonne droite"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-            {matches("Lignes galère solution")&&<BOField label="Lignes (1 par ligne, format : emoji | galère | solution)"><BOTextInput k="comboRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
-            {matches("Tableau comparatif lignes")&&<BOField label="Tableau comparatif — 1 ligne par item (format : emoji | titre | sous-titre | sans TiMat | avec TiMat)"><BOTextInput k="tableRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
-            {matches("Tableau comparatif colonne gauche")&&<BOField label="Tableau — titre colonne gauche (ex : Sans TiMat)"><BOTextInput k="comboLabelBefore" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau comparatif colonne droite")&&<BOField label="Tableau — titre colonne droite (ex : Avec TiMat)"><BOTextInput k="comboLabelAfter" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau comparatif couleur colonne gauche")&&<BOField label="Tableau — couleur du titre colonne gauche"><BOColorInput k="comboPbColor" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau comparatif couleur colonne droite")&&<BOField label="Tableau — couleur du titre colonne droite"><BOColorInput k="comboSolColor" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau cellules couleur titres lignes")&&<BOField label="Tableau — couleur des titres de lignes (ex : Mensualisation)"><BOColorInput k="tableTitleColor" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau cellules couleur sous-titres")&&<BOField label="Tableau — couleur des sous-titres de lignes"><BOColorInput k="tableSubColor" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau cellules couleur texte colonne gauche")&&<BOField label="Tableau — couleur du TEXTE des cases colonne gauche"><BOColorInput k="tableSansColor" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau cellules couleur texte colonne droite")&&<BOField label="Tableau — couleur du TEXTE des cases colonne droite"><BOColorInput k="tableAvecColor" state={cfg.landing} setter={setLand}/></BOField>}
-            {matches("Tableau comparatif phrase")&&<BOField label="Tableau comparatif — phrase de conclusion"><BOTextInput k="tableFooter" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
-          </BOCard>
-        </>}
-        {sec==="couleurs"&&<>
-          <BOCard title="Palette de l\'application" icon="🎨">
-            {[["T","Principale (terracotta)"],["S","Secondaire (sauge)"],["G","Vert d'eau (succès)"],["R","Rouge alerte (terracotta foncé)"],["c","Fond général (crème)"],["w","Fond cartes (blanc)"],["b","Texte principal (bleu nuit)"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.cols} setter={setCol}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Fonds de sections landing" icon="🖼️">
-            {[["pageBg","Fond général page"],["heroBg","Fond hero"],["section1Bg","La réalité du métier"],["section2Bg","Section 2 (démo)"],["section4Bg","Pourquoi TiMat"],["section5Bg","Section 5 (témoignages)"],["section6Bg","Section Tarifs"],["faqBg","Section FAQ"],["blogBg","Section Blog"],["footerBg","Footer"],["ctaBg","CTA final"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Couleur d\'accent globale" icon="✨">
-            <BOField label="Couleur accent (stats, italique, étoiles par défaut)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
-          </BOCard>
-          <BOCard title="Hero - couleurs de texte" icon="🏠">
-            {[["heroTitleColor","Titre hero"],["heroSubColor","Sous-titre"],["heroSubDescColor","Description"],["heroBadgeColor","Badge - texte"],["heroBadgeBg","Badge - fond"],["heroTagsColor","Tags"],["heroStatsColor","Stats (chiffres)"],["heroStatsLabelColor","Stats (labels)"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Section Problème → Solution - couleurs" icon="⚖️">
-            {[["section1Bg","Fond de la section"],["comboCardBg","Fond des cartes"],["comboPbColor","Texte galère"],["comboSolColor","Texte solution + ✓"],["comboArrowColor","Flèche →"],["comboLabelAfterColor","En-tête colonne droite"],["s1TitleColor","Titre"],["s1DescColor","Sous-titre"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="Sections 1 à 6 - couleurs texte" icon="📑">
-            {[["s1TitleColor","S1 - Titre"],["s1DescColor","S1 - Description"],["s1CardBg","S1 - Fond cards"],["s1CardTitleColor","S1 - Titre cards"],["s1CardDescColor","S1 - Texte cards"],["s1QuoteBg","S1 - Fond citation"],["s1QuoteColor","S1 - Citation"],
-              ["s2TitleColor","S2 - Titre"],["s2DescColor","S2 - Description"],
-              ["s4TitleColor","Pourquoi TiMat - Titre"],["s4SubColor","Pourquoi TiMat - Sous-titre"],
-              ["s5TitleColor","S5 - Titre"],["testimonialBg","S5 - Fond cards"],["testimonialNameColor","S5 - Nom"],["testimonialCityColor","S5 - Ville"],["testimonialBeforeColor","S5 - Texte avant"],["testimonialAfterColor","S5 - Texte après"],["testimonialStarColor","S5 - Étoiles"],
-              ["s6TitleColor","S6 - Titre"],["freeBg","S6 - Fond Gratuit"],["freeLabelColor","S6 - Label Gratuit"],["freePriceColor","S6 - Prix Gratuit"],["freeDescColor","S6 - Description Gratuit"],["proBg","S6 - Fond Pro"],["proBorderColor","S6 - Bordure Pro"],["proLabelColor","S6 - Label Pro"],["proPriceColor","S6 - Prix Pro"],["proSubColor","S6 - Sous-prix Pro"],["proDescColor","S6 - Description Pro"],
-              ["ctaTitleColor","CTA - Titre"],["ctaSubTitleColor","CTA - Sous-titre"],["ctaSubColor","CTA - Descriptif"],["ctaFooterColor","CTA - Footer"]
-            ].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-          </BOCard>
-          <BOCard title="FAQ · Blog · Footer - couleurs" icon="🧩">
-            {[["faqTitleColor","FAQ - Titre"],["faqDescColor","FAQ - Sous-titre"],["blogTitleColor","Blog - Titre"],["blogDescColor","Blog - Sous-titre"],["footerTextColor","Footer - Texte"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-          </BOCard>
-        </>}
-
-        {sec==="boutons"&&<>
-          {[
-            {titre:"Bouton NAV \"Commencer\"",icon:"🔸",fields:[["heroBtnNavTxt","Texte",true],["heroBtnNavBg","Fond",false],["heroBtnNavColor","Couleur texte",false]]},
-            {titre:"Bouton NAV \"Tarifs\"",icon:"🔸",fields:[["heroBtnTarifsBg","Fond",false],["heroBtnTarifsColor","Couleur texte",false]]},
-            {titre:"Bouton NAV \"Connexion\"",icon:"🔸",fields:[["heroBtnConnexionBg","Fond",false],["heroBtnConnexionColor","Couleur texte",false]]},
-            {titre:"Bouton HERO principal",icon:"🔸",fields:[["heroBtnPrimTxt","Texte",true],["heroBtnPrimBg","Fond",false],["heroBtnPrimColor","Couleur texte",false]]},
-            {titre:"Bouton HERO secondaire",icon:"🔸",fields:[["heroBtnSecTxt","Texte",true],["heroBtnSecBg","Fond",false],["heroBtnSecColor","Couleur texte",false]]},
-            {titre:"Bouton TARIFS Gratuit",icon:"🔸",fields:[["freeBtnTxt","Texte",true],["freeBtnBg","Fond",false],["freeBtnColor","Couleur texte",false]]},
-            {titre:"Bouton TARIFS Pro",icon:"🔸",fields:[["proBtnTxt","Texte",true],["proBtnBg","Fond",false],["proBtnColor","Couleur texte",false]]},
-            {titre:"Bouton CTA final",icon:"🎯",fields:[["ctaBtnTxt","Texte",true],["ctaBtnBg","Fond",false],["ctaBtnColor","Couleur texte",false]]},
-          ].filter(b=>matches(b.titre)).map(btn=>
-            <BOCard key={btn.titre} title={btn.titre} icon={btn.icon}>
-              {btn.fields.map(([k,l,isTxt])=>
-                <BOField key={k} label={l}>
-                  {isTxt
-                    ?<BOTextInput k={k} state={cfg.txts} setter={setTxt}/>
-                    :<BOColorInput k={k} state={cfg.landing} setter={setLand}/>}
-                </BOField>
-              )}
-              {/* Preview */}
-              <div style={{marginTop:8,padding:8,background:"#f0f0f0",borderRadius:8}}>
-                <div style={{fontSize:11,color:"var(--l)",marginBottom:4,textTransform:"uppercase"}}>Aperçu</div>
-                <button style={{
-                  background:cfg.landing[btn.fields.find(f=>f[0].endsWith("Bg"))?.[0]]||"#ccc",
-                  color:cfg.landing[btn.fields.find(f=>f[0].endsWith("Color"))?.[0]]||"#000",
-                  border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"default",width:"100%"
-                }}>{cfg.txts[btn.fields.find(f=>f[2])?.[0]]||"Exemple"}</button>
-              </div>
-            </BOCard>
-          )}
-        </>}
-
-        {/* ====================== POLICES ====================== */}
-        {sec==="polices"&&<>
-          <BOCard title="Presets de polices" icon="🎨">
-            <div style={{fontSize:11,color:"var(--m)",marginBottom:10}}>Clique pour appliquer un preset complet</div>
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {FONT_PRESETS.map(p=><button key={p.name} onClick={()=>applyFontPreset(p)}
-                style={{padding:"10px 12px",background:"var(--c)",border:"1px solid var(--br)",borderRadius:10,cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"all .15s"}}
-                onMouseEnter={e=>e.currentTarget.style.background="var(--Sp)"}
-                onMouseLeave={e=>e.currentTarget.style.background="var(--c)"}>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--b)",marginBottom:2}}>{p.name}</div>
-                <div style={{fontSize:11,color:"var(--l)",fontFamily:p.title}}>Titre ({p.title.split(",")[0].replace(/\'/g,"")})</div>
-                <div style={{fontSize:11,color:"var(--l)",fontFamily:p.body}}>Corps ({p.body.split(",")[0].replace(/\'/g,"")})</div>
-              </button>)}
-            </div>
-          </BOCard>
-          <BOCard title="Polices personnalisées" icon="𝐓">
-            <BOField label="Police des titres" hint="Ex: \'Playfair Display\', serif">
-              <BOTextInput k="fontTitle" state={cfg.landing} setter={setLand}/>
-            </BOField>
-            <BOField label="Police du corps" hint="Ex: \'Inter\', sans-serif">
-              <BOTextInput k="fontBody" state={cfg.landing} setter={setLand}/>
-            </BOField>
-            <BOField label="URL Google Fonts" hint="Colle ici l\'URL complète de Google Fonts">
-              <BOTextInput k="googleFontsUrl" state={cfg.landing} setter={setLand} multi/>
-            </BOField>
-            <div style={{padding:10,background:"var(--c)",borderRadius:8,marginTop:6,fontSize:11,color:"var(--m)",lineHeight:1.5}}>
-              💡 Pour ajouter une police :<br/>
-              1. Va sur <strong>fonts.google.com</strong><br/>
-              2. Choisis tes polices<br/>
-              3. Copie l\'URL de &lt;link href=\"...\"&gt;<br/>
-              4. Colle-la ci-dessus + édite fontTitle / fontBody
-            </div>
-          </BOCard>
-          <BOCard title="Aperçu des polices" icon="👁">
-            <div style={{padding:12,background:"#fff",borderRadius:8,border:"1px solid var(--br)"}}>
-              <div style={{fontFamily:cfg.landing.fontTitle,fontSize:24,fontWeight:700,marginBottom:8}}>Titre exemple</div>
-              <div style={{fontFamily:cfg.landing.fontBody,fontSize:14,lineHeight:1.6}}>Corps de texte en police normale. Le lorem ipsum est un faux texte qui permet de visualiser la mise en page.</div>
-            </div>
-          </BOCard>
-        </>}
-
-        {/* ====================== CONTENU (items) ====================== */}
-        {sec==="contenu"&&<>
-          <BOCard title="FAQ de la landing" icon="❓">
-            <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Questions/réponses affichées dans la section « Questions fréquentes » de la page d'accueil.</div>
-            {(cfg.faqLanding||[]).map((item,i)=>(
-              <div key={i}style={{marginBottom:12,paddingBottom:12,borderBottom:"1px solid var(--br)"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                  <span style={{fontSize:11,fontWeight:700,color:"var(--m)"}}>Question {i+1}</span>
-                  <button onClick={()=>removeFaqL(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
-                </div>
-                <input value={item.q}onChange={e=>setFaqL(i,"q",e.target.value)}placeholder="Question"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                <textarea value={item.a}onChange={e=>setFaqL(i,"a",e.target.value)}placeholder="Réponse"rows={3}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
-              </div>
-            ))}
-            <button onClick={addFaqL}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter une question</button>
-          </BOCard>
-          <BOCard title="Footer (pied de page)" icon="🦶">
-            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Description (sous le logo)</div>
-            <textarea value={(cfg.footer||{}).description||""}onChange={e=>setFooter("description",e.target.value)}rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5,marginBottom:14}}/>
-            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Contact</div>
-            <input value={(cfg.footer||{}).contactEmail||""}onChange={e=>setFooter("contactEmail",e.target.value)}placeholder="Email (ex: support@timat.app)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
-            <input value={(cfg.footer||{}).contactWeb||""}onChange={e=>setFooter("contactWeb",e.target.value)}placeholder="Site (ex: timat.app)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
-            <input value={(cfg.footer||{}).contactLieu||""}onChange={e=>setFooter("contactLieu",e.target.value)}placeholder="Lieu (ex: Île-de-France, France)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:14}}/>
-            <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Données & RGPD (une ligne par puce)</div>
-            {((cfg.footer||{}).rgpd||[]).map((line,i)=>(
-              <div key={i}style={{display:"flex",gap:6,marginBottom:6}}>
-                <input value={line}onChange={e=>setFooterRgpd(i,e.target.value)}style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                <button onClick={()=>removeFooterRgpd(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"0 10px",fontSize:13,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
-              </div>
-            ))}
-            <button onClick={addFooterRgpd}style={{width:"100%",padding:"8px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginTop:2}}>+ Ajouter une ligne RGPD</button>
-            <div style={{fontSize:11,color:"var(--m)",marginTop:10,lineHeight:1.5}}>Le copyright (nom auto-entrepreneur · SIRET) se modifie dans l'onglet dédié aux infos légales. Les liens Mentions/CGU/Confidentialité ouvrent les pages juridiques.</div>
-          </BOCard>
-          <BOCard title="Articles du blog (cartes)" icon="📰">
-            <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Cartes affichées dans la section « Ressources ». Vous pouvez éditer, ajouter ou supprimer un article. Le contenu détaillé des articles existants reste affiché ; pour un nouvel article, le contenu complet sera éditable dans une prochaine étape.</div>
-            {(cfg.blog||[]).map((art,i)=>(
-              <div key={i}style={{marginBottom:14,paddingBottom:14,borderBottom:"1px solid var(--br)"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                  <span style={{fontSize:11,fontWeight:700,color:"var(--m)"}}>Article {i+1}</span>
-                  <button onClick={()=>removeBlog(i)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"3px 10px",fontSize:11,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>🗑 Supprimer</button>
-                </div>
-                <div style={{display:"flex",gap:6,marginBottom:6}}>
-                  <input value={art.emoji||""}onChange={e=>setBlog(i,"emoji",e.target.value)}placeholder="🧮"style={{width:52,textAlign:"center",padding:"8px 6px",borderRadius:8,border:"1px solid var(--br)",fontSize:18,boxSizing:"border-box",fontFamily:"inherit"}}/>
-                  <input value={art.cat||""}onChange={e=>setBlog(i,"cat",e.target.value)}placeholder="Catégorie"style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                  <input type="color"value={art.catColor||"#E49178"}onChange={e=>setBlog(i,"catColor",e.target.value)}title="Couleur de la catégorie"style={{width:42,height:38,padding:2,borderRadius:8,border:"1px solid var(--br)",cursor:"pointer",flexShrink:0}}/>
-                </div>
-                <input value={art.title||""}onChange={e=>setBlog(i,"title",e.target.value)}placeholder="Titre de l'article"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,fontWeight:600,marginBottom:6,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                <textarea value={art.excerpt||""}onChange={e=>setBlog(i,"excerpt",e.target.value)}placeholder="Extrait (résumé court)"rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
-                <button onClick={()=>setOpenBlocks(openBlocks===i?null:i)}style={{marginTop:6,width:"100%",padding:"7px",borderRadius:10,border:"1px solid var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="📝"/> Contenu de l'article ({(art.blocks||[]).length} bloc{(art.blocks||[]).length>1?"s":""}) {openBlocks===i?"▲":"▼"}</button>
-                {openBlocks===i&&<div style={{marginTop:8,padding:10,background:"var(--c)",borderRadius:10}}>
-                  {(art.blocks||[]).length===0&&<div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>Aucun bloc : cet article affiche son contenu d'origine. Dès que vous ajoutez un bloc, le contenu par blocs remplace l'original.</div>}
-                  {(art.blocks||[]).map((b,bi)=>(
-                    <div key={bi}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:8,padding:8,marginBottom:8}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                        <span style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px"}}>{b.type==="h3"?"Titre":b.type==="callout"?"Encadré":b.type==="list"?"Liste":"Paragraphe"}</span>
-                        <div style={{display:"flex",gap:4}}>
-                          <button onClick={()=>moveBlk(i,bi,-1)}title="Monter"style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↑</button>
-                          <button onClick={()=>moveBlk(i,bi,1)}title="Descendre"style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"2px 7px",minWidth:36,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↓</button>
-                          <button onClick={()=>removeBlk(i,bi)}title="Supprimer"style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"2px 7px",cursor:"pointer",fontSize:11,color:"#C84B31",fontFamily:"inherit"}}>🗑</button>
-                        </div>
-                      </div>
-                      {b.type==="h3"&&<div style={{display:"flex",gap:6}}>
-                        <input value={b.text||""}onChange={e=>setBlk(i,bi,"text",e.target.value)}placeholder="Titre de section"style={{flex:1,padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,fontWeight:600,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                        <input type="color"value={b.color||"#2E4859"}onChange={e=>setBlk(i,bi,"color",e.target.value)}title="Couleur du titre"style={{width:38,height:34,padding:2,borderRadius:7,border:"1px solid var(--br)",cursor:"pointer",flexShrink:0}}/>
-                      </div>}
-                      {b.type==="p"&&<textarea value={b.text||""}onChange={e=>setBlk(i,bi,"text",e.target.value)}placeholder="Paragraphe — **gras**, *italique*"rows={3}style={{width:"100%",padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>}
-                      {b.type==="callout"&&<div>
-                        <div style={{display:"flex",gap:6,marginBottom:6}}>
-                          <input value={b.title||""}onChange={e=>setBlk(i,bi,"title",e.target.value)}placeholder="Titre de l'encadré"style={{flex:1,padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,fontWeight:600,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                          <input type="color"value={b.color||"#5DA9A1"}onChange={e=>setBlk(i,bi,"color",e.target.value)}title="Couleur de l'encadré"style={{width:38,height:34,padding:2,borderRadius:7,border:"1px solid var(--br)",cursor:"pointer",flexShrink:0}}/>
-                        </div>
-                        <textarea value={b.text||""}onChange={e=>setBlk(i,bi,"text",e.target.value)}placeholder="Texte de l'encadré"rows={2}style={{width:"100%",padding:"7px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5}}/>
-                      </div>}
-                      {b.type==="list"&&<div>
-                        {(b.items||[]).map((it,ii)=>(
-                          <div key={ii}style={{display:"flex",gap:6,marginBottom:5}}>
-                            <input value={it}onChange={e=>setBlkItem(i,bi,ii,e.target.value)}placeholder="Point de liste"style={{flex:1,padding:"6px 9px",borderRadius:7,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)"}}/>
-                            <button onClick={()=>removeBlkItem(i,bi,ii)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"0 9px",fontSize:12,color:"#C84B31",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>🗑</button>
-                          </div>
-                        ))}
-                        <button onClick={()=>addBlkItem(i,bi)}style={{fontSize:11,padding:"5px 10px",borderRadius:10,border:"1px dashed var(--br)",background:"var(--c)",color:"var(--b)",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>+ point</button>
-                      </div>}
-                    </div>
-                  ))}
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:4}}>
-                    {[["h3","+ Titre"],["p","+ Paragraphe"],["callout","+ Encadré"],["list","+ Liste"]].map(([t,l])=>
-                      <button key={t}onClick={()=>addBlk(i,t)}style={{flex:"1 1 45%",padding:"7px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--w)",color:"var(--b)",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
-                    )}
-                  </div>
-                </div>}
-              </div>
-            ))}
-            <button onClick={addBlog}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter un article</button>
-          </BOCard>
-          <BOCard title="Stats du hero (bandeau)" icon="📊">
-            {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsHero",i,"suf",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsHero",i,"label",e.target.value)}/>
-            </div>)}
-          </BOCard>
-          <BOCard title="Pain points (section 1)" icon="🔥">
-            {(cfg.painPoints||[]).map((p,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
-              <div style={{display:"flex",gap:4,marginBottom:4}}>
-                <input className="inp"style={{width:36,fontSize:11,padding:"4px",textAlign:"center"}}value={p.ic}onChange={e=>setPain(i,"ic",e.target.value)}/>
-                <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={p.titre}onChange={e=>setPain(i,"titre",e.target.value)}placeholder="Titre"/>
-                <button onClick={()=>removePain(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"4px 8px",color:"#c00"}}>✕</button>
-              </div>
-              <textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={p.desc}onChange={e=>setPain(i,"desc",e.target.value)}/>
-            </div>)}
-            <button onClick={addPain}className="btn bG s"style={{padding:"6px 12px",width:"100%"}}>+ Ajouter un pain point</button>
-          </BOCard>
-          <BOCard title="Témoignages (section 5)" icon="⭐">
-            {(cfg.testimonials||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--b)"}}>⭐ Témoignage {i+1}</div>
-                <button onClick={()=>removeTesti(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 8px",color:"#c00"}}>✕</button>
-              </div>
-              {[["nom","Nom"],["ville","Ville"],["avant","Avant (citation)"],["apres","Après (témoignage)"]].map(([k,l])=>
-                <div key={k}style={{marginBottom:5}}>
-                  <div style={{fontSize:11,fontWeight:600,color:"var(--m)",marginBottom:2}}>{l}</div>
-                  {k==="apres"?<textarea className="inp"rows={2}style={{fontSize:11,padding:"5px 8px",resize:"vertical",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>
-                    :<input className="inp"style={{fontSize:11,padding:"5px 8px",width:"100%",boxSizing:"border-box"}}value={t[k]||""}onChange={e=>setTesti(i,k,e.target.value)}/>}
-                </div>
-              )}
-            </div>)}
-            <button onClick={addTesti}className="btn bG s"style={{padding:"6px 12px",width:"100%"}}>+ Ajouter un témoignage</button>
-          </BOCard>
-
-          <BOCard title="Plan Gratuit - Fonctionnalités" icon="🆓">
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Coche = inclus, décoche = barré (non inclus)</div>
-            {(cfg.freeItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
-              <input type="checkbox"checked={item[0]}onChange={e=>setFreeItem(i,0,e.target.checked)}style={{width:16,height:16,cursor:"pointer",flexShrink:0}}/>
-              <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item[1]}onChange={e=>setFreeItem(i,1,e.target.value)}/>
-              <button onClick={()=>removeFreeItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
-            </div>)}
-            <button onClick={addFreeItem}className="btn bG s"style={{padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
-          </BOCard>
-
-          <BOCard title="Plan Pro - Fonctionnalités" icon="⭐">
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Emoji + texte sur une ligne. Les 3 premières sont en gras automatiquement.</div>
-            {(cfg.proItems||[]).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
-              <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setProItem(i,e.target.value)}placeholder="✨ Emoji + description"/>
-              <button onClick={()=>removeProItem(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
-            </div>)}
-            <button onClick={addProItem}className="btn bG s"style={{padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une ligne</button>
-          </BOCard>
-
-          <BOCard title="Garanties (sous tarifs)" icon="✅">
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:10,lineHeight:1.5}}>Les petits points de réassurance affichés sous les tarifs.</div>
-            {(cfg.guarantees||DEFAULT_CONFIG.guarantees).map((item,i)=><div key={i}style={{display:"flex",gap:4,marginBottom:5,alignItems:"center"}}>
-              <input className="inp"style={{flex:1,fontSize:11,padding:"4px 6px"}}value={item}onChange={e=>setGuarantee(i,e.target.value)}placeholder="✅ Texte garantie"/>
-              <button onClick={()=>removeGuarantee(i)}style={{background:"#fee",border:"1px solid #fcc",borderRadius:10,cursor:"pointer",fontSize:11,padding:"3px 7px",color:"#c00"}}>✕</button>
-            </div>)}
-            <button onClick={addGuarantee}className="btn bG s"style={{padding:"6px 12px",width:"100%",marginTop:6}}>+ Ajouter une garantie</button>
-          </BOCard>
-        </>}
-
-        {/* ====================== APP (modules + stats) ====================== */}
-        {sec==="app"&&<>
-          <BOCard title="Modules activables" icon="⚙️">
-            {[
-              {k:"parrainage",l:"Parrainage",ic:"🎁"},
-              {k:"forum",l:"Forum communauté",ic:"💬"},
-              {k:"pmi",l:"Communication PMI",ic:"🏛️"},
-              {k:"periscolaire",l:"Planning périscolaire",ic:"🚌"},
-              {k:"rappelsVaccins",l:"Rappels vaccins",ic:"💉"},
-            ].map(({k,l,ic})=><div key={k}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
-              <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}><IconeOuEmoji e={ic}/> {l}</span>
-              <div onClick={()=>setFeat(k,!cfg.feats[k])}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:cfg.feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"}}>
-                <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-              </div>
-            </div>)}
-          </BOCard>
-          <BOCard title="Statistiques" icon="📊">
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
-              {[{v:stats.users,l:"Inscrits",c:"var(--T)"},{v:stats.pro,l:"Pro",c:"var(--S)"},{v:stats.enfants,l:"Enfants",c:"var(--G)"}].map(s=>
-                <div key={s.l}style={{padding:10,background:"var(--c)",borderRadius:8}}>
-                  <div style={{fontSize:22,fontWeight:700,color:s.c}}>{s.v}</div>
-                  <div style={{fontSize:11,color:"var(--l)"}}>{s.l}</div>
-                </div>
-              )}
-            </div>
-          </BOCard>
-          <BOCard title="Informations légales" icon="📋">
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Ces informations apparaissent dans les mentions légales, CGU et politique de confidentialité.</div>
-            <BOField label="Nom complet"><BOTextInput k="nom" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
-            <BOField label="SIRET"><BOTextInput k="siret" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
-            <BOField label="Adresse"><BOTextInput k="adresse" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
-            <BOField label="Email de contact"><BOTextInput k="email" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
-          </BOCard>
-          <BOCard title="Boutique — Liens de paiement Stripe" icon="🛒">
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Collez ici vos liens Stripe. Dashboard Stripe → Produits → Liens de paiement.</div>
-            <BOField label="Kit de gestion"><BOTextInput k="linkSheets" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-            <BOField label="Fiche d'urgence"><BOTextInput k="linkFiche" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-            <BOField label="Projet d'accueil"><BOTextInput k="linkProjet" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-            <BOField label="Registre des medicaments"><BOTextInput k="linkRegistre" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-            <BOField label="Pack Complet"><BOTextInput k="linkPack" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-          </BOCard>
-          <BOCard title="Table Supabase" icon="🗄️">
-            <div style={{fontSize:11,color:"var(--m)",marginBottom:8,lineHeight:1.5}}>À exécuter dans Supabase SQL Editor :</div>
-            <div style={{fontSize:11,background:"#1a1a1a",color:"#0f0",padding:10,borderRadius:8,fontFamily:"monospace",lineHeight:1.5}}>
-              CREATE TABLE app_config (<br/>
-              &nbsp;&nbsp;id TEXT PRIMARY KEY,<br/>
-              &nbsp;&nbsp;config JSONB,<br/>
-              &nbsp;&nbsp;updated_at TIMESTAMPTZ<br/>
-              );<br/>
-              ALTER TABLE app_config ENABLE ROW LEVEL SECURITY;<br/>
-              CREATE POLICY \"admin_all\" ON app_config USING (true);
-            </div>
-          </BOCard>
-        </>}
-
-        {/* ====================== SECTIONS VISIBLES (P32 Palier 1 : afficher/masquer) ====================== */}
-        {sec==="sectionsvis"&&<>
-          <BOCard title="Gestionnaire de sections" icon="🧩">
-            <div style={{fontSize:12,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>Réorganise ta page d'accueil avec les flèches, et affiche ou masque chaque section. Le contenu n'est jamais supprimé — tu peux réafficher à tout moment. Le Hero et le Footer restent toujours aux extrémités.</div>
-            {(()=>{
-              const META={probleme:{l:"La réalité du métier"},signature:{l:"Pourquoi TiMat"},demo:{l:"L'application en images"},temoignages:{l:"Témoignages",strict:true},confidentialite:{l:"Confidentialité & photos"},tarifs:{l:"Tarifs"},ctaFinal:{l:"Appel à l'action final"},faq:{l:"Questions fréquentes"},blog:{l:"Ressources / Blog",strict:true}};
-              const order=(cfg.sectionsOrder&&cfg.sectionsOrder.length)?cfg.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;
-              const SVm=cfg.sectionsVisibles||{};
-              return order.map((id,i)=>{
-                const meta=META[id]||{l:id};
-                const on=meta.strict?(SVm[id]===true):(SVm[id]!==false);
-                return <div key={id} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 10px",marginBottom:7,background:on?"var(--w)":"var(--c)",border:"1px solid var(--br)",borderRadius:10}}>
-                  <span style={{fontSize:11,fontWeight:700,color:"var(--l)",width:14,textAlign:"center",flexShrink:0}}>{i+1}</span>
-                  <div style={{display:"flex",flexDirection:"column",gap:3,flexShrink:0}}>
-                    <button onClick={()=>moveSectionAt(i,i-1)}disabled={i===0}title="Monter"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:10,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===0?"not-allowed":"pointer",opacity:i===0?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↑</button>
-                    <button onClick={()=>moveSectionAt(i,i+1)}disabled={i===order.length-1}title="Descendre"style={{width:38,height:38,border:"1px solid var(--br)",background:"var(--w)",borderRadius:10,fontSize:11,fontWeight:800,color:"var(--m)",cursor:i===order.length-1?"not-allowed":"pointer",opacity:i===order.length-1?.3:1,fontFamily:"inherit",padding:0,lineHeight:1}}>↓</button>
-                  </div>
-                  <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:on?"var(--b)":"var(--l)"}}>{meta.l}{!on&&<span style={{fontSize:11,fontWeight:700,color:"var(--l)",marginLeft:7}}>· masquée</span>}</span>
-                  <div onClick={()=>setSV(id,!on)}title={on?"Masquer":"Afficher"}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
-                    <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-                  </div>
-                </div>;
-              });
-            })()}
-            <button onClick={()=>setSec("sections")}style={{width:"100%",marginTop:6,padding:"11px",borderRadius:10,border:"1px dashed var(--Tl)",background:"var(--accent-pale)",color:"#B85C38",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><IconeOuEmoji e="✏️"/> Renommer / modifier le contenu d'une section</button>
-          </BOCard>
-          <BOCard title="Vagues entre sections" icon="🌊">
-            <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>Ajoute une transition en vague en haut de chaque section. Désactive si tu préfères des séparations nettes.</div>
-            {(()=>{const on=(cfg.landing||{}).wavesOn!==false;return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"6px 0 14px"}}>
-              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>Activer les vagues</div>
-              <div onClick={()=>setLand("wavesOn",!on)}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:on?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
-                <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-              </div>
-            </div>;})()}
-            {[["waveOn1","Problème / tableau"],["waveOn2","Démo"],["waveOn4","Pourquoi TiMat"],["waveOn3","Transformation"],["waveOnConf","Confidentialité"],["waveOn6","Tarifs"],["waveOnFaq","FAQ"],["waveOnFooter","Footer"]].map(([k,lbl])=>{
-              const v=(cfg.landing||{})[k]!==false;
-              return <div key={k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"7px 0"}}>
-                <div style={{fontSize:12.5,color:"var(--m)"}}>{lbl}</div>
-                <div onClick={()=>setLand(k,!v)} style={{width:36,height:20,borderRadius:10,cursor:"pointer",background:v?"var(--G)":"var(--br)",position:"relative",transition:"background .2s",flexShrink:0}}>
-                  <div style={{width:14,height:14,borderRadius:7,background:"#fff",position:"absolute",top:3,left:v?19:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-                </div>
-              </div>;
-            })}
-            <div style={{fontSize:11,color:"var(--m)",margin:"10px 0 6px",fontWeight:700}}>Couleur des vagues</div>
-            {[["wave1","Vague — La réalité du métier"],["wave2","Vague — L'application en images"],["wave4","Vague — Pourquoi TiMat"],["wave3","Vague — Ce que ça change"],["wave6","Vague — Tarifs"]].filter(([,l])=>matches(l)).map(([k,l])=>
-              <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
-            )}
-          </BOCard>
-          {/* Carte "Ordre des sections" retiree : ordre + visibilite fusionnes dans le Gestionnaire de sections ci-dessus */}
-        </>}
-
-        {/* ====================== HISTORIQUE (P30D : backups + restauration) ====================== */}
-        {sec==="historique"&&<>
-          <BOCard title="Historique des configurations" icon="🕐">
-            <div style={{fontSize:11,color:"var(--m)",marginBottom:12,lineHeight:1.5}}>
-              Les 20 dernières sauvegardes automatiques de votre configuration. Cliquez sur <b>Restaurer</b> pour revenir à une version antérieure (la config actuelle sera automatiquement sauvegardée avant).
-            </div>
-            <button onClick={loadBackups} disabled={loadingBackups} style={{padding:"6px 14px",fontSize:11,fontWeight:600,borderRadius:10,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",cursor:loadingBackups?"wait":"pointer",marginBottom:12,fontFamily:"inherit"}}>
-              {loadingBackups?"⏳ Chargement…":"↻ Rafraîchir"}
-            </button>
-            {!loadingBackups&&backupList.length===0&&
-              <div style={{textAlign:"center",padding:30,color:"var(--m)",fontSize:12,background:"var(--c)",borderRadius:8}}>Aucune sauvegarde pour l'instant.</div>
-            }
-            {backupList.map(b=>{
-              const reasonInfo={
-                before_save:  {ic:"💾",l:"Avant sauvegarde",col:"#1E40AF",bg:"#DBEAFE"},
-                before_reset: {ic:"⚠️",l:"Avant réinitialisation",col:"#92400E",bg:"#FEF3C7"},
-                manual:       {ic:"🛡️",l:"Filet de sécurité (avant restauration)",col:"#065F46",bg:"#D1FAE5"},
-              }[b.reason]||{ic:"📦",l:b.reason,col:"var(--m)",bg:"var(--c)"};
-              const dt=new Date(b.created_at);
-              const dateStr=dt.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-              const sizeKo=b.config?Math.round(JSON.stringify(b.config).length/1024):"?";
-              return <div key={b.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,padding:"12px 14px",border:"1px solid var(--br)",borderRadius:10,marginBottom:8,background:"var(--w)"}}>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
-                    <span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:6,background:reasonInfo.bg,color:reasonInfo.col}}><IconeOuEmoji e={reasonInfo.ic}/> {reasonInfo.l}</span>
-                    <span style={{fontSize:11,color:"var(--l)"}}>{sizeKo} ko</span>
-                  </div>
-                  <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{dateStr}</div>
-                </div>
-                <div style={{display:"flex",gap:6,flexShrink:0}}>
-                  <button
-                    onClick={()=>setShowJsonModal(b)}
-                    title="Voir le contenu JSON de cette sauvegarde"
-                    style={{padding:"7px 12px",fontSize:11,fontWeight:700,borderRadius:8,border:"1px solid var(--br)",background:"var(--w)",color:"var(--b)",cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}
-                  >👁 Voir</button>
-                  <button
-                    onClick={()=>setShowRestoreModal(b)}
-                    disabled={restoringId!==null}
-                    style={{padding:"7px 14px",fontSize:11,fontWeight:700,borderRadius:8,border:"none",background:restoringId===b.id?"var(--br)":"var(--T)",color:"#fff",cursor:restoringId!==null?"not-allowed":"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}
-                  >{restoringId===b.id?"⏳ …":"↺ Restaurer"}</button>
-                </div>
-              </div>;
-            })}
-          </BOCard>
-        </>}
-
-      </div>}
-
-      {/* RIGHT PANEL: Live Preview (web / mobile) */}
-      {((isWide&&showPreview)||(!isWide&&mView==="apercu"))&&<div style={{flex:isWide?1:"none",width:isWide?"auto":"100%",height:isWide?"auto":"calc(100vh - 200px)",minHeight:isWide?0:420,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
-        <IframePreview cfg={cfg} noBezel={!isWide}/>
-      </div>}
-    </div>
-  </div>;
-}
-
-// P19 + P24: helper logo selon le role et mode dark
+// Le back-office vit dans src/backoffice.jsx : il n'est chargé que sur
+// la route /backoffice, pas par les visiteuses de la landing.
 const logoForRole = (role, dark) => {
   const s = dark ? "-dark" : "";
   if(role === "parent") return `/logo${s}-parent.png`;
@@ -19976,7 +17143,7 @@ const BLOG_DEFAULT=[
               {id:"pajemploi",slug:"pajemploi-declaration-assistante-maternelle",cat:"Pajemploi et d\u00e9clarations",catColor:"#2E4859",emoji:"\uD83C\uDFE6",title:"D\u00e9clarer sur Pajemploi",excerpt:"Chaque rubrique expliqu\u00e9e, et la fen\u00eatre du 25 au 5 \u00e0 ne pas manquer."},
               {id:"indemnite2026",slug:"indemnite-entretien-assistante-maternelle-2026",cat:"Indemnit\u00e9 d'entretien",catColor:"#C84B31",emoji:"\uD83E\uDDF4",title:"Indemnit\u00e9 d'entretien 2026",excerpt:"3,92 \u20ac pour 9 h, 0,435 \u20ac de l'heure au-del\u00e0, plancher \u00e0 2,65 \u20ac par journ\u00e9e."}
             ];
-const DEFAULT_CONFIG = {
+export const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#B85C38",c:"#FDFBF8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
     heroTitle:"Application pour assistantes maternelles",
@@ -20212,14 +17379,14 @@ const DEFAULT_CONFIG = {
   blog: BLOG_DEFAULT,
   sectionsOrder:["probleme","demo","signature","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
 };
-let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
+export let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
-const applyColsToDOM = (cols) => {
+export const applyColsToDOM = (cols) => {
   const r = document.documentElement;
   Object.entries(cols).forEach(([k,v]) => r.style.setProperty('--'+k, v));
 };
 
-const loadConfig = async () => {
+export const loadConfig = async () => {
   try {
     const {data,error} = await supabase.from('app_config').select('config').eq('id','main').maybeSingle();
     if (error) {
@@ -20267,7 +17434,7 @@ const loadConfig = async () => {
 
 // P30B : sauvegarde de sécurité de la config en base AVANT tout écrasement.
 // Best-effort : ne bloque jamais le Save. Retourne {ok, error?, skipped?}.
-const backupCurrentConfig = async (reason) => {
+export const backupCurrentConfig = async (reason) => {
   try {
     const {data, error} = await supabase
       .from('app_config').select('config').eq('id','main').maybeSingle();
@@ -20306,58 +17473,6 @@ const backupCurrentConfig = async (reason) => {
 // Ne garde que ce qui DIFFERE des defauts du code -> les defauts non modifies
 // restent pilotes par le code (une modif de code s'affiche toujours), et le
 // back-office continue de fonctionner (il enregistre uniquement tes surcharges).
-function diffConfig(cur, def){
-  const out = {};
-  if(!cur) return out;
-  for (const k of Object.keys(cur)) {
-    const cv = cur[k], dv = def ? def[k] : undefined;
-    if (dv === undefined) { out[k] = cv; continue; }
-    if (cv && dv && typeof cv==='object' && !Array.isArray(cv) && typeof dv==='object' && !Array.isArray(dv)) {
-      const sub = diffConfig(cv, dv);
-      if (Object.keys(sub).length) out[k] = sub;
-    } else if (JSON.stringify(cv) !== JSON.stringify(dv)) {
-      out[k] = cv;
-    }
-  }
-  return out;
-}
-
-const saveConfig = async (backupReason='before_save') => {
-  const G_save = diffConfig(G, DEFAULT_CONFIG);
-  const configStr = JSON.stringify(G_save);
-  // P30B : backup de sécurité best-effort avant écrasement (ne bloque jamais)
-  const backupRes = await backupCurrentConfig(backupReason);
-  // Try JSONB first (object), then TEXT fallback (string)
-  try {
-    const {error: errObj} = await supabase.from('app_config').upsert({
-      id:'main',
-      config: G_save,
-      updated_at: new Date().toISOString()
-    });
-    if (!errObj) {
-      console.log('[TiMat config] Sauvegardé en JSONB ('+configStr.length+' octets)');
-      return {ok:true, backupOk:backupRes.ok, backupError:backupRes.error};
-    }
-    console.warn('[TiMat config] JSONB a échoué, tentative TEXT:', errObj.message);
-    // Fallback: string
-    const {error: errStr} = await supabase.from('app_config').upsert({
-      id:'main',
-      config: configStr,
-      updated_at: new Date().toISOString()
-    });
-    if (!errStr) {
-      console.log('[TiMat config] Sauvegardé en TEXT ('+configStr.length+' octets)');
-      return {ok:true, backupOk:backupRes.ok, backupError:backupRes.error};
-    }
-    console.error('[TiMat config] Les deux formats ont échoué. JSONB:', errObj.message, 'TEXT:', errStr.message);
-    return {ok:false, error: errObj.message + ' | ' + errStr.message};
-  } catch(e) {
-    console.error('[TiMat config] Exception sauvegarde:', e);
-    return {ok:false, error: e.message || 'Exception inconnue'};
-  }
-};
-
-
 function QuickActions({role,setPage}){
   // Les cinq raccourcis etaient colores a parts egales, chacun dans une teinte
   // differente : aucun ne ressortait, et l'ecran comptait cinq couleurs pleines
@@ -20443,421 +17558,7 @@ function BienvenueOnboarding({role,user,setPage,onClose}){
 // Coquille sidebar (web) / hamburger (mobile) + onglets, reservee admin.
 // Reutilise le composant Backoffice existant (contenu, sections, sauvegardes).
 // ============================================================
-function SearchConsoleSetup(){
-  const step={display:"flex",gap:10,marginBottom:12};
-  const numc={width:22,height:22,borderRadius:11,background:"#E49178",color:"#fff",fontSize:12,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0};
-  const txt={fontSize:12.5,color:"#2E4A5A",lineHeight:1.55};
-  return <div>
-    <div style={{background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:12,padding:"16px 16px 5px",marginBottom:14}}>
-      <div style={{fontWeight:800,fontSize:14,color:"#B85C38",marginBottom:12}}><IconeOuEmoji e="⚙️"/> Configuration en une fois (~10 min)</div>
-      <div style={step}><span style={numc}>1</span><span style={txt}>Sur <b>console.cloud.google.com</b>, crée un projet, puis active l'<b>API Google Search Console</b>.</span></div>
-      <div style={step}><span style={numc}>2</span><span style={txt}>Crée un <b>compte de service</b>, puis génère et télécharge sa <b>clé JSON</b>.</span></div>
-      <div style={step}><span style={numc}>3</span><span style={txt}>Dans <b>Search Console → Paramètres → Utilisateurs et autorisations</b>, ajoute l'<b>e-mail du compte de service</b> (il finit par <code>.iam.gserviceaccount.com</code>) en lecture.</span></div>
-      <div style={step}><span style={numc}>4</span><span style={txt}>Dans <b>Vercel → Settings → Environment Variables</b>, ajoute :<br/>• <code>GSC_SERVICE_ACCOUNT</code> = tout le contenu du fichier JSON<br/>• <code>GSC_SITE_URL</code> = <code>sc-domain:timat.app</code></span></div>
-      <div style={step}><span style={numc}>5</span><span style={txt}>Redéploie (un simple push, ou « Redeploy » dans Vercel), puis recharge cette page.</span></div>
-    </div>
-    <div style={{fontSize:12,color:"#6B4F5A",lineHeight:1.5}}>Une fois fait, tes mots-clés, positions et clics s'afficheront ici automatiquement. Ces données sont <b>gratuites et officielles</b> (fournies par Google).</div>
-  </div>;
-}
-
-function SearchConsole(){
-  const [loading,setLoading]=useState(true);
-  const [data,setData]=useState(null);
-  const [err,setErr]=useState("");
-  const [tab,setTab]=useState("queries");
-  const load=async()=>{
-    setLoading(true); setErr("");
-    try{
-      const r=await boFetch("/api/backoffice?action=search-console");
-      const j=await r.json().catch(()=>null);
-      if(!j) throw new Error("Réponse invalide (HTTP "+r.status+")");
-      if(j.error) throw new Error(j.error);
-      setData(j);
-    }catch(e){ setErr(e.message||"Erreur"); setData(null); }
-    setLoading(false);
-  };
-  useEffect(()=>{ load(); },[]);
-  const cardS={background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 12px",textAlign:"center"};
-  const numS={fontSize:22,fontWeight:900,color:"#2E4A5A"};
-  const lblS={fontSize:11.5,color:"#6B4F5A",fontWeight:600,marginTop:4};
-  const pct=(v)=>Math.round((v||0)*1000)/10+" %";
-  const pos=(v)=>Math.round((v||0)*10)/10;
-  const num=(v)=>Math.round(v||0).toLocaleString("fr-FR");
-  const short=(u)=>{try{const x=new URL(u);return x.pathname==="/"?"/ (accueil)":x.pathname;}catch(e){return u;}};
-  return <div>
-    <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Search Console</div>
-    <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Tes vraies données Google : les mots-clés qui t'amènent du trafic, tes positions moyennes, clics et impressions (28 derniers jours).</div>
-    {loading&&<div style={{color:"#6B4F5A",fontSize:13,padding:"20px 0"}}>⏳ Chargement des données Search Console…</div>}
-    {!loading&&err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}<br/><span style={{fontSize:12,color:"#6B4F5A"}}>Vérifie que le compte de service est bien ajouté dans Search Console et que les variables Vercel sont correctes.</span></div>}
-    {!loading&&data&&data.configured===false&&<SearchConsoleSetup/>}
-    {!loading&&data&&data.configured&&<>
-      <button onClick={load} style={{background:"none",border:"1px solid #EAE0E8",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,color:"#6B4F5A",cursor:"pointer",fontFamily:"inherit",marginBottom:14}}>↻ Rafraîchir</button>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
-        <div style={cardS}><div style={numS}>{num(data.totals.clicks)}</div><div style={lblS}>Clics</div></div>
-        <div style={cardS}><div style={numS}>{num(data.totals.impressions)}</div><div style={lblS}>Impressions</div></div>
-        <div style={cardS}><div style={numS}>{pct(data.totals.ctr)}</div><div style={lblS}>CTR moyen</div></div>
-        <div style={cardS}><div style={numS}>{pos(data.totals.position)}</div><div style={lblS}>Position moyenne</div></div>
-      </div>
-      <div style={{display:"flex",gap:6,marginBottom:12}}>
-        {[["queries","🔑 Mots-clés"],["pages","📄 Pages"]].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{flex:1,padding:"9px",borderRadius:10,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,background:tab===k?"#E49178":"rgba(0,0,0,.05)",color:tab===k?"#fff":"#6B4F5A"}}>{l}</button>)}
-      </div>
-      {(tab==="queries"?data.queries:data.pages).length===0&&<div style={{textAlign:"center",padding:24,color:"#6B4F5A",fontSize:13,background:"#fff",border:"1px solid #EAE0E8",borderRadius:12}}>Pas encore de données sur cette période. Reviens dans quelques jours, le temps que Google indexe plus de pages.</div>}
-      {(tab==="queries"?data.queries:data.pages).map((row,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 13px",marginBottom:7}}>
-        <span style={{width:18,fontSize:11,fontWeight:700,color:"#A8909A",flexShrink:0}}>{i+1}</span>
-        <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tab==="queries"?row.q:short(row.p)}</span>
-        <span style={{textAlign:"right",flexShrink:0}}>
-          <span style={{display:"block",fontSize:13,fontWeight:800,color:"#B85C38"}}>#{pos(row.position)}</span>
-          <span style={{display:"block",fontSize:11.5,color:"#6B4F5A"}}>{num(row.clicks)} clics · {num(row.impressions)} vues</span>
-        </span>
-      </div>)}
-      <div style={{fontSize:11.5,color:"#A8909A",marginTop:10,lineHeight:1.5}}>Période : {data.start} au {data.end}. Source : Google Search Console ({data.siteUrl}).</div>
-    </>}
-  </div>;
-}
-
-// Appels aux endpoints du backoffice : on joint le jeton de session Supabase
-// pour que le serveur puisse verifier que l appelant est bien l administrateur.
-async function boFetch(url){
-  let t="";
-  try{ const{data}=await supabase.auth.getSession(); t=data?.session?.access_token||""; }catch(e){}
-  return fetch(url,{headers:t?{Authorization:"Bearer "+t}:{}});
-}
-
-function SeoAudit(){
-  const [loading,setLoading]=useState(false);
-  const [data,setData]=useState(null);
-  const [err,setErr]=useState("");
-  const [open,setOpen]=useState({});
-  const [history,setHistory]=useState(null);
-  useEffect(()=>{
-    let alive=true;
-    (async()=>{
-      try{
-        const r=await boFetch("/api/backoffice?action=seo-audit-history");
-        const j=await r.json();
-        if(alive)setHistory(j);
-      }catch(e){ if(alive)setHistory({ok:false,error:"Impossible de charger l'historique."}); }
-    })();
-    return ()=>{alive=false;};
-  },[data]);
-  const run=async()=>{
-    setLoading(true); setErr(""); setData(null);
-    try{
-      const r=await boFetch("/api/backoffice?action=seo-audit");
-      const j=await r.json().catch(()=>null);
-      if(!r.ok||!j||j.error) throw new Error((j&&j.error)||("HTTP "+r.status));
-      setData(j);
-    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Verifie que api/backoffice.js est bien deploye."); }
-    setLoading(false);
-  };
-  const mk={ok:"✅",warn:"⚠️",fail:"❌"};
-  const short=(u)=>{try{const x=new URL(u);return x.pathname==="/"?"/ (accueil)":x.pathname;}catch(e){return u;}};
-  const pageState=(p)=>{ if(p.status>=400||p.error)return"fail"; if(p.checks.some(c=>c.state==="fail"))return"fail"; if(p.checks.some(c=>c.state==="warn"))return"warn"; return"ok"; };
-  return <div>
-    <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Santé SEO</div>
-    <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Audit de tes propres pages : titres, meta description, H1/H2, Open Graph, liens morts et contenu lisible par les robots. Relançable à tout moment.</div>
-    <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:13,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
-    {err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}</div>}
-    {history&&history.ok&&history.history.length>0&&<div className="bo-card" style={{marginBottom:16}}>
-      <h3>Historique des audits</h3>
-      <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:8}}>
-        {history.history.map((h,i)=>{
-          const prev=history.history[i+1];
-          const dDead=prev?h.dead-prev.dead:null;
-          const dWarn=prev?h.with_warn-prev.with_warn:null;
-          return <div key={h.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12.5,padding:"7px 0",borderBottom:i<history.history.length-1?"1px solid #F2ECF0":"none"}}>
-            <span style={{color:"#6B4F5A"}}>{new Date(h.created_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
-            <span style={{display:"flex",gap:12}}>
-              <span style={{color:h.dead>0?"#C84B31":"#1F8A5B",fontWeight:700}}>{h.dead} mort{h.dead>1?"s":""}{dDead?(dDead>0?" ▲":" ▼"):""}</span>
-              <span style={{color:h.with_warn>0?"#92600E":"#1F8A5B",fontWeight:700}}>{h.with_warn} alerte{h.with_warn>1?"s":""}{dWarn?(dWarn>0?" ▲":" ▼"):""}</span>
-            </span>
-          </div>;
-        })}
-      </div>
-    </div>}
-    {history&&!history.ok&&<div style={{fontSize:12,color:"#A8909A",marginBottom:14}}>Historique indisponible : {history.error}</div>}
-    {data&&<>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
-        <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:"#2E4A5A"}}>{data.total}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Pages analysées</div></div>
-        <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:data.withWarn>0?"#92600E":"#1F8A5B"}}>{data.withWarn}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Avec alertes</div></div>
-        <div style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:24,fontWeight:900,color:data.dead>0?"#C84B31":"#1F8A5B"}}>{data.dead}</div><div style={{fontSize:11,color:"#6B4F5A",fontWeight:600,marginTop:4}}>Liens morts</div></div>
-      </div>
-      {data.results.map((p,i)=>{const st=pageState(p);const isOpen=open[i];return <div key={i} style={{background:"#fff",border:"1px solid #EAE0E8",borderRadius:12,marginBottom:8,overflow:"hidden"}}>
-        <div onClick={()=>setOpen(o=>({...o,[i]:!o[i]}))} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer"}}>
-          <span style={{fontSize:16}}>{mk[st]}</span>
-          <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:700,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(p.url)}</span>
-          {p.status>0&&<span style={{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:20,background:p.status>=400?"#FBF1EF":"#EAF7F1",color:p.status>=400?"#C84B31":"#1F8A5B"}}>{p.status}</span>}
-          <span style={{fontSize:12,color:"#A8909A"}}>{isOpen?"▲":"▼"}</span>
-        </div>
-        {isOpen&&<div style={{padding:"0 14px 12px"}}>
-          {p.error&&<div style={{fontSize:12.5,color:"#C84B31",padding:"8px 0",fontWeight:600}}>{p.error}</div>}
-          {p.checks.map((c,j)=><div key={j} style={{display:"flex",gap:9,padding:"8px 0",borderTop:"1px solid #F2ECF0"}}>
-            <span style={{fontSize:14,flexShrink:0}}>{mk[c.state]}</span>
-            <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:"#2E4A5A"}}>{c.label}</div><div style={{fontSize:12,color:"#6B4F5A",marginTop:1,lineHeight:1.4}}>{c.detail}</div></div>
-          </div>)}
-        </div>}
-      </div>;})}
-      <div style={{fontSize:11.5,color:"#A8909A",marginTop:10,lineHeight:1.5}}>Analyse du {new Date(data.generatedAt).toLocaleString("fr-FR")}. L'audit vérifie tes propres pages (celles du sitemap). Pour les positions Google et mots-clés, on branchera Search Console ensuite.</div>
-    </>}
-  </div>;
-}
-
-function SitePages(){
-  const [urls,setUrls]=useState(null);
-  const [err,setErr]=useState("");
-  const [status,setStatus]=useState({});
-  const [checking,setChecking]=useState(false);
-  const [orphans,setOrphans]=useState(null);
-  useEffect(()=>{
-    let alive=true;
-    (async()=>{
-      try{
-        const r=await fetch("/sitemap.xml");
-        const xml=await r.text();
-        const list=(xml.match(/<loc>([^<]+)<\/loc>/g)||[]).map(m=>m.replace(/<\/?loc>/g,"").trim());
-        if(alive)setUrls(list);
-      }catch(e){ if(alive){setErr("Impossible de lire le sitemap.xml.");setUrls([]);} }
-    })();
-    return ()=>{alive=false;};
-  },[]);
-  useEffect(()=>{
-    let alive=true;
-    (async()=>{
-      try{
-        const r=await boFetch("/api/backoffice?action=orphan-pages");
-        const j=await r.json();
-        if(alive)setOrphans(j);
-      }catch(e){ if(alive)setOrphans({ok:false,error:"Impossible de contacter /api/orphan-pages."}); }
-    })();
-    return ()=>{alive=false;};
-  },[]);
-  const check=async()=>{
-    if(!urls||!urls.length) return;
-    setChecking(true);
-    const res={};
-    await Promise.all(urls.map(async(u)=>{ try{const r=await fetch(u,{method:"HEAD"});res[u]=r.status;}catch(e){res[u]=0;} }));
-    setStatus(res); setChecking(false);
-  };
-  const short=(u)=>{try{const x=new URL(u);return x.pathname==="/"?"/ (accueil)":x.pathname;}catch(e){return u;}};
-  return <div>
-    <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Pages &amp; articles</div>
-    <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Toutes les pages référencées dans ton sitemap. Ouvre-les, ou vérifie qu'elles répondent bien (pas de 404).</div>
-    {orphans&&orphans.ok&&orphans.orphans&&orphans.orphans.length>0&&<div className="bo-card">
-      <h3>Pages orphelines<span style={{marginLeft:8,fontSize:11,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>{orphans.orphans.length} trouvée{orphans.orphans.length>1?"s":""}</span></h3>
-      <p>Fichiers présents dans public/ mais absents du sitemap.xml — invisibles pour Google.</p>
-      <div style={{marginTop:10}}>
-        {orphans.orphans.map((o,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,background:"#FDFBF8",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
-          <div style={{minWidth:0}}>
-            <div style={{fontSize:13.5,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{o.name}</div>
-            <div style={{fontSize:12,color:"#8FA6B4"}}>{o.path}</div>
-          </div>
-          <a href={"/"+o.name} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"#B85C38",fontWeight:700,textDecoration:"none",flexShrink:0}}>Voir →</a>
-        </div>)}
-      </div>
-      <div style={{marginTop:6,fontSize:12,color:"#8FA6B4",lineHeight:1.5}}>Pour chaque page : ajoute-la au sitemap si elle doit être indexée, ou supprime-la si elle est obsolète.</div>
-    </div>}
-    {orphans&&orphans.ok&&orphans.orphans&&orphans.orphans.length===0&&<div className="bo-card"><h3>Pages orphelines</h3><p>✅ Aucune page orpheline détectée : tous les fichiers de public/ sont dans le sitemap.</p></div>}
-    {orphans&&!orphans.ok&&<div className="bo-card"><h3>Pages orphelines</h3><p>⚠️ {orphans.error||"GITHUB_TOKEN non configuré dans Vercel."}</p></div>}
-    <button onClick={check} disabled={checking||!urls||!urls.length} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"11px 18px",fontSize:13,fontWeight:700,cursor:checking?"wait":"pointer",fontFamily:"inherit",marginBottom:14}}>{checking?"⏳ Vérification…":"🔎 Vérifier le statut des pages"}</button>
-    {err&&<div style={{color:"#C84B31",fontSize:13,marginBottom:12}}>{err}</div>}
-    {!urls&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Chargement du sitemap…</div>}
-    {urls&&urls.map((u,i)=>{const s=status[u];return <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #EAE0E8",borderRadius:11,padding:"11px 14px",marginBottom:8}}>
-      <span style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,color:"#2E4A5A",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{short(u)}</span>
-      {s!==undefined&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:20,background:(s>=400||s===0)?"#FBF1EF":"#EAF7F1",color:(s>=400||s===0)?"#C84B31":"#1F8A5B"}}>{s===0?"erreur":s}</span>}
-      <a href={u} target="_blank" rel="noreferrer" style={{fontSize:12.5,color:"var(--T)",fontWeight:700,textDecoration:"none",flexShrink:0,padding:"11px 10px",display:"inline-flex",alignItems:"center"}}>Ouvrir ↗</a>
-    </div>;})}
-    {urls&&urls.length===0&&!err&&<div style={{color:"#6B4F5A",fontSize:13}}>Aucune URL trouvée dans le sitemap.</div>}
-  </div>;
-}
-
-function BackofficeLogin({onLogin}){
-  const [email,setEmail]=useState("");
-  const [pwd,setPwd]=useState("");
-  const [err,setErr]=useState("");
-  const [busy,setBusy]=useState(false);
-  const submit=async()=>{
-    setErr(""); setBusy(true);
-    try{
-      const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password:pwd});
-      if(error||!data?.user){ setErr("Identifiants incorrects."); setBusy(false); return; }
-      onLogin(data.user);
-    }catch(e){ setErr("Erreur reseau, reessaie."); setBusy(false); }
-  };
-  return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
-    <div style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:28,maxWidth:380,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.12)"}}>
-      <div style={{textAlign:"center",marginBottom:18}}>
-        <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,var(--T),var(--S))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 10px"}}>🔧</div>
-        <div style={{fontWeight:800,fontSize:18,color:"var(--b)"}}>Backoffice TiMat</div>
-        <div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Accès réservé à l'administrateur.</div>
-      </div>
-      <input className="inp" type="email" placeholder="E-mail" value={email} onChange={e=>setEmail(e.target.value)} style={{width:"100%",marginBottom:10,fontSize:14,padding:"11px 13px",boxSizing:"border-box"}}/>
-      <input className="inp" type="password" placeholder="Mot de passe" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")submit();}} style={{width:"100%",marginBottom:12,fontSize:14,padding:"11px 13px",boxSizing:"border-box"}}/>
-      {err&&<div style={{color:"var(--R)",fontSize:12.5,marginBottom:10,textAlign:"center"}}>{err}</div>}
-      <button onClick={submit} disabled={busy} className="btn bT" style={{width:"100%",justifyContent:"center",padding:"12px"}}>{busy?"⏳":"Se connecter"}</button>
-      <div style={{textAlign:"center",marginTop:14}}><a href="/" style={{fontSize:12.5,color:"var(--m)",textDecoration:"none"}}>← Retour au site</a></div>
-    </div>
-  </div>;
-}
-
-function BackofficeShell({user,appConfig,setAppConfig}){
-  const [top,setTop]=useState("dashboard");
-  const [sec,setSec]=useState("hero");
-  const [drawer,setDrawer]=useState(false);
-  const [stats,setStats]=useState(null);
-  useEffect(()=>{
-    let cancel=false;
-    (async()=>{
-      try{
-        const {count:u}=await supabase.from("profiles").select("*",{count:"exact",head:true});
-        const {count:p}=await supabase.from("profiles").select("*",{count:"exact",head:true}).eq("subscription_status","pro");
-        const {count:e}=await supabase.from("enfants").select("*",{count:"exact",head:true});
-        if(!cancel)setStats({users:u||0,pro:p||0,enfants:e||0});
-      }catch(e){ if(!cancel)setStats({users:0,pro:0,enfants:0}); }
-    })();
-    return ()=>{cancel=true;};
-  },[]);
-  const [stripeMrr,setStripeMrr]=useState(null);
-  useEffect(()=>{
-    let cancel=false;
-    (async()=>{
-      try{
-        const r=await boFetch("/api/backoffice?action=stripe-mrr");
-        const j=await r.json();
-        if(!cancel)setStripeMrr(j);
-      }catch(e){ if(!cancel)setStripeMrr({ok:false,error:"Impossible de contacter /api/stripe-mrr."}); }
-    })();
-    return ()=>{cancel=true;};
-  },[]);
-  const goSite=()=>{ try{window.location.href="/";}catch(e){} };
-  const pickTop=(id)=>{
-    setTop(id); setDrawer(false);
-    if(id==="contenu")setSec("hero");
-    else if(id==="sections")setSec("sectionsvis");
-    else if(id==="backups")setSec("historique");
-  };
-  const GROUPS=[
-    {grp:"Vue d'ensemble",items:[{id:"dashboard",l:"Tableau de bord",ic:"📊"}]},
-    {grp:"Site & app",items:[{id:"contenu",l:"Contenu (landing)",ic:"✏️"},{id:"sections",l:"Sections",ic:"🧩"},{id:"pages",l:"Pages & articles",ic:"📄"}]},
-    {grp:"Référencement",items:[{id:"seo",l:"SEO",ic:"🔍"},{id:"gsc",l:"Search Console",ic:"📈"}]},
-    {grp:"Système",items:[{id:"backups",l:"Sauvegardes",ic:"💾"}]},
-  ];
-  const CONTENU_SUBS=[{id:"hero",l:"Hero",ic:"🏠"},{id:"textes",l:"Textes",ic:"✏️"},{id:"couleurs",l:"Couleurs",ic:"🎨"},{id:"boutons",l:"Boutons",ic:"🔘"},{id:"polices",l:"Polices",ic:"🔤"},{id:"contenu",l:"Blog & listes",ic:"📋"},{id:"app",l:"App",ic:"⚙️"}];
-  const SECTIONS_SUBS=[{id:"sectionsvis",l:"Gérer les sections",ic:"🧩"},{id:"sections",l:"Éditer le contenu",ic:"✏️"}];
-  const isBO=(top==="contenu"||top==="sections"||top==="backups");
-  return <div className={"bo-root"+(drawer?" open":"")}>
-    <style>{`
-      .bo-root{min-height:100vh;background:#FDFBF8;font-family:'DM Sans',sans-serif;}
-      .bo-wrap{display:flex;min-height:100vh;}
-      .bo-side{width:230px;background:#2E4A5A;color:#EDE4DE;flex-shrink:0;display:flex;flex-direction:column;padding:14px 10px;position:sticky;top:0;height:100vh;overflow-y:auto;}
-      .bo-grp{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#8FA6B4;font-weight:700;padding:11px 10px 5px;}
-      .bo-tab{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;color:#DCE6EC;border:none;background:none;width:100%;text-align:left;font-family:inherit;margin-bottom:2px;}
-      .bo-tab .ic{font-size:16px;width:22px;text-align:center;}
-      .bo-tab:hover{background:rgba(255,255,255,.07);}
-      .bo-tab.on{background:#E49178;color:#fff;font-weight:800;}
-      .bo-tab .soon{margin-left:auto;font-size:11px;background:rgba(255,255,255,.16);padding:2px 6px;border-radius:20px;font-weight:700;}
-      .bo-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;}
-      .bo-foot .mail{color:#EDE4DE;font-weight:600;display:block;margin-bottom:7px;word-break:break-all;}
-      .bo-main{flex:1;min-width:0;display:flex;flex-direction:column;}
-      .bo-mbar{display:none;align-items:center;gap:12px;padding:11px 14px;background:#fff;border-bottom:1px solid #EAE0E8;position:sticky;top:0;z-index:15;}
-      .bo-burger{background:none;border:none;font-size:23px;cursor:pointer;color:#2E4A5A;line-height:1;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
-      .bo-scrim{display:none;}
-      .bo-subnav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px 0;background:#FDFBF8;}
-      .bo-subbtn{padding:7px 12px;border-radius:20px;border:1px solid #EAE0E8;background:#fff;color:#6B4F5A;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
-      .bo-subbtn.on{background:#FDF6F4;color:#B85C38;border-color:#F3CEC2;}
-      .bo-pad{padding:22px;max-width:820px;}
-      .bo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
-      .bo-stat{background:#fff;border:1px solid #EAE0E8;border-radius:12px;padding:16px;}
-      .bo-stat .n{font-size:27px;font-weight:900;color:#B85C38;line-height:1;}
-      .bo-stat .l{font-size:12.5px;color:#6B4F5A;font-weight:600;margin-top:6px;}
-      .bo-card{background:#fff;border:1px solid #EAE0E8;border-radius:12px;padding:18px;margin-bottom:14px;color:#2E4A5A;}
-      .bo-card h3{font-size:15px;font-weight:800;margin:0 0 8px;}
-      .bo-card p{font-size:13px;color:#6B4F5A;line-height:1.6;margin:0;}
-      .bo-soon{border:1.5px dashed #F3CEC2;background:#FDF6F4;border-radius:12px;padding:30px 20px;text-align:center;color:#B85C38;font-weight:700;font-size:14px;line-height:1.6;}
-      .bo-soon .big{font-size:34px;display:block;margin-bottom:10px;}
-      @media(max-width:760px){
-        .bo-side{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-100%);transition:transform .22s;box-shadow:4px 0 24px rgba(0,0,0,.25);}
-        .bo-root.open .bo-side{transform:translateX(0);}
-        .bo-mbar{display:flex;}
-        .bo-scrim{position:fixed;inset:0;background:rgba(46,74,90,.45);z-index:25;}
-        .bo-root.open .bo-scrim{display:block;}
-        .bo-stats{grid-template-columns:1fr;}
-        .bo-pad{padding:16px;}
-      }
-    `}</style>
-    <div className="bo-scrim" onClick={()=>setDrawer(false)}/>
-    <div className="bo-wrap">
-      <nav className="bo-side">
-        {GROUPS.map(g=><div key={g.grp}>
-          <div className="bo-grp">{g.grp}</div>
-          {g.items.map(it=><button key={it.id} className={"bo-tab"+(top===it.id?" on":"")} onClick={()=>pickTop(it.id)}>
-            <span className="ic"><IconeOuEmoji e={it.ic}/></span>{it.l}{it.soon&&<span className="soon">à venir</span>}
-          </button>)}
-        </div>)}
-        <div className="bo-foot">
-          <span className="mail">{user?.email||""}</span>
-          <span style={{color:"#E8A594",fontWeight:700,cursor:"pointer"}} onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} goSite();}}>🚪 Se déconnecter</span>
-        </div>
-      </nav>
-      <div className="bo-main">
-        <div className="bo-mbar">
-          <button className="bo-burger" onClick={()=>setDrawer(true)}>☰</button>
-          <span style={{fontWeight:800,fontSize:15,color:"#2E4A5A"}}>TiMat · Admin</span>
-          <a href="/" style={{marginLeft:"auto",fontSize:12.5,color:"#6B4F5A",textDecoration:"none",fontWeight:600,padding:"11px 8px",display:"inline-flex",alignItems:"center"}}>← Site</a>
-        </div>
-        {top==="contenu"&&<div className="bo-subnav">{CONTENU_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}><IconeOuEmoji e={s.ic}/> {s.l}</button>)}</div>}
-        {top==="sections"&&<div className="bo-subnav">{SECTIONS_SUBS.map(s=><button key={s.id} className={"bo-subbtn"+(sec===s.id?" on":"")} onClick={()=>setSec(s.id)}><IconeOuEmoji e={s.ic}/> {s.l}</button>)}</div>}
-        <div style={{display:isBO?"block":"none",flex:1,minWidth:0}}>
-          <Backoffice user={user} appConfig={appConfig} setAppConfig={setAppConfig} secProp={sec} setSecProp={setSec} hideTabBar setPage={goSite}/>
-        </div>
-        {top==="dashboard"&&<div className="bo-pad">
-          <div style={{fontSize:22,fontWeight:800,color:"#2E4A5A",marginBottom:4}}>Tableau de bord</div>
-          <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:18}}>Tes chiffres en direct.</div>
-          <div className="bo-stats">
-            <div className="bo-stat"><div className="n">{stats?stats.users:"…"}</div><div className="l">Comptes inscrits</div></div>
-            <div className="bo-stat"><div className="n">{stats?stats.pro:"…"}</div><div className="l">Abonnés Pro</div></div>
-            <div className="bo-stat"><div className="n">{stats?stats.enfants:"…"}</div><div className="l">Enfants suivis</div></div>
-          </div>
-          <div className="bo-card">
-            <h3>💳 Revenu (Stripe){stripeMrr&&stripeMrr.ok&&stripeMrr.mode==="test"&&<span style={{marginLeft:8,fontSize:11,fontWeight:800,color:"#B85C38",background:"#FDF6F4",border:"1px solid #F3CEC2",borderRadius:20,padding:"2px 8px",verticalAlign:"middle"}}>MODE TEST</span>}</h3>
-            {stripeMrr===null&&<p>Chargement…</p>}
-            {stripeMrr&&!stripeMrr.ok&&<p>⚠️ {stripeMrr.error||"Stripe non configuré."}</p>}
-            {stripeMrr&&stripeMrr.ok&&<>
-              <div className="bo-stats" style={{marginTop:4,marginBottom:0}}>
-                <div className="bo-stat"><div className="n">{stripeMrr.mrrFormatted}</div><div className="l">MRR estimé</div></div>
-                <div className="bo-stat"><div className="n">{stripeMrr.activeCount}</div><div className="l">Abonnés actifs</div></div>
-                <div className="bo-stat"><div className="n">{stripeMrr.trialingCount}</div><div className="l">En essai gratuit</div></div>
-              </div>
-              {stripeMrr.mode==="test"&&<p style={{marginTop:10}}>Ces chiffres viennent de comptes de <strong>test</strong> Stripe (aucun paiement réel). Ils deviendront réels dès le passage de Stripe en mode Live.</p>}
-            </>}
-          </div>
-          <div className="bo-card"><h3>Bienvenue 👋</h3><p>Utilise le menu pour modifier le contenu de ta landing, organiser tes sections, gérer tes pages ou lancer un audit SEO de ton site.</p></div>
-        </div>}
-        {top==="pages"&&<div className="bo-pad"><SitePages/></div>}
-        {top==="seo"&&<div className="bo-pad"><SeoAudit/></div>}
-        {top==="gsc"&&<div className="bo-pad"><SearchConsole/></div>}
-      </div>
-    </div>
-  </div>;
-}
-
-function BackofficePage({user,appConfig,setAppConfig,onLogin}){
-  if(!user)return <BackofficeLogin onLogin={onLogin}/>;
-  if(user.is_admin!==true)return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
-    <div style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:28,maxWidth:360,width:"100%",textAlign:"center",boxShadow:"0 12px 40px rgba(0,0,0,.12)"}}>
-      <div style={{fontSize:34,marginBottom:10}}>🔒</div>
-      <div style={{fontWeight:800,fontSize:18,color:"var(--b)",marginBottom:6}}>Accès refusé</div>
-      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:16}}>Cette zone est réservée à l'administrateur. Le compte {user.email} n'y a pas accès.</div>
-      <a href="/" style={{display:"inline-block",padding:"11px 18px",borderRadius:12,background:"linear-gradient(135deg,var(--T),var(--S))",color:"#fff",fontWeight:700,fontSize:14,textDecoration:"none"}}>← Retour au site</a>
-    </div>
-  </div>;
-  return <BackofficeShell user={user} appConfig={appConfig} setAppConfig={setAppConfig}/>;
-}
-
-// ===== MODE VITRINE (avant ouverture) =====
-// MAINTENANCE=true : la landing marketing reste visible et indexable, mais aucune
-// inscription ni connexion n'est possible. Passer a false le jour de l'ouverture.
-// Acces de service : https://www.timat.app/?acces=D1Jrp_UaM29A  (memorise 24 h)
-const MAINTENANCE = true;
+export const MAINTENANCE = true;
 const MAINTENANCE_CLE = "D1Jrp_UaM29A";
 function maintenanceBypass(){
   try{
@@ -20871,6 +17572,20 @@ function maintenanceBypass(){
     return t > 0 && (Date.now() - t) < 86400000;
   }catch(e){ return false; }
 }
+
+// Le back-office n'est téléchargé qu'en arrivant sur /backoffice. Une visiteuse
+// de la landing ne paie plus ses 1 700 lignes.
+const BackofficePage = lazy(() => import("./backoffice.jsx").then(m => ({ default: m.BackofficePage })));
+
+// Six écrans que le routeur est seul à appeler, et qu'on ne voit jamais à
+// l'ouverture : ils quittent le morceau principal et arrivent au clic.
+const _ecrans = () => import("./ecrans-secondaires.jsx");
+const Bilans = lazy(() => _ecrans().then(m => ({ default: m.Bilans })));
+const Parametres = lazy(() => _ecrans().then(m => ({ default: m.Parametres })));
+const ListeAttente = lazy(() => _ecrans().then(m => ({ default: m.ListeAttente })));
+const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m.PlanningPeriscolaire })));
+const ForumCommunaute = lazy(() => _ecrans().then(m => ({ default: m.ForumCommunaute })));
+const ProjetAccueil = lazy(() => _ecrans().then(m => ({ default: m.ProjetAccueil })));
 
 export default function App(){
   const [maintOk] = useState(()=>maintenanceBypass());
@@ -21328,7 +18043,9 @@ export default function App(){
 
   if(_isBO){
     const _onLoginBO=u=>{ setUser({...u,_needsProfileFetch:true,_profileConfirmed:false}); };
-    return <><Styles/><BackofficePage user={user} appConfig={appConfig} setAppConfig={setAppConfig} onLogin={_onLoginBO}/></>;
+    return <><Styles/><Suspense fallback={<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--m)",fontFamily:"'DM Sans',sans-serif",fontSize:14}}>Chargement du back-office…</div>}>
+      <BackofficePage user={user} appConfig={appConfig} setAppConfig={setAppConfig} onLogin={_onLoginBO}/>
+    </Suspense></>;
   }
 
   // - Utiliser données réelles
@@ -21438,7 +18155,12 @@ export default function App(){
   const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
   const P={enfants,role,pEId,user,pointagesDB};
 
-  const renderPage=()=>{
+  // Les écrans chargés à la demande arrivent après un aller-retour réseau : sans
+  // ce Suspense, React jetterait la promesse jusqu'à la racine et l'application
+  // entière disparaîtrait le temps du téléchargement.
+  const renderPage=()=> <Suspense fallback={<div style={{padding:"48px 20px",textAlign:"center",color:"var(--m)",fontSize:14}}>Chargement…</div>}>{_page()}</Suspense>;
+
+  const _page=()=>{
     switch(page){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
       case "cahier_jour": return <CahierJour {...P}/>;
