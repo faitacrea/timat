@@ -4359,7 +4359,7 @@ function ComparateurTarifs({T,fTitle}){
           return <button key={v} id={"comp-enfants-"+v} type="button" onClick={()=>setN(v)} aria-pressed={on}
             aria-label={v+(v>1?" enfants":" enfant")}
             style={{fontFamily:"inherit",fontSize:14,fontWeight:600,width:"100%",height:38,borderRadius:9,cursor:"pointer",
-              border:"1.5px solid "+(on?"#B8622F":"#E8E0D5"),background:on?"#B8622F":"#fff",color:on?"#fff":"#6B4F3A",
+              border:"1.5px solid "+(on?"#B35F2E":"#E8E0D5"),background:on?"#B35F2E":"#fff",color:on?"#fff":"#6B4F3A",
               transition:"background .14s,border-color .14s,color .14s"}}>{v}</button>;
         })}
       </div>
@@ -5257,7 +5257,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                     <span style={{ flex:1, fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859" }}>{t}</span>
                     {!isWeb&&<span className="acc-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
-                  <div style={{ padding:"0 18px 15px", fontSize:13.5, color:"#6B7A82", lineHeight:1.6 }}>{d}</div>
+                  <div style={{ padding:"0 18px 15px", fontSize:13.5, color:"#697880", lineHeight:1.6 }}>{d}</div>
                 </details>
               ))}
             </div>
@@ -5311,7 +5311,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               {(config.freeItems||DEFAULT_CONFIG.freeItems).map(([ok, t], i, arr) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid #DDD5C8" : "none" }}>
                   <span style={{ color: ok ? "#3D6B50" : "#78746D", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
-                  <span style={{ color: ok ? "#2C1F14" : "#A68970" }}>{t}</span>
+                  <span style={{ color: ok ? "#2C1F14" : "#8A725D" }}>{t}</span>
                 </div>
               ))}
             </div>
@@ -5388,7 +5388,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <details className="faq-item" style={{ marginBottom: 8, background: "#fff", borderRadius: 12, border: "1px solid #E8E4E0", overflow: "hidden" }}>
                 <summary style={{ padding: "16px 20px", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#2E4859", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   {q}
-                  <span style={{ fontSize: 18, color: "#E49178", flexShrink: 0, marginLeft: 12, display:"inline-block" }}>+</span>
+                  <span style={{ fontSize: 18, color: "#9E6553", flexShrink: 0, marginLeft: 12, display:"inline-block" }}>+</span>
                 </summary>
                 <div className="faq-ans" style={{ padding: "0 20px 16px", fontSize: 13, color: "#5F7A86", lineHeight: 1.8 }}>{a}</div>
               </details>
@@ -5396,7 +5396,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           ))}
           {(config.faqLanding||DEFAULT_CONFIG.faqLanding).length>5&&(
             <div style={{ textAlign:"center", marginTop:18 }}>
-              <button onClick={()=>setShowAllFaq(v=>!v)} style={{ background:"transparent", border:"1.5px solid rgba(228,145,120,.5)", color:"#C84B31", fontWeight:700, fontSize:13, padding:"11px 22px", borderRadius:24, cursor:"pointer", fontFamily:"inherit" }}>
+              <button onClick={()=>setShowAllFaq(v=>!v)} style={{ background:"transparent", border:"1.5px solid rgba(228,145,120,.5)", color:"#BC472E", fontWeight:700, fontSize:13, padding:"11px 22px", borderRadius:24, cursor:"pointer", fontFamily:"inherit" }}>
                 {showAllFaq?"Réduire les questions ↑":"Voir les "+((config.faqLanding||DEFAULT_CONFIG.faqLanding).length-5)+" autres questions ↓"}
               </button>
             </div>
@@ -5481,7 +5481,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div className="lp-logo" style={{ fontFamily: fTitle, marginBottom: 12 }}>
                 <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" style={{height:(L?.logoSizes?.landingFooter)||40,objectFit:"contain",filter:"brightness(0) invert(1)"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="20px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
               </div>
-              <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.5)" }}>
+              <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(255,255,255,.59)" }}>
                 {F.description}
               </div>
             </div>
@@ -5512,13 +5512,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
           {/* Séparateur */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", lineHeight: 1.9 }}>
-              {(F.rgpd||[]).length ? <span style={{display:"block", color:"rgba(255,255,255,.5)"}}>{(F.rgpd||[]).join(" · ")}</span> : null}
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.59)", lineHeight: 1.9 }}>
+              {(F.rgpd||[]).length ? <span style={{display:"block", color:"rgba(255,255,255,.59)"}}>{(F.rgpd||[]).join(" · ")}</span> : null}
               © {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
-                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
+                <span key={id} onClick={()=>setShowLegal(id)} style={{ fontSize: 11, color: "rgba(255,255,255,.59)", cursor: "pointer" }}
                   onMouseEnter={e=>e.target.style.color="#fff"} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,.4)"}>{l}</span>
               )}
             </div>
@@ -5948,7 +5948,7 @@ const FAQ_LANDING_DEFAULT=[
           ];
 const BLOG_DEFAULT=[
               {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Salaire et mensualisation",catColor:"#C84B31",emoji:"\uD83D\uDCB6",title:"Salaire net, brut et co\u00fbt employeur",excerpt:"4,20 \u20ac brut depuis juin 2026. Les quatre montants qu'on confond tout le temps."},
-              {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Salaire et mensualisation",catColor:"#E49178",emoji:"\uD83E\uDDEE",title:"La mensualisation, sans se tromper",excerpt:"Ann\u00e9e compl\u00e8te ou incompl\u00e8te : la formule, les pi\u00e8ges et les r\u00e9gularisations."},
+              {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Salaire et mensualisation",catColor:"#9E6553",emoji:"\uD83E\uDDEE",title:"La mensualisation, sans se tromper",excerpt:"Ann\u00e9e compl\u00e8te ou incompl\u00e8te : la formule, les pi\u00e8ges et les r\u00e9gularisations."},
               {id:"heures",slug:"heures-complementaires-majorees-assistante-maternelle",cat:"Contrat et rupture",catColor:"#47807A",emoji:"\u23F1\uFE0F",title:"Heures compl\u00e9mentaires et major\u00e9es",excerpt:"Le seuil de 45 h, le taux minimum de 10 % et le plafond de 2 250 heures par an."},
               {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Cong\u00e9s pay\u00e9s",catColor:"#47807A",emoji:"\uD83C\uDF34",title:"Cong\u00e9s pay\u00e9s : 10 % ou maintien ?",excerpt:"Deux m\u00e9thodes, une seule \u00e0 retenir \u2014 la plus favorable. Et le versement mensuel interdit."},
               {id:"pajemploi",slug:"pajemploi-declaration-assistante-maternelle",cat:"Pajemploi et d\u00e9clarations",catColor:"#2E4859",emoji:"\uD83C\uDFE6",title:"D\u00e9clarer sur Pajemploi",excerpt:"Chaque rubrique expliqu\u00e9e, et la fen\u00eatre du 25 au 5 \u00e0 ne pas manquer."},
@@ -6002,7 +6002,7 @@ export const DEFAULT_CONFIG = {
     // Meme faute en sens inverse : du blanc sur le creme #F4F1EA de la section
     // des questions. « Questions frequentes » ne se lisait pas.
     faqTitleColor:"#2E4859", faqDescColor:"#55707C",
-    blogTitleColor:"#2E4859", blogDescColor:"#5F7A86",
+    blogTitleColor:"#2E4859", blogDescColor:"#5E7884",
     footerTextColor:"rgba(255,255,255,.7)",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
     statsBg:"linear-gradient(135deg,#2E4859,#3E6B63)",
@@ -6052,7 +6052,7 @@ export const DEFAULT_CONFIG = {
     s2TitleColor:"#FFFFFF",
     s2DescColor:"rgba(255,255,255,.78)",
     s4TitleColor:"#2E4859",
-    s4SubColor:"#5F7A86",
+    s4SubColor:"#5E7884",
     s5TitleColor:"#0D1B2A",
     testimonialBg:"#FFFFFF",
     testimonialNameColor:"#2C1F14",
@@ -6067,7 +6067,7 @@ export const DEFAULT_CONFIG = {
     s6SubColor:"#55707C",
     guaranteesColor:"#55707C",
     freeBg:"#FFFFFF",
-    freeLabelColor:"#A68970",
+    freeLabelColor:"#8A725D",
     freePriceColor:"#0D1B2A",
     freeDescColor:"#6B5348",
     proBg:"#FDFBF8",
