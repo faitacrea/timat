@@ -61,7 +61,13 @@
         position:fixed;inset:0;z-index:9999;overflow:auto;
         background:linear-gradient(165deg,#FDF6EE 0%,#F7ECE0 55%,#FBF1E7 100%);
         display:flex;flex-direction:column;align-items:center;justify-content:center;
-        gap:18px;padding:32px 20px;text-align:center;
+        /* 12 px de marge laterale, exactement comme .lp-hero sous 480 px dans
+           src/App.jsx. Ce n'est pas un detail d'esthetique : le titre peint ici
+           faisait 372 px de large contre 388 pour celui de React. React peignait
+           donc un candidat LCP PLUS GRAND vers trois secondes, et c'est lui qui
+           comptait — le hero peint en 0,8 s ne servait a rien pour la mesure.
+           A largeur egale, React ne reprend plus la main. */
+        gap:18px;padding:32px 12px;text-align:center;
         /* Les memes familles que le hero de React : quand la police arrive,
            les mesures ne changent pas et rien ne se decale. */
         font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#2E4859;
