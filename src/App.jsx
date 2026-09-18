@@ -4930,7 +4930,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 La mise en forme est portée par le style, pas par la balise. */}
             <h1 style={{ maxWidth: isWeb?(L.heroTitleMaxW||620):"none", margin:"0 auto 16px", fontFamily: fTitle, fontSize: "clamp(24px,4.4vw,50px)", fontWeight: 700, color: L.heroTitleColor||"#2E4859", lineHeight: 1.14 }}>
               {T.heroTitle}<br/>
-              {T.heroTitleAccent&&<span style={{ color: accent, fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
+              {/* #C76754, la teinte qu'index.html donne deja a cette ligne. React
+                  utilisait #E49178 : la page changeait de couleur au relais, et
+                  2,36:1 sur le creme passait sous le seuil de 3 exige pour un
+                  titre. 3,70:1 maintenant, et les deux hero sont d'accord. */}
+              {T.heroTitleAccent&&<span style={{ color: L.heroAccentColor||"#C76754", fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </h1>
             <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600, whiteSpace: "pre-line" }}>{T.heroSub}</div>
             <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
@@ -5136,7 +5140,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 POURQUOI TIMAT
               </div>
               <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                La gestion assistante maternelle <span style={{ color: "#E49178", fontStyle: "italic" }}>sans mauvaise surprise</span>
+                La gestion assistante maternelle <span style={{ color: "#C47D67", fontStyle: "italic" }}>sans mauvaise surprise</span>
               </div>
               <div style={{ fontSize: 15, color: L.s4SubColor||"#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
                 Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
@@ -5164,8 +5168,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   </summary>
                   <div style={{ padding:"0 18px 16px", display:"flex", flexDirection:"column", gap:8 }}>
                     {d.puces.split("\n").filter(Boolean).map((p,j)=>(
-                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:13, color:"#6B7A82", lineHeight:1.5 }}>
-                        <span style={{ color:"#5DA9A1", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
+                      <div key={j} style={{ display:"flex", gap:8, alignItems:"flex-start", fontSize:13, color:"#68767E", lineHeight:1.5 }}>
+                        <span style={{ color:"#47807A", fontWeight:800, flexShrink:0 }}>✓</span><span>{p}</span>
                       </div>
                     ))}
                   </div>
@@ -5181,7 +5185,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <span style={{ fontSize:24, lineHeight:1, flexShrink:0 }}>🚀</span>
                 <span style={{ flex:1, minWidth:0 }}>
                   <span style={{ display:"block", fontFamily:fTitle, fontSize:17, fontWeight:700, color:"#2E4859" }}>Comment ça marche ?</span>
-                  <span style={{ display:"block", fontSize:12.5, color:"#8A7A70", marginTop:2 }}>Prête à l'emploi en quelques minutes.</span>
+                  <span style={{ display:"block", fontSize:12.5, color:"#827369", marginTop:2 }}>Prête à l'emploi en quelques minutes.</span>
                 </span>
                 <span className="cmt-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>
               </summary>
@@ -5239,7 +5243,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 36 }}>
               <div style={{ fontFamily:fTitle, fontSize:"clamp(22px,4vw,34px)", color:"#2E4859", fontWeight:700, marginBottom:10 }}>Vos photos et vos données restent chez vous</div>
-              <div style={{ fontSize:15, color:"#6B7A82", maxWidth:560, margin:"0 auto", lineHeight:1.6 }}>La confiance avant tout : rien n'est jamais public, rien ne part sur les réseaux sociaux.</div>
+              <div style={{ fontSize:15, color:"#626F77", maxWidth:560, margin:"0 auto", lineHeight:1.6 }}>La confiance avant tout : rien n'est jamais public, rien ne part sur les réseaux sociaux.</div>
             </div>
             <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?900:640, margin:"0 auto" }}>
               {[
@@ -5306,7 +5310,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.freeBtnBg||"#0D1B2A", color: L.freeBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>{T.freeBtnTxt||"Commencer gratuitement"}</button>
               {(config.freeItems||DEFAULT_CONFIG.freeItems).map(([ok, t], i, arr) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid #DDD5C8" : "none" }}>
-                  <span style={{ color: ok ? "#3D6B50" : "#DDD5C8", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? "#3D6B50" : "#78746D", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
                   <span style={{ color: ok ? "#2C1F14" : "#A68970" }}>{t}</span>
                 </div>
               ))}
@@ -5317,7 +5321,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
-                <span style={{ fontSize: 13, color: "#A68970" }}>/mois</span>
+                <span style={{ fontSize: 13, color: "#866F5A" }}>/mois</span>
               </div>
               <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>
                 {T.proSubtxt}
@@ -5421,7 +5425,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                     <div style={{fontSize:11,fontWeight:700,color:art.catColor,textTransform:"uppercase",letterSpacing:".8px",marginBottom:8}}>{art.cat}</div>
                     <div style={{fontSize:15,fontWeight:700,color:"#2E4859",lineHeight:1.4,marginBottom:8}}>{art.title}</div>
                     <div style={{fontSize:12,color:"#5F7A86",lineHeight:1.6}}>{art.excerpt}</div>
-                    <div style={{marginTop:12,fontSize:12,color:accent,fontWeight:600}}>Lire l'article <span className="blog-arrow" style={{display:"inline-block"}}>→</span></div>
+                    <div style={{marginTop:12,fontSize:12,color:L.lienBlogColor||"#9E6553",fontWeight:600}}>Lire l'article <span className="blog-arrow" style={{display:"inline-block"}}>→</span></div>
                   </div>
                 </div>
               </FadeIn>
@@ -5945,8 +5949,8 @@ const FAQ_LANDING_DEFAULT=[
 const BLOG_DEFAULT=[
               {id:"salaire",slug:"salaire-assistante-maternelle-net-brut",cat:"Salaire et mensualisation",catColor:"#C84B31",emoji:"\uD83D\uDCB6",title:"Salaire net, brut et co\u00fbt employeur",excerpt:"4,20 \u20ac brut depuis juin 2026. Les quatre montants qu'on confond tout le temps."},
               {id:"mensualisation",slug:"calcul-mensualisation-assistante-maternelle",cat:"Salaire et mensualisation",catColor:"#E49178",emoji:"\uD83E\uDDEE",title:"La mensualisation, sans se tromper",excerpt:"Ann\u00e9e compl\u00e8te ou incompl\u00e8te : la formule, les pi\u00e8ges et les r\u00e9gularisations."},
-              {id:"heures",slug:"heures-complementaires-majorees-assistante-maternelle",cat:"Contrat et rupture",catColor:"#5DA9A1",emoji:"\u23F1\uFE0F",title:"Heures compl\u00e9mentaires et major\u00e9es",excerpt:"Le seuil de 45 h, le taux minimum de 10 % et le plafond de 2 250 heures par an."},
-              {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Cong\u00e9s pay\u00e9s",catColor:"#5DA9A1",emoji:"\uD83C\uDF34",title:"Cong\u00e9s pay\u00e9s : 10 % ou maintien ?",excerpt:"Deux m\u00e9thodes, une seule \u00e0 retenir \u2014 la plus favorable. Et le versement mensuel interdit."},
+              {id:"heures",slug:"heures-complementaires-majorees-assistante-maternelle",cat:"Contrat et rupture",catColor:"#47807A",emoji:"\u23F1\uFE0F",title:"Heures compl\u00e9mentaires et major\u00e9es",excerpt:"Le seuil de 45 h, le taux minimum de 10 % et le plafond de 2 250 heures par an."},
+              {id:"conges",slug:"conges-payes-assistante-maternelle",cat:"Cong\u00e9s pay\u00e9s",catColor:"#47807A",emoji:"\uD83C\uDF34",title:"Cong\u00e9s pay\u00e9s : 10 % ou maintien ?",excerpt:"Deux m\u00e9thodes, une seule \u00e0 retenir \u2014 la plus favorable. Et le versement mensuel interdit."},
               {id:"pajemploi",slug:"pajemploi-declaration-assistante-maternelle",cat:"Pajemploi et d\u00e9clarations",catColor:"#2E4859",emoji:"\uD83C\uDFE6",title:"D\u00e9clarer sur Pajemploi",excerpt:"Chaque rubrique expliqu\u00e9e, et la fen\u00eatre du 25 au 5 \u00e0 ne pas manquer."},
               {id:"indemnite2026",slug:"indemnite-entretien-assistante-maternelle-2026",cat:"Indemnit\u00e9 d'entretien",catColor:"#C84B31",emoji:"\uD83E\uDDF4",title:"Indemnit\u00e9 d'entretien 2026",excerpt:"3,92 \u20ac pour 9 h, 0,435 \u20ac de l'heure au-del\u00e0, plancher \u00e0 2,65 \u20ac par journ\u00e9e."}
             ];
@@ -6052,10 +6056,10 @@ export const DEFAULT_CONFIG = {
     s5TitleColor:"#0D1B2A",
     testimonialBg:"#FFFFFF",
     testimonialNameColor:"#2C1F14",
-    testimonialCityColor:"#A68970",
-    testimonialBeforeColor:"#A68970",
+    testimonialCityColor:"#8A725D",
+    testimonialBeforeColor:"#8A725D",
     testimonialAfterColor:"#2C1F14",
-    testimonialStarColor:"#E8A84A",
+    testimonialStarColor:"#976E30",
     // La section tarifs a un fond creme : ses textes doivent etre sombres.
     // Le code avait garde des replis blancs, herites du temps ou le fond
     // etait ardoise — d'ou trois lignes invisibles en ligne.
@@ -6068,9 +6072,13 @@ export const DEFAULT_CONFIG = {
     freeDescColor:"#6B5348",
     proBg:"#FDFBF8",
     proBorderColor:"#B85C38",
-    proLabelColor:"#B85C38",
+    proLabelColor:"#B25936",
+    // Le saumon de la marque descend a #9E6553 quand il porte du texte sur
+    // fond blanc : 4,73:1 au lieu de 2,44. La teinte reste la meme.
+    lienBlogColor:"#9E6553",
+    heroAccentColor:"#C76754",
     proPriceColor:"#B85C38",
-    proSubColor:"#A68970",
+    proSubColor:"#866F5A",
     proDescColor:"#6B5348",
     ctaTitleColor:"#FFFFFF",
     ctaSubTitleColor:"rgba(255,255,255,.6)",
