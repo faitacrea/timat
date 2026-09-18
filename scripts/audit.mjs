@@ -410,17 +410,36 @@ for (const u of fichiersAppSrc()) {
     ["faqDescColor", "faqBg", 4.5],
     ["s5TitleColor", "section5Bg", 3],
     ["s4TitleColor", "section4Bg", 3],
+    ["s6TitleColor", "section6Bg", 3],
+    ["s6SubColor", "section6Bg", 4.5],
+    ["guaranteesColor", "section6Bg", 4.5],
+    ["s1DescColor", "section1Bg", 4.5],
+    ["tableSubColor", "section1Bg", 4.5],
+    ["tableSansColor", "section1Bg", 4.5],
   ];
   for (const [cTexte, cFond, seuil] of COUPLES) {
     const texte = val(cTexte), fond = val(cFond);
     if (!texte || !fond) continue;
-    // Une couleur translucide se melange a ce qu'il y a dessous : on ne peut
-    // pas trancher sans rendre la page, et inventer une reponse serait pire.
-    if (!/^#[0-9A-Fa-f]{6}$/.test(texte)) continue;
+    // J'avais ecarte les couleurs translucides « parce qu'elles se melangent a
+    // ce qu'il y a dessous ». C'etait faux quand le fond est uni : la
+    // composition est exacte, et c'est justement ce que l'oeil voit. Trois
+    // lignes en rgba(255,255,255,.8) sur le creme de la section tarifs sont
+    // restees invisibles en ligne a cause de cette exclusion.
+    const compose = (av, fondHex) => {
+      const m = av.match(/rgba?\(([^)]+)\)/);
+      if (!m) return /^#[0-9A-Fa-f]{6}$/.test(av) ? av : null;
+      const p2 = m[1].split(",").map((x) => parseFloat(x));
+      const al = p2.length > 3 ? p2[3] : 1;
+      const f = [1, 3, 5].map((i) => parseInt(fondHex.substr(i, 2), 16));
+      const c = [0, 1, 2].map((i) => Math.round(p2[i] * al + f[i] * (1 - al)));
+      return "#" + c.map((v) => v.toString(16).padStart(2, "0")).join("");
+    };
     for (const t of teintes(fond)) {
-      const r = contraste(texte, t);
+      const vue = compose(texte, t);
+      if (!vue) continue;
+      const r = contraste(vue, t);
       if (r < seuil) {
-        signale("contraste", `${cTexte} (${texte}) sur ${cFond} (${t}) : ${r.toFixed(2)}:1, il en faut ${seuil} — ce texte est illisible sur son propre fond`);
+        signale("contraste", `${cTexte} (${texte}${vue !== texte ? " → vu " + vue : ""}) sur ${cFond} (${t}) : ${r.toFixed(2)}:1, il en faut ${seuil} — ce texte est illisible sur son propre fond`);
       }
     }
   }

@@ -5293,7 +5293,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
-            <div style={{ fontSize: 14, color: L.s6SubColor||"rgba(255,255,255,.72)", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
+            <div style={{ fontSize: 14, color: L.s6SubColor||"#55707C", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
           </FadeIn>
           <div className="lp-tarifs-grid">
             {/* Gratuit */}
@@ -5342,7 +5342,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               ))}
             </div>
           </div>
-          <div className="lp-guarantees" style={{color:"rgba(255,255,255,.8)"}}>
+          {/* Ces trois lignes etaient en blanc EN DUR. Le fond de la section
+              tarifs est passe au creme #FDFBF8 sans que les textes suivent :
+              « Resiliable en 1 clic », « Pointages et messages opposables » et
+              « Donnees en France » etaient invisibles en ligne, ratio 1,03. */}
+          <div className="lp-guarantees" style={{color:L.guaranteesColor||"#55707C"}}>
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
           <FadeIn>
@@ -6029,7 +6033,9 @@ export const DEFAULT_CONFIG = {
     heroStatsColor:"#E49178",
     heroStatsLabelColor:"#2E4859",
     s1TitleColor:"#FFFFFF",
-    s1DescColor:"rgba(255,255,255,.5)",
+    // .5 donnait 3,76:1 sur le fond ardoise de la section, sous le seuil de
+    // 4,5. .65 donne 5,14 sans changer le rendu a l'oeil.
+    s1DescColor:"rgba(255,255,255,.65)",
     s1CardBg:"rgba(255,255,255,.04)",
     s1CardTitleColor:"#FFFFFF",
     s1CardDescColor:"rgba(255,255,255,.5)",
@@ -6050,7 +6056,12 @@ export const DEFAULT_CONFIG = {
     testimonialBeforeColor:"#A68970",
     testimonialAfterColor:"#2C1F14",
     testimonialStarColor:"#E8A84A",
+    // La section tarifs a un fond creme : ses textes doivent etre sombres.
+    // Le code avait garde des replis blancs, herites du temps ou le fond
+    // etait ardoise — d'ou trois lignes invisibles en ligne.
     s6TitleColor:"#0D1B2A",
+    s6SubColor:"#55707C",
+    guaranteesColor:"#55707C",
     freeBg:"#FFFFFF",
     freeLabelColor:"#A68970",
     freePriceColor:"#0D1B2A",
