@@ -14,8 +14,11 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  Documents, ACTIVITES_PAR_AGE, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CROISSANCE_DEMO, CahierJour, D, DATE_ACCORD_CONGES, EmptyState, ExportDonnees, FAQ_DATA, FicheUrgence, G, H, IconeOuEmoji, JALONS_REF, JOURS_SEMAINE_TYPE, MOIS_PAR_AN, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_H, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, PMI_PAR_DEP, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, ageEnMois, brutDepuisNet, catColors, chargerJsPDF, decalerMois, estPro, etatPush, fmt, fmtDatePdf, fmtMoisLong, heuresDepuisMinutes, heuresMensualisees, indemniteEntretienMin, isoJour, isoMois, journeesTravaillees, minimumHoraireAu, minutesDepuisHeure, montantCMG, nb2, nbf, netDepuisBrut, parseAgeAttendu, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PMI_PAR_DEP, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
+import {
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
+} from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
 
