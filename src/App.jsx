@@ -1004,7 +1004,7 @@ var TODAY_YEAR=String(_D.getFullYear());
 
 export function Styles(){return(
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     /* Certaines personnes desactivent les animations pour raison medicale
        (vertiges, migraines). On respecte le reglage du systeme. */
@@ -5416,12 +5416,18 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     {id:"demo-parent2",email:"thomas.bernard@mail.fr",prenom:"Thomas",nom:"Bernard",role:"parent",couleur:"#3D6B50",label:"Thomas Bernard - Emma"},
   ];
 
+  // Les polices par defaut sont deja demandees par index.html, des l'analyse du
+  // HTML. Cet effet ne sert plus qu'a la police CHOISIE au back-office, quand
+  // elle differe : la redemander ici couterait un second telechargement inutile
+  // et un reflow de plus, exactement ce qu'on vient de supprimer.
   useEffect(()=>{
-    const id = 'timat-fonts';
-    if (document.getElementById(id)) return;
+    const voulue = config.landing.googleFontsUrl;
+    if (!voulue) return;
+    const deja = [...document.querySelectorAll('link[rel="stylesheet"]')].some(l => l.href === voulue);
+    if (deja || document.getElementById('timat-fonts')) return;
     const link = document.createElement('link');
-    link.id = id; link.rel = 'stylesheet';
-    link.href = config.landing.googleFontsUrl || 'https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap';
+    link.id = 'timat-fonts'; link.rel = 'stylesheet';
+    link.href = voulue;
     document.head.appendChild(link);
   }, []);
 
@@ -5527,7 +5533,10 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
 
   const accent = L.accentColor||"#E49178";
   const fTitle = L.fontTitle||"'Fraunces', Georgia, serif";
-  const fBody = L.fontBody||"'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
+  // Plus Jakarta Sans n'est plus telechargee : personne ne s'en servait, et
+  // elle partait a chaque chargement. Le repli commence donc a DM Sans, qui
+  // l'est bel et bien.
+  const fBody = L.fontBody||"'DM Sans', system-ui, sans-serif";
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
   const statsHero = config.statsHero||DEFAULT_CONFIG.statsHero;
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;

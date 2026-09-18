@@ -388,6 +388,27 @@ for (const u of fichiersAppSrc()) {
   });
 }
 
+// --- l'URL des polices, ecrite a deux endroits ---
+//
+// index.html demande les polices des l'analyse du HTML, pour que le hero peint
+// avant React ait deja les bonnes mesures. DEFAULT_CONFIG.landing.googleFontsUrl
+// dit la meme chose du cote de l'application. Si les deux divergent, le
+// navigateur telecharge deux polices et le texte se decale au relais — soit
+// exactement le defaut que ce doublon sert a supprimer.
+{
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+  const dansHtml = (html.match(/<link rel="stylesheet" href="(https:\/\/fonts\.googleapis\.com[^"]+)"/) || [])[1];
+  const dansApp = (app.match(/googleFontsUrl:"(https:\/\/fonts\.googleapis\.com[^"]+)"/) || [])[1];
+  if (!dansHtml) {
+    signale("police", "index.html ne demande plus les polices du hero — la requête repartirait après le démarrage de React, et le texte se décalerait");
+  } else if (!dansApp) {
+    signale("police", "DEFAULT_CONFIG.landing.googleFontsUrl est introuvable — impossible de vérifier qu'index.html demande la bonne police");
+  } else if (dansHtml.replace(/&amp;/g, "&") !== dansApp) {
+    signale("police", `index.html et DEFAULT_CONFIG demandent deux polices différentes — le navigateur téléchargerait les deux et le texte se décalerait au relais`);
+  }
+}
+
 // --- la landing rendue par React doit porter un h1 ---
 //
 // index.html en pose un pour la premiere peinture, puis React remplacait tout

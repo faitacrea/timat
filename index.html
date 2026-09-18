@@ -2,6 +2,21 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <!-- Les polices du hero, demandées dès l'analyse du HTML.
+
+         Elles étaient demandées par un useEffect DANS LandingPage : la requête
+         ne partait donc qu'une fois React démarré, vers trois secondes sur un
+         mobile bridé, et il fallait encore deux allers-retours (la feuille de
+         style, puis le fichier de police, sur un second domaine sans
+         preconnect). Le hero peint en 0,8 s en police système se reflowait
+         alors : décalage de mise en page, et nouveau candidat LCP tardif.
+
+         Cette URL doit rester identique à DEFAULT_CONFIG.landing.googleFontsUrl
+         dans src/App.jsx — deux copies qui divergent chargeraient deux polices.
+         L'audit le vérifie. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Outfit:wght@300;400;500;600;700&amp;display=swap" />
     <link rel="icon" type="image/svg+xml" href="/assmat.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
@@ -39,7 +54,9 @@
         background:linear-gradient(165deg,#FDF6EE 0%,#F7ECE0 55%,#FBF1E7 100%);
         display:flex;flex-direction:column;align-items:center;justify-content:center;
         gap:18px;padding:32px 20px;text-align:center;
-        font-family:system-ui,-apple-system,'Nunito',sans-serif;color:#2E4859;
+        /* Les memes familles que le hero de React : quand la police arrive,
+           les mesures ne changent pas et rien ne se decale. */
+        font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#2E4859;
       }
       #timat-boot .logo img{height:44px;width:auto}
       #timat-boot .badge{
@@ -47,6 +64,7 @@
         border:1px solid rgba(228,145,120,.35);border-radius:99px;padding:7px 16px;
       }
       #timat-boot h1{
+        font-family:'Quicksand','Outfit',system-ui,sans-serif;
         font-size:clamp(24px,4.4vw,50px);line-height:1.14;font-weight:700;margin:0;
         letter-spacing:-.01em;max-width:none;
       }
