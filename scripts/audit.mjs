@@ -507,6 +507,14 @@ for (const u of fichiersAppSrc()) {
 {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+  // La teinte de l'accent du titre est elle aussi ecrite des deux cotes.
+  // index.html disait #C76754, React #E49178 : la page changeait de couleur au
+  // relais, et le titre passait sous le seuil de contraste au passage.
+  const teinteHtml = (html.match(/#timat-boot h1 em\{[^}]*color:(#[0-9A-Fa-f]{6})/) || [])[1];
+  const teinteApp = (app.match(/heroAccentColor:"(#[0-9A-Fa-f]{6})"/) || [])[1];
+  if (teinteHtml && teinteApp && teinteHtml.toLowerCase() !== teinteApp.toLowerCase()) {
+    signale("hero", `l'accent du titre vaut ${teinteHtml} dans index.html et ${teinteApp} dans DEFAULT_CONFIG — la page changera de couleur quand React prendra le relais`);
+  }
   const boot = (html.match(/#timat-boot\{[^}]*padding:\s*[\d.]+px\s+([\d.]+)px/) || [])[1];
   const hero = (app.match(/\.lp-hero\{padding:0\s+([\d.]+)px/g) || []).pop();
   const heroPx = hero ? (hero.match(/([\d.]+)px/) || [])[1] : undefined;
