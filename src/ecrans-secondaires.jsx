@@ -15,7 +15,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  BILANS, CPill, D, DEMANDES_DEMO, FORUM_POSTS, GestionStockage, H, IconeOuEmoji, InstallButton, JOURS_SEM, MDP_AIDE, PERIODES, PageHeader, Pastille, Sante, SignaturePad, Sommeil, Support, SupprimerCompte, Toast, ageEnMois, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, minimumHoraireAu, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G
+  CPill, D, DEMANDES_DEMO, FORUM_POSTS, GestionStockage, H, IconeOuEmoji, InstallButton, JOURS_SEM, MDP_AIDE, PERIODES, PageHeader, Pastille, SignaturePad, SupprimerCompte, Toast, ageEnMois, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, minimumHoraireAu, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G
 } from "./App.jsx";
 
 export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
