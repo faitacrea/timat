@@ -426,6 +426,51 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
+// --- le back-office fige un texte que le code a change depuis ---
+//
+// Le hero de la landing a ete reecrit six fois dans le code. En ligne, il
+// affichait toujours « Toute la paperasse d'une assistante maternelle » : une
+// surcharge enregistree au back-office des mois plus tot, que React applique
+// par-dessus DEFAULT_CONFIG au chargement de app_config. La page s'ouvrait avec
+// le bon titre — celui d'index.html — puis basculait sur l'ancien.
+//
+// diffConfig n'enregistre que ce qui DIFFERE des defauts, mais une fois
+// enregistree une surcharge ne se perime jamais toute seule : le code peut
+// changer dessous sans que rien ne le dise.
+//
+// Ce controle lit app_config et signale tout texte de landing surcharge par une
+// valeur differente de celle du code. Quand la base est injoignable — c'est le
+// cas dans la construction en ligne — il le dit, et ne se tait jamais en
+// pretendant que tout va bien.
+{
+  const url = process.env.VITE_SUPABASE_URL, cle = process.env.VITE_SUPABASE_KEY;
+  if (!url || !cle) {
+    console.log("  (surcharges du back-office : non vérifiées, VITE_SUPABASE_URL/KEY absentes)");
+  } else {
+    try {
+      const r = await fetch(`${url}/rest/v1/app_config?id=eq.main&select=config`, {
+        headers: { apikey: cle, Authorization: "Bearer " + cle },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const [ligne] = await r.json();
+      const txts = (ligne && ligne.config && ligne.config.txts) || {};
+      const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+      for (const [k, v] of Object.entries(txts)) {
+        if (typeof v !== "string") continue;
+        const m = app.match(new RegExp("\\b" + k + ':\\s*"((?:[^"\\\\]|\\\\.)*)"'));
+        if (!m) continue;
+        const duCode = m[1].replace(/\\"/g, '"').replace(/\\n/g, "\n");
+        if (duCode !== v) {
+          signale("surcharge", `app_config impose « ${k} » = "${v.slice(0, 60)}" alors que le code dit "${duCode.slice(0, 60)}" — c'est la base qui gagne, la landing en ligne n'affiche pas ce que dit le code`);
+        }
+      }
+    } catch (e) {
+      console.log(`  (surcharges du back-office : non vérifiées — ${e.message})`);
+    }
+  }
+}
+
 // --- la marge du hero peint avant React ---
 //
 // Le LCP retient le plus GRAND element peint, et n'enregistre un nouveau
