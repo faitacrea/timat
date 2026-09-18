@@ -15,8 +15,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  CPill, D, DEMANDES_DEMO, FORUM_POSTS, GestionStockage, H, IconeOuEmoji, InstallButton, JOURS_SEM, MDP_AIDE, PERIODES, PageHeader, Pastille, SignaturePad, SupprimerCompte, Toast, ageEnMois, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, minimumHoraireAu, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G
+  CPill, D, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction
 } from "./App.jsx";
+import {
+  DEMANDES_DEMO, FORUM_POSTS, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ageEnMois, minimumHoraireAu
+} from "./socle.jsx";
 
 export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
   const [selId,setSelId]=useState(enfants[0]?.id);

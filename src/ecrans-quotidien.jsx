@@ -15,8 +15,11 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, CPill, D, DOCS_DEMO, EmptyState, FERIES_2024, H, HEURES_TYPES, IconeOuEmoji, JOURS_SEM, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, RETENUE_TYPES, SEMAINES_MAX_ANNEE_INCOMPLETE, THEMES_CAL, Toast, URL_CONVENTION, VACANCES_2024, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, estPro, fileHorsLigne, filerOperation, fmt, fmtDateHeureCourte, heuresMensualisees, isVacances, isoJour, lireHorsLigne, memoriserHorsLigne, minimumHoraireAu, nb2, nbf, netDepuisBrut, nomVacances, qrSvgBalise, salaireMensualise, semainesDuContrat, tirerJetonBorne, typeEv, G, TODAY_STR
+  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, VACANCES_2024, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 } from "./App.jsx";
+import {
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, FERIES_2024, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, isVacances, minimumHoraireAu, nb2, nomVacances, tirerJetonBorne
+} from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
   const tape=(c)=>{if(valeur.length<longueur)setValeur(valeur+c);};

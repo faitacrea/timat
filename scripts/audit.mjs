@@ -490,7 +490,7 @@ for (const u of fichiersAppSrc()) {
   const appU = fichiers.find((u) => u.pathname.endsWith("/App.jsx"));
   const app = readFileSync(appU, "utf8");
   const hautNiveau = new Set(
-    [...app.matchAll(/^(?:export )?(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1])
+    [...app.matchAll(/^(?:export )?(?:async function|function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1])
   );
   // Ce que App.jsx tient de React compte aussi : une declaration lazy() est
   // partie dans un module qui n'importait pas « lazy », le build est passe, et
@@ -522,7 +522,7 @@ for (const u of fichiersAppSrc()) {
         .flatMap((m) => m[1].split(",").map((x) => x.trim().split(" as ").pop()).filter(Boolean))
     );
     const locaux = new Set(
-      [...t.matchAll(/(?:^|\s)(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1])
+      [...t.matchAll(/(?:^|\s)(?:async function|function|const|let|var)\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1])
     );
     for (const n of hautNiveau) {
       if (importes.has(n) || locaux.has(n)) continue;
@@ -548,7 +548,7 @@ for (const u of fichiersAppSrc()) {
   for (const u of fichiers) {
     exportes.set(
       "./" + u.pathname.split("/").pop(),
-      new Set([...readFileSync(u, "utf8").matchAll(/^export (?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]))
+      new Set([...readFileSync(u, "utf8").matchAll(/^export (?:async function|function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]))
     );
   }
   for (const u of fichiers) {
