@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/test-retenue.mjs && node scripts/test-pdf-encodage.mjs && node scripts/test-echappement.mjs && node scripts/test-hors-ligne.mjs && node scripts/test-push.mjs && node scripts/test-qr.mjs && node scripts/test-mdp-fuite.mjs && node scripts/test-pointage-public.mjs && node scripts/test-file-blog.mjs && TZ=Europe/Paris node scripts/test-dates.mjs && node scripts/audit.mjs",
+    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/test-retenue.mjs && node scripts/test-pdf-encodage.mjs && node scripts/test-echappement.mjs && node scripts/test-hors-ligne.mjs && node scripts/test-push.mjs && node scripts/test-qr.mjs && node scripts/test-mdp-fuite.mjs && node scripts/test-pointage-public.mjs && node scripts/test-file-blog.mjs && node scripts/test-hero-lcp.mjs && TZ=Europe/Paris node scripts/test-dates.mjs && node scripts/audit.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
@@ -15,6 +15,7 @@
     "parcours": "node scripts/parcours-visuel.mjs",
     "parcours:parent": "node scripts/parcours-visuel.mjs http://localhost:4173 /tmp/timat-parent parent",
     "parcours:backoffice": "node scripts/parcours-backoffice.mjs",
+    "hero:lcp": "node scripts/test-hero-lcp.mjs",
     "test:retenue": "node scripts/test-retenue.mjs",
     "parcours:bulletin": "node scripts/parcours-bulletin.mjs",
     "parcours:calendrier-parent": "node scripts/parcours-calendrier-parent.mjs",
