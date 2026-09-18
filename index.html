@@ -16,7 +16,15 @@
          L'audit le vérifie. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Outfit:wght@300;400;500;600;700&amp;display=swap" />
+    <!-- media="print" puis onload : la feuille est demandée dès l'analyse du
+         HTML, mais elle ne BLOQUE PAS le premier rendu. Écrite en simple
+         rel="stylesheet", elle le bloquait : le FCP mobile est passé de 0,8 s à
+         3,9 s et le score de 87 à 76, parce que plus rien ne se peignait tant
+         que Google Fonts n'avait pas répondu. Le navigateur traite une feuille
+         destinée à l'impression comme non bloquante, et onload la rend
+         applicable à l'écran dès qu'elle est là. -->
+    <link rel="stylesheet" media="print" onload="this.media='all';this.onload=null" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Outfit:wght@300;400;500;600;700&amp;display=swap" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Outfit:wght@300;400;500;600;700&amp;display=swap" /></noscript>
     <link rel="icon" type="image/svg+xml" href="/assmat.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
