@@ -426,6 +426,35 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
+// --- la marge du hero peint avant React ---
+//
+// Le LCP retient le plus GRAND element peint, et n'enregistre un nouveau
+// candidat que s'il est strictement plus grand. Le hero de demarrage etait en
+// padding lateral de 20 px quand .lp-hero passe a 12 px sous 480 px : son titre
+// faisait 372 px de large contre 388 pour celui de React. React repeignait donc
+// un candidat plus grand vers trois secondes, et le hero peint en 0,8 s ne
+// comptait pas. Huit pixels annulaient une partie du decoupage du bundle.
+//
+// scripts/test-hero-lcp.mjs le verifie pour de vrai, dans un navigateur, a
+// quatre largeurs — mais il lui faut Chromium, que la construction en ligne n'a
+// pas : branche dans npm run build, il a fait echouer quatre deploiements
+// d'affilee. Il se lance donc a la main (npm run hero:lcp), et ce controle-ci,
+// purement textuel, garde la cause exacte sous surveillance a chaque build.
+{
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+  const boot = (html.match(/#timat-boot\{[^}]*padding:\s*[\d.]+px\s+([\d.]+)px/) || [])[1];
+  const hero = (app.match(/\.lp-hero\{padding:0\s+([\d.]+)px/g) || []).pop();
+  const heroPx = hero ? (hero.match(/([\d.]+)px/) || [])[1] : undefined;
+  if (!boot) {
+    signale("hero", "index.html : la marge latérale de #timat-boot est illisible — c'est elle qui décide si React reprend le LCP");
+  } else if (!heroPx) {
+    signale("hero", "src/App.jsx : la marge de .lp-hero est illisible — impossible de vérifier que le hero de démarrage lui correspond");
+  } else if (boot !== heroPx) {
+    signale("hero", `le hero peint avant React a ${boot} px de marge latérale, celui de React ${heroPx} px — React repeindra un titre plus grand et reprendra le LCP (npm run hero:lcp le mesure dans un navigateur)`);
+  }
+}
+
 // --- l'URL des polices, ecrite a deux endroits ---
 //
 // index.html demande les polices des l'analyse du HTML, pour que le hero peint
