@@ -9,6 +9,7 @@
 import { chromium } from "playwright";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { lireApp } from "./sources-app.mjs";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 // Passe « sous-minimum » : le contrat porte un taux illegal, l'alerte doit sortir.
@@ -22,7 +23,7 @@ const ANNEE_INCOMPLETE = process.argv[3] === "annee-incomplete";
 // l'ouvrir : il fallait quitter l'ecran pour relire ce qu'on venait d'envoyer.
 const DEJA_ENVOYE = true;
 const SORTIE = "/tmp/timat-documents";
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
 if (!CLE) { console.error("Clé d'accès introuvable."); process.exit(1); }
 

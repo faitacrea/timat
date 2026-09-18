@@ -14,6 +14,7 @@
 import { chromium } from "playwright";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { lireApp } from "./sources-app.mjs";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 // Passe « sous-minimum » : le contrat porte un taux illegal, l'alerte doit sortir.
@@ -30,7 +31,7 @@ const DEJA_ENVOYE = process.argv[3] === "envoye" || process.argv[3] === "envoye-
 // modele. Le PDF stocke n'est jamais recalcule : l'application doit le dire.
 const BULLETIN_ANCIEN = process.argv[3] === "envoye-ancien";
 const SORTIE = "/tmp/timat-bulletin";
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
 if (!CLE) { console.error("Clé d'accès introuvable."); process.exit(1); }
 

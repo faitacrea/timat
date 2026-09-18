@@ -15,11 +15,12 @@
 import { chromium } from "playwright";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { lireApp } from "./sources-app.mjs";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 const ESPACE = process.argv[3] || "asmat";
 const SORTIE = `/tmp/timat-neuf-${ESPACE}`;
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
 if (!CLE) { console.error("Clé d'accès introuvable."); process.exit(1); }
 

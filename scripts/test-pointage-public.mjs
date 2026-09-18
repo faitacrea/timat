@@ -18,6 +18,7 @@
 // par cette route — c'est justement pour ça qu'il est fiable.
 
 import { readFileSync } from "node:fs";
+import { lireApp } from "./sources-app.mjs";
 
 const src = readFileSync(new URL("../api/pointage-public.js", import.meta.url), "utf8");
 
@@ -142,7 +143,7 @@ console.log("\nL'ADRESSE EST BRANCHÉE");
 
   // Un QR qui pointe ailleurs que sur la route n'enregistre rien. C'est le
   // genre de défaut qui ne se voit qu'une fois l'affiche au mur.
-  const app = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+  const app = lireApp();
   verifie("l'application fabrique bien une adresse /p/", /\/\s*\+\s*"\/p\/"|"\/p\/"\s*\+/.test(app), true);
   verifie("le jeton du QR est tiré au sort, pas dérivé de l'enfant",
     /getRandomValues/.test(app.slice(app.indexOf("const tirerJetonBorne"), app.indexOf("const tirerJetonBorne") + 400)), true);

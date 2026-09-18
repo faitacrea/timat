@@ -8,8 +8,9 @@
 // page du document, et un texte saisi par un parent pouvait faire exécuter du
 // code dans la fenêtre que l'assistante maternelle ouvre pour imprimer.
 import { readFileSync } from "node:fs";
+import { lireApp } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 let ko = 0;
 
 // --- 1. Le filtre, extrait du source plutôt que recopié ---

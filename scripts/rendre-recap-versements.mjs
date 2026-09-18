@@ -5,7 +5,8 @@
 //   node scripts/rendre-recap-versements.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { jsPDF } from "jspdf";
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+import { lireAppExecutable } from "./sources-app.mjs";
+const src = lireAppExecutable();
 const bout = (re) => { const m = src.match(re); if (!m) { console.error("introuvable :", re); process.exit(1); } return m[0]; };
 const prelude = [
   bout(/const CAR_PDF_INTERDITS = .*?;/s),

@@ -5,8 +5,9 @@
 //   node scripts/rendre-bulletin.mjs [complete|incomplete]
 import { readFileSync, writeFileSync } from "node:fs";
 import { jsPDF } from "jspdf";
+import { lireAppExecutable } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireAppExecutable();
 const bout = (re, nom) => { const m = src.match(re); if (!m) { console.error("introuvable :", nom || re); process.exit(1); } return m[0]; };
 
 const incomplete = process.argv[2] === "incomplete";

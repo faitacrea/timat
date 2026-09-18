@@ -1,7 +1,8 @@
 // Rend le contrat PDF hors du navigateur, pour le relire avant de le livrer.
 import { readFileSync, writeFileSync } from "node:fs";
 import { jsPDF } from "jspdf";
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+import { lireAppExecutable } from "./sources-app.mjs";
+const src = lireAppExecutable();
 const bout = (re, nom) => { const m = src.match(re); if (!m) { console.error("introuvable :", nom); process.exit(1); } return m[0]; };
 
 const ctx = {};
