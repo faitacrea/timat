@@ -1,4 +1,4 @@
-// Le hero peint avant React doit être AU MOINS aussi grand que celui de React.
+// Le hero peint avant React doit garder le LCP.
 //
 // Le LCP retient le plus GRAND élément peint, et n'enregistre un nouveau
 // candidat que s'il est strictement plus grand que le précédent. Le hero
@@ -47,46 +47,57 @@ const chercherChromium = () => {
 
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
 
-// Les deux mesures se font aux memes largeurs, dont celles ou les points de
-// rupture changent les marges : une egalite a 412 px qui se defait a 360 ne
-// vaut rien, la moitie des telephones y sont.
-const LARGEURS = [360, 390, 412, 430];
+// Une premiere version de ce controle comparait getBoundingClientRect() des deux
+// titres, apres stabilisation. Elle repondait « identiques, 31 846 chacun » —
+// et le navigateur, lui, enregistrait deux candidats LCP de 20 900 puis 27 060.
+// Un test vert et faux, exactement ce qu'on cherche a eviter.
+//
+// L'aire que retient le LCP n'est pas celle du bloc : c'est celle du TEXTE
+// PEINT, au moment ou il est peint. Trois details invisibles la faisaient
+// diverger — em en display:block cote statique, un letter-spacing de -0,01em
+// que React n'applique pas, et un arrondi de hauteur de ligne a 412 px.
+//
+// On mesure donc ce que mesure Chrome : les candidats LCP, sous l'emulation
+// mobile de Lighthouse. Un seul candidat = le hero peint tot garde le LCP.
+const LARGEURS = [360, 390, 412, 430, 480];
 
-const mesurer = async (largeur, sansReact) => {
+const mesurer = async (largeur) => {
   const ctx = await nav.newContext({ viewport: { width: largeur, height: 823 }, deviceScaleFactor: 1.75 });
   const p = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(p);
+  // L'emulation mobile de Lighthouse : 1,6 Mbit/s, 150 ms d'aller-retour,
+  // processeur quatre fois plus lent. Sans elle, React demarre en 100 ms et le
+  // defaut ne se voit pas.
+  await cdp.send("Network.enable");
+  await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 150, downloadThroughput: 204800, uploadThroughput: 84375 });
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   // Google Fonts est injoignable depuis l'environnement de verification : on
-  // repond a vide, identiquement dans les deux cas, pour comparer a police egale.
-  await p.route("**://fonts.googleapis.com/**", (r) => r.fulfill({ status: 200, contentType: "text/css", body: "" }));
-  await p.route("**://fonts.gstatic.com/**", (r) => r.fulfill({ status: 200, body: "" }));
-  if (sansReact) await p.route("**/assets/index-*.js", (r) => r.abort());
-  await p.goto(base, { waitUntil: "load" });
-  await p.waitForTimeout(sansReact ? 600 : 3500);
-  const r = await p.evaluate(() => {
-    const h = document.querySelector("h1");
-    if (!h) return null;
-    const rc = h.getBoundingClientRect();
-    return { w: Math.round(rc.width), h: Math.round(rc.height), aire: Math.round(rc.width * rc.height) };
+  // repond a vide, pour que les deux rendus soient compares a police egale.
+  await p.route("**://fonts.g**", (r) => r.fulfill({ status: 200, contentType: "text/css", body: "" }));
+  await p.addInitScript(() => {
+    window.__c = [];
+    new PerformanceObserver((l) => {
+      for (const e of l.getEntries()) window.__c.push({ t: Math.round(e.startTime), aire: Math.round(e.size) });
+    }).observe({ type: "largest-contentful-paint", buffered: true });
   });
+  await p.goto(base, { waitUntil: "load" });
+  await p.waitForTimeout(9000);
+  const c = await p.evaluate(() => window.__c);
   await ctx.close();
-  return r;
+  return c;
 };
 
-console.log("\n=== HERO — le peint avant React ne doit pas être plus petit ===\n");
+console.log("\n=== HERO — le titre peint avant React doit garder le LCP ===\n");
 let ko = 0;
 for (const l of LARGEURS) {
-  const st = await mesurer(l, true);
-  const re = await mesurer(l, false);
-  if (!st || !re) {
-    console.log(`  KO  ${l} px : pas de <h1> (${!st ? "avant React" : "après React"})`);
-    ko++; continue;
-  }
-  const ecart = re.aire - st.aire;
-  const ok = ecart <= 0;
+  const c = await mesurer(l);
+  if (!c.length) { console.log(`  KO  ${l} px : aucun candidat LCP`); ko++; continue; }
+  const ok = c.length === 1;
   if (!ok) ko++;
-  console.log(`  ${ok ? "ok" : "KO"}  ${String(l).padStart(3)} px   statique ${st.w}x${st.h} = ${String(st.aire).padStart(6)}   React ${re.w}x${re.h} = ${String(re.aire).padStart(6)}   ${ecart > 0 ? `React plus grand de ${ecart} px² → il reprend le LCP` : "React ne reprend pas le LCP"}`);
+  const aires = c.map((e) => e.aire).join(" → ");
+  console.log(`  ${ok ? "ok" : "KO"}  ${String(l).padStart(3)} px   ${c.length} candidat(s)   aire ${aires}   LCP ${c[c.length - 1].t} ms${ok ? "" : "   → React repeint plus grand et reprend le LCP"}`);
 }
 await nav.close();
 serveur.close();
-console.log(ko ? `\n${ko} largeur(s) où React repeint un candidat LCP plus grand\n` : "\nAucune anomalie\n");
+console.log(ko ? `\n${ko} largeur(s) ou React reprend le LCP\n` : "\nAucune anomalie\n");
 process.exit(ko ? 1 : 0);
