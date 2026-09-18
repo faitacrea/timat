@@ -398,7 +398,20 @@ for (const u of fichiersAppSrc()) {
 {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
-  const dansHtml = (html.match(/<link rel="stylesheet" href="(https:\/\/fonts\.googleapis\.com[^"]+)"/) || [])[1];
+  // Une feuille de style ordinaire dans le <head> BLOQUE le premier rendu :
+  // rien ne se peint tant que le serveur n'a pas repondu. Ecrite ainsi, elle a
+  // fait passer le FCP mobile de 0,8 s a 3,9 s et le score de 87 a 76. Mesure
+  // en local avec un serveur de polices a 2,5 s : 2 576 ms de FCP au lieu de 80.
+  // On exige donc la forme non bloquante — media="print" puis onload — et on
+  // tolere la copie dans <noscript>, qui ne s'applique que sans JavaScript.
+  const sansNoscript = html.replace(/<noscript>[\s\S]*?<\/noscript>/g, "");
+  for (const m of sansNoscript.matchAll(/<link ([^>]*href="https:\/\/fonts\.googleapis\.com[^"]*"[^>]*)>/g)) {
+    const attrs = m[1];
+    if (/rel="stylesheet"/.test(attrs) && !/media="print"/.test(attrs)) {
+      signale("police", "index.html charge les polices avec une feuille de style bloquante — la page ne peint plus rien tant que Google Fonts n'a pas répondu ; utiliser media=\"print\" puis onload");
+    }
+  }
+  const dansHtml = (html.match(/href="(https:\/\/fonts\.googleapis\.com[^"]+)"/) || [])[1];
   const dansApp = (app.match(/googleFontsUrl:"(https:\/\/fonts\.googleapis\.com[^"]+)"/) || [])[1];
   if (!dansHtml) {
     signale("police", "index.html ne demande plus les polices du hero — la requête repartirait après le démarrage de React, et le texte se décalerait");
