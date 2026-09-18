@@ -15,18 +15,11 @@
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import fs from "node:fs";
 import path from "node:path";
+import { lireApp, fichiersApp as fichiersAppSrc } from "./sources-app.mjs";
 
-// L'application a longtemps tenu dans un seul fichier, et tout l'audit lisait
-// « ../src/App.jsx » en dur. Le jour où le back-office est parti dans son
-// propre module pour sortir du morceau principal, ses 1 700 lignes ont cessé
-// d'être auditées sans que rien ne le signale : l'audit annonçait toujours
-// « aucune anomalie », en regardant un fichier plus petit. On énumère donc le
-// dossier, pour qu'un fichier nouveau soit couvert du jour où il existe.
-const FICHIERS_APP = readdirSync(new URL("../src/", import.meta.url))
-  .filter((f) => f.endsWith(".jsx") || f.endsWith(".js"))
-  .sort()
-  .map((f) => "../src/" + f);
-const lireApp = () => FICHIERS_APP.map((f) => readFileSync(new URL(f, import.meta.url), "utf8")).join("\n");
+// Tout ce qui lit « le code de l'application » passe par scripts/sources-app.mjs :
+// le fichier dit pourquoi, et un module nouveau y est couvert du jour où il existe.
+const FICHIERS_APP = fichiersAppSrc().map((u) => "../src/" + u.pathname.split("/").pop());
 
 const RACINE = process.cwd();
 const DIST = path.join(RACINE, "dist");
@@ -374,6 +367,134 @@ for (const rel of PORTEE_PERIMEES) {
 const occurrencesCHR = (lireApp().match(/CHR_AM\s*=/g) || []).length;
 if (occurrencesCHR !== 1) {
   signale("chiffre", `le barème CMG est déclaré ${occurrencesCHR} fois dans src/ — il doit l'être une seule dans src/, sans quoi les copies divergent`);
+}
+
+// --- un return dont la valeur est avalee par un commentaire ---
+//
+// « if(...)return // P16D : ... <OnboardingWizard/> ... ; » tenait sur une seule
+// ligne. Tout ce qui suivait les deux barres etait un commentaire : la fonction
+// retournait undefined, et une assistante maternelle qui venait de s'inscrire
+// tombait sur une page blanche au lieu de son premier pas. Personne ne l'a vu
+// pendant dix jours, parce que rien ne plante : React ne rend rien, c'est tout.
+for (const u of fichiersAppSrc()) {
+  const nom = u.pathname.split("/").pop();
+  readFileSync(u, "utf8").split("\n").forEach((ligne, i) => {
+    // Une ligne qui est elle-meme un commentaire ne retourne rien : celle qui
+    // raconte ce bug ci-dessus contient « return // » et se signalait elle-meme.
+    if (/^\s*(\/\/|\*|\/\*)/.test(ligne)) return;
+    if (/\breturn\s*\/\/\s*\S/.test(ligne)) {
+      signale("retour", `${nom}:${i + 1} — « return » suivi d'un commentaire sur la même ligne : la valeur est avalée, la fonction retourne undefined`);
+    }
+  });
+}
+
+// --- un module qui lit une variable restee dans App.jsx sans l'importer ---
+//
+// En sortant du code de App.jsx, j'ai oublie d'exporter « var TODAY_STR » : mon
+// releve des symboles partages ne regardait que « function » et « const ». Le
+// build est passe — Rollup prend un identifiant inconnu pour une variable
+// globale du navigateur et n'en dit rien — et l'ecran du pointage tombait a
+// l'ouverture, en production, sur « TODAY_STR is not defined ».
+//
+// On compare donc ce que chaque module lit a ce qu'il importe.
+{
+  const fichiers = fichiersAppSrc();
+  const appU = fichiers.find((u) => u.pathname.endsWith("/App.jsx"));
+  const app = readFileSync(appU, "utf8");
+  const hautNiveau = new Set(
+    [...app.matchAll(/^(?:export )?(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1])
+  );
+  for (const u of fichiers) {
+    if (u.pathname.endsWith("/App.jsx")) continue;
+    const t = readFileSync(u, "utf8");
+    const nom = u.pathname.split("/").pop();
+    const importes = new Set(
+      [...t.matchAll(/import\s*\{([^}]*)\}\s*from/g)]
+        .flatMap((m) => m[1].split(",").map((x) => x.trim().split(" as ").pop()).filter(Boolean))
+    );
+    const locaux = new Set(
+      [...t.matchAll(/(?:^|\s)(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1])
+    );
+    for (const n of hautNiveau) {
+      if (importes.has(n) || locaux.has(n)) continue;
+      // Un nom suivi d'une ponctuation de code, jamais un mot de phrase : le
+      // mot « Contrats » dans « Contrats, avenants, courriers illimites » n'est
+      // pas un appel, et le signaler aurait rendu ce controle inutilisable.
+      if (new RegExp("\\b" + n + "(?=[).,;:=\\]}\\[(.?])").test(t)) {
+        signale("module", `${nom} lit « ${n} », déclaré dans App.jsx, sans l'importer — le build passe, l'écran tombe à l'ouverture`);
+      }
+    }
+  }
+}
+
+// --- un ecran paresseux rendu hors de tout Suspense ---
+//
+// Depuis le decoupage du bundle, une vingtaine de composants arrivent par
+// import(). React rend une promesse pendant le telechargement : si le point qui
+// rend le composant n'est pas sous un <Suspense>, la promesse remonte jusqu'a
+// la racine et TOUTE l'application disparait — ecran blanc, zero erreur dans la
+// console. C'est arrive au mode borne, qui se rend hors du routeur : l'ecran
+// tendu au parent serait reste blanc, et rien ne l'aurait signale.
+//
+// On verifie donc que chaque usage JSX d'un composant paresseux se trouve dans
+// une fonction qui ouvre un Suspense.
+{
+  const fichiers = fichiersAppSrc();
+  // Un nom n'est paresseux que la ou il l'est vraiment : la ou il est declare
+  // en lazy(), et dans les modules qui l'importent depuis App.jsx. Ailleurs,
+  // c'est une definition locale deja chargee, et l'avertir serait du bruit —
+  // un audit qui crie a tort finit par ne plus etre lu.
+  const declaresLazy = new Set();
+  for (const u of fichiers) {
+    for (const m of readFileSync(u, "utf8").matchAll(/^(?:export )?const ([A-Za-z_$][\w$]*) = lazy\(/gm)) {
+      declaresLazy.add(m[1]);
+    }
+  }
+  // Un commentaire qui CITE un composant n'en rend aucun. La ligne qui explique
+  // ce controle contenait « <OnboardingWizard/> » et se faisait signaler
+  // elle-meme. On blanchit donc les commentaires en gardant la longueur exacte
+  // des lignes, pour que le comptage des balises reste juste.
+  const blanchir = (t) => t
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(/^([^\n]*?)\/\/[^\n]*$/gm, (m, avant) => avant + " ".repeat(m.length - avant.length));
+  for (const u of fichiers) {
+    const texte = blanchir(readFileSync(u, "utf8"));
+    const nom = u.pathname.split("/").pop();
+    const importe = new Set(
+      [...texte.matchAll(/import\s*\{([^}]*)\}\s*from\s*"\.\/App\.jsx"/g)]
+        .flatMap((m) => m[1].split(",").map((x) => x.trim()))
+    );
+    const local = new Set([...texte.matchAll(/^(?:export )?(?:function|const) ([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]));
+    const paresseux = new Set(
+      [...declaresLazy].filter((c) => importe.has(c) || (local.has(c) && new RegExp("const " + c + " = lazy\\(").test(texte)))
+    );
+    // Decoupe en fonctions de premier niveau : le Suspense doit etre dans la
+    // meme, sans quoi on ne peut rien affirmer.
+    // Les fleches nommees comptent aussi : le routeur est un « const _page = ()
+    // => », et sans elles tout son corps serait noye dans celui de App().
+    const debuts = [...texte.matchAll(/^\s*(?:export (?:default )?)?(?:function ([A-Za-z_$][\w$]*)|const ([A-Za-z_$][\w$]*)\s*=\s*(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>)/gm)]
+      .map((m) => ({ i: m.index, nom: m[1] || m[2] }));
+    for (let k = 0; k < debuts.length; k++) {
+      const corps = texte.slice(debuts[k].i, k + 1 < debuts.length ? debuts[k + 1].i : texte.length);
+      // On ne peut pas se contenter de « la fonction contient un Suspense » :
+      // App() en contient un pour le routeur, et le mode borne se rend APRES sa
+      // fermeture. La regle l'aurait laisse passer — verifie en retirant le
+      // Suspense de la borne, l'audit disait « aucune anomalie ». On compte donc
+      // les balises ouvertes et fermees avant l'usage : il faut en avoir une
+      // d'ouverte a ce point precis.
+      const ouvert = (jusqua) => {
+        const avant = corps.slice(0, jusqua);
+        return (avant.match(/<Suspense[\s>]/g) || []).length
+             - (avant.match(/<\/Suspense>/g) || []).length;
+      };
+      for (const c of paresseux) {
+        for (const m of corps.matchAll(new RegExp("<" + c + "[\\s/>]", "g"))) {
+          if (ouvert(m.index) > 0) continue;
+          signale("paresseux", `${nom} : ${debuts[k].nom}() rend <${c}/>, chargé à la demande, hors de tout <Suspense> ouvert à cet endroit — l'application entière disparaîtrait le temps du téléchargement`);
+        }
+      }
+    }
+  }
 }
 
 // --- routes serveur que plus personne n'appelle ---

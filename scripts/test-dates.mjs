@@ -14,13 +14,14 @@
 // isoJour() corrige le décalage. Ce test le démontre, puis relit le source
 // pour vérifier qu'aucune conversion ne contourne le helper.
 import { readFileSync } from "node:fs";
+import { lireAppExecutable } from "./sources-app.mjs";
 
 if (process.env.TZ !== "Europe/Paris") {
   // On force le fuseau : le défaut du serveur est UTC, où le défaut ne se voit pas.
   process.env.TZ = "Europe/Paris";
 }
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireAppExecutable();
 let ko = 0;
 
 const extrait = src.match(/const isoJour=\([\s\S]*?\n\};/);

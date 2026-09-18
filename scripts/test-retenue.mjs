@@ -12,8 +12,9 @@
 //   annee complete   : salaire mensualise x heures absence / heures du mois
 //   annee incomplete : salaire mensualise x jours absence / jours du mois
 import { readFileSync } from "node:fs";
+import { lireAppExecutable } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireAppExecutable();
 const extrait = src.match(/const retenueAbsence=\([\s\S]*?\n\};/);
 if (!extrait) {
   console.error("retenueAbsence introuvable dans src/App.jsx");

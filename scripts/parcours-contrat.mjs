@@ -13,6 +13,7 @@
 import { chromium } from "playwright";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { lireApp } from "./sources-app.mjs";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 // Passe « pdf-ancien » : le PDF stocke date d'avant la refonte du contrat. Il
@@ -25,7 +26,7 @@ const PDF_ANCIEN = process.argv[3] === "pdf-ancien" || process.argv[3] === "pare
 // « new row violates row-level security policy ».
 const PARENT = process.argv[3] === "parent";
 const SORTIE = "/tmp/timat-contrat";
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 const CLE = (src.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
 if (!CLE) { console.error("Clé d'accès introuvable."); process.exit(1); }
 

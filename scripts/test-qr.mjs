@@ -16,8 +16,9 @@
 
 import { readFileSync } from "node:fs";
 import qrcode from "qrcode-generator";
+import { lireApp } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 
 let ko = 0;
 const verifie = (nom, reel, attendu) => {

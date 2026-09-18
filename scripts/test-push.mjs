@@ -8,8 +8,9 @@
 //
 // Chacun de ces defauts est muet. Ce test les rend bruyants.
 import { readFileSync } from "node:fs";
+import { lireApp } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireApp();
 const routeSrc = readFileSync(new URL("../api/send-push.js", import.meta.url), "utf8");
 const swSrc = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
 

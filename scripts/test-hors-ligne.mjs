@@ -9,8 +9,9 @@
 // Comme les autres tests, il EXTRAIT le code de src/App.jsx au lieu de le
 // recopier : il n'existe qu'une seule file, et c'est celle de l'application.
 import { readFileSync } from "node:fs";
+import { lireAppExecutable } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireAppExecutable();
 const debut = src.indexOf('const CLE_HL="timat:hl:";');
 const ancre = src.indexOf("async function rejouerFile(){");
 if (debut < 0 || ancre < 0) {

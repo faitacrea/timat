@@ -18,8 +18,9 @@
 
 import { readFileSync } from "node:fs";
 import { webcrypto } from "node:crypto";
+import { lireAppExecutable } from "./sources-app.mjs";
 
-const src = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+const src = lireAppExecutable();
 const debut = src.indexOf("const MDP_FUITE_DELAI_MS");
 const fin = src.indexOf("\nconst verifierMotDePasse");
 if (debut < 0 || fin < 0) {

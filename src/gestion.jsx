@@ -15,10 +15,10 @@
 // déclarés en lazy() là-bas. Les quatorze autres ne sont appelés
 // que d'ici.
 // ============================================================
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BAREME_KM_2026, BoutonAjouterEnfant, COURRIERS_DATA, CPill, D, Documents, EMAIL_TEMPLATES, EmptyState, H, HEURES_TYPES, IconeOuEmoji, MODELES_CONTRATS, MOIS_PAR_AN, PLANCHER_KM_CONV, PageHeader, Pastille, REPAS_CHOIX, RETENUE_TYPES, Recap, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VERSEMENT_MODES, VerrouPro, allocationFormation, chargerJsPDF, congesAcquis, decalerMois, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, iccpCalcul, indemniteEntretienMin, indemniteRupture, isoJour, isoMois, minimumHoraireAu, nb2, nb3, nbf, netDepuisBrut, pdfPerime, preavisJours, protegerPdf, retenueAbsence, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BAREME_KM_2026, BoutonAjouterEnfant, COURRIERS_DATA, CPill, D, Documents, EMAIL_TEMPLATES, EmptyState, H, HEURES_TYPES, IconeOuEmoji, MODELES_CONTRATS, MOIS_PAR_AN, PLANCHER_KM_CONV, PageHeader, Pastille, REPAS_CHOIX, RETENUE_TYPES, Recap, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VERSEMENT_MODES, VerrouPro, allocationFormation, chargerJsPDF, congesAcquis, decalerMois, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, iccpCalcul, indemniteEntretienMin, indemniteRupture, isoJour, isoMois, minimumHoraireAu, nb2, nb3, nbf, netDepuisBrut, pdfPerime, preavisJours, protegerPdf, retenueAbsence, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR
 } from "./App.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -447,7 +447,7 @@ export function Contrats({enfants,role,pEId,user}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    {showAjout&&user&&<AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/>}
+    {showAjout&&user&&<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/></Suspense>}
     <PageHeader icon="📄" title="Contrats & Signatures" sub="Signature électronique légale"
       action={role==="asmat"&&user?<BoutonAjouterEnfant compact user={user} enfants={enfants} onClick={()=>setShowAjout(true)}/>:null}/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
