@@ -388,6 +388,44 @@ for (const u of fichiersAppSrc()) {
   });
 }
 
+// --- un texte de la landing ecrit dans la couleur de son fond ---
+//
+// s2TitleColor valait #0D1B2A : exactement la couleur de depart du degrade qui
+// sert de fond a cette section. Le titre etait invisible. faqTitleColor valait
+// #FFFFFF sur le creme #F4F1EA : « Questions frequentes » ne se lisait pas
+// davantage. Dans les deux cas le code prevoyait un repli correct, et c'est la
+// configuration qui l'ecrasait — donc rien ne plantait, et la landing est
+// partie en ligne avec deux titres illisibles.
+{
+  const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+  const val = (cle) => (app.match(new RegExp(cle + ':\\s*"([^"]+)"')) || [])[1];
+  // Un degrade : on prend chacune de ses teintes, et on exige que le texte
+  // passe sur toutes — un titre lisible en haut du degrade et noye en bas
+  // reste un titre illisible.
+  const teintes = (v) => (v || "").match(/#[0-9A-Fa-f]{6}/g) || [];
+  const COUPLES = [
+    ["s2TitleColor", "section2Bg", 3],
+    ["s2DescColor", "section2Bg", 4.5],
+    ["faqTitleColor", "faqBg", 3],
+    ["faqDescColor", "faqBg", 4.5],
+    ["s5TitleColor", "section5Bg", 3],
+    ["s4TitleColor", "section4Bg", 3],
+  ];
+  for (const [cTexte, cFond, seuil] of COUPLES) {
+    const texte = val(cTexte), fond = val(cFond);
+    if (!texte || !fond) continue;
+    // Une couleur translucide se melange a ce qu'il y a dessous : on ne peut
+    // pas trancher sans rendre la page, et inventer une reponse serait pire.
+    if (!/^#[0-9A-Fa-f]{6}$/.test(texte)) continue;
+    for (const t of teintes(fond)) {
+      const r = contraste(texte, t);
+      if (r < seuil) {
+        signale("contraste", `${cTexte} (${texte}) sur ${cFond} (${t}) : ${r.toFixed(2)}:1, il en faut ${seuil} — ce texte est illisible sur son propre fond`);
+      }
+    }
+  }
+}
+
 // --- l'URL des polices, ecrite a deux endroits ---
 //
 // index.html demande les polices des l'analyse du HTML, pour que le hero peint
