@@ -6086,8 +6086,16 @@ export const DEFAULT_CONFIG = {
     ctaFooterColor:"rgba(255,255,255,.35)",
     pageBg:"#FDFBF8",
     // ----- POLICES -----
-    fontTitle:"'Quicksand', sans-serif",
-    fontBody:"'Outfit', sans-serif",
+    // Les MEMES piles que index.html, repli compris. Elles divergeaient :
+    // « 'Quicksand', sans-serif » ici contre « 'Quicksand','Outfit',system-ui,
+    // sans-serif » la-bas. Tant que Quicksand n'est pas arrivee — et sur un
+    // mobile bride elle arrive apres le premier rendu — les deux hero sont donc
+    // peints dans des polices differentes, avec des largeurs de ligne
+    // differentes : 380 px contre 328 px pour la meme phrase. Le titre de React
+    // devient alors un candidat LCP distinct, peint deux secondes plus tard.
+    // C'est ce qui maintenait le LCP mobile a 3,3 s malgre tout le reste.
+    fontTitle:"'Quicksand','Outfit',system-ui,sans-serif",
+    fontBody:"'Outfit',system-ui,-apple-system,sans-serif",
     fontTitleWeight:"700",
     fontBodyWeight:"400",
     googleFontsUrl:"https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap",
