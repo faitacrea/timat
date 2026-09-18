@@ -16,9 +16,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import {
-  Styles, Toast, IconeOuEmoji, Messagerie, Parrainage, FAQ, LandingPage,
-  Boutique, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig,
-  backupCurrentConfig, MAINTENANCE
+  Boutique, Messagerie, Styles, Toast, IconeOuEmoji, LandingPage, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig, backupCurrentConfig, MAINTENANCE
 } from "./App.jsx";
 
 const BOField=({label,children,hint})=>(

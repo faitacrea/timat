@@ -388,6 +388,22 @@ for (const u of fichiersAppSrc()) {
   });
 }
 
+// --- la landing rendue par React doit porter un h1 ---
+//
+// index.html en pose un pour la premiere peinture, puis React remplacait tout
+// le corps par des div : la page servie n'avait plus AUCUN titre de niveau 1.
+// Les controles lisaient dist/index.html, ou le h1 statique est bien la, et ne
+// voyaient rien. C'est pourtant le DOM rendu que Google lit.
+{
+  const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+  const i = app.indexOf("function LandingPage(");
+  const corps = i < 0 ? "" : app.slice(i, app.indexOf("\nfunction ", i + 10));
+  const combien = (corps.match(/<h1[\s>]/g) || []).length;
+  if (combien !== 1) {
+    signale("seo", `LandingPage rend ${combien} <h1> — il en faut exactement un, sinon la page servie n'a pas de titre de niveau 1 une fois React affiché`);
+  }
+}
+
 // --- un module qui lit une variable restee dans App.jsx sans l'importer ---
 //
 // En sortant du code de App.jsx, j'ai oublie d'exporter « var TODAY_STR » : mon
@@ -404,6 +420,27 @@ for (const u of fichiersAppSrc()) {
   const hautNiveau = new Set(
     [...app.matchAll(/^(?:export )?(?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1])
   );
+  // Ce que App.jsx tient de React compte aussi : une declaration lazy() est
+  // partie dans un module qui n'importait pas « lazy », le build est passe, et
+  // l'ecran de la journee tombait sur « lazy is not defined ».
+  for (const m of app.matchAll(/import\s*\{([^}]*)\}\s*from\s*"react(?:-dom)?"/g)) {
+    for (const n of m[1].split(",")) if (n.trim()) hautNiveau.add(n.trim());
+  }
+  // Un nom precede d'une lettre de phrase n'est pas un appel : « il apparaitra
+  // ici et dans Documents. » citait un ecran, et le signaler aurait rendu ce
+  // controle illisible. On exige du code des DEUX cotes.
+  const enPositionDeCode = (t, n) => {
+    // Une balise JSX « <Suspense fallback=... » est suivie d'une espace : le
+    // motif de code ne la voyait pas, et « Suspense is not defined » est passe
+    // au travers une fois de plus. On la reconnait explicitement.
+    if (new RegExp("<" + n + "[\\s/>]").test(t)) return true;
+    for (const m of t.matchAll(new RegExp("\\b" + n + "(?=[).,;:=\\]}\\[(.?])", "g"))) {
+      let j = m.index - 1;
+      while (j >= 0 && (t[j] === " " || t[j] === "\t")) j--;
+      if (j < 0 || "([{,;=:<&|!?+-*/>}\n".includes(t[j])) return true;
+    }
+    return false;
+  };
   for (const u of fichiers) {
     if (u.pathname.endsWith("/App.jsx")) continue;
     const t = readFileSync(u, "utf8");
@@ -420,8 +457,39 @@ for (const u of fichiersAppSrc()) {
       // Un nom suivi d'une ponctuation de code, jamais un mot de phrase : le
       // mot « Contrats » dans « Contrats, avenants, courriers illimites » n'est
       // pas un appel, et le signaler aurait rendu ce controle inutilisable.
-      if (new RegExp("\\b" + n + "(?=[).,;:=\\]}\\[(.?])").test(t)) {
+      if (enPositionDeCode(t, n)) {
         signale("module", `${nom} lit « ${n} », déclaré dans App.jsx, sans l'importer — le build passe, l'écran tombe à l'ouverture`);
+      }
+    }
+  }
+}
+
+// --- un module qui importe un nom que l'autre n'exporte pas ---
+//
+// Le pendant du controle precedent. Rollup n'en fait qu'un avertissement, noye
+// dans la sortie du build : « X is not exported by src/App.jsx ». Le build
+// reussit, la valeur vaut undefined, et l'ecran tombe a l'ouverture. Quatre de
+// ces imports fantomes trainaient apres le decoupage.
+{
+  const fichiers = fichiersAppSrc();
+  const exportes = new Map();
+  for (const u of fichiers) {
+    exportes.set(
+      "./" + u.pathname.split("/").pop(),
+      new Set([...readFileSync(u, "utf8").matchAll(/^export (?:function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]))
+    );
+  }
+  for (const u of fichiers) {
+    const t = readFileSync(u, "utf8");
+    const nom = u.pathname.split("/").pop();
+    for (const m of t.matchAll(/import\s*\{([^}]*)\}\s*from\s*"(\.\/[^"]+)"/g)) {
+      const cible = exportes.get(m[2]);
+      if (!cible) continue;
+      for (const brut of m[1].split(",")) {
+        const n = brut.trim().split(" as ")[0].trim();
+        if (n && !cible.has(n)) {
+          signale("module", `${nom} importe « ${n} » depuis ${m[2]}, qui ne l'exporte pas — le build ne fait qu'un avertissement, la valeur vaut undefined`);
+        }
       }
     }
   }
