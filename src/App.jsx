@@ -6836,7 +6836,9 @@ export const DEFAULT_CONFIG = {
     section5Bg:"#FFFFFF",
     section6Bg:"#FDFBF8",
     sectionConfBg:"#F4F1EA", faqBg:"#F4F1EA", blogBg:"#FDFBF8", footerBg:"#2E4859",
-    faqTitleColor:"#FFFFFF", faqDescColor:"rgba(255,255,255,.65)",
+    // Meme faute en sens inverse : du blanc sur le creme #F4F1EA de la section
+    // des questions. « Questions frequentes » ne se lisait pas.
+    faqTitleColor:"#2E4859", faqDescColor:"#55707C",
     blogTitleColor:"#2E4859", blogDescColor:"#5F7A86",
     footerTextColor:"rgba(255,255,255,.7)",
     ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
@@ -6878,8 +6880,12 @@ export const DEFAULT_CONFIG = {
     s1CardDescColor:"rgba(255,255,255,.5)",
     s1QuoteBg:"rgba(232,168,74,.08)",
     s1QuoteColor:"#E8A84A",
-    s2TitleColor:"#0D1B2A",
-    s2DescColor:"#6B5348",
+    // Le titre de cette section etait ecrit en #0D1B2A — exactement la couleur
+    // de depart du degrade qui lui sert de fond. Il etait donc invisible, et le
+    // sous-titre en brun sombre juste en dessous l'etait presque autant. Le code
+    // prevoyait bien du blanc en repli ; c'est la configuration qui l'ecrasait.
+    s2TitleColor:"#FFFFFF",
+    s2DescColor:"rgba(255,255,255,.78)",
     s4TitleColor:"#2E4859",
     s4SubColor:"#5F7A86",
     s5TitleColor:"#0D1B2A",
