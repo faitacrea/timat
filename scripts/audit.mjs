@@ -490,6 +490,45 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
+// --- un article de blog publie sans image de couverture ---
+//
+// La carte d'un article sans couverture ne montre rien : pas de zone image du
+// tout. Sur la page du blog, huit cartes sur cinquante etaient ainsi, et neuf
+// des onze brouillons en attente le sont aussi — ils partiront en ligne comme
+// ca, un par jour, sans que rien ne le dise.
+//
+// L'article perd aussi son og:image : partage sur un reseau social ou dans une
+// conversation, il arrive sans visuel.
+//
+// Sanity repond sans jeton, le blog entier est construit ainsi. Quand il est
+// injoignable — c'est le cas dans l'environnement de verification — ce controle
+// l'ecrit, et ne se tait jamais en pretendant que tout va bien.
+{
+  const PROJET = "740dzcep", JEU = "production";
+  const groq = `{
+    "publiesSansImage": *[_type=="article" && !(_id in path("drafts.**")) && !defined(imageCouverture)]{"s": slug.current},
+    "brouillonsSansImage": *[_type=="article" && _id in path("drafts.**") && !defined(imageCouverture)]{"s": slug.current}
+  }`;
+  try {
+    const r = await fetch(
+      `https://${PROJET}.api.sanity.io/v2024-01-01/data/query/${JEU}?query=${encodeURIComponent(groq)}`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const { result } = await r.json();
+    const pub = (result?.publiesSansImage || []).map((x) => x.s);
+    const bro = (result?.brouillonsSansImage || []).map((x) => x.s);
+    if (pub.length) {
+      signale("blog", `${pub.length} article(s) en ligne sans image de couverture — leur carte s'affiche sans visuel et leur partage n'a pas d'aperçu : ${pub.slice(0, 3).join(", ")}${pub.length > 3 ? "…" : ""}`);
+    }
+    if (bro.length) {
+      signale("blog", `${bro.length} brouillon(s) sans image de couverture — ils seront publiés tels quels, un par jour : ${bro.slice(0, 3).join(", ")}${bro.length > 3 ? "…" : ""}`);
+    }
+  } catch (e) {
+    console.log(`  (couvertures du blog : non vérifiées — ${e.message})`);
+  }
+}
+
 // --- une image servie en PNG alors que le WebP existe a cote ---
 //
 // logoForRole servait des .png de 85 a 143 Ko, en 1 732 px de large, pour un
