@@ -5925,12 +5925,21 @@ const ONBOARD_STEPS=[
 // --- Backoffice reusable components (outside to avoid re-mount on state change) ---
 // Le back-office vit dans src/backoffice.jsx : il n'est chargé que sur
 // la route /backoffice, pas par les visiteuses de la landing.
+// WebP, pas PNG. Les huit logos par role pesaient 85 a 143 Ko chacun, en
+// 1 732 px de large, pour un rendu de 56 px : PageSpeed chiffrait a lui seul le
+// logo de la barre du haut a 110 Ko d'economies. Redimensionnes a 435 px — le
+// plus grand usage est le logo de chargement a 64 px de haut sur un ecran x3 —
+// et encodes en WebP, les huit pesent 61 Ko au total au lieu de 922.
+//
+// Les .png restent dans public/ : les donnees structurees et og:image les
+// citent par leur nom, et ces balises-la sont lues par des robots qui ne
+// negocient pas le format.
 const logoForRole = (role, dark) => {
   const s = dark ? "-dark" : "";
-  if(role === "parent") return `/logo${s}-parent.png`;
-  if(role === "mam") return `/logo${s}-mam.png`;
-  if(role === "creche") return `/logo${s}-creche.png`;
-  return `/logo${s}.png`;
+  if(role === "parent") return `/logo${s}-parent.webp`;
+  if(role === "mam") return `/logo${s}-mam.webp`;
+  if(role === "creche") return `/logo${s}-creche.webp`;
+  return `/logo${s}.webp`;
 };
 
 const FAQ_LANDING_DEFAULT=[

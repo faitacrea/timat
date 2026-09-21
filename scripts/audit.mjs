@@ -490,6 +490,44 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
+// --- une image servie en PNG alors que le WebP existe a cote ---
+//
+// logoForRole servait des .png de 85 a 143 Ko, en 1 732 px de large, pour un
+// rendu de 56 px. PageSpeed chiffrait le seul logo de la barre du haut a 110 Ko
+// d'economies. Rien ne plantait : une image trop lourde s'affiche tres bien.
+//
+// On refuse donc qu'un .png soit reference comme source d'image quand le .webp
+// du meme nom existe dans public/. Les balises og:image et les donnees
+// structurees restent exemptees : elles sont lues par des robots qui ne
+// negocient pas le format, et leur URL doit rester stable.
+{
+  const dossier = new URL("../public/", import.meta.url);
+  const webps = new Set(
+    readdirSync(dossier).filter((f) => f.endsWith(".webp")).map((f) => f.replace(/\.webp$/, ""))
+  );
+  const sources = [...fichiersAppSrc(), new URL("../index.html", import.meta.url)];
+  for (const u of sources) {
+    const nom = u.pathname.split("/").pop();
+    const texte = readFileSync(u, "utf8");
+    texte.split("\n").forEach((ligne, i) => {
+      if (/og:image|ld\+json|schema\.org|OGIMG|const IMG=/.test(ligne)) return;
+      // Le nom est souvent construit : `/logo${s}-parent.png`. Un motif qui
+      // exige un nom entier rate ces cas — verifie en remettant le .png, il
+      // repondait « aucune anomalie ». On prend donc le prefixe litteral et on
+      // regarde si un .webp commence par lui.
+      const noms = [
+        ...[...ligne.matchAll(/["'`\/]([a-z0-9-]+)\.png\b/g)].map((m) => m[1]),
+        ...[...ligne.matchAll(/[`"'\/]([a-z0-9-]+)\$\{[^}]*\}[a-z0-9-]*\.png\b/g)].map((m) => m[1]),
+      ];
+      for (const nomImage of noms) {
+        const m = [nomImage, nomImage];
+        if (![...webps].some((w) => w === nomImage || w.startsWith(nomImage))) continue;
+        signale("image", `${nom}:${i + 1} sert ${m[1]}.png alors que ${m[1]}.webp existe — une image trop lourde s'affiche très bien, et rien ne le signale`);
+      }
+    });
+  }
+}
+
 // --- la marge du hero peint avant React ---
 //
 // Le LCP retient le plus GRAND element peint, et n'enregistre un nouveau
