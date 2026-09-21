@@ -4988,7 +4988,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
               <div style={{ display:"inline-block", background:"rgba(228,145,120,.14)", border:"1px solid rgba(228,145,120,.32)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#E49178", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</div>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</h2>
               <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.65)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
           </FadeIn>
@@ -5039,7 +5039,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</div>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</h2>
               <div style={{ fontSize: 15, color: L.s2DescColor||"rgba(255,255,255,.6)", lineHeight: 1.7 }}>{L.s2Desc}</div>
             </div>
           </FadeIn>
@@ -5139,9 +5139,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#C84B31", marginBottom: 24, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
                 La gestion assistante maternelle <span style={{ color: "#C47D67", fontStyle: "italic" }}>sans mauvaise surprise</span>
-              </div>
+              </h2>
               <div style={{ fontSize: 15, color: L.s4SubColor||"#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
                 Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
               </div>
@@ -5269,9 +5269,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
+            <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
               {L.s5Title}
-            </div>
+            </h2>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
             {testimonials.map((t, i) => (
@@ -5296,7 +5296,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <WaveDivider color={L.wave6||L.section6Bg||"#2E4859"} on={L.wavesOn!==false&&L.waveOn6!==false}/>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</div>
+            <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</h2>
             <div style={{ fontSize: 14, color: L.s6SubColor||"#55707C", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
           </FadeIn>
           <div className="lp-tarifs-grid">
@@ -5362,11 +5362,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       {/* CTA FINAL */}
       {SV.ctaFinal!==false&&<div className="lp-section" style={{ order:ord("ctaFinal"), background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
-          <div style={{ fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
+          <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
             <span style={{ color: accent, fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
             <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
-          </div>
+          </h2>
           <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
           <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
           <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
@@ -5379,7 +5379,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.faqTitleColor||"#2E4859", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</div>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.faqTitleColor||"#2E4859", fontWeight: 700, marginBottom: 10 }}>Questions fréquentes</h2>
               <div style={{ fontSize: 15, color: L.faqDescColor||"#6B7A82" }}>Tout ce que vous devez savoir avant de commencer.</div>
             </div>
           </FadeIn>
@@ -5409,7 +5409,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.blogTitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</div>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.blogTitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>Ressources pour les assmats</h2>
               <div style={{ fontSize: 15, color: L.blogDescColor||"rgba(255,255,255,.7)" }}>Guides pratiques, conseils et informations utiles pour votre quotidien.</div>
             </div>
           </FadeIn>

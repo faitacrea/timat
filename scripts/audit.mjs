@@ -613,6 +613,21 @@ for (const u of fichiersAppSrc()) {
   if (combien !== 1) {
     signale("seo", `LandingPage rend ${combien} <h1> — il en faut exactement un, sinon la page servie n'a pas de titre de niveau 1 une fois React affiché`);
   }
+  // Les titres de section etaient des <div> : la landing entiere n'avait que
+  // deux titres, dont un h3 juste apres le h1. Un lecteur d'ecran ne pouvait pas
+  // la parcourir, et Google n'y voyait aucune structure. Lighthouse le disait
+  // — « les elements d'en-tete ne sont pas dans l'ordre decroissant » — et je
+  // l'ai lu trois fois sans le traiter.
+  const h2 = (corps.match(/<h2[\s>]/g) || []).length;
+  if (h2 < 6) {
+    signale("seo", `LandingPage ne rend que ${h2} <h2> — ses sections doivent être des titres, pas des <div>, sinon la page n'a pas de structure pour un lecteur d'écran ni pour Google`);
+  }
+  // Un h3 avant le premier h2 est un saut de niveau : c'est exactement ce que
+  // Lighthouse refuse.
+  const iH2 = corps.search(/<h2[\s>]/), iH3 = corps.search(/<h3[\s>]/);
+  if (iH3 >= 0 && (iH2 < 0 || iH3 < iH2)) {
+    signale("seo", "LandingPage ouvre un <h3> avant tout <h2> — saut de niveau dans la hiérarchie des titres");
+  }
 }
 
 // --- un module qui lit une variable restee dans App.jsx sans l'importer ---
