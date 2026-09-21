@@ -29,7 +29,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <meta name="theme-color" content="#264653" />
+    <meta name="theme-color" content="#2E4859" />
     <meta name="description" content="TiMat gère salaire, congés et déclaration Pajemploi de votre assistante maternelle. Contrats conformes IDCC 3239. 2 mois d'essai gratuit, sans CB." />
     <link rel="canonical" href="https://www.timat.app/" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -59,7 +59,7 @@
          identiques, il n'y a donc pas de saut visible. */
       #timat-boot{
         position:fixed;inset:0;z-index:9999;overflow:auto;
-        background:linear-gradient(165deg,#FDF6EE 0%,#F7ECE0 55%,#FBF1E7 100%);
+        background:linear-gradient(165deg,#24404F 0%,#2E4859 62%,#2A4D53 100%);
         display:flex;flex-direction:column;align-items:center;justify-content:center;
         /* 12 px de marge laterale, exactement comme .lp-hero sous 480 px dans
            src/App.jsx. Ce n'est pas un detail d'esthetique : le titre peint ici
@@ -70,12 +70,12 @@
         gap:18px;padding:32px 12px;text-align:center;
         /* Les memes familles que le hero de React : quand la police arrive,
            les mesures ne changent pas et rien ne se decale. */
-        font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#2E4859;
+        font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#fff;
       }
       #timat-boot .logo img{height:44px;width:auto}
       #timat-boot .badge{
-        font-size:13px;font-weight:700;color:#B8622F;background:rgba(228,145,120,.16);
-        border:1px solid rgba(228,145,120,.35);border-radius:99px;padding:7px 16px;
+        font-size:13px;font-weight:700;color:#BFE3DE;background:rgba(93,169,161,.15);
+        border:1px solid rgba(93,169,161,.38);border-radius:99px;padding:7px 16px;
       }
       #timat-boot h1{
         font-family:'Quicksand','Outfit',system-ui,sans-serif;
@@ -90,28 +90,28 @@
       }
       /* inline, comme le span de React : em en display:block ajoutait une
          boite de ligne pleine largeur et changeait l'aire que le LCP mesure. */
-      #timat-boot h1 em{font-style:italic;color:#C76754}
+      #timat-boot h1 em{font-style:italic;color:#F0A98F}
       #timat-boot .quoi{
         font-size:clamp(15px,2vw,19px);font-weight:600;line-height:1.5;
-        margin:0;max-width:none;color:#42555E;
+        margin:0;max-width:none;color:rgba(255,255,255,.88);
       }
       #timat-boot .detail{
-        font-size:clamp(13px,1.6vw,15px);color:#7C8A90;line-height:1.65;
+        font-size:clamp(13px,1.6vw,15px);color:rgba(255,255,255,.72);line-height:1.65;
         margin:0;max-width:460px;font-weight:400;
       }
       #timat-boot .cta{
-        background:linear-gradient(135deg,#E49178,#C76754);color:#fff;font-weight:700;
+        background:#B4543F;color:#fff;font-weight:700;
         font-size:15px;border-radius:12px;padding:14px 26px;margin-top:4px;
-        box-shadow:0 4px 16px rgba(184,98,47,.32);
+        box-shadow:0 4px 16px rgba(0,0,0,.28);
       }
-      #timat-boot .rassure{font-size:12.5px;color:#8A9BA0;font-weight:600}
+      #timat-boot .rassure{font-size:12.5px;color:rgba(255,255,255,.72);font-weight:600}
       #timat-boot .bar{
-        width:120px;height:3px;border-radius:99px;background:rgba(38,70,83,.09);
+        width:120px;height:3px;border-radius:99px;background:rgba(255,255,255,.16);
         overflow:hidden;margin-top:6px;
       }
       #timat-boot .bar span{
         display:block;height:100%;width:40%;border-radius:99px;
-        background:linear-gradient(90deg,#E49178,#C76754);
+        background:linear-gradient(90deg,#F0A98F,#E49178);
         animation:timat-slide 1.2s ease-in-out infinite;
       }
       @keyframes timat-slide{0%{transform:translateX(-120%)}100%{transform:translateX(330%)}}
@@ -124,7 +124,7 @@
     <div id="root">
       <!-- Écran de chargement visuel -->
       <div id="timat-boot">
-        <div class="logo"><img src="/logo.webp" alt="TiMat" width="140" height="44"></div>
+        <div class="logo"><img src="/logo-dark.webp" alt="TiMat" width="140" height="44"></div>
         <span class="badge">🧸 Conçue par une professionnelle de la petite enfance</span>
         <h1>Application pour assistantes maternelles<br><em>et parents employeurs.</em></h1>
         <p class="quoi">Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.</p>
