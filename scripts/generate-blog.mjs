@@ -767,7 +767,10 @@ function chipsRubriques(articles, actif = null) {
     .map((r) => {
       const [bg, fg] = PASTILLES[r.titre] || PASTILLES._defaut;
       const ici = r.slug === actif;
-      return `<a href="${escAttr(categorieTarget(r.slug).url)}" style="background:${bg};color:${fg}${
+      // L'audience est portee par la pastille elle-meme : le filtre du haut
+      // n'a plus qu'a masquer celles qui ne concernent pas le role choisi.
+      // Une rubrique « les-deux » reste visible pour les deux roles.
+      return `<a href="${escAttr(categorieTarget(r.slug).url)}" data-audience="${escAttr(r.audience || "les-deux")}" style="background:${bg};color:${fg}${
         ici ? ";outline:2px solid " + fg : ""
       }"${ici ? ' aria-current="page"' : ""}>${esc(r.titre)}<span class="n">${r.n}</span></a>`;
     })
@@ -779,14 +782,25 @@ const SCRIPT_FILTRE = `(function(){
   var barre=document.getElementById('filtres');
   if(!barre)return;
   var cartes=[].slice.call(document.querySelectorAll('.cards .card'));
+  var pastilles=[].slice.call(document.querySelectorAll('.rubs a'));
   var vide=document.getElementById('vide');
+  var ROLES={assmat:1,parent:1};
+  function concerne(el,val){
+    var a=el.getAttribute('data-audience')||'les-deux';
+    return a==='les-deux' || a===val;
+  }
   function appliquer(val){
+    if(!ROLES[val])val='assmat';
     var n=0;
     cartes.forEach(function(c){
-      var a=c.getAttribute('data-audience')||'les-deux';
-      var ok = val==='tout' || a==='les-deux' || a===val;
+      var ok=concerne(c,val);
       c.style.display = ok ? '' : 'none';
       if(ok)n++;
+    });
+    // Les rubriques du role choisi, et elles seules : leur compte est deja
+    // celui du role, puisqu'une rubrique appartient a un seul public.
+    pastilles.forEach(function(p){
+      p.style.display = concerne(p,val) ? '' : 'none';
     });
     if(vide)vide.style.display = n ? 'none' : 'block';
     [].slice.call(barre.querySelectorAll('button')).forEach(function(b){
@@ -798,16 +812,29 @@ const SCRIPT_FILTRE = `(function(){
     var b=e.target.closest('button');
     if(b)appliquer(b.getAttribute('data-aud'));
   });
-  var init='tout';
-  try{ init = localStorage.getItem('timat-blog-audience') || 'tout'; }catch(e){}
+  // Le role retenu de la derniere visite. « tout » a disparu : une valeur
+  // gardee par un ancien passage ne doit pas ouvrir une page sans role actif.
+  var init='assmat';
+  try{ init = localStorage.getItem('timat-blog-audience') || 'assmat'; }catch(e){}
   appliquer(init);
 })();`;
 
+// Deux roles, et rien d'autre.
+//
+// « Tout voir » etait le troisieme choix, et c'etait celui qui s'affichait par
+// defaut : la page s'ouvrait donc sur cinquante articles et une douzaine de
+// rubriques melangees, dont la moitie ne concernait pas la personne qui lisait.
+// Une assistante maternelle voyait « Choisir son mode de garde », un parent
+// voyait « Devenir assistante maternelle ». Le filtre existait, mais il fallait
+// penser a s'en servir, et la page ne donnait aucune raison de le faire.
+//
+// La question « Je suis... » n'a que deux reponses vraies. On la pose vraiment :
+// un role est toujours actif, les rubriques affichees sont celles de ce role, et
+// leur compte est celui du role — plus jamais les deux d'un coup.
 function barreFiltres() {
-  return `<div class="filtres" id="filtres">
+  return `<div class="filtres" id="filtres" role="group" aria-label="Choisir votre rôle">
     <span class="lab">Je suis</span>
-    <button type="button" data-aud="tout" aria-pressed="true">Tout voir</button>
-    <button type="button" data-aud="assmat" aria-pressed="false">Assistante maternelle</button>
+    <button type="button" data-aud="assmat" aria-pressed="true">Assistante maternelle</button>
     <button type="button" data-aud="parent" aria-pressed="false">Parent employeur</button>
   </div>`;
 }
@@ -829,7 +856,7 @@ function pageIndex(articles) {
         : `<p class="lead">Les premiers articles arrivent très bientôt.</p>`
     }
   </div>
-  <p class="vide" id="vide">Aucun article pour ce public pour l'instant. Choisissez « Tout voir ».</p>
+  <p class="vide" id="vide">Aucun article pour ce public pour l'instant. Essayez l'autre rôle ci-dessus.</p>
 </main>`;
 
   return layout({

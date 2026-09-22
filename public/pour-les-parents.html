@@ -47,6 +47,9 @@
   :root{--terraD:var(--terra-fonce);--cream2:var(--cream-fonce);--sage:#5F7360}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
+  /* La barre du haut est collante : sans cette marge, « Voir mon espace ↓ »
+     amenait la section juste dessous et son titre passait derrière. */
+  section[id],div[id]{scroll-margin-top:78px}
   body{line-height:1.6}
   a{text-decoration:none;color:var(--terra-texte)}
   a:hover{text-decoration:underline}
@@ -155,6 +158,20 @@
   .step b{display:block;font-family:var(--titre);color:var(--marine);font-size:15px;margin-bottom:5px}
   .step span{font-size:13px;color:var(--muted)}
 
+  .parler{max-width:860px;margin:30px auto 0;background:var(--marine);border-radius:22px;padding:28px 26px;
+    display:grid;grid-template-columns:1fr auto;gap:22px 30px;align-items:center;color:#fff}
+  @media(max-width:760px){.parler{grid-template-columns:1fr;text-align:center}}
+  .parler .lab{display:inline-block;background:rgba(93,169,161,.16);border:1px solid rgba(93,169,161,.42);
+    color:#BFE3DE;font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+    padding:5px 13px;border-radius:99px;margin-bottom:12px}
+  .parler h3{font-size:20px;color:#fff;margin-bottom:9px;line-height:1.3}
+  .parler p{font-size:14px;color:rgba(255,255,255,.78);line-height:1.65}
+  .parler p b{color:#F0A98F;font-weight:700}
+  .parler-act{display:flex;flex-direction:column;gap:10px;white-space:nowrap}
+  @media(max-width:760px){.parler-act{align-items:center}}
+  .btn2.sombre{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.28);margin-left:0}
+  .btn2.sombre:hover{background:rgba(255,255,255,.14)}
+
   .links-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:14px}
   .lcard{background:#fff;border:1px solid var(--br);border-radius:14px;padding:18px;transition:transform .15s,box-shadow .15s}
   .lcard:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(46,72,89,.10);text-decoration:none}
@@ -184,7 +201,7 @@
   .foot-bottom{border-top:1px solid rgba(255,255,255,.18);padding-top:18px;font-size:11.5px;color:rgba(255,255,255,.6)}
 
   /* DEMO facon landing : onglets + explication + telephone */
-  .demo-layout{display:grid;grid-template-columns:210px 1fr 300px;gap:26px;align-items:center;max-width:1100px;margin:0 auto}
+  .demo-layout{display:grid;grid-template-columns:200px 1fr 290px;gap:26px;align-items:center;max-width:1100px;margin:0 auto}
   @media(max-width:1000px){.demo-layout{grid-template-columns:1fr;gap:20px}}
   .demo-tabs{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:8px}
   @media(max-width:1000px){.demo-tabs{flex-direction:row;overflow-x:auto;-webkit-overflow-scrolling:touch}}
@@ -248,6 +265,37 @@
   .dmi b{display:block;font-size:10px;color:var(--marine);font-weight:700}
   .dmi span{display:block;font-size:8px;color:var(--muted)}
   .dcal span.a{background:rgba(200,75,49,.12);border-color:rgba(200,75,49,.3);color:var(--terraD)}
+  .dtopbar .dtopright{display:flex;align-items:center;gap:5px;font-size:10px}
+  .dtopbar .dtopright b{font-size:9px;color:var(--marine)}
+  .dleg{display:flex;gap:12px;font-size:8px;color:var(--muted);font-weight:700}
+  .dleg i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+  .dleg .lp{background:rgba(93,169,161,.35)}
+  .dleg .la{background:rgba(180,84,63,.3)}
+  .dphoto{margin-top:8px;background:#fff;border:1px dashed var(--br);border-radius:11px;padding:9px;
+    font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .dphoto span{font-size:15px}
+  .dligne{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;
+    border-bottom:1px solid var(--br);font-size:10px;color:var(--muted)}
+  .dligne b{font-size:11px;color:var(--marine);white-space:nowrap}
+  .dligne.moins b{color:var(--teal-fonce)}
+  .dligne+.dcard{margin-top:10px}
+  .dsaisie{margin-top:10px;background:#fff;border:1px solid var(--br);border-radius:99px;padding:8px 12px;
+    font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+  .dsaisie span{color:var(--terra-fonce);font-size:12px}
+
+  /* LES DEUX MENUS DE L'APPLICATION, à taille lisible.
+     Dans le téléphone de la démo ils faisaient 8 px de haut : personne ne les
+     lisait, et la page perdait ainsi son meilleur argument — l'étendue de ce
+     que le parent trouve dans son espace. */
+  .menus{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;max-width:900px;margin:34px auto 0}
+  .menucol{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px}
+  .menucol h3{font-size:15px;color:#fff;margin-bottom:14px}
+  .menucol ul{list-style:none;margin:0;padding:0}
+  .menucol li{display:grid;grid-template-columns:26px 1fr;gap:4px 10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.09)}
+  .menucol li:first-child{border-top:none}
+  .menucol li i{grid-row:span 2;font-style:normal;font-size:17px;line-height:1.2}
+  .menucol li b{font-size:13.5px;color:#fff;font-weight:700}
+  .menucol li span{font-size:12px;color:rgba(255,255,255,.66);line-height:1.45}
 </style>
 </head>
 <body>
@@ -265,14 +313,14 @@
 <div class="hero">
   <div class="wrap">
     <span class="pill"><span class="pt" aria-hidden="true"></span>Espace parent employeur</span>
-    <h1>L'espace parent de TiMat,<br><em>gratuit pour vous.</em></h1>
-    <p class="sub">Vous voyez la journée de votre enfant, ce que la garde vous coûte vraiment une fois le CMG déduit, et votre déclaration Pajemploi préparée à partir des présences réelles.</p>
-    <div class="free">🎁 Seule votre assistante maternelle est abonnée — vous, jamais</div>
+    <h1>L'application qui vous montre la journée de votre enfant<br><em>chez votre assistante maternelle.</em></h1>
+    <p class="sub">Repas, sieste, activités, photos et heures de présence, au fil de la journée. Et ce que la garde vous coûte vraiment, une fois le CMG déduit.</p>
+    <div class="free">🎁 Gratuite pour les parents — seule votre assistante maternelle est abonnée</div>
     <div class="hero-btns">
-      <a href="#decouvrir" class="btn">Voir mon espace ↓</a>
-      <a href="/?connexion=parent" class="btn2">Se connecter</a>
+      <a href="#decouvrir" class="btn">Voir à quoi ça ressemble ↓</a>
+      <a href="/?connexion=parent" class="btn2">J'ai déjà un compte</a>
     </div>
-    <p class="detail">Votre assistante maternelle vous envoie un lien d'invitation : votre compte se crée en une minute, sans carte bancaire.</p>
+    <p class="detail">C'est votre assistante maternelle qui vous ouvre l'accès, par un lien d'invitation. Elle ne l'utilise pas encore ? <a href="#parler">Vous pouvez lui en parler.</a></p>
     <div class="microtags"><span>🔒 Photos privées</span><span>🇫🇷 Données en France</span><span>👶 Conçue par une pro de la petite enfance</span></div>
   </div>
 </div>
@@ -281,18 +329,33 @@
      qui expliquent, on laisse l'œil se poser sur ce dont on parle. -->
 <div class="bandeau"><img src="/hero-enfants.webp" alt="Des petites voitures posées sur un tapis de jeu." width="1600" height="1067" loading="lazy" decoding="async" style="object-position:50% 74%"></div>
 
+<!-- ============================ LA DÉMO ============================
+     Elle montrait trois écrans, et deux d'entre eux n'étaient qu'un menu :
+     une liste de rubriques dans un téléphone de 290 px, illisible, et qui ne
+     disait rien de ce que le parent allait VOIR. Elle montre maintenant cinq
+     écrans réels, dans l'ordre des questions que se pose un parent : ce que
+     fait mon enfant, combien d'heures, combien ça me coûte, et comment je
+     parle à la personne qui le garde.
+
+     Les deux menus n'ont pas disparu : ils sont sous la démo, lisibles, à
+     leur taille. Ils sont recopiés de GROUPS_P dans src/App.jsx, et une
+     barrière d'audit vérifie qu'ils ne s'en écartent pas — l'ancienne version
+     avait déjà perdu « Mes alertes » en route sans que personne ne le voie.
+     ================================================================= -->
 <section class="sec-dark" id="decouvrir">
   <div class="wrap">
     <div class="sectitle fade">
       <h2>Votre espace parent, en vrai</h2>
-      <p>Trois onglets, tout est là. Cliquez pour découvrir ce que vous verrez dans votre espace.</p>
+      <p>Cinq écrans, tels que vous les verrez. Cliquez pour les parcourir.</p>
     </div>
     <div class="demo-layout fade">
 
       <div class="demo-tabs" id="dtabs">
-        <button class="dtab on" data-p="accueil"><span class="di">🏠</span><span class="dl">Accueil</span></button>
-        <button class="dtab" data-p="enfant"><span class="di">👶</span><span class="dl">Mon enfant</span></button>
-        <button class="dtab" data-p="admin"><span class="di">🗂️</span><span class="dl">Administratif</span></button>
+        <button class="dtab on" data-p="accueil"><span class="di">🏠</span><span class="dl">Le quotidien</span></button>
+        <button class="dtab" data-p="journee"><span class="di">📔</span><span class="dl">Sa journée</span></button>
+        <button class="dtab" data-p="pointage"><span class="di">⏰</span><span class="dl">Ses heures</span></button>
+        <button class="dtab" data-p="cout"><span class="di">💶</span><span class="dl">Coût &amp; aides</span></button>
+        <button class="dtab" data-p="messages"><span class="di">💬</span><span class="dl">Messagerie</span></button>
       </div>
 
       <div class="demo-explain">
@@ -305,51 +368,77 @@
           <div class="demo-notch"></div>
           <div class="demo-frame">
             <div class="dtopbar">
-              <span class="dlogo">tim<i>at</i> <small style="font-size:7px;color:#9AAAB2;font-family:'DM Mono',monospace">v3</small></span>
-              <span style="display:flex;align-items:center;gap:5px;font-size:10px">🔔 🌙 ⚙️ <b style="font-size:9px;color:var(--marine)">Julie</b></span>
+              <span class="dlogo">tim<i>at</i></span>
+              <span class="dtopright">🔔 🌙 <b>Julie</b></span>
             </div>
             <div class="dbody">
 
+              <!-- 1. LE QUOTIDIEN -->
               <div class="dscreen on" data-s="accueil">
                 <div class="dhero">
-                  <span class="ddate">MERCREDI 15 JUILLET 2026</span>
+                  <span class="ddate">MERCREDI 15 JUILLET</span>
                   <div class="dtitle">La journée de Chloé ✨</div>
-                  <div class="dsub">Suivez son quotidien en temps réel.</div>
+                  <div class="dsub">Arrivée à 8 h 12 · en cours</div>
                   <span class="dabs">🤒 Déclarer une absence</span>
                 </div>
                 <div class="dq">Que voulez-vous faire ?</div>
                 <div class="dchips">
-                  <div class="dchip" style="background:#FBF0DC;color:#9A7B3F"><i>📔</i>La journée</div>
-                  <div class="dchip" style="background:#E7F3EF;color:#2E7F73"><i>⏰</i>Pointer</div>
-                  <div class="dchip" style="background:#FBEDE7;color:var(--terraD)"><i>💬</i>Messages</div>
-                  <div class="dchip" style="background:#E8EEF8;color:#3E6394"><i>📄</i>Documents</div>
+                  <div class="dchip" style="background:#FBF0DC;color:#8A6C30"><i>📔</i>La journée</div>
+                  <div class="dchip" style="background:#E7F3EF;color:#2F655F"><i>⏰</i>Ses heures</div>
+                  <div class="dchip" style="background:#FBEDE7;color:var(--terra-texte)"><i>💬</i>Messages</div>
+                  <div class="dchip" style="background:#E8EEF8;color:#3A5E8E"><i>📄</i>Documents</div>
                 </div>
-                <div class="drow"><span class="e">🦋</span><span><span class="t">Chloé — Arrivée</span><span class="d">Un tap pour enregistrer l'arrivée</span></span><span class="h">✅</span></div>
-                <div class="drow"><span class="e">📔</span><span><span class="t">Cahier du jour de Chloé</span><span class="d">Repas, siestes, activités, photos</span></span><span class="h">→</span></div>
+                <div class="drow"><span class="e">🍲</span><span><span class="t">Déjeuner terminé</span><span class="d">A bien mangé</span></span><span class="h">12 h 20</span></div>
+                <div class="drow"><span class="e">😴</span><span><span class="t">Sieste en cours</span><span class="d">Endormie à 13 h 05</span></span><span class="h">13 h 05</span></div>
               </div>
 
-              <div class="dscreen" data-s="enfant">
-                <div class="dsec">MON ENFANT</div>
-                <div class="dmenu">
-                  <div class="dmi"><i>📔</i><span><b>Journée</b><span>Sa journée : repas, sieste, activités</span></span></div>
-                  <div class="dmi"><i>⏰</i><span><b>Pointage</b><span>Heures de présence et absences</span></span></div>
-                  <div class="dmi"><i>📊</i><span><b>Suivi & Progrès</b><span>Son développement au quotidien</span></span></div>
-                  <div class="dmi"><i>🏥</i><span><b>Santé & Urgence</b><span>Fiche d'urgence et informations santé</span></span></div>
-                  <div class="dmi"><i>🌿</i><span><b>Projet d'accueil</b><span>Le projet pédagogique</span></span></div>
-                  <div class="dmi"><i>✨</i><span><b>Bilans</b><span>Bilans partagés par l'assistante maternelle</span></span></div>
-                </div>
+              <!-- 2. SA JOURNÉE -->
+              <div class="dscreen" data-s="journee">
+                <div class="dsec">SA JOURNÉE — MERCREDI 15 JUILLET</div>
+                <div class="drow"><span class="e">🥣</span><span><span class="t">Petit-déjeuner</span><span class="d">Tout fini</span></span><span class="h">8 h 40</span></div>
+                <div class="drow"><span class="e">🎨</span><span><span class="t">Peinture à doigts</span><span class="d">Avec Léo et Nina</span></span><span class="h">10 h 15</span></div>
+                <div class="drow"><span class="e">🍲</span><span><span class="t">Déjeuner</span><span class="d">Purée de carottes, compote</span></span><span class="h">12 h 20</span></div>
+                <div class="drow"><span class="e">😴</span><span><span class="t">Sieste</span><span class="d">1 h 40, réveil calme</span></span><span class="h">13 h 05</span></div>
+                <div class="dphoto"><span>📷</span> 2 photos partagées aujourd'hui</div>
               </div>
 
-              <div class="dscreen" data-s="admin">
-                <div class="dsec">ADMINISTRATIF</div>
-                <div class="dmenu">
-                  <div class="dmi"><i>📅</i><span><b>Calendrier</b><span>Planning, absences et événements</span></span></div>
-                  <div class="dmi"><i>💬</i><span><b>Messagerie</b><span>Échanges avec l'assistante maternelle</span></span></div>
-                  <div class="dmi"><i>💶</i><span><b>Aides & Simulateurs</b><span>CMG et estimation du coût de garde</span></span></div>
-                  <div class="dmi"><i>🧾</i><span><b>Mon contrat</b><span>Contrat, bulletins et paiements</span></span></div>
-                  <div class="dmi"><i>🗂️</i><span><b>Documents & Attestations</b><span>Vos documents et attestations</span></span></div>
-                  <div class="dmi"><i>❓</i><span><b>Centre d'aide</b><span>Guides et contact</span></span></div>
+              <!-- 3. SES HEURES -->
+              <div class="dscreen" data-s="pointage">
+                <div class="dsec">JUILLET 2026</div>
+                <div class="dcard">
+                  <span class="lbl">Heures pointées ce mois</span>
+                  <span class="val">142 h 30</span>
+                  <span class="sub">dont 4 h 30 complémentaires</span>
                 </div>
+                <div class="dcal">
+                  <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                  <span class="p">1</span><span class="p">2</span><span class="p">3</span><span class="p">4</span><span class="p">5</span><span>6</span><span>7</span>
+                  <span class="p">8</span><span class="p">9</span><span class="p">10</span><span class="a">11</span><span class="p">12</span><span>13</span><span>14</span>
+                  <span class="p">15</span><span class="p">16</span><span class="p">17</span><span class="p">18</span><span class="p">19</span><span>20</span><span>21</span>
+                </div>
+                <div class="dleg"><span><i class="lp"></i>Présente</span><span><i class="la"></i>Absence déclarée</span></div>
+              </div>
+
+              <!-- 4. COÛT & AIDES -->
+              <div class="dscreen" data-s="cout">
+                <div class="dsec">CE QUE LA GARDE VOUS COÛTE</div>
+                <div class="dligne"><span>Coût mensuel de l'accueil</span><b>540,10 €</b></div>
+                <div class="dligne moins"><span>CMG versé par la CAF</span><b>− 313,06 €</b></div>
+                <div class="dcard">
+                  <span class="lbl">Reste à charge</span>
+                  <span class="val">227,04 €</span>
+                  <span class="sub">avant crédit d'impôt de 50 %</span>
+                </div>
+                <div class="drow"><span class="e">🧮</span><span><span class="t">Simulateur CMG</span><span class="d">Selon vos revenus et vos heures</span></span><span class="h">→</span></div>
+              </div>
+
+              <!-- 5. MESSAGERIE -->
+              <div class="dscreen" data-s="messages">
+                <div class="dsec">SANDRA — ASSISTANTE MATERNELLE</div>
+                <div class="dmsg them"><span class="who">Sandra · 12 h 22</span>Chloé a très bien mangé ce midi 🙂 Je vous mets une photo de la peinture de ce matin.</div>
+                <div class="dmsg me"><span class="who">Vous · 12 h 41</span>Merci ! On viendra la chercher vers 17 h 30 ce soir.</div>
+                <div class="dmsg them"><span class="who">Sandra · 12 h 44</span>C'est noté, à ce soir.</div>
+                <div class="dsaisie">Écrire un message…<span>➤</span></div>
               </div>
 
             </div>
@@ -362,6 +451,36 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- LES DEUX MENUS, À TAILLE LISIBLE.
+         Recopiés de GROUPS_P (src/App.jsx). Une barrière d'audit les compare
+         ligne à ligne : si l'application gagne ou perd une rubrique, cette
+         page ne peut plus mentir. -->
+    <div class="menus fade">
+      <div class="menucol">
+        <h3>👶 Mon enfant</h3>
+        <ul data-menu="enfant">
+          <li><i>📔</i><b>Journée</b><span>Sa journée : repas, sieste, activités</span></li>
+          <li><i>⏰</i><b>Pointage</b><span>Heures de présence et absences</span></li>
+          <li><i>📊</i><b>Suivi &amp; Progrès</b><span>Son développement au quotidien</span></li>
+          <li><i>🏥</i><b>Santé &amp; Urgence</b><span>Fiche d'urgence et informations santé</span></li>
+          <li><i>🌿</i><b>Projet d'accueil</b><span>Le projet pédagogique</span></li>
+          <li><i>✨</i><b>Bilans</b><span>Bilans partagés par l'assistante maternelle</span></li>
+        </ul>
+      </div>
+      <div class="menucol">
+        <h3>🗂️ Administratif</h3>
+        <ul data-menu="admin">
+          <li><i>📅</i><b>Calendrier</b><span>Planning, absences et événements</span></li>
+          <li><i>💬</i><b>Messagerie</b><span>Échanges avec l'assistante maternelle</span></li>
+          <li><i>💶</i><b>Aides &amp; Simulateurs</b><span>CMG et estimation du coût de garde</span></li>
+          <li><i>🧾</i><b>Mon contrat</b><span>Contrat, bulletins et paiements</span></li>
+          <li><i>🗂️</i><b>Documents &amp; Attestations</b><span>Vos documents et attestations</span></li>
+          <li><i>🔔</i><b>Mes alertes</b><span>Ce que vous recevez, et sur quels appareils</span></li>
+          <li><i>❓</i><b>Centre d'aide</b><span>Guides et contact</span></li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
@@ -419,8 +538,13 @@
       </div>
       <div class="card">
         <div class="ic">🤝</div>
-        <h3>Clair, écrit et protégé</h3>
-        <p>Tout est écrit, daté et partagé entre vous deux — moins de non-dits, moins de tensions. Et vos données restent hébergées en France, conformes RGPD.</p>
+        <h3>Clair, écrit et daté</h3>
+        <p>Tout est écrit, daté et partagé entre vous deux — moins de non-dits, moins de tensions. Et les deux parents voient la même chose, sans que l'un doive tout retransmettre à l'autre.</p>
+      </div>
+      <div class="card">
+        <div class="ic">🔒</div>
+        <h3>Les photos de votre enfant</h3>
+        <p>Elles ne sont visibles que par vous et votre assistante maternelle, dans votre espace privé. Jamais en public, jamais sur un réseau social, jamais utilisées ailleurs. Données hébergées en France, conformes RGPD, supprimables à tout moment.</p>
       </div>
     </div>
   </div>
@@ -428,7 +552,7 @@
 
 <div class="bandeau"><img src="/hero-toboggan.webp" alt="Un enfant sur un toboggan, cadré sur les jambes." width="1600" height="1067" loading="lazy" decoding="async" style="object-position:50% 97%"></div>
 
-<section class="sec-cream">
+<section class="sec-cream" id="parler">
   <div class="wrap">
     <div class="sectitle fade">
       <h2>Comment accéder à votre espace ?</h2>
@@ -439,14 +563,34 @@
       <div class="step"><div class="n">2</div><b>Vous créez votre compte</b><span>Depuis ce lien, en une minute, sans carte bancaire ni engagement.</span></div>
       <div class="step"><div class="n">3</div><b>Vous vous connectez</b><span>Ensuite, votre espace est accessible à tout moment, sur mobile comme sur ordinateur.</span></div>
     </div>
-    <p style="text-align:center;margin-top:24px;font-size:14px;color:var(--muted)">Votre assistante maternelle n'utilise pas encore TiMat ? Parlez-lui-en : <a href="/">elle peut l'essayer gratuitement</a>.</p>
+
+    <!-- LE CHEMIN QUI MANQUAIT.
+         Tous les boutons de cette page menaient à une page de connexion. Or la
+         personne qui arrive ici depuis une recherche n'a pas de compte, et n'a
+         aucun moyen d'en avoir un : c'est son assistante maternelle qui ouvre
+         l'accès. Elle n'avait donc rien à faire, et repartait.
+         Ce bloc lui donne la seule action qu'elle peut réellement faire — et
+         c'est aussi celle qui amène une abonnée. Le message est pré-écrit :
+         demander à quelqu'un d'essayer un outil est plus facile quand on n'a
+         pas à trouver les mots. -->
+    <div class="parler fade">
+      <div class="parler-txt">
+        <span class="lab">Elle n'utilise pas encore TiMat ?</span>
+        <h3>Parlez-lui-en — c'est elle qui ouvre l'accès</h3>
+        <p>TiMat lui fait gagner ses fins de mois : salaire, congés, indemnités et déclaration Pajemploi calculés à partir des heures pointées. Elle peut l'essayer <b>deux mois gratuitement, sans carte bancaire</b>. Ensuite, c'est <b>9,99 € par mois</b> — pour elle, pas pour vous.</p>
+      </div>
+      <div class="parler-act">
+        <a class="btn" href="mailto:?subject=TiMat%20%E2%80%94%20l%27application%20pour%20assistantes%20maternelles&amp;body=Bonjour%2C%0A%0AJ%27ai%20d%C3%A9couvert%20TiMat%2C%20une%20application%20fran%C3%A7aise%20pour%20les%20assistantes%20maternelles%20et%20les%20parents%20employeurs.%0A%0AElle%20calcule%20le%20salaire%2C%20les%20cong%C3%A9s%2C%20les%20indemnit%C3%A9s%20et%20pr%C3%A9pare%20la%20d%C3%A9claration%20Pajemploi%20%C3%A0%20partir%20des%20heures%20point%C3%A9es.%20De%20mon%20c%C3%B4t%C3%A9%2C%20je%20pourrais%20suivre%20la%20journ%C3%A9e%20de%20mon%20enfant%20et%20nos%20documents%20-%20l%27espace%20parent%20est%20gratuit.%0A%0AElle%20est%20essayable%20deux%20mois%20gratuitement%2C%20sans%20carte%20bancaire%20%3A%20https%3A%2F%2Fwww.timat.app%0A%0AQu%27en%20pensez-vous%20%3F%0A">✉️ Lui envoyer un e-mail</a>
+        <a class="btn2 sombre" href="https://www.timat.app/">Voir ce que ça lui apporte →</a>
+      </div>
+    </div>
   </div>
 </section>
 
 <section class="sec-sage faq">
   <div class="wrap">
     <div class="sectitle fade"><h2>Questions fréquentes des parents</h2></div>
-    <details><summary>L'espace parent est-il payant ?</summary><div class="a">Non, il est entièrement gratuit pour vous. Seule votre assistante maternelle est abonnée à TiMat. Vous n'avez aucune carte bancaire à renseigner.</div></details>
+    <details><summary>L'espace parent est-il payant ?</summary><div class="a">Non, il est entièrement gratuit pour vous, sans limite de durée et sans carte bancaire. C'est votre assistante maternelle qui est abonnée : 9,99 € par mois, après deux mois d'essai gratuits. Rien ne vous est jamais facturé, et rien ne vous sera demandé si elle arrête son abonnement.</div></details>
     <details><summary>Comment accéder à mon espace parent ?</summary><div class="a">Votre assistante maternelle vous envoie un lien d'invitation par e-mail. Vous créez votre compte depuis ce lien en une minute, puis vous vous connectez ensuite normalement depuis cette page.</div></details>
     <details><summary>Les photos de mon enfant sont-elles protégées ?</summary><div class="a">Oui. Elles sont partagées uniquement dans l'espace privé entre vous et votre assistante maternelle — jamais en public ni sur les réseaux sociaux. Les données sont hébergées en France, conformes RGPD et supprimables à tout moment.</div></details>
     <details><summary>TiMat m'aide-t-il pour la déclaration Pajemploi ?</summary><div class="a">Oui. Votre récapitulatif mensuel est préparé à partir des présences réelles, prêt à reporter sur pajemploi.urssaf.fr. Depuis 2026, une déclaration par enfant est nécessaire : TiMat détaille les montants enfant par enfant.</div></details>
@@ -492,8 +636,11 @@
 <div class="wrap">
   <div class="cta-final fade">
     <h2>Votre espace parent vous attend</h2>
-    <p>Déjà invité par votre assistante maternelle ? Connectez-vous et retrouvez le quotidien de votre enfant, vos documents et vos déclarations.</p>
-    <a href="/?connexion=parent" class="btn">Me connecter →</a>
+    <p>Déjà invité par votre assistante maternelle ? Connectez-vous. Sinon, l'accès se demande à elle — et cela prend un message.</p>
+    <div class="hero-btns" style="justify-content:center">
+      <a href="/?connexion=parent" class="btn">Me connecter →</a>
+      <a href="#parler" class="btn2 sombre">En parler à mon assistante maternelle</a>
+    </div>
     <div class="sub">Gratuit pour les parents · Données hébergées en France · Photos privées</div>
   </div>
 </div>
@@ -532,20 +679,29 @@
 </footer>
 
 <script>
+  // Chaque écran dit ce qu'il montre, et à quel onglet du bas il appartient —
+  // c'est la vraie navigation de l'application, pas une invention de la page.
   var DEXP={
-    accueil:{d:"Sa journée en temps réel, dès l'ouverture.",p:["Pointez l'arrivée et le départ en un tap","Le cahier du jour : repas, siestes, activités et photos","Déclarez une absence en deux clics"]},
-    enfant:{d:"Tout ce qui concerne votre enfant, au même endroit.",p:["Sa journée, son pointage et ses progrès","Fiche santé & urgence toujours à jour","Projet d'accueil et bilans partagés"]},
-    admin:{d:"Votre rôle d'employeur, simplifié.",p:["Calendrier, messagerie et documents","Aides & simulateurs : CMG et coût de garde","Contrat, bulletins et paiements suivis"]}
+    accueil:{n:"accueil",d:"Sa journée, en direct, dès l'ouverture.",
+      p:["Arrivée, repas, sieste : vous voyez sans demander","Déclarez une absence en deux taps","Les quatre raccourcis que vous utilisez vraiment"]},
+    journee:{n:"enfant",d:"Le cahier de journée, écrit par elle, lu par vous.",
+      p:["Repas, siestes, activités, humeur","Les photos partagées, dans un espace privé","Rien à redemander le soir sur le pas de la porte"]},
+    pointage:{n:"enfant",d:"Les heures pointées, pas les heures estimées.",
+      p:["Le total du mois se met à jour tout seul","Absences déclarées visibles des deux côtés","Un désaccord sur les heures se tranche avec une date"]},
+    cout:{n:"admin",d:"Ce que la garde vous coûte, une fois les aides déduites.",
+      p:["Salaire, indemnités, CMG : le détail ligne par ligne","Votre reste à charge réel, pas le tarif horaire","Le simulateur CMG selon vos revenus"]},
+    messages:{n:"admin",d:"Le lien avec votre assistante maternelle.",
+      p:["Messages et photos au fil de la journée","Daté, non modifiable : ce qui a été dit reste","Les deux parents lisent la même chose"]}
   };
   function dgo(p){
+    var x=DEXP[p]; if(!x)return;
     document.querySelectorAll('.dtab').forEach(function(b){b.classList.toggle('on',b.dataset.p===p);});
     document.querySelectorAll('.dscreen').forEach(function(e){e.classList.toggle('on',e.dataset.s===p);});
-    document.querySelectorAll('.dnav span').forEach(function(e){e.classList.toggle('on',e.dataset.n===p);});
-    var x=DEXP[p];
+    // La barre du bas suit l'écran : on voit où l'on se trouve dans l'app.
+    document.querySelectorAll('.dnav span').forEach(function(e){e.classList.toggle('on',e.dataset.n===x.n);});
     document.getElementById('dexp').innerHTML='<div class="dd">'+x.d+'</div>'+x.p.map(function(t){return '<div class="dp"><b>✦</b>'+t+'</div>';}).join('');
   }
   document.querySelectorAll('.dtab').forEach(function(b){b.addEventListener('click',function(){dgo(b.dataset.p);});});
-  document.querySelectorAll('.dnav span').forEach(function(e){e.addEventListener('click',function(){dgo(e.dataset.n);});});
   dgo('accueil');
 </script>
 <script>
