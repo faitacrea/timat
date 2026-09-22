@@ -1304,7 +1304,51 @@ export const D = {
 //
 // Un parent n'est jamais bride : son espace est gratuit par construction.
 export const LIMITE_ENFANTS_GRATUIT = 1;
-export const estPro = (u) => ["pro", "trialing"].includes(u?.subscription_status) || u?.role === "parent";
+// ---------------------------------------------------------------------------
+// L'ESSAI DE DEUX MOIS, SANS CARTE BANCAIRE
+//
+// Avant, l'essai n'existait QUE chez Stripe : la session de paiement était
+// créée avec trial_period_days=60. Pour en profiter il fallait donc ouvrir
+// Stripe et saisir une carte — alors que la page promettait « 2 mois offerts,
+// sans carte bancaire ». La promesse était fausse, et c'est la carte demandée
+// à l'inscription qui coûtait le plus d'inscriptions.
+//
+// L'essai vit désormais chez nous : le compte naît en « trialing » avec une
+// date de fin, et Stripe n'intervient qu'au moment de continuer. C'est là,
+// et seulement là, qu'une carte est demandée.
+export const DUREE_ESSAI_JOURS = 60;
+export const finEssaiDepuis = (depuis = new Date()) =>
+  new Date(depuis.getTime() + DUREE_ESSAI_JOURS * 86400000).toISOString();
+
+// LE point de passage unique : tout compte qui naît passe par ici. Un
+// `subscription_status:'free'` écrit à la main dans un chemin d'inscription
+// rendrait l'essai muet pour les comptes créés par ce chemin-là, sans que rien
+// ne plante — une barrière d'audit l'interdit donc.
+export const abonnementInitial = (role) => (role === "parent"
+  // L'espace parent est gratuit par construction : il n'a pas d'essai à user.
+  ? { subscription_status: "free", subscription_end_date: null }
+  : { subscription_status: "trialing", subscription_end_date: finEssaiDepuis() });
+
+// Un essai sans date de fin ne finissait JAMAIS : estPro() acceptait
+// « trialing » sans rien regarder d'autre. Le compte restait Pro à vie.
+//
+// Une date absente ne fait pas expirer : les comptes « trialing » venus de
+// Stripe avant ce changement n'en ont pas, et couper l'accès à quelqu'un par
+// défaut de donnée serait la pire des deux erreurs.
+export const joursRestantsEssai = (u) => {
+  if (u?.subscription_status !== "trialing" || !u?.subscription_end_date) return null;
+  const fin = new Date(u.subscription_end_date).getTime();
+  if (Number.isNaN(fin)) return null;
+  return Math.ceil((fin - Date.now()) / 86400000);
+};
+export const essaiExpire = (u) => {
+  const j = joursRestantsEssai(u);
+  return j !== null && j <= 0;
+};
+export const estPro = (u) =>
+  u?.role === "parent" ||
+  u?.subscription_status === "pro" ||
+  (u?.subscription_status === "trialing" && !essaiExpire(u));
 const peutAjouterEnfant = (u, enfants) =>
   estPro(u) || (enfants || []).length < LIMITE_ENFANTS_GRATUIT;
 
@@ -4229,7 +4273,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         }
         else setErr(error.message||"Erreur lors de l'inscription.");
       }else if(data?.user){
-        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,subscription_status:'free'},{onConflict:'id'});}catch(e){}},500);
+        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,...abonnementInitial("parent")},{onConflict:'id'});}catch(e){}},500);
         await claim();
         try{if(typeof logConsent==="function")logConsent(data.user.id,{politique:true,cgu:true,newsletter:false});}catch(e){}
         onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:COULEUR_ROLE.parent});
@@ -4701,7 +4745,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               id: data.user.id, email: data.user.email,
               prenom: form.prenom, nom: form.nom||'',
               role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
-              subscription_status: 'free',
+              ...abonnementInitial(role),
             },{onConflict:'id'});
           }catch(e){console.log('Profile upsert:', e);}
         },500);
@@ -5687,7 +5731,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Formules et tarification</h3>
               <p><strong>Formule Gratuite :</strong> accès limité (1 enfant, fonctionnalités de base).</p>
-              <p><strong>Formule Pro :</strong> 9,99€/mois TTC, avec un essai gratuit de 2 mois sans carte bancaire. L'abonnement est mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
+              <p><strong>Formule Pro :</strong> 9,99€/mois TTC. Tout compte d'assistante maternelle s'ouvre sur un essai de 2 mois offerts, à compter de la création du compte. <strong>Aucune carte bancaire n'est demandée pour cet essai</strong>, et aucun abonnement n'est créé pendant sa durée : il ne peut donc pas se transformer en prélèvement. Un rappel est envoyé 7 jours puis 3 jours avant la fin.</p>
+              <p>À l'issue des 2 mois, le compte repasse automatiquement en formule gratuite. <strong>Aucune donnée n'est supprimée</strong> : enfants, pointages, contrats et documents sont conservés, seules les fonctions de la formule Pro cessent d'être accessibles. Reprendre l'abonnement les rouvre en l'état.</p>
+              <p>La carte bancaire n'est demandée qu'au moment de souscrire l'abonnement, si vous choisissez de continuer. L'abonnement est alors mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
               <p>L'utilisateur reste propriétaire de toutes les données qu'il saisit dans TiMat (informations sur les enfants, contrats, pointages, transmissions, documents). TiMat ne revendique aucun droit de propriété sur ces données. L'utilisateur peut exporter ou supprimer ses données à tout moment.</p>
@@ -6036,12 +6082,12 @@ const logoForRole = (role, dark) => {
 };
 
 const FAQ_LANDING_DEFAULT=[
-            {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. La formule Pro à 9,99€/mois débloque les contrats illimités et toutes les fonctions, et elle est offerte pendant 2 mois pour l'essayer, sans engagement."},
+            {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur 2 mois de formule Pro offerts — contrats illimités, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
             {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Toujours le même résultat, sans erreur."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
             {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
             {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
-            {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. Vous arrêtez quand vous voulez, en un clic, et l'essai ne demande pas de carte bancaire. Pas de reconduction forcée ni de prélèvement surprise."},
+            {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. L'essai de 2 mois ne demande aucune carte bancaire et ne crée aucun abonnement : il ne peut donc pas se transformer en prélèvement. Nous vous prévenons 7 jours puis 3 jours avant la fin. Si vous continuez, l'abonnement est mensuel et s'arrête en un clic — ni reconduction forcée ni prélèvement surprise."},
             {q:"Les parents employeurs ont-ils aussi accès ?",a:"Oui. Chaque parent est invité par un lien et dispose de son espace : présences, paie, documents et messagerie. Tout est partagé, en toute transparence."},
             {q:"Je suis parent employeur, qu'est-ce que TiMat m'apporte ?",a:"Votre espace parent regroupe présences, paie, documents et messagerie. Vous suivez le coût réel et le CMG, sans mauvaise surprise de plafond, et tout est partagé en toute transparence avec votre assistante maternelle."},
             {q:"Comment fonctionne le cahier de liaison numérique ?",a:"Repas, sieste, activités et humeur se remplissent une seule fois, même pour plusieurs enfants, et le parent les consulte en temps réel. Tout est daté et gardé en historique : un compte-rendu factuel qui évite les oublis et les malentendus."},
@@ -7114,6 +7160,11 @@ export default function App(){
   // de l'autre.
   const isPro=estPro(user);
   const isTrialing=user?.subscription_status==="trialing";
+  // Le même calcul que la tâche quotidienne : une assistante maternelle ne doit
+  // pas lire « il vous reste 3 jours » ici et recevoir le courriel de fin le
+  // même matin.
+  const joursEssai=joursRestantsEssai(user);
+  const essaiFini=essaiExpire(user);
 
   // //  Lancer le checkout Stripe
   const lancerCheckout=async()=>{
@@ -7309,7 +7360,41 @@ export default function App(){
             <span>{e.emoji||"👶"}</span>{e.prenom||"Enfant"}
           </button>)}
         </div>}
-        <div className="content"><ActionBar page={page} setPage={setPage} role={role}/>{renderPage()}</div>
+        <div className="content">
+          <ActionBar page={page} setPage={setPage} role={role}/>
+          {/* FIN D'ESSAI — le même message que le courriel, pour celle qui
+              ouvre l'application sans avoir lu ses messages. Il ne s'affiche
+              qu'aux seuils des rappels : un décompte permanent pendant deux
+              mois serait un reproche quotidien. */}
+          {role!=="parent"&&isTrialing&&joursEssai!==null&&joursEssai>0&&joursEssai<=7&&(
+            <div style={{margin:"10px 12px 0",background:"#FFF4EF",border:"1px solid #F0D6CB",borderLeft:"3px solid #B4543F",borderRadius:12,padding:"12px 14px",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+              <div style={{flex:"1 1 200px",minWidth:0}}>
+                <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>
+                  {joursEssai===1?"Vos deux mois offerts se terminent demain.":"Vos deux mois offerts se terminent dans "+joursEssai+" jours."}
+                </div>
+                <div style={{fontSize:12.5,color:"#55707C",marginTop:2,lineHeight:1.5}}>
+                  Sans rien faire, votre compte repasse en formule gratuite. Rien n'est supprimé.
+                </div>
+              </div>
+              <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
+            </div>
+          )}
+          {/* ESSAI FINI — le compte est repassé en gratuit. On dit d'abord ce
+              qui est CONSERVÉ : c'est la seule question que se pose quelqu'un
+              qui voit une fonction se refermer. */}
+          {role!=="parent"&&essaiFini&&(
+            <div style={{margin:"10px 12px 0",background:"#F4F7F6",border:"1px solid #D8E4E1",borderLeft:"3px solid #2F655F",borderRadius:12,padding:"12px 14px",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+              <div style={{flex:"1 1 200px",minWidth:0}}>
+                <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>Vos deux mois offerts sont terminés.</div>
+                <div style={{fontSize:12.5,color:"#55707C",marginTop:2,lineHeight:1.5}}>
+                  Vos enfants, vos pointages et vos documents sont intacts. Reprendre l'abonnement rouvre le dossier exactement où vous l'aviez laissé.
+                </div>
+              </div>
+              <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
+            </div>
+          )}
+          {renderPage()}
+        </div>
         <BottomNav groups={groups} page={page} setPage={setPage} role={role} pmiNonLus={role==="parent"?0:pmiNonLus}/>
         {showWelcome&&<BienvenueOnboarding role={role} user={user} setPage={setPage} onClose={closeWelcome}/>}
         {gToast&&<Toast msg={gToast} onClose={()=>setGToast("")}/>}

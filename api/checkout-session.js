@@ -68,8 +68,11 @@ export default async function handler(req, res) {
       success_url: appUrl + '?session_id={CHECKOUT_SESSION_ID}&success=true',
       cancel_url: appUrl + '?canceled=true',
       metadata: { userId, prenom: prenom || '', type: 'subscription' },
+      // PLUS DE trial_period_days ICI. Les deux mois offerts sont consommés
+      // AVANT Stripe, dans TiMat, sans carte. Les laisser aussi chez Stripe
+      // offrait donc quatre mois à qui décidait de continuer — et repoussait
+      // le premier paiement de deux mois de plus.
       subscription_data: {
-        trial_period_days: 60,
         metadata: { userId },
       },
     });

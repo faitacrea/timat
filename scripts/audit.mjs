@@ -483,6 +483,58 @@ for (const u of fichiersAppSrc()) {
   globalThis.__verifieContrastesLanding(val, "");
 }
 
+// --- l'essai de deux mois ne doit pas pouvoir redevenir muet ---
+//
+// Trois façons de le casser sans rien faire planter :
+//
+//   1. créer un compte avec subscription_status:'free' écrit en dur. Le compte
+//      naît sans essai. Personne ne s'en aperçoit avant qu'une assistante
+//      maternelle ne demande pourquoi elle n'a pas eu ses deux mois ;
+//   2. rendre estPro() aveugle à la date de fin. L'essai ne finit alors JAMAIS,
+//      et tout le monde est Pro à vie — la version d'avant faisait exactement
+//      cela, et rien ne le signalait ;
+//   3. remettre trial_period_days chez Stripe. Les deux mois étant déjà
+//      consommés dans TiMat, on en offrirait quatre.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+
+  // 1. Toute création de profil passe par abonnementInitial().
+  for (const [nom, code] of sources) {
+    for (const m of code.matchAll(/from\(['"]profiles['"]\)\s*\.\s*(insert|upsert)\(/g)) {
+      const bloc = code.slice(m.index, m.index + 900);
+      if (/subscription_status\s*:/.test(bloc) && !/abonnementInitial/.test(bloc)) {
+        const ligne = code.slice(0, m.index).split("\n").length;
+        signale("essai", `${nom}:${ligne} crée un profil en écrivant subscription_status à la main — ce compte-là n'aura pas ses deux mois d'essai, et rien ne le dira ; passer par abonnementInitial()`);
+      }
+    }
+  }
+
+  const app = sources.find(([n]) => n === "App.jsx")[1];
+
+  // 2. estPro() doit consulter la date de fin.
+  const dEstPro = app.match(/export const estPro = \(u\) =>([\s\S]{0,400}?);\n/);
+  if (!dEstPro) {
+    signale("essai", "estPro() est introuvable — impossible de vérifier que l'essai finit un jour");
+  } else if (!/essaiExpire|subscription_end_date/.test(dEstPro[1])) {
+    signale("essai", "estPro() accepte « trialing » sans regarder la date de fin — l'essai ne finira jamais et tout compte restera Pro à vie");
+  }
+
+  // 3. Stripe ne doit plus offrir une seconde fois les deux mois.
+  const stripe = readFileSync(new URL("../api/checkout-session.js", import.meta.url), "utf8");
+  const actif = stripe.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+  if (/trial_period_days/.test(actif)) {
+    signale("essai", "api/checkout-session.js pose encore trial_period_days — les deux mois étant déjà offerts dans TiMat, Stripe en offrirait deux de plus");
+  }
+
+  // 4. La tâche quotidienne doit rester déclarée : sans elle, un essai ne finit
+  //    que si l'utilisatrice ouvre l'application — donc jamais pour celle qui
+  //    ne revient plus, qui est précisément celle qu'il faut prévenir.
+  const vercel = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  if (!(vercel.crons || []).some((c) => c.path === "/api/cron-essais")) {
+    signale("essai", "vercel.json ne déclare plus la tâche quotidienne des essais — les rappels ne partiront plus et aucun essai n'expirera de lui-même");
+  }
+}
+
 // --- un champ du back-office que la landing ne lit nulle part ---
 //
 // « Lignes galere solution » (comboRows) est propose au back-office depuis des
