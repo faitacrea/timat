@@ -14,8 +14,9 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="/timat-design.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
 {"@type":"Question","name":"Comment calcule-t-on les congés payés d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"On calcule deux montants : la règle du dixième (10 % de la rémunération brute de la période) et le maintien de salaire. On verse à l'assmat le plus élevé des deux."}},
@@ -25,32 +26,32 @@
 <style>
   :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--teal:#5DA9A1;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+  body{font-family:'Outfit',system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
   a{color:var(--terraD)}
   .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
   .bar{max-width:760px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
   .brand{display:flex;align-items:center;gap:8px;text-decoration:none}.brand img{height:30px}
-  .wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+  .wm{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
   .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(200,75,49,.3)}
   .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
   .hero-in{max-width:760px;margin:0 auto;padding:32px 22px 24px}
   .crumb{font-size:13px;color:var(--muted);margin-bottom:14px}.crumb a{color:var(--muted)}
   .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:14px}
-  h1{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+  h1{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--marine);margin-bottom:12px}
   .lead{font-size:17px;color:#42555E}
   main{max-width:760px;margin:0 auto;padding:26px 22px 20px}
   .sim{background:#fff;border:1px solid #E4DCD0;border-radius:16px;padding:22px 20px;margin:0 0 26px;box-shadow:0 8px 28px rgba(46,72,89,.09)}
-  .sim h2{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .sim h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:19px;color:var(--marine);margin:0 0 14px;display:flex;align-items:center;gap:8px}
   .sim-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
   .sim-row label{font-size:13px;font-weight:600;color:var(--marine)}
   .sim-row input{border:1px solid #DDD5C8;border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit;background:var(--cream)}
   .res{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
   .res .c{border-radius:12px;padding:14px;text-align:center}
   .res .a{background:#F2ECE6;color:#7A544A}.res .b{background:#EAF3F1;color:#2E4859}
-  .res .lbl{font-size:11px;opacity:.85}.res .val{font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+  .res .lbl{font-size:11px;opacity:.85}.res .val{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:22px;font-weight:700}
   .verdict{margin-top:12px;text-align:center;font-weight:700;color:var(--marine);font-size:14px}
   .note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
-  h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+  h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
   p{margin-bottom:13px}
   .box{background:var(--cream2);border:1px solid #EDE6DE;border-left:4px solid var(--terra);border-radius:10px;padding:15px 17px;margin:18px 0}
   .ctabox{background:linear-gradient(135deg,var(--marine),#3E6B63);color:#fff;border-radius:16px;padding:28px 24px;text-align:center;margin:34px 0 10px}

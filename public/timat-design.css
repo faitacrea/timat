@@ -1,0 +1,73 @@
+/* ===========================================================================
+   LA CHARTE DE TIMAT — UN SEUL ENDROIT
+   ===========================================================================
+
+   Avant ce fichier, le site parlait quatre langues typographiques à la fois :
+
+     la landing ............ Quicksand + Outfit
+     les 19 pages outils ... Fraunces + Inter
+     la boutique ........... Fraunces + Nunito
+     le blog ............... Fraunces + Plus Jakarta Sans
+
+   Six URL Google Fonts différentes, donc six jeux de fichiers téléchargés.
+   Une visiteuse qui passait de la landing au simulateur de salaire changeait
+   de police au milieu de son parcours, et rechargeait des polices entières
+   pour lire la même marque. Ce n'est pas qu'une affaire de goût : deux
+   familles servies partout tiennent dans le cache du navigateur, six non.
+
+   Les couleurs, elles, étaient déjà presque alignées — marine, terra, teal et
+   crème identiques partout, sauf la boutique. Elles sont réunies ici pour que
+   la prochaine dérive se voie.
+
+   Ce fichier est la source. Une page qui redéclare une police ou une couleur
+   de marque en dur crée une fausse note que personne ne verra avant qu'elle
+   ne soit en ligne — une barrière d'audit l'interdit donc.
+
+   L'URL des polices doit rester identique à celle de index.html et de
+   DEFAULT_CONFIG.landing.googleFontsUrl dans src/App.jsx : trois copies qui
+   divergent, ce sont trois téléchargements au lieu d'un.
+   =========================================================================== */
+
+/* Pas d'@import ici : un @import dans une feuille de style bloque le rendu et
+   ajoute un aller-retour avant que la page ne s'affiche. Chaque page demande
+   les polices par son propre <link>, à cette même URL. */
+
+:root {
+  /* ---- LES DEUX FAMILLES, ET ELLES SEULES ---- */
+  --titre: 'Quicksand', 'Outfit', system-ui, sans-serif;
+  --corps: 'Outfit', system-ui, -apple-system, sans-serif;
+
+  /* ---- LES COULEURS DE LA MARQUE ----
+     Ce sont celles du logo et du thème marine de la landing. Le marine porte
+     le fond sombre et les titres ; le terra porte l'action. */
+  --marine: #2E4859;
+  --marine-clair: #55707C;
+  --terra: #E49178;
+  --terra-fonce: #B4543F;   /* le terra qui porte du texte blanc : 4,91:1 */
+  --terra-texte: #9E5341;   /* le terra qui s'écrit sur du crème : 5,01:1 */
+  --teal: #5DA9A1;
+  --teal-fonce: #2F655F;    /* idem, pour le vert : 5,99:1 sur crème */
+  --cream: #FDFBF8;
+  --cream-fonce: #F7F2EC;
+  --gris: #7C8A90;
+  --filet: #EDE6DE;
+
+  /* Anciens noms, gardés le temps que les pages les abandonnent. Ils pointent
+     vers les mêmes valeurs : aucune page ne change d'aspect en les adoptant. */
+  --ink: var(--marine);
+  --muted: var(--marine-clair);
+  --br: var(--filet);
+}
+
+/* Le corps de page : toute page qui charge cette feuille hérite des bonnes
+   familles sans avoir à les redéclarer. */
+body {
+  font-family: var(--corps);
+  color: var(--marine);
+  background: var(--cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .wm, .brand .wm {
+  font-family: var(--titre);
+}

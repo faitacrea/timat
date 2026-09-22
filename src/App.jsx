@@ -4408,16 +4408,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const demoTour = [
     {page:"accueil",label:"Le quotidien",ic:"🏠",
       desc:((config.landing||{}).demoPhrase1||"Toute la journée d'accueil, en un coup d'œil."),
-      resume:((config.landing||{}).demoPuces1||"Enfants présents, pointage, événements\nFiche d'urgence & santé de chaque enfant").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces1||"Enfants présents, pointage, événements\nFiche d'urgence & santé de chaque enfant\nLe parent voit la journée sans avoir à demander").split("\n").filter(Boolean)},
     {page:"calendrier",label:"Planning & présences",ic:"📅",
       desc:((config.landing||{}).demoPhrase2||"Le planning partagé, pointé en un tap."),
-      resume:((config.landing||{}).demoPuces2||"Présences, absences et heures sup.\nFeuille de présence mensuelle prête").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces2||"Présences, absences et heures sup.\nFeuille de présence mensuelle prête\nUn désaccord sur les heures se tranche avec une date").split("\n").filter(Boolean)},
     {page:"admin_finances",label:"Calculs & paie",ic:"💶",
       desc:((config.landing||{}).demoPhrase3||"Salaire et déclaration, calculés tout seuls."),
-      resume:((config.landing||{}).demoPuces3||"Mensualisation, congés et indemnités\nBulletin & Pajemploi prêts").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces3||"Mensualisation, congés et indemnités\nBulletin & Pajemploi prêts\nPlus de fin de mois passée sur un tableur").split("\n").filter(Boolean)},
     {page:"messagerie",label:"Messagerie parents",ic:"💬",
       desc:((config.landing||{}).demoPhrase4||"Le lien avec les parents, au quotidien."),
-      resume:((config.landing||{}).demoPuces4||"Messages & moments de la journée partagés\nNotifications en temps réel").split("\n").filter(Boolean)},
+      resume:((config.landing||{}).demoPuces4||"Messages & moments de la journée partagés\nNotifications en temps réel\nDaté, non modifiable : ce qui a été dit reste").split("\n").filter(Boolean)},
   ];
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
