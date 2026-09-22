@@ -482,6 +482,51 @@ for (const u of fichiersAppSrc()) {
   globalThis.__verifieContrastesLanding(val, "");
 }
 
+// --- une seule typographie pour tout le site ---
+//
+// Le site parlait quatre langues typographiques à la fois : Quicksand + Outfit
+// sur la landing, Fraunces + Inter sur les dix-neuf pages d'outils, Fraunces +
+// Nunito sur la boutique, Fraunces + Plus Jakarta Sans sur le blog. Six URL
+// Google Fonts différentes, donc six jeux de fichiers à télécharger, et une
+// visiteuse qui changeait de police au milieu de son parcours.
+//
+// Ce n'est pas qu'une affaire de goût : deux familles servies partout tiennent
+// dans le cache du navigateur, six non. Une page qui réintroduit une famille
+// rompt le raccord ET recharge des polices entières pour dire la même marque.
+{
+  const AUTORISEES = ["Quicksand", "Outfit"];
+  const sources = [
+    ...readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+    ["index.html", readFileSync(new URL("../index.html", import.meta.url), "utf8")],
+    ["scripts/generate-blog.mjs", readFileSync(new URL("../scripts/generate-blog.mjs", import.meta.url), "utf8")],
+    ["scripts/generate-local.mjs", readFileSync(new URL("../scripts/generate-local.mjs", import.meta.url), "utf8")],
+    // De App.jsx on ne regarde QUE la police de la landing. L'application
+    // connectée a la sienne — DM Sans pour le corps, Cormorant Garamond pour
+    // les documents imprimés, où une serif est un choix et non un oubli. La
+    // changer toucherait chaque écran du quotidien et chaque PDF produit :
+    // c'est une décision à part, pas un raccord de site vitrine.
+    ["src/App.jsx (landing)", (readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8")
+      .match(/googleFontsUrl:"[^"]+"/) || [""])[0]],
+  ];
+  const intruses = new Map();
+  for (const [nom, code] of sources) {
+    for (const m of code.matchAll(/fonts\.googleapis\.com\/css2\?([^"')\s]+)/g)) {
+      for (const f of m[1].matchAll(/family=([A-Za-z+]+)/g)) {
+        const fam = f[1].replace(/\+/g, " ");
+        if (!AUTORISEES.includes(fam)) {
+          if (!intruses.has(fam)) intruses.set(fam, new Set());
+          intruses.get(fam).add(nom);
+        }
+      }
+    }
+  }
+  for (const [fam, ou] of intruses) {
+    signale("typographie", `la police « ${fam} » est encore demandée par ${[...ou].join(", ")} — le site doit parler une seule langue typographique, et une famille de plus est un téléchargement de plus pour dire la même marque`);
+  }
+}
+
 // --- le plafond de fonctions serverless du plan Hobby ---
 //
 // Vercel n'accepte que DOUZE fonctions serverless par déploiement sur le plan

@@ -188,25 +188,25 @@ const parMois = (ecart) => Math.round(Math.abs(ecart) * HEURES_MOIS);
 const CSS = `
 :root{--marine:#2E4859;--terra:#E49178;--terraD:#C84B31;--cream:#FDFBF8;--cream2:#FAF6F1;--ink:#2E4859;--muted:#6B7A82;--line:#E4DCD0}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
+body{font-family:'Outfit',system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);line-height:1.7}
 a{color:var(--terraD)}
 .top{background:linear-gradient(165deg,#FDF6EE,#F7ECE0);border-bottom:1px solid #EEE4D8;position:sticky;top:0;z-index:10}
 .bar{max-width:820px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
 .brand img{height:30px;display:block}
-.wm{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
+.wm{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-weight:700;font-size:22px;color:var(--marine)}.wm span{color:var(--terra)}
 .cta-top{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:10px}
 .hero{background:linear-gradient(165deg,#FDF6EE,#F7ECE0,#FBF1E7);border-bottom:1px solid #EEE4D8}
 .hero-in{max-width:820px;margin:0 auto;padding:30px 22px 24px}
 .crumb{font-size:13px;color:var(--muted);margin-bottom:13px}.crumb a{color:var(--muted)}
 .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--terraD);background:rgba(228,145,120,.14);border-radius:20px;padding:4px 12px;margin-bottom:13px}
-h1{font-family:'Fraunces',serif;font-size:clamp(25px,4.6vw,36px);line-height:1.15;color:var(--marine);margin-bottom:12px}
+h1{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:clamp(25px,4.6vw,36px);line-height:1.15;color:var(--marine);margin-bottom:12px}
 .lead{font-size:17px;color:#42555E}
 main{max-width:820px;margin:0 auto;padding:26px 22px 20px}
 .reponse{background:#fff;border:1px solid var(--line);border-left:5px solid var(--terra);border-radius:4px 14px 14px 4px;padding:18px 22px;margin:0 0 26px;box-shadow:0 6px 20px rgba(46,72,89,.07)}
-.reponse h2{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--terraD);margin:0 0 8px;font-weight:800}
+.reponse h2{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--terraD);margin:0 0 8px;font-weight:800}
 .reponse p{margin:0;font-size:17.5px;font-weight:600;line-height:1.6}
-h2{font-family:'Fraunces',serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
-h3{font-family:'Fraunces',serif;font-size:17px;color:var(--marine);margin:22px 0 8px}
+h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:22px;color:var(--marine);margin:30px 0 10px}
+h3{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:17px;color:var(--marine);margin:22px 0 8px}
 p{margin-bottom:13px}
 table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
 th,td{border:1px solid #EDE6DE;padding:10px 12px;text-align:left}
@@ -228,7 +228,7 @@ tr.fort td{background:#FDF6F4;font-weight:700}
 .grille a{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:var(--marine);font-weight:600;font-size:14.5px}
 .grille a:hover{border-color:var(--terra)}
 .grille .c{color:var(--muted);font-weight:400;font-size:12.5px}
-.reg{font-family:'Fraunces',serif;font-size:19px;color:var(--marine);margin:26px 0 4px}
+.reg{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:19px;color:var(--marine);margin:26px 0 4px}
 footer{background:var(--marine);color:rgba(255,255,255,.75);text-align:center;padding:26px 22px;font-size:13px;margin-top:24px}
 footer a{color:#fff}
 `;
@@ -269,7 +269,7 @@ function page({ titre, description, canonical, jsonLd, corps }) {
 <link rel="icon" href="/assmat.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>${CSS}</style>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 </head>

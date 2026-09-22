@@ -315,7 +315,7 @@ const CSS = `
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:${T.cream};color:${T.ink};
-  font-family:'Plus Jakarta Sans','DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-family:'Outfit',system-ui,-apple-system,sans-serif;
   font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
 a{color:${T.ink};text-decoration:underline;text-decoration-color:${T.terracottaLine};text-underline-offset:3px}
 a:hover{text-decoration-color:${T.terracotta}}
@@ -325,7 +325,7 @@ img{max-width:100%;height:auto}
 .topbar .wrap{max-width:1100px;display:flex;align-items:center;justify-content:space-between;height:62px}
 .brand{display:flex;align-items:center;text-decoration:none;color:${T.ink};line-height:0}
 .brand img{height:30px;width:auto;display:block}
-.brand .wm{font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:21px;letter-spacing:-.4px;line-height:1}
+.brand .wm{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-weight:800;font-size:21px;letter-spacing:-.4px;line-height:1}
 .brand .wm span{color:${T.terracotta}}
 .topnav{display:flex;gap:18px;align-items:center;font-size:14px;font-weight:600}
 .topnav a{text-decoration:none;color:${T.mauve}}
@@ -337,13 +337,13 @@ img{max-width:100%;height:auto}
 .eyebrow{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;
   color:${T.terracotta};background:${T.terracottaPale};border:1px solid ${T.terracottaLine};
   padding:5px 12px;border-radius:20px;margin:20px 0 14px;text-decoration:none}
-h1{font-family:'Fraunces',Georgia,serif;font-size:clamp(29px,5.4vw,44px);line-height:1.12;
+h1{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:clamp(29px,5.4vw,44px);line-height:1.12;
   font-weight:800;letter-spacing:-.8px;margin:0 0 16px}
 .chapo{font-size:19px;line-height:1.6;color:${T.mauve};margin:0 0 22px}
 .reponse{background:${T.white};border:1px solid ${T.border};border-left:5px solid ${T.terracotta};
   border-radius:4px 14px 14px 4px;padding:18px 22px;margin:0 0 24px;
   box-shadow:0 6px 20px rgba(46,74,90,.07)}
-.reponse h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;letter-spacing:1.2px;
+.reponse h2{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:11px;letter-spacing:1.2px;
   text-transform:uppercase;color:${T.terracotta};margin:0 0 8px;font-weight:800;border:0;padding:0}
 .reponse p{margin:0;font-size:17.5px;line-height:1.6;color:${T.ink};font-weight:600}
 .meta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:${T.light};
@@ -353,20 +353,20 @@ h1{font-family:'Fraunces',Georgia,serif;font-size:clamp(29px,5.4vw,44px);line-he
 .cover{border-radius:16px;overflow:hidden;border:1px solid ${T.border};margin-bottom:32px}
 .cover img{display:block;width:100%}
 .sommaire{background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:20px 22px;margin:0 0 34px}
-.sommaire h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+.sommaire h2{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
   color:${T.light};margin:0 0 12px;font-weight:800;border:0;padding:0}
 .sommaire ol{margin:0;padding-left:20px;font-size:15px}
 .sommaire li{margin:7px 0}
 .sommaire a{text-decoration:none;color:${T.mauve};font-weight:600}
 .sommaire a:hover{color:${T.terracotta}}
-article h2{font-family:'Fraunces',Georgia,serif;font-size:27px;line-height:1.25;font-weight:800;
+article h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:27px;line-height:1.25;font-weight:800;
   letter-spacing:-.4px;margin:42px 0 14px;padding-top:12px;border-top:2px solid ${T.border}}
 article h3{font-size:19px;font-weight:800;margin:30px 0 10px;color:${T.ink}}
 article p{margin:0 0 18px}
 article ul,article ol{margin:0 0 20px;padding-left:24px}
 article li{margin:8px 0}
 article blockquote{margin:26px 0;padding:4px 0 4px 20px;border-left:3px solid ${T.terracotta};
-  font-family:'Fraunces',Georgia,serif;font-size:20px;line-height:1.5;color:${T.mauve}}
+  font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:20px;line-height:1.5;color:${T.mauve}}
 article figure{margin:28px 0}
 article figure img{border-radius:14px;border:1px solid ${T.border};display:block}
 article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:center}
@@ -383,12 +383,12 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .faq details[open] summary::after{content:"−"}
 .faq .rep{padding:0 18px 16px;font-size:15.5px;color:${T.mauve};margin:0}
 .sources{margin:42px 0 0;background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:20px 22px}
-.sources h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+.sources h2{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
   color:${T.light};margin:0 0 12px;font-weight:800;border:0;padding:0}
 .sources ul{margin:0;padding-left:20px;font-size:15px}
 .sources li{margin:7px 0}
 .lire{margin:42px 0 0;background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:20px 22px}
-.lire h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+.lire h2{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
   color:${T.light};margin:0 0 14px;font-weight:800;border:0;padding:0}
 .lire ul{margin:0;padding:0;list-style:none}
 .lire li{margin:0;padding:0;border-top:1px solid ${T.border}}
@@ -403,7 +403,7 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .lire .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   font-size:13px;color:${T.mauve};line-height:1.5;margin-top:4px}
 .cta{margin:48px 0;background:${T.ink};border-radius:18px;padding:32px 28px;color:#fff;text-align:center}
-.cta h2{font-family:'Fraunces',Georgia,serif;font-size:25px;margin:0 0 10px;color:#fff;border:0;padding:0;letter-spacing:-.4px}
+.cta h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:25px;margin:0 0 10px;color:#fff;border:0;padding:0;letter-spacing:-.4px}
 .cta p{color:rgba(255,255,255,.85);font-size:15.5px;margin:0 0 20px}
 .cta a{display:inline-block;background:${T.terracotta};color:#fff;text-decoration:none;font-weight:700;
   padding:13px 26px;border-radius:12px;font-size:15px}
@@ -429,7 +429,7 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
 .card-body{padding:18px 19px;display:flex;flex-direction:column;flex:1}
 .card .cat{font-size:11px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:${T.terracotta};margin-bottom:8px}
-.card h2{font-family:'Fraunces',Georgia,serif;font-size:19px;line-height:1.3;margin:0 0 9px;border:0;padding:0;letter-spacing:-.2px}
+.card h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:19px;line-height:1.3;margin:0 0 9px;border:0;padding:0;letter-spacing:-.2px}
 .card h2 a{text-decoration:none}
 .card p{font-size:14.5px;color:${T.mauve};margin:0 0 14px;flex:1}
 .card .date{font-size:12px;color:${T.light}}
@@ -484,7 +484,7 @@ ${ogImage ? `<meta property="og:image" content="${escAttr(ogImage)}">` : ""}
 <link rel="icon" href="/assmat.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>${CSS}${wide ? "\n.wrap{max-width:1100px}" : ""}</style>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : ""}
 </head>
