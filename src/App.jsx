@@ -4513,6 +4513,19 @@ export function ModaleListeAttente({ ouverte, fermer }){
 export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModalBrut, setShowModalBrut] = useState(false);
+  // Lus ici, et pas cent lignes plus bas : la minuterie de la liste
+  // d'attente s'en sert, et une constante utilisée avant sa déclaration
+  // fait planter tout le composant — dans le cadre de la démo, la page
+  // parents n'affichait alors plus qu'une boîte vide.
+  const [demoRole] = useState(()=>{
+    try{ return new URLSearchParams(window.location.search).get("demo")==="parent" ? "parent" : "asmat"; }
+    catch(e){ return "asmat"; }
+  });
+  const [demoNu] = useState(()=>{
+    try{ return new URLSearchParams(window.location.search).get("nu")==="1"; }
+    catch(e){ return false; }
+  });
+
   const [showBientot, setShowBientot] = useState(false);
   // Mode vitrine : la landing reste visible et indexable, mais aucune inscription
   // ni connexion n'est possible. Toutes les ouvertures de la modale d'authentification
@@ -4526,7 +4539,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   // fermer sans lire. Une seule fois par navigateur, jamais si l'adresse est
   // déjà donnée, jamais dans l'aperçu du back-office.
   useEffect(()=>{
-    if(!vitrine || preview) return;
+    if(!vitrine || preview || demoNu) return;   // jamais dans le cadre embarqué
     try{
       if(localStorage.getItem(CLE_ATTENTE_VUE)==="1") return;
       if(dejaInscriteAttente()) return;
@@ -4536,7 +4549,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       try{ localStorage.setItem(CLE_ATTENTE_VUE,"1"); }catch(e){}
     }, 7000);
     return ()=>clearTimeout(t);
-  },[vitrine,preview]);
+  },[vitrine,preview,demoNu]);
   const [showLegal, setShowLegal] = useState(null);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
@@ -4591,14 +4604,6 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   // l'application une fois connectée, par la prop `role`. On la passe ici.
   // `?demo=parent` bascule tout le bloc ; `?nu=1` ne rend que lui, pour que la
   // page statique l'embarque dans un cadre sans rejouer le reste de la landing.
-  const [demoRole] = useState(()=>{
-    try{ return new URLSearchParams(window.location.search).get("demo")==="parent" ? "parent" : "asmat"; }
-    catch(e){ return "asmat"; }
-  });
-  const [demoNu] = useState(()=>{
-    try{ return new URLSearchParams(window.location.search).get("nu")==="1"; }
-    catch(e){ return false; }
-  });
   const demoParent = demoRole==="parent";
 
   // En vitrine, « Se connecter » est faux : personne ne peut se connecter. Le
@@ -5097,7 +5102,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           une page. Les vagues décoratives tomberaient au milieu de la page
           hôte : elles disparaissent aussi. */}
       <style>{`html,body{margin:0}#demo{padding:8px 16px 4px!important}#demo>svg,#demo>div>svg{display:none}`}</style>
-      {blocDemo}
+      <div id="demo-mesure">{blocDemo}</div>
     </div>
   );
 

@@ -820,61 +820,11 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
-// --- la page parents dessine un menu que l'application ne sert plus ---
-//
-// public/pour-les-parents.html est une page statique : elle ne monte pas React
-// et ne peut donc pas afficher les vrais composants comme le fait la demo de la
-// landing. Elle RECOPIE donc les deux menus du parent. Une copie derive.
-//
-// Elle avait deja derive : l'application a sept entrees dans « Administratif »,
-// la page n'en montrait que six — « Mes alertes » manquait. Rien ne l'avait
-// signale, parce que rien ne comparait les deux. Une visiteuse lisait donc un
-// inventaire faux de ce qu'elle allait trouver dans son espace.
-//
-// La source est GROUPS_P dans src/App.jsx. On compare les libelles, dans
-// l'ordre : c'est ce que la personne lit, et l'ordre est une promesse aussi.
-{
-  const app = fs.readFileSync("src/App.jsx", "utf8");
-  const page = fs.readFileSync("public/pour-les-parents.html", "utf8");
-
-  // Le bloc GROUPS_P, de son ouverture a la premiere accolade seule en debut
-  // de ligne : suffisant et stable, l'objet est ecrit a plat.
-  const bloc = app.match(/const GROUPS_P\s*=\s*\{[\s\S]*?\n\};/);
-  if (!bloc) {
-    signale("parents", "GROUPS_P est introuvable dans src/App.jsx — la page parents ne peut plus être comparée à l'application.");
-  } else {
-    // Dans chaque groupe, les entrees { id, l:"...", ... } dans l'ordre.
-    const groupes = {};
-    for (const nom of ["enfant", "admin"]) {
-      const m = bloc[0].match(new RegExp(`\\n  ${nom}:\\{[\\s\\S]*?subs:\\[([\\s\\S]*?)\\n  \\]\\}`));
-      groupes[nom] = m ? [...m[1].matchAll(/l:"((?:[^"\\]|\\.)*)"/g)].map((x) => x[1]) : null;
-    }
-
-    // Cote page : les <b> de chaque <ul data-menu="...">.
-    const deLaPage = (nom) => {
-      const m = page.match(new RegExp(`<ul data-menu="${nom}">([\\s\\S]*?)</ul>`));
-      if (!m) return null;
-      return [...m[1].matchAll(/<b>([\s\S]*?)<\/b>/g)]
-        .map((x) => x[1].replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").trim());
-    };
-
-    for (const nom of ["enfant", "admin"]) {
-      const attendu = groupes[nom];
-      const trouve = deLaPage(nom);
-      if (!attendu) { signale("parents", `Le groupe « ${nom} » n'a pas pu être lu dans GROUPS_P.`); continue; }
-      if (!trouve)  { signale("parents", `Le menu « ${nom} » a disparu de public/pour-les-parents.html — la page ne dit plus ce que contient l'espace parent.`); continue; }
-      const a = attendu.join(" | "), t = trouve.join(" | ");
-      if (a !== t) {
-        const manquants = attendu.filter((x) => !trouve.includes(x));
-        const enTrop = trouve.filter((x) => !attendu.includes(x));
-        const detail = manquants.length || enTrop.length
-          ? `${manquants.length ? "absente(s) de la page : " + manquants.join(", ") : ""}${manquants.length && enTrop.length ? " ; " : ""}${enTrop.length ? "inconnue(s) de l'application : " + enTrop.join(", ") : ""}`
-          : `même contenu mais pas le même ordre — attendu ${a}`;
-        signale("parents", `Le menu « ${nom} » de public/pour-les-parents.html ne correspond plus à GROUPS_P (src/App.jsx) — ${detail}`);
-      }
-    }
-  }
-}
+// Il y avait ici une barriere qui comparait les deux menus recopies dans
+// public/pour-les-parents.html a GROUPS_P. Elle a disparu avec eux : la page
+// ne recopie plus rien, elle embarque l'application. La barriere suivante,
+// qui verifie que le cadre pointe bien vers un mode existant, couvre
+// desormais le seul risque restant.
 
 // --- le cadre de demo de la page parents pointe vers un mode qui n'existe plus ---
 //

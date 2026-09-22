@@ -211,21 +211,37 @@
   .mot blockquote{font-size:16px;line-height:1.75;color:var(--marine);margin:0 0 16px;font-style:italic}
   .mot-sig{font-family:var(--titre);font-weight:700;font-size:14.5px;color:var(--terra-texte)}
 
-  .cadre-demo{max-width:1200px;margin:0 auto}
-  .cadre-demo iframe{width:100%;border:0;display:block;height:1180px;background:transparent;color-scheme:normal}
-  @media(min-width:900px){.cadre-demo iframe{height:760px}}
+  .cadre-demo{max-width:1200px;margin:0 auto;position:relative;min-height:430px}
+  /* La hauteur de départ est volontairement modeste : le cadre dit sa vraie
+     hauteur dès qu'il a démarré. Une valeur généreuse « au cas où » laissait
+     une bande vide sous la démo partout sauf sur une taille d'écran. */
+  .cadre-demo iframe{width:100%;border:0;display:block;height:430px;background:transparent;
+    color-scheme:normal;position:relative;z-index:2;opacity:0;transition:opacity .35s ease}
+  .cadre-demo iframe.pret{opacity:1}
+  @media(min-width:900px){.cadre-demo iframe{height:700px}.cadre-demo{min-height:700px}}
+
+  /* LE GABARIT, DERRIÈRE LE CADRE.
+     L'application met une à trois secondes à démarrer sur un téléphone, et le
+     corps du cadre est transparent : pendant ce temps on voyait le fond de la
+     page à travers une boîte de 1180 px. C'était ça, la « grande section
+     blanche ». Le gabarit tient la place et dit ce qui arrive ; le cadre se
+     pose dessus quand il est prêt. */
+  .gabarit{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;pointer-events:none}
+  .gabarit p{font-size:13px;color:var(--muted);font-weight:600}
+  .gabarit-tel{width:150px;height:250px;border-radius:26px;border:2px solid var(--br);
+    background:#fff;display:flex;flex-direction:column;align-items:center;
+    padding:14px 12px;gap:10px;box-shadow:0 10px 30px rgba(46,72,89,.07)}
+  .gabarit-encoche{width:46px;height:5px;border-radius:3px;background:var(--br);flex-shrink:0}
+  .gabarit-pt{width:100%;height:30px;border-radius:9px;background:var(--cream-fonce);
+    flex-shrink:0;animation:respire 1.5s ease-in-out infinite}
+  .gabarit-pt:nth-of-type(3){animation-delay:.2s}
+  .gabarit-pt:nth-of-type(4){animation-delay:.4s;height:54px}
+  @keyframes respire{0%,100%{opacity:.5}50%{opacity:1}}
+  @media(prefers-reduced-motion:reduce){.gabarit-pt{animation:none}}
   .sans-js{color:var(--muted);text-align:center;padding:30px 12px}
   .sans-js a{color:var(--terra-texte)}
 
-  .menus{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;max-width:900px;margin:34px auto 0}
-  .menucol{background:#fff;border:1px solid var(--br);border-radius:18px;padding:20px;box-shadow:0 4px 16px rgba(46,72,89,.05)}
-  .menucol h3{font-size:15px;color:var(--marine);margin-bottom:14px}
-  .menucol ul{list-style:none;margin:0;padding:0}
-  .menucol li{display:grid;grid-template-columns:26px 1fr;gap:4px 10px;padding:9px 0;border-top:1px solid var(--br)}
-  .menucol li:first-child{border-top:none}
-  .menucol li i{grid-row:span 2;font-style:normal;font-size:17px;line-height:1.2}
-  .menucol li b{font-size:13.5px;color:var(--marine);font-weight:700}
-  .menucol li span{font-size:12px;color:var(--muted);line-height:1.45}
 </style>
 </head>
 <body>
@@ -289,41 +305,16 @@
          arrivé près de l'écran. Une visiteuse qui lit le hero et repart ne
          paie pas le bundle. -->
     <div class="cadre-demo fade">
+      <div class="gabarit" aria-hidden="true">
+        <div class="gabarit-tel"><span class="gabarit-encoche"></span><span class="gabarit-pt"></span><span class="gabarit-pt"></span><span class="gabarit-pt"></span></div>
+        <p>Chargement de la démonstration…</p>
+      </div>
       <iframe id="demo-app" src="/?demo=parent&amp;nu=1" title="La démonstration de l'espace parent TiMat"
               loading="lazy" scrolling="no"></iframe>
       <noscript><p class="sans-js">La démonstration a besoin de JavaScript. <a href="/?demo=parent">L'ouvrir dans un onglet</a>.</p></noscript>
     </div>
     </div>
 
-    <!-- LES DEUX MENUS, À TAILLE LISIBLE.
-         Recopiés de GROUPS_P (src/App.jsx). Une barrière d'audit les compare
-         ligne à ligne : si l'application gagne ou perd une rubrique, cette
-         page ne peut plus mentir. -->
-    <div class="menus fade">
-      <div class="menucol">
-        <h3>👶 Mon enfant</h3>
-        <ul data-menu="enfant">
-          <li><i>📔</i><b>Journée</b><span>Sa journée : repas, sieste, activités</span></li>
-          <li><i>⏰</i><b>Pointage</b><span>Heures de présence et absences</span></li>
-          <li><i>📊</i><b>Suivi &amp; Progrès</b><span>Son développement au quotidien</span></li>
-          <li><i>🏥</i><b>Santé &amp; Urgence</b><span>Fiche d'urgence et informations santé</span></li>
-          <li><i>🌿</i><b>Projet d'accueil</b><span>Le projet pédagogique</span></li>
-          <li><i>✨</i><b>Bilans</b><span>Bilans partagés par l'assistante maternelle</span></li>
-        </ul>
-      </div>
-      <div class="menucol">
-        <h3>🗂️ Administratif</h3>
-        <ul data-menu="admin">
-          <li><i>📅</i><b>Calendrier</b><span>Planning, absences et événements</span></li>
-          <li><i>💬</i><b>Messagerie</b><span>Échanges avec l'assistante maternelle</span></li>
-          <li><i>💶</i><b>Aides &amp; Simulateurs</b><span>CMG et estimation du coût de garde</span></li>
-          <li><i>🧾</i><b>Mon contrat</b><span>Contrat, bulletins et paiements</span></li>
-          <li><i>🗂️</i><b>Documents &amp; Attestations</b><span>Vos documents et attestations</span></li>
-          <li><i>🔔</i><b>Mes alertes</b><span>Ce que vous recevez, et sur quels appareils</span></li>
-          <li><i>❓</i><b>Centre d'aide</b><span>Guides et contact</span></li>
-        </ul>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -531,24 +522,36 @@
 </footer>
 
 <script>
-  // La hauteur du cadre : le contenu de la démo n'a pas la même taille selon
-  // la largeur, et une hauteur fixe laisse soit une bande vide, soit une barre
-  // de défilement dans un cadre qui n'en veut pas. Le cadre est servi par le
-  // même domaine : on lit sa hauteur réelle, sans protocole à inventer.
+  // LA HAUTEUR DU CADRE.
+  //
+  // Elle était lue sur body.scrollHeight. Or l'<iframe> impose sa hauteur au
+  // document qu'il contient : le corps remplit la fenêtre du cadre, et
+  // scrollHeight renvoyait donc exactement la hauteur qu'on venait de lui
+  // donner. La mesure se confirmait elle-même, ne pouvait jamais réduire le
+  // cadre, et laissait une bande vide sous la démo. On mesure maintenant le
+  // bloc (#demo-mesure), qui fait la taille de son contenu.
+  //
+  // Même domaine : rien à inventer, pas de protocole de messages.
   (function(){
     var c=document.getElementById('demo-app'); if(!c)return;
     function ajuster(){
       try{
-        var d=c.contentDocument; if(!d||!d.body)return;
-        var h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);
-        if(h>200)c.style.height=h+'px';
-      }catch(e){/* origine différente un jour : la hauteur CSS reste le repli */}
+        var d=c.contentDocument; if(!d)return;
+        var bloc=d.getElementById('demo-mesure'); if(!bloc)return;
+        var h=Math.ceil(bloc.getBoundingClientRect().height);
+        if(h>200){ c.style.height=h+'px'; c.classList.add('pret'); }
+      }catch(e){ c.classList.add('pret'); } // origine différente un jour : on montre quand même
     }
-    c.addEventListener('load',function(){ajuster();
-      // La démo monte ses écrans à la demande : sa hauteur bouge encore un
-      // instant après le chargement.
-      [150,600,1500].forEach(function(t){setTimeout(ajuster,t);});});
+    c.addEventListener('load',function(){
+      ajuster();
+      // L'application démarre après le chargement du document, et ses écrans
+      // arrivent à la demande : la hauteur bouge encore un instant.
+      [120,500,1200,2500].forEach(function(t){setTimeout(ajuster,t);});
+    });
     var t; window.addEventListener('resize',function(){clearTimeout(t);t=setTimeout(ajuster,150);});
+    // Filet : si le démarrage traîne, on montre le cadre plutôt que de laisser
+    // le gabarit tourner indéfiniment.
+    setTimeout(function(){c.classList.add('pret');},6000);
   })();
 </script>
 <script>
