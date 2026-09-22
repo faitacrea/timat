@@ -904,6 +904,61 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
+// --- le consentement affiche n'est plus celui qui est enregistre ---
+//
+// Le RGPD demande de pouvoir prouver le consentement. TiMat le prouve en
+// enregistrant, avec l'adresse, LE TEXTE affiche au moment du clic
+// (prospects.consentement_texte). Mais le texte affiche vit dans le
+// navigateur et le texte enregistre vit dans la route serveur : deux copies.
+//
+// Si l'une change sans l'autre, la base garde une phrase que personne n'a lue
+// — et la preuve ne prouve plus rien. Ca ne casse aucun test, aucune page,
+// aucun deploiement. Rien ne le dirait jamais.
+//
+// On compare donc les deux, mot pour mot, apres avoir remis les sauts de ligne
+// et les espaces multiples a plat (les deux fichiers ne coupent pas leurs
+// lignes au meme endroit).
+{
+  const app = fs.readFileSync("src/App.jsx", "utf8");
+  const route = fs.readFileSync("api/inscription-releve.js", "utf8");
+  const aplat = (t) => t.replace(/\s+/g, " ").trim();
+
+  // Les chaines sont ecrites en plusieurs morceaux concatenes : on recolle.
+  const recoller = (texte, nom) => {
+    const m = texte.match(new RegExp(`${nom}\\s*=\\s*([\\s\\S]*?);\\n`));
+    if (!m) return null;
+    // La chaine se termine sur LE MEME guillemet qui l'ouvre : sans ce
+    // rappel arriere, « d'etre » coupait la chaine en deux au milieu d'un mot
+    // et le message d'erreur devenait illisible.
+    const morceaux = [...m[1].matchAll(/(["'])((?:\\.|(?!\1)[^\\])*)\1/g)].map((x) => x[2]);
+    return morceaux.length ? aplat(morceaux.join("").replace(/\\(['"])/g, "$1")) : null;
+  };
+
+  const affiche = recoller(app, "CONSENTEMENT_ATTENTE");
+  const enregistre = recoller(route, "TEXTE_CONSENTEMENT_ATTENTE");
+
+  if (!affiche || !enregistre) {
+    signale("liste d'attente", "Le texte de consentement est introuvable dans src/App.jsx ou api/inscription-releve.js — impossible de vérifier que la personne lit ce qui est enregistré.");
+  } else if (affiche !== enregistre) {
+    // On montre l'endroit ou les deux divergent, pas leurs premiers mots :
+    // ils commencent presque toujours pareil, et un extrait identique des deux
+    // cotes ne dit pas ou chercher.
+    let i = 0;
+    while (i < affiche.length && affiche[i] === enregistre[i]) i++;
+    const d = Math.max(0, i - 20);
+    const bout = (t) => (d ? "…" : "") + t.slice(d, i + 45) + (i + 45 < t.length ? "…" : "");
+    signale("liste d'attente", `Le consentement affiché n'est pas celui qui est enregistré, à partir du caractère ${i}. Affiché : « ${bout(affiche)} » — enregistré : « ${bout(enregistre)} »`);
+  }
+
+  // La source envoyee doit exister dans la route, sinon elle repond 400 et la
+  // personne voit « Formulaire inconnu » sans savoir pourquoi.
+  for (const [, src] of app.matchAll(/source\s*:\s*"([a-z-]+)"/g)) {
+    if (!new RegExp(`'${src}'\\s*:\\s*\\{`).test(route)) {
+      signale("liste d'attente", `Le formulaire envoie source="${src}", que api/inscription-releve.js ne connaît pas — l'inscription échouerait.`);
+    }
+  }
+}
+
 // --- une image servie en PNG alors que le WebP existe a cote ---
 //
 // logoForRole servait des .png de 85 a 143 Ko, en 1 732 px de large, pour un
