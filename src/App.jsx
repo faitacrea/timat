@@ -4568,12 +4568,23 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   // d'attente s'en sert, et une constante utilisée avant sa déclaration
   // fait planter tout le composant — dans le cadre de la démo, la page
   // parents n'affichait alors plus qu'une boîte vide.
+  // Le chemin /demo-parent sert exactement la meme chose que
+  // « ?demo=parent&nu=1 », mais en tant que CHEMIN : les en-tetes de Vercel ne
+  // savent pas distinguer une requete par son parametre d'URL, et il fallait
+  // pouvoir autoriser cette page-la — et elle seule — a etre encadree. Tout le
+  // site refuse l'encadrement, y compris par lui-meme : le cadre de la page
+  // parents restait donc vide en production, sur un « Chargement… » sans fin.
+  // Les parametres restent acceptes, pour ouvrir la demo a la main.
+  const [cheminDemo] = useState(()=>{
+    try{ return window.location.pathname.replace(/\/$/,"") === "/demo-parent"; }
+    catch(e){ return false; }
+  });
   const [demoRole] = useState(()=>{
-    try{ return new URLSearchParams(window.location.search).get("demo")==="parent" ? "parent" : "asmat"; }
+    try{ return (cheminDemo || new URLSearchParams(window.location.search).get("demo")==="parent") ? "parent" : "asmat"; }
     catch(e){ return "asmat"; }
   });
   const [demoNu] = useState(()=>{
-    try{ return new URLSearchParams(window.location.search).get("nu")==="1"; }
+    try{ return cheminDemo || new URLSearchParams(window.location.search).get("nu")==="1"; }
     catch(e){ return false; }
   });
 
@@ -4802,8 +4813,32 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
   const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
-  const SECTIONS_ORDER_DEFAULT=["probleme","photo1","demo","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"]; // P32-4
-  const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
+  const SECTIONS_ORDER_DEFAULT=["probleme","photo1","demo","photo3","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"]; // P32-4
+  // LE PIEGE DE L'ORDRE ENREGISTRE EN BASE.
+  //
+  // app_config.sectionsOrder, s'il existe, remplaçait purement et simplement
+  // cette liste. Une section AJOUTEE ICI n'y figurait donc pas, ord() renvoyait
+  // 999, et elle atterrissait tout en bas de la page — apres le pied de page —
+  // sans que rien ne le dise. C'est exactement ce qui serait arrive au
+  // troisieme bandeau photo : invisible en local, casse en ligne.
+  //
+  // On fusionne au lieu de remplacer : l'ordre de la base decide de ce qu'elle
+  // connait, et tout identifiant qu'elle ignore est replace a cote de son
+  // voisin par defaut. La proprietaire garde la main sur l'ordre, et une
+  // section nouvelle n'a plus besoin qu'on pense a la declarer deux fois.
+  const _ord=(()=>{
+    const base=(config.sectionsOrder&&config.sectionsOrder.length)?[...config.sectionsOrder]:null;
+    if(!base)return SECTIONS_ORDER_DEFAULT;
+    SECTIONS_ORDER_DEFAULT.forEach((id,i)=>{
+      if(base.includes(id))return;
+      // On le glisse derriere le premier voisin de gauche que la base connait ;
+      // s'il n'y en a aucun, il passe en tete.
+      let ancre=-1;
+      for(let j=i-1;j>=0;j--){const k=base.indexOf(SECTIONS_ORDER_DEFAULT[j]);if(k>=0){ancre=k;break;}}
+      base.splice(ancre+1,0,id);
+    });
+    return base;
+  })();
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
   const demos=[
@@ -5564,6 +5599,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* SECTION SOURCES — ce sur quoi les calculs s'appuient */}
+      {/* On vient de voir l'application faire les calculs. La question qui suit
+          est « sur quoi ils s'appuient » — et entre les deux, une respiration
+          qui montre de quoi on parle : des chiffres, des courriers, des
+          montants qu'il a bien fallu vérifier quelque part. */}
+      <BandeauPhoto order={ord("photo3")} src="/accueil-calculs.webp" position="50% 62%"
+        alt="Une calculatrice posée à côté d'enveloppes et d'une paire de lunettes." />
+
       {SV.sources!==false&&<div className="lp-section" style={{ order:ord("sources"), background: L.sectionSourcesBg||"#F7F2EC" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
@@ -6624,7 +6666,7 @@ export const DEFAULT_CONFIG = {
   blog: BLOG_DEFAULT,
   // Les bandeaux photo font partie de l'ordre : ce sont des respirations
   // placées, pas des décorations collées à une section.
-  sectionsOrder:["probleme","photo1","demo","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"],
+  sectionsOrder:["probleme","photo1","demo","photo3","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"],
 };
 export let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 

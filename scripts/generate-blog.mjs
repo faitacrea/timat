@@ -414,6 +414,9 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .filtres button:hover{border-color:${T.terracottaLine};color:${T.terracotta}}
 .filtres button[aria-pressed="true"]{background:${T.mauve};border-color:${T.mauve};color:#fff}
 .rubs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.rubs[hidden]{display:none}
+.invite{font-size:14px;color:${T.light};margin:12px 0 0}
+.invite[hidden]{display:none}
 .rubs a{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;text-decoration:none;
   padding:7px 14px;border-radius:99px;border:1px solid transparent;transition:.15s}
 .rubs a:hover{filter:brightness(.96);border-color:rgba(0,0,0,.08)}
@@ -763,7 +766,7 @@ function carte(a) {
 function chipsRubriques(articles, actif = null) {
   const rubs = rubriques(articles);
   if (!rubs.length) return "";
-  return `<div class="rubs">${rubs
+  return `<div class="rubs" id="rubs" hidden>${rubs
     .map((r) => {
       const [bg, fg] = PASTILLES[r.titre] || PASTILLES._defaut;
       const ici = r.slug === actif;
@@ -782,41 +785,56 @@ const SCRIPT_FILTRE = `(function(){
   var barre=document.getElementById('filtres');
   if(!barre)return;
   var cartes=[].slice.call(document.querySelectorAll('.cards .card'));
-  var pastilles=[].slice.call(document.querySelectorAll('.rubs a'));
+  var sousMenu=document.getElementById('rubs');
+  var pastilles=sousMenu?[].slice.call(sousMenu.querySelectorAll('a')):[];
   var vide=document.getElementById('vide');
+  var invite=document.getElementById('invite-role');
   var ROLES={assmat:1,parent:1};
+  var CLE='timat-blog-audience';
+
   function concerne(el,val){
     var a=el.getAttribute('data-audience')||'les-deux';
     return a==='les-deux' || a===val;
   }
+
+  // val vaut null tant qu'aucun role n'est choisi : le sous-menu reste replie
+  // et tous les articles restent visibles — une page qui s'ouvre sur du vide
+  // donnerait l'impression qu'il n'y a rien a lire.
   function appliquer(val){
-    if(!ROLES[val])val='assmat';
+    if(val && !ROLES[val]) val=null;
     var n=0;
     cartes.forEach(function(c){
-      var ok=concerne(c,val);
+      var ok = !val || concerne(c,val);
       c.style.display = ok ? '' : 'none';
       if(ok)n++;
     });
-    // Les rubriques du role choisi, et elles seules : leur compte est deja
-    // celui du role, puisqu'une rubrique appartient a un seul public.
-    pastilles.forEach(function(p){
-      p.style.display = concerne(p,val) ? '' : 'none';
-    });
-    if(vide)vide.style.display = n ? 'none' : 'block';
+    if(sousMenu){
+      sousMenu.hidden = !val;
+      pastilles.forEach(function(p){ p.style.display = (!val||concerne(p,val)) ? '' : 'none'; });
+    }
+    if(invite) invite.hidden = !!val;
+    if(vide) vide.style.display = n ? 'none' : 'block';
     [].slice.call(barre.querySelectorAll('button')).forEach(function(b){
-      b.setAttribute('aria-pressed', String(b.getAttribute('data-aud')===val));
+      var actif = b.getAttribute('data-aud')===val;
+      b.setAttribute('aria-pressed', String(actif));
+      b.setAttribute('aria-expanded', String(actif));
     });
-    try{ localStorage.setItem('timat-blog-audience', val); }catch(e){}
+    try{ if(val) localStorage.setItem(CLE,val); else localStorage.removeItem(CLE); }catch(e){}
   }
+
+  var courant=null;
   barre.addEventListener('click',function(e){
-    var b=e.target.closest('button');
-    if(b)appliquer(b.getAttribute('data-aud'));
+    var b=e.target.closest('button'); if(!b)return;
+    var v=b.getAttribute('data-aud');
+    // Recliquer l'onglet ouvert le referme : c'est un menu, pas un verrou.
+    courant = (courant===v) ? null : v;
+    appliquer(courant);
   });
-  // Le role retenu de la derniere visite. « tout » a disparu : une valeur
-  // gardee par un ancien passage ne doit pas ouvrir une page sans role actif.
-  var init='assmat';
-  try{ init = localStorage.getItem('timat-blog-audience') || 'assmat'; }catch(e){}
-  appliquer(init);
+
+  // Une visite precedente a laisse un role : on le reprend, sous-menu ouvert.
+  // Une valeur inconnue — « tout », d'une version precedente — est ignoree.
+  try{ var m=localStorage.getItem(CLE); if(m&&ROLES[m]) courant=m; }catch(e){}
+  appliquer(courant);
 })();`;
 
 // Deux roles, et rien d'autre.
@@ -831,11 +849,27 @@ const SCRIPT_FILTRE = `(function(){
 // La question « Je suis... » n'a que deux reponses vraies. On la pose vraiment :
 // un role est toujours actif, les rubriques affichees sont celles de ce role, et
 // leur compte est celui du role — plus jamais les deux d'un coup.
+// Deux onglets, et les rubriques en sous-menu.
+//
+// Premiere version : « Tout voir » etait le choix par defaut, la page s'ouvrait
+// donc sur cinquante articles et douze rubriques melangees.
+// Deuxieme version : un role etait toujours actif, et ses rubriques toujours
+// affichees — c'etait juste, mais ca faisait encore beaucoup a lire d'un coup,
+// et la question « Je suis... » semblait deja repondue a la place du lecteur.
+//
+// Ici, la question est posee et attend. Rien d'autre que les deux reponses
+// possibles. On clique, le sous-menu des rubriques de ce role s'ouvre dessous,
+// et la liste se filtre. On reclique sur le meme onglet et il se referme : un
+// menu, qui se replie.
+//
+// Le role choisi est retenu d'une visite a l'autre : quelqu'un qui revient
+// arrive directement chez lui, sous-menu ouvert. Ce n'est qu'a la toute
+// premiere visite que la question est posee a blanc.
 function barreFiltres() {
   return `<div class="filtres" id="filtres" role="group" aria-label="Choisir votre rôle">
     <span class="lab">Je suis</span>
-    <button type="button" data-aud="assmat" aria-pressed="true">Assistante maternelle</button>
-    <button type="button" data-aud="parent" aria-pressed="false">Parent employeur</button>
+    <button type="button" data-aud="assmat" aria-pressed="false" aria-expanded="false" aria-controls="rubs">Assistante maternelle</button>
+    <button type="button" data-aud="parent" aria-pressed="false" aria-expanded="false" aria-controls="rubs">Parent employeur</button>
   </div>`;
 }
 
@@ -848,6 +882,7 @@ function pageIndex(articles) {
   <h1>Comprendre l'accueil chez une assistante maternelle</h1>
   <p class="lead">Contrat, salaire, Pajemploi, agrément, quotidien de l'accueil : des réponses claires et sourcées, pour les assistantes maternelles agréées comme pour les parents employeurs.</p>
   ${barreFiltres()}
+  <p class="invite" id="invite-role">Choisissez votre rôle pour ne voir que ce qui vous concerne.</p>
   ${chipsRubriques(articles)}
   <div class="cards">
     ${

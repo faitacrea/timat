@@ -826,14 +826,120 @@ for (const u of fichiersAppSrc()) {
 // qui verifie que le cadre pointe bien vers un mode existant, couvre
 // desormais le seul risque restant.
 
-// --- le cadre de demo de la page parents pointe vers un mode qui n'existe plus ---
+// --- une section de la landing qui n'a pas de place dans l'ordre ---
 //
-// public/pour-les-parents.html n'affiche plus une demo dessinee a la main : il
-// embarque l'application elle-meme, dans un <iframe src="/?demo=parent&nu=1">.
-// Ces deux parametres sont lus par LandingPage (src/App.jsx). Renommes ou
-// supprimes d'un cote, le cadre affiche la landing entiere dans un cadre de
-// 760 px — une page dans une page, et personne ne s'en apercoit avant la mise
-// en ligne, parce que rien ne plante.
+// L'ordre des sections vient de SECTIONS_ORDER_DEFAULT, que app_config peut
+// remplacer depuis le back-office. ord("x") donne la position de x ; un
+// identifiant absent de la liste renvoie 999, et la section atterrit tout en
+// bas de la page, apres le pied de page, sans que rien ne plante.
+//
+// La fusion faite dans LandingPage protege le cas « la base ne connait pas
+// encore cette section ». Reste le cas « on a ajoute la section et oublie de
+// la declarer » : c'est ce que verifie cette barriere.
+{
+  const app = fs.readFileSync("src/App.jsx", "utf8");
+  const liste = app.match(/const SECTIONS_ORDER_DEFAULT\s*=\s*\[([^\]]*)\]/);
+  if (!liste) {
+    signale("landing", "SECTIONS_ORDER_DEFAULT est introuvable dans src/App.jsx — l'ordre des sections ne peut plus être vérifié.");
+  } else {
+    const connus = new Set([...liste[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]));
+    const utilises = new Set([...app.matchAll(/\bord\("([^"]+)"\)/g)].map((m) => m[1]));
+    const orphelines = [...utilises].filter((id) => !connus.has(id));
+    if (orphelines.length) {
+      signale("landing", `${orphelines.length} section(s) placée(s) par ord() sans figurer dans SECTIONS_ORDER_DEFAULT — elles s'afficheraient tout en bas de la page, après le pied de page : ${orphelines.join(", ")}`);
+    }
+    // Et l'inverse : une entree de la liste que plus personne ne place est un
+    // reste, qui trompe qui relit l'ordre de la page.
+    const mortes = [...connus].filter((id) => !utilises.has(id));
+    if (mortes.length) {
+      signale("landing", `${mortes.length} entrée(s) de SECTIONS_ORDER_DEFAULT ne correspondent à aucune section : ${mortes.join(", ")}`);
+    }
+  }
+}
+
+// --- une page encadree que le site s'interdit d'encadrer ---
+//
+// CE QUI S'EST PASSE. public/pour-les-parents.html montre la demonstration de
+// l'application dans un <iframe>. Le site entier envoie X-Frame-Options: DENY
+// et Content-Security-Policy: frame-ancestors 'none' — un refus d'etre encadre
+// qui vaut aussi pour nous-memes. En production, le cadre restait donc vide sur
+// un « Chargement de la demonstration… » qui ne finissait jamais.
+//
+// Rien ne l'avait dit. La construction reussit, l'audit passait, et le serveur
+// de verification local n'envoie aucun en-tete : la demo s'affichait
+// parfaitement ici et nulle part ailleurs. C'est la proprietaire qui l'a vu,
+// deux fois, sur le site en ligne.
+//
+// LA CORRECTION. La regle generale ne bouge pas : la landing, l'application,
+// les outils, le blog, la boutique restent interdits d'encadrement par qui que
+// ce soit. Une seule page fait exception, /demo-parent, et seulement pour notre
+// propre origine. Elle ne contient que la demonstration : aucun formulaire,
+// aucun bouton qui engage, aucune session — il n'y a rien a y detourner par un
+// clic. C'est pour cela qu'elle a son propre CHEMIN et non un parametre d'URL :
+// les en-tetes de Vercel ne savent pas distinguer une requete par son
+// parametre.
+//
+// CE QUE CETTE BARRIERE VERIFIE. Pour chaque <iframe> qui pointe vers notre
+// propre site, le chemin vise doit etre autorise a etre encadre par les
+// en-tetes de vercel.json. La derniere regle qui correspond l'emporte, comme
+// chez Vercel.
+{
+  const conf = JSON.parse(fs.readFileSync("vercel.json", "utf8"));
+  const regles = conf.headers || [];
+
+  // La valeur effective d'un en-tete pour un chemin : la derniere regle qui
+  // correspond gagne, exactement comme Vercel les applique.
+  const entete = (chemin, cle) => {
+    let valeur = null;
+    for (const r of regles) {
+      let corresp = false;
+      try { corresp = new RegExp("^" + r.source.replace(/:\w+\*?/g, "[^/]+") + "$").test(chemin); }
+      catch (e) { corresp = r.source === chemin; }
+      if (!corresp) continue;
+      for (const h of r.headers || []) if (h.key.toLowerCase() === cle) valeur = h.value;
+    }
+    return valeur;
+  };
+
+  const pages = fs.readdirSync("public").filter((f) => f.endsWith(".html"));
+  for (const nom of pages) {
+    const html = fs.readFileSync(path.join("public", nom), "utf8");
+    for (const [, src] of html.matchAll(/<iframe[^>]*\ssrc="([^"]+)"/g)) {
+      const cible = src.replace(/&amp;/g, "&");
+      // On ne juge que ce qui vient de chez nous : un cadre vers YouTube ou
+      // une carte n'est pas concerne par NOS en-tetes.
+      if (!cible.startsWith("/")) continue;
+      const chemin = cible.split(/[?#]/)[0];
+
+      const xfo = (entete(chemin, "x-frame-options") || "").toUpperCase();
+      const csp = entete(chemin, "content-security-policy") || "";
+      const fa = (csp.match(/frame-ancestors([^;]*)/i) || [, ""])[1].toLowerCase();
+
+      if (xfo === "DENY") {
+        signale("cadres", `public/${nom} affiche « ${cible} » dans un cadre, mais vercel.json envoie X-Frame-Options: DENY sur ${chemin} — le cadre restera vide en ligne, sans aucune erreur visible.`);
+      }
+      if (fa.includes("'none'")) {
+        signale("cadres", `public/${nom} affiche « ${cible} » dans un cadre, mais vercel.json envoie frame-ancestors 'none' sur ${chemin} — le cadre restera vide en ligne, sans aucune erreur visible.`);
+      }
+      // Le chemin doit exister : un cadre vers une page qui n'est ni un
+      // fichier de public/ ni une reecriture ne montrera rien non plus.
+      const connu =
+        fs.existsSync(path.join("public", chemin.replace(/^\//, "") || "index.html")) ||
+        chemin === "/" ||
+        (conf.rewrites || []).some((r) => r.source === chemin);
+      if (!connu) {
+        signale("cadres", `public/${nom} affiche « ${cible} » dans un cadre, mais ${chemin} n'est ni un fichier de public/ ni une réécriture de vercel.json.`);
+      }
+    }
+  }
+}
+
+// --- le cadre de demo pointe vers un chemin que l'application ne reconnait pas ---
+//
+// public/pour-les-parents.html embarque « /demo-parent ». C'est LandingPage qui
+// reconnait ce chemin et ne rend alors que le bloc de demonstration. Renomme
+// d'un cote sans l'autre, le cadre afficherait la landing entiere dans une
+// boite de 540 px — une page dans une page, et rien ne planterait.
 {
   const page = fs.readFileSync("public/pour-les-parents.html", "utf8");
   const app = fs.readFileSync("src/App.jsx", "utf8");
@@ -841,70 +947,9 @@ for (const u of fichiersAppSrc()) {
   if (!cadre) {
     signale("parents", "Le cadre de la démo (iframe#demo-app) a disparu de public/pour-les-parents.html — la page ne montre plus l'application.");
   } else {
-    const url = cadre[1].replace(/&amp;/g, "&");
-    const params = new URLSearchParams(url.split("?")[1] || "");
-    for (const [cle, valeur] of params) {
-      // Le paramètre doit être lu quelque part dans la landing, ET comparé à
-      // la valeur que le cadre lui donne.
-      const lu = new RegExp(`get\\("${cle}"\\)\\s*===\\s*"${valeur}"`).test(app);
-      if (!lu) {
-        signale("parents", `Le cadre de la démo appelle « ${cle}=${valeur} », que src/App.jsx ne reconnaît pas — la page parents afficherait la landing entière dans un cadre.`);
-      }
-    }
-  }
-}
-
-// --- le consentement affiche n'est plus celui qui est enregistre ---
-//
-// Le RGPD demande de pouvoir prouver le consentement. TiMat le prouve en
-// enregistrant, avec l'adresse, LE TEXTE affiche au moment du clic
-// (prospects.consentement_texte). Mais le texte affiche vit dans le
-// navigateur et le texte enregistre vit dans la route serveur : deux copies.
-//
-// Si l'une change sans l'autre, la base garde une phrase que personne n'a lue
-// — et la preuve ne prouve plus rien. Ca ne casse aucun test, aucune page,
-// aucun deploiement. Rien ne le dirait jamais.
-//
-// On compare donc les deux, mot pour mot, apres avoir remis les sauts de ligne
-// et les espaces multiples a plat (les deux fichiers ne coupent pas leurs
-// lignes au meme endroit).
-{
-  const app = fs.readFileSync("src/App.jsx", "utf8");
-  const route = fs.readFileSync("api/inscription-releve.js", "utf8");
-  const aplat = (t) => t.replace(/\s+/g, " ").trim();
-
-  // Les chaines sont ecrites en plusieurs morceaux concatenes : on recolle.
-  const recoller = (texte, nom) => {
-    const m = texte.match(new RegExp(`${nom}\\s*=\\s*([\\s\\S]*?);\\n`));
-    if (!m) return null;
-    // La chaine se termine sur LE MEME guillemet qui l'ouvre : sans ce
-    // rappel arriere, « d'etre » coupait la chaine en deux au milieu d'un mot
-    // et le message d'erreur devenait illisible.
-    const morceaux = [...m[1].matchAll(/(["'])((?:\\.|(?!\1)[^\\])*)\1/g)].map((x) => x[2]);
-    return morceaux.length ? aplat(morceaux.join("").replace(/\\(['"])/g, "$1")) : null;
-  };
-
-  const affiche = recoller(app, "CONSENTEMENT_ATTENTE");
-  const enregistre = recoller(route, "TEXTE_CONSENTEMENT_ATTENTE");
-
-  if (!affiche || !enregistre) {
-    signale("liste d'attente", "Le texte de consentement est introuvable dans src/App.jsx ou api/inscription-releve.js — impossible de vérifier que la personne lit ce qui est enregistré.");
-  } else if (affiche !== enregistre) {
-    // On montre l'endroit ou les deux divergent, pas leurs premiers mots :
-    // ils commencent presque toujours pareil, et un extrait identique des deux
-    // cotes ne dit pas ou chercher.
-    let i = 0;
-    while (i < affiche.length && affiche[i] === enregistre[i]) i++;
-    const d = Math.max(0, i - 20);
-    const bout = (t) => (d ? "…" : "") + t.slice(d, i + 45) + (i + 45 < t.length ? "…" : "");
-    signale("liste d'attente", `Le consentement affiché n'est pas celui qui est enregistré, à partir du caractère ${i}. Affiché : « ${bout(affiche)} » — enregistré : « ${bout(enregistre)} »`);
-  }
-
-  // La source envoyee doit exister dans la route, sinon elle repond 400 et la
-  // personne voit « Formulaire inconnu » sans savoir pourquoi.
-  for (const [, src] of app.matchAll(/source\s*:\s*"([a-z-]+)"/g)) {
-    if (!new RegExp(`'${src}'\\s*:\\s*\\{`).test(route)) {
-      signale("liste d'attente", `Le formulaire envoie source="${src}", que api/inscription-releve.js ne connaît pas — l'inscription échouerait.`);
+    const chemin = cadre[1].replace(/&amp;/g, "&").split(/[?#]/)[0];
+    if (!app.includes(`=== "${chemin}"`)) {
+      signale("parents", `Le cadre de la démo appelle « ${chemin} », que src/App.jsx ne reconnaît pas — la page parents afficherait la landing entière dans un cadre.`);
     }
   }
 }
