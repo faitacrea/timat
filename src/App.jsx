@@ -6098,7 +6098,7 @@ export const DEFAULT_CONFIG = {
     heroRoleParentSub:"Gratuit, invité par votre assistante maternelle",
     heroOutilTxt:"Calculer un salaire mensualisé — sans compte",
     heroBtnNavTxt:"Commencer gratuitement →",
-    heroTags:"2 mois offerts,Sans carte bancaire,Données en France,Résiliable en 1 clic",
+    heroTags:"2 mois offerts,Sans carte bancaire,Une saisie — le reste se calcule,Données en France",
     ctaBtnTxt:"Je commence - 2 mois gratuits →",
     ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
     ctaFooter:"Créé par une professionnelle de la petite enfance · Données hébergées en France 🇫🇷",

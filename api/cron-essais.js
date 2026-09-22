@@ -22,8 +22,20 @@
  *
  * La carte bancaire n'apparaît nulle part ici : elle n'est demandée qu'au
  * moment de continuer, dans Stripe, et seulement là.
+ *
+ * POURQUOI UNE FONCTION EDGE ET NON SERVERLESS.
+ * Le plan Hobby n'accepte que douze fonctions serverless par déploiement, et
+ * le projet en comptait déjà douze. Ajoutée en serverless, cette tâche a fait
+ * échouer le déploiement de production : errorCode
+ * « exceeded_serverless_functions_per_deployment ». Les fonctions Edge ne
+ * comptent pas dans ce plafond, et cette tâche n'a besoin de rien d'autre que
+ * fetch et du client Supabase — tous deux disponibles sur Edge. Une barrière
+ * d'audit compte désormais les fonctions serverless avant que Vercel ne le
+ * fasse à notre place.
  */
 import { createClient } from '@supabase/supabase-js';
+
+export const config = { runtime: 'edge' };
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -64,23 +76,27 @@ async function rappeler(profil, jours) {
   }
 }
 
-export default async function handler(req, res) {
+const repondre = (code, corps) => new Response(JSON.stringify(corps), {
+  status: code, headers: { 'Content-Type': 'application/json' },
+});
+
+export default async function handler(request) {
   // Échec fermé, comme la publication d'articles : sans secret configuré, cet
   // endpoint ne touche à aucun abonnement. Ouvert au monde, il permettrait de
   // faire expirer les essais de tout le monde.
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    return res.status(500).json({ error: 'CRON_SECRET absent : tâche désactivée.' });
+    return repondre(500, { error: 'CRON_SECRET absent : tâche désactivée.' });
   }
-  if (req.headers.authorization !== `Bearer ${secret}`) {
-    return res.status(401).json({ error: 'Non autorisé.' });
+  if (request.headers.get('authorization') !== `Bearer ${secret}`) {
+    return repondre(401, { error: 'Non autorisé.' });
   }
   if (!process.env.SUPABASE_SERVICE_KEY) {
-    return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY absente.' });
+    return repondre(500, { error: 'SUPABASE_SERVICE_KEY absente.' });
   }
 
   // « simulation=1 » dit ce qui serait fait, sans rien écrire ni envoyer.
-  const simulation = req.query?.simulation === '1';
+  const simulation = new URL(request.url).searchParams.get('simulation') === '1';
   const maintenant = new Date();
   const journal = { simulation, rappels: [], expires: [], erreurs: [] };
 
@@ -148,10 +164,9 @@ export default async function handler(req, res) {
     // Une erreur sur un compte n'arrête pas les autres, mais elle doit se voir :
     // une tâche qui répond « tout va bien » en ayant échoué partout est pire
     // que pas de tâche du tout.
-    const code = journal.erreurs.length ? 207 : 200;
-    return res.status(code).json(journal);
+    return repondre(journal.erreurs.length ? 207 : 200, journal);
   } catch (e) {
     console.error('[cron-essais]', e.message);
-    return res.status(500).json({ error: e.message, journal });
+    return repondre(500, { error: e.message, journal });
   }
 }
