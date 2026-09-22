@@ -1074,7 +1074,7 @@ export function Styles(){return(
     .demo-col-phone{flex-shrink:0}
     .demo-frame{height:487px}
     .demo-scrollhint{display:none}
-    .demo-zoom{zoom:.8}
+    .demo-zoom{zoom:.6}
     @media(max-width:860px){
       .demo-layout{display:flex;flex-direction:column;gap:6px;align-items:stretch;max-width:520px;grid-template-columns:none;grid-template-areas:none}
       .demo-tabs{flex-direction:row;flex-wrap:nowrap;gap:5px;width:100%;overflow:visible;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);box-shadow:none;border-radius:12px;padding:5px;order:1}
@@ -4788,11 +4788,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           width:max-content;max-width:calc(100% - 32px)}
         @media (prefers-reduced-motion:reduce){.lp-barre{transition:none}}
         @media(max-width:899px){
-          /* Sous 900 px — le même seuil que isWeb — la pleine largeur reste le
-             bon choix : une carte
-             flottante y perdrait la moitié de sa place en marges. */
-          .lp-barre{left:0;right:0;width:auto;max-width:none;border-radius:0;margin:0}
-          .lp-barre .lp-barre-bulle{display:none}
+          .lp-barre{max-width:calc(100% - 20px)}
         }
 
         /* Les bulles de notification du hero. Elles se posaient SUR l'écran du
@@ -5142,7 +5138,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </FadeIn>
 
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
-          <div style={{ display:"grid", gridTemplateColumns:isWeb?"1fr 1fr":"1fr", gap:10, maxWidth:isWeb?900:720, margin:"0 auto", marginBottom: 24 }}>
+          <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?980:720, margin:"0 auto", marginBottom: 24 }}>
             {[
               { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Unique", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n28 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
               { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Exclusif", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
@@ -5559,14 +5555,14 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           Elle n'existe que pour la visiteuse qui a lu et qui redescend : tant
           qu'elle est dans le hero, les deux boutons de rôle suffisent. */}
       {!preview&&<div className="lp-barre" style={{
-        position:"fixed", bottom:isWeb?22:0, zIndex:190,
-        display:"flex", alignItems:"center", gap:isWeb?22:12,
+        position:"fixed", bottom:"calc(16px + env(safe-area-inset-bottom,0px))", zIndex:190,
+        display:"flex", alignItems:"center", gap:isWeb?22:14,
         background:"rgba(46,72,89,.97)", backdropFilter:"blur(10px)", color:"#fff",
-        border:isWeb?"1px solid rgba(255,255,255,.14)":"none",
-        borderRadius:isWeb?18:0,
-        padding:isWeb?"13px 14px 13px 24px":"11px 14px calc(11px + env(safe-area-inset-bottom,0px))",
+        border:"1px solid rgba(255,255,255,.14)",
+        borderRadius:18,
+        padding:isWeb?"13px 14px 13px 24px":"12px 12px 12px 18px",
         boxShadow:"0 14px 40px rgba(13,27,42,.4)",
-        transform: (isWeb?"translateX(-50%) ":"") + (heroPasse?"translateY(0)":"translateY(150%)"),
+        transform: "translateX(-50%) " + (heroPasse?"translateY(0)":"translateY(180%)"),
         pointerEvents: heroPasse?"auto":"none",
       }}>
         {/* La bulle : elle dit l'offre au-dessus du prix, là où l'œil arrive
@@ -5576,16 +5572,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           borderRadius:99, padding:"3px 11px", fontSize:10.5, fontWeight:700,
           letterSpacing:".5px", textTransform:"uppercase", whiteSpace:"nowrap",
           boxShadow:"0 4px 12px rgba(13,27,42,.3)" }}>{T.prixEssai}</span>
-        <div style={{ fontFamily:fTitle, fontWeight:700, fontSize:isWeb?22:17, lineHeight:1.1, whiteSpace:"nowrap" }}>
+        <div style={{ fontFamily:fTitle, fontWeight:700, fontSize:isWeb?22:19, lineHeight:1.1, whiteSpace:"nowrap" }}>
           {T.prixMensuel} €
-          <span style={{ display:"block", fontFamily:fBody, fontSize:isWeb?12.5:10.5, fontWeight:400, color:"rgba(255,255,255,.72)" }}>
-            {isWeb?"par mois, contrats illimités":T.prixEssai}
+          <span style={{ display:"block", fontFamily:fBody, fontSize:isWeb?12.5:11, fontWeight:400, color:"rgba(255,255,255,.72)" }}>
+            par mois{isWeb?", contrats illimités":""}
           </span>
         </div>
         <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{
           marginLeft:"auto", background:"#B4543F", color:"#fff", border:"none", borderRadius:12,
-          padding:isWeb?"13px 22px":"11px 15px", fontSize:isWeb?15:13, fontWeight:700, fontFamily:"inherit",
-          cursor:"pointer", whiteSpace:"nowrap" }}>{T.barreBtnTxt}</button>
+          padding:isWeb?"13px 22px":"12px 16px", fontSize:isWeb?15:13.5, fontWeight:700, fontFamily:"inherit",
+          cursor:"pointer", whiteSpace:"nowrap" }}>{isWeb?T.barreBtnTxt:"Je démarre"}</button>
       </div>}
 
       {/* PAGES JURIDIQUES */}
@@ -6062,10 +6058,10 @@ export const DEFAULT_CONFIG = {
     proLabel:"⭐ TOUT INCLUS",
     proSubtxt:"quel que soit le nombre d'enfants",
     proDesc:"La solution complète. Tout est inclus.",
-    proBtnTxt:"2 mois gratuits, sans CB →",
+    proBtnTxt:"Je démarre mes 2 mois offerts →",
     freeLabel:"Gratuit",
     freeBtnTxt:"Commencer gratuitement",
-    freeDesc:"Pour découvrir TiMat.",
+    freeDesc:"1 seul enfant accueilli. Pour essayer TiMat, pas pour travailler avec plusieurs familles.",
     freePrice:"0€",
   },
   landing: {
