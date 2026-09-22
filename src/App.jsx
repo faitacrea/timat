@@ -4994,17 +4994,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 encadrés de chiffres. Une visiteuse devait deviner si la page
                 s'adressait à elle : une assistante maternelle et un parent
                 employeur n'ont ni le même compte, ni le même prix, ni le même
-                parcours. On le lui demande, c'est tout. Le libellé est aligné
-                à gauche : sur deux lignes, centré, il se lit mal. */}
+                parcours. On le lui demande, c'est tout. */}
             <div className="lp-hero-roles">
               <button onClick={() => { setShowModal(true); setRole("asmat"); }}
-                style={{ background: L.heroBtnPrimBg||"#B4543F", color: L.heroBtnPrimColor||"#fff", border:"none", borderRadius:13, padding:"14px 44px 14px 17px", fontSize:15, fontWeight:700, fontFamily:"inherit", cursor:"pointer", textAlign:"left", position:"relative", width:"100%", boxShadow:"0 8px 22px rgba(180,84,63,.3)" }}>
+                style={{ background: L.heroBtnPrimBg||"#B4543F", color: L.heroBtnPrimColor||"#fff", border:"none", borderRadius:13, padding:"14px 44px", fontSize:15, fontWeight:700, fontFamily:"inherit", cursor:"pointer", textAlign:"center", position:"relative", width:"100%", boxShadow:"0 8px 22px rgba(180,84,63,.3)" }}>
                 {T.heroRoleAsmat}
                 <small style={{ display:"block", fontSize:11.5, fontWeight:400, marginTop:2, opacity:.88 }}>{T.heroRoleAsmatSub}</small>
                 <span aria-hidden="true" style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", fontSize:15 }}>→</span>
               </button>
               <button onClick={() => { window.location.href="/parents"; }}
-                style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border:"1.5px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.28)"), borderRadius:13, padding:"14px 44px 14px 17px", fontSize:15, fontWeight:600, fontFamily:"inherit", cursor:"pointer", textAlign:"left", position:"relative", width:"100%" }}>
+                style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border:"1.5px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.28)"), borderRadius:13, padding:"14px 44px", fontSize:15, fontWeight:600, fontFamily:"inherit", cursor:"pointer", textAlign:"center", position:"relative", width:"100%" }}>
                 {T.heroRoleParent}
                 <small style={{ display:"block", fontSize:11.5, fontWeight:400, marginTop:2, opacity:.86 }}>{T.heroRoleParentSub}</small>
                 <span aria-hidden="true" style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", fontSize:15 }}>→</span>
