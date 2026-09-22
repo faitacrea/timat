@@ -4405,7 +4405,52 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const consentValide = consent.politique && consent.cgu;
   const [demoArrivee, setDemoArrivee] = useState({e1:"07h35",e2:null,e3:null});
   // Auto-demo facon "screencast" : defile automatiquement les sections cles
-  const demoTour = [
+  // ── LA DÉMO A DEUX CÔTÉS ───────────────────────────────────────────────
+  //
+  // La page parents employeurs recopiait l'application à la main, en HTML
+  // statique : cinq écrans dessinés, qui dérivaient dès que l'application
+  // bougeait (elle avait déjà perdu « Mes alertes »). La démo de l'accueil,
+  // elle, monte les VRAIS composants — AccueilAssMat, Pointage, Messagerie —
+  // avec des données d'exemple. Il n'y avait aucune raison que le parent ait
+  // droit à un dessin quand l'assistante maternelle a droit à l'application.
+  //
+  // Les mêmes composants savent déjà servir les deux rôles : c'est ce que fait
+  // l'application une fois connectée, par la prop `role`. On la passe ici.
+  // `?demo=parent` bascule tout le bloc ; `?nu=1` ne rend que lui, pour que la
+  // page statique l'embarque dans un cadre sans rejouer le reste de la landing.
+  const [demoRole] = useState(()=>{
+    try{ return new URLSearchParams(window.location.search).get("demo")==="parent" ? "parent" : "asmat"; }
+    catch(e){ return "asmat"; }
+  });
+  const [demoNu] = useState(()=>{
+    try{ return new URLSearchParams(window.location.search).get("nu")==="1"; }
+    catch(e){ return false; }
+  });
+  const demoParent = demoRole==="parent";
+  // L'utilisatrice de la démo : Marie côté assistante maternelle, Sophie côté
+  // parent — la mère de Léo, dont on regarde la journée.
+  const demoUser = demoParent ? D.parents[0] : D.asmat;
+  const demoEnfantParent = D.enfants[0];
+
+  // Le parcours du parent suit ses questions, pas les fonctions de l'app :
+  // que fait mon enfant, combien d'heures, combien ça me coûte, comment je
+  // lui parle. Les pages visées sont celles de GROUPS_P.
+  const demoTourParent = [
+    {page:"accueil",label:"Le quotidien",ic:"🏠",
+      desc:"La journée de votre enfant, en direct.",
+      resume:["Arrivée, repas, sieste : vous voyez sans demander","Déclarez une absence en deux taps","Les photos et les moments partagés dans la journée"]},
+    {page:"pointage",label:"Ses heures",ic:"⏰",
+      desc:"Les heures pointées, pas les heures estimées.",
+      resume:["Présences et absences, jour par jour","Le total du mois se met à jour tout seul","Un désaccord sur les heures se tranche avec une date"]},
+    {page:"admin_finances",label:"Coût & aides",ic:"💶",
+      desc:"Ce que la garde vous coûte vraiment.",
+      resume:["Salaire, indemnités et déclaration Pajemploi","Votre reste à charge, une fois le CMG déduit","Bulletins et paiements suivis des deux côtés"]},
+    {page:"messagerie",label:"Messagerie",ic:"💬",
+      desc:"Le lien avec votre assistante maternelle.",
+      resume:["Messages et moments de la journée","Daté, non modifiable : ce qui a été dit reste","Les deux parents lisent la même chose"]},
+  ];
+
+  const demoTourAsmat = [
     {page:"accueil",label:"Le quotidien",ic:"🏠",
       desc:((config.landing||{}).demoPhrase1||"Toute la journée d'accueil, en un coup d'œil."),
       resume:((config.landing||{}).demoPuces1||"Enfants présents, pointage, événements\nFiche d'urgence & santé de chaque enfant\nLe parent voit la journée sans avoir à demander").split("\n").filter(Boolean)},
@@ -4419,6 +4464,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       desc:((config.landing||{}).demoPhrase4||"Le lien avec les parents, au quotidien."),
       resume:((config.landing||{}).demoPuces4||"Messages & moments de la journée partagés\nNotifications en temps réel\nDaté, non modifiable : ce qui a été dit reste").split("\n").filter(Boolean)},
   ];
+  const demoTour = demoParent ? demoTourParent : demoTourAsmat;
   // Demo "video" : le contenu scrolle naturellement, l'ecran change, on voit l'onde de clic (sans doigt visible)
   const demoScript = [
     {page:"accueil",       x:13, y:91},
@@ -4496,7 +4542,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const demoAccueilStats = {heuresSemaine:38.5,joursSemaine:5,revenuMois:1620,heuresMois:152,messagesNonLus:D.messages.filter(m=>!m.lu).length,presencesJour:demoEnfants.filter(e=>demoArrivee[e.id]).map(e=>({...e,depuis:demoArrivee[e.id]})),loaded:true};
   // Démo : sous-onglets déverrouillés (vrais écrans) ; tout le reste = aperçu verrouillé
   const DEMO_UNLOCKED = ["accueil","pointage","admin_finances","inviter_parent","calendrier","messagerie","sante_complet"];
-  const demoActiveGroup = findGroup(GROUPS_AM, demoPage) || "accueil";
+  const demoActiveGroup = findGroup(demoParent?GROUPS_P:GROUPS_AM, demoPage) || "accueil";
   // Deux sources de vérité se contredisaient. DEFAULT_CONFIG décrit le design
   // voulu ; chaque endroit du rendu portait en plus son propre repli littéral
   // (`L.faqBg||"#FDFBF8"`), écrit à une autre époque. Tant que la configuration
@@ -4727,6 +4773,150 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>
     );
   }
+
+  // ── LE BLOC DÉMO, SORTI DU RENDU ──────────────────────────────────────
+  // Il est déclaré ici pour pouvoir être rendu SEUL : la page parents
+  // employeurs l'embarque dans un cadre (?demo=parent&nu=1) et n'a donc plus
+  // à redessiner l'application en HTML. Une seule démo, celle qui monte les
+  // vrais écrans, pour les deux publics.
+        const blocDemo = SV.demo!==false && (<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"linear-gradient(160deg,#0D1B2A,#22384A)" }}>
+        <WaveDivider color={L.wave2||L.section2Bg||"#0D1B2A"} on={L.wavesOn!==false&&L.waveOn2!==false}/>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          {/* Pas de titre dans le cadre embarqué : la page qui l'accueille a
+              déjà le sien, et celui-ci s'adresse à l'assistante maternelle. */}
+          {!demoNu && <FadeIn>
+            <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</h2>
+              <div style={{ fontSize: 15, color: L.s2DescColor||"rgba(255,255,255,.6)", lineHeight: 1.7 }}>{L.s2Desc}</div>
+            </div>
+          </FadeIn>}
+          <div className="demo-layout">
+
+            {/* Onglets (gauche desktop / haut mobile) facon Pandi-Panda */}
+            <div style={{order:1,position:"relative"}}>
+              <div className="demo-tabs">
+                {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
+                  style={{display:"flex",alignItems:"center",gap:9,padding:"12px 13px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"#B4543F":"#FFFFFF",color:on?"#fff":"#55707C",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid #EDE6DE",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
+                  <span style={{fontSize:on?20:18,flexShrink:0,transition:"font-size .2s"}}><IconeOuEmoji e={s.ic}/></span>
+                  <span style={{fontSize:13,fontWeight:700,lineHeight:1.2}}>{s.label}</span>
+                </button>;})}
+              </div>
+              {/* Fleche transparente (mobile) indiquant qu'on peut faire defiler les onglets */}
+              <div className="demo-scrollarrow" style={{position:"absolute",top:0,right:0,bottom:0,width:44,pointerEvents:"none",display:"none",alignItems:"center",justifyContent:"flex-end",paddingRight:6,background:"linear-gradient(90deg,rgba(253,251,248,0),rgba(253,251,248,.9))",borderRadius:"0 14px 14px 0"}}>
+                <span style={{fontSize:22,color:"rgba(46,72,89,.4)",animation:"nudge 1.2s ease-in-out infinite"}}>›</span>
+              </div>
+              <div className="demo-scrollhint" style={{alignItems:"center",justifyContent:"center",gap:6,marginTop:8,fontSize:11.5,color:"#90A093",fontWeight:600}}>
+                <span style={{animation:"nudge 1.2s ease-in-out infinite"}}>👉</span> Faites défiler pour voir les autres sections
+              </div>
+            </div>
+
+            {/* Explication resumee (centre desktop / sous onglets mobile) */}
+            {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
+              <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:12,marginBottom:4}}>
+                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#2E4859",lineHeight:1.3,marginBottom:2,animation:"demoPuceIn .45s ease backwards"}}>{s.desc}</div>
+                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#55707C",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:((j+1)*0.1)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.18)",color:"#2F655F",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+              </div>
+              {/* faisceau lumineux qui file vers le telephone (desktop) a chaque changement */}
+              <div className="demo-beam" style={{position:"relative",height:2,marginTop:22,background:"linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.25),rgba(93,169,161,0))",borderRadius:2}}>
+                <span key={demoPage} style={{position:"absolute",top:-3,width:8,height:8,borderRadius:"50%",background:"#5DA9A1",boxShadow:"0 0 12px 3px rgba(93,169,161,.8)",animation:"demoBeam 1.1s ease-out"}}/>
+              </div>
+            </div>;})()}
+
+            {/* Phone (droite desktop / bas mobile) */}
+            <div className="demo-col-phone" style={{order:3,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
+            {/* Phone frame — style hero, ecrans propres, sans scroll */}
+            <div className="demo-phone" style={{ flexShrink: 0, background: "#0D1B2A", borderRadius: 42, padding: "12px 11px", boxShadow: "0 30px 70px rgba(13,27,42,.4)" }}>
+              <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>
+                <div style={{ width:70, height:5, borderRadius:3, background:"rgba(255,255,255,.22)" }}/>
+              </div>
+              <div className="demo-frame" style={{ background:"#FDFBF8", borderRadius:30, overflow:"hidden", display:"flex", flexDirection:"column", position:"relative" }}>
+                <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
+                <div className="topbar">
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <img src={logoForRole(demoRole,false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+                    <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{position:"relative",display:"inline-flex"}}><IconeOuEmoji e="🔔" taille={19}/><span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",minWidth:17,height:17,padding:"0 4px",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
+                    <IconeOuEmoji e="🌙" taille={17}/>
+                    <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:demoUser.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(demoUser.prenom,demoUser.nom)}</div>
+                  </div>
+                </div>
+                <div key={demoPage} ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative", animation:"demoScreenIn .4s ease" }}>
+                  {/* Les écrans de la démo arrivent à la demande : sans ce
+                      Suspense, cliquer un onglet ferait disparaître la landing
+                      le temps du téléchargement. */}
+                  <Suspense fallback={<div style={{padding:"40px 16px",textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement de l'aperçu…</div>}>
+                  {/* Les mêmes composants, la prop `role` en moins ou en plus.
+                      Côté parent, `pEId` désigne SON enfant : les écrans se
+                      limitent d'eux-mêmes à celui-là, exactement comme dans
+                      l'application une fois connectée. */}
+                  {demoPage==="accueil"
+                    ? (demoParent
+                        ? <AccueilParent enfant={demoEnfants[0]} user={demoUser} setPage={setDemoPage}/>
+                        : <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>)
+                    : demoPage==="pointage"
+                    ? <div style={{padding:10}}><Pointage enfants={demoEnfants} role={demoRole} pEId={demoParent?demoEnfantParent.id:null} user={demoUser} demoMode={true}/></div>
+                    : demoPage==="admin_finances"
+                    ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role={demoRole} pEId={demoParent?demoEnfantParent.id:null} user={demoUser} pointagesDB={D.pointages} demoMode={true}/></div>
+                    : demoPage==="calendrier"
+                    ? <div style={{padding:10}}><Calendrier enfants={demoEnfants} role={demoRole} pEId={demoParent?demoEnfantParent.id:null}/></div>
+                    : demoPage==="messagerie"
+                    ? <div style={{padding:10}}><Messagerie enfants={demoEnfants} role={demoRole} pEId={demoParent?demoEnfantParent.id:null} user={demoUser}/></div>
+                    : demoPage==="sante_complet"
+                    ? <div style={{padding:10}}><SanteComplete enfants={demoEnfants} role={demoRole} pEId={demoParent?demoEnfantParent.id:null}/></div>
+                    : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100%",gap:14,textAlign:"center",padding:24}}>
+                        <div style={{fontSize:40}}>🔒</div>
+                        <div style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
+                      </div>}
+                  </Suspense>
+                </div>
+                <div className="demo-bnav"><BottomNav groups={demoParent?GROUPS_P:GROUPS_AM} page={demoPage} setPage={goDemo} role={demoRole} pmiNonLus={0} flat/></div>
+                </div>{/* /demo-zoom */}
+              </div>
+              <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
+                <div style={{ width:90, height:4, background:"rgba(255,255,255,.25)", borderRadius:2 }}/>
+              </div>
+            </div>
+            </div>{/* /colonne phone */}
+            {/* La démo est le meilleur argument de la page : l'action se
+                propose juste après l'avoir vue, et le prix est dit là, en
+                clair, plutôt que découvert trois écrans plus bas. */}
+            <div className="demo-cta">
+              <div style={{ fontSize:11.5, color:"#7C8A90", marginBottom:14, lineHeight:1.5 }}>Écrans réels · données d'exemple{demoParent?"":" · certains écrans s'ouvrent avec l'abonnement"}</div>
+              {demoParent
+                ? <>
+                    <a href="/?connexion=parent" target="_top" style={{ display:"inline-block", background:"#B4543F", color:"#fff", borderRadius:12, padding:"14px 30px", fontSize:15, fontWeight:700, textDecoration:"none", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Me connecter à mon espace →</a>
+                    <div style={{ fontSize:12.5, color:"#55707C", marginTop:14, lineHeight:1.6 }}>
+                      <b style={{ color:"#2F655F", fontWeight:700 }}>Gratuit pour les parents</b>, sans limite de durée.<br/>C'est votre assistante maternelle qui vous invite.
+                    </div>
+                  </>
+                : <>
+                    <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"#B4543F", color:"#fff", border:"none", borderRadius:12, padding:"14px 30px", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Créer mon compte gratuitement →</button>
+                    <div style={{ fontSize:12.5, color:"#55707C", marginTop:14, lineHeight:1.6 }}>
+                      <b style={{ color:"#9E5341", fontWeight:700 }}>{T.prixMensuel} € par mois</b>, contrats illimités.<br/>{T.prixEssai}, sans engagement.
+                    </div>
+                  </>}
+            </div>
+          </div>
+        </div>
+      </div>);
+
+  // Le cadre ne montre que la démo : ni en-tête, ni hero, ni pied de page —
+  // la page qui l'embarque les a déjà, et les afficher deux fois serait une
+  // page dans une page. Le fond reprend celui de la section pour que la
+  // jointure avec la page hôte ne se voie pas.
+  if(demoNu) return (
+    <div style={{ fontFamily: fBody, background: L.section2Bg||"#FDFBF8" }}>
+      {/* Le titre de section reste à la page qui embarque le cadre : elle a
+          déjà le sien, et celui d'ici parle à l'assistante maternelle. Deux
+          titres l'un sous l'autre, dont un hors sujet, c'est une page dans
+          une page. Les vagues décoratives tomberaient au milieu de la page
+          hôte : elles disparaissent aussi. */}
+      <style>{`html,body{margin:0}#demo{padding:8px 16px 4px!important}#demo>svg,#demo>div>svg{display:none}`}</style>
+      {blocDemo}
+    </div>
+  );
 
   return (
     <div style={{ fontFamily: fBody, overflowX: "hidden", background: L.pageBg||"#FDFBF8" }}>
@@ -5013,111 +5203,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         alt="Des petites voitures posées sur un tapis de jeu." />
 
       {/* SECTION 2 - DEMO */}
-      {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"linear-gradient(160deg,#0D1B2A,#22384A)" }}>
-        <WaveDivider color={L.wave2||L.section2Bg||"#0D1B2A"} on={L.wavesOn!==false&&L.waveOn2!==false}/>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <FadeIn>
-            <div style={{ textAlign: L.s2Align||"center", marginBottom: 48 }}>
-              <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s2TitleColor||"#fff", fontWeight: 700, marginBottom: 10 }}>{L.s2Title}</h2>
-              <div style={{ fontSize: 15, color: L.s2DescColor||"rgba(255,255,255,.6)", lineHeight: 1.7 }}>{L.s2Desc}</div>
-            </div>
-          </FadeIn>
-          <div className="demo-layout">
-
-            {/* Onglets (gauche desktop / haut mobile) facon Pandi-Panda */}
-            <div style={{order:1,position:"relative"}}>
-              <div className="demo-tabs">
-                {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                  style={{display:"flex",alignItems:"center",gap:9,padding:"12px 13px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"#B4543F":"#FFFFFF",color:on?"#fff":"#55707C",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid #EDE6DE",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
-                  <span style={{fontSize:on?20:18,flexShrink:0,transition:"font-size .2s"}}><IconeOuEmoji e={s.ic}/></span>
-                  <span style={{fontSize:13,fontWeight:700,lineHeight:1.2}}>{s.label}</span>
-                </button>;})}
-              </div>
-              {/* Fleche transparente (mobile) indiquant qu'on peut faire defiler les onglets */}
-              <div className="demo-scrollarrow" style={{position:"absolute",top:0,right:0,bottom:0,width:44,pointerEvents:"none",display:"none",alignItems:"center",justifyContent:"flex-end",paddingRight:6,background:"linear-gradient(90deg,rgba(253,251,248,0),rgba(253,251,248,.9))",borderRadius:"0 14px 14px 0"}}>
-                <span style={{fontSize:22,color:"rgba(46,72,89,.4)",animation:"nudge 1.2s ease-in-out infinite"}}>›</span>
-              </div>
-              <div className="demo-scrollhint" style={{alignItems:"center",justifyContent:"center",gap:6,marginTop:8,fontSize:11.5,color:"#90A093",fontWeight:600}}>
-                <span style={{animation:"nudge 1.2s ease-in-out infinite"}}>👉</span> Faites défiler pour voir les autres sections
-              </div>
-            </div>
-
-            {/* Explication resumee (centre desktop / sous onglets mobile) */}
-            {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
-              <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:12,marginBottom:4}}>
-                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#2E4859",lineHeight:1.3,marginBottom:2,animation:"demoPuceIn .45s ease backwards"}}>{s.desc}</div>
-                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#55707C",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:((j+1)*0.1)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.18)",color:"#2F655F",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
-              </div>
-              {/* faisceau lumineux qui file vers le telephone (desktop) a chaque changement */}
-              <div className="demo-beam" style={{position:"relative",height:2,marginTop:22,background:"linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.25),rgba(93,169,161,0))",borderRadius:2}}>
-                <span key={demoPage} style={{position:"absolute",top:-3,width:8,height:8,borderRadius:"50%",background:"#5DA9A1",boxShadow:"0 0 12px 3px rgba(93,169,161,.8)",animation:"demoBeam 1.1s ease-out"}}/>
-              </div>
-            </div>;})()}
-
-            {/* Phone (droite desktop / bas mobile) */}
-            <div className="demo-col-phone" style={{order:3,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-            {/* Phone frame — style hero, ecrans propres, sans scroll */}
-            <div className="demo-phone" style={{ flexShrink: 0, background: "#0D1B2A", borderRadius: 42, padding: "12px 11px", boxShadow: "0 30px 70px rgba(13,27,42,.4)" }}>
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>
-                <div style={{ width:70, height:5, borderRadius:3, background:"rgba(255,255,255,.22)" }}/>
-              </div>
-              <div className="demo-frame" style={{ background:"#FDFBF8", borderRadius:30, overflow:"hidden", display:"flex", flexDirection:"column", position:"relative" }}>
-                <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
-                <div className="topbar">
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <img src={logoForRole("asmat",false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
-                    <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{position:"relative",display:"inline-flex"}}><IconeOuEmoji e="🔔" taille={19}/><span style={{position:"absolute",top:-2,right:-2,background:"var(--R)",color:"#fff",borderRadius:"50%",minWidth:17,height:17,padding:"0 4px",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>3</span></span>
-                    <IconeOuEmoji e="🌙" taille={17}/>
-                    <div style={{width:28,height:28,minWidth:28,borderRadius:"50%",background:D.asmat.couleur,color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>{ini(D.asmat.prenom,D.asmat.nom)}</div>
-                  </div>
-                </div>
-                <div key={demoPage} ref={demoScreenRef} className="demo-screen" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position:"relative", animation:"demoScreenIn .4s ease" }}>
-                  {/* Les écrans de la démo arrivent à la demande : sans ce
-                      Suspense, cliquer un onglet ferait disparaître la landing
-                      le temps du téléchargement. */}
-                  <Suspense fallback={<div style={{padding:"40px 16px",textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement de l'aperçu…</div>}>
-                  {demoPage==="accueil"
-                    ? <AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>
-                    : demoPage==="pointage"
-                    ? <div style={{padding:10}}><Pointage enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} demoMode={true}/></div>
-                    : demoPage==="admin_finances"
-                    ? <div style={{padding:10}}><AdminFinances enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat} pointagesDB={D.pointages} demoMode={true}/></div>
-                    : demoPage==="calendrier"
-                    ? <div style={{padding:10}}><Calendrier enfants={demoEnfants} role="asmat" pEId={null}/></div>
-                    : demoPage==="messagerie"
-                    ? <div style={{padding:10}}><Messagerie enfants={demoEnfants} role="asmat" pEId={null} user={D.asmat}/></div>
-                    : demoPage==="sante_complet"
-                    ? <div style={{padding:10}}><SanteComplete enfants={demoEnfants} role="asmat" pEId={null}/></div>
-                    : <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100%",gap:14,textAlign:"center",padding:24}}>
-                        <div style={{fontSize:40}}>🔒</div>
-                        <div style={{fontSize:16,fontWeight:700,color:"var(--b)"}}>Disponible dans l'application</div>
-                      </div>}
-                  </Suspense>
-                </div>
-                <div className="demo-bnav"><BottomNav groups={GROUPS_AM} page={demoPage} setPage={goDemo} pmiNonLus={0} flat/></div>
-                </div>{/* /demo-zoom */}
-              </div>
-              <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
-                <div style={{ width:90, height:4, background:"rgba(255,255,255,.25)", borderRadius:2 }}/>
-              </div>
-            </div>
-            </div>{/* /colonne phone */}
-            {/* La démo est le meilleur argument de la page : l'action se
-                propose juste après l'avoir vue, et le prix est dit là, en
-                clair, plutôt que découvert trois écrans plus bas. */}
-            <div className="demo-cta">
-              <div style={{ fontSize:11.5, color:"#7C8A90", marginBottom:14, lineHeight:1.5 }}>Écrans réels · données d'exemple · certains écrans s'ouvrent avec l'abonnement</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"#B4543F", color:"#fff", border:"none", borderRadius:12, padding:"14px 30px", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Créer mon compte gratuitement →</button>
-              <div style={{ fontSize:12.5, color:"#55707C", marginTop:14, lineHeight:1.6 }}>
-                <b style={{ color:"#9E5341", fontWeight:700 }}>{T.prixMensuel} € par mois</b>, contrats illimités.<br/>{T.prixEssai}, sans engagement.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>}
+      {blocDemo}
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
       {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
