@@ -65,5 +65,22 @@ export const ordre = [
   "conges-evenements-familiaux-assistante-maternelle",
   "indemnite-depart-retraite-assistante-maternelle",
   "formation-continue-assistante-maternelle-58-heures",
+  // Huit articles ecrits pour le parent employeur, et c'est le point : sur les
+  // cinquante et un articles en ligne, six seulement lui parlaient directement.
+  // Le filtre du blog pouvait bien separer les roles, il ne pouvait pas
+  // inventer des articles qui n'existaient pas.
+  //
+  // Ils sont ranges du plus attendu au moins urgent : l'argent d'abord (ce
+  // qu'on paie, quand, et ce qu'on doit encore quand l'enfant n'est pas la),
+  // puis les demarches, puis le choix du mode de garde. Les cinq premiers
+  // inaugurent la rubrique « Cote parent employeur », qui manquait.
+  "budget-mensuel-parent-employeur-assistante-maternelle",
+  "rompre-contrat-assistante-maternelle-parent-employeur",
+  "periode-adaptation-assistante-maternelle-parent",
+  "enfant-malade-absence-ce-que-le-parent-doit-payer",
+  "contrat-assistante-maternelle-cote-parent-employeur",
+  "premiere-declaration-pajemploi-parent-employeur",
+  "assistante-maternelle-ou-garde-a-domicile-cout",
+  "trouver-une-assistante-maternelle-ou-chercher-quand",
 ];
 export default ordre;
