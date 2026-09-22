@@ -4364,8 +4364,11 @@ function ComparateurTarifs({T,fTitle}){
     </div>
   );
 
-  return <div style={{width:"100%",maxWidth:620,margin:"26px auto 0",background:"#fff",border:"1px solid #E8E0D5",borderRadius:12,padding:"20px 20px 18px",display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
-    <h3 style={{fontFamily:fTitle,fontSize:17,fontWeight:600,margin:0,color:"#2E4859",lineHeight:1.3}}>Combien coûte TiMat, vraiment ?</h3>
+  return <div style={{width:"100%",maxWidth:620,margin:"0 auto",background:"#fff",border:"1px solid #E8E0D5",borderRadius:12,padding:"20px 20px 18px",display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
+    <div>
+      <h3 style={{fontFamily:fTitle,fontSize:17,fontWeight:700,margin:0,color:"#2E4859",lineHeight:1.3}}>Est-ce que ça vaut le coup pour moi ?</h3>
+      <div style={{fontSize:12.5,color:"#5A6B72",marginTop:4,lineHeight:1.45}}>Votre coût réel, selon le nombre de contrats.</div>
+    </div>
 
     <div style={{display:"flex",flexDirection:"column",gap:7}}>
       <label htmlFor="comp-enfants-1" style={{fontSize:12.5,color:"#5A6B72"}}>J'accueille combien d'enfants ?</label>
@@ -5367,7 +5370,10 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</h2>
             <div style={{ fontSize: 14, color: L.s6SubColor||"#55707C", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
           </FadeIn>
-          <div className="lp-tarifs-grid">
+          <FadeIn>
+            <ComparateurTarifs T={T} fTitle={fTitle}/>
+          </FadeIn>
+          <div className="lp-tarifs-grid" style={{ marginTop: 26 }}>
             {/* Gratuit */}
             <div className="tarif-free" style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
@@ -5421,9 +5427,6 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <div className="lp-guarantees" style={{color:L.guaranteesColor||"#55707C"}}>
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
-          <FadeIn>
-            <ComparateurTarifs T={T} fTitle={fTitle}/>
-          </FadeIn>
         </div>
       </div>}
 
