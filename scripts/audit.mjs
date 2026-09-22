@@ -415,7 +415,6 @@ for (const u of fichiersAppSrc()) {
     ["heroBadgeColor", "heroBg", 4.5],
     ["heroTagsColor", "heroBg", 4.5],
     ["heroBtnSecColor", "heroBg", 4.5],
-    ["heroStatsLabelColor", "heroBg", 4.5],
     ["navBtnColor", "heroBg", 4.5],
     ["s1TitleColor", "section1Bg", 3],
     ["tableTitleColor", "section1Bg", 4.5],
@@ -565,6 +564,17 @@ for (const u of fichiersAppSrc()) {
   // part hors du back-office ? Un nom comme « comboRows » est assez
   // distinctif pour que ce soit concluant, et une version plus fine se
   // trompait — elle ne reconnaissait pas (config.landing||{}).demoPuces1.
+  // Les cartes qui éditent une LISTE (les encadrés du hero, les articles du
+  // blog…) ne passent pas par BOTextInput : elles lisent cfg.<clé> directement.
+  // Une liste dont le rendu a disparu se remplit donc aussi en pure perte —
+  // c'est arrivé aux encadrés de chiffres du hero le jour où ils ont été
+  // retirés de la page.
+  for (const carte of bo.split("</BOCard>")) {
+    for (const m of carte.matchAll(/\bcfg\.([a-z][A-Za-z0-9_]*)/g)) {
+      if (["landing", "txts", "cols", "footer", "legal", "feats", "boutique", "sectionsVisibles", "sectionsOrder"].includes(m[1])) continue;
+      offertes.add(m[1]);
+    }
+  }
   const mortes = [...offertes].filter((cle) => !new RegExp("\\b" + cle + "\\b").test(sources));
   if (mortes.length) {
     signale("back-office", `champ(s) propose(s) au back-office que la page ne lit nulle part : ${mortes.sort().join(", ")} — ce qu'on y ecrit est perdu sans le moindre avertissement`);
