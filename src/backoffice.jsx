@@ -700,7 +700,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               {k:"s6Align",l:"Alignement du texte",type:"align"},
               {k:"s6Title",l:"Titre",type:"txt"},
               {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
-              {k:"compBasePro",l:"Comparateur — forfait pro concurrent (€)",type:"txt",inTxts:true},{k:"compParContrat",l:"Comparateur — coût par contrat (€)",type:"txt",inTxts:true},
+              
               {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
               {k:"freeLabel",l:"Label Gratuit",type:"txt",inTxts:true},
               {k:"section6Bg",l:"Fond section",type:"col"},{k:"s6TitleColor",l:"Couleur titre",type:"col"},
