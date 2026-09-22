@@ -422,6 +422,8 @@ for (const u of fichiersAppSrc()) {
     ["tableAvecColor", "section1Bg", 4.5],
     ["comboPbColor", "section1Bg", 4.5],
     ["comboSolColor", "section1Bg", 4.5],
+    ["sourcesTitleColor", "sectionSourcesBg", 3],
+    ["sourcesDescColor", "sectionSourcesBg", 4.5],
     ["blogTitleColor", "blogBg", 3],
     ["blogDescColor", "blogBg", 4.5],
     ["freeLabelColor", "section6Bg", 4.5],

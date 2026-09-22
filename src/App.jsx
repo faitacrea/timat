@@ -3997,6 +3997,23 @@ function NotifBulle({slot,pool,i}){
   );
 }
 
+// Une bande de photo entre deux sections. Elle respire, elle ne raconte rien :
+// c'est une respiration entre deux blocs de texte, pas une illustration.
+//
+// Le cadrage n'est pas décoratif, c'est la contrainte : aucune photo ne doit
+// montrer un visage net d'enfant. Chaque image a donc son propre point de
+// coupe, choisi là où il n'y a ni visage ni regard — le bas du tapis pour
+// l'une, sous les épaules pour l'autre. Changer ce point, c'est refaire ce
+// choix, pas ajuster une esthétique.
+function BandeauPhoto({src, alt, position, order}){
+  return (
+    <div style={{ order, display:"block", lineHeight:0, background:"#2E4859" }}>
+      <img src={src} alt={alt} width="1600" height="1067" loading="lazy" decoding="async"
+        style={{ width:"100%", height:150, objectFit:"cover", objectPosition:position, display:"block" }}/>
+    </div>
+  );
+}
+
 function WaveDivider({color="#fff",height=52,on=true}){
   if(!on)return null;
   return <div aria-hidden="true" style={{position:"absolute",top:0,left:0,right:0,lineHeight:0,transform:"translateY(-99%)",pointerEvents:"none",zIndex:1}}>
@@ -4433,6 +4450,20 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     window.addEventListener("scroll",onScroll,{passive:true});
     return()=>window.removeEventListener("scroll",onScroll);
   },[preview]);
+  // La barre d'action du bas reste cachée pendant TOUT le hero : les deux
+  // boutons de rôle y sont la vraie porte d'entrée, et une barre par-dessus
+  // leur ferait concurrence au moment précis où la visiteuse choisit qui elle
+  // est. Un seuil en pixels ne suffisait pas — la hauteur du hero change avec
+  // la largeur de l'écran et avec la longueur du titre.
+  const [heroPasse, setHeroPasse] = useState(false);
+  useEffect(()=>{
+    if(preview) return;
+    const hero=document.getElementById("lp-hero");
+    if(!hero||typeof IntersectionObserver==="undefined"){ setHeroPasse(true); return; }
+    const o=new IntersectionObserver(([e])=>setHeroPasse(!e.isIntersecting),{threshold:0});
+    o.observe(hero);
+    return()=>o.disconnect();
+  },[preview]);
   const _qParent=(()=>{try{return new URLSearchParams(window.location.search).get("connexion")==="parent";}catch(e){return false;}})();
   const [role, setRole] = useState(forceRole||(_qParent?"parent":"asmat"));
   const [modeAuth, setModeAuth] = useState((forceRole||_qParent)?"connexion":"inscription");
@@ -4561,7 +4592,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
   const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
-  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const SECTIONS_ORDER_DEFAULT=["probleme","photo1","demo","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
@@ -4814,6 +4845,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         .sticky-burger{display:none!important}
         @media(max-width:760px){.sticky-links{display:none!important}.sticky-burger{display:flex!important}}
         .lp-section{padding:72px 24px;position:relative}
+        .lp-barre{transition:transform .28s ease}
+        @media (prefers-reduced-motion:reduce){.lp-barre{transition:none}}
         .lp-guarantees{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;text-align:center;margin-top:24px;font-size:13px}
         @media(max-width:768px){
           .lp-nav-full{display:none!important}
@@ -4861,7 +4894,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
         </div>
       </div>
-      <div className="lp-hero" style={{ background: L.heroBg }}>
+      <div id="lp-hero" className="lp-hero" style={{ background: L.heroBg }}>
         <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:L.heroImg?"url("+L.heroImg+")":"none", backgroundSize:"cover", backgroundPosition:L.heroImgPosition||"center center", opacity:L.heroImgOpacity||0.12, filter:"blur("+(L.heroImgBlur||2)+"px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         {/* Nav */}
@@ -5031,6 +5064,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         </div>
       </div>}
 
+      <BandeauPhoto order={ord("photo1")} src="/hero-enfants.webp" position="50% 74%"
+        alt="Des petites voitures posées sur un tapis de jeu." />
+
       {/* SECTION 2 - DEMO */}
       {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"linear-gradient(160deg,#0D1B2A,#22384A)" }}>
         <WaveDivider color={L.wave2||L.section2Bg||"#0D1B2A"} on={L.wavesOn!==false&&L.waveOn2!==false}/>
@@ -5125,6 +5161,18 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </div>
             </div>{/* /colonne phone */}
           </div>
+          {/* La démo est le meilleur argument de la page : l'action se propose
+              juste après l'avoir vue, et le prix est dit là, en clair, plutôt
+              que découvert trois écrans plus bas. */}
+          <FadeIn delay={200}>
+            <div style={{ textAlign:"center", marginTop:28 }}>
+              <div style={{ fontSize:11.5, color:"#7C8A90", marginBottom:14 }}>Écrans réels · données d'exemple · certains écrans s'ouvrent avec l'abonnement</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"#B4543F", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Créer mon compte gratuitement →</button>
+              <div style={{ fontSize:12.5, color:"#55707C", marginTop:14, lineHeight:1.6 }}>
+                <b style={{ color:"#9E5341", fontWeight:700 }}>{T.prixMensuel} € par mois</b>, contrats illimités.<br/>{T.prixEssai}, sans engagement.
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </div>}
 
@@ -5263,6 +5311,38 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         </div>
       </div>}
 
+      {/* SECTION SOURCES — ce sur quoi les calculs s'appuient */}
+      {SV.sources!==false&&<div className="lp-section" style={{ order:ord("sources"), background: L.sectionSourcesBg||"#F7F2EC" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign:"center", marginBottom: 32 }}>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:16 }}>SUR QUOI ÇA S'APPUIE</div>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize:"clamp(22px,4vw,36px)", color: L.sourcesTitleColor||"#2E4859", fontWeight:700, marginBottom:10, lineHeight:1.25 }}>{L.sourcesTitle}</h2>
+              <div style={{ fontSize:15, color: L.sourcesDescColor||"#55707C", lineHeight:1.6, maxWidth:560, margin:"0 auto" }}>{L.sourcesDesc}</div>
+            </div>
+          </FadeIn>
+          <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?920:640, margin:"0 auto" }}>
+            {[
+              ["Convention collective","IDCC 3239","Salaire, mensualisation, congés, indemnités et préavis suivent la convention des particuliers employeurs et de l'emploi à domicile.","Mise à jour au 1ᵉʳ juin 2026"],
+              ["Déclaration","Barèmes Pajemploi et CAF","Plafonds horaires, complément de libre choix du mode de garde, crédit d'impôt : les montants en vigueur, pas ceux de l'an dernier.","Vérifiés à chaque évolution"],
+              // Ce que Sophie peut prouver, et rien de plus : un CAP, des années
+              // en crèche. Son agrément est en préparation — il n'est écrit
+              // nulle part qu'elle serait déjà assistante maternelle agréée.
+              ["Conçue par","Une professionnelle de la petite enfance","CAP petite enfance, plusieurs années en crèche. L'application est née des calculs qu'on refait tous les mois.",""],
+            ].map(([ref,titre,texte,maj],i)=>(
+              <FadeIn key={titre} delay={i*70}>
+                <div style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, padding:"18px 18px", height:isWeb?"100%":"auto" }}>
+                  <div style={{ fontSize:10.5, letterSpacing:"1.1px", textTransform:"uppercase", color:"#2F655F", fontWeight:700, marginBottom:6 }}>{ref}</div>
+                  <div style={{ fontFamily:fTitle, fontSize:15.5, color:"#2E4859", fontWeight:700, marginBottom:6 }}>{titre}</div>
+                  <div style={{ fontSize:13, lineHeight:1.6, color:"#55707C" }}>{texte}</div>
+                  {maj&&<div style={{ display:"inline-block", marginTop:10, fontSize:11, color:"#55707C", background:"#F7F2EC", borderRadius:20, padding:"4px 11px" }}>{maj}</div>}
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </div>}
+
       {/* SECTION 5 - TEMOIGNAGES */}
       {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -5288,6 +5368,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
         </div>
       </div>}
+
+      <BandeauPhoto order={ord("photo2")} src="/hero-toboggan.webp" position="50% 97%"
+        alt="Un enfant sur un toboggan, cadré sur les jambes." />
 
       {/* SECTION 6 - TARIFS */}
       {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#2E4859" }}>
@@ -5523,6 +5606,28 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
         </div>
       </footer>
+
+      {/* BARRE D'ACTION — le prix et une seule action, une fois le hero passé.
+          Elle n'existe que pour la visiteuse qui a lu et qui redescend : tant
+          qu'elle est dans le hero, les deux boutons de rôle suffisent. */}
+      {!preview&&<div className="lp-barre" style={{
+        position:"fixed", left:0, right:0, bottom:0, zIndex:190,
+        display:"flex", alignItems:"center", gap:12,
+        background:"rgba(46,72,89,.97)", backdropFilter:"blur(8px)", color:"#fff",
+        padding:"11px 14px calc(11px + env(safe-area-inset-bottom,0px))",
+        boxShadow:"0 -6px 20px rgba(46,72,89,.22)",
+        transform: heroPasse?"translateY(0)":"translateY(120%)",
+        pointerEvents: heroPasse?"auto":"none",
+      }}>
+        <div style={{ fontFamily:fTitle, fontWeight:700, fontSize:17, lineHeight:1.1, whiteSpace:"nowrap" }}>
+          {T.prixMensuel} €
+          <span style={{ display:"block", fontFamily:fBody, fontSize:10.5, fontWeight:400, color:"rgba(255,255,255,.7)" }}>{T.prixEssai}</span>
+        </div>
+        <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{
+          marginLeft:"auto", background:"#B4543F", color:"#fff", border:"none", borderRadius:10,
+          padding:"11px 15px", fontSize:13, fontWeight:700, fontFamily:"inherit",
+          cursor:"pointer", whiteSpace:"nowrap" }}>{T.barreBtnTxt}</button>
+      </div>}
 
       {/* PAGES JURIDIQUES */}
       {showLegal&&<div onClick={e=>e.target===e.currentTarget&&setShowLegal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
@@ -5969,13 +6074,16 @@ export const DEFAULT_CONFIG = {
     heroSub:"Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
-    prixEssai:"2 mois gratuits",
+    prixEssai:"2 mois offerts",
     compBasePro:"7,99",
     compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 Conçue par une professionnelle de la petite enfance",
     heroSubDesc:"À jour de la convention collective au 1ᵉʳ juin 2026.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
+    // La barre du bas a son propre libellé : elle porte déjà le prix et la
+    // durée à gauche, reprendre le bouton du hero disait tout deux fois.
+    barreBtnTxt:"Je démarre mes 2 mois offerts",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
     heroTags:"💳 Sans carte bancaire,🔓 Sans engagement,🔒 Données hébergées en France,👨‍👩‍👧 Espace parent gratuit pour les familles",
@@ -6005,7 +6113,7 @@ export const DEFAULT_CONFIG = {
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
     section1Bg:"#FDFBF8",
-    section2Bg:"#F7F2EC",
+    section2Bg:"#FDFBF8",
     section4Bg:"#FDFBF8",
     section5Bg:"#FDFBF8",
     section6Bg:"#F7F2EC",
@@ -6143,8 +6251,16 @@ export const DEFAULT_CONFIG = {
     s1Title:"La réalité du métier, personne n'en parle.",
     s1Desc:"Être assistante maternelle agréée, c'est exercer un métier de soin exigeant\ntout en gérant une TPE sans formation ni support.",
     s1Quote:"TiMat n'ajoute pas une appli à votre vie.\nIl retire tout ce qui n'aurait jamais dû s'y trouver.",
-    s2Title:"L'application en images, section par section",
-    s2Desc:"Cliquez sur un onglet pour voir tout ce que TiMat gère à votre place.",
+    // Lister les quatre domaines, puis montrer quatre onglets qui sont ces
+    // mêmes quatre domaines, disait deux fois la même chose. Le titre porte
+    // donc ce que couvre l'application, et la démo le prouve juste dessous.
+    s2Title:"Le planning, la paie et Pajemploi, au même endroit",
+    s2Desc:"Choisissez un domaine : vous voyez l'écran réel, avec des données d'exemple. Aucune inscription.",
+    sectionSourcesBg:"#F7F2EC",
+    sourcesTitle:"Chaque calcul s'appuie sur un texte",
+    sourcesDesc:"Et vous pouvez le vérifier vous-même : voici lesquels.",
+    sourcesTitleColor:"#2E4859",
+    sourcesDescColor:"#55707C",
     s5Title:"Devenez l'assistante maternelle dont les parents parlent à leurs amis.",
     s6Title:"Le tarif de votre application assistante maternelle",
     ctaTitle:"Vous n'avez pas eu de formation\nen comptabilité.",
@@ -6236,7 +6352,7 @@ export const DEFAULT_CONFIG = {
     linkPack:"https://buy.stripe.com/aFa7sD6kO4Zb8iS7j3dwc0a",
   },
   sectionsVisibles:{
-    probleme:true, demo:true, signature:true,
+    probleme:true, demo:true, signature:true, sources:true,
     temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
   },
   faqLanding: FAQ_LANDING_DEFAULT,
@@ -6253,7 +6369,9 @@ export const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","demo","signature","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
+  // Les bandeaux photo font partie de l'ordre : ce sont des respirations
+  // placées, pas des décorations collées à une section.
+  sectionsOrder:["probleme","photo1","demo","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"],
 };
 export let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 
