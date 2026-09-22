@@ -5177,16 +5177,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
-      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)", padding: "80px 24px" }}>
+      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
         <WaveDivider color={L.wave4||L.section4Bg||"#FDFBF8"} on={L.wavesOn!==false&&L.waveOn4!==false}/>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#C84B31", marginBottom: 24, fontWeight: 700, letterSpacing: ".8px" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(158,83,65,.10)", border: "1px solid rgba(158,83,65,.28)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#9E5341", marginBottom: 16, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                La gestion assistante maternelle <span style={{ color: "#C47D67", fontStyle: "italic" }}>sans mauvaise surprise</span>
+                La gestion assistante maternelle <span style={{ color: "#9E5341", fontStyle: "italic" }}>sans mauvaise surprise</span>
               </h2>
               <div style={{ fontSize: 15, color: L.s4SubColor||"#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
                 Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
@@ -5195,12 +5195,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </FadeIn>
 
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
-          <div style={{ display:"grid", gridTemplateColumns:isWeb?"1fr 1fr":"1fr", gap:10, maxWidth:isWeb?900:720, margin:"0 auto", marginBottom: 56 }}>
+          <div style={{ display:"grid", gridTemplateColumns:isWeb?"1fr 1fr":"1fr", gap:10, maxWidth:isWeb?900:720, margin:"0 auto", marginBottom: 24 }}>
             {[
               { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Unique", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n28 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
-              { ic: L.diff2Ic||"🧮", badge: L.diff2Badge||"Zéro erreur", titre: L.diff2Titre||"Des calculs fiables", puces: L.diff2Puces||"Salaire, congés, Pajemploi calculés\nConformes à la convention\nToujours le même résultat" },
-              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
-              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Zéro impression", titre: L.diff4Titre||"Signez en ligne, sans imprimer", puces: L.diff4Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
+              { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Exclusif", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
+              { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
@@ -5261,7 +5260,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               tout l'interet d'une preuve sociale honnete quand on n'a pas
               encore d'avis a montrer. */}
           {L.signatureTexte !== "" && <FadeIn delay={400}>
-            <div style={{ maxWidth: isWeb?760:560, margin:"44px auto 0", background:"#FFFFFF", border:"1px solid #EDE6DE", borderLeft:"3px solid "+accent, borderRadius:14, padding:isWeb?"24px 28px":"20px 20px", boxShadow:"0 4px 18px rgba(46,72,89,.05)" }}>
+            <div style={{ maxWidth: isWeb?760:560, margin:"24px auto 0", background:"#FFFFFF", border:"1px solid #EDE6DE", borderLeft:"3px solid "+accent, borderRadius:14, padding:isWeb?"24px 28px":"20px 20px", boxShadow:"0 4px 18px rgba(46,72,89,.05)" }}>
               <div style={{ fontSize:14.5, color:"#42555E", lineHeight:1.75, fontStyle:"italic", whiteSpace:"pre-line" }}>
                 {L.signatureTexte || "J'ai un CAP petite enfance et j'ai travaillé plusieurs années en crèche. J'ai créé TiMat en préparant mon propre agrément, quand j'ai découvert la montagne administrative que le métier impose et que personne n'explique nulle part. Chaque calcul de l'application s'appuie sur un texte que je cite, pour que vous puissiez le vérifier vous-même."}
               </div>
@@ -5271,14 +5270,6 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </div>
           </FadeIn>}
 
-          {/* CTA */}
-          <FadeIn delay={500}>
-            <div style={{ textAlign: "center", marginTop: 48 }}>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "#B4543F", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
-                Tester TiMat gratuitement →
-              </button>
-            </div>
-          </FadeIn>
         </div>
       </div>}
 
@@ -5321,14 +5312,10 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{ fontSize:15, color: L.sourcesDescColor||"#55707C", lineHeight:1.6, maxWidth:560, margin:"0 auto" }}>{L.sourcesDesc}</div>
             </div>
           </FadeIn>
-          <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?920:640, margin:"0 auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(2,1fr)":"1fr", gap:10, maxWidth:isWeb?720:640, margin:"0 auto" }}>
             {[
               ["Convention collective","IDCC 3239","Salaire, mensualisation, congés, indemnités et préavis suivent la convention des particuliers employeurs et de l'emploi à domicile.","Mise à jour au 1ᵉʳ juin 2026"],
               ["Déclaration","Barèmes Pajemploi et CAF","Plafonds horaires, complément de libre choix du mode de garde, crédit d'impôt : les montants en vigueur, pas ceux de l'an dernier.","Vérifiés à chaque évolution"],
-              // Ce que Sophie peut prouver, et rien de plus : un CAP, des années
-              // en crèche. Son agrément est en préparation — il n'est écrit
-              // nulle part qu'elle serait déjà assistante maternelle agréée.
-              ["Conçue par","Une professionnelle de la petite enfance","CAP petite enfance, plusieurs années en crèche. L'application est née des calculs qu'on refait tous les mois.",""],
             ].map(([ref,titre,texte,maj],i)=>(
               <FadeIn key={titre} delay={i*70}>
                 <div style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, padding:"18px 18px", height:isWeb?"100%":"auto" }}>

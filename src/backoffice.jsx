@@ -642,10 +642,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Couleur texte (tous boutons)"><BOColorInput k="navBtnColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Bordure (tous boutons)"><BOColorInput k="navBtnBorder" state={cfg.landing} setter={setLand}/></BOField>
             <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Boutons individuels (écrase le défaut)</div>
-            <BOField label="Fond — Fonctionnalités"><BOColorInput k="navFonctionBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond — Tarifs"><BOColorInput k="navTarifsBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond — Boutique"><BOColorInput k="navBoutiqueBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Fond — Connexion"><BOColorInput k="navConnexionBg" state={cfg.landing} setter={setLand}/></BOField>
             <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Bouton CTA (Commencer)</div>
             <BOField label="Fond CTA"><BOColorInput k="navCtaBg" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Couleur texte CTA"><BOColorInput k="navCtaColor" state={cfg.landing} setter={setLand}/></BOField>
@@ -763,8 +759,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             {[
               ["diff1Ic","Diff 1 - Emoji"],["diff1Badge","Diff 1 - Badge"],["diff1Titre","Diff 1 - Titre"],["diff1Puces","Diff 1 - Puces (1/ligne)",true],
               ["diff2Ic","Diff 2 - Emoji"],["diff2Badge","Diff 2 - Badge"],["diff2Titre","Diff 2 - Titre"],["diff2Puces","Diff 2 - Puces (1/ligne)",true],
-              ["diff3Ic","Diff 3 - Emoji"],["diff3Badge","Diff 3 - Badge"],["diff3Titre","Diff 3 - Titre"],["diff3Puces","Diff 3 - Puces (1/ligne)",true],
-              ["diff4Ic","Diff 4 - Emoji"],["diff4Badge","Diff 4 - Badge"],["diff4Titre","Diff 4 - Titre"],["diff4Puces","Diff 4 - Puces (1/ligne)",true]
+              ["diff3Ic","Diff 3 - Emoji"],["diff3Badge","Diff 3 - Badge"],["diff3Titre","Diff 3 - Titre"],["diff3Puces","Diff 3 - Puces (1/ligne)",true]
             ].filter(([,l])=>matches(l)).map(([k,l,m])=>
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand} multi={m}/></BOField>
             )}
@@ -783,7 +778,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             {[["comboLabelBefore","En-tête colonne gauche"],["comboLabelAfter","En-tête colonne droite"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
-            {matches("Lignes galère solution")&&<BOField label="Lignes (1 par ligne, format : emoji | galère | solution)"><BOTextInput k="comboRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
             {matches("Tableau comparatif lignes")&&<BOField label="Tableau comparatif — 1 ligne par item (format : emoji | titre | sous-titre | sans TiMat | avec TiMat)"><BOTextInput k="tableRows" state={cfg.landing} setter={setLand} multi={true}/></BOField>}
             {matches("Tableau comparatif colonne gauche")&&<BOField label="Tableau — titre colonne gauche (ex : Sans TiMat)"><BOTextInput k="comboLabelBefore" state={cfg.landing} setter={setLand}/></BOField>}
             {matches("Tableau comparatif colonne droite")&&<BOField label="Tableau — titre colonne droite (ex : Avec TiMat)"><BOTextInput k="comboLabelAfter" state={cfg.landing} setter={setLand}/></BOField>}
@@ -816,7 +810,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             )}
           </BOCard>
           <BOCard title="Section Problème → Solution - couleurs" icon="⚖️">
-            {[["section1Bg","Fond de la section"],["comboCardBg","Fond des cartes"],["comboPbColor","Texte galère"],["comboSolColor","Texte solution + ✓"],["comboArrowColor","Flèche →"],["comboLabelAfterColor","En-tête colonne droite"],["s1TitleColor","Titre"],["s1DescColor","Sous-titre"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["section1Bg","Fond de la section"],["comboPbColor","Texte galère"],["comboSolColor","Texte solution + ✓"],["s1TitleColor","Titre"],["s1DescColor","Sous-titre"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
@@ -1158,7 +1152,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
                 <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:on?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
               </div>
             </div>;})()}
-            {[["waveOn1","Problème / tableau"],["waveOn2","Démo"],["waveOn4","Pourquoi TiMat"],["waveOn3","Transformation"],["waveOnConf","Confidentialité"],["waveOn6","Tarifs"],["waveOnFaq","FAQ"],["waveOnFooter","Footer"]].map(([k,lbl])=>{
+            {[["waveOn1","Problème / tableau"],["waveOn2","Démo"],["waveOn4","Pourquoi TiMat"],["waveOnConf","Confidentialité"],["waveOn6","Tarifs"],["waveOnFaq","FAQ"],["waveOnFooter","Footer"]].map(([k,lbl])=>{
               const v=(cfg.landing||{})[k]!==false;
               return <div key={k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"7px 0"}}>
                 <div style={{fontSize:12.5,color:"var(--m)"}}>{lbl}</div>
@@ -1168,7 +1162,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               </div>;
             })}
             <div style={{fontSize:11,color:"var(--m)",margin:"10px 0 6px",fontWeight:700}}>Couleur des vagues</div>
-            {[["wave1","Vague — La réalité du métier"],["wave2","Vague — L'application en images"],["wave4","Vague — Pourquoi TiMat"],["wave3","Vague — Ce que ça change"],["wave6","Vague — Tarifs"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["wave1","Vague — La réalité du métier"],["wave2","Vague — L'application en images"],["wave4","Vague — Pourquoi TiMat"],["wave6","Vague — Tarifs"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>

@@ -483,6 +483,42 @@ for (const u of fichiersAppSrc()) {
   globalThis.__verifieContrastesLanding(val, "");
 }
 
+// --- un champ du back-office que la landing ne lit nulle part ---
+//
+// « Lignes galere solution » (comboRows) est propose au back-office depuis des
+// mois. Six lignes y ont ete ecrites avec soin. Elles ne s'affichent nulle
+// part : la landing lit tableRows, pas comboRows — le champ a survecu a la
+// section qu'il alimentait. Rien ne plante, rien ne previent, et le travail
+// est perdu en silence.
+//
+// On exige donc que toute cle offerte au back-office soit lue quelque part
+// dans le rendu, ou declaree dans DEFAULT_CONFIG.
+{
+  const bo = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/backoffice.jsx")), "utf8");
+  const sources = fichiersAppSrc()
+    .filter((u) => !u.pathname.endsWith("/backoffice.jsx"))
+    .map((u) => readFileSync(u, "utf8"))
+    .join("\n");
+  // On ne regarde QUE les cartes du back-office qui écrivent dans la
+  // configuration de la landing : ailleurs, des paires ["x","Libellé"] servent
+  // à tout autre chose (l'alignement d'un texte, les onglets d'un tableau de
+  // bord), et les confondre ferait crier cette barrière pour rien.
+  const offertes = new Set();
+  for (const carte of bo.split("</BOCard>")) {
+    if (!/state=\{cfg\.(landing|txts)\}/.test(carte)) continue;
+    for (const m of carte.matchAll(/k="([A-Za-z0-9_]+)"/g)) offertes.add(m[1]);
+    for (const m of carte.matchAll(/\["([a-z][A-Za-z0-9_]*)","(?!☰)[^"]*"(?:,\s*true)?\]/g)) offertes.add(m[1]);
+  }
+  // Le test est volontairement grossier : le nom de la clé apparaît-il quelque
+  // part hors du back-office ? Un nom comme « comboRows » est assez
+  // distinctif pour que ce soit concluant, et une version plus fine se
+  // trompait — elle ne reconnaissait pas (config.landing||{}).demoPuces1.
+  const mortes = [...offertes].filter((cle) => !new RegExp("\\b" + cle + "\\b").test(sources));
+  if (mortes.length) {
+    signale("back-office", `champ(s) propose(s) au back-office que la page ne lit nulle part : ${mortes.sort().join(", ")} — ce qu'on y ecrit est perdu sans le moindre avertissement`);
+  }
+}
+
 // --- le back-office fige un texte que le code a change depuis ---
 //
 // Le hero de la landing a ete reecrit six fois dans le code. En ligne, il
