@@ -668,11 +668,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Couleur badge (texte)"><BOColorInput k="heroBadgeColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Fond badge"><BOColorInput k="heroBadgeBg" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Couleur tags"><BOColorInput k="heroTagsColor" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur stats (chiffres)"><BOColorInput k="heroStatsColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Hero — largeur max du titre en web (px, force 2 lignes)"><BOTextInput k="heroTitleMaxW" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Hero stats — fond des cartes"><BOColorInput k="heroStatsCardBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Hero stats — bordure des cartes"><BOColorInput k="heroStatsCardBorder" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur labels stats"><BOColorInput k="heroStatsLabelColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Couleur d\'accent (italique)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
         </>}
@@ -805,7 +801,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Couleur accent (stats, italique, étoiles par défaut)"><BOColorInput k="accentColor" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
           <BOCard title="Hero - couleurs de texte" icon="🏠">
-            {[["heroTitleColor","Titre hero"],["heroSubColor","Sous-titre"],["heroSubDescColor","Description"],["heroBadgeColor","Badge - texte"],["heroBadgeBg","Badge - fond"],["heroTagsColor","Tags"],["heroStatsColor","Stats (chiffres)"],["heroStatsLabelColor","Stats (labels)"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["heroTitleColor","Titre hero"],["heroSubColor","Sous-titre"],["heroSubDescColor","Description"],["heroBadgeColor","Badge - texte"],["heroBadgeBg","Badge - fond"],["heroTagsColor","Tags"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOColorInput k={k} state={cfg.landing} setter={setLand}/></BOField>
             )}
           </BOCard>
@@ -998,13 +994,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               </div>
             ))}
             <button onClick={addBlog}style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed var(--br)",background:"var(--c)",color:"var(--b)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>+ Ajouter un article</button>
-          </BOCard>
-          <BOCard title="Stats du hero (bandeau)" icon="📊">
-            {(cfg.statsHero||[]).map((s,i)=><div key={i}style={{display:"grid",gridTemplateColumns:"55px 40px 1fr",gap:4,marginBottom:4}}>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}type="number"value={s.n}onChange={e=>setStat("statsHero",i,"n",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.suf}onChange={e=>setStat("statsHero",i,"suf",e.target.value)}/>
-              <input className="inp"style={{fontSize:11,padding:"4px 6px"}}value={s.label}onChange={e=>setStat("statsHero",i,"label",e.target.value)}/>
-            </div>)}
           </BOCard>
           <BOCard title="Pain points (section 1)" icon="🔥">
             {(cfg.painPoints||[]).map((p,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>

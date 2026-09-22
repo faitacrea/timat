@@ -1304,7 +1304,51 @@ export const D = {
 //
 // Un parent n'est jamais bride : son espace est gratuit par construction.
 export const LIMITE_ENFANTS_GRATUIT = 1;
-export const estPro = (u) => ["pro", "trialing"].includes(u?.subscription_status) || u?.role === "parent";
+// ---------------------------------------------------------------------------
+// L'ESSAI DE DEUX MOIS, SANS CARTE BANCAIRE
+//
+// Avant, l'essai n'existait QUE chez Stripe : la session de paiement était
+// créée avec trial_period_days=60. Pour en profiter il fallait donc ouvrir
+// Stripe et saisir une carte — alors que la page promettait « 2 mois offerts,
+// sans carte bancaire ». La promesse était fausse, et c'est la carte demandée
+// à l'inscription qui coûtait le plus d'inscriptions.
+//
+// L'essai vit désormais chez nous : le compte naît en « trialing » avec une
+// date de fin, et Stripe n'intervient qu'au moment de continuer. C'est là,
+// et seulement là, qu'une carte est demandée.
+export const DUREE_ESSAI_JOURS = 60;
+export const finEssaiDepuis = (depuis = new Date()) =>
+  new Date(depuis.getTime() + DUREE_ESSAI_JOURS * 86400000).toISOString();
+
+// LE point de passage unique : tout compte qui naît passe par ici. Un
+// `subscription_status:'free'` écrit à la main dans un chemin d'inscription
+// rendrait l'essai muet pour les comptes créés par ce chemin-là, sans que rien
+// ne plante — une barrière d'audit l'interdit donc.
+export const abonnementInitial = (role) => (role === "parent"
+  // L'espace parent est gratuit par construction : il n'a pas d'essai à user.
+  ? { subscription_status: "free", subscription_end_date: null }
+  : { subscription_status: "trialing", subscription_end_date: finEssaiDepuis() });
+
+// Un essai sans date de fin ne finissait JAMAIS : estPro() acceptait
+// « trialing » sans rien regarder d'autre. Le compte restait Pro à vie.
+//
+// Une date absente ne fait pas expirer : les comptes « trialing » venus de
+// Stripe avant ce changement n'en ont pas, et couper l'accès à quelqu'un par
+// défaut de donnée serait la pire des deux erreurs.
+export const joursRestantsEssai = (u) => {
+  if (u?.subscription_status !== "trialing" || !u?.subscription_end_date) return null;
+  const fin = new Date(u.subscription_end_date).getTime();
+  if (Number.isNaN(fin)) return null;
+  return Math.ceil((fin - Date.now()) / 86400000);
+};
+export const essaiExpire = (u) => {
+  const j = joursRestantsEssai(u);
+  return j !== null && j <= 0;
+};
+export const estPro = (u) =>
+  u?.role === "parent" ||
+  u?.subscription_status === "pro" ||
+  (u?.subscription_status === "trialing" && !essaiExpire(u));
 const peutAjouterEnfant = (u, enfants) =>
   estPro(u) || (enfants || []).length < LIMITE_ENFANTS_GRATUIT;
 
@@ -3894,37 +3938,6 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 }
 
 
-//
-function Counter({target,suffix="",prefix="",duration=2000}){
-  // Tout ne se compte pas. Un encadré peut vouloir dire « 🇫🇷 » ou « 1 saisie » :
-  // ce qui n'est pas un nombre s'affiche tel quel, sans animation.
-  if(typeof target!=="number"||!isFinite(target)) return <>{prefix}{target}{suffix}</>;
-  return <CounterNombre target={target} suffix={suffix} prefix={prefix} duration={duration}/>;
-}
-function CounterNombre({target,suffix="",prefix="",duration=2000}){
-  const [count,setCount]=useState(0);
-  const ref=useRef(null);
-  const started=useRef(false);
-  useEffect(()=>{
-    const observer=new IntersectionObserver(([e])=>{
-      if(e.isIntersecting&&!started.current){
-        started.current=true;
-        const start=performance.now();
-        const tick=(now)=>{
-          const p=Math.min((now-start)/duration,1);
-          const ease=1-Math.pow(1-p,3);
-          setCount(Math.round(ease*target));
-          if(p<1)requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      }
-    },{threshold:0.3});
-    if(ref.current)observer.observe(ref.current);
-    return()=>observer.disconnect();
-  },[target,duration]);
-  return <span ref={ref}>{prefix}{count.toLocaleString("fr-FR")}{suffix}</span>;
-}
-
 
 function HeroPhone({screen}){
   const pool=[
@@ -4229,7 +4242,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         }
         else setErr(error.message||"Erreur lors de l'inscription.");
       }else if(data?.user){
-        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,subscription_status:'free'},{onConflict:'id'});}catch(e){}},500);
+        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,...abonnementInitial("parent")},{onConflict:'id'});}catch(e){}},500);
         await claim();
         try{if(typeof logConsent==="function")logConsent(data.user.id,{politique:true,cgu:true,newsletter:false});}catch(e){}
         onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:COULEUR_ROLE.parent});
@@ -4701,7 +4714,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               id: data.user.id, email: data.user.email,
               prenom: form.prenom, nom: form.nom||'',
               role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
-              subscription_status: 'free',
+              ...abonnementInitial(role),
             },{onConflict:'id'});
           }catch(e){console.log('Profile upsert:', e);}
         },500);
@@ -4727,7 +4740,6 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   // l'est bel et bien.
   const fBody = L.fontBody||"'DM Sans', system-ui, sans-serif";
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
-  const statsHero = config.statsHero||DEFAULT_CONFIG.statsHero;
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
 
   // PAGE DÉDIÉE CONNEXION/INSCRIPTION ASSMAT (ouverte depuis blog/outils via ?connexion)
@@ -4829,10 +4841,14 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
         .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
         .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+        .lp-hero-roles{display:flex;flex-direction:column;gap:9px;max-width:380px;margin:0 auto}
+        .lp-hero-roles button{transition:transform .12s}
+        .lp-hero-roles button:hover{transform:translateY(-2px)}
+        @media (prefers-reduced-motion:reduce){.lp-hero-roles button{transition:none}.lp-hero-roles button:hover{transform:none}}
         .lp-hero-grid{display:flex;gap:52px;align-items:center;justify-content:center;max-width:1200px;margin:0 auto}
         .lp-hero-text{flex:1 1 460px;min-width:0;text-align:center}
-        .lp-hero-visual{flex:0 0 auto;position:relative;display:flex;justify-content:center}
-        .lp-hero-tags{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+        .lp-hero-visual{flex:0 0 auto;position:relative;display:flex;flex-direction:column;align-items:center}
+        .lp-hero-tags{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:16px}
         @keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-16px) rotate(1.2deg)}}
         @keyframes notifpop{0%{opacity:0;transform:translateY(12px) scale(.92)}14%,82%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-10px) scale(.95)}}
         @keyframes glowpulse{0%,100%{opacity:.35}50%{opacity:.6}}
@@ -4954,64 +4970,58 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
         </div>}
         {/* Hero content : texte a gauche, telephone anime a droite */}
-        {/* Badge standalone centré (créée en France) — editable via heroBadge */}
-        <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:28 }}>
-          <span style={{ display:"inline-flex", alignItems:"center", gap:8, background:L.heroBadgeBg||"rgba(228,145,120,.12)", border:"1px solid "+(L.heroBadgeBorder||"rgba(228,145,120,.35)"), borderRadius:22, padding:"7px 18px", fontSize:12.5, color:L.heroBadgeColor||"#C84B31", fontWeight:700, letterSpacing:".3px", boxShadow:"0 4px 14px rgba(46,72,89,.08)" }}>{T.heroBadge}</span>
+        {/* Le badge : ce qui rassure en premier n'est pas qui a fait
+            l'application, c'est qu'elle suive la convention. */}
+        <div style={{ position:"relative", zIndex:1, textAlign:"center", marginBottom:22 }}>
+          <span style={{ display:"inline-flex", alignItems:"center", gap:8, background:L.heroBadgeBg||"rgba(93,169,161,.15)", border:"1px solid "+(L.heroBadgeBorder||"rgba(93,169,161,.38)"), borderRadius:22, padding:"7px 16px", fontSize:11.5, color:L.heroBadgeColor||"#BFE3DE", fontWeight:700, letterSpacing:".9px", textTransform:"uppercase" }}>
+            <span aria-hidden="true" style={{ width:7, height:7, borderRadius:"50%", background:"#5DA9A1", flexShrink:0 }}/>
+            {T.heroBadge}
+          </span>
         </div>
         <div className="lp-hero-grid" style={{ position: "relative", zIndex: 1 }}>
           <div className="lp-hero-text" style={{ textAlign: L.heroAlign||"center" }}>
             {/* Un h1, pas un div. index.html en pose un, puis React remplaçait
                 tout le corps par des div : la page servie n'avait plus aucun
-                titre de niveau 1, et c'est le DOM rendu que Google lit.
-                La mise en forme est portée par le style, pas par la balise. */}
-            <h1 style={{ maxWidth: isWeb?(L.heroTitleMaxW||620):"none", margin:"0 auto 16px", fontFamily: fTitle, fontSize: "clamp(24px,4.4vw,50px)", fontWeight: 700, color: L.heroTitleColor||"#2E4859", lineHeight: 1.14 }}>
+                titre de niveau 1, et c'est le DOM rendu que Google lit. */}
+            <h1 style={{ maxWidth: isWeb?(L.heroTitleMaxW||620):"none", margin:"0 auto 16px", fontFamily: fTitle, fontSize: "clamp(24px,4.4vw,50px)", fontWeight: 700, color: L.heroTitleColor||"#FFFFFF", lineHeight: 1.14 }}>
               {T.heroTitle}<br/>
-              {/* #C76754, la teinte qu'index.html donne deja a cette ligne. React
-                  utilisait #E49178 : la page changeait de couleur au relais, et
-                  2,36:1 sur le creme passait sous le seuil de 3 exige pour un
-                  titre. 3,70:1 maintenant, et les deux hero sont d'accord. */}
-              {T.heroTitleAccent&&<span style={{ color: L.heroAccentColor||"#C76754", fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
+              {T.heroTitleAccent&&<span style={{ color: L.heroAccentColor||"#F0A98F", fontStyle: "italic" }}>{T.heroTitleAccent}</span>}
             </h1>
-            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"#42555E", lineHeight: 1.5, marginBottom: 14, fontWeight: 600, whiteSpace: "pre-line" }}>{T.heroSub}</div>
-            <div style={{ fontSize: "clamp(13px,1.6vw,15px)", color: L.heroSubDescColor||"#7C8A90", lineHeight: 1.65, marginBottom: 30, maxWidth: 460, marginLeft:"auto", marginRight:"auto", whiteSpace:"pre-line" }}>{T.heroSubDesc}</div>
-            {/* Hero stats (deplaces sous le titre) */}
-        <div className="lp-hero-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:isWeb?10:5, position: "relative", zIndex: 1, maxWidth: isWeb?600:370, alignItems:"stretch", margin: "0 auto 22px" }}>
-          {statsHero.map(({ n, suf, label, lien }) => {
-            // L'encadré qui mène quelque part doit le dire sans souris : ni le
-            // curseur ni le survol n'existent sur un téléphone. Il le dit par une
-            // flèche permanente, un fond plus opaque et une ombre plus marquée —
-            // il est posé au-dessus des trois autres. La bordure reste la même
-            // que celle des voisins : c'est le relief qui distingue, pas la couleur.
-            const Balise = lien ? "a" : "div";
-            return (
-            <Balise key={label} {...(lien ? { href: lien } : {})}
-              style={{ textAlign: "center", textDecoration:"none",
-                background: lien ? (L.heroStatsCardBgLien||"rgba(255,255,255,.82)") : (L.heroStatsCardBg||"rgba(255,255,255,.55)"),
-                border:"1px solid "+(L.heroStatsCardBorder||"rgba(228,145,120,.3)"), borderRadius:12,
-                padding:isWeb?"12px 8px":"9px 4px",
-                boxShadow: lien ? (L.heroStatsShadowLien||"0 4px 16px rgba(46,72,89,.13)") : (L.heroStatsShadow||"0 2px 8px rgba(46,72,89,.05)"),
-                display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
-                cursor:lien?"pointer":"default", transition:"transform .12s, box-shadow .12s" }}
-              onMouseEnter={lien?(e)=>e.currentTarget.style.transform="translateY(-2px)":undefined}
-              onMouseLeave={lien?(e)=>e.currentTarget.style.transform="none":undefined}>
-              <div style={{ fontSize: isWeb?22:18, fontWeight: 900, color: L.heroStatsColor||"#B85C38", fontFamily: fTitle }}><Counter target={n} suffix={suf} /></div>
-              <div style={{ fontSize: isWeb?12.5:11, fontWeight: 700, color: L.heroStatsLabelColor||"#2E4859", marginTop: 3, lineHeight: 1.25 }}>
-                {label}{lien ? <span aria-hidden="true" style={{ fontWeight:900, color:L.heroStatsColor||"#B85C38" }}> →</span> : null}
-              </div>
-            </Balise>
-            );
-          })}
-        </div>
-            <div className="lp-hero-ctas">
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.heroBtnPrimBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.heroBtnPrimColor||"#fff", border: "none", borderRadius: 10, padding: "15px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.5)", letterSpacing: ".3px", transition:"transform .12s" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{T.heroBtnPrimTxt}</button>
-              <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })} style={{ background: L.heroBtnSecBg||"transparent", color: L.heroBtnSecColor||"rgba(46,72,89,.75)", border: "1px solid "+(L.heroBtnSecBorder||"rgba(46,72,89,.22)"), borderRadius: 10, padding: "13px 22px", fontSize: 14, cursor: "pointer", fontWeight:600 }}>{T.heroBtnSecTxt}</button>
+            <div style={{ fontSize: "clamp(15px,2vw,19px)", color: L.heroSubColor||"rgba(255,255,255,.88)", lineHeight: 1.5, marginBottom: 24, fontWeight: 500, whiteSpace: "pre-line", maxWidth: 480, marginLeft:"auto", marginRight:"auto" }}>{T.heroSub}</div>
+
+            {/* LES DEUX PORTES D'ENTRÉE.
+                Le hero posait un seul bouton — « 2 mois offerts » — et quatre
+                encadrés de chiffres. Une visiteuse devait deviner si la page
+                s'adressait à elle : une assistante maternelle et un parent
+                employeur n'ont ni le même compte, ni le même prix, ni le même
+                parcours. On le lui demande, c'est tout. Le libellé est aligné
+                à gauche : sur deux lignes, centré, il se lit mal. */}
+            <div className="lp-hero-roles">
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }}
+                style={{ background: L.heroBtnPrimBg||"#B4543F", color: L.heroBtnPrimColor||"#fff", border:"none", borderRadius:13, padding:"14px 44px 14px 17px", fontSize:15, fontWeight:700, fontFamily:"inherit", cursor:"pointer", textAlign:"left", position:"relative", width:"100%", boxShadow:"0 8px 22px rgba(180,84,63,.3)" }}>
+                {T.heroRoleAsmat}
+                <small style={{ display:"block", fontSize:11.5, fontWeight:400, marginTop:2, opacity:.88 }}>{T.heroRoleAsmatSub}</small>
+                <span aria-hidden="true" style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", fontSize:15 }}>→</span>
+              </button>
+              <button onClick={() => { window.location.href="/parents"; }}
+                style={{ background: L.heroBtnSecBg||"rgba(255,255,255,.07)", color: L.heroBtnSecColor||"#fff", border:"1.5px solid "+(L.heroBtnSecBorder||"rgba(255,255,255,.28)"), borderRadius:13, padding:"14px 44px 14px 17px", fontSize:15, fontWeight:600, fontFamily:"inherit", cursor:"pointer", textAlign:"left", position:"relative", width:"100%" }}>
+                {T.heroRoleParent}
+                <small style={{ display:"block", fontSize:11.5, fontWeight:400, marginTop:2, opacity:.86 }}>{T.heroRoleParentSub}</small>
+                <span aria-hidden="true" style={{ position:"absolute", right:16, top:"50%", transform:"translateY(-50%)", fontSize:15 }}>→</span>
+              </button>
             </div>
-            <div className="lp-hero-tags">
-              {(T.heroTags||"").split(",").map(t=>t.trim()).filter(Boolean).map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"#93A0A2", fontWeight: 500 }}>{t.trim()}</span>)}
-            </div>
+            {/* Une troisième voie, pour qui ne veut encore s'engager à rien :
+                un calcul tout de suite, sans compte. */}
+            <button onClick={() => { window.location.href="/outils.html"; }}
+              style={{ display:"block", width:"100%", margin:"12px auto 0", background:"none", border:"none", fontFamily:"inherit", fontSize:13, fontWeight:600, color:L.heroLienColor||"#BFE3DE", textDecoration:"underline", textUnderlineOffset:3, cursor:"pointer" }}>{T.heroOutilTxt}</button>
           </div>
           <div className="lp-hero-visual">
             <HeroPhone screen={<AccueilAssMat enfants={demoEnfants} user={D.asmat} setPage={setDemoPage} demoStats={demoAccueilStats}/>}/>
+            <button onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
+              style={{ display:"block", margin:"18px auto 0", background:"none", border:"none", fontFamily:"inherit", fontSize:12.5, fontWeight:600, color:L.heroLienColor||"#BFE3DE", textDecoration:"underline", textUnderlineOffset:3, cursor:"pointer" }}>{T.heroBtnSecTxt}</button>
+            <div className="lp-hero-tags">
+              {(T.heroTags||"").split(",").map(t=>t.trim()).filter(Boolean).map(t => <span key={t} style={{ fontSize: 11, color: L.heroTagsColor||"rgba(255,255,255,.82)", fontWeight: 500, background:"rgba(255,255,255,.08)", border:"1px solid rgba(255,255,255,.18)", borderRadius:99, padding:"6px 11px" }}>{t}</span>)}
+            </div>
           </div>
         </div>
       </div>
@@ -5687,7 +5697,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Formules et tarification</h3>
               <p><strong>Formule Gratuite :</strong> accès limité (1 enfant, fonctionnalités de base).</p>
-              <p><strong>Formule Pro :</strong> 9,99€/mois TTC, avec un essai gratuit de 2 mois sans carte bancaire. L'abonnement est mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
+              <p><strong>Formule Pro :</strong> 9,99€/mois TTC. Tout compte d'assistante maternelle s'ouvre sur un essai de 2 mois offerts, à compter de la création du compte. <strong>Aucune carte bancaire n'est demandée pour cet essai</strong>, et aucun abonnement n'est créé pendant sa durée : il ne peut donc pas se transformer en prélèvement. Un rappel est envoyé 7 jours puis 3 jours avant la fin.</p>
+              <p>À l'issue des 2 mois, le compte repasse automatiquement en formule gratuite. <strong>Aucune donnée n'est supprimée</strong> : enfants, pointages, contrats et documents sont conservés, seules les fonctions de la formule Pro cessent d'être accessibles. Reprendre l'abonnement les rouvre en l'état.</p>
+              <p>La carte bancaire n'est demandée qu'au moment de souscrire l'abonnement, si vous choisissez de continuer. L'abonnement est alors mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
               <p>L'utilisateur reste propriétaire de toutes les données qu'il saisit dans TiMat (informations sur les enfants, contrats, pointages, transmissions, documents). TiMat ne revendique aucun droit de propriété sur ces données. L'utilisateur peut exporter ou supprimer ses données à tout moment.</p>
@@ -6036,12 +6048,12 @@ const logoForRole = (role, dark) => {
 };
 
 const FAQ_LANDING_DEFAULT=[
-            {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. La formule Pro à 9,99€/mois débloque les contrats illimités et toutes les fonctions, et elle est offerte pendant 2 mois pour l'essayer, sans engagement."},
+            {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur 2 mois de formule Pro offerts — contrats illimités, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
             {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Toujours le même résultat, sans erreur."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
             {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
             {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
-            {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. Vous arrêtez quand vous voulez, en un clic, et l'essai ne demande pas de carte bancaire. Pas de reconduction forcée ni de prélèvement surprise."},
+            {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. L'essai de 2 mois ne demande aucune carte bancaire et ne crée aucun abonnement : il ne peut donc pas se transformer en prélèvement. Nous vous prévenons 7 jours puis 3 jours avant la fin. Si vous continuez, l'abonnement est mensuel et s'arrête en un clic — ni reconduction forcée ni prélèvement surprise."},
             {q:"Les parents employeurs ont-ils aussi accès ?",a:"Oui. Chaque parent est invité par un lien et dispose de son espace : présences, paie, documents et messagerie. Tout est partagé, en toute transparence."},
             {q:"Je suis parent employeur, qu'est-ce que TiMat m'apporte ?",a:"Votre espace parent regroupe présences, paie, documents et messagerie. Vous suivez le coût réel et le CMG, sans mauvaise surprise de plafond, et tout est partagé en toute transparence avec votre assistante maternelle."},
             {q:"Comment fonctionne le cahier de liaison numérique ?",a:"Repas, sieste, activités et humeur se remplissent une seule fois, même pour plusieurs enfants, et le parent les consulte en temps réel. Tout est daté et gardé en historique : un compte-rendu factuel qui évite les oublis et les malentendus."},
@@ -6059,24 +6071,34 @@ const BLOG_DEFAULT=[
 export const DEFAULT_CONFIG = {
   cols: {T:"#E49178",S:"#8F9F92",G:"#5DA9A1",R:"#B85C38",c:"#FDFBF8",w:"#FFFFFF",b:"#2E4859"}, // P17b: palette 3-logos (marine + saumon + sauge + teal)
   txts: {
-    heroTitle:"Application pour assistantes maternelles",
-    heroTitleAccent:"et parents employeurs.",
-    heroSub:"Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.",
+    // Le titre disait CE QUE C'EST (« une application »). Il dit maintenant
+    // ce qu'elle fait disparaître. Le mot-clé « assistante maternelle » reste
+    // porté par le sous-titre, le bouton de rôle, la balise <title> et le
+    // contenu destiné aux robots — il n'est plus dans le h1.
+    heroTitle:"Le salaire, le contrat et Pajemploi,",
+    heroTitleAccent:"sans les refaire à la main",
+    heroSub:"TiMat réunit le planning, les présences, le salaire, les congés et la déclaration Pajemploi — côté assistante maternelle comme côté parent.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
     prixEssai:"2 mois offerts",
     compBasePro:"7,99",
     compParContrat:"2,99",
     heroDesc:"",
-    heroBadge:"🧸 Conçue par une professionnelle de la petite enfance",
-    heroSubDesc:"À jour de la convention collective au 1ᵉʳ juin 2026.",
+    heroBadge:"Conforme à la convention IDCC 3239",
+    heroSubDesc:"",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
     // La barre du bas a son propre libellé : elle porte déjà le prix et la
     // durée à gauche, reprendre le bouton du hero disait tout deux fois.
     barreBtnTxt:"Je démarre mes 2 mois offerts",
     heroBtnSecTxt:"Voir l'app en démo ↓",
+    // Les deux portes d'entrée du hero, et la troisième voie sans compte.
+    heroRoleAsmat:"Je suis assistante maternelle",
+    heroRoleAsmatSub:"2 mois offerts, sans carte bancaire",
+    heroRoleParent:"Je suis parent employeur",
+    heroRoleParentSub:"Gratuit, invité par votre assistante maternelle",
+    heroOutilTxt:"Calculer un salaire mensualisé — sans compte",
     heroBtnNavTxt:"Commencer gratuitement →",
-    heroTags:"💳 Sans carte bancaire,🔓 Sans engagement,🔒 Données hébergées en France,👨‍👩‍👧 Espace parent gratuit pour les familles",
+    heroTags:"2 mois offerts,Sans carte bancaire,Données en France,Résiliable en 1 clic",
     ctaBtnTxt:"Je commence - 2 mois gratuits →",
     ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
     ctaFooter:"Créé par une professionnelle de la petite enfance · Données hébergées en France 🇫🇷",
@@ -6143,8 +6165,7 @@ export const DEFAULT_CONFIG = {
     heroBadgeColor:"#BFE3DE",
     heroBadgeBg:"rgba(93,169,161,.15)",
     heroTagsColor:"rgba(255,255,255,.82)",
-    heroStatsColor:"#F0A98F",
-    heroStatsLabelColor:"rgba(255,255,255,.88)",
+    heroLienColor:"#BFE3DE",
     s1TitleColor:"#2E4859",
     // .5 donnait 3,76:1 sur le fond ardoise de la section, sous le seuil de
     // 4,5. .65 donne 5,14 sans changer le rendu a l'oeil.
@@ -6198,9 +6219,6 @@ export const DEFAULT_CONFIG = {
     // Elles étaient donc invisibles du back-office ET de l'audit des
     // contrastes, qui ne lit que DEFAULT_CONFIG : le tableau Sans/Avec
     // pouvait devenir illisible sans qu'aucune barrière ne le voie.
-    heroStatsCardBg:"rgba(255,255,255,.08)",
-    heroStatsCardBgLien:"rgba(255,255,255,.15)",
-    heroStatsCardBorder:"rgba(255,255,255,.20)",
     // La barre de navigation est posée SUR le hero : ses couleurs suivent
     // donc le hero, pas les sections. Elles n'existaient qu'en repli littéral.
     navBtnColor:"rgba(255,255,255,.88)",
@@ -6274,14 +6292,7 @@ export const DEFAULT_CONFIG = {
     {ic:"🌙",titre:"Administratrice le soir",desc:"Après 10h avec les enfants, vous ouvrez l'ordinateur. Pajemploi, les factures, les tableaux Excel. Votre soirée n'existe plus."},
     {ic:"🔇",titre:"Seule face aux problèmes",desc:"Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème."},
   ],
-  statsHero:[
-    {n:0,suf:"€",label:"pour essayer"},
-    {n:2,suf:" mois",label:"offerts · sans CB"},
-    // Le seul encadré qui mène quelque part : « lien » suffit à le rendre
-    // cliquable, à lui donner sa flèche et à en faire un vrai lien.
-    {n:0,suf:" €",label:"l'espace des parents employeurs",lien:"/parents"},
-    {n:2,suf:" min",label:"pour s'inscrire"},
-  ],
+
   testimonials:[
     {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soirées sur Excel.",apres:"Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
     {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contrôle PMI.",apres:"Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi."},
@@ -6392,7 +6403,6 @@ export const loadConfig = async () => {
         landing:{...DEFAULT_CONFIG.landing,...(saved.landing||{})},
         feats:{...DEFAULT_CONFIG.feats,...(saved.feats||{})},
         painPoints: saved.painPoints||DEFAULT_CONFIG.painPoints,
-        statsHero: saved.statsHero||DEFAULT_CONFIG.statsHero,
         testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
         freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
         proItems: saved.proItems||DEFAULT_CONFIG.proItems,
@@ -7114,6 +7124,11 @@ export default function App(){
   // de l'autre.
   const isPro=estPro(user);
   const isTrialing=user?.subscription_status==="trialing";
+  // Le même calcul que la tâche quotidienne : une assistante maternelle ne doit
+  // pas lire « il vous reste 3 jours » ici et recevoir le courriel de fin le
+  // même matin.
+  const joursEssai=joursRestantsEssai(user);
+  const essaiFini=essaiExpire(user);
 
   // //  Lancer le checkout Stripe
   const lancerCheckout=async()=>{
@@ -7309,7 +7324,41 @@ export default function App(){
             <span>{e.emoji||"👶"}</span>{e.prenom||"Enfant"}
           </button>)}
         </div>}
-        <div className="content"><ActionBar page={page} setPage={setPage} role={role}/>{renderPage()}</div>
+        <div className="content">
+          <ActionBar page={page} setPage={setPage} role={role}/>
+          {/* FIN D'ESSAI — le même message que le courriel, pour celle qui
+              ouvre l'application sans avoir lu ses messages. Il ne s'affiche
+              qu'aux seuils des rappels : un décompte permanent pendant deux
+              mois serait un reproche quotidien. */}
+          {role!=="parent"&&isTrialing&&joursEssai!==null&&joursEssai>0&&joursEssai<=7&&(
+            <div style={{margin:"10px 12px 0",background:"#FFF4EF",border:"1px solid #F0D6CB",borderLeft:"3px solid #B4543F",borderRadius:12,padding:"12px 14px",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+              <div style={{flex:"1 1 200px",minWidth:0}}>
+                <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>
+                  {joursEssai===1?"Vos deux mois offerts se terminent demain.":"Vos deux mois offerts se terminent dans "+joursEssai+" jours."}
+                </div>
+                <div style={{fontSize:12.5,color:"#55707C",marginTop:2,lineHeight:1.5}}>
+                  Sans rien faire, votre compte repasse en formule gratuite. Rien n'est supprimé.
+                </div>
+              </div>
+              <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
+            </div>
+          )}
+          {/* ESSAI FINI — le compte est repassé en gratuit. On dit d'abord ce
+              qui est CONSERVÉ : c'est la seule question que se pose quelqu'un
+              qui voit une fonction se refermer. */}
+          {role!=="parent"&&essaiFini&&(
+            <div style={{margin:"10px 12px 0",background:"#F4F7F6",border:"1px solid #D8E4E1",borderLeft:"3px solid #2F655F",borderRadius:12,padding:"12px 14px",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+              <div style={{flex:"1 1 200px",minWidth:0}}>
+                <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>Vos deux mois offerts sont terminés.</div>
+                <div style={{fontSize:12.5,color:"#55707C",marginTop:2,lineHeight:1.5}}>
+                  Vos enfants, vos pointages et vos documents sont intacts. Reprendre l'abonnement rouvre le dossier exactement où vous l'aviez laissé.
+                </div>
+              </div>
+              <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
+            </div>
+          )}
+          {renderPage()}
+        </div>
         <BottomNav groups={groups} page={page} setPage={setPage} role={role} pmiNonLus={role==="parent"?0:pmiNonLus}/>
         {showWelcome&&<BienvenueOnboarding role={role} user={user} setPage={setPage} onClose={closeWelcome}/>}
         {gToast&&<Toast msg={gToast} onClose={()=>setGToast("")}/>}

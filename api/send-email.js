@@ -21,6 +21,25 @@ const EMAIL_TEMPLATES = {
 <p>${esc(v.parent_prenom)} ${esc(v.parent_nom)} vient de signer le contrat de ${esc(v.enfant_prenom)}.</p>
 <p>Le contrat est finalisé et archivé dans vos documents.</p>`,
   },
+  // Les deux rappels de fin d'essai. Ils disent la date en clair, ce qui est
+  // conservé (tout), et ce qui s'arrête. Aucun des deux ne demande de carte :
+  // elle n'est demandée qu'au moment de continuer, dans Stripe.
+  essai_rappel_7: {
+    subject: "Il vous reste une semaine d'essai TiMat",
+    html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
+<p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>, dans ${esc(v.jours)} jours.</p>
+<p>Vous n'avez rien à faire tout de suite, et aucune carte bancaire ne vous a été demandée. Si vous souhaitez continuer, vous pourrez le faire d'un clic depuis votre espace.</p>
+<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir TiMat</a></p>
+<p style="color:#55707C;font-size:14px">Si vous ne continuez pas, votre compte repasse simplement en formule gratuite. Vos enfants, vos pointages et vos documents restent là où ils sont.</p>`,
+  },
+  essai_rappel_3: {
+    subject: "Vos deux mois d'essai TiMat se terminent dans 3 jours",
+    html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
+<p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>.</p>
+<p>Pour garder les bulletins de salaire, le récapitulatif Pajemploi et les contrats illimités, continuez avec TiMat à 9,99 € par mois — sans engagement, résiliable en un clic.</p>
+<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Continuer avec TiMat</a></p>
+<p style="color:#55707C;font-size:14px">Si vous ne faites rien, votre compte repasse en formule gratuite. <strong>Rien n'est supprimé</strong> : vos enfants, vos pointages et vos documents vous attendent, et reprendre l'abonnement rouvre exactement le dossier que vous aviez laissé.</p>`,
+  },
   signature_reminder: {
     subject: "Rappel : signature de contrat en attente",
     html: (v) => `<p>Le contrat de ${esc(v.enfant_prenom)} attend votre signature depuis le ${esc(v.date)}.</p>

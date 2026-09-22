@@ -76,7 +76,9 @@
       #timat-boot .badge{
         font-size:13px;font-weight:700;color:#BFE3DE;background:rgba(93,169,161,.15);
         border:1px solid rgba(93,169,161,.38);border-radius:99px;padding:7px 16px;
+        display:inline-flex;align-items:center;gap:8px;letter-spacing:.9px;text-transform:uppercase;
       }
+      #timat-boot .badge .pt{width:7px;height:7px;border-radius:50%;background:#5DA9A1;flex-shrink:0}
       #timat-boot h1{
         font-family:'Quicksand','Outfit',system-ui,sans-serif;
         /* 1,16 et non 1,14 : a 412 px, l'arrondi de la hauteur de ligne donnait
@@ -125,12 +127,11 @@
       <!-- Écran de chargement visuel -->
       <div id="timat-boot">
         <div class="logo"><img src="/logo-dark.webp" alt="TiMat" width="140" height="44"></div>
-        <span class="badge">🧸 Conçue par une professionnelle de la petite enfance</span>
-        <h1>Application pour assistantes maternelles<br><em>et parents employeurs.</em></h1>
-        <p class="quoi">Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.</p>
-        <p class="detail">À jour de la convention collective au 1ᵉʳ juin 2026.</p>
-        <span class="cta">2 mois offerts, sans carte bancaire →</span>
-        <span class="rassure">Sans engagement · Données hébergées en France 🇫🇷</span>
+        <span class="badge"><span class="pt" aria-hidden="true"></span>Conforme à la convention IDCC 3239</span>
+        <h1>Le salaire, le contrat et Pajemploi,<br><em>sans les refaire à la main</em></h1>
+        <p class="quoi">TiMat réunit le planning, les présences, le salaire, les congés et la déclaration Pajemploi — côté assistante maternelle comme côté parent.</p>
+        <span class="cta">Je suis assistante maternelle →</span>
+        <span class="rassure">2 mois offerts · Sans carte bancaire · Données en France</span>
         <div class="bar"><span></span></div>
       </div>
       <!-- Contenu statique pour les moteurs de recherche -->

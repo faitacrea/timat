@@ -78,6 +78,10 @@
     {
       "path": "/api/publier-article",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron-essais",
+      "schedule": "0 7 * * *"
     }
   ],
   "headers": [
