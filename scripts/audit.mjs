@@ -766,9 +766,23 @@ for (const u of fichiersAppSrc()) {
 // l'ecrit, et ne se tait jamais en pretendant que tout va bien.
 {
   const PROJET = "740dzcep", JEU = "production";
+  // Les longueurs maximales viennent du schema Sanity (studio/schemas/article).
+  // Celles marquees BLOQUANT sont declarees en niveau « error » : le Studio
+  // refuse de republier l'article tant qu'elles sont depassees. Les autres sont
+  // des avertissements — l'article part en ligne, mais Google tronque.
+  //
+  // Pourquoi ce controle existe : deux articles ont ete crees par l'API avec un
+  // chapo de 303 et 306 caracteres. L'API ne verifie rien ; le Studio, si. Les
+  // deux articles etaient donc en ligne, leur couverture ajoutee dans le
+  // brouillon, et impossibles a republier — sans que rien n'explique pourquoi.
+  const MAX = { chapo: 300, titre: 100, seoTitre: 60, seoDescription: 160 };
   const groq = `{
     "publiesSansImage": *[_type=="article" && !(_id in path("drafts.**")) && !defined(imageCouverture)]{"s": slug.current},
-    "brouillonsSansImage": *[_type=="article" && _id in path("drafts.**") && !defined(imageCouverture)]{"s": slug.current}
+    "brouillonsSansImage": *[_type=="article" && _id in path("drafts.**") && !defined(imageCouverture)]{"s": slug.current},
+    "tropLongs": *[_type=="article" && (length(chapo) > ${MAX.chapo} || length(titre) > ${MAX.titre} || length(seoTitre) > ${MAX.seoTitre} || length(seoDescription) > ${MAX.seoDescription})]{
+      "s": slug.current, "chapo": length(chapo), "titre": length(titre),
+      "seoTitre": length(seoTitre), "seoDescription": length(seoDescription)
+    }
   }`;
   try {
     const r = await fetch(
@@ -785,8 +799,80 @@ for (const u of fichiersAppSrc()) {
     if (bro.length) {
       signale("blog", `${bro.length} brouillon(s) sans image de couverture — ils seront publiés tels quels, un par jour : ${bro.slice(0, 3).join(", ")}${bro.length > 3 ? "…" : ""}`);
     }
+
+    // Un champ trop long par article, le plus grave d'abord : on nomme le
+    // blocage plutot que de lister quatre lignes pour le meme article.
+    const bloquants = [], tronques = [];
+    for (const a of result?.tropLongs || []) {
+      if (a.chapo > MAX.chapo) bloquants.push(`${a.s} — chapô ${a.chapo}/${MAX.chapo}`);
+      else if (a.titre > MAX.titre) bloquants.push(`${a.s} — titre ${a.titre}/${MAX.titre}`);
+      else if (a.seoDescription > MAX.seoDescription) tronques.push(`${a.s} — meta ${a.seoDescription}/${MAX.seoDescription}`);
+      else if (a.seoTitre > MAX.seoTitre) tronques.push(`${a.s} — titre SEO ${a.seoTitre}/${MAX.seoTitre}`);
+    }
+    if (bloquants.length) {
+      signale("blog", `${bloquants.length} article(s) que le Studio refusera de republier — le champ dépasse la limite du schéma : ${bloquants.slice(0, 3).join(" ; ")}${bloquants.length > 3 ? "…" : ""}`);
+    }
+    if (tronques.length) {
+      signale("blog", `${tronques.length} article(s) dont Google tronquera le titre ou la description dans ses résultats : ${tronques.slice(0, 3).join(" ; ")}${tronques.length > 3 ? "…" : ""}`);
+    }
   } catch (e) {
     console.log(`  (couvertures du blog : non vérifiées — ${e.message})`);
+  }
+}
+
+// --- la page parents dessine un menu que l'application ne sert plus ---
+//
+// public/pour-les-parents.html est une page statique : elle ne monte pas React
+// et ne peut donc pas afficher les vrais composants comme le fait la demo de la
+// landing. Elle RECOPIE donc les deux menus du parent. Une copie derive.
+//
+// Elle avait deja derive : l'application a sept entrees dans « Administratif »,
+// la page n'en montrait que six — « Mes alertes » manquait. Rien ne l'avait
+// signale, parce que rien ne comparait les deux. Une visiteuse lisait donc un
+// inventaire faux de ce qu'elle allait trouver dans son espace.
+//
+// La source est GROUPS_P dans src/App.jsx. On compare les libelles, dans
+// l'ordre : c'est ce que la personne lit, et l'ordre est une promesse aussi.
+{
+  const app = fs.readFileSync("src/App.jsx", "utf8");
+  const page = fs.readFileSync("public/pour-les-parents.html", "utf8");
+
+  // Le bloc GROUPS_P, de son ouverture a la premiere accolade seule en debut
+  // de ligne : suffisant et stable, l'objet est ecrit a plat.
+  const bloc = app.match(/const GROUPS_P\s*=\s*\{[\s\S]*?\n\};/);
+  if (!bloc) {
+    signale("parents", "GROUPS_P est introuvable dans src/App.jsx — la page parents ne peut plus être comparée à l'application.");
+  } else {
+    // Dans chaque groupe, les entrees { id, l:"...", ... } dans l'ordre.
+    const groupes = {};
+    for (const nom of ["enfant", "admin"]) {
+      const m = bloc[0].match(new RegExp(`\\n  ${nom}:\\{[\\s\\S]*?subs:\\[([\\s\\S]*?)\\n  \\]\\}`));
+      groupes[nom] = m ? [...m[1].matchAll(/l:"((?:[^"\\]|\\.)*)"/g)].map((x) => x[1]) : null;
+    }
+
+    // Cote page : les <b> de chaque <ul data-menu="...">.
+    const deLaPage = (nom) => {
+      const m = page.match(new RegExp(`<ul data-menu="${nom}">([\\s\\S]*?)</ul>`));
+      if (!m) return null;
+      return [...m[1].matchAll(/<b>([\s\S]*?)<\/b>/g)]
+        .map((x) => x[1].replace(/&amp;/g, "&").replace(/&nbsp;/g, " ").trim());
+    };
+
+    for (const nom of ["enfant", "admin"]) {
+      const attendu = groupes[nom];
+      const trouve = deLaPage(nom);
+      if (!attendu) { signale("parents", `Le groupe « ${nom} » n'a pas pu être lu dans GROUPS_P.`); continue; }
+      if (!trouve)  { signale("parents", `Le menu « ${nom} » a disparu de public/pour-les-parents.html — la page ne dit plus ce que contient l'espace parent.`); continue; }
+      const a = attendu.join(" | "), t = trouve.join(" | ");
+      if (a !== t) {
+        const manquants = attendu.filter((x) => !trouve.includes(x));
+        const enTrop = trouve.filter((x) => !attendu.includes(x));
+        const detail = manquants.length || enTrop.length
+          ? `${manquants.length ? "absente(s) de la page : " + manquants.join(", ") : ""}${manquants.length && enTrop.length ? " ; " : ""}${enTrop.length ? "inconnue(s) de l'application : " + enTrop.join(", ") : ""}`
+          : `même contenu mais pas le même ordre — attendu ${a}`;
+        signale("parents", `Le menu « ${nom} » de public/pour-les-parents.html ne correspond plus à GROUPS_P (src/App.jsx) — ${detail}`);
+      }
+    }
   }
 }
 
