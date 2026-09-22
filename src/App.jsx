@@ -1061,6 +1061,32 @@ export function Styles(){return(
     .demo-screen .g4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
     .demo-screen .g2>*,.demo-screen .g3>*,.demo-screen .g4>*{min-width:0}
     .demo-screen [style*="overflow-x"],.demo-screen [style*="overflowX"]{overflow-x:hidden!important}
+    /* ── LE CADRE DE TÉLÉPHONE, COMMUN AU HERO ET À LA DÉMO ──
+       La taille vient de l'appelant : en dur pour le hero, par .demo-phone
+       pour la démo. Tout le reste — coque, rayon, ombre, halo, flottement —
+       est identique, parce que c'est ce qui se voit. */
+    @keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-16px) rotate(1.2deg)}}
+    @keyframes floaty-doux{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    @keyframes glowpulse{0%,100%{opacity:.35}50%{opacity:.6}}
+    .cadre-tel{position:relative;display:inline-block;flex-shrink:0}
+    .cadre-tel-halo{position:absolute;inset:6% 4%;border-radius:50%;pointer-events:none;
+      background:radial-gradient(closest-side,rgba(228,145,120,.55),transparent);
+      filter:blur(26px);animation:glowpulse 4s ease-in-out infinite}
+    .cadre-tel-flotte{position:relative;height:100%;animation:floaty 5s ease-in-out infinite}
+    /* Le hero pivote de 1,2° : il n'y a rien à y cliquer. La démo, si — viser
+       un bouton qui tourne est désagréable. Elle monte et descend, sans plus. */
+    .cadre-tel-flotte.doux{animation:floaty-doux 6s ease-in-out infinite}
+    .cadre-tel-coque{position:relative;height:100%;box-sizing:border-box;background:#0D1B2A;
+      border-radius:38px;padding:12px 11px;box-shadow:0 40px 90px rgba(13,27,42,.45);
+      display:flex;flex-direction:column}
+    .cadre-tel-encoche{width:70px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);
+      margin:2px auto 8px;flex-shrink:0}
+    /* flex-basis « auto » et non 0 : le hero donne au cadre une hauteur fixe et
+       l'écran remplit ce qui reste, mais la démo, elle, impose une hauteur
+       d'écran (.demo-frame). Avec flex:1, cette hauteur était ignorée et le
+       téléphone de la démo passait de 534 à 762 px. */
+    .cadre-tel-ecran{flex:1 1 auto;min-height:0;background:#FDFBF8;border-radius:28px;overflow:hidden;
+      display:flex;flex-direction:column}
     .demo-phone{width:270px}
     .demo-layout{display:grid;gap:26px 28px;justify-content:center;max-width:940px;margin:0 auto;
       grid-template-columns:178px minmax(0,340px) auto;
@@ -3947,7 +3973,28 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
 
 
 
-function HeroPhone({screen}){
+// ══════════════════════════════════════════════════════════════════════════
+// LE CADRE DE TÉLÉPHONE — UN SEUL, POUR LE HERO ET POUR LA DÉMO
+// ──────────────────────────────────────────────────────────────────────────
+// Il y en avait deux, écrits séparément, et ça se voyait : le hero avait son
+// halo, son flottement et ses bulles de notification ; la démo n'était qu'un
+// rectangle sombre posé à plat. Même marque, même page, deux téléphones —
+// et celui de la démo, qui est pourtant l'argument principal, était le moins
+// soigné des deux.
+//
+// Un seul composant désormais. Ce qui reste différent entre les deux usages
+// est passé en propriété, et chaque différence a une raison :
+//
+//   — les bulles de notification : au hero seulement. Dans la démo, elles
+//     tomberaient sur la colonne d'explication à sa gauche, et hors du cadre
+//     embarqué de la page parents à sa droite.
+//   — le flottement : le hero tourne de 1,2° ; la démo se contente de monter
+//     et descendre. On clique dans la démo, et viser un bouton qui pivote
+//     est désagréable.
+//
+// La taille vient de l'appelant : 230 x 466 en dur pour le hero, la règle CSS
+// .demo-phone pour la démo, qui change avec la largeur de l'écran.
+export function CadreTelephone({children, bulles=false, doux=false, className="", style, ecranClassName="", ecranStyle}){
   const pool=[
     {ic:"✅",t:"Bulletin de salaire généré"},
     {ic:"💶",t:"Salaire calculé automatiquement"},
@@ -3960,26 +4007,35 @@ function HeroPhone({screen}){
     {ic:"✍️",t:"Contrat signé en 1 clic"},
   ];
   const slots=[{top:"6%",left:"-6%",d:"0s"},{top:"44%",left:"52%",d:"1.4s"},{top:"80%",left:"-4%",d:"2.8s"}];
-  return <div className="hero-phone-wrap" style={{position:"relative",width:230,height:466}}>
-    {/* halo */}
-    <div style={{position:"absolute",inset:"6% 4%",borderRadius:"50%",background:"radial-gradient(closest-side,rgba(228,145,120,.55),transparent)",filter:"blur(26px)",animation:"glowpulse 4s ease-in-out infinite"}}/>
-    {/* telephone flottant */}
-    <div style={{position:"relative",width:230,height:466,animation:"floaty 5s ease-in-out infinite"}}>
-      <div style={{position:"absolute",inset:0,background:"#0D1B2A",borderRadius:38,padding:"12px 11px",boxShadow:"0 40px 90px rgba(0,0,0,.45)"}}>
-        <div style={{position:"absolute",top:20,left:"50%",transform:"translateX(-50%)",width:70,height:5,borderRadius:3,background:"rgba(255,255,255,.25)",zIndex:2}}/>
-        <div style={{width:"100%",height:"100%",background:"#FDFBF8",borderRadius:28,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-          {screen
-          ? <div style={{zoom:.6,width:"100%",height:"100%",overflow:"hidden"}}>{screen}</div>
-          : <>
+  return (
+    <div className={"cadre-tel "+className} style={style}>
+      <div className="cadre-tel-halo" aria-hidden="true"/>
+      <div className={"cadre-tel-flotte"+(doux?" doux":"")}>
+        <div className="cadre-tel-coque">
+          <div className="cadre-tel-encoche" aria-hidden="true"/>
+          <div className={"cadre-tel-ecran "+ecranClassName} style={ecranStyle}>{children}</div>
+        </div>
+      </div>
+      {bulles && slots.map((s,i)=><NotifBulle key={i} slot={s} pool={pool} i={i}/>)}
+    </div>
+  );
+}
+
+function HeroPhone({screen}){
+  return (
+    <CadreTelephone className="hero-phone-wrap" style={{width:230,height:466}} bulles>
+      {screen
+        ? <div style={{zoom:.6,width:"100%",height:"100%",overflow:"hidden"}}>{screen}</div>
+        : <>
           {/* header */}
           <div style={{padding:"18px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <span style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:20,color:"#E49178"}}>timat</span>
+            <span style={{fontFamily:"'Quicksand','Outfit',system-ui,sans-serif",fontWeight:700,fontSize:20,color:"#E49178"}}>timat</span>
             <span style={{width:26,height:26,borderRadius:"50%",background:"#E49178",color:"#fff",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>MD</span>
           </div>
           {/* carte du jour */}
           <div style={{margin:"4px 12px",background:"linear-gradient(135deg,#2E4859,#3E6B63)",borderRadius:16,padding:14,color:"#fff"}}>
             <div style={{fontSize:11,opacity:.7,fontWeight:600}}>AUJOURD'HUI</div>
-            <div style={{fontSize:16,fontWeight:700,fontFamily:"'Fraunces',serif",marginTop:2}}>3 enfants présents</div>
+            <div style={{fontSize:16,fontWeight:700,fontFamily:"'Quicksand','Outfit',system-ui,sans-serif",marginTop:2}}>3 enfants présents</div>
             <div style={{display:"flex",gap:6,marginTop:10}}>
               {["👶","🧒","👧"].map((e,i)=><span key={i}style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{e}</span>)}
             </div>
@@ -3992,14 +4048,9 @@ function HeroPhone({screen}){
               <span style={{fontSize:11,color:"#5DA9A1",fontWeight:700,background:"#5DA9A118",padding:"2px 8px",borderRadius:8}}>{b}</span>
             </div>
           )}
-          </>}
-        </div>
-      </div>
-    </div>
-    {/* notifications qui sortent et changent a chaque cycle */}
-    {slots.map((s,i)=>{return (
-      <NotifBulle key={i} slot={s} pool={pool} i={i}/>);})}
-  </div>;
+</>}
+    </CadreTelephone>
+  );
 }
 
 function NotifBulle({slot,pool,i}){
@@ -5012,12 +5063,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
 
             {/* Phone (droite desktop / bas mobile) */}
             <div className="demo-col-phone" style={{order:3,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-            {/* Phone frame — style hero, ecrans propres, sans scroll */}
-            <div className="demo-phone" style={{ flexShrink: 0, background: "#0D1B2A", borderRadius: 42, padding: "12px 11px", boxShadow: "0 30px 70px rgba(13,27,42,.4)" }}>
-              <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>
-                <div style={{ width:70, height:5, borderRadius:3, background:"rgba(255,255,255,.22)" }}/>
-              </div>
-              <div className="demo-frame" style={{ background:"#FDFBF8", borderRadius:30, overflow:"hidden", display:"flex", flexDirection:"column", position:"relative" }}>
+            {/* Le même cadre qu'au hero : halo, flottement, coque et rayon
+                identiques. Sans les bulles de notification, qui tomberaient
+                sur la colonne d'explication à gauche ; et avec un flottement
+                sans rotation, parce qu'ici on clique. */}
+            <CadreTelephone className="demo-phone" doux ecranClassName="demo-frame" ecranStyle={{position:"relative"}}>
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
                 <div className="topbar">
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -5061,11 +5111,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 </div>
                 <div className="demo-bnav"><BottomNav groups={demoParent?GROUPS_P:GROUPS_AM} page={demoPage} setPage={goDemo} role={demoRole} pmiNonLus={0} flat/></div>
                 </div>{/* /demo-zoom */}
-              </div>
-              <div style={{ display:"flex", justifyContent:"center", paddingTop:8 }}>
-                <div style={{ width:90, height:4, background:"rgba(255,255,255,.25)", borderRadius:2 }}/>
-              </div>
-            </div>
+            </CadreTelephone>
             </div>{/* /colonne phone */}
             {/* La démo est le meilleur argument de la page : l'action se
                 propose juste après l'avoir vue, et le prix est dit là, en
@@ -5136,9 +5182,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         .lp-hero-text{flex:1 1 460px;min-width:0;text-align:center}
         .lp-hero-visual{flex:0 0 auto;position:relative;display:flex;flex-direction:column;align-items:center}
         .lp-hero-tags{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:16px}
-        @keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-16px) rotate(1.2deg)}}
         @keyframes notifpop{0%{opacity:0;transform:translateY(12px) scale(.92)}14%,82%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-10px) scale(.95)}}
-        @keyframes glowpulse{0%,100%{opacity:.35}50%{opacity:.6}}
         @media(max-width:820px){
           .lp-hero-grid{flex-direction:column;gap:34px}
           .lp-hero-text{text-align:center;flex-basis:auto}
