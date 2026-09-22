@@ -67,6 +67,18 @@ export const COUVERTURES = [
    "Cent vingt heures, dont une grande partie avant le premier enfant accueilli"],
   ["aeeh-majoration-cmg-enfant-handicap-assistante-maternelle", "Pajemploi et aides",
    "Trente pour cent de CMG en plus, et pour tous les enfants de la famille"],
+  // Les cinq articles écrits d'avance. Comme les autres, la phrase n'est pas
+  // le titre : c'est le fait que l'article établit.
+  ["grossesse-protection-retrait-enfant-assistante-maternelle", "Contrat et paie",
+   "Un retrait d’enfant décidé pendant la grossesse est nul, pas seulement irrégulier"],
+  ["conge-maternite-assistante-maternelle-indemnites", "Contrat et paie",
+   "Trois mois de salaires fixent l’indemnité de tout le congé. Un contrat perdu avant pèse longtemps"],
+  ["conges-evenements-familiaux-assistante-maternelle", "Contrat et paie",
+   "Sans ancienneté, sans perte de salaire, et l’employeur ne peut pas les refuser"],
+  ["indemnite-depart-retraite-assistante-maternelle", "Contrat et paie",
+   "Une indemnité par famille, et ce n’est pas la famille qui la paie"],
+  ["formation-continue-assistante-maternelle-58-heures", "Devenir assistante maternelle",
+   "Cinquante-huit heures par an, remises à zéro chaque janvier et jamais reportées"],
 ];
 
 async function polices() {

@@ -57,5 +57,13 @@ export const ordre = [
   "demission-assistante-maternelle-preavis-procedure",
   "formation-obligatoire-120-heures-assistante-maternelle",
   "prevoyance-ircem-assistante-maternelle",
+  // Cinq articles écrits d'avance, tous sourcés. Le fil conducteur du lot :
+  // ce qui change quand on a plusieurs employeurs — c'est la particularité du
+  // métier, et c'est là que les droits se perdent le plus souvent.
+  "grossesse-protection-retrait-enfant-assistante-maternelle",
+  "conge-maternite-assistante-maternelle-indemnites",
+  "conges-evenements-familiaux-assistante-maternelle",
+  "indemnite-depart-retraite-assistante-maternelle",
+  "formation-continue-assistante-maternelle-58-heures",
 ];
 export default ordre;
