@@ -4355,6 +4355,161 @@ function BlocErreurAuth({err,errAction,email,resetInfo,onSwitch,onReset}){
   </div>;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LA LISTE D'ATTENTE
+// ──────────────────────────────────────────────────────────────────────────
+// Tant que MAINTENANCE vaut true, la landing est une vitrine : on peut tout
+// lire, rien créer. Une personne qui cliquait « Se connecter » voyait une
+// modale « Ouverture très bientôt » qui ne recueillait RIEN. Elle repartait,
+// et nous n'avions aucun moyen de la prévenir le jour de l'ouverture — alors
+// que c'est exactement la personne qu'on cherche : elle est venue, elle a lu,
+// elle a cliqué pour s'inscrire.
+//
+// Trois portes, un seul formulaire :
+//   — la minuterie, quelques secondes après l'arrivée, une fois ;
+//   — le bouton de la barre de navigation, qui en vitrine ne peut pas
+//     honnêtement dire « Se connecter » et dit « Être prévenue » ;
+//   — un clic sur n'importe quel bouton d'inscription de la page.
+//
+// Deux traces dans le navigateur, et rien d'autre :
+//   timat:attente:vue      la fenêtre s'est déjà ouverte toute seule
+//   timat:attente:inscrit  l'adresse est enregistrée
+// La seconde empêche aussi la minuterie : réclamer une adresse déjà donnée
+// est la meilleure façon de la faire retirer.
+//
+// L'enregistrement passe par /api/inscription-releve avec source=liste-attente.
+// Pas de treizième fonction serverless : le plan Hobby s'arrête à douze, et
+// le projet y est déjà.
+
+export const CLE_ATTENTE_VUE = "timat:attente:vue";
+export const CLE_ATTENTE_INSCRIT = "timat:attente:inscrit";
+// Le consentement se prouve par le texte affiché au moment du clic. Cette
+// constante DOIT rester identique à TEXTE_CONSENTEMENT_ATTENTE dans
+// api/inscription-releve.js — une barrière d'audit compare les deux.
+export const CONSENTEMENT_ATTENTE =
+  "J'accepte d'être prévenue par e-mail de l'ouverture des inscriptions à TiMat. " +
+  "Mon adresse ne sert qu'à cela, et je peux me désinscrire à tout moment via le " +
+  "lien présent dans chaque e-mail.";
+
+export const dejaInscriteAttente = () => {
+  try { return localStorage.getItem(CLE_ATTENTE_INSCRIT) === "1"; } catch(e) { return false; }
+};
+
+export function ModaleListeAttente({ ouverte, fermer }){
+  const [email,setEmail] = useState("");
+  const [piege,setPiege] = useState("");   // leurre à robots, invisible à l'œil
+  const [etat,setEtat] = useState("saisie"); // saisie | envoi | fait
+  const [err,setErr] = useState("");
+  const champRef = useRef(null);
+
+  useEffect(()=>{
+    if(!ouverte) return;
+    setErr("");
+    // Le focus va au champ : la fenêtre s'ouvre pour ça, et une personne au
+    // clavier ne doit pas avoir à la traverser pour le trouver.
+    const t = setTimeout(()=>champRef.current?.focus(), 120);
+    const echap = (e)=>{ if(e.key === "Escape") fermer(); };
+    window.addEventListener("keydown", echap);
+    return ()=>{ clearTimeout(t); window.removeEventListener("keydown", echap); };
+  },[ouverte,fermer]);
+
+  if(!ouverte) return null;
+
+  const envoyer = async (e)=>{
+    e.preventDefault();
+    const propre = email.trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(propre)){
+      setErr("Cette adresse ne semble pas valide."); champRef.current?.focus(); return;
+    }
+    setEtat("envoi"); setErr("");
+    try{
+      const r = await fetch("/api/inscription-releve", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ email:propre, consentement:true, piege, source:"liste-attente" }),
+      });
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(j.error || "L'enregistrement a échoué.");
+      try{ localStorage.setItem(CLE_ATTENTE_INSCRIT,"1"); }catch(e2){}
+      setEtat("fait");
+    }catch(e2){
+      setEtat("saisie");
+      setErr(e2.message || "Réessayez dans un instant.");
+    }
+  };
+
+  const champ = {
+    width:"100%", padding:"13px 14px", borderRadius:12, border:"1.5px solid #EDE6DE",
+    fontSize:15, fontFamily:"inherit", color:"#2E4859", background:"#fff", outline:"none",
+  };
+
+  return (
+    <div role="dialog" aria-modal="true" aria-labelledby="attente-titre"
+      onClick={e=>e.target===e.currentTarget&&fermer()}
+      style={{position:"fixed",inset:0,background:"rgba(13,27,42,.72)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:400,padding:20,animation:"demoScreenIn .25s ease"}}>
+      <div style={{background:"#FDFBF8",borderRadius:22,width:"100%",maxWidth:460,overflow:"hidden",boxShadow:"0 24px 80px rgba(13,27,42,.45)",maxHeight:"92vh",overflowY:"auto"}}>
+        <div style={{background:"linear-gradient(165deg,#24404F 0%,#2E4859 62%,#2A4D53 100%)",padding:"22px 26px 20px",position:"relative"}}>
+          <button onClick={fermer} aria-label="Fermer"
+            style={{position:"absolute",top:12,right:12,width:34,height:34,borderRadius:"50%",border:"none",cursor:"pointer",background:"rgba(255,255,255,.12)",color:"#fff",fontSize:16,fontFamily:"inherit",lineHeight:1}}>✕</button>
+          <span style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(93,169,161,.16)",border:"1px solid rgba(93,169,161,.42)",color:"#BFE3DE",fontSize:11.5,fontWeight:700,letterSpacing:".9px",textTransform:"uppercase",padding:"6px 14px",borderRadius:99,marginBottom:12}}>
+            <span style={{width:7,height:7,borderRadius:"50%",background:"#5DA9A1"}}/>Ouverture prochaine
+          </span>
+          <div id="attente-titre" style={{fontFamily:"'Quicksand','Outfit',system-ui,sans-serif",fontSize:22,fontWeight:700,color:"#fff",lineHeight:1.25}}>
+            {etat==="fait" ? "C'est noté." : "Soyez prévenue à l'ouverture"}
+          </div>
+        </div>
+
+        <div style={{padding:"22px 26px 26px"}}>
+          {etat==="fait" ? (
+            <>
+              <p style={{fontSize:14.5,lineHeight:1.7,color:"#55707C",margin:"0 0 18px"}}>
+                Vous recevrez un e-mail le jour où les inscriptions ouvrent. Un seul.
+                Vous pourrez créer votre compte dans la foulée : <b style={{color:"#2E4859"}}>deux mois offerts, sans carte bancaire</b>.
+              </p>
+              <p style={{fontSize:14.5,lineHeight:1.7,color:"#55707C",margin:"0 0 14px"}}>
+                D'ici là, tout ceci est déjà en ligne, gratuitement et sans compte :
+              </p>
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+                {[["Les simulateurs gratuits","/outils.html"],["Les guides du blog","/blog"],["L'espace parent employeur","/parents"]].map(([t,u])=>(
+                  <a key={u} href={u} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,textDecoration:"none",color:"#2E4859",fontSize:14.5,fontWeight:600,padding:"11px 13px",background:"#fff",border:"1px solid #EDE6DE",borderRadius:12}}>
+                    <span>{t}</span><span style={{color:"#9E5341"}}>→</span>
+                  </a>
+                ))}
+              </div>
+              <button onClick={fermer} style={{width:"100%",padding:"13px 18px",borderRadius:12,border:"none",cursor:"pointer",background:"#B4543F",color:"#fff",fontSize:15,fontWeight:700,fontFamily:"inherit"}}>Fermer</button>
+            </>
+          ) : (
+            <form onSubmit={envoyer} noValidate>
+              <p style={{fontSize:14.5,lineHeight:1.7,color:"#55707C",margin:"0 0 18px"}}>
+                L'application est prête ; nous finissons les derniers réglages avant
+                d'ouvrir les inscriptions. Laissez votre adresse et vous serez
+                prévenue le jour même — <b style={{color:"#2E4859"}}>un seul e-mail</b>, rien d'autre.
+              </p>
+              {/* Leurre : hors de l'écran et hors du parcours clavier, un robot
+                  le remplit quand même. La route renvoie alors un succès muet. */}
+              <input type="text" name="site" tabIndex={-1} autoComplete="off" aria-hidden="true"
+                value={piege} onChange={e=>setPiege(e.target.value)}
+                style={{position:"absolute",left:"-9999px",width:1,height:1,opacity:0}}/>
+              <label htmlFor="attente-email" style={{display:"block",fontSize:12.5,fontWeight:700,color:"#2E4859",marginBottom:7}}>Votre adresse e-mail</label>
+              <input id="attente-email" ref={champRef} type="email" inputMode="email" autoComplete="email"
+                placeholder="vous@exemple.fr" value={email} onChange={e=>{setEmail(e.target.value);setErr("");}}
+                aria-invalid={err?"true":"false"} aria-describedby={err?"attente-err":undefined}
+                style={{...champ, borderColor: err ? "#B3261E" : "#EDE6DE"}}/>
+              {err && <div id="attente-err" role="alert" style={{fontSize:13,color:"#B3261E",fontWeight:600,marginTop:8}}>{err}</div>}
+              <button type="submit" disabled={etat==="envoi"}
+                style={{width:"100%",marginTop:14,padding:"14px 18px",borderRadius:12,border:"none",cursor:etat==="envoi"?"wait":"pointer",background:"#B4543F",color:"#fff",fontSize:15,fontWeight:700,fontFamily:"inherit",opacity:etat==="envoi"?.7:1}}>
+                {etat==="envoi" ? "Enregistrement…" : "Prévenez-moi à l'ouverture →"}
+              </button>
+              <p style={{fontSize:11.5,lineHeight:1.6,color:"#7C8A90",margin:"12px 0 0"}}>{CONSENTEMENT_ATTENTE}</p>
+              <button type="button" onClick={fermer}
+                style={{display:"block",width:"100%",marginTop:10,background:"none",border:"none",cursor:"pointer",color:"#55707C",fontSize:13,fontWeight:600,fontFamily:"inherit",textDecoration:"underline"}}>Non merci, je regarde d'abord</button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModalBrut, setShowModalBrut] = useState(false);
@@ -4364,6 +4519,24 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   // passent par ce garde-fou, ce qui evite d'avoir a neutraliser chaque bouton.
   const showModal = vitrine ? false : showModalBrut;
   const setShowModal = (v) => { if(vitrine){ if(v) setShowBientot(true); return; } setShowModalBrut(v); };
+
+  // LA MINUTERIE. Sept secondes : le temps de lire le hero et de comprendre de
+  // quoi il s'agit. Ouvrir plus tôt, c'est demander une adresse à quelqu'un qui
+  // ne sait pas encore à qui il la donne — et c'est le meilleur moyen de la voir
+  // fermer sans lire. Une seule fois par navigateur, jamais si l'adresse est
+  // déjà donnée, jamais dans l'aperçu du back-office.
+  useEffect(()=>{
+    if(!vitrine || preview) return;
+    try{
+      if(localStorage.getItem(CLE_ATTENTE_VUE)==="1") return;
+      if(dejaInscriteAttente()) return;
+    }catch(e){ return; }
+    const t = setTimeout(()=>{
+      setShowBientot(true);
+      try{ localStorage.setItem(CLE_ATTENTE_VUE,"1"); }catch(e){}
+    }, 7000);
+    return ()=>clearTimeout(t);
+  },[vitrine,preview]);
   const [showLegal, setShowLegal] = useState(null);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
@@ -4427,6 +4600,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     catch(e){ return false; }
   });
   const demoParent = demoRole==="parent";
+
+  // En vitrine, « Se connecter » est faux : personne ne peut se connecter. Le
+  // bouton ouvre déjà la liste d'attente ; il le dit maintenant. Et quand
+  // l'adresse est déjà donnée, il cesse de la redemander.
+  const [inscriteAttente,setInscriteAttente] = useState(()=>dejaInscriteAttente());
+  useEffect(()=>{ if(!showBientot) setInscriteAttente(dejaInscriteAttente()); },[showBientot]);
+  const libelleCtaNav = !vitrine ? "Se connecter →"
+    : inscriteAttente ? "Vous êtes sur la liste ✓" : "Être prévenue à l'ouverture →";
+  const libelleCtaNavCourt = !vitrine ? "Commencer →"
+    : inscriteAttente ? "Sur la liste ✓" : "Être prévenue →";
   // L'utilisatrice de la démo : Marie côté assistante maternelle, Sophie côté
   // parent — la mère de Léo, dont on regarde la journée.
   const demoUser = demoParent ? D.parents[0] : D.asmat;
@@ -5032,7 +5215,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               )}
             </nav>
             <button className="sticky-burger" onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:18,fontWeight:700,width:40,height:40,borderRadius:10,fontFamily:"inherit",alignItems:"center",justifyContent:"center" }}>☰</button>
-            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
+            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
           </div>
         </div>
       </div>
@@ -5053,12 +5236,12 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.10)";e.currentTarget.style.color="#F0A98F";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
             </nav>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(46,72,89,.06)", color: L.navHamburgerColor||L.navBtnColor||"#2E4859", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(46,72,89,.25)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{menuOpen?"✕":"☰"}</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Commencer →</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{libelleCtaNavCourt}</button>
           </div>
         </div>
         {/* Dropdown menu (desktop + mobile) */}
@@ -5885,29 +6068,10 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* MODALE VITRINE : remplace l'authentification avant l'ouverture */}
-      {showBientot && (
-        <div onClick={e => e.target === e.currentTarget && setShowBientot(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#FDFAF8", borderRadius: 20, width: "100%", maxWidth: 420, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,.5)", borderTop: "4px solid #C76754" }}>
-            <div style={{ padding: 26 }}>
-              <div style={{ fontFamily: "Fraunces,Georgia,serif", fontSize: 21, fontWeight: 700, color: "#0D1B2A", marginBottom: 10 }}>Ouverture tres bientot</div>
-              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#4A6270", margin: "0 0 18px" }}>
-                Nous mettons la derniere main a l'application. Les inscriptions et les connexions ouvriront au lancement.
-              </p>
-              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "#4A6270", margin: "0 0 18px" }}>
-                En attendant, tout le reste est deja accessible :
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-                {[["Les guides du blog","/blog"],["Les simulateurs gratuits","/outils.html"],["L'espace parent employeur","/parents"]].map(([t,u])=>(
-                  <a key={u} href={u} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, textDecoration: "none", color: "#0D1B2A", fontSize: 14.5, fontWeight: 600, padding: "10px 12px", background: "#fff", border: "1px solid #E8E4E0", borderRadius: 10 }}>
-                    <span>{t}</span><span style={{ color: "#C76754" }}>&rarr;</span>
-                  </a>
-                ))}
-              </div>
-              <button onClick={()=>setShowBientot(false)} style={{ width: "100%", padding: "12px 18px", borderRadius: 10, border: "none", cursor: "pointer", background: "#C76754", color: "#fff", fontSize: 15, fontWeight: 700 }}>Fermer</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* La liste d'attente. Elle remplace la modale « Ouverture très bientôt »
+          qui disait la même chose et ne recueillait rien : la personne repartait
+          sans qu'on puisse la prévenir le jour de l'ouverture. */}
+      <ModaleListeAttente ouverte={showBientot} fermer={()=>setShowBientot(false)}/>
 
       {/* MODALE AUTH */}
       {showModal && (
