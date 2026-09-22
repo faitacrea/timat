@@ -200,102 +200,32 @@
   .foot a:hover{color:#fff}
   .foot-bottom{border-top:1px solid rgba(255,255,255,.18);padding-top:18px;font-size:11.5px;color:rgba(255,255,255,.6)}
 
-  /* DEMO facon landing : onglets + explication + telephone */
-  .demo-layout{display:grid;grid-template-columns:200px 1fr 290px;gap:26px;align-items:center;max-width:1100px;margin:0 auto}
-  @media(max-width:1000px){.demo-layout{grid-template-columns:1fr;gap:20px}}
-  .demo-tabs{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:8px}
-  @media(max-width:1000px){.demo-tabs{flex-direction:row;overflow-x:auto;-webkit-overflow-scrolling:touch}}
-  .dtab{display:flex;align-items:center;gap:9px;padding:12px 13px;border:none;cursor:pointer;text-align:left;width:100%;background:transparent;color:rgba(255,255,255,.7);border-radius:11px;font-family:inherit;transition:background .2s,color .2s;white-space:nowrap}
-  .dtab .di{font-size:18px;transition:font-size .2s}
-  .dtab .dl{font-size:13px;font-weight:700;line-height:1.2}
-  .dtab:hover{background:rgba(255,255,255,.07);color:#fff}
-  .dtab.on{background:linear-gradient(135deg,rgba(93,169,161,.28),rgba(93,169,161,.14));color:#fff;box-shadow:0 4px 16px rgba(93,169,161,.18)}
-  .dtab.on .di{font-size:20px}
-  .demo-explain .dd{font-family:var(--titre);font-size:18px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:12px}
-  .demo-explain .dp{display:flex;gap:11px;align-items:center;font-size:14.5px;color:rgba(255,255,255,.88);line-height:1.4;margin-bottom:9px}
-  .demo-explain .dp b{color:#5DA9A1;font-size:15px}
-  .demo-beam{position:relative;height:2px;margin-top:20px;background:linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.3),rgba(93,169,161,0))}
-  @media(max-width:1000px){.demo-beam{display:none}}
-  .demo-phone{flex-shrink:0;background:#0D1B2A;border-radius:42px;padding:12px 11px;box-shadow:0 30px 70px rgba(13,27,42,.4);max-width:290px;margin:0 auto;width:100%;animation:float 6s ease-in-out infinite}
-  .demo-notch{width:70px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);margin:0 auto 6px}
-  .demo-frame{background:#FDFBF8;border-radius:30px;overflow:hidden;display:flex;flex-direction:column;height:470px;position:relative}
-  .dtopbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--br);background:#fff}
-  .dtopbar .dlogo{font-family:var(--titre);font-weight:700;font-size:15px;color:var(--marine)}
-  .dtopbar .dlogo i{color:var(--terra);font-style:normal}
-  .dtopbar .dav{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--teal));display:flex;align-items:center;justify-content:center;font-size:12px}
-  .dbody{flex:1;padding:12px;overflow:hidden}
-  .dscreen{display:none;animation:demoIn .45s ease}
-  .dscreen.on{display:block}
-  @keyframes demoIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  .dh{font-family:var(--titre);font-size:13px;font-weight:700;color:var(--marine);margin-bottom:9px}
-  .drow{background:#fff;border:1px solid var(--br);border-radius:11px;padding:9px 10px;margin-bottom:7px;display:flex;align-items:center;gap:9px}
-  .drow .e{font-size:16px}
-  .drow .t{font-size:11.5px;font-weight:700;color:var(--marine);display:block}
-  .drow .d{font-size:9.5px;color:var(--muted);display:block}
-  .drow .h{margin-left:auto;font-size:9px;color:var(--sage);font-weight:700}
-  .dnav{display:flex;border-top:1px solid var(--br);background:#fff;padding:7px 4px 9px}
-  .dnav span{flex:1;text-align:center;font-size:8.5px;color:var(--muted);font-weight:600}
-  .dnav span i{display:block;font-size:15px;font-style:normal;margin-bottom:2px}
-  .dnav span.on{color:var(--terraD)}
-  .dcard{background:linear-gradient(135deg,#2E4859,#2A6F6A);border-radius:12px;padding:12px;color:#fff;margin-bottom:8px}
-  .dcard .lbl{font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.5px}
-  .dcard .val{font-family:var(--titre);font-size:21px;font-weight:700;margin:2px 0}
-  .dcard .sub{font-size:9.5px;opacity:.75}
-  .dmsg{border-radius:11px;padding:8px 10px;margin-bottom:7px;font-size:10.5px;line-height:1.45;max-width:82%}
-  .dmsg.them{background:#fff;border:1px solid var(--br);color:var(--marine)}
-  .dmsg.me{background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;margin-left:auto}
-  .dmsg .who{display:block;font-size:8.5px;opacity:.6;margin-bottom:2px;font-weight:700}
-  .dcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:9px}
-  .dcal span{aspect-ratio:1;border-radius:5px;background:#fff;border:1px solid var(--br);font-size:8px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
-  .dcal span.p{background:rgba(93,169,161,.22);border-color:rgba(93,169,161,.4);color:#2E7F73;font-weight:700}
+  /* Les styles de l'ancienne démo dessinée à la main — onglets, téléphone,
+     écrans, menus miniatures : 74 règles — ont disparu avec elle. La démo est
+     maintenant l'application elle-même, dans un cadre, et elle apporte ses
+     propres styles. */
+  .mot{max-width:720px;margin:0 auto;text-align:center}
+  .mot-lab{display:inline-block;background:rgba(93,169,161,.14);border:1px solid rgba(93,169,161,.35);
+    color:var(--teal-fonce);font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+    padding:5px 13px;border-radius:99px;margin-bottom:18px}
+  .mot blockquote{font-size:16px;line-height:1.75;color:var(--marine);margin:0 0 16px;font-style:italic}
+  .mot-sig{font-family:var(--titre);font-weight:700;font-size:14.5px;color:var(--terra-texte)}
 
-  .dhero{background:linear-gradient(160deg,#FDF6EE,#FBEFE6);border:1px solid #F2E3D6;border-radius:14px;padding:11px;margin-bottom:10px}
-  .ddate{display:inline-block;background:#fff;border-radius:20px;padding:3px 9px;font-size:7.5px;font-family:'DM Mono',monospace;color:#5B7FA8;letter-spacing:.5px;margin-bottom:6px;font-weight:700}
-  .dtitle{font-family:var(--titre);font-size:14px;font-weight:700;color:var(--marine);margin-bottom:2px}
-  .dsub{font-size:9.5px;color:var(--muted);margin-bottom:8px}
-  .dabs{display:inline-block;background:#2E4859;color:#fff;font-size:9px;font-weight:700;padding:6px 11px;border-radius:9px}
-  .dq{font-size:9px;font-weight:700;color:var(--muted);margin:9px 0 6px}
-  .dchips{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:9px}
-  .dchip{border-radius:10px;padding:8px 3px;text-align:center;font-size:7.5px;font-weight:700}
-  .dchip i{display:block;font-size:14px;font-style:normal;margin-bottom:2px}
-  .dsec{font-size:8px;font-weight:700;color:#B08D7A;letter-spacing:.6px;margin-bottom:6px}
-  .dmenu{background:#fff;border-radius:12px;padding:4px}
-  .dmi{display:flex;align-items:center;gap:8px;padding:7px 6px}
-  .dmi i{font-size:14px;font-style:normal;width:20px;text-align:center}
-  .dmi b{display:block;font-size:10px;color:var(--marine);font-weight:700}
-  .dmi span{display:block;font-size:8px;color:var(--muted)}
-  .dcal span.a{background:rgba(200,75,49,.12);border-color:rgba(200,75,49,.3);color:var(--terraD)}
-  .dtopbar .dtopright{display:flex;align-items:center;gap:5px;font-size:10px}
-  .dtopbar .dtopright b{font-size:9px;color:var(--marine)}
-  .dleg{display:flex;gap:12px;font-size:8px;color:var(--muted);font-weight:700}
-  .dleg i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:4px;vertical-align:-1px}
-  .dleg .lp{background:rgba(93,169,161,.35)}
-  .dleg .la{background:rgba(180,84,63,.3)}
-  .dphoto{margin-top:8px;background:#fff;border:1px dashed var(--br);border-radius:11px;padding:9px;
-    font-size:10px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:7px}
-  .dphoto span{font-size:15px}
-  .dligne{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;
-    border-bottom:1px solid var(--br);font-size:10px;color:var(--muted)}
-  .dligne b{font-size:11px;color:var(--marine);white-space:nowrap}
-  .dligne.moins b{color:var(--teal-fonce)}
-  .dligne+.dcard{margin-top:10px}
-  .dsaisie{margin-top:10px;background:#fff;border:1px solid var(--br);border-radius:99px;padding:8px 12px;
-    font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
-  .dsaisie span{color:var(--terra-fonce);font-size:12px}
+  .cadre-demo{max-width:1200px;margin:0 auto}
+  .cadre-demo iframe{width:100%;border:0;display:block;height:1180px;background:transparent;color-scheme:normal}
+  @media(min-width:900px){.cadre-demo iframe{height:760px}}
+  .sans-js{color:var(--muted);text-align:center;padding:30px 12px}
+  .sans-js a{color:var(--terra-texte)}
 
-  /* LES DEUX MENUS DE L'APPLICATION, à taille lisible.
-     Dans le téléphone de la démo ils faisaient 8 px de haut : personne ne les
-     lisait, et la page perdait ainsi son meilleur argument — l'étendue de ce
-     que le parent trouve dans son espace. */
   .menus{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;max-width:900px;margin:34px auto 0}
-  .menucol{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px}
-  .menucol h3{font-size:15px;color:#fff;margin-bottom:14px}
+  .menucol{background:#fff;border:1px solid var(--br);border-radius:18px;padding:20px;box-shadow:0 4px 16px rgba(46,72,89,.05)}
+  .menucol h3{font-size:15px;color:var(--marine);margin-bottom:14px}
   .menucol ul{list-style:none;margin:0;padding:0}
-  .menucol li{display:grid;grid-template-columns:26px 1fr;gap:4px 10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.09)}
+  .menucol li{display:grid;grid-template-columns:26px 1fr;gap:4px 10px;padding:9px 0;border-top:1px solid var(--br)}
   .menucol li:first-child{border-top:none}
   .menucol li i{grid-row:span 2;font-style:normal;font-size:17px;line-height:1.2}
-  .menucol li b{font-size:13.5px;color:#fff;font-weight:700}
-  .menucol li span{font-size:12px;color:rgba(255,255,255,.66);line-height:1.45}
+  .menucol li b{font-size:13.5px;color:var(--marine);font-weight:700}
+  .menucol li span{font-size:12px;color:var(--muted);line-height:1.45}
 </style>
 </head>
 <body>
@@ -342,115 +272,27 @@
      barrière d'audit vérifie qu'ils ne s'en écartent pas — l'ancienne version
      avait déjà perdu « Mes alertes » en route sans que personne ne le voie.
      ================================================================= -->
-<section class="sec-dark" id="decouvrir">
+<section class="sec-cream" id="decouvrir">
   <div class="wrap">
     <div class="sectitle fade">
       <h2>Votre espace parent, en vrai</h2>
-      <p>Cinq écrans, tels que vous les verrez. Cliquez pour les parcourir.</p>
+      <p>Ce ne sont pas des images : c'est l'application elle-même, avec des données d'exemple. Cliquez pour la parcourir.</p>
     </div>
-    <div class="demo-layout fade">
+    <!-- LA VRAIE APPLICATION, CÔTÉ PARENT.
+         Ce cadre charge la démo de l'accueil avec ?demo=parent : les mêmes
+         composants React que l'application une fois connectée — AccueilParent,
+         Pointage, AdminFinances, Messagerie — servis avec la prop role="parent"
+         et des données d'exemple. Plus rien n'est dessiné à la main ici, donc
+         plus rien ne peut dériver.
 
-      <div class="demo-tabs" id="dtabs">
-        <button class="dtab on" data-p="accueil"><span class="di">🏠</span><span class="dl">Le quotidien</span></button>
-        <button class="dtab" data-p="journee"><span class="di">📔</span><span class="dl">Sa journée</span></button>
-        <button class="dtab" data-p="pointage"><span class="di">⏰</span><span class="dl">Ses heures</span></button>
-        <button class="dtab" data-p="cout"><span class="di">💶</span><span class="dl">Coût &amp; aides</span></button>
-        <button class="dtab" data-p="messages"><span class="di">💬</span><span class="dl">Messagerie</span></button>
-      </div>
-
-      <div class="demo-explain">
-        <div id="dexp"></div>
-        <div class="demo-beam"></div>
-      </div>
-
-      <div class="demo-col-phone">
-        <div class="demo-phone">
-          <div class="demo-notch"></div>
-          <div class="demo-frame">
-            <div class="dtopbar">
-              <span class="dlogo">tim<i>at</i></span>
-              <span class="dtopright">🔔 🌙 <b>Julie</b></span>
-            </div>
-            <div class="dbody">
-
-              <!-- 1. LE QUOTIDIEN -->
-              <div class="dscreen on" data-s="accueil">
-                <div class="dhero">
-                  <span class="ddate">MERCREDI 15 JUILLET</span>
-                  <div class="dtitle">La journée de Chloé ✨</div>
-                  <div class="dsub">Arrivée à 8 h 12 · en cours</div>
-                  <span class="dabs">🤒 Déclarer une absence</span>
-                </div>
-                <div class="dq">Que voulez-vous faire ?</div>
-                <div class="dchips">
-                  <div class="dchip" style="background:#FBF0DC;color:#8A6C30"><i>📔</i>La journée</div>
-                  <div class="dchip" style="background:#E7F3EF;color:#2F655F"><i>⏰</i>Ses heures</div>
-                  <div class="dchip" style="background:#FBEDE7;color:var(--terra-texte)"><i>💬</i>Messages</div>
-                  <div class="dchip" style="background:#E8EEF8;color:#3A5E8E"><i>📄</i>Documents</div>
-                </div>
-                <div class="drow"><span class="e">🍲</span><span><span class="t">Déjeuner terminé</span><span class="d">A bien mangé</span></span><span class="h">12 h 20</span></div>
-                <div class="drow"><span class="e">😴</span><span><span class="t">Sieste en cours</span><span class="d">Endormie à 13 h 05</span></span><span class="h">13 h 05</span></div>
-              </div>
-
-              <!-- 2. SA JOURNÉE -->
-              <div class="dscreen" data-s="journee">
-                <div class="dsec">SA JOURNÉE — MERCREDI 15 JUILLET</div>
-                <div class="drow"><span class="e">🥣</span><span><span class="t">Petit-déjeuner</span><span class="d">Tout fini</span></span><span class="h">8 h 40</span></div>
-                <div class="drow"><span class="e">🎨</span><span><span class="t">Peinture à doigts</span><span class="d">Avec Léo et Nina</span></span><span class="h">10 h 15</span></div>
-                <div class="drow"><span class="e">🍲</span><span><span class="t">Déjeuner</span><span class="d">Purée de carottes, compote</span></span><span class="h">12 h 20</span></div>
-                <div class="drow"><span class="e">😴</span><span><span class="t">Sieste</span><span class="d">1 h 40, réveil calme</span></span><span class="h">13 h 05</span></div>
-                <div class="dphoto"><span>📷</span> 2 photos partagées aujourd'hui</div>
-              </div>
-
-              <!-- 3. SES HEURES -->
-              <div class="dscreen" data-s="pointage">
-                <div class="dsec">JUILLET 2026</div>
-                <div class="dcard">
-                  <span class="lbl">Heures pointées ce mois</span>
-                  <span class="val">142 h 30</span>
-                  <span class="sub">dont 4 h 30 complémentaires</span>
-                </div>
-                <div class="dcal">
-                  <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
-                  <span class="p">1</span><span class="p">2</span><span class="p">3</span><span class="p">4</span><span class="p">5</span><span>6</span><span>7</span>
-                  <span class="p">8</span><span class="p">9</span><span class="p">10</span><span class="a">11</span><span class="p">12</span><span>13</span><span>14</span>
-                  <span class="p">15</span><span class="p">16</span><span class="p">17</span><span class="p">18</span><span class="p">19</span><span>20</span><span>21</span>
-                </div>
-                <div class="dleg"><span><i class="lp"></i>Présente</span><span><i class="la"></i>Absence déclarée</span></div>
-              </div>
-
-              <!-- 4. COÛT & AIDES -->
-              <div class="dscreen" data-s="cout">
-                <div class="dsec">CE QUE LA GARDE VOUS COÛTE</div>
-                <div class="dligne"><span>Coût mensuel de l'accueil</span><b>540,10 €</b></div>
-                <div class="dligne moins"><span>CMG versé par la CAF</span><b>− 313,06 €</b></div>
-                <div class="dcard">
-                  <span class="lbl">Reste à charge</span>
-                  <span class="val">227,04 €</span>
-                  <span class="sub">avant crédit d'impôt de 50 %</span>
-                </div>
-                <div class="drow"><span class="e">🧮</span><span><span class="t">Simulateur CMG</span><span class="d">Selon vos revenus et vos heures</span></span><span class="h">→</span></div>
-              </div>
-
-              <!-- 5. MESSAGERIE -->
-              <div class="dscreen" data-s="messages">
-                <div class="dsec">SANDRA — ASSISTANTE MATERNELLE</div>
-                <div class="dmsg them"><span class="who">Sandra · 12 h 22</span>Chloé a très bien mangé ce midi 🙂 Je vous mets une photo de la peinture de ce matin.</div>
-                <div class="dmsg me"><span class="who">Vous · 12 h 41</span>Merci ! On viendra la chercher vers 17 h 30 ce soir.</div>
-                <div class="dmsg them"><span class="who">Sandra · 12 h 44</span>C'est noté, à ce soir.</div>
-                <div class="dsaisie">Écrire un message…<span>➤</span></div>
-              </div>
-
-            </div>
-            <div class="dnav">
-              <span class="on" data-n="accueil"><i>🏠</i>Accueil</span>
-              <span data-n="enfant"><i>👶</i>Mon enfant</span>
-              <span data-n="admin"><i>🗂️</i>Administratif</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+         loading="lazy" : le cadre ne télécharge l'application qu'une fois
+         arrivé près de l'écran. Une visiteuse qui lit le hero et repart ne
+         paie pas le bundle. -->
+    <div class="cadre-demo fade">
+      <iframe id="demo-app" src="/?demo=parent&amp;nu=1" title="La démonstration de l'espace parent TiMat"
+              loading="lazy" scrolling="no"></iframe>
+      <noscript><p class="sans-js">La démonstration a besoin de JavaScript. <a href="/?demo=parent">L'ouvrir dans un onglet</a>.</p></noscript>
+    </div>
     </div>
 
     <!-- LES DEUX MENUS, À TAILLE LISIBLE.
@@ -587,6 +429,16 @@
   </div>
 </section>
 
+<section class="sec-cream">
+  <div class="wrap">
+    <div class="mot fade">
+      <span class="mot-lab">Le mot de la fondatrice</span>
+      <blockquote>« J'ai un CAP petite enfance et j'ai travaillé plusieurs années en crèche. J'ai créé TiMat en préparant mon propre agrément, quand j'ai découvert la montagne administrative que ce métier impose et que personne n'explique nulle part.<br><br>Côté parent, j'ai voulu l'inverse d'une application de plus : vous ne payez rien, vous ne recevez rien à remplir, et vous voyez simplement la journée de votre enfant. Les photos restent entre vous deux. Chaque calcul s'appuie sur un texte que je cite, pour que vous puissiez le vérifier vous-même. »</blockquote>
+      <div class="mot-sig">Sophie, fondatrice de TiMat</div>
+    </div>
+  </div>
+</section>
+
 <section class="sec-sage faq">
   <div class="wrap">
     <div class="sectitle fade"><h2>Questions fréquentes des parents</h2></div>
@@ -679,30 +531,25 @@
 </footer>
 
 <script>
-  // Chaque écran dit ce qu'il montre, et à quel onglet du bas il appartient —
-  // c'est la vraie navigation de l'application, pas une invention de la page.
-  var DEXP={
-    accueil:{n:"accueil",d:"Sa journée, en direct, dès l'ouverture.",
-      p:["Arrivée, repas, sieste : vous voyez sans demander","Déclarez une absence en deux taps","Les quatre raccourcis que vous utilisez vraiment"]},
-    journee:{n:"enfant",d:"Le cahier de journée, écrit par elle, lu par vous.",
-      p:["Repas, siestes, activités, humeur","Les photos partagées, dans un espace privé","Rien à redemander le soir sur le pas de la porte"]},
-    pointage:{n:"enfant",d:"Les heures pointées, pas les heures estimées.",
-      p:["Le total du mois se met à jour tout seul","Absences déclarées visibles des deux côtés","Un désaccord sur les heures se tranche avec une date"]},
-    cout:{n:"admin",d:"Ce que la garde vous coûte, une fois les aides déduites.",
-      p:["Salaire, indemnités, CMG : le détail ligne par ligne","Votre reste à charge réel, pas le tarif horaire","Le simulateur CMG selon vos revenus"]},
-    messages:{n:"admin",d:"Le lien avec votre assistante maternelle.",
-      p:["Messages et photos au fil de la journée","Daté, non modifiable : ce qui a été dit reste","Les deux parents lisent la même chose"]}
-  };
-  function dgo(p){
-    var x=DEXP[p]; if(!x)return;
-    document.querySelectorAll('.dtab').forEach(function(b){b.classList.toggle('on',b.dataset.p===p);});
-    document.querySelectorAll('.dscreen').forEach(function(e){e.classList.toggle('on',e.dataset.s===p);});
-    // La barre du bas suit l'écran : on voit où l'on se trouve dans l'app.
-    document.querySelectorAll('.dnav span').forEach(function(e){e.classList.toggle('on',e.dataset.n===x.n);});
-    document.getElementById('dexp').innerHTML='<div class="dd">'+x.d+'</div>'+x.p.map(function(t){return '<div class="dp"><b>✦</b>'+t+'</div>';}).join('');
-  }
-  document.querySelectorAll('.dtab').forEach(function(b){b.addEventListener('click',function(){dgo(b.dataset.p);});});
-  dgo('accueil');
+  // La hauteur du cadre : le contenu de la démo n'a pas la même taille selon
+  // la largeur, et une hauteur fixe laisse soit une bande vide, soit une barre
+  // de défilement dans un cadre qui n'en veut pas. Le cadre est servi par le
+  // même domaine : on lit sa hauteur réelle, sans protocole à inventer.
+  (function(){
+    var c=document.getElementById('demo-app'); if(!c)return;
+    function ajuster(){
+      try{
+        var d=c.contentDocument; if(!d||!d.body)return;
+        var h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);
+        if(h>200)c.style.height=h+'px';
+      }catch(e){/* origine différente un jour : la hauteur CSS reste le repli */}
+    }
+    c.addEventListener('load',function(){ajuster();
+      // La démo monte ses écrans à la demande : sa hauteur bouge encore un
+      // instant après le chargement.
+      [150,600,1500].forEach(function(t){setTimeout(ajuster,t);});});
+    var t; window.addEventListener('resize',function(){clearTimeout(t);t=setTimeout(ajuster,150);});
+  })();
 </script>
 <script>
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});

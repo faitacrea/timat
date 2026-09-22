@@ -876,6 +876,34 @@ for (const u of fichiersAppSrc()) {
   }
 }
 
+// --- le cadre de demo de la page parents pointe vers un mode qui n'existe plus ---
+//
+// public/pour-les-parents.html n'affiche plus une demo dessinee a la main : il
+// embarque l'application elle-meme, dans un <iframe src="/?demo=parent&nu=1">.
+// Ces deux parametres sont lus par LandingPage (src/App.jsx). Renommes ou
+// supprimes d'un cote, le cadre affiche la landing entiere dans un cadre de
+// 760 px — une page dans une page, et personne ne s'en apercoit avant la mise
+// en ligne, parce que rien ne plante.
+{
+  const page = fs.readFileSync("public/pour-les-parents.html", "utf8");
+  const app = fs.readFileSync("src/App.jsx", "utf8");
+  const cadre = page.match(/<iframe[^>]*id="demo-app"[^>]*src="([^"]+)"/);
+  if (!cadre) {
+    signale("parents", "Le cadre de la démo (iframe#demo-app) a disparu de public/pour-les-parents.html — la page ne montre plus l'application.");
+  } else {
+    const url = cadre[1].replace(/&amp;/g, "&");
+    const params = new URLSearchParams(url.split("?")[1] || "");
+    for (const [cle, valeur] of params) {
+      // Le paramètre doit être lu quelque part dans la landing, ET comparé à
+      // la valeur que le cadre lui donne.
+      const lu = new RegExp(`get\\("${cle}"\\)\\s*===\\s*"${valeur}"`).test(app);
+      if (!lu) {
+        signale("parents", `Le cadre de la démo appelle « ${cle}=${valeur} », que src/App.jsx ne reconnaît pas — la page parents afficherait la landing entière dans un cadre.`);
+      }
+    }
+  }
+}
+
 // --- une image servie en PNG alors que le WebP existe a cote ---
 //
 // logoForRole servait des .png de 85 a 143 Ko, en 1 732 px de large, pour un
