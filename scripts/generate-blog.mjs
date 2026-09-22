@@ -413,6 +413,31 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
   border:1px solid ${T.border};background:${T.white};color:${T.mauve};cursor:pointer;transition:.15s}
 .filtres button:hover{border-color:${T.terracottaLine};color:${T.terracotta}}
 .filtres button[aria-pressed="true"]{background:${T.mauve};border-color:${T.mauve};color:#fff}
+.filtres{position:relative;z-index:20}
+.menu-role{position:relative;display:inline-block}
+.filtres .dec{display:inline-flex;align-items:center;gap:8px}
+.filtres .dec .fl{font-size:11px;opacity:.6;transition:transform .15s}
+.filtres .dec[aria-expanded="true"] .fl{transform:rotate(180deg)}
+.filtres .dec.actif{background:${T.mauve};border-color:${T.mauve};color:#fff}
+.filtres .raz{font-size:13px;font-weight:600;padding:8px 14px;border-radius:99px;border:1px dashed ${T.border};
+  background:transparent;color:${T.light};cursor:pointer;font-family:inherit}
+.filtres .raz[hidden]{display:none}
+.menu-pan{position:absolute;top:calc(100% + 8px);left:0;min-width:288px;z-index:30;
+  background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:6px;
+  box-shadow:0 18px 44px rgba(46,72,89,.16);animation:menuOuvre .14s ease}
+.menu-pan[hidden]{display:none}
+@keyframes menuOuvre{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.menu-pan a,.menu-pan .tout{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:10px 12px;border-radius:10px;text-decoration:none;border:none;background:transparent;
+  font-family:inherit;font-size:14px;font-weight:600;color:${T.ink};cursor:pointer}
+.menu-pan a:hover,.menu-pan .tout:hover{background:${T.cream}}
+.menu-pan .pt{font-size:9px;line-height:1;width:18px;height:18px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.menu-pan .t{flex:1;min-width:0}
+.menu-pan .n{font-size:12px;font-weight:800;color:${T.light};margin-left:auto}
+.menu-pan .tout{font-weight:800}
+.menu-pan .sep{height:1px;background:${T.border};margin:5px 8px}
+@media(max-width:560px){.menu-role{position:static}.menu-pan{left:0;right:0;min-width:0}}
 .rubs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
 .rubs[hidden]{display:none}
 .invite{font-size:14px;color:${T.light};margin:12px 0 0}
@@ -763,17 +788,16 @@ function carte(a) {
 }
 
 /** Les pastilles de rubrique, menant aux pages dediees. */
+// Les pastilles de rubrique, sur les PAGES DE RUBRIQUE. Sur l'index, elles
+// vivent maintenant dans les menus deroulants de barreFiltres().
 function chipsRubriques(articles, actif = null) {
   const rubs = rubriques(articles);
   if (!rubs.length) return "";
-  return `<div class="rubs" id="rubs" hidden>${rubs
+  return `<div class="rubs">${rubs
     .map((r) => {
       const [bg, fg] = PASTILLES[r.titre] || PASTILLES._defaut;
       const ici = r.slug === actif;
-      // L'audience est portee par la pastille elle-meme : le filtre du haut
-      // n'a plus qu'a masquer celles qui ne concernent pas le role choisi.
-      // Une rubrique « les-deux » reste visible pour les deux roles.
-      return `<a href="${escAttr(categorieTarget(r.slug).url)}" data-audience="${escAttr(r.audience || "les-deux")}" style="background:${bg};color:${fg}${
+      return `<a href="${escAttr(categorieTarget(r.slug).url)}" style="background:${bg};color:${fg}${
         ici ? ";outline:2px solid " + fg : ""
       }"${ici ? ' aria-current="page"' : ""}>${esc(r.titre)}<span class="n">${r.n}</span></a>`;
     })
@@ -785,21 +809,33 @@ const SCRIPT_FILTRE = `(function(){
   var barre=document.getElementById('filtres');
   if(!barre)return;
   var cartes=[].slice.call(document.querySelectorAll('.cards .card'));
-  var sousMenu=document.getElementById('rubs');
-  var pastilles=sousMenu?[].slice.call(sousMenu.querySelectorAll('a')):[];
   var vide=document.getElementById('vide');
   var invite=document.getElementById('invite-role');
+  var raz=document.getElementById('raz');
   var ROLES={assmat:1,parent:1};
   var CLE='timat-blog-audience';
 
-  function concerne(el,val){
-    var a=el.getAttribute('data-audience')||'les-deux';
+  function concerne(c,val){
+    var a=c.getAttribute('data-audience')||'les-deux';
     return a==='les-deux' || a===val;
   }
 
-  // val vaut null tant qu'aucun role n'est choisi : le sous-menu reste replie
-  // et tous les articles restent visibles — une page qui s'ouvre sur du vide
-  // donnerait l'impression qu'il n'y a rien a lire.
+  // ── L'OUVERTURE DES MENUS ──
+  // Un seul a la fois : deux panneaux ouverts cote a cote, ce n'est plus un
+  // menu, c'est la bande de pastilles qu'on vient justement de replier.
+  function ouvrir(cle){
+    barre.querySelectorAll('.dec').forEach(function(b){
+      var ici=b.getAttribute('data-aud')===cle;
+      b.setAttribute('aria-expanded',String(ici));
+      document.getElementById('menu-'+b.getAttribute('data-aud')).hidden=!ici;
+    });
+  }
+  function fermer(){ ouvrir(null); }
+
+  // ── LE FILTRE ──
+  // val vaut null tant qu'aucun role n'est choisi : tous les articles restent
+  // visibles. Une page qui s'ouvre sur du vide donnerait l'impression qu'il n'y
+  // a rien a lire.
   function appliquer(val){
     if(val && !ROLES[val]) val=null;
     var n=0;
@@ -808,31 +844,41 @@ const SCRIPT_FILTRE = `(function(){
       c.style.display = ok ? '' : 'none';
       if(ok)n++;
     });
-    if(sousMenu){
-      sousMenu.hidden = !val;
-      pastilles.forEach(function(p){ p.style.display = (!val||concerne(p,val)) ? '' : 'none'; });
-    }
-    if(invite) invite.hidden = !!val;
-    if(vide) vide.style.display = n ? 'none' : 'block';
-    [].slice.call(barre.querySelectorAll('button')).forEach(function(b){
-      var actif = b.getAttribute('data-aud')===val;
-      b.setAttribute('aria-pressed', String(actif));
-      b.setAttribute('aria-expanded', String(actif));
+    barre.querySelectorAll('.dec').forEach(function(b){
+      b.classList.toggle('actif', b.getAttribute('data-aud')===val);
     });
+    if(invite) invite.hidden=!!val;
+    if(raz) raz.hidden=!val;
+    if(vide) vide.style.display = n ? 'none' : 'block';
     try{ if(val) localStorage.setItem(CLE,val); else localStorage.removeItem(CLE); }catch(e){}
   }
 
-  var courant=null;
   barre.addEventListener('click',function(e){
-    var b=e.target.closest('button'); if(!b)return;
-    var v=b.getAttribute('data-aud');
-    // Recliquer l'onglet ouvert le referme : c'est un menu, pas un verrou.
-    courant = (courant===v) ? null : v;
-    appliquer(courant);
+    var dec=e.target.closest('.dec');
+    if(dec){
+      var v=dec.getAttribute('data-aud');
+      // Recliquer le bouton ouvert referme son menu, sans perdre le filtre.
+      ouvrir(dec.getAttribute('aria-expanded')==='true' ? null : v);
+      appliquer(v);
+      return;
+    }
+    var tout=e.target.closest('.tout');
+    if(tout){ appliquer(tout.getAttribute('data-aud')); fermer(); return; }
+    if(e.target.closest('#raz')){ appliquer(null); fermer(); }
   });
 
-  // Une visite precedente a laisse un role : on le reprend, sous-menu ouvert.
+  // Dehors et Echap referment, comme n'importe quel menu.
+  document.addEventListener('click',function(e){ if(!barre.contains(e.target)) fermer(); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      var ouvertes=barre.querySelector('.dec[aria-expanded="true"]');
+      if(ouvertes){ fermer(); ouvertes.focus(); }
+    }
+  });
+
+  // Une visite precedente a laisse un role : on le reprend, menus fermes.
   // Une valeur inconnue — « tout », d'une version precedente — est ignoree.
+  var courant=null;
   try{ var m=localStorage.getItem(CLE); if(m&&ROLES[m]) courant=m; }catch(e){}
   appliquer(courant);
 })();`;
@@ -849,27 +895,55 @@ const SCRIPT_FILTRE = `(function(){
 // La question « Je suis... » n'a que deux reponses vraies. On la pose vraiment :
 // un role est toujours actif, les rubriques affichees sont celles de ce role, et
 // leur compte est celui du role — plus jamais les deux d'un coup.
-// Deux onglets, et les rubriques en sous-menu.
+// LES DEUX MENUS DÉROULANTS DU BLOG
 //
-// Premiere version : « Tout voir » etait le choix par defaut, la page s'ouvrait
-// donc sur cinquante articles et douze rubriques melangees.
-// Deuxieme version : un role etait toujours actif, et ses rubriques toujours
-// affichees — c'etait juste, mais ca faisait encore beaucoup a lire d'un coup,
-// et la question « Je suis... » semblait deja repondue a la place du lecteur.
+// Trois versions ont precede celle-ci, et chacune disait trop :
+//   1. « Tout voir » par defaut — cinquante articles et douze rubriques
+//      melangees, dont la moitie ne concernait pas qui lisait.
+//   2. Un role toujours actif — juste, mais la question « Je suis... » etait
+//      repondue a la place du lecteur.
+//   3. Les rubriques depliees sous la barre — mieux, mais encore une bande de
+//      six pastilles a lire avant d'arriver aux articles.
 //
-// Ici, la question est posee et attend. Rien d'autre que les deux reponses
-// possibles. On clique, le sous-menu des rubriques de ce role s'ouvre dessous,
-// et la liste se filtre. On reclique sur le meme onglet et il se referme : un
-// menu, qui se replie.
+// Ici, deux boutons, et rien d'autre. Chacun ouvre SON menu : les rubriques de
+// ce role, avec leur nombre d'articles. Le premier choix de chaque menu montre
+// tout le role ; les suivants mènent a la page de la rubrique, qui a son propre
+// titre et sa propre description — c'est aussi ce qui garde ces pages reliees
+// au reste du site.
 //
-// Le role choisi est retenu d'une visite a l'autre : quelqu'un qui revient
-// arrive directement chez lui, sous-menu ouvert. Ce n'est qu'a la toute
-// premiere visite que la question est posee a blanc.
-function barreFiltres() {
-  return `<div class="filtres" id="filtres" role="group" aria-label="Choisir votre rôle">
+// Un seul menu ouvert a la fois, fermeture au clic dehors et a Echap.
+function barreFiltres(articles) {
+  const rubs = rubriques(articles);
+  const ROLES = [
+    ["assmat", "Assistante maternelle"],
+    ["parent", "Parent employeur"],
+  ];
+  const menus = ROLES.map(([cle, libelle]) => {
+    // Une rubrique « les-deux » appartient aux deux menus.
+    const miennes = rubs.filter((r) => (r.audience || "les-deux") === "les-deux" || r.audience === cle);
+    const total = miennes.reduce((n, r) => n + r.n, 0);
+    const lignes = miennes
+      .map((r) => {
+        const [bg, fg] = PASTILLES[r.titre] || PASTILLES._defaut;
+        return `<a href="${escAttr(categorieTarget(r.slug).url)}" role="menuitem">
+          <span class="pt" style="background:${bg};color:${fg}" aria-hidden="true">●</span>
+          <span class="t">${esc(r.titre)}</span><span class="n">${r.n}</span></a>`;
+      })
+      .join("");
+    return `<div class="menu-role">
+      <button type="button" class="dec" data-aud="${cle}" aria-expanded="false" aria-haspopup="true" aria-controls="menu-${cle}">${esc(libelle)}<span class="fl" aria-hidden="true">▾</span></button>
+      <div class="menu-pan" id="menu-${cle}" role="menu" aria-label="${escAttr(libelle)}" hidden>
+        <button type="button" class="tout" data-aud="${cle}" role="menuitem">Tous les articles<span class="n">${total}</span></button>
+        <div class="sep" aria-hidden="true"></div>
+        ${lignes}
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div class="filtres" id="filtres">
     <span class="lab">Je suis</span>
-    <button type="button" data-aud="assmat" aria-pressed="false" aria-expanded="false" aria-controls="rubs">Assistante maternelle</button>
-    <button type="button" data-aud="parent" aria-pressed="false" aria-expanded="false" aria-controls="rubs">Parent employeur</button>
+    ${menus}
+    <button type="button" class="raz" id="raz" hidden>Voir tous les articles ✕</button>
   </div>`;
 }
 
@@ -881,9 +955,8 @@ function pageIndex(articles) {
   <span class="eyebrow">Le blog TiMat</span>
   <h1>Comprendre l'accueil chez une assistante maternelle</h1>
   <p class="lead">Contrat, salaire, Pajemploi, agrément, quotidien de l'accueil : des réponses claires et sourcées, pour les assistantes maternelles agréées comme pour les parents employeurs.</p>
-  ${barreFiltres()}
-  <p class="invite" id="invite-role">Choisissez votre rôle pour ne voir que ce qui vous concerne.</p>
-  ${chipsRubriques(articles)}
+  ${barreFiltres(articles)}
+  <p class="invite" id="invite-role">Choisissez votre rôle : chaque menu donne les domaines qui vous concernent.</p>
   <div class="cards">
     ${
       articles.length
