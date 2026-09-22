@@ -3997,6 +3997,23 @@ function NotifBulle({slot,pool,i}){
   );
 }
 
+// Une bande de photo entre deux sections. Elle respire, elle ne raconte rien :
+// c'est une respiration entre deux blocs de texte, pas une illustration.
+//
+// Le cadrage n'est pas décoratif, c'est la contrainte : aucune photo ne doit
+// montrer un visage net d'enfant. Chaque image a donc son propre point de
+// coupe, choisi là où il n'y a ni visage ni regard — le bas du tapis pour
+// l'une, sous les épaules pour l'autre. Changer ce point, c'est refaire ce
+// choix, pas ajuster une esthétique.
+function BandeauPhoto({src, alt, position, order}){
+  return (
+    <div style={{ order, display:"block", lineHeight:0, background:"#2E4859" }}>
+      <img src={src} alt={alt} width="1600" height="1067" loading="lazy" decoding="async"
+        style={{ width:"100%", height:150, objectFit:"cover", objectPosition:position, display:"block" }}/>
+    </div>
+  );
+}
+
 function WaveDivider({color="#fff",height=52,on=true}){
   if(!on)return null;
   return <div aria-hidden="true" style={{position:"absolute",top:0,left:0,right:0,lineHeight:0,transform:"translateY(-99%)",pointerEvents:"none",zIndex:1}}>
@@ -4347,8 +4364,11 @@ function ComparateurTarifs({T,fTitle}){
     </div>
   );
 
-  return <div style={{width:"100%",maxWidth:620,margin:"26px auto 0",background:"#fff",border:"1px solid #E8E0D5",borderRadius:12,padding:"20px 20px 18px",display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
-    <h3 style={{fontFamily:fTitle,fontSize:17,fontWeight:600,margin:0,color:"#2E4859",lineHeight:1.3}}>Combien coûte TiMat, vraiment ?</h3>
+  return <div style={{width:"100%",maxWidth:620,margin:"0 auto",background:"#fff",border:"1px solid #E8E0D5",borderRadius:12,padding:"20px 20px 18px",display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
+    <div>
+      <h3 style={{fontFamily:fTitle,fontSize:17,fontWeight:700,margin:0,color:"#2E4859",lineHeight:1.3}}>Est-ce que ça vaut le coup pour moi ?</h3>
+      <div style={{fontSize:12.5,color:"#5A6B72",marginTop:4,lineHeight:1.45}}>Votre coût réel, selon le nombre de contrats.</div>
+    </div>
 
     <div style={{display:"flex",flexDirection:"column",gap:7}}>
       <label htmlFor="comp-enfants-1" style={{fontSize:12.5,color:"#5A6B72"}}>J'accueille combien d'enfants ?</label>
@@ -4432,6 +4452,20 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     const onScroll=()=>setScrolled(window.scrollY>150);
     window.addEventListener("scroll",onScroll,{passive:true});
     return()=>window.removeEventListener("scroll",onScroll);
+  },[preview]);
+  // La barre d'action du bas reste cachée pendant TOUT le hero : les deux
+  // boutons de rôle y sont la vraie porte d'entrée, et une barre par-dessus
+  // leur ferait concurrence au moment précis où la visiteuse choisit qui elle
+  // est. Un seuil en pixels ne suffisait pas — la hauteur du hero change avec
+  // la largeur de l'écran et avec la longueur du titre.
+  const [heroPasse, setHeroPasse] = useState(false);
+  useEffect(()=>{
+    if(preview) return;
+    const hero=document.getElementById("lp-hero");
+    if(!hero||typeof IntersectionObserver==="undefined"){ setHeroPasse(true); return; }
+    const o=new IntersectionObserver(([e])=>setHeroPasse(!e.isIntersecting),{threshold:0});
+    o.observe(hero);
+    return()=>o.disconnect();
   },[preview]);
   const _qParent=(()=>{try{return new URLSearchParams(window.location.search).get("connexion")==="parent";}catch(e){return false;}})();
   const [role, setRole] = useState(forceRole||(_qParent?"parent":"asmat"));
@@ -4560,8 +4594,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const T = { ...(DEFAULT_CONFIG.txts || {}), ..._sansVide(config.txts) };
   const SV = config.sectionsVisibles||{}; // P32 : visibilité des sections landing (true par défaut)
   const F = config.footer||DEFAULT_CONFIG.footer; // P32-2b : contenu du footer
-  const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n⚖️|Convention collective|IDCC 3239, toujours à jour|Des textes à éplucher soi-même|Conforme, mis à jour pour vous\n💸|Suivi des paiements|Versements et relances|Courir après, sans oser relancer|Suivi clair, relances automatiques\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
-  const SECTIONS_ORDER_DEFAULT=["probleme","signature","demo","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"]; // P32-4
+  const TABLE_ROWS_DEFAULT=`🧮|Mensualisation & salaire|Année complète ou incomplète, heures majorées|Des heures de calculs, chaque fin de mois|Calculés depuis vos présences réelles\n🌴|Congés payés|10 % ou maintien de salaire, solde suivi|Deux méthodes à comparer à la main|La plus favorable, calculée pour vous\n🏦|Déclaration Pajemploi|Chaque mois, enfant par enfant|Reporter à la main, avec le risque d'erreur|Récapitulatif prêt à reporter\n📐|Régularisation & fin de contrat|Solde de tout compte, absences|Le calcul qu'on redoute le plus|Calculé et justifié au parent\n🗂️|Contrat & documents|Bulletins, attestations, signature en ligne|Éparpillés entre classeurs et mails|Un dossier par enfant, en 2 clics`;
+  const SECTIONS_ORDER_DEFAULT=["probleme","photo1","demo","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"]; // P32-4
   const _ord=(config.sectionsOrder&&config.sectionsOrder.length)?config.sectionsOrder:SECTIONS_ORDER_DEFAULT;
   const ord=(id)=>{const i=_ord.indexOf(id);return i<0?999:i;};
 
@@ -4814,6 +4848,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         .sticky-burger{display:none!important}
         @media(max-width:760px){.sticky-links{display:none!important}.sticky-burger{display:flex!important}}
         .lp-section{padding:72px 24px;position:relative}
+        .lp-barre{transition:transform .28s ease}
+        @media (prefers-reduced-motion:reduce){.lp-barre{transition:none}}
         .lp-guarantees{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;text-align:center;margin-top:24px;font-size:13px}
         @media(max-width:768px){
           .lp-nav-full{display:none!important}
@@ -4861,13 +4897,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
         </div>
       </div>
-      <div className="lp-hero" style={{ background: L.heroBg }}>
+      <div id="lp-hero" className="lp-hero" style={{ background: L.heroBg }}>
         <div style={{ position:"absolute", inset:0, zIndex:0, backgroundImage:L.heroImg?"url("+L.heroImg+")":"none", backgroundSize:"cover", backgroundPosition:L.heroImgPosition||"center center", opacity:L.heroImgOpacity||0.12, filter:"blur("+(L.heroImgBlur||2)+"px)" }}/>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")", pointerEvents: "none", zIndex: 0 }} />
         {/* Nav */}
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 0", maxWidth: 1200, margin: "0 auto" }}>
           <div className="lp-logo" style={{ fontFamily: fTitle }}>
-            <img src={L?.logoUrl || "/logo.webp"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#2E4859"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
+            <img src={L?.logoUrlSurFonce || L?.logoUrl || "/logo-dark.webp"} alt="TiMat" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{height:(L?.logoSizes?.landingHeader)||44,objectFit:"contain",cursor:"pointer"}} onError={e=>{e.target.style.display="none"; const fallback=document.createElement("span"); fallback.style.color="#fff"; fallback.style.fontWeight="700"; fallback.style.fontSize="22px"; fallback.textContent="TiMat"; e.target.parentNode.appendChild(fallback);}}/>
           </div>
           {/* Desktop nav : onglets visibles + Se connecter */}
           <div className="lp-nav-full" style={{ alignItems:"center", gap:6 }}>
@@ -4875,7 +4911,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               {[["Parents","parents-page"],["Fonctionnalités","demo"],["Tarifs","tarifs"],["Boutique","boutique"],["Outils gratuits","outils"],["Blog","blog-section"]].map(([label,target])=>
                 <button key={target} onClick={()=>{ if(target==="parents-page")window.location.href="/parents"; else if(target==="outils")window.location.href="/outils.html"; else if(target==="boutique")window.location.href="/boutique.html"; else if(target==="blog-section")window.location.href="/blog"; else document.getElementById(target)?.scrollIntoView({behavior:"smooth"}); }}
                   style={{ background:"transparent", border:"none", cursor:"pointer", fontSize:13.5, fontWeight:600, color:L.navBtnColor||"#2E4859", padding:"7px 12px", borderRadius:8, fontFamily:"inherit", transition:"background .15s,color .15s", whiteSpace:"nowrap" }}
-                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(228,145,120,.12)";e.currentTarget.style.color="#C84B31";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.10)";e.currentTarget.style.color="#F0A98F";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
             </nav>
             <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>Se connecter →</button>
@@ -4987,13 +5023,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
-              <div style={{ display:"inline-block", background:"rgba(228,145,120,.14)", border:"1px solid rgba(228,145,120,.32)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#E49178", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</h2>
               <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.65)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
           </FadeIn>
           {/* TABLEAU COMPARATIF Sans/Avec (editable back-office : L.tableRows) */}
-          <div style={{ marginTop:30, maxWidth:760, marginLeft:"auto", marginRight:"auto", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:16, overflow:"hidden" }}>
+          <div style={{ marginTop:30, maxWidth:760, marginLeft:"auto", marginRight:"auto", background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:16, overflow:"hidden" }}>
             <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr" }}>
               <div style={{ padding:"11px 12px" }}></div>
               <div style={{ padding:"11px 8px", textAlign:"center", fontSize:11.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboPbColor||"#FF8C82", background:"rgba(255,140,130,.09)" }}>{L.comboLabelBefore||"Sans TiMat"}</div>
@@ -5003,17 +5039,15 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               const p=line.split("|");
               const ic=(p[0]||"").trim(), t=(p[1]||"").trim(), st=(p[2]||"").trim(), sans=(p[3]||"").trim(), avec=(p[4]||"").trim();
               return <FadeIn key={i} delay={i*60}>
-                <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid rgba(255,255,255,.08)" }}>
+                <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid #EDE6DE" }}>
                   <div style={{ padding:"12px 12px", minWidth:0 }}>
                     <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#fff", lineHeight:1.3 }}><IconeOuEmoji e={ic}/> {t}</span>
                     {st&&<span style={{ display:"block", fontSize:11, color:L.tableSubColor||"rgba(255,255,255,.5)", marginTop:2, lineHeight:1.35 }}>{st}</span>}
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
-                    <span style={{ fontSize:15, display:"block", lineHeight:1.2 }}>❌</span>
                     <span style={{ display:"block", fontSize:11, color:L.tableSansColor||"rgba(255,255,255,.62)", marginTop:3, lineHeight:1.4 }}>{sans}</span>
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(131,192,184,.07)", minWidth:0 }}>
-                    <span style={{ fontSize:15, display:"block", lineHeight:1.2 }}>✅</span>
                     <span style={{ display:"block", fontSize:11, color:L.tableAvecColor||"#A8D5CE", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
                   </div>
                 </div>
@@ -5021,17 +5055,20 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             })}
           </div>
           <FadeIn delay={350}>
-            <div style={{ maxWidth:600, margin:"18px auto 0", textAlign:"center", fontSize:13, color:"rgba(255,255,255,.6)", lineHeight:1.6 }}>
+            <div style={{ maxWidth:600, margin:"18px auto 0", textAlign:"center", fontSize:13, color:"#55707C", lineHeight:1.6 }}>
               {L.tableFooter||"Vous n'avez pas choisi ce métier pour faire de la comptabilité. TiMat s'occupe du reste."}
             </div>
           </FadeIn>
           <FadeIn delay={400}>
             <div style={{ marginTop:36, textAlign:"center" }}>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 8px 24px rgba(228,145,120,.4)" }}>Alléger mon quotidien →</button>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"#B4543F", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:15, fontWeight:700, cursor:"pointer", boxShadow:"0 8px 24px rgba(180,84,63,.28)" }}>Alléger mon quotidien →</button>
             </div>
           </FadeIn>
         </div>
       </div>}
+
+      <BandeauPhoto order={ord("photo1")} src="/hero-enfants.webp" position="50% 74%"
+        alt="Des petites voitures posées sur un tapis de jeu." />
 
       {/* SECTION 2 - DEMO */}
       {SV.demo!==false&&<div id="demo" className="lp-section" style={{ order:ord("demo"), background: L.section2Bg||"linear-gradient(160deg,#0D1B2A,#22384A)" }}>
@@ -5049,7 +5086,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <div style={{order:1,position:"relative"}}>
               <div className="demo-tabs">
                 {demoTour.map(s=>{const on=demoPage===s.page;return <button key={s.page}onClick={()=>goDemo(s.page)}
-                  style={{display:"flex",alignItems:"center",gap:9,padding:"12px 13px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"linear-gradient(135deg,#E49178,#C84B31)":"rgba(255,255,255,.06)",color:on?"#fff":"rgba(255,255,255,.72)",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid rgba(255,255,255,.06)",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
+                  style={{display:"flex",alignItems:"center",gap:9,padding:"12px 13px",border:"none",cursor:"pointer",textAlign:"left",width:"100%",background:on?"#B4543F":"#FFFFFF",color:on?"#fff":"#55707C",transition:"all .25s cubic-bezier(.34,1.56,.64,1)",borderBottom:"1px solid #EDE6DE",transform:on?"scale(1.03)":"scale(1)",position:"relative",zIndex:on?2:1,animation:on?"demoTabGlow 2.4s ease-in-out infinite":"none"}}>
                   <span style={{fontSize:on?20:18,flexShrink:0,transition:"font-size .2s"}}><IconeOuEmoji e={s.ic}/></span>
                   <span style={{fontSize:13,fontWeight:700,lineHeight:1.2}}>{s.label}</span>
                 </button>;})}
@@ -5066,8 +5103,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             {/* Explication resumee (centre desktop / sous onglets mobile) */}
             {(()=>{const s=demoTour.find(t=>t.page===demoPage)||demoTour[0];return <div className="demo-explain" style={{order:2}}>
               <div key={demoPage} style={{display:"flex",flexDirection:"column",gap:12,marginBottom:4}}>
-                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#fff",lineHeight:1.3,marginBottom:2,animation:"demoPuceIn .45s ease backwards"}}>{s.desc}</div>
-                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"rgba(255,255,255,.88)",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:((j+1)*0.1)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.2)",color:"#6FC2B8",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
+                <div style={{fontFamily:fTitle,fontSize:18,fontWeight:700,color:"#2E4859",lineHeight:1.3,marginBottom:2,animation:"demoPuceIn .45s ease backwards"}}>{s.desc}</div>
+                {s.resume.map((r,j)=><div key={r}style={{display:"flex",gap:11,alignItems:"center",fontSize:14.5,color:"#55707C",lineHeight:1.4,animation:"demoPuceIn .45s ease backwards",animationDelay:((j+1)*0.1)+"s"}}><span style={{flexShrink:0,width:24,height:24,borderRadius:"50%",background:"rgba(93,169,161,.18)",color:"#2F655F",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✓</span><span style={{fontWeight:600}}>{r}</span></div>)}
               </div>
               {/* faisceau lumineux qui file vers le telephone (desktop) a chaque changement */}
               <div className="demo-beam" style={{position:"relative",height:2,marginTop:22,background:"linear-gradient(90deg,rgba(93,169,161,0),rgba(93,169,161,.25),rgba(93,169,161,0))",borderRadius:2}}>
@@ -5127,20 +5164,32 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </div>
             </div>{/* /colonne phone */}
           </div>
+          {/* La démo est le meilleur argument de la page : l'action se propose
+              juste après l'avoir vue, et le prix est dit là, en clair, plutôt
+              que découvert trois écrans plus bas. */}
+          <FadeIn delay={200}>
+            <div style={{ textAlign:"center", marginTop:28 }}>
+              <div style={{ fontSize:11.5, color:"#7C8A90", marginBottom:14 }}>Écrans réels · données d'exemple · certains écrans s'ouvrent avec l'abonnement</div>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"#B4543F", color:"#fff", border:"none", borderRadius:12, padding:"14px 32px", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Créer mon compte gratuitement →</button>
+              <div style={{ fontSize:12.5, color:"#55707C", marginTop:14, lineHeight:1.6 }}>
+                <b style={{ color:"#9E5341", fontWeight:700 }}>{T.prixMensuel} € par mois</b>, contrats illimités.<br/>{T.prixEssai}, sans engagement.
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </div>}
 
       {/* SECTION SIGNATURE ELECTRONIQUE P13 - differentiateurs vs concurrents */}
-      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)", padding: "80px 24px" }}>
+      {SV.signature!==false&&<div className="lp-section" style={{ order:ord("signature"), background: L.section4Bg||"linear-gradient(160deg,#FDFBF8,#F4F1EA)" }}>
         <WaveDivider color={L.wave4||L.section4Bg||"#FDFBF8"} on={L.wavesOn!==false&&L.waveOn4!==false}/>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(228,145,120,.12)", border: "1px solid rgba(228,145,120,.3)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#C84B31", marginBottom: 24, fontWeight: 700, letterSpacing: ".8px" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(158,83,65,.10)", border: "1px solid rgba(158,83,65,.28)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#9E5341", marginBottom: 16, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
-                La gestion assistante maternelle <span style={{ color: "#C47D67", fontStyle: "italic" }}>sans mauvaise surprise</span>
+                La gestion assistante maternelle <span style={{ color: "#9E5341", fontStyle: "italic" }}>sans mauvaise surprise</span>
               </h2>
               <div style={{ fontSize: 15, color: L.s4SubColor||"#6B7A82", lineHeight: 1.7, maxWidth: 720, margin: "0 auto" }}>
                 Salaire, mensualisation, indemnités, congés payés et déclaration Pajemploi : tout est calculé à partir de vos présences réelles, conforme à la convention collective. Et côté tarif, aucune surprise.
@@ -5149,12 +5198,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </FadeIn>
 
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
-          <div style={{ display:"grid", gridTemplateColumns:isWeb?"1fr 1fr":"1fr", gap:10, maxWidth:isWeb?900:720, margin:"0 auto", marginBottom: 56 }}>
+          <div style={{ display:"grid", gridTemplateColumns:isWeb?"1fr 1fr":"1fr", gap:10, maxWidth:isWeb?900:720, margin:"0 auto", marginBottom: 24 }}>
             {[
               { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Unique", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n28 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
-              { ic: L.diff2Ic||"🧮", badge: L.diff2Badge||"Zéro erreur", titre: L.diff2Titre||"Des calculs fiables", puces: L.diff2Puces||"Salaire, congés, Pajemploi calculés\nConformes à la convention\nToujours le même résultat" },
-              { ic: L.diff3Ic||"✅", badge: L.diff3Badge||"Exclusif", titre: L.diff3Titre||"Le suivi des versements", puces: L.diff3Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
-              { ic: L.diff4Ic||"✍️", badge: L.diff4Badge||"Zéro impression", titre: L.diff4Titre||"Signez en ligne, sans imprimer", puces: L.diff4Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
+              { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Exclusif", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
+              { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
@@ -5197,7 +5245,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   { n: "4", ic:"📄", t: "Signez & déclarez", d: "Contrats signés en 1 clic et déclaration Pajemploi prête." }
                 ].map((st) => (
                   <div key={st.n} style={{ display:"flex", gap:12, alignItems:"flex-start", background:"#FAF6F1", borderRadius:12, border:"1px solid #F0E7DC", padding:"12px 14px" }}>
-                    <span style={{ width:24, height:24, borderRadius:"50%", background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", fontSize:12, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{st.n}</span>
+                    <span style={{ width:24, height:24, borderRadius:"50%", background:"#B4543F", color:"#fff", fontSize:12, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{st.n}</span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:14.5, fontWeight:700, color:"#2E4859", marginBottom:2 }}><IconeOuEmoji e={st.ic}/> {st.t}</span>
                       <span style={{ display:"block", fontSize:12.5, color:"#7A6A60", lineHeight:1.55 }}>{st.d}</span>
@@ -5215,7 +5263,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               tout l'interet d'une preuve sociale honnete quand on n'a pas
               encore d'avis a montrer. */}
           {L.signatureTexte !== "" && <FadeIn delay={400}>
-            <div style={{ maxWidth: isWeb?760:560, margin:"44px auto 0", background:"#FFFFFF", border:"1px solid #EDE6DE", borderLeft:"3px solid "+accent, borderRadius:14, padding:isWeb?"24px 28px":"20px 20px", boxShadow:"0 4px 18px rgba(46,72,89,.05)" }}>
+            <div style={{ maxWidth: isWeb?760:560, margin:"24px auto 0", background:"#FFFFFF", border:"1px solid #EDE6DE", borderLeft:"3px solid "+accent, borderRadius:14, padding:isWeb?"24px 28px":"20px 20px", boxShadow:"0 4px 18px rgba(46,72,89,.05)" }}>
               <div style={{ fontSize:14.5, color:"#42555E", lineHeight:1.75, fontStyle:"italic", whiteSpace:"pre-line" }}>
                 {L.signatureTexte || "J'ai un CAP petite enfance et j'ai travaillé plusieurs années en crèche. J'ai créé TiMat en préparant mon propre agrément, quand j'ai découvert la montagne administrative que le métier impose et que personne n'explique nulle part. Chaque calcul de l'application s'appuie sur un texte que je cite, pour que vous puissiez le vérifier vous-même."}
               </div>
@@ -5225,14 +5273,6 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </div>
           </FadeIn>}
 
-          {/* CTA */}
-          <FadeIn delay={500}>
-            <div style={{ textAlign: "center", marginTop: 48 }}>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: "linear-gradient(135deg,#E49178,#C76754)", color: "#fff", border: "none", borderRadius: 10, padding: "15px 36px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 6px 24px rgba(184,98,47,.4)", letterSpacing: ".3px" }}>
-                Tester TiMat gratuitement →
-              </button>
-            </div>
-          </FadeIn>
         </div>
       </div>}
 
@@ -5265,6 +5305,34 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         </div>
       </div>}
 
+      {/* SECTION SOURCES — ce sur quoi les calculs s'appuient */}
+      {SV.sources!==false&&<div className="lp-section" style={{ order:ord("sources"), background: L.sectionSourcesBg||"#F7F2EC" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign:"center", marginBottom: 32 }}>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:16 }}>SUR QUOI ÇA S'APPUIE</div>
+              <h2 style={{ margin:0, fontFamily: fTitle, fontSize:"clamp(22px,4vw,36px)", color: L.sourcesTitleColor||"#2E4859", fontWeight:700, marginBottom:10, lineHeight:1.25 }}>{L.sourcesTitle}</h2>
+              <div style={{ fontSize:15, color: L.sourcesDescColor||"#55707C", lineHeight:1.6, maxWidth:560, margin:"0 auto" }}>{L.sourcesDesc}</div>
+            </div>
+          </FadeIn>
+          <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(2,1fr)":"1fr", gap:10, maxWidth:isWeb?720:640, margin:"0 auto" }}>
+            {[
+              ["Convention collective","IDCC 3239","Salaire, mensualisation, congés, indemnités et préavis suivent la convention des particuliers employeurs et de l'emploi à domicile.","Mise à jour au 1ᵉʳ juin 2026"],
+              ["Déclaration","Barèmes Pajemploi et CAF","Plafonds horaires, complément de libre choix du mode de garde, crédit d'impôt : les montants en vigueur, pas ceux de l'an dernier.","Vérifiés à chaque évolution"],
+            ].map(([ref,titre,texte,maj],i)=>(
+              <FadeIn key={titre} delay={i*70}>
+                <div style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, padding:"18px 18px", height:isWeb?"100%":"auto" }}>
+                  <div style={{ fontSize:10.5, letterSpacing:"1.1px", textTransform:"uppercase", color:"#2F655F", fontWeight:700, marginBottom:6 }}>{ref}</div>
+                  <div style={{ fontFamily:fTitle, fontSize:15.5, color:"#2E4859", fontWeight:700, marginBottom:6 }}>{titre}</div>
+                  <div style={{ fontSize:13, lineHeight:1.6, color:"#55707C" }}>{texte}</div>
+                  {maj&&<div style={{ display:"inline-block", marginTop:10, fontSize:11, color:"#55707C", background:"#F7F2EC", borderRadius:20, padding:"4px 11px" }}>{maj}</div>}
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </div>}
+
       {/* SECTION 5 - TEMOIGNAGES */}
       {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -5291,6 +5359,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         </div>
       </div>}
 
+      <BandeauPhoto order={ord("photo2")} src="/hero-toboggan.webp" position="50% 97%"
+        alt="Un enfant sur un toboggan, cadré sur les jambes." />
+
       {/* SECTION 6 - TARIFS */}
       {SV.tarifs!==false&&<div id="tarifs" className="lp-section" style={{ order:ord("tarifs"), background: L.section6Bg||"#2E4859" }}>
         <WaveDivider color={L.wave6||L.section6Bg||"#2E4859"} on={L.wavesOn!==false&&L.waveOn6!==false}/>
@@ -5299,7 +5370,10 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</h2>
             <div style={{ fontSize: 14, color: L.s6SubColor||"#55707C", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
           </FadeIn>
-          <div className="lp-tarifs-grid">
+          <FadeIn>
+            <ComparateurTarifs T={T} fTitle={fTitle}/>
+          </FadeIn>
+          <div className="lp-tarifs-grid" style={{ marginTop: 26 }}>
             {/* Gratuit */}
             <div className="tarif-free" style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
@@ -5317,7 +5391,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </div>
             {/* Pro */}
             <div className="tarif-pro" style={{ background: L.proBg||"#FDFBF8", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
-              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#E49178,#B85838)", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap", animation:"badgePulse 2.2s ease-in-out infinite", boxShadow:"0 6px 18px rgba(184,98,47,.4)" }}>{T.proLabel}</div>
+              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "#B4543F", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap", animation:"badgePulse 2.2s ease-in-out infinite", boxShadow:"0 6px 18px rgba(184,98,47,.4)" }}>{T.proLabel}</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
@@ -5353,9 +5427,6 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <div className="lp-guarantees" style={{color:L.guaranteesColor||"#55707C"}}>
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
-          <FadeIn>
-            <ComparateurTarifs T={T} fTitle={fTitle}/>
-          </FadeIn>
         </div>
       </div>}
 
@@ -5525,6 +5596,28 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
         </div>
       </footer>
+
+      {/* BARRE D'ACTION — le prix et une seule action, une fois le hero passé.
+          Elle n'existe que pour la visiteuse qui a lu et qui redescend : tant
+          qu'elle est dans le hero, les deux boutons de rôle suffisent. */}
+      {!preview&&<div className="lp-barre" style={{
+        position:"fixed", left:0, right:0, bottom:0, zIndex:190,
+        display:"flex", alignItems:"center", gap:12,
+        background:"rgba(46,72,89,.97)", backdropFilter:"blur(8px)", color:"#fff",
+        padding:"11px 14px calc(11px + env(safe-area-inset-bottom,0px))",
+        boxShadow:"0 -6px 20px rgba(46,72,89,.22)",
+        transform: heroPasse?"translateY(0)":"translateY(120%)",
+        pointerEvents: heroPasse?"auto":"none",
+      }}>
+        <div style={{ fontFamily:fTitle, fontWeight:700, fontSize:17, lineHeight:1.1, whiteSpace:"nowrap" }}>
+          {T.prixMensuel} €
+          <span style={{ display:"block", fontFamily:fBody, fontSize:10.5, fontWeight:400, color:"rgba(255,255,255,.7)" }}>{T.prixEssai}</span>
+        </div>
+        <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{
+          marginLeft:"auto", background:"#B4543F", color:"#fff", border:"none", borderRadius:10,
+          padding:"11px 15px", fontSize:13, fontWeight:700, fontFamily:"inherit",
+          cursor:"pointer", whiteSpace:"nowrap" }}>{T.barreBtnTxt}</button>
+      </div>}
 
       {/* PAGES JURIDIQUES */}
       {showLegal&&<div onClick={e=>e.target===e.currentTarget&&setShowLegal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:250,padding:20}}>
@@ -5971,13 +6064,16 @@ export const DEFAULT_CONFIG = {
     heroSub:"Contrats, bulletins de salaire et déclarations Pajemploi, prêts chaque mois.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
-    prixEssai:"2 mois gratuits",
+    prixEssai:"2 mois offerts",
     compBasePro:"7,99",
     compParContrat:"2,99",
     heroDesc:"",
     heroBadge:"🧸 Conçue par une professionnelle de la petite enfance",
     heroSubDesc:"À jour de la convention collective au 1ᵉʳ juin 2026.",
     heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
+    // La barre du bas a son propre libellé : elle porte déjà le prix et la
+    // durée à gauche, reprendre le bouton du hero disait tout deux fois.
+    barreBtnTxt:"Je démarre mes 2 mois offerts",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     heroBtnNavTxt:"Commencer gratuitement →",
     heroTags:"💳 Sans carte bancaire,🔓 Sans engagement,🔒 Données hébergées en France,👨‍👩‍👧 Espace parent gratuit pour les familles",
@@ -5994,75 +6090,79 @@ export const DEFAULT_CONFIG = {
     freePrice:"0€",
   },
   landing: {
-    heroBg:"linear-gradient(165deg,#FDF6EE 0%,#F7ECE0 55%,#FBF1E7 100%)",
+    heroBg:"linear-gradient(165deg,#24404F 0%,#2E4859 62%,#2A4D53 100%)",
     heroImg:"",
     heroImgOpacity:0.12,
     heroImgPosition:"center center",
     heroImgBlur:2,
     logoUrl:"",
+    // Le hero est marine : le logo marine y serait invisible. La variante
+    // claire existe déjà dans public/. Le pied de page, lui, blanchit le logo
+    // par un filtre CSS et n'a donc pas besoin de cette clé.
+    logoUrlSurFonce:"/logo-dark.webp",
     logoEmoji:"🌿",
     logoSizes:{topBar:28,landingHeader:44,landingFooter:40,login:80,loading:64},
-    section1Bg:"#2E4859",
-    section2Bg:"#26404F",
+    section1Bg:"#FDFBF8",
+    section2Bg:"#FDFBF8",
     section4Bg:"#FDFBF8",
-    section5Bg:"#FFFFFF",
-    section6Bg:"#FDFBF8",
-    sectionConfBg:"#F4F1EA", faqBg:"#F4F1EA", blogBg:"#FDFBF8", footerBg:"#2E4859",
+    section5Bg:"#FDFBF8",
+    section6Bg:"#F7F2EC",
+    sectionConfBg:"#F7F2EC", faqBg:"#FDFBF8", blogBg:"#F7F2EC", footerBg:"#2E4859",
     // Meme faute en sens inverse : du blanc sur le creme #F4F1EA de la section
     // des questions. « Questions frequentes » ne se lisait pas.
     faqTitleColor:"#2E4859", faqDescColor:"#55707C",
-    blogTitleColor:"#2E4859", blogDescColor:"#5E7884",
+    blogTitleColor:"#2E4859", blogDescColor:"#55707C",
     footerTextColor:"rgba(255,255,255,.7)",
-    ctaBg:"linear-gradient(135deg,#2E4859,#2A6F6A)",
-    statsBg:"linear-gradient(135deg,#2E4859,#3E6B63)",
+    ctaBg:"linear-gradient(135deg,#24404F,#2E4859)",
+    statsBg:"linear-gradient(135deg,#24404F,#2E4859)",
     // ----- BOUTONS HERO -----
-    heroBtnPrimBg:"linear-gradient(135deg,#E49178,#C84B31)",
+    heroBtnPrimBg:"#B4543F",
     heroBtnPrimColor:"#FFFFFF",
-    heroBtnSecBg:"transparent",
-    heroBtnSecColor:"#2E4859",
+    heroBtnSecBg:"rgba(255,255,255,.07)",
+    heroBtnSecColor:"#FFFFFF",
     heroBtnNavBg:"linear-gradient(135deg,#5DA9A1,#2E4859)",
     heroBtnNavColor:"#FFFFFF",
-    heroBtnTarifsBg:"rgba(46,72,89,.06)",
-    heroBtnTarifsColor:"#42555E",
-    heroBtnConnexionBg:"rgba(46,72,89,.10)",
+    heroBtnTarifsBg:"rgba(255,255,255,.08)",
+    heroBtnTarifsColor:"#FFFFFF",
+    heroBtnConnexionBg:"rgba(255,255,255,.10)",
     heroBtnConnexionColor:"#FFFFFF",
     // ----- BOUTONS TARIFS -----
-    proBtnBg:"linear-gradient(135deg,#E49178,#C84B31)",
+    proBtnBg:"#B4543F",
     proBtnColor:"#FFFFFF",
-    freeBtnBg:"#0D1B2A",
+    freeBtnBg:"#2E4859",
     freeBtnColor:"#FFFFFF",
     // ----- BOUTON CTA FINAL -----
-    ctaBtnBg:"linear-gradient(135deg,#E49178,#C84B31)",
+    ctaBtnBg:"#B4543F",
     ctaBtnColor:"#FFFFFF",
     // ----- COULEURS -----
-    accentColor:"#E49178",
+    accentColor:"#B4543F",
     // Couleurs de texte par section
-    heroTitleColor:"#2E4859",
-    heroSubColor:"#42555E",
-    heroSubDescColor:"#7C8A90",
-    heroBadgeColor:"#B85C38",
-    heroBadgeBg:"rgba(228,145,120,.12)",
-    heroTagsColor:"#93A0A2",
-    heroStatsColor:"#E49178",
-    heroStatsLabelColor:"#2E4859",
-    s1TitleColor:"#FFFFFF",
+    heroTitleColor:"#FFFFFF",
+    heroSubColor:"rgba(255,255,255,.88)",
+    heroSubDescColor:"rgba(255,255,255,.72)",
+    heroBadgeColor:"#BFE3DE",
+    heroBadgeBg:"rgba(93,169,161,.15)",
+    heroTagsColor:"rgba(255,255,255,.82)",
+    heroStatsColor:"#F0A98F",
+    heroStatsLabelColor:"rgba(255,255,255,.88)",
+    s1TitleColor:"#2E4859",
     // .5 donnait 3,76:1 sur le fond ardoise de la section, sous le seuil de
     // 4,5. .65 donne 5,14 sans changer le rendu a l'oeil.
-    s1DescColor:"rgba(255,255,255,.65)",
-    s1CardBg:"rgba(255,255,255,.04)",
-    s1CardTitleColor:"#FFFFFF",
-    s1CardDescColor:"rgba(255,255,255,.5)",
+    s1DescColor:"#55707C",
+    s1CardBg:"#FFFFFF",
+    s1CardTitleColor:"#2E4859",
+    s1CardDescColor:"#55707C",
     s1QuoteBg:"rgba(232,168,74,.08)",
     s1QuoteColor:"#E8A84A",
     // Le titre de cette section etait ecrit en #0D1B2A — exactement la couleur
     // de depart du degrade qui lui sert de fond. Il etait donc invisible, et le
     // sous-titre en brun sombre juste en dessous l'etait presque autant. Le code
     // prevoyait bien du blanc en repli ; c'est la configuration qui l'ecrasait.
-    s2TitleColor:"#FFFFFF",
-    s2DescColor:"rgba(255,255,255,.78)",
+    s2TitleColor:"#2E4859",
+    s2DescColor:"#55707C",
     s4TitleColor:"#2E4859",
-    s4SubColor:"#5E7884",
-    s5TitleColor:"#0D1B2A",
+    s4SubColor:"#55707C",
+    s5TitleColor:"#2E4859",
     testimonialBg:"#FFFFFF",
     testimonialNameColor:"#2C1F14",
     testimonialCityColor:"#8A725D",
@@ -6072,28 +6172,57 @@ export const DEFAULT_CONFIG = {
     // La section tarifs a un fond creme : ses textes doivent etre sombres.
     // Le code avait garde des replis blancs, herites du temps ou le fond
     // etait ardoise — d'ou trois lignes invisibles en ligne.
-    s6TitleColor:"#0D1B2A",
+    s6TitleColor:"#2E4859",
     s6SubColor:"#55707C",
     guaranteesColor:"#55707C",
     freeBg:"#FFFFFF",
-    freeLabelColor:"#8A725D",
-    freePriceColor:"#0D1B2A",
-    freeDescColor:"#6B5348",
-    proBg:"#FDFBF8",
-    proBorderColor:"#B85C38",
-    proLabelColor:"#B25936",
+    freeLabelColor:"#55707C",
+    freePriceColor:"#2E4859",
+    freeDescColor:"#55707C",
+    proBg:"#FFFFFF",
+    proBorderColor:"#B4543F",
+    proLabelColor:"#9E5341",
     // Le saumon de la marque descend a #9E6553 quand il porte du texte sur
     // fond blanc : 4,73:1 au lieu de 2,44. La teinte reste la meme.
-    lienBlogColor:"#9E6553",
-    heroAccentColor:"#C76754",
-    proPriceColor:"#B85C38",
-    proSubColor:"#866F5A",
-    proDescColor:"#6B5348",
+    lienBlogColor:"#9E5341",
+    heroAccentColor:"#F0A98F",
+    proPriceColor:"#9E5341",
+    proSubColor:"#55707C",
+    proDescColor:"#55707C",
     ctaTitleColor:"#FFFFFF",
     ctaSubTitleColor:"rgba(255,255,255,.6)",
     ctaSubColor:"rgba(255,255,255,.5)",
     ctaFooterColor:"rgba(255,255,255,.35)",
     pageBg:"#FDFBF8",
+    // Ces quatre clés n'existaient que comme repli littéral dans le rendu.
+    // Elles étaient donc invisibles du back-office ET de l'audit des
+    // contrastes, qui ne lit que DEFAULT_CONFIG : le tableau Sans/Avec
+    // pouvait devenir illisible sans qu'aucune barrière ne le voie.
+    heroStatsCardBg:"rgba(255,255,255,.08)",
+    heroStatsCardBgLien:"rgba(255,255,255,.15)",
+    heroStatsCardBorder:"rgba(255,255,255,.20)",
+    // La barre de navigation est posée SUR le hero : ses couleurs suivent
+    // donc le hero, pas les sections. Elles n'existaient qu'en repli littéral.
+    navBtnColor:"rgba(255,255,255,.88)",
+    navCtaBg:"#B4543F",
+    navCtaColor:"#FFFFFF",
+    navHamburgerBg:"rgba(255,255,255,.10)",
+    navHamburgerColor:"#FFFFFF",
+    navHamburgerBorder:"rgba(255,255,255,.30)",
+    // Les quatre couleurs du tableau Sans/Avec n'existaient elles non plus
+    // QUE comme repli littéral, hérité du temps où la section était sombre :
+    // du blanc. La section passée au crème, la colonne de gauche est devenue
+    // blanc sur blanc — et la barrière des contrastes ne voyait rien, puisque
+    // ces clés n'apparaissaient nulle part dans DEFAULT_CONFIG.
+    tableTitleColor:"#2E4859",
+    tableSubColor:"#55707C",
+    tableSansColor:"#96594A",
+    tableAvecColor:"#2F655F",
+    comboPbColor:"#9E5341",
+    comboSolColor:"#2F655F",
+    // Le thème marine ne porte pas de vagues : le contraste entre le hero
+    // sombre et les deux crèmes suffit à séparer les sections.
+    wavesOn:false,
     // ----- POLICES -----
     // Les MEMES piles que index.html, repli compris. Elles divergeaient :
     // « 'Quicksand', sans-serif » ici contre « 'Quicksand','Outfit',system-ui,
@@ -6112,8 +6241,16 @@ export const DEFAULT_CONFIG = {
     s1Title:"La réalité du métier, personne n'en parle.",
     s1Desc:"Être assistante maternelle agréée, c'est exercer un métier de soin exigeant\ntout en gérant une TPE sans formation ni support.",
     s1Quote:"TiMat n'ajoute pas une appli à votre vie.\nIl retire tout ce qui n'aurait jamais dû s'y trouver.",
-    s2Title:"L'application en images, section par section",
-    s2Desc:"Cliquez sur un onglet pour voir tout ce que TiMat gère à votre place.",
+    // Lister les quatre domaines, puis montrer quatre onglets qui sont ces
+    // mêmes quatre domaines, disait deux fois la même chose. Le titre porte
+    // donc ce que couvre l'application, et la démo le prouve juste dessous.
+    s2Title:"Le planning, la paie et Pajemploi, au même endroit",
+    s2Desc:"Choisissez un domaine : vous voyez l'écran réel, avec des données d'exemple. Aucune inscription.",
+    sectionSourcesBg:"#F7F2EC",
+    sourcesTitle:"Chaque calcul s'appuie sur un texte",
+    sourcesDesc:"Et vous pouvez le vérifier vous-même : voici lesquels.",
+    sourcesTitleColor:"#2E4859",
+    sourcesDescColor:"#55707C",
     s5Title:"Devenez l'assistante maternelle dont les parents parlent à leurs amis.",
     s6Title:"Le tarif de votre application assistante maternelle",
     ctaTitle:"Vous n'avez pas eu de formation\nen comptabilité.",
@@ -6205,7 +6342,7 @@ export const DEFAULT_CONFIG = {
     linkPack:"https://buy.stripe.com/aFa7sD6kO4Zb8iS7j3dwc0a",
   },
   sectionsVisibles:{
-    probleme:true, demo:true, signature:true,
+    probleme:true, demo:true, signature:true, sources:true,
     temoignages:true, tarifs:true, ctaFinal:true, faq:true, blog:true,
   },
   faqLanding: FAQ_LANDING_DEFAULT,
@@ -6222,7 +6359,9 @@ export const DEFAULT_CONFIG = {
     ],
   },
   blog: BLOG_DEFAULT,
-  sectionsOrder:["probleme","demo","signature","temoignages","confidentialite","tarifs","ctaFinal","faq","blog"],
+  // Les bandeaux photo font partie de l'ordre : ce sont des respirations
+  // placées, pas des décorations collées à une section.
+  sectionsOrder:["probleme","photo1","demo","sources","signature","confidentialite","photo2","tarifs","ctaFinal","temoignages","faq","blog"],
 };
 export let G = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); // mutable global config
 

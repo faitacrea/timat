@@ -404,6 +404,30 @@ for (const u of fichiersAppSrc()) {
   // reste un titre illisible.
   const teintes = (v) => (v || "").match(/#[0-9A-Fa-f]{6}/g) || [];
   const COUPLES = [
+    // Le hero n'était surveillé par AUCUN couple : il a basculé du crème au
+    // marine sans qu'une seule barrière ait quoi que ce soit à dire, alors que
+    // son titre, son sous-titre et ses lignes de réassurance y deviennent
+    // illisibles d'un seul changement de fond.
+    ["heroTitleColor", "heroBg", 3],
+    ["heroAccentColor", "heroBg", 3],
+    ["heroSubColor", "heroBg", 4.5],
+    ["heroSubDescColor", "heroBg", 4.5],
+    ["heroBadgeColor", "heroBg", 4.5],
+    ["heroTagsColor", "heroBg", 4.5],
+    ["heroBtnSecColor", "heroBg", 4.5],
+    ["heroStatsLabelColor", "heroBg", 4.5],
+    ["navBtnColor", "heroBg", 4.5],
+    ["s1TitleColor", "section1Bg", 3],
+    ["tableTitleColor", "section1Bg", 4.5],
+    ["tableAvecColor", "section1Bg", 4.5],
+    ["comboPbColor", "section1Bg", 4.5],
+    ["comboSolColor", "section1Bg", 4.5],
+    ["sourcesTitleColor", "sectionSourcesBg", 3],
+    ["sourcesDescColor", "sectionSourcesBg", 4.5],
+    ["blogTitleColor", "blogBg", 3],
+    ["blogDescColor", "blogBg", 4.5],
+    ["freeLabelColor", "section6Bg", 4.5],
+    ["freeDescColor", "section6Bg", 4.5],
     ["s2TitleColor", "section2Bg", 3],
     ["s2DescColor", "section2Bg", 4.5],
     ["faqTitleColor", "faqBg", 3],
@@ -417,8 +441,20 @@ for (const u of fichiersAppSrc()) {
     ["tableSubColor", "section1Bg", 4.5],
     ["tableSansColor", "section1Bg", 4.5],
   ];
+  // Ce contrôle sert deux fois : sur DEFAULT_CONFIG ici, puis plus bas sur la
+  // configuration RÉELLEMENT servie — la base fusionnée par-dessus le code.
+  globalThis.__verifieContrastesLanding = (lis, origine) => {
   for (const [cTexte, cFond, seuil] of COUPLES) {
-    const texte = val(cTexte), fond = val(cFond);
+    const texte = lis(cTexte), fond = lis(cFond);
+    // Une clé absente de DEFAULT_CONFIG désactivait SA PROPRE barrière, en
+    // silence : le rendu retombait alors sur un repli littéral que personne
+    // ne relit. C'est ainsi que la colonne de gauche du tableau comparatif
+    // est passée en blanc sur blanc sans qu'un seul contrôle ne bronche.
+    // Une couleur surveillée doit donc être déclarée pour de bon.
+    if (!origine && !texte) {
+      signale("contraste", `${cTexte} est surveillée mais absente de DEFAULT_CONFIG.landing — le rendu retombe sur un repli littéral, et ce contrôle ne sert à rien`);
+      continue;
+    }
     if (!texte || !fond) continue;
     // J'avais ecarte les couleurs translucides « parce qu'elles se melangent a
     // ce qu'il y a dessous ». C'etait faux quand le fond est uni : la
@@ -439,9 +475,47 @@ for (const u of fichiersAppSrc()) {
       if (!vue) continue;
       const r = contraste(vue, t);
       if (r < seuil) {
-        signale("contraste", `${cTexte} (${texte}${vue !== texte ? " → vu " + vue : ""}) sur ${cFond} (${t}) : ${r.toFixed(2)}:1, il en faut ${seuil} — ce texte est illisible sur son propre fond`);
+        signale("contraste", `${origine}${cTexte} (${texte}${vue !== texte ? " → vu " + vue : ""}) sur ${cFond} (${t}) : ${r.toFixed(2)}:1, il en faut ${seuil} — ce texte est illisible sur son propre fond`);
       }
     }
+  }
+  };
+  globalThis.__verifieContrastesLanding(val, "");
+}
+
+// --- un champ du back-office que la landing ne lit nulle part ---
+//
+// « Lignes galere solution » (comboRows) est propose au back-office depuis des
+// mois. Six lignes y ont ete ecrites avec soin. Elles ne s'affichent nulle
+// part : la landing lit tableRows, pas comboRows — le champ a survecu a la
+// section qu'il alimentait. Rien ne plante, rien ne previent, et le travail
+// est perdu en silence.
+//
+// On exige donc que toute cle offerte au back-office soit lue quelque part
+// dans le rendu, ou declaree dans DEFAULT_CONFIG.
+{
+  const bo = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/backoffice.jsx")), "utf8");
+  const sources = fichiersAppSrc()
+    .filter((u) => !u.pathname.endsWith("/backoffice.jsx"))
+    .map((u) => readFileSync(u, "utf8"))
+    .join("\n");
+  // On ne regarde QUE les cartes du back-office qui écrivent dans la
+  // configuration de la landing : ailleurs, des paires ["x","Libellé"] servent
+  // à tout autre chose (l'alignement d'un texte, les onglets d'un tableau de
+  // bord), et les confondre ferait crier cette barrière pour rien.
+  const offertes = new Set();
+  for (const carte of bo.split("</BOCard>")) {
+    if (!/state=\{cfg\.(landing|txts)\}/.test(carte)) continue;
+    for (const m of carte.matchAll(/k="([A-Za-z0-9_]+)"/g)) offertes.add(m[1]);
+    for (const m of carte.matchAll(/\["([a-z][A-Za-z0-9_]*)","(?!☰)[^"]*"(?:,\s*true)?\]/g)) offertes.add(m[1]);
+  }
+  // Le test est volontairement grossier : le nom de la clé apparaît-il quelque
+  // part hors du back-office ? Un nom comme « comboRows » est assez
+  // distinctif pour que ce soit concluant, et une version plus fine se
+  // trompait — elle ne reconnaissait pas (config.landing||{}).demoPuces1.
+  const mortes = [...offertes].filter((cle) => !new RegExp("\\b" + cle + "\\b").test(sources));
+  if (mortes.length) {
+    signale("back-office", `champ(s) propose(s) au back-office que la page ne lit nulle part : ${mortes.sort().join(", ")} — ce qu'on y ecrit est perdu sans le moindre avertissement`);
   }
 }
 
@@ -462,19 +536,67 @@ for (const u of fichiersAppSrc()) {
 // cas dans la construction en ligne — il le dit, et ne se tait jamais en
 // pretendant que tout va bien.
 {
+  // Deuxième source de lecture : un fichier JSON local. Elle sert quand le
+  // réseau ne laisse pas joindre Supabase — et surtout elle rend cette
+  // barrière vérifiable, en lui donnant une configuration fabriquée exprès.
+  const fichierConfig = process.env.TIMAT_APP_CONFIG;
   const url = process.env.VITE_SUPABASE_URL, cle = process.env.VITE_SUPABASE_KEY;
-  if (!url || !cle) {
+  if (!fichierConfig && (!url || !cle)) {
     console.log("  (surcharges du back-office : non vérifiées, VITE_SUPABASE_URL/KEY absentes)");
   } else {
     try {
-      const r = await fetch(`${url}/rest/v1/app_config?id=eq.main&select=config`, {
-        headers: { apikey: cle, Authorization: "Bearer " + cle },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const [ligne] = await r.json();
+      let ligne;
+      if (fichierConfig) {
+        ligne = { config: JSON.parse(readFileSync(fichierConfig, "utf8")) };
+      } else {
+        const r = await fetch(`${url}/rest/v1/app_config?id=eq.main&select=config`, {
+          headers: { apikey: cle, Authorization: "Bearer " + cle },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        [ligne] = await r.json();
+      }
       const txts = (ligne && ligne.config && ligne.config.txts) || {};
       const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8");
+
+      // --- LES COULEURS DE LA BASE, ET NON CELLES DU CODE ---
+      //
+      // Le contrôle des contrastes plus haut ne lit que DEFAULT_CONFIG. Or
+      // app_config.landing se pose PAR-DESSUS au chargement : c'est la base qui
+      // gagne. Un thème changé dans le code et pas dans la base donne donc une
+      // landing où du texte disparaît EN LIGNE, sans erreur nulle part et sans
+      // qu'aucune barrière ne bronche — le code, lui, est irréprochable.
+      //
+      // On refait donc exactement le même calcul de contraste, mais sur la
+      // fusion que React applique vraiment : la base quand elle dit quelque
+      // chose, DEFAULT_CONFIG sinon. Le back-office enregistre des chaînes
+      // vides pour les cases non remplies, et React les ignore : on les ignore
+      // pareil, sinon on verrait des couleurs que personne n'affiche.
+      const landingBase = (ligne && ligne.config && ligne.config.landing) || {};
+      const litFusion = (cle) => {
+        const enBase = landingBase[cle];
+        if (typeof enBase === "string" && enBase.trim() !== "") return enBase.trim();
+        const m = app.match(new RegExp("\\b" + cle + ':\\s*"([^"]+)"'));
+        return m ? m[1] : undefined;
+      };
+      globalThis.__verifieContrastesLanding(litFusion, "app_config : ");
+
+      // Une couleur invalide ne « casse » rien non plus : le navigateur
+      // l'ignore et retombe sur la couleur héritée, qui peut être n'importe
+      // quoi. #ffff (cinq caractères) est resté des mois dans cette table.
+      for (const [cle, v] of Object.entries(landingBase)) {
+        if (typeof v !== "string" || v.trim() === "") continue;
+        const t = v.trim();
+        if (!/Color$|Bg$|Border$/.test(cle)) continue;
+        const valide = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(t)
+          || /^(rgb|rgba|hsl|hsla)\(/i.test(t)
+          || /^(linear|radial|conic)-gradient\(/i.test(t)
+          || /^(transparent|none|currentColor|inherit)$/i.test(t)
+          || /^[a-z]+$/i.test(t);
+        if (!valide) {
+          signale("surcharge", `app_config impose « ${cle} » = "${t}" — le navigateur ne sait pas lire cette couleur, il l'ignore et garde celle du dessus`);
+        }
+      }
       for (const [k, v] of Object.entries(txts)) {
         if (typeof v !== "string") continue;
         const m = app.match(new RegExp("\\b" + k + ':\\s*"((?:[^"\\\\]|\\\\.)*)"'));
