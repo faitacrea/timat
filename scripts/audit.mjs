@@ -482,6 +482,32 @@ for (const u of fichiersAppSrc()) {
   globalThis.__verifieContrastesLanding(val, "");
 }
 
+// --- le plafond de fonctions serverless du plan Hobby ---
+//
+// Vercel n'accepte que DOUZE fonctions serverless par déploiement sur le plan
+// Hobby. Le projet en comptait douze : ajouter la tâche quotidienne des essais
+// en a fait treize, et le déploiement de production a échoué —
+// « exceeded_serverless_functions_per_deployment ». La construction, elle,
+// avait parfaitement réussi : rien dans le build ne pouvait le voir venir, et
+// le site est resté bloqué sur la version précédente sans que personne ne
+// comprenne pourquoi.
+//
+// Ce qui compte : chaque fichier de api/ qui ne commence pas par « _ » (les
+// autres sont des modules importés, pas des routes) et qui n'est pas déclaré
+// en runtime Edge — les fonctions Edge ont leur propre plafond.
+{
+  const PLAFOND_HOBBY = 12;
+  const dossier = new URL("../api/", import.meta.url);
+  const routes = readdirSync(dossier)
+    .filter((f) => f.endsWith(".js") && !f.startsWith("_"))
+    .map((f) => [f, readFileSync(new URL(f, dossier), "utf8")]);
+  const edge = routes.filter(([, c]) => /runtime:\s*['"]edge['"]/.test(c)).map(([f]) => f);
+  const serverless = routes.filter(([, c]) => !/runtime:\s*['"]edge['"]/.test(c)).map(([f]) => f);
+  if (serverless.length > PLAFOND_HOBBY) {
+    signale("vercel", `${serverless.length} fonctions serverless dans api/ — le plan Hobby en accepte ${PLAFOND_HOBBY}. Le déploiement de production ÉCHOUERA alors que la construction réussira, et le site restera sur la version précédente. Passer une route en runtime Edge, ou en fusionner deux. (Edge, hors plafond : ${edge.join(", ") || "aucune"})`);
+  }
+}
+
 // --- l'essai de deux mois ne doit pas pouvoir redevenir muet ---
 //
 // Trois façons de le casser sans rien faire planter :
@@ -661,6 +687,12 @@ for (const u of fichiersAppSrc()) {
       }
       for (const [k, v] of Object.entries(txts)) {
         if (typeof v !== "string") continue;
+        // Une chaîne vide n'écrase RIEN : _sansVide() l'ignore au rendu, et
+        // c'est le code qui s'affiche. Les signaler revenait à crier quatre
+        // fois à chaque construction pour des cases simplement laissées
+        // blanches au back-office — et une barrière qui crie pour rien finit
+        // par n'être plus lue.
+        if (v.trim() === "") continue;
         const m = app.match(new RegExp("\\b" + k + ':\\s*"((?:[^"\\\\]|\\\\.)*)"'));
         if (!m) continue;
         const duCode = m[1].replace(/\\"/g, '"').replace(/\\n/g, "\n");
