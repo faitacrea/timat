@@ -71,4 +71,8 @@ public/sitemap-local.xml
 # === Documents vendus en boutique (générés par npm run documents) ===
 # Le PDF est un produit livré à l'acheteur, pas un fichier servi par le site.
 documents/*.pdf
+# Les deux documents gratuits sont SERVIS par le site, mais regeneres a chaque
+# construction par generer-documents.mjs. Les versionner en plus produisait un
+# conflit binaire a chaque fusion, sur un fichier que personne ne relit.
+public/documents/*.pdf
 documents/*.xlsx
