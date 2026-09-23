@@ -1337,6 +1337,37 @@ export const D = {
 //
 // Un parent n'est jamais bride : son espace est gratuit par construction.
 export const LIMITE_ENFANTS_GRATUIT = 1;
+
+// ---------------------------------------------------------------------------
+// CE QUE LE FORFAIT PRO OUVRE — LA LISTE, ET RIEN QU'ELLE
+//
+// Le verrou etait ecrit neuf fois, a la main, dans le routeur :
+//
+//   case "pmi": return isPro ? <CommunicationPMI/> : <VerrouPro .../>;
+//
+// Un ecran ajoute demain sans ce ternaire est gratuit, et personne ne le
+// voit : rien ne plante, l'audit passe, la page tarifs continue de le
+// promettre au forfait Pro. C'est exactement ce qui etait arrive a
+// « rapport_annuel » et « attestation_pe » : les deux memes fonctions
+// etaient verrouillees quand on y arrivait par l'onglet Documents, et
+// ouvertes quand on y arrivait par leur route. Le verrou dependait du
+// chemin emprunte.
+//
+// Le forfait se declare donc ICI, une fois. Le routeur consulte cette
+// liste avant d'appeler quoi que ce soit, et une barriere d'audit refuse
+// qu'un verrou soit re-ecrit a la main a cote.
+export const ECRANS_PRO = {
+  bilans: ["Les bilans de journée", "Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."],
+  documents_complet: ["Documents et attestations", "Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."],
+  recap_fiscal: ["Le récapitulatif fiscal", "Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."],
+  mes_employeurs: ["Vos employeurs", "Vos revenus du mois famille par famille, et vos congés à poser avec toutes. Cette fonction fait partie du forfait Pro."],
+  temps_travail: ["Votre temps de travail", "Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie du forfait Pro."],
+  pmi: ["La communication avec la PMI", "Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."],
+  solde_compte: ["Le solde de tout compte", "Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte, calculés à la fin d'un contrat. Cette fonction fait partie du forfait Pro."],
+  attestation_fiscale: ["L'attestation fiscale", "L'attestation annuelle à remettre aux parents employeurs pour leur crédit d'impôt. Cette fonction fait partie du forfait Pro."],
+  rapport_annuel: ["Le rapport annuel", "La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie du forfait Pro."],
+  attestation_pe: ["L'attestation France Travail", "L'attestation d'employeur à remettre en fin de contrat, préremplie à partir de vos bulletins. Cette fonction fait partie du forfait Pro."],
+};
 // ---------------------------------------------------------------------------
 // L'ESSAI DE DEUX MOIS, SANS CARTE BANCAIRE
 //
@@ -5710,8 +5741,15 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
                 <span style={{ fontSize: 13, color: "#866F5A" }}>/mois</span>
               </div>
-              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>
+              {/* « quel que soit le nombre d'enfants » etait en 11 px sous le
+                  prix, la ou la visiteuse venue d'un concurrent lit « 9,99 »
+                  et le compare a « a partir de 5 € ». C'est LA difference de
+                  structure entre les deux tarifications : elle se lit avec le
+                  prix, pas sous lui. */}
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: L.proPriceColor||"#B8622F", marginBottom: 6, lineHeight: 1.4 }}>
                 {T.proSubtxt}
+              </div>
+              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>
                 {(() => {
                   // Le prix par contrat est ce qu'une assistante maternelle compare a ce
                   // qu'elle facture a une famille. Il se derive du forfait : l'ecrire en
@@ -5737,6 +5775,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               tarifs est passe au creme #FDFBF8 sans que les textes suivent :
               « Resiliable en 1 clic », « Pointages et messages opposables » et
               « Donnees en France » etaient invisibles en ligne, ratio 1,03. */}
+          {(T.tarifsRelais)&&<div style={{ marginTop: 20, textAlign: "center", fontSize: 13.5, color: L.guaranteesColor||"#55707C", lineHeight: 1.6, maxWidth: 560, marginLeft: "auto", marginRight: "auto" }}>
+            {T.tarifsRelais}
+          </div>}
           <div className="lp-guarantees" style={{color:L.guaranteesColor||"#55707C"}}>
             {(config.guarantees||DEFAULT_CONFIG.guarantees).map(g=><span key={g}>{g}</span>)}
           </div>
@@ -6397,11 +6438,14 @@ export const DEFAULT_CONFIG = {
     ctaFooter:"Créé par une professionnelle de la petite enfance · Données hébergées en France 🇫🇷",
     proLabel:"⭐ TOUT INCLUS",
     proSubtxt:"quel que soit le nombre d'enfants",
+    // La phrase qui separe l'essai de TiMat de celui des autres : ailleurs,
+    // au dernier jour, l'acces s'arrete. Elle n'etait ecrite nulle part.
+    tarifsRelais:"Après vos 2 mois offerts, rien ne se ferme : le compte gratuit prend le relais, et vos données restent là.",
     proDesc:"La solution complète. Tout est inclus.",
     proBtnTxt:"Je démarre mes 2 mois offerts →",
-    freeLabel:"Gratuit",
-    freeBtnTxt:"Commencer gratuitement",
-    freeDesc:"1 seul enfant accueilli. Pour essayer TiMat, pas pour travailler avec plusieurs familles.",
+    freeLabel:"Gratuit, pour toujours",
+    freeBtnTxt:"Ouvrir mon compte gratuit",
+    freeDesc:"Un enfant accueilli, et tout le quotidien avec lui. Sans carte bancaire et sans date de fin.",
     freePrice:"0€",
   },
   landing: {
@@ -7489,6 +7533,12 @@ export default function App(){
   const renderPage=()=>
     <Suspense fallback={<div style={{padding:"48px 20px",textAlign:"center",color:"var(--m)",fontSize:14}}>Chargement…</div>}>
       {(()=>{
+    // LE verrou du forfait. Avant le routeur, pas dedans : un ecran ne peut
+    // pas etre ouvert par un chemin et ferme par un autre.
+    if(!isPro && ECRANS_PRO[page]){
+      const [titre, desc] = ECRANS_PRO[page];
+      return <VerrouPro titre={titre} desc={desc}/>;
+    }
     switch(page){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
       case "cahier_jour": return <CahierJour {...P}/>;
@@ -7500,11 +7550,11 @@ export default function App(){
       case "documents_rapports": return <VueDocsRapports {...P}/>;
       case "journal_complet": return <JournalComplet {...P}/>;
       case "sante_complet": return <SanteComplete {...P}/>;
-      case "bilans": return isPro?<Bilans {...P}/>:<VerrouPro titre="Les bilans de journée" desc="Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."/>;
+      case "bilans": return <Bilans {...P}/>;
       case "eveil_complet": return <EveilComplet {...P}/>;
-      case "documents_complet": return isPro?<DocumentsComplet {...P}/>:<VerrouPro titre="Documents et attestations" desc="Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."/>;
+      case "documents_complet": return <DocumentsComplet {...P}/>;
       case "bilans_exports": return <BilansExports {...P}/>;
-      case "recap_fiscal": return isPro?<RecapFiscalAssmat enfants={enfants} user={user}/>:<VerrouPro titre="Le récapitulatif fiscal" desc="Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."/>;
+      case "recap_fiscal": return <RecapFiscalAssmat enfants={enfants} user={user}/>;
       case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
       case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId} user={user}/>;
@@ -7513,19 +7563,19 @@ export default function App(){
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
-      case "mes_employeurs": return isPro?<MesEmployeurs enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Vos employeurs" desc="Vos revenus du mois famille par famille, et vos congés à poser avec toutes. Cette fonction fait partie du forfait Pro."/>;
+      case "mes_employeurs": return <MesEmployeurs enfants={enfants} role={role} user={user}/>;
       case "mes_alertes": return <MesAlertes user={user}/>;
-      case "temps_travail": return isPro?<TempsDeTravail enfants={enfants} role={role} user={user}/>:<VerrouPro titre="Votre temps de travail" desc="Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie du forfait Pro."/>;
-      case "pmi": return isPro?<CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>:<VerrouPro titre="La communication avec la PMI" desc="Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."/>;
+      case "temps_travail": return <TempsDeTravail enfants={enfants} role={role} user={user}/>;
+      case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
       case "ik": return <IndemnitesKilometriques enfants={enfants} role={role} user={user}/>;
-      case "solde_compte": return isPro?<SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>:<VerrouPro titre="Le solde de tout compte" desc="Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte, calculés à la fin d'un contrat. Cette fonction fait partie du forfait Pro."/>;
+      case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "attestation_pe": return <AttestationPoleEmploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
-      case "attestation_fiscale": return isPro?<AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>:<VerrouPro titre="L'attestation fiscale" desc="L'attestation annuelle à remettre aux parents employeurs pour leur crédit d'impôt. Cette fonction fait partie du forfait Pro."/>;
+      case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "projet_accueil": return <ProjetAccueil user={user} role={role}/>;
       case "boutique": return <Boutique user={user}/>;

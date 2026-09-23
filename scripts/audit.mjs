@@ -2550,6 +2550,54 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   signale("accessibilité", "les champs ne sont plus forces a 16 px : iOS va zoomer au focus, et la parade habituelle est de desactiver le zoom");
 }
 
+// --- le forfait ne se verrouille qu'a un seul endroit ---
+//
+// ECRANS_PRO est la liste de ce que le forfait Pro ouvre, et le routeur la
+// consulte AVANT d'appeler quoi que ce soit. Tant qu'un ecran passe par la,
+// il est ferme quel que soit le chemin emprunte.
+//
+// Le danger n'est pas qu'on oublie la liste : c'est qu'on la court-circuite,
+// en remettant un ternaire a la main dans le routeur. C'est ainsi que
+// « rapport_annuel » et « attestation_pe » se sont retrouves verrouilles par
+// l'onglet Documents et ouverts par leur propre route — la meme fonction,
+// deux reponses, selon le chemin. Rien ne plantait.
+//
+// Deux choses sont donc verifiees : aucun verrou ecrit a la main a cote de la
+// liste, et aucune entree de la liste qui ne corresponde a un ecran reel.
+{
+  // Les commentaires sont retires avant la recherche : le commentaire qui
+  // EXPLIQUE le motif interdit le contient forcement, et se signalait
+  // lui-meme. Une barriere qui accuse sa propre documentation apprend a
+  // ignorer ce qu'elle dit.
+  const app = readFileSync(fichiersAppSrc().find((u) => u.pathname.endsWith("/App.jsx")), "utf8")
+    .replace(/^\s*\/\/.*$/gm, "");
+
+  const aLaMain = [...app.matchAll(/case "(\w+)": return isPro\s*\?/g)].map((m) => m[1]);
+  if (aLaMain.length) {
+    signale("forfait", `${aLaMain.length} ecran(s) rouvrent un verrou a la main dans le routeur au lieu de passer par ECRANS_PRO : ${aLaMain.join(", ")}. Le verrou deviendrait dependant du chemin emprunte.`);
+  }
+
+  const bloc = app.match(/export const ECRANS_PRO = \{([\s\S]*?)\n\};/);
+  if (!bloc) {
+    signale("forfait", "ECRANS_PRO est introuvable : plus rien ne declare ce que le forfait Pro ouvre.");
+  } else {
+    const declares = [...bloc[1].matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+    if (!declares.length) signale("forfait", "ECRANS_PRO est vide : toute l'application est gratuite.");
+    const routes = new Set([...app.matchAll(/case "(\w+)": return /g)].map((m) => m[1]));
+    for (const id of declares) {
+      if (!routes.has(id)) signale("forfait", `ECRANS_PRO verrouille « ${id} », qui ne correspond a aucun ecran du routeur : le verrou ne protege rien.`);
+    }
+    // Le routeur doit lire la liste POUR EN TIRER UN VERROU. Chercher la
+    // simple presence de « ECRANS_PRO[page] » ne suffisait pas : en
+    // remplacant la condition par if(false), la ligne qui lit le titre
+    // continuait de matcher et la barriere se taisait. C'est la garde
+    // elle-meme qu'on cherche.
+    if (!/if\s*\(\s*!isPro\s*&&\s*ECRANS_PRO\[page\]\s*\)/.test(app)) {
+      signale("forfait", "le routeur ne consulte plus ECRANS_PRO : la liste est devenue decorative et tous les ecrans Pro sont ouverts.");
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
