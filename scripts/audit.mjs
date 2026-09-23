@@ -29,6 +29,56 @@ const strict = process.argv.includes("--strict");
 const anomalies = [];
 const signale = (cat, msg) => anomalies.push({ cat, msg });
 
+// --- un marqueur de conflit oublie dans un fichier ---
+//
+// « git add -A » apres une resolution de conflit stage TOUT, y compris les
+// fichiers dont le conflit n'a PAS ete resolu. Trois fichiers sont ainsi
+// partis avec leurs marqueurs dedans : package.json, qui a casse npm tout de
+// suite, mais aussi le schema de la base et le parcours visuel — deux fichiers
+// que la construction ne lit pas, et qui seraient passes inapercus.
+//
+// C'est le fichier que personne ne lit qui garde le marqueur. On les regarde
+// donc tous — ET EN PREMIER. Place plus bas, ce controle ne se declenchait
+// jamais sur un JSON abime : le JSON.parse du schema levait avant, l'audit
+// mourait sur une trace de pile, et la seule chose qu'on apprenait etait
+// qu'un fichier etait illisible — pas lequel, ni pourquoi.
+{
+  const marqueur = /^(?:<{7}|={7}|>{7})(?: |$)/m;
+  const ignores = new Set(["node_modules", ".git", "dist", "documents", ".vercel"]);
+  const aVoir = [];
+  const parcourir = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ignores.has(e.name)) continue;
+      const complet = path.join(dir, e.name);
+      if (e.isDirectory()) parcourir(complet);
+      else if (/\.(jsx?|mjs|json|html|css|md|sql|ya?ml)$/.test(e.name)) aVoir.push(complet);
+    }
+  };
+  parcourir(RACINE);
+  for (const f of aVoir) {
+    // L'audit se decrit lui-meme : la regex ci-dessus contient le motif.
+    if (path.resolve(f) === path.resolve(new URL(import.meta.url).pathname)) continue;
+    if (marqueur.test(readFileSync(f, "utf8"))) {
+      signale("conflit", `${path.relative(RACINE, f)} contient un marqueur de conflit de fusion non resolu`);
+    }
+  }
+
+  // ON S'ARRETE ICI, et on parle. Detecter ne suffisait pas : le reste de
+  // l'audit parse ces memes fichiers, et un JSON a moitie fusionne le faisait
+  // mourir sur une trace de pile AVANT que le rapport ne s'affiche. La
+  // conclusion etait trouvee, et personne ne la lisait.
+  //
+  // Un marqueur oublie rend de toute facon tout ce qui suit sans valeur : on
+  // n'audite pas un fichier qu'on sait a moitie fusionne.
+  if (anomalies.length) {
+    console.log(`\n## conflit — ${anomalies.length}`);
+    for (const a of anomalies) console.log(`   ${a.msg}`);
+    console.log("\nAudit interrompu : resolvez ces conflits avant tout le reste.\n");
+    process.exit(1);
+  }
+}
+
+
 function fichiers(dir, out = []) {
   for (const e of readdirSync(dir)) {
     const p = path.join(dir, e);
