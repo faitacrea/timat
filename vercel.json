@@ -5,6 +5,10 @@
       "destination": "/api/pointage-public?j=:jeton"
     },
     {
+      "source": "/d/:jeton",
+      "destination": "/api/demande-publique?j=:jeton"
+    },
+    {
       "source": "/parents",
       "destination": "/pour-les-parents.html"
     },

@@ -1030,14 +1030,63 @@ export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckou
 
 //
 
+// Une ligne de la table « demandes » vue avec la forme que cet ecran attend
+// depuis toujours. L'ecran existait — filtres, statuts, reponses types — mais
+// SANS aucune table derriere : il montrait des donnees de demonstration en mode
+// demo, et une liste vide pour tout le monde. On branche le fond sur la
+// coquille plutot que de reecrire la coquille.
+const demandeDepuisBase=(d)=>({
+  id:d.id,
+  statut:d.statut||"nouveau",
+  date:(d.created_at||"").slice(0,10),
+  parent:{prenom:d.parent_nom||"",nom:"",email:d.parent_email||"",tel:d.parent_tel||"",profession:""},
+  enfant:{prenom:d.enfant_prenom||"",naissance:d.enfant_naissance||null,allergies:"",dejaCrèche:false},
+  contrat:{debut:d.debut_souhaite||null,jours:[],heuresHebdo:null,anneeComplete:null,vacances:d.besoin||""},
+  message:d.message||"",
+  source:d.source||"",
+});
+
 export function ListeAttente({role,enfants,user}){
   const isDemoMode=(enfants||[]).every(e=>["e1","e2","e3"].includes(e.id));
   const [demandes,setDemandes]=useState(isDemoMode?DEMANDES_DEMO:[]);
+  const [chargement,setChargement]=useState(!isDemoMode);
   const [selId,setSelId]=useState(null);
   const [filtre,setFiltre]=useState("tous");
   const [repTxt,setRepTxt]=useState("");
   const [toast,setToast]=useState("");
+  const [jeton,setJeton]=useState(null);
   const sel=demandes.find(d=>d.id===selId);
+
+  useEffect(()=>{
+    if(isDemoMode||!user?.id){setChargement(false);return;}
+    let vivant=true;
+    (async()=>{
+      const [{data:ds,error},{data:prof}]=await Promise.all([
+        supabase.from("demandes").select("*").eq("asmat_id",user.id).order("created_at",{ascending:false}),
+        supabase.from("profiles").select("jeton_demandes").eq("id",user.id).maybeSingle(),
+      ]);
+      if(!vivant)return;
+      if(error)setToast("Les demandes n'ont pas pu être lues.");
+      setDemandes((ds||[]).map(demandeDepuisBase));
+      setJeton(prof?.jeton_demandes||null);
+      setChargement(false);
+    })();
+    return()=>{vivant=false;};
+  },[isDemoMode,user?.id]);
+
+  // Le jeton n'est PAS l'identifiant du compte : c'est un tirage aleatoire,
+  // revocable. Le regenerer casse l'ancien lien — ce qu'un identifiant de
+  // compte ne permettrait jamais.
+  const nouveauJeton=async()=>{
+    const alea=(typeof crypto!=="undefined"&&crypto.getRandomValues)
+      ? Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%30]).join("")
+      : String(Date.now());
+    const {error}=await supabase.from("profiles").update({jeton_demandes:alea}).eq("id",user.id);
+    if(error){setToast("Le lien n'a pas pu être créé.");return;}
+    setJeton(alea);
+    setToast(jeton?"Nouveau lien créé — l'ancien ne fonctionne plus.":"Votre lien est prêt.");
+  };
+  const lienPublic=jeton?((typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/d/"+jeton):null;
 
   // Le libelle porte la pastille, pour que la couleur suive le theme.
   const STATUT_DEMANDE={nouveau:{l:"Nouveau",c:"var(--B)"},en_discussion:{l:"En discussion",c:"var(--P)"},
@@ -1046,15 +1095,34 @@ export function ListeAttente({role,enfants,user}){
   const statutColor={nouveau:"var(--B)",en_discussion:"var(--G)",accepte:"var(--S)",refuse:"var(--R)"};
   const statutBg={nouveau:"var(--Bp)",en_discussion:"var(--Gp)",accepte:"var(--Sp)",refuse:"var(--Rp)"};
 
-  const changerStatut=(id,statut)=>{
+  // Le statut s'ecrivait en memoire seulement : il repartait a zero au
+  // rechargement. Il part maintenant en base — sauf en demo, ou il n'y a rien
+  // a ecrire.
+  const changerStatut=async(id,statut)=>{
     setDemandes(p=>p.map(d=>d.id===id?{...d,statut}:d));
-    if(statut==="accepte")setToast("Demande acceptée - un contrat peut maintenant être créé ✓");
-    if(statut==="refuse")setToast("Demande refusée - un email sera envoyé aux parents.");
+    if(!isDemoMode){
+      const {error}=await supabase.from("demandes")
+        .update({statut,updated_at:new Date().toISOString()}).eq("id",id);
+      if(error){setToast("Le statut n'a pas pu être enregistré.");return;}
+    }
+    if(statut==="accepte")setToast("Demande acceptée — vous pouvez créer le contrat.");
+    if(statut==="refuse")setToast("Refus enregistré.");
   };
 
+  // L'ancienne version affichait « Réponse envoyée ✓ » sans rien envoyer du
+  // tout. Un message de succes pour un envoi qui n'a pas lieu est pire que pas
+  // de bouton : on croit avoir repondu, et le parent attend.
+  //
+  // La reponse part donc du courrier de l'assistante maternelle, avec son
+  // adresse a elle — c'est celle que le parent doit voir, et celle a laquelle
+  // il repondra.
   const envoyerReponse=()=>{
-    if(!repTxt.trim())return;
-    setToast("Réponse envoyée à "+sel?.parent.email+" ✓");
+    const texte=repTxt.trim();
+    if(!texte)return;
+    const dest=sel?.parent?.email;
+    if(!dest){setToast("Ce parent n'a laissé qu'un téléphone : appelez-le.");return;}
+    const sujet="Votre demande d'accueil";
+    window.open("mailto:"+encodeURIComponent(dest)+"?subject="+encodeURIComponent(sujet)+"&body="+encodeURIComponent(texte),"_blank");
     setRepTxt("");
     changerStatut(selId,"en_discussion");
   };
@@ -1073,19 +1141,45 @@ export function ListeAttente({role,enfants,user}){
     <PageHeader icon="📬" title="Demandes de contact"
       sub="Parents qui souhaitent vous confier leur enfant via votre profil TiMat"/>
 
-    {/* Info email public */}
-    <div style={{background:"linear-gradient(135deg,var(--Bp),var(--Pp))",border:"1px solid var(--B)",borderRadius:14,padding:"14px 18px",marginBottom:20,display:"flex",gap:14,alignItems:"flex-start"}}>
-      <IconeOuEmoji e="💡"/>
-      <div>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}>Votre adresse de contact publique</div>
-        <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:"var(--B)",fontWeight:600,marginBottom:6}}>
-          {user?.email||"votre-email@timat.app"}
-        </div>
-        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
-          Mettez cette adresse sur votre profil <strong>monenfant.fr</strong>. 
-          Les parents qui vous écrivent arrivent sur votre formulaire TiMat et vous voyez leur demande complète ici.
-        </div>
+    {/* CE BLOC PROMETTAIT QUELQUE CHOSE QUI N'EXISTAIT PAS.
+        Il affichait l'adresse e-mail du compte et disait : « Mettez cette
+        adresse sur votre profil monenfant.fr. Les parents qui vous écrivent
+        arrivent sur votre formulaire TiMat et vous voyez leur demande complète
+        ici. » Rien ne recevait ce courrier. Aucune boîte, aucun service de
+        réception, aucune route — et la table des demandes n'existait pas non
+        plus. Une assistante maternelle qui suivait cette consigne donnait son
+        adresse aux parents et n'aurait jamais rien vu arriver dans TiMat.
+        Le lien public le remplace : lui, il fonctionne. */}
+
+    <div className="card" style={{marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>Votre lien de demande</div>
+      <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:10}}>
+        Collez-le dans votre présentation sur <b>monenfant.fr</b>, sur votre page Facebook
+        ou dans votre signature de mail. Les parents remplissent un court formulaire,
+        et leur demande arrive ici.
+        <br/><span style={{fontSize:12}}>monenfant.fr n'affiche qu'un téléphone et un e-mail :
+        il n'existe pas de connexion automatique entre les deux sites. Ce lien est le chemin
+        qui fonctionne partout.</span>
       </div>
+      {isDemoMode
+        ? <code style={{display:"block",background:"var(--bg)",border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:12.5,color:"var(--m)"}}>www.timat.app/d/exemple-de-lien</code>
+        : lienPublic
+        ? <>
+            <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
+              <code style={{flex:"1 1 240px",minWidth:0,background:"var(--bg)",border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:12.5,color:"var(--b)",overflowWrap:"anywhere"}}>{lienPublic}</code>
+              <button className="btn s bT" onClick={()=>{
+                try{navigator.clipboard.writeText(lienPublic);setToast("Lien copié.");}
+                catch(e){setToast("Copie impossible : sélectionnez le lien à la main.");}
+              }}>Copier</button>
+            </div>
+            <button className="btn s" style={{marginTop:9,background:"var(--bg)",color:"var(--m)"}} onClick={nouveauJeton}>
+              Créer un nouveau lien
+            </button>
+            <div style={{fontSize:11.5,color:"var(--m)",marginTop:6}}>
+              Créer un nouveau lien met fin à l'ancien : à faire si vous l'avez affiché quelque part que vous ne maîtrisez plus.
+            </div>
+          </>
+        : <button className="btn bT" onClick={nouveauJeton}>Créer mon lien</button>}
     </div>
 
     {nbNouveaux>0&&<div style={{background:"var(--Bp)",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>

@@ -3910,6 +3910,7 @@ const GROUPS_AM={
   outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
     {id:"mode_borne",l:"Borne & QR de pointage",ic:"🚪",d:"Les parents pointent eux-mêmes : écran d'entrée, ou QR affiché au mur"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
+    {id:"liste_attente",l:"Demandes & liste d'attente",ic:"📬",d:"Les parents qui vous contactent, et votre lien public"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"reprise_contrat",l:"Reprendre un contrat",ic:"📥",d:"Vos mois passés chez un autre outil, sans tout ressaisir"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},

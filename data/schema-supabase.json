@@ -172,6 +172,23 @@
     "mois",
     "parent_id"
   ],
+  "demandes": [
+    "asmat_id",
+    "besoin",
+    "created_at",
+    "debut_souhaite",
+    "enfant_naissance",
+    "enfant_prenom",
+    "id",
+    "message",
+    "note_privee",
+    "parent_email",
+    "parent_nom",
+    "parent_tel",
+    "source",
+    "statut",
+    "updated_at"
+  ],
   "documents_meta": [
     "asmat_id",
     "categorie",
@@ -355,6 +372,7 @@
     "email",
     "id",
     "is_admin",
+    "jeton_demandes",
     "last_payment_date",
     "nom",
     "numero_agrement",
