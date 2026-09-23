@@ -79,6 +79,25 @@ export const COUVERTURES = [
    "Une indemnité par famille, et ce n’est pas la famille qui la paie"],
   ["formation-continue-assistante-maternelle-58-heures", "Devenir assistante maternelle",
    "Cinquante-huit heures par an, remises à zéro chaque janvier et jamais reportées"],
+  // Les huit articles écrits pour le parent employeur. Même règle : la phrase
+  // n'est pas le titre, c'est le fait que l'article établit — celui qu'on
+  // retient quand la vignette circule seule dans une conversation.
+  ["budget-mensuel-parent-employeur-assistante-maternelle", "Côté parent employeur",
+   "Le salaire ne bouge pas. Ce sont les indemnités qui varient, et le CMG arrive un mois plus tard"],
+  ["rompre-contrat-assistante-maternelle-parent-employeur", "Côté parent employeur",
+   "Une indemnité de 1/80e des salaires bruts, due dès neuf mois d'accueil"],
+  ["periode-adaptation-assistante-maternelle-parent", "Côté parent employeur",
+   "Trente jours au plus, à l'intérieur de la période d'essai. Et chaque heure se paie"],
+  ["enfant-malade-absence-ce-que-le-parent-doit-payer", "Côté parent employeur",
+   "Sans certificat médical, rien ne se déduit du salaire mensualisé"],
+  ["contrat-assistante-maternelle-cote-parent-employeur", "Côté parent employeur",
+   "Une clause moins favorable que la convention est sans effet, même signée des deux côtés"],
+  ["premiere-declaration-pajemploi-parent-employeur", "Pajemploi et aides",
+   "On déclare le salaire NET. Pajemploi reconstitue lui-même le brut et les cotisations"],
+  ["assistante-maternelle-ou-garde-a-domicile-cout", "Choisir son mode de garde",
+   "Cent pour cent des cotisations prises en charge chez une assistante maternelle, cinquante à domicile"],
+  ["trouver-une-assistante-maternelle-ou-chercher-quand", "Choisir son mode de garde",
+   "Les places se libèrent au printemps, quand les départs à l'école se confirment"],
 ];
 
 async function polices() {

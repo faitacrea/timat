@@ -437,6 +437,10 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .menu-pan .n{font-size:12px;font-weight:800;color:${T.light};margin-left:auto}
 .menu-pan .tout{font-weight:800}
 .menu-pan .sep{height:1px;background:${T.border};margin:5px 8px}
+.menu-pan a.actif{background:${T.cream};box-shadow:inset 2px 0 0 ${T.mauve}}
+.filtres .choix{font-size:13px;font-weight:700;color:${T.mauve};background:${T.cream};
+  border-radius:99px;padding:8px 15px}
+.filtres .choix[hidden]{display:none}
 @media(max-width:560px){.menu-role{position:static}.menu-pan{left:0;right:0;min-width:0}}
 .rubs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
 .rubs[hidden]{display:none}
@@ -582,6 +586,12 @@ const PASTILLES = {
   "Devenir assistante maternelle": ["#E4EDE6", "#40614A"],
   "Choisir son mode de garde": ["#E6EFEE", "#2E5C57"],
   "Situation pratique": ["#F4EAD5", "#7A5E28"],
+  // Trois rubriques tombaient sur le gris de repli : leurs pastilles ne
+  // disaient plus rien, et le menu du parent en comptait deux sur cinq.
+  // Chaque couple est verifie a 4,5:1 au moins (4,53 / 6,46 / 6,58).
+  "Côté parent employeur": ["#F6E4DE", "#9E5341"],
+  "Démarches et agrément": ["#E3EAF2", "#3A5470"],
+  "Pajemploi et aides": ["#E9EFE4", "#415A2E"],
   // Repli d'une rubrique creee dans le Studio sans teinte declaree ici.
   _defaut: ["#EDEAE6", "#6E6669"],
 };
@@ -812,17 +822,18 @@ const SCRIPT_FILTRE = `(function(){
   var vide=document.getElementById('vide');
   var invite=document.getElementById('invite-role');
   var raz=document.getElementById('raz');
+  var choix=document.getElementById('choix');
   var ROLES={assmat:1,parent:1};
   var CLE='timat-blog-audience';
+  var role=null, rubrique=null, titreRubrique='';
 
   function concerne(c,val){
     var a=c.getAttribute('data-audience')||'les-deux';
     return a==='les-deux' || a===val;
   }
 
-  // ── L'OUVERTURE DES MENUS ──
-  // Un seul a la fois : deux panneaux ouverts cote a cote, ce n'est plus un
-  // menu, c'est la bande de pastilles qu'on vient justement de replier.
+  // Un seul menu ouvert a la fois : deux panneaux cote a cote, ce n'est plus
+  // un menu, c'est la bande de pastilles qu'on vient justement de replier.
   function ouvrir(cle){
     barre.querySelectorAll('.dec').forEach(function(b){
       var ici=b.getAttribute('data-aud')===cle;
@@ -832,55 +843,72 @@ const SCRIPT_FILTRE = `(function(){
   }
   function fermer(){ ouvrir(null); }
 
-  // ── LE FILTRE ──
-  // val vaut null tant qu'aucun role n'est choisi : tous les articles restent
+  // role vaut null tant qu'aucun n'est choisi : tous les articles restent
   // visibles. Une page qui s'ouvre sur du vide donnerait l'impression qu'il n'y
-  // a rien a lire.
-  function appliquer(val){
-    if(val && !ROLES[val]) val=null;
+  // a rien a lire. rubrique affine ensuite, sans quitter la page.
+  function appliquer(){
     var n=0;
     cartes.forEach(function(c){
-      var ok = !val || concerne(c,val);
+      var ok = (!role || concerne(c,role)) &&
+               (!rubrique || c.getAttribute('data-rubrique')===rubrique);
       c.style.display = ok ? '' : 'none';
       if(ok)n++;
     });
     barre.querySelectorAll('.dec').forEach(function(b){
-      b.classList.toggle('actif', b.getAttribute('data-aud')===val);
+      b.classList.toggle('actif', b.getAttribute('data-aud')===role);
     });
-    if(invite) invite.hidden=!!val;
-    if(raz) raz.hidden=!val;
+    barre.querySelectorAll('.menu-pan a').forEach(function(a){
+      a.classList.toggle('actif', a.getAttribute('data-rub')===rubrique);
+    });
+    if(invite) invite.hidden=!!role;
+    if(raz) raz.hidden=!role && !rubrique;
+    if(choix){ choix.hidden=!rubrique; choix.textContent=rubrique?titreRubrique:''; }
     if(vide) vide.style.display = n ? 'none' : 'block';
-    try{ if(val) localStorage.setItem(CLE,val); else localStorage.removeItem(CLE); }catch(e){}
+    try{ if(role) localStorage.setItem(CLE,role); else localStorage.removeItem(CLE); }catch(e){}
   }
 
   barre.addEventListener('click',function(e){
     var dec=e.target.closest('.dec');
     if(dec){
       var v=dec.getAttribute('data-aud');
-      // Recliquer le bouton ouvert referme son menu, sans perdre le filtre.
+      // Changer de role remet la rubrique a zero : celles de l'autre role ne
+      // veulent plus rien dire.
+      if(role!==v) rubrique=null;
+      role=v;
       ouvrir(dec.getAttribute('aria-expanded')==='true' ? null : v);
-      appliquer(v);
+      appliquer();
       return;
     }
     var tout=e.target.closest('.tout');
-    if(tout){ appliquer(tout.getAttribute('data-aud')); fermer(); return; }
-    if(e.target.closest('#raz')){ appliquer(null); fermer(); }
+    if(tout){ role=tout.getAttribute('data-aud'); rubrique=null; appliquer(); fermer(); return; }
+
+    var lien=e.target.closest('.menu-pan a[data-rub]');
+    if(lien){
+      // On reste sur place : la page de la rubrique reaffichait toutes les
+      // autres rubriques et defaisait le tri. Le lien reste un vrai lien pour
+      // les robots et pour une navigation sans JavaScript.
+      e.preventDefault();
+      var r=lien.getAttribute('data-rub');
+      rubrique = (rubrique===r) ? null : r;
+      titreRubrique = lien.querySelector('.t') ? lien.querySelector('.t').textContent : '';
+      appliquer(); fermer();
+      return;
+    }
+    if(e.target.closest('#raz')){ role=null; rubrique=null; appliquer(); fermer(); }
   });
 
   // Dehors et Echap referment, comme n'importe quel menu.
   document.addEventListener('click',function(e){ if(!barre.contains(e.target)) fermer(); });
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
-      var ouvertes=barre.querySelector('.dec[aria-expanded="true"]');
-      if(ouvertes){ fermer(); ouvertes.focus(); }
+      var ouverte=barre.querySelector('.dec[aria-expanded="true"]');
+      if(ouverte){ fermer(); ouverte.focus(); }
     }
   });
 
   // Une visite precedente a laisse un role : on le reprend, menus fermes.
-  // Une valeur inconnue — « tout », d'une version precedente — est ignoree.
-  var courant=null;
-  try{ var m=localStorage.getItem(CLE); if(m&&ROLES[m]) courant=m; }catch(e){}
-  appliquer(courant);
+  try{ var m=localStorage.getItem(CLE); if(m&&ROLES[m]) role=m; }catch(e){}
+  appliquer();
 })();`;
 
 // Deux roles, et rien d'autre.
@@ -925,7 +953,12 @@ function barreFiltres(articles) {
     const lignes = miennes
       .map((r) => {
         const [bg, fg] = PASTILLES[r.titre] || PASTILLES._defaut;
-        return `<a href="${escAttr(categorieTarget(r.slug).url)}" role="menuitem">
+        // Un vrai lien, vers une vraie page : sans JavaScript et pour les
+        // robots, il mène à la page de la rubrique. Avec JavaScript, le clic
+        // est intercepté et filtre la liste sur place — cliquer un filtre ne
+        // doit pas emmener ailleurs, surtout pas sur une page qui réaffiche
+        // toutes les rubriques et défait le tri qu'on venait de faire.
+        return `<a href="${escAttr(categorieTarget(r.slug).url)}" role="menuitem" data-rub="${escAttr(r.slug)}">
           <span class="pt" style="background:${bg};color:${fg}" aria-hidden="true">●</span>
           <span class="t">${esc(r.titre)}</span><span class="n">${r.n}</span></a>`;
       })
@@ -944,6 +977,7 @@ function barreFiltres(articles) {
     <span class="lab">Je suis</span>
     ${menus}
     <button type="button" class="raz" id="raz" hidden>Voir tous les articles ✕</button>
+    <span class="choix" id="choix" hidden></span>
   </div>`;
 }
 
