@@ -2563,56 +2563,105 @@ export function RecapFiscalAssmat({enfants,user}){
     return()=>{cancelled=true;};
   },[annee,user?.id,demo,(enfants||[]).map(e=>e.id).join(",")]);
 
-  // LES MOIS REPRIS D'UN AUTRE OUTIL — MONTRES, PAS ADDITIONNES
+  // LES MOIS REPRIS D'UN AUTRE OUTIL
   //
-  // La tentation etait d'ajouter leurs totaux au revenu imposable. On ne le
-  // fait PAS, pour deux raisons qui rendraient le chiffre faux :
+  // Ils entrent dans le calcul DES QUE le net imposable est renseigne — et
+  // seulement a ce moment-la. Le net verse ne suffit pas : ce n'est pas le
+  // montant que la declaration attend, et additionner l'un en croyant l'autre
+  // produit un chiffre faux qui ne se voit pas et se paie des annees plus tard.
   //
-  // 1. La reprise enregistre un salaire NET VERSE. La declaration attend un
-  //    net IMPOSABLE, qui n'est pas le meme montant.
-  // 2. L'abattement se calcule journee par journee, selon la duree de chaque
-  //    accueil et le SMIC en vigueur ce jour-la. La reprise ne garde que des
-  //    totaux mensuels : le detail necessaire n'existe pas.
-  //
-  // Un chiffre faux dans une declaration d'impots ne se voit pas, et se paie
-  // des annees plus tard. On affiche donc ces mois a part, avec ce qu'ils
-  // sont, et on dit ce qu'il reste a faire.
+  // L'abattement, lui, se calcule normalement journee par journee a partir des
+  // pointages. Les mois repris n'en ont pas : on prend l'abattement des anciens
+  // bulletins s'il a ete saisi, sinon on l'ESTIME a 3 x SMIC x jours d'accueil.
+  // L'estimation suppose des journees completes et serait donc trop haute sur
+  // des accueils courts — un abattement trop haut fait SOUS-declarer. Elle est
+  // signalee comme estimation partout ou elle sert.
   const [reprisAnnee,setReprisAnnee]=useState([]);
   useEffect(()=>{
     const ids=(enfants||[]).map(e=>e.id);
     if(demo||!ids.length){setReprisAnnee([]);return;}
     let cancelled=false;
-    supabase.from("historique_mois").select("enfant_id,mois,salaire_net,indemnites_entretien,heures")
+    supabase.from("historique_mois")
+      .select("enfant_id,mois,salaire_net,net_imposable,indemnites_entretien,jours_travailles,abattement,heures")
       .in("enfant_id",ids).gte("mois",annee+"-01").lte("mois",annee+"-12")
       .then(({data})=>{ if(!cancelled) setReprisAnnee(data||[]); });
     return()=>{cancelled=true;};
   },[annee,demo,(enfants||[]).map(e=>e.id).join(",")]);
 
-  const totauxRepris=useMemo(()=>reprisAnnee.reduce((t,m)=>({
-    mois:t.mois+1,
-    net:t.net+(Number(m.salaire_net)||0),
-    entretien:t.entretien+(Number(m.indemnites_entretien)||0),
-  }),{mois:0,net:0,entretien:0}),[reprisAnnee]);
+  // UN MOIS NE COMPTE QU'UNE FOIS.
+  //
+  // Un bulletin emis sur TiMat et un mois repris pour la meme periode
+  // decrivent le MEME mois. Les additionner doublerait le revenu declare — une
+  // erreur dans le mauvais sens, et invisible. Le bulletin gagne : il vient de
+  // nos propres calculs, la reprise est une saisie.
+  const reprisUtiles=useMemo(()=>{
+    const dejaAuBulletin=new Set(bulletins.map(b=>b.enfant_id+"|"+b.mois));
+    return reprisAnnee.filter(m=>!dejaAuBulletin.has(m.enfant_id+"|"+m.mois));
+  },[reprisAnnee,bulletins]);
+
+  // Number(null) vaut ZERO, et zero est fini. Un net imposable absent passait
+  // donc pour un mois a 0 EUR — compte dans le calcul, et surtout GRATIFIE d'un
+  // abattement sans revenu en face. Un abattement de trop fait sous-declarer :
+  // c'est le mauvais sens de l'erreur, et le test l'a attrape.
+  //
+  // Une case vide n'est pas un montant. Elle est absente.
+  const nombreOuRien=(v)=>{
+    if(v===null||v===undefined||v==="")return null;
+    const n=Number(v);
+    return Number.isFinite(n)?n:null;
+  };
+
+  const reprisParEnfant=useMemo(()=>{
+    const r={};
+    for(const m of reprisUtiles){
+      const imp=nombreOuRien(m.net_imposable);
+      const o=r[m.enfant_id]||(r[m.enfant_id]={mois:0,moisSansImposable:0,net:0,imposable:0,entretien:0,jours:0,abattement:0,abattementEstime:false});
+      o.mois++;
+      o.net+=nombreOuRien(m.salaire_net)||0;
+      o.entretien+=nombreOuRien(m.indemnites_entretien)||0;
+      if(imp===null){o.moisSansImposable++;continue;}
+      o.imposable+=imp;
+      const j=nombreOuRien(m.jours_travailles)||0;
+      o.jours+=j;
+      const ab=nombreOuRien(m.abattement);
+      if(ab!==null) o.abattement+=ab;
+      else if(j>0){ o.abattement+=3*smicHoraireAu(m.mois+"-15")*j; o.abattementEstime=true; }
+    }
+    return r;
+  },[reprisUtiles]);
+
+  const totauxRepris=useMemo(()=>Object.values(reprisParEnfant).reduce((t,o)=>({
+    mois:t.mois+o.mois, sansImposable:t.sansImposable+o.moisSansImposable,
+    net:t.net+o.net, imposable:t.imposable+o.imposable, entretien:t.entretien+o.entretien,
+    estime:t.estime||o.abattementEstime,
+  }),{mois:0,sansImposable:0,net:0,imposable:0,entretien:0,estime:false}),[reprisParEnfant]);
 
   // Agregation par enfant (recalcule a chaque toggle AEEH)
   const lignes=useMemo(()=>{
     const ids=Array.from(new Set([...bulletins.map(b=>b.enfant_id),...Object.keys(joursParEnfant)]));
     return ids.map(eid=>{
       const bs=bulletins.filter(b=>b.enfant_id===eid);
-      const salaireImp=Math.round(bs.reduce((s,b)=>s+(Number(b.net_imposable)||0),0)*100)/100;
-      const entretienTot=Math.round(bs.reduce((s,b)=>s+(Number(b.entretien)||0),0)*100)/100;
-      const moisCouverts=new Set(bs.map(b=>b.mois)).size;
+      // Les mois repris dont le net imposable est connu rejoignent le calcul.
+      // Ceux qui ne l'ont pas restent dehors, et sont comptes a part.
+      const rep=reprisParEnfant[eid]||{mois:0,moisSansImposable:0,imposable:0,entretien:0,abattement:0,abattementEstime:false};
+      const salaireImp=Math.round((bs.reduce((s,b)=>s+(Number(b.net_imposable)||0),0)+rep.imposable)*100)/100;
+      const entretienTot=Math.round((bs.reduce((s,b)=>s+(Number(b.entretien)||0),0)+rep.entretien)*100)/100;
+      const moisCouverts=new Set(bs.map(b=>b.mois)).size+(rep.mois-rep.moisSansImposable);
       const baseMult=aeeh[eid]?4:3;
       const jh=joursParEnfant[eid]||[];
       let abatt=0,jPlein=0,jPart=0,jNuit=0;
       jh.forEach(({date,h})=>{const smic=smicHoraireAu(date);if(h>=23.5){jNuit++;abatt+=(baseMult+1)*smic;}else if(h>=8){jPlein++;abatt+=baseMult*smic;}else{jPart++;abatt+=(baseMult*smic/8)*h;}});
+      // L'abattement des mois repris s'ajoute a celui calcule sur les
+      // pointages : ce sont des journees differentes, jamais les memes.
+      abatt+=rep.abattement;
       const baseImposable=salaireImp+entretienTot;
       // Même plafond légal que sur le bulletin.
       abatt=Math.min(Math.round(abatt*100)/100,Math.round(baseImposable*100)/100);
       const netApres=Math.max(0,Math.round((baseImposable-abatt)*100)/100);
-      return{eid,prenom:prenomMap[eid]||"Enfant",salaireImp,entretienTot,baseImposable,abatt,netApres,moisCouverts,jours:jh.length,jPlein,jPart,jNuit};
+      return{eid,prenom:prenomMap[eid]||"Enfant",salaireImp,entretienTot,baseImposable,abatt,netApres,moisCouverts,jours:jh.length+(rep.jours||0),jPlein,jPart,jNuit,
+        moisRepris:rep.mois-rep.moisSansImposable,abattementEstime:rep.abattementEstime};
     });
-  },[bulletins,joursParEnfant,aeeh]);
+  },[bulletins,joursParEnfant,aeeh,reprisParEnfant]);
 
   const totalNet=Math.round(lignes.reduce((s,l)=>s+l.netApres,0)*100)/100;
   const totalAbatt=Math.round(lignes.reduce((s,l)=>s+l.abatt,0)*100)/100;
@@ -2635,17 +2684,23 @@ export function RecapFiscalAssmat({enfants,user}){
 
   return <div className="fi">
     <PageHeader icon="📋" title="Récap fiscal annuel" sub="Revenu imposable après abattement, à reporter sur la déclaration 2042"/>
-    {totauxRepris.mois>0&&<div className="card" style={{marginBottom:14,borderLeft:"4px solid #B8862F",background:"#FFFBF0"}}>
+    {totauxRepris.mois>0&&<div className="card" style={{marginBottom:14,borderLeft:"4px solid "+(totauxRepris.sansImposable?"#B8862F":"#5DA9A1"),background:totauxRepris.sansImposable?"#FFFBF0":"#F3F7F6"}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>
         {totauxRepris.mois} mois de {annee} viennent de votre ancien outil
       </div>
       <div style={{fontSize:12.5,color:"var(--b)",lineHeight:1.65}}>
-        Ils totalisent <b>{nbf(totauxRepris.net,2)} €</b> de salaire net versé
-        {totauxRepris.entretien>0?<> et <b>{nbf(totauxRepris.entretien,2)} €</b> d'indemnités d'entretien</>:null}.
-        <br/><b>Ces montants ne sont pas ajoutés au calcul ci-dessous</b>, et c'est volontaire :
-        la reprise enregistre un net <i>versé</i>, quand la déclaration attend un net <i>imposable</i> —
-        et l'abattement se calcule journée par journée, un détail que vos totaux mensuels ne contiennent pas.
-        <br/>Reportez-vous à vos bulletins de l'époque pour ces {totauxRepris.mois} mois, et additionnez-les vous-même.
+        {totauxRepris.mois-totauxRepris.sansImposable>0&&<>
+          <b>{totauxRepris.mois-totauxRepris.sansImposable} sont comptés ci-dessous</b>, pour {nbf(totauxRepris.imposable,2)} € de net imposable
+          {totauxRepris.entretien>0?<> et {nbf(totauxRepris.entretien,2)} € d'indemnités d'entretien</>:null}.
+        </>}
+        {totauxRepris.sansImposable>0&&<>
+          {totauxRepris.mois-totauxRepris.sansImposable>0?<br/>:null}
+          <b style={{color:"#8A5A1A"}}>{totauxRepris.sansImposable} mois restent dehors</b> : leur net imposable n'a pas été saisi.
+          Le net <i>versé</i> ne peut pas le remplacer — ce ne sont pas les mêmes montants.
+          Complétez-les depuis vos anciens bulletins sur l'écran « Reprendre un contrat ».
+        </>}
+        {totauxRepris.estime&&<><br/>L'abattement de ces mois est <b>estimé</b> à 3 × SMIC × jours d'accueil,
+          faute du détail journalier. Si vos anciens bulletins donnent l'abattement réel, saisissez-le : il primera.</>}
       </div>
     </div>}
     <div className="card" style={{marginBottom:14,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>

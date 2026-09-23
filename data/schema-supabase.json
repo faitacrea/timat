@@ -219,6 +219,7 @@
     "updated_by"
   ],
   "historique_mois": [
+    "abattement",
     "conges_acquis",
     "conges_pris",
     "created_at",
@@ -227,7 +228,9 @@
     "id",
     "indemnites_entretien",
     "indemnites_repas",
+    "jours_travailles",
     "mois",
+    "net_imposable",
     "salaire_net",
     "source",
     "updated_at"
