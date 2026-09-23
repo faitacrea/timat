@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/test-retenue.mjs && node scripts/test-pdf-encodage.mjs && node scripts/test-echappement.mjs && node scripts/test-hors-ligne.mjs && node scripts/test-push.mjs && node scripts/test-qr.mjs && node scripts/test-essai.mjs && node scripts/test-mdp-fuite.mjs && node scripts/test-pointage-public.mjs && node scripts/test-file-blog.mjs && TZ=Europe/Paris node scripts/test-dates.mjs && node scripts/audit.mjs",
+    "build": "node scripts/generate-blog.mjs && node scripts/generate-local.mjs && vite build && node scripts/test-retenue.mjs && node scripts/test-pdf-encodage.mjs && node scripts/test-echappement.mjs && node scripts/test-hors-ligne.mjs && node scripts/test-push.mjs && node scripts/test-qr.mjs && node scripts/test-essai.mjs && node scripts/test-reprise.mjs && node scripts/test-mdp-fuite.mjs && node scripts/test-pointage-public.mjs && node scripts/test-file-blog.mjs && TZ=Europe/Paris node scripts/test-dates.mjs && node scripts/audit.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
@@ -38,7 +38,8 @@
     "test:push": "node scripts/test-push.mjs",
     "parcours:alertes": "node scripts/parcours-alertes.mjs",
     "test:qr": "node scripts/test-qr.mjs",
-    "test:mdp": "node scripts/test-mdp-fuite.mjs"
+    "test:mdp": "node scripts/test-mdp-fuite.mjs",
+    "test:reprise": "node scripts/test-reprise.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
