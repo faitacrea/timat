@@ -328,10 +328,19 @@ for (const p of pages) {
   const sansTaille = new Map();
   for (const p of pages) {
     const html = lire(p);
-    for (const [balise] of html.matchAll(/<img\b[^>]*>/g)) {
-      // Une image dimensionnee par du CSS explicite (width dans style=) tient
-      // deja sa place : on ne la compte pas.
-      if (/\bwidth\s*=/.test(balise) && /\bheight\s*=/.test(balise)) continue;
+    // [^>]* s'arretait au PREMIER « > », meme place dans la valeur d'un
+    // attribut : le onerror du logo contient « <span ...> », et la balise
+    // etait coupee en deux avant qu'on cherche width=. Les valeurs entre
+    // guillemets sont donc traversees d'un bloc.
+    for (const [balise] of html.matchAll(/<img\b(?:"[^"]*"|[^>"])*>/g)) {
+      // On cherche width= SUR la balise, pas DANS la valeur d'un autre
+      // attribut. La premiere version se contentait d'un /\bwidth\s*=/ sur
+      // toute la chaine : le logo portait un onerror="...<span class=&quot;wm&quot;
+      // width=&quot;95&quot;..." et l'audit le comptait comme dimensionne.
+      // Verte, et fausse — sur 213 pages. Les valeurs entre guillemets sont
+      // donc retirees avant de chercher les attributs.
+      const attrs = balise.replace(/"[^"]*"/g, '""');
+      if (/\bwidth\s*=/.test(attrs) && /\bheight\s*=/.test(attrs)) continue;
       if (/style="[^"]*\b(width|aspect-ratio)\s*:/.test(balise)) continue;
       const src = (balise.match(/\bsrc="([^"]+)"/) || [])[1] || "(sans src)";
       const r = routeDe(p);
