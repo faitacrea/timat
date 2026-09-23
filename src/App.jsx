@@ -1357,6 +1357,10 @@ export const LIMITE_ENFANTS_GRATUIT = 1;
 // liste avant d'appeler quoi que ce soit, et une barriere d'audit refuse
 // qu'un verrou soit re-ecrit a la main a cote.
 export const ECRANS_PRO = {
+  // Le registre des medicaments n'est PAS ici, et c'est deliberé : c'est une
+  // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
+  // qu'on est obligee de tenir serait indefendable.
+  reprise_contrat: ["La reprise d'un contrat en cours", "Vos mois déjà passés chez un autre outil, repris en une fois, pour que vos congés et votre récapitulatif fiscal soient justes dès le premier mois. Cette fonction fait partie du forfait Pro."],
   bilans: ["Les bilans de journée", "Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."],
   documents_complet: ["Documents et attestations", "Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."],
   recap_fiscal: ["Le récapitulatif fiscal", "Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."],
@@ -3775,6 +3779,7 @@ const GROUPS_AM={
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Développement et acquisitions de l'enfant"},
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence, allergies, soins"},
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans périodiques à partager"},
+    {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Consignation obligatoire de chaque médicament donné"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
@@ -3786,6 +3791,7 @@ const GROUPS_AM={
     {id:"mode_borne",l:"Borne & QR de pointage",ic:"🚪",d:"Les parents pointent eux-mêmes : écran d'entrée, ou QR affiché au mur"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
+    {id:"reprise_contrat",l:"Reprendre un contrat",ic:"📥",d:"Vos mois passés chez un autre outil, sans tout ressaisir"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
@@ -3802,6 +3808,7 @@ const GROUPS_P={
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence et informations santé"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Le projet pédagogique"},
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans partagés par l'assistante maternelle"},
+    {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Chaque médicament donné à votre enfant, daté"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
@@ -6441,11 +6448,11 @@ export const DEFAULT_CONFIG = {
     // La phrase qui separe l'essai de TiMat de celui des autres : ailleurs,
     // au dernier jour, l'acces s'arrete. Elle n'etait ecrite nulle part.
     tarifsRelais:"Après vos 2 mois offerts, rien ne se ferme : le compte gratuit prend le relais, et vos données restent là.",
-    proDesc:"La solution complète. Tout est inclus.",
+    proDesc:"Tout ce qui touche à la paie et aux documents officiels.",
     proBtnTxt:"Je démarre mes 2 mois offerts →",
     freeLabel:"Gratuit, pour toujours",
     freeBtnTxt:"Ouvrir mon compte gratuit",
-    freeDesc:"Un enfant accueilli, et tout le quotidien avec lui. Sans carte bancaire et sans date de fin.",
+    freeDesc:"Un enfant accueilli, et tout son quotidien. Sans carte bancaire, sans date de fin.",
     freePrice:"0€",
   },
   landing: {
@@ -6639,36 +6646,45 @@ export const DEFAULT_CONFIG = {
   // Cette liste doit correspondre exactement aux verrous du code. Une ligne qui
   // promet plus que l'application n'accorde se decouvre au pire moment, et une
   // ligne qui promet moins fait perdre une inscription pour rien.
+  // LA LISTE DU GRATUIT — ce qu'on a, puis ce qu'on n'a pas.
+  //
+  // Elle enumerait dix fonctions au meme niveau, dont « Frais kilometriques »
+  // et « Export de vos donnees (RGPD) ». Ces deux-la ne font choisir personne :
+  // elles allongent la colonne et noient les trois qui comptent vraiment.
+  //
+  // Une colonne de tarif n'est pas un inventaire. On garde ce qui fait dire
+  // « ca, j'en ai besoin » — et les croix disent clairement ce qu'il manque,
+  // parce qu'un gratuit dont on ne voit pas la limite ne fait jamais monter
+  // au forfait.
   freeItems:[
     [true, "1 enfant accueilli"],
-    [true, "Journal quotidien"],
-    [true, "Pointage & Repas"],
-    [true, "Messagerie parents"],
-    [true, "Calendrier"],
-    [true, "Fiche d'urgence & santé"],
-    [true, "Suivi des versements reçus"],
-    [true, "Frais kilométriques"],
-    [true, "20 photos et 50 Mo de documents"],
-    [true, "Export de vos données (RGPD)"],
-    [false, "Bulletins de salaire & Pajemploi"],
-    [false, "Bilans, rapports et récap fiscal"],
-    [false, "PMI, documents et attestations"],
-    [false, "Courriers types & fin de contrat"],
-    [false, "Enfants illimités"],
+    [true, "Le cahier de liaison : repas, sieste, change, activités"],
+    [true, "Le pointage des heures, signé des deux côtés"],
+    [true, "L'espace parent, gratuit et sans limite"],
+    [true, "Le contrat et ses avenants"],
+    [true, "Le registre des médicaments, imprimable"],
+    [false, "Les bulletins de salaire"],
+    [false, "Le récapitulatif Pajemploi du mois"],
+    [false, "Les attestations fiscale et France Travail"],
+    [false, "Le solde de tout compte en fin de contrat"],
+    [false, "Un deuxième enfant"],
   ],
+  // LA LISTE DU PRO — les douze etaient a plat, du plus decisif
+  // (« Bulletins de salaire complets ») au plus anecdotique
+  // (« Centre d'aide prioritaire »), sans hierarchie. Les trois premieres
+  // lignes sont les seules qu'on lit vraiment : ce sont donc les trois
+  // raisons de payer, et elles portent le mot « tous vos enfants » qui est
+  // notre difference de structure avec les autres.
   proItems:[
-    "✨ Bilans de journée automatiques",
-    "📜 Bulletins de salaire complets",
-    "🏛️ Export Pajemploi en 1 clic",
-    "📑 Attestation fiscale",
-    "📸 Photos sans limite de nombre",
-    "🏥 Communication PMI",
-    "🗂️ 5 Go de documents",
-    "👶 Enfants illimités",
-    "🏛️ Compatible Pajemploi+",
-    "📋 Solde de tout compte",
-    "✉️ Courriers types",
-    "❓ Centre d'aide prioritaire",
+    "Les bulletins de salaire, conformes à la convention",
+    "Le récapitulatif Pajemploi, prêt à reporter",
+    "Tous vos enfants accueillis, sans supplément",
+    "Le solde de tout compte et la fin de contrat",
+    "Les attestations fiscale et France Travail",
+    "La reprise de vos mois passés chez un autre outil",
+    "Le récapitulatif mensuel remis au parent",
+    "Vos revenus et vos congés, tous employeurs réunis",
+    "Photos sans limite et 5 Go de documents",
   ],
   guarantees:[
     "✅ Résiliable en 1 clic, sans reconduction",
@@ -6934,6 +6950,8 @@ export const Bilans = lazy(() => _ecrans().then(m => ({ default: m.Bilans })));
 export const Parametres = lazy(() => _ecrans().then(m => ({ default: m.Parametres })));
 export const ListeAttente = lazy(() => _ecrans().then(m => ({ default: m.ListeAttente })));
 export const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m.PlanningPeriscolaire })));
+export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.RegistreMedicaments })));
+export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
 export const ForumCommunaute = lazy(() => _ecrans().then(m => ({ default: m.ForumCommunaute })));
 export const ProjetAccueil = lazy(() => _ecrans().then(m => ({ default: m.ProjetAccueil })));
 
@@ -7568,6 +7586,8 @@ export default function App(){
       case "temps_travail": return <TempsDeTravail enfants={enfants} role={role} user={user}/>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
+      case "registre_medicaments": return <RegistreMedicaments enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "reprise_contrat": return <RepriseContrat enfants={enfants} role={role} user={user}/>;
       case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;

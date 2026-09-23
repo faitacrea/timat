@@ -15,7 +15,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  CPill, D, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction
+  CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction
 } from "./App.jsx";
 import {
   DEMANDES_DEMO, FORUM_POSTS, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ageEnMois, minimumHoraireAu
@@ -1653,3 +1653,512 @@ export function ProjetAccueil({user,role}){
 }
 
 // ========== BOUTIQUE ==========
+
+// ========== LE REGISTRE DES MEDICAMENTS ==========
+//
+// Le decret n 2021-1131 impose depuis le 1er septembre 2021 qu'un geste
+// d'administration soit inscrit IMMEDIATEMENT dans un registre dedie, avec le
+// nom de l'enfant, la date et l'heure de l'acte, le nom de la personne qui l'a
+// realise, le nom du medicament et la posologie.
+//
+// Ces cinq mentions sont les cinq champs obligatoires du formulaire, et aucune
+// ne peut etre laissee vide : un registre incomplet ne prouve rien le jour ou
+// on le demande.
+//
+// Une ligne inscrite ne se supprime pas. La base ne porte volontairement aucune
+// politique DELETE sur cette table : une erreur se corrige, elle ne s'efface
+// pas.
+export function RegistreMedicaments({enfants,role,pEId,user}){
+  const estParent = role==="parent";
+  const listeEnfants = estParent ? enfants.filter(e=>e.id===pEId||!pEId) : enfants;
+  const [selId,setSelId]=useState(listeEnfants[0]?.id);
+  const [lignes,setLignes]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const [toast,setToast]=useState("");
+  const [saving,setSaving]=useState(false);
+  const enfant = enfants.find(e=>e.id===selId);
+
+  const vide=()=>({
+    date_acte:isoJour(new Date()),
+    heure_acte:new Date().toTimeString().slice(0,5),
+    medicament:"",
+    posologie:"",
+    administre_par:[user?.prenom,user?.nom].filter(Boolean).join(" ")||"",
+    autorisation:"",
+    observations:"",
+  });
+  const [form,setForm]=useState(vide());
+  const [edite,setEdite]=useState(null);
+
+  useEffect(()=>{
+    if(!selId){setChargement(false);return;}
+    let vivant=true;
+    setChargement(true);
+    supabase.from("medicaments").select("*").eq("enfant_id",selId)
+      .order("date_acte",{ascending:false}).order("heure_acte",{ascending:false})
+      .then(({data,error})=>{
+        if(!vivant)return;
+        if(error)setToast("Le registre n'a pas pu être lu.");
+        setLignes(data||[]);
+        setChargement(false);
+      });
+    return()=>{vivant=false;};
+  },[selId]);
+
+  // Les cinq mentions legales, verifiees ici et pas seulement par le navigateur :
+  // un champ « required » se contourne, la loi non.
+  const MANQUE=(f)=>{
+    if(!f.date_acte) return "la date de l'acte";
+    if(!f.heure_acte) return "l'heure de l'acte";
+    if(!f.medicament.trim()) return "le nom du médicament";
+    if(!f.posologie.trim()) return "la posologie";
+    if(!f.administre_par.trim()) return "le nom de la personne qui a administré";
+    return null;
+  };
+
+  const enregistrer=async()=>{
+    const m=MANQUE(form);
+    if(m){setToast("Le registre exige "+m+".");return;}
+    setSaving(true);
+    const charge={...form, enfant_id:selId,
+      medicament:form.medicament.trim(), posologie:form.posologie.trim(),
+      administre_par:form.administre_par.trim()};
+    let res;
+    if(edite){
+      res=await supabase.from("medicaments").update({...charge,updated_at:new Date().toISOString()}).eq("id",edite).select().single();
+    }else{
+      res=await supabase.from("medicaments").insert(charge).select().single();
+    }
+    setSaving(false);
+    if(res.error){setToast("L'enregistrement a échoué. Rien n'a été inscrit.");return;}
+    setLignes(l=>edite?l.map(x=>x.id===edite?res.data:x):[res.data,...l]);
+    setForm(vide()); setEdite(null);
+    setToast(edite?"Ligne corrigée.":"Inscrit au registre.");
+    logAction&&logAction(edite?"registre_medicament_corrige":"registre_medicament_inscrit");
+  };
+
+  const imprimer=async()=>{
+    if(!lignes.length){setToast("Le registre est vide : rien à imprimer.");return;}
+    try{
+      const jsPDF=await chargerJsPDF();
+      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"landscape"}));
+      const PW=297,MX=12;let y=18;
+      const orange=[184,98,47],noir=[40,40,40],gris=[120,120,120];
+      doc.setFontSize(17);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
+      doc.text("Registre d'administration des medicaments",MX,y);y+=8;
+      doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
+      doc.text("Decret n 2021-1131 - article R.2111-1 du code de la sante publique",MX,y);y+=7;
+      doc.setFontSize(10);doc.setTextColor(...noir);
+      doc.text("Enfant : "+[enfant?.prenom,enfant?.nom].filter(Boolean).join(" "),MX,y);y+=5;
+      doc.text("Assistante maternelle : "+[user?.prenom,user?.nom].filter(Boolean).join(" "),MX,y);y+=5;
+      if(user?.numero_agrement){doc.text("N agrement : "+user.numero_agrement,MX,y);y+=5;}
+      y+=3;
+      const COLS=[["Date",22],["Heure",16],["Medicament",62],["Posologie",62],["Administre par",50],["Observations",0]];
+      const entete=()=>{
+        doc.setFillColor(245,245,245);doc.rect(MX,y,PW-2*MX,7,"F");
+        doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(...noir);
+        let x=MX+2;COLS.forEach(([l,w])=>{doc.text(l,x,y+4.8);x+=w||45;});
+        y+=7;doc.setFont("helvetica","normal");
+      };
+      entete();
+      for(const l of [...lignes].reverse()){
+        if(y>190){doc.addPage();y=18;entete();}
+        let x=MX+2;
+        const cellules=[
+          (l.date_acte||"").split("-").reverse().join("/"),
+          l.heure_acte||"",
+          l.medicament||"",
+          l.posologie||"",
+          l.administre_par||"",
+          l.observations||"",
+        ];
+        cellules.forEach((c,i)=>{
+          const larg=COLS[i][1]||45;
+          doc.text(String(doc.splitTextToSize(String(c),larg-3)[0]||""),x,y+4.5);
+          x+=larg;
+        });
+        doc.setDrawColor(228,220,208);doc.line(MX,y+6.5,PW-MX,y+6.5);
+        y+=7;
+      }
+      y+=6;
+      doc.setFontSize(8);doc.setTextColor(...gris);
+      doc.text("Document genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
+      doc.save("registre-medicaments-"+(enfant?.prenom||"enfant")+".pdf");
+      logAction&&logAction("registre_medicament_imprime");
+    }catch(e){ setToast("Le PDF n'a pas pu être créé."); }
+  };
+
+  if(!listeEnfants.length) return <div className="fi">
+    <PageHeader icon="💊" title="Registre des médicaments" sub="Consignation obligatoire des médicaments administrés"/>
+    <EmptyState emoji="👶" titre="Aucun enfant" texte="Le registre s'ouvre dès qu'un enfant est enregistré."/>
+  </div>;
+
+  const champ=(k,label,props={})=>
+    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+      <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{label}</label>
+      <input value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}
+        style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}} {...props}/>
+    </div>;
+
+  return <div className="fi">
+    <PageHeader icon="💊" title="Registre des médicaments" sub="Consignation obligatoire des médicaments administrés"/>
+
+    {enfants.length>1&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+      {listeEnfants.map(e=>
+        <button key={e.id} onClick={()=>setSelId(e.id)} className={"btn s "+(selId===e.id?"bT":"")}
+          style={selId===e.id?{}:{background:"var(--c)",color:"var(--b)"}}>{e.prenom}</button>)}
+    </div>}
+
+    <div style={{background:"#FFF6F2",border:"1px solid #F3DDD4",borderLeft:"4px solid #C84B31",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+      Chaque geste doit être inscrit <b>immédiatement</b>, avec cinq mentions : la date,
+      l'heure, le médicament, la posologie et le nom de la personne qui l'a administré.
+      Une ligne inscrite ne peut plus être supprimée — elle se corrige.
+    </div>
+
+    {!estParent&&<div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>
+        {edite?"Corriger une inscription":"Nouvelle inscription"}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+        {champ("date_acte","Date de l'acte",{type:"date"})}
+        {champ("heure_acte","Heure de l'acte",{type:"time"})}
+      </div>
+      <div style={{display:"grid",gap:10,marginBottom:10}}>
+        {champ("medicament","Médicament",{placeholder:"Nom exact, tel qu'il figure sur la boîte"})}
+        {champ("posologie","Posologie",{placeholder:"Dose et modalité — ex. 1 dose de 5 kg, par voie orale"})}
+        {champ("administre_par","Administré par",{placeholder:"Prénom et nom"})}
+        {champ("autorisation","Autorisation / ordonnance",{placeholder:"Ordonnance du Dr X du 12/09, ou autorisation parentale écrite"})}
+        {champ("observations","Observations",{placeholder:"Facultatif"})}
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button className="btn bT" disabled={saving} onClick={enregistrer} style={{flex:1}}>
+          {saving?"…":(edite?"Enregistrer la correction":"Inscrire au registre")}
+        </button>
+        {edite&&<button className="btn" style={{background:"var(--bg)",color:"var(--b)"}}
+          onClick={()=>{setEdite(null);setForm(vide());}}>Annuler</button>}
+      </div>
+    </div>}
+
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>
+        {lignes.length} inscription{lignes.length>1?"s":""}
+      </div>
+      {!!lignes.length&&<button className="btn s" onClick={imprimer}
+        style={{background:"var(--c)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}><IconeOuEmoji e="🖨️"/> Imprimer le registre</button>}
+    </div>
+
+    {chargement
+      ? <div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>
+      : !lignes.length
+        ? <EmptyState emoji="💊" titre="Aucun médicament inscrit" texte={estParent?"Vous verrez ici chaque médicament donné à votre enfant, avec sa date et sa posologie.":"La première inscription ouvrira le registre. Il s'imprime ensuite en un document."}/>
+        : <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {lignes.map(l=>
+              <div key={l.id} style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:12,padding:"12px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"flex-start"}}>
+                  <div style={{minWidth:0}}>
+                    <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{l.medicament}</div>
+                    <div style={{fontSize:12.5,color:"var(--m)",marginTop:2}}>{l.posologie}</div>
+                  </div>
+                  <div style={{fontSize:12,color:"var(--m)",whiteSpace:"nowrap",textAlign:"right"}}>
+                    {(l.date_acte||"").split("-").reverse().join("/")}<br/>{l.heure_acte}
+                  </div>
+                </div>
+                <div style={{fontSize:12,color:"var(--m)",marginTop:8,borderTop:"1px solid var(--br)",paddingTop:7}}>
+                  Administré par <b style={{color:"var(--b)"}}>{l.administre_par}</b>
+                  {l.autorisation?<> · {l.autorisation}</>:null}
+                  {l.observations?<><br/>{l.observations}</>:null}
+                  {l.updated_at?<><br/><i>Corrigé le {new Date(l.updated_at).toLocaleDateString("fr-FR")}</i></>:null}
+                </div>
+                {!estParent&&<button className="btn s" style={{marginTop:9,background:"var(--bg)",color:"var(--b)"}}
+                  onClick={()=>{setEdite(l.id);setForm({
+                    date_acte:l.date_acte||"",heure_acte:l.heure_acte||"",medicament:l.medicament||"",
+                    posologie:l.posologie||"",administre_par:l.administre_par||"",
+                    autorisation:l.autorisation||"",observations:l.observations||"",
+                  });window.scrollTo({top:0,behavior:"smooth"});}}>Corriger</button>}
+              </div>)}
+          </div>}
+
+    {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+  </div>;
+}
+
+// ========== REPRENDRE UN CONTRAT DEJA COMMENCE ==========
+//
+// Sans reprise d'historique, changer d'outil veut dire ressaisir des mois de
+// paie a la main. Personne ne le fait : c'est le verrou qui garde les gens chez
+// le concurrent, et les deux concurrents offrent la reprise.
+//
+// On ne recree PAS les bulletins anterieurs : ils ont ete emis ailleurs, ils
+// font foi, et les refabriquer produirait deux documents differents pour le
+// meme mois. On reprend leurs TOTAUX, et on garde d'ou ils viennent.
+//
+// Deux chemins, parce que les deux situations existent : un fichier exporte de
+// l'ancien outil, ou une saisie mois par mois quand il n'y a qu'un tableau
+// papier.
+const COLONNES_REPRISE=[
+  ["mois","Mois","AAAA-MM"],
+  ["heures","Heures","h réalisées"],
+  ["salaire_net","Salaire net","€ versés"],
+  ["indemnites_entretien","Indemnités d'entretien","€"],
+  ["indemnites_repas","Frais de repas","€"],
+  ["conges_acquis","Congés acquis","jours"],
+  ["conges_pris","Congés pris","jours"],
+];
+
+// Un point decimal, une virgule, un espace insecable, un symbole euro : les
+// exports des autres outils melangent tout. Un nombre illisible devient null,
+// jamais zero — zero serait un chiffre faux, et un chiffre faux dans un
+// recapitulatif fiscal ne se voit pas.
+export const nombreRepris=(v)=>{
+  if(v===null||v===undefined)return null;
+  const t=String(v).replace(/ |\s|€|h/g,"").replace(",",".").trim();
+  if(!t)return null;
+  const n=Number(t);
+  return Number.isFinite(n)?n:null;
+};
+
+// « 2026-01 », « 01/2026 », « janvier 2026 » : on normalise vers AAAA-MM, et on
+// refuse ce qu'on n'a pas compris plutot que de deviner.
+const MOIS_FR=["janvier","fevrier","mars","avril","mai","juin","juillet","aout","septembre","octobre","novembre","decembre"];
+export const moisRepris=(v)=>{
+  const t=String(v||"").trim().toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g,"");
+  let m=t.match(/^(\d{4})[-/](\d{1,2})$/);
+  if(m)return m[1]+"-"+String(m[2]).padStart(2,"0");
+  m=t.match(/^(\d{1,2})[-/](\d{4})$/);
+  if(m)return m[2]+"-"+String(m[1]).padStart(2,"0");
+  m=t.match(/^([a-z]+)\s+(\d{4})$/);
+  if(m){const i=MOIS_FR.indexOf(m[1]);if(i>=0)return m[2]+"-"+String(i+1).padStart(2,"0");}
+  return null;
+};
+
+export function RepriseContrat({enfants,role,user}){
+  const [selId,setSelId]=useState(enfants[0]?.id);
+  const [mois,setMois]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const [toast,setToast]=useState("");
+  const [saving,setSaving]=useState(false);
+  const [apercu,setApercu]=useState(null);
+  const enfant=enfants.find(e=>e.id===selId);
+
+  const videSaisie=()=>({mois:"",heures:"",salaire_net:"",indemnites_entretien:"",indemnites_repas:"",conges_acquis:"",conges_pris:""});
+  const [saisie,setSaisie]=useState(videSaisie());
+
+  const recharger=(id)=>{
+    setChargement(true);
+    supabase.from("historique_mois").select("*").eq("enfant_id",id).order("mois",{ascending:false})
+      .then(({data,error})=>{
+        if(error)setToast("L'historique n'a pas pu être lu.");
+        setMois(data||[]); setChargement(false);
+      });
+  };
+  useEffect(()=>{ if(!selId){setChargement(false);return;} recharger(selId); },[selId]);
+
+  const totaux=mois.reduce((t,m)=>({
+    heures:t.heures+(m.heures||0),
+    net:t.net+(m.salaire_net||0),
+    acquis:t.acquis+(m.conges_acquis||0),
+    pris:t.pris+(m.conges_pris||0),
+  }),{heures:0,net:0,acquis:0,pris:0});
+
+  const ajouter=async()=>{
+    const mm=moisRepris(saisie.mois);
+    if(!mm){setToast("Le mois n'est pas lisible. Attendu : 2026-01, 01/2026 ou janvier 2026.");return;}
+    setSaving(true);
+    const ligne={enfant_id:selId,mois:mm,source:"saisie manuelle"};
+    COLONNES_REPRISE.slice(1).forEach(([k])=>{ligne[k]=nombreRepris(saisie[k]);});
+    const {error}=await supabase.from("historique_mois").upsert(ligne,{onConflict:"enfant_id,mois"});
+    setSaving(false);
+    if(error){setToast("Le mois n'a pas pu être enregistré.");return;}
+    setSaisie(videSaisie()); recharger(selId);
+    setToast("Mois "+mm+" repris.");
+    logAction&&logAction("reprise_mois_saisi");
+  };
+
+  const supprimer=async(id)=>{
+    const {error}=await supabase.from("historique_mois").delete().eq("id",id);
+    if(error){setToast("La suppression a échoué.");return;}
+    recharger(selId);
+    setToast("Mois retiré de la reprise.");
+  };
+
+  // Le fichier n'est jamais ecrit directement : il passe par un apercu ou la
+  // lecture de CHAQUE ligne est montree avant d'etre acceptee. Un import qui
+  // s'ecrit tout seul est un import qu'on decouvre faux trois mois plus tard.
+  const lireFichier=async(fichier)=>{
+    if(!fichier)return;
+    try{
+      const texte=await fichier.text();
+      const sep=(texte.split("\n")[0].match(/;/g)||[]).length >= (texte.split("\n")[0].match(/,/g)||[]).length ? ";" : ",";
+      const lignes=texte.split(/\r?\n/).filter(l=>l.trim());
+      if(lignes.length<2){setToast("Le fichier ne contient aucune ligne de données.");return;}
+      const entete=lignes[0].split(sep).map(c=>c.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""));
+      const idx=(...noms)=>{for(const n of noms){const i=entete.findIndex(c=>c.includes(n));if(i>=0)return i;}return -1;};
+      const cols={
+        mois:idx("mois","periode","date"),
+        heures:idx("heure"),
+        salaire_net:idx("net","salaire"),
+        indemnites_entretien:idx("entretien"),
+        indemnites_repas:idx("repas"),
+        conges_acquis:idx("acquis"),
+        conges_pris:idx("pris"),
+      };
+      if(cols.mois<0){setToast("Aucune colonne de mois trouvée dans le fichier.");return;}
+      const lues=lignes.slice(1).map(l=>{
+        const c=l.split(sep);
+        const brut=(c[cols.mois]||"").replace(/"/g,"");
+        const o={brut, mois:moisRepris(brut)};
+        COLONNES_REPRISE.slice(1).forEach(([k])=>{
+          o[k]=cols[k]>=0?nombreRepris((c[cols[k]]||"").replace(/"/g,"")):null;
+        });
+        return o;
+      });
+      setApercu(lues);
+    }catch(e){ setToast("Le fichier n'a pas pu être lu."); }
+  };
+
+  const validerApercu=async()=>{
+    const bonnes=(apercu||[]).filter(l=>l.mois);
+    if(!bonnes.length){setToast("Aucune ligne exploitable : le mois n'a été compris nulle part.");return;}
+    setSaving(true);
+    const charge=bonnes.map(l=>{
+      const o={enfant_id:selId,mois:l.mois,source:"import fichier"};
+      COLONNES_REPRISE.slice(1).forEach(([k])=>{o[k]=l[k];});
+      return o;
+    });
+    const {error}=await supabase.from("historique_mois").upsert(charge,{onConflict:"enfant_id,mois"});
+    setSaving(false);
+    if(error){setToast("L'import a échoué. Rien n'a été enregistré.");return;}
+    setApercu(null); recharger(selId);
+    setToast(bonnes.length+" mois repris.");
+    logAction&&logAction("reprise_import_valide");
+  };
+
+  if(role==="parent") return <div className="fi">
+    <PageHeader icon="📥" title="Reprise de contrat" sub="Réservé à l'assistante maternelle"/>
+    <EmptyState emoji="🔒" titre="Cet écran n'est pas le vôtre" texte="La reprise d'un contrat déjà commencé se fait depuis le compte de l'assistante maternelle."/>
+  </div>;
+
+  if(!enfants.length) return <div className="fi">
+    <PageHeader icon="📥" title="Reprendre un contrat en cours" sub="Vos mois passés, sans tout ressaisir"/>
+    <EmptyState emoji="👶" titre="Aucun enfant" texte="Enregistrez d'abord l'enfant et son contrat, puis revenez reprendre les mois déjà passés."/>
+  </div>;
+
+  const champ=(k,label,ph)=>
+    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+      <label style={{fontSize:11.5,fontWeight:600,color:"var(--b)"}}>{label}</label>
+      <input value={saisie[k]||""} onChange={e=>setSaisie(s=>({...s,[k]:e.target.value}))} placeholder={ph}
+        inputMode={k==="mois"?"text":"decimal"}
+        style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}/>
+    </div>;
+
+  return <div className="fi">
+    <PageHeader icon="📥" title="Reprendre un contrat en cours" sub="Vos mois passés, sans tout ressaisir"/>
+
+    {enfants.length>1&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+      {enfants.map(e=>
+        <button key={e.id} onClick={()=>{setSelId(e.id);setApercu(null);}} className={"btn s "+(selId===e.id?"bT":"")}
+          style={selId===e.id?{}:{background:"var(--c)",color:"var(--b)"}}>{e.prenom}</button>)}
+    </div>}
+
+    <div style={{background:"#F3F7F6",border:"1px solid #DCE9E6",borderLeft:"4px solid #5DA9A1",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+      Vos bulletins déjà émis ailleurs font foi : on ne les refabrique pas. On reprend
+      leurs <b>totaux</b>, pour que vos congés acquis, votre récapitulatif fiscal et
+      votre solde de tout compte soient justes dès le premier mois sur TiMat.
+      <br/><b>Gardez vos anciens documents</b> : changer d'outil ne remplace pas vos
+      obligations d'archivage.
+    </div>
+
+    {apercu
+      ? <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}>Vérifiez avant d'enregistrer</div>
+          <div style={{fontSize:12.5,color:"var(--m)",marginBottom:12}}>
+            {apercu.filter(l=>l.mois).length} mois compris sur {apercu.length} lignes lues.
+            Rien n'est encore enregistré.
+          </div>
+          <div style={{maxHeight:300,overflow:"auto",border:"1px solid var(--br)",borderRadius:10}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+              <thead><tr>{["Mois","Heures","Net","Acquis","Pris"].map(h=>
+                <th key={h} style={{textAlign:"left",padding:"7px 8px",background:"var(--bg)",position:"sticky",top:0,color:"var(--b)"}}>{h}</th>)}</tr></thead>
+              <tbody>
+                {apercu.map((l,i)=>
+                  <tr key={i} style={{background:l.mois?"transparent":"#FFF6F2"}}>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)",color:l.mois?"var(--b)":"#C84B31"}}>
+                      {l.mois||("« "+l.brut+" » non compris")}
+                    </td>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.heures??"—"}</td>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.salaire_net??"—"}</td>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.conges_acquis??"—"}</td>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.conges_pris??"—"}</td>
+                  </tr>)}
+              </tbody>
+            </table>
+          </div>
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button className="btn bT" disabled={saving} onClick={validerApercu} style={{flex:1}}>
+              {saving?"…":"Enregistrer ces mois"}
+            </button>
+            <button className="btn" style={{background:"var(--bg)",color:"var(--b)"}} onClick={()=>setApercu(null)}>Annuler</button>
+          </div>
+        </div>
+      : <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>Importer un fichier</div>
+          <div style={{fontSize:12.5,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
+            Un export CSV de votre ancien outil, ou un tableur enregistré en CSV.
+            Les colonnes sont reconnues par leur nom : mois, heures, net, entretien,
+            repas, acquis, pris. Rien n'est enregistré avant que vous ayez vérifié.
+          </div>
+          <input type="file" accept=".csv,text/csv,text/plain"
+            onChange={e=>{lireFichier(e.target.files?.[0]); e.target.value="";}}
+            style={{fontSize:13,color:"var(--b)"}}/>
+        </div>}
+
+    <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>Ou saisir un mois</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:12}}>
+        {COLONNES_REPRISE.map(([k,l,ph])=>champ(k,l,ph))}
+      </div>
+      <button className="btn bT" disabled={saving} onClick={ajouter} style={{width:"100%"}}>
+        {saving?"…":"Ajouter ce mois"}
+      </button>
+    </div>
+
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>
+        {mois.length} mois repris{enfant?" pour "+enfant.prenom:""}
+      </div>
+    </div>
+
+    {!!mois.length&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginBottom:14}}>
+      {[["Heures",nbf(totaux.heures,1)+" h"],["Net versé",nbf(totaux.net,2)+" €"],
+        ["Congés acquis",nbf(totaux.acquis,1)+" j"],["Congés pris",nbf(totaux.pris,1)+" j"]].map(([l,v])=>
+        <div key={l} style={{background:"var(--bg)",border:"1px solid var(--br)",borderRadius:12,padding:"11px 12px",textAlign:"center"}}>
+          <div style={{fontSize:11,color:"var(--m)"}}>{l}</div>
+          <div style={{fontSize:17,fontWeight:700,color:"var(--b)",marginTop:2}}>{v}</div>
+        </div>)}
+    </div>}
+
+    {chargement
+      ? <div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>
+      : !mois.length
+        ? <EmptyState emoji="📥" titre="Aucun mois repris" texte="Importez un fichier ou saisissez le premier mois. Vous pourrez corriger et compléter à tout moment."/>
+        : <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {mois.map(m=>
+              <div key={m.id} style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:12,padding:"11px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                <div style={{minWidth:0}}>
+                  <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{m.mois}</div>
+                  <div style={{fontSize:12,color:"var(--m)",marginTop:2}}>
+                    {m.heures!=null?nbf(m.heures,1)+" h · ":""}
+                    {m.salaire_net!=null?nbf(m.salaire_net,2)+" € net":"net non repris"}
+                    {m.conges_acquis!=null?" · "+nbf(m.conges_acquis,1)+" j acquis":""}
+                  </div>
+                  <div style={{fontSize:11,color:"var(--m)",marginTop:3,fontStyle:"italic"}}>{m.source}</div>
+                </div>
+                <button className="btn s" style={{background:"var(--bg)",color:"#C84B31"}}
+                  onClick={()=>supprimer(m.id)}>Retirer</button>
+              </div>)}
+          </div>}
+
+    {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+  </div>;
+}
