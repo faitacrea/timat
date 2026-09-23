@@ -1922,6 +1922,31 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   const isDemoUser=enfants.every(e=>["e1","e2","e3"].includes(e.id));
   const nbEnfants=enfants.length;
   const nonSigne=enfants.filter(e=>!e.contrat?.signe_asmat);
+
+  // L'AUTORISATION QUI MANQUE ET QU'ON NE VOIT PAS
+  //
+  // Un enfant accueilli depuis trois mois sans autorisation de soins
+  // d'urgence, c'est un vrai risque — et personne ne s'en apercoit tant qu'il
+  // ne se passe rien. Le jour ou il se passe quelque chose, il est trop tard
+  // pour la demander.
+  //
+  // On ne remonte QUE celle-la sur l'accueil. Alerter sur les six ferait une
+  // liste qu'on apprend a ignorer ; celle-ci est la seule dont l'absence se
+  // paie comptant.
+  const [sansUrgence,setSansUrgence]=useState([]);
+  useEffect(()=>{
+    if(demoStats||isDemoUser||!enfants.length){setSansUrgence([]);return;}
+    let vivant=true;
+    (async()=>{
+      const ids=enfants.map(e=>e.id);
+      const{data,error}=await supabase.from("autorisations")
+        .select("enfant_id,accordee").in("enfant_id",ids).eq("type","urgence");
+      if(!vivant||error)return;
+      const repondu=new Set((data||[]).filter(a=>a.accordee!==null&&a.accordee!==undefined).map(a=>a.enfant_id));
+      setSansUrgence(enfants.filter(e=>!repondu.has(e.id)));
+    })();
+    return()=>{vivant=false;};
+  },[enfants,demoStats,isDemoUser]);
   // FIX P14D - garder pt et tx pour la liste des enfants plus bas (mock D pour l'instant)
   const pt=D.pointages.filter(p=>p.date===TODAY_STR);
   const tx=D.transmissions.filter(t=>t.date===TODAY_STR);
@@ -2097,6 +2122,19 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
           {nonSigne.length>1?"Contrats à signer":"Contrat à signer"}
         </span>
         <span style={{display:"block",fontSize:12.5,color:"var(--R)",opacity:.85,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nonSigne.map(e=>e.prenom).join(", ")}</span>
+      </span>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--R)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}} aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>}
+
+    {sansUrgence.length>0&&<button className="ligne-alerte" onClick={()=>setPage("autorisations")}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--R)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}} aria-hidden="true">
+        <path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+      </svg>
+      <span style={{flex:1,minWidth:0,textAlign:"left"}}>
+        <span style={{display:"block",fontSize:13.5,fontWeight:700,color:"var(--R)"}}>
+          Autorisation de soins d'urgence manquante
+        </span>
+        <span style={{display:"block",fontSize:12.5,color:"var(--R)",opacity:.85,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sansUrgence.map(e=>e.prenom).join(", ")}</span>
       </span>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--R)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}} aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
     </button>}
@@ -4795,7 +4833,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       m.setAttribute("content",content); return m;
     };
     const [md,prevDesc]=setMeta("description",DESC);
-    const [mk]=setMeta("keywords","application assistante maternelle, logiciel assistante maternelle, cahier de liaison numérique, calcul mensualisation, bulletin de salaire, déclaration Pajemploi, CMG, contrat assistante maternelle, planning nounou, MAM, parents employeurs");
+    const [mk]=setMeta("keywords","application assistante maternelle, logiciel assistante maternelle, cahier de liaison numérique, carnet de vie assistante maternelle, calcul mensualisation, bulletin de salaire, déclaration Pajemploi, CMG, contrat assistante maternelle, planning nounou, MAM, parents employeurs");
     // Open Graph + Twitter
     setProp("og:title",document.title); setProp("og:description",DESC); setProp("og:type","website");
     setProp("og:url",SITE); setProp("og:image",OGIMG); setProp("og:site_name","TiMat"); setProp("og:locale","fr_FR");
@@ -6684,7 +6722,7 @@ export const DEFAULT_CONFIG = {
   // La phrase qui remplace les croix. Elle est dans la config du back-office
   // comme le reste : le jour ou le partage gratuit/Pro bouge, elle se corrige
   // sans toucher au code.
-  freeLimite:"Les bulletins de salaire, le récapitulatif Pajemploi, les attestations et les enfants suivants font partie du forfait Pro.",
+  freeLimite:"Besoin des bulletins de salaire, du récapitulatif Pajemploi, des attestations ou d'un deuxième enfant ? C'est le forfait Pro, à droite.",
   proItems:[
     "Les bulletins de salaire, conformes à la convention",
     "Le récapitulatif Pajemploi, prêt à reporter",

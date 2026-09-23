@@ -1690,6 +1690,21 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
   const [form,setForm]=useState(vide());
   const [edite,setEdite]=useState(null);
 
+  // L'autorisation d'administrer un medicament vit sur l'ecran Autorisations,
+  // signee par le parent. Le registre la LIT : inscrire un medicament que le
+  // parent a refuse, ou n'a jamais autorise, est precisement l'erreur que ce
+  // registre existe pour empecher. On ne bloque pas — il y a des urgences, et
+  // un geste fait doit etre inscrit meme s'il n'aurait pas du avoir lieu —
+  // mais on le dit, avant et apres.
+  const [autoMedic,setAutoMedic]=useState(undefined);
+  useEffect(()=>{
+    if(!selId){setAutoMedic(undefined);return;}
+    let vivant=true;
+    supabase.from("autorisations").select("accordee").eq("enfant_id",selId).eq("type","medicaments").maybeSingle()
+      .then(({data})=>{ if(vivant) setAutoMedic(data?.accordee); });
+    return()=>{vivant=false;};
+  },[selId]);
+
   useEffect(()=>{
     if(!selId){setChargement(false);return;}
     let vivant=true;
@@ -1737,12 +1752,14 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
     logAction&&logAction(edite?"registre_medicament_corrige":"registre_medicament_inscrit");
   };
 
-  // Vierge ou rempli, c'est LE MEME document : meme entete, memes colonnes,
-  // meme mention du decret. Deux generateurs separes auraient diverge au
-  // premier changement de colonne, et la version papier serait devenue celle
-  // qui ne correspond plus.
-  const imprimer=async(vierge=false)=>{
-    if(!vierge && !lignes.length){setToast("Le registre est vide : rien à imprimer.");return;}
+  // Le registre papier ne se fabrique PAS ici. C'est exactement le meme
+  // fichier que celui offert sur la boutique : un second exemplaire genere
+  // dans l'application aurait fini par differer du premier, et c'est celui
+  // qu'on imprime et qu'on garde des annees qui serait devenu le faux.
+  const REGISTRE_PAPIER = "/documents/registre-medicaments-administres.pdf";
+
+  const imprimer=async()=>{
+    if(!lignes.length){setToast("Le registre est vide : rien à imprimer.");return;}
     try{
       const jsPDF=await chargerJsPDF();
       const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"landscape"}));
@@ -1753,8 +1770,8 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
       doc.text("Decret n 2021-1131 - article R.2111-1 du code de la sante publique",MX,y);y+=7;
       doc.setFontSize(10);doc.setTextColor(...noir);
-      doc.text("Enfant : "+(vierge?"..................................................":[enfant?.prenom,enfant?.nom].filter(Boolean).join(" ")),MX,y);y+=5;
-      doc.text("Assistante maternelle : "+(vierge?"..................................................":[user?.prenom,user?.nom].filter(Boolean).join(" ")),MX,y);y+=5;
+      doc.text("Enfant : "+[enfant?.prenom,enfant?.nom].filter(Boolean).join(" "),MX,y);y+=5;
+      doc.text("Assistante maternelle : "+[user?.prenom,user?.nom].filter(Boolean).join(" "),MX,y);y+=5;
       if(user?.numero_agrement){doc.text("N agrement : "+user.numero_agrement,MX,y);y+=5;}
       y+=3;
       const COLS=[["Date",22],["Heure",16],["Medicament",62],["Posologie",62],["Administre par",50],["Observations",0]];
@@ -1765,12 +1782,7 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
         y+=7;doc.setFont("helvetica","normal");
       };
       entete();
-      // 22 lignes vides tiennent sur une page A4 paysage : de quoi couvrir
-      // plusieurs mois a la main sans reimprimer.
-      const aTracer = vierge
-        ? Array.from({length:22},()=>({date_acte:"",heure_acte:"",medicament:"",posologie:"",administre_par:"",observations:""}))
-        : [...lignes].reverse();
-      for(const l of aTracer){
+      for(const l of [...lignes].reverse()){
         if(y>190){doc.addPage();y=18;entete();}
         let x=MX+2;
         const cellules=[
@@ -1791,11 +1803,9 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       }
       y+=6;
       doc.setFontSize(8);doc.setTextColor(...gris);
-      doc.text(vierge
-        ? "Registre vierge genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - a remplir a la main, immediatement apres chaque geste."
-        : "Document genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
-      doc.save((vierge?"registre-medicaments-vierge":"registre-medicaments-"+(enfant?.prenom||"enfant"))+".pdf");
-      logAction&&logAction(vierge?"registre_medicament_vierge":"registre_medicament_imprime");
+      doc.text("Document genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
+      doc.save("registre-medicaments-"+(enfant?.prenom||"enfant")+".pdf");
+      logAction&&logAction("registre_medicament_imprime");
     }catch(e){ setToast("Le PDF n'a pas pu être créé."); }
   };
 
@@ -1826,6 +1836,16 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       Une ligne inscrite ne peut plus être supprimée — elle se corrige.
     </div>
 
+    {!estParent&&autoMedic!==true&&<div style={{background:autoMedic===false?"#FFF6F2":"#FFFBF0",border:"1px solid "+(autoMedic===false?"#F3DDD4":"#EFE4C8"),borderLeft:"4px solid "+(autoMedic===false?"#C84B31":"#B8862F"),borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+      {autoMedic===false
+        ? <><b>Le parent a refusé l'administration de médicaments.</b> Si un geste a tout de même été nécessaire, inscrivez-le — un geste fait doit figurer au registre — et prévenez le parent sans attendre.</>
+        : <><b>Aucune autorisation signée pour les médicaments.</b> Demandez-la au parent sur l'écran Autorisations avant d'administrer quoi que ce soit, même du paracétamol.</>}
+      <button className="btn s" style={{marginTop:9,background:"var(--bg)",color:"var(--b)"}}
+        onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"autorisations"}))}>
+        Ouvrir les autorisations
+      </button>
+    </div>}
+
     {!estParent&&<div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>
         {edite?"Corriger une inscription":"Nouvelle inscription"}
@@ -1855,10 +1875,10 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
         {lignes.length} inscription{lignes.length>1?"s":""}
       </div>
       <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-        {!!lignes.length&&<button className="btn s" onClick={()=>imprimer(false)}
+        {!!lignes.length&&<button className="btn s" onClick={imprimer}
           style={{background:"var(--c)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}><IconeOuEmoji e="🖨️"/> Imprimer le registre</button>}
-        {!estParent&&<button className="btn s" onClick={()=>imprimer(true)}
-          style={{background:"var(--bg)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}><IconeOuEmoji e="📥"/> Version vierge à remplir</button>}
+        {!estParent&&<a className="btn s" href={REGISTRE_PAPIER} download
+          style={{background:"var(--bg)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6,textDecoration:"none"}}><IconeOuEmoji e="📥"/> Le registre papier</a>}
       </div>
     </div>
 

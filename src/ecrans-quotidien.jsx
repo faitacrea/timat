@@ -3284,10 +3284,36 @@ export function FicheUrgence({enfants,role,pEId,user}){
     p1Nom:"",p1Lien:"",p1Tel:"",p2Nom:"",p2Lien:"",p2Tel:"",p3Nom:"",p3Lien:"",p3Tel:"",
     medecin:"",medecinTel:"",groupe:"",vaccins:"Oui",pai:"Non",
     allergies:enfant.allergies?.join(", ")||"",traitements:"",particularites:"",
-    authUrgences:true,authParacetamol:false,authSorties:true,authVoiture:true,authPhotos:false,
   });
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
   const ro=role==="asmat"||!editing;
+
+  // LES AUTORISATIONS NE SONT PLUS SAISIES ICI.
+  //
+  // La fiche portait cinq cases a cocher — urgences, paracetamol, sorties,
+  // voiture, photos — dont trois arrivaient DEJA COCHEES. Une autorisation
+  // pre-cochee que personne n'a signee s'imprimait ensuite sur la fiche comme
+  // si le parent l'avait donnee. Et l'ecran « Autorisations » posait les memes
+  // questions, en les faisant signer : deux reponses possibles pour la meme
+  // question, dont une seule avait une valeur.
+  //
+  // La fiche AFFICHE donc ce que le parent a signe, et ne le saisit plus.
+  const [autorisations,setAutorisations]=useState(null);
+  useEffect(()=>{
+    if(!enfant?.id){setAutorisations([]);return;}
+    let vivant=true;
+    supabase.from("autorisations").select("type,accordee,signe_le,precisions").eq("enfant_id",enfant.id)
+      .then(({data})=>{ if(vivant) setAutorisations(data||[]); });
+    return()=>{vivant=false;};
+  },[enfant?.id]);
+  const AUTORISATIONS_FICHE=[
+    ["urgence","Soins d'urgence et hospitalisation"],
+    ["medicaments","Administrer un medicament"],
+    ["sorties","Sorties hors du domicile"],
+    ["transport","Transport en vehicule"],
+    ["photos","Photographier l'enfant"],
+  ];
+  const etatAuth=(t)=>(autorisations||[]).find(a=>a.type===t)?.accordee;
 
   // CONTACT PARENT TEMPS REEL P15 - lit profiles en direct, jamais fige, critique en cas d'urgence
   const [parentLive,setParentLive]=useState(null);
@@ -3368,10 +3394,14 @@ export function FicheUrgence({enfants,role,pEId,user}){
     const w=window.open("","_blank");
     if(!w){setToast("Autorisez les popups");return;}
     const f=form;
-    const authLines=[
-      ["Emmener aux urgences",f.authUrgences],["Paracetamol (ordonnance jointe)",f.authParacetamol],
-      ["Sorties exterieures",f.authSorties],["Transport en voiture",f.authVoiture],["Photos (usage interne)",f.authPhotos]
-    ].map(([l,v])=>"<div style='margin:6px 0;font-size:13px'><span style='color:"+(v?"#5DA9A1":"#C84B31")+";font-weight:700'>"+(v?"[X] Oui  [ ] Non":"[ ] Oui  [X] Non")+"</span>  "+l+"</div>").join("");
+    // « Sans reponse » s'imprime tel quel. Une case vide laisserait croire a un
+    // refus, et une case cochee a une autorisation : les deux seraient faux.
+    const authLines=AUTORISATIONS_FICHE.map(([t,l])=>{
+      const v=etatAuth(t);
+      const marque=v===true?"[X] Oui  [ ] Non":v===false?"[ ] Oui  [X] Non":"Sans reponse a ce jour";
+      const couleur=v===true?"#5DA9A1":v===false?"#C84B31":"#7C8A90";
+      return "<div style='margin:6px 0;font-size:13px'><span style='color:"+couleur+";font-weight:700'>"+marque+"</span>  "+H(l)+"</div>";
+    }).join("");
     const html=[
       "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'/><title>Fiche urgence - "+H(f.prenom)+"</title>",
       "<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#2E4859;font-size:13px;line-height:1.8}",
@@ -3561,12 +3591,24 @@ export function FicheUrgence({enfants,role,pEId,user}){
           {ta("Allergies","allergies","Aucune connue")}{ta("Traitements","traitements","Aucun")}{ta("Particularites","particularites")}
         </div>
         <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="✅"/> Autorisations</div>
-          {chk("Emmener aux urgences","authUrgences")}
-          {chk("Paracetamol (ordonnance jointe)","authParacetamol")}
-          {chk("Sorties exterieures","authSorties")}
-          {chk("Transport en voiture","authVoiture")}
-          {chk("Photos (usage interne)","authPhotos")}
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="✅"/> Autorisations</div>
+          <div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.55}}>
+            Elles se répondent et se signent sur l'écran <b>Autorisations</b>, par le parent lui-même. Ce qui est affiché ici en vient.
+          </div>
+          {autorisations===null
+            ? <div style={{fontSize:12.5,color:"var(--m)"}}>Chargement…</div>
+            : AUTORISATIONS_FICHE.map(([t,l])=>{
+                const v=etatAuth(t);
+                const couleur=v===true?"#3D6B50":v===false?"#C84B31":"#7C8A90";
+                return <div key={t} style={{display:"flex",justifyContent:"space-between",gap:10,fontSize:13,padding:"6px 0",borderBottom:"1px solid var(--br)"}}>
+                  <span style={{color:"var(--b)"}}>{l}</span>
+                  <b style={{color:couleur,whiteSpace:"nowrap"}}>{v===true?"Accordée":v===false?"Refusée":"Sans réponse"}</b>
+                </div>;
+              })}
+          <button className="btn s" style={{marginTop:10,background:"var(--bg)",color:"var(--b)"}}
+            onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"autorisations"}))}>
+            Ouvrir les autorisations
+          </button>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {role==="parent"&&(editing
