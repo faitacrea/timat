@@ -295,11 +295,14 @@
   ],
   "messages_pmi": [
     "asmat_id",
+    "canal",
     "created_at",
+    "date_echange",
     "de",
     "email_from",
     "id",
     "lu",
+    "objet",
     "texte"
   ],
   "modifications_contrat": [
@@ -380,6 +383,8 @@
     "parent2_email",
     "parent2_nom",
     "parent2_prenom",
+    "pmi_email",
+    "pmi_nom",
     "pmi_tel",
     "prenom",
     "role",

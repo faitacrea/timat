@@ -2720,6 +2720,39 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucune coordonnee officielle ecrite en dur ---
+//
+// Un annuaire de PMI par departement vivait dans le code : une quarantaine
+// d'adresses et de telephones, INVENTES. La Haute-Garonne y figurait comme
+// pmi@haute-garonne.fr quand le contact publie par le departement est
+// accueilpmi-individuelcollectif@cd31.fr, et le repli conseillait d'appeler
+// « le 15 » — le SAMU — pour joindre la PMI.
+//
+// Ces valeurs s'affichaient comme officielles, et le telephone s'imprimait sur
+// la FICHE D'URGENCE, a cote du SAMU et des pompiers. Un numero faux a cet
+// endroit est compose le jour ou tout va mal.
+//
+// On ne devine pas une coordonnee d'administration. Elle est saisie par celle
+// qui la connait, ou elle n'apparait pas.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  // Les domaines d'administrations et de collectivites. On cherche une adresse
+  // ecrite en dur, pas une URL de documentation : d'ou le « @ ».
+  const motif = /["'][\w.+-]+@[\w.-]*(?:gouv\.fr|urssaf\.fr|caf\.fr|departement\d*\.fr|cd\d{2}\.fr|\w+-?\w*\.fr)["']/g;
+  const ADMIN = /(pmi|caf|urssaf|prefecture|conseil-?departemental|departement)/i;
+  for (const [nom, src] of sources) {
+    if (nom === "backoffice.jsx") continue; // reglages internes, pas des coordonnees affichees
+    const propre = src.replace(/^\s*\/\/.*$/gm, "");
+    for (const m of propre.matchAll(motif)) {
+      const adresse = m[0].slice(1, -1);
+      // support@timat.app et les adresses du produit ne sont pas concernees.
+      if (/timat/i.test(adresse)) continue;
+      if (!ADMIN.test(adresse)) continue;
+      signale("coordonnées", `${nom} contient une adresse d'administration ecrite en dur (${adresse}) : une coordonnee officielle fausse ne se voit pas, elle se recopie. Elle doit etre saisie par l'utilisatrice.`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

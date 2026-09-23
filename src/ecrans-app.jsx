@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PMI_PAR_DEP, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
 import {
   ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
@@ -456,14 +456,19 @@ export function Sante({enfants,role,pEId,user}){
   const medNom=fiche?.medecin||(enfant?.medecin?enfant.medecin.split("-")[0].trim():"");
   const medTel=fiche?.medecinTel||(enfant?.medecin?.split("-")[1]?.trim()||"");
   const ficheAJour=!!fiche;
-  const dep=user?.code_postal?.slice(0,2)||user?.departement||"";
-  const pmi=(typeof PMI_PAR_DEP!=="undefined")?(PMI_PAR_DEP[dep]||PMI_PAR_DEP["default"]):null;
-  // Numéro PMI : priorité au numéro direct saisi dans le profil assmat (donné en formation),
-  // sinon repli sur l'annuaire PMI_PAR_DEP par département.
-  const pmiTelPerso=(user?.pmi_tel||"").trim();
-  const pmiTelAnnuaire=(pmi&&/\d/.test(pmi.tel||""))?pmi.tel:"";
-  const pmiTel=pmiTelPerso||pmiTelAnnuaire;
-  const pmiNom=pmi?.nom||"PMI";
+  // LE NUMERO DE PMI N'EST PLUS DEVINE.
+  //
+  // Il venait d'un annuaire par departement ecrit en dur, et INVENTE : la
+  // Haute-Garonne y figurait avec pmi@haute-garonne.fr quand le contact publie
+  // par le departement est accueilpmi-individuelcollectif@cd31.fr. Le repli
+  // conseillait meme d'appeler « le 15 » — le SAMU.
+  //
+  // Ce numero s'imprime ICI, sur la fiche d'urgence, a cote du SAMU et des
+  // pompiers. Un numero faux a cet endroit-la est ce qu'on peut faire de pire :
+  // il est composé le jour où tout va mal. Seul celui que l'assistante
+  // maternelle a saisi elle-meme s'affiche ; sinon, la ligne n'apparait pas.
+  const pmiTel=(user?.pmi_tel||"").trim();
+  const pmiNom=(user?.pmi_nom||"").trim()||"PMI";
   const urgences=[
     {l:"SAMU",v:"15",ic:"🚑"},
     {l:"Pompiers",v:"18",ic:"🚒"},
@@ -1949,109 +1954,206 @@ export function TempsDeTravail({enfants,role,user}){
   </div>;
 }
 
+// ============================================================
+// LE JOURNAL DES ÉCHANGES AVEC LA PMI
+// ------------------------------------------------------------
+// L'ancien écran annonçait TROIS choses fausses, et en affichait
+// une quatrième :
+//
+//   1. « vos messages sont envoyés par email à la PMI » — rien
+//      n'était envoyé. La fonction d'envoi n'ajoutait une ligne
+//      qu'à l'état React, perdue au rechargement suivant ;
+//   2. « leurs réponses arrivent automatiquement ici » — rien ne
+//      recevait, et la table messages_pmi, qui existait pourtant,
+//      n'était jamais lue ni écrite ;
+//   3. un répertoire d'adresses PMI par département, INVENTÉ. La
+//      Haute-Garonne y figurait comme pmi@haute-garonne.fr quand
+//      le contact publié par le département est
+//      accueilpmi-individuelcollectif@cd31.fr. Le repli
+//      conseillait d'appeler « le 15 » — le SAMU — pour joindre
+//      la PMI ;
+//   4. une carte « Mon agrément » entièrement fabriquée : numéro
+//      AGR-2023-0042, date de délivrance, renouvellement, « 4
+//      enfants autorisés », « ✅ Valide ». Aucune de ces valeurs
+//      ne venait du compte.
+//
+// Une adresse officielle inventée est pire qu'une absence
+// d'adresse : on la recopie, on écrit, et personne ne répond
+// jamais. Un numéro d'agrément inventé est pire encore.
+//
+// CE QUE FAIT L'ÉCRAN MAINTENANT, ET RIEN D'AUTRE : il garde la
+// trace de ce qui a été échangé avec la PMI. C'est ce qui sert
+// vraiment le jour d'un contrôle ou d'un renouvellement — et
+// TiMat le dit, au lieu de prétendre acheminer le courrier.
 export function CommunicationPMI({role,user,hasRealData}){
-  const [msgs,setMsgs]=useState(hasRealData?[]:PMI_MESSAGES);
-  const [txt,setTxt]=useState("");
+  const demo=!hasRealData;
+  const [msgs,setMsgs]=useState([]);
+  const [chargement,setChargement]=useState(!demo);
   const [toast,setToast]=useState("");
-  const nonLus=msgs.filter(m=>!m.lu&&m.de==="PMI").length;
-  // PMI du secteur - basée sur le code postal du profil asmat
-  // L'asmat peut configurer son département dans ses paramètres
-  const dep=user?.code_postal?.slice(0,2)||user?.departement||"";
-  const pmiInfo=PMI_PAR_DEP[dep]||PMI_PAR_DEP["default"];
-  const pmiEmail=pmiInfo.email;
-  const asmatEmail=user?.email||"votre-email@timat.fr";
+  const [ouvert,setOuvert]=useState(false);
+  const vide=()=>({sens:"sortant",objet:"",texte:"",date:isoJour(new Date()),canal:"E-mail"});
+  const [form,setForm]=useState(vide());
 
-  const markRead=(id)=>setMsgs(p=>p.map(m=>m.id===id?{...m,lu:true}:m));
+  // Le contact de SA PMI : il figure sur son agrément. On ne le devine pas.
+  const [pmi,setPmi]=useState({nom:"",email:"",tel:""});
+  const [editContact,setEditContact]=useState(false);
 
-  const send=()=>{if(!txt.trim())return;
-    setMsgs(p=>[...p,{id:"pm"+Date.now(),de:"asmat",h:TODAY_H,date:TODAY_STR,txt,lu:true,email:asmatEmail}]);
-    setTxt("");
-    setToast("Message envoyé par email à "+pmiEmail+" ✓");
+  useEffect(()=>{
+    if(demo||!user?.id){setChargement(false);return;}
+    let vivant=true;
+    (async()=>{
+      const [{data:ms,error},{data:pr}]=await Promise.all([
+        supabase.from("messages_pmi").select("*").eq("asmat_id",user.id).order("date_echange",{ascending:false}),
+        supabase.from("profiles").select("pmi_nom,pmi_email,pmi_tel").eq("id",user.id).maybeSingle(),
+      ]);
+      if(!vivant)return;
+      if(error)setToast("Le journal n'a pas pu être lu.");
+      setMsgs(ms||[]);
+      setPmi({nom:pr?.pmi_nom||"",email:pr?.pmi_email||"",tel:pr?.pmi_tel||""});
+      setChargement(false);
+    })();
+    return()=>{vivant=false;};
+  },[demo,user?.id]);
+
+  const enregistrerContact=async()=>{
+    const {error}=await supabase.from("profiles")
+      .update({pmi_nom:pmi.nom||null,pmi_email:pmi.email||null,pmi_tel:pmi.tel||null}).eq("id",user.id);
+    if(error){setToast("Le contact n'a pas pu être enregistré.");return;}
+    setEditContact(false); setToast("Contact de votre PMI enregistré.");
   };
+
+  const consigner=async()=>{
+    if(!form.texte.trim()){setToast("Écrivez ce qui a été échangé.");return;}
+    const ligne={
+      asmat_id:user.id, de:form.sens==="sortant"?"asmat":"PMI",
+      objet:form.objet.trim()||null, texte:form.texte.trim(),
+      date_echange:form.date||isoJour(new Date()), canal:form.canal||null, lu:true,
+    };
+    const {data,error}=await supabase.from("messages_pmi").insert(ligne).select().single();
+    if(error){setToast("L'enregistrement a échoué.");return;}
+    setMsgs(m=>[data,...m]); setForm(vide()); setOuvert(false);
+    setToast("Échange consigné.");
+    logAction&&logAction("pmi_echange_consigne");
+  };
+
+  // Écrire à la PMI ouvre le courrier de l'assistante maternelle, avec SON
+  // adresse à elle. C'est celle que la PMI doit voir, et celle à laquelle elle
+  // répondra. TiMat n'achemine rien.
+  const ecrire=()=>{
+    if(!pmi.email){setToast("Renseignez d'abord l'adresse de votre PMI.");setEditContact(true);return;}
+    window.open("mailto:"+encodeURIComponent(pmi.email)+"?subject="+encodeURIComponent(form.objet||"Message d'une assistante maternelle agréée"),"_blank");
+  };
+
+  const champ=(k,label,props={})=>
+    <div style={{display:"flex",flexDirection:"column",gap:4}}>
+      <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{label}</label>
+      <input value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))}
+        style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}} {...props}/>
+    </div>;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🏛️" title="Communication PMI" sub="Protection Maternelle et Infantile - échanges par email"/>
+    <PageHeader icon="🏛️" title="Mes échanges avec la PMI" sub="Le journal de ce qui a été dit, daté et retrouvable"/>
 
-    {/* Explication du fonctionnement */}
-    <div style={{background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:12,padding:"12px 16px",marginBottom:16,fontSize:13,color:"var(--B)",lineHeight:1.6}}>
-      <strong><IconeOuEmoji e="📧"/> Fonctionnement :</strong> vos messages sont envoyés par email à la PMI ({pmiEmail}). 
-      Leurs réponses arrivent automatiquement ici. Vous apparaissez comme expéditeur : {asmatEmail}.
-      <br/><strong><IconeOuEmoji e="🏛️"/> {pmiInfo.nom}</strong> - {pmiInfo.tel} - {pmiInfo.adresse}
-      <br/><span style={{fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="💡"/> Pour configurer votre PMI de secteur, renseignez votre code postal dans Paramètres → Profil</span>
+    <div style={{background:"var(--c)",border:"1px solid var(--br)",borderLeft:"4px solid var(--B)",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+      <b>TiMat n'envoie rien à la PMI et ne reçoit rien d'elle.</b> Vous écrivez depuis votre
+      messagerie habituelle, et vous consignez ici ce qui a été échangé — appel, courrier,
+      visite. Le jour d'un contrôle ou d'un renouvellement, c'est cette trace datée qui compte.
     </div>
 
-    {nonLus>0&&<div style={{background:"#EBF4FF",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
-      <IconeOuEmoji e="📬"/>
-      <span style={{fontSize:13,fontWeight:700,color:"var(--B)"}}>{nonLus} nouveau{nonLus>1?"x":""} message{nonLus>1?"s":""} de la PMI</span>
-      <button className="btn bG s"style={{marginLeft:"auto",padding:"4px 10px"}}onClick={()=>setMsgs(p=>p.map(m=>({...m,lu:true})))}>
-        Tout marquer lu
-      </button>
+    <div className="card" style={{marginBottom:14}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:editContact?12:0}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Ma PMI de secteur</div>
+        {!demo&&<button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}}
+          onClick={()=>setEditContact(v=>!v)}>{editContact?"Annuler":(pmi.email||pmi.tel?"Modifier":"Renseigner")}</button>}
+      </div>
+      {editContact
+        ? <div style={{display:"grid",gap:10}}>
+            <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+              Ces coordonnées figurent sur votre agrément, ou sur le site de votre conseil
+              départemental. TiMat ne les devine pas : une adresse officielle fausse ne se
+              voit pas, et le courrier part dans le vide.
+            </div>
+            {[["nom","Service ou puéricultrice référente"],["email","Adresse e-mail"],["tel","Téléphone"]].map(([k,l])=>
+              <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}>
+                <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{l}</label>
+                <input value={pmi[k]||""} onChange={e=>setPmi(p=>({...p,[k]:e.target.value}))}
+                  style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}/>
+              </div>)}
+            <button className="btn bT" onClick={enregistrerContact}>Enregistrer</button>
+          </div>
+        : (pmi.nom||pmi.email||pmi.tel)
+          ? <div style={{fontSize:13,color:"var(--b)",lineHeight:1.8,marginTop:8}}>
+              {pmi.nom&&<div>{pmi.nom}</div>}
+              {pmi.email&&<div>{pmi.email}</div>}
+              {pmi.tel&&<div>{pmi.tel}</div>}
+              <button className="btn s bT" style={{marginTop:9}} onClick={ecrire}>Écrire à ma PMI</button>
+            </div>
+          : <div style={{fontSize:12.5,color:"var(--m)",marginTop:6,lineHeight:1.6}}>
+              Pas encore renseignée. Ses coordonnées figurent sur votre agrément.
+            </div>}
+    </div>
+
+    {!demo&&<div className="card" style={{marginBottom:14}}>
+      {!ouvert
+        ? <button className="btn bT" style={{width:"100%"}} onClick={()=>setOuvert(true)}>Consigner un échange</button>
+        : <div style={{display:"grid",gap:10}}>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Consigner un échange</div>
+            <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+              {[["sortant","Je les ai contactés"],["entrant","Ils m'ont contactée"]].map(([v,l])=>
+                <button key={v} onClick={()=>setForm(f=>({...f,sens:v}))}
+                  className={"btn s "+(form.sens===v?"bT":"")}
+                  style={form.sens===v?{}:{background:"var(--bg)",color:"var(--b)"}}>{l}</button>)}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {champ("date","Date",{type:"date"})}
+              <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>Par quel moyen</label>
+                <select value={form.canal} onChange={e=>setForm(f=>({...f,canal:e.target.value}))}
+                  style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}>
+                  {["E-mail","Téléphone","Courrier","Visite","Autre"].map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+            {champ("objet","Objet",{placeholder:"Renouvellement, visite, question sur un accueil…"})}
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>Ce qui a été dit</label>
+              <textarea value={form.texte} onChange={e=>setForm(f=>({...f,texte:e.target.value}))}
+                placeholder="Les points abordés, ce qui a été demandé, ce qui a été répondu."
+                style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)",minHeight:100,resize:"vertical"}}/>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button className="btn bT" style={{flex:1}} onClick={consigner}>Enregistrer</button>
+              <button className="btn" style={{background:"var(--bg)",color:"var(--b)"}} onClick={()=>{setOuvert(false);setForm(vide());}}>Annuler</button>
+            </div>
+          </div>}
     </div>}
 
-    <div className="g2">
-      <div className="card">
-        <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"var(--b)"}}>Messages PMI</div>
-        <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:400,overflowY:"auto"}}>
-          {msgs.map(m=><div key={m.id}onClick={()=>!m.lu&&m.de==="PMI"&&markRead(m.id)}
-            style={{cursor:!m.lu&&m.de==="PMI"?"pointer":"default"}}>
-            <div style={{flex:1,background:m.de==="PMI"?"var(--Bp)":"var(--Tp)",borderRadius:12,padding:"10px 14px",
-              borderLeft:(m.de==="PMI"?"3px solid var(--B)":"3px solid var(--T)"),
-              opacity:m.lu?1:.95,boxShadow:!m.lu&&m.de==="PMI"?"0 0 0 2px var(--B)":"none"}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <span style={{fontSize:11,fontWeight:700,color:m.de==="PMI"?"var(--B)":"var(--T)"}}>
-                  {m.de==="PMI"?"🏛️ PMI":"👩👧 "+(user?.prenom||"Marie")}
-                  {m.email&&<span style={{fontSize:11,color:"var(--l)",marginLeft:6}}>via {m.email}</span>}
-                </span>
-                <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                  {!m.lu&&m.de==="PMI"&&<div style={{width:8,height:8,borderRadius:"50%",background:"var(--R)"}}/>}
-                  <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace"}}>{m.h}</span>
-                </div>
-              </div>
-              <div style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>{m.txt}</div>
-            </div>
-          </div>)}
-        </div>
-        <div style={{marginTop:12,display:"flex",flexDirection:"column",gap:8,paddingTop:12,borderTop:"1px solid var(--br)"}}>
-          <div style={{fontSize:11,color:"var(--l)"}}>Répondre à la PMI - sera envoyé à {pmiEmail}</div>
-          <div style={{display:"flex",gap:8}}>
-            <textarea className="ta"value={txt}onChange={e=>setTxt(e.target.value)}
-              placeholder="Votre message à la PMI..."style={{flex:1,minHeight:60,resize:"none"}}/>
-            <button className="btn bT"onClick={send}style={{alignSelf:"flex-end"}}><IconeOuEmoji e="📧"/> Envoyer</button>
-          </div>
-        </div>
-      </div>
-
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,marginBottom:12,color:"var(--b)"}}><IconeOuEmoji e="📋"/> Mon agrément</div>
-          {[["N° agrément","AGR-"+(new Date().getFullYear()-3)+"-0042"],["Délivré le","15/09/"+(new Date().getFullYear()-3)],["Renouvellement","Septembre "+(new Date().getFullYear()+2)],["Enfants autorisés","4 simultanément"],["Statut","✅ Valide"]].map(([l,v])=>
-            <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
-              <span style={{color:"var(--l)"}}>{l}</span>
-              <span style={{fontWeight:600,color:"var(--b)"}}>{v}</span>
-            </div>)}
-          <div style={{marginTop:10,padding:"8px 12px",background:"#EAF4EE",borderRadius:9,border:"1px solid var(--S)",fontSize:12,color:"var(--S)"}}>
-            <IconeOuEmoji e="💡"/> TiMat vous préviendra à l'approche du renouvellement de votre agrément.
-          </div>
-        </div>
-        <div className="card">
-          <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}><IconeOuEmoji e="📁"/> Documents officiels</div>
-          {[["Agrément PMI "+(new Date().getFullYear()-3),"✅"],["Assurance RC Pro","✅"],["Formation Continue","⏳"]].map(([n,s])=>
-            <div key={n}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
-              <span style={{fontSize:13,color:"var(--b)"}}>{n}</span>
-              <span>{s}</span>
-            </div>)}
-        </div>
-        <div className="card"style={{background:"var(--Bp)",border:"1px solid var(--B)"}}>
-          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:6}}><IconeOuEmoji e="📞"/> Contacts PMI</div>
-          <div style={{fontSize:12,color:"var(--b)",lineHeight:1.7}}>
-            Email : {pmiEmail}<br/>
-            Tél : 01 XX XX XX XX<br/>
-            Horaires : Lun–Ven 9h–17h
-          </div>
-        </div>
-      </div>
+    <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>
+      {demo?"Exemple de journal":msgs.length+" échange"+(msgs.length>1?"s":"")+" consigné"+(msgs.length>1?"s":"")}
     </div>
+
+    {chargement
+      ? <div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>
+      : (demo?PMI_MESSAGES:msgs).length===0
+        ? <EmptyState emoji="🏛️" titre="Rien de consigné" texte="Notez ici chaque appel, courrier ou visite. C'est la trace qui sert le jour d'un contrôle."/>
+        : <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            {(demo?PMI_MESSAGES:msgs).map(m=>{
+              const sortant=(m.de||"asmat")==="asmat";
+              return <div key={m.id} style={{background:"var(--c)",border:"1px solid var(--br)",borderLeft:"3px solid "+(sortant?"var(--T)":"var(--B)"),borderRadius:12,padding:"12px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap",marginBottom:4}}>
+                  <span style={{fontSize:12,fontWeight:700,color:sortant?"var(--T)":"var(--B)"}}>
+                    {sortant?"Vous → PMI":"PMI → vous"}{m.canal?" · "+m.canal:""}
+                  </span>
+                  <span style={{fontSize:12,color:"var(--m)"}}>
+                    {(m.date_echange||m.date||"").split("-").reverse().join("/")||m.h||""}
+                  </span>
+                </div>
+                {m.objet&&<div style={{fontWeight:700,fontSize:13.5,color:"var(--b)",marginBottom:3}}>{m.objet}</div>}
+                <div style={{fontSize:13,color:"var(--b)",lineHeight:1.55}}>{m.texte||m.txt}</div>
+              </div>;
+            })}
+          </div>}
   </div>;
 }
 

@@ -3232,29 +3232,20 @@ const SOMMEIL_DEMO={
 
 const OMS_TAILLE=[49.9,54.7,58.4,61.4,63.9,65.9,67.6,69.2,70.6,72.0,73.3,74.5,75.7];
 
-export const PMI_PAR_DEP={
-  "75":  {nom:"PMI Paris 75",email:"pmi75-paris@sante.gouv.fr",tel:"01 42 76 40 40",adresse:"4 rue Lobau, 75196 Paris"},
-  "92":  {nom:"PMI Hauts-de-Seine 92",email:"pmi@hauts-de-seine.fr",tel:"01 47 29 30 00",adresse:"2-4 bd Soufflot, 92015 Nanterre"},
-  "93":  {nom:"PMI Seine-Saint-Denis 93",email:"pmi@seine-saint-denis.fr",tel:"01 43 93 85 00",adresse:"12 pl de l'Hôtel de Ville, 93000 Bobigny"},
-  "94":  {nom:"PMI Val-de-Marne 94",email:"pmi@valdemarne.fr",tel:"01 43 99 80 00",adresse:"Hôtel du Dép., 94011 Créteil - RAM L'Haÿ-les-Roses"},
-  "91":  {nom:"PMI Essonne 91",email:"pmi@essonne.fr",tel:"01 69 25 62 62",adresse:"Boulevard de France, 91012 Évry"},
-  "95":  {nom:"PMI Val-d'Oise 95",email:"pmi@valdoise.fr",tel:"01 34 25 30 00",adresse:"2 av du Parc, 95032 Cergy-Pontoise"},
-  "77":  {nom:"PMI Seine-et-Marne 77",email:"pmi@seine-et-marne.fr",tel:"01 64 14 77 00",adresse:"Hôtel du Dép., 77010 Melun"},
-  "78":  {nom:"PMI Yvelines 78",email:"pmi@yvelines.fr",tel:"01 39 07 78 00",adresse:"2 pl André Mignot, 78012 Versailles"},
-  "69":  {nom:"PMI Métropole de Lyon 69",email:"pmi@grandlyon.com",tel:"04 78 63 40 40",adresse:"20 rue du Lac, 69399 Lyon"},
-  "13":  {nom:"PMI Bouches-du-Rhône 13",email:"pmi@departement13.fr",tel:"04 13 31 13 13",adresse:"52 av de Saint-Just, 13004 Marseille"},
-  "31":  {nom:"PMI Haute-Garonne 31",email:"pmi@haute-garonne.fr",tel:"05 34 33 30 00",adresse:"1 bd de la Marquette, 31090 Toulouse"},
-  "33":  {nom:"PMI Gironde 33",email:"pmi@gironde.fr",tel:"05 56 99 33 33",adresse:"Hôtel du Dép., 33074 Bordeaux"},
-  "67":  {nom:"PMI Bas-Rhin 67",email:"pmi@bas-rhin.fr",tel:"03 88 76 67 67",adresse:"Hôtel du Dép., 67945 Strasbourg"},
-  "59":  {nom:"PMI Nord 59",email:"pmi@lenord.fr",tel:"03 59 73 59 00",adresse:"51 rue Gustave Delory, 59047 Lille"},
-  "default":{nom:"PMI de votre département",email:"pmi@votre-departement.fr",tel:"Contactez le 15 ou la mairie",adresse:"Renseignez-vous auprès de votre mairie ou du conseil départemental"},
-};
-const getPMI=(email)=>{
-  if(!email)return PMI_PAR_DEP["default"];
-  // Essayer de détecter le département depuis l'email ou le profil
-  // Pour l'instant, on utilise le code postal du profil si disponible
-  return PMI_PAR_DEP["default"];
-};
+// L'ANNUAIRE PMI PAR DEPARTEMENT A ETE SUPPRIME.
+//
+// Il contenait une quarantaine d'adresses et de telephones ecrits en dur, et
+// INVENTES. Verification faite sur une seule ligne : la Haute-Garonne y
+// figurait comme pmi@haute-garonne.fr, quand le contact publie par le
+// departement est accueilpmi-individuelcollectif@cd31.fr. Le repli par defaut
+// conseillait d'appeler « le 15 » — le SAMU — pour joindre la PMI.
+//
+// Ces valeurs s'affichaient comme des coordonnees officielles, et le telephone
+// s'imprimait sur la fiche d'urgence a cote du SAMU et des pompiers.
+//
+// Une coordonnee officielle fausse est pire qu'une absence : on la recopie, on
+// appelle, et ce n'est pas le bon interlocuteur. L'assistante maternelle saisit
+// desormais celles de SA PMI, qui figurent sur son agrement.
 //
 // MON TEMPS DE TRAVAIL - la vue qui manque quand on a plusieurs employeurs.
 // Chaque parent ne voit que son contrat ; personne ne voit le total. C'est
