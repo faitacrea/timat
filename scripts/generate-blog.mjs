@@ -698,9 +698,16 @@ function pageArticle(a, tous = []) {
   </div>
   ${
     cover
-      ? `<div class="cover"><img src="${escAttr(cover)}" alt="${escAttr(
-          a.imageCouverture?.alt || a.titre
-        )}"></div>`
+      ? (() => {
+          // Sans largeur ni hauteur, la couverture ne reserve pas sa place : le
+          // titre et le chapo sont mis en page, puis l'image arrive et pousse
+          // tout vers le bas. imageDims lit les dimensions dans la reference
+          // Sanity, qui les porte deja — il n'y a rien a deviner.
+          const d = imageDims(a.imageCouverture);
+          return `<div class="cover"><img src="${escAttr(cover)}" alt="${escAttr(
+            a.imageCouverture?.alt || a.titre
+          )}"${d ? ` width="${d.w}" height="${d.h}"` : ""}></div>`;
+        })()
       : ""
   }
   ${
@@ -783,9 +790,14 @@ function carte(a) {
   )}">
         ${
           img
-            ? `<a href="${escAttr(href)}" aria-hidden="true" tabindex="-1"><img src="${escAttr(
-                img
-              )}" alt="${escAttr(a.imageCouverture?.alt || "")}" loading="lazy"></a>`
+            ? (() => {
+                const d = imageDims(a.imageCouverture);
+                return `<a href="${escAttr(href)}" aria-hidden="true" tabindex="-1"><img src="${escAttr(
+                  img
+                )}" alt="${escAttr(a.imageCouverture?.alt || "")}" loading="lazy"${
+                  d ? ` width="${d.w}" height="${d.h}"` : ""
+                }></a>`;
+              })()
             : ""
         }
         <div class="card-body">

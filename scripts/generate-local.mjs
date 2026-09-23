@@ -275,7 +275,7 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script
 </head>
 <body>
 <div class="top"><div class="bar">
-  <a href="/" class="brand"><img src="/logo.webp" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot;>tim<span>at</span></span>'"></a>
+  <a href="/" class="brand"><img src="/logo.webp" alt="TiMat" onerror="this.outerHTML='<span class=&quot;wm&quot; width="95" height="30">tim<span>at</span></span>'"></a>
   <a href="/?connexion" class="cta-top">Essayer TiMat →</a>
 </div></div>
 ${corps}
