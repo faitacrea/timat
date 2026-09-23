@@ -520,6 +520,19 @@ export const COURRIERS_DATA=[
    contenu:"Madame, Monsieur,\n\nConformément à la convention collective, qui invite les parties à fixer les dates d'un commun accord au plus tard le 1er mars, je vous confirme que je prendrai mes congés du [Date début] au [Date fin] inclus.\n\nDurant cette période, je ne pourrai pas assurer l'accueil de [Prénom].\n\nCordialement,\n[Votre nom]"},
   {id:"r6",cat:"Avenant",ic:"✏️",titre:"Proposition d'avenant aux horaires",
    contenu:"Madame, Monsieur,\n\nJe vous propose de modifier le contrat d'accueil de [Prénom] comme suit :\n\nAnciennes dispositions : [Anciens horaires]\nNouveaux horaires : [Nouveaux horaires]\nDate d'effet : [Date]\n\nCes modifications entraîneront une révision du salaire à [Nouveau montant]€.\n\nMerci de confirmer votre accord en signant l'avenant ci-joint.\n\nCordialement,\n[Votre nom]"},
+  // L'ENGAGEMENT RECIPROQUE
+  //
+  // Il se signe AVANT le contrat, quand l'accueil est convenu mais ne commence
+  // que dans deux ou trois mois. Sans lui, les deux parties peuvent se
+  // retracter sans rien devoir : l'assistante maternelle a refuse d'autres
+  // familles, le parent n'a plus de solution.
+  //
+  // Ce n'est PAS une obligation legale, et la convention collective ne le
+  // prevoit pas : c'est un usage du metier, tres repandu. Le dedit se negocie,
+  // il ne se decrete pas — d'ou les crochets a remplir plutot qu'un montant
+  // impose.
+  {id:"r8",cat:"Contrat",ic:"🤝",titre:"Engagement réciproque avant contrat",
+   contenu:"ENGAGEMENT RÉCIPROQUE D'ACCUEIL\n\nEntre :\n[Votre nom], assistant(e) maternel(le) agréé(e) sous le n° [Numéro agrément],\net\n[Nom du parent employeur], demeurant [Adresse].\n\nLes deux parties conviennent de l'accueil de [Prénom de l'enfant], né(e) le [Date de naissance], à compter du [Date de début].\n\nConditions convenues : [Nombre] heures par semaine, [Nombre] semaines par an, au tarif de [Montant] € net de l'heure.\n\nLe contrat de travail sera signé au plus tard le [Date de signature].\n\nEn cas de renoncement :\nSi le parent employeur renonce à l'accueil, il versera à l'assistante maternelle une indemnité de [Montant] €.\nSi l'assistante maternelle renonce à l'accueil, elle versera au parent employeur une indemnité de [Montant] €.\nCes indemnités ne sont pas dues si le renoncement tient à un cas de force majeure, ni si l'agrément est suspendu ou retiré.\n\nLe présent engagement est établi en deux exemplaires.\n\nFait à [Lieu], le [Date].\n\nSignature de l'assistante maternelle          Signature du parent employeur\n\nDocument d'usage : ni la convention collective ni le code du travail ne l'imposent. Les montants se négocient entre les parties."},
   {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
    contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
 ];

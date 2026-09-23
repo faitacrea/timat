@@ -130,13 +130,32 @@ for (const [nom, groupe, entree] of ECRANS) {
   await page.screenshot({ path: `${SORTIE}/${nom}.png`, fullPage: true });
   const m = await page.evaluate(() => {
     const doc = document.documentElement;
-    let petit = 0, cibles = 0;
+    let petit = 0, cibles = 0; const coupables = [];
     for (const n of document.querySelectorAll("body *")) {
       const st = getComputedStyle(n);
       if (!n.childElementCount && n.textContent.trim() && parseFloat(st.fontSize) < 11) petit++;
-      if (/^(BUTTON|A)$/.test(n.tagName)) { const r = n.getBoundingClientRect(); if (r.width > 0 && (r.height < 36 || r.width < 36)) cibles++; }
+      if (/^(BUTTON|A)$/.test(n.tagName)) {
+        // UN LIEN DANS UNE PHRASE N'EST PAS UNE CIBLE TACTILE.
+        //
+        // Le critere WCAG 2.5.8 exempte explicitement le lien pose au fil du
+        // texte : lui donner 36 px de haut casserait l'interligne du
+        // paragraphe. L'exemption est donc precise — inline ET entoure de
+        // texte dans son parent — et ne dispense aucun bouton.
+        const inline = st.display === "inline";
+        const dansUnePhrase = inline && n.parentElement &&
+          n.parentElement.textContent.trim().length > n.textContent.trim().length + 10;
+        if (dansUnePhrase) continue;
+        const r = n.getBoundingClientRect();
+        if (r.width > 0 && (r.height < 36 || r.width < 36)) {
+          cibles++;
+          // « 1 cible trop petite » ne dit pas laquelle : on ne peut rien en
+          // faire sans rouvrir l'ecran a la main. Le libelle et la taille
+          // suffisent a la retrouver du premier coup.
+          coupables.push((n.textContent.trim().slice(0, 28) || "(sans texte)") + " " + Math.round(r.width) + "x" + Math.round(r.height));
+        }
+      }
     }
-    return { deborde: doc.scrollWidth > doc.clientWidth + 1, petit, cibles };
+    return { deborde: doc.scrollWidth > doc.clientWidth + 1, petit, cibles, coupables };
   });
   lignes.push({ nom, ...m, erreurs: [...erreurs] });
 }
@@ -154,5 +173,6 @@ const totalErr = lignes.reduce((s, l) => s + (l.erreurs?.length || 0), 0);
 const totalDeb = lignes.filter((l) => l.deborde).length;
 console.log(`\ntexte sous 11 px : ${lignes.reduce((s, l) => s + (l.petit || 0), 0)}`);
 console.log(`cibles sous 36 px : ${lignes.reduce((s, l) => s + (l.cibles || 0), 0)}`);
+for (const l of lignes) for (const c of l.coupables || []) console.log(`   ${l.nom} : ${c}`);
 console.log(`erreurs JavaScript : ${totalErr} · débordements : ${totalDeb}\n`);
 process.exit(totalErr || totalDeb ? 1 : 0);

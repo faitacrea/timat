@@ -2599,6 +2599,31 @@ export function RecapFiscalAssmat({enfants,user}){
     return reprisAnnee.filter(m=>!dejaAuBulletin.has(m.enfant_id+"|"+m.mois));
   },[reprisAnnee,bulletins]);
 
+  // L'ESTIMATION DE L'ABATTEMENT, QUAND LE VRAI CHIFFRE MANQUE
+  //
+  // La regle legale se joue JOURNEE PAR JOURNEE : 3 x SMIC pour une journee
+  // d'au moins 8 heures, et au prorata en dessous. Les mois repris n'ont pas ce
+  // detail — seulement des totaux.
+  //
+  // La premiere version estimait 3 x SMIC x jours, ce qui revient a traiter
+  // TOUTES les journees comme des journees completes. Sur des accueils courts
+  // (periscolaire, demi-journees), l'abattement sorti etait trop haut — et un
+  // abattement trop haut fait SOUS-declarer.
+  //
+  // Les heures du mois sont deja reprises : on s'en sert. Une journee ne peut
+  // pas compter plus que 8 heures dans ce calcul, donc le nombre de journees
+  // PLEINES que le mois peut contenir est au plus heures / 8. On retient le
+  // plus petit des deux, ce qui est exact dans les deux cas purs (que des
+  // journees completes, ou que des journees courtes) et strictement plus
+  // prudent que l'ancienne formule partout ailleurs.
+  //
+  // Sans les heures, on retombe sur les jours : c'est tout ce qu'on a.
+  const abattementEstime=(mois,jours,heures)=>{
+    const base=3*smicHoraireAu(mois+"-15");
+    const equivalentPleines=heures>0?Math.min(jours,heures/8):jours;
+    return base*equivalentPleines;
+  };
+
   // Number(null) vaut ZERO, et zero est fini. Un net imposable absent passait
   // donc pour un mois a 0 EUR — compte dans le calcul, et surtout GRATIFIE d'un
   // abattement sans revenu en face. Un abattement de trop fait sous-declarer :
@@ -2622,10 +2647,11 @@ export function RecapFiscalAssmat({enfants,user}){
       if(imp===null){o.moisSansImposable++;continue;}
       o.imposable+=imp;
       const j=nombreOuRien(m.jours_travailles)||0;
+      const h=nombreOuRien(m.heures)||0;
       o.jours+=j;
       const ab=nombreOuRien(m.abattement);
       if(ab!==null) o.abattement+=ab;
-      else if(j>0){ o.abattement+=3*smicHoraireAu(m.mois+"-15")*j; o.abattementEstime=true; }
+      else if(j>0){ o.abattement+=abattementEstime(m.mois,j,h); o.abattementEstime=true; }
     }
     return r;
   },[reprisUtiles]);
@@ -2699,8 +2725,18 @@ export function RecapFiscalAssmat({enfants,user}){
           Le net <i>versé</i> ne peut pas le remplacer — ce ne sont pas les mêmes montants.
           Complétez-les depuis vos anciens bulletins sur l'écran « Reprendre un contrat ».
         </>}
-        {totauxRepris.estime&&<><br/>L'abattement de ces mois est <b>estimé</b> à 3 × SMIC × jours d'accueil,
-          faute du détail journalier. Si vos anciens bulletins donnent l'abattement réel, saisissez-le : il primera.</>}
+        {totauxRepris.estime&&<>
+          <br/><br/><b>L'abattement de ces mois est estimé</b>, faute du détail journée par journée.
+          Vous n'avez pas à le calculer : <b>Pajemploi le fait pour vous</b> et le publie
+          sur votre attestation fiscale annuelle.
+          <br/>Connectez-vous à <a href="https://www.pajemploi.urssaf.fr/" target="_blank" rel="noopener noreferrer" style={{color:"var(--T)"}}>pajemploi.urssaf.fr</a>,
+          rubrique <i>Mon attestation fiscale</i> ou <i>Consulter mon cumul imposable</i>,
+          relevez le montant de l'année concernée et saisissez-le dans la colonne
+          <b> Abattement</b> de l'écran « Reprendre un contrat ». Il remplacera aussitôt l'estimation.
+          <br/><span style={{color:"#8A5A1A"}}>À vérifier dans tous les cas : le nombre de jours d'accueil
+          retenu par Pajemploi vient des déclarations du parent, et une déclaration oubliée
+          ou mal saisie s'y voit.</span>
+        </>}
       </div>
     </div>}
     <div className="card" style={{marginBottom:14,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
