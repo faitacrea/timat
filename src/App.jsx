@@ -1340,6 +1340,46 @@ export const D = {
 export const LIMITE_ENFANTS_GRATUIT = 1;
 
 // ---------------------------------------------------------------------------
+// LES FRATRIES
+//
+// Deux enfants d'une meme famille, c'est DEUX contrats — la convention
+// collective ne connait pas le contrat fratrie, chaque enfant a le sien. Mais
+// c'est UN SEUL parent employeur : meme adresse, meme taux negocie, memes
+// conges poses, un seul credit d'impot.
+//
+// L'application les traitait comme deux familles etrangeres l'une a l'autre.
+// On ressaisissait tout, et rien ne signalait qu'un conge pose pour l'aine
+// concernait aussi le cadet.
+//
+// LE LIEN EXISTE DEJA : c'est parent_id. Aucune table a ajouter — il manquait
+// seulement de le lire. Quand le parent n'a pas encore accepte son invitation,
+// parent_id est vide : on retombe alors sur l'identite de l'employeur figee
+// dans le contrat, normalisee, car « Marie DUPONT » et « marie dupont » sont
+// la meme personne.
+export const cleFamille = (enfant) => {
+  const ct = enfant?.contrat || {};
+  const pid = enfant?.parent_id || enfant?.parentId || ct.parent_id;
+  if (pid) return "p:" + pid;
+  const emp = ct.employeur_snapshot || {};
+  const identite = [emp.email, emp.nom, emp.prenom]
+    .map((v) => String(v || "").trim().toLowerCase())
+    .filter(Boolean)
+    .join("|");
+  // Sans parent_id NI identite d'employeur, on ne peut rien affirmer : chaque
+  // enfant reste seul. Affirmer une fratrie a tort melangerait deux familles,
+  // ce qui est bien pire que de ne pas la voir.
+  return identite ? "e:" + identite : null;
+};
+
+// Les freres et soeurs d'un enfant, parmi ceux que l'assistante maternelle
+// accueille. L'enfant lui-meme n'en fait jamais partie.
+export const fratrieDe = (enfant, enfants) => {
+  const cle = cleFamille(enfant);
+  if (!cle) return [];
+  return (enfants || []).filter((e) => e && e.id !== enfant?.id && cleFamille(e) === cle);
+};
+
+// ---------------------------------------------------------------------------
 // CE QUE LE FORFAIT PRO OUVRE — LA LISTE, ET RIEN QU'ELLE
 //
 // Le verrou etait ecrit neuf fois, a la main, dans le routeur :
@@ -5375,6 +5415,20 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           .hero-phone-wrap .lp-bulle-2{left:-30% !important}
         }
         .lp-guarantees{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;text-align:center;margin-top:24px;font-size:13px}
+        /* LE COMPARATIF SANS / AVEC
+           La version web etait illisible : 760 px de large au milieu d'une
+           section de 1200, et des colonnes en 11 px — plus petit que le texte
+           d'introduction juste au-dessus, alors que c'est le coeur de
+           l'argument. Elle passe a 1020 px, titres 16 px, colonnes 14 px.
+           Sur telephone, ces valeurs ecraseraient les trois colonnes : le
+           mobile garde donc les anciennes, qui y tenaient tres bien. */
+        @media(max-width:768px){
+          .lp-comparatif>div{padding:0!important}
+          .lp-comparatif>div>div{padding:12px 10px!important}
+          .lp-comparatif>div>div:first-child{padding:12px 11px!important}
+          .lp-comparatif span{font-size:11.5px!important;line-height:1.4!important}
+          .lp-comparatif span[style*="font-weight:700"],.lp-comparatif>div>div>span:first-child{font-size:12.5px!important}
+        }
         @media(max-width:768px){
           .lp-nav-full{display:none!important}
           .lp-nav-mobile{display:flex!important;gap:6px;align-items:center}
@@ -5546,26 +5600,26 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </div>
           </FadeIn>
           {/* TABLEAU COMPARATIF Sans/Avec (editable back-office : L.tableRows) */}
-          <div style={{ marginTop:30, maxWidth:760, marginLeft:"auto", marginRight:"auto", background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:16, overflow:"hidden" }}>
-            <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr" }}>
-              <div style={{ padding:"11px 12px" }}></div>
-              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:11.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboPbColor||"#FF8C82", background:"rgba(255,140,130,.09)" }}>{L.comboLabelBefore||"Sans TiMat"}</div>
-              <div style={{ padding:"11px 8px", textAlign:"center", fontSize:11.5, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboSolColor||"#83C0B8", background:"rgba(131,192,184,.11)" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
+          <div className="lp-comparatif" style={{ marginTop:30, maxWidth:1020, marginLeft:"auto", marginRight:"auto", background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:16, overflow:"hidden" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr 1fr" }}>
+              <div style={{ padding:"15px 22px" }}></div>
+              <div style={{ padding:"15px 14px", textAlign:"center", fontSize:13, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboPbColor||"#FF8C82", background:"rgba(255,140,130,.09)" }}>{L.comboLabelBefore||"Sans TiMat"}</div>
+              <div style={{ padding:"15px 14px", textAlign:"center", fontSize:13, fontWeight:800, letterSpacing:".5px", textTransform:"uppercase", color:L.comboSolColor||"#83C0B8", background:"rgba(131,192,184,.11)" }}>{L.comboLabelAfter||"Avec TiMat"}</div>
             </div>
             {((L.tableRows&&L.tableRows.trim())?L.tableRows:TABLE_ROWS_DEFAULT).split("\n").filter(Boolean).map((line,i)=>{
               const p=line.split("|");
               const ic=(p[0]||"").trim(), t=(p[1]||"").trim(), st=(p[2]||"").trim(), sans=(p[3]||"").trim(), avec=(p[4]||"").trim();
               return <FadeIn key={i} delay={i*60}>
-                <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid #EDE6DE" }}>
-                  <div style={{ padding:"12px 12px", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#2E4859", lineHeight:1.3 }}><IconeOuEmoji e={ic}/> {t}</span>
-                    {st&&<span style={{ display:"block", fontSize:11, color:L.tableSubColor||"#55707C", marginTop:2, lineHeight:1.35 }}>{st}</span>}
+                <div style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr 1fr", borderTop:"1px solid #EDE6DE" }}>
+                  <div style={{ padding:"18px 22px", minWidth:0 }}>
+                    <span style={{ display:"block", fontSize:16, fontWeight:700, color:L.tableTitleColor||"#2E4859", lineHeight:1.3 }}><IconeOuEmoji e={ic}/> {t}</span>
+                    {st&&<span style={{ display:"block", fontSize:13, color:L.tableSubColor||"#55707C", marginTop:4, lineHeight:1.4 }}>{st}</span>}
                   </div>
-                  <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:11, color:L.tableSansColor||"#96594A", marginTop:3, lineHeight:1.4 }}>{sans}</span>
+                  <div style={{ padding:"18px 16px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
+                    <span style={{ display:"block", fontSize:14, color:L.tableSansColor||"#96594A", lineHeight:1.45 }}>{sans}</span>
                   </div>
-                  <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(131,192,184,.07)", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:11, color:L.tableAvecColor||"#2F655F", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
+                  <div style={{ padding:"18px 16px", textAlign:"center", background:"rgba(131,192,184,.07)", minWidth:0 }}>
+                    <span style={{ display:"block", fontSize:14, color:L.tableAvecColor||"#2F655F", lineHeight:1.45, fontWeight:600 }}>{avec}</span>
                   </div>
                 </div>
               </FadeIn>;

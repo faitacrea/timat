@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PMI_PAR_DEP, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PMI_PAR_DEP, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
 import {
   ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
@@ -47,6 +47,14 @@ export function FichesEnfants({enfants,user,setPage}){
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontWeight:700,fontSize:16,color:"var(--b)"}}>{e.prenom} {e.nom||""}</div>
             <div style={{fontSize:12.5,color:"var(--l)",marginTop:2}}>{e.naissance?age(e.naissance)+" · né(e) le "+new Date(e.naissance).toLocaleDateString("fr-FR"):"Date de naissance non renseignée"}</div>
+            {/* La fratrie se lit ici, la ou on regarde les enfants. Deux
+                contrats distincts, mais un seul parent employeur : les congés
+                posés et le crédit d'impôt les concernent ensemble. */}
+            {(()=>{const f=fratrieDe(e,list);return f.length>0&&
+              <div style={{fontSize:12,color:"#2F655F",marginTop:4,display:"flex",alignItems:"center",gap:5}}>
+                <IconeOuEmoji e="👪" taille={14}/>
+                <span>Même famille que <b>{f.map(x=>x.prenom).join(", ")}</b></span>
+              </div>;})()}
             <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
               <button className="btn bG s" style={{padding:"5px 10px"}} onClick={()=>setEditAvatar(e)}><IconeOuEmoji e="📷"/> Photo / emoji</button>
               <button className="btn bT s" style={{padding:"5px 10px"}} onClick={()=>setPage&&setPage("admin_finances")}><IconeOuEmoji e="🧾"/> Contrat & paie</button>
