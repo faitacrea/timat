@@ -2120,6 +2120,19 @@ export function RepriseContrat({enfants,role,user}){
       obligations d'archivage.
     </div>
 
+    <div style={{background:"#FFFBF0",border:"1px solid #EFE4C8",borderLeft:"4px solid #B8862F",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+      <b>Où trouver les deux chiffres qui comptent</b>
+      <br/>Le <b>net imposable</b> figure sur chaque bulletin de salaire de l'époque.
+      Sans lui, le mois ne peut pas entrer dans votre récapitulatif fiscal — le net
+      versé ne le remplace pas, ce ne sont pas les mêmes montants.
+      <br/>L'<b>abattement</b>, vous n'avez pas à le calculer : Pajemploi le fait et le
+      publie sur votre <b>attestation fiscale annuelle</b>. Sur{" "}
+      <a href="https://www.pajemploi.urssaf.fr/" target="_blank" rel="noopener noreferrer" style={{color:"var(--T)"}}>pajemploi.urssaf.fr</a>,
+      rubrique <i>Mon attestation fiscale</i> ou <i>Consulter mon cumul imposable</i>.
+      <br/>Si vous le laissez vide, TiMat l'estime à partir de vos heures et de vos
+      jours d'accueil — une estimation, jamais le chiffre officiel.
+    </div>
+
     {apercu
       ? <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}>Vérifiez avant d'enregistrer</div>
@@ -2160,9 +2173,16 @@ export function RepriseContrat({enfants,role,user}){
             <b> net imposable</b>, entretien, repas, jours, abattement, acquis, pris.
             Rien n'est enregistré avant que vous ayez vérifié.
           </div>
-          <input type="file" accept=".csv,text/csv,text/plain"
-            onChange={e=>{lireFichier(e.target.files?.[0]); e.target.value="";}}
-            style={{fontSize:13,color:"var(--b)"}}/>
+          {/* Le champ « fichier » natif se dessine a la taille du systeme : 24 px
+              de haut sur mobile, sous la cible tactile minimale de 36 px. On le
+              rend invisible et on clique le label a sa place, qui est un vrai
+              bouton de l'application. */}
+          <label className="btn bT" style={{display:"inline-flex",alignItems:"center",gap:7,cursor:"pointer",padding:"11px 18px"}}>
+            <IconeOuEmoji e="📥"/> Choisir un fichier
+            <input type="file" accept=".csv,text/csv,text/plain"
+              onChange={e=>{lireFichier(e.target.files?.[0]); e.target.value="";}}
+              style={{position:"absolute",width:1,height:1,opacity:0,pointerEvents:"none"}}/>
+          </label>
         </div>}
 
     <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:14,padding:16,marginBottom:18}}>

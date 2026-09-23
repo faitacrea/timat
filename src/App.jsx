@@ -576,6 +576,7 @@ const TRACES = {
   reglages:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
   courrier:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
   signature:'<path d="M3 19c3 0 3-9 6-9s3 6 6 6 3-4 6-4"/><path d="M3 21h18"/>',
+  poignee_main:'<path d="M2 12h3l3.2-3.2a2 2 0 0 1 2.8 0L13 10.8"/><path d="m11 9 3.4 3.4a1.6 1.6 0 0 1-2.3 2.3l-.7-.7"/><path d="m11.4 14-.9-.9a1.6 1.6 0 0 0-2.3 2.3l.9.9a1.6 1.6 0 0 0 2.3-2.3Z"/><path d="M22 12h-3l-3.2-3.2a2 2 0 0 0-2.8 0"/>',
   crayon:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
   etoiles:'<path d="M12 3.5 13.7 8l4.5 1.7-4.5 1.7L12 16l-1.7-4.6L5.8 9.7 10.3 8Z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z"/>',
   aide:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.1-2.5 3.6M12 17.5h.01"/>',
@@ -692,7 +693,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","📵":"hors_ligne","👆":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🤝":"poignee_main","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","📵":"hors_ligne","👆":"main",
 };
 export function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];
@@ -1357,6 +1358,7 @@ export const LIMITE_ENFANTS_GRATUIT = 1;
 // liste avant d'appeler quoi que ce soit, et une barriere d'audit refuse
 // qu'un verrou soit re-ecrit a la main a cote.
 export const ECRANS_PRO = {
+  reprise_contrat: ["La reprise d'un contrat en cours", "Vos mois déjà passés chez un autre outil, repris en une fois, pour que vos congés et votre récapitulatif fiscal soient justes dès le premier mois. Cette fonction fait partie du forfait Pro."],
   // Le registre des medicaments n'est PAS ici, et c'est deliberé : c'est une
   // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
   // qu'on est obligee de tenir serait indefendable.
@@ -1932,6 +1934,32 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   // On ne remonte QUE celle-la sur l'accueil. Alerter sur les six ferait une
   // liste qu'on apprend a ignorer ; celle-ci est la seule dont l'absence se
   // paie comptant.
+  // L'ANNIVERSAIRE QUI ARRIVE
+  //
+  // Nounou-Top le rappelle, et c'est une des rares fonctions de son tableau
+  // qui n'est pas de l'administratif : c'est le geste qui fait la difference
+  // avec les parents, et celui qu'on oublie parce qu'il n'a pas de date limite.
+  //
+  // Sept jours devant, pas plus : un rappel trop tot se lit puis s'oublie. Le
+  // jour meme compte, et on ne regarde que le jour et le mois — l'annee de
+  // naissance ne dit pas quand tomber l'anniversaire.
+  const anniversairesProches=(()=>{
+    const aujourdhui=new Date(); aujourdhui.setHours(0,0,0,0);
+    const res=[];
+    for(const e of enfants||[]){
+      if(!e?.naissance)continue;
+      const d=new Date(String(e.naissance)+"T12:00:00");
+      if(Number.isNaN(d.getTime()))continue;
+      // La prochaine occurrence : cette annee, ou l'an prochain si elle est passee.
+      let prochain=new Date(aujourdhui.getFullYear(),d.getMonth(),d.getDate());
+      prochain.setHours(0,0,0,0);
+      if(prochain<aujourdhui)prochain=new Date(aujourdhui.getFullYear()+1,d.getMonth(),d.getDate());
+      const jours=Math.round((prochain-aujourdhui)/86400000);
+      if(jours>=0&&jours<=7)res.push({...e,jours,age:aujourdhui.getFullYear()-d.getFullYear()+(prochain.getFullYear()>aujourdhui.getFullYear()?1:0)});
+    }
+    return res.sort((a,b)=>a.jours-b.jours);
+  })();
+
   const [sansUrgence,setSansUrgence]=useState([]);
   useEffect(()=>{
     if(demoStats||isDemoUser||!enfants.length){setSansUrgence([]);return;}
@@ -2137,6 +2165,20 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       </span>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--R)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}} aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
     </button>}
+
+    {anniversairesProches.length>0&&<div className="card" style={{marginBottom:12,display:"flex",alignItems:"center",gap:11,background:"var(--Tp,#F3F7F6)",border:"1px solid var(--Tl,#DCE9E6)"}}>
+      <span style={{fontSize:22,lineHeight:1}}><IconeOuEmoji e="🎂" taille={22}/></span>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13.5,fontWeight:700,color:"var(--b)"}}>
+          {anniversairesProches.length>1?"Anniversaires cette semaine":"Anniversaire cette semaine"}
+        </div>
+        <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>
+          {anniversairesProches.map(e=>
+            e.prenom+" "+(e.jours===0?"aujourd'hui":e.jours===1?"demain":"dans "+e.jours+" jours")+" ("+e.age+" ans)"
+          ).join(" · ")}
+        </div>
+      </div>
+    </div>}
 
 
     {/* TABLEAU SIGNATURES P11 - vue d'ensemble du statut signatures des contrats */}
@@ -5516,14 +5558,14 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               return <FadeIn key={i} delay={i*60}>
                 <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr 1fr", borderTop:"1px solid #EDE6DE" }}>
                   <div style={{ padding:"12px 12px", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#fff", lineHeight:1.3 }}><IconeOuEmoji e={ic}/> {t}</span>
-                    {st&&<span style={{ display:"block", fontSize:11, color:L.tableSubColor||"rgba(255,255,255,.5)", marginTop:2, lineHeight:1.35 }}>{st}</span>}
+                    <span style={{ display:"block", fontSize:12.5, fontWeight:700, color:L.tableTitleColor||"#2E4859", lineHeight:1.3 }}><IconeOuEmoji e={ic}/> {t}</span>
+                    {st&&<span style={{ display:"block", fontSize:11, color:L.tableSubColor||"#55707C", marginTop:2, lineHeight:1.35 }}>{st}</span>}
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(255,140,130,.05)", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:11, color:L.tableSansColor||"rgba(255,255,255,.62)", marginTop:3, lineHeight:1.4 }}>{sans}</span>
+                    <span style={{ display:"block", fontSize:11, color:L.tableSansColor||"#96594A", marginTop:3, lineHeight:1.4 }}>{sans}</span>
                   </div>
                   <div style={{ padding:"12px 8px", textAlign:"center", background:"rgba(131,192,184,.07)", minWidth:0 }}>
-                    <span style={{ display:"block", fontSize:11, color:L.tableAvecColor||"#A8D5CE", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
+                    <span style={{ display:"block", fontSize:11, color:L.tableAvecColor||"#2F655F", marginTop:3, lineHeight:1.4, fontWeight:600 }}>{avec}</span>
                   </div>
                 </div>
               </FadeIn>;
