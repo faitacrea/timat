@@ -38,7 +38,6 @@
     "materiel",
     "titre"
   ],
-<<<<<<< HEAD
   "autorisations": [
     "accordee",
     "created_at",
@@ -51,8 +50,6 @@
     "type",
     "updated_at"
   ],
-=======
->>>>>>> origin/main
   "bilans": [
     "contenu",
     "created_at",
