@@ -1913,7 +1913,7 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
               </div>)}
           </div>}
 
-    {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+    {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
   </div>;
 }
 
@@ -1930,12 +1930,18 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
 // Deux chemins, parce que les deux situations existent : un fichier exporte de
 // l'ancien outil, ou une saisie mois par mois quand il n'y a qu'un tableau
 // papier.
+// L'ORDRE COMPTE : le net imposable vient juste apres le net verse, parce que
+// c'est la ou on les confond. Ce ne sont PAS les memes montants, et c'est le
+// second que la declaration d'impots attend.
 const COLONNES_REPRISE=[
   ["mois","Mois","AAAA-MM"],
   ["heures","Heures","h réalisées"],
-  ["salaire_net","Salaire net","€ versés"],
+  ["salaire_net","Salaire net versé","€"],
+  ["net_imposable","Net imposable","€ — sur le bulletin"],
   ["indemnites_entretien","Indemnités d'entretien","€"],
   ["indemnites_repas","Frais de repas","€"],
+  ["jours_travailles","Jours d'accueil","nombre"],
+  ["abattement","Abattement","€ — si connu"],
   ["conges_acquis","Congés acquis","jours"],
   ["conges_pris","Congés pris","jours"],
 ];
@@ -2029,15 +2035,25 @@ export function RepriseContrat({enfants,role,user}){
       if(lignes.length<2){setToast("Le fichier ne contient aucune ligne de données.");return;}
       const entete=lignes[0].split(sep).map(c=>c.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""));
       const idx=(...noms)=>{for(const n of noms){const i=entete.findIndex(c=>c.includes(n));if(i>=0)return i;}return -1;};
+      // « imposable » se cherche AVANT « net » : une colonne « net imposable »
+      // contient les deux mots, et le premier test qui gagne decide. Chercher
+      // « net » d'abord aurait range le net imposable dans le net verse — deux
+      // montants differents dans la meme case, sans que rien ne le signale.
       const cols={
         mois:idx("mois","periode","date"),
         heures:idx("heure"),
-        salaire_net:idx("net","salaire"),
+        net_imposable:idx("imposable","fiscal"),
         indemnites_entretien:idx("entretien"),
         indemnites_repas:idx("repas"),
+        jours_travailles:idx("jours","journees"),
+        abattement:idx("abattement"),
         conges_acquis:idx("acquis"),
         conges_pris:idx("pris"),
       };
+      cols.salaire_net=(()=>{
+        const i=idx("net verse","net paye","net","salaire");
+        return i===cols.net_imposable?-1:i;
+      })();
       if(cols.mois<0){setToast("Aucune colonne de mois trouvée dans le fichier.");return;}
       const lues=lignes.slice(1).map(l=>{
         const c=l.split(sep);
@@ -2113,7 +2129,7 @@ export function RepriseContrat({enfants,role,user}){
           </div>
           <div style={{maxHeight:300,overflow:"auto",border:"1px solid var(--br)",borderRadius:10}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-              <thead><tr>{["Mois","Heures","Net","Acquis","Pris"].map(h=>
+              <thead><tr>{["Mois","Heures","Net versé","Net imposable","Jours"].map(h=>
                 <th key={h} style={{textAlign:"left",padding:"7px 8px",background:"var(--bg)",position:"sticky",top:0,color:"var(--b)"}}>{h}</th>)}</tr></thead>
               <tbody>
                 {apercu.map((l,i)=>
@@ -2123,8 +2139,8 @@ export function RepriseContrat({enfants,role,user}){
                     </td>
                     <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.heures??"—"}</td>
                     <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.salaire_net??"—"}</td>
-                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.conges_acquis??"—"}</td>
-                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.conges_pris??"—"}</td>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)",color:l.net_imposable==null?"#B8862F":"var(--b)",fontWeight:l.net_imposable==null?600:400}}>{l.net_imposable??"absent"}</td>
+                    <td style={{padding:"6px 8px",borderTop:"1px solid var(--br)"}}>{l.jours_travailles??"—"}</td>
                   </tr>)}
               </tbody>
             </table>
@@ -2140,8 +2156,9 @@ export function RepriseContrat({enfants,role,user}){
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>Importer un fichier</div>
           <div style={{fontSize:12.5,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
             Un export CSV de votre ancien outil, ou un tableur enregistré en CSV.
-            Les colonnes sont reconnues par leur nom : mois, heures, net, entretien,
-            repas, acquis, pris. Rien n'est enregistré avant que vous ayez vérifié.
+            Les colonnes sont reconnues par leur nom : mois, heures, net versé,
+            <b> net imposable</b>, entretien, repas, jours, abattement, acquis, pris.
+            Rien n'est enregistré avant que vous ayez vérifié.
           </div>
           <input type="file" accept=".csv,text/csv,text/plain"
             onChange={e=>{lireFichier(e.target.files?.[0]); e.target.value="";}}
@@ -2194,7 +2211,7 @@ export function RepriseContrat({enfants,role,user}){
               </div>)}
           </div>}
 
-    {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+    {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
   </div>;
 }
 
@@ -2393,6 +2410,6 @@ export function Autorisations({enfants,role,pEId,user}){
           })}
         </div>}
 
-    {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+    {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
   </div>;
 }

@@ -1360,7 +1360,6 @@ export const ECRANS_PRO = {
   // Le registre des medicaments n'est PAS ici, et c'est deliberé : c'est une
   // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
   // qu'on est obligee de tenir serait indefendable.
-  reprise_contrat: ["La reprise d'un contrat en cours", "Vos mois déjà passés chez un autre outil, repris en une fois, pour que vos congés et votre récapitulatif fiscal soient justes dès le premier mois. Cette fonction fait partie du forfait Pro."],
   bilans: ["Les bilans de journée", "Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."],
   documents_complet: ["Documents et attestations", "Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."],
   recap_fiscal: ["Le récapitulatif fiscal", "Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."],

@@ -2687,6 +2687,39 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- un rappel de composant partage avec le mauvais nom de prop ---
+//
+// Toast attend « onClose ». Trois ecrans neufs lui passaient « onDone » : le
+// message s'affichait et ne partait plus, et la construction ne disait rien —
+// React ignore une prop inconnue en silence. Le parcours visuel ne l'a pas vu
+// non plus, parce qu'il navigue sans jamais declencher de message.
+//
+// Le nom attendu est LU dans la signature du composant, jamais recopie ici :
+// une copie finirait par diverger de l'originale.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  const tout = sources.map(([, src]) => src).join("\n");
+  for (const [composant, requise] of [["Toast", "onClose"], ["SignaturePad", "onSave"]]) {
+    const sig = tout.match(new RegExp("function\\s+" + composant + "\\s*\\(\\s*\\{([^}]*)\\}"));
+    if (!sig) { signale("props", `le composant ${composant} est introuvable : la verification de ses props ne protege plus rien`); continue; }
+    if (!sig[1].split(",").some((c) => c.trim().split(/[:=]/)[0].trim() === requise)) {
+      signale("props", `${composant} n'accepte plus « ${requise} » : la regle verifiee ici ne correspond plus au composant`);
+      continue;
+    }
+    for (const [nom, src] of sources) {
+      // [^>] s'arretait sur le « > » de la fleche d'un « ()=>… » : la balise
+      // etait coupee avant la prop cherchee, et la barriere se taisait sur le
+      // bug meme qu'elle devait attraper. On accepte tout caractere, en
+      // s'arretant au premier « /> ».
+      for (const m of src.matchAll(new RegExp("<" + composant + "\\s[\\s\\S]{0,300}?/>", "g"))) {
+        if (!new RegExp("\\b" + requise + "\\s*=").test(m[0])) {
+          signale("props", `${nom} : un <${composant}> sans « ${requise} » — la prop est ignoree en silence, et le composant ne se ferme jamais`);
+        }
+      }
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
