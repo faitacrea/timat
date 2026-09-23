@@ -3901,10 +3901,9 @@ export function Boutique({user}){
   const isPro=user?.subscription_status==="pro";
   const products=[
     {id:"kit_sheets",name:"Kit de gestion Assmat",price:"14,90",desc:"Jusqu'a 4 contrats : heures jour par jour, conges payes compares, recapitulatif annuel.",icon:"📊",color:"#5DA9A1"},
-    {id:"fiche_urgence",name:"Fiche d'urgence",price:"6,90",desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences, autorisations.",icon:"🚨",color:"#C84B31"},
+    {id:"fiche_urgence",name:"Fiche d'urgence",prix:0,desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences.",icon:"🚨",color:"#C84B31",fichier:"/documents/fiche-renseignements-urgence.pdf"},
     {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections : presentation, lieu, familiarisation, journee type, sommeil, repas, change, jeu, emotions, parents, inclusion, securite, formation.",icon:"🌿",color:"#2E4859"},
-    {id:"registre_medicaments",name:"Registre des medicaments",price:"6,90",desc:"Document obligatoire (article R2111-1) : grilles de consignation et modele d'autorisation parentale a faire signer.",icon:"💊",color:"#5DA9A1"},
-    {id:"pack_complet",name:"Pack Complet",price:"34,90",desc:"Les 4 produits reunis. Economisez 6,70 EUR par rapport a l'achat separe.",icon:"🎁",color:"#E49178",badge:"-16%"},
+    {id:"registre_medicaments",name:"Registre des medicaments",prix:0,desc:"Document obligatoire (article R2111-1). Vous pouvez aussi le tenir directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
   ];
 
   const acheter=async(product)=>{
@@ -3936,10 +3935,16 @@ export function Boutique({user}){
           <div style={{fontSize:12,color:"var(--l)",lineHeight:1.6,flex:1,marginBottom:12}}>{p.desc}</div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
-              {isPro&&<span style={{fontSize:11,color:"var(--l)",textDecoration:"line-through",marginRight:6}}>{p.price} EUR</span>}
-              <span style={{fontSize:18,fontWeight:700,color:p.color}}>{isPro?nbf((parseFloat(p.price.replace(",","."))*0.8),2):p.price} EUR</span>
+              {p.prix===0
+                ? <span style={{fontSize:18,fontWeight:700,color:p.color}}>Gratuit</span>
+                : <>
+                    {isPro&&<span style={{fontSize:11,color:"var(--l)",textDecoration:"line-through",marginRight:6}}>{p.price} EUR</span>}
+                    <span style={{fontSize:18,fontWeight:700,color:p.color}}>{isPro?nbf((parseFloat(p.price.replace(",","."))*0.8),2):p.price} EUR</span>
+                  </>}
             </div>
-            <button className="btn bT s"style={{padding:"8px 16px"}}onClick={()=>acheter(p)}>Acheter</button>
+            {p.prix===0
+              ? <a className="btn bT s" href={p.fichier} download style={{padding:"8px 16px",textDecoration:"none"}}>Telecharger</a>
+              : <button className="btn bT s"style={{padding:"8px 16px"}}onClick={()=>acheter(p)}>Acheter</button>}
           </div>
         </div>
       </div>)}

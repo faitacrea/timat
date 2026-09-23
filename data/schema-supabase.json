@@ -38,6 +38,18 @@
     "materiel",
     "titre"
   ],
+  "autorisations": [
+    "accordee",
+    "created_at",
+    "enfant_id",
+    "id",
+    "precisions",
+    "signature",
+    "signe_le",
+    "signe_par",
+    "type",
+    "updated_at"
+  ],
   "bilans": [
     "contenu",
     "created_at",
