@@ -76,6 +76,11 @@
       "source": "/blog.html",
       "destination": "/blog",
       "permanent": true
+    },
+    {
+      "source": "/timat-vs-pandi-panda.html",
+      "destination": "/blog/quel-logiciel-assistante-maternelle",
+      "permanent": true
     }
   ],
   "crons": [

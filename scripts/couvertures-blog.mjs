@@ -33,6 +33,8 @@ const UA =
 // établit. C'est la règle des cinquante couvertures déjà en ligne, et c'est ce
 // qui rend la vignette utile quand elle circule seule.
 export const COUVERTURES = [
+  ["quel-logiciel-assistante-maternelle", "Situation pratique",
+   "Trois outils sur le marché français. Un seul est habilité à déclarer à Pajemploi à votre place"],
   ["visite-domicile-pmi-agrement-assistante-maternelle", "Devenir assistante maternelle",
    "Des critères nationaux, et par-dessus les exigences de sécurité propres à chaque département"],
   ["projet-accueil-assistante-maternelle", "Le quotidien de l'accueil",
