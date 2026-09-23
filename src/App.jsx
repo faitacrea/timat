@@ -599,7 +599,6 @@ const TRACES = {
   colis:'<path d="M3 8.5 12 3.5l9 5v7l-9 5-9-5Z"/><path d="M3 8.5 12 13.5l9-5M12 13.5V21"/>',
   boite:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 12h5l1.5 2.5h5L16 12h5"/><path d="m6 7 2-3h8l2 3"/>',
   cadenas:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
-  dossier:'<path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H3Z"/>',
   sommeil:'<path d="M20.5 14A8.5 8.5 0 1 1 10 3.5 7 7 0 0 0 20.5 14Z"/>',
   bus:'<rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 10h16"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M8 4v6M16 4v6"/>',
   voiture:'<path d="M5 17h14"/><path d="M6 17V11l2-4h8l2 4v6"/><path d="M4 11h16"/><circle cx="8" cy="17.5" r="1.6"/><circle cx="16" cy="17.5" r="1.6"/>',
@@ -693,7 +692,7 @@ const EMOJI_TRACE = {
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
   "💾":"sauver","📱":"mobile","🤒":"fievre","🔔":"cloche","🔗":"lien",
-  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","🚨":"urgence","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","📵":"hors_ligne","👆":"main","👉":"main",
+  "🔄":"rafraichir","📥":"telecharger","📤":"envoyer","🌙":"lune","☀️":"soleil","🚪":"sortie","🗑️":"poubelle","🗑":"poubelle","⏳":"sablier","❌":"croix","🚑":"ambulance","🚒":"pompier","👮":"police","📞":"telephone","🛟":"bouee","💜":"coeur","❤️":"coeur","👨‍⚕️":"medecin","📁":"dossier","🏖️":"plage","😊":"sourire","🍎":"pomme","🍼":"biberon","🌅":"aube","🌆":"crepuscule","📩":"enveloppe_recue","🔘":"bouton","🔤":"typo","👁":"oeil","👁️":"oeil","🕐":"horloge","🛡️":"bouclier","⚖️":"balance","🔇":"silence","🧩":"piece","🔍":"loupe","💰":"billets","⬇️":"fleche_bas","📷":"appareil_photo","📸":"appareil_photo","🎂":"gateau","📎":"trombone","✦":"etoiles","💳":"carte_bancaire","🎉":"fete","👤":"personne","👥":"personnes","🔐":"cadenas_ferme","🎈":"ballon","🚙":"voiture_ecole","💊":"medicament","🥗":"salade","📲":"mobile","📍":"punaise","🤍":"coeur","ℹ️":"info","ℹ":"info","🪪":"carte_identite","➤":"fleche_droite","👉":"main","📑":"liste","📢":"annonce","🚀":"fusee","📌":"punaise","🌴":"valise","🖨️":"imprimante","🖨":"imprimante","📵":"hors_ligne","👆":"main",
 };
 export function Icone({ nom, taille = 22, couleur = "currentColor", epaisseur = 1.85 }) {
   const d = TRACES[nom];

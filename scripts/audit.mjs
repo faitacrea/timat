@@ -166,6 +166,185 @@ for (const p of pages) {
   if (!vus) signale("orpheline", `${r} n'est liée depuis aucune page`);
 }
 
+// --- les avertissements que la construction repete depuis des mois ---
+//
+// esbuild signalait trois cles dupliquees dans src/App.jsx a CHAQUE
+// construction. Une cle dupliquee est un bug silencieux : la seconde valeur
+// ecrase la premiere, et la premiere devient du code mort que personne ne sait
+// mort. Le trace d'icone « dossier » etait ainsi ignore depuis qu'un second
+// avait ete ajoute quarante lignes plus bas.
+//
+// Ces avertissements ne font pas echouer la construction, alors on apprend a
+// les ignorer — et le jour ou il en apparait un qui compte, il se noie dans
+// ceux qu'on ignore deja.
+//
+// ON NE REECRIT PAS LE DETECTEUR. Un premier essai le faisait a la regex : il
+// sortait 293 faux positifs, parce qu'un objet litteral en contient d'autres et
+// qu'une cle repetee dans DEUX objets imbriques differents n'est pas un
+// doublon. esbuild, lui, analyse vraiment le code — et il est deja la, c'est
+// lui qui construit le projet. On lui demande donc son avis directement.
+{
+  try {
+    const esbuild = await import("esbuild");
+    const avertissements = [];
+    // Un try/catch AUTOUR DE LA BOUCLE laissait passer tout le reste : deux
+    // fichiers de src/ etaient du Markdown avec une extension .jsx, esbuild
+    // levait une erreur sur le premier, et la barriere se taisait sur les
+    // neuf autres. Le rapport disait « non verifie » — une ligne qu'on lit
+    // comme un succes. Chaque fichier est donc isole, et un fichier de src/
+    // qui ne s'analyse pas est lui-meme un signalement : c'est soit une
+    // erreur de syntaxe, soit un fichier qui n'a rien a faire la.
+    for (const fichier of fichiersAppSrc()) {
+      const nom = decodeURIComponent(String(fichier)).split("/").pop();
+      const src = readFileSync(fichier, "utf8");
+      let r;
+      try {
+        r = await esbuild.transform(src, { loader: "jsx", logLevel: "silent" });
+      } catch (err) {
+        const p = err.errors?.[0];
+        avertissements.push(`${nom}:${p?.location?.line ?? "?"} — ne s'analyse pas : ${p?.text ?? err.message}`);
+        continue;
+      }
+      for (const a of r.warnings || []) {
+        avertissements.push(`${nom}:${a.location?.line ?? "?"} — ${a.text}`);
+      }
+    }
+    if (avertissements.length) {
+      signale("construction", `${avertissements.length} avertissement(s) d'esbuild, répété(s) à chaque construction : ${avertissements.slice(0, 4).join(" ; ")}${avertissements.length > 4 ? "…" : ""}`);
+    }
+  } catch (e) {
+    console.log(`  (avertissements de construction : non vérifiés — ${e.message})`);
+  }
+}
+
+// --- un lien interne qui ne mene nulle part ---
+//
+// La barriere « pages orphelines » regarde qui pointe VERS une page. Celle-ci
+// regarde l'inverse : ce vers quoi les pages pointent. Un href qui tombe sur du
+// vide ne casse rien a la construction, ne leve aucune erreur, et ne se voit
+// qu'au clic — donc chez la visiteuse, jamais ici.
+//
+// Les ancres (#tarifs), les liens externes, les mailto et les tel: ne sont pas
+// concernes : ils ne dependent pas de nos fichiers.
+{
+  const morts = new Map();
+  for (const p of pages) {
+    const html = lire(p);
+    for (const [, href] of html.matchAll(/<a[^>]+href="([^"]+)"/g)) {
+      if (!href.startsWith("/")) continue;            // externe, ancre, mailto, tel
+      const chemin = href.split(/[?#]/)[0];
+      if (!chemin || chemin === "/") continue;
+      const variantes = [chemin, chemin.replace(/\/$/, ""), chemin + "/", chemin + ".html"];
+      if (variantes.some((v) => routes.has(v))) continue;
+      // Le blog est genere depuis Sanity : sans reseau, ses routes manquent et
+      // tout lien vers /blog/... paraitrait mort. On se tait plutot que de crier.
+      if (!blogConnu && chemin.startsWith("/blog")) continue;
+      if (!morts.has(chemin)) morts.set(chemin, new Set());
+      morts.get(chemin).add(routeDe(p));
+    }
+  }
+  for (const [chemin, depuis] of morts) {
+    const l = [...depuis];
+    signale("liens", `${chemin} ne mène nulle part, et ${l.length} page(s) y renvoient : ${l.slice(0, 3).join(", ")}${l.length > 3 ? "…" : ""}`);
+  }
+}
+
+// --- deux pages qui racontent la meme chose a Google ---
+//
+// Deux pages avec le meme <title> ou la meme meta description se font
+// concurrence dans les resultats de recherche : Google en choisit une, souvent
+// pas celle qu'on voulait, et parfois n'en garde aucune. Sur un site de 280
+// pages construites par gabarit, c'est l'erreur qui arrive toute seule — il
+// suffit qu'une variable ne soit pas interpolee.
+{
+  const parTitre = new Map(), parDesc = new Map();
+  for (const p of pages) {
+    const html = lire(p);
+    if (estNoindex(html)) continue;
+    const t = ((html.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "").trim();
+    const d = ((html.match(/<meta[^>]+name="description"[^>]+content="([^"]*)"/i) || [])[1] || "").trim();
+    if (t) { if (!parTitre.has(t)) parTitre.set(t, []); parTitre.get(t).push(routeDe(p)); }
+    if (d) { if (!parDesc.has(d)) parDesc.set(d, []); parDesc.get(d).push(routeDe(p)); }
+  }
+  for (const [quoi, carte] of [["titre", parTitre], ["description", parDesc]]) {
+    for (const [valeur, ou] of carte) {
+      if (ou.length < 2) continue;
+      signale("seo", `${ou.length} pages partagent le même ${quoi} « ${valeur.slice(0, 55)}… » — elles se font concurrence dans Google : ${ou.slice(0, 3).join(", ")}${ou.length > 3 ? "…" : ""}`);
+    }
+  }
+}
+
+// --- des donnees structurees que Google refusera ---
+//
+// Le JSON-LD est ecrit a la main dans les gabarits. Un JSON casse est ignore en
+// silence par le navigateur ET par Google : on perd l'etoile de la FAQ ou le
+// fil d'Ariane dans les resultats, sans qu'aucune page ne paraisse abimee.
+//
+// On verifie trois choses : que le JSON se lit, qu'il annonce un @type, et que
+// les types que nous utilisons portent bien les champs que Google exige.
+{
+  const REQUIS = {
+    FAQPage: ["mainEntity"],
+    BreadcrumbList: ["itemListElement"],
+    Article: ["headline"],
+    BlogPosting: ["headline"],
+    Organization: ["name"],
+    WebPage: ["name"],
+    Blog: ["name"],
+    CollectionPage: ["name"],
+    ItemList: ["itemListElement"],
+    Product: ["name"],
+    SoftwareApplication: ["name"],
+  };
+  for (const p of pages) {
+    const html = lire(p);
+    for (const [, bloc] of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+      let donnees;
+      try { donnees = JSON.parse(bloc); }
+      catch (e) {
+        signale("donnees structurees", `${routeDe(p)} contient un JSON-LD illisible (${e.message.slice(0, 60)}) — Google l'ignorera sans rien dire.`);
+        continue;
+      }
+      for (const n of [].concat(donnees)) {
+        if (!n || typeof n !== "object") continue;
+        const type = n["@type"];
+        if (!type) { signale("donnees structurees", `${routeDe(p)} : un bloc JSON-LD sans @type.`); continue; }
+        const manque = (REQUIS[type] || []).filter((c) => n[c] === undefined);
+        if (manque.length) {
+          signale("donnees structurees", `${routeDe(p)} : le bloc ${type} n'a pas ${manque.join(" ni ")} — Google exige ce champ pour l'afficher.`);
+        }
+      }
+    }
+  }
+}
+
+// --- une image qui fait sauter la page pendant son chargement ---
+//
+// Une <img> sans width ni height ne reserve pas sa place : le texte est mis en
+// page, puis l'image arrive et pousse tout vers le bas. C'est le decalage que
+// Google mesure sous le nom de CLS, et c'est ce qui fait cliquer a cote sur un
+// telephone. Deux attributs suffisent a l'eviter.
+{
+  const sansTaille = new Map();
+  for (const p of pages) {
+    const html = lire(p);
+    for (const [balise] of html.matchAll(/<img\b[^>]*>/g)) {
+      // Une image dimensionnee par du CSS explicite (width dans style=) tient
+      // deja sa place : on ne la compte pas.
+      if (/\bwidth\s*=/.test(balise) && /\bheight\s*=/.test(balise)) continue;
+      if (/style="[^"]*\b(width|aspect-ratio)\s*:/.test(balise)) continue;
+      const src = (balise.match(/\bsrc="([^"]+)"/) || [])[1] || "(sans src)";
+      const r = routeDe(p);
+      if (!sansTaille.has(r)) sansTaille.set(r, new Set());
+      sansTaille.get(r).add(src.split("/").pop());
+    }
+  }
+  for (const [r, srcs] of sansTaille) {
+    const l = [...srcs];
+    signale("mise en page", `${r} : ${l.length} image(s) sans largeur ni hauteur — la page sautera pendant leur chargement : ${l.slice(0, 3).join(", ")}${l.length > 3 ? "…" : ""}`);
+  }
+}
+
 // --- cohérence du minimum conventionnel ---
 // « Minimum conventionnel » designe ici le salaire horaire brut par enfant,
 // 4,20 € depuis le 1er juin 2026. Une page qui l'evoque sans le chiffrer laisse
