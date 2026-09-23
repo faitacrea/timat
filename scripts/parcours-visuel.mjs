@@ -41,7 +41,10 @@ const ECRANS_ASMAT = [
   ["sante-urgence", "L'enfant", "Santé & Urgence"],
   ["bilans", "L'enfant", "Bilans"],
   ["registre-medicaments", "L'enfant", "Registre médicaments"],
+<<<<<<< HEAD
   ["autorisations", "L'enfant", "Autorisations"],
+=======
+>>>>>>> origin/main
   ["calendrier", "Administratif", "Calendrier"],
   ["messagerie", "Administratif", "Messagerie"],
   ["paie-contrats", "Administratif", "Paie & Contrats"],
@@ -62,7 +65,10 @@ const ECRANS_PARENT = [
   ["projet-accueil", "Mon enfant", "Projet d'accueil"],
   ["bilans", "Mon enfant", "Bilans"],
   ["registre-medicaments", "Mon enfant", "Registre médicaments"],
+<<<<<<< HEAD
   ["autorisations", "Mon enfant", "Autorisations"],
+=======
+>>>>>>> origin/main
   ["calendrier", "Administratif", "Calendrier"],
   ["messagerie", "Administratif", "Messagerie"],
   ["aides-simulateurs", "Administratif", "Aides & Simulateurs"],
