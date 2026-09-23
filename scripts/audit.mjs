@@ -2653,6 +2653,40 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- une autorisation ne se coche qu'a un seul endroit ---
+//
+// La fiche d'urgence portait cinq cases a cocher — urgences, paracetamol,
+// sorties, voiture, photos — dont TROIS arrivaient deja cochees. Une
+// autorisation pre-cochee que personne n'a signee s'imprimait ensuite sur la
+// fiche comme si le parent l'avait donnee.
+//
+// Et l'ecran Autorisations posait les memes questions, en les faisant signer :
+// deux reponses possibles pour la meme question, dont une seule avait une
+// valeur. Celle qui n'en avait pas etait la plus facile a remplir.
+//
+// Les autorisations vivent donc dans la table « autorisations », signees par
+// le parent, et nulle part ailleurs.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  for (const [nom, src] of sources) {
+    // Le champ de formulaire qui recree une autorisation a la main.
+    const champs = [...src.matchAll(/\bauth(Urgences|Paracetamol|Sorties|Voiture|Photos)\b/g)];
+    if (champs.length) {
+      signale("autorisations", `${nom} porte ${champs.length} champ(s) d'autorisation en dur (${[...new Set(champs.map((m) => m[0]))].join(", ")}) : une autorisation se signe sur l'ecran Autorisations, elle ne se coche pas ailleurs`);
+    }
+  }
+  // L'ecran Autorisations doit rester le seul a ECRIRE dans la table.
+  const ecrivains = sources
+    .filter(([, src]) => /from\("autorisations"\)[\s\S]{0,80}\.(upsert|insert|update)\(/.test(src))
+    .map(([nom]) => nom);
+  const attendus = new Set(["ecrans-secondaires.jsx"]);
+  for (const nom of ecrivains) {
+    if (!attendus.has(nom)) {
+      signale("autorisations", `${nom} ecrit dans la table « autorisations » : seul l'ecran Autorisations doit le faire, sinon une reponse non signee peut ecraser une reponse signee`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

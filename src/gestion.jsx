@@ -2563,6 +2563,37 @@ export function RecapFiscalAssmat({enfants,user}){
     return()=>{cancelled=true;};
   },[annee,user?.id,demo,(enfants||[]).map(e=>e.id).join(",")]);
 
+  // LES MOIS REPRIS D'UN AUTRE OUTIL — MONTRES, PAS ADDITIONNES
+  //
+  // La tentation etait d'ajouter leurs totaux au revenu imposable. On ne le
+  // fait PAS, pour deux raisons qui rendraient le chiffre faux :
+  //
+  // 1. La reprise enregistre un salaire NET VERSE. La declaration attend un
+  //    net IMPOSABLE, qui n'est pas le meme montant.
+  // 2. L'abattement se calcule journee par journee, selon la duree de chaque
+  //    accueil et le SMIC en vigueur ce jour-la. La reprise ne garde que des
+  //    totaux mensuels : le detail necessaire n'existe pas.
+  //
+  // Un chiffre faux dans une declaration d'impots ne se voit pas, et se paie
+  // des annees plus tard. On affiche donc ces mois a part, avec ce qu'ils
+  // sont, et on dit ce qu'il reste a faire.
+  const [reprisAnnee,setReprisAnnee]=useState([]);
+  useEffect(()=>{
+    const ids=(enfants||[]).map(e=>e.id);
+    if(demo||!ids.length){setReprisAnnee([]);return;}
+    let cancelled=false;
+    supabase.from("historique_mois").select("enfant_id,mois,salaire_net,indemnites_entretien,heures")
+      .in("enfant_id",ids).gte("mois",annee+"-01").lte("mois",annee+"-12")
+      .then(({data})=>{ if(!cancelled) setReprisAnnee(data||[]); });
+    return()=>{cancelled=true;};
+  },[annee,demo,(enfants||[]).map(e=>e.id).join(",")]);
+
+  const totauxRepris=useMemo(()=>reprisAnnee.reduce((t,m)=>({
+    mois:t.mois+1,
+    net:t.net+(Number(m.salaire_net)||0),
+    entretien:t.entretien+(Number(m.indemnites_entretien)||0),
+  }),{mois:0,net:0,entretien:0}),[reprisAnnee]);
+
   // Agregation par enfant (recalcule a chaque toggle AEEH)
   const lignes=useMemo(()=>{
     const ids=Array.from(new Set([...bulletins.map(b=>b.enfant_id),...Object.keys(joursParEnfant)]));
@@ -2604,6 +2635,19 @@ export function RecapFiscalAssmat({enfants,user}){
 
   return <div className="fi">
     <PageHeader icon="📋" title="Récap fiscal annuel" sub="Revenu imposable après abattement, à reporter sur la déclaration 2042"/>
+    {totauxRepris.mois>0&&<div className="card" style={{marginBottom:14,borderLeft:"4px solid #B8862F",background:"#FFFBF0"}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>
+        {totauxRepris.mois} mois de {annee} viennent de votre ancien outil
+      </div>
+      <div style={{fontSize:12.5,color:"var(--b)",lineHeight:1.65}}>
+        Ils totalisent <b>{nbf(totauxRepris.net,2)} €</b> de salaire net versé
+        {totauxRepris.entretien>0?<> et <b>{nbf(totauxRepris.entretien,2)} €</b> d'indemnités d'entretien</>:null}.
+        <br/><b>Ces montants ne sont pas ajoutés au calcul ci-dessous</b>, et c'est volontaire :
+        la reprise enregistre un net <i>versé</i>, quand la déclaration attend un net <i>imposable</i> —
+        et l'abattement se calcule journée par journée, un détail que vos totaux mensuels ne contiennent pas.
+        <br/>Reportez-vous à vos bulletins de l'époque pour ces {totauxRepris.mois} mois, et additionnez-les vous-même.
+      </div>
+    </div>}
     <div className="card" style={{marginBottom:14,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
       <label className="lbl" style={{margin:0}}>Année des revenus</label>
       <select className="sel" style={{maxWidth:140}} value={annee} onChange={e=>setAnnee(Number(e.target.value))}>
@@ -2830,6 +2874,32 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   })();
   const [cpPris,setCpPris]=useState(0);
   const [ruptureParEmployeur,setRuptureParEmployeur]=useState(true);
+
+  // LES CONGES DEJA PRIS AVANT L'ARRIVEE SUR TIMAT
+  //
+  // L'anciennete part du debut du contrat, donc les conges ACQUIS couvrent
+  // deja toute la duree, y compris les mois passes chez un autre outil. Les
+  // conges PRIS, eux, partaient de zero : l'indemnite compensatrice se
+  // calculait comme si l'assistante maternelle n'avait pris aucun jour depuis
+  // le debut. Trop favorable, et faux.
+  //
+  // On pre-remplit donc avec ce que la reprise d'historique a enregistre. La
+  // case reste modifiable : c'est une aide a la saisie, pas une verite qu'on
+  // impose. Une fois touchee, on n'y revient plus.
+  const [prisTouche,setPrisTouche]=useState(false);
+  const [prisRepris,setPrisRepris]=useState(0);
+  useEffect(()=>{
+    if(!selId){setPrisRepris(0);return;}
+    let vivant=true;
+    supabase.from("historique_mois").select("conges_pris").eq("enfant_id",selId)
+      .then(({data})=>{
+        if(!vivant)return;
+        const t=(data||[]).reduce((s,m)=>s+(Number(m.conges_pris)||0),0);
+        setPrisRepris(t);
+        if(!prisTouche&&t>0)setCpPris(t);
+      });
+    return()=>{vivant=false;};
+  },[selId]);
   // Un jour ouvrable de congé vaut une journée d'accueil habituelle. Le mois
   // conventionnel compte 26 jours ouvrables.
   const salaireJournalier=Math.round((salMensuel/26)*100)/100;
@@ -2913,9 +2983,12 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)"}}>
               Jours de congés déjà pris
               <input type="number" min="0" max={cpAcquisFin} step="0.5" value={cpPris}
-                onChange={e=>setCpPris(Math.max(0,Number(e.target.value)||0))}
+                onChange={e=>{setPrisTouche(true);setCpPris(Math.max(0,Number(e.target.value)||0));}}
                 style={{width:72,padding:"5px 8px",borderRadius:7,border:"1px solid var(--br)",fontFamily:"inherit",fontSize:13}}/>
             </label>
+            {prisRepris>0&&!prisTouche&&<span style={{fontSize:12,color:"#2F655F",fontWeight:600}}>
+              dont {nbf(prisRepris,1)} repris de votre historique
+            </span>}
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)",cursor:"pointer"}}>
               <input type="checkbox" checked={ruptureParEmployeur} onChange={e=>setRuptureParEmployeur(e.target.checked)}
                 style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
