@@ -1737,8 +1737,12 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
     logAction&&logAction(edite?"registre_medicament_corrige":"registre_medicament_inscrit");
   };
 
-  const imprimer=async()=>{
-    if(!lignes.length){setToast("Le registre est vide : rien à imprimer.");return;}
+  // Vierge ou rempli, c'est LE MEME document : meme entete, memes colonnes,
+  // meme mention du decret. Deux generateurs separes auraient diverge au
+  // premier changement de colonne, et la version papier serait devenue celle
+  // qui ne correspond plus.
+  const imprimer=async(vierge=false)=>{
+    if(!vierge && !lignes.length){setToast("Le registre est vide : rien à imprimer.");return;}
     try{
       const jsPDF=await chargerJsPDF();
       const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4",orientation:"landscape"}));
@@ -1749,8 +1753,8 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
       doc.text("Decret n 2021-1131 - article R.2111-1 du code de la sante publique",MX,y);y+=7;
       doc.setFontSize(10);doc.setTextColor(...noir);
-      doc.text("Enfant : "+[enfant?.prenom,enfant?.nom].filter(Boolean).join(" "),MX,y);y+=5;
-      doc.text("Assistante maternelle : "+[user?.prenom,user?.nom].filter(Boolean).join(" "),MX,y);y+=5;
+      doc.text("Enfant : "+(vierge?"..................................................":[enfant?.prenom,enfant?.nom].filter(Boolean).join(" ")),MX,y);y+=5;
+      doc.text("Assistante maternelle : "+(vierge?"..................................................":[user?.prenom,user?.nom].filter(Boolean).join(" ")),MX,y);y+=5;
       if(user?.numero_agrement){doc.text("N agrement : "+user.numero_agrement,MX,y);y+=5;}
       y+=3;
       const COLS=[["Date",22],["Heure",16],["Medicament",62],["Posologie",62],["Administre par",50],["Observations",0]];
@@ -1761,11 +1765,16 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
         y+=7;doc.setFont("helvetica","normal");
       };
       entete();
-      for(const l of [...lignes].reverse()){
+      // 22 lignes vides tiennent sur une page A4 paysage : de quoi couvrir
+      // plusieurs mois a la main sans reimprimer.
+      const aTracer = vierge
+        ? Array.from({length:22},()=>({date_acte:"",heure_acte:"",medicament:"",posologie:"",administre_par:"",observations:""}))
+        : [...lignes].reverse();
+      for(const l of aTracer){
         if(y>190){doc.addPage();y=18;entete();}
         let x=MX+2;
         const cellules=[
-          (l.date_acte||"").split("-").reverse().join("/"),
+          l.date_acte?l.date_acte.split("-").reverse().join("/"):"",
           l.heure_acte||"",
           l.medicament||"",
           l.posologie||"",
@@ -1782,9 +1791,11 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       }
       y+=6;
       doc.setFontSize(8);doc.setTextColor(...gris);
-      doc.text("Document genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
-      doc.save("registre-medicaments-"+(enfant?.prenom||"enfant")+".pdf");
-      logAction&&logAction("registre_medicament_imprime");
+      doc.text(vierge
+        ? "Registre vierge genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - a remplir a la main, immediatement apres chaque geste."
+        : "Document genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
+      doc.save((vierge?"registre-medicaments-vierge":"registre-medicaments-"+(enfant?.prenom||"enfant"))+".pdf");
+      logAction&&logAction(vierge?"registre_medicament_vierge":"registre_medicament_imprime");
     }catch(e){ setToast("Le PDF n'a pas pu être créé."); }
   };
 
@@ -1843,8 +1854,12 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>
         {lignes.length} inscription{lignes.length>1?"s":""}
       </div>
-      {!!lignes.length&&<button className="btn s" onClick={imprimer}
-        style={{background:"var(--c)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}><IconeOuEmoji e="🖨️"/> Imprimer le registre</button>}
+      <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+        {!!lignes.length&&<button className="btn s" onClick={()=>imprimer(false)}
+          style={{background:"var(--c)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}><IconeOuEmoji e="🖨️"/> Imprimer le registre</button>}
+        {!estParent&&<button className="btn s" onClick={()=>imprimer(true)}
+          style={{background:"var(--bg)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}><IconeOuEmoji e="📥"/> Version vierge à remplir</button>}
+      </div>
     </div>
 
     {chargement
@@ -2158,6 +2173,205 @@ export function RepriseContrat({enfants,role,user}){
                   onClick={()=>supprimer(m.id)}>Retirer</button>
               </div>)}
           </div>}
+
+    {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
+  </div>;
+}
+
+// ========== LES AUTORISATIONS PARENTALES ==========
+//
+// Elles circulaient sur papier, dans une annexe du contrat signee une fois et
+// rangee quelque part. Le jour ou il faut prouver que le parent avait autorise
+// l'appel au 15 ou le transport en voiture, la feuille est introuvable — et une
+// autorisation qu'on ne retrouve pas n'existe pas.
+//
+// SEUL LE PARENT ACCORDE ET SIGNE. La politique UPDATE de la base le lui
+// reserve : une assistante maternelle qui pourrait cocher « autorise » a la
+// place du parent rendrait la trace sans valeur, et c'est tout l'interet de la
+// separer du reste.
+//
+// Le refus est une reponse comme une autre. Un « non » date et signe vaut mieux
+// qu'un silence : au moins on sait.
+export const TYPES_AUTORISATION = [
+  ["medicaments", "Administrer un médicament", "💊",
+   "Donner un médicament prescrit par ordonnance, et l'inscrire au registre.",
+   "Sans cette autorisation, aucun médicament ne peut être administré, même du paracétamol."],
+  ["urgence", "Soins d'urgence et hospitalisation", "🚑",
+   "Appeler le 15, faire transporter l'enfant et autoriser une intervention si les parents sont injoignables.",
+   "C'est l'autorisation la plus importante, et la plus souvent oubliée."],
+  ["transport", "Transporter en véhicule", "🚗",
+   "Emmener l'enfant en voiture, en siège homologué et assuré.",
+   "L'assurance du véhicule doit couvrir le transport d'enfants accueillis."],
+  ["sorties", "Sorties hors du domicile", "🌳",
+   "Parc, bibliothèque, relais petite enfance, promenades.",
+   "Une sortie est un temps d'accueil comme un autre."],
+  ["photos", "Photographier l'enfant", "📷",
+   "Prendre des photos de l'enfant et les partager avec vous dans l'application.",
+   "Le consentement se retire à tout moment : c'est le RGPD."],
+  ["tiers", "Personnes autorisées à venir le chercher", "👪",
+   "Les personnes, autres que vous, qui peuvent récupérer l'enfant.",
+   "Précisez leurs noms. Une pièce d'identité sera demandée la première fois."],
+];
+
+export function Autorisations({enfants,role,pEId,user}){
+  const estParent = role==="parent";
+  const liste = estParent ? enfants.filter(e=>!pEId||e.id===pEId) : enfants;
+  const [selId,setSelId]=useState(liste[0]?.id);
+  const [lignes,setLignes]=useState([]);
+  const [chargement,setChargement]=useState(true);
+  const [toast,setToast]=useState("");
+  // Deux etats distincts, et pas un seul qui porterait tantot un type tantot
+  // un objet : « ouvert sur quelle carte » et « signature tracee » ne sont pas
+  // la meme information, et les confondre faisait disparaitre le formulaire au
+  // moment ou le parent venait de signer.
+  const [ouvert,setOuvert]=useState(null);
+  const [signature,setSignature]=useState(null);
+  const [precisions,setPrecisions]=useState("");
+  const enfant = enfants.find(e=>e.id===selId);
+
+  const recharger=(id)=>{
+    setChargement(true);
+    supabase.from("autorisations").select("*").eq("enfant_id",id).then(({data,error})=>{
+      if(error)setToast("Les autorisations n'ont pas pu être lues.");
+      setLignes(data||[]); setChargement(false);
+    });
+  };
+  useEffect(()=>{ if(!selId){setChargement(false);return;} recharger(selId); },[selId]);
+
+  const par=(t)=>lignes.find(l=>l.type===t);
+
+  // Le parent repond : oui ou non, avec sa signature et la date. Les deux
+  // reponses s'enregistrent de la meme facon — un refus n'est pas une absence
+  // de reponse, et il doit se voir.
+  const repondre=async(type, accordee, sig)=>{
+    const charge={
+      enfant_id:selId, type, accordee, precisions:precisions||null,
+      signature:sig||null,
+      signe_par:[user?.prenom,user?.nom].filter(Boolean).join(" ")||null,
+      signe_le:new Date().toISOString(), updated_at:new Date().toISOString(),
+    };
+    const {error}=await supabase.from("autorisations").upsert(charge,{onConflict:"enfant_id,type"});
+    if(error){setToast("La réponse n'a pas pu être enregistrée.");return;}
+    setOuvert(null); setSignature(null); setPrecisions(""); recharger(selId);
+    setToast(accordee?"Autorisation accordée et signée.":"Refus enregistré et signé.");
+    logAction&&logAction(accordee?"autorisation_accordee":"autorisation_refusee");
+  };
+
+  const imprimer=async()=>{
+    try{
+      const jsPDF=await chargerJsPDF();
+      const doc=protegerPdf(new jsPDF({unit:"mm",format:"a4"}));
+      const PW=210,MX=18;let y=20;
+      const orange=[184,98,47],noir=[40,40,40],gris=[120,120,120];
+      doc.setFontSize(18);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
+      doc.text("Autorisations parentales",MX,y);y+=9;
+      doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
+      doc.text("Enfant : "+[enfant?.prenom,enfant?.nom].filter(Boolean).join(" "),MX,y);y+=5;
+      doc.text("Assistante maternelle : "+[user?.prenom,user?.nom].filter(Boolean).join(" "),MX,y);y+=8;
+      for(const [type,titre,,desc] of TYPES_AUTORISATION){
+        const l=par(type);
+        if(y>255){doc.addPage();y=20;}
+        doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(...noir);
+        doc.text(titre.normalize("NFD").replace(/[̀-ͯ]/g,""),MX,y);y+=5;
+        doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(...gris);
+        doc.splitTextToSize(desc.normalize("NFD").replace(/[̀-ͯ]/g,""),PW-2*MX).forEach(t=>{doc.text(t,MX,y);y+=4;});
+        doc.setFontSize(10);doc.setTextColor(...noir);
+        const etat = l?.accordee===true ? "ACCORDEE" : l?.accordee===false ? "REFUSEE" : "SANS REPONSE";
+        const quand = l?.signe_le ? " le "+new Date(l.signe_le).toLocaleDateString("fr-FR")+" par "+(l.signe_par||"") : "";
+        doc.text(etat+quand,MX,y);y+=5;
+        if(l?.precisions){doc.setFontSize(9);doc.setTextColor(...gris);
+          doc.splitTextToSize(l.precisions.normalize("NFD").replace(/[̀-ͯ]/g,""),PW-2*MX).forEach(t=>{doc.text(t,MX,y);y+=4;});}
+        doc.setDrawColor(228,220,208);doc.line(MX,y,PW-MX,y);y+=6;
+      }
+      doc.setFontSize(8);doc.setTextColor(...gris);
+      doc.text("Genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+".",MX,y+2);
+      doc.save("autorisations-"+(enfant?.prenom||"enfant")+".pdf");
+    }catch(e){ setToast("Le PDF n'a pas pu être créé."); }
+  };
+
+  if(!liste.length) return <div className="fi">
+    <PageHeader icon="🪪" title="Autorisations parentales" sub="Ce que le parent autorise, daté et signé"/>
+    <EmptyState emoji="👶" titre="Aucun enfant" texte="Les autorisations s'ouvrent dès qu'un enfant est enregistré."/>
+  </div>;
+
+  const sansReponse=TYPES_AUTORISATION.filter(([t])=>par(t)?.accordee===undefined||par(t)?.accordee===null).length;
+
+  return <div className="fi">
+    <PageHeader icon="🪪" title="Autorisations parentales" sub="Ce que le parent autorise, daté et signé"/>
+
+    {liste.length>1&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+      {liste.map(e=>
+        <button key={e.id} onClick={()=>{setSelId(e.id);setOuvert(null);setSignature(null);}} className={"btn s "+(selId===e.id?"bT":"")}
+          style={selId===e.id?{}:{background:"var(--c)",color:"var(--b)"}}>{e.prenom}</button>)}
+    </div>}
+
+    <div style={{background:"#F3F7F6",border:"1px solid #DCE9E6",borderLeft:"4px solid #5DA9A1",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+      {estParent
+        ? <>Vous seul pouvez accorder ou refuser. Un refus est une réponse : il se signe
+            aussi, et l'assistante maternelle sait alors à quoi s'en tenir. Vous pouvez
+            revenir sur une autorisation à tout moment — la nouvelle réponse remplace
+            l'ancienne, datée.</>
+        : <>Seul le parent peut répondre et signer : c'est ce qui donne sa valeur à la
+            trace. Vous voyez ici ses réponses, et vous pouvez imprimer le récapitulatif
+            pour votre dossier.{sansReponse>0?<> <b>{sansReponse} autorisation{sansReponse>1?"s":""} sans réponse.</b></>:null}</>}
+    </div>
+
+    <div style={{display:"flex",justifyContent:"flex-end",marginBottom:10}}>
+      <button className="btn s" onClick={imprimer} style={{background:"var(--c)",color:"var(--b)",display:"inline-flex",alignItems:"center",gap:6}}>
+        <IconeOuEmoji e="🖨️"/> Imprimer le récapitulatif
+      </button>
+    </div>
+
+    {chargement
+      ? <div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>
+      : <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {TYPES_AUTORISATION.map(([type,titre,ic,desc,note])=>{
+            const l=par(type);
+            const etat=l?.accordee===true?"oui":l?.accordee===false?"non":null;
+            const couleur=etat==="oui"?"#3D6B50":etat==="non"?"#C84B31":"#7C8A90";
+            return <div key={type} style={{background:"var(--c)",border:"1px solid var(--br)",borderLeft:"4px solid "+couleur,borderRadius:12,padding:"13px 15px"}}>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                <div style={{lineHeight:1}}><IconeOuEmoji e={ic} taille={20}/></div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{titre}</div>
+                  <div style={{fontSize:12.5,color:"var(--m)",marginTop:3,lineHeight:1.55}}>{desc}</div>
+                  <div style={{fontSize:12,color:"var(--m)",marginTop:5,fontStyle:"italic"}}>{note}</div>
+                  <div style={{marginTop:8,fontSize:12.5,fontWeight:700,color:couleur}}>
+                    {etat==="oui"?"Accordée":etat==="non"?"Refusée":"Sans réponse"}
+                    {l?.signe_le?<span style={{fontWeight:400,color:"var(--m)"}}>
+                      {" · "}le {new Date(l.signe_le).toLocaleDateString("fr-FR")}
+                      {l.signe_par?" par "+l.signe_par:""}
+                    </span>:null}
+                  </div>
+                  {l?.precisions?<div style={{fontSize:12.5,color:"var(--b)",marginTop:5,background:"var(--bg)",borderRadius:8,padding:"7px 9px"}}>{l.precisions}</div>:null}
+
+                  {estParent&&ouvert!==type&&<div style={{display:"flex",gap:7,marginTop:10,flexWrap:"wrap"}}>
+                    <button className="btn s bT" onClick={()=>{setOuvert(type);setSignature(null);setPrecisions(l?.precisions||"");}}>
+                      {etat?"Modifier ma réponse":"Répondre et signer"}
+                    </button>
+                  </div>}
+
+                  {estParent&&ouvert===type&&<div style={{marginTop:12,borderTop:"1px solid var(--br)",paddingTop:11}}>
+                    <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>Précisions (facultatif)</label>
+                    <input value={precisions} onChange={e=>setPrecisions(e.target.value)}
+                      placeholder={type==="tiers"?"Prénoms et noms des personnes autorisées":"Ce que vous souhaitez ajouter"}
+                      style={{width:"100%",border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)",marginTop:4,marginBottom:10}}/>
+                    <div style={{fontSize:12,color:"var(--m)",marginBottom:7}}>
+                      {signature?"Signature enregistrée. Choisissez votre réponse.":"Signez ci-dessous, puis choisissez votre réponse."}
+                    </div>
+                    {!signature&&<SignaturePad
+                      onSave={(sig)=>setSignature(sig||"")}
+                      onCancel={()=>{setOuvert(null);setSignature(null);setPrecisions("");}}/>}
+                    {signature!==null&&<div style={{display:"flex",gap:7,marginTop:10}}>
+                      <button className="btn s bT" style={{flex:1}} onClick={()=>repondre(type,true,signature)}>J'autorise</button>
+                      <button className="btn s" style={{flex:1,background:"var(--bg)",color:"#C84B31"}} onClick={()=>repondre(type,false,signature)}>Je refuse</button>
+                    </div>}
+                  </div>}
+                </div>
+              </div>
+            </div>;
+          })}
+        </div>}
 
     {toast&&<Toast msg={toast} onDone={()=>setToast("")}/>}
   </div>;

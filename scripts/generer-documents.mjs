@@ -18,7 +18,25 @@ import path from "node:path";
 import PDFDocument from "pdfkit";
 
 const ROOT = process.cwd();
+// Deux de ces documents sont desormais GRATUITS et servis par le site : le
+// registre des medicaments et la fiche d'urgence sont l'un une obligation
+// legale, l'autre un document qu'on trouve partout ailleurs sans payer. Les
+// faire payer revenait a vendre ce qu'on avait soi-meme trouve gratuitement.
+//
+// Ils vont donc dans public/documents/, servi tel quel. Le projet d'accueil,
+// lui, reste livre apres paiement : ses treize sections guidees sont un
+// travail d'ecriture, pas un formulaire recopie.
 const OUT = path.join(ROOT, "documents");
+const OUT_PUBLIC = path.join(ROOT, "public", "documents");
+const GRATUITS = new Set(["registre-medicaments-administres.pdf", "fiche-renseignements-urgence.pdf"]);
+
+// LE point de passage de l'ecriture. Un « if » recopie a chaque document
+// aurait fini par oublier l'un des deux, et un document gratuit qui n'arrive
+// pas dans public/ donne un lien mort sur la boutique.
+const ecrire = (doc, nom) => {
+  doc.pipe(createWriteStream(path.join(OUT, nom)));
+  if (GRATUITS.has(nom)) doc.pipe(createWriteStream(path.join(OUT_PUBLIC, nom)));
+};
 
 // Palette alignee sur les pages du site.
 const C = {
@@ -233,7 +251,7 @@ const COLONNES_REGISTRE = [
 
 function registreMedicaments() {
   const doc = nouveauDoc("Registre des médicaments administrés");
-  doc.pipe(createWriteStream(path.join(OUT, "registre-medicaments-administres.pdf")));
+  ecrire(doc, "registre-medicaments-administres.pdf");
 
   bandeau(
     doc,
@@ -334,7 +352,7 @@ function registreMedicaments() {
 
 function ficheUrgence() {
   const doc = nouveauDoc("Fiche de renseignements et d'urgence");
-  doc.pipe(createWriteStream(path.join(OUT, "fiche-renseignements-urgence.pdf")));
+  ecrire(doc, "fiche-renseignements-urgence.pdf");
 
   bandeau(doc, "Fiche de renseignements et d'urgence", "Une fiche par enfant — à afficher et à garder accessible", "À AFFICHER");
 
@@ -445,7 +463,7 @@ function ficheUrgence() {
 
 function projetAccueil() {
   const doc = nouveauDoc("Projet d'accueil");
-  doc.pipe(createWriteStream(path.join(OUT, "projet-accueil.pdf")));
+  ecrire(doc, "projet-accueil.pdf");
 
   bandeau(doc, "Mon projet d'accueil", "Modèle à personnaliser — accueil à domicile ou en MAM", "À COMPLÉTER");
 
@@ -507,6 +525,7 @@ function projetAccueil() {
 
 async function main() {
   await mkdir(OUT, { recursive: true });
+  await mkdir(OUT_PUBLIC, { recursive: true });
   registreMedicaments();
   ficheUrgence();
   projetAccueil();

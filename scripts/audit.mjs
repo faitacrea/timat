@@ -236,6 +236,11 @@ for (const p of pages) {
       if (!chemin || chemin === "/") continue;
       const variantes = [chemin, chemin.replace(/\/$/, ""), chemin + "/", chemin + ".html"];
       if (variantes.some((v) => routes.has(v))) continue;
+      // Un lien peut viser un FICHIER servi tel quel — un PDF a telecharger,
+      // une image — et pas une page. « routes » ne contient que des pages :
+      // sans ce test, chaque document telechargeable etait signale comme lien
+      // mort. On regarde donc si le fichier existe vraiment dans dist/.
+      if (fs.existsSync(path.join(DIST, chemin))) continue;
       // Le blog est genere depuis Sanity : sans reseau, ses routes manquent et
       // tout lien vers /blog/... paraitrait mort. On se tait plutot que de crier.
       if (!blogConnu && chemin.startsWith("/blog")) continue;

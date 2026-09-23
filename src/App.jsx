@@ -3780,6 +3780,7 @@ const GROUPS_AM={
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence, allergies, soins"},
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans périodiques à partager"},
     {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Consignation obligatoire de chaque médicament donné"},
+    {id:"autorisations",l:"Autorisations",ic:"🪪",d:"Ce que le parent autorise : médicaments, urgence, transport, photos"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
@@ -3809,6 +3810,7 @@ const GROUPS_P={
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Le projet pédagogique"},
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans partagés par l'assistante maternelle"},
     {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Chaque médicament donné à votre enfant, daté"},
+    {id:"autorisations",l:"Autorisations",ic:"🪪",d:"Ce que vous autorisez, à signer — vous seul pouvez répondre"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
@@ -5739,6 +5741,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   <span style={{ color: ok ? "#2C1F14" : "#8A725D" }}>{t}</span>
                 </div>
               ))}
+              {(config.freeLimite ?? DEFAULT_CONFIG.freeLimite) && <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #DDD5C8", fontSize: 12.5, lineHeight: 1.6, color: L.freeDescColor||"#6B4F3A" }}>
+                {config.freeLimite ?? DEFAULT_CONFIG.freeLimite}
+              </div>}
             </div>
             {/* Pro */}
             <div className="tarif-pro" style={{ background: L.proBg||"#FDFBF8", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
@@ -5880,10 +5885,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
               {id:"kit_sheets",name:"Kit de gestion",price:"14,90",desc:"Jusqu'a 4 contrats : heures jour par jour, mensualisation, conges payes, recap annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
-              {id:"fiche_urgence",name:"Fiche d'urgence",price:"6,90",desc:"Le document a afficher, que la PMI regarde. A remplir et imprimer.",icon:"🚨",color:"#C84B31",link:config.boutique?.linkFiche},
+              {id:"fiche_urgence",name:"Fiche d'urgence",prix:0,desc:"Le document a afficher, que la PMI regarde. A remplir et imprimer.",icon:"🚨",color:"#C84B31",fichier:"/documents/fiche-renseignements-urgence.pdf"},
               {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections guidees, adossees au referentiel national qualite 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
-              {id:"registre_medicaments",name:"Registre des medicaments",price:"6,90",desc:"Document obligatoire : consignation, autorisation parentale type.",icon:"💊",color:"#5DA9A1",link:config.boutique?.linkRegistre},
-              {id:"pack_complet",name:"Pack Complet",price:"34,90",desc:"Les 4 produits reunis (-16%).",icon:"🎁",color:"#E49178",badge:"-16%",link:config.boutique?.linkPack},
+              {id:"registre_medicaments",name:"Registre des medicaments",prix:0,desc:"Document obligatoire (article R2111-1). Aussi tenu directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
                 {p.icon}
@@ -5893,13 +5897,15 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <div style={{fontWeight:700,fontSize:13,color:"#2E4859",marginBottom:4}}>{p.name}</div>
                 <div style={{fontSize:11,color:"#5F7A86",lineHeight:1.5,flex:1,marginBottom:10}}>{p.desc}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.price} €</span>
-                  <button onClick={()=>{if(p.link){window.open(p.link,"_blank");}else{alert("Lien de paiement non configure. Allez dans le Backoffice > App > Boutique pour ajouter vos liens Stripe.");}}}style={{background:p.color,color:"#fff",border:"none",borderRadius:10,padding:"8px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>Acheter →</button>
+                  <span style={{fontSize:16,fontWeight:700,color:p.color}}>{p.prix===0?"Gratuit":p.price+" €"}</span>
+                  {p.prix===0
+                    ? <a href={p.fichier} download style={{background:p.color,color:"#fff",borderRadius:10,padding:"8px 16px",fontSize:12,fontWeight:700,textDecoration:"none"}}>Télécharger →</a>
+                    : <button onClick={()=>{if(p.link){window.open(p.link,"_blank");}else{alert("Lien de paiement non configure. Allez dans le Backoffice > App > Boutique pour ajouter vos liens Stripe.");}}}style={{background:p.color,color:"#fff",border:"none",borderRadius:10,padding:"8px 16px",cursor:"pointer",fontSize:12,fontWeight:700}}>Acheter →</button>}
                 </div>
               </div>
             </div>)}
           </div>
-          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Paiement securise par Stripe · Telechargement immediat apres achat</div>
+          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Les documents obligatoires sont gratuits · Paiement securise par Stripe pour les autres</div>
         </div>
       </div>}
 
@@ -6656,6 +6662,16 @@ export const DEFAULT_CONFIG = {
   // « ca, j'en ai besoin » — et les croix disent clairement ce qu'il manque,
   // parce qu'un gratuit dont on ne voit pas la limite ne fait jamais monter
   // au forfait.
+  // LA LISTE DU GRATUIT — ce qu'on a, et rien d'autre.
+  //
+  // Elle portait cinq croix : « pas les bulletins », « pas Pajemploi », « pas
+  // les attestations ». Une colonne qui se termine sur cinq refus se lit comme
+  // une punition, alors que le compte gratuit est une vraie offre.
+  //
+  // Ce que les croix disaient reste dit — mais une fois, en une phrase posee
+  // sous la colonne, et non en cinq lignes barrees. Le lecteur doit savoir ce
+  // qu'il n'aura pas : le taire serait le tromper, et il le decouvrirait au
+  // pire moment, le jour du premier bulletin.
   freeItems:[
     [true, "1 enfant accueilli"],
     [true, "Le cahier de liaison : repas, sieste, change, activités"],
@@ -6663,18 +6679,12 @@ export const DEFAULT_CONFIG = {
     [true, "L'espace parent, gratuit et sans limite"],
     [true, "Le contrat et ses avenants"],
     [true, "Le registre des médicaments, imprimable"],
-    [false, "Les bulletins de salaire"],
-    [false, "Le récapitulatif Pajemploi du mois"],
-    [false, "Les attestations fiscale et France Travail"],
-    [false, "Le solde de tout compte en fin de contrat"],
-    [false, "Un deuxième enfant"],
+    [true, "Les autorisations parentales, signées en ligne"],
   ],
-  // LA LISTE DU PRO — les douze etaient a plat, du plus decisif
-  // (« Bulletins de salaire complets ») au plus anecdotique
-  // (« Centre d'aide prioritaire »), sans hierarchie. Les trois premieres
-  // lignes sont les seules qu'on lit vraiment : ce sont donc les trois
-  // raisons de payer, et elles portent le mot « tous vos enfants » qui est
-  // notre difference de structure avec les autres.
+  // La phrase qui remplace les croix. Elle est dans la config du back-office
+  // comme le reste : le jour ou le partage gratuit/Pro bouge, elle se corrige
+  // sans toucher au code.
+  freeLimite:"Les bulletins de salaire, le récapitulatif Pajemploi, les attestations et les enfants suivants font partie du forfait Pro.",
   proItems:[
     "Les bulletins de salaire, conformes à la convention",
     "Le récapitulatif Pajemploi, prêt à reporter",
@@ -6952,6 +6962,7 @@ export const ListeAttente = lazy(() => _ecrans().then(m => ({ default: m.ListeAt
 export const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m.PlanningPeriscolaire })));
 export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.RegistreMedicaments })));
 export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
+export const Autorisations = lazy(() => _ecrans().then(m => ({ default: m.Autorisations })));
 export const ForumCommunaute = lazy(() => _ecrans().then(m => ({ default: m.ForumCommunaute })));
 export const ProjetAccueil = lazy(() => _ecrans().then(m => ({ default: m.ProjetAccueil })));
 
@@ -7588,6 +7599,7 @@ export default function App(){
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
       case "registre_medicaments": return <RegistreMedicaments enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "reprise_contrat": return <RepriseContrat enfants={enfants} role={role} user={user}/>;
+      case "autorisations": return <Autorisations enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "parrainage": return <Parrainage user={user}/>;
