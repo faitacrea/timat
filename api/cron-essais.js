@@ -76,6 +76,54 @@ async function rappeler(profil, jours) {
   }
 }
 
+/**
+ * LE RAPPEL DE POINTAGE NON VALIDE.
+ *
+ * Le courriel « Un pointage attend votre validation » se terminait par cette
+ * phrase : « Si vous oubliez, un rappel automatique sera envoye sous 3 jours. »
+ * Le gabarit du rappel existait, la colonne rappel_envoye_at existait — mais
+ * rien ne l'envoyait. Des parents ont donc lu une promesse qui n'a jamais ete
+ * tenue, et des pointages sont restes en attente sans que personne ne le sache.
+ *
+ * Trois garde-fous :
+ *
+ *   1. UN SEUL rappel par pointage, jamais deux. rappel_envoye_at est marque
+ *      apres l'envoi, et la requete ecarte les lignes deja marquees ;
+ *
+ *   2. on ne remonte pas plus loin que TRENTE JOURS. Le jour ou cette tache
+ *      est deployee, la base contient des mois de pointages non valides : sans
+ *      cette borne, le premier passage enverrait des centaines de courriels
+ *      d'un coup, a des parents qui ne comprendraient pas ;
+ *
+ *   3. sans adresse de parent, on ne fait rien et on ne signale pas d'erreur :
+ *      tous les enfants n'ont pas de parent invite dans l'application.
+ */
+const JOURS_AVANT_RAPPEL = 3;
+const JOURS_MAX_REMONTEE = 30;
+
+async function rappelerPointage(ligne, urlParent) {
+  const res = await fetch(`${APP_URL}/api/send-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'pointage_rappel',
+      to: ligne.parent_email,
+      vars: {
+        parent_prenom: ligne.parent_prenom || '',
+        enfant_prenom: ligne.enfant_prenom || '',
+        date: new Date(ligne.date + 'T12:00:00').toLocaleDateString('fr-FR', {
+          day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris',
+        }),
+        url: urlParent,
+      },
+    }),
+  });
+  if (!res.ok) {
+    const corps = await res.text().catch(() => '');
+    throw new Error(`send-email ${res.status} : ${corps.slice(0, 200)}`);
+  }
+}
+
 const repondre = (code, corps) => new Response(JSON.stringify(corps), {
   status: code, headers: { 'Content-Type': 'application/json' },
 });
@@ -98,8 +146,13 @@ export default async function handler(request) {
   // « simulation=1 » dit ce qui serait fait, sans rien écrire ni envoyer.
   const simulation = new URL(request.url).searchParams.get('simulation') === '1';
   const maintenant = new Date();
-  const journal = { simulation, rappels: [], expires: [], erreurs: [] };
+  const journal = { simulation, rappels: [], expires: [], pointages: [], erreurs: [] };
 
+  // ---- LES ESSAIS QUI FINISSENT ----
+  //
+  // Chaque passe a son propre try. Sans cela, une lecture de « profiles » en
+  // echec sautait toute la suite : les rappels de pointage n'auraient jamais
+  // ete envoyes ce jour-la, pour une panne qui ne les concernait pas.
   try {
     const { data: essais, error } = await supabase
       .from('profiles')
@@ -161,12 +214,75 @@ export default async function handler(request) {
       }
     }
 
-    // Une erreur sur un compte n'arrête pas les autres, mais elle doit se voir :
-    // une tâche qui répond « tout va bien » en ayant échoué partout est pire
-    // que pas de tâche du tout.
-    return repondre(journal.erreurs.length ? 207 : 200, journal);
   } catch (e) {
-    console.error('[cron-essais]', e.message);
-    return repondre(500, { error: e.message, journal });
+    console.error('[cron-essais] essais', e.message);
+    journal.erreurs.push({ etape: 'essais', raison: e.message });
   }
+
+  // ---- LES POINTAGES QUI ATTENDENT DEPUIS TROIS JOURS ----
+  //
+  // Independante de la precedente, dans les deux sens : une panne sur les
+  // essais ne doit pas priver les parents de leur rappel, et une panne ici ne
+  // doit pas laisser un essai fini ouvert.
+  {
+    try {
+      const borneHaute = new Date(maintenant.getTime() - JOURS_AVANT_RAPPEL * 86400000);
+      const borneBasse = new Date(maintenant.getTime() - JOURS_MAX_REMONTEE * 86400000);
+      const { data: enAttente, error: eP } = await supabase
+        .from('pointages')
+        .select('id, date, created_at, enfant_id, enfants(prenom, parent_id)')
+        .eq('valide_parent', false)
+        .is('rappel_envoye_at', null)
+        .lte('created_at', borneHaute.toISOString())
+        .gte('created_at', borneBasse.toISOString())
+        .limit(200);
+      if (eP) throw new Error(eP.message);
+
+      // Le parent n'est pas sur l'enfant : « enfants.parent_id » pointe vers
+      // « profiles ». On charge les parents concernes en UNE requete plutot
+      // qu'une par pointage — vingt pointages du meme enfant ne doivent pas
+      // faire vingt lectures.
+      const idsParents = [...new Set((enAttente || [])
+        .map((pt) => pt.enfants && pt.enfants.parent_id).filter(Boolean))];
+      const parents = new Map();
+      if (idsParents.length) {
+        const { data: pr, error: eR } = await supabase
+          .from('profiles').select('id, email, prenom').in('id', idsParents);
+        if (eR) throw new Error(eR.message);
+        for (const p of pr || []) parents.set(p.id, p);
+      }
+
+      for (const pt of enAttente || []) {
+        const e = pt.enfants || {};
+        const parent = e.parent_id ? parents.get(e.parent_id) : null;
+        // Pas de parent invite, ou parent sans adresse : rien a envoyer, et ce
+        // n'est pas une anomalie — tous les enfants n'ont pas de compte parent.
+        if (!parent || !parent.email) continue;
+        journal.pointages.push({ id: pt.id, date: pt.date });
+        if (simulation) continue;
+        try {
+          await rappelerPointage({
+            date: pt.date, parent_email: parent.email,
+            parent_prenom: parent.prenom, enfant_prenom: e.prenom,
+          }, APP_URL);
+          // Marque APRES l'envoi : un courriel qui echoue est retente demain
+          // plutot que perdu. Marquer avant perdrait le rappel en silence.
+          const { error: eM } = await supabase.from('pointages')
+            .update({ rappel_envoye_at: maintenant.toISOString() }).eq('id', pt.id);
+          if (eM) journal.erreurs.push({ id: pt.id, raison: eM.message });
+        } catch (err) {
+          journal.erreurs.push({ id: pt.id, raison: err.message });
+        }
+      }
+    } catch (err) {
+      console.error('[cron-essais] pointages', err.message);
+      journal.erreurs.push({ etape: 'pointages', raison: err.message });
+    }
+  }
+
+  // Une erreur sur un compte n'arrête pas les autres, mais elle doit se voir :
+  // une tâche qui répond « tout va bien » en ayant échoué partout est pire
+  // que pas de tâche du tout. Le journal est renvoyé même en cas de panne
+  // partielle : il dit ce qui est passé, et ce qui ne l'est pas.
+  return repondre(journal.erreurs.length ? 207 : 200, journal);
 }

@@ -1781,9 +1781,11 @@ const qrChemin=(valeur,module=4,marge=4)=>{
   return{d,cote:(n+marge*2)*module};
 };
 
-export function QRPointage({valeur,taille=180,style}){
+// « libelle » existe parce qu'un lecteur d'ecran annonce ce texte : un QR qui
+// mene a la page publique ne doit pas s'annoncer « QR code de pointage ».
+export function QRPointage({valeur,taille=180,style,libelle="QR code de pointage"}){
   const{d,cote}=useMemo(()=>qrChemin(valeur),[valeur]);
-  return <svg role="img" aria-label="QR code de pointage"
+  return <svg role="img" aria-label={libelle}
     viewBox={"0 0 "+cote+" "+cote} width={taille} height={taille}
     style={{background:"#fff",display:"block",...style}}>
     <rect width={cote} height={cote} fill="#fff"/>
@@ -2777,9 +2779,10 @@ function ResumeJournee({enfants,role,pEId}){
           </div>)}
         </div>
         <div className="card"style={{background:"var(--Pp)",border:"1px solid var(--P)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Exclusivité TiMat</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Le bilan de la journée</div>
           <div style={{fontSize:13,color:"var(--b)",lineHeight:1.6}}>
-            Aucun concurrent ne génère un bilan personnalisé de la journée. TiMat transforme les données en émotions pour les parents.
+            Il se compose tout seul à partir de ce que vous avez déjà noté dans la journée :
+            repas, siestes, humeurs, activités. Vous le relisez, vous ajoutez un mot, et il part.
           </div>
         </div>
       </div>
@@ -6284,7 +6287,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>Le RGPD (article 28.3.g) impose à TiMat, en tant que sous-traitante, de vous <strong>restituer ou supprimer</strong> vos données professionnelles à la fin de la prestation, <strong>à votre choix</strong>, et de détruire les copies existantes.</p>
               <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à {EMAIL_CONTACT}.</p>
               <p style={{marginTop:8,fontSize:12,color:"#5F7A86"}}>Les pièces relevant d'une obligation légale de conservation — la facturation de TiMat notamment — échappent à cette suppression, comme le prévoit ce même article.</p>
-              <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont appliquées automatiquement, chaque mois, et non seulement annoncées.</p>
+              <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont celles que nous appliquons lorsqu'une suppression est demandée, et à la fermeture d'un compte. Elles ne sont pas exécutées par une purge automatique : écrivez-nous et la suppression est faite, avec une attestation écrite si vous la demandez.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
               <p>Conformément au RGPD, vous disposez des droits suivants :</p>
@@ -7747,8 +7750,8 @@ export default function App(){
       case "mode_borne": return <ReglagesBorne enfants={enfants} user={user} onDemarrer={()=>setBorne(true)}/>;
       case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
-      case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
-      case "page_vitrine": return <PageVitrine user={user} role={role}/>;
+      case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user} setPage={setPage}/>;
+      case "page_vitrine": return <PageVitrine user={user} role={role} setPage={setPage}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;

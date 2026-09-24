@@ -2859,6 +2859,34 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- pas de superlative invérifiable sur les concurrents ---
+//
+// « Aucun concurrent ne propose cela » figurait sur l'ecran du recapitulatif
+// mensuel, et « Aucun concurrent ne genere un bilan personnalise » sur celui
+// du bilan. Les deux etaient faux : Pandi-Panda affiche un recapitulatif de
+// fin de mois partage, et les transmissions quotidiennes sont la base du
+// marche.
+//
+// Ce genre de phrase ne coute pas qu'en credibilite. Une utilisatrice la
+// verifie en cinq minutes, un concurrent la releve, et l'article L121-1 du
+// code de la consommation traite les allegations fausses sur un concurrent
+// comme une pratique commerciale trompeuse.
+//
+// On peut dire ce que TiMat fait. On ne peut pas dire ce que TOUS les autres
+// ne font pas : c'est indemontrable et cela vieillit mal.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  const motif = /(aucun(e)?\s+(autre\s+)?(concurrent|application|logiciel|outil)[^.<>{}]{0,60}(ne\s|n['’])|seule?\s+(application|logiciel|outil)\s+(du\s+march|sur\s+le\s+march)|unique\s+sur\s+le\s+march|personne\s+d['’]autre\s+ne\s)/gi;
+  for (const [nom, src] of sources) {
+    // Les commentaires expliquent souvent POURQUOI la phrase a ete retiree :
+    // les signaler ferait de l'explication une anomalie.
+    const propre = src.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+    for (const m of propre.matchAll(motif)) {
+      signale("concurrents", `${nom} affirme « ${m[0].trim().slice(0, 55)}… » : une superlative sur ce que les concurrents ne font pas est indemontrable, vieillit mal, et se verifie en cinq minutes.`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
