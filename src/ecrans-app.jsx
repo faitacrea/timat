@@ -1986,6 +1986,102 @@ export function TempsDeTravail({enfants,role,user}){
 // trace de ce qui a été échangé avec la PMI. C'est ce qui sert
 // vraiment le jour d'un contrôle ou d'un renouvellement — et
 // TiMat le dit, au lieu de prétendre acheminer le courrier.
+// LES CINQ COURRIERS QU'ON ÉCRIT VRAIMENT À LA PMI.
+//
+// Écrire à sa PMI n'est pas difficile : c'est se lancer qui l'est. On repousse,
+// puis on oublie, et le délai passe. Ces modèles existent pour ça — pas pour
+// dire quoi penser, mais pour qu'il ne reste qu'à remplir les blancs.
+//
+// LES DÉLAIS SONT RÉELS, PAS DÉCORATIFS. Le code de l'action sociale et des
+// familles impose de déclarer SANS DÉLAI tout décès ou accident grave survenu
+// à un enfant accueilli, et sous HUIT JOURS tout changement de situation
+// familiale ou professionnelle, ainsi que les arrivées et départs d'enfants.
+// C'est pour cela que le délai est écrit sur chaque modèle : c'est la seule
+// information que l'assistante maternelle ne peut pas deviner.
+//
+// AUCUN MODÈLE N'INVENTE UN FAIT. Les crochets restent à remplir par elle.
+// TiMat ne connaît ni la date de l'accident, ni le nom du médecin, ni ce qui
+// s'est réellement passé — et un courrier à la PMI qui contiendrait une phrase
+// préremplie fausse serait pire que pas de courrier du tout.
+const MODELES_PMI = [
+  {
+    cle: "accident",
+    titre: "Déclarer un accident",
+    delai: "Sans délai",
+    urgent: true,
+    objet: "Déclaration d'un accident survenu à un enfant accueilli",
+    corps: `Madame, Monsieur,
+
+Je vous informe d'un accident survenu à un enfant que j'accueille à mon domicile.
+
+Enfant concerné : [prénom et nom]
+Date et heure : [le ... à ...]
+Circonstances : [décrivez ce qui s'est passé, simplement et factuellement]
+Suites données : [appel au 15, consultation, passage aux urgences, aucune]
+Parents prévenus : [le ... à ...]
+
+Je reste à votre disposition pour tout complément d'information.`,
+  },
+  {
+    cle: "situation",
+    titre: "Changement dans mon foyer",
+    delai: "Sous 8 jours",
+    objet: "Changement de situation",
+    corps: `Madame, Monsieur,
+
+Je vous informe d'un changement dans ma situation.
+
+Nature du changement : [naissance, séparation, arrivée d'une personne majeure au domicile, changement d'adresse…]
+Date de ce changement : [le ...]
+Précisions : [ce qu'il faut savoir]
+
+Je vous remercie de me dire si un document ou une visite sont nécessaires.`,
+  },
+  {
+    cle: "agrement",
+    titre: "Modifier mon agrément",
+    delai: "Avant tout nouvel accueil",
+    objet: "Demande de modification d'agrément",
+    corps: `Madame, Monsieur,
+
+Je souhaite demander une modification de mon agrément.
+
+Modification demandée : [nombre d'enfants, tranches d'âge, horaires…]
+Situation actuelle : [ce que prévoit l'agrément aujourd'hui]
+Motif : [expliquez brièvement]
+
+Je vous remercie de m'indiquer la marche à suivre et les pièces à fournir.`,
+  },
+  {
+    cle: "mouvement",
+    titre: "Arrivée ou départ d'un enfant",
+    delai: "Sous 8 jours",
+    objet: "Arrivée / départ d'un enfant accueilli",
+    corps: `Madame, Monsieur,
+
+Je vous informe d'un changement parmi les enfants que j'accueille.
+
+Enfant : [prénom et nom, date de naissance]
+Arrivée ou départ : [arrivée / fin de contrat]
+Date : [le ...]
+Rythme d'accueil : [temps plein, périscolaire, occasionnel…]`,
+  },
+  {
+    cle: "rdv",
+    titre: "Demander un rendez-vous",
+    delai: "",
+    objet: "Demande de rendez-vous",
+    corps: `Madame, Monsieur,
+
+Je souhaiterais vous rencontrer, ou m'entretenir avec vous par téléphone.
+
+Motif : [votre question]
+Mes disponibilités : [jours et créneaux qui vous arrangent]
+
+Je vous remercie par avance.`,
+  },
+];
+
 export function CommunicationPMI({role,user,hasRealData}){
   const demo=!hasRealData;
   const [msgs,setMsgs]=useState([]);
@@ -1994,6 +2090,10 @@ export function CommunicationPMI({role,user,hasRealData}){
   const [ouvert,setOuvert]=useState(false);
   const vide=()=>({sens:"sortant",objet:"",texte:"",date:isoJour(new Date()),canal:"E-mail"});
   const [form,setForm]=useState(vide());
+
+  // Le modèle en cours de relecture. Elle le modifie avant d'envoyer : c'est
+  // SON courrier, pas celui de TiMat.
+  const [modele,setModele]=useState(null);
 
   // Le contact de SA PMI : il figure sur son agrément. On ne le devine pas.
   const [pmi,setPmi]=useState({nom:"",email:"",tel:""});
@@ -2045,6 +2145,37 @@ export function CommunicationPMI({role,user,hasRealData}){
     window.open("mailto:"+encodeURIComponent(pmi.email)+"?subject="+encodeURIComponent(form.objet||"Message d'une assistante maternelle agréée"),"_blank");
   };
 
+  // Ouvrir le modèle NE L'ENVOIE PAS. Le courrier part de sa messagerie à elle,
+  // avec son adresse : c'est celle que la PMI doit voir, et celle à laquelle
+  // elle répondra.
+  const envoyerModele=()=>{
+    if(!modele)return;
+    if(!pmi.email){setToast("Renseignez d'abord l'adresse de votre PMI.");setEditContact(true);return;}
+    window.open("mailto:"+encodeURIComponent(pmi.email)
+      +"?subject="+encodeURIComponent(modele.objet)
+      +"&body="+encodeURIComponent(modele.corps),"_blank");
+  };
+
+  const copierModele=()=>{
+    if(!modele)return;
+    navigator.clipboard?.writeText(modele.objet+"\n\n"+modele.corps)
+      .then(()=>setToast("Texte copié."),()=>setToast("La copie a échoué."));
+  };
+
+  // Le vrai gain n'est pas le modèle : c'est la trace. Un courrier envoyé et
+  // jamais consigné ne servira à rien dans trois ans, au renouvellement.
+  const consignerModele=async()=>{
+    if(demo){setToast("Connectez-vous pour tenir votre journal.");return;}
+    const {data,error}=await supabase.from("messages_pmi").insert({
+      asmat_id:user.id, de:"asmat", objet:modele.objet, texte:modele.corps,
+      date_echange:isoJour(new Date()), canal:"E-mail", lu:true,
+    }).select().single();
+    if(error){setToast("L'enregistrement a échoué.");return;}
+    setMsgs(m=>[data,...m]); setModele(null);
+    setToast("Courrier consigné dans votre journal.");
+    logAction&&logAction("pmi_modele_consigne");
+  };
+
   const champ=(k,label,props={})=>
     <div style={{display:"flex",flexDirection:"column",gap:4}}>
       <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>{label}</label>
@@ -2093,6 +2224,57 @@ export function CommunicationPMI({role,user,hasRealData}){
           : <div style={{fontSize:12.5,color:"var(--m)",marginTop:6,lineHeight:1.6}}>
               Pas encore renseignée. Ses coordonnées figurent sur votre agrément.
             </div>}
+    </div>
+
+    <div className="card" style={{marginBottom:14}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}>Écrire à ma PMI</div>
+      <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:12}}>
+        Cinq courriers qu'on écrit vraiment. Choisissez, relisez, complétez les crochets :
+        le message s'ouvre dans votre messagerie, avec votre adresse à vous.
+      </div>
+      {!modele
+        ? <div style={{display:"grid",gap:8}}>
+            {MODELES_PMI.map(m=>
+              <button key={m.cle} onClick={()=>setModele({...m})}
+                style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,textAlign:"left",
+                  background:"var(--bg)",border:"1px solid var(--br)",borderLeft:m.urgent?"3px solid var(--D)":"1px solid var(--br)",
+                  borderRadius:10,padding:"12px 13px",fontSize:14,fontWeight:600,color:"var(--b)",fontFamily:"inherit",cursor:"pointer"}}>
+                <span>{m.titre}</span>
+                {m.delai&&<span style={{fontSize:11,fontWeight:700,whiteSpace:"nowrap",color:m.urgent?"var(--D)":"var(--m)"}}>{m.delai}</span>}
+              </button>)}
+            <div style={{fontSize:11.5,color:"var(--m)",lineHeight:1.55,marginTop:2}}>
+              Les délais viennent du code de l'action sociale et des familles : sans délai pour
+              un accident grave ou un décès, huit jours pour un changement de situation et pour
+              l'arrivée ou le départ d'un enfant.
+            </div>
+          </div>
+        : <div style={{display:"grid",gap:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+              <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{modele.titre}</div>
+              <button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}} onClick={()=>setModele(null)}>Retour</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>Objet</label>
+              <input value={modele.objet} onChange={e=>setModele(m=>({...m,objet:e.target.value}))}
+                style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}/>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              <label style={{fontSize:12,fontWeight:600,color:"var(--b)"}}>Message</label>
+              <textarea value={modele.corps} onChange={e=>setModele(m=>({...m,corps:e.target.value}))} rows={13}
+                style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:14.5,lineHeight:1.6,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)",resize:"vertical"}}/>
+              <div style={{fontSize:11.5,color:"var(--m)",lineHeight:1.55}}>
+                Remplacez chaque crochet par votre situation réelle. TiMat ne connaît ni les
+                circonstances, ni les dates : rien n'est prérempli à votre place.
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button className="btn bT" style={{flex:"1 1 160px"}} onClick={envoyerModele}>Ouvrir dans ma messagerie</button>
+              <button className="btn s" style={{flex:"1 1 110px",background:"var(--bg)",color:"var(--b)"}} onClick={copierModele}>Copier le texte</button>
+            </div>
+            {!demo&&<button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}} onClick={consignerModele}>
+              Consigner ce courrier dans mon journal
+            </button>}
+          </div>}
     </div>
 
     {!demo&&<div className="card" style={{marginBottom:14}}>

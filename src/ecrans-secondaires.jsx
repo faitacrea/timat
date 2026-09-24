@@ -15,7 +15,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction
+  CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 } from "./App.jsx";
 import {
   DEMANDES_DEMO, FORUM_POSTS, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ageEnMois, minimumHoraireAu
@@ -1046,7 +1046,7 @@ const demandeDepuisBase=(d)=>({
   source:d.source||"",
 });
 
-export function ListeAttente({role,enfants,user}){
+export function ListeAttente({role,enfants,user,setPage}){
   const isDemoMode=(enfants||[]).every(e=>["e1","e2","e3"].includes(e.id));
   const [demandes,setDemandes]=useState(isDemoMode?DEMANDES_DEMO:[]);
   const [chargement,setChargement]=useState(!isDemoMode);
@@ -1181,6 +1181,20 @@ export function ListeAttente({role,enfants,user}){
           </>
         : <button className="btn bT" onClick={nouveauJeton}>Créer mon lien</button>}
     </div>
+
+    {/* Le lien de demande est un FORMULAIRE : seul, il ne dit rien d'elle. Un
+        parent qui le reçoit sans la connaître n'a aucune raison de le remplir.
+        Ce renvoi existe pour que l'étage d'avant ne reste pas introuvable au
+        fond d'un sous-menu. */}
+    {setPage&&<button onClick={()=>setPage("page_vitrine")}
+      style={{width:"100%",textAlign:"left",background:"var(--c)",border:"1px solid var(--br)",borderRadius:12,padding:"13px 15px",marginBottom:14,fontFamily:"inherit",cursor:"pointer",color:"var(--b)"}}>
+      <div style={{fontSize:13.5,fontWeight:700,marginBottom:3}}>🌐 Et si les parents ne vous connaissent pas encore ?</div>
+      <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6}}>
+        Ce lien est un formulaire : il ne dit rien de vous. Votre page publique, elle, présente
+        vos places, vos horaires et votre façon de travailler — et se termine par ce formulaire.
+        <strong style={{color:"var(--b)"}}> La créer →</strong>
+      </div>
+    </button>}
 
     {nbNouveaux>0&&<div style={{background:"var(--Bp)",border:"1.5px solid var(--B)",borderRadius:12,padding:"10px 16px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
       <IconeOuEmoji e="📬"/>
@@ -2558,7 +2572,7 @@ export function Autorisations({enfants,role,pEId,user}){
 // Elle est GRATUITE, contrairement au reste des outils Pro. Une
 // assistante maternelle sans contrat ne paiera pas pour un outil
 // dont le rôle est justement de lui en trouver un.
-export function PageVitrine({user,role}){
+export function PageVitrine({user,role,setPage}){
   const demo=!user?.id;
   const [v,setV]=useState(null);
   const [jeton,setJeton]=useState(null);
@@ -2625,6 +2639,34 @@ export function PageVitrine({user,role}){
     logAction&&logAction("vitrine_enregistree");
   };
 
+  // L'affichette est un document a part : la fenetre d'impression ne partage
+  // pas le rendu React, d'ou le balisage brut. Le QR est vectoriel, donc net
+  // quelle que soit la taille du papier — et il s'imprime sans reseau.
+  const imprimerAffichette=()=>{
+    if(!lien)return;
+    const titre=String(v?.vitrine_titre||"Assistante maternelle");
+    const commune=String(v?.vitrine_commune||"");
+    const f=window.open("","_blank");
+    if(!f){setToast("Autorisez les fenêtres pour imprimer l'affichette.");return;}
+    f.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<title>Affichette</title><style>
+ @page{size:A4;margin:18mm}
+ body{font-family:system-ui,sans-serif;color:#2E4859;text-align:center;margin:0}
+ h1{font-size:34px;line-height:1.25;margin:0 0 6px}
+ .c{font-size:20px;color:#55707C;margin-bottom:34px}
+ .q{display:inline-block;border:2px solid #EDE6DE;border-radius:14px;padding:14px}
+ .a{font-size:17px;margin-top:26px;word-break:break-all}
+ .e{font-size:15px;color:#55707C;margin-top:12px;line-height:1.6}
+</style></head><body>
+<h1>${H(titre)}</h1>
+${commune?`<div class="c">${H(commune)}</div>`:""}
+<div class="q">${qrSvgBalise(lien,320)}</div>
+<div class="a"><strong>${H(lien)}</strong></div>
+<div class="e">Scannez ce code, ou tapez l'adresse :<br>vous y trouverez mes disponibilités et pourrez m'envoyer une demande d'accueil.</div>
+</body></html>`);
+    f.document.close(); f.focus(); f.print();
+  };
+
   const copier=()=>{
     if(!lien)return;
     navigator.clipboard?.writeText(lien).then(()=>setToast("Lien copié."),()=>setToast("La copie a échoué."));
@@ -2687,7 +2729,9 @@ export function PageVitrine({user,role}){
       <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:12}}>
         {jeton
           ? <>Le bouton <strong>« Faire une demande d'accueil »</strong> est ajouté automatiquement : il mène à votre formulaire, et les demandes arrivent dans votre liste d'attente.</>
-          : <>Créez d'abord votre lien de demande dans <strong>Demandes &amp; liste d'attente</strong> : le bouton du formulaire s'ajoutera tout seul ici.</>}
+          : <>Vous n'avez pas encore de lien de demande. {setPage
+              ? <button onClick={()=>setPage("liste_attente")} style={{background:"none",border:"none",padding:0,font:"inherit",color:"var(--B)",fontWeight:700,textDecoration:"underline",cursor:"pointer"}}>Créez-le en un clic</button>
+              : <strong>Créez-le dans Demandes &amp; liste d'attente</strong>} : le bouton du formulaire s'ajoutera tout seul ici.</>}
       </div>
       {champ("vitrine_tel","Téléphone affiché","Laissez vide si vous préférez n'être contactée que par le formulaire.",{placeholder:"06 12 34 56 78",maxLength:30})}
       {champ("vitrine_email","E-mail affiché","",{placeholder:"prenom@exemple.fr"})}
@@ -2719,6 +2763,22 @@ export function PageVitrine({user,role}){
         </>}
       </div>
     </>)}
+
+    {lien&&enLigne&&bloc("Le QR code de votre page",<div style={{paddingBottom:14}}>
+      <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:12}}>
+        Un parent devant votre porte, au relais petite enfance ou à la sortie de l'école n'a
+        pas à recopier une adresse : il pointe son téléphone. C'est le seul moyen de partage
+        qui ne rate jamais à cause d'une faute de frappe.
+      </div>
+      <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+        <QRPointage valeur={lien} taille={132} libelle="QR code de votre page publique"
+          style={{border:"1px solid var(--br)",borderRadius:8,padding:6}}/>
+        <button onClick={imprimerAffichette}
+          style={{flex:"1 1 160px",background:"var(--c)",color:"var(--b)",border:"1.5px solid var(--br)",borderRadius:10,padding:"13px 16px",fontSize:14.5,fontWeight:600,fontFamily:"inherit",cursor:"pointer"}}>
+          Imprimer une affichette
+        </button>
+      </div>
+    </div>)}
 
     <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:12,padding:"14px 16px",fontSize:12.5,lineHeight:1.65,color:"var(--m)"}}>
       <strong style={{color:"var(--b)"}}>Où mettre ce lien ?</strong><br/>

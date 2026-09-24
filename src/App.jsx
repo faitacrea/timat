@@ -1781,9 +1781,11 @@ const qrChemin=(valeur,module=4,marge=4)=>{
   return{d,cote:(n+marge*2)*module};
 };
 
-export function QRPointage({valeur,taille=180,style}){
+// « libelle » existe parce qu'un lecteur d'ecran annonce ce texte : un QR qui
+// mene a la page publique ne doit pas s'annoncer « QR code de pointage ».
+export function QRPointage({valeur,taille=180,style,libelle="QR code de pointage"}){
   const{d,cote}=useMemo(()=>qrChemin(valeur),[valeur]);
-  return <svg role="img" aria-label="QR code de pointage"
+  return <svg role="img" aria-label={libelle}
     viewBox={"0 0 "+cote+" "+cote} width={taille} height={taille}
     style={{background:"#fff",display:"block",...style}}>
     <rect width={cote} height={cote} fill="#fff"/>
@@ -7747,8 +7749,8 @@ export default function App(){
       case "mode_borne": return <ReglagesBorne enfants={enfants} user={user} onDemarrer={()=>setBorne(true)}/>;
       case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
-      case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
-      case "page_vitrine": return <PageVitrine user={user} role={role}/>;
+      case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user} setPage={setPage}/>;
+      case "page_vitrine": return <PageVitrine user={user} role={role} setPage={setPage}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;
