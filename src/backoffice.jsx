@@ -15,6 +15,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
   Boutique, Messagerie, Styles, Toast, IconeOuEmoji, LandingPage, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig, MAINTENANCE
 } from "./App.jsx";
@@ -921,7 +922,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Description (sous le logo)</div>
             <textarea value={(cfg.footer||{}).description||""}onChange={e=>setFooter("description",e.target.value)}rows={2}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",resize:"vertical",lineHeight:1.5,marginBottom:14}}/>
             <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Contact</div>
-            <input value={(cfg.footer||{}).contactEmail||""}onChange={e=>setFooter("contactEmail",e.target.value)}placeholder="Email (ex: support@timat.app)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
+            <input value={(cfg.footer||{}).contactEmail||""}onChange={e=>setFooter("contactEmail",e.target.value)}placeholder={`Email (par defaut : ${EMAIL_CONTACT})`}style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
             <input value={(cfg.footer||{}).contactWeb||""}onChange={e=>setFooter("contactWeb",e.target.value)}placeholder="Site (ex: timat.app)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:6}}/>
             <input value={(cfg.footer||{}).contactLieu||""}onChange={e=>setFooter("contactLieu",e.target.value)}placeholder="Lieu (ex: Île-de-France, France)"style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--br)",fontSize:13,boxSizing:"border-box",fontFamily:"inherit",color:"var(--b)",marginBottom:14}}/>
             <div style={{fontSize:11,fontWeight:700,color:"var(--m)",marginBottom:4}}>Données & RGPD (une ligne par puce)</div>

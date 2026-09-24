@@ -14,6 +14,7 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
   ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, VACANCES_2024, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 } from "./App.jsx";
@@ -2609,7 +2610,7 @@ export function ExportDonnees({enfants,user,role}){
         <div className="card"style={{background:"var(--Sp)",border:"1px solid var(--Sl)"}}>
           <div style={{fontWeight:700,fontSize:13,color:"var(--S)",marginBottom:6}}><IconeOuEmoji e="✅"/> Vos droits RGPD</div>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.7}}>
-            Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les supprimer à tout moment. En cas de demande : support@timat.app - réponse sous 30 jours.
+            Vous avez le droit d'accéder à toutes vos données, de les télécharger, et de les supprimer à tout moment. En cas de demande : {EMAIL_CONTACT} - réponse sous 30 jours.
           </div>
         </div>
       </div>

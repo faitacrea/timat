@@ -69,6 +69,12 @@ const TECHNIQUE = /toFixed|nbf\(|fmtEur|Math\.|length|getFullYear|\.slice\(|new 
 // construction. Le contrôle ne sait pas suivre une variable d'une ligne à
 // l'autre ; ce suffixe le lui dit. Il ne dispense de rien d'autre.
 const DEJA_ECHAPPE = /[a-z0-9]H$/;
+// UNE CONSTANTE N'EST PAS UNE SAISIE. EMAIL_CONTACT et ses semblables sont
+// ecrites en majuscules dans le code : leur valeur est un litteral du depot,
+// pas quelque chose qu'une utilisatrice tape. Il n'existe aucun chemin par
+// lequel un tiers les influence, donc rien a echapper. L'exemption est
+// volontairement etroite — MAJUSCULES et tirets bas uniquement, rien d'autre.
+const CONSTANTE = /^[A-Z][A-Z0-9_]*$/;
 const oublis = [];
 
 // Le controle ne lisait que les chaines a GUILLEMETS DOUBLES. Le
@@ -81,14 +87,14 @@ for (const m of [...src.matchAll(/"\s*\+\s*([^+"]{1,70}?)\s*\+\s*"/g),
   const avant = src.slice(Math.max(0, m.index - 600), m.index);
   if (!/<(tr|td|div|p|h[1-6]|span|li|title|option|b)[ >]/.test(avant)) continue;
   const e = m[1].trim();
-  if ((!CHAMPS.test(e) && !CHAMPS_COURTS.test(e)) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
+  if ((!CHAMPS.test(e) && !CHAMPS_COURTS.test(e)) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e) || CONSTANTE.test(e)) continue;
   oublis.push(`ligne ${src.slice(0, m.index).split("\n").length} : ${e}`);
 }
 for (const m of src.matchAll(/\$\{([^}]{1,60})\}/g)) {
   const avant = src.slice(Math.max(0, m.index - 500), m.index);
   if (!/document\.write|<div|<td|<p>|<h[1-6]|<title/.test(avant)) continue;
   const e = m[1].trim();
-  if ((!CHAMPS.test(e) && !CHAMPS_COURTS.test(e)) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e)) continue;
+  if ((!CHAMPS.test(e) && !CHAMPS_COURTS.test(e)) || TECHNIQUE.test(e) || DEJA_ECHAPPE.test(e) || CONSTANTE.test(e)) continue;
   oublis.push(`ligne ${src.slice(0, m.index).split("\n").length} : \${${e}}`);
 }
 

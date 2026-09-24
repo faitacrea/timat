@@ -2527,3 +2527,202 @@ export function Autorisations({enfants,role,pEId,user}){
     {toast&&<Toast msg={toast} onClose={()=>setToast("")}/>}
   </div>;
 }
+
+// ============================================================
+// LA PAGE VITRINE PUBLIQUE
+// ------------------------------------------------------------
+// Le lien public de demande d'accueil (/d/<jeton>) est un
+// formulaire : il ne dit rien d'elle. Un parent qui le reçoit
+// sans la connaître n'a aucune raison de le remplir.
+//
+// La vitrine est l'étage d'avant : une page qu'elle publie, qui
+// dit comment elle travaille, et qui se termine par ce
+// formulaire. C'est l'adresse qu'elle met dans sa présentation
+// monenfant.fr, sur sa page Facebook, dans sa signature de mail.
+//
+// TROIS DÉCISIONS, ET CE QU'ELLES COÛTENT SI ON LES PREND À
+// L'ENVERS :
+//
+//   1. rien n'est public tant qu'elle ne l'a pas publié. Écrire
+//      la page et la publier sont deux gestes séparés ;
+//
+//   2. aucun champ n'est prérempli depuis son profil privé. Son
+//      adresse est son domicile, et des enfants y vivent : elle
+//      n'a rien à faire sur une page publique, même de façon
+//      « approximative ». Ce qui est public, elle l'écrit ;
+//
+//   3. la page n'est pas référencée par défaut. Apparaître sur
+//      Google, c'est associer publiquement un nom, un métier et
+//      une commune. C'est un choix, pas un réglage par défaut.
+//
+// Elle est GRATUITE, contrairement au reste des outils Pro. Une
+// assistante maternelle sans contrat ne paiera pas pour un outil
+// dont le rôle est justement de lui en trouver un.
+export function PageVitrine({user,role}){
+  const demo=!user?.id;
+  const [v,setV]=useState(null);
+  const [jeton,setJeton]=useState(null);
+  const [chargement,setChargement]=useState(!demo);
+  const [toast,setToast]=useState("");
+  const [enregistrement,setEnregistrement]=useState(false);
+
+  const CHAMPS=["vitrine_active","vitrine_slug","vitrine_indexable","vitrine_titre",
+    "vitrine_commune","vitrine_presentation","vitrine_places","vitrine_disponibilite",
+    "vitrine_horaires","vitrine_atouts","vitrine_tel","vitrine_email"];
+
+  useEffect(()=>{
+    if(demo){setChargement(false);setV({});return;}
+    let vivant=true;
+    (async()=>{
+      const {data,error}=await supabase.from("profiles")
+        .select(CHAMPS.join(",")+",jeton_demandes").eq("id",user.id).maybeSingle();
+      if(!vivant)return;
+      if(error)setToast("Votre page n'a pas pu être lue.");
+      setV(data||{}); setJeton(data?.jeton_demandes||null); setChargement(false);
+    })();
+    return()=>{vivant=false;};
+  },[demo,user?.id]);
+
+  const maj=(k,val)=>setV(x=>({...x,[k]:val}));
+
+  // L'adresse ne contient que des minuscules, des chiffres et des tirets :
+  // c'est ce que la route publique accepte. On la nettoie ici plutôt que de
+  // refuser sa saisie — elle n'a pas à deviner la règle.
+  const nettoyerSlug=(s)=>String(s||"").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60);
+
+  const origine=typeof window!=="undefined"?window.location.origin:"https://www.timat.app";
+  const lien=v?.vitrine_slug?origine+"/a/"+v.vitrine_slug:null;
+
+  const enregistrer=async(surcharge={})=>{
+    if(demo){setToast("Connectez-vous pour publier votre page.");return;}
+    const etat={...v,...surcharge};
+    const slug=nettoyerSlug(etat.vitrine_slug);
+    // Publier une page sans adresse ne donne rien de partageable, et publier
+    // une page sans titre donne une page vide : on le dit avant, pas après.
+    if(etat.vitrine_active&&!slug){setToast("Choisissez d'abord l'adresse de votre page.");return;}
+    if(etat.vitrine_active&&!String(etat.vitrine_titre||"").trim()){setToast("Écrivez au moins un titre avant de publier.");return;}
+    if(slug&&slug.length<3){setToast("L'adresse doit faire au moins trois caractères.");return;}
+    setEnregistrement(true);
+    const ligne={}; for(const k of CHAMPS) ligne[k]=etat[k]??null;
+    ligne.vitrine_slug=slug||null;
+    ligne.vitrine_active=!!etat.vitrine_active;
+    ligne.vitrine_indexable=!!etat.vitrine_indexable;
+    ligne.vitrine_maj=new Date().toISOString();
+    const {error}=await supabase.from("profiles").update(ligne).eq("id",user.id);
+    setEnregistrement(false);
+    if(error){
+      // Deux vitrines ne peuvent pas partager la même adresse. Le message de
+      // Postgres ne veut rien dire pour elle : on traduit.
+      setToast(/duplicate|unique/i.test(error.message||"")
+        ? "Cette adresse est déjà prise. Essayez-en une autre."
+        : "L'enregistrement a échoué.");
+      return;
+    }
+    setV(x=>({...x,...ligne}));
+    setToast(ligne.vitrine_active?"Votre page est en ligne.":"Vos modifications sont enregistrées.");
+    logAction&&logAction("vitrine_enregistree");
+  };
+
+  const copier=()=>{
+    if(!lien)return;
+    navigator.clipboard?.writeText(lien).then(()=>setToast("Lien copié."),()=>setToast("La copie a échoué."));
+  };
+
+  const champ=(k,label,aide,props={})=>
+    <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:14}}>
+      <label style={{fontSize:12.5,fontWeight:700,color:"var(--b)"}}>{label}</label>
+      {props.multi
+        ? <textarea value={v?.[k]||""} onChange={e=>maj(k,e.target.value)} rows={props.rows||5}
+            placeholder={props.placeholder} maxLength={props.maxLength||2000}
+            style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)",resize:"vertical"}}/>
+        : <input value={v?.[k]||""} onChange={e=>maj(k,e.target.value)}
+            placeholder={props.placeholder} maxLength={props.maxLength||120}
+            style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}/>}
+      {aide&&<div style={{fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>{aide}</div>}
+    </div>;
+
+  const bloc=(titre,contenu)=>
+    <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:12,padding:"16px 16px 4px",marginBottom:14}}>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:12,color:"var(--b)"}}>{titre}</div>
+      {contenu}
+    </div>;
+
+  if(chargement) return <div className="fi"><PageHeader icon="🌐" title="Ma page publique" sub="Chargement…"/></div>;
+
+  const enLigne=!!v?.vitrine_active;
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="🌐" title="Ma page publique" sub="L'adresse à donner aux parents qui ne vous connaissent pas encore"/>
+
+    <div style={{background:"var(--c)",border:"1px solid var(--br)",borderLeft:"4px solid var(--B)",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--m)"}}>
+      Cette page ne reprend <strong>rien</strong> de votre dossier privé : ni votre nom complet, ni votre adresse, ni votre numéro d'agrément, ni le moindre mot sur les enfants que vous accueillez. Ce qui s'affiche, c'est uniquement ce que vous écrivez ci-dessous.
+    </div>
+
+    {bloc("L'adresse de votre page",<>
+      {champ("vitrine_slug","Adresse",
+        lien?<>Votre page sera à l'adresse <strong style={{color:"var(--b)"}}>{lien}</strong></>
+            :"Par exemple votre prénom et votre commune : sophie-toulouse",
+        {placeholder:"sophie-toulouse",maxLength:60})}
+      {v?.vitrine_slug&&nettoyerSlug(v.vitrine_slug)!==v.vitrine_slug&&
+        <div style={{fontSize:12,color:"var(--m)",marginBottom:12}}>Elle sera enregistrée sous la forme <strong>{nettoyerSlug(v.vitrine_slug)}</strong>.</div>}
+    </>)}
+
+    {bloc("Ce que les parents liront",<>
+      {champ("vitrine_titre","Titre de la page","C'est la première ligne, et le titre qui apparaît dans un partage.",{placeholder:"Sophie, assistante maternelle"})}
+      {champ("vitrine_commune","Commune","La commune seule, jamais la rue ni le numéro.",{placeholder:"Toulouse (31)"})}
+      {champ("vitrine_places","Places","",{placeholder:"1 place disponible"})}
+      {champ("vitrine_disponibilite","Disponibilité","",{placeholder:"À partir de janvier 2027"})}
+      {champ("vitrine_horaires","Horaires d'accueil","",{placeholder:"7h30 – 18h30, du lundi au vendredi"})}
+      {champ("vitrine_presentation","Votre façon de travailler",
+        "Quelques lignes : votre cadre, vos repas, vos sorties, ce à quoi vous tenez. Laissez une ligne vide entre deux paragraphes.",
+        {multi:true,rows:7,maxLength:2000,placeholder:"J'accueille les enfants chez moi, dans une maison avec jardin clos…"})}
+      {champ("vitrine_atouts","Ce que vous proposez","Une ligne par élément. Chacune deviendra une puce.",
+        {multi:true,rows:5,maxLength:800,placeholder:"Jardin clos\nRepas faits maison\nSorties au parc chaque matin"})}
+    </>)}
+
+    {bloc("Comment vous joindre",<>
+      <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.6,marginBottom:12}}>
+        {jeton
+          ? <>Le bouton <strong>« Faire une demande d'accueil »</strong> est ajouté automatiquement : il mène à votre formulaire, et les demandes arrivent dans votre liste d'attente.</>
+          : <>Créez d'abord votre lien de demande dans <strong>Demandes &amp; liste d'attente</strong> : le bouton du formulaire s'ajoutera tout seul ici.</>}
+      </div>
+      {champ("vitrine_tel","Téléphone affiché","Laissez vide si vous préférez n'être contactée que par le formulaire.",{placeholder:"06 12 34 56 78",maxLength:30})}
+      {champ("vitrine_email","E-mail affiché","",{placeholder:"prenom@exemple.fr"})}
+    </>)}
+
+    {bloc("Publication",<>
+      <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:14}}>
+        <input type="checkbox" checked={enLigne} onChange={e=>enregistrer({vitrine_active:e.target.checked})} style={{marginTop:3,width:18,height:18,flexShrink:0}}/>
+        <span style={{fontSize:13.5,lineHeight:1.55}}>
+          <strong>Mettre ma page en ligne.</strong><br/>
+          <span style={{color:"var(--m)",fontSize:12.5}}>Tant que cette case est décochée, l'adresse ne montre rien — exactement comme une adresse qui n'existe pas.</span>
+        </span>
+      </label>
+      <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:14}}>
+        <input type="checkbox" checked={!!v?.vitrine_indexable} onChange={e=>maj("vitrine_indexable",e.target.checked)} style={{marginTop:3,width:18,height:18,flexShrink:0}}/>
+        <span style={{fontSize:13.5,lineHeight:1.55}}>
+          <strong>Autoriser Google à référencer ma page.</strong><br/>
+          <span style={{color:"var(--m)",fontSize:12.5}}>Décoché, votre page reste accessible à qui a le lien, mais n'apparaît pas dans les résultats de recherche. C'est le réglage par défaut.</span>
+        </span>
+      </label>
+      <div style={{display:"flex",gap:9,flexWrap:"wrap",paddingBottom:14}}>
+        <button onClick={()=>enregistrer()} disabled={enregistrement}
+          style={{flex:"1 1 170px",background:"var(--B)",color:"#fff",border:"none",borderRadius:10,padding:"13px 16px",fontSize:15,fontWeight:700,fontFamily:"inherit",cursor:"pointer",opacity:enregistrement?.6:1}}>
+          {enregistrement?"Enregistrement…":"Enregistrer"}
+        </button>
+        {lien&&enLigne&&<>
+          <button onClick={copier} style={{flex:"1 1 130px",background:"var(--c)",color:"var(--b)",border:"1.5px solid var(--br)",borderRadius:10,padding:"13px 16px",fontSize:14.5,fontWeight:600,fontFamily:"inherit",cursor:"pointer"}}>Copier le lien</button>
+          <a href={lien} target="_blank" rel="noreferrer" style={{flex:"1 1 130px",textAlign:"center",background:"var(--c)",color:"var(--b)",border:"1.5px solid var(--br)",borderRadius:10,padding:"13px 16px",fontSize:14.5,fontWeight:600,textDecoration:"none"}}>Voir ma page</a>
+        </>}
+      </div>
+    </>)}
+
+    <div style={{background:"var(--c)",border:"1px solid var(--br)",borderRadius:12,padding:"14px 16px",fontSize:12.5,lineHeight:1.65,color:"var(--m)"}}>
+      <strong style={{color:"var(--b)"}}>Où mettre ce lien ?</strong><br/>
+      Dans votre présentation sur monenfant.fr, sur votre page Facebook, dans la signature de vos e-mails, sur une affichette au relais petite enfance. Partout où un parent peut le lire, il peut vous envoyer une demande complète plutôt qu'un appel manqué.
+    </div>
+  </div>;
+}

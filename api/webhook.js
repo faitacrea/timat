@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { randomBytes } from 'node:crypto';
 import { PRODUITS, reconnaitreProduit, developper } from './_catalogue-boutique.js';
 
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -122,12 +123,12 @@ async function envoyerCourriel(email, liens) {
   const { error } = await resend.emails.send({
     from: 'TiMat <noreply@timat.app>',
     to: [email],
-    reply_to: 'support@timat.app',
+    reply_to: EMAIL_CONTACT,
     subject: 'Vos documents TiMat',
     html: `<h2 style="color:#2E4859">Merci pour votre commande</h2>
 <p>Voici ${liens.length > 1 ? 'vos documents' : 'votre document'} :</p>
 ${boutons}
-<p style="font-size:13px;color:#6B7A82;line-height:1.6">Ces liens restent valables sept jours : pensez à enregistrer les fichiers sur votre ordinateur ou votre téléphone. Passé ce délai, écrivez à <a href="mailto:support@timat.app" style="color:#C4714A">support@timat.app</a> et nous vous en renverrons.</p>
+<p style="font-size:13px;color:#6B7A82;line-height:1.6">Ces liens restent valables sept jours : pensez à enregistrer les fichiers sur votre ordinateur ou votre téléphone. Passé ce délai, écrivez à <a href="mailto:${EMAIL_CONTACT}" style="color:#C4714A">${EMAIL_CONTACT}</a> et nous vous en renverrons.</p>
 <p style="font-size:12px;color:#888">Une question sur l'utilisation d'un document ? Répondez simplement à ce message.</p>`,
   });
   if (error) throw new Error('Resend : ' + (error.message || JSON.stringify(error)));

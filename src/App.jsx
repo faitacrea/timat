@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -599,6 +600,7 @@ const TRACES = {
   parchemin:'<path d="M6 3h11a2 2 0 0 1 2 2v13a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6"/><path d="M4 6h4"/><path d="M9 8h7M9 12h7M9 16h4"/>',
   colis:'<path d="M3 8.5 12 3.5l9 5v7l-9 5-9-5Z"/><path d="M3 8.5 12 13.5l9-5M12 13.5V21"/>',
   boite:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 12h5l1.5 2.5h5L16 12h5"/><path d="m6 7 2-3h8l2 3"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/>',
   cadenas:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   sommeil:'<path d="M20.5 14A8.5 8.5 0 1 1 10 3.5 7 7 0 0 0 20.5 14Z"/>',
   bus:'<rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 10h16"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M8 4v6M16 4v6"/>',
@@ -688,7 +690,7 @@ const EMOJI_TRACE = {
   "🏥":"sante","👧":"fille","👪":"famille","👶":"enfant","💉":"vaccin",
   "💡":"idee","💬":"messages","💶":"paie","📄":"document","📅":"planning","🗓️":"planning","🗓":"planning",
   "📊":"graphique","📋":"liste","📏":"regle","📔":"cahier","📜":"parchemin",
-  "📝":"crayon","📦":"colis","📬":"boite","🔒":"cadenas","🗂️":"dossier",
+  "📝":"crayon","📦":"colis","📬":"boite","🌐":"globe","🔒":"cadenas","🗂️":"dossier",
   "😴":"sommeil","🚌":"bus","🚗":"voiture","🚨":"urgence","🛒":"panier",
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
@@ -3902,11 +3904,12 @@ const GROUPS_AM={
     {id:"mode_borne",l:"Borne & QR de pointage",ic:"🚪",d:"Les parents pointent eux-mêmes : écran d'entrée, ou QR affiché au mur"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"liste_attente",l:"Demandes & liste d'attente",ic:"📬",d:"Les parents qui vous contactent, et votre lien public"},
+    {id:"page_vitrine",l:"Ma page publique",ic:"🌐",d:"La page que vous donnez aux parents qui ne vous connaissent pas encore"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"reprise_contrat",l:"Reprendre un contrat",ic:"📥",d:"Vos mois passés chez un autre outil, sans tout ressaisir"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
-    {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
+    {id:"pmi",l:"PMI",ic:"🏛️",d:"Le journal de vos échanges, et les coordonnées de votre PMI"},
     {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
   ]},
@@ -6170,7 +6173,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>Les calculs de salaire, récapitulatifs Pajemploi, attestations fiscales et bulletins de paie générés par TiMat sont fournis <strong>à titre indicatif</strong>. L'utilisateur reste seul responsable de la vérification des montants auprès des organismes compétents (URSSAF, Pajemploi, Administration fiscale). TiMat ne saurait être tenu responsable d'erreurs dans les déclarations effectuées par l'utilisateur.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Contact</h3>
-              <p>Pour toute question : <strong>support@timat.app</strong></p>
+              <p>Pour toute question : <strong>{EMAIL_CONTACT}</strong></p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
                 Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
@@ -6279,7 +6282,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p style={{marginTop:8}}>Un parent qui supprime son compte est détaché du dossier sans que celui-ci soit détruit, pour la même raison.</p>
               <p style={{marginTop:10}}><strong>À la fin de votre abonnement</strong></p>
               <p>Le RGPD (article 28.3.g) impose à TiMat, en tant que sous-traitante, de vous <strong>restituer ou supprimer</strong> vos données professionnelles à la fin de la prestation, <strong>à votre choix</strong>, et de détruire les copies existantes.</p>
-              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à support@timat.app.</p>
+              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à {EMAIL_CONTACT}.</p>
               <p style={{marginTop:8,fontSize:12,color:"#5F7A86"}}>Les pièces relevant d'une obligation légale de conservation — la facturation de TiMat notamment — échappent à cette suppression, comme le prévoit ce même article.</p>
               <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont appliquées automatiquement, chaque mois, et non seulement annoncées.</p>
 
@@ -6294,7 +6297,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   </div>
                 )}
               </div>
-              <p style={{marginTop:8}}>Pour exercer vos droits : <strong>support@timat.app</strong>. Réponse sous 30 jours maximum.</p>
+              <p style={{marginTop:8}}>Pour exercer vos droits : <strong>{EMAIL_CONTACT}</strong>. Réponse sous 30 jours maximum.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Sous-traitants</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
@@ -6831,7 +6834,7 @@ export const DEFAULT_CONFIG = {
     nom:"Sophie [Votre nom]",
     siret:"[Votre SIRET]",
     adresse:"Île-de-France, France",
-    email:"support@timat.app",
+    email:EMAIL_CONTACT,
   },
   boutique:{
     linkSheets:"https://buy.stripe.com/9B64gr4cGfDP0Qq7j3dwc07",
@@ -6847,7 +6850,7 @@ export const DEFAULT_CONFIG = {
   faqLanding: FAQ_LANDING_DEFAULT,
   footer:{
     description:"L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.",
-    contactEmail:"support@timat.app",
+    contactEmail:EMAIL_CONTACT,
     contactWeb:"timat.app",
     contactLieu:"Île-de-France, France",
     rgpd:[
@@ -7084,6 +7087,7 @@ export const SoldeDeCompte = lazy(() => _gestion().then(m => ({ default: m.Solde
 export const Bilans = lazy(() => _ecrans().then(m => ({ default: m.Bilans })));
 export const Parametres = lazy(() => _ecrans().then(m => ({ default: m.Parametres })));
 export const ListeAttente = lazy(() => _ecrans().then(m => ({ default: m.ListeAttente })));
+export const PageVitrine = lazy(() => _ecrans().then(m => ({ default: m.PageVitrine })));
 export const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m.PlanningPeriscolaire })));
 export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.RegistreMedicaments })));
 export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
@@ -7744,6 +7748,7 @@ export default function App(){
       case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
+      case "page_vitrine": return <PageVitrine user={user} role={role}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;

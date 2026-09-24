@@ -9,6 +9,10 @@
       "destination": "/api/demande-publique?j=:jeton"
     },
     {
+      "source": "/a/:slug",
+      "destination": "/api/vitrine?a=:slug"
+    },
+    {
       "source": "/parents",
       "destination": "/pour-les-parents.html"
     },

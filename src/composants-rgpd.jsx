@@ -1,3 +1,4 @@
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 // ═══════════════════════════════════════════════════════════════════════
 // TIMAT — Composants RGPD React
 // 1. ConsentementRGPD  → case à cocher à l'inscription
@@ -148,7 +149,7 @@ export function SupprimerCompte({ onDeleted }) {
 
     } catch (err) {
       console.error('Erreur suppression:', err)
-      setErreur(err.message || 'Une erreur est survenue. Contactez support@timat.app')
+      setErreur(err.message || `Une erreur est survenue. Contactez ${EMAIL_CONTACT}`)
       setEtape('error')
     }
   }

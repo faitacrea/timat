@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -58,7 +59,7 @@ export default async function handler(req, res) {
     const { error: emailError } = await resend.emails.send({
       from: "TiMat <noreply@timat.app>",
       // noreply@ ne reçoit pas : sans replyTo, la réponse du parent part dans le vide.
-      replyTo: "support@timat.app",
+      replyTo: EMAIL_CONTACT,
       to: emailParent,
       subject: "Votre assistante maternelle vous invite sur TiMat",
       html: html

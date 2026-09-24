@@ -20,6 +20,7 @@ const API_VERSION = "2024-01-01";
 
 import { ordre } from "../data/ordre-publication.js";
 
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const API = `https://${PROJECT_ID}.api.sanity.io/v${API_VERSION}/data`;
 
 async function sanity(chemin, options = {}) {
@@ -92,7 +93,7 @@ async function prevenirFileBasse(restants) {
       headers: { Authorization: `Bearer ${cle}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "TiMat <noreply@timat.app>",
-        to: ["support@timat.app"],
+        to: [EMAIL_CONTACT],
         subject: sujet,
         text: corps,
       }),

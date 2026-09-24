@@ -13,6 +13,7 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
   Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
@@ -2162,7 +2163,7 @@ export function CommunicationPMI({role,user,hasRealData}){
 
 export function PolitiqueConfidentialite(){
   const sections=[
-    {titre:"1. Rôles",contenu:"TiMat - contact : support@timat.app\nHébergement des données : France (OVHcloud Paris via Supabase).\n\nTiMat est responsable de traitement pour ce qu'elle décide elle-même : les comptes, l'abonnement, la facturation, la prospection, le support et les journaux techniques.\n\nTiMat est sous-traitante pour les données professionnelles de l'assistante maternelle : le dossier de l'enfant, les pointages, les contrats et les bulletins. Ces données sont hébergées sur instruction, et l'assistante maternelle en reste seule responsable."},
+    {titre:"1. Rôles",contenu:`TiMat - contact : ${EMAIL_CONTACT}\nHébergement des données : France (OVHcloud Paris via Supabase).\n\nTiMat est responsable de traitement pour ce qu'elle décide elle-même : les comptes, l'abonnement, la facturation, la prospection, le support et les journaux techniques.\n\nTiMat est sous-traitante pour les données professionnelles de l'assistante maternelle : le dossier de l'enfant, les pointages, les contrats et les bulletins. Ces données sont hébergées sur instruction, et l'assistante maternelle en reste seule responsable.`},
     {titre:"2. Données collectées",contenu:""},
     {titre:"3. Qui décide de quoi",contenu:""},
     {titre:"4. Durées de conservation",contenu:""},
@@ -2206,7 +2207,7 @@ export function PolitiqueConfidentialite(){
       ["Rectification","Paramètres → Modifier mon profil"],
       ["Effacement (oubli)","Paramètres → Supprimer mon compte (immédiat et définitif)"],
       ["Portabilité","Export CSV/PDF depuis l'application"],
-      ["Opposition","Contactez support@timat.app"],
+      ["Opposition",`Contactez ${EMAIL_CONTACT}`],
       ["Réclamation CNIL","www.cnil.fr - 3 Place de Fontenoy, 75007 Paris"],
     ],
   };
@@ -2235,7 +2236,7 @@ export function PolitiqueConfidentialite(){
       </div>)}
       <div className="card"style={{background:"var(--Bp)",border:"1px solid var(--B)"}}>
         <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:6}}><IconeOuEmoji e="📧"/> Contact RGPD</div>
-        <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>support@timat.app</strong> - Réponse sous 30 jours.</div>
+        <div style={{fontSize:13,color:"var(--m)"}}>Pour exercer vos droits : <strong>{EMAIL_CONTACT}</strong> - Réponse sous 30 jours.</div>
       </div>
     </div>
   </div>;
@@ -2257,7 +2258,7 @@ export function MentionsLegales(){
     {titre:"Hébergement",contenu:"Application web : Vercel Inc. (serveurs européens)\nBase de données : Supabase / OVHcloud - 2 rue Kellermann, 59100 Roubaix, France\nToutes les données sont hébergées en France."},
     {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de TiMat et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
     {titre:"Limitation de responsabilité",contenu:"Les calculs de salaire, récapitulatifs Pajemploi et attestations fiscales générés par TiMat sont fournis à titre indicatif. L'utilisateur reste responsable de la vérification des montants auprès des organismes compétents (URSSAF, CAF, Administration fiscale)."},
-    {titre:"Données personnelles",contenu:"Responsable de traitement : TiMat - support@timat.app\nAutorité de contrôle : CNIL - www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements."},
+    {titre:"Données personnelles",contenu:`Responsable de traitement : TiMat - ${EMAIL_CONTACT}\nAutorité de contrôle : CNIL - www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements.`},
     {titre:"Droit applicable",contenu:"Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents."},
   ];
 
@@ -2277,7 +2278,7 @@ export function MentionsLegales(){
           {[
             ["Raison sociale","TiMat"],
             ["Représentée par","representant"],
-            ["Email","contact@timat.app"],
+            ["Email",EMAIL_CONTACT],
             ["SIRET","siret"],
             ["Adresse","adresse"],
             ["Téléphone","telephone"],
@@ -3307,13 +3308,13 @@ export function Support({role,user}){
         setEnvoye(true);
       }else{
         // Fallback: mailto si l'API n'existe pas encore
-        const mailto=`mailto:support@timat.app?subject=${encodeURIComponent((isPro?"[PRO] ":"")+"["+sujet+"] "+user?.prenom)}&body=${encodeURIComponent(msg+"\n\n---\n"+user?.email+" · "+role)}`;
+        const mailto=`mailto:${EMAIL_CONTACT}?subject=${encodeURIComponent((isPro?"[PRO] ":"")+"["+sujet+"] "+user?.prenom)}&body=${encodeURIComponent(msg+"\n\n---\n"+user?.email+" · "+role)}`;
         window.open(mailto);
         setEnvoye(true);
       }
     }catch(e){
       // Fallback mailto
-      const mailto=`mailto:support@timat.app?subject=${encodeURIComponent((isPro?"[PRO] ":"")+"["+sujet+"] "+user?.prenom)}&body=${encodeURIComponent(msg+"\n\n---\n"+user?.email+" · "+role)}`;
+      const mailto=`mailto:${EMAIL_CONTACT}?subject=${encodeURIComponent((isPro?"[PRO] ":"")+"["+sujet+"] "+user?.prenom)}&body=${encodeURIComponent(msg+"\n\n---\n"+user?.email+" · "+role)}`;
       window.open(mailto);
       setEnvoye(true);
     }
@@ -3354,7 +3355,7 @@ export function Support({role,user}){
         </button>
       </div>
       <div style={{marginTop:14,display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
-        {[["📧","support@timat.app"],["⏱️",isPro?"Réponse < 12h":"Réponse < 24h"],["📚","Centre d'aide 24/7"]].map(([ic,t])=>
+        {[["📧",EMAIL_CONTACT],["⏱️",isPro?"Réponse < 12h":"Réponse < 24h"],["📚","Centre d'aide 24/7"]].map(([ic,t])=>
           <div key={t}style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:10,padding:"10px 16px",fontSize:12,color:"var(--m)",display:"flex",gap:8,alignItems:"center"}}>
             <span><IconeOuEmoji e={ic}/></span><span>{t}</span>
           </div>)}

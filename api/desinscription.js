@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
   if (!email || !jetonValide(email, t)) {
     return res
       .status(400)
-      .send(page('Lien invalide', "Ce lien de désinscription n'est pas valable. Écrivez-nous à support@timat.app et nous nous en occupons.", 'ko'));
+      .send(page('Lien invalide', `Ce lien de désinscription n'est pas valable. Écrivez-nous à ${EMAIL_CONTACT} et nous nous en occupons.`, 'ko'));
   }
 
   const { error } = await supabase
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
     console.error('[desinscription] Supabase :', error.message);
     return res
       .status(500)
-      .send(page('Une erreur est survenue', "Nous n'avons pas pu enregistrer votre désinscription. Écrivez-nous à support@timat.app.", 'ko'));
+      .send(page('Une erreur est survenue', `Nous n'avons pas pu enregistrer votre désinscription. Écrivez-nous à ${EMAIL_CONTACT}.`, 'ko'));
   }
 
   return res

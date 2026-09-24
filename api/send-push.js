@@ -21,6 +21,7 @@
 import webpush from 'web-push';
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { EMAIL_CONTACT } from '../data/coordonnees.js';
 
 // Les deux cles VAPID forment une PAIRE. Si la privee posee chez Vercel ne
 // correspond pas a la publique qu'embarque l'application, chaque envoi echoue
@@ -102,7 +103,7 @@ export default async function handler(req, res) {
     if (autorise !== true) return res.status(403).json({ erreur: 'Destinataire non autorisé' });
 
     webpush.setVapidDetails(
-      'mailto:contact@timat.app',
+      `mailto:${EMAIL_CONTACT}`,
       process.env.VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY,
     );

@@ -11,7 +11,7 @@ Forme juridique : Auto-entrepreneur
 Numéro SIRET : 90264808800026
 Représentant légal : Sophie LEFORT
 Adresse : 12 rue étienne dolet, 94230 cachan, France
-Email : contact@timat.app
+Email : contact.timat.app@gmail.com
 Téléphone : 0620873380
 
 ---
@@ -19,7 +19,7 @@ Téléphone : 0620873380
 ## Directeur de la publication
 
 Sophie LEFORT
-Email : contact@timat.app
+Email : contact.timat.app@gmail.com
 
 ---
 
@@ -49,7 +49,7 @@ Toute reproduction, représentation, modification, publication ou adaptation de 
 
 Conformément au RGPD et à la loi Informatique et Libertés, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données.
 
-Responsable de traitement : TiMat — support@timat.app
+Responsable de traitement : TiMat — contact.timat.app@gmail.com
 Autorité de contrôle : CNIL — www.cnil.fr
 
 Voir notre [Politique de confidentialité complète](/confidentialite).
