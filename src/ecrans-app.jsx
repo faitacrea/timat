@@ -893,13 +893,14 @@ export function Recap({enfants,role,pEId}){
     </div>}
 
     {!showPrev&&<div className="card"style={{background:"var(--Pp)",border:"1px solid var(--P)"}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Fonctionnalité exclusive</div>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Le récapitulatif du mois</div>
       <div style={{fontSize:13,color:"var(--b)",lineHeight:1.7}}>
-        TiMat génère automatiquement chaque mois un <strong>récapitulatif PDF complet</strong> :
+        Un seul document qui réunit ce qui est habituellement séparé :
         heures, repas, humeurs, étapes de développement, facturation et transmissions.
-        Envoyé automatiquement aux parents le 1er de chaque mois.
         <br/><br/>
-        <strong>Aucun concurrent ne propose cela.</strong>
+        Vous le générez depuis cet écran, vous le relisez, puis vous le transmettez
+        aux parents quand il vous convient. <strong>TiMat ne l'envoie pas à votre place :</strong>
+        un document sur l'enfant de quelqu'un ne part pas sans que vous l'ayez vu.
       </div>
     </div>}
   </div>;
