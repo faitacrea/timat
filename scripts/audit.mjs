@@ -2753,6 +2753,52 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucun chemin absolu de machine dans le depot ---
+//
+// Un test importait « /home/user/timat/api/demande-publique.js » : le chemin
+// absolu du bac a sable ou il avait ete ecrit. Il passait la, et NULLE PART
+// ailleurs. Vercel deploie dans /vercel/path0 : la construction de production
+// est tombee deux fois de suite, sur une erreur que rien en local ne pouvait
+// montrer.
+//
+// C'est exactement ce que sources-app.mjs existe pour eviter. Un chemin se
+// calcule depuis le fichier qui le lit — import.meta.url — ou depuis la racine
+// du depot, jamais depuis la racine de la machine.
+{
+  // ON NE CHERCHE PAS TOUT CHEMIN ABSOLU. Un script de mise au point qui ecrit
+  // son apercu dans /tmp est legitime : il ne tourne jamais en production, et
+  // /tmp existe partout. Une premiere version signalait ces dix-neuf-la et
+  // noyait le seul qui comptait.
+  //
+  // Le danger, c'est un chemin absolu qui DESIGNE LE DEPOT LUI-MEME : il porte
+  // le nom du dossier sur la machine de celui qui l'a ecrit, et ce dossier
+  // n'existe nulle part ailleurs.
+  const nomDepot = path.basename(RACINE);
+  const racines = new RegExp(
+    "[\"'`](\\/(?:home|Users|root|var)\\/[^\"'`\\n]*\\/" + nomDepot + "\\/[^\"'`\\n]*|\\/vercel\\/path\\d[^\"'`\\n]*)[\"'`]", "g");
+  const aVoir = [];
+  const ignores = new Set(["node_modules", ".git", "dist", "documents", ".vercel", "public"]);
+  const parcourir = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ignores.has(e.name)) continue;
+      const complet = path.join(dir, e.name);
+      if (e.isDirectory()) parcourir(complet);
+      else if (/\.(jsx?|mjs|json)$/.test(e.name)) aVoir.push(complet);
+    }
+  };
+  parcourir(RACINE);
+  for (const f of aVoir) {
+    if (path.resolve(f) === path.resolve(new URL(import.meta.url).pathname)) continue;
+    const src = readFileSync(f, "utf8").replace(/^\s*\/\/.*$/gm, "");
+    for (const m of src.matchAll(racines)) {
+      // Les chemins de navigateur pre-installe sont fournis par l'environnement
+      // d'execution, pas par le depot : ils sont attendus.
+      if (/pw-browsers|chrome-linux|playwright/.test(m[1])) continue;
+      signale("chemins", `${path.relative(RACINE, f)} contient un chemin absolu de machine (${m[1].slice(0, 60)}) : il ne vaut que sur l'ordinateur ou il a ete ecrit, et la construction de production tombera dessus.`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

@@ -2,7 +2,12 @@
 // COMPORTEMENT, pas seulement que le fichier compile.
 process.env.VITE_SUPABASE_URL = "https://exemple.supabase.co";
 process.env.SUPABASE_SERVICE_KEY = "cle-de-test";
-const mod = await import("/home/user/timat/api/demande-publique.js");
+// Le chemin se calcule DEPUIS CE FICHIER, jamais depuis la racine de la
+// machine. La premiere version importait « /home/user/timat/api/… » : le
+// chemin absolu du bac a sable ou le test a ete ecrit. Il passait la, et
+// nulle part ailleurs — Vercel deploie dans /vercel/path0, et la construction
+// de production est tombee deux fois de suite.
+const mod = await import(new URL("../api/demande-publique.js", import.meta.url).href);
 const handler = mod.default;
 
 let dernierInsert = null;
