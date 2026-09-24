@@ -2799,6 +2799,66 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- une seule adresse de contact dans tout le depot ---
+//
+// « support@timat.app » etait ecrite en dur a vingt-huit endroits : pages
+// legales, mentions RGPD, messages d'erreur, reponses des fonctions serveur.
+// Le back-office avait bien un champ « Email de contact », mais il n'alimentait
+// qu'une ligne — le pied de page. On pouvait donc changer l'adresse dans les
+// reglages et ne rien voir changer sur le site. C'est arrive.
+//
+// Une adresse de contact fausse ou morte n'est pas un detail cosmetique : les
+// pages RGPD promettent une reponse sous trente jours a cette adresse. Elle
+// doit venir de data/coordonnees.js, et de nulle part ailleurs.
+{
+  const source = readFileSync(new URL("../data/coordonnees.js", import.meta.url), "utf8");
+  const attendue = (source.match(/EMAIL_CONTACT\s*=\s*["']([^"']+)["']/) || [])[1];
+  if (!attendue) {
+    signale("contact", "data/coordonnees.js n'exporte plus EMAIL_CONTACT : le point de passage unique de l'adresse de contact a disparu.");
+  } else {
+    const aVoir = [];
+    const ignores = new Set(["node_modules", ".git", "dist", ".vercel", "documents"]);
+    const parcourir = (dir) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (ignores.has(e.name)) continue;
+        const complet = path.join(dir, e.name);
+        if (e.isDirectory()) parcourir(complet);
+        else if (/\.(jsx?|mjs|html|md)$/.test(e.name)) aVoir.push(complet);
+      }
+    };
+    parcourir(RACINE);
+    // CE QUE L'ON CHERCHE : une adresse de contact DE TIMAT ecrite en dur.
+    //
+    // Toute adresse @timat.app en est une par construction — c'est le domaine
+    // du produit. Un gmail quelconque, non : camille.moreau@gmail.com dans un
+    // jeu de demonstration n'engage personne. Le seul gmail qui compte est
+    // l'adresse de contact elle-meme, justement parce qu'elle doit venir du
+    // point unique et de nulle part ailleurs.
+    const motif = new RegExp("[\\w.+-]+@timat\\.app|" + attendue.replace(/[.+]/g, "\\$&"), "g");
+    for (const f of aVoir) {
+      const rel = path.relative(RACINE, f);
+      if (rel === "data/coordonnees.js") continue;
+      if (rel === "scripts/audit.mjs") continue;
+      const src = readFileSync(f, "utf8").replace(/^\s*(?:\/\/|#).*$/gm, "");
+      for (const m of src.matchAll(motif)) {
+        const adresse = m[0];
+        if (adresse.startsWith("noreply@")) continue;
+        // Les adresses ILLUSTRATIVES — l'astuce sur les points dans Gmail, le
+        // jeu de demonstration, les exemples de saisie — ne sont pas des
+        // coordonnees : personne n'est cense leur ecrire.
+        if (/^(prenom\.?nom|marie\.dupont|exemple|nom\.prenom)@/.test(adresse)) continue;
+        // Les fichiers statiques et la documentation ne peuvent pas importer :
+        // on exige alors qu'ils portent EXACTEMENT l'adresse du point unique.
+        const statique = /\.(html|md)$/.test(rel);
+        if (statique && adresse === attendue) continue;
+        signale("contact", statique
+          ? `${rel} affiche ${adresse}, mais l'adresse de contact est ${attendue} (data/coordonnees.js). Un fichier statique ne peut pas importer : il doit porter la meme adresse, au caractere pres.`
+          : `${rel} ecrit l'adresse ${adresse} en dur. Elle doit venir de data/coordonnees.js — sinon la changer dans les reglages ne change rien sur le site.`);
+      }
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

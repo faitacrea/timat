@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { PRODUITS, developper } from './_catalogue-boutique.js';
 import { FICHIERS } from './_fichiers-boutique.js';
 
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
   // inconnu » de « jeton expiré » indiquerait à un curieux qu'il a trouvé un
   // jeton valide, et un lien périmé se règle de toute façon par le support.
   const refuser = () => res.status(403).send(
-    "Ce lien de téléchargement n'est plus valable. Écrivez à support@timat.app en indiquant votre adresse de commande, nous vous en renverrons un."
+    `Ce lien de téléchargement n'est plus valable. Écrivez à ${EMAIL_CONTACT} en indiquant votre adresse de commande, nous vous en renverrons un.`
   );
 
   if (!jeton || jeton.length < 20 || !PRODUITS[cle]) return refuser();

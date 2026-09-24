@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { jeton } from './desinscription.js';
 
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -147,7 +148,7 @@ export default async function handler(req, res) {
         from: 'TiMat <noreply@timat.app>',
         to: [propre],
         // noreply@ ne reçoit pas : sans reply_to, une réponse part dans le vide.
-        reply_to: 'support@timat.app',
+        reply_to: EMAIL_CONTACT,
         subject: conf.sujet,
         html: conf.corps(propre),
       }),

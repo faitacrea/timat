@@ -18,6 +18,7 @@
 // ============================================================
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
   ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Parrainage, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, VACANCES_2024, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte
 } from "./App.jsx";
@@ -661,7 +662,7 @@ export function SupprimerCompte({onDeleted}){
       setEtape("done");
       setTimeout(()=>onDeleted?.(),2000);
     }catch(e){
-      setErreur(e.message||"Erreur - contactez support@timat.app");
+      setErreur(e.message||`Erreur - contactez ${EMAIL_CONTACT}`);
       setEtape("error");
     }
   };

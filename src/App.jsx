@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -6170,7 +6171,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>Les calculs de salaire, récapitulatifs Pajemploi, attestations fiscales et bulletins de paie générés par TiMat sont fournis <strong>à titre indicatif</strong>. L'utilisateur reste seul responsable de la vérification des montants auprès des organismes compétents (URSSAF, Pajemploi, Administration fiscale). TiMat ne saurait être tenu responsable d'erreurs dans les déclarations effectuées par l'utilisateur.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Contact</h3>
-              <p>Pour toute question : <strong>support@timat.app</strong></p>
+              <p>Pour toute question : <strong>{EMAIL_CONTACT}</strong></p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
                 Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
@@ -6279,7 +6280,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p style={{marginTop:8}}>Un parent qui supprime son compte est détaché du dossier sans que celui-ci soit détruit, pour la même raison.</p>
               <p style={{marginTop:10}}><strong>À la fin de votre abonnement</strong></p>
               <p>Le RGPD (article 28.3.g) impose à TiMat, en tant que sous-traitante, de vous <strong>restituer ou supprimer</strong> vos données professionnelles à la fin de la prestation, <strong>à votre choix</strong>, et de détruire les copies existantes.</p>
-              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à support@timat.app.</p>
+              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à {EMAIL_CONTACT}.</p>
               <p style={{marginTop:8,fontSize:12,color:"#5F7A86"}}>Les pièces relevant d'une obligation légale de conservation — la facturation de TiMat notamment — échappent à cette suppression, comme le prévoit ce même article.</p>
               <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont appliquées automatiquement, chaque mois, et non seulement annoncées.</p>
 
@@ -6294,7 +6295,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   </div>
                 )}
               </div>
-              <p style={{marginTop:8}}>Pour exercer vos droits : <strong>support@timat.app</strong>. Réponse sous 30 jours maximum.</p>
+              <p style={{marginTop:8}}>Pour exercer vos droits : <strong>{EMAIL_CONTACT}</strong>. Réponse sous 30 jours maximum.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>7. Sous-traitants</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
@@ -6831,7 +6832,7 @@ export const DEFAULT_CONFIG = {
     nom:"Sophie [Votre nom]",
     siret:"[Votre SIRET]",
     adresse:"Île-de-France, France",
-    email:"support@timat.app",
+    email:EMAIL_CONTACT,
   },
   boutique:{
     linkSheets:"https://buy.stripe.com/9B64gr4cGfDP0Qq7j3dwc07",
@@ -6847,7 +6848,7 @@ export const DEFAULT_CONFIG = {
   faqLanding: FAQ_LANDING_DEFAULT,
   footer:{
     description:"L'application tout-en-un des assistantes maternelles. Conçue en France, pour simplifier votre quotidien.",
-    contactEmail:"support@timat.app",
+    contactEmail:EMAIL_CONTACT,
     contactWeb:"timat.app",
     contactLieu:"Île-de-France, France",
     rgpd:[
