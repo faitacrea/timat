@@ -50,6 +50,7 @@ const ECRANS_ASMAT = [
   ["projet-accueil", "Outils Pro", "Projet d'accueil"],
   ["reprise-contrat", "Outils Pro", "Reprendre un contrat"],
   ["liste-attente", "Outils Pro", "Demandes & liste d'attente"],
+  ["page-vitrine", "Outils Pro", "Ma page publique"],
   ["pmi", "Outils Pro", "PMI"],
   ["faq", "Outils Pro", "Aide & Support"],
 ];

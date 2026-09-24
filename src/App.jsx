@@ -600,6 +600,7 @@ const TRACES = {
   parchemin:'<path d="M6 3h11a2 2 0 0 1 2 2v13a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V6"/><path d="M4 6h4"/><path d="M9 8h7M9 12h7M9 16h4"/>',
   colis:'<path d="M3 8.5 12 3.5l9 5v7l-9 5-9-5Z"/><path d="M3 8.5 12 13.5l9-5M12 13.5V21"/>',
   boite:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 12h5l1.5 2.5h5L16 12h5"/><path d="m6 7 2-3h8l2 3"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/>',
   cadenas:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   sommeil:'<path d="M20.5 14A8.5 8.5 0 1 1 10 3.5 7 7 0 0 0 20.5 14Z"/>',
   bus:'<rect x="4" y="4" width="16" height="13" rx="2"/><path d="M4 10h16"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M8 4v6M16 4v6"/>',
@@ -689,7 +690,7 @@ const EMOJI_TRACE = {
   "🏥":"sante","👧":"fille","👪":"famille","👶":"enfant","💉":"vaccin",
   "💡":"idee","💬":"messages","💶":"paie","📄":"document","📅":"planning","🗓️":"planning","🗓":"planning",
   "📊":"graphique","📋":"liste","📏":"regle","📔":"cahier","📜":"parchemin",
-  "📝":"crayon","📦":"colis","📬":"boite","🔒":"cadenas","🗂️":"dossier",
+  "📝":"crayon","📦":"colis","📬":"boite","🌐":"globe","🔒":"cadenas","🗂️":"dossier",
   "😴":"sommeil","🚌":"bus","🚗":"voiture","🚨":"urgence","🛒":"panier",
   "🧮":"calcul","🧾":"facture","🏠":"accueil",
   "✅":"valide","⚠️":"alerte","⚠":"alerte","📈":"courbe","➕":"plus","📧":"mail",
@@ -3903,11 +3904,12 @@ const GROUPS_AM={
     {id:"mode_borne",l:"Borne & QR de pointage",ic:"🚪",d:"Les parents pointent eux-mêmes : écran d'entrée, ou QR affiché au mur"},
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"liste_attente",l:"Demandes & liste d'attente",ic:"📬",d:"Les parents qui vous contactent, et votre lien public"},
+    {id:"page_vitrine",l:"Ma page publique",ic:"🌐",d:"La page que vous donnez aux parents qui ne vous connaissent pas encore"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"reprise_contrat",l:"Reprendre un contrat",ic:"📥",d:"Vos mois passés chez un autre outil, sans tout ressaisir"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
-    {id:"pmi",l:"PMI",ic:"🏛️",d:"Contacts PMI de votre secteur"},
+    {id:"pmi",l:"PMI",ic:"🏛️",d:"Le journal de vos échanges, et les coordonnées de votre PMI"},
     {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
     {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
   ]},
@@ -7085,6 +7087,7 @@ export const SoldeDeCompte = lazy(() => _gestion().then(m => ({ default: m.Solde
 export const Bilans = lazy(() => _ecrans().then(m => ({ default: m.Bilans })));
 export const Parametres = lazy(() => _ecrans().then(m => ({ default: m.Parametres })));
 export const ListeAttente = lazy(() => _ecrans().then(m => ({ default: m.ListeAttente })));
+export const PageVitrine = lazy(() => _ecrans().then(m => ({ default: m.PageVitrine })));
 export const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m.PlanningPeriscolaire })));
 export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.RegistreMedicaments })));
 export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
@@ -7745,6 +7748,7 @@ export default function App(){
       case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user}/>;
+      case "page_vitrine": return <PageVitrine user={user} role={role}/>;
       case "kit_cmg": return <KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "journal": return <JournalComplet {...P}/>;
       case "transmissions": return <JournalComplet {...P}/>;

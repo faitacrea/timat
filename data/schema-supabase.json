@@ -395,7 +395,20 @@
     "subscription_status",
     "subscription_updated_at",
     "telephone",
-    "titre_amge"
+    "titre_amge",
+    "vitrine_active",
+    "vitrine_atouts",
+    "vitrine_commune",
+    "vitrine_disponibilite",
+    "vitrine_email",
+    "vitrine_horaires",
+    "vitrine_indexable",
+    "vitrine_maj",
+    "vitrine_places",
+    "vitrine_presentation",
+    "vitrine_slug",
+    "vitrine_tel",
+    "vitrine_titre"
   ],
   "projet_accueil": [
     "asmat_id",
