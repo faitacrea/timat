@@ -25,6 +25,22 @@ const EMAIL_TEMPLATES = {
   // Les deux rappels de fin d'essai. Ils disent la date en clair, ce qui est
   // conservé (tout), et ce qui s'arrête. Aucun des deux ne demande de carte :
   // elle n'est demandée qu'au moment de continuer, dans Stripe.
+  // L'AVERTISSEMENT D'INACTIVITE.
+  //
+  // Ce courriel n'annonce PAS une suppression automatique, parce qu'il n'y en
+  // a pas : un compte inactif contient le dossier d'enfants reels, et TiMat
+  // n'efface pas d'office des pieces qui servent de justificatifs. Il dit ce
+  // qui est vrai — le compte est en sommeil, les donnees sont toujours la, et
+  // une seule connexion suffit a le reveiller.
+  inactivite_avertissement: {
+    subject: 'Votre compte TiMat dort depuis deux ans',
+    html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
+<p>Vous ne vous êtes pas connectée à TiMat depuis <strong>deux ans</strong>. Nous vous le signalons parce que la CNIL le recommande, et parce que c'est normal de savoir ce qu'un service garde de vous.</p>
+<p><strong>Vos données sont toujours là</strong> : vos dossiers d'enfants, vos pointages, vos contrats et vos bulletins n'ont pas été touchés. Nous ne les supprimons pas de notre propre initiative — ce sont vos justificatifs, et vous seule savez quand ils ne vous servent plus.</p>
+<p>Une seule connexion suffit à remettre le compte en activité :</p>
+<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Me reconnecter</a></p>
+<p style="color:#55707C;font-size:14px">Si vous préférez que tout soit effacé, écrivez-nous : la suppression est faite, et nous vous envoyons une attestation écrite si vous la demandez.</p>`,
+  },
   essai_rappel_7: {
     subject: "Il vous reste une semaine d'essai TiMat",
     html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>

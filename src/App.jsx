@@ -6216,7 +6216,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>TiMat est un outil d'aide à la gestion. Les calculs, documents et informations fournis le sont <strong>à titre indicatif</strong> et ne constituent pas un conseil juridique, fiscal ou comptable. L'utilisateur reste seul responsable de ses déclarations auprès des organismes officiels.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>8. Résiliation</h3>
-              <p>L'utilisateur peut résilier son abonnement Pro à tout moment depuis son espace, sans frais. Les données restent accessibles pendant 30 jours après résiliation. Passé ce délai, elles sont supprimées définitivement. L'éditeur se réserve le droit de suspendre un compte en cas de non-respect des CGU.</p>
+              <p>L'utilisateur peut résilier son abonnement Pro à tout moment depuis son espace, sans frais. Après résiliation, le compte repasse en formule gratuite et les données restent accessibles : rien n'est supprimé automatiquement. L'effacement se fait à votre demande, ou en supprimant votre compte depuis les paramètres. L'éditeur se réserve le droit de suspendre un compte en cas de non-respect des CGU.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>9. Disponibilité du service</h3>
               <p>TiMat s'engage à fournir un service disponible 24h/24, 7j/7. Toutefois, des interruptions pour maintenance ou mise à jour peuvent survenir. L'éditeur ne saurait être tenu responsable des conséquences d'une interruption temporaire du service.</p>
@@ -6273,7 +6273,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p style={{marginTop:10}}><strong>Données dont TiMat est responsable</strong></p>
               <ul style={{paddingLeft:20,margin:"8px 0"}}>
                 <li><strong>Compte :</strong> conservé tant qu'il est actif. La suppression demandée depuis Paramètres est <strong>immédiate</strong>, sans délai de grâce.</li>
-                <li><strong>Compte inactif :</strong> signalé après 2 ans sans connexion, supprimé après vous avoir averti (recommandation CNIL).</li>
+                <li><strong>Compte inactif :</strong> après 2 ans sans connexion, vous recevez un e-mail vous le signalant (recommandation CNIL). Vos données ne sont pas supprimées pour autant : une connexion suffit à réveiller le compte, et l'effacement se fait à votre demande.</li>
                 <li><strong>Facturation et comptabilité de TiMat :</strong> 10 ans (article L123-22 du code de commerce).</li>
                 <li><strong>Prospection :</strong> 3 ans après le dernier contact.</li>
                 <li><strong>Messages de support :</strong> 2 ans.</li>
@@ -6285,9 +6285,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p style={{marginTop:8}}>Un parent qui supprime son compte est détaché du dossier sans que celui-ci soit détruit, pour la même raison.</p>
               <p style={{marginTop:10}}><strong>À la fin de votre abonnement</strong></p>
               <p>Le RGPD (article 28.3.g) impose à TiMat, en tant que sous-traitante, de vous <strong>restituer ou supprimer</strong> vos données professionnelles à la fin de la prestation, <strong>à votre choix</strong>, et de détruire les copies existantes.</p>
-              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, sans choix exprimé de votre part, les données sont supprimées. Vous pouvez à tout moment demander leur suppression immédiate, ou une attestation écrite de suppression, à {EMAIL_CONTACT}.</p>
+              <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, rien n'est supprimé pour autant : votre compte repasse simplement en formule gratuite, et vos dossiers restent consultables et exportables. La suppression n'intervient que si vous la demandez. Vous pouvez à tout moment demander l'effacement immédiat, ou une attestation écrite de suppression, à {EMAIL_CONTACT}.</p>
               <p style={{marginTop:8,fontSize:12,color:"#5F7A86"}}>Les pièces relevant d'une obligation légale de conservation — la facturation de TiMat notamment — échappent à cette suppression, comme le prévoit ce même article.</p>
-              <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Ces durées sont celles que nous appliquons lorsqu'une suppression est demandée, et à la fermeture d'un compte. Elles ne sont pas exécutées par une purge automatique : écrivez-nous et la suppression est faite, avec une attestation écrite si vous la demandez.</p>
+              <p style={{marginTop:10,fontSize:12,color:"#5F7A86"}}>Les durées ci-dessus sont appliquées par une tâche quotidienne, pour les seules données dont TiMat est responsable : journaux de connexion, messages de support, prospection. Les données professionnelles — dossiers d'enfants, pointages, contrats, bulletins — ne sont jamais supprimées d'office : ce sont vos justificatifs, et vous seule savez quand ils ne servent plus. Écrivez-nous et la suppression est faite, avec une attestation écrite si vous la demandez.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>6. Vos droits (RGPD)</h3>
               <p>Conformément au RGPD, vous disposez des droits suivants :</p>
