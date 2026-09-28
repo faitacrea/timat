@@ -2887,6 +2887,49 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- un seul expediteur, et il ne peut pas etre le gmail ---
+//
+// L'adresse de contact est un gmail. L'expediteur technique, lui, DOIT rester
+// sur le domaine verifie : Resend refuse d'envoyer depuis gmail.com — erreur
+// 403, « the gmail.com domain is not verified » — et personne ne peut verifier
+// le domaine de Google. Ce n'est pas un choix de style, c'est un mur.
+//
+// Les deux adresses ont donc deux roles opposes, et il faut les tenir separees :
+//   EMAIL_EXPEDITEUR  part du domaine verifie, ne recoit rien, personne ne lui ecrit ;
+//   EMAIL_CONTACT     recoit vraiment, et c'est lui que porte « reply_to ».
+//
+// Cette barriere refuse un expediteur ecrit en dur : cinq endroits a corriger
+// le jour ou le domaine change, c'est cinq occasions d'en oublier un.
+{
+  const source = readFileSync(new URL("../data/coordonnees.js", import.meta.url), "utf8");
+  const expediteur = (source.match(/EMAIL_EXPEDITEUR\s*=\s*["']([^"']+)["']/) || [])[1];
+  const contact = (source.match(/EMAIL_CONTACT\s*=\s*["']([^"']+)["']/) || [])[1];
+  if (!expediteur) {
+    signale("expediteur", "data/coordonnees.js n'exporte plus EMAIL_EXPEDITEUR.");
+  } else {
+    if (/@gmail\.com$/i.test(expediteur)) {
+      signale("expediteur", `EMAIL_EXPEDITEUR vaut ${expediteur} : Resend refuse d'envoyer depuis gmail.com (403, domaine non verifiable). Aucun courriel ne partirait.`);
+    }
+    if (expediteur === contact) {
+      signale("expediteur", "EMAIL_EXPEDITEUR et EMAIL_CONTACT sont identiques : l'un doit partir du domaine verifie, l'autre doit recevoir. Les confondre casse l'envoi ou perd les reponses.");
+    }
+    const dossier = path.join(RACINE, "api");
+    for (const nom of fs.readdirSync(dossier)) {
+      if (!/\.js$/.test(nom)) continue;
+      const src = readFileSync(path.join(dossier, nom), "utf8").replace(/^\s*\/\/.*$/gm, "");
+      // Un « from: » qui porte une adresse litterale plutot que la constante.
+      for (const m of src.matchAll(/\bfrom:\s*['"][^'"]*@[^'"]*['"]/g)) {
+        signale("expediteur", `api/${nom} ecrit un expediteur en dur (${m[0].slice(0, 46)}…) : il doit venir de data/coordonnees.js.`);
+      }
+      // Un envoi Resend sans reply_to : noreply@ ne recoit pas, la reponse
+      // du parent partirait dans le vide.
+      if (/api\.resend\.com\/emails/.test(src) && !/reply_?[Tt]o/.test(src)) {
+        signale("expediteur", `api/${nom} envoie un courriel sans reply_to : l'expediteur technique ne recoit rien, une reponse serait perdue.`);
+      }
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

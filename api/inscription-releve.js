@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { jeton } from './desinscription.js';
 
-import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: { Authorization: `Bearer ${cle}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'TiMat <noreply@timat.app>',
+        from: `TiMat <${EMAIL_EXPEDITEUR}>`,
         to: [propre],
         // noreply@ ne reçoit pas : sans reply_to, une réponse part dans le vide.
         reply_to: EMAIL_CONTACT,
