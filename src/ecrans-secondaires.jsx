@@ -2700,6 +2700,7 @@ ${commune?`<div class="c">${H(commune)}</div>`:""}
     <PageHeader icon="🌐" title="Ma page publique" sub="L'adresse à donner aux parents qui ne vous connaissent pas encore"/>
 
     <div style={{background:"var(--c)",border:"1px solid var(--br)",borderLeft:"4px solid var(--B)",borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12.5,lineHeight:1.6,color:"var(--m)"}}>
+      <a href="/a/exemple" target="_blank" rel="noreferrer" style={{color:"var(--B)",fontWeight:700}}>Voir un exemple de page →</a><br/><br/>
       Cette page ne reprend <strong>rien</strong> de votre dossier privé : ni votre nom complet, ni votre adresse, ni votre numéro d'agrément, ni le moindre mot sur les enfants que vous accueillez. Ce qui s'affiche, c'est uniquement ce que vous écrivez ci-dessous.
     </div>
 

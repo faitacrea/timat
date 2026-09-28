@@ -372,8 +372,10 @@
     "code_postal",
     "couleur",
     "created_at",
+    "derniere_connexion_at",
     "email",
     "id",
+    "inactivite_avertie_at",
     "is_admin",
     "jeton_demandes",
     "last_payment_date",
@@ -518,5 +520,14 @@
     "note",
     "periode",
     "saisi_par"
+  ],
+  "audit_log": [
+    "action",
+    "created_at",
+    "id",
+    "ip_address",
+    "record_id",
+    "table_name",
+    "user_id"
   ]
 }

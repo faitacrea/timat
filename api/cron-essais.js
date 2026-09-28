@@ -124,6 +124,57 @@ async function rappelerPointage(ligne, urlParent) {
   }
 }
 
+/**
+ * LA PURGE DES DUREES DE CONSERVATION.
+ *
+ * La politique de confidentialite annonce des durees. Jusqu'ici, rien ne les
+ * appliquait : elles etaient ecrites, pas executees. Une duree annoncee et non
+ * tenue est pire qu'une duree non annoncee — c'est la ligne meme qu'un
+ * controle reprendrait.
+ *
+ * CE QUI EST PURGE, ET RIEN D'AUTRE. Uniquement les donnees dont TiMat est
+ * RESPONSABLE : journaux, support, prospection, notifications, anti-force
+ * brute. Ce sont des traces techniques et commerciales, celles dont TiMat
+ * fixe librement la duree.
+ *
+ * CE QUI N'EST JAMAIS PURGE. Le dossier de l'enfant, les pointages, les
+ * contrats, les bulletins, le registre des medicaments, les autorisations.
+ * TiMat n'en est qu'hebergeur : l'assistante maternelle en est responsable,
+ * et la politique dit expressement que TiMat ne les supprime pas d'office.
+ * Ces pieces sont des justificatifs — devant l'URSSAF, devant la PMI, devant
+ * un prud'homme. Les effacer « parce que le contrat est fini » detruirait sa
+ * preuve au moment ou elle en a besoin.
+ *
+ * Chaque duree ci-dessous correspond a une ligne ecrite dans la politique.
+ * Un test compare les deux : si l'une change sans l'autre, la construction
+ * tombe.
+ */
+const PURGES = [
+  // « Journaux de connexion : 12 mois. »
+  { table: 'audit_log', colonne: 'created_at', mois: 12 },
+  // « Messages de support : 2 ans. »
+  { table: 'support_messages', colonne: 'created_at', mois: 24 },
+  // « Prospection : 3 ans apres le dernier contact. »
+  { table: 'prospects', colonne: 'created_at', mois: 36 },
+  // Les notifications dans l'application ne sont pas une donnee conservee :
+  // passe un an, c'est du bruit que personne ne relira.
+  { table: 'notifications', colonne: 'created_at', mois: 12 },
+  // Les tentatives ratees sur la borne servent a bloquer une attaque en cours.
+  // Un mois plus tard, elles ne protegent plus de rien.
+  { table: 'borne_tentatives', colonne: 'dernier_echec', mois: 1 },
+];
+
+/** Deux ans sans connexion : la CNIL recommande de signaler, puis de supprimer. */
+const MOIS_INACTIVITE = 24;
+/** Le delai laisse entre l'avertissement et la suppression. */
+const JOURS_APRES_AVERTISSEMENT = 30;
+
+const ilYaMois = (maintenant, mois) => {
+  const d = new Date(maintenant);
+  d.setMonth(d.getMonth() - mois);
+  return d;
+};
+
 const repondre = (code, corps) => new Response(JSON.stringify(corps), {
   status: code, headers: { 'Content-Type': 'application/json' },
 });
@@ -146,7 +197,7 @@ export default async function handler(request) {
   // « simulation=1 » dit ce qui serait fait, sans rien écrire ni envoyer.
   const simulation = new URL(request.url).searchParams.get('simulation') === '1';
   const maintenant = new Date();
-  const journal = { simulation, rappels: [], expires: [], pointages: [], erreurs: [] };
+  const journal = { simulation, rappels: [], expires: [], pointages: [], purges: [], inactifs: [], erreurs: [] };
 
   // ---- LES ESSAIS QUI FINISSENT ----
   //
@@ -278,6 +329,76 @@ export default async function handler(request) {
       console.error('[cron-essais] pointages', err.message);
       journal.erreurs.push({ etape: 'pointages', raison: err.message });
     }
+  }
+
+  // ---- LES DUREES DE CONSERVATION ----
+  //
+  // Chaque table a sa propre erreur : une purge qui echoue n'empeche pas les
+  // autres. La suppression est definitive, d'ou « simulation=1 » qui compte
+  // sans rien effacer — a lancer avant chaque changement de duree.
+  for (const p of PURGES) {
+    try {
+      const limite = ilYaMois(maintenant, p.mois).toISOString();
+      if (simulation) {
+        const { count, error } = await supabase
+          .from(p.table).select('*', { count: 'exact', head: true }).lt(p.colonne, limite);
+        if (error) throw new Error(error.message);
+        journal.purges.push({ table: p.table, mois: p.mois, aSupprimer: count || 0 });
+        continue;
+      }
+      // « select() » fait renvoyer les lignes effacees : sans lui, on ecrirait
+      // « purge : 0 » sans savoir si c'est vrai.
+      const { data, error } = await supabase
+        .from(p.table).delete().lt(p.colonne, limite).select('id');
+      if (error) throw new Error(error.message);
+      journal.purges.push({ table: p.table, mois: p.mois, supprimees: (data || []).length });
+    } catch (e) {
+      console.error('[cron-essais] purge ' + p.table, e.message);
+      journal.erreurs.push({ etape: 'purge ' + p.table, raison: e.message });
+    }
+  }
+
+  // ---- LES COMPTES INACTIFS DEPUIS DEUX ANS ----
+  //
+  // La politique promet : « signale apres 2 ans sans connexion, supprime APRES
+  // VOUS AVOIR AVERTI ». L'avertissement est donc la condition, pas une
+  // politesse. Cette passe ne fait QUE l'avertissement.
+  //
+  // ELLE NE SUPPRIME AUCUN COMPTE, ET C'EST DELIBERE. Un compte inactif
+  // contient le dossier d'enfants reels : des pointages qui prouvent des
+  // heures travaillees, des bulletins, des contrats. Les effacer par une
+  // tache automatique detruirait la preuve de quelqu'un sans que personne
+  // n'ait rien decide. La suppression reste un geste humain, sur demande ou
+  // depuis Parametres — ou l'utilisatrice, elle, sait ce qu'elle efface.
+  try {
+    const limite = ilYaMois(maintenant, MOIS_INACTIVITE).toISOString();
+    const { data: comptes, error } = await supabase
+      .from('profiles').select('id, email, prenom, inactivite_avertie_at')
+      .is('inactivite_avertie_at', null)
+      .lt('derniere_connexion_at', limite)
+      .limit(50);
+    // La colonne peut ne pas exister sur une base plus ancienne : on le dit,
+    // on ne fait pas tomber la tache.
+    if (error) throw new Error(error.message);
+    for (const c of comptes || []) {
+      journal.inactifs.push({ id: c.id });
+      if (simulation) continue;
+      try {
+        await fetch(`${APP_URL}/api/send-email`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'inactivite_avertissement', to: c.email,
+            vars: { prenom: c.prenom || '', jours: String(JOURS_APRES_AVERTISSEMENT), url: APP_URL } }),
+        });
+        const { error: eM } = await supabase.from('profiles')
+          .update({ inactivite_avertie_at: maintenant.toISOString() }).eq('id', c.id);
+        if (eM) journal.erreurs.push({ id: c.id, raison: eM.message });
+      } catch (e) {
+        journal.erreurs.push({ id: c.id, raison: e.message });
+      }
+    }
+  } catch (e) {
+    console.error('[cron-essais] inactifs', e.message);
+    journal.erreurs.push({ etape: 'inactifs', raison: e.message });
   }
 
   // Une erreur sur un compte n'arrête pas les autres, mais elle doit se voir :
