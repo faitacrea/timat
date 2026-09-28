@@ -12,8 +12,15 @@
 // la valeur par defaut est la meme partout, y compris cote serveur, ou aucune
 // configuration n'est lue.
 //
-// noreply@timat.app n'est PAS une adresse de contact : c'est l'expediteur
-// technique des envois Resend, sur le domaine verifie. Elle ne recoit rien et
-// ne doit jamais etre proposee a quelqu'un.
-export const EMAIL_CONTACT = "contact.timat.app@gmail.com";
-export const EMAIL_EXPEDITEUR = "noreply@timat.app";
+// L'EXPEDITEUR EST DESORMAIS LA MEME ADRESSE, et c'est possible parce qu'elle
+// est sur le domaine verifie chez Resend. Le gmail, lui, ne pouvait pas :
+// Resend refuse gmail.com (403, domaine non verifiable). On a donc pris une
+// adresse du domaine, redirigee gratuitement par OVH vers la boite gmail qui
+// sert de lecture.
+//
+// UNE CONSEQUENCE A CONNAITRE : les rebonds automatiques (adresse de parent
+// invalide, boite pleine) arrivent maintenant dans une vraie boite au lieu de
+// disparaitre dans noreply@. C'est quelques courriels par mois, et c'est
+// plutot une bonne chose de les voir.
+export const EMAIL_CONTACT = "contact@timat.app";
+export const EMAIL_EXPEDITEUR = "contact@timat.app";

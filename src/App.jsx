@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
-import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -280,7 +280,7 @@ async function logConsent(user_id, consents={}){
 // pour pouvoir relancer ces emails plus tard (rappel : ajouter `email_log` table optionnelle).
 export async function sendNotificationEmail({type,to,subject,template,vars={}}){
   try{
-    const payload={type,to,subject,template,vars,from:"TiMat <noreply@timat.app>"};
+    const payload={type,to,subject,template,vars,from:`TiMat <${EMAIL_EXPEDITEUR}>`};
     const res=await fetch("/api/send-email",{
       method:"POST",
       headers:{"Content-Type":"application/json"},

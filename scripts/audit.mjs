@@ -2910,21 +2910,44 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     if (/@gmail\.com$/i.test(expediteur)) {
       signale("expediteur", `EMAIL_EXPEDITEUR vaut ${expediteur} : Resend refuse d'envoyer depuis gmail.com (403, domaine non verifiable). Aucun courriel ne partirait.`);
     }
-    if (expediteur === contact) {
-      signale("expediteur", "EMAIL_EXPEDITEUR et EMAIL_CONTACT sont identiques : l'un doit partir du domaine verifie, l'autre doit recevoir. Les confondre casse l'envoi ou perd les reponses.");
+    // CETTE REGLE A ETE CORRIGEE, et il faut dire pourquoi.
+    //
+    // La premiere version interdisait que les deux constantes soient
+    // identiques. Elle avait ete ecrite en supposant que l'adresse de contact
+    // resterait un gmail : dans ce monde-la, les confondre cassait l'envoi,
+    // puisque Resend refuse gmail.com. Mais ce n'etait pas l'invariant reel —
+    // c'en etait une consequence.
+    //
+    // L'INVARIANT REEL : l'expediteur doit etre sur un domaine qu'on peut
+    // verifier chez Resend. Une fois l'adresse de contact passee sur
+    // timat.app, les deux PEUVENT etre identiques, et c'est meme souhaitable :
+    // un courriel auquel on repond naturellement vaut mieux qu'un noreply@
+    // dont les reponses partent dans le vide.
+    const MUTUALISE = /@(gmail|googlemail|outlook|hotmail|live|yahoo|orange|free|sfr|laposte|wanadoo)\./i;
+    if (MUTUALISE.test(expediteur)) {
+      signale("expediteur", `EMAIL_EXPEDITEUR vaut ${expediteur} : un domaine de courrier mutualise ne peut pas etre verifie chez Resend. Aucun courriel ne partirait.`);
     }
-    const dossier = path.join(RACINE, "api");
-    for (const nom of fs.readdirSync(dossier)) {
-      if (!/\.js$/.test(nom)) continue;
-      const src = readFileSync(path.join(dossier, nom), "utf8").replace(/^\s*\/\/.*$/gm, "");
+    // ON BALAIE AUSSI src/. Une premiere version ne regardait que api/, et
+    // laissait passer « from: "TiMat <noreply@timat.app>" » ecrit en dur dans
+    // App.jsx — l'application construit elle aussi des envois.
+    const aVoir = [];
+    for (const d of ["api", "src"]) {
+      const dossier = path.join(RACINE, d);
+      if (!fs.existsSync(dossier)) continue;
+      for (const nom of fs.readdirSync(dossier)) {
+        if (/\.(jsx?|mjs)$/.test(nom)) aVoir.push([d + "/" + nom, path.join(dossier, nom)]);
+      }
+    }
+    for (const [nom, complet] of aVoir) {
+      const src = readFileSync(complet, "utf8").replace(/^\s*\/\/.*$/gm, "");
       // Un « from: » qui porte une adresse litterale plutot que la constante.
       for (const m of src.matchAll(/\bfrom:\s*['"][^'"]*@[^'"]*['"]/g)) {
-        signale("expediteur", `api/${nom} ecrit un expediteur en dur (${m[0].slice(0, 46)}…) : il doit venir de data/coordonnees.js.`);
+        signale("expediteur", `${nom} ecrit un expediteur en dur (${m[0].slice(0, 46)}…) : il doit venir de data/coordonnees.js.`);
       }
       // Un envoi Resend sans reply_to : noreply@ ne recoit pas, la reponse
       // du parent partirait dans le vide.
       if (/api\.resend\.com\/emails/.test(src) && !/reply_?[Tt]o/.test(src)) {
-        signale("expediteur", `api/${nom} envoie un courriel sans reply_to : l'expediteur technique ne recoit rien, une reponse serait perdue.`);
+        signale("expediteur", `${nom} envoie un courriel sans reply_to : l'expediteur technique ne recoit rien, une reponse serait perdue.`);
       }
     }
   }
