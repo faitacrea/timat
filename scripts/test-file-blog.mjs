@@ -21,7 +21,7 @@ const src = readFileSync(new URL("../api/publier-article.js", import.meta.url), 
 // Le fragment evalue plus bas utilise EMAIL_CONTACT, qui vient d'un import.
 // On ne le recopie pas : on lit la vraie valeur du point unique, pour que ce
 // test tombe aussi le jour ou l'alerte partirait a une adresse inventee.
-const { EMAIL_CONTACT } = await import(new URL("../data/coordonnees.js", import.meta.url).href);
+const { EMAIL_CONTACT, EMAIL_EXPEDITEUR } = await import(new URL("../data/coordonnees.js", import.meta.url).href);
 
 let ko = 0;
 const verifie = (nom, reel, attendu) => {
@@ -46,7 +46,7 @@ const faireModule = (reponse) => {
     if (reponse === "429") return { ok: false, status: 429 };
     return { ok: true, status: 200 };
   };
-  const portee = { fetch: fetchFaux, process: { env: { RESEND_API_KEY: reponse === "sans-cle" ? "" : "cle" } }, console: { warn() {}, error() {} }, EMAIL_CONTACT };
+  const portee = { fetch: fetchFaux, process: { env: { RESEND_API_KEY: reponse === "sans-cle" ? "" : "cle" } }, console: { warn() {}, error() {} }, EMAIL_CONTACT, EMAIL_EXPEDITEUR };
   const noms = Object.keys(portee);
   const usine = new Function(...noms, src.slice(debut, fin) + "\nreturn {prevenirFileBasse,PREVENIR_SOUS};");
   return usine(...noms.map((n) => portee[n]));
@@ -89,6 +89,7 @@ console.log("\nLE MESSAGE DIT QUOI FAIRE");
   verifie("le message indique où écrire les articles", /Sanity/.test(m.text), true);
   verifie("et où déclarer leur ordre", /ordre-publication\.js/.test(m.text), true);
   verifie("l'alerte part à l'adresse de contact du produit", m.to, [EMAIL_CONTACT]);
+  verifie("et depuis le domaine vérifié, jamais depuis le gmail", m.from, `TiMat <${EMAIL_EXPEDITEUR}>`);
 
   await M.prevenirFileBasse(3);
   const m3 = envois.at(-1).corps;

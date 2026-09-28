@@ -1,4 +1,4 @@
-import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 // api/send-email.js
 // Edge Function Vercel pour envoyer des emails via Resend
 // Frontend envoie : { type, to, subject, template, vars, from }
@@ -234,7 +234,7 @@ export default async function handler(req) {
   if (from && !fromValide) {
     console.warn('[send-email] expéditeur refusé, repli sur le défaut :', from);
   }
-  const finalFrom = fromValide ? from : 'TiMat <noreply@timat.app>';
+  const finalFrom = fromValide ? from : `TiMat <${EMAIL_EXPEDITEUR}>`;
 
   // noreply@ ne reçoit pas : sans reply_to, une réponse part dans le vide.
   const replyTo = EMAIL_CONTACT;

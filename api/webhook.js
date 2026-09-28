@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import { randomBytes } from 'node:crypto';
 import { PRODUITS, reconnaitreProduit, developper } from './_catalogue-boutique.js';
 
-import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -121,7 +121,7 @@ async function envoyerCourriel(email, liens) {
   ).join('\n');
 
   const { error } = await resend.emails.send({
-    from: 'TiMat <noreply@timat.app>',
+    from: `TiMat <${EMAIL_EXPEDITEUR}>`,
     to: [email],
     reply_to: EMAIL_CONTACT,
     subject: 'Vos documents TiMat',
