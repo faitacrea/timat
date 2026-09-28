@@ -94,6 +94,43 @@ const introuvable = () => enveloppe({
 // Une adresse ne contient que des minuscules, des chiffres et des tirets. On
 // la valide AVANT d'interroger la base : cela borne ce qui part dans l'URL de
 // requete, et ecarte d'emblee tout ce qui n'a pas la forme d'une adresse.
+// LA PAGE D'EXEMPLE.
+//
+// Une fonction que personne ne voit ne sert a rien. Avant d'ecrire sa propre
+// page, une assistante maternelle veut savoir a quoi elle ressemblera — et
+// une capture d'ecran dans une brochure ne vaut pas la vraie page.
+//
+// « /a/exemple » rend donc une page complete, servie par LE MEME code que les
+// vraies. Si la mise en page casse un jour, elle casse ici aussi : c'est une
+// demonstration, pas une maquette qui vieillit a part.
+//
+// ELLE NE DECRIT PERSONNE. Le prenom est invente, la commune est un exemple,
+// et un bandeau le dit en haut de page. Presenter une personne reelle comme
+// agreee, ou afficher des disponibilites qui n'existent pas, tromperait le
+// parent qui la lirait.
+const EXEMPLE = {
+  vitrine_active: true,
+  vitrine_indexable: false,
+  vitrine_titre: "Camille, assistante maternelle",
+  vitrine_commune: "Exemple-sur-Loire (00)",
+  vitrine_places: "1 place disponible",
+  vitrine_disponibilite: "À partir de janvier",
+  vitrine_horaires: "7h30 – 18h30, du lundi au vendredi",
+  vitrine_presentation:
+    "J'accueille les enfants chez moi, dans une maison avec un jardin clos et une pièce de jeu qui leur est réservée.\n\n"
+    + "Les repas sont faits maison, à partir de produits frais. Nous sortons chaque matin : parc, médiathèque, ou simplement le tour du quartier quand il fait beau.\n\n"
+    + "Je tiens à ce que chaque famille sache comment s'est passée la journée de son enfant : vous recevez un résumé le soir, avec les repas, les siestes et les moments qui ont compté.",
+  vitrine_atouts: "Jardin clos et sécurisé\nRepas faits maison\nSortie extérieure chaque matin\nRésumé de la journée envoyé chaque soir",
+  vitrine_tel: "", vitrine_email: "",
+  vitrine_maj: null, jeton_demandes: "",
+};
+
+const BANDEAU_EXEMPLE = `<div style="background:#FFF6F2;border:1px solid #E8C4B4;border-left:4px solid #C76754;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13.5px;line-height:1.6">
+ <strong>Ceci est un exemple.</strong> Camille n'existe pas, et cette commune non plus.
+ Cette page montre à quoi ressemble une page TiMat — c'est vous qui écrivez la vôtre, champ par champ.
+ <a href="/" style="color:#C76754;font-weight:600">Découvrir TiMat</a>
+</div>`;
+
 const SLUG = /^[a-z0-9-]{3,60}$/;
 
 export default async function handler(req) {
@@ -114,8 +151,11 @@ export default async function handler(req) {
     "vitrine_maj", "jeton_demandes",
   ].join(",");
 
-  let p;
-  try {
+  let p = null;
+  // L'exemple ne vient pas de la base : il n'y a personne derriere, et il ne
+  // doit pas dependre qu'un compte de demonstration existe encore.
+  if (slug === "exemple") p = EXEMPLE;
+  else try {
     const r = await fetch(
       `${URL_SUPABASE}/rest/v1/profiles?select=${champs}&vitrine_slug=eq.${encodeURIComponent(slug)}&limit=1`,
       { headers: { apikey: CLE_SERVICE, Authorization: "Bearer " + CLE_SERVICE } });
@@ -144,7 +184,7 @@ export default async function handler(req) {
   const majTexte = maj && !Number.isNaN(maj.getTime())
     ? maj.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "";
 
-  const corps = `<div class="c">
+  const corps = `${slug === "exemple" ? BANDEAU_EXEMPLE : ""}<div class="c">
  <h1>${H(titre)}</h1>
  ${commune ? `<p class="lieu">📍 ${H(commune)}</p>` : ""}
  ${faits.length ? `<div class="faits">${faits.map(([k, v]) =>
@@ -158,7 +198,9 @@ export default async function handler(req) {
  ${jeton ? `<a class="cta" href="/d/${encodeURIComponent(jeton)}">Faire une demande d'accueil</a>` : ""}
  ${tel ? `<a class="tel" href="tel:${H(tel.replace(/[^\d+]/g, ""))}">📞 ${H(tel)}</a>` : ""}
  ${email ? `<a class="tel" href="mailto:${H(email)}">✉️ ${H(email)}</a>` : ""}
- ${!jeton && !tel && !email ? `<p>Aucun moyen de contact n'est renseigné pour le moment.</p>` : ""}
+ ${slug === "exemple"
+   ? `<p>Sur une vraie page, vous trouvez ici le bouton <strong>« Faire une demande d'accueil »</strong>, et le téléphone si elle a choisi de l'afficher.</p>`
+   : (!jeton && !tel && !email ? `<p>Aucun moyen de contact n'est renseigné pour le moment.</p>` : "")}
  <p class="n" style="margin-top:14px">Une demande envoyée par le formulaire arrive directement dans son application : elle ne se perd pas.</p>
 </div>`;
 

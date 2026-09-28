@@ -85,6 +85,23 @@ verifie("aucune balise script n'est rendue", !html.includes("<script>"));
 verifie("le HTML de la presentation ne ressort pas tel quel", !html.includes("<img src=x"));
 verifie("le HTML d'un atout ne ressort pas tel quel", !html.includes("<b>gras</b>"));
 
+console.log("\n=== LA PAGE D'EXEMPLE ===");
+// Elle doit etre servie par LE MEME code que les vraies pages : une
+// demonstration qui vit a part vieillit sans qu'on s'en apercoive.
+derniereRequete = null;
+profil = null;  // la base ne rend rien : l'exemple ne doit pas en dependre
+let ex = await (await appeler("exemple")).text();
+verifie("l'exemple s'affiche sans rien demander à la base", derniereRequete === null);
+verifie("il porte un titre", ex.includes("Camille, assistante maternelle"));
+verifie("un bandeau dit que c'est un exemple", ex.includes("Ceci est un exemple."));
+verifie("il dit que la personne n'existe pas", ex.includes("Camille n'existe pas"));
+verifie("il n'est pas indexé", ex.includes('content="noindex,nofollow"'));
+verifie("il n'affiche aucun téléphone ni e-mail inventé",
+  !/href="tel:/.test(ex) && !/href="mailto:/.test(ex));
+verifie("il ne propose pas de formulaire menant nulle part", !/href="\/d\//.test(ex));
+verifie("il explique ce qu'on verrait sur une vraie page", ex.includes("Sur une vraie page"));
+verifie("il ne dit pas « aucun moyen de contact »", !ex.includes("Aucun moyen de contact"));
+
 console.log("\n=== LA FORME DE L'ADRESSE ===");
 derniereRequete = null;
 profil = { ...profilDeBase };
