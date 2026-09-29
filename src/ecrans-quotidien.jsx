@@ -2948,9 +2948,13 @@ export function AjouterEnfantModale({user,onClose}){
       //    un lien direct ou un bouton oublie ne doit pas contourner la limite.
       //    Le comptage se fait en base, pas sur une liste deja chargee.
       if(!estPro(user)){
-        const{count}=await supabase.from("enfants")
+        // « count||0 » laissait passer l'ajout quand la lecture echouait : la
+        // limite du forfait gratuit n'etait plus verifiee du tout. On ne
+        // devine pas dans un sens ni dans l'autre, on le dit.
+        const{count,error:eCount}=await supabase.from("enfants")
           .select("id",{count:"exact",head:true})
           .eq("asmat_id",user.id);
+        if(eCount){ setToast("Impossible de vérifier votre nombre d'enfants pour le moment. Réessayez dans un instant."); return; }
         if((count||0)>=LIMITE_ENFANTS_GRATUIT){
           setSaving(false);
           setToast("Le forfait gratuit couvre un enfant. Passez au Pro pour en accueillir davantage.");

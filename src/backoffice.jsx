@@ -155,10 +155,14 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
   useEffect(()=>{
     const load=async()=>{
-      const {count:u}=await supabase.from('profiles').select('*',{count:'exact',head:true});
-      const {count:p}=await supabase.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','pro');
-      const {count:e}=await supabase.from('enfants').select('*',{count:'exact',head:true});
-      setStats({users:u||0,pro:p||0,enfants:e||0});
+      // « u||0 » affichait ZERO UTILISATEUR quand la lecture echouait. Sur un
+      // tableau de bord d'administration, c'est la premiere chose qu'on lit le
+      // matin : on croit avoir tout perdu.
+      const {count:u,error:eU}=await supabase.from('profiles').select('*',{count:'exact',head:true});
+      const {count:p,error:eP}=await supabase.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','pro');
+      const {count:e,error:eE}=await supabase.from('enfants').select('*',{count:'exact',head:true});
+      if(eU||eP||eE){ setStats(st=>({...(st||{}),panne:true})); return; }
+      setStats({users:u||0,pro:p||0,enfants:e||0,panne:false});
     };
     load();
   },[]);
@@ -1536,11 +1540,14 @@ function BackofficeShell({user,appConfig,setAppConfig}){
     let cancel=false;
     (async()=>{
       try{
-        const {count:u}=await supabase.from("profiles").select("*",{count:"exact",head:true});
-        const {count:p}=await supabase.from("profiles").select("*",{count:"exact",head:true}).eq("subscription_status","pro");
-        const {count:e}=await supabase.from("enfants").select("*",{count:"exact",head:true});
-        if(!cancel)setStats({users:u||0,pro:p||0,enfants:e||0});
-      }catch(e){ if(!cancel)setStats({users:0,pro:0,enfants:0}); }
+        // Meme compteur, meme piege : le catch plus bas remettait explicitement
+        // 0/0/0 en cas de panne.
+        const {count:u,error:eU}=await supabase.from("profiles").select("*",{count:"exact",head:true});
+        const {count:p,error:eP}=await supabase.from("profiles").select("*",{count:"exact",head:true}).eq("subscription_status","pro");
+        const {count:e,error:eE}=await supabase.from("enfants").select("*",{count:"exact",head:true});
+        if(eU||eP||eE){ if(!cancel)setStats(st=>({...(st||{}),panne:true})); return; }
+        if(!cancel)setStats({users:u||0,pro:p||0,enfants:e||0,panne:false});
+      }catch(e){ if(!cancel)setStats(st=>({...(st||{}),panne:true})); }
     })();
     return ()=>{cancel=true;};
   },[]);

@@ -188,6 +188,8 @@ async function rejouerFile(){
     if(e.table!=="pointages"){retirerDeLaFile(e.id);continue;}
     try{
       // Le parent a-t-il touche a ce pointage pendant la coupure ?
+      // sans-retour : on cherche un doublon avant d'ecrire. Si la lecture
+      // echoue, l'ecriture qui suit echouera aussi et sera signalee la.
       const{data:existant}=await supabase.from("pointages")
         .select("modified_by_parent_at,valide_parent")
         .eq("enfant_id",e.charge.enfant_id).eq("date",e.charge.date).maybeSingle();
@@ -2058,7 +2060,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         const enfantIds=enfants.map(e=>e.id);
 
         // 1. Pointages de la semaine
-        const{data:ptsSemaine}=await supabase.from("pointages").select("total_minutes,date,enfant_id")
+        const{data:ptsSemaine,error:eSem}=await supabase.from("pointages").select("total_minutes,date,enfant_id")
           .in("enfant_id",enfantIds).gte("date",lundiIso).lte("date",todayIso);
         const minSemaine=(ptsSemaine||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
         const heuresSemaine=Math.round(minSemaine/60*10)/10;
@@ -2066,7 +2068,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         const joursSemaine=joursSemaineSet.size;
 
         // 2. Pointages du mois pour revenu estime
-        const{data:ptsMois}=await supabase.from("pointages").select("total_minutes,enfant_id")
+        const{data:ptsMois,error:eMois}=await supabase.from("pointages").select("total_minutes,enfant_id")
           .in("enfant_id",enfantIds).gte("date",debutMois).lte("date",todayIso);
         const minMois=(ptsMois||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
         const heuresMois=Math.round(minMois/60*10)/10;
@@ -2080,7 +2082,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         revenuMois=Math.round(revenuMois);
 
         // 3. Presences en cours aujourd'hui (arrivee mais pas de depart)
-        const{data:ptsJour}=await supabase.from("pointages").select("enfant_id,arrivee,depart")
+        const{data:ptsJour,error:eJour}=await supabase.from("pointages").select("enfant_id,arrivee,depart")
           .in("enfant_id",enfantIds).eq("date",todayIso);
         const presencesJour=(ptsJour||[]).filter(p=>p.arrivee&&!p.depart).map(p=>{
           const e=enfants.find(en=>en.id===p.enfant_id);
@@ -2088,11 +2090,15 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
         }).filter(Boolean);
 
         // 4. Messages non lus
-        const{data:msgs}=await supabase.from("messages").select("id,lu").eq("destinataire_id",user.id).eq("lu",false);
+        const{data:msgs,error:eMsg}=await supabase.from("messages").select("id,lu").eq("destinataire_id",user.id).eq("lu",false);
         const messagesNonLus=msgs?.length||0;
 
         if(cancelled)return;
-        setStats({heuresSemaine,joursSemaine,revenuMois,heuresMois,messagesNonLus,presencesJour,loaded:true});
+        // UNE PANNE NE DOIT PAS SE LIRE COMME UNE SEMAINE SANS TRAVAIL.
+        // Sans ces erreurs, l'accueil affichait « 0 h cette semaine, 0 € ce
+        // mois-ci » : elle cherche un probleme de pointage qui n'existe pas.
+        const panne=!!(eSem||eMois||eJour||eMsg);
+        setStats({heuresSemaine,joursSemaine,revenuMois,heuresMois,messagesNonLus,presencesJour,loaded:true,panne});
       }catch(e){
         console.warn("[stats accueil]",e.message);
         if(!cancelled)setStats(s=>({...s,loaded:true}));
@@ -2124,17 +2130,10 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
   };
 
   // STATS TEMPS REEL P14D - KPIs reels (heures semaine, revenu mois, presences jour, messages)
-  const kpis=isDemoUser?[
-    {icon:"👶",val:nbEnfants+" enfant"+(nbEnfants>1?"s":""),lbl:"Enfants accueillis",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
-    {icon:"💬",val:"0",lbl:"Messages non lus",c:"var(--B)",page:"messagerie",hint:"→ Messagerie"},
-    {icon:"📋",val:"Actif",lbl:"Détail du jour",c:"var(--S)",page:"journal_complet",hint:"→ Saisie"},
-    {icon:"🧾",val:nbEnfants,lbl:"Contrats actifs",c:"var(--G)",page:"admin_finances",hint:"→ Paie & Contrats"},
-  ]:[
-    {icon:"⏱️",val:stats.heuresSemaine+" h",lbl:"Heures cette semaine",c:"var(--T)",page:"pointage",hint:"→ Pointage"},
-    {icon:"💰",val:stats.revenuMois+" €",lbl:"Revenu estimé du mois",c:"var(--G)",page:"admin_finances",hint:"→ Paie"},
-    {icon:"👶",val:stats.presencesJour.length+"/"+nbEnfants,lbl:"Présents maintenant",c:"var(--S)",page:"pointage",hint:"→ Pointage"},
-    {icon:"💬",val:stats.messagesNonLus,lbl:"Messages non lus",c:stats.messagesNonLus>0?"var(--R)":"var(--B)",page:"messagerie",hint:"→ Messagerie"},
-  ];
+  // Le tableau « kpis » qui vivait ici etait du CODE MORT : calcule a chaque
+  // rendu, consomme nulle part. C'est lui seul qui lisait stats.heuresSemaine
+  // et stats.revenuMois — donc ces deux chiffres n'ont jamais ete affiches.
+  // Le retirer evite qu'on croie corriger un ecran en corrigeant ces valeurs.
 
   return <div className="fi">
     {tabToast&&<Toast msg={tabToast}onClose={()=>setTabToast("")}/>}
@@ -2182,7 +2181,12 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     <PointageRapide enfants={enfants} role="asmat" user={user} demo={isDemoUser}/>
 
     {/* STATS TEMPS REEL P14D - bandeau presences en cours */}
-    {!isDemoUser&&stats.loaded&&stats.presencesJour.length>0&&<div className="card" style={{marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D9EDE0)",border:"1px solid var(--S)"}}>
+    {!isDemoUser&&stats.loaded&&stats.panne&&<div className="card" style={{marginBottom:14,background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
+      <div style={{fontSize:12.5,lineHeight:1.6,color:"var(--b)"}}>
+        Vos chiffres du jour n'ont pas pu être chargés. Ce n'est pas qu'il n'y a rien : la lecture a échoué. Réessayez dans un instant.
+      </div>
+    </div>}
+    {!isDemoUser&&stats.loaded&&!stats.panne&&stats.presencesJour.length>0&&<div className="card" style={{marginBottom:14,background:"linear-gradient(135deg,#E8F4EC,#D9EDE0)",border:"1px solid var(--S)"}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
         <span style={{width:9,height:9,borderRadius:"50%",background:"#3FA868",boxShadow:"0 0 0 4px rgba(63,168,104,.18)",flexShrink:0}}/>
         <span style={{fontSize:12.5,fontWeight:700,color:"#2E7D4F"}}>Actuellement en accueil · {stats.presencesJour.length}</span>
@@ -3600,7 +3604,9 @@ export async function generateAndStoreContratPDF(contratId){
     if(moi?.id&&ct.asmat_id&&moi.id!==ct.asmat_id){
       return{success:false,error:"Seule l'assistante maternelle peut mettre ce PDF à jour : le document est produit depuis son espace."};
     }
-    const{data:enfant}=await supabase.from("enfants").select("*").eq("id",ct.enfant_id).single();
+    // Sans l'enfant, le contrat serait genere avec des champs vides.
+    const{data:enfant,error:eEnf}=await supabase.from("enfants").select("*").eq("id",ct.enfant_id).single();
+    if(eEnf||!enfant)return{success:false,error:"Le dossier de l'enfant n'a pas pu être lu. Réessayez."};
     if(!enfant)return{success:false,error:"Enfant introuvable"};
     const{data:asmatProfile}=await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_agrement").eq("id",ct.asmat_id).maybeSingle();
     let{data:parentProfile}=ct.parent_id?await supabase.from("profiles").select("prenom,nom,email,telephone,adresse,numero_pajemploi,parent2_prenom,parent2_nom,parent2_email").eq("id",ct.parent_id).maybeSingle():{data:null};
@@ -7426,6 +7432,8 @@ export default function App(){
         if(e&&e.length>0){
           // Charger les contrats pour chaque enfant
           const enfantIds=e.map(x=>x.id);
+          // sans-retour : cote parent, l'ecran gere deja l'absence de contrat
+          // par un message dedie, et une panne se voit au rechargement suivant.
           const{data:c}=await supabase.from("contrats").select("*")
             .in("enfant_id",enfantIds).eq("actif",true);
           setContratsDB(c||[]);
@@ -7470,6 +7478,7 @@ export default function App(){
           setEnfantsDB(enfantsAvecContrat);
           // Charger pointages du mois
           const debut=new Date();debut.setDate(1);
+          // sans-retour : meme ecran parent, meme raison.
           const{data:p}=await supabase.from("pointages").select("*")
             .in("enfant_id",enfantIds)
             .gte("date",isoJour(debut));
