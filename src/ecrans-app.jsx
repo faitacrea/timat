@@ -150,13 +150,17 @@ export function RepasChanges({enfants,role,pEId}){
     const newCh={id:"chn"+Date.now(),eId:enfant.id,date:TODAY_STR,h:nch.h.replace(":","h"),type:nch.type,n:nch.n};
     setCh(p=>[...p,newCh]);
     setNch({h:"",type:"Change",n:""});
-    setToast("Change ajouté ✓");
+    // LE TOAST NE PRECEDE PLUS L'ECRITURE. Il disait « ajouté ✓ » avant meme
+    // d'essayer, puis l'erreur etait ignoree : un change perdu s'annoncait
+    // comme un change enregistre, et rien ne le rattrapait.
     if(!isDemo&&enfant?.id){
-      await supabase.from("changes_couches").insert({
+      const { error } = await supabase.from("changes_couches").insert({
         enfant_id:enfant.id,date:TODAY_STR,heure:nch.h.replace(":","h"),
         type:nch.type,note:nch.n||null
       });
+      if(error){ setCh(p=>p.filter(c=>c.id!==newCh.id)); setToast("Le change n'a pas pu être enregistré. Réessayez."); return; }
     }
+    setToast("Change ajouté ✓");
   };
 
   const saveRp=async()=>{
@@ -164,14 +168,16 @@ export function RepasChanges({enfants,role,pEId}){
     const up={...(ex||{id:"rn"+Date.now(),eId:enfant.id,date:TODAY_STR,notes:""}),
       dej:re.dej??erp?.dej,gou:re.gou??erp?.gou,bib:re.bib??erp?.bib,q:re.q??erp?.q??"bien"};
     setRp(p=>ex?p.map(r=>(r.eId||r.enfant_id)===enfant.id&&r.date===TODAY_STR?up:r):[...p,up]);
-    setRe({});setToast("Repas enregistré ✓");
+    setRe({});
     if(!isDemo&&enfant?.id){
-      await supabase.from("repas").upsert({
+      const { error } = await supabase.from("repas").upsert({
         enfant_id:enfant.id,date:TODAY_STR,
         dejeuner:re.dej??erp?.dej,gouter:re.gou??erp?.gou,
         biberon:re.bib??erp?.bib,qualite:re.q??erp?.q??"bien"
       },{onConflict:"enfant_id,date"});
+      if(error){ setToast("Le repas n'a pas pu être enregistré. Réessayez."); return; }
     }
+    setToast("Repas enregistré ✓");
   };
 
   return <div className="fi">
