@@ -1063,18 +1063,22 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       // 5. Upsert dans documents_meta
       const{data:existing}=await supabase.from("documents_meta").select("id").eq("storage_path",path).maybeSingle();
       const nomDoc="Bulletin_"+H(enfant.prenom||"enfant")+"_"+moisSelKey+".pdf";
+      // Sans cette fiche, le bulletin existe dans le stockage mais n'apparait
+      // ni dans ses documents ni dans ceux du parent.
+      let eDoc=null;
       if(existing){
-        await supabase.from("documents_meta").update({
+        ({ error: eDoc } = await supabase.from("documents_meta").update({
           nom:nomDoc,categorie:"admin",sous_type:"Bulletin de salaire",
-        }).eq("id",existing.id);
+        }).eq("id",existing.id));
       }else{
-        await supabase.from("documents_meta").insert({
+        ({ error: eDoc } = await supabase.from("documents_meta").insert({
           asmat_id:user.id,enfant_id:enfant.id,
           nom:nomDoc,categorie:"admin",sous_type:"Bulletin de salaire",
           storage_path:path,partage:true,
           taille:Math.round(blob.size/1024)+" Ko",
-        });
+        }));
       }
+      if(eDoc){setToast("Le bulletin est enregistré mais n'apparaîtra pas dans vos documents. Réessayez.");}
       await logAction(notifier?"send_bulletin":"regen_bulletin",{table_name:"bulletins",record_id:contrat.id});
       // 6. Email parent (silencieux si Resend pas configure)
       if(notifier&&contrat.parent_id){

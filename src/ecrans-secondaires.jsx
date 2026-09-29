@@ -866,16 +866,21 @@ export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckou
             <button className="btn bT s" onClick={async()=>{
               const cp=document.getElementById("cp-input")?.value?.trim();
               if(!cp)return;
-              await supabase.from("profiles").update({code_postal:cp}).eq("id",user.id);
+              // L'ERREUR ETAIT IGNOREE : le message de succes s'affichait meme
+              // quand la base refusait, et le code postal etait perdu.
+              const { error } = await supabase.from("profiles").update({code_postal:cp}).eq("id",user.id);
+              if(error){ setToast("Le code postal n'a pas pu être enregistré. Réessayez."); return; }
               setUser&&setUser(u=>({...u,code_postal:cp}));
-              // Forcer rechargement page PMI
-              const dep=cp.slice(0,2);
-              const pmi={"75":"PMI Paris 75","92":"PMI Hauts-de-Seine 92","93":"PMI Seine-Saint-Denis 93","94":"PMI Val-de-Marne 94 (L'Haÿ-les-Roses)","91":"PMI Essonne 91","95":"PMI Val-d'Oise 95","77":"PMI Seine-et-Marne 77","78":"PMI Yvelines 78","69":"PMI Métropole de Lyon 69","13":"PMI Bouches-du-Rhône 13","31":"PMI Haute-Garonne 31","33":"PMI Gironde 33","67":"PMI Bas-Rhin 67","59":"PMI Nord 59"}[dep]||"PMI détectée selon département "+dep;
-              setToast("✅ Code postal "+cp+" enregistré — "+pmi+" — Allez dans Outils Pro → PMI pour voir les contacts");
+              // L'ANNUAIRE PMI QUI ETAIT ICI A ETE SUPPRIME. Il associait un
+              // departement a un nom de PMI invente, et renvoyait vers des
+              // contacts qui n'existent plus depuis que le faux annuaire a ete
+              // retire de l'ecran PMI. Le code postal sert a autre chose ; les
+              // coordonnees de SA PMI, c'est elle qui les saisit.
+              setToast("Code postal enregistré.");
             }}>Sauvegarder</button>
           </div>
           {user?.code_postal&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
-            <IconeOuEmoji e="✅"/> Code postal : {user.code_postal} → PMI {{"75":"Paris 75","92":"Hauts-de-Seine 92","93":"Seine-Saint-Denis 93","94":"Val-de-Marne 94","91":"Essonne 91","95":"Val-d'Oise 95","77":"Seine-et-Marne 77","78":"Yvelines 78","69":"Métropole de Lyon 69","13":"Bouches-du-Rhône 13","31":"Haute-Garonne 31","33":"Gironde 33","67":"Bas-Rhin 67","59":"Nord 59"}[user.code_postal?.slice(0,2)]||user.code_postal?.slice(0,2)} détectée
+            <IconeOuEmoji e="✅"/> Code postal enregistré : {user.code_postal}
           </div>}
         </div>}
         {/* Numéro PMI direct — saisi manuellement (ex. donné en formation), prioritaire sur l'annuaire */}

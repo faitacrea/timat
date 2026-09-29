@@ -227,6 +227,9 @@ export async function logAction(action, opts={}){
         uid = user?.id || null;
       } catch{}
     }
+    // sans-retour : journal interne d'administration. Une ligne manquante n'a
+    // aucune consequence visible pour l'utilisatrice, et faire echouer son geste
+    // parce que le journal n'a pas pu s'ecrire serait pire que le trou.
     await supabase.from('audit_log').insert({
       user_id: uid,
       action,
@@ -395,6 +398,8 @@ async function desactiverPush(userId){
     const reg=await navigator.serviceWorker.ready;
     const abo=await reg.pushManager.getSubscription();
     if(abo){
+      // sans-retour : menage d'un abonnement que le navigateur a deja revoque.
+      // S'il reste une ligne morte, le prochain envoi la nettoiera.
       await supabase.from("push_subscriptions").delete().eq("endpoint",abo.endpoint);
       await abo.unsubscribe();
     }
@@ -1719,13 +1724,18 @@ function EcheancierDeclaration({enfants,role,user,demo}){
     setBusy(enfantId);
     try{
       if(declared[enfantId]){
-        await supabase.from("declarations_pajemploi").delete().eq("enfant_id",enfantId).eq("mois",moisKey);
+        const { error } = await supabase.from("declarations_pajemploi").delete().eq("enfant_id",enfantId).eq("mois",moisKey);
+        // La case ne bouge que si la base a suivi. Avant, elle bougeait
+        // toujours, et le catch etait explicitement silencieux : un parent
+        // pouvait croire avoir declare son mois sans que rien ne soit ecrit.
+        if(error){ console.error("[pajemploi] suppression refusee :", error.message); setBusy(null); return; }
         setDeclared(d=>{const n={...d};delete n[enfantId];return n;});
       }else{
-        await supabase.from("declarations_pajemploi").upsert({parent_id:user.id,enfant_id:enfantId,mois:moisKey},{onConflict:"enfant_id,mois"});
+        const { error: eUp } = await supabase.from("declarations_pajemploi").upsert({parent_id:user.id,enfant_id:enfantId,mois:moisKey},{onConflict:"enfant_id,mois"});
+        if(eUp){ console.error("[pajemploi] enregistrement refuse :", eUp.message); setBusy(null); return; }
         setDeclared(d=>({...d,[enfantId]:true}));
       }
-    }catch(e){/* silencieux */}
+    }catch(e){ console.error('[pajemploi]', e?.message); }
     setBusy(null);
   };
 
@@ -3796,23 +3806,29 @@ const jsPDF=await chargerJsPDF();
 
     // 5. Update contrat avec le path
     const nowIso=new Date().toISOString();
-    await supabase.from("contrats").update({
+    // Sans ce chemin, le PDF signe reste dans le stockage mais plus rien ne
+    // sait ou le trouver : le contrat devient introuvable depuis l'application.
+    const { error: eMajCt } = await supabase.from("contrats").update({
       pdf_storage_path:path,
       pdf_generated_at:nowIso,
     }).eq("id",contratId);
+    if(eMajCt) return{success:false,error:"Le contrat a été généré mais n'a pas pu être rattaché. Réessayez."};
 
     // 6. Inserer/update dans documents_meta (idempotent via upsert sur cle storage_path)
     const metaId="contrat_"+contratId; // id stable pour upsert
     const nomDoc="Contrat_"+H(enfant.prenom||"enfant")+"_"+(ct.debut?.slice(0,7)||"")+".pdf";
     const{data:existing}=await supabase.from("documents_meta").select("id").eq("storage_path",path).maybeSingle();
+    // Sans cette fiche, le PDF existe dans le stockage mais n'apparait dans
+    // aucune liste : elle ne le retrouve pas.
+    let eDoc=null;
     if(existing){
-      await supabase.from("documents_meta").update({
+      ({ error: eDoc } = await supabase.from("documents_meta").update({
         nom:nomDoc,
         categorie:"admin",
         sous_type:"Contrat signe",
-      }).eq("id",existing.id);
+      }).eq("id",existing.id));
     }else{
-      await supabase.from("documents_meta").insert({
+      ({ error: eDoc } = await supabase.from("documents_meta").insert({
         asmat_id:ct.asmat_id,
         enfant_id:ct.enfant_id,
         nom:nomDoc,
@@ -3821,8 +3837,9 @@ const jsPDF=await chargerJsPDF();
         storage_path:path,
         partage:true,
         taille:Math.round(blob.size/1024)+" Ko",
-      });
+      }));
     }
+    if(eDoc) return{success:false,error:"Le contrat a été généré mais n'apparaîtra pas dans vos documents. Réessayez."};
 
     await logAction("generate_contract_pdf",{table_name:"contrats",record_id:contratId});
     return{success:true,path};

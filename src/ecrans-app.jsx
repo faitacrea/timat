@@ -453,7 +453,10 @@ export function Sante({enfants,role,pEId,user}){
   };
   const delMesure=async(id)=>{
     if(!window.confirm("Supprimer cette mesure ?"))return;
-    await supabase.from("croissance").delete().eq("id",id);
+    const { error } = await supabase.from("croissance").delete().eq("id",id);
+    // L'ecran ne retire la ligne que si la base l'a vraiment retiree. Avant,
+    // elle disparaissait dans tous les cas et revenait au rechargement.
+    if(error){ console.error("[croissance] suppression refusee :", error.message); return; }
     setCroissance(c=>c.filter(m=>m.id!==id));
   };
   const isRealChild=!["e1","e2","e3"].includes(enfant?.id);
@@ -1605,7 +1608,10 @@ export function MesAlertes({user}){
     setOccupe(false);
   };
   const retirer=async(id)=>{
-    await supabase.from("push_subscriptions").delete().eq("id",id);
+    const { error } = await supabase.from("push_subscriptions").delete().eq("id",id);
+    // « Appareil retiré. » s'affichait meme quand la suppression echouait :
+    // l'appareil continuait alors de recevoir les notifications.
+    if(error){ setMessage("L'appareil n'a pas pu être retiré. Réessayez."); return; }
     setMessage("Appareil retiré.");
     await relire();
   };
@@ -2580,17 +2586,22 @@ export function SanteComplete({enfants,role,pEId,user}){
   },[enfant?.id]);
 
   const toggleVaccin=async(i)=>{
+    const avant=vacsState;
     const updated=[...VACCINS_CALENDRIER];
     updated[i]={...updated[i],fait:!updated[i].fait};
     setVacsState(updated);
     if(isRealEnfant&&enfant?.id){
-      await supabase.from("vaccins").upsert({
+      const { error } = await supabase.from("vaccins").upsert({
         enfant_id:enfant.id,
         nom:updated[i].nom,
         age_mois:updated[i].age_mois,
         fait:updated[i].fait,
         updated_at:new Date().toISOString(),
       },{onConflict:"enfant_id,nom"});
+      // La coche revient a son etat d'avant si la base a refuse. Un vaccin
+      // affiche comme fait alors qu'il ne l'est pas serait lu par le parent,
+      // et le cas echeant par la PMI.
+      if(error){ console.error("[vaccins] enregistrement refuse :", error.message); setVacsState(avant); }
     }
   };
 
