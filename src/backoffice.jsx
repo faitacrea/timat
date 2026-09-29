@@ -385,6 +385,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
       // Cleanup test rows
       try{
+        // sans-retour : menage de deux lignes de test ecrites juste avant par le
+        // diagnostic lui-meme. Si elles survivent, le prochain diagnostic les
+        // ecrasera.
         await supabase.from('app_config').delete().in('id',['_diag_test_jsonb','_diag_test_text']);
       }catch(e){}
 

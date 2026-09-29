@@ -1806,7 +1806,10 @@ export function Documents({enfants,role,pEId,user}){
     if(!window.confirm("Supprimer "+doc.nom+" ?"))return;
     if(doc.storagePath&&!isDemoMode){
       await supabase.storage.from('documents').remove([doc.storagePath]);
-      await supabase.from('documents_meta').delete().eq('id',doc.id);
+      // « Document supprimé ✓ » s'affichait meme quand la fiche restait en
+      // base : le document reapparaissait au rechargement suivant.
+      const { error } = await supabase.from('documents_meta').delete().eq('id',doc.id);
+      if(error){ setToast("Le document n'a pas pu être supprimé. Réessayez."); return; }
     }
     setDocs(p=>p.filter(d=>d.id!==doc.id));
     setToast("Document supprimé ✓");

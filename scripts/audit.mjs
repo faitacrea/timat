@@ -2988,6 +2988,42 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucune ecriture en base jetee en silence ---
+//
+// Meme cause que la barriere « supabase » ci-dessus, mais sur les donnees du
+// produit : « await supabase.from(...).insert(...) » sans recuperer le retour
+// ne signale JAMAIS un echec. La ligne n'est pas ecrite, le code continue, et
+// l'ecran affiche souvent une coche verte.
+//
+// Ce n'est pas theorique. Le change et le repas s'annoncaient « ajouté ✓ »
+// AVANT meme d'essayer ; le calendrier vaccinal cochait un vaccin que la base
+// refusait ; la case « déclaré » de Pajemploi basculait sur un catch
+// explicitement silencieux ; et le profil d'inscription pouvait manquer, ce
+// qui donne un compte sans role ni abonnement.
+//
+// LA REGLE : soit on lit « error », soit on ecrit noir sur blanc pourquoi on
+// l'ignore, avec un commentaire « sans-retour : <raison> » juste au-dessus.
+// Le silence par accident devient impossible ; le silence choisi reste
+// possible, mais il se lit.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  const ECRITURES = /\.(insert|update|upsert|delete)\s*\(/;
+  for (const [nom, src] of sources) {
+    const lignes = src.split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      const l = lignes[i];
+      if (!/^\s*await\s+supabase\s*\.\s*from\s*\(/.test(l)) continue;
+      // L'appel peut tenir sur plusieurs lignes : on regarde la suite.
+      const bloc5 = lignes.slice(i, i + 6).join("\n");
+      if (!ECRITURES.test(bloc5)) continue;
+      // Une justification explicite juste au-dessus vaut acceptation.
+      const avant = lignes.slice(Math.max(0, i - 4), i).join("\n");
+      if (/sans-retour\s*:/.test(avant)) continue;
+      signale("ecritures", `${nom}:${i + 1} ecrit en base sans lire le retour. La bibliotheque RETOURNE l'erreur : un echec passerait inapercu et la donnee serait perdue. Lisez « error », ou justifiez avec « sans-retour : <raison> ».`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
