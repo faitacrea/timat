@@ -263,7 +263,9 @@ export async function createNotification({userId,type="info",titre="",page="accu
 
 async function logConsent(user_id, consents={}){
   try{
-    await supabase.from('consentements').insert({
+    // Une preuve de consentement perdue, c'est la piece qu'un controle CNIL
+    // demande qui n'existe plus. On la journalise au moins.
+    const { error: eCons } = await supabase.from('consentements').insert({
       user_id,
       version_politique: '1.0',
       consent_politique_confidentialite: !!consents.politique,
@@ -271,6 +273,7 @@ async function logConsent(user_id, consents={}){
       consent_newsletter: !!consents.newsletter,
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
     });
+    if (eCons) console.warn('[consentements] insert refuse :', eCons.message);
   } catch(e){ console.warn('[consentements] insert failed:', e?.message); }
 }
 
@@ -5122,13 +5125,26 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         // Delay profile upsert so auth listener settles first (avoids lock race)
         setTimeout(async()=>{
           try{
-            await supabase.from('profiles').upsert({
+            const { error: eProfil } = await supabase.from('profiles').upsert({
               id: data.user.id, email: data.user.email,
               prenom: form.prenom, nom: form.nom||'',
               role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
               ...abonnementInitial(role),
             },{onConflict:'id'});
-          }catch(e){console.log('Profile upsert:', e);}
+            // Sans cette ligne, le compte existe cote authentification mais n'a
+            // aucun profil : l'utilisatrice se connecte et tombe sur un espace
+            // vide, sans role et sans abonnement, sans que rien ne dise
+            // pourquoi. On retente une fois, puis on le dit.
+            if(eProfil){
+              const { error: eBis } = await supabase.from('profiles').upsert({
+                id: data.user.id, email: data.user.email,
+                prenom: form.prenom, nom: form.nom||'',
+                role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
+                ...abonnementInitial(role),
+              },{onConflict:'id'});
+              if(eBis) setErr("Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous.");
+            }
+          }catch(e){ setErr("Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous."); }
         },500);
         // RATTACHEMENT IMMEDIAT (session fraiche apres signUp) : lien token + invitations par email
         try{
