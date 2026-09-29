@@ -4412,8 +4412,25 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
     const mail=(form.email||"").trim();
     if(!mail){setErr("Saisis d'abord ton email.");return;}
     setLoading(true);
+    // LA BIBLIOTHEQUE SUPABASE NE LEVE PAS D'EXCEPTION : elle RETOURNE l'erreur.
+    // Le try/catch d'origine n'attrapait donc rien, et « un lien vient d'être
+    // envoyé » s'affichait meme quand l'envoi avait echoue. C'est exactement ce
+    // qui a masque, pendant des mois, un expediteur SMTP qui ne livrait a
+    // personne : l'ecran disait que tout allait bien.
+    //
+    // La reponse reste identique que le compte existe ou non — Supabase ne
+    // signale pas une adresse inconnue, justement pour qu'on ne puisse pas
+    // deviner qui a un compte. Ce qu'on attrape ici, ce sont les VRAIES pannes :
+    // SMTP injoignable, quota depasse, service indisponible.
     try{
-      await supabase.auth.resetPasswordForEmail(mail,{redirectTo:window.location.origin});
+      const { error } = await supabase.auth.resetPasswordForEmail(mail,{redirectTo:window.location.origin});
+      if(error){
+        setResetInfo("");
+        setErr(/rate|seconds|temps|limit/i.test(error.message||"")
+          ? "Trop de demandes d'affilée. Patiente une minute avant de réessayer."
+          : "L'envoi a échoué. Réessaie dans un instant, ou écris-nous.");
+        setLoading(false); return;
+      }
       setErr("");setErrAction(null);
       setResetInfo("Si un compte existe pour "+mail+", un lien de connexion vient d'être envoyé. Pense à vérifier tes spams.");
     }catch(e){setErr("Envoi impossible pour le moment.");}
@@ -5061,8 +5078,18 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     const mail=(form.email||"").trim();
     if(!mail){ setErr("Saisissez d'abord votre email."); return; }
     setLoading(true);
+    // Voir le commentaire de l'autre ecran de connexion : la bibliotheque
+    // RETOURNE l'erreur au lieu de la lever, donc le try/catch n'attrapait rien
+    // et l'ecran annoncait un envoi qui n'avait pas eu lieu.
     try{
-      await supabase.auth.resetPasswordForEmail(mail,{redirectTo:window.location.origin});
+      const { error } = await supabase.auth.resetPasswordForEmail(mail,{redirectTo:window.location.origin});
+      if(error){
+        setResetInfo("");
+        setErr(/rate|seconds|temps|limit/i.test(error.message||"")
+          ? "Trop de demandes d'affilée. Patientez une minute avant de réessayer."
+          : "L'envoi a échoué. Réessayez dans un instant, ou écrivez-nous.");
+        setLoading(false); return;
+      }
       // Reponse volontairement identique que le compte existe ou non (pas d'enumeration d'emails)
       setErr(""); setErrAction(null);
       setResetInfo("Si un compte existe pour "+mail+", un lien de connexion vient d'être envoyé. Pensez à vérifier vos spams.");

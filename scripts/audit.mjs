@@ -2953,6 +2953,41 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucune reponse de supabase jetee en silence ---
+//
+// LA BIBLIOTHEQUE SUPABASE NE LEVE PAS D'EXCEPTION. Elle RETOURNE { data,
+// error }. Un « await supabase.auth.machin(...) » sans recuperer « error »
+// n'echoue donc jamais visiblement : le code continue comme si tout allait
+// bien, et l'ecran annonce un succes qui n'a pas eu lieu.
+//
+// Ce n'est pas theorique. Les deux ecrans de mot de passe oublie faisaient
+// exactement cela, entoures d'un try/catch qui n'attrapait rien. Pendant ce
+// temps l'expediteur SMTP configure cote Supabase ne livrait qu'a une seule
+// adresse — celle du compte Resend — donc AUCUNE utilisatrice ne recevait son
+// lien de reinitialisation, et l'application lui repondait « un lien vient
+// d'être envoyé ». Le defaut a tenu parce que rien ne regardait le retour.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  // Les appels d'authentification qui ECRIVENT ou DECLENCHENT quelque chose.
+  // Une lecture comme getSession() ne merite pas la meme severite.
+  const SENSIBLES = "resetPasswordForEmail|signUp|signInWithPassword|signInWithOtp|updateUser|verifyOtp|resend|setSession|exchangeCodeForSession";
+  const motif = new RegExp("(^|[^.\\w])await\\s+supabase\\.auth\\.(" + SENSIBLES + ")\\s*\\(", "g");
+  for (const [nom, src] of sources) {
+    const propre = src.replace(/^\s*\/\/.*$/gm, "");
+    const lignes = propre.split("\n");
+    for (const m of propre.matchAll(motif)) {
+      const debutLigne = propre.lastIndexOf("\n", m.index) + 1;
+      const ligne = lignes[propre.slice(0, m.index).split("\n").length - 1] || "";
+      // Le retour est-il recupere ? « const { error } = await … » ou
+      // « const r = await … ». On regarde le debut de la ligne.
+      const tete = propre.slice(debutLigne, m.index + m[0].length);
+      if (/(const|let|var|return|=>)\s*[\s\S]{0,60}=\s*await\s*$|=\s*await\s+supabase\.auth\.\w+\s*\($/.test(tete)) continue;
+      if (/^\s*(const|let|var|return)\b/.test(ligne)) continue;
+      signale("supabase", `${nom} appelle supabase.auth.${m[2]}() sans lire le retour : la bibliotheque RETOURNE l'erreur au lieu de la lever, donc un echec passerait pour un succes.`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
