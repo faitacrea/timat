@@ -714,7 +714,9 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       const[year,month]=moisSelKey.split("-").map(Number);
       const finDate=new Date(year,month,0); // dernier jour du mois
       const fin=isoJour(finDate);
-      const{data:pts}=await supabase.from("pointages").select("total_minutes,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      // Ces minutes servent au bulletin de salaire : une lecture ratee
+      // donnerait un bulletin a zero heure.
+      const{data:pts,error:ePts}=await supabase.from("pointages").select("total_minutes,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
       // Regrouper par date : une "journee d'accueil" = somme des pointages du meme jour (matin+apres-midi)
       const byDate={};
@@ -722,7 +724,8 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       const parJour=Object.values(byDate); // minutes par journee d'accueil reelle
       const totalMin=parJour.reduce((s,m)=>s+m,0);
       const jours=parJour.length;
-      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,parJour,nbPointages:pts?.length||0});
+      if(ePts){ setHeuresMoisReel(h=>({...(h||{}),panne:true})); return; }
+      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,parJour,nbPointages:pts?.length||0,panne:false});
     })();
     return()=>{cancelled=true;};
   },[enfant?.id,moisSelKey,isDemoBull]);
@@ -732,6 +735,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
     if(!contrat?.id||isDemoBull){setBulletinsEnvoyes({});return;}
     let cancelled=false;
     (async()=>{
+      // sans-retour : liste d'historique, rechargee a chaque ouverture.
       const{data}=await supabase.from("bulletins").select("mois,envoye_au_parent,date_envoi,pdf_storage_path").eq("contrat_id",contrat.id);
       if(cancelled)return;
       const map={};
@@ -2544,6 +2548,7 @@ export function RecapFiscalAssmat({enfants,user}){
     if(!user?.id){setLoading(false);return;}
     let cancelled=false;setLoading(true);
     (async()=>{
+      // sans-retour : recapitulatif rechargee a chaque ouverture de l'ecran.
       const{data:bs}=await supabase.from("bulletins")
         .select("enfant_id,mois,net_imposable,entretien,jours_travailles")
         .eq("asmat_id",user.id).eq("annee",annee);
@@ -2552,6 +2557,7 @@ export function RecapFiscalAssmat({enfants,user}){
       const ids=Array.from(new Set([...(enfants||[]).map(e=>e.id),...(bs||[]).map(b=>b.enfant_id)]));
       const map={};
       if(ids.length){
+        // sans-retour : complement du recapitulatif ci-dessus, meme raison.
         const{data:pts}=await supabase.from("pointages")
           .select("enfant_id,total_minutes,date")
           .in("enfant_id",ids).gte("date",annee+"-01-01").lte("date",annee+"-12-31");

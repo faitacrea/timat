@@ -1856,6 +1856,8 @@ export function TempsDeTravail({enfants,role,user}){
     if(role!=="asmat"||!asmatId){setChargement(false);return;}
     let vivant=true;
     (async()=>{
+      // sans-retour : liste rechargee a chaque ouverture de l'ecran ; une
+      // panne disparait au rechargement, sans chiffre faux affiche.
       const{data}=await supabase.from("pointages")
         .select("date,arrivee,depart,enfant_id")
         .gte("date",anneeEnCours+"-01-01").lte("date",anneeEnCours+"-12-31");
@@ -2933,10 +2935,17 @@ export function RapportAnnuel({enfants,role,pEId,user}){
     let cancelled=false;
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
-      const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      const{data:paie}=await supabase.from("versements").select("montant,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      // UNE PANNE NE DOIT PAS SE LIRE COMME UNE ANNEE SANS TRAVAIL. Sans ces
+      // erreurs, « (pts||[]).reduce » calculait 0 h et 0 € des que la requete
+      // echouait — sur un document que l'assistante maternelle remet au parent
+      // ou reporte sur sa declaration.
+      const{data:pts,error:ePts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      const{data:paie,error:ePaie}=await supabase.from("versements").select("montant,date").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      const{data:abs,error:eAbs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
+      // On laisse realStats a null plutot que d'afficher des zeros : l'ecran
+      // montre son etat d'attente, et le message dit ce qui s'est passe.
+      if(ePts||ePaie||eAbs){ setToast("Vos données n'ont pas pu être chargées. Les chiffres affichés seraient faux : réessayez."); return; }
       // RAPPORT REEL P13 - utiliser total_minutes (vrai nom de colonne)
       const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
       const heuresReelles=Math.round(totalMin/60);
@@ -3717,10 +3726,17 @@ export function AttestationFiscale({enfants,role,pEId,user}){
     let cancelled=false;
     (async()=>{
       const debut=annee+"-01-01";const fin=annee+"-12-31";
-      const{data:pts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
-      const{data:paie}=await supabase.from("versements").select("montant,date,mode,periode,note").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin).order("date");
-      const{data:abs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      // UNE PANNE NE DOIT PAS SE LIRE COMME UNE ANNEE SANS TRAVAIL. Sans ces
+      // erreurs, « (pts||[]).reduce » calculait 0 h et 0 € des que la requete
+      // echouait — sur un document que l'assistante maternelle remet au parent
+      // ou reporte sur sa declaration.
+      const{data:pts,error:ePts}=await supabase.from("pointages").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
+      const{data:paie,error:ePaie}=await supabase.from("versements").select("montant,date,mode,periode,note").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin).order("date");
+      const{data:abs,error:eAbs}=await supabase.from("absences").select("*").eq("enfant_id",enfant.id).gte("date",debut).lte("date",fin);
       if(cancelled)return;
+      // On laisse realStats a null plutot que d'afficher des zeros : l'ecran
+      // montre son etat d'attente, et le message dit ce qui s'est passe.
+      if(ePts||ePaie||eAbs){ setToast("Vos données n'ont pas pu être chargées. Les chiffres affichés seraient faux : réessayez."); return; }
       const totalMin=(pts||[]).reduce((s,p)=>s+(p.total_minutes||0),0);
       const heuresReelles=Math.round(totalMin/60);
       const joursTravailles=(pts||[]).filter(p=>p.total_minutes>0).length;

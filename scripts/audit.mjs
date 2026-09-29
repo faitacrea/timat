@@ -3024,6 +3024,68 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucune lecture d'argent ou de droit jetee en silence ---
+//
+// LE MIROIR EXACT DE LA BARRIERE « ecritures ». Une lecture qui echoue rend
+// « data » a null, et le code qui suit ecrit presque toujours « (data||[]) ».
+// Resultat : zero heure, zero euro, liste vide — une PANNE qui se lit comme
+// une ABSENCE DE DONNEE. L'utilisatrice cherche un probleme de pointage qui
+// n'existe pas, ou pire, remet au parent un document a zero.
+//
+// C'est arrive : l'attestation fiscale et le rapport annuel calculaient
+// « (pts||[]).reduce » sans jamais regarder l'erreur. Une annee entiere de
+// travail pouvait s'afficher a 0 h et 0 €.
+//
+// LA PORTEE EST VOLONTAIREMENT ETROITE. On n'exige pas cela de toute lecture :
+// une liste d'activites rechargee a chaque ouverture ne coute rien. On l'exige
+// des tables qui portent de l'argent ou du droit, celles dont un zero faux se
+// retrouve sur un document remis a quelqu'un ou reporte sur une declaration.
+//
+// LA REGLE, la meme que pour les ecritures : soit on lit « error », soit on
+// ecrit pourquoi on l'ignore avec « sans-retour : <raison> ».
+{
+  const SENSIBLES = /from\(\s*["'](pointages|versements|bulletins|contrats|absences|historique_mois|enfants)["']\s*\)/;
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  for (const [nom, src] of sources) {
+    const lignes = src.split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      const l = lignes[i];
+      if (!/await\s+supabase\s*\.\s*from\s*\(/.test(l)) continue;
+      if (!SENSIBLES.test(l)) continue;
+      // LA FENETRE S'ARRETE A LA FIN DE L'INSTRUCTION. Une fenetre fixe de six
+      // lignes debordait sur la requete suivante : en retirant « error » d'une
+      // lecture, le controle voyait le « error » de sa voisine et se taisait.
+      // C'est ce qui a fait echouer la premiere preuve.
+      let fin = i;
+      while (fin < lignes.length && fin < i + 8 && !/;\s*$/.test(lignes[fin])) fin++;
+      const suite = lignes.slice(i, fin + 1).join("\n");
+      if (/\.(insert|update|upsert|delete)\s*\(/.test(suite)) continue;
+      // L'ERREUR EST-ELLE REGARDEE ? Deux ecritures legitimes, et il faut les
+      // distinguer precisement — elargir bêtement la fenetre faisait passer la
+      // barriere a cote du vrai bug, parce qu'elle voyait le « error » de la
+      // requete VOISINE.
+      //
+      //   1. destructuration : « const { data, error: eX } = await … »
+      //      l'erreur doit alors apparaitre DANS l'instruction elle-meme ;
+      //   2. resultat stocke : « const r = await … ; if (r.error) throw … »
+      //      l'erreur est testee juste apres, sur CETTE variable-la.
+      if (/^\s*(const|let|var)\s*\{/.test(l)) {
+        if (/\berror\b/.test(suite)) continue;
+      } else {
+        const nom_var = (l.match(/^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/) || [])[1];
+        if (nom_var) {
+          const apres = lignes.slice(fin + 1, fin + 4).join("\n");
+          if (new RegExp("\\b" + nom_var + "\\.error\\b").test(apres)) continue;
+        }
+        if (/\berror\b/.test(suite)) continue;
+      }
+      const avant = lignes.slice(Math.max(0, i - 4), i).join("\n");
+      if (/sans-retour\s*:/.test(avant)) continue;
+      signale("lectures", `${nom}:${i + 1} lit ${(l.match(SENSIBLES) || [])[1]} sans regarder l'erreur. Une panne rendrait « data » a null, et le « (data||[]) » qui suit afficherait zero — une panne qui se lit comme une absence de donnee. Lisez « error », ou justifiez avec « sans-retour : <raison> ».`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
