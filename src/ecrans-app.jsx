@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase.js";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
 import {
   ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
@@ -50,12 +50,36 @@ export function VueJournee({enfants,role,pEId,user,pointagesDB}){
 
 export function VueSanteUrgence({enfants,role,pEId,user,pointagesDB}){
   const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
-  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"}]}/>{<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>{v===0?<SanteComplete {...P}/>:<FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>}</Suspense>}</>;
+  // Le registre des medicaments reste GRATUIT, et c'est delibere : c'est une
+  // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
+  // qu'on est tenue de tenir serait indefendable.
+  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"},{ic:"💊",l:"Registre médicaments"}]}/>
+    {<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>
+      {v===0?<SanteComplete {...P}/>
+      :v===1?<FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>
+      :<RegistreMedicaments enfants={enfants} role={role} pEId={pEId} user={user}/>}
+    </Suspense>}
+  </>;
 }
 
 export function VueSuiviProgres({enfants,role,pEId,user,pointagesDB,setPage}){
   const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
-  return <><SegBar v={v} setV={setV} items={[{ic:"📊",l:"Tableau de bord"},{ic:"🌱",l:"Éveil & Progrès"}]}/>{v===0?<TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>:<EveilComplet {...P}/>}</>;
+  // LE BILAN A REJOINT CET ECRAN, ET CE N'EST PAS ARBITRAIRE : il se compose a
+  // partir des jalons, de la croissance, des repas et du sommeil — exactement
+  // ce qu'« Eveil & Progres » montre au jour le jour. Le bilan en est la
+  // synthese periodique. Il etait auparavant un onglet a lui seul, dans un
+  // menu qui en comptait huit.
+  //
+  // Le verrou Pro s'applique ICI, a l'onglet : l'ecran qui l'accueille est
+  // gratuit, et sans cela le forfait serait contourne par un simple clic.
+  const pro=estPro(user);
+  return <><SegBar v={v} setV={setV} items={[{ic:"📊",l:"Tableau de bord"},{ic:"🌱",l:"Éveil & Progrès"},{ic:"✨",l:"Bilans"}]}/>
+    {v===0?<TableauDeBord enfants={enfants} role={role} pEId={pEId} setPage={setPage}/>
+    :v===1?<EveilComplet {...P}/>
+    :(pro
+      ? <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><Bilans {...P}/></Suspense>
+      : <VerrouPro titre="Les bilans de journée" desc="Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."/>)}
+  </>;
 }
 
 export function VuePaieContrats({enfants,role,pEId,user,pointagesDB}){
