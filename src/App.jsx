@@ -3982,8 +3982,6 @@ const GROUPS_AM={
     {id:"pointage",l:"Pointage",ic:"⏰",d:"Arrivées, départs et heures effectuées"},
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Développement et acquisitions de l'enfant"},
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence, allergies, soins"},
-    {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans périodiques à partager"},
-    {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Consignation obligatoire de chaque médicament donné"},
     {id:"autorisations",l:"Autorisations",ic:"🪪",d:"Ce que le parent autorise : médicaments, urgence, transport, photos"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique, que le parent peut lire"},
   ]},
@@ -4014,8 +4012,6 @@ const GROUPS_P={
     {id:"suivi_progres",l:"Suivi & Progrès",ic:"📊",d:"Son développement au quotidien"},
     {id:"sante_urgence",l:"Santé & Urgence",ic:"🏥",d:"Fiche d'urgence et informations santé"},
     {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Le projet pédagogique"},
-    {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans partagés par l'assistante maternelle"},
-    {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Chaque médicament donné à votre enfant, daté"},
     {id:"autorisations",l:"Autorisations",ic:"🪪",d:"Ce que vous autorisez, à signer — vous seul pouvez répondre"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
@@ -4048,7 +4044,7 @@ export const pageDepuisURL = (recherche) => {
 };
 
 // Alias : anciens ids de pages -> nouvel onglet regroupé (pour le surlignage du menu)
-const PAGE_ALIAS={cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports",kit_cmg:"aides_simulateurs",simulateur:"aides_simulateurs",support:"faq"};
+const PAGE_ALIAS={bilans:"suivi_progres",registre_medicaments:"sante_urgence",cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports",kit_cmg:"aides_simulateurs",simulateur:"aides_simulateurs",support:"faq"};
 // Trouver à quel groupe appartient une page
 const findGroup=(groups,pageId)=>{
   const pid=PAGE_ALIAS[pageId]||pageId;
