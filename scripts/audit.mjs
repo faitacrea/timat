@@ -3170,6 +3170,41 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- la cle de maintenance ne se distribue pas en clair ---
+//
+// public/acces.html existait : une page servie publiquement, qui posait le
+// cookie d'acces et redirigeait vers l'application, avec la cle ecrite en
+// clair dans son source. N'importe qui tombant sur ce nom de fichier — l'un
+// des plus devinables qui soit — franchissait le mode maintenance sans rien
+// savoir du code. Elle n'etait referencee nulle part : une commodite oubliee.
+//
+// CE QUE CETTE BARRIERE NE PRETEND PAS. Le mode maintenance reste un RIDEAU,
+// pas une serrure : la cle est compilee dans le bundle JavaScript, donc elle
+// part chez chaque visiteur. Qui lit le source la trouve. On empeche ici la
+// decouverte triviale, on ne cree pas un secret.
+//
+// Un vrai verrou se poserait cote serveur — un middleware qui refuse la page
+// avant de la servir. C'est un autre chantier, et il doit etre decide, pas
+// improvise.
+{
+  const cle = (readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
+    .match(/MAINTENANCE_CLE\s*=\s*["']([^"']+)["']/) || [])[1];
+  if (cle) {
+    const dossier = path.join(RACINE, "public");
+    const parcourir = (dir) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const complet = path.join(dir, e.name);
+        if (e.isDirectory()) { parcourir(complet); continue; }
+        if (!/\.(html|js|json|txt)$/.test(e.name)) continue;
+        if (readFileSync(complet, "utf8").includes(cle)) {
+          signale("acces", `${path.relative(RACINE, complet)} contient la cle de maintenance en clair. Ce fichier est servi publiquement : n'importe qui tombant sur son nom franchirait le mode maintenance sans lire une ligne de code.`);
+        }
+      }
+    };
+    parcourir(dossier);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
