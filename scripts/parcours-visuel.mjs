@@ -71,7 +71,8 @@ const ECRANS_PARENT = [
   ["aides-simulateurs", "Administratif", "Aides & Simulateurs"],
   ["mon-contrat", "Administratif", "Mon contrat"],
   ["documents", "Administratif", "Documents & Attestations"],
-  ["centre-aide", "Administratif", "Centre d'aide"],
+  ["mes-alertes", "Paramètres", "Mes alertes"],
+  ["centre-aide", "Paramètres", "Centre d'aide"],
 ];
 
 const ECRANS = ESPACE === "parent" ? ECRANS_PARENT : ECRANS_ASMAT;
