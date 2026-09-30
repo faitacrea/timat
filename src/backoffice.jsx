@@ -1071,6 +1071,28 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
               )}
             </div>
           </BOCard>
+          <BOCard title="Déclaration Pajemploi" icon="✍️">
+            <div style={{fontSize:11,color:"var(--m)",marginBottom:10,lineHeight:1.55}}>
+              L'écran de mandat et le journal des déclarations restent <b>invisibles</b> tant que ce champ est vide :
+              proposer de mandater sans pouvoir transmettre promettrait ce que l'application ne sait pas faire.
+              <br/><br/>
+              Renseignez l'identifiant client remis par l'URSSAF le jour de l'habilitation.
+              <b> Pour une démonstration avant habilitation</b>, une valeur quelconque suffit à rendre l'écran
+              visible — pensez à la retirer ensuite.
+            </div>
+            <BOField label="Identifiant client URSSAF"><BOTextInput k="clientId" state={cfg.pajemploi||{}} setter={(k,v)=>setCfg(c=>({...c,pajemploi:{...(c.pajemploi||{}),[k]:v}}))} placeholder="vide = écran masqué"/></BOField>
+            <div style={{marginTop:8,padding:"8px 10px",borderRadius:8,fontSize:11,lineHeight:1.5,
+              background:(cfg.pajemploi||{}).clientId?"var(--Sp)":"var(--c)",
+              color:(cfg.pajemploi||{}).clientId?"var(--S)":"var(--l)"}}>
+              {(cfg.pajemploi||{}).clientId
+                ? "✅ L'écran « Déclaration Pajemploi » est visible dans les deux menus."
+                : "⬜ L'écran est masqué. Personne ne le voit."}
+            </div>
+            <div style={{marginTop:8,padding:"8px 10px",background:"var(--Rp)",borderRadius:8,fontSize:11,color:"var(--R)",lineHeight:1.5}}>
+              ⚠️ Le <b>secret</b> client ne se met jamais ici : il vit dans les variables d'environnement Vercel
+              (PAJEMPLOI_CLIENT_SECRET), hors de portée du navigateur. Ce réglage-ci part dans la page.
+            </div>
+          </BOCard>
           <BOCard title="Informations légales" icon="📋">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Ces informations apparaissent dans les mentions légales, CGU et politique de confidentialité.</div>
             <BOField label="Nom complet"><BOTextInput k="nom" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>

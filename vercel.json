@@ -4,6 +4,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/desinscription",
+      "destination": "/api/infolettre"
+    },
+    {
+      "source": "/api/inscription-releve",
+      "destination": "/api/infolettre"
+    },
+    {
       "source": "/api/checkout-session",
       "destination": "/api/stripe"
     },
