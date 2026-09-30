@@ -16,7 +16,7 @@ export const MAJ_DOCUMENTS_LEGAUX = "2026-09-30";
 
 // Empreinte du texte lisible des trois documents. Se regenere avec :
 //   node scripts/empreinte-legale.mjs --ecrire
-export const EMPREINTE_DOCUMENTS_LEGAUX = "ca4d62cc4a4b508939f0157abbb1aec6";
+export const EMPREINTE_DOCUMENTS_LEGAUX = "3666d3636cf7b74c37f36ce96b4f7ed4";
 
 export const majLisible = () => {
   const [a, m, j] = MAJ_DOCUMENTS_LEGAUX.split("-");

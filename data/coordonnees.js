@@ -24,3 +24,18 @@
 // plutot une bonne chose de les voir.
 export const EMAIL_CONTACT = "contact@timat.app";
 export const EMAIL_EXPEDITEUR = "contact@timat.app";
+
+// L'HEBERGEUR, ECRIT UNE SEULE FOIS.
+//
+// Deux adresses differentes coexistaient : « 340 S Lemon Ave, Walnut » sur la
+// landing et « 440 N Barranca Ave, Covina » dans l'application. Les deux ne
+// peuvent pas etre vraies, et la loi n° 2004-575 (LCEN) impose de publier
+// l'adresse de l'hebergeur. Une valeur recopiee a deux endroits finit toujours
+// par diverger : il n'y en a plus qu'une, et une barriere d'audit interdit de
+// la reecrire ailleurs.
+//
+// A VERIFIER : cette adresse doit etre confirmee sur les pages legales de
+// Vercel. Elle n'a pas pu l'etre au moment de l'ecriture.
+export const HEBERGEUR_WEB = "Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis";
+export const HEBERGEUR_BASE = "Supabase, sur OVHcloud — région eu-west-3 (Paris, France)";
+export const HEBERGEUR_REGION = "Fonctions serveur exécutées en région cdg1 (Paris, France).";
