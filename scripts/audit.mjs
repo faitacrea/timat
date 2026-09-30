@@ -849,10 +849,12 @@ for (const u of fichiersAppSrc()) {
   }
 
   // 3. Stripe ne doit plus offrir une seconde fois les deux mois.
-  const stripe = readFileSync(new URL("../api/checkout-session.js", import.meta.url), "utf8");
+  // Les deux chemins Stripe ont ete reunis dans api/stripe.js pour tenir sous
+  // les douze fonctions du plan Hobby ; les anciens chemins sont rediriges.
+  const stripe = readFileSync(new URL("../api/stripe.js", import.meta.url), "utf8");
   const actif = stripe.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
   if (/trial_period_days/.test(actif)) {
-    signale("essai", "api/checkout-session.js pose encore trial_period_days — les deux mois étant déjà offerts dans TiMat, Stripe en offrirait deux de plus");
+    signale("essai", "api/stripe.js pose encore trial_period_days — les deux mois étant déjà offerts dans TiMat, Stripe en offrirait deux de plus");
   }
 
   // 4. La tâche quotidienne doit rester déclarée : sans elle, un essai ne finit
@@ -3334,6 +3336,37 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
                          "[Téléphone professionnel]", "[Votre nom]", "[Votre SIRET]"])
     if (textes.includes(gabarit))
       signale("legal", `le gabarit « ${gabarit} » est encore publie dans les mentions legales`);
+}
+
+// --- une route supprimee doit rester joignable ---
+//
+// api/checkout-session.js et api/customer-portal.js ont ete reunis dans
+// api/stripe.js pour tenir sous les douze fonctions du plan Hobby. Leurs
+// anciens chemins vivent encore dans du JavaScript deja telecharge par les
+// navigateurs, et dans des pages gardees en cache. Sans redirection, le
+// paiement tomberait en 404 chez la visiteuse qui n'a pas recharge — et elle
+// n'aurait aucun moyen de comprendre pourquoi.
+{
+  const vercelConf = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  const redirigees = new Set((vercelConf.rewrites || []).map((r) => r.source));
+  const appelees = new Set();
+  const dossiers = [new URL("../src/", import.meta.url), new URL("../public/", import.meta.url)];
+  const parcourir = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const complet = path.join(dir.pathname ?? dir, e.name);
+      if (e.isDirectory()) { parcourir(complet); continue; }
+      if (!/\.(jsx?|html)$/.test(e.name)) continue;
+      for (const m of readFileSync(complet, "utf8").matchAll(/["'`](\/api\/[a-z0-9-]+)["'`?]/g))
+        appelees.add(m[1]);
+    }
+  };
+  for (const d of dossiers) parcourir(d);
+  for (const chemin of appelees) {
+    const fichier = new URL("..".concat(chemin, ".js"), import.meta.url);
+    if (fs.existsSync(fichier)) continue;
+    if (redirigees.has(chemin)) continue;
+    signale("routes", `le code appelle « ${chemin} », qui n'existe plus dans api/ et n'est redirige nulle part dans vercel.json — l'appel repondra 404`);
+  }
 }
 
 // --- rapport ---
