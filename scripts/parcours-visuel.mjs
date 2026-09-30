@@ -42,17 +42,18 @@ const ECRANS_ASMAT = [
   ["bilans", "L'enfant", "Bilans"],
   ["registre-medicaments", "L'enfant", "Registre médicaments"],
   ["autorisations", "L'enfant", "Autorisations"],
+  ["projet-accueil", "L'enfant", "Projet d'accueil"],
   ["calendrier", "Administratif", "Calendrier"],
   ["messagerie", "Administratif", "Messagerie"],
   ["paie-contrats", "Administratif", "Paie & Contrats"],
   ["documents-rapports", "Administratif", "Documents & Rapports"],
   ["inviter-parent", "Outils Pro", "Inviter un parent"],
-  ["projet-accueil", "Outils Pro", "Projet d'accueil"],
   ["reprise-contrat", "Outils Pro", "Reprendre un contrat"],
   ["liste-attente", "Outils Pro", "Demandes & liste d'attente"],
   ["page-vitrine", "Outils Pro", "Ma page publique"],
   ["pmi", "Outils Pro", "PMI"],
-  ["faq", "Outils Pro", "Aide & Support"],
+  ["mes-alertes", "Paramètres", "Mes alertes"],
+  ["faq", "Paramètres", "Aide & Support"],
 ];
 
 const ECRANS_PARENT = [
@@ -70,7 +71,8 @@ const ECRANS_PARENT = [
   ["aides-simulateurs", "Administratif", "Aides & Simulateurs"],
   ["mon-contrat", "Administratif", "Mon contrat"],
   ["documents", "Administratif", "Documents & Attestations"],
-  ["centre-aide", "Administratif", "Centre d'aide"],
+  ["mes-alertes", "Paramètres", "Mes alertes"],
+  ["centre-aide", "Paramètres", "Centre d'aide"],
 ];
 
 const ECRANS = ESPACE === "parent" ? ECRANS_PARENT : ECRANS_ASMAT;
@@ -116,8 +118,18 @@ await page.waitForTimeout(3000);
 const passer = page.getByRole("button", { name: /^Passer$/ });
 if (await passer.isVisible().catch(() => false)) { await passer.click(); await page.waitForTimeout(600); }
 
+// Les entrees du menu sont des <button>. Les lignes des Parametres sont des
+// <div onClick> : les chercher aussi, sinon un ecran atteignable uniquement
+// depuis les reglages passerait pour introuvable.
 const clic = (txt) => page.evaluate((t) => {
-  const n = [...document.querySelectorAll("button")].find((b) => b.innerText.replace(/\s+/g, " ").trim().includes(t));
+  const norm = (e) => e.innerText.replace(/\s+/g, " ").trim();
+  // Le bouton des reglages ne porte qu'une icone : son libelle est dans
+  // aria-label. Un bouton sans texte accessible serait de toute facon un
+  // defaut — on cherche donc les deux.
+  let n = [...document.querySelectorAll("button")].find((b) =>
+    norm(b).includes(t) || (b.getAttribute("aria-label") || "").includes(t));
+  if (!n) n = [...document.querySelectorAll('div[style*="cursor: pointer"], div[style*="cursor:pointer"]')]
+    .filter((d) => d.childElementCount <= 3).find((d) => norm(d).includes(t));
   if (n) { n.click(); return true; }
   return false;
 }, txt);

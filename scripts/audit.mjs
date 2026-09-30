@@ -2535,9 +2535,26 @@ if (!/impossible-ios/.test(appSrc)) {
 // 4bis. Les parents recoivent des notifications eux aussi. L'ecran n'etait
 //       d'abord que dans le menu de l'assistante maternelle : cote parent, il
 //       existait sans qu'aucun chemin n'y mene.
-const menusAvecAlertes = (appSrc.match(/id:"mes_alertes"/g) || []).length;
-if (menusAvecAlertes < 2) {
-  signale("push", "l'ecran « Mes alertes » manque dans un des deux menus : un role ne pourrait pas gerer ses notifications");
+//       La regle porte sur l'accessibilite, pas sur le menu : « Mes alertes »
+//       a quitte « Outils Pro » pour les Parametres, ou l'on va chercher un
+//       reglage. Les Parametres s'ouvrent pour les deux roles, donc un lien
+//       la-bas suffit — a condition qu'il ne soit pas cache derriere un role.
+{
+  const menus = (appSrc.match(/id:"mes_alertes"/g) || []).length;
+  const secSrc = readFileSync(new URL("../src/ecrans-secondaires.jsx", import.meta.url), "utf8");
+  // Le lien doit exister, et la carte qui le porte ne doit pas etre rendue sous
+  // condition : une carte ouverte par « x && <div className="card"> » ne
+  // s'afficherait que pour un role.
+  const iLien = secSrc.indexOf('["🔔","Mes alertes","mes_alertes"]');
+  let depuisReglages = false;
+  if (iLien > 0) {
+    const iCarte = secSrc.lastIndexOf('<div className="card">', iLien);
+    const avant = secSrc.slice(Math.max(0, iCarte - 90), iCarte);
+    depuisReglages = !/&&\s*$|\?\s*$/.test(avant.replace(/\s*\/\*[\s\S]*?\*\/\s*$/, ""));
+  }
+  if (menus < 2 && !depuisReglages) {
+    signale("push", "l'ecran « Mes alertes » n'est atteignable ni depuis les deux menus ni depuis les Parametres des deux roles : un role ne pourrait pas gerer ses notifications");
+  }
 }
 
 // 5. Le push doit partir du point unique des notifications. Reparti dans les
