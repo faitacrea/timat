@@ -176,7 +176,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
   const setCol=(k,v)=>setCfg(c=>({...c,cols:{...c.cols,[k]:v}}));
   const setTxt=(k,v)=>setCfg(c=>({...c,txts:{...c.txts,[k]:v}}));
   const setLand=(k,v)=>setCfg(c=>({...c,landing:{...c.landing,[k]:v}}));
-  const setFeat=(k,v)=>setCfg(c=>({...c,feats:{...c.feats,[k]:v}}));
   const setSV=(k,v)=>setCfg(c=>({...c,sectionsVisibles:{...(c.sectionsVisibles||{}),[k]:v}}));
   const moveSectionAt=(from,to)=>setCfg(c=>{const base=(c.sectionsOrder&&c.sectionsOrder.length)?c.sectionsOrder:DEFAULT_CONFIG.sectionsOrder;const arr=[...base];if(from<0||from>=arr.length||to<0||to>=arr.length)return c;const[x]=arr.splice(from,1);arr.splice(to,0,x);return{...c,sectionsOrder:arr};});
   const setPain=(idx,field,v)=>setCfg(c=>{const pp=[...(c.painPoints||[])];pp[idx]={...pp[idx],[field]:v};return{...c,painPoints:pp};});
@@ -1062,20 +1061,6 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
 
         {/* ====================== APP (modules + stats) ====================== */}
         {sec==="app"&&<>
-          <BOCard title="Modules activables" icon="⚙️">
-            {[
-              {k:"parrainage",l:"Parrainage",ic:"🎁"},
-              {k:"forum",l:"Forum communauté",ic:"💬"},
-              {k:"pmi",l:"Communication PMI",ic:"🏛️"},
-              {k:"periscolaire",l:"Planning périscolaire",ic:"🚌"},
-              {k:"rappelsVaccins",l:"Rappels vaccins",ic:"💉"},
-            ].map(({k,l,ic})=><div key={k}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
-              <span style={{fontSize:12,fontWeight:600,color:"var(--b)"}}><IconeOuEmoji e={ic}/> {l}</span>
-              <div onClick={()=>setFeat(k,!cfg.feats[k])}style={{width:40,height:22,borderRadius:11,cursor:"pointer",background:cfg.feats[k]?"var(--G)":"var(--br)",position:"relative",transition:"background .2s"}}>
-                <div style={{width:16,height:16,borderRadius:8,background:"#fff",position:"absolute",top:3,left:cfg.feats[k]?21:3,transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}/>
-              </div>
-            </div>)}
-          </BOCard>
           <BOCard title="Statistiques" icon="📊">
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
               {[{v:stats.users,l:"Inscrits",c:"var(--T)"},{v:stats.pro,l:"Pro",c:"var(--S)"},{v:stats.enfants,l:"Enfants",c:"var(--G)"}].map(s=>

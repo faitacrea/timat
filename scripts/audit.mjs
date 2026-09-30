@@ -3205,6 +3205,37 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- reglages : un interrupteur du back-office doit commander quelque chose ---
+//
+// Le back-office a longtemps affiche cinq « modules activables » (parrainage,
+// forum, PMI, periscolaire, rappels vaccins). Ils s'enregistraient bien en
+// base — et l'application ne les lisait nulle part. Basculer l'interrupteur ne
+// changeait rien, et rien ne le disait. C'est la meme famille de defaut que les
+// promesses ecrites qu'on ne tient pas : l'interface affirme un pouvoir qu'elle
+// n'a pas.
+//
+// La regle : toute cle de configuration qu'un ecran d'administration propose de
+// modifier doit etre lue ailleurs que dans sa propre definition.
+{
+  const bo = readFileSync(new URL("../src/backoffice.jsx", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+  // Les cles que le back-office ecrit : setCfg(c=>({...c, <cle>: ...}))
+  const ecrites = new Set();
+  for (const m of bo.matchAll(/setCfg\(\s*c\s*=>\s*\(\{\s*\.\.\.c\s*,\s*([A-Za-z_][A-Za-z0-9_]*)\s*:/g)) ecrites.add(m[1]);
+  for (const cle of ecrites) {
+    // Une lecture reelle : config.<cle> ou cfg.<cle> hors du back-office et hors
+    // de DEFAULT_CONFIG / de la fusion qui la recopie.
+    // Une lecture reelle : un acces pointe « quelquechose.<cle> » ailleurs que
+    // dans la definition de DEFAULT_CONFIG et que la fusion qui la recopie.
+    const lues = app.split("\n").filter(l =>
+      new RegExp(`\\.\\s*${cle}\\b`).test(l)
+      && !/\.\.\.DEFAULT_CONFIG/.test(l));
+    if (!lues.length) {
+      signale("reglages", `le back-office propose de modifier « ${cle} », mais l'application ne lit cette valeur nulle part : l'interrupteur s'enregistre et ne commande rien.`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
