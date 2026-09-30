@@ -2341,21 +2341,44 @@ export function PolitiqueConfidentialite(){
 //
 
 export function MentionsLegales(){
-  const [edit,setEdit]=useState(false);
-  const [info,setInfo]=useState({
-    representant:"[Votre prénom et nom]",
-    siret:"[Numéro SIRET]",
-    adresse:"[Adresse complète, Code postal, Ville]",
-    telephone:"[Téléphone professionnel]",
-  });
+  // CE QUE CET ECRAN FAISAIT, ET POURQUOI C'ETAIT GRAVE.
+  //
+  // Il affichait « [Votre prénom et nom] », « [Numéro SIRET] », « [Adresse
+  // complète] » — des gabarits, publies tels quels. Et son bouton
+  // « ✓ Sauvegarder » n'ecrivait nulle part : il modifiait un useState, perdu
+  // au rechargement suivant. Deux fois faux : la loi n° 2004-575 (LCEN) exige
+  // que ces informations soient publiees, et un bouton qui dit enregistrer
+  // doit enregistrer.
+  //
+  // Les vraies informations existaient deja, dans app_config.legal, et la page
+  // d'accueil les affichait correctement. Cet ecran-ci les ignorait. Il n'y a
+  // desormais qu'une source, et elle se modifie au back-office.
+  const legal = G.config?.legal || {};
+  const manquants = ["nom","siret","adresse"].filter(k => !String(legal[k]||"").trim());
 
   const blocs=[
     {titre:"Éditeur du site",custom:true},
-    {titre:"Hébergement",contenu:"Application web : Vercel Inc. (serveurs européens)\nBase de données : Supabase / OVHcloud - 2 rue Kellermann, 59100 Roubaix, France\nToutes les données sont hébergées en France."},
-    {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de TiMat et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
+    // Le siege de l'editeur et la base de donnees sont en France. Les
+    // fonctions serveur tournent a Paris (region cdg1, declaree dans
+    // vercel.json) — sans cette declaration, Vercel les executerait par
+    // defaut a Washington. Quelques fonctions dites « edge » (envoi de
+    // courriel, page vitrine publique) s'executent au plus pres du visiteur,
+    // donc potentiellement hors de France : elles ne conservent rien.
+    {titre:"Hébergement",contenu:`Base de données : Supabase, sur OVHcloud — région eu-west-3 (Paris, France).
+Application et fonctions serveur : Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis — exécution configurée sur la région cdg1 (Paris, France).
+Quelques fonctions légères (envoi de courriel, page vitrine publique) s'exécutent au plus près du visiteur et peuvent donc transiter hors de France. Elles ne conservent aucune donnée : tout est stocké en France.`},
+    {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de l'éditeur et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
     {titre:"Limitation de responsabilité",contenu:"Les calculs de salaire, récapitulatifs Pajemploi et attestations fiscales générés par TiMat sont fournis à titre indicatif. L'utilisateur reste responsable de la vérification des montants auprès des organismes compétents (URSSAF, CAF, Administration fiscale)."},
-    {titre:"Données personnelles",contenu:`Responsable de traitement : TiMat - ${EMAIL_CONTACT}\nAutorité de contrôle : CNIL - www.cnil.fr\nVoir la politique de confidentialité complète pour le détail des traitements.`},
-    {titre:"Droit applicable",contenu:"Les présentes mentions légales sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents."},
+    {titre:"Données personnelles",contenu:`Responsable de traitement : ${legal.nom||"l'éditeur"} — ${EMAIL_CONTACT}
+Autorité de contrôle : CNIL — www.cnil.fr — 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07
+Voir la politique de confidentialité complète pour le détail des traitements.`},
+    // La version precedente disait « les tribunaux francais seront seuls
+    // competents », tandis que les CGU designaient « les tribunaux du ressort
+    // du siege de l'editeur ». Les deux se contredisaient, et la seconde est
+    // reputee non ecrite : l'article 48 du code de procedure civile n'admet
+    // une clause attributive de competence qu'entre commercants. Une
+    // assistante maternelle et un parent employeur n'en sont pas.
+    {titre:"Droit applicable",contenu:"Les présentes mentions légales sont soumises au droit français.\nEn cas de litige, une solution amiable sera recherchée en priorité. À défaut, le litige relève des juridictions désignées par les règles légales de compétence — aucune clause du présent site n'y déroge."},
   ];
 
   return <div className="fi">
@@ -2364,38 +2387,25 @@ export function MentionsLegales(){
       {blocs.map((b,i)=><div key={i}className="card"style={{marginBottom:14}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>{b.titre}</div>
         {b.custom?<div>
-          {/* Bloc éditeur éditable */}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <div style={{fontSize:12,color:"var(--l)"}}>À compléter avec vos informations légales</div>
-            <button onClick={()=>setEdit(p=>!p)}className="btn bG s"style={{padding:"4px 12px"}}>
-              {edit?"✓ Sauvegarder":"✏️ Modifier"}
-            </button>
-          </div>
           {[
-            ["Raison sociale","TiMat"],
-            ["Représentée par","representant"],
-            ["Email",EMAIL_CONTACT],
-            ["SIRET","siret"],
-            ["Adresse","adresse"],
-            ["Téléphone","telephone"],
-          ].map(([label,key])=><div key={label}style={{display:"flex",gap:12,padding:"6px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
-            <span style={{fontSize:12,color:"var(--l)",minWidth:120,flexShrink:0}}>{label}</span>
-            {edit&&info[key]!==undefined?
-              <input className="inp"style={{flex:1,padding:"4px 8px",fontSize:12}}
-                value={info[key]}onChange={e=>setInfo(p=>({...p,[key]:e.target.value}))}/>
-            :<span style={{fontSize:13,color:"var(--b)",fontWeight:500}}>
-              {info[key]||key}
-            </span>}
+            ["Éditeur",legal.nom],
+            ["Directrice de la publication",legal.nom],
+            ["Statut","Entrepreneur individuel"],
+            ["SIRET",legal.siret],
+            ["Adresse",legal.adresse],
+            ["Courriel",EMAIL_CONTACT],
+          ].map(([label,valeur])=><div key={label}style={{display:"flex",gap:12,padding:"6px 0",borderBottom:"1px solid var(--br)",alignItems:"center"}}>
+            <span style={{fontSize:12,color:"var(--l)",minWidth:170,flexShrink:0}}>{label}</span>
+            <span style={{fontSize:13,color:valeur?"var(--b)":"var(--R)",fontWeight:500}}>
+              {valeur||"— non renseigné"}
+            </span>
           </div>)}
-          {info.siret.includes("[")&&<div style={{marginTop:10,padding:"8px 12px",background:"var(--Rp)",borderRadius:8,fontSize:11,color:"var(--R)"}}>
-            <IconeOuEmoji e="⚠️"/> Ces informations doivent être complétées avant la mise en ligne de l'application. Cliquez sur "Modifier" pour renseigner vos données légales.
+          {manquants.length>0&&<div style={{marginTop:10,padding:"8px 12px",background:"var(--Rp)",borderRadius:8,fontSize:11,color:"var(--R)",lineHeight:1.55}}>
+            <IconeOuEmoji e="⚠️"/> {manquants.join(", ")} — information{manquants.length>1?"s":""} obligatoire{manquants.length>1?"s":""} manquante{manquants.length>1?"s":""}. À compléter dans le back-office, onglet « Informations légales ».
           </div>}
         </div>
         :<div style={{fontSize:13,color:"var(--m)",lineHeight:1.8,whiteSpace:"pre-line"}}>{b.contenu}</div>}
       </div>)}
-      <div style={{fontSize:12,color:"var(--l)",textAlign:"center",marginTop:8}}>
-        Dernière mise à jour : mars 2026
-      </div>
     </div>
   </div>;
 }
