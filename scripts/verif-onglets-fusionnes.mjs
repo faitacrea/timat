@@ -48,6 +48,15 @@ const t=(await p.locator("body").innerText());
 const verrou=/forfait Pro/.test(t);
 if(!verrou)ko++;
 console.log(`  ${verrou?"ok ":"KO "} un compte gratuit voit le verrou Pro sur les bilans`);
+// Le projet d'accueil a rejoint les documents : il doit s'y ouvrir, et rester
+// gratuit pour l'assistante maternelle alors que l'onglet voisin est Pro.
+await p.evaluate(()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"documents_rapports"})));
+await p.waitForTimeout(1100); const trouveProjet=await clic("Projet d'accueil"); await p.waitForTimeout(1500);
+const tp=(await p.locator("body").innerText());
+const projetOk = trouveProjet && !/forfait Pro/.test(tp) && tp.length>120;
+if(!projetOk)ko++;
+console.log(`  ${projetOk?"ok ":"KO "} le projet d'accueil s'ouvre dans « Documents » et reste gratuit`);
+
 // Le registre, lui, est une obligation legale : il ne doit JAMAIS etre verrouille.
 await p.evaluate(()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"sante_urgence"})));
 await p.waitForTimeout(900); await clic("Registre médicaments"); await p.waitForTimeout(1400);
