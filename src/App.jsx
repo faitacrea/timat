@@ -3975,6 +3975,24 @@ const GROUPS_P={
   ]},
 };
 
+// Les destinations qu'une notification a le droit de viser. Une notification
+// push ouvre « /?page=<id> » : sans cette liste, n'importe quelle valeur
+// arrivant dans l'URL deciderait de l'ecran affiche. Une barriere d'audit
+// verifie que toute page passee a createNotification figure ici.
+export const PAGES_NOTIFIABLES = new Set([
+  "accueil","journee","pointage","suivi_progres","sante_urgence","bilans",
+  "registre_medicaments","autorisations","calendrier","messagerie",
+  "paie_contrats","documents_rapports","admin_finances","documents_complet",
+  "aides_simulateurs","mes_alertes","liste_attente","pmi","faq",
+]);
+// La page demandee par l'URL, si et seulement si elle est reconnue.
+export const pageDepuisURL = (recherche) => {
+  try{
+    const p = new URLSearchParams(recherche||"").get("page");
+    return p && PAGES_NOTIFIABLES.has(p) ? p : null;
+  }catch(e){ return null; }
+};
+
 // Alias : anciens ids de pages -> nouvel onglet regroupé (pour le surlignage du menu)
 const PAGE_ALIAS={cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports",kit_cmg:"aides_simulateurs",simulateur:"aides_simulateurs",support:"faq"};
 // Trouver à quel groupe appartient une page
@@ -6907,7 +6925,6 @@ export const DEFAULT_CONFIG = {
     "✅ Pointages et messages opposables",
     "✅ Données en France 🇫🇷",
   ],
-  feats:{parrainage:true,forum:true,pmi:true,periscolaire:true,rappelsVaccins:true},
   legal:{
     nom:"Sophie [Votre nom]",
     siret:"[Votre SIRET]",
@@ -6970,7 +6987,6 @@ export const loadConfig = async () => {
         cols:{...DEFAULT_CONFIG.cols,...(saved.cols||{})},
         txts:{...DEFAULT_CONFIG.txts,...(saved.txts||{})},
         landing:{...DEFAULT_CONFIG.landing,...(saved.landing||{})},
-        feats:{...DEFAULT_CONFIG.feats,...(saved.feats||{})},
         painPoints: saved.painPoints||DEFAULT_CONFIG.painPoints,
         testimonials: saved.testimonials||DEFAULT_CONFIG.testimonials,
         freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
@@ -7189,7 +7205,9 @@ export default function App(){
     return false;
   });
   const [user,setUser]=useState(null);
-  const [page,setPage]=useState("accueil");
+  // Une notification push ouvre « /?page=<id> ». Avant, rien ne lisait ce
+  // parametre : chaque push ramenait a l'accueil, quel que soit ce qu'il annoncait.
+  const [page,setPage]=useState(()=>pageDepuisURL(typeof window!=="undefined"?window.location.search:"")||"accueil");
   const [pEIdSel,setPEIdSel]=useState(null);  const [showWelcome,setShowWelcome]=useState(false);
   const [recovery,setRecovery]=useState(false); // MDP P16 - arrivee par lien de reinitialisation
   useEffect(()=>{
