@@ -4,6 +4,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/checkout-session",
+      "destination": "/api/stripe"
+    },
+    {
+      "source": "/api/customer-portal",
+      "destination": "/api/stripe?action=portail"
+    },
+    {
       "source": "/p/:jeton",
       "destination": "/api/pointage-public?j=:jeton"
     },
