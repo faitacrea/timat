@@ -15,10 +15,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
+  CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 } from "./App.jsx";
 import {
-  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ageEnMois, minimumHoraireAu
+  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT
 } from "./socle.jsx";
 
 export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
@@ -1358,92 +1358,215 @@ export function ListeAttente({role,enfants,user,setPage}){
 
 //
 
-export function PlanningPeriscolaire({enfants,role,pEId}){
-  const [selId,setSelId]=useState(enfants[0]?.id);
-  const [planning,setPlanning]=useState(()=>{
-    const p={};
-    enfants.forEach(e=>{
-      p[e.id]={matin:["Lundi","Mercredi"],midi:[],soir:["Lundi","Mardi","Jeudi","Vendredi"],mercredi:true,vacances:false};
-    });
-    return p;
-  });
-  const [toast,setToast]=useState("");
+export function PlanningPeriscolaire({enfants,role,pEId,user}){
+  // CE QU'IL Y AVAIT AVANT, ET POURQUOI C'ETAIT PIRE QU'UN ECRAN MANQUANT.
+  //
+  // Le planning vivait dans un useState initialise en dur : « matin lundi et
+  // mercredi, soir du lundi au vendredi ». Rien n'etait ni lu ni ecrit. A
+  // chaque rechargement tout etait perdu, et l'ecran affichait un planning
+  // invente comme s'il etait celui de l'enfant. Un ecran vide dit « il n'y a
+  // rien » ; celui-la disait quelque chose de faux.
+  //
+  // Le parent comme l'assistante maternelle peuvent modifier : c'est le parent
+  // qui sait quand il a besoin d'un accueil. Chaque enregistrement garde qui a
+  // touche en dernier, parce que ces heures sont aussi un salaire.
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const [selId,setSelId]=useState(liste[0]?.id);
   const enfant=liste.find(e=>e.id===selId)||liste[0];
-  const p=planning[enfant?.id]||{};
+  const [plannings,setPlannings]=useState({});
+  const [etat,setEtat]=useState("chargement"); // chargement | pret | panne
+  const [zone,setZone]=useState(ZONE_DEFAUT);
+  const [toast,setToast]=useState("");
 
-  const toggleJour=(periode,jour)=>{
-    setPlanning(prev=>({...prev,[enfant.id]:{...p,
-      [periode]:Array.isArray(p[periode])
-        ?p[periode].includes(jour)?p[periode].filter(j=>j!==jour):[...p[periode],jour]
-        :p[periode]
-    }}));
+  useEffect(()=>{
+    if(!enfants.length){setEtat("pret");return;}
+    let vivant=true;
+    (async()=>{
+      const{data,error}=await supabase.from("planning_periscolaire")
+        .select("enfant_id,semaine,vacances,zone")
+        .in("enfant_id",enfants.map(e=>e.id));
+      if(!vivant)return;
+      // Une lecture qui echoue ne doit pas ressembler a « pas encore de
+      // planning » : la difference est celle entre une panne et une donnee
+      // absente, et c'est la premiere fois qu'elle compte ici — enregistrer
+      // par-dessus effacerait le vrai planning.
+      if(error){setEtat("panne");return;}
+      const parEnfant={};
+      for(const l of (data||[]))parEnfant[l.enfant_id]=l;
+      setPlannings(parEnfant);
+      const z=(data||[]).find(l=>l.zone)?.zone;
+      if(z)setZone(z);
+      setEtat("pret");
+    })();
+    return()=>{vivant=false;};
+  },[enfants.map(e=>e.id).join(",")]);
+
+  const SEM_VIDE={matin:[],midi:[],soir:[],mercredi:false};
+  const sem=plannings[enfant?.id]?.semaine||SEM_VIDE;
+  const vac=plannings[enfant?.id]?.vacances||{};
+
+  const enregistrer=async(maj)=>{
+    if(!enfant)return;
+    const ligne={
+      enfant_id:enfant.id,
+      semaine:maj.semaine??sem,
+      vacances:maj.vacances??vac,
+      zone:maj.zone??zone,
+      updated_at:new Date().toISOString(),
+      modifie_par:user?.id||null,
+    };
+    setPlannings(p=>({...p,[enfant.id]:ligne}));
+    const{error}=await supabase.from("planning_periscolaire").upsert(ligne,{onConflict:"enfant_id"});
+    if(error){
+      setToast("Enregistrement impossible — vérifiez votre connexion");
+      // L'affichage revient a ce que la base contient vraiment : laisser la
+      // modification a l'ecran ferait croire qu'elle est enregistree.
+      setPlannings(p=>({...p,[enfant.id]:plannings[enfant.id]}));
+      return;
+    }
+    setToast("Enregistré ✓");
   };
+
+  const basculerJour=(periode,jour)=>{
+    const actuel=Array.isArray(sem[periode])?sem[periode]:[];
+    const suivant=actuel.includes(jour)?actuel.filter(j=>j!==jour):[...actuel,jour];
+    enregistrer({semaine:{...sem,[periode]:suivant}});
+  };
+  const basculerMercredi=()=>enregistrer({semaine:{...sem,mercredi:!sem.mercredi}});
+  const repondreVacances=(cle,valeur)=>enregistrer({vacances:{...vac,[cle]:valeur}});
+  const changerZone=(z)=>{
+    setZone(z);
+    // La zone vaut pour toute l'assistante maternelle, pas pour un enfant :
+    // elle est recopiee sur chaque planning pour que le parent la lise sans
+    // avoir acces au profil de l'assistante maternelle.
+    enregistrer({zone:z});
+  };
+
+  const periodes=enfant?periodesVacances(TODAY_STR,zone):[];
+
+  if(etat==="chargement")return <div className="fi" style={{padding:"48px 20px",textAlign:"center",color:"var(--m)",fontSize:14}}>Chargement du planning…</div>;
+  if(etat==="panne")return <div className="fi" style={{padding:"40px 20px",maxWidth:520,margin:"0 auto",textAlign:"center"}}>
+    <div style={{fontSize:40,marginBottom:12}}>📡</div>
+    <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:8}}>Le planning n'a pas pu être chargé</div>
+    <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:16}}>
+      Ce n'est pas qu'il est vide : la connexion à nos serveurs a échoué. Rien n'a été perdu, et rien ne sera enregistré tant que la page n'aura pas pu le relire.
+    </div>
+    <button className="btn bP" onClick={()=>window.location.reload()}>Réessayer</button>
+  </div>;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="🚌" title="Planning périscolaire"
-      sub="Gestion des accueils matin, midi, soir, mercredis et vacances"/>
+      sub="Les jours d'accueil, et ce que vous souhaitez pendant les vacances"/>
 
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
-    </div>}
+    {!enfant&&<EmptyState emoji="🚌" titre="Aucun enfant"
+      texte="Le planning périscolaire s'affichera dès qu'un enfant sera enregistré."/>}
 
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      {PERIODES.map(per=><div key={per.id}className="card"style={{borderLeft:"4px solid var(--B)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <div>
-            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e={per.ic}/> {per.l}</div>
-            <div style={{fontSize:12,color:"var(--l)"}}>{per.h}</div>
-          </div>
-          {typeof p[per.id]==="boolean"&&<label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
-            <span style={{fontSize:12,color:"var(--m)"}}>Accueil</span>
-            <div onClick={()=>{if(role==="asmat")setPlanning(prev=>({...prev,[enfant.id]:{...p,[per.id]:!p[per.id]}}));}}
-              style={{width:44,height:24,borderRadius:12,background:p[per.id]?"var(--S)":"var(--br)",
-                position:"relative",cursor:role==="asmat"?"pointer":"default",transition:"background .2s"}}>
-              <div style={{position:"absolute",top:2,left:p[per.id]?20:2,width:20,height:20,
-                borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,.2)"}}/>
+    {enfant&&<>
+      {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+      </div>}
+
+      <div style={{fontSize:12,color:"var(--m)",marginBottom:14,padding:"10px 12px",background:"var(--c)",borderRadius:10,lineHeight:1.55}}>
+        {role==="parent"
+          ? "Vous pouvez modifier ce planning : cochez les moments où vous souhaitez confier votre enfant. Votre assistante maternelle voit vos choix."
+          : "Le parent peut modifier ce planning de son côté. Vous voyez toujours l'état à jour."}
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {PERIODES.filter(per=>per.id!=="vacances").map(per=><div key={per.id}className="card"style={{borderLeft:"4px solid var(--B)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div>
+              <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e={per.ic}/> {per.l}</div>
+              <div style={{fontSize:12,color:"var(--l)"}}>{per.h}</div>
             </div>
-          </label>}
-        </div>
-        {Array.isArray(p[per.id])&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {JOURS_SEM.filter(j=>j!=="Mercredi"||per.id!=="mercredi").map(jour=>{
-            const actif=p[per.id]?.includes(jour);
-            return <button key={jour}onClick={()=>role==="asmat"&&toggleJour(per.id,jour)}style={{
-              padding:"6px 14px",borderRadius:20,border:(actif?"1.5px solid var(--B)":"1.5px solid var(--br)"),
-              background:actif?"var(--Bp)":"transparent",color:actif?"var(--B)":"var(--l)",
-              fontWeight:actif?700:400,fontSize:13,cursor:role==="asmat"?"pointer":"default",transition:"all .15s"
-            }}>{jour.slice(0,2)}</button>;
-          })}
-        </div>}
-      </div>)}
-    </div>
-
-    {role==="asmat"&&<div style={{marginTop:16,display:"flex",gap:8,justifyContent:"flex-end"}}>
-      <button className="btn bG">Imprimer le planning</button>
-      <button className="btn bT"onClick={()=>setToast("Planning enregistré et partagé avec les parents ✓")}>
-        <IconeOuEmoji e="💾"/> Sauvegarder et partager
-      </button>
-    </div>}
-
-    {/* Vue hebdo synthèse */}
-    <div className="card"style={{marginTop:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Récapitulatif semaine type - {enfant?.prenom}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
-        {JOURS_SEM.map(j=><div key={j}style={{textAlign:"center"}}>
-          <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>{j.slice(0,2)}</div>
-          {PERIODES.filter(per=>per.id!=="vacances"&&per.id!=="mercredi").map(per=>{
-            const actif=Array.isArray(p[per.id])?p[per.id].includes(j):false;
-            if(!actif)return null;
-            return <div key={per.id}style={{
-              background:"var(--Bp)",borderRadius:6,padding:"3px 4px",
-              fontSize:11,color:"var(--B)",fontWeight:600,marginBottom:3
-            }}><IconeOuEmoji e={per.ic}/></div>;
-          })}
-          {j==="Mercredi"&&p.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:11,color:"var(--S)",fontWeight:600}}>Journée</div>}
+            {per.id==="mercredi"&&<button onClick={basculerMercredi}
+              aria-pressed={!!sem.mercredi}
+              style={{minWidth:44,minHeight:36,padding:"6px 14px",borderRadius:20,cursor:"pointer",
+                border:sem.mercredi?"1.5px solid var(--S)":"1.5px solid var(--br)",
+                background:sem.mercredi?"var(--Sp)":"transparent",color:sem.mercredi?"var(--S)":"var(--l)",
+                fontWeight:700,fontSize:13,fontFamily:"inherit"}}>
+              {sem.mercredi?"Accueilli":"Pas d'accueil"}
+            </button>}
+          </div>
+          {per.id!=="mercredi"&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {JOURS_SEM.map(jour=>{
+              const actif=(sem[per.id]||[]).includes(jour);
+              return <button key={jour}onClick={()=>basculerJour(per.id,jour)}
+                aria-pressed={actif}
+                style={{
+                  minHeight:36,padding:"6px 14px",borderRadius:20,
+                  border:(actif?"1.5px solid var(--B)":"1.5px solid var(--br)"),
+                  background:actif?"var(--Bp)":"transparent",color:actif?"var(--B)":"var(--l)",
+                  fontWeight:actif?700:400,fontSize:13,cursor:"pointer",fontFamily:"inherit"
+                }}>{jour.slice(0,3)}</button>;
+            })}
+          </div>}
         </div>)}
       </div>
-    </div>
+
+      {/* ===== LES VACANCES SCOLAIRES ===== */}
+      <div className="card" style={{marginTop:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:4}}>
+          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="🏖️"/> Vacances scolaires</div>
+          {role==="asmat"&&<label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"var(--m)"}}>
+            Zone
+            <select className="inp" value={zone} onChange={e=>changerZone(e.target.value)}
+              style={{padding:"6px 10px",fontSize:13,minHeight:36,width:"auto"}}>
+              {ZONES.map(z=><option key={z} value={z}>{z}</option>)}
+            </select>
+          </label>}
+        </div>
+        <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.55}}>
+          {role==="asmat"
+            ? <>Les dates dépendent de votre académie. Zone {zone} : {(ACADEMIES_PAR_ZONE[zone]||[]).join(", ")}.</>
+            : <>Dites pour chaque période si vous souhaitez un accueil. Zone {zone}.</>}
+        </div>
+        {periodes.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>
+          Les dates de cette année scolaire ne sont pas encore connues.
+        </div>}
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {periodes.map(v=>{
+            const cle=anneeScolaireDe(v.debut)+"|"+v.nom;
+            const rep=vac[cle];
+            return <div key={cle} style={{padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
+              <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
+              <div style={{fontSize:11,color:"var(--l)",marginBottom:8}}>{fmt(v.debut)} → {fmt(finVacances(v))}</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[[true,"Accueil souhaité","var(--S)","var(--Sp)"],[false,"Pas d'accueil","var(--l)","var(--c)"]].map(([val,lib,coul,fond])=>{
+                  const actif=rep===val;
+                  return <button key={String(val)}onClick={()=>repondreVacances(cle,val)}
+                    aria-pressed={actif}
+                    style={{minHeight:36,padding:"6px 14px",borderRadius:20,cursor:"pointer",fontFamily:"inherit",
+                      border:actif?("1.5px solid "+coul):"1.5px solid var(--br)",
+                      background:actif?fond:"transparent",color:actif?coul:"var(--l)",
+                      fontWeight:actif?700:400,fontSize:13}}>{lib}</button>;
+                })}
+                {rep===undefined&&<span style={{alignSelf:"center",fontSize:12,color:"var(--l)"}}>pas encore répondu</span>}
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>
+
+      {/* ===== RECAPITULATIF SEMAINE TYPE ===== */}
+      <div className="card"style={{marginTop:16}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Semaine type — {enfant?.prenom}</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
+          {JOURS_SEM.map(j=><div key={j}style={{textAlign:"center"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>{j.slice(0,3)}</div>
+            {PERIODES.filter(per=>per.id!=="vacances"&&per.id!=="mercredi").map(per=>{
+              if(!(sem[per.id]||[]).includes(j))return null;
+              return <div key={per.id}title={per.l}style={{
+                background:"var(--Bp)",borderRadius:6,padding:"3px 4px",
+                fontSize:11,color:"var(--B)",fontWeight:600,marginBottom:3
+              }}><IconeOuEmoji e={per.ic}/></div>;
+            })}
+            {j==="Mercredi"&&sem.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:11,color:"var(--S)",fontWeight:600}}>Journée</div>}
+          </div>)}
+        </div>
+      </div>
+    </>}
   </div>;
 }
 

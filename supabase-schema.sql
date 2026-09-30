@@ -325,3 +325,15 @@ CREATE POLICY "documents_select" ON storage.objects
 -- ════════════════════════════════════════════════════════════
 -- ✅ TERMINÉ — Toutes les tables et politiques sont créées
 -- ════════════════════════════════════════════════════════════
+
+-- Planning periscolaire : semaine type d'accueil et souhaits de garde pendant
+-- les vacances scolaires. Modifiable par le parent comme par l'assistante
+-- maternelle. Voir sql/2026-09-30-planning-periscolaire.sql.
+create table if not exists public.planning_periscolaire (
+  enfant_id   uuid primary key references public.enfants(id) on delete cascade,
+  semaine     jsonb not null default '{"matin":[],"midi":[],"soir":[],"mercredi":false}'::jsonb,
+  vacances    jsonb not null default '{}'::jsonb,
+  zone        text  not null default 'C',
+  updated_at  timestamptz not null default now(),
+  modifie_par uuid references public.profiles(id)
+);
