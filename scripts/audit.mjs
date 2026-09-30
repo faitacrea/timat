@@ -3095,6 +3095,39 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucune operation de stockage jetee en silence ---
+//
+// Troisieme membre de la meme famille, apres « ecritures » et « lectures ».
+// Le stockage garde les photos des enfants, les contrats signes, les bulletins
+// et les documents partages. Un « await supabase.storage…upload() » dont on ne
+// lit pas le retour rend la main comme si tout s'etait bien passe.
+//
+// Deux cas reels l'ont montre : la suppression RGPD laissait des fichiers en
+// place alors que la politique promet leur effacement, et une signature de
+// liens ratee affichait « aucune photo » a une assistante maternelle dont les
+// photos etaient pourtant bien la.
+//
+// Meme regle que les deux autres : lire « error », ou ecrire pourquoi on
+// l'ignore avec « sans-retour : <raison> ».
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  for (const [nom, src] of sources) {
+    const lignes = src.split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      if (!/await\s+supabase\s*\.\s*storage\s*\./.test(lignes[i])) continue;
+      let fin = i;
+      while (fin < lignes.length && fin < i + 8 && !/;\s*$/.test(lignes[fin])) fin++;
+      const bloc = lignes.slice(i, fin + 1).join("\n");
+      if (/\berror\b/.test(bloc)) continue;
+      const nom_var = (lignes[i].match(/^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/) || [])[1];
+      if (nom_var && new RegExp("\\b" + nom_var + "\\.error\\b").test(lignes.slice(fin + 1, fin + 4).join("\n"))) continue;
+      const avant = lignes.slice(Math.max(0, i - 4), i).join("\n");
+      if (/sans-retour\s*:/.test(avant)) continue;
+      signale("stockage", `${nom}:${i + 1} appelle le stockage sans lire le retour. Un televersement ou une suppression qui echoue rendrait la main comme si tout allait bien — le fichier manquerait, ou survivrait a une suppression promise.`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

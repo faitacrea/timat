@@ -3459,9 +3459,18 @@ export async function viderStockageDuCompte(userId){
       };
       await parcourir(String(userId));
       // La suppression accepte un lot ; on decoupe pour ne pas depasser la limite.
+      // ON REGARDE CE QUI N'A PAS ETE EFFACE. La politique de confidentialite
+      // promet la suppression des fichiers : un echec ignore laissait des
+      // photos et des documents en place alors qu'on affirmait le contraire.
+      // On n'interrompt pas pour autant — le droit a l'effacement des donnees
+      // prime — mais un reste se journalise au lieu de disparaitre.
+      let restants=0;
       for(let i=0;i<aEffacer.length;i+=100){
-        await supabase.storage.from(bucket).remove(aEffacer.slice(i,i+100));
+        const lot=aEffacer.slice(i,i+100);
+        const{error:eSup}=await supabase.storage.from(bucket).remove(lot);
+        if(eSup){ restants+=lot.length; console.warn("[suppression] "+lot.length+" fichier(s) non effaces dans "+bucket+" :",eSup.message); }
       }
+      if(restants)console.warn("[suppression] TOTAL non efface dans "+bucket+" : "+restants+" fichier(s)");
     }catch(e){
       // Un echec de nettoyage ne doit pas empecher l'effacement des donnees
       // elles-memes : le droit a l'effacement prime sur le menage des fichiers.
