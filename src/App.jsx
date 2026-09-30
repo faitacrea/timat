@@ -2808,13 +2808,6 @@ function ResumeJournee({enfants,role,pEId}){
 }
 
 //
-export const VACANCES_2024=[
-  {debut:"2024-02-17",fin:"2024-03-04",nom:"Hiver"},
-  {debut:"2024-04-13",fin:"2024-04-29",nom:"Printemps"},
-  {debut:"2024-07-06",fin:"2024-09-02",nom:"Été"},
-  {debut:"2024-10-19",fin:"2024-11-04",nom:"Toussaint"},
-  {debut:"2024-12-21",fin:"2025-01-06",nom:"Noël"},
-];
 function CompteRenduTrimestriel({enfants,role,pEId}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [trim,setTrim]=useState("T"+(Math.floor(new Date().getMonth()/3)+1)+" "+new Date().getFullYear());
@@ -3935,6 +3928,7 @@ const GROUPS_AM={
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
+    {id:"periscolaire",l:"Planning périscolaire",ic:"🚌",d:"Les jours d'accueil, et les vacances scolaires"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec les parents"},
     {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾",d:"Bulletins, contrats et déclarations"},
     {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️",d:"Attestations et exports"},
@@ -3964,6 +3958,7 @@ const GROUPS_P={
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
+    {id:"periscolaire",l:"Planning périscolaire",ic:"🚌",d:"Quand vous souhaitez un accueil, vacances comprises"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec l'assistante maternelle"},
     {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
     {id:"admin_finances",l:"Mon contrat",ic:"🧾",d:"Contrat, bulletins et paiements"},
@@ -7863,7 +7858,7 @@ export default function App(){
       case "mes_alertes": return <MesAlertes user={user}/>;
       case "temps_travail": return <TempsDeTravail enfants={enfants} role={role} user={user}/>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
-      case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId}/>;
+      case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "registre_medicaments": return <RegistreMedicaments enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "reprise_contrat": return <RepriseContrat enfants={enfants} role={role} user={user}/>;
       case "autorisations": return <Autorisations enfants={enfants} role={role} pEId={pEId} user={user}/>;

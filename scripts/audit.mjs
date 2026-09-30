@@ -1409,7 +1409,18 @@ for (const u of fichiersAppSrc()) {
   for (const u of fichiers) {
     exportes.set(
       "./" + u.pathname.split("/").pop(),
-      new Set([...readFileSync(u, "utf8").matchAll(/^export (?:async function|function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]))
+      (() => {
+        const t = readFileSync(u, "utf8");
+        const noms = new Set([...t.matchAll(/^export (?:async function|function|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]));
+        // Un module peut aussi reexporter en bloc : « export { a, b as c }; ».
+        // Sans cette forme, la barriere criait au fantome sur un nom bel et
+        // bien exporte — et une fausse alerte use la confiance qu'on met dans
+        // les vraies.
+        for (const m of t.matchAll(/^export\s*\{([^}]*)\}\s*(?:from\s*"[^"]*"\s*)?;/gm))
+          for (const brut of m[1].split(","))
+            if (brut.trim()) noms.add(brut.trim().split(/\s+as\s+/).pop().trim());
+        return noms;
+      })()
     );
   }
   for (const u of fichiers) {

@@ -20,8 +20,10 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, VACANCES_2024, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte
 } from "./App.jsx";
+
+import { anneeScolaireDe, estFerie, finVacances, feriesDe, vacancesDe, vacancesAnnee, ACADEMIES_PAR_ZONE, ZONES, ZONE_DEFAUT } from "../data/calendrier-scolaire.js";
 
 export const fmtDateHeureCourte=(iso)=>{
   const d=new Date(iso);
@@ -297,24 +299,15 @@ export const tirerJetonBorne=()=>{
 // Reglages de la borne, cote assistante maternelle : le code de sortie de
 // l'appareil, le code de chaque famille, et le QR a afficher a l'entree.
 
-export const FERIES_2024={
-  "2024-01-01":"🎆 Jour de l'An",
-  "2024-04-01":"🐣 Lundi de Pâques",
-  "2024-05-01":"🌹 Fête du Travail",
-  "2024-05-08":"🕊️ Victoire 1945",
-  "2024-05-09":"✝️ Ascension",
-  "2024-05-20":"🕊️ Lundi de Pentecôte",
-  "2024-07-14":"🇫🇷 Fête Nationale",
-  "2024-08-15":"✨ Assomption",
-  "2024-11-01":"🕯️ Toussaint",
-  "2024-11-11":"🎖️ Armistice",
-  "2024-12-25":"🎄 Noël",
-};
-// Vacances scolaires Zone C (Paris) 2024
-
-export const isVacances=(ds)=>VACANCES_2024.some(v=>ds>=v.debut&&ds<=v.fin);
-
-export const nomVacances=(ds)=>VACANCES_2024.find(v=>ds>=v.debut&&ds<=v.fin)?.nom||"";
+// Les jours feries et les vacances scolaires vivent dans data/calendrier-scolaire.js :
+// les premiers se calculent (Paques), les secondes viennent de l'arrete
+// ministeriel et dependent de la zone. Ce qui etait ici etait fige en 2024 et
+// n'affichait plus rien depuis deux ans.
+export const FERIES_DE = feriesDe;
+export const estVacances = (ds, zone) => !!vacancesDe(ds, zone);
+export const nomVacances = (ds, zone) => vacancesDe(ds, zone)?.nom || "";
+export const periodesVacances = vacancesAnnee;
+export { anneeScolaireDe, estFerie, finVacances, ACADEMIES_PAR_ZONE, ZONES, ZONE_DEFAUT };
 
 export const JALONS_REF=[
   // Motricité globale (OMS - WHO Multicentre Growth Reference Study 2006)

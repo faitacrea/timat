@@ -16,10 +16,10 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, VACANCES_2024, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
+  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 } from "./App.jsx";
 import {
-  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, FERIES_2024, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, isVacances, minimumHoraireAu, nb2, nomVacances, tirerJetonBorne
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT
 } from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
@@ -1137,6 +1137,30 @@ export function Calendrier({enfants,role,pEId,user}){
     })();
     return()=>{vivant=false;};
   },[isDemoUser,enfants.length]);
+  // Le planning periscolaire de chaque enfant : la semaine type qui remonte
+  // dans les cases du calendrier, et la reponse du parent pour chaque periode
+  // de vacances. Il porte aussi la zone academique — sans elle, les dates de
+  // vacances affichees seraient celles d'une autre region.
+  const [plannings,setPlannings]=useState({});
+  useEffect(()=>{
+    if(enfants.length===0||isDemoUser)return;
+    let vivant=true;
+    (async()=>{
+      const{data,error}=await supabase.from("planning_periscolaire")
+        .select("enfant_id,semaine,vacances,zone")
+        .in("enfant_id",enfants.map(e=>e.id));
+      // Une lecture qui echoue ne doit pas passer pour « aucun accueil » :
+      // sans planning charge, le calendrier n'affiche simplement rien de
+      // periscolaire, et n'invente pas une semaine vide.
+      if(!vivant||error||!data)return;
+      const parEnfant={};
+      for(const l of data) parEnfant[l.enfant_id]=l;
+      setPlannings(parEnfant);
+    })();
+    return()=>{vivant=false;};
+  },[isDemoUser,enfants.length]);
+  const zone=Object.values(plannings)[0]?.zone||ZONE_DEFAUT;
+
   const [newEv,setNewEv]=useState({type:"rdv",txt:""});
   const [showAbsenceModal,setShowAbsenceModal]=useState(false);
   const [absForm,setAbsForm]=useState({eId:pEId||enfants[0]?.id,date:"",motif:"Maladie",heures:"",indemnise:true});
@@ -1178,9 +1202,9 @@ export function Calendrier({enfants,role,pEId,user}){
     : evs;
 
   const getUserEv=(d)=>evsFiltres.find(e=>e.date===ds(d));
-  const getFerie=(d)=>FERIES_2024[ds(d)];
+  const getFerie=(d)=>estFerie(ds(d));
   const getBirthday=(d)=>enfants.find(e=>e.naissance&&e.naissance.slice(5)===ds(d).slice(5));
-  const getVac=(d)=>isVacances(ds(d));
+  const getVac=(d)=>estVacances(ds(d),zone);
   // Quels enfants sont accueillis ce jour ?
   const getAccueil=(d)=>enfants.filter(e=>{
     const ji=jourIdx(d);
@@ -1206,7 +1230,7 @@ export function Calendrier({enfants,role,pEId,user}){
   // Événements du mois filtrés pour le panneau latéral
   const moisEvs=[
     ...evsFiltres.filter(e=>e.date.startsWith(moisStr)).map(e=>({...e,src:"user"})),
-    ...Object.entries(FERIES_2024).filter(([d])=>d.startsWith(moisStr)).map(([d,n])=>({id:d,date:d,txt:n,type:"ferie",src:"ferie"})),
+    ...Object.entries(FERIES_DE(an)).filter(([d])=>d.startsWith(moisStr)).map(([d,n])=>({id:d,date:d,txt:n,type:"ferie",src:"ferie"})),
     ...enfants.filter(e=>e.naissance&&(an+"-"+e.naissance.slice(5)).startsWith(moisStr))
       .map(e=>({id:"bd"+e.id,date:an+"-"+e.naissance.slice(5),txt:"🎂 Anniversaire de "+e.prenom,type:"anniv",src:"birthday"}))
   ].sort((a,b)=>a.date>b.date?1:-1).filter((ev,i,arr)=>arr.findIndex(x=>x.date===ev.date&&x.txt===ev.txt&&x.type===ev.type)===i);
@@ -1265,7 +1289,7 @@ export function Calendrier({enfants,role,pEId,user}){
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📅"
       title={role==="parent"?"Mon calendrier":"Calendrier"}
-      sub={role==="parent"?"Jours d'accueil, congés et jours fériés":"Accueil, congés, anniversaires, vacances scolaires Zone C"}
+      sub={role==="parent"?"Jours d'accueil, congés et jours fériés":"Accueil, congés, anniversaires, vacances scolaires (zone "+zone+")"}
     />
 
     {/* Modale absence parent */}
@@ -1400,7 +1424,7 @@ export function Calendrier({enfants,role,pEId,user}){
       if(jourLarge){
         const jd=jourLarge,idx=jourIdxDate(jd);
         const acc=accueilDuJour(jd),n=acc.length||1;
-        const ev2=evDuJour(jd),ferie=FERIES_2024[dsDate(jd)];
+        const ev2=evDuJour(jd),ferie=estFerie(dsDate(jd));
         const decaler=(d)=>{const x=new Date(jd);x.setDate(x.getDate()+d);setJourLarge(x);};
         return <div className="card">
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:8}}>
@@ -1467,7 +1491,7 @@ export function Calendrier({enfants,role,pEId,user}){
               <div style={{fontSize:15,fontWeight:800,color:auj?"#fff":"var(--b)",background:auj?"var(--T)":"transparent",width:26,height:26,lineHeight:"26px",borderRadius:"50%",margin:"2px auto 0"}}>{jd.getDate()}</div>
             </div>;})}
             <div/>
-            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=FERIES_2024[dsDate(jd)];const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:14}}>
+            {joursDeLaSemaine.map((jd,i)=>{const ev2=evDuJour(jd);const ferie=estFerie(dsDate(jd));const sansH=accueilDuJour(jd).filter(e=>!parseHoraire(e.contrat&&e.contrat.horaires));return <div key={i} style={{padding:"3px",borderRight:i<6?"1px solid var(--br)":"none",minHeight:14}}>
               {ferie&&<div style={{fontSize:11,background:"var(--Rp)",color:"var(--R)",borderRadius:5,padding:"1px 4px",marginBottom:2,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><IconeOuEmoji e="🎉"/> {ferie}</div>}
               {ev2.map(ev=><div key={ev.id} style={{fontSize:11,background:typeEv(ev.type).fond,color:typeEv(ev.type).texte,borderRadius:5,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={ev.txt}>{ev.txt}</div>)}
               {sansH.map(e=>{const col=colorEnf(e.id);return <div key={e.id} style={{fontSize:11,background:col+"22",color:"var(--b)",borderLeft:"2px solid "+col,borderRadius:4,padding:"1px 4px",marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.prenom+" — horaires non renseignés"}>{e.prenom}</div>;})}
@@ -1535,7 +1559,7 @@ export function Calendrier({enfants,role,pEId,user}){
               const ds2=jd.getFullYear()+"-"+String(jd.getMonth()+1).padStart(2,"0")+"-"+String(dNum).padStart(2,"0");
               const auj=estAujourdhui(jd);
               const colWE=(k%7)>=5;
-              const ferie=FERIES_2024[ds2];
+              const ferie=estFerie(ds2);
               const evs2=dMois?evsFiltres.filter(e=>e.date===ds2).filter((ev,i,arr)=>arr.findIndex(x=>x.txt===ev.txt&&x.type===ev.type)===i):[];
               const bday=dMois?enfants.find(e=>e.naissance&&e.naissance.slice(5)===ds2.slice(5)):null;
               const isSel=dMois&&sel===dNum;
@@ -1629,13 +1653,40 @@ export function Calendrier({enfants,role,pEId,user}){
               <span style={{fontSize:11,color:"var(--l)"}}>{e.contrat?.horaires}</span>
             </div>)}
           </div>}
-          {isVacances(ds(sel))&&<div style={{padding:"6px 10px",background:"var(--Bp)",borderRadius:8,fontSize:12,color:"var(--B)",fontWeight:600,marginBottom:6}}>
-            <IconeOuEmoji e="🏖️"/> Vacances scolaires {nomVacances(ds(sel))} - Zone C
+          {/* La semaine type du periscolaire, pour le jour ouvert. C'est la
+              reponse a « quels accueils ce jour-la », que le contrat seul ne
+              donne pas : le contrat dit les journees, le periscolaire dit les
+              bouts de journee autour de l'ecole. */}
+          {(()=>{
+            // JOURS_SEM ne contient que les cinq jours ouvres : samedi et
+            // dimanche n'ont pas d'index, et il n'y a pas de periscolaire ces
+            // jours-la. On le dit, plutot que de s'appuyer sur un undefined.
+            const idx=jourIdx(sel);
+            if(idx>4)return null;
+            const jourNom=JOURS_SEM[idx];
+            const lignes=enfants.map(e=>{
+              const sem=plannings[e.id]?.semaine;
+              if(!sem)return null;
+              const moments=PERIODES.filter(per=>per.id!=="vacances"&&per.id!=="mercredi")
+                .filter(per=>(sem[per.id]||[]).includes(jourNom));
+              if(jourNom==="Mercredi"&&sem.mercredi)moments.push(PERIODES.find(per=>per.id==="mercredi"));
+              return moments.length?{e,moments}:null;
+            }).filter(Boolean);
+            if(!lignes.length)return null;
+            return <div style={{padding:"8px 10px",background:"var(--Bp)",borderRadius:8,marginBottom:6}}>
+              <div style={{fontSize:11,fontWeight:700,color:"var(--B)",marginBottom:4}}><IconeOuEmoji e="🚌"/> Périscolaire</div>
+              {lignes.map(({e,moments})=><div key={e.id} style={{fontSize:12,color:"var(--b)",padding:"2px 0"}}>
+                {e.emoji} {e.prenom} — {moments.map(m=>m.l).join(", ")}
+              </div>)}
+            </div>;
+          })()}
+          {estVacances(ds(sel),zone)&&<div style={{padding:"6px 10px",background:"var(--Bp)",borderRadius:8,fontSize:12,color:"var(--B)",fontWeight:600,marginBottom:6}}>
+            <IconeOuEmoji e="🏖️"/> Vacances scolaires {nomVacances(ds(sel),zone)} — zone {zone}
           </div>}
           {getBirthday(sel)&&<div style={{padding:"6px 10px",background:"var(--Tp)",borderRadius:8,fontSize:12,color:"var(--T)",fontWeight:600}}>
             <IconeOuEmoji e="🎂"/> Anniversaire de {getBirthday(sel)?.prenom} !
           </div>}
-          {!getFerie(sel)&&!getUserEv(sel)&&!getAccueil(sel).length&&!isVacances(ds(sel))&&!getBirthday(sel)&&
+          {!getFerie(sel)&&!getUserEv(sel)&&!getAccueil(sel).length&&!estVacances(ds(sel),zone)&&!Object.keys(plannings).length&&!getBirthday(sel)&&
             <div style={{fontSize:12,color:"var(--l)"}}>Aucun événement ce jour.</div>}
         </div>}
 
@@ -1661,11 +1712,28 @@ export function Calendrier({enfants,role,pEId,user}){
           <span style={{fontSize:12,color:"var(--m)",flex:1}}>{ev.txt}</span>
         </div>)}
       </div>
-      {VACANCES_2024.filter(v=>v.debut.startsWith(moisStr)||v.fin.startsWith(moisStr)||(v.debut<moisStr+"-99"&&v.fin>moisStr)).map(v=>
-        <div key={v.nom} style={{marginTop:10,padding:12,background:"var(--Bp)",borderRadius:10,border:"1px solid rgba(46,95,138,.3)"}}>
-          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}><IconeOuEmoji e="🏖️"/> Vacances {v.nom} - Zone C</div>
-          <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(v.fin)}</div>
-        </div>)}
+      {periodesVacances(moisStr+"-01",zone).filter(v=>v.debut<=moisStr+"-31"&&v.reprise>moisStr+"-01").map(v=>{
+        // Pendant les vacances, la question n'est plus « l'ecole ouvre-t-elle »
+        // mais « l'enfant vient-il ». La reponse du parent est ecrite ici,
+        // enfant par enfant : c'est la seule chose que l'assistante maternelle
+        // ait besoin de savoir pour organiser sa periode.
+        const cle=anneeScolaireDe(v.debut)+"|"+v.nom;
+        return <div key={v.nom} style={{marginTop:10,padding:12,background:"var(--Bp)",borderRadius:10,border:"1px solid rgba(46,95,138,.3)"}}>
+          <div style={{fontWeight:700,fontSize:12,color:"var(--B)",marginBottom:2}}><IconeOuEmoji e="🏖️"/> Vacances {v.nom} — zone {zone}</div>
+          <div style={{fontSize:11,color:"var(--m)"}}>{fmt(v.debut)} → {fmt(finVacances(v))}</div>
+          <div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
+            {enfants.map(e=>{
+              const rep=plannings[e.id]?.vacances?.[cle];
+              return <div key={e.id} style={{display:"flex",alignItems:"center",gap:6,fontSize:12}}>
+                <span style={{color:"var(--b)"}}>{e.emoji} {e.prenom} :</span>
+                <span style={{fontWeight:700,color:rep===true?"var(--S)":rep===false?"var(--l)":"var(--m)"}}>
+                  {rep===true?"accueilli":rep===false?"pas d'accueil":"pas encore répondu"}
+                </span>
+              </div>;
+            })}
+          </div>
+        </div>;
+      })}
     </div>
   </div>;
 }
