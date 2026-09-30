@@ -3403,6 +3403,43 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- le sommaire du HTML brut dit la meme chose que la page ---
+//
+// Le HTML brut de la page d'accueil comptait 370 caracteres et aucun titre de
+// niveau 2 : c'est tout ce que voit un robot qui n'execute pas JavaScript.
+// React, lui, en affiche 10 600 et neuf titres. Un sommaire visible reprend
+// donc ces titres dans index.html.
+//
+// Le risque de ce genre de bloc est connu : il finit par annoncer autre chose
+// que ce que la page montre — et devient alors du referencement trompeur. La
+// regle est donc simple et verifiee ici : chaque titre du sommaire doit exister
+// mot pour mot dans la configuration de la landing.
+{
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const titres = [...html.matchAll(/<h2>([^<]+)<\/h2>/g)].map((m) => m[1].trim());
+  if (!titres.length) {
+    signale("sommaire", "index.html ne porte plus aucun titre de niveau 2 : le HTML brut redevient quasi vide pour les robots qui n'executent pas JavaScript");
+  }
+  for (const t of titres) {
+    // Les entites HTML de l'un ne sont pas celles de l'autre.
+    // Le titre affiche par React peut etre coupe par de la mise en forme
+    // (« <span> » de couleur, retour a la ligne). Comparer la chaine entiere
+    // signalerait a tort ces titres-la. On exige donc que ses quatre premiers
+    // mots se suivent dans le source : assez pour reconnaitre le titre, assez
+    // souple pour tolerer un balisage au milieu.
+    const clair = t.replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&");
+    const debut = clair.split(/\s+/).slice(0, 4).join(" ");
+    if (!appSrc.includes(clair) && !appSrc.includes(debut))
+      signale("sommaire", `le sommaire de index.html annonce « ${clair.slice(0, 60)} », introuvable dans la configuration de la landing : les deux versions disent des choses differentes`);
+  }
+  // Un bloc masque serait du referencement trompeur, et c'est precisement ce
+  // qui avait ete retire de cette page.
+  const bloc = (html.match(/id="timat-sommaire"[\s\S]{0,400}?>/) || [""])[0];
+  const style = (html.match(/#timat-sommaire\s*\{[^}]*\}/) || [""])[0];
+  if (/display\s*:\s*none|visibility\s*:\s*hidden|opacity\s*:\s*0|height\s*:\s*0|position\s*:\s*absolute/.test(bloc + style))
+    signale("sommaire", "le sommaire de index.html est masque : un texte ecrit pour les moteurs et cache aux visiteurs est du referencement trompeur");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
