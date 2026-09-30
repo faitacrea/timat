@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 import { majLisible } from "../data/documents-legaux.js";
+import { habilitationActive } from "../data/pajemploi.js";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -3932,6 +3933,7 @@ const GROUPS_AM={
     {id:"periscolaire",l:"Planning périscolaire",ic:"🚌",d:"Les jours d'accueil, et les vacances scolaires"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec les parents"},
     {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾",d:"Bulletins, contrats et déclarations"},
+    {id:"mandat_pajemploi",l:"Déclaration Pajemploi",ic:"✍️",d:"Le mandat du parent, et vos déclarations transmises"},
     {id:"documents_rapports",l:"Documents & Rapports",ic:"🗂️",d:"Attestations et exports"},
   ]},
   outils:{l:"Outils Pro",ic:"⭐",trace:"outils",color:"var(--S)",subs:[
@@ -3963,6 +3965,7 @@ const GROUPS_P={
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec l'assistante maternelle"},
     {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
     {id:"admin_finances",l:"Mon contrat",ic:"🧾",d:"Contrat, bulletins et paiements"},
+    {id:"mandat_pajemploi",l:"Déclaration Pajemploi",ic:"✍️",d:"Vous décidez si TiMat déclare à votre place"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️",d:"Vos documents et attestations"},
   ]},
 };
@@ -3975,7 +3978,7 @@ export const PAGES_NOTIFIABLES = new Set([
   "accueil","journee","pointage","suivi_progres","sante_urgence","bilans",
   "registre_medicaments","autorisations","calendrier","messagerie",
   "paie_contrats","documents_rapports","admin_finances","documents_complet",
-  "aides_simulateurs","mes_alertes","liste_attente","pmi","faq","periscolaire",
+  "aides_simulateurs","mes_alertes","liste_attente","pmi","faq","periscolaire","mandat_pajemploi",
 ]);
 // La page demandee par l'URL, si et seulement si elle est reconnue.
 export const pageDepuisURL = (recherche) => {
@@ -6917,10 +6920,13 @@ export const DEFAULT_CONFIG = {
     "✅ Pointages et messages opposables",
     "✅ Données en France 🇫🇷",
   ],
+  // Aucune valeur par defaut inventee : ces informations sont obligatoires
+  // (LCEN), et un gabarit plausible se publie sans qu'on le remarque, la ou un
+  // champ vide se voit et se signale en rouge.
   legal:{
-    nom:"Sophie [Votre nom]",
-    siret:"[Votre SIRET]",
-    adresse:"Île-de-France, France",
+    nom:"",
+    siret:"",
+    adresse:"",
     email:EMAIL_CONTACT,
   },
   boutique:{
@@ -7171,6 +7177,7 @@ export const Parametres = lazy(() => _ecrans().then(m => ({ default: m.Parametre
 export const ListeAttente = lazy(() => _ecrans().then(m => ({ default: m.ListeAttente })));
 export const PageVitrine = lazy(() => _ecrans().then(m => ({ default: m.PageVitrine })));
 export const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m.PlanningPeriscolaire })));
+export const MandatPajemploi = lazy(() => _ecrans().then(m => ({ default: m.MandatPajemploi })));
 export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.RegistreMedicaments })));
 export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
 export const Autorisations = lazy(() => _ecrans().then(m => ({ default: m.Autorisations })));
@@ -7814,7 +7821,19 @@ export default function App(){
     return [];
   })()));
   const pEId=(pEIdSel&&enfants.some(e=>e.id===pEIdSel))?pEIdSel:enfants[0]?.id;
-  const groups=role==="asmat"?GROUPS_AM:GROUPS_P;
+  // Le mandat Pajemploi n'apparait que le jour ou l'habilitation « tiers
+  // declarant » est obtenue — c'est-a-dire quand l'identifiant client URSSAF
+  // est configure. Avant, l'ecran existe dans le code mais aucun chemin n'y
+  // mene : proposer de mandater sans pouvoir transmettre promettrait ce que
+  // l'application ne sait pas faire.
+  const groups=useMemo(()=>{
+    const base=role==="asmat"?GROUPS_AM:GROUPS_P;
+    if(habilitationActive(G.config))return base;
+    const filtre={};
+    for(const[k,g]of Object.entries(base))
+      filtre[k]=g.subs?{...g,subs:g.subs.filter(sub=>sub.id!=="mandat_pajemploi")}:g;
+    return filtre;
+  },[role]);
   const P={enfants,role,pEId,user,pointagesDB};
 
   // Les écrans chargés à la demande arrivent après un aller-retour réseau : sans
@@ -7860,6 +7879,7 @@ export default function App(){
       case "temps_travail": return <TempsDeTravail enfants={enfants} role={role} user={user}/>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
       case "periscolaire": return <PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "mandat_pajemploi": return <MandatPajemploi enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "registre_medicaments": return <RegistreMedicaments enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "reprise_contrat": return <RepriseContrat enfants={enfants} role={role} user={user}/>;
       case "autorisations": return <Autorisations enfants={enfants} role={role} pEId={pEId} user={user}/>;

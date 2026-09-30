@@ -508,8 +508,24 @@ for (const m of sourcesDonnees.matchAll(/\.from\("([a-z_]+)"\)\s*\.select\(\s*"(
     if (/^[a-z_]+$/.test(c)) noter(m[1], c);
   }
 }
-for (const m of sourcesDonnees.matchAll(/\.from\("([a-z_]+)"\)\s*\.(?:insert|upsert|update)\(\s*\{([\s\S]{0,600}?)\}/g)) {
-  for (const c of m[2].matchAll(/([a-z_]+)\s*:/g)) noter(m[1], c[1]);
+// Les cles d'un objet imbrique ne sont pas des colonnes : « preuve:{le:…} »
+// ecrit UNE colonne jsonb nommee preuve, pas deux colonnes « le » et
+// « version ». On ne retient donc que le premier niveau d'accolades, en
+// suivant la profondeur plutot qu'en s'arretant a la premiere fermante.
+for (const m of sourcesDonnees.matchAll(/\.from\("([a-z_]+)"\)\s*\.(?:insert|upsert|update)\(\s*\{/g)) {
+  const debut = m.index + m[0].length;
+  let profondeur = 1, i = debut, niveau1 = "";
+  while (i < sourcesDonnees.length && profondeur > 0 && i - debut < 2000) {
+    const c = sourcesDonnees[i];
+    if (c === "{" || c === "[") profondeur++;
+    else if (c === "}" || c === "]") profondeur--;
+    if (profondeur === 1 && c !== "}" && c !== "]") niveau1 += c;
+    i++;
+  }
+  // Les commentaires aussi contiennent des deux-points : « // Non renseigne a
+  // la creation : … » se lisait comme une colonne « creation ».
+  const sansCommentaires = niveau1.replace(/\/\/[^\n]*/g, "");
+  for (const c of sansCommentaires.matchAll(/([a-z_]+)\s*:/g)) noter(m[1], c[1]);
 }
 for (const [t, cols] of citees) {
   if (!schemaConnu[t]) continue;
@@ -3304,7 +3320,18 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     .map((f) => readFileSync(new URL(f, import.meta.url), "utf8"))
     .join("\n")
     .split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
-  for (const gabarit of ["[Numéro SIRET]", "[Votre prénom et nom]", "[Adresse complète", "[Téléphone professionnel]"])
+  // « Île-de-France, France » n'est pas un gabarit partout : c'est le lieu
+  // affiche en pied de page, et c'est legitime. Ce n'en est un que dans
+  // legal.adresse, ou la LCEN attend une adresse et pas une region. La
+  // verification est donc portee sur ce bloc-la seulement.
+  {
+    const legal = (textes.match(/legal:\s*\{[\s\S]{0,400}?\}/) || [""])[0];
+    const adresse = (legal.match(/adresse:\s*"([^"]*)"/) || [])[1];
+    if (adresse && !/\d/.test(adresse))
+      signale("legal", `legal.adresse vaut « ${adresse} » : la LCEN attend une adresse, pas une region`);
+  }
+  for (const gabarit of ["[Numéro SIRET]", "[Votre prénom et nom]", "[Adresse complète",
+                         "[Téléphone professionnel]", "[Votre nom]", "[Votre SIRET]"])
     if (textes.includes(gabarit))
       signale("legal", `le gabarit « ${gabarit} » est encore publie dans les mentions legales`);
 }
