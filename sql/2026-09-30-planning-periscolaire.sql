@@ -47,3 +47,16 @@ create policy planning_peri_update on public.planning_periscolaire
 
 -- Pas de politique DELETE : un planning se vide, il ne se supprime pas. La
 -- suppression de l'enfant emporte la ligne (on delete cascade).
+
+-- ---------------------------------------------------------------------------
+-- La confirmation de l'assistante maternelle (meme jour).
+--
+-- Le parent peut modifier : c'est lui qui sait quand il a besoin d'un accueil.
+-- Mais ces heures sont le salaire de l'assistante maternelle, et le contrat les
+-- fixe. Une modification du parent ne devient donc pas le planning : elle
+-- devient une DEMANDE, qu'elle accepte ou refuse.
+alter table public.planning_periscolaire
+  add column if not exists demande jsonb;
+
+comment on column public.planning_periscolaire.demande is
+  'Modification proposee par le parent, en attente de reponse de l''assistante maternelle : {semaine, vacances, par, le}. null quand rien n''attend. Le planning confirme reste dans semaine/vacances — le calendrier n''affiche que celui-la.';

@@ -3974,7 +3974,7 @@ export const PAGES_NOTIFIABLES = new Set([
   "accueil","journee","pointage","suivi_progres","sante_urgence","bilans",
   "registre_medicaments","autorisations","calendrier","messagerie",
   "paie_contrats","documents_rapports","admin_finances","documents_complet",
-  "aides_simulateurs","mes_alertes","liste_attente","pmi","faq",
+  "aides_simulateurs","mes_alertes","liste_attente","pmi","faq","periscolaire",
 ]);
 // La page demandee par l'URL, si et seulement si elle est reconnue.
 export const pageDepuisURL = (recherche) => {

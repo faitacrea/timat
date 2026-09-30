@@ -14,8 +14,9 @@
 // ============================================================
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
+import { resumeDemande } from "../data/planning-periscolaire.js";
 import {
-  CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
+  CPill, createNotification, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 } from "./App.jsx";
 import {
   DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT
@@ -1367,9 +1368,17 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
   // invente comme s'il etait celui de l'enfant. Un ecran vide dit « il n'y a
   // rien » ; celui-la disait quelque chose de faux.
   //
-  // Le parent comme l'assistante maternelle peuvent modifier : c'est le parent
-  // qui sait quand il a besoin d'un accueil. Chaque enregistrement garde qui a
-  // touche en dernier, parce que ces heures sont aussi un salaire.
+  // QUI DECIDE, ET QUI DEMANDE.
+  //
+  // Le parent modifie : c'est lui qui sait quand il a besoin d'un accueil.
+  // Mais ces heures sont le salaire de l'assistante maternelle, et le contrat
+  // les fixe. Une modification du parent ne devient donc pas le planning :
+  // elle devient une DEMANDE, qu'elle accepte ou refuse.
+  //
+  // « semaine » et « vacances » restent le planning CONFIRME — c'est lui, et
+  // lui seul, que le calendrier affiche. Une modification de l'assistante
+  // maternelle s'y applique directement : elle n'a pas a se demander la
+  // permission a elle-meme.
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const [selId,setSelId]=useState(liste[0]?.id);
   const enfant=liste.find(e=>e.id===selId)||liste[0];
@@ -1383,7 +1392,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
     let vivant=true;
     (async()=>{
       const{data,error}=await supabase.from("planning_periscolaire")
-        .select("enfant_id,semaine,vacances,zone")
+        .select("enfant_id,semaine,vacances,zone,demande")
         .in("enfant_id",enfants.map(e=>e.id));
       if(!vivant)return;
       // Une lecture qui echoue ne doit pas ressembler a « pas encore de
@@ -1405,35 +1414,90 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
   const sem=plannings[enfant?.id]?.semaine||SEM_VIDE;
   const vac=plannings[enfant?.id]?.vacances||{};
 
-  const enregistrer=async(maj)=>{
-    if(!enfant)return;
-    const ligne={
-      enfant_id:enfant.id,
-      semaine:maj.semaine??sem,
-      vacances:maj.vacances??vac,
-      zone:maj.zone??zone,
-      updated_at:new Date().toISOString(),
-      modifie_par:user?.id||null,
-    };
+  // Ce que le parent voit et modifie, c'est sa demande en cours si elle
+  // existe, sinon le planning confirme : sans cela, il perdrait sa propre
+  // proposition a chaque clic suivant.
+  const enAttente=plannings[enfant?.id]?.demande||null;
+  const base=(role==="parent"&&enAttente)?enAttente:{semaine:sem,vacances:vac};
+  const semVue=base.semaine||sem;
+  const vacVue=base.vacances||vac;
+
+  const ecrire=async(ligne,messageOk)=>{
+    const avant=plannings[enfant.id];
     setPlannings(p=>({...p,[enfant.id]:ligne}));
     const{error}=await supabase.from("planning_periscolaire").upsert(ligne,{onConflict:"enfant_id"});
     if(error){
       setToast("Enregistrement impossible — vérifiez votre connexion");
       // L'affichage revient a ce que la base contient vraiment : laisser la
       // modification a l'ecran ferait croire qu'elle est enregistree.
-      setPlannings(p=>({...p,[enfant.id]:plannings[enfant.id]}));
+      setPlannings(p=>({...p,[enfant.id]:avant}));
+      return false;
+    }
+    setToast(messageOk);
+    return true;
+  };
+
+  const enregistrer=async(maj)=>{
+    if(!enfant)return;
+    const commun={
+      enfant_id:enfant.id,
+      zone:maj.zone??zone,
+      updated_at:new Date().toISOString(),
+      modifie_par:user?.id||null,
+    };
+    if(role==="parent"){
+      // Le parent depose une demande. Le planning confirme ne bouge pas.
+      const ligne={...commun,semaine:sem,vacances:vac,demande:{
+        semaine:maj.semaine??semVue,
+        vacances:maj.vacances??vacVue,
+        par:user?.id||null,
+        le:new Date().toISOString(),
+      }};
+      if(await ecrire(ligne,"Demande envoyée à votre assistante maternelle"))
+        createNotification({
+          userId:enfant.asmat_id||enfant.asmatId,
+          type:"info",
+          titre:"Demande de planning périscolaire pour "+enfant.prenom,
+          corps:"Le parent propose une modification du planning. Elle attend votre confirmation.",
+          page:"periscolaire",
+        });
       return;
     }
-    setToast("Enregistré ✓");
+    // L'assistante maternelle ecrit le planning confirme, et sa propre
+    // modification repond a la demande en cours s'il y en avait une.
+    await ecrire({...commun,semaine:maj.semaine??sem,vacances:maj.vacances??vac,demande:null},"Enregistré ✓");
+  };
+
+  const repondreDemande=async(accepte)=>{
+    if(!enfant||!enAttente)return;
+    const ligne={
+      enfant_id:enfant.id,
+      semaine:accepte?(enAttente.semaine||sem):sem,
+      vacances:accepte?(enAttente.vacances||vac):vac,
+      zone,
+      updated_at:new Date().toISOString(),
+      modifie_par:user?.id||null,
+      demande:null,
+    };
+    if(await ecrire(ligne,accepte?"Demande acceptée ✓":"Demande refusée"))
+      createNotification({
+        userId:enfant.parent_id||enfant.parentId,
+        type:"info",
+        titre:accepte?"Planning périscolaire accepté":"Planning périscolaire non accepté",
+        corps:accepte
+          ?"Votre assistante maternelle a accepté votre demande de modification."
+          :"Votre assistante maternelle n'a pas pu accepter votre demande. Parlez-en avec elle.",
+        page:"periscolaire",
+      });
   };
 
   const basculerJour=(periode,jour)=>{
-    const actuel=Array.isArray(sem[periode])?sem[periode]:[];
+    const actuel=Array.isArray(semVue[periode])?semVue[periode]:[];
     const suivant=actuel.includes(jour)?actuel.filter(j=>j!==jour):[...actuel,jour];
-    enregistrer({semaine:{...sem,[periode]:suivant}});
+    enregistrer({semaine:{...semVue,[periode]:suivant}});
   };
-  const basculerMercredi=()=>enregistrer({semaine:{...sem,mercredi:!sem.mercredi}});
-  const repondreVacances=(cle,valeur)=>enregistrer({vacances:{...vac,[cle]:valeur}});
+  const basculerMercredi=()=>enregistrer({semaine:{...semVue,mercredi:!semVue.mercredi}});
+  const repondreVacances=(cle,valeur)=>enregistrer({vacances:{...vacVue,[cle]:valeur}});
   const changerZone=(z)=>{
     setZone(z);
     // La zone vaut pour toute l'assistante maternelle, pas pour un enfant :
@@ -1469,9 +1533,32 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
 
       <div style={{fontSize:12,color:"var(--m)",marginBottom:14,padding:"10px 12px",background:"var(--c)",borderRadius:10,lineHeight:1.55}}>
         {role==="parent"
-          ? "Vous pouvez modifier ce planning : cochez les moments où vous souhaitez confier votre enfant. Votre assistante maternelle voit vos choix."
-          : "Le parent peut modifier ce planning de son côté. Vous voyez toujours l'état à jour."}
+          ? "Cochez les moments où vous souhaitez confier votre enfant. Vos changements sont envoyés à votre assistante maternelle, qui les confirme : ce sont ses heures de travail."
+          : "Le parent propose ses besoins d'accueil ; vous confirmez. Vos propres modifications s'appliquent directement."}
       </div>
+
+      {/* LA DEMANDE EN ATTENTE. Cote assistante maternelle, c'est une decision
+          a prendre. Cote parent, c'est l'etat de sa demande — et la raison
+          pour laquelle ce qu'il voit n'est pas encore ce qui fait foi. */}
+      {enAttente&&(role==="asmat"
+        ? <div className="card" style={{marginBottom:14,borderLeft:"4px solid var(--T)"}}>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}>
+              <IconeOuEmoji e="✋"/> Le parent demande une modification
+            </div>
+            <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55,marginBottom:10}}>
+              {resumeDemande(enAttente,sem,vac)}
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button className="btn bP" style={{minHeight:36}} onClick={()=>repondreDemande(true)}>Accepter</button>
+              <button className="btn bG" style={{minHeight:36}} onClick={()=>repondreDemande(false)}>Refuser</button>
+            </div>
+            <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
+              Tant que vous n'avez pas répondu, le planning qui fait foi reste celui d'avant.
+            </div>
+          </div>
+        : <div style={{marginBottom:14,padding:"10px 12px",background:"var(--Tp)",borderRadius:10,fontSize:12,color:"var(--T)",lineHeight:1.55}}>
+            <strong>Demande envoyée.</strong> Ce que vous voyez ci-dessous est votre demande, en attente de confirmation. Le planning qui fait foi reste celui d'avant tant que votre assistante maternelle n'a pas répondu.
+          </div>)}
 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {PERIODES.filter(per=>per.id!=="vacances").map(per=><div key={per.id}className="card"style={{borderLeft:"4px solid var(--B)"}}>
@@ -1481,17 +1568,17 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
               <div style={{fontSize:12,color:"var(--l)"}}>{per.h}</div>
             </div>
             {per.id==="mercredi"&&<button onClick={basculerMercredi}
-              aria-pressed={!!sem.mercredi}
+              aria-pressed={!!semVue.mercredi}
               style={{minWidth:44,minHeight:36,padding:"6px 14px",borderRadius:20,cursor:"pointer",
-                border:sem.mercredi?"1.5px solid var(--S)":"1.5px solid var(--br)",
-                background:sem.mercredi?"var(--Sp)":"transparent",color:sem.mercredi?"var(--S)":"var(--l)",
+                border:semVue.mercredi?"1.5px solid var(--S)":"1.5px solid var(--br)",
+                background:semVue.mercredi?"var(--Sp)":"transparent",color:semVue.mercredi?"var(--S)":"var(--l)",
                 fontWeight:700,fontSize:13,fontFamily:"inherit"}}>
-              {sem.mercredi?"Accueilli":"Pas d'accueil"}
+              {semVue.mercredi?"Accueilli":"Pas d'accueil"}
             </button>}
           </div>
           {per.id!=="mercredi"&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             {JOURS_SEM.map(jour=>{
-              const actif=(sem[per.id]||[]).includes(jour);
+              const actif=(semVue[per.id]||[]).includes(jour);
               return <button key={jour}onClick={()=>basculerJour(per.id,jour)}
                 aria-pressed={actif}
                 style={{
@@ -1528,7 +1615,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {periodes.map(v=>{
             const cle=anneeScolaireDe(v.debut)+"|"+v.nom;
-            const rep=vac[cle];
+            const rep=vacVue[cle];
             return <div key={cle} style={{padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
               <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{v.nom}</div>
               <div style={{fontSize:11,color:"var(--l)",marginBottom:8}}>{fmt(v.debut)} → {fmt(finVacances(v))}</div>

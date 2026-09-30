@@ -335,5 +335,7 @@ create table if not exists public.planning_periscolaire (
   vacances    jsonb not null default '{}'::jsonb,
   zone        text  not null default 'C',
   updated_at  timestamptz not null default now(),
-  modifie_par uuid references public.profiles(id)
+  modifie_par uuid references public.profiles(id),
+  -- Modification proposee par le parent, en attente de confirmation.
+  demande     jsonb
 );
