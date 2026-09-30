@@ -82,6 +82,14 @@
   .pro-band h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
   .pro-band p{font-size:14px;color:rgba(255,255,255,.85);max-width:440px}
   .pro-band .buy{white-space:nowrap;padding:13px 28px}
+  /* Le bouton des bandeaux porte un libelle long (« Decouvrir TiMat Pro —
+     9,99 EUR/mois »). Avec white-space:nowrap et 28 px de marge laterale, il
+     mesurait 349 px de large : sur un ecran de 390 px, dans une carte qui a
+     deja ses propres marges, il depassait de 3 px et faisait defiler toute la
+     page horizontalement. Sous 480 px, on le laisse donc revenir a la ligne. */
+  @media (max-width:480px){
+    .free-band .buy,.pro-band .buy{white-space:normal;padding:13px 18px}
+  }
   footer{background:var(--marine);color:rgba(255,255,255,.85);text-align:center;padding:26px 20px;font-size:13px;margin-top:40px}
   footer a{color:var(--terra-texte)}
 </style>
