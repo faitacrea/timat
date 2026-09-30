@@ -3264,6 +3264,51 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- les documents legaux ne changent pas en silence ---
+//
+// Les trois documents affichaient « Derniere mise a jour » calcule avec
+// new Date() : ils se declaraient modifies tous les jours, sans que rien ne
+// change. Une date qui bouge toute seule ne dit plus rien — et c'est
+// exactement ce qu'un utilisateur regarde pour savoir si le contrat qu'il a
+// accepte a ete modifie.
+//
+// La date est desormais ecrite a la main. Cette barriere empeche le mensonge
+// inverse : un texte modifie sans que la date bouge.
+{
+  const { empreinte } = await import(new URL("./empreinte-legale.mjs", import.meta.url));
+  const declaree = (readFileSync(new URL("../data/documents-legaux.js", import.meta.url), "utf8")
+    .match(/EMPREINTE_DOCUMENTS_LEGAUX = "([^"]*)"/) || [])[1];
+  const reelle = empreinte();
+  if (declaree !== reelle) {
+    signale("legal", `le texte des documents legaux a change sans que la date de mise a jour le dise. Corrigez MAJ_DOCUMENTS_LEGAUX dans data/documents-legaux.js, puis lancez « node scripts/empreinte-legale.mjs --ecrire ».`);
+  }
+  // Une date de mise a jour posterieure a aujourd'hui serait fausse elle aussi.
+  const maj = (readFileSync(new URL("../data/documents-legaux.js", import.meta.url), "utf8")
+    .match(/MAJ_DOCUMENTS_LEGAUX = "([^"]*)"/) || [])[1];
+  if (maj > new Date().toISOString().slice(0, 10))
+    signale("legal", `la date de mise a jour des documents legaux (${maj}) est dans le futur`);
+}
+
+// --- les informations legales obligatoires sont-elles renseignees ? ---
+//
+// La loi n° 2004-575 (LCEN) impose de publier l'identite de l'editeur, son
+// adresse et son numero d'immatriculation. L'ecran des mentions legales
+// affichait des gabarits — « [Numero SIRET] » — et son bouton
+// « Sauvegarder » n'ecrivait nulle part. Cette barriere ne peut pas verifier
+// le contenu de la base, mais elle peut interdire le retour des gabarits.
+{
+  // Les commentaires sont exclus : expliquer pourquoi un gabarit a ete retire
+  // ne doit pas compter comme un gabarit publie. Une barriere qui se declenche
+  // sur son propre mode d'emploi apprend a etre ignoree.
+  const textes = ["../src/App.jsx", "../src/ecrans-app.jsx"]
+    .map((f) => readFileSync(new URL(f, import.meta.url), "utf8"))
+    .join("\n")
+    .split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+  for (const gabarit of ["[Numéro SIRET]", "[Votre prénom et nom]", "[Adresse complète", "[Téléphone professionnel]"])
+    if (textes.includes(gabarit))
+      signale("legal", `le gabarit « ${gabarit} » est encore publie dans les mentions legales`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

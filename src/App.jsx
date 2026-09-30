@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
+import { majLisible } from "../data/documents-legaux.js";
 
 /* ========== MODE HORS LIGNE ==========
 
@@ -6235,16 +6236,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <strong>{config.legal?.nom}</strong><br/>
                 Auto-entrepreneur<br/>
                 SIRET : {config.legal?.siret}<br/>
-                Adresse : {config.legal?.adresse}<br/>
-                Email : {config.legal?.email}<br/>
+                Adresse : {config.legal?.adresse||"— à compléter"}<br/>
+                Email : {EMAIL_CONTACT}<br/>
                 Directrice de la publication : {config.legal?.nom}
               </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>2. Hébergement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
-                <strong>Site web :</strong> Vercel Inc. — 340 S Lemon Ave #4133, Walnut, CA 91789, USA<br/>
-                <strong>Base de données :</strong> Supabase — Région Europe (Paris, France)<br/>
-                <strong>Paiement :</strong> Stripe — Certifié PCI-DSS Level 1
+                <strong>Site web :</strong> Vercel Inc. — 340 S Lemon Ave #4133, Walnut, CA 91789, USA. Fonctions serveur exécutées en région cdg1 (Paris, France).<br/>
+                <strong>Base de données :</strong> Supabase, sur OVHcloud — région eu-west-3 (Paris, France)<br/>
+                <strong>Paiement :</strong> Stripe — certifié PCI-DSS niveau 1
               </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>3. Propriété intellectuelle</h3>
@@ -6263,7 +6264,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>Pour toute question : <strong>{EMAIL_CONTACT}</strong></p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
-                Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
+                Dernière mise à jour : {majLisible()}
               </div>
             </div>}
 
@@ -6303,13 +6304,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>L'utilisateur peut résilier son abonnement Pro à tout moment depuis son espace, sans frais. Après résiliation, le compte repasse en formule gratuite et les données restent accessibles : rien n'est supprimé automatiquement. L'effacement se fait à votre demande, ou en supprimant votre compte depuis les paramètres. L'éditeur se réserve le droit de suspendre un compte en cas de non-respect des CGU.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>9. Disponibilité du service</h3>
-              <p>TiMat s'engage à fournir un service disponible 24h/24, 7j/7. Toutefois, des interruptions pour maintenance ou mise à jour peuvent survenir. L'éditeur ne saurait être tenu responsable des conséquences d'une interruption temporaire du service.</p>
+              <p>TiMat vise une disponibilité permanente, sans la garantir : des interruptions pour maintenance, mise à jour ou incident technique peuvent survenir. L'éditeur s'engage à les limiter et à en informer les utilisateurs lorsqu'elles sont programmées. Vos données restent conservées pendant une interruption, et exportables dès le retour du service.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>10. Droit applicable et litiges</h3>
-              <p>Les présentes CGU sont soumises au droit français. En cas de litige, une solution amiable sera privilégiée. À défaut, les tribunaux compétents du ressort du siège de l'éditeur seront saisis.</p>
+              <p>Les présentes CGU sont soumises au droit français. En cas de litige, l'utilisateur est invité à écrire à l'éditeur : une solution amiable sera recherchée en priorité. À défaut, le litige relève des juridictions désignées par les règles légales de compétence. Aucune clause des présentes CGU n'y déroge : l'article 48 du code de procédure civile ne permet une telle dérogation qu'entre commerçants.</p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
-                Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
+                Dernière mise à jour : {majLisible()}
               </div>
             </div>}
 
@@ -6345,7 +6346,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Hébergement et sécurité</h3>
               <div style={{background:"#F0FAF4",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 🔒 Base de données : <strong>Supabase</strong> — Région Europe, Paris (France)<br/>
-                🌐 Site web : <strong>Vercel</strong> — CDN mondial, données en Europe<br/>
+                🌐 Site web : <strong>Vercel</strong> — fonctions serveur exécutées à Paris (région cdg1) ; la distribution des pages passe par un réseau mondial<br/>
                 💳 Paiement : <strong>Stripe</strong> — Certifié PCI-DSS Level 1<br/>
                 🛡️ Chiffrement : TLS 1.3 en transit, AES-256 au repos<br/>
                 🔑 Mots de passe : hachés avec bcrypt (irréversible)<br/>
@@ -6409,7 +6410,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>8. Transferts hors UE</h3>
-              <p>Les données sont hébergées en France et en Europe. En cas de transfert vers les États-Unis (CDN Vercel), celui-ci est encadré par les clauses contractuelles types de la Commission européenne.</p>
+              <p>Les données sont stockées en France (Supabase, région eu-west-3 à Paris) et les fonctions serveur s'exécutent à Paris. La distribution des pages passe par le réseau mondial de Vercel, société américaine : ce transfert, qui ne concerne pas les données stockées, est encadré par les clauses contractuelles types de la Commission européenne. Stripe (paiement) et Resend (envoi de courriels) sont également encadrés par ces clauses.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>9. Cookies</h3>
               <p>TiMat utilise uniquement des cookies techniques strictement nécessaires (authentification, session). Aucun cookie publicitaire, analytique ou de traçage n'est utilisé. Aucun consentement spécifique n'est requis pour ces cookies (Art. 82 de la loi Informatique et Libertés).</p>
@@ -6418,7 +6419,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (Commission Nationale de l'Informatique et des Libertés) : <strong>www.cnil.fr</strong></p>
 
               <div style={{marginTop:20,padding:12,background:"#F0FAF4",borderRadius:10,fontSize:11,color:"#5F7A86"}}>
-                Dernière mise à jour : {new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
+                Dernière mise à jour : {majLisible()}
               </div>
             </div>}
 
