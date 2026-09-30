@@ -119,7 +119,6 @@
       @keyframes timat-slide{0%{transform:translateX(-120%)}100%{transform:translateX(330%)}}
       @media (prefers-reduced-motion:reduce){#timat-boot .bar span{animation:none}}
       /* Contenu SEO : lu par les robots, invisible à l'écran (l'écran de chargement le couvre) */
-      #seo-fallback{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
     </style>
   </head>
   <body>
@@ -134,29 +133,8 @@
         <span class="rassure">2 mois offerts · Sans carte bancaire · Données en France</span>
         <div class="bar"><span></span></div>
       </div>
-      <!-- Contenu statique pour les moteurs de recherche -->
-      <div id="seo-fallback">
-        <h1>TiMat — L'application des assistantes maternelles et des parents employeurs</h1>
-        <p>Salaire, congés, Pajemploi : calculés automatiquement. TiMat gère les contrats conformes à la convention collective (IDCC 3239), la mensualisation en année complète ou incomplète, les congés payés, les indemnités d'entretien, la déclaration Pajemploi mensuelle, le pointage des présences et le cahier de journée partagé avec les parents. 2 mois d'essai gratuit, sans carte bancaire ni engagement. Données hébergées en France. L'espace parent est inclus et gratuit pour les familles.</p>
-        <ul>
-          <li><a href="/blog/calcul-mensualisation-assistante-maternelle">La mensualisation expliquée (avec simulateur)</a></li>
-          <li><a href="/blog/conges-payes-assistante-maternelle">Congés payés : 10 % ou maintien de salaire</a></li>
-          <li><a href="/blog/salaire-assistante-maternelle-net-brut">Salaire net, brut et coût employeur</a></li>
-          <li><a href="/blog/indemnite-entretien-assistante-maternelle-2026">Indemnité d'entretien : les montants au 1er juin 2026</a></li>
-          <li><a href="/blog/cout-reel-assistante-maternelle-reste-a-charge">Coût réel et reste à charge</a></li>
-          <li><a href="/blog/pajemploi-declaration-assistante-maternelle">La déclaration Pajemploi pas à pas</a></li>
-          <li><a href="/parents">L'espace parent employeur : coût, CMG, Pajemploi</a></li>
-          <li><a href="/outils.html">Tous les simulateurs gratuits</a></li>
-          <li><a href="/simulateur-declaration-pajemploi-assistante-maternelle.html">Déclaration Pajemploi : quoi mettre dans chaque case</a></li>
-          <li><a href="/simulateur-deduction-absence-assistante-maternelle.html">Calculer une déduction d'absence</a></li>
-          <li><a href="/simulateur-abattement-fiscal-assistante-maternelle.html">Calculer son abattement fiscal</a></li>
-          <li><a href="/verificateur-bulletin-assistante-maternelle.html">Vérifier la conformité d'un bulletin de salaire</a></li>
-          <li><a href="/assistante-maternelle/">L'accueil chez une assistante maternelle, département par département</a></li>
-          <li><a href="/releve-heures-assistante-maternelle.html">Relevé mensuel d'heures à imprimer (gratuit)</a></li>
-          <li><a href="/boutique.html">La boutique TiMat</a></li>
-          <li><a href="/blog">Tous les guides</a></li>
-        </ul>
-      </div>
+      <!-- Un seul h1 sur cette page, et aucun bloc cache pour les moteurs :
+           le pourquoi est dans la barriere « titres » de scripts/audit.mjs. -->
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

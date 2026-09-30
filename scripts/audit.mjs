@@ -3128,6 +3128,48 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- un seul h1, et aucun texte ecrit pour les moteurs seuls ---
+//
+// index.html portait DEUX <h1> : celui du hero peint avant React, et un second
+// dans un bloc « seo-fallback » cache aux visiteurs par
+// « position:absolute;width:1px;height:1px;clip:rect(0 0 0 0) ». Les deux
+// disaient d'ailleurs autre chose l'un que l'autre.
+//
+// Deux fautes distinctes. Une page ne porte qu'un h1 — au-dela, le moteur ne
+// sait plus quel est le sujet. Et du texte present pour le robot mais invisible
+// pour l'humain est traite par les consignes de Google comme une technique de
+// spam : le motif « 1px + clip » est legitime pour un lecteur d'ecran, pas pour
+// un bloc de mots-cles.
+//
+// Le bloc ne manquait a personne : ses liens etaient tous declares dans les
+// sitemaps, et les articles sont de vraies pages statiques.
+{
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8")
+    // Les commentaires expliquent souvent POURQUOI quelque chose a ete retire.
+    // Les compter ferait de l'explication une anomalie.
+    .replace(/<!--[\s\S]*?-->/g, "");
+  const h1 = (html.match(/<h1[\s>]/g) || []).length;
+  if (h1 !== 1) {
+    signale("titres", `index.html contient ${h1} balise(s) h1 au lieu d'une seule. Au-dela d'un titre principal, le moteur ne sait plus quel est le sujet de la page.`);
+  }
+  // Un bloc cache qui porte du texte destine aux moteurs. On cherche le motif
+  // de dissimulation, pas le nom du bloc : le renommer ne doit rien changer.
+  const DISSIMULE = /(clip\s*:\s*rect\(\s*0[\s,]|width\s*:\s*1px\s*;\s*height\s*:\s*1px|text-indent\s*:\s*-\d{4}|display\s*:\s*none)/i;
+  for (const m of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) {
+    for (const regle of m[1].split("}")) {
+      if (!DISSIMULE.test(regle)) continue;
+      // Une regle de dissimulation n'est un probleme que si le bloc qu'elle
+      // vise porte un titre ou un paragraphe — pas pour un helper generique.
+      const cible = (regle.match(/#([\w-]+)/) || [])[1];
+      if (!cible) continue;
+      const bloc = html.match(new RegExp('id="' + cible + '"[\\s\\S]{0,1500}'));
+      if (bloc && /<h[1-6][\s>]|<p[\s>]/.test(bloc[0])) {
+        signale("titres", `index.html cache le bloc « #${cible} » aux visiteurs alors qu'il contient du texte. Un contenu present pour le robot et invisible pour l'humain est traite comme une technique de spam.`);
+      }
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
