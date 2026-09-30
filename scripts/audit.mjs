@@ -3369,6 +3369,23 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- un chiffre annonce doit etre le vrai chiffre ---
+//
+// La landing annoncait « 28 guides pratiques » alors que le blog en comptait
+// 60. Personne ne ment en ecrivant 28 : le chiffre a simplement ete juste un
+// jour, puis le blog a grossi. C'est la forme la plus commune de fausse
+// promesse, et la plus facile a eviter — il suffit de la compter.
+{
+  const dossier = new URL("../public/blog/", import.meta.url);
+  if (fs.existsSync(dossier)) {
+    const reels = fs.readdirSync(dossier, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name !== "rubrique").length;
+    const annonce = Number((appSrc.match(/(\d+)\s+guides pratiques/) || [])[1]);
+    if (annonce && reels && annonce !== reels)
+      signale("chiffres", `la landing annonce « ${annonce} guides pratiques » alors que le blog en compte ${reels}`);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
