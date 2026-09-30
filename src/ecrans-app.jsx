@@ -13,6 +13,7 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
+import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
   Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
@@ -2364,8 +2365,8 @@ export function MentionsLegales(){
     // defaut a Washington. Quelques fonctions dites « edge » (envoi de
     // courriel, page vitrine publique) s'executent au plus pres du visiteur,
     // donc potentiellement hors de France : elles ne conservent rien.
-    {titre:"Hébergement",contenu:`Base de données : Supabase, sur OVHcloud — région eu-west-3 (Paris, France).
-Application et fonctions serveur : Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis — exécution configurée sur la région cdg1 (Paris, France).
+    {titre:"Hébergement",contenu:`Base de données : ${HEBERGEUR_BASE}.
+Application et fonctions serveur : ${HEBERGEUR_WEB}. ${HEBERGEUR_REGION}
 Quelques fonctions légères (envoi de courriel, page vitrine publique) s'exécutent au plus près du visiteur et peuvent donc transiter hors de France. Elles ne conservent aucune donnée : tout est stocké en France.`},
     {titre:"Propriété intellectuelle",contenu:"L'ensemble du contenu de TiMat (textes, interface, logo, fonctionnalités, code source) est la propriété exclusive de l'éditeur et protégé par le droit d'auteur. Toute reproduction sans autorisation écrite est interdite."},
     {titre:"Limitation de responsabilité",contenu:"Les calculs de salaire, récapitulatifs Pajemploi et attestations fiscales générés par TiMat sont fournis à titre indicatif. L'utilisateur reste responsable de la vérification des montants auprès des organismes compétents (URSSAF, CAF, Administration fiscale)."},

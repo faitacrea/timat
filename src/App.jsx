@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, useMemo, lazy, Suspense, Component } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
-import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { majLisible } from "../data/documents-legaux.js";
 import { habilitationActive } from "../data/pajemploi.js";
 
@@ -3916,6 +3916,65 @@ function BottomNav({groups,page,setPage,pmiNonLus,flat,role="asmat"}){
 }
 
 
+// ═══════════════════════════════════════════════════════════════════════════
+// LE FILET SOUS LES ÉCRANS CHARGÉS À LA DEMANDE
+//
+// LE DÉFAUT QU'IL RÉPARE — une page blanche, sans un mot.
+//
+// Cinquante-quatre écrans sont chargés à la demande : leur code n'arrive qu'au
+// moment où on les ouvre, depuis un fichier dont le nom porte une empreinte
+// (ecrans-a1b2c3.js). Cette empreinte change à chaque mise en ligne, et
+// l'ancien fichier disparaît du serveur.
+//
+// Conséquence : un onglet resté ouvert pendant une mise en ligne détient une
+// page qui réclame des fichiers qui n'existent plus. Au clic sur un onglet
+// pas encore visité, le téléchargement échoue, la promesse est rejetée — et
+// comme rien n'attrapait cette erreur, React démontait TOUTE l'application.
+// Écran blanc. Pas de message, pas de bouton, rien. Et seulement sur certains
+// onglets : ceux déjà ouverts avant la mise en ligne continuaient de marcher,
+// ce qui rend le défaut incompréhensible pour qui le subit.
+//
+// CE QU'IL FAIT. Il attrape l'erreur au lieu de laisser la page se vider. Et
+// comme le seul remède est de recharger — ce qui va chercher la nouvelle page
+// et les bons fichiers — il le fait lui-même, une fois. Le drapeau en session
+// interdit la boucle : si le rechargement ne règle rien, l'écran s'affiche et
+// explique, au lieu de recharger sans fin.
+class FiletEcrans extends Component {
+  constructor(p){ super(p); this.state={casse:false,rechargeTentee:false}; }
+  static getDerivedStateFromError(){ return {casse:true}; }
+  componentDidCatch(erreur){
+    // Un échec de téléchargement de module se reconnaît à son message. Lui
+    // seul justifie un rechargement : une vraie erreur de code se rechargerait
+    // en boucle sans jamais se réparer.
+    const chargement = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i
+      .test(erreur?.message || "");
+    let dejaTente = false;
+    try { dejaTente = sessionStorage.getItem("timat:rechargeApresEchec") === "1"; } catch(e){}
+    if (chargement && !dejaTente) {
+      try { sessionStorage.setItem("timat:rechargeApresEchec","1"); } catch(e){}
+      window.location.reload();
+      return;
+    }
+    console.warn("[écran] chargement impossible :", erreur?.message);
+    this.setState({rechargeTentee:true});
+  }
+  render(){
+    if(!this.state.casse) return this.props.children;
+    return <div style={{padding:"48px 20px",maxWidth:460,margin:"0 auto",textAlign:"center"}}>
+      <div style={{fontSize:40,marginBottom:12}}>🧩</div>
+      <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:8}}>Cet écran n'a pas pu s'ouvrir</div>
+      <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:18}}>
+        Vos données sont intactes : rien n'a été perdu et rien n'a été modifié.
+        C'est l'affichage de cet écran qui n'a pas pu être téléchargé.
+      </div>
+      <button className="btn bP" style={{minHeight:44}} onClick={()=>{
+        try{ sessionStorage.removeItem("timat:rechargeApresEchec"); }catch(e){}
+        window.location.reload();
+      }}>Recharger l'application</button>
+    </div>;
+  }
+}
+
 const GROUPS_AM={
   accueil:{l:"Accueil",ic:"🏠",trace:"accueil",color:"var(--B)",subs:null},
   enfant:{l:"L'enfant",ic:"👶",trace:"enfant",color:"var(--T)",subs:[
@@ -6246,8 +6305,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>2. Hébergement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
-                <strong>Site web :</strong> Vercel Inc. — 340 S Lemon Ave #4133, Walnut, CA 91789, USA. Fonctions serveur exécutées en région cdg1 (Paris, France).<br/>
-                <strong>Base de données :</strong> Supabase, sur OVHcloud — région eu-west-3 (Paris, France)<br/>
+                <strong>Site web :</strong> {HEBERGEUR_WEB}. {HEBERGEUR_REGION}<br/>
+                <strong>Base de données :</strong> {HEBERGEUR_BASE}<br/>
                 <strong>Paiement :</strong> Stripe — certifié PCI-DSS niveau 1
               </div>
 
@@ -7859,6 +7918,7 @@ export default function App(){
   // la demande sont tous dedans, et l'audit peut le vérifier en lisant le code
   // plutôt qu'en croyant sur parole que l'appelant s'en charge.
   const renderPage=()=>
+    <FiletEcrans key={page}>
     <Suspense fallback={<div style={{padding:"48px 20px",textAlign:"center",color:"var(--m)",fontSize:14}}>Chargement…</div>}>
       {(()=>{
     // LE verrou du forfait. Avant le routeur, pas dedans : un ecran ne peut
@@ -7937,7 +7997,8 @@ export default function App(){
       default: return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
     }
       })()}
-    </Suspense>;
+    </Suspense>
+    </FiletEcrans>;
 
   // MODE BORNE : l'appareil est pose dans l'entree, ou tendu a un parent. On
   // remplace TOUTE l'application — pas de barre du haut, pas de menu, pas de

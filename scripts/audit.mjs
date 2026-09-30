@@ -3386,6 +3386,23 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- l'adresse de l'hebergeur ne s'ecrit qu'a un endroit ---
+//
+// Deux adresses differentes de Vercel coexistaient, l'une sur la landing,
+// l'autre dans l'application. Les deux ne peuvent pas etre vraies, et la LCEN
+// impose de publier celle de l'hebergeur. Une valeur recopiee finit toujours
+// par diverger : elle vit desormais dans data/coordonnees.js, et plus nulle
+// part ailleurs.
+{
+  const fichiers = ["../src/App.jsx", "../src/ecrans-app.jsx", "../src/ecrans-secondaires.jsx"];
+  for (const f of fichiers) {
+    const t = readFileSync(new URL(f, import.meta.url), "utf8")
+      .split("\n").filter((l) => !/^\s*(\/\/|\*)/.test(l)).join("\n");
+    for (const m of t.matchAll(/Vercel Inc\.?,?\s*—?\s*\d+\s+[NS]?\s*[A-Z][a-z]+/g))
+      signale("hébergeur", `${f.replace("../", "")} ecrit une adresse de Vercel en dur (« ${m[0]} ») : elle doit venir de HEBERGEUR_WEB, dans data/coordonnees.js`);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
