@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase.js";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, PastilleRepas, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
 import {
   ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
@@ -99,6 +99,35 @@ export function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
 export function VueAidesSimulateurs({enfants,role,pEId,user}){
   const [v,setV]=useState(0);
   return <><SegBar v={v} setV={setV} items={[{ic:"💶",l:"Aide CMG"},{ic:"🧮",l:"Simulateur de coût"}]}/>{v===0?<KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>:<SimulateurCout enfants={enfants} pEId={pEId}/>}</>;
+}
+
+// LE CALENDRIER ET LA SEMAINE TYPE, AU MEME ENDROIT.
+//
+// Les deux repondent a la meme question — quand l'enfant est la — a deux
+// echelles : le calendrier montre les jours, le planning periscolaire la
+// semaine type qui les alimente. Les separer obligeait a regarder a deux
+// endroits pour une seule question.
+export function VueCalendrier({enfants,role,pEId,user}){
+  const [v,setV]=useState(0);
+  return <><SegBar v={v} setV={setV} items={[{ic:"📅",l:"Calendrier"},{ic:"🚌",l:"Semaine type"}]}/>
+    <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>
+      {v===0?<Calendrier enfants={enfants} role={role} pEId={pEId} user={user}/>
+            :<PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId} user={user}/>}
+    </Suspense>
+  </>;
+}
+
+// VOS REVENUS ET VOS HEURES, TOUTES FAMILLES REUNIES.
+//
+// Deux vues du meme tableau : l'une montre ce que chaque famille verse, l'autre
+// les heures face aux plafonds legaux. Elles agregent la meme matiere, et
+// c'est la meme question de fond — ou j'en suis, tous employeurs confondus.
+export function VueMonActivite({enfants,role,user}){
+  const [v,setV]=useState(0);
+  return <><SegBar v={v} setV={setV} items={[{ic:"👪",l:"Mes employeurs"},{ic:"⏰",l:"Mon temps de travail"}]}/>
+    {v===0?<MesEmployeurs enfants={enfants} role={role} user={user}/>
+          :<TempsDeTravail enfants={enfants} role={role} user={user}/>}
+  </>;
 }
 
 export function VueAideSupport({role,user}){

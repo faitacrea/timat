@@ -3987,7 +3987,6 @@ const GROUPS_AM={
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
-    {id:"periscolaire",l:"Planning périscolaire",ic:"🚌",d:"Les jours d'accueil, et les vacances scolaires"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec les parents"},
     {id:"paie_contrats",l:"Paie & Contrats",ic:"🧾",d:"Bulletins, contrats et déclarations"},
     {id:"mandat_pajemploi",l:"Déclaration Pajemploi",ic:"✍️",d:"Le mandat du parent, et vos déclarations transmises"},
@@ -3999,8 +3998,7 @@ const GROUPS_AM={
     {id:"liste_attente",l:"Demandes & liste d'attente",ic:"📬",d:"Les parents qui vous contactent, et votre lien public"},
     {id:"page_vitrine",l:"Ma page publique",ic:"🌐",d:"La page que vous donnez aux parents qui ne vous connaissent pas encore"},
     {id:"reprise_contrat",l:"Reprendre un contrat",ic:"📥",d:"Vos mois passés chez un autre outil, sans tout ressaisir"},
-    {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
-    {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
+    {id:"mes_employeurs",l:"Mon activité",ic:"👪",d:"Vos revenus et vos heures, toutes familles réunies"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Le journal de vos échanges, et les coordonnées de votre PMI"},
   ]},
 };
@@ -4016,7 +4014,6 @@ const GROUPS_P={
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
-    {id:"periscolaire",l:"Planning périscolaire",ic:"🚌",d:"Quand vous souhaitez un accueil, vacances comprises"},
     {id:"messagerie",l:"Messagerie",ic:"💬",d:"Échanges avec l'assistante maternelle"},
     {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
     {id:"admin_finances",l:"Mon contrat",ic:"🧾",d:"Contrat, bulletins et paiements"},
@@ -4044,7 +4041,7 @@ export const pageDepuisURL = (recherche) => {
 };
 
 // Alias : anciens ids de pages -> nouvel onglet regroupé (pour le surlignage du menu)
-const PAGE_ALIAS={bilans:"suivi_progres",registre_medicaments:"sante_urgence",cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports",kit_cmg:"aides_simulateurs",simulateur:"aides_simulateurs",support:"faq"};
+const PAGE_ALIAS={bilans:"suivi_progres",periscolaire:"calendrier",temps_travail:"mes_employeurs",registre_medicaments:"sante_urgence",cahier_jour:"journee",journal_complet:"journee",dashboard:"suivi_progres",eveil_complet:"suivi_progres",sante_complet:"sante_urgence",fiche_urgence:"sante_urgence",admin_finances:"paie_contrats",ik:"paie_contrats",recap_fiscal:"paie_contrats",documents_complet:"documents_rapports",bilans_exports:"documents_rapports",kit_cmg:"aides_simulateurs",simulateur:"aides_simulateurs",support:"faq"};
 // Trouver à quel groupe appartient une page
 const findGroup=(groups,pageId)=>{
   const pid=PAGE_ALIAS[pageId]||pageId;
@@ -7212,6 +7209,8 @@ export const Support = lazy(() => _app().then(m => ({ default: m.Support })));
 export const TableauDeBord = lazy(() => _app().then(m => ({ default: m.TableauDeBord })));
 export const TempsDeTravail = lazy(() => _app().then(m => ({ default: m.TempsDeTravail })));
 export const VueAideSupport = lazy(() => _app().then(m => ({ default: m.VueAideSupport })));
+export const VueCalendrier = lazy(() => _app().then(m => ({ default: m.VueCalendrier })));
+export const VueMonActivite = lazy(() => _app().then(m => ({ default: m.VueMonActivite })));
 export const VueAidesSimulateurs = lazy(() => _app().then(m => ({ default: m.VueAidesSimulateurs })));
 export const VueDocsRapports = lazy(() => _app().then(m => ({ default: m.VueDocsRapports })));
 export const VueJournee = lazy(() => _app().then(m => ({ default: m.VueJournee })));
@@ -7940,13 +7939,13 @@ export default function App(){
       case "recap_fiscal": return <RecapFiscalAssmat enfants={enfants} user={user}/>;
       case "admin_finances": return <AdminFinances {...P} user={user}/>;
       case "pointage": return <Pointage {...P}/>;
-      case "calendrier": return <Calendrier enfants={enfants} role={role} pEId={pEId} user={user}/>;
+      case "calendrier": return <VueCalendrier enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
       case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
-      case "mes_employeurs": return <MesEmployeurs enfants={enfants} role={role} user={user}/>;
+      case "mes_employeurs": return <VueMonActivite enfants={enfants} role={role} user={user}/>;
       case "mes_alertes": return <MesAlertes user={user}/>;
       case "temps_travail": return <TempsDeTravail enfants={enfants} role={role} user={user}/>;
       case "pmi": return <CommunicationPMI role={role} user={user} hasRealData={hasRealData}/>;
