@@ -139,12 +139,17 @@ non-diffusion du domicile reste acquise.
 > d'éditeur de logiciel, et connaître la marche à suivre ainsi que la licence
 > d'usage à signer.
 >
-> **Éditeur** : Lefort Sophie, entrepreneur individuel
-> **SIRET** : 902 648 088 00026
-> **Adresse** : [adresse déclarée à l'INSEE]
-> **Service** : TiMat — https://www.timat.app
-> **Lieu de l'activité** : France
-> **Usage** : éditeur partenaire (service proposé à des employeurs tiers)
+> J'ai tenté de créer un compte sur portailapi.urssaf.fr sans y parvenir : la
+> définition du mot de passe échoue systématiquement et me renvoie au début de
+> la création. Je vous écris donc directement.
+>
+> Éditeur : Lefort Sophie, entrepreneur individuel
+> SIRET : 902 648 088 00026
+> Adresse : [adresse]
+> Téléphone : [téléphone]
+> Service : TiMat — https://www.timat.app
+> Lieu de l'activité : France
+> Usage : éditeur partenaire (service proposé à des employeurs tiers)
 >
 > TiMat est une application de gestion destinée aux assistantes maternelles
 > agréées et aux parents employeurs relevant de Pajemploi. Elle calcule les
@@ -155,17 +160,17 @@ non-diffusion du domicile reste acquise.
 > L'accès à l'API nous permettrait de transmettre la déclaration mensuelle
 > directement, sur mandat explicite du parent employeur.
 >
-> **Le recueil du mandat est déjà en place dans l'application.** Le mandat est
+> Le recueil du mandat est déjà en place dans l'application. Le mandat est
 > donné par le parent employeur lui-même, jamais par l'assistante maternelle
 > qui est la salariée ; le texte accepté est horodaté et versionné ; le mandat
 > est révocable à tout moment d'un seul geste, avec effet immédiat ; et il est
 > conservé après révocation, de sorte qu'une déclaration déjà transmise reste
 > rattachable à l'autorisation en vigueur le jour de son envoi.
 >
-> **Volumétrie** : service en lancement, volumétrie estimée à quelques dizaines
-> de déclarations mensuelles la première année.
+> Volumétrie : service en lancement, volumétrie estimée à quelques dizaines de
+> déclarations mensuelles la première année.
 >
-> **Hébergement et sécurité** : les données sont hébergées en France — base de
+> Hébergement et sécurité : les données sont hébergées en France — base de
 > données à Paris (région eu-west-3) et fonctions serveur en région cdg1 — avec
 > chiffrement en transit et au repos, cloisonnement par ligne au niveau de la
 > base, et journal d'audit. Le service est conforme au RGPD ; les mentions
@@ -178,7 +183,19 @@ non-diffusion du domicile reste acquise.
 > distinguées.
 >
 > Sophie Lefort
-> [téléphone] — contact@timat.app
+> [téléphone]
+> Adresse de contact du service : contact@timat.app
+> (message envoyé depuis contact.timat.app@gmail.com, qui reçoit les réponses)
+
+**Où l'envoyer** : `contact.tiercedeclaration@urssaf.fr`.
+
+**Pourquoi deux adresses dans la signature.** Le message part d'une adresse
+Gmail, et c'est elle qui apparaît dans l'en-tête. Le site, lui, affiche
+`contact@timat.app` dans ses mentions légales. Les donner toutes les deux évite
+un décalage qu'il faudrait sinon expliquer, et dit clairement où arrive la
+réponse. Envoyer depuis `contact@timat.app` demanderait une vraie boîte aux
+lettres chez OVH, et non une simple redirection : à vérifier avec eux si la
+question se pose un jour.
 
 ## Sources
 
