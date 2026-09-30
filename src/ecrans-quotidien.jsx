@@ -1805,7 +1805,8 @@ export function Documents({enfants,role,pEId,user}){
   const supprimerDoc=async(doc)=>{
     if(!window.confirm("Supprimer "+doc.nom+" ?"))return;
     if(doc.storagePath&&!isDemoMode){
-      await supabase.storage.from('documents').remove([doc.storagePath]);
+      const{error:eFic}=await supabase.storage.from('documents').remove([doc.storagePath]);
+      if(eFic){ setToast("Le fichier n'a pas pu être supprimé. Réessayez."); return; }
       // « Document supprimé ✓ » s'affichait meme quand la fiche restait en
       // base : le document reapparaissait au rechargement suivant.
       const { error } = await supabase.from('documents_meta').delete().eq('id',doc.id);
@@ -2093,6 +2094,9 @@ export function CahierJour({enfants,role,pEId,user,pointagesDB}){
   const [activites,setActivites]=useState([]);
   const [cahier,setCahier]=useState(null);
   const [photos,setPhotos]=useState([]);
+  // Les fichiers existent mais leurs liens n'ont pas pu etre signes : ce n'est
+  // pas « aucune photo », c'est une panne. La confondre inquiete pour rien.
+  const [photosPanne,setPhotosPanne]=useState(false);
   const [toast,setToast]=useState("");
   const [mot,setMot]=useState("");
   const [humeur,setHumeur]=useState("");
@@ -2118,9 +2122,13 @@ export function CahierJour({enfants,role,pEId,user,pointagesDB}){
       if(!error&&files?.length){
         const valid=files.filter(f=>f.name!=='.emptyFolderPlaceholder');
         const paths=valid.map(f=>`${path}/${f.name}`);
-        const{data:signed}=await supabase.storage.from('photos').createSignedUrls(paths,3600);
-        setPhotos((signed||[]).map(s=>s.signedUrl).filter(Boolean));
-      }else setPhotos([]);
+        // La liste a reussi, donc les photos EXISTENT. Si la signature des
+        // liens echoue, « (signed||[]) » affichait « aucune photo » — elle
+        // croyait les avoir perdues alors qu'elles sont bien la.
+        const{data:signed,error:eSign}=await supabase.storage.from('photos').createSignedUrls(paths,3600);
+        if(eSign){ setPhotosPanne(true); setPhotos([]); }
+        else { setPhotosPanne(false); setPhotos((signed||[]).map(s=>s.signedUrl).filter(Boolean)); }
+      }else{ setPhotosPanne(false); setPhotos([]); }
     }catch(e){setPhotos([]);}
     setPhotoLoading(false);
   };
@@ -2300,7 +2308,10 @@ export function CahierJour({enfants,role,pEId,user,pointagesDB}){
           + Photo<input type="file"accept="image/*"style={{display:"none"}}onChange={ajouterPhoto}/></label>}
       </div>
       {photoLoading&&<div style={{fontSize:12,color:"var(--l)"}}>Chargement…</div>}
-      {!photoLoading&&photos.length===0&&<div style={{fontSize:13,color:"var(--l)",marginTop:8}}>{role==="asmat"?"Ajoutez une photo de la journée.":"Aucune photo partagée pour ce jour."}</div>}
+      {!photoLoading&&photosPanne&&<div style={{fontSize:13,lineHeight:1.6,color:"var(--b)",background:"#FFF6F2",border:"1px solid #E8C4B4",borderRadius:10,padding:"10px 12px",marginTop:8}}>
+        Les photos de ce jour n'ont pas pu être affichées. <strong>Elles ne sont pas perdues</strong> : seule la préparation des liens a échoué. Rechargez la page.
+      </div>}
+      {!photoLoading&&!photosPanne&&photos.length===0&&<div style={{fontSize:13,color:"var(--l)",marginTop:8}}>{role==="asmat"?"Ajoutez une photo de la journée.":"Aucune photo partagée pour ce jour."}</div>}
       {photos.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(90px,1fr))",gap:8}}>
         {photos.map((u,i)=><img key={i}src={u}alt=""style={{width:"100%",aspectRatio:"1",objectFit:"cover",borderRadius:10}}/>)}
       </div>}
