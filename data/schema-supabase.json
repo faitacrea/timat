@@ -280,6 +280,16 @@
   "source",
   "texte"
  ],
+ "mandats_pajemploi": [
+  "accorde_le",
+  "asmat_id",
+  "enfant_id",
+  "id",
+  "parent_id",
+  "preuve",
+  "revoque_le",
+  "version_texte"
+ ],
  "medicaments": [
   "administre_par",
   "autorisation",
@@ -517,6 +527,17 @@
   "id",
   "mood",
   "texte"
+ ],
+ "transmissions_pajemploi": [
+  "accuse",
+  "enfant_id",
+  "envoye_le",
+  "id",
+  "mandat_id",
+  "message",
+  "mois",
+  "repondu_le",
+  "statut"
  ],
  "vaccins": [
   "age_mois",

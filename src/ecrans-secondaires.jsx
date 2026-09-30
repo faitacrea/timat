@@ -15,6 +15,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase.js";
 import { resumeDemande } from "../data/planning-periscolaire.js";
+import { ETATS_TRANSMISSION, LIBELLE_ETAT_MANDAT, TEXTE_MANDAT, VERSION_MANDAT, etatMandat } from "../data/pajemploi.js";
 import {
   CPill, createNotification, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 } from "./App.jsx";
@@ -2941,5 +2942,185 @@ ${commune?`<div class="c">${H(commune)}</div>`:""}
       <strong style={{color:"var(--b)"}}>Où mettre ce lien ?</strong><br/>
       Dans votre présentation sur monenfant.fr, sur votre page Facebook, dans la signature de vos e-mails, sur une affichette au relais petite enfance. Partout où un parent peut le lire, il peut vous envoyer une demande complète plutôt qu'un appel manqué.
     </div>
+  </div>;
+}
+
+// ===========================================================================
+// LE MANDAT DE DECLARATION PAJEMPLOI
+//
+// Ecran entierement invisible tant que l'habilitation « tiers declarant »
+// n'est pas obtenue : proposer de mandater alors qu'aucune declaration ne peut
+// partir promettrait ce que l'application ne sait pas faire.
+//
+// Seul le PARENT peut donner ou retirer le mandat — c'est lui l'employeur.
+// L'assistante maternelle le consulte, et voit le journal des transmissions.
+// La base impose deja cette regle : l'ecran ne fait que la rendre lisible.
+// ===========================================================================
+export function MandatPajemploi({enfants,role,pEId,user}){
+  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
+  const [selId,setSelId]=useState(liste[0]?.id);
+  const enfant=liste.find(e=>e.id===selId)||liste[0];
+  const [mandat,setMandat]=useState(null);
+  const [transmissions,setTransmissions]=useState([]);
+  const [etat,setEtat]=useState("chargement"); // chargement | pret | panne
+  const [lu,setLu]=useState(false);
+  const [toast,setToast]=useState("");
+
+  useEffect(()=>{
+    if(!enfant){setEtat("pret");return;}
+    let vivant=true;
+    (async()=>{
+      const [m,t]=await Promise.all([
+        supabase.from("mandats_pajemploi")
+          .select("id,parent_id,version_texte,accorde_le,revoque_le")
+          .eq("enfant_id",enfant.id).is("revoque_le",null).maybeSingle(),
+        supabase.from("transmissions_pajemploi")
+          .select("id,mois,statut,accuse,message,envoye_le")
+          .eq("enfant_id",enfant.id).order("envoye_le",{ascending:false}).limit(24),
+      ]);
+      if(!vivant)return;
+      // Une lecture en echec ne doit pas ressembler a « aucun mandat » : le
+      // parent croirait devoir le redonner, et l'assistante maternelle
+      // croirait ne pas pouvoir declarer.
+      if(m.error||t.error){setEtat("panne");return;}
+      setMandat(m.data||null);
+      setTransmissions(t.data||[]);
+      setLu(false);
+      setEtat("pret");
+    })();
+    return()=>{vivant=false;};
+  },[enfant?.id]);
+
+  const donner=async()=>{
+    const{data,error}=await supabase.from("mandats_pajemploi").insert({
+      enfant_id:enfant.id, parent_id:user.id, asmat_id:enfant.asmat_id||enfant.asmatId,
+      version_texte:VERSION_MANDAT,
+      preuve:{le:new Date().toISOString(), version:VERSION_MANDAT},
+    }).select("id,parent_id,version_texte,accorde_le,revoque_le").single();
+    if(error){setToast("Le mandat n'a pas pu être enregistré — réessayez");return;}
+    setMandat(data);
+    setToast("Mandat donné ✓");
+    createNotification({
+      userId:enfant.asmat_id||enfant.asmatId, type:"info",
+      titre:"Mandat Pajemploi accordé pour "+enfant.prenom,
+      corps:"Le parent employeur vous autorise à transmettre la déclaration.",
+      page:"mandat_pajemploi",
+    });
+  };
+
+  const retirer=async()=>{
+    const{error}=await supabase.from("mandats_pajemploi")
+      .update({revoque_le:new Date().toISOString()}).eq("id",mandat.id);
+    if(error){setToast("Le retrait n'a pas pu être enregistré — réessayez");return;}
+    setMandat(null);
+    setToast("Mandat retiré");
+    createNotification({
+      userId:enfant.asmat_id||enfant.asmatId, type:"alerte",
+      titre:"Mandat Pajemploi retiré pour "+enfant.prenom,
+      corps:"Plus aucune déclaration ne partira tant que le parent ne l'aura pas redonné.",
+      page:"mandat_pajemploi",
+    });
+  };
+
+  if(etat==="chargement")return <div className="fi" style={{padding:"48px 20px",textAlign:"center",color:"var(--m)",fontSize:14}}>Chargement…</div>;
+  if(etat==="panne")return <div className="fi" style={{padding:"40px 20px",maxWidth:520,margin:"0 auto",textAlign:"center"}}>
+    <div style={{fontSize:40,marginBottom:12}}>📡</div>
+    <div style={{fontWeight:700,fontSize:16,color:"var(--b)",marginBottom:8}}>Le mandat n'a pas pu être chargé</div>
+    <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:16}}>
+      Ce n'est pas qu'il n'existe pas : la connexion a échoué. Rien n'a changé.
+    </div>
+    <button className="btn bP" onClick={()=>window.location.reload()}>Réessayer</button>
+  </div>;
+
+  const actif=etatMandat(mandat)==="actif";
+
+  return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+    <PageHeader icon="✍️" title="Déclaration Pajemploi"
+      sub={role==="parent"?"Vous décidez si TiMat déclare à votre place":"Le mandat du parent, et vos déclarations transmises"}/>
+
+    {!enfant&&<EmptyState emoji="✍️" titre="Aucun enfant" texte="Cet écran s'ouvrira dès qu'un enfant sera enregistré."/>}
+
+    {enfant&&<>
+      {role==="asmat"&&liste.length>1&&<div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}
+      </div>}
+
+      <div className="card" style={{marginBottom:14,borderLeft:"4px solid "+(actif?"var(--S)":"var(--l)")}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>
+          <IconeOuEmoji e={actif?"✅":"⬜"}/> {LIBELLE_ETAT_MANDAT[etatMandat(mandat)]}
+        </div>
+        {actif&&<div style={{fontSize:12,color:"var(--m)",marginTop:4}}>
+          Donné le {new Date(mandat.accorde_le).toLocaleDateString("fr-FR")}
+        </div>}
+        {!actif&&role==="asmat"&&<div style={{fontSize:12,color:"var(--m)",marginTop:6,lineHeight:1.55}}>
+          Seul le parent employeur peut donner ce mandat — c'est lui l'employeur. Vous ne pouvez pas le donner à sa place, ni vous l'accorder. Parlez-en avec lui.
+        </div>}
+      </div>
+
+      {role==="parent"&&<div className="card" style={{marginBottom:14}}>
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:8}}>{TEXTE_MANDAT.titre}</div>
+        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:12}}>{TEXTE_MANDAT.intro}</div>
+        <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:6}}>Ce que vous autorisez</div>
+        <ul style={{paddingLeft:18,margin:"0 0 14px",fontSize:13,color:"var(--m)",lineHeight:1.7}}>
+          {TEXTE_MANDAT.points.map((p,i)=><li key={i}>{p}</li>)}
+        </ul>
+        <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:6}}>Ce que vous n'autorisez pas</div>
+        <ul style={{paddingLeft:18,margin:"0 0 14px",fontSize:13,color:"var(--m)",lineHeight:1.7}}>
+          {TEXTE_MANDAT.exclusions.map((p,i)=><li key={i}>{p}</li>)}
+        </ul>
+
+        {!actif&&<>
+          {/* Une case a cocher avant le bouton : un mandat donne sans avoir lu
+              n'est pas un consentement eclaire, et c'est la piece qui vaudra
+              preuve le jour d'un litige. */}
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",marginBottom:12}}>
+            <input type="checkbox" checked={lu} onChange={e=>setLu(e.target.checked)}
+              style={{marginTop:3,width:18,height:18,flexShrink:0,cursor:"pointer"}}/>
+            <span style={{fontSize:13,color:"var(--b)",lineHeight:1.55}}>
+              J'ai lu ce mandat et j'autorise TiMat à transmettre ma déclaration Pajemploi pour {enfant.prenom}.
+            </span>
+          </label>
+          <button className="btn bP" disabled={!lu} onClick={donner}
+            style={{minHeight:40,opacity:lu?1:.5,cursor:lu?"pointer":"not-allowed"}}>
+            Donner le mandat
+          </button>
+        </>}
+
+        {actif&&<>
+          <button className="btn bG" onClick={retirer} style={{minHeight:40}}>Retirer le mandat</button>
+          <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.55}}>
+            Le retrait est immédiat. Les déclarations déjà transmises restent valables : elles étaient autorisées le jour de leur envoi.
+          </div>
+        </>}
+      </div>}
+
+      {/* ===== LE JOURNAL DES TRANSMISSIONS ===== */}
+      <div className="card">
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:10}}>
+          <IconeOuEmoji e="📨"/> Déclarations transmises
+        </div>
+        {transmissions.length===0
+          ? <div style={{fontSize:13,color:"var(--l)",lineHeight:1.6}}>
+              Aucune déclaration transmise pour l'instant. Chaque envoi s'inscrira ici, avec la réponse de l'URSSAF et son numéro d'accusé.
+            </div>
+          : <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {transmissions.map(t=>{
+                const e=ETATS_TRANSMISSION[t.statut]||ETATS_TRANSMISSION.erreur;
+                const coul=t.statut==="transmise"?"var(--S)":t.statut==="en_attente"?"var(--B)":"var(--R)";
+                return <div key={t.id} style={{padding:"10px 12px",background:"var(--c)",borderRadius:10,borderLeft:"3px solid "+coul}}>
+                  <div style={{display:"flex",justifyContent:"space-between",gap:8,flexWrap:"wrap",alignItems:"baseline"}}>
+                    <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{t.mois}</span>
+                    <span style={{fontWeight:700,fontSize:12,color:coul}}>{e.libelle}</span>
+                  </div>
+                  <div style={{fontSize:12,color:"var(--m)",marginTop:4,lineHeight:1.55}}>{e.explication}</div>
+                  {t.message&&<div style={{fontSize:12,color:"var(--R)",marginTop:4}}>Motif : {t.message}</div>}
+                  {t.accuse&&<div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Accusé n° {t.accuse}</div>}
+                  <div style={{fontSize:12,color:"var(--b)",marginTop:6,fontWeight:600}}>{e.action}</div>
+                </div>;
+              })}
+            </div>}
+      </div>
+    </>}
   </div>;
 }
