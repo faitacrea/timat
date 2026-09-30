@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase.js";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
 import {
   ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
@@ -90,10 +90,17 @@ export function VuePaieContrats({enfants,role,pEId,user,pointagesDB}){
 export function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
   const [v,setV]=useState(0);const P={enfants,role,pEId,user,pointagesDB};
   const pro=estPro(user);
-  return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"}]}/>
+  // LE PROJET D'ACCUEIL A REJOINT LES DOCUMENTS. C'est un document qu'on redige
+  // une fois et qu'on relit : sa place est avec les autres documents, pas au
+  // milieu du quotidien de l'enfant, entre la journee et le pointage.
+  //
+  // Il reste GRATUIT — contrairement a l'onglet des attestations — parce qu'il
+  // l'etait deja et qu'il n'y a aucune raison de le faire payer maintenant.
+  return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"},{ic:"🌿",l:"Projet d'accueil"}]}/>
     {v===0
       ? (pro?<DocumentsComplet {...P}/>:<VerrouPro titre="Documents et attestations" desc="Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."/>)
-      : <BilansExports {...P}/>}</>;
+      : v===1 ? <BilansExports {...P}/>
+      : <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><ProjetAccueil user={user} role={role}/></Suspense>}</>;
 }
 
 export function VueAidesSimulateurs({enfants,role,pEId,user}){
@@ -2676,7 +2683,8 @@ export function DocumentsComplet({enfants,role,pEId,user}){
   return <div className="fi">
     <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"}].map(s=>
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"},
+        ...(role==="parent"?[{id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"}]:[])].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -2689,6 +2697,7 @@ export function DocumentsComplet({enfants,role,pEId,user}){
     {sec==="documents"&&<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><Documents enfants={enfants}role={role}pEId={pEId}user={user}/></Suspense>}
     {sec==="attestation_pe"&&<AttestationPoleEmploi enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {sec==="attestation_fiscale"&&<AttestationFiscale enfants={enfants}role={role}pEId={pEId}user={user}/>}
+    {sec==="projet_accueil"&&<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><ProjetAccueil user={user} role={role}/></Suspense>}
   </div>;
 }
 
