@@ -6929,6 +6929,9 @@ export const DEFAULT_CONFIG = {
     adresse:"",
     email:EMAIL_CONTACT,
   },
+  // Vide = l'ecran de mandat Pajemploi est masque. Il ne s'ouvre que le jour
+  // de l'habilitation, quand l'URSSAF remet l'identifiant client.
+  pajemploi:{ clientId:"" },
   boutique:{
     linkSheets:"https://buy.stripe.com/9B64gr4cGfDP0Qq7j3dwc07",
     linkFiche:"https://buy.stripe.com/00wcMX38C0IV1UucDndwc0c",
@@ -6991,6 +6994,7 @@ export const loadConfig = async () => {
         proItems: saved.proItems||DEFAULT_CONFIG.proItems,
         guarantees: saved.guarantees||DEFAULT_CONFIG.guarantees,
         legal:{...DEFAULT_CONFIG.legal,...(saved.legal||{})},
+        pajemploi:{...DEFAULT_CONFIG.pajemploi,...(saved.pajemploi||{})},
         boutique:{...DEFAULT_CONFIG.boutique,...(saved.boutique||{})},
         sectionsVisibles:{...DEFAULT_CONFIG.sectionsVisibles,...(saved.sectionsVisibles||{})},
         faqLanding: saved.faqLanding||DEFAULT_CONFIG.faqLanding,
@@ -7826,14 +7830,26 @@ export default function App(){
   // est configure. Avant, l'ecran existe dans le code mais aucun chemin n'y
   // mene : proposer de mandater sans pouvoir transmettre promettrait ce que
   // l'application ne sait pas faire.
-  const groups=useMemo(()=>{
+  // PAS DE useMemo ICI, ET C'EST IMPORTANT. Ce calcul se trouve APRES plusieurs
+  // retours anticipes (compte non charge, borne, onboarding). Un hook pose
+  // apres un « return » conditionnel s'execute a certains rendus et pas a
+  // d'autres : React compte alors un nombre de hooks different d'un rendu au
+  // suivant et jette l'erreur #310, qui vide la page entiere. C'est exactement
+  // ce qui est arrive, et c'est un essai en navigateur qui l'a montre — la
+  // relecture du code ne l'avait pas vu.
+  //
+  // Le calcul est de toute facon negligeable : une dizaine d'objets recopies.
+  const groups=(()=>{
     const base=role==="asmat"?GROUPS_AM:GROUPS_P;
-    if(habilitationActive(G.config))return base;
+    // On lit l'etat React « appConfig », pas la globale mutable G : G EST la
+    // configuration, donc « G.config » valait undefined et l'ecran restait
+    // masque quoi qu'on regle au back-office.
+    if(habilitationActive(appConfig))return base;
     const filtre={};
     for(const[k,g]of Object.entries(base))
       filtre[k]=g.subs?{...g,subs:g.subs.filter(sub=>sub.id!=="mandat_pajemploi")}:g;
     return filtre;
-  },[role]);
+  })();
   const P={enfants,role,pEId,user,pointagesDB};
 
   // Les écrans chargés à la demande arrivent après un aller-retour réseau : sans

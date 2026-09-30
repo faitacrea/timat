@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { jeton, jetonValide } from '../lib/infolettre-jeton.js';
 
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 const supabase = createClient(
@@ -13,19 +13,6 @@ const supabase = createClient(
  * jamais le serveur, elle sert donc de secret sans variable d'environnement
  * supplémentaire.
  */
-export function jeton(email) {
-  return createHmac('sha256', process.env.SUPABASE_SERVICE_KEY || '')
-    .update(`desinscription:${email}`)
-    .digest('base64url')
-    .slice(0, 32);
-}
-
-function jetonValide(email, fourni) {
-  const attendu = Buffer.from(jeton(email));
-  const recu = Buffer.from(String(fourni || ''));
-  return attendu.length === recu.length && timingSafeEqual(attendu, recu);
-}
-
 function page(titre, message, ton) {
   const couleur = ton === 'ok' ? '#3F7A63' : '#B33A24';
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
@@ -46,6 +33,20 @@ a{display:inline-block;background:#C84B31;color:#fff;text-decoration:none;font-w
 }
 
 export default async function handler(req, res) {
+  // L'INSCRIPTION ET LA DESINSCRIPTION, DANS UNE SEULE FONCTION.
+  //
+  // Elles allaient deja ensemble — inscription-releve.js importait jeton()
+  // d'ici — et les reunir libere une place sous les douze fonctions du plan
+  // Hobby. Le chemin se choisit par la METHODE : POST pour un formulaire
+  // d'inscription, GET pour un lien de desinscription clique dans un courriel.
+  //
+  // L'adresse /api/desinscription?e=…&t=… figure dans des courriels DEJA
+  // ENVOYES : elle doit continuer de repondre, et vercel.json la redirige ici.
+  if (req.method === 'POST' || req.method === 'OPTIONS') {
+    const { inscrire } = await import('../lib/infolettre-inscription.js');
+    return inscrire(req, res);
+  }
+
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Robots-Tag', 'noindex');
 

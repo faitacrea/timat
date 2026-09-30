@@ -129,21 +129,6 @@ domiciliation commerciale (15 à 30 € par mois pour une offre simple) se décl
 à l'INSEE, devient l'adresse de l'entreprise, et c'est elle qu'on publie. La
 non-diffusion du domicile reste acquise.
 
-## L'adresse : un point à trancher avant d'envoyer
-
-L'adresse déclarée à l'INSEE est **non diffusible** — l'option de non-diffusion
-du répertoire SIRENE a été activée. C'est une protection volontaire, et la
-publier sur le site la défait : une page web est indexée, archivée et mise en
-cache, ce qu'un registre consultable au cas par cas n'est pas.
-
-L'URSSAF, elle, a besoin de l'adresse réelle : c'est une administration, pas
-une publication. La donner dans le dossier ne pose aucun problème.
-
-Le choix ne porte donc que sur ce qui est **publié sur le site**. Une adresse de
-domiciliation commerciale (15 à 30 € par mois pour une offre simple) se déclare
-à l'INSEE, devient l'adresse de l'entreprise, et c'est elle qu'on publie. La
-non-diffusion du domicile reste acquise.
-
 ## Brouillon du courriel de demande
 
 > Objet : Demande d'accès à l'API Tierce déclaration Pajemploi — éditeur TiMat

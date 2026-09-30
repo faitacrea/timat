@@ -81,7 +81,9 @@ console.log("\n— Seul le parent mandate, et l'écran le dit comme la base");
 console.log("\n— Rien ne s'affiche tant que l'habilitation n'est pas obtenue");
 {
   const app = lire("src/App.jsx");
-  ok(/habilitationActive\(G\.config\)/.test(app), "le menu interroge l'habilitation");
+  ok(/habilitationActive\(appConfig\)/.test(app), "le menu interroge l'habilitation depuis l'état React");
+  ok(!/const groups=useMemo/.test(app),
+    "le menu ne passe pas par un hook — il est calculé après des retours anticipés, et React #310 viderait la page");
   ok(/sub\.id!=="mandat_pajemploi"/.test(app), "l'entrée est retirée du menu sans habilitation");
   ok(app.includes('case "mandat_pajemploi"'), "l'écran reste routé — pour le jour où ça bascule");
 }
