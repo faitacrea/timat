@@ -3931,6 +3931,7 @@ const GROUPS_AM={
     {id:"bilans",l:"Bilans",ic:"✨",d:"Bilans périodiques à partager"},
     {id:"registre_medicaments",l:"Registre médicaments",ic:"💊",d:"Consignation obligatoire de chaque médicament donné"},
     {id:"autorisations",l:"Autorisations",ic:"🪪",d:"Ce que le parent autorise : médicaments, urgence, transport, photos"},
+    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique, que le parent peut lire"},
   ]},
   admin:{l:"Administratif",ic:"🗂️",trace:"admin",color:"var(--P)",subs:[
     {id:"calendrier",l:"Calendrier",ic:"📅",d:"Planning, absences et événements"},
@@ -3943,13 +3944,10 @@ const GROUPS_AM={
     {id:"inviter_parent",l:"Inviter un parent",ic:"👪",d:"Lien de suivi et signature du contrat"},
     {id:"liste_attente",l:"Demandes & liste d'attente",ic:"📬",d:"Les parents qui vous contactent, et votre lien public"},
     {id:"page_vitrine",l:"Ma page publique",ic:"🌐",d:"La page que vous donnez aux parents qui ne vous connaissent pas encore"},
-    {id:"projet_accueil",l:"Projet d'accueil",ic:"🌿",d:"Votre projet pédagogique"},
     {id:"reprise_contrat",l:"Reprendre un contrat",ic:"📥",d:"Vos mois passés chez un autre outil, sans tout ressaisir"},
     {id:"mes_employeurs",l:"Mes employeurs",ic:"👪",d:"Revenus du mois et congés, famille par famille"},
     {id:"temps_travail",l:"Mon temps de travail",ic:"⏰",d:"Tous employeurs confondus, face aux plafonds légaux"},
     {id:"pmi",l:"PMI",ic:"🏛️",d:"Le journal de vos échanges, et les coordonnées de votre PMI"},
-    {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
-    {id:"faq",l:"Aide & Support",ic:"❓",d:"Guides, questions fréquentes, contact"},
   ]},
 };
 const GROUPS_P={
@@ -3970,8 +3968,6 @@ const GROUPS_P={
     {id:"aides_simulateurs",l:"Aides & Simulateurs",ic:"💶",d:"CMG et estimation du coût de garde"},
     {id:"admin_finances",l:"Mon contrat",ic:"🧾",d:"Contrat, bulletins et paiements"},
     {id:"documents_complet",l:"Documents & Attestations",ic:"🗂️",d:"Vos documents et attestations"},
-    {id:"mes_alertes",l:"Mes alertes",ic:"🔔",d:"Ce que vous recevez, et sur quels appareils"},
-    {id:"faq",l:"Centre d'aide",ic:"❓",d:"Guides et contact"},
   ]},
 };
 

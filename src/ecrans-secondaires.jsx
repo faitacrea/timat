@@ -1006,6 +1006,24 @@ export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckou
       </div>
       <GestionStockage user={user}/>
 
+      {/* Les alertes et l'aide etaient rangees dans « Outils Pro », a cote du
+          pointage et des bulletins. Ce ne sont pas des outils de metier : ce
+          sont des reglages. Elles vivent ici, ou on va quand on cherche un
+          reglage, et « Outils Pro » redevient lisible. */}
+      <div className="card">
+        <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="⚙️"/> Notifications & aide</div>
+        {[
+          ["🔔","Mes alertes","mes_alertes"],
+          ["❓",estParent?"Centre d'aide":"Aide & Support","faq"],
+        ].map(([ic,l,pg])=>
+          <div key={pg}onClick={()=>setPage(pg)}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid var(--br)",cursor:"pointer"}}
+            onMouseEnter={e=>e.currentTarget.style.background="var(--c)"}
+            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            <span style={{fontSize:13,color:"var(--b)"}}><IconeOuEmoji e={ic}/> {l}</span>
+            <span style={{color:"var(--l)",fontSize:12}}>→</span>
+          </div>)}
+      </div>
+
       <div className="card">
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Légal & RGPD</div>
         {[
