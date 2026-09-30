@@ -689,6 +689,9 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   // Elles ne se confondent pas avec celles de l'enfant : ce sont les journees
   // ou c'est elle qui n'accueille pas.
   const [absAsmat,setAbsAsmat]=useState([]);
+  // Sans cet etat, une lecture ratee des absences donnait un bulletin sans
+  // aucune deduction — donc un montant trop eleve, envoye au parent.
+  const [absAsmatPanne,setAbsAsmatPanne]=useState(false);
   useEffect(()=>{
     if(!moisSelKey){setAbsAsmat([]);return;}
     if(isDemoBull){
@@ -697,9 +700,14 @@ export function BulletinSalaire({enfants,role,pEId,user}){
     }
     let vivant=true;
     (async()=>{
-      const{data}=await supabase.from("evenements").select("*")
+      // CES ABSENCES SE DEDUISENT DU BULLETIN. « (data||[]) » sur une lecture
+      // ratee donnait ZERO absence : le salaire calcule ne deduisait rien, et
+      // le bulletin partait au parent avec un montant trop eleve.
+      const{data,error}=await supabase.from("evenements").select("*")
         .gte("date",moisSelKey+"-01").lte("date",moisSelKey+"-31");
       if(!vivant)return;
+      if(error){ setAbsAsmatPanne(true); return; }
+      setAbsAsmatPanne(false);
       setAbsAsmat((data||[]).filter(e=>HEURES_TYPES[e.type]).map(e=>({...e,heures:Number(e.heures)||0})));
     })();
     return()=>{vivant=false;};
@@ -1111,6 +1119,14 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📜" title="Bulletin de salaire" sub="Bulletin officiel conforme à la convention collective"/>
+    {/* LE BULLETIN SE CALCULE SUR CES ABSENCES. Si leur lecture a echoue, le
+        montant est trop eleve et rien ne le dirait : on refuse de laisser
+        signer et envoyer un document faux sans avertissement. */}
+    {absAsmatPanne&&<div className="card" style={{marginBottom:14,background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
+      <div style={{fontSize:13,lineHeight:1.65,color:"var(--b)"}}>
+        <strong>Vos absences du mois n'ont pas pu être chargées.</strong> Le montant affiché ne les déduit donc pas et serait trop élevé. Rechargez la page avant d'envoyer ce bulletin.
+      </div>
+    </div>}
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>{setSelId(e.id);}}/>)}
     </div>}
@@ -2821,6 +2837,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
   const [mois,setMois]=useState(isoMois(new Date()));
   const [cv,setCv]=useState(5);
   const [trajets,setTrajets]=useState([]);
+  const [trajetsPanne,setTrajetsPanne]=useState(false);
   const [loading,setLoading]=useState(false);
   const [saving,setSaving]=useState(false);
   const blank={date:isoJour(new Date()),enfant_id:enfants[0]?.id||"",km:"",motif:"",taux:BAREME_KM_2026[5]};
@@ -2833,7 +2850,11 @@ export function IndemnitesKilometriques({enfants,role,user}){
     const debut=mois+"-01";
     const d=new Date(mois+"-01"); d.setMonth(d.getMonth()+1);
     const finExcl=isoJour(d);
-    const{data}=await supabase.from("trajets").select("*").gte("date",debut).lt("date",finExcl).order("date",{ascending:true});
+    // « if(data) » protegeait deja d'un ecrasement, mais au premier chargement
+    // une panne laissait la liste vide — indiscernable d'un mois sans trajet.
+    const{data,error:eTraj}=await supabase.from("trajets").select("*").gte("date",debut).lt("date",finExcl).order("date",{ascending:true});
+    if(eTraj){ setTrajetsPanne(true); setLoading(false); return; }
+    setTrajetsPanne(false);
     if(data)setTrajets(data);
     setLoading(false);
   };
@@ -2866,6 +2887,11 @@ export function IndemnitesKilometriques({enfants,role,user}){
 
   return <div className="fi">
     <PageHeader icon="🚗" title="Frais kilométriques (IK)" sub="Trajets, barème 2026 et feuille de route Pajemploi"/>
+    {trajetsPanne&&<div className="card" style={{marginBottom:14,background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
+      <div style={{fontSize:13,lineHeight:1.65,color:"var(--b)"}}>
+        <strong>Vos trajets n'ont pas pu être chargés.</strong> Le total affiché n'est pas celui du mois : rechargez la page avant de le reporter sur Pajemploi.
+      </div>
+    </div>}
 
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
       <button className="btn" onClick={()=>setMois(decalerMois(mois,-1))} style={{padding:"6px 12px"}}>←</button>

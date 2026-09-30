@@ -3044,7 +3044,16 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
 // LA REGLE, la meme que pour les ecritures : soit on lit « error », soit on
 // ecrit pourquoi on l'ignore avec « sans-retour : <raison> ».
 {
-  const SENSIBLES = /from\(\s*["'](pointages|versements|bulletins|contrats|absences|historique_mois|enfants)["']\s*\)/;
+  // LA PORTEE S'EST ELARGIE, et il faut dire pourquoi. Elle couvrait d'abord
+  // l'argent et le droit. Deux ecrans ont montre pire qu'un chiffre faux : la
+  // fiche d'urgence et le projet d'accueil repartaient d'un FORMULAIRE VIDE
+  // quand leur lecture echouait — et le premier enregistrement ECRASAIT les
+  // donnees existantes. Une lecture ratee ne coutait plus un affichage, elle
+  // coutait le document lui-meme.
+  //
+  // Toute table dont l'ecran propose ensuite de SAISIR ce qu'il n'a pas pu
+  // lire est donc concernee.
+  const SENSIBLES = /from\(\s*["'](pointages|versements|bulletins|contrats|absences|historique_mois|enfants|fiche_urgence|projet_accueil|bilans|transmissions|evenements|trajets|medicaments|autorisations|demandes)["']\s*\)/;
   const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
   for (const [nom, src] of sources) {
     const lignes = src.split("\n");

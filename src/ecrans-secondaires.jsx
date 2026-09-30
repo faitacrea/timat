@@ -148,8 +148,11 @@ export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user p
         bilanId=ins?.id;
       }
       if(send&&bilanId)logAction("send_bilan",{table_name:"bilans",record_id:bilanId}); // SEND BILAN P9
-      const{data}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
-      setBilans(data||[]);
+      // Ce rechargement suit un enregistrement reussi. « (data||[]) » sur une
+      // lecture ratee VIDAIT la liste a l'ecran juste apres avoir affiche
+      // « Bilan enregistré ✓ » : elle croyait avoir tout perdu.
+      const{data,error:eBil}=await supabase.from("bilans").select("*").eq("enfant_id",enfant.id).order("date",{ascending:false});
+      if(!eBil)setBilans(data||[]);
       setEditor(null);
       setToast(send?"✅ Bilan envoyé au parent":(editor.id?"✓ Bilan modifié":"✓ Bilan enregistré (brouillon)")); // SEND BILAN P9
     }catch(e){console.error("[BILANS P8] save",e);setToast("Erreur : "+e.message);}
@@ -1540,6 +1543,10 @@ export function ProjetAccueil({user,role}){
   const [editing,setEditing]=useState(false);
   const [loaded,setLoaded]=useState(false);
   const [hasData,setHasData]=useState(false);
+  // Meme piege que la fiche d'urgence : un echec de lecture ouvrait le
+  // formulaire VIDE en mode edition. Le premier enregistrement effacait alors
+  // tout le projet d'accueil, qui represente des heures de travail.
+  const [panne,setPanne]=useState(false);
   const [saving,setSaving]=useState(false);
   const [form,setForm]=useState({
     nom:(user?.prenom||"")+" "+(user?.nom||""),adresse:"",tel:user?.tel||"",email:user?.email||"",agrement:"",
@@ -1564,13 +1571,16 @@ export function ProjetAccueil({user,role}){
       try{
         let row=null;
         if(role==="parent"){
-          const{data}=await supabase.from("projet_accueil").select("data").limit(1).maybeSingle();
+          const{data,error}=await supabase.from("projet_accueil").select("data").limit(1).maybeSingle();
+          if(error){ if(!cancelled){setPanne(true);setLoaded(true);} return; }
           row=data;
         }else if(user?.id){
-          const{data}=await supabase.from("projet_accueil").select("data").eq("asmat_id",user.id).maybeSingle();
+          const{data,error}=await supabase.from("projet_accueil").select("data").eq("asmat_id",user.id).maybeSingle();
+          if(error){ if(!cancelled){setPanne(true);setLoaded(true);} return; }
           row=data;
         }
         if(cancelled)return;
+        setPanne(false);
         if(row&&row.data&&Object.keys(row.data).length){setForm(f=>({...f,...row.data}));setHasData(true);setEditing(false);}
         else{setHasData(false);if(role!=="parent")setEditing(true);}
       }catch(e){console.warn("projet_accueil load",e);}
@@ -1691,6 +1701,23 @@ export function ProjetAccueil({user,role}){
     w.document.write(html);w.document.close();
     setToast("Projet d'accueil genere ✓");
   };
+
+  // LA LECTURE A ECHOUE. On ne propose surtout pas le formulaire vide : le
+  // premier enregistrement effacerait le projet d'accueil existant.
+  if(panne){
+    return <div className="fi">
+      {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
+      <PageHeader icon="🌿" title="Projet d'accueil" sub="Le projet d'accueil de votre assistante maternelle"/>
+      <div className="card" style={{textAlign:"center",background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
+        <div style={{fontSize:44,marginBottom:14}}>📡</div>
+        <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Le projet n'a pas pu être chargé</div>
+        <div style={{fontSize:13.5,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>
+          Ce n'est pas qu'il est vide : la connexion a échoué. <strong>N'enregistrez rien depuis cet écran</strong> tant qu'il ne s'affiche pas — vous effaceriez ce qui est déjà écrit.
+        </div>
+        <button className="btn bT" onClick={()=>window.location.reload()}>Réessayer</button>
+      </div>
+    </div>;
+  }
 
   // Parent sans projet encore publie -> message d'attente
   if(role==="parent"&&loaded&&!hasData){

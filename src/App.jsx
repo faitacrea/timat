@@ -7509,10 +7509,13 @@ export default function App(){
             .gte("date",isoJour(debut));
           setPointagesDB(p||[]);
           // Charger transmissions du jour
-          const{data:t}=await supabase.from("transmissions").select("*")
+          // « (t||[]) » sur une lecture ratee affichait « aucune transmission
+          // aujourd'hui » a un parent dont l'assistante maternelle en avait
+          // pourtant ecrit une. On garde ce qu'on avait plutot que d'effacer.
+          const{data:t,error:eTr}=await supabase.from("transmissions").select("*")
             .in("enfant_id",enfantIds)
             .eq("date",TODAY_STR);
-          setTransmissionsDB(t||[]);
+          if(!eTr)setTransmissionsDB(t||[]);
         }else{
           setEnfantsDB([]);
         }
