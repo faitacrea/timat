@@ -18,7 +18,7 @@ import {
   CPill, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 } from "./App.jsx";
 import {
-  DEMANDES_DEMO, FORUM_POSTS, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ageEnMois, minimumHoraireAu
+  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ageEnMois, minimumHoraireAu
 } from "./socle.jsx";
 
 export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
@@ -1449,110 +1449,6 @@ export function PlanningPeriscolaire({enfants,role,pEId}){
 
 //
 
-export function ForumCommunaute({role}){
-  const [posts,setPosts]=useState(FORUM_POSTS);
-  const [filtre,setFiltre]=useState("tous");
-  const [newPost,setNewPost]=useState({titre:"",contenu:"",tag:"Pajemploi"});
-  const [showNew,setShowNew]=useState(false);
-  const [selPost,setSelPost]=useState(null);
-  const [reponse,setReponse]=useState("");
-  const [toast,setToast]=useState("");
-  const tags=["tous","Pajemploi","Contrat","Activités","Juridique","PMI","MAM","Réseau"];
-  const postsFiltres=filtre==="tous"?posts:posts.filter(p=>p.tags.includes(filtre));
-
-  const poster=()=>{
-    if(!newPost.titre.trim()||!newPost.contenu.trim())return;
-    setPosts(p=>[{id:"p"+Date.now(),auteur:"Marie D.",ville:"Paris",date:"À l'instant",
-      titre:newPost.titre,contenu:newPost.contenu,reponses:0,tags:[newPost.tag],epingle:false},...p]);
-    setNewPost({titre:"",contenu:"",tag:"Pajemploi"});
-    setShowNew(false);
-    setToast("Votre question a été publiée ✓");
-  };
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="💬" title="Communauté assmats"
-      sub="Entraidez-vous · Partagez vos expériences · Posez vos questions"/>
-
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        {tags.map(t=><button key={t}onClick={()=>setFiltre(t)}style={{
-          padding:"5px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",fontSize:12,fontWeight:600,
-          background:filtre===t?"var(--P)":"transparent",
-          color:filtre===t?"#fff":"var(--m)",
-          borderColor:filtre===t?"var(--P)":"var(--br)"
-        }}>{t}</button>)}
-      </div>
-      <button className="btn bT"onClick={()=>setShowNew(p=>!p)}>
-        {showNew?"✕ Annuler":"✏️ Poser une question"}
-      </button>
-    </div>
-
-    {showNew&&<div className="card"style={{marginBottom:16,border:"2px solid var(--T)"}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="✏️"/> Nouvelle question</div>
-      <input className="inp"placeholder="Titre de votre question..."value={newPost.titre}
-        onChange={e=>setNewPost(p=>({...p,titre:e.target.value}))}style={{marginBottom:10}}/>
-      <textarea className="ta"placeholder="Décrivez votre situation..."value={newPost.contenu}
-        onChange={e=>setNewPost(p=>({...p,contenu:e.target.value}))}
-        style={{width:"100%",minHeight:80,resize:"vertical",marginBottom:10}}/>
-      <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        <select className="sel"style={{flex:1}}value={newPost.tag}onChange={e=>setNewPost(p=>({...p,tag:e.target.value}))}>
-          {tags.filter(t=>t!=="tous").map(t=><option key={t}>{t}</option>)}
-        </select>
-        <button className="btn bT"onClick={poster}>Publier →</button>
-      </div>
-    </div>}
-
-    <div className="g2">
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {postsFiltres.map(post=><div key={post.id}className="card card-lift"
-          onClick={()=>setSelPost(selPost?.id===post.id?null:post)}
-          style={{cursor:"pointer",borderLeft:post.epingle?"4px solid var(--G)":"4px solid var(--P)"}}>
-          {post.epingle&&<div style={{fontSize:11,fontWeight:700,color:"var(--G)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}><IconeOuEmoji e="📌"/> Épinglé</div>}
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6,lineHeight:1.4}}>{post.titre}</div>
-          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5,marginBottom:8,
-            overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",
-            WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{post.contenu}</div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-              {post.tags.map(t=><span key={t}className="badge"style={{background:"var(--Pp)",color:"var(--P)",fontSize:11}}>{t}</span>)}
-            </div>
-            <div style={{display:"flex",gap:12,fontSize:11,color:"var(--l)"}}>
-              <span>👩 {post.auteur} · {post.ville}</span>
-              <span><IconeOuEmoji e="💬"/> {post.reponses} réponse{post.reponses>1?"s":""}</span>
-              <span>{post.date}</span>
-            </div>
-          </div>
-        </div>)}
-      </div>
-
-      {selPost?<div className="card">
-        <div style={{fontWeight:700,fontSize:15,color:"var(--b)",marginBottom:8}}>{selPost.titre}</div>
-        <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:12}}>{selPost.contenu}</div>
-        <div style={{fontSize:11,color:"var(--l)",marginBottom:16,paddingBottom:12,borderBottom:"1px solid var(--br)"}}>
-          {selPost.auteur} · {selPost.ville} · {selPost.date}
-        </div>
-        <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:10}}>
-          <IconeOuEmoji e="💬"/> {selPost.reponses} réponses
-        </div>
-        <div style={{background:"var(--c)",borderRadius:10,padding:12,marginBottom:12,fontSize:13,color:"var(--m)"}}>
-          Les réponses de la communauté s'afficheront ici.
-        </div>
-        <textarea className="ta"value={reponse}onChange={e=>setReponse(e.target.value)}
-          placeholder="Votre réponse..."style={{width:"100%",minHeight:70,resize:"vertical",marginBottom:8}}/>
-        <button className="btn bP"style={{width:"100%"}}onClick={()=>{
-          if(!reponse.trim())return;
-          setPosts(p=>p.map(post=>post.id===selPost.id?{...post,reponses:post.reponses+1}:post));
-          setReponse("");setToast("Réponse publiée ✓");
-        }}>Publier ma réponse</button>
-      </div>
-      :<div className="card"style={{padding:"var(--pad-carte-l)",textAlign:"center",color:"var(--l)"}}>
-        <div style={{fontSize:36,marginBottom:8}}>💬</div>
-        <div >Sélectionnez un sujet pour lire les réponses et participer</div>
-      </div>}
-    </div>
-  </div>;
-}
 
 //
 

@@ -27,46 +27,6 @@ const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
 // C'est la seule facon juste de compter une journee ou plusieurs enfants se
 // chevauchent.
 
-export function FichesEnfants({enfants,user,setPage}){
-  const [editAvatar,setEditAvatar]=useState(null);
-  const [showAjout,setShowAjout]=useState(false);
-  const [ov,setOv]=useState({});
-  const list=(enfants||[]).map(e=>({...e,...(ov[e.id]||{})}));
-  return <div className="fi">
-    <PageHeader icon="👧" title="Mes enfants" sub="Photo, emoji et informations de chaque enfant accueilli"/>
-    <div style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
-      <BoutonAjouterEnfant user={user} enfants={enfants} onClick={()=>setShowAjout(true)}/>
-    </div>
-    {list.length===0
-      ? <EmptyState emoji="👶" titre="Aucun enfant pour le moment" texte="Ajoutez un premier enfant pour commencer à suivre son quotidien." cta="➕ Ajouter un enfant" onCta={()=>setShowAjout(true)}/>
-      : <div className="g2">
-        {list.map(e=><div key={e.id} className="card" style={{display:"flex",gap:14,alignItems:"center"}}>
-          <button type="button" onClick={()=>setEditAvatar(e)} title="Changer la photo ou l'emoji" style={{background:"none",border:"none",cursor:"pointer",padding:0,position:"relative",flexShrink:0,lineHeight:0}}>
-            <AvatarEnfant e={e} size={76}/>
-            <IconeOuEmoji e="📷"/>
-          </button>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontWeight:700,fontSize:16,color:"var(--b)"}}>{e.prenom} {e.nom||""}</div>
-            <div style={{fontSize:12.5,color:"var(--l)",marginTop:2}}>{e.naissance?age(e.naissance)+" · né(e) le "+new Date(e.naissance).toLocaleDateString("fr-FR"):"Date de naissance non renseignée"}</div>
-            {/* La fratrie se lit ici, la ou on regarde les enfants. Deux
-                contrats distincts, mais un seul parent employeur : les congés
-                posés et le crédit d'impôt les concernent ensemble. */}
-            {(()=>{const f=fratrieDe(e,list);return f.length>0&&
-              <div style={{fontSize:12,color:"#2F655F",marginTop:4,display:"flex",alignItems:"center",gap:5}}>
-                <IconeOuEmoji e="👪" taille={14}/>
-                <span>Même famille que <b>{f.map(x=>x.prenom).join(", ")}</b></span>
-              </div>;})()}
-            <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
-              <button className="btn bG s" style={{padding:"5px 10px"}} onClick={()=>setEditAvatar(e)}><IconeOuEmoji e="📷"/> Photo / emoji</button>
-              <button className="btn bT s" style={{padding:"5px 10px"}} onClick={()=>setPage&&setPage("admin_finances")}><IconeOuEmoji e="🧾"/> Contrat & paie</button>
-            </div>
-          </div>
-        </div>)}
-      </div>}
-    {editAvatar&&<AvatarEditeur enfant={editAvatar} onClose={()=>setEditAvatar(null)} onSaved={(up)=>setOv(o=>({...o,[up.id]:{emoji:up.emoji,photo_url:up.photo_url}}))}/>}
-    {showAjout&&user&&<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><AjouterEnfantModale user={user} onClose={()=>setShowAjout(false)}/></Suspense>}
-  </div>;
-}
 // ===== Regroupement de sous-onglets : barre segmentée + vues fusionnées =====
 
 export function SegBar({v,setV,items}){
@@ -918,67 +878,6 @@ export function Recap({enfants,role,pEId}){
 //
 //
 
-export function Parrainage({user}){
-  const [copied,setCopied]=useState(false);
-  const [toast,setToast]=useState("");
-  const prefix=(user?.prenom||"MARIE").toUpperCase().slice(0,4);
-  const codeNum=Math.abs((user?.email||"test").split("").reduce((a,c)=>a+c.charCodeAt(0),1000)%9000+1000);
-  const code="TM-"+prefix+"-"+codeNum;
-  const lien="https://www.timat.app/rejoindre?code="+code;
-  const copy=()=>{navigator.clipboard?.writeText(lien).catch(()=>{});setCopied(true);setTimeout(()=>setCopied(false),2500);setToast("Lien copié ✓");};
-  const filleules=[
-    {prenom:"Nathalie",ville:"Lyon",date:"Il y a 5 jours",statut:"actif",gain:"1 mois offert"},
-    {prenom:"Camille",ville:"Bordeaux",date:"Il y a 2 semaines",statut:"essai",gain:"En cours"},
-  ];
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🎁" title="Parrainage" sub="Invitez vos collègues - gagnez des mois gratuits"/>
-    <div style={{background:"linear-gradient(135deg,#1C3028,#3D6B50)",borderRadius:20,padding:"28px 24px",marginBottom:20}}>
-      <div style={{fontSize:36,marginBottom:10}}>🌿</div>
-      <div className="pf"style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:8}}>Invitez une collègue asmat</div>
-      <div style={{fontSize:13,color:"rgba(255,255,255,.75)",lineHeight:1.7,marginBottom:16}}>
-        Pour chaque asmat qui s'inscrit et passe Pro avec votre code :<br/>
-        <strong style={{color:"#E8B060"}}>Vous gagnez 1 mois gratuit · Elle gagne 1 mois gratuit.</strong>
-      </div>
-      <div style={{background:"rgba(255,255,255,.1)",borderRadius:10,padding:"12px 16px",marginBottom:12}}>
-        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:4}}>Votre code personnel</div>
-        <div style={{fontFamily:"'DM Mono',monospace",fontSize:22,fontWeight:700,color:"#E8B060",letterSpacing:"2px"}}>{code}</div>
-      </div>
-      <div style={{display:"flex",gap:8,alignItems:"center",background:"rgba(255,255,255,.08)",borderRadius:8,padding:"8px 12px",marginBottom:12}}>
-        <span style={{fontSize:11,color:"rgba(255,255,255,.6)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{lien}</span>
-        <button onClick={copy}style={{background:copied?"var(--G)":"rgba(255,255,255,.2)",color:"#fff",border:"none",borderRadius:10,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:700,flexShrink:0}}>
-          {copied?"✓ Copié":"Copier"}
-        </button>
-      </div>
-      <div style={{display:"flex",gap:8}}>
-        <button onClick={()=>setToast("Message SMS préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="📱"/> SMS</button>
-        <button onClick={()=>setToast("Message WhatsApp préparé ✓")}style={{background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,padding:"7px 14px",cursor:"pointer",fontSize:12,fontWeight:600}}><IconeOuEmoji e="💬"/> WhatsApp</button>
-      </div>
-    </div>
-    <div className="card"style={{marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>Comment ça marche</div>
-      {[["1","Partagez votre lien","📋"],["2","Votre collègue s'inscrit","✅"],["3","Elle passe Pro","⬆️"],["4","1 mois offert à chacune","🎁"]].map(([n,t,ic])=>
-        <div key={n}style={{display:"flex",gap:12,alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--br)"}}>
-          <div style={{width:28,height:28,borderRadius:"50%",background:"var(--Tp)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,color:"var(--T)",fontSize:13,flexShrink:0}}>{n}</div>
-          <span style={{flex:1,fontSize:13,color:"var(--b)"}}>{t}</span>
-          <span style={{fontSize:18}}><IconeOuEmoji e={ic}/></span>
-        </div>)}
-    </div>
-    <div className="card">
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}>
-        Mes filleules · <span style={{color:"var(--S)"}}>{filleules.length} inscrites</span>
-        {" · "}<span style={{color:"var(--T)"}}>{filleules.filter(f=>f.statut==="actif").length} mois gagnés</span>
-      </div>
-      {filleules.map((f,i)=><div key={i}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid var(--br)"}}>
-        <div>
-          <div style={{fontWeight:600,fontSize:13,color:"var(--b)"}}>{f.prenom} - {f.ville}</div>
-          <div style={{fontSize:11,color:"var(--l)"}}>{f.date}</div>
-        </div>
-        <span className="badge"style={{background:f.statut==="actif"?"var(--Gp)":"var(--c)",color:f.statut==="actif"?"var(--G)":"var(--m)"}}>{f.gain}</span>
-      </div>)}
-    </div>
-  </div>;
-}
 
 //
 // VERSEMENTS P34 - Suivi des paiements reels recus (palier 2 : lecture + saisie)
@@ -3573,30 +3472,6 @@ export function Support({role,user}){
   </div>;
 }
 
-export function OutilsHub({setPage}){
-  const items=[
-    {id:"inviter_parent",ic:"👪",t:"Inviter un parent",d:"Envoyez un lien : le parent suit la journée en direct et signe le contrat.",c:"#5DA9A1"},
-    {id:"projet_accueil",ic:"🌿",t:"Projet d'accueil",d:"Rédigez et partagez votre projet pédagogique.",c:"#B8622F"},
-    {id:"pmi",ic:"🏛️",t:"PMI",d:"Contacts et communication avec votre PMI de secteur.",c:"#2E4859"},
-    {id:"faq",ic:"❓",t:"Aide & Support",d:"Guides, questions fréquentes et contact.",c:"#C09553"},
-  ];
-  return <div className="fi">
-    <PageHeader icon="⭐" title="Outils Pro" sub="Vos outils du quotidien, réunis au même endroit"/>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:14}}>
-      {items.map(o=><button key={o.id}onClick={()=>setPage(o.id)}
-        style={{textAlign:"left",background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:18,cursor:"pointer",transition:"transform .15s,box-shadow .15s,border-color .15s",display:"flex",flexDirection:"column",gap:10,minHeight:170}}
-        onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 12px 30px "+o.c+"22";e.currentTarget.style.borderColor=o.c;}}
-        onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor="var(--br)";}}>
-        <div style={{width:52,height:52,borderRadius:15,background:o.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:27}}><IconeOuEmoji e={o.ic} taille={27}/></div>
-        <div>
-          <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:4}}>{o.t}</div>
-          <div style={{fontSize:12.5,color:"var(--m)",lineHeight:1.5}}>{o.d}</div>
-        </div>
-        <div style={{marginTop:"auto",fontSize:12.5,fontWeight:700,color:o.c}}>Ouvrir →</div>
-      </button>)}
-    </div>
-  </div>;
-}
 
 export function AttestationPoleEmploi({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
@@ -4223,64 +4098,6 @@ export function InviterParent({enfants,user,demoMode=false}){
   </div>;
 }
 
-export function Boutique({user}){
-  const [toast,setToast]=useState("");
-  const isPro=user?.subscription_status==="pro";
-  const products=[
-    {id:"kit_sheets",name:"Kit de gestion Assmat",price:"14,90",desc:"Jusqu'a 4 contrats : heures jour par jour, conges payes compares, recapitulatif annuel.",icon:"📊",color:"#5DA9A1"},
-    {id:"fiche_urgence",name:"Fiche d'urgence",prix:0,desc:"Fiche complete a remplir : enfant, parents, personnes autorisees, medical, urgences.",icon:"🚨",color:"#C84B31",fichier:"/documents/fiche-renseignements-urgence.pdf"},
-    {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections : presentation, lieu, familiarisation, journee type, sommeil, repas, change, jeu, emotions, parents, inclusion, securite, formation.",icon:"🌿",color:"#2E4859"},
-    {id:"registre_medicaments",name:"Registre des medicaments",prix:0,desc:"Document obligatoire (article R2111-1). Vous pouvez aussi le tenir directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
-  ];
-
-  const acheter=async(product)=>{
-    try{
-      const res=await fetch('/api/checkout-session',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({userId:user?.id,email:user?.email,prenom:user?.prenom,productId:product.id,productName:product.name,productPrice:product.price}),
-      });
-      const data=await res.json();
-      if(data.url)window.location.href=data.url;
-      else setToast("Erreur de paiement — reessayez");
-    }catch(e){setToast("Erreur reseau");}
-  };
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🛒" title="Boutique TiMat" sub="Templates et outils pour simplifier votre quotidien d'assmat"/>
-    {isPro&&<div style={{background:"var(--Sp)",border:"1px solid var(--Sl)",borderRadius:10,padding:"10px 16px",marginBottom:16,fontSize:12,color:"var(--S)",fontWeight:600}}>
-      ⭐ En tant qu'abonnee Pro, vous beneficiez de -20% sur tous les produits de la boutique.
-    </div>}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>
-      {products.map(p=><div key={p.id}className="card"style={{padding:0,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-        <div style={{height:80,background:"linear-gradient(135deg,"+p.color+"20,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,position:"relative"}}>
-          {p.icon}
-          {p.badge&&<div style={{position:"absolute",top:8,right:8,background:p.color,color:"#fff",borderRadius:6,padding:"2px 8px",fontSize:11,fontWeight:700}}>{p.badge}</div>}
-        </div>
-        <div style={{padding:16,flex:1,display:"flex",flexDirection:"column"}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:6}}>{p.name}</div>
-          <div style={{fontSize:12,color:"var(--l)",lineHeight:1.6,flex:1,marginBottom:12}}>{p.desc}</div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div>
-              {p.prix===0
-                ? <span style={{fontSize:18,fontWeight:700,color:p.color}}>Gratuit</span>
-                : <>
-                    {isPro&&<span style={{fontSize:11,color:"var(--l)",textDecoration:"line-through",marginRight:6}}>{p.price} EUR</span>}
-                    <span style={{fontSize:18,fontWeight:700,color:p.color}}>{isPro?nbf((parseFloat(p.price.replace(",","."))*0.8),2):p.price} EUR</span>
-                  </>}
-            </div>
-            {p.prix===0
-              ? <a className="btn bT s" href={p.fichier} download style={{padding:"8px 16px",textDecoration:"none"}}>Telecharger</a>
-              : <button className="btn bT s"style={{padding:"8px 16px"}}onClick={()=>acheter(p)}>Acheter</button>}
-          </div>
-        </div>
-      </div>)}
-    </div>
-    <div style={{marginTop:20,textAlign:"center",fontSize:12,color:"var(--l)"}}>
-      Paiement securise par Stripe. Telechargement immediat apres achat.
-    </div>
-  </div>;
-}
 
 //
 

@@ -8,7 +8,7 @@
 // Rollup le sort dans son propre morceau.
 //
 // Le retour vers App.jsx est volontaire : les écrans partagés
-// (LandingPage, Messagerie, FAQ, Boutique...) et la config
+// (LandingPage, Messagerie, FAQ...) et la config
 // restent définis là-bas, dans le morceau principal, et ne sont
 // donc pas dupliqués ici.
 // ============================================================
@@ -17,7 +17,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Boutique, Messagerie, Styles, Toast, IconeOuEmoji, LandingPage, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig, MAINTENANCE
+  Messagerie, Styles, Toast, IconeOuEmoji, LandingPage, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig, MAINTENANCE
 } from "./App.jsx";
 import {
   backupCurrentConfig

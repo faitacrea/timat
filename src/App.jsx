@@ -7133,11 +7133,9 @@ export const Sommeil = lazy(() => _app().then(m => ({ default: m.Sommeil })));
 export const AttestationFiscale = lazy(() => _app().then(m => ({ default: m.AttestationFiscale })));
 export const AttestationPoleEmploi = lazy(() => _app().then(m => ({ default: m.AttestationPoleEmploi })));
 export const BilansExports = lazy(() => _app().then(m => ({ default: m.BilansExports })));
-export const Boutique = lazy(() => _app().then(m => ({ default: m.Boutique })));
 export const CommunicationPMI = lazy(() => _app().then(m => ({ default: m.CommunicationPMI })));
 export const DocumentsComplet = lazy(() => _app().then(m => ({ default: m.DocumentsComplet })));
 export const EveilComplet = lazy(() => _app().then(m => ({ default: m.EveilComplet })));
-export const FichesEnfants = lazy(() => _app().then(m => ({ default: m.FichesEnfants })));
 export const InviterParent = lazy(() => _app().then(m => ({ default: m.InviterParent })));
 export const JournalComplet = lazy(() => _app().then(m => ({ default: m.JournalComplet })));
 export const KitCMG = lazy(() => _app().then(m => ({ default: m.KitCMG })));
@@ -7145,8 +7143,6 @@ export const MentionsLegales = lazy(() => _app().then(m => ({ default: m.Mention
 export const MesAlertes = lazy(() => _app().then(m => ({ default: m.MesAlertes })));
 export const MesEmployeurs = lazy(() => _app().then(m => ({ default: m.MesEmployeurs })));
 export const Messagerie = lazy(() => _app().then(m => ({ default: m.Messagerie })));
-export const OutilsHub = lazy(() => _app().then(m => ({ default: m.OutilsHub })));
-export const Parrainage = lazy(() => _app().then(m => ({ default: m.Parrainage })));
 export const PolitiqueConfidentialite = lazy(() => _app().then(m => ({ default: m.PolitiqueConfidentialite })));
 export const RapportAnnuel = lazy(() => _app().then(m => ({ default: m.RapportAnnuel })));
 export const SanteComplete = lazy(() => _app().then(m => ({ default: m.SanteComplete })));
@@ -7182,7 +7178,6 @@ export const PlanningPeriscolaire = lazy(() => _ecrans().then(m => ({ default: m
 export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.RegistreMedicaments })));
 export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
 export const Autorisations = lazy(() => _ecrans().then(m => ({ default: m.Autorisations })));
-export const ForumCommunaute = lazy(() => _ecrans().then(m => ({ default: m.ForumCommunaute })));
 export const ProjetAccueil = lazy(() => _ecrans().then(m => ({ default: m.ProjetAccueil })));
 
 export default function App(){
@@ -7844,7 +7839,6 @@ export default function App(){
     switch(page){
       case "accueil": return role==="asmat"?<AccueilAssMat enfants={enfants} setPage={setPage} user={user}/>:<AccueilParent enfant={enfants.find(e=>e.id===pEId)||enfants[0]} setPage={setPage} user={user}/>;
       case "cahier_jour": return <CahierJour {...P}/>;
-      case "fiches_enfants": return <FichesEnfants enfants={enfants} user={user} setPage={setPage}/>;
       case "journee": return <VueJournee {...P}/>;
       case "suivi_progres": return <VueSuiviProgres {...P} setPage={setPage}/>;
       case "sante_urgence": return <VueSanteUrgence {...P}/>;
@@ -7873,9 +7867,7 @@ export default function App(){
       case "registre_medicaments": return <RegistreMedicaments enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "reprise_contrat": return <RepriseContrat enfants={enfants} role={role} user={user}/>;
       case "autorisations": return <Autorisations enfants={enfants} role={role} pEId={pEId} user={user}/>;
-      case "forum": return <ForumCommunaute role={role}/>;
       case "rapport_annuel": return <RapportAnnuel enfants={enfants} role={role} pEId={pEId} user={user}/>;
-      case "parrainage": return <Parrainage user={user}/>;
       case "simulateur": return <SimulateurCout enfants={enfants} pEId={pEId}/>;
       case "ik": return <IndemnitesKilometriques enfants={enfants} role={role} user={user}/>;
       case "solde_compte": return <SoldeDeCompte enfants={enfants} role={role} pEId={pEId} user={user}/>;
@@ -7883,13 +7875,11 @@ export default function App(){
       case "attestation_fiscale": return <AttestationFiscale enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "fiche_urgence": return <FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "projet_accueil": return <ProjetAccueil user={user} role={role}/>;
-      case "boutique": return <Boutique user={user}/>;
       case "export_donnees": return <ExportDonnees enfants={enfants} user={user} role={role}/>;
       case "faq": return <VueAideSupport role={role} user={user}/>;
       case "aides_simulateurs": return <VueAidesSimulateurs enfants={enfants} role={role} pEId={pEId} user={user}/>;
       case "inviter_parent": return <InviterParent enfants={enfants} user={user}/>;
       case "mode_borne": return <ReglagesBorne enfants={enfants} user={user} onDemarrer={()=>setBorne(true)}/>;
-      case "outils_hub": return <OutilsHub setPage={setPage}/>;
       case "support": return <Support role={role} user={user}/>;
       case "liste_attente": return <ListeAttente enfants={enfants} role={role} user={user} setPage={setPage}/>;
       case "page_vitrine": return <PageVitrine user={user} role={role} setPage={setPage}/>;
