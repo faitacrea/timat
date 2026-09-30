@@ -63,21 +63,56 @@ Authentification : **OAuth2 Client Credentials**.
   chiffrement en transit et au repos, RLS sur chaque table, journal d'audit.
 - Les mentions légales et la politique de confidentialité **complètes**.
 
-## Ce qu'il reste à construire dans TiMat
+## Ce qui est construit, et ce qui ne l'est pas
 
-Rien de tout cela n'existe aujourd'hui. À prévoir :
+*Mis à jour le 30 septembre 2026. Quatre des cinq chantiers sont faits.*
 
-- [ ] Un écran de **mandat côté parent** : ce qu'il autorise, depuis quand,
-      comment il le retire. Sur le modèle de l'écran Autorisations.
-- [ ] La **conservation du mandat** : une table, sans politique DELETE — un
-      mandat se révoque, il ne s'efface pas.
-- [ ] L'intégration **OAuth2 Client Credentials** et l'appel de l'API, côté
-      serveur uniquement (jamais depuis le navigateur : le secret client ne doit
-      pas quitter le serveur).
-- [ ] Un **journal des déclarations transmises**, avec l'accusé de l'URSSAF.
-      Une déclaration transmise est une preuve : elle doit être retrouvable.
-- [ ] Le **cas d'échec** : que voit l'assistante maternelle quand l'URSSAF
-      refuse ? La pire réponse serait un écran qui laisse croire que c'est parti.
+- [x] **L'écran de mandat côté parent** — `MandatPajemploi`, dans
+      `src/ecrans-secondaires.jsx`. Le texte dit ce qu'il autorise ET ce qu'il
+      n'autorise pas ; une case à cocher précède le bouton, parce qu'un mandat
+      donné sans avoir lu n'est pas un consentement éclairé.
+- [x] **La conservation du mandat** — table `mandats_pajemploi`, aucune
+      politique DELETE : un mandat se révoque en datant `revoque_le`. Le texte
+      accepté est versionné, sans quoi on ne saurait plus à quoi le parent a
+      consenti.
+      La règle « seul le parent mandate » est imposée **par la base**, pas par
+      l'écran, et vérifiée en production : l'assistante maternelle ne peut ni se
+      mandater elle-même, ni mandater au nom du parent.
+- [x] **Le journal des déclarations transmises** — table
+      `transmissions_pajemploi`, en lecture seule côté navigateur : un client
+      qui pourrait y écrire pourrait inscrire « transmise » sans que rien ne
+      parte.
+- [x] **Le cas d'échec** — quatre états, et chacun dit trois choses : où en est
+      la déclaration, **si elle est partie**, et quoi faire. « erreur » (rien
+      n'est parti) ne se confond pas avec « refusée » (c'est arrivé, corrigez).
+      En attente, l'écran dit de NE PAS renvoyer.
+
+- [ ] **L'intégration OAuth2 et l'appel de l'API.** Seul chantier non fait, et
+      délibérément : la spécification n'est remise qu'après signature de la
+      licence. Écrire un appel « probable » aurait produit une intégration qui
+      compile, qui passe les tests, et qui échoue le jour où elle sert. La
+      logique autour est complète — mandat vérifié côté serveur, secret qui ne
+      quitte jamais le serveur, journal ouvert **avant** l'envoi — dans
+      `lib/pajemploi-transmission.js`. Il restera trois choses à brancher :
+      le point d'accès OAuth2, le format de la charge utile, et la traduction
+      des codes de réponse de l'URSSAF.
+
+### Une réserve à connaître avant une démonstration
+
+Tout cela est **invisible dans l'application tant que l'habilitation n'est pas
+obtenue** : l'entrée de menu n'apparaît que lorsque l'identifiant client URSSAF
+est configuré. C'est volontaire — proposer de mandater sans pouvoir transmettre
+promettrait ce que l'application ne sait pas faire.
+
+Conséquence pratique : si l'URSSAF demande une démonstration, il faut renseigner
+une valeur dans le réglage `pajemploi.clientId` au back-office pour rendre
+l'écran visible le temps de la montrer.
+
+### La place sous le plafond Vercel
+
+Le forfait Hobby n'autorise que douze fonctions serverless. Les deux routes
+Stripe ont été réunies : il reste **onze sur douze**, donc une place libre pour
+`api/pajemploi-transmettre.js` le jour venu.
 
 ## L'adresse : un point à trancher avant d'envoyer
 
