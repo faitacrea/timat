@@ -3280,6 +3280,11 @@ export function FicheUrgence({enfants,role,pEId,user}){
   const [editing,setEditing]=useState(false);
   const [loaded,setLoaded]=useState(false);
   const [hasData,setHasData]=useState(false);
+  // UNE LECTURE RATEE COUTAIT LA FICHE ELLE-MEME. Sans cet etat, l'echec
+  // retombait sur un formulaire vide et « hasData=false » : elle voyait une
+  // fiche d'urgence sans medecin, sans contacts, sans PAI — et si elle
+  // enregistrait, elle ECRASAIT la vraie. On bloque, et on le dit.
+  const [panne,setPanne]=useState(false);
   const [saving,setSaving]=useState(false);
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
@@ -3380,8 +3385,10 @@ export function FicheUrgence({enfants,role,pEId,user}){
     const base={nom:enfant.nom||"",prenom:enfant.prenom||"",naissance:enfant.naissance||"",allergies:enfant.allergies?.join(", ")||""};
     (async()=>{
       try{
-        const{data}=await supabase.from("fiche_urgence").select("data").eq("enfant_id",enfant.id).maybeSingle();
+        const{data,error}=await supabase.from("fiche_urgence").select("data").eq("enfant_id",enfant.id).maybeSingle();
         if(cancelled)return;
+        if(error){ setPanne(true); setLoaded(true); return; }
+        setPanne(false);
         if(data&&data.data&&Object.keys(data.data).length){setForm(f=>({...f,...base,...data.data}));setHasData(true);setEditing(false);}
         else{setForm(f=>({...f,...base}));setHasData(false);setEditing(role==="parent");}
       }catch(e){console.warn("fiche_urgence load",e);if(!cancelled){setForm(f=>({...f,...base}));setHasData(false);}}
@@ -3554,7 +3561,16 @@ export function FicheUrgence({enfants,role,pEId,user}){
     {/* ALERTE DIVERGENCE EN HAUT P15 - visible sans avoir a faire defiler */}
     {ecarts.length>0&&<AlerteEcart ecarts={ecarts}role={role}onMaj={majDepuisProfil}/>}
 
-    {role==="asmat"&&loaded&&!hasData
+    {panne
+      ? <div className="card" style={{textAlign:"center",background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
+          <div style={{fontSize:44,marginBottom:14}}>📡</div>
+          <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>La fiche n'a pas pu être chargée</div>
+          <div style={{fontSize:13.5,color:"var(--m)",lineHeight:1.7,marginBottom:16}}>
+            Ce n'est pas qu'elle est vide : la connexion a échoué. <strong>N'enregistrez rien depuis cet écran</strong> tant qu'elle ne s'affiche pas — vous effaceriez les informations déjà saisies.
+          </div>
+          <button className="btn bT" onClick={()=>window.location.reload()}>Réessayer</button>
+        </div>
+      : role==="asmat"&&loaded&&!hasData
       ? <div className="card"style={{textAlign:"center"}}>
           <div style={{fontSize:48,marginBottom:16}}>🚨</div>
           <div style={{fontSize:16,fontWeight:700,color:"var(--b)",marginBottom:8}}>Fiche pas encore remplie</div>
