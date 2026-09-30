@@ -1385,16 +1385,40 @@ for (const u of fichiersAppSrc()) {
     // motif de code ne la voyait pas, et « Suspense is not defined » est passe
     // au travers une fois de plus. On la reconnait explicitement.
     if (new RegExp("<" + n + "[\\s/>]").test(t)) return true;
-    for (const m of t.matchAll(new RegExp("\\b" + n + "(?=[).,;:=\\]}\\[(.?])", "g"))) {
+    // La liste des caracteres pouvant suivre un nom etait incomplete : il y
+    // manquait les operateurs. « SEMAINES_ANNEE_COMPLETE/MOIS_PAR_AN » — une
+    // division — n'etait donc pas vue comme du code, et l'ecran du recapitulatif
+    // des versements tombait a l'ouverture sans que rien ne le signale.
+    // On accepte desormais tout ce qui n'est pas un caractere de mot : c'est la
+    // definition d'une fin d'identifiant, plutot qu'une liste a completer
+    // apres chaque defaut.
+    for (const m of t.matchAll(new RegExp("\\b" + n + "(?![\\w$])", "g"))) {
       let j = m.index - 1;
       while (j >= 0 && (t[j] === " " || t[j] === "\t")) j--;
       if (j < 0 || "([{,;=:<&|!?+-*/>}\n".includes(t[j])) return true;
     }
     return false;
   };
+  // Les commentaires ne sont pas du code. Depuis que la fin d'identifiant est
+  // reconnue correctement, une ligne comme « // BILANS P8 - Composant... »
+  // etait lue comme un usage de BILANS. Une barriere qui crie sur ses propres
+  // commentaires apprend a etre ignoree : on les retire avant de chercher.
+  // On ne garde que ce qui est reellement du code : ni les commentaires, ni les
+  // chaines, ni le texte affiche entre deux balises. Sinon « Calendrier
+  // officiel francais », « Pointage valide » ou « [BILANS P8] » se lisent
+  // comme des usages de variables. Une barriere qui crie sur du texte affiche
+  // apprend a etre ignoree.
+  const codeSeul = (src) => src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n").map((l) => l.replace(/(^|[^:])\/\/.*$/, "$1")).join("\n")
+    .replace(/`(?:\\.|[^`\\])*`/g, "``")
+    .replace(/"(?:\\.|[^"\\\n])*"/g, '""')
+    .replace(/'(?:\\.|[^'\\\n])*'/g, "''")
+    // Le texte entre « > » et « < » est affiche, pas execute.
+    .replace(/>[^<>{}]+</g, "><");
   for (const u of fichiers) {
     if (u.pathname.endsWith("/App.jsx")) continue;
-    const t = readFileSync(u, "utf8");
+    const t = codeSeul(readFileSync(u, "utf8"));
     const nom = u.pathname.split("/").pop();
     const importes = new Set(
       [...t.matchAll(/import\s*\{([^}]*)\}\s*from/g)]
