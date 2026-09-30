@@ -7343,12 +7343,37 @@ export default function App(){
     let cancelled=false;
     (async()=>{
       try{
-        const{data:profil}=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle();
+        // LA LECTURE LA PLUS COUTEUSE DE L'APPLICATION.
+        //
+        // Ce profil porte le role et l'abonnement. Quand la lecture echouait,
+        // « profil » valait null et le code partait dans la branche « else » :
+        // il marquait le chargement TERMINE et ne reessayait jamais. Une
+        // abonnee Pro se retrouvait alors traitee comme une utilisatrice
+        // gratuite pendant toute sa session — estPro() lit
+        // u.subscription_status, absent — donc tous les ecrans qu'elle paie
+        // se refermaient derriere le mur du forfait.
+        //
+        // Une panne reseau ne doit pas ressembler a une fin d'abonnement. On
+        // distingue donc les deux cas : « aucune ligne » (compte sans profil)
+        // et « la lecture a echoue » (on reessaie, puis on le dit).
+        let{data:profil,error:eProfil}=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle();
         if(cancelled)return;
+        if(eProfil){
+          await new Promise(r=>setTimeout(r,1500));
+          if(cancelled)return;
+          ({data:profil,error:eProfil}=await supabase.from("profiles").select("*").eq("id",user.id).maybeSingle());
+          if(cancelled)return;
+        }
+        if(eProfil){
+          // On ne confirme PAS le profil : l'application sait ainsi qu'elle ne
+          // connait pas encore ce compte, au lieu de le prendre pour gratuit.
+          setUser(u=>({...u,_needsProfileFetch:false,_profilePanne:true}));
+          return;
+        }
         if(profil){
           // ROLE MEMORISE P16 - sert a reouvrir le bon ecran de connexion (deconnexion, raccourci PWA)
           try{if(profil.role)localStorage.setItem("timat:lastRole",profil.role);}catch(e){}
-          setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true})); // P16D
+          setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true,_profilePanne:false})); // P16D
         }else{
           setUser(u=>({...u,_needsProfileFetch:false}));
         }
@@ -7667,6 +7692,27 @@ export default function App(){
       </div>
     </div></>;
   }
+
+  // LA LECTURE DU PROFIL A ECHOUE, DEUX FOIS. On ne fait pas semblant.
+  //
+  // Sans profil, l'application ne connait ni le role ni l'abonnement. La
+  // laisser continuer reviendrait a presenter a une abonnee Pro les murs du
+  // forfait gratuit, comme si elle avait cesse de payer. On s'arrete et on
+  // dit ce qui se passe.
+  if(user?._profilePanne)
+    return <><Styles/><div className={"app"+(dark?" dark":"")}>
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px 18px"}}>
+        <div className="card" style={{maxWidth:420,textAlign:"center"}}>
+          <div style={{fontSize:34,marginBottom:10}}>📡</div>
+          <div style={{fontWeight:700,fontSize:17,marginBottom:8,color:"var(--b)"}}>Votre compte n'a pas pu être chargé</div>
+          <div style={{fontSize:14,lineHeight:1.65,color:"var(--m)",marginBottom:16}}>
+            Ce n'est pas un problème d'abonnement : la connexion à nos serveurs a échoué.
+            Vos données sont intactes. Réessayez dans un instant.
+          </div>
+          <button className="btn bT" style={{width:"100%"}} onClick={()=>window.location.reload()}>Réessayer</button>
+        </div>
+      </div>
+    </div></>;
 
   // P16D : on exige le profil confirmé en base avant de proposer l'accompagnement.
   //
