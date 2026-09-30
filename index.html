@@ -118,7 +118,15 @@
       }
       @keyframes timat-slide{0%{transform:translateX(-120%)}100%{transform:translateX(330%)}}
       @media (prefers-reduced-motion:reduce){#timat-boot .bar span{animation:none}}
-      /* Contenu SEO : lu par les robots, invisible à l'écran (l'écran de chargement le couvre) */
+      /* LE SOMMAIRE DE LA PAGE, EN CLAIR.
+         Il n'est pas cache : il se lit en faisant defiler, sous l'ecran de
+         chargement, pendant les quelques centaines de millisecondes ou React
+         n'a pas encore pris la main. Il porte exactement les titres que React
+         affichera ensuite — c'est ce qui le distingue d'un bloc de
+         referencement : il ne dit rien que la page ne dise. */
+      #timat-sommaire{max-width:760px;margin:0 auto;padding:40px 22px 60px;font-family:Outfit,system-ui,sans-serif;color:#2E4859}
+      #timat-sommaire h2{font-size:17px;font-weight:700;margin:22px 0 6px;line-height:1.35}
+      #timat-sommaire p{font-size:14px;line-height:1.65;color:#55707C;margin:0}
     </style>
   </head>
   <body>
@@ -134,7 +142,48 @@
         <div class="bar"><span></span></div>
       </div>
       <!-- Un seul h1 sur cette page, et aucun bloc cache pour les moteurs :
-           le pourquoi est dans la barriere « titres » de scripts/audit.mjs. -->
+           le pourquoi est dans la barriere « titres » de scripts/audit.mjs.
+
+           CE QUE FAIT LE BLOC CI-DESSOUS, ET POURQUOI.
+           Sans lui, le HTML brut de cette page comptait 370 caracteres et
+           AUCUN titre de niveau 2 : c'est tout ce que voit un robot qui
+           n'execute pas JavaScript — Bing, les apercus des reseaux sociaux,
+           la plupart des robots d'IA. React, lui, affiche 10 600 caracteres
+           et neuf titres.
+           Le bloc reprend donc ces neuf titres, a l'identique, avec une phrase
+           vraie sous chacun. Il est VISIBLE — aucune regle ne le masque — et
+           React le remplace des qu'il prend la main. Une barriere d'audit
+           verifie que chaque titre existe aussi dans la configuration : le
+           jour ou un titre change au back-office, la construction le signale
+           plutot que de laisser les deux versions diverger. -->
+      <div id="timat-sommaire">
+        <h2>La réalité du métier, personne n'en parle.</h2>
+        <p>Les heures complémentaires, les congés payés, la régularisation de fin d'année : ce que le métier demande vraiment, et que personne n'enseigne.</p>
+
+        <h2>Le planning, la paie et Pajemploi, au même endroit</h2>
+        <p>Les heures saisies une fois servent au bulletin, au récapitulatif Pajemploi et aux congés, sans ressaisie.</p>
+
+        <h2>La gestion assistante maternelle sans mauvaise surprise</h2>
+        <p>Mensualisation, indemnités d'entretien et de repas, absences : les calculs suivent la convention collective IDCC 3239.</p>
+
+        <h2>Chaque calcul s'appuie sur un texte</h2>
+        <p>Chaque règle appliquée cite l'article de la convention ou du code dont elle vient, pour que vous puissiez vérifier.</p>
+
+        <h2>Devenez l'assistante maternelle dont les parents parlent à leurs amis.</h2>
+        <p>Le parent voit la journée de son enfant, ses heures et ses documents dans un espace gratuit, sans rien avoir à demander.</p>
+
+        <h2>Le tarif de votre application assistante maternelle</h2>
+        <p>Un compte gratuit sans date de fin pour un enfant. Le forfait Pro à 9,99 € par mois, quel que soit le nombre d'enfants accueillis.</p>
+
+        <h2>Vous n'avez pas eu de formation en comptabilité. Pourtant vous en faites tous les mois.</h2>
+        <p>TiMat fait les calculs et prépare les documents ; vous gardez la main sur ce que vous déclarez.</p>
+
+        <h2>Questions fréquentes</h2>
+        <p>Le salaire minimum, la mensualisation, les congés, la déclaration Pajemploi : les réponses aux questions qui reviennent.</p>
+
+        <h2>Ressources pour les assmats</h2>
+        <p>Soixante guides pratiques gratuits, chacun adossé à ses sources officielles, et des simulateurs sans inscription.</p>
+      </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

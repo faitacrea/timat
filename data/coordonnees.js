@@ -34,8 +34,18 @@ export const EMAIL_EXPEDITEUR = "contact@timat.app";
 // par diverger : il n'y en a plus qu'une, et une barriere d'audit interdit de
 // la reecrire ailleurs.
 //
-// A VERIFIER : cette adresse doit etre confirmee sur les pages legales de
-// Vercel. Elle n'a pas pu l'etre au moment de l'ecriture.
+// L'adresse est celle que Vercel publie pour ses mentions legales et sa
+// politique de confidentialite ; plusieurs sources independantes la citent a
+// l'identique. C'est bien celle de la landing d'origine : la seconde, que
+// j'avais ecrite dans l'application (« 440 N Barranca Ave, Covina »), etait
+// fausse.
+//
+// ATTENTION AU CONTRESENS : Vercel est une societe AMERICAINE, et la loi
+// impose de publier l'identite et l'adresse de l'hebergeur — donc celles-la.
+// Ce qui est en France, c'est l'ENDROIT OU LE CODE S'EXECUTE (region cdg1) et
+// l'endroit ou les donnees sont stockees (Supabase, eu-west-3). Ecrire
+// « Vercel est en France » serait faux ; les deux phrases ci-dessous disent
+// exactement ce qui est vrai, et elles sont les memes partout.
 export const HEBERGEUR_WEB = "Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis";
 export const HEBERGEUR_BASE = "Supabase, sur OVHcloud — région eu-west-3 (Paris, France)";
 export const HEBERGEUR_REGION = "Fonctions serveur exécutées en région cdg1 (Paris, France).";
