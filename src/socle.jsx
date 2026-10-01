@@ -478,7 +478,7 @@ export const minimumHoraireAu=(d,titreAmge=false)=>{
 
 export const CATS={
   medical:{l:"Médical",ic:"🏥",c:"#B84060",bg:"#FAEEF2"},
-  admin:{l:"Administratif",ic:"🧾",c:"#B8892A",bg:"#FBF5E0"},
+  admin:{l:"Administratif",ic:"🧾",c:"#866318",bg:"#FBF5E0"},
   peda:{l:"Pédagogique",ic:"📝",c:"#6A3F88",bg:"#F2EAF8"},
   agrement:{l:"Agréments & Pro",ic:"🏛️",c:"#2E5F8A",bg:"#E6F0F8"},
 };

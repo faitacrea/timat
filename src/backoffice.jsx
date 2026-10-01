@@ -183,7 +183,14 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
   const setStat=(which,idx,field,v)=>setCfg(c=>{const ss=[...(c[which]||[])];ss[idx]={...ss[idx],[field]:field==="n"?Number(v):v};return{...c,[which]:ss};});
   const addPain=()=>setCfg(c=>({...c,painPoints:[...(c.painPoints||[]),{ic:"✨",titre:"Nouveau",desc:"Description"}]}));
   const removePain=(idx)=>setCfg(c=>({...c,painPoints:(c.painPoints||[]).filter((_,i)=>i!==idx)}));
-  const addTesti=()=>setCfg(c=>({...c,testimonials:[...(c.testimonials||[]),{nom:"Nouveau",ville:"Ville",avant:"Avant...",apres:"Après..."}]}));
+  // AUCUN GABARIT : un temoignage s'ajoute VIDE.
+  //
+  // Le bouton posait « Nouveau / Ville / Avant... / Apres... ». Rempli a moitie
+  // puis oublie, ca devient un avis invente sur la page publique — et l'article
+  // L. 121-4 du code de la consommation repute la diffusion de faux avis de
+  // consommateurs trompeuse en toutes circonstances. La landing n'affiche que
+  // les temoignages dont le nom ET le texte sont renseignes.
+  const addTesti=()=>setCfg(c=>({...c,testimonials:[...(c.testimonials||[]),{nom:"",ville:"",avant:"",apres:""}]}));
   const removeTesti=(idx)=>setCfg(c=>({...c,testimonials:(c.testimonials||[]).filter((_,i)=>i!==idx)}));
   // Free/Pro/Guarantees
   const setFreeItem=(idx,pos,v)=>setCfg(c=>{const items=[...(c.freeItems||[])];const row=[...items[idx]];row[pos]=v;items[idx]=row;return{...c,freeItems:items};});
@@ -1014,6 +1021,9 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <button onClick={addPain}className="btn bG s"style={{padding:"6px 12px",width:"100%"}}>+ Ajouter un pain point</button>
           </BOCard>
           <BOCard title="Témoignages (section 5)" icon="⭐">
+            <div style={{fontSize:11,lineHeight:1.6,color:"var(--m)",background:"#FFF8E7",border:"1px solid #F0DFB8",borderRadius:10,padding:"8px 10px",marginBottom:10}}>
+              Uniquement de <b>vrais avis</b>, reçus de vraies utilisatrices. Publier un avis inventé est une pratique commerciale trompeuse (article L.&nbsp;121-4 du code de la consommation). Un témoignage dont le nom ou le texte manque n'est pas affiché, et la section entière reste masquée tant qu'il n'y en a aucun.
+            </div>
             {(cfg.testimonials||[]).map((t,i)=><div key={i}style={{marginBottom:10,paddingBottom:10,borderBottom:"1px solid var(--br)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{fontSize:11,fontWeight:700,color:"var(--b)"}}>⭐ Témoignage {i+1}</div>

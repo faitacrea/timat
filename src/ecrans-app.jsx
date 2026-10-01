@@ -251,7 +251,7 @@ export function RepasChanges({enfants,role,pEId}){
           {echs.length===0&&<div style={{fontSize:13,color:"var(--l)"}}>Aucun change.</div>}
           {echs.map(c=><div key={c.id}style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"var(--c)",borderRadius:9}}>
             <span style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{c.h}</span>
-            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":c.type==="Selles"?"#FBF0DD":"var(--Gp)",color:c.type==="Propre"?"var(--G)":c.type==="Selles"?"#B8892A":"var(--G)"}}>
+            <span className="badge"style={{background:c.type==="Propre"?"var(--Sp)":c.type==="Selles"?"#FBF0DD":"var(--Gp)",color:c.type==="Propre"?"var(--G)":c.type==="Selles"?"#866318":"var(--G)"}}>
               {c.type==="Propre"?"✅ Propre":c.type==="Selles"?"💩 Selles":"🔄 Change"}</span>
             {c.n&&<span style={{fontSize:11,color:"var(--m)",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.n}</span>}
           </div>)}
@@ -265,7 +265,7 @@ export function RepasChanges({enfants,role,pEId}){
             <div><label className="lbl">Heure</label><input type="time"className="inp"value={nch.h}onChange={e=>setNch(p=>({...p,h:e.target.value}))}/></div>
             <div><label className="lbl">Type</label>
               <div style={{display:"flex",gap:6}}>
-                {[["Change","🔄 Change","var(--G)"],["Propre","✅ Propre","var(--S)"],["Selles","💩 Selles","#B8892A"]].map(([v,l,c])=>{
+                {[["Change","🔄 Change","var(--G)"],["Propre","✅ Propre","var(--S)"],["Selles","💩 Selles","#866318"]].map(([v,l,c])=>{
                   const on=nch.type===v;
                   return <button key={v} type="button" onClick={()=>setNch(p=>({...p,type:v}))} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",borderColor:on?c:"var(--br)",background:on?c+"1F":"#fff",color:on?c:"var(--m)",fontWeight:on?700:600,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
                 })}
@@ -390,7 +390,7 @@ export function Messagerie({enfants,role,pEId,user}){
         <div style={{display:"flex",gap:8,padding:"12px 14px",borderTop:"1px solid var(--br)",alignItems:"center",background:"#fff"}}>
           <input id="timat-msg-input" className="inp"value={txt}onChange={e=>setTxt(e.target.value)}
             onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Votre message…"style={{flex:1,borderRadius:22}}/>
-          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--accent)":"var(--br)",color:"#fff",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
+          <button onClick={send}disabled={!txt.trim()}aria-label="Envoyer"style={{flexShrink:0,width:42,height:42,borderRadius:"50%",border:"none",cursor:txt.trim()?"pointer":"default",background:txt.trim()?"var(--accent)":"var(--br)",color:txt.trim()?"#fff":"var(--m)",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>➤</button>
         </div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -557,7 +557,7 @@ export function Sante({enfants,role,pEId,user}){
           {(enfant.allergies||[]).length===0
             ?<div style={{display:"inline-flex",alignItems:"center",gap:7,background:"var(--Sp)",color:"var(--S)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600}}><IconeOuEmoji e="✅"/> Aucune allergie connue</div>
             :<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-              {(enfant.allergies||[]).map(a=><span key={a}style={{background:"#FEE2E2",color:"#DC2626",fontSize:13,fontWeight:600,padding:"6px 13px",borderRadius:10,display:"inline-flex",alignItems:"center",gap:7}}><IconeOuEmoji e="⚠️"/> {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
+              {(enfant.allergies||[]).map(a=><span key={a}style={{background:"#FEE2E2",color:"#A91616",fontSize:13,fontWeight:600,padding:"6px 13px",borderRadius:10,display:"inline-flex",alignItems:"center",gap:7}}><IconeOuEmoji e="⚠️"/> {a}{role==="parent"&&<span onClick={()=>delAllergie(a)}style={{cursor:"pointer",fontWeight:700,fontSize:14,opacity:0.7,userSelect:"none"}}title="Supprimer">✕</span>}</span>)}
             </div>}
           {role==="parent"?<div style={{marginTop:14,display:"flex",gap:8}}>
             <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
