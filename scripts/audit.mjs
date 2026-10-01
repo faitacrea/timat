@@ -3497,6 +3497,93 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- aucun faux avis de consommateur ---
+//
+// Quatre temoignages etaient ecrits en dur dans DEFAULT_CONFIG — « Marie D.,
+// Paris 15e », cinq etoiles — et s'affichaient sur la page publique alors que
+// l'application n'a aucune utilisatrice. L'article L. 121-4 du code de la
+// consommation repute trompeuse « en toutes circonstances » la diffusion de
+// faux avis de consommateurs : deux ans d'emprisonnement et 300 000 EUR
+// d'amende, et la DGCCRF peut sanctionner sans passer par le juge.
+//
+// Les vrais avis viendront du back-office. Ici, la liste doit rester vide.
+{
+  const m = appSrc.match(/testimonials\s*:\s*\[([\s\S]*?)\n\s{0,4}\]/);
+  if (m && /\{\s*nom\s*:/.test(m[1])) {
+    const noms = [...m[1].matchAll(/nom\s*:\s*"([^"]+)"/g)].map((x) => x[1]);
+    signale("faux avis", `des témoignages sont écrits dans le code (${noms.join(", ")}) : publiés sans utilisatrice derrière, ce sont de faux avis de consommateurs — article L. 121-4 du code de la consommation`);
+  }
+  // La section ne doit pas pouvoir s'afficher vide non plus : un bloc « elles
+  // en parlent » sans un seul avis promet une clientele qui n'existe pas.
+  if (!/SV\.temoignages===true&&testimonials\.length>0/.test(appSrc))
+    signale("faux avis", "la section des témoignages s'affiche sans vérifier qu'il y a au moins un avis : vide, elle laisse croire à des utilisatrices qui n'existent pas");
+}
+
+// --- aucune mention legale a trou sur la page publique ---
+//
+// Le pied de page affichait « · SIRET : » suivi de rien tant que le champ
+// n'etait pas rempli au back-office. Une mention legale obligatoire (LCEN,
+// article 19) annoncee puis laissee vide, sur la page que lisent les visiteurs
+// et les administrations, fait douter de tout le reste.
+{
+  const pied = appSrc.match(/Tous droits réservés[\s\S]{0,600}/);
+  if (pied && /SIRET\s*:\s*\{|SIRET\s*:\s*\$\{/.test(pied[0]) && !/legal\?\.siret\s*\?/.test(pied[0]))
+    signale("legal", "le pied de page écrit « SIRET : » sans vérifier que le numéro existe : publié vide, c'est une mention légale à trou");
+}
+
+// --- aucune promesse absolue sur la page publique ---
+//
+// La FAQ promettait « toujours le meme resultat, sans erreur ». Aucun logiciel
+// ne peut garantir cela, et l'ecrire est une allegation fausse au sens de
+// l'article L. 121-2 du code de la consommation. Le fait exact — chaque calcul
+// cite son texte — se defend ; la perfection, non.
+{
+  const INTERDITS = [
+    [/sans erreur/i, "« sans erreur » : aucune garantie d'absence d'erreur ne peut être tenue"],
+    [/z[ée]ro erreur/i, "« zéro erreur » : même promesse, même impossibilité"],
+    [/100\s*% (?:fiable|exact|conforme)/i, "« 100 % fiable / exact / conforme » : une perfection qu'on ne peut pas prouver"],
+    [/ne quittent pas le territoire/i, "« ne quittent pas le territoire » : contredit par la politique de confidentialité (Stripe en Irlande, Resend aux États-Unis, pages distribuées mondialement)"],
+    [/valeur l[ée]gale identique à une signature manuscrite/i, "cette équivalence est réservée à la signature QUALIFIÉE (eIDAS art. 25.2) ; TiMat produit une signature simple"],
+    [/opposables?\b/i, "« opposable » affirme qu'un pointage s'impose à l'autre partie : c'est une preuve, dont le juge apprécie la force"],
+  ];
+  for (const [re, msg] of INTERDITS)
+    if (re.test(appSrc)) signale("promesses", msg);
+}
+
+// --- aucune regle abrogee presentee comme en vigueur ---
+//
+// Une page outil publique affirmait encore : « si le salaire brut depasse
+// 5 fois le SMIC horaire par jour, les parents perdent l'aide en entier » —
+// y compris dans ses donnees structurees, celles que Google reprend en
+// reponse directe. Ce plafond journalier a ete SUPPRIME par la reforme du
+// CMG de septembre 2025 et remplace par un plafond horaire de 8,09 EUR :
+// le CMG continue d'etre verse, seule la part qui depasse reste a charge
+// (urssaf.fr, « Evolution du complement de libre choix du mode de garde »,
+// mis a jour le 24 avril 2026). La page disait donc le contraire du blog du
+// meme site.
+{
+  const ABROGEES = [
+    // On ne cherche pas la MENTION de la regle abrogee — l'expliquer est utile —
+    // mais la mention qui ne dit pas qu'elle ne s'applique plus. D'ou la
+    // negation : la phrase doit contenir « supprime », « remplace », « avant la
+    // reforme » ou equivalent dans les 160 caracteres qui suivent.
+    [/5\s*(?:fois|x)\s*(?:le\s*)?SMIC\s*horaires?\s*(?:par\s*jour|journalier)(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))/i,
+      "le plafond journalier de 5 SMIC horaires est présenté comme en vigueur : il a été supprimé par la réforme du CMG de septembre 2025"],
+    [/plafond journalier(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))[^.]{0,80}CMG/i,
+      "le CMG n'a plus de plafond journalier depuis septembre 2025, mais un plafond horaire de 8,09 EUR"],
+    [/reste à charge minimum de 15\s*%(?![^.]{0,120}(?:supprim|dispar|n'existe plus|aboli))/i, "le reste à charge minimum de 15 % a été supprimé en septembre 2025"],
+  ];
+  const aLire = [
+    ["src/App.jsx", appSrc],
+    ...readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+  ];
+  for (const [nom, contenu] of aLire)
+    for (const [re, msg] of ABROGEES)
+      if (re.test(contenu)) signale("règles abrogées", `${nom} : ${msg}`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

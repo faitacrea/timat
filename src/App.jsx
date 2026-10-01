@@ -1059,7 +1059,7 @@ export function Styles(){return(
     .bR:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(179,38,30,.36)}
     .bG2{background:var(--G);color:#fff;box-shadow:0 2px 10px rgba(47,107,100,.28)}
     .bG2:hover{transform:translateY(-1px)}
-    .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
+    .bP{background:linear-gradient(135deg,#B4543F,#A8452F);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
     .content{flex:1;overflow-x:hidden;max-width:100vw}
@@ -1754,7 +1754,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
       {role==="parent"
         ?<>En tant qu'employeur, déclarez le salaire net versé <b>{echeanceLabel}</b> sur Pajemploi, puis cochez chaque enfant ci-dessous.</>
         :<>Le parent employeur doit déclarer le salaire net <b>{echeanceLabel}</b> sur Pajemploi.</>}
-      {" "}Depuis janvier 2026, la déclaration est mensuelle et obligatoire, <b>une par enfant</b>.
+      {" "}La déclaration est mensuelle, entre le 25 du mois et le 5 du mois suivant. Depuis le 25 janvier 2026, elle est <b>distincte pour chaque enfant</b> d'une même fratrie.
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
       {list.map(e=>{
@@ -3799,7 +3799,15 @@ const jsPDF=await chargerJsPDF();
     cadreSig(MARGE,"L'assistant maternel",ct.signature_asmat_data,ct.date_signature_asmat,"Non signé");
     cadreSig(LARGEUR-MARGE-sigW,"Le particulier employeur",ct.signature_parent_data,ct.date_signature_parent,"En attente de signature");
     R.y=sigY+sigH+7;
-    R.texte("Signature électronique horodatée, de valeur légale identique à une signature manuscrite (règlement eIDAS n° 910/2014).",{italique:true,taille:7.5});
+    // NE PAS REECRIRE « de valeur legale identique a une signature manuscrite ».
+    // L'article 25.2 du reglement eIDAS n° 910/2014 reserve cette equivalence a
+    // la signature QUALIFIEE, qui suppose un certificat delivre par un
+    // prestataire qualifie. Ce que TiMat produit est une signature electronique
+    // simple : recevable comme preuve (article 25.1), mais dont la fiabilite
+    // s'apprecie au cas par cas par le juge, sans presomption. Ecrire l'inverse
+    // sur un contrat de travail, c'est donner une fausse securite juridique a
+    // l'assistante maternelle ET au parent.
+    R.texte("Signature électronique simple, horodatée et conservée avec le contrat (règlement eIDAS n° 910/2014, article 25.1 : recevable comme preuve). Elle ne bénéficie pas de la présomption de fiabilité réservée à la signature qualifiée.",{italique:true,taille:7.5});
 
     R.finaliser();
 
@@ -4821,7 +4829,7 @@ export function ModaleListeAttente({ ouverte, fermer }){
                 style={{width:"100%",marginTop:14,padding:"14px 18px",borderRadius:12,border:"none",cursor:etat==="envoi"?"wait":"pointer",background:"#B4543F",color:"#fff",fontSize:15,fontWeight:700,fontFamily:"inherit",opacity:etat==="envoi"?.7:1}}>
                 {etat==="envoi" ? "Enregistrement…" : "Prévenez-moi à l'ouverture →"}
               </button>
-              <p style={{fontSize:11.5,lineHeight:1.6,color:"#7C8A90",margin:"12px 0 0"}}>{CONSENTEMENT_ATTENTE}</p>
+              <p style={{fontSize:11.5,lineHeight:1.6,color:"#616F77",margin:"12px 0 0"}}>{CONSENTEMENT_ATTENTE}</p>
               <button type="button" onClick={fermer}
                 style={{display:"block",width:"100%",marginTop:10,background:"none",border:"none",cursor:"pointer",color:"#55707C",fontSize:13,fontWeight:600,fontFamily:"inherit",textDecoration:"underline"}}>Non merci, je regarde d'abord</button>
             </form>
@@ -5317,7 +5325,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
-              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
@@ -5446,7 +5454,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 propose juste après l'avoir vue, et le prix est dit là, en
                 clair, plutôt que découvert trois écrans plus bas. */}
             <div className="demo-cta">
-              <div style={{ fontSize:11.5, color:"#7C8A90", marginBottom:14, lineHeight:1.5 }}>Écrans réels · données d'exemple{demoParent?"":" · certains écrans s'ouvrent avec l'abonnement"}</div>
+              <div style={{ fontSize:11.5, color:"#616F77", marginBottom:14, lineHeight:1.5 }}>Écrans réels · données d'exemple{demoParent?"":" · certains écrans s'ouvrent avec l'abonnement"}</div>
               {demoParent
                 ? <>
                     <a href="/?connexion=parent" target="_top" style={{ display:"inline-block", background:"#B4543F", color:"#fff", borderRadius:12, padding:"14px 30px", fontSize:15, fontWeight:700, textDecoration:"none", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Me connecter à mon espace →</a>
@@ -5607,7 +5615,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               )}
             </nav>
             <button className="sticky-burger" onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:18,fontWeight:700,width:40,height:40,borderRadius:10,fontFamily:"inherit",alignItems:"center",justifyContent:"center" }}>☰</button>
-            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
+            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#B4543F,#A8452F)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
           </div>
         </div>
       </div>
@@ -5628,12 +5636,12 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.10)";e.currentTarget.style.color="#F0A98F";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
             </nav>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(46,72,89,.06)", color: L.navHamburgerColor||L.navBtnColor||"#2E4859", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(46,72,89,.25)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{menuOpen?"✕":"☰"}</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{libelleCtaNavCourt}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{libelleCtaNavCourt}</button>
           </div>
         </div>
         {/* Dropdown menu (desktop + mobile) */}
@@ -5730,7 +5738,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
-              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#8A4433", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</h2>
               <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.65)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
@@ -5786,7 +5794,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(158,83,65,.10)", border: "1px solid rgba(158,83,65,.28)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#9E5341", marginBottom: 16, fontWeight: 700, letterSpacing: ".8px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(158,83,65,.10)", border: "1px solid rgba(158,83,65,.28)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#8A4433", marginBottom: 16, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
@@ -5801,9 +5809,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?980:720, margin:"0 auto", marginBottom: 24 }}>
             {[
-              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Unique", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n61 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
-              { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Exclusif", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
-              { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
+              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n61 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
+              { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Les versements", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nMois par mois, employeur par employeur" },
+              { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nSignature horodatée, archivée avec le contrat" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
@@ -5811,7 +5819,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                     <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}><IconeOuEmoji e={d.ic} taille={26}/></span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
-                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
+                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#306862", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
                     </span>
                     {!isWeb&&<span className="acc-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
@@ -5889,7 +5897,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?900:640, margin:"0 auto" }}>
               {[
                 ["📸","Photos privées","Partagées uniquement entre vous et le parent, dans l'espace sécurisé. Jamais publiques, jamais sur les réseaux sociaux."],
-                ["🇫🇷","Hébergées en France","Vos données et celles des enfants ne quittent pas le territoire. Conformes RGPD, chiffrées en transit et au repos."],
+                ["🇫🇷","Hébergées en France","Base de données, documents et calculs à Paris. Conformes RGPD, chiffrés en transit et au repos. La liste complète de nos sous-traitants est publiée."],
                 ["🗑️","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
               ].map(([emo,t,d])=>(
                 <details key={t} open={isWeb} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
@@ -5918,7 +5926,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 32 }}>
-              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:16 }}>SUR QUOI ÇA S'APPUIE</div>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#8A4433", fontWeight:700, letterSpacing:".8px", marginBottom:16 }}>SUR QUOI ÇA S'APPUIE</div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize:"clamp(22px,4vw,36px)", color: L.sourcesTitleColor||"#2E4859", fontWeight:700, marginBottom:10, lineHeight:1.25 }}>{L.sourcesTitle}</h2>
               <div style={{ fontSize:15, color: L.sourcesDescColor||"#55707C", lineHeight:1.6, maxWidth:560, margin:"0 auto" }}>{L.sourcesDesc}</div>
             </div>
@@ -5942,7 +5950,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
+      {SV.temoignages===true&&testimonials.length>0&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6043,7 +6051,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 })()}
               </div>
               <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
               {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
                   <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
@@ -6054,7 +6062,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
           {/* Ces trois lignes etaient en blanc EN DUR. Le fond de la section
               tarifs est passe au creme #FDFBF8 sans que les textes suivent :
-              « Resiliable en 1 clic », « Pointages et messages opposables » et
+              « Resiliable en 1 clic », « Pointages signes des deux cotes » et
               « Donnees en France » etaient invisibles en ligne, ratio 1,03. */}
           {(T.tarifsRelais)&&<div style={{ marginTop: 20, textAlign: "center", fontSize: 13.5, color: L.guaranteesColor||"#55707C", lineHeight: 1.6, maxWidth: 560, marginLeft: "auto", marginRight: "auto" }}>
             {T.tarifsRelais}
@@ -6066,16 +6074,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* CTA FINAL */}
-      {SV.ctaFinal!==false&&<div className="lp-section" style={{ order:ord("ctaFinal"), background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
+      {SV.ctaFinal!==false&&<div className="lp-section" style={{ order:ord("ctaFinal"), background: L.ctaBg||"linear-gradient(135deg,#2E4859,#1F544F)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
-            <span style={{ color: accent, fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
-            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
+            <span style={{ color: L.ctaAccentColor||"#F6CDBF", fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
+            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.88)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
           </h2>
-          <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
-          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
-          <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
+          <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.88)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
+          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
+          <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.82)" }}>{T.ctaFooter}</div>
         </FadeIn>
       </div>}
 
@@ -6221,7 +6229,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.59)", lineHeight: 1.9 }}>
               {(F.rgpd||[]).length ? <span style={{display:"block", color:"rgba(255,255,255,.59)"}}>{(F.rgpd||[]).join(" · ")}</span> : null}
-              © {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}
+              {/* « SIRET : » suivi de rien s'affichait sur la page publique tant
+                  que le champ n'etait pas rempli : une mention legale a trou,
+                  visible de tous, qui fait douter du reste. Un champ vide ne
+                  s'annonce pas. */}
+              © {new Date().getFullYear()} TiMat — Tous droits réservés
+              {config.legal?.nom ? ` · Auto-entrepreneur ${config.legal.nom}` : ""}
+              {config.legal?.siret ? ` · SIRET : ${config.legal.siret}` : ""}
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
@@ -6444,10 +6458,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,fontSize:11}}>
                   <div><strong>Sous-traitant</strong></div><div><strong>Finalité</strong></div><div><strong>Localisation</strong></div>
-                  <div>Supabase</div><div>Base de données</div><div>🇫🇷 Paris, France</div>
-                  <div>Vercel</div><div>Hébergement web</div><div>🇪🇺 Europe (CDN)</div>
-                  <div>Stripe</div><div>Paiement</div><div>🇪🇺 Europe (Dublin)</div>
-                  <div>Have I Been Pwned</div><div>Contrôle des mots de passe fuités</div><div>🌍 Cloudflare (mondial)</div>
+                  <div>Supabase</div><div>Base de données et fichiers</div><div>🇫🇷 Paris, France (eu-west-3)</div>
+                  <div>Vercel</div><div>Hébergement web</div><div>🇫🇷 Fonctions serveur à Paris (cdg1) · 🌍 pages distribuées mondialement</div>
+                  <div>Stripe</div><div>Paiement</div><div>🇪🇺 Irlande (Dublin)</div>
+                  <div>Resend</div><div>Envoi des courriels (invitations, alertes)</div><div>🌍 Resend Inc., États-Unis — clauses contractuelles types</div>
+                  <div>Have I Been Pwned</div><div>Contrôle des mots de passe fuités</div><div>🌍 Cloudflare — aucun mot de passe transmis (seuls 5 caractères d'empreinte)</div>
                 </div>
               </div>
               <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
@@ -6536,7 +6551,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
-              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
@@ -6667,7 +6682,7 @@ const logoForRole = (role, dark) => {
 
 const FAQ_LANDING_DEFAULT=[
             {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur 2 mois de formule Pro offerts — contrats illimités, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
-            {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Toujours le même résultat, sans erreur."},
+            {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Chaque calcul cite le texte dont il sort, pour que vous puissiez le vérifier. Et si vous trouvez un écart, écrivez-nous : nous le corrigeons et nous le disons."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
             {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
             {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
@@ -6831,8 +6846,8 @@ export const DEFAULT_CONFIG = {
     proDescColor:"#55707C",
     ctaTitleColor:"#FFFFFF",
     ctaSubTitleColor:"rgba(255,255,255,.6)",
-    ctaSubColor:"rgba(255,255,255,.5)",
-    ctaFooterColor:"rgba(255,255,255,.35)",
+    ctaSubColor:"rgba(255,255,255,.88)",
+    ctaFooterColor:"rgba(255,255,255,.82)",
     pageBg:"#FDFBF8",
     // Ces quatre clés n'existaient que comme repli littéral dans le rendu.
     // Elles étaient donc invisibles du back-office ET de l'audit des
@@ -6912,12 +6927,23 @@ export const DEFAULT_CONFIG = {
     {ic:"🔇",titre:"Seule face aux problèmes",desc:"Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème."},
   ],
 
-  testimonials:[
-    {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soirées sur Excel.",apres:"Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
-    {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contrôle PMI.",apres:"Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi."},
-    {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contesté des heures.",apres:"Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat."},
-    {nom:"Fatima A.",ville:"Marseille",avant:"Je me réveillais la nuit à stresser.",apres:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai."},
-  ],
+  // AUCUN TEMOIGNAGE ECRIT D'AVANCE, ET CE N'EST PAS UN OUBLI.
+  //
+  // Quatre temoignages etaient ecrits ici en dur — « Marie D., Paris 15e »,
+  // cinq etoiles, une anecdote de controle PMI — alors que l'application n'a
+  // aucune utilisatrice. Ce ne sont pas des exemples de mise en page : ils
+  // s'affichaient sur la page publique comme de vrais avis.
+  //
+  // L'article L. 121-4 du code de la consommation repute trompeuse « en toutes
+  // circonstances » la diffusion de faux avis de consommateurs (liste issue de
+  // la directive Omnibus 2019/2161, transposee le 28 mai 2022). C'est un delit :
+  // deux ans d'emprisonnement et 300 000 EUR d'amende, et la DGCCRF peut
+  // sanctionner administrativement sans passer par le juge.
+  //
+  // La section existe toujours et se remplit depuis le back-office, le jour ou
+  // de vrais avis existeront. Vide, elle ne s'affiche pas. Une barriere d'audit
+  // refuse tout temoignage ecrit dans le code.
+  testimonials:[],
   // Cette liste doit correspondre exactement aux verrous du code. Une ligne qui
   // promet plus que l'application n'accorde se decouvre au pire moment, et une
   // ligne qui promet moins fait perdre une inscription pour rien.
@@ -6967,7 +6993,7 @@ export const DEFAULT_CONFIG = {
   ],
   guarantees:[
     "✅ Résiliable en 1 clic, sans reconduction",
-    "✅ Pointages et messages opposables",
+    "✅ Pointages signés des deux côtés, horodatés et conservés",
     "✅ Données en France 🇫🇷",
   ],
   // Aucune valeur par defaut inventee : ces informations sont obligatoires
@@ -7766,7 +7792,7 @@ export default function App(){
           <div style={{fontSize:34,marginBottom:10}}>👋</div>
           <div style={{fontSize:18,fontWeight:700,color:"#2E4A5A",marginBottom:8,fontFamily:"'Fraunces',Georgia,serif"}}>Invitation parent</div>
           <div style={{fontSize:13.5,color:"#555",lineHeight:1.6,marginBottom:20}}>Vous avez ouvert un lien d'invitation parent, mais vous êtes déjà connecté{user.role==="asmat"?" en tant qu'assistante maternelle":""} ({user.email}). Pour rejoindre l'espace parent, déconnectez-vous puis continuez.</div>
-          <button onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} setUser(null);}} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#E49178,#C76754)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:10,fontFamily:"inherit"}}>Se déconnecter et continuer</button>
+          <button onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} setUser(null);}} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#B4543F,#A8452F)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:10,fontFamily:"inherit"}}>Se déconnecter et continuer</button>
           <button onClick={()=>{try{window.location.href=window.location.pathname;}catch(e){}}} style={{width:"100%",padding:"11px",borderRadius:12,border:"1.5px solid #DDD5C8",background:"transparent",color:"#777",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Ignorer et rester sur mon espace</button>
         </div>
       </div>
