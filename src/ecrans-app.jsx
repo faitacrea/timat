@@ -108,12 +108,16 @@ export function VueAidesSimulateurs({enfants,role,pEId,user}){
   return <><SegBar v={v} setV={setV} items={[{ic:"💶",l:"Aide CMG"},{ic:"🧮",l:"Simulateur de coût"}]}/>{v===0?<KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>:<SimulateurCout enfants={enfants} pEId={pEId}/>}</>;
 }
 
-// LE CALENDRIER ET LA SEMAINE TYPE, AU MEME ENDROIT.
+// LE CALENDRIER ET LE PLANNING PERISCOLAIRE, AU MEME ENDROIT.
 //
 // Les deux repondent a la meme question — quand l'enfant est la — a deux
 // echelles : le calendrier montre les jours, le planning periscolaire la
-// semaine type qui les alimente. Les separer obligeait a regarder a deux
-// endroits pour une seule question.
+// semaine qui les alimente. Les separer obligeait a regarder a deux endroits
+// pour une seule question.
+//
+// L'ONGLET PORTE LE NOM DE L'ECRAN QU'IL OUVRE, et la barriere « intitules »
+// de l'audit refuse toute divergence : on avait deja eu un onglet « Semaine
+// type » qui ouvrait « Planning periscolaire ».
 export function VueCalendrier({enfants,role,pEId,user}){
   const [v,setV]=useState(0);
   return <><SegBar v={v} setV={setV} items={[{ic:"📅",l:"Calendrier"},{ic:"🚌",l:"Planning périscolaire"}]}/>
