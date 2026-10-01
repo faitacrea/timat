@@ -76,7 +76,9 @@
   .c1{background:#F2ECE6;color:#7A544A}.c3{background:var(--marine);color:#fff}
   .sep{border:0;border-top:1px dashed #E4DCD0;margin:18px 0 14px}
   .warnbox{background:#FFF6F2;border:1px solid #F3DDD4;border-left:4px solid var(--terraD);border-radius:10px;padding:14px 16px;margin:16px 0;font-size:14px}
-  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;table-layout:fixed}
+  th,td{overflow-wrap:break-word;word-break:break-word}
+  @media (max-width:430px){table{font-size:13px}th,td{padding:7px 6px}}
   th,td{border:1px solid #E7DED2;padding:9px 11px;text-align:left}
   th{background:var(--cream2);font-weight:600}
   ul.chk{padding-left:20px} ul.chk li{margin:6px 0}

@@ -22,7 +22,7 @@
 {"@type":"Question","name":"Quel est le salaire horaire minimum d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"Deux planchers coexistent et le plus élevé s'applique. Le minimum légal vaut 0,281 fois le SMIC horaire, soit 3,46 € brut au 1er juin 2026. Le minimum conventionnel, fixé par l'avenant n° 10 du 5 février 2026 à la convention collective, vaut 4,20 € brut par heure et par enfant, soit 3,28 € net. C'est donc 4,20 € le plancher réellement applicable, porté à 4,37 € pour les titulaires du titre de branche."}},
 {"@type":"Question","name":"Comment vérifier le montant de la mensualisation ?","acceptedAnswer":{"@type":"Answer","text":"La mensualisation se calcule ainsi : taux horaire brut × nombre d'heures d'accueil par semaine × nombre de semaines d'accueil dans l'année, le tout divisé par 12. Le résultat doit correspondre au salaire de base figurant chaque mois sur le bulletin."}},
 {"@type":"Question","name":"Quel est le minimum de l'indemnité d'entretien ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, elle se calcule à 0,435 € par heure d'accueil, sans pouvoir descendre sous 2,65 € par journée d'accueil et par enfant. Pour une journée de 9 heures, cela représente 3,92 €."}},
-{"@type":"Question","name":"Que se passe-t-il si le salaire journalier dépasse 5 fois le SMIC horaire ?","acceptedAnswer":{"@type":"Answer","text":"Les parents perdent le complément de libre choix du mode de garde pour cet enfant. Le plafond s'apprécie par jour d'accueil et par enfant, sur le salaire brut : au-delà, l'aide n'est pas réduite, elle est supprimée."}}
+{"@type":"Question","name":"Que se passe-t-il si le tarif horaire dépasse le plafond du CMG ?","acceptedAnswer":{"@type":"Answer","text":"Le CMG continue d'être versé. Depuis la réforme de septembre 2025, l'ancien plafond journalier de 5 fois le SMIC horaire a été supprimé et remplacé par un plafond horaire : 8,09 € de l'heure chez un assistant maternel. Au-delà, le CMG est calculé sur la base du plafond et seule la différence reste à la charge des parents, cotisations comprises."}}
 ]}
 </script>
 <style>
@@ -183,8 +183,8 @@
     <h3>5. La majoration au-delà de 45 heures</h3>
     <p>À partir de la 46<sup>e</sup> heure dans la même semaine, la majoration est obligatoire, à un taux fixé au contrat qui <strong>ne peut pas être inférieur à 10 %</strong> du taux de base. En dessous de 45 heures, les heures au-delà du contrat sont des heures complémentaires : elles se paient au taux normal, sauf si le contrat prévoit mieux.</p>
 
-    <h3>6. Le plafond qui coûte le CMG</h3>
-    <p>Si le salaire brut dépasse <strong>5 fois le SMIC horaire par jour d'accueil et par enfant</strong> — soit 61,55 € au 1<sup>er</sup> juin 2026 — les parents ne perdent pas une partie de l'aide : ils la perdent en entier. Un contrôle qui ne concerne pas la légalité du bulletin, mais qui pèse souvent plus lourd que tous les autres.</p>
+    <h3>6. Le plafond horaire du CMG</h3>
+    <p>L'ancien plafond journalier de 5 fois le SMIC horaire, qui faisait perdre l'aide en entier, <strong>a été supprimé par la réforme de septembre 2025</strong>. Il est remplacé par un plafond horaire : <strong>8,09 € de l'heure</strong> chez un assistant maternel. Au-delà, le CMG continue d'être versé — il est calculé sur la base du plafond, et seule la différence reste à la charge des parents, cotisations comprises. Un tarif élevé ne coûte donc plus l'aide ; il coûte la part qui dépasse. <a href="/simulateur-cmg-reste-a-charge.html">Estimer le reste à charge</a>.</p>
 
     <div class="box">Ces contrôles portent sur le <strong>brut</strong>. Si votre bulletin n'affiche qu'un net, appliquez le taux de conversion de votre situation avant de saisir les montants, ou partez du taux horaire inscrit au contrat, qui est toujours exprimé en brut.</div>
 
@@ -219,6 +219,11 @@
   </footer>
 
   <script>
+      /* Cotisations salariales reelles du bulletin (table TAUX_COTISATIONS de
+         l'application) : vieillesse 6,9 + 0,4, ARRCO 3,15, CEG 0,86, Ircem 1,04,
+         CSG 6,8 + 2,4 et CRDS 0,5 sur 98,25 % du brut. Soit 21,88 %. On ne met
+         PAS un coefficient arrondi comme 0,78 : il derive a chaque evolution. */
+      var TAUX_SAL=0.2188;
     (function(){
       var ids=['taux','hsem','sem','jsem','mens','jours','ent','hmaj','tmaj','smic','mini'],el={};
       ids.forEach(function(i){el[i]=document.getElementById(i);});
@@ -332,18 +337,30 @@
             'La durée est plafonnée à 48 h par semaine en moyenne sur quatre mois. Au-delà, un accord écrit est nécessaire, dans la limite de 2 250 heures par an tous contrats confondus.']);
         }
 
-        // 6. Plafond CMG : 5 x SMIC horaire par jour d'accueil et par enfant.
-        var plafond=smic*5;
-        var brutJour=jsem>0?taux*hsem/jsem:0;
-        if(brutJour>plafond){
-          v.push(['ko','Plafond CMG dépassé',
-            'Le salaire brut atteint <span class="num">'+eur(brutJour)+'</span> par jour d\'accueil, au-dessus du plafond de <span class="num">'+eur(plafond)+'</span> (5 × SMIC). Les parents perdent la totalité du CMG pour cet enfant — pas une partie.']);
-        }else if(brutJour>plafond*0.95&&brutJour>0){
-          v.push(['att','Plafond CMG bientôt atteint',
-            '<span class="num">'+eur(brutJour)+'</span> brut par jour, pour un plafond de <span class="num">'+eur(plafond)+'</span>. La marge est faible : une revalorisation ou une heure de plus par jour ferait perdre le CMG aux parents.']);
-        }else if(brutJour>0){
-          v.push(['ok','Plafond CMG respecté',
-            '<span class="num">'+eur(brutJour)+'</span> brut par jour d\'accueil, sous le plafond de <span class="num">'+eur(plafond)+'</span> (5 × SMIC).']);
+        // 6. Plafond HORAIRE du CMG.
+        //
+        // Cet outil appliquait l'ancien plafond journalier de 5 SMIC horaires et
+        // annoncait la perte totale de l'aide : la reforme de septembre 2025 l'a
+        // SUPPRIME. Le plafond est desormais horaire — 8,09 EUR chez un assistant
+        // maternel — il porte sur le COUT NET TOTAL de l'heure (salaire net,
+        // indemnite d'entretien et frais de repas), et le depasser ne fait plus
+        // perdre le CMG : seule la part qui depasse reste a la charge des parents.
+        // Source : urssaf.fr, « Evolution du complement de libre choix du mode de
+        // garde », mis a jour le 24 avril 2026.
+        //
+        // Un bulletin ne porte pas les frais de repas : ce controle ne peut donc
+        // pas conclure, seulement situer. Il n'emet jamais de « ko » — un tarif
+        // au-dessus du plafond est parfaitement legal.
+        var PLAFOND_H_CMG=8.09;
+        var netH=taux*(1-TAUX_SAL);
+        var entH=hjour>0?entretienJour(hjour)/hjour:0;
+        var coutH=netH+entH;
+        if(coutH>0&&coutH>PLAFOND_H_CMG){
+          v.push(['att','Au-dessus du plafond horaire du CMG',
+            'Le coût net de l\'heure atteint <span class="num">'+eur(coutH)+'</span> (salaire net <span class="num">'+eur(netH)+'</span> + entretien <span class="num">'+eur(entH)+'</span>), au-dessus du plafond de <span class="num">'+eur(PLAFOND_H_CMG)+'</span>. Ce n\'est pas une irrégularité et les parents ne perdent pas le CMG : il est calculé sur la base du plafond, et la différence reste à leur charge. Les frais de repas, absents du bulletin, s\'ajoutent à ce coût.']);
+        }else if(coutH>0){
+          v.push(['ok','Sous le plafond horaire du CMG',
+            'Coût net de l\'heure : <span class="num">'+eur(coutH)+'</span> (salaire net <span class="num">'+eur(netH)+'</span> + entretien <span class="num">'+eur(entH)+'</span>), pour un plafond de <span class="num">'+eur(PLAFOND_H_CMG)+'</span>. Les frais de repas, qui n\'apparaissent pas sur le bulletin, viennent s\'y ajouter.']);
         }
 
         // Rendu.

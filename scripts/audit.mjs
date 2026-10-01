@@ -3550,6 +3550,40 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     if (re.test(appSrc)) signale("promesses", msg);
 }
 
+// --- aucune regle abrogee presentee comme en vigueur ---
+//
+// Une page outil publique affirmait encore : « si le salaire brut depasse
+// 5 fois le SMIC horaire par jour, les parents perdent l'aide en entier » —
+// y compris dans ses donnees structurees, celles que Google reprend en
+// reponse directe. Ce plafond journalier a ete SUPPRIME par la reforme du
+// CMG de septembre 2025 et remplace par un plafond horaire de 8,09 EUR :
+// le CMG continue d'etre verse, seule la part qui depasse reste a charge
+// (urssaf.fr, « Evolution du complement de libre choix du mode de garde »,
+// mis a jour le 24 avril 2026). La page disait donc le contraire du blog du
+// meme site.
+{
+  const ABROGEES = [
+    // On ne cherche pas la MENTION de la regle abrogee — l'expliquer est utile —
+    // mais la mention qui ne dit pas qu'elle ne s'applique plus. D'ou la
+    // negation : la phrase doit contenir « supprime », « remplace », « avant la
+    // reforme » ou equivalent dans les 160 caracteres qui suivent.
+    [/5\s*(?:fois|x)\s*(?:le\s*)?SMIC\s*horaires?\s*(?:par\s*jour|journalier)(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))/i,
+      "le plafond journalier de 5 SMIC horaires est présenté comme en vigueur : il a été supprimé par la réforme du CMG de septembre 2025"],
+    [/plafond journalier(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))[^.]{0,80}CMG/i,
+      "le CMG n'a plus de plafond journalier depuis septembre 2025, mais un plafond horaire de 8,09 EUR"],
+    [/reste à charge minimum de 15\s*%(?![^.]{0,120}(?:supprim|dispar|n'existe plus|aboli))/i, "le reste à charge minimum de 15 % a été supprimé en septembre 2025"],
+  ];
+  const aLire = [
+    ["src/App.jsx", appSrc],
+    ...readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+  ];
+  for (const [nom, contenu] of aLire)
+    for (const [re, msg] of ABROGEES)
+      if (re.test(contenu)) signale("règles abrogées", `${nom} : ${msg}`);
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
