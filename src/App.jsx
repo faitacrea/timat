@@ -1754,7 +1754,7 @@ function EcheancierDeclaration({enfants,role,user,demo}){
       {role==="parent"
         ?<>En tant qu'employeur, déclarez le salaire net versé <b>{echeanceLabel}</b> sur Pajemploi, puis cochez chaque enfant ci-dessous.</>
         :<>Le parent employeur doit déclarer le salaire net <b>{echeanceLabel}</b> sur Pajemploi.</>}
-      {" "}Depuis janvier 2026, la déclaration est mensuelle et obligatoire, <b>une par enfant</b>.
+      {" "}La déclaration est mensuelle, entre le 25 du mois et le 5 du mois suivant. Depuis le 25 janvier 2026, elle est <b>distincte pour chaque enfant</b> d'une même fratrie.
     </div>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
       {list.map(e=>{
@@ -3799,7 +3799,15 @@ const jsPDF=await chargerJsPDF();
     cadreSig(MARGE,"L'assistant maternel",ct.signature_asmat_data,ct.date_signature_asmat,"Non signé");
     cadreSig(LARGEUR-MARGE-sigW,"Le particulier employeur",ct.signature_parent_data,ct.date_signature_parent,"En attente de signature");
     R.y=sigY+sigH+7;
-    R.texte("Signature électronique horodatée, de valeur légale identique à une signature manuscrite (règlement eIDAS n° 910/2014).",{italique:true,taille:7.5});
+    // NE PAS REECRIRE « de valeur legale identique a une signature manuscrite ».
+    // L'article 25.2 du reglement eIDAS n° 910/2014 reserve cette equivalence a
+    // la signature QUALIFIEE, qui suppose un certificat delivre par un
+    // prestataire qualifie. Ce que TiMat produit est une signature electronique
+    // simple : recevable comme preuve (article 25.1), mais dont la fiabilite
+    // s'apprecie au cas par cas par le juge, sans presomption. Ecrire l'inverse
+    // sur un contrat de travail, c'est donner une fausse securite juridique a
+    // l'assistante maternelle ET au parent.
+    R.texte("Signature électronique simple, horodatée et conservée avec le contrat (règlement eIDAS n° 910/2014, article 25.1 : recevable comme preuve). Elle ne bénéficie pas de la présomption de fiabilité réservée à la signature qualifiée.",{italique:true,taille:7.5});
 
     R.finaliser();
 
@@ -5801,9 +5809,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?980:720, margin:"0 auto", marginBottom: 24 }}>
             {[
-              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Unique", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n61 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
-              { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Exclusif", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nUn suivi rare sur le marché" },
-              { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nArchivés en sécurité (conforme eIDAS)" }
+              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n61 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
+              { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Les versements", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nMois par mois, employeur par employeur" },
+              { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nSignature horodatée, archivée avec le contrat" }
             ].map((d, i) => (
               <FadeIn key={d.titre} delay={i * 60}>
                 <details open={isWeb} style={{ background:"#FFFFFF", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
@@ -5889,7 +5897,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?900:640, margin:"0 auto" }}>
               {[
                 ["📸","Photos privées","Partagées uniquement entre vous et le parent, dans l'espace sécurisé. Jamais publiques, jamais sur les réseaux sociaux."],
-                ["🇫🇷","Hébergées en France","Vos données et celles des enfants ne quittent pas le territoire. Conformes RGPD, chiffrées en transit et au repos."],
+                ["🇫🇷","Hébergées en France","Base de données, documents et calculs à Paris. Conformes RGPD, chiffrés en transit et au repos. La liste complète de nos sous-traitants est publiée."],
                 ["🗑️","Vous gardez le contrôle","Documents archivés en sécurité, consultables à tout moment, et supprimables sur simple demande."]
               ].map(([emo,t,d])=>(
                 <details key={t} open={isWeb} style={{ background:"#fff", border:"1px solid #EDE6DE", borderRadius:14, overflow:"hidden", height:isWeb?"100%":"auto" }}>
@@ -5942,7 +5950,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      {SV.temoignages===true&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
+      {SV.temoignages===true&&testimonials.length>0&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -6054,7 +6062,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           </div>
           {/* Ces trois lignes etaient en blanc EN DUR. Le fond de la section
               tarifs est passe au creme #FDFBF8 sans que les textes suivent :
-              « Resiliable en 1 clic », « Pointages et messages opposables » et
+              « Resiliable en 1 clic », « Pointages signes des deux cotes » et
               « Donnees en France » etaient invisibles en ligne, ratio 1,03. */}
           {(T.tarifsRelais)&&<div style={{ marginTop: 20, textAlign: "center", fontSize: 13.5, color: L.guaranteesColor||"#55707C", lineHeight: 1.6, maxWidth: 560, marginLeft: "auto", marginRight: "auto" }}>
             {T.tarifsRelais}
@@ -6221,7 +6229,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,.59)", lineHeight: 1.9 }}>
               {(F.rgpd||[]).length ? <span style={{display:"block", color:"rgba(255,255,255,.59)"}}>{(F.rgpd||[]).join(" · ")}</span> : null}
-              © {new Date().getFullYear()} TiMat — Tous droits réservés · Auto-entrepreneur {config.legal?.nom} · SIRET : {config.legal?.siret}
+              {/* « SIRET : » suivi de rien s'affichait sur la page publique tant
+                  que le champ n'etait pas rempli : une mention legale a trou,
+                  visible de tous, qui fait douter du reste. Un champ vide ne
+                  s'annonce pas. */}
+              © {new Date().getFullYear()} TiMat — Tous droits réservés
+              {config.legal?.nom ? ` · Auto-entrepreneur ${config.legal.nom}` : ""}
+              {config.legal?.siret ? ` · SIRET : ${config.legal.siret}` : ""}
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               {[["Mentions légales","mentions"],["CGU","cgu"],["Confidentialité","confidentialite"]].map(([l,id])=>
@@ -6444,10 +6458,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,fontSize:11}}>
                   <div><strong>Sous-traitant</strong></div><div><strong>Finalité</strong></div><div><strong>Localisation</strong></div>
-                  <div>Supabase</div><div>Base de données</div><div>🇫🇷 Paris, France</div>
-                  <div>Vercel</div><div>Hébergement web</div><div>🇪🇺 Europe (CDN)</div>
-                  <div>Stripe</div><div>Paiement</div><div>🇪🇺 Europe (Dublin)</div>
-                  <div>Have I Been Pwned</div><div>Contrôle des mots de passe fuités</div><div>🌍 Cloudflare (mondial)</div>
+                  <div>Supabase</div><div>Base de données et fichiers</div><div>🇫🇷 Paris, France (eu-west-3)</div>
+                  <div>Vercel</div><div>Hébergement web</div><div>🇫🇷 Fonctions serveur à Paris (cdg1) · 🌍 pages distribuées mondialement</div>
+                  <div>Stripe</div><div>Paiement</div><div>🇪🇺 Irlande (Dublin)</div>
+                  <div>Resend</div><div>Envoi des courriels (invitations, alertes)</div><div>🌍 Resend Inc., États-Unis — clauses contractuelles types</div>
+                  <div>Have I Been Pwned</div><div>Contrôle des mots de passe fuités</div><div>🌍 Cloudflare — aucun mot de passe transmis (seuls 5 caractères d'empreinte)</div>
                 </div>
               </div>
               <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
@@ -6667,7 +6682,7 @@ const logoForRole = (role, dark) => {
 
 const FAQ_LANDING_DEFAULT=[
             {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur 2 mois de formule Pro offerts — contrats illimités, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
-            {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Toujours le même résultat, sans erreur."},
+            {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Chaque calcul cite le texte dont il sort, pour que vous puissiez le vérifier. Et si vous trouvez un écart, écrivez-nous : nous le corrigeons et nous le disons."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
             {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
             {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
@@ -6912,12 +6927,23 @@ export const DEFAULT_CONFIG = {
     {ic:"🔇",titre:"Seule face aux problèmes",desc:"Pas de collègue à qui demander. Pas de RH. Pas de syndicat facilement accessible. Juste les forums et l'espoir que quelqu'un ait eu le même problème."},
   ],
 
-  testimonials:[
-    {nom:"Marie D.",ville:"Paris 15e",avant:"Je passais mes soirées sur Excel.",apres:"Mon récap Pajemploi est prêt en 5 minutes. Je ne sais même plus pourquoi j'attendais de changer."},
-    {nom:"Sylvie R.",ville:"Lyon",avant:"J'avais peur d'un contrôle PMI.",apres:"Tout est archivé, daté, accessible. L'inspectrice a été impressionnée par mon suivi."},
-    {nom:"Nathalie B.",ville:"Bordeaux",avant:"Un parent a contesté des heures.",apres:"Le pointage horodaté a tout réglé en 30 secondes. Je ne travaillerai plus sans TiMat."},
-    {nom:"Fatima A.",ville:"Marseille",avant:"Je me réveillais la nuit à stresser.",apres:"TiMat me prévient avant chaque échéance. Je dors mieux. C'est bête mais c'est vrai."},
-  ],
+  // AUCUN TEMOIGNAGE ECRIT D'AVANCE, ET CE N'EST PAS UN OUBLI.
+  //
+  // Quatre temoignages etaient ecrits ici en dur — « Marie D., Paris 15e »,
+  // cinq etoiles, une anecdote de controle PMI — alors que l'application n'a
+  // aucune utilisatrice. Ce ne sont pas des exemples de mise en page : ils
+  // s'affichaient sur la page publique comme de vrais avis.
+  //
+  // L'article L. 121-4 du code de la consommation repute trompeuse « en toutes
+  // circonstances » la diffusion de faux avis de consommateurs (liste issue de
+  // la directive Omnibus 2019/2161, transposee le 28 mai 2022). C'est un delit :
+  // deux ans d'emprisonnement et 300 000 EUR d'amende, et la DGCCRF peut
+  // sanctionner administrativement sans passer par le juge.
+  //
+  // La section existe toujours et se remplit depuis le back-office, le jour ou
+  // de vrais avis existeront. Vide, elle ne s'affiche pas. Une barriere d'audit
+  // refuse tout temoignage ecrit dans le code.
+  testimonials:[],
   // Cette liste doit correspondre exactement aux verrous du code. Une ligne qui
   // promet plus que l'application n'accorde se decouvre au pire moment, et une
   // ligne qui promet moins fait perdre une inscription pour rien.
@@ -6967,7 +6993,7 @@ export const DEFAULT_CONFIG = {
   ],
   guarantees:[
     "✅ Résiliable en 1 clic, sans reconduction",
-    "✅ Pointages et messages opposables",
+    "✅ Pointages signés des deux côtés, horodatés et conservés",
     "✅ Données en France 🇫🇷",
   ],
   // Aucune valeur par defaut inventee : ces informations sont obligatoires
