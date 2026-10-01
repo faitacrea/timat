@@ -1,0 +1,37 @@
+À : contact.tiercedeclaration@urssaf.fr
+Objet : Demande d'accès à l'API Tierce déclaration Pajemploi — éditeur TiMat
+
+
+Madame, Monsieur,
+
+Je souhaite demander l'accès à l'API Tierce déclaration Pajemploi en qualité d'éditeur de logiciel, et connaître la marche à suivre ainsi que la licence d'usage à signer.
+
+J'ai tenté de créer un compte sur portailapi.urssaf.fr sans y parvenir : la définition du mot de passe échoue systématiquement et me renvoie au début de la création. Je vous écris donc directement.
+
+Éditeur : Lefort Sophie, entrepreneur individuel
+SIRET : 902 648 088 00026
+Adresse : 12 rue Étienne Dolet, 94230 Cachan, France
+Téléphone : 06 20 87 33 80
+Service : TiMat — https://www.timat.app
+Lieu de l'activité : France
+Usage : éditeur partenaire (service proposé à des employeurs tiers)
+
+TiMat est une application de gestion destinée aux assistantes maternelles agréées et aux parents employeurs relevant de Pajemploi. Elle calcule les heures d'accueil, le salaire, les indemnités d'entretien et de repas et les congés, et prépare aujourd'hui les montants que le parent employeur reporte lui-même sur son compte Pajemploi.
+
+L'accès à l'API nous permettrait de transmettre la déclaration mensuelle directement, sur mandat explicite du parent employeur.
+
+Le recueil du mandat est déjà en place dans l'application. Le mandat est donné par le parent employeur lui-même, jamais par l'assistante maternelle qui est la salariée ; le texte accepté est horodaté et versionné ; le mandat est révocable à tout moment d'un seul geste, avec effet immédiat ; et il est conservé après révocation, de sorte qu'une déclaration déjà transmise reste rattachable à l'autorisation en vigueur le jour de son envoi.
+
+Volumétrie : service en lancement, volumétrie estimée à quelques dizaines de déclarations mensuelles la première année.
+
+Hébergement et sécurité : les données sont hébergées en France — base de données à Paris (région eu-west-3) et fonctions serveur en région cdg1 — avec chiffrement en transit et au repos, cloisonnement par ligne au niveau de la base, et journal d'audit. Le service est conforme au RGPD ; les mentions légales et la politique de confidentialité sont publiées sur le site.
+
+Je me tiens à votre disposition pour toute pièce complémentaire ou pour une démonstration du service.
+
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+
+Sophie Lefort
+TiMat — https://www.timat.app
+06 20 87 33 80
+Contact.timat.app@gmail.com

@@ -114,7 +114,7 @@ Le forfait Hobby n'autorise que douze fonctions serverless. Les deux routes
 Stripe ont été réunies : il reste **onze sur douze**, donc une place libre pour
 `api/pajemploi-transmettre.js` le jour venu.
 
-## L'adresse : un point à trancher avant d'envoyer
+## L'adresse publiée : décision prise le 1er octobre 2026
 
 L'adresse déclarée à l'INSEE est **non diffusible** — l'option de non-diffusion
 du répertoire SIRENE a été activée. C'est une protection volontaire, et la
@@ -128,6 +128,13 @@ Le choix ne porte donc que sur ce qui est **publié sur le site**. Une adresse d
 domiciliation commerciale (15 à 30 € par mois pour une offre simple) se déclare
 à l'INSEE, devient l'adresse de l'entreprise, et c'est elle qu'on publie. La
 non-diffusion du domicile reste acquise.
+
+**Décision : l'adresse personnelle est publiée**, en connaissance de la
+conséquence — une page web est indexée et mise en cache, là où un registre ne
+se consulte qu'au cas par cas. Le retour en arrière reste possible à tout
+moment : une domiciliation se souscrit, se déclare à l'INSEE, et le champ se
+change en une ligne au back-office. Rien dans le code ne dépend de cette
+adresse.
 
 ## Brouillon du courriel de demande
 
@@ -145,8 +152,8 @@ non-diffusion du domicile reste acquise.
 >
 > Éditeur : Lefort Sophie, entrepreneur individuel
 > SIRET : 902 648 088 00026
-> Adresse : [adresse]
-> Téléphone : [téléphone]
+> Adresse : 12 rue Étienne Dolet, 94230 Cachan, France
+> Téléphone : 06 20 87 33 80
 > Service : TiMat — https://www.timat.app
 > Lieu de l'activité : France
 > Usage : éditeur partenaire (service proposé à des employeurs tiers)
@@ -183,9 +190,17 @@ non-diffusion du domicile reste acquise.
 > distinguées.
 >
 > Sophie Lefort
-> [téléphone]
-> Adresse de contact du service : contact@timat.app
-> (message envoyé depuis contact.timat.app@gmail.com, qui reçoit les réponses)
+> TiMat — https://www.timat.app
+> 06 20 87 33 80
+> Contact.timat.app@gmail.com
+
+**Le texte prêt à copier** : `courriel-urssaf.txt`, à la racine du dépôt.
+
+**L'adresse de contact doit être celle des mentions légales.** La configuration
+publiée porte `Contact.timat.app@gmail.com` ; c'est donc elle qui figure dans la
+signature. Si `contact@timat.app` devient une vraie boîte aux lettres un jour,
+il faudra changer les deux ensemble — une adresse dans le courriel et une autre
+sur le site est exactement le genre d'écart qu'un relecteur relève.
 
 **Où l'envoyer** : `contact.tiercedeclaration@urssaf.fr`.
 
