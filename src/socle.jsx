@@ -862,13 +862,30 @@ export const REPAS_CHOIX=[
 
 export const JOURS_SEM=["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
 
+// LES MOMENTS D'ACCUEIL AUTOUR DE L'ECOLE.
+//
+// « Meridien » a ete remplace par « Midi » : c'est du vocabulaire de cantine,
+// que personne n'emploie en parlant a une assistante maternelle.
+//
+// Les horaires sont INDICATIFS et le disent : ce sont ceux d'une journee
+// d'ecole ordinaire. Ils ne viennent pas du contrat, et les afficher comme des
+// horaires fermes laissait croire le contraire — une assistante maternelle qui
+// accueille de 7 h 30 a 17 h 30 ne reconnaissait aucun de ces creneaux.
 export const PERIODES=[
-  {id:"matin",l:"Matin",h:"07h00–08h30",ic:"🌅"},
-  {id:"midi",l:"Méridien",h:"11h30–13h30",ic:"☀️"},
-  {id:"soir",l:"Soir",h:"16h30–19h00",ic:"🌆"},
-  {id:"mercredi",l:"Mercredi journée",h:"08h00–18h00",ic:"📅"},
+  {id:"matin",l:"Matin",h:"avant l'école",ic:"🌅"},
+  {id:"midi",l:"Midi",h:"pause déjeuner",ic:"☀️"},
+  {id:"soir",l:"Soir",h:"après l'école",ic:"🌆"},
+  {id:"mercredi",l:"Mercredi",h:"journée entière",ic:"📅"},
   {id:"vacances",l:"Vacances scolaires",h:"Selon planning",ic:"🏖️"},
 ];
+
+// L'AGE A PARTIR DUQUEL LA SEMAINE TYPE A UN SENS.
+//
+// Ces creneaux decrivent l'accueil AUTOUR DE L'ECOLE. Pour un enfant qui n'y va
+// pas encore, ils ne veulent rien dire : il est la toute la journee, et c'est
+// le contrat qui le dit. L'instruction est obligatoire a 3 ans, et la rentree
+// se fait en septembre — on prend donc 3 ans revolus, soit 36 mois.
+export const MOIS_SCOLARISABLE = 36;
 
 
 export const BAREME_KM_2026={3:0.529,4:0.606,5:0.636,6:0.665,7:0.697}; // voiture, <=5000 km/an, baremes 2026 (geles)

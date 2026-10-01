@@ -20,7 +20,7 @@ import {
   CPill, createNotification, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 } from "./App.jsx";
 import {
-  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT
+  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, MOIS_SCOLARISABLE, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT
 } from "./socle.jsx";
 
 export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
@@ -1507,6 +1507,13 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
     enregistrer({zone:z});
   };
 
+  // L'ENFANT EST-IL EN AGE D'ALLER A L'ECOLE ? Les creneaux matin / midi / soir
+  // decrivent l'accueil AUTOUR DE L'ECOLE. Pour un bebe, ils ne veulent rien
+  // dire : il est la toute la journee, et c'est le contrat qui le dit. Les
+  // afficher quand meme, c'est demander de cocher des cases sans objet — et
+  // c'est precisement ce qui rendait cet ecran incomprehensible.
+  const scolarise=ageEnMois(enfant?.naissance)>=MOIS_SCOLARISABLE;
+
   const periodes=enfant?periodesVacances(TODAY_STR,zone):[];
 
   if(etat==="chargement")return <div className="fi" style={{padding:"48px 20px",textAlign:"center",color:"var(--m)",fontSize:14}}>Chargement du planning…</div>;
@@ -1521,8 +1528,10 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🚌" title="Planning périscolaire"
-      sub="Les jours d'accueil, et ce que vous souhaitez pendant les vacances"/>
+    <PageHeader icon="🚌" title="Semaine type"
+      sub={scolarise
+        ? "Les moments d'accueil autour de l'école, et les vacances scolaires"
+        : "Ce que vous souhaitez pendant les vacances scolaires"}/>
 
     {!enfant&&<EmptyState emoji="🚌" titre="Aucun enfant"
       texte="Le planning périscolaire s'affichera dès qu'un enfant sera enregistré."/>}
@@ -1533,9 +1542,14 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
       </div>}
 
       <div style={{fontSize:12,color:"var(--m)",marginBottom:14,padding:"10px 12px",background:"var(--c)",borderRadius:10,lineHeight:1.55}}>
+        <strong style={{color:"var(--b)"}}>À quoi sert cet écran.</strong>{" "}
+        {scolarise
+          ? <>Le contrat fixe les jours et les horaires d'accueil. Ici, on précise les moments où {enfant.prenom} est accueilli <em>autour de l'école</em> — avant, le midi, après — et ce qui est prévu pendant les vacances scolaires, où l'école est fermée.</>
+          : <>{enfant.prenom} n'est pas encore à l'école : ses journées sont celles du contrat, et il n'y a pas de créneaux à préciser. Reste la question des vacances scolaires, utile si une sœur ou un frère est scolarisé, ou si vos congés suivent le calendrier scolaire.</>}
+        <br/><br/>
         {role==="parent"
-          ? "Cochez les moments où vous souhaitez confier votre enfant. Vos changements sont envoyés à votre assistante maternelle, qui les confirme : ce sont ses heures de travail."
-          : "Le parent propose ses besoins d'accueil ; vous confirmez. Vos propres modifications s'appliquent directement."}
+          ? "Vos changements sont envoyés à votre assistante maternelle, qui les confirme : ce sont ses heures de travail."
+          : "Le parent propose ses besoins ; vous confirmez. Vos propres modifications s'appliquent directement."}
       </div>
 
       {/* LA DEMANDE EN ATTENTE. Cote assistante maternelle, c'est une decision
@@ -1561,7 +1575,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
             <strong>Demande envoyée.</strong> Ce que vous voyez ci-dessous est votre demande, en attente de confirmation. Le planning qui fait foi reste celui d'avant tant que votre assistante maternelle n'a pas répondu.
           </div>)}
 
-      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      {scolarise&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
         {PERIODES.filter(per=>per.id!=="vacances").map(per=><div key={per.id}className="card"style={{borderLeft:"4px solid var(--B)"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <div>
@@ -1591,7 +1605,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
             })}
           </div>}
         </div>)}
-      </div>
+      </div>}
 
       {/* ===== LES VACANCES SCOLAIRES ===== */}
       <div className="card" style={{marginTop:16}}>
@@ -1638,7 +1652,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
       </div>
 
       {/* ===== RECAPITULATIF SEMAINE TYPE ===== */}
-      <div className="card"style={{marginTop:16}}>
+      {scolarise&&<div className="card"style={{marginTop:16}}>
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Semaine type — {enfant?.prenom}</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
           {JOURS_SEM.map(j=><div key={j}style={{textAlign:"center"}}>
@@ -1653,7 +1667,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
             {j==="Mercredi"&&sem.mercredi&&<div style={{background:"var(--Sp)",borderRadius:6,padding:"3px 4px",fontSize:11,color:"var(--S)",fontWeight:600}}>Journée</div>}
           </div>)}
         </div>
-      </div>
+      </div>}
     </>}
   </div>;
 }
