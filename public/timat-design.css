@@ -45,11 +45,18 @@
   --terra: #E49178;
   --terra-fonce: #B4543F;   /* le terra qui porte du texte blanc : 4,91:1 */
   --terra-texte: #9E5341;   /* le terra qui s'écrit sur du crème : 5,01:1 */
+  /* CHAQUE COULEUR DE TEXTE A SON FOND. Celles ci-dessus ne valent que sur du
+     crème ou du blanc : posées ailleurs, elles tombent sous le seuil sans que
+     personne le voie. Deux manquaient, et elles manquaient là où ça se voit :
+     le lien du pied de page, terra foncé sur marine, ne tenait que 1,72:1, et
+     le texte des pastilles, sur son propre terra à 16 %, 4,19:1. */
+  --terra-clair: #F3BCA9;   /* le terra qui s'écrit sur le marine : 5,75:1 */
+  --terra-encre: #8E4636;   /* le terra qui s'écrit dans une pastille terra : 5,82:1 */
   --teal: #5DA9A1;
   --teal-fonce: #2F655F;    /* idem, pour le vert : 5,99:1 sur crème */
   --cream: #FDFBF8;
   --cream-fonce: #F7F2EC;
-  --gris: #7C8A90;
+  --gris: #5A6870;          /* 4,94:1 même sur l'extrémité foncée du dégradé crème ; il valait #7C8A90, soit 3,45:1 */
   --filet: #EDE6DE;
 
   /* Anciens noms, gardés le temps que les pages les abandonnent. Ils pointent

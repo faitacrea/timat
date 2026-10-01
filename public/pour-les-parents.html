@@ -83,6 +83,9 @@
   .hero h1{font-size:clamp(28px,5vw,48px);line-height:1.16;color:#fff;font-weight:700;margin:0}
   .hero h1 em{font-style:italic;color:#F0A98F}
   .hero .sub{font-size:clamp(15px,2vw,19px);font-weight:600;color:rgba(255,255,255,.88);max-width:660px;margin:0;line-height:1.5}
+  /* Le lien etait en terracotta sur le degrade sombre du hero : 1,65:1.
+     Le terra clair tient 6,30:1 sur ce fond. */
+  .hero .detail a{color:#F6CDBF}
   .hero .detail{font-size:clamp(13px,1.6vw,15px);color:rgba(255,255,255,.72);max-width:520px;margin:0;line-height:1.65}
   .free{display:inline-flex;align-items:center;gap:8px;background:rgba(93,169,161,.16);border:1px solid rgba(93,169,161,.42);color:#BFE3DE;font-weight:700;font-size:14.5px;padding:10px 20px;border-radius:99px}
   .hero-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
@@ -154,7 +157,7 @@
 
   .steps{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
   .step{background:#fff;border:1px solid var(--br);border-radius:14px;padding:20px;text-align:center}
-  .step .n{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--terraD));color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+  .step .n{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#B4543F,var(--terraD));color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
   .step b{display:block;font-family:var(--titre);color:var(--marine);font-size:15px;margin-bottom:5px}
   .step span{font-size:13px;color:var(--muted)}
 
@@ -188,7 +191,7 @@
   .cta-final{background:linear-gradient(165deg,#24404F 0%,#2E4859 62%,#2A4D53 100%);border-radius:24px;padding:42px 30px;text-align:center;margin:20px 0}
   .cta-final h2{color:#fff;font-size:25px;margin-bottom:12px}
   .cta-final p{color:rgba(255,255,255,.72);max-width:520px;margin:0 auto 20px;font-size:14.5px}
-  .cta-final .sub{margin-top:14px;font-size:12px;color:rgba(255,255,255,.45)}
+  .cta-final .sub{margin-top:14px;font-size:12px;color:rgba(255,255,255,.85)}
 
   /* Marine, comme le pied de la landing. Le corail #C46A5C d'avant ne portait
      son texte blanc qu'à 3,77:1 — sous le minimum AA de 4,5. */

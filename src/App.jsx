@@ -1059,7 +1059,7 @@ export function Styles(){return(
     .bR:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(179,38,30,.36)}
     .bG2{background:var(--G);color:#fff;box-shadow:0 2px 10px rgba(47,107,100,.28)}
     .bG2:hover{transform:translateY(-1px)}
-    .bP{background:linear-gradient(135deg,#E49178,#C76754);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
+    .bP{background:linear-gradient(135deg,#B4543F,#A8452F);color:#fff;box-shadow:0 2px 10px rgba(228,145,120,.3)}
     .bP:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(196,113,74,.4)}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
     .content{flex:1;overflow-x:hidden;max-width:100vw}
@@ -4829,7 +4829,7 @@ export function ModaleListeAttente({ ouverte, fermer }){
                 style={{width:"100%",marginTop:14,padding:"14px 18px",borderRadius:12,border:"none",cursor:etat==="envoi"?"wait":"pointer",background:"#B4543F",color:"#fff",fontSize:15,fontWeight:700,fontFamily:"inherit",opacity:etat==="envoi"?.7:1}}>
                 {etat==="envoi" ? "Enregistrement…" : "Prévenez-moi à l'ouverture →"}
               </button>
-              <p style={{fontSize:11.5,lineHeight:1.6,color:"#7C8A90",margin:"12px 0 0"}}>{CONSENTEMENT_ATTENTE}</p>
+              <p style={{fontSize:11.5,lineHeight:1.6,color:"#616F77",margin:"12px 0 0"}}>{CONSENTEMENT_ATTENTE}</p>
               <button type="button" onClick={fermer}
                 style={{display:"block",width:"100%",marginTop:10,background:"none",border:"none",cursor:"pointer",color:"#55707C",fontSize:13,fontWeight:600,fontFamily:"inherit",textDecoration:"underline"}}>Non merci, je regarde d'abord</button>
             </form>
@@ -5325,7 +5325,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
-              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
@@ -5454,7 +5454,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 propose juste après l'avoir vue, et le prix est dit là, en
                 clair, plutôt que découvert trois écrans plus bas. */}
             <div className="demo-cta">
-              <div style={{ fontSize:11.5, color:"#7C8A90", marginBottom:14, lineHeight:1.5 }}>Écrans réels · données d'exemple{demoParent?"":" · certains écrans s'ouvrent avec l'abonnement"}</div>
+              <div style={{ fontSize:11.5, color:"#616F77", marginBottom:14, lineHeight:1.5 }}>Écrans réels · données d'exemple{demoParent?"":" · certains écrans s'ouvrent avec l'abonnement"}</div>
               {demoParent
                 ? <>
                     <a href="/?connexion=parent" target="_top" style={{ display:"inline-block", background:"#B4543F", color:"#fff", borderRadius:12, padding:"14px 30px", fontSize:15, fontWeight:700, textDecoration:"none", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Me connecter à mon espace →</a>
@@ -5615,7 +5615,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               )}
             </nav>
             <button className="sticky-burger" onClick={()=>{ window.scrollTo({top:0,behavior:"smooth"}); setTimeout(()=>setMenuOpen(true),450); }} style={{ background:"transparent",color:"#2E4859",border:"1px solid rgba(46,72,89,.2)",cursor:"pointer",fontSize:18,fontWeight:700,width:40,height:40,borderRadius:10,fontFamily:"inherit",alignItems:"center",justifyContent:"center" }}>☰</button>
-            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#E49178,#C84B31)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
+            <button onClick={()=>{ setShowModal(true); setRole("asmat"); }} style={{ background:"linear-gradient(135deg,#B4543F,#A8452F)", color:"#fff", border:"none", borderRadius:10, padding:"9px 18px", cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"inherit", boxShadow:"0 4px 14px rgba(228,145,120,.35)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
           </div>
         </div>
       </div>
@@ -5636,12 +5636,12 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.10)";e.currentTarget.style.color="#F0A98F";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=L.navBtnColor||"#2E4859";}}>{label}</button>
               )}
             </nav>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "9px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, boxShadow: "0 4px 20px rgba(255,159,99,.4)", transition:"transform .12s", whiteSpace:"nowrap" }} onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="none"}>{libelleCtaNav}</button>
           </div>
           {/* Mobile nav - hamburger + CTA */}
           <div className="lp-nav-mobile">
             <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: L.navHamburgerBg||L.navBtnBg||"rgba(46,72,89,.06)", color: L.navHamburgerColor||L.navBtnColor||"#2E4859", border: "2px solid "+(L.navHamburgerBorder||L.navBtnBorder||"rgba(46,72,89,.25)"), borderRadius: 10, width: 42, height: 42, cursor: "pointer", fontSize: 20, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{menuOpen?"✕":"☰"}</button>
-            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#E49178,#C84B31)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{libelleCtaNavCourt}</button>
+            <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.navCtaBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.navCtaColor||"#fff", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{libelleCtaNavCourt}</button>
           </div>
         </div>
         {/* Dropdown menu (desktop + mobile) */}
@@ -5738,7 +5738,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 14 }}>
-              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#8A4433", fontWeight:700, letterSpacing:".8px", marginBottom:18 }}>LA RÉALITÉ DU MÉTIER</div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(23px,4vw,38px)", color: L.s1TitleColor||"#fff", fontWeight: 700, marginBottom: 12, lineHeight:1.2 }}>{L.s1Title||"Votre métier, c'est l'enfant. Pas la paperasse."}</h2>
               <div style={{ fontSize: 15, color: L.s1DescColor||"rgba(255,255,255,.65)", lineHeight: 1.6, maxWidth:620, margin:"0 auto" }}>{L.s1Desc||"Les calculs, les déclarations, les papiers… TiMat s'en occupe."}</div>
             </div>
@@ -5794,7 +5794,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(158,83,65,.10)", border: "1px solid rgba(158,83,65,.28)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#9E5341", marginBottom: 16, fontWeight: 700, letterSpacing: ".8px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(158,83,65,.10)", border: "1px solid rgba(158,83,65,.28)", borderRadius: 20, padding: "5px 16px", fontSize: 11, color: "#8A4433", marginBottom: 16, fontWeight: 700, letterSpacing: ".8px" }}>
                 POURQUOI TIMAT
               </div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,4vw,42px)", color: L.s4TitleColor||"#2E4859", fontWeight: 700, marginBottom: 14, lineHeight: 1.2 }}>
@@ -5819,7 +5819,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                     <span style={{ fontSize:26, lineHeight:1, flexShrink:0 }}><IconeOuEmoji e={d.ic} taille={26}/></span>
                     <span style={{ flex:1, minWidth:0 }}>
                       <span style={{ display:"block", fontFamily:fTitle, fontSize:15.5, fontWeight:700, color:"#2E4859", lineHeight:1.25 }}>{d.titre}</span>
-                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#3E8079", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
+                      <span style={{ display:"inline-block", marginTop:4, background:"rgba(93,169,161,.15)", color:"#306862", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:20, letterSpacing:".3px", textTransform:"uppercase" }}>{d.badge}</span>
                     </span>
                     {!isWeb&&<span className="acc-plus" style={{ color:"#C84B31", fontSize:20, fontWeight:700, flexShrink:0 }}>+</span>}
                   </summary>
@@ -5926,7 +5926,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <div style={{ textAlign:"center", marginBottom: 32 }}>
-              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#9E5341", fontWeight:700, letterSpacing:".8px", marginBottom:16 }}>SUR QUOI ÇA S'APPUIE</div>
+              <div style={{ display:"inline-block", background:"rgba(158,83,65,.10)", border:"1px solid rgba(158,83,65,.28)", borderRadius:20, padding:"5px 16px", fontSize:11, color:"#8A4433", fontWeight:700, letterSpacing:".8px", marginBottom:16 }}>SUR QUOI ÇA S'APPUIE</div>
               <h2 style={{ margin:0, fontFamily: fTitle, fontSize:"clamp(22px,4vw,36px)", color: L.sourcesTitleColor||"#2E4859", fontWeight:700, marginBottom:10, lineHeight:1.25 }}>{L.sourcesTitle}</h2>
               <div style={{ fontSize:15, color: L.sourcesDescColor||"#55707C", lineHeight:1.6, maxWidth:560, margin:"0 auto" }}>{L.sourcesDesc}</div>
             </div>
@@ -6051,7 +6051,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 })()}
               </div>
               <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
+              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
               {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
                 <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
                   <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
@@ -6074,16 +6074,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* CTA FINAL */}
-      {SV.ctaFinal!==false&&<div className="lp-section" style={{ order:ord("ctaFinal"), background: L.ctaBg||"linear-gradient(135deg,#2E4859,#2A6F6A)", textAlign: L.ctaAlign||"center" }}>
+      {SV.ctaFinal!==false&&<div className="lp-section" style={{ order:ord("ctaFinal"), background: L.ctaBg||"linear-gradient(135deg,#2E4859,#1F544F)", textAlign: L.ctaAlign||"center" }}>
         <FadeIn>
           <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(24px,5vw,46px)", color: L.ctaTitleColor||"#fff", fontWeight: 700, marginBottom: 16, lineHeight: 1.2, whiteSpace:"pre-line" }}>
             {(L.ctaTitle||"").split(L.ctaTitleAccent||"en comptabilité.")[0]}
-            <span style={{ color: accent, fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
-            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.6)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
+            <span style={{ color: L.ctaAccentColor||"#F6CDBF", fontStyle: "italic" }}>{L.ctaTitleAccent}</span><br/>
+            <span style={{ fontSize: "clamp(16px,3vw,28px)", fontWeight: 400, color: L.ctaSubTitleColor||"rgba(255,255,255,.88)", fontStyle: "normal" }}>{L.ctaSubTitle}</span>
           </h2>
-          <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.5)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
-          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#E49178,#C76754)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
-          <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.35)" }}>{T.ctaFooter}</div>
+          <div style={{ fontSize: 16, color: L.ctaSubColor||"rgba(255,255,255,.88)", marginBottom: 32, maxWidth: 460, margin: "0 auto 32px", lineHeight: 1.7 }}>{T.ctaSub}</div>
+          <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background: L.ctaBtnBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.ctaBtnColor||"#fff", border: "none", borderRadius: 12, padding: "16px 36px", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 32px rgba(184,98,47,.5)", fontFamily: "inherit", letterSpacing: ".3px" }}>{T.ctaBtnTxt}</button>
+          <div style={{ marginTop: 16, fontSize: 12, color: L.ctaFooterColor||"rgba(255,255,255,.82)" }}>{T.ctaFooter}</div>
         </FadeIn>
       </div>}
 
@@ -6551,7 +6551,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
               {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
-              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#E49178,#C76754)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
+              <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
               </form>
@@ -6846,8 +6846,8 @@ export const DEFAULT_CONFIG = {
     proDescColor:"#55707C",
     ctaTitleColor:"#FFFFFF",
     ctaSubTitleColor:"rgba(255,255,255,.6)",
-    ctaSubColor:"rgba(255,255,255,.5)",
-    ctaFooterColor:"rgba(255,255,255,.35)",
+    ctaSubColor:"rgba(255,255,255,.88)",
+    ctaFooterColor:"rgba(255,255,255,.82)",
     pageBg:"#FDFBF8",
     // Ces quatre clés n'existaient que comme repli littéral dans le rendu.
     // Elles étaient donc invisibles du back-office ET de l'audit des
@@ -7792,7 +7792,7 @@ export default function App(){
           <div style={{fontSize:34,marginBottom:10}}>👋</div>
           <div style={{fontSize:18,fontWeight:700,color:"#2E4A5A",marginBottom:8,fontFamily:"'Fraunces',Georgia,serif"}}>Invitation parent</div>
           <div style={{fontSize:13.5,color:"#555",lineHeight:1.6,marginBottom:20}}>Vous avez ouvert un lien d'invitation parent, mais vous êtes déjà connecté{user.role==="asmat"?" en tant qu'assistante maternelle":""} ({user.email}). Pour rejoindre l'espace parent, déconnectez-vous puis continuez.</div>
-          <button onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} setUser(null);}} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#E49178,#C76754)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:10,fontFamily:"inherit"}}>Se déconnecter et continuer</button>
+          <button onClick={async()=>{try{await supabase.auth.signOut();}catch(e){} setUser(null);}} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#B4543F,#A8452F)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:10,fontFamily:"inherit"}}>Se déconnecter et continuer</button>
           <button onClick={()=>{try{window.location.href=window.location.pathname;}catch(e){}}} style={{width:"100%",padding:"11px",borderRadius:12,border:"1.5px solid #DDD5C8",background:"transparent",color:"#777",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Ignorer et rester sur mon espace</button>
         </div>
       </div>
