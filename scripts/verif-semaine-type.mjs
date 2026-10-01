@@ -1,4 +1,4 @@
-// LA SEMAINE TYPE S'ADAPTE A L'AGE DE L'ENFANT.
+// LE PLANNING PERISCOLAIRE S'ADAPTE A L'AGE DE L'ENFANT.
 //
 // Les creneaux matin / midi / soir decrivent l'accueil AUTOUR DE L'ECOLE. Pour
 // un enfant qui n'y va pas encore, ils ne veulent rien dire : il est la toute
@@ -35,12 +35,15 @@ for (const [libelle, naissance, attenduCreneaux] of [
   const t=(await p.locator("body").innerText());
   const creneaux=/Avant l'école|avant l'école|Midi|pause déjeuner/.test(t);
   const vacances=/Vacances scolaires|Toussaint/.test(t);
-  const unSeulNom=!/périscolaire/i.test(t);
-  const bon = creneaux===attenduCreneaux && vacances && unSeulNom;
+  // Le nom affiche en haut de l'ecran (l'egalite avec le libelle de l'onglet
+  // est verifiee par la barriere « intitules » et par verif-onglets-fusionnes).
+  const memeNom=/Planning périscolaire/.test(t);
+  const explication=/À quoi sert cet écran/.test(t);
+  const bon = creneaux===attenduCreneaux && vacances && memeNom && explication;
   if(!bon)ko++;
-  console.log(`  ${bon?"ok ":"KO "} ${libelle} : créneaux ${creneaux?"affichés":"masqués"} (attendu ${attenduCreneaux?"affichés":"masqués"}), vacances ${vacances?"présentes":"ABSENTES"}, mot « périscolaire » ${unSeulNom?"absent":"ENCORE LÀ"}`);
+  console.log(`  ${bon?"ok ":"KO "} ${libelle} : créneaux ${creneaux?"affichés":"masqués"} (attendu ${attenduCreneaux?"affichés":"masqués"}), vacances ${vacances?"présentes":"ABSENTES"}, onglet et titre ${memeNom?"identiques":"DIFFÉRENTS"}, explication ${explication?"présente":"ABSENTE"}`);
   await ctx.close();
 }
 await N.close();
-console.log(ko?`\n${ko} problème(s)\n`:"\nL'écran s'adapte à l'âge, et ne porte plus qu'un seul nom.\n");
+console.log(ko?`\n${ko} problème(s)\n`:"\nL'écran s'adapte à l'âge, porte le même nom que son onglet, et s'explique.\n");
 process.exit(ko?1:0);

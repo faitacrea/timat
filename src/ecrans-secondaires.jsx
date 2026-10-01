@@ -1528,7 +1528,7 @@ export function PlanningPeriscolaire({enfants,role,pEId,user}){
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="🚌" title="Semaine type"
+    <PageHeader icon="🚌" title="Planning périscolaire"
       sub={scolarise
         ? "Les moments d'accueil autour de l'école, et les vacances scolaires"
         : "Ce que vous souhaitez pendant les vacances scolaires"}/>

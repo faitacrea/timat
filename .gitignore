@@ -76,3 +76,4 @@ documents/*.pdf
 # conflit binaire a chaque fusion, sur un fichier que personne ne relit.
 public/documents/*.pdf
 documents/*.xlsx
+captures-sous-onglets-parent/

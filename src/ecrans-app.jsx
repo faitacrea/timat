@@ -53,7 +53,7 @@ export function VueSanteUrgence({enfants,role,pEId,user,pointagesDB}){
   // Le registre des medicaments reste GRATUIT, et c'est delibere : c'est une
   // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
   // qu'on est tenue de tenir serait indefendable.
-  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"},{ic:"💊",l:"Registre médicaments"}]}/>
+  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"},{ic:"💊",l:"Registre des médicaments"}]}/>
     {<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>
       {v===0?<SanteComplete {...P}/>
       :v===1?<FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>
@@ -108,15 +108,19 @@ export function VueAidesSimulateurs({enfants,role,pEId,user}){
   return <><SegBar v={v} setV={setV} items={[{ic:"💶",l:"Aide CMG"},{ic:"🧮",l:"Simulateur de coût"}]}/>{v===0?<KitCMG enfants={enfants} role={role} pEId={pEId} user={user}/>:<SimulateurCout enfants={enfants} pEId={pEId}/>}</>;
 }
 
-// LE CALENDRIER ET LA SEMAINE TYPE, AU MEME ENDROIT.
+// LE CALENDRIER ET LE PLANNING PERISCOLAIRE, AU MEME ENDROIT.
 //
 // Les deux repondent a la meme question — quand l'enfant est la — a deux
 // echelles : le calendrier montre les jours, le planning periscolaire la
-// semaine type qui les alimente. Les separer obligeait a regarder a deux
-// endroits pour une seule question.
+// semaine qui les alimente. Les separer obligeait a regarder a deux endroits
+// pour une seule question.
+//
+// L'ONGLET PORTE LE NOM DE L'ECRAN QU'IL OUVRE, et la barriere « intitules »
+// de l'audit refuse toute divergence : on avait deja eu un onglet « Semaine
+// type » qui ouvrait « Planning periscolaire ».
 export function VueCalendrier({enfants,role,pEId,user}){
   const [v,setV]=useState(0);
-  return <><SegBar v={v} setV={setV} items={[{ic:"📅",l:"Calendrier"},{ic:"🚌",l:"Semaine type"}]}/>
+  return <><SegBar v={v} setV={setV} items={[{ic:"📅",l:"Calendrier"},{ic:"🚌",l:"Planning périscolaire"}]}/>
     <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>
       {v===0?<Calendrier enfants={enfants} role={role} pEId={pEId} user={user}/>
             :<PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId} user={user}/>}
@@ -2683,7 +2687,7 @@ export function DocumentsComplet({enfants,role,pEId,user}){
   return <div className="fi">
     <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"},
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Attestation France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"},
         ...(role==="parent"?[{id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"}]:[])].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
