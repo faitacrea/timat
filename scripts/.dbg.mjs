@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+import { readFileSync } from "node:fs";
+const CLE=(readFileSync(new URL("../src/App.jsx",import.meta.url),"utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
+const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const ctx=await N.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
+const p=await ctx.newPage();
+p.on("pageerror",e=>console.log("JS:",e.message.slice(0,150)));
+await p.route("**/auth/v1/token**",r=>r.fulfill({status:400,contentType:"application/json",body:'{"error":"x"}'}));
+await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/json",body:"[]"}));
+await p.goto(`http://127.0.0.1:4173/?acces=${CLE}&connexion=parent`,{waitUntil:"domcontentloaded"});
+await p.waitForTimeout(2500);
+await p.fill('input[type="email"]',"sophie.martin@mail.fr");
+await p.fill('input[type="password"]',"demonstration");
+await p.getByRole("button",{name:/^Se connecter$/}).first().click();
+await p.waitForTimeout(3500);
+console.log("=== APRES LOGIN\n"+(await p.locator("body").innerText()).slice(0,900));

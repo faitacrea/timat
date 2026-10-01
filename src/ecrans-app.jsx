@@ -2687,7 +2687,7 @@ export function DocumentsComplet({enfants,role,pEId,user}){
   return <div className="fi">
     <PageHeader icon="🗂️" title="Documents & Attestations" sub="Tous vos documents et attestations au meme endroit"/>
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Att. France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"},
+      {[{id:"documents",l:"Documents",ic:"🗂️"},{id:"attestation_pe",l:"Attestation France Travail",ic:"📋"},{id:"attestation_fiscale",l:"Récap. versements",ic:"💶"},
         ...(role==="parent"?[{id:"projet_accueil",l:"Projet d'accueil",ic:"🌿"}]:[])].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
