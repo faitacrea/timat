@@ -2664,7 +2664,7 @@ export function Autorisations({enfants,role,pEId,user}){
           {TYPES_AUTORISATION.map(([type,titre,ic,desc,note])=>{
             const l=par(type);
             const etat=l?.accordee===true?"oui":l?.accordee===false?"non":null;
-            const couleur=etat==="oui"?"#3D6B50":etat==="non"?"#C84B31":"#7C8A90";
+            const couleur=etat==="oui"?"#3D6B50":etat==="non"?"#C84B31":"#5A6870";
             return <div key={type} style={{background:"var(--c)",border:"1px solid var(--br)",borderLeft:"4px solid "+couleur,borderRadius:12,padding:"13px 15px"}}>
               <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                 <div style={{lineHeight:1}}><IconeOuEmoji e={ic} taille={20}/></div>

@@ -3515,8 +3515,14 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
   // La section ne doit pas pouvoir s'afficher vide non plus : un bloc « elles
   // en parlent » sans un seul avis promet une clientele qui n'existe pas.
-  if (!/SV\.temoignages===true&&testimonials\.length>0/.test(appSrc))
-    signale("faux avis", "la section des témoignages s'affiche sans vérifier qu'il y a au moins un avis : vide, elle laisse croire à des utilisatrices qui n'existent pas");
+  if (!/SV\.temoignages===true&&avisPublies\.length>0/.test(appSrc))
+    signale("faux avis", "la section des témoignages s'affiche sans vérifier qu'il reste au moins un avis COMPLET : vide ou à moitié remplie, elle laisse croire à des utilisatrices qui n'existent pas");
+  // Le bouton « ajouter » du back-office ne doit poser aucun gabarit : une fiche
+  // pre-remplie « Nouveau / Ville » oubliee en l'etat devient un faux avis.
+  const boSrc = readFileSync(new URL("../src/backoffice.jsx", import.meta.url), "utf8");
+  const ajout = (boSrc.match(/const addTesti\s*=[^;]+;/) || [""])[0];
+  if (/nom:\s*"[^"]+"/.test(ajout))
+    signale("faux avis", "le bouton « ajouter un témoignage » du back-office pré-remplit la fiche : oubliée en l'état, elle se publie comme un vrai avis");
 }
 
 // --- aucune mention legale a trou sur la page publique ---

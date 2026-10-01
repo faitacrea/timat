@@ -570,7 +570,7 @@ export function PastilleRepas({q,taille=12}){
 export const ALLOC_FORMATION_H = 5.57;
 // Plan de developpement des competences : jusqu'a 58 heures par an.
 export const ALLOC_FORMATION_PLAFOND_H = 58;
-const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#B85536",mam:"#4E6B57"};
+const COULEUR_ROLE={asmat:"#2E5F8A",parent:"#A94C2F",mam:"#4E6B57"};
 
 // Icones dessinees, en remplacement des emoji. Un emoji change d'aspect selon
 // le telephone, ne se recolore pas et grossit mal ; un trace reste net partout
@@ -903,11 +903,15 @@ export function Styles(){return(
       --c:#FDFBF8;--w:#FFFFFF;
       --b:#2E4A5A;   /* encre, 9,06:1 */
       --m:#61565C;   /* secondaire, 6,79:1 */
-      --l:#7A6C73;   /* tertiaire, 4,82:1 (etait #A8909A a 2,86) */
+      --l:#6B5E64;   /* tertiaire, 5,27:1 meme sur les cartes bleutees (il valait #7A6C73, qui n'y tenait que 4,26) */
       --br:#EAE0E8;
 
       /* --- corail / terracotta : le parent employeur --- */
-      --T:#B85536;--Tb:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
+      /* L'accent terracotta servait aussi de couleur de TEXTE sur des cartes
+         teintees : il n'y tenait que 4,00 a 4,48:1. Assombri de six pour cent,
+         meme teinte, il passe partout (5,20:1 au pire) et le blanc qu'il porte
+         en fond gagne au passage. */
+      --T:#A94C2F;--Tb:#E49178;--Tp:#FDF6F4;--Tl:#F3CEC2;
       /* --- sauge : la MAM et la creche --- */
       --S:#4E6B57;--Sb:#8FAE99;--Sp:#F3F8F5;--Sl:#CDD4CE;
       /* --- vert : etat positif (present, valide, a jour) --- */
@@ -955,7 +959,7 @@ export function Styles(){return(
       /* Sur fond sombre le rapport s'inverse : ce sont les teintes claires qui
          portent le texte. Les memes noms, les valeurs opposees. */
       --T:#E49178;--S:#A8B5A8;--G:#7FC4BC;--B:#7AAAE0;--R:#E26B4F;--P:#D4B068;
-      --Tb:#B85536;--Sb:#4E6B57;--Gb:#2F6B64;--Bb:#2E5F8A;--Rb:#B3261E;--Pb:#8A6A16;
+      --Tb:#A94C2F;--Sb:#4E6B57;--Gb:#2F6B64;--Bb:#2E5F8A;--Rb:#B3261E;--Pb:#8A6A16;
       --Tl:#5A3A2C;--Sl:#384038;--Gl:#1F4A44;--Bl:#1A3050;--Rl:#4A1F12;
       --hover-veil:rgba(255,255,255,.07);--tap-veil:rgba(255,255,255,.14);
       --sh:0 1px 4px rgba(0,0,0,.5),0 4px 20px rgba(0,0,0,.6);
@@ -2255,7 +2259,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:18}}>
         {[
           {l:"Signés (2/2)",c:"var(--S)",n:sigStats.both.length,bg:"var(--Sp)"},
-          {l:"Attente parent",c:"#B8892A",n:sigStats.asmat.length,bg:"#FFF8E6"},
+          {l:"Attente parent",c:"#866318",n:sigStats.asmat.length,bg:"#FFF8E6"},
           {l:"Attente assmat",c:"var(--B)",n:sigStats.parent.length,bg:"var(--Bp)"},
           {l:"Non signés",c:"var(--R)",n:sigStats.none.length,bg:"var(--Rp)"},
         ].map(s=><div key={s.l}style={{padding:"14px 14px",borderRadius:14,background:s.bg,display:"flex",alignItems:"center",gap:12}}>
@@ -2271,7 +2275,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
           const onlyP=!ct.signe_asmat&&ct.signe_parent;
           const none=!ct.signe_asmat&&!ct.signe_parent;
           const status=both?{ic:"✅",l:"Signé (assmat + parent)",c:"var(--S)"}
-            :onlyA?{ic:"⏳",l:"En attente du parent",c:"#B8892A"}
+            :onlyA?{ic:"⏳",l:"En attente du parent",c:"#866318"}
             :onlyP?{ic:"⏳",l:"En attente de votre signature",c:"var(--B)"}
             :{ic:"❌",l:"Non signé",c:"var(--R)"};
           const genState=genPdf[ct.id];
@@ -2467,7 +2471,7 @@ function AccueilParent({enfant,setPage,user}){
                 garde, l'accueil du parent ne s'affichait pas du tout. Les
                 données de démonstration en ont toujours, d'où l'angle mort. */}
             {(enfant.allergies||[]).length>0&&<div style={{marginTop:6,cursor:"pointer"}}onClick={()=>setPage&&setPage("sante_complet")}>
-              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#DC2626",marginRight:4,cursor:"pointer"}}><IconeOuEmoji e="⚠️"/> {a}</span>)}
+              {(enfant.allergies||[]).map(a=><span key={a}className="badge"style={{background:"#FEE2E2",color:"#A91616",marginRight:4,cursor:"pointer"}}><IconeOuEmoji e="⚠️"/> {a}</span>)}
             </div>}
           </div>
         </div>
@@ -5272,6 +5276,10 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const fBody = L.fontBody||"'DM Sans', system-ui, sans-serif";
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
+  // UN AVIS N'EST PUBLIE QUE S'IL EST COMPLET. Le back-office ajoute une fiche
+  // vide ; tant que le nom ou le temoignage manque, elle reste au brouillon et
+  // n'apparait nulle part. On ne publie jamais une demi-fiche sous cinq etoiles.
+  const avisPublies = (testimonials||[]).filter(t => t && String(t.nom||"").trim() && String(t.apres||"").trim());
 
   // PAGE DÉDIÉE CONNEXION/INSCRIPTION ASSMAT (ouverte depuis blog/outils via ?connexion)
   if(authOnly){
@@ -5950,7 +5958,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       </div>}
 
       {/* SECTION 5 - TEMOIGNAGES */}
-      {SV.temoignages===true&&testimonials.length>0&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
+      {/* Un temoignage incomplet ne s'affiche pas : ni demi-fiche, ni gabarit
+          oublie. La section entiere disparait s'il n'en reste aucun. */}
+      {SV.temoignages===true&&avisPublies.length>0&&<div className="lp-section" style={{ order:ord("temoignages"), background: L.section5Bg||"#FDFBF8" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(20px,3.5vw,32px)", color: L.s5TitleColor||"#0D1B2A", fontWeight: 700, textAlign: L.s5Align||"center", marginBottom: 48, fontStyle: "italic" }}>
@@ -5958,7 +5968,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             </h2>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20 }}>
-            {testimonials.map((t, i) => (
+            {avisPublies.map((t, i) => (
               <FadeIn key={i} delay={i * 80}>
                 <div style={{ background: L.testimonialBg||"#fff", borderRadius: 16, padding: 22, border: "1px solid #DDD5C8", boxShadow: "0 2px 16px rgba(44,31,20,.06)" }}>
                   <div style={{ color: L.testimonialStarColor||accent, fontSize: 13, marginBottom: 10 }}>⭐⭐⭐⭐⭐</div>

@@ -3493,7 +3493,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
     const authLines=AUTORISATIONS_FICHE.map(([t,l])=>{
       const v=etatAuth(t);
       const marque=v===true?"[X] Oui  [ ] Non":v===false?"[ ] Oui  [X] Non":"Sans reponse a ce jour";
-      const couleur=v===true?"#5DA9A1":v===false?"#C84B31":"#7C8A90";
+      const couleur=v===true?"#5DA9A1":v===false?"#C84B31":"#5A6870";
       return "<div style='margin:6px 0;font-size:13px'><span style='color:"+couleur+";font-weight:700'>"+marque+"</span>  "+H(l)+"</div>";
     }).join("");
     const html=[
@@ -3702,7 +3702,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
             ? <div style={{fontSize:12.5,color:"var(--m)"}}>Chargement…</div>
             : AUTORISATIONS_FICHE.map(([t,l])=>{
                 const v=etatAuth(t);
-                const couleur=v===true?"#3D6B50":v===false?"#C84B31":"#7C8A90";
+                const couleur=v===true?"#3D6B50":v===false?"#C84B31":"#5A6870";
                 return <div key={t} style={{display:"flex",justifyContent:"space-between",gap:10,fontSize:13,padding:"6px 0",borderBottom:"1px solid var(--br)"}}>
                   <span style={{color:"var(--b)"}}>{l}</span>
                   <b style={{color:couleur,whiteSpace:"nowrap"}}>{v===true?"Accordée":v===false?"Refusée":"Sans réponse"}</b>
