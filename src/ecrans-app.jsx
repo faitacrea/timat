@@ -53,7 +53,7 @@ export function VueSanteUrgence({enfants,role,pEId,user,pointagesDB}){
   // Le registre des medicaments reste GRATUIT, et c'est delibere : c'est une
   // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
   // qu'on est tenue de tenir serait indefendable.
-  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"},{ic:"💊",l:"Registre médicaments"}]}/>
+  return <><SegBar v={v} setV={setV} items={[{ic:"🏥",l:"Santé"},{ic:"🚨",l:"Fiche d'urgence"},{ic:"💊",l:"Registre des médicaments"}]}/>
     {<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>
       {v===0?<SanteComplete {...P}/>
       :v===1?<FicheUrgence enfants={enfants} role={role} pEId={pEId} user={user}/>
@@ -116,7 +116,7 @@ export function VueAidesSimulateurs({enfants,role,pEId,user}){
 // endroits pour une seule question.
 export function VueCalendrier({enfants,role,pEId,user}){
   const [v,setV]=useState(0);
-  return <><SegBar v={v} setV={setV} items={[{ic:"📅",l:"Calendrier"},{ic:"🚌",l:"Semaine type"}]}/>
+  return <><SegBar v={v} setV={setV} items={[{ic:"📅",l:"Calendrier"},{ic:"🚌",l:"Planning périscolaire"}]}/>
     <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}>
       {v===0?<Calendrier enfants={enfants} role={role} pEId={pEId} user={user}/>
             :<PlanningPeriscolaire enfants={enfants} role={role} pEId={pEId} user={user}/>}

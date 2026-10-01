@@ -3464,6 +3464,39 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     signale("sommaire", "le sommaire de index.html est masque : un texte ecrit pour les moteurs et cache aux visiteurs est du referencement trompeur");
 }
 
+// --- un onglet et l'ecran qu'il ouvre portent le meme nom ---
+//
+// L'onglet disait « Semaine type », l'ecran qu'il ouvrait « Planning
+// periscolaire ». On clique sur l'un et on arrive sur l'autre : c'est la
+// premiere raison pour laquelle cet ecran etait incomprehensible, avant meme
+// son contenu. Personne ne s'en apercoit en relisant le code, parce que les
+// deux noms vivent dans deux fichiers differents.
+{
+  const vues = readFileSync(new URL("../src/ecrans-app.jsx", import.meta.url), "utf8");
+  const ecrans = readFileSync(new URL("../src/ecrans-secondaires.jsx", import.meta.url), "utf8")
+    + readFileSync(new URL("../src/ecrans-quotidien.jsx", import.meta.url), "utf8")
+    + vues;
+  // Les onglets d'une barre segmentee, et le titre de l'ecran qu'ils ouvrent.
+  const PAIRES = [
+    ["Planning périscolaire", "PlanningPeriscolaire"],
+    ["Registre des médicaments", "RegistreMedicaments"],
+    ["Projet d'accueil", "ProjetAccueil"],
+  ];
+  for (const [libelle, composant] of PAIRES) {
+    if (!vues.includes(`l:"${libelle}"`)) {
+      signale("intitulés", `aucun onglet ne s'appelle « ${libelle} » : le libellé a changé d'un côté seulement`);
+      continue;
+    }
+    const i = ecrans.indexOf(`export function ${composant}(`);
+    if (i < 0) continue;
+    const suivant = ecrans.indexOf("\nexport function ", i + 10);
+    const corps = ecrans.slice(i, suivant < 0 ? ecrans.length : suivant);
+    const titre = (corps.match(/<PageHeader[^>]*title="([^"]+)"/) || [])[1];
+    if (titre && titre !== libelle)
+      signale("intitulés", `l'onglet « ${libelle} » ouvre un écran intitulé « ${titre} » : on clique sur l'un et on arrive sur l'autre`);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

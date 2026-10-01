@@ -29,7 +29,9 @@ const clic=(t)=>p.evaluate(x=>{const n=[...document.querySelectorAll("button")].
 
 for (const [page,onglet,attendu,libelle] of [
   ["suivi_progres","Bilans",/forfait Pro|Bilans/,"les bilans s'ouvrent dans « Suivi & Progrès »"],
-  ["sante_urgence","Registre médicaments",/[Rr]egistre|médicament/,"le registre s'ouvre dans « Santé & Urgence »"],
+  ["sante_urgence","Registre des médicaments",/[Rr]egistre|médicament/,"le registre s'ouvre dans « Santé & Urgence »"],
+  // On clique « Planning périscolaire » : le titre de l'ecran doit porter le meme nom.
+  ["calendrier","Planning périscolaire",/Planning périscolaire/,"le planning périscolaire s'ouvre dans « Calendrier » sous le même nom"],
 ]) {
   err=[];
   await p.evaluate(x=>window.dispatchEvent(new CustomEvent("timat:page",{detail:x})),page);
@@ -59,7 +61,7 @@ console.log(`  ${projetOk?"ok ":"KO "} le projet d'accueil s'ouvre dans « Docum
 
 // Le registre, lui, est une obligation legale : il ne doit JAMAIS etre verrouille.
 await p.evaluate(()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"sante_urgence"})));
-await p.waitForTimeout(900); await clic("Registre médicaments"); await p.waitForTimeout(1400);
+await p.waitForTimeout(900); await clic("Registre des médicaments"); await p.waitForTimeout(1400);
 const t2=(await p.locator("body").innerText());
 const libre=!/forfait Pro/.test(t2);
 if(!libre)ko++;
