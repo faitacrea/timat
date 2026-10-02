@@ -192,15 +192,34 @@ adresse.
 > Sophie Lefort
 > TiMat — https://www.timat.app
 > 06 20 87 33 80
-> Contact.timat.app@gmail.com
+> contact@timat.app
 
 **Le texte prêt à copier** : `courriel-urssaf.txt`, à la racine du dépôt.
 
-**L'adresse de contact doit être celle des mentions légales.** La configuration
-publiée porte `Contact.timat.app@gmail.com` ; c'est donc elle qui figure dans la
-signature. Si `contact@timat.app` devient une vraie boîte aux lettres un jour,
-il faudra changer les deux ensemble — une adresse dans le courriel et une autre
-sur le site est exactement le genre d'écart qu'un relecteur relève.
+### Quelle adresse de contact, et pourquoi
+
+`contact@timat.app`, partout. Ce n'est pas un choix de présentation :
+
+- elle est sur le domaine, **vérifiée chez Resend**, et c'est elle qui ENVOIE
+  tous les courriels de l'application — invitation d'un parent, alertes, fin
+  d'essai, infolettre. Resend refuse `gmail.com` comme expéditeur (403, domaine
+  non vérifiable) : le gmail ne peut pas tenir ce rôle ;
+- OVH la redirige gratuitement vers la boîte gmail, qui reste la boîte de
+  lecture. Rien ne change dans les habitudes ;
+- c'est elle que le site affiche déjà : pied de page, mentions légales, CGU,
+  politique de confidentialité, écran RGPD, bouton de support, page de
+  maintenance, et les trois pages publiques autonomes.
+
+Le champ « email » du back-office portait le gmail. Il n'était lu qu'à UN seul
+endroit — le paragraphe « Responsable du traitement » de la politique de
+confidentialité — pendant que tout le reste affichait l'adresse du domaine. Le
+site se serait donc contredit lui-même, sur la même page, pour la même
+personne. Les deux lisent désormais la même valeur, et une barrière d'audit
+refuse qu'elles divergent à nouveau.
+
+**Une vérification à faire une fois** : s'envoyer un message à
+`contact@timat.app` et constater qu'il arrive bien dans la boîte gmail. La
+redirection OVH est documentée mais n'a jamais été testée depuis ici.
 
 **Où l'envoyer** : `contact.tiercedeclaration@urssaf.fr`.
 

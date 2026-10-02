@@ -5276,6 +5276,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const fBody = L.fontBody||"'DM Sans', system-ui, sans-serif";
   const painPoints = config.painPoints||DEFAULT_CONFIG.painPoints;
   const testimonials = config.testimonials||DEFAULT_CONFIG.testimonials;
+  // L'adresse de contact des pages legales : celle du back-office si elle est
+  // renseignee, sinon celle du code. UNE SEULE, pour toutes les pages legales.
+  const emailLegal = String(config.legal?.email||"").trim() || EMAIL_CONTACT;
   // UN AVIS N'EST PUBLIE QUE S'IL EST COMPLET. Le back-office ajoute une fiche
   // vide ; tant que le nom ou le temoignage manque, elle reste au brouillon et
   // n'apparait nulle part. On ne publie jamais une demi-fiche sous cinq etoiles.
@@ -6314,7 +6317,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 Auto-entrepreneur<br/>
                 SIRET : {config.legal?.siret}<br/>
                 Adresse : {config.legal?.adresse||"— à compléter"}<br/>
-                Email : {EMAIL_CONTACT}<br/>
+                Email : {emailLegal}<br/>
                 Directrice de la publication : {config.legal?.nom}
               </div>
 
@@ -6396,7 +6399,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",marginBottom:12}}>1. Responsable du traitement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 {config.legal?.nom} — Auto-entrepreneur<br/>
-                Email : {config.legal?.email}<br/>
+                Email : {emailLegal}<br/>
                 SIRET : {config.legal?.siret}
               </div>
 
