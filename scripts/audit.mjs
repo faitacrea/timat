@@ -1392,10 +1392,22 @@ for (const u of fichiersAppSrc()) {
     // On accepte desormais tout ce qui n'est pas un caractere de mot : c'est la
     // definition d'une fin d'identifiant, plutot qu'une liste a completer
     // apres chaque defaut.
+    // UN NOM SUIVI D'UNE PARENTHESE EST UN APPEL. C'est vrai quoi qu'il y ait
+    // devant, et c'est ce qui manquait : « await enregistrerPointage({...} ) »
+    // etait precede de la lettre « t » d'« await », donc pris pour un mot de
+    // phrase. Resultat, le bouton « Pointer l'arrivee » levait
+    // « enregistrerPointage is not defined » depuis des mois, sans que rien ne
+    // le dise — le pointage n'etait ni enregistre, ni mis en file.
+    if (new RegExp("\\b" + n + "\\s*\\(").test(t)) return true;
     for (const m of t.matchAll(new RegExp("\\b" + n + "(?![\\w$])", "g"))) {
       let j = m.index - 1;
       while (j >= 0 && (t[j] === " " || t[j] === "\t")) j--;
       if (j < 0 || "([{,;=:<&|!?+-*/>}\n".includes(t[j])) return true;
+      // Un mot-cle devant le nom, c'est encore du code : await, return, new,
+      // typeof, of, in, yield... La liste des caracteres admis ne pouvait pas
+      // les voir, puisqu'ils finissent par une lettre.
+      const avant = t.slice(Math.max(0, j - 10), j + 1).match(/([A-Za-z]+)$/);
+      if (avant && ["await","return","new","typeof","of","in","yield","else","do","case","delete","void"].includes(avant[1])) return true;
     }
     return false;
   };
@@ -3404,9 +3416,22 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   if (fs.existsSync(dossier)) {
     const reels = fs.readdirSync(dossier, { withFileTypes: true })
       .filter((e) => e.isDirectory() && e.name !== "rubrique").length;
-    const annonce = Number((appSrc.match(/(\d+)\s+guides pratiques/) || [])[1]);
-    if (annonce && reels && annonce !== reels)
-      signale("chiffres", `la landing annonce « ${annonce} guides pratiques » alors que le blog en compte ${reels}`);
+    // Le compte est annonce a DEUX endroits : la landing (src/App.jsx) et le
+    // sommaire pre-affiche d'index.html, lu par les moteurs. Le second l'ecrivait
+    // en toutes lettres — « Soixante-et-un guides » — et echappait donc a un
+    // controle qui cherchait des chiffres. Un nombre ecrit en lettres vieillit
+    // comme les autres : on l'interdit plutot que d'essayer de le lire.
+    const indexSrc = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+    for (const [ou, src] of [["la landing", appSrc], ["index.html", indexSrc]]) {
+      const annonce = Number((src.match(/(\d+)\s+guides pratiques/) || [])[1]);
+      if (annonce && reels && annonce !== reels)
+        signale("chiffres", `${ou} annonce « ${annonce} guides pratiques » alors que le blog en compte ${reels}`);
+      // « Soixante-deux » ne finit par aucun suffixe utile : on reconnait donc le
+      // NOMBRE ECRIT EN LETTRES par ses mots, composes ou non.
+      const CHIFFRE_EN_LETTRES = /\b(?:un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente|quarante|cinquante|soixante|cent|mille)(?:[- ](?:et[- ])?(?:un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente|quarante|cinquante|soixante|cent|mille|s))*\s+guides pratiques/i;
+      if (CHIFFRE_EN_LETTRES.test(src))
+        signale("chiffres", `${ou} écrit le nombre de guides en toutes lettres : il échappe au comptage et vieillit sans qu'on le voie`);
+    }
   }
 }
 

@@ -135,7 +135,12 @@ const panneReseau=(e)=>{
 
 // Le point de passage unique de l'enregistrement d'un pointage.
 // Rend {etat:"envoye"} ou {etat:"en-file"} ou {etat:"erreur",message}.
-async function enregistrerPointage(ligne){
+//
+// ELLE DOIT RESTER EXPORTEE. L'ecran de pointage vit dans un morceau charge a
+// la demande (src/ecrans-quotidien.jsx) : sans export ni import, l'appel leve
+// « enregistrerPointage is not defined » au moment ou l'on tape sur le bouton,
+// et le pointage n'est ni enregistre, ni mis en file, ni signale.
+export async function enregistrerPointage(ligne){
   const cle="pointage:"+ligne.enfant_id+":"+ligne.date;
   if(typeof navigator!=="undefined"&&navigator.onLine===false){
     filerOperation({table:"pointages",cle,charge:ligne});
@@ -162,7 +167,7 @@ async function enregistrerPointage(ligne){
 // de l'arrivee, soit zero minute travaillee. Deux evenements « online » de suite
 // suffisent a le declencher, et un reseau qui vacille en envoie plus que ca.
 let _rejeuEnCours=null;
-async function rejouerFile(){
+export async function rejouerFile(){
   if(_rejeuEnCours)return _rejeuEnCours;
   const course=(async()=>{
   let envoyees=0,conflits=0;
@@ -372,7 +377,7 @@ const nomAppareil=()=>{
 
 // Rend {etat, message}. L'appelant AFFICHE le message tel quel : c'est ce qui
 // empeche d'annoncer « Notifications activees » quand elles ne le sont pas.
-async function activerPush(userId){
+export async function activerPush(userId){
   const etat=etatPush();
   if(etat==="impossible-ios")return{etat,message:"Sur iPhone, les notifications ne fonctionnent que si TiMat a été ajouté à votre écran d'accueil. Ajoutez-le, puis revenez ici."};
   if(etat==="non-supporte")return{etat,message:"Ce navigateur ne gère pas les notifications. Vous continuerez à les recevoir par e-mail."};
@@ -397,7 +402,7 @@ async function activerPush(userId){
   }
 }
 
-async function desactiverPush(userId){
+export async function desactiverPush(userId){
   try{
     const reg=await navigator.serviceWorker.ready;
     const abo=await reg.pushManager.getSubscription();
@@ -1548,7 +1553,7 @@ export async function lireQuota() {
 // En cas d'echec de la mesure, on laisse passer : une coupure reseau ne doit
 // pas empecher quelqu'un de travailler, et le risque d'un fichier de trop est
 // sans commune mesure avec celui d'une journee bloquee.
-async function placeDisponible(user, type, octets = 0) {
+export async function placeDisponible(user, type, octets = 0) {
   const lim = quotaDe(user);
   const q = await lireQuota();
   if (!q) return { ok: true };
@@ -3513,7 +3518,7 @@ export async function viderStockageDuCompte(userId){
   }
 }
 
-async function saveAsmatSignature(userId,base64){
+export async function saveAsmatSignature(userId,base64){
   const{error}=await supabase.from("profiles").update({signature_base64:base64}).eq("id",userId);
   if(error)throw error;
   await logAction("update_signature",{table_name:"profiles",record_id:userId,user_id:userId});
