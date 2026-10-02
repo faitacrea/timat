@@ -3590,6 +3590,25 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
       if (re.test(contenu)) signale("règles abrogées", `${nom} : ${msg}`);
 }
 
+// --- une seule adresse de contact dans les pages legales ---
+//
+// Les mentions legales affichaient la constante du code, la politique de
+// confidentialite le champ du back-office. Deux reglages pour une information
+// qui doit etre unique : il a suffi d'en remplir un pour que le site se
+// contredise — une adresse dans les mentions legales, une autre dans la
+// politique de confidentialite, pour la meme personne et sur la meme page.
+{
+  const bloc = appSrc.slice(appSrc.indexOf("Éditeur du site"), appSrc.indexOf("Éditeur du site") + 18000);
+  const adresses = [...bloc.matchAll(/Email\s*:\s*\{([^}]+)\}/g)].map((m) => m[1].trim());
+  const uniques = [...new Set(adresses)];
+  if (adresses.length && uniques.length > 1)
+    signale("legal", `les pages légales affichent ${uniques.length} sources d'adresse différentes (${uniques.join(" / ")}) : elles finiront par se contredire`);
+  // Et le champ du back-office doit etre lu : un reglage qui ne change rien est
+  // pire qu'un reglage absent, parce qu'on croit avoir agi.
+  if (!/config\.legal\?\.email/.test(appSrc))
+    signale("legal", "le champ « email » du back-office n'est lu nulle part : on peut le changer sans que rien ne bouge sur le site");
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
