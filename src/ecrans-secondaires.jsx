@@ -18,6 +18,7 @@ import { resumeDemande } from "../data/planning-periscolaire.js";
 import { ETATS_TRANSMISSION, LIBELLE_ETAT_MANDAT, TEXTE_MANDAT, VERSION_MANDAT, etatMandat } from "../data/pajemploi.js";
 import {
   CPill, createNotification, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
+, saveAsmatSignature
 } from "./App.jsx";
 import {
   DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, MOIS_SCOLARISABLE, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT

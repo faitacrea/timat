@@ -103,6 +103,20 @@ console.log("\n=== HORS LIGNE — pointer dans une maison sans réseau ===\n");
 dire(/Pointage/.test(await texte()), "l'écran de pointage s'ouvre");
 
 // --- La coupure ---
+//
+// ON ATTEND QUE LE SERVICE WORKER AIT PRIS LES COMMANDES avant de couper. Il
+// s'installe au premier chargement, et ne controle la page qu'une fois active :
+// couper avant, c'est tester une application qui n'a pas encore son filet, et
+// conclure a tort qu'elle ne redemarre pas sans reseau.
+const swPret = await page.evaluate(async () => {
+  if (!("serviceWorker" in navigator)) return "pas de service worker";
+  const reg = await navigator.serviceWorker.ready.catch(() => null);
+  for (let i = 0; i < 40 && !navigator.serviceWorker.controller; i++)
+    await new Promise((r) => setTimeout(r, 250));
+  return navigator.serviceWorker.controller ? "il contrôle la page" : "installé, mais ne contrôle pas encore la page";
+});
+dire(/contrôle la page/.test(swPret), "le filet hors ligne est en place avant la coupure", swPret);
+
 await ctx.setOffline(true);
 await page.waitForTimeout(800);
 const tCoupe = await texte();

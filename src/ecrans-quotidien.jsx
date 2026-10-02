@@ -17,6 +17,8 @@ import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
   ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
+, enregistrerPointage
+, rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
   BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT
