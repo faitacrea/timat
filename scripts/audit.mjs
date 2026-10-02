@@ -3634,6 +3634,34 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     signale("legal", "le champ « email » du back-office n'est lu nulle part : on peut le changer sans que rien ne bouge sur le site");
 }
 
+// --- aucune modification du DOM derriere le dos de React ---
+//
+// Trois gestionnaires onError remplacaient le logo par du texte en reecrivant
+// outerHTML. L'image disparaissait du document alors que React la croyait
+// toujours la ; au demontage suivant il levait « removeChild : the node to be
+// removed is not a child of this node », et l'application ENTIERE disparaissait
+// — page blanche, sans message. Hors ligne, le logo echoue a coup sur : le
+// defaut se declenchait donc exactement au rechargement sans reseau.
+//
+// Ce que React affiche, React doit le retirer. Un echec se range dans un etat,
+// jamais dans le document.
+{
+  const INTERDITS = [
+    [/\.outerHTML\s*=/g, "réécrit outerHTML"],
+    [/target\.innerHTML\s*=/g, "réécrit innerHTML sur la cible d'un évènement"],
+    [/target\.(?:remove|replaceWith)\s*\(/g, "retire la cible d'un évènement du document"],
+  ];
+  for (const u of fichiersAppSrc()) {
+    const nom = u.pathname.split("/").pop();
+    const t = readFileSync(u, "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .split("\n").map((l) => l.replace(/(^|[^:])\/\/.*$/, "$1")).join("\n");
+    for (const [re, quoi] of INTERDITS)
+      if (re.test(t))
+        signale("rendu", `${nom} ${quoi} : React ne possède plus ce qu'il affiche, et le prochain démontage fait disparaître l'application`);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

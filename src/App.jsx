@@ -4002,9 +4002,24 @@ class FiletEcrans extends Component {
       .test(erreur?.message || "");
     let dejaTente = false;
     try { dejaTente = sessionStorage.getItem("timat:rechargeApresEchec") === "1"; } catch(e){}
-    if (chargement && !dejaTente) {
+
+    // SANS RÉSEAU, RECHARGER NE PEUT RIEN RÉPARER. Le morceau manquant n'est
+    // pas en cache : le redemander échouera pareil. On montre donc l'écran de
+    // secours, qui est utile, plutôt qu'un rechargement qui ne l'est pas.
+    const horsLigne = typeof navigator !== "undefined" && navigator.onLine === false;
+
+    if (chargement && !dejaTente && !horsLigne) {
       try { sessionStorage.setItem("timat:rechargeApresEchec","1"); } catch(e){}
-      window.location.reload();
+      // ON NE RECHARGE JAMAIS PENDANT LE RENDU.
+      //
+      // componentDidCatch s'exécute au milieu de la phase où React démonte
+      // l'arbre cassé. Appeler location.reload() ici fait partir le document
+      // sous ses pieds : React continue de retirer des nœuds qui n'existent
+      // plus et lève « removeChild : the node to be removed is not a child of
+      // this node ». L'application entière disparaît alors — page blanche, sans
+      // message, et c'est exactement ce qu'on observait au rechargement sans
+      // réseau. Le rechargement attend donc la fin du rendu.
+      setTimeout(() => { try { window.location.reload(); } catch(e){} }, 0);
       return;
     }
     console.warn("[écran] chargement impossible :", erreur?.message);
@@ -4018,6 +4033,9 @@ class FiletEcrans extends Component {
       <div style={{fontSize:13,color:"var(--m)",lineHeight:1.6,marginBottom:18}}>
         Vos données sont intactes : rien n'a été perdu et rien n'a été modifié.
         C'est l'affichage de cet écran qui n'a pas pu être téléchargé.
+        {typeof navigator!=="undefined"&&navigator.onLine===false
+          ? <><br/><br/><b>Vous êtes hors ligne.</b> Cet écran n'a jamais été ouvert sur cet appareil, il n'est donc pas en mémoire. Les pointages déjà notés sont conservés et partiront au retour du réseau.</>
+          : null}
       </div>
       <button className="btn bP" style={{minHeight:44}} onClick={()=>{
         try{ sessionStorage.removeItem("timat:rechargeApresEchec"); }catch(e){}
@@ -4148,7 +4166,7 @@ function TopBar({role,groups,page,setPage,user,onLogout,pmiNonLus,dark,setDark,n
     <div className="topbar">
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <img src={logoForRole(user?.role, dark)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+          <LogoTiMat role={user?.role} dark={dark} hauteur={(G?.landing?.logoSizes?.topBar)||28} secours={<div className="logo">TiMat</div>}/>
           <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
         </div>
       </div>
@@ -5459,7 +5477,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <div className="demo-zoom" style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
                 <div className="topbar">
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <img src={logoForRole(demoRole,false)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.topBar)||28,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="logo">TiMat</div>'}}/>
+                    <LogoTiMat role={demoRole} dark={false} hauteur={(G?.landing?.logoSizes?.topBar)||28} secours={<div className="logo">TiMat</div>}/>
                     <span style={{fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",letterSpacing:"1px",marginTop:1}}>v3</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -6733,6 +6751,31 @@ const logoForRole = (role, dark) => {
   return `/logo${s}.webp`;
 };
 
+// LE LOGO, ET SON REPLI QUAND L'IMAGE NE SE CHARGE PAS.
+//
+// Les trois endroits qui affichaient le logo remplacaient l'image par du texte
+// dans leur gestionnaire onError, EN REECRIVANT outerHTML. C'est une
+// modification du document derriere le dos de React : l'image disparaissait du
+// DOM alors que React la croyait toujours la. Au demontage suivant, il levait
+// « removeChild : the node to be removed is not a child of this node », et
+// l'application entiere disparaissait — page blanche, sans message.
+//
+// Hors ligne, le logo echoue a coup sur. C'etait donc le defaut le plus sur
+// d'arriver au pire moment : au rechargement sans reseau, quand l'ecran
+// d'attente est precisement cense rassurer.
+//
+// L'echec vit maintenant dans un etat React. React reste proprietaire de ce
+// qu'il affiche, et il n'y a plus rien a retirer dans son dos.
+function LogoTiMat({ role, dark, hauteur, secours }) {
+  const src = logoForRole(role, dark);
+  const [echoue, setEchoue] = useState(false);
+  // Un changement de logo (connexion, bascule sombre) merite un nouvel essai :
+  // l'echec portait sur l'ancienne image, pas sur celle-ci.
+  useEffect(() => { setEchoue(false); }, [src]);
+  if (echoue) return secours;
+  return <img src={src} alt="TiMat" style={{ height: hauteur, objectFit: "contain" }} onError={() => setEchoue(true)} />;
+}
+
 const FAQ_LANDING_DEFAULT=[
             {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur 2 mois de formule Pro offerts — contrats illimités, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
             {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Chaque calcul cite le texte dont il sort, pour que vous puissiez le vérifier. Et si vous trouvez un écart, écrivez-nous : nous le corrigeons et nous le disons."},
@@ -7793,7 +7836,7 @@ export default function App(){
   if(loading||!configLoaded||(user&&user._needsProfileFetch)||(user&&!dataFetched))return(
     <><Styles/>
     <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <img src={logoForRole(user?.role, dark)} alt="TiMat" style={{height:(G?.landing?.logoSizes?.loading)||64,objectFit:"contain"}} onError={e=>{e.target.outerHTML='<div class="pf" style="font-size:36px;color:var(--T);font-style:italic">TiMat</div>'}}/>
+      <LogoTiMat role={user?.role} dark={dark} hauteur={(G?.landing?.logoSizes?.loading)||64} secours={<div className="pf" style={{fontSize:36,color:"var(--T)",fontStyle:"italic"}}>TiMat</div>}/>
       <div style={{display:"flex",gap:6}}>
         <div className="ai-dot"/><div className="ai-dot"style={{animationDelay:".3s"}}/><div className="ai-dot"style={{animationDelay:".6s"}}/>
       </div>
