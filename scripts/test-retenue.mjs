@@ -229,23 +229,53 @@ const total = cas.length + casAlloc.length + casMin.length + 1 + 21 + 13;
 // cotisations salariales, pas par le coefficient 0,78 qui trainait.
 {
   const tc = src.match(/const TAUX_COTISATIONS=\{[\s\S]*?\n\};/);
-  const nd = src.match(/const netDepuisBrut=\(brut\)=>\{[\s\S]*?\n\};/);
+  const nd = src.match(/const netDepuisBrut=\(brut,regimeLocal=false\)=>\{[\s\S]*?\n\};/);
+  const trl = src.match(/const TAUX_REGIME_LOCAL = [\d.]+;/);
   if (!tc || !nd) {
     console.error("\n  KO  netDepuisBrut() ou le barème des cotisations est introuvable\n");
     process.exit(1);
   }
-  const netDepuisBrut = eval(`(function(){${tc[0]}; ${nd[0]}; return netDepuisBrut;})()`);
+  if (!trl) { console.error("\n  KO  le taux du regime local d'Alsace-Moselle est introuvable\n"); process.exit(1); }
+  const netDepuisBrut = eval(`(function(){${tc[0]}; ${trl[0]}; ${nd[0]}; return netDepuisBrut;})()`);
 
   console.log("\n=== BRUT ET NET — cotisations reelles, pas un coefficient ===\n");
   const casNet = [
     { b: 0, a: 0, n: "un brut nul donne un net nul" },
     { b: -5, a: 0, n: "un brut negatif ne donne jamais de net" },
+    { b: 4.20, a: 3.28, n: "le minimum conventionnel, 4,20 EUR brut" },
+    { b: 4.37, a: 3.41, n: "le minimum avec le titre AM-GE, 4,37 EUR brut" },
+    // ALSACE-MOSELLE : 1,30 % de cotisation maladie en plus, a la charge du
+    // seul salarie. Le simulateur public et le blog l'annoncaient deja ;
+    // l'application, non. Les deux doivent donner le meme centime.
+    { b: 4.20, local: true, a: 3.23, n: "4,20 EUR brut en Alsace-Moselle" },
+    { b: 4.37, local: true, a: 3.36, n: "4,37 EUR brut en Alsace-Moselle" },
+    { b: 0, local: true, a: 0, n: "un brut nul, regime local compris" },
   ];
   for (const c of casNet) {
-    const r = netDepuisBrut(c.b);
-    const ok = r === c.a;
+    const r = netDepuisBrut(c.b, !!c.local);
+    const ok = Math.abs(r - c.a) < 0.005;
     if (!ok) ko++;
-    console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(50)} ${r}`);
+    console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(50)} ${r}${ok ? "" : ` (attendu ${c.a})`}`);
+  }
+
+  // LE SIMULATEUR PUBLIC ET L'APPLICATION PARTAGENT LE MEME TAUX.
+  // Le simulateur ecrit ses coefficients en dur dans la page : 0,7812 en
+  // metropole, 0,7682 en Alsace-Moselle. S'ils derivent du bareme ci-dessus, le
+  // site et l'application annoncent deux salaires differents pour un seul
+  // contrat — c'est arrive, et personne ne le voyait.
+  {
+    const sim = readFileSync(new URL("../public/simulateur-salaire-assistante-maternelle.html", import.meta.url), "utf8");
+    const coefs = [...sim.matchAll(/0\.7\d{3}/g)].map((m) => Number(m[0]));
+    const attendus = [
+      Math.round((1 - Object.values(eval(`(function(){${tc[0]}; return TAUX_COTISATIONS;})()`))
+        .reduce((a, t) => a + (t.sal > 0 ? (t.base || 1) * t.sal / 100 : 0), 0)) * 10000) / 10000,
+    ];
+    attendus.push(Math.round((attendus[0] - Number(trl[0].match(/[\d.]+/)[0]) / 100) * 10000) / 10000);
+    for (const att of attendus) {
+      const trouve = coefs.includes(att);
+      if (!trouve) ko++;
+      console.log(`  ${trouve ? "ok " : "KO "} ${("le simulateur public applique bien " + att).padEnd(50)} ${trouve ? "" : "ABSENT de la page — le site et l'application divergent"}`);
+    }
   }
   // Le minimum conventionnel est publie en brut ET en net : 4,20 brut, 3,28 net.
   // C'est le seul point de controle exterieur dont on dispose.

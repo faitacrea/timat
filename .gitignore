@@ -78,3 +78,8 @@ public/documents/*.pdf
 documents/*.xlsx
 captures-sous-onglets-parent/
 captures-contraste/
+
+# Le pont entre le moteur de l'application et les simulateurs publics,
+# reconstruit a chaque execution de scripts/verif-calculs-identiques.mjs.
+.calculs-app.cjs
+.entree-calculs.js
