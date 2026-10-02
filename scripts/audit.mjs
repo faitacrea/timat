@@ -3374,36 +3374,6 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
       signale("legal", `le gabarit « ${gabarit} » est encore publie dans les mentions legales`);
 }
 
-// --- une route supprimee doit rester joignable ---
-//
-// api/checkout-session.js et api/customer-portal.js ont ete reunis dans
-// api/stripe.js pour tenir sous les douze fonctions du plan Hobby. Leurs
-// anciens chemins vivent encore dans du JavaScript deja telecharge par les
-// navigateurs, et dans des pages gardees en cache. Sans redirection, le
-// paiement tomberait en 404 chez la visiteuse qui n'a pas recharge — et elle
-// n'aurait aucun moyen de comprendre pourquoi.
-{
-  const vercelConf = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
-  const redirigees = new Set((vercelConf.rewrites || []).map((r) => r.source));
-  const appelees = new Set();
-  const dossiers = [new URL("../src/", import.meta.url), new URL("../public/", import.meta.url)];
-  const parcourir = (dir) => {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      const complet = path.join(dir.pathname ?? dir, e.name);
-      if (e.isDirectory()) { parcourir(complet); continue; }
-      if (!/\.(jsx?|html)$/.test(e.name)) continue;
-      for (const m of readFileSync(complet, "utf8").matchAll(/["'`](\/api\/[a-z0-9-]+)["'`?]/g))
-        appelees.add(m[1]);
-    }
-  };
-  for (const d of dossiers) parcourir(d);
-  for (const chemin of appelees) {
-    const fichier = new URL("..".concat(chemin, ".js"), import.meta.url);
-    if (fs.existsSync(fichier)) continue;
-    if (redirigees.has(chemin)) continue;
-    signale("routes", `le code appelle « ${chemin} », qui n'existe plus dans api/ et n'est redirige nulle part dans vercel.json — l'appel repondra 404`);
-  }
-}
 
 // --- un chiffre annonce doit etre le vrai chiffre ---
 //
@@ -3660,6 +3630,39 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
       if (re.test(t))
         signale("rendu", `${nom} ${quoi} : React ne possède plus ce qu'il affiche, et le prochain démontage fait disparaître l'application`);
   }
+}
+
+// --- toute route /api/ nommee doit exister ---
+//
+// Cinq fonctions du back-office ont ete reunies dans /api/backoffice pour tenir
+// sous la limite de douze fonctions serverless de Vercel. Les appels ont suivi ;
+// les MESSAGES D'ERREUR, non. Le tableau de bord affichait donc « Impossible de
+// contacter /api/stripe-mrr » — une route qui repond 404 depuis la fusion.
+// Chercher une panne a l'adresse indiquee, c'est chercher la ou il n'y a rien.
+//
+// On verifie donc tous les chemins /api/ ecrits dans le code, messages compris :
+// chacun doit correspondre a un fichier de api/ ou a une reecriture de
+// vercel.json.
+{
+  const vercel = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  const reecritures = new Set((vercel.rewrites || []).map((r) => String(r.source).split("?")[0]));
+  const fichiers = readdirSync(new URL("../api/", import.meta.url))
+    .filter((f) => f.endsWith(".js")).map((f) => "/api/" + f.replace(/\.js$/, ""));
+  const connues = new Set([...fichiers, ...reecritures]);
+  const sources = [
+    ...fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]),
+    ...readdirSync(new URL("../public/", import.meta.url)).filter((f) => f.endsWith(".html"))
+      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+  ];
+  const vues = new Set();
+  for (const [nom, src] of sources)
+    for (const m of src.matchAll(/\/api\/[a-zA-Z0-9_-]+/g)) {
+      const cle = nom + "|" + m[0];
+      if (vues.has(cle)) continue;
+      vues.add(cle);
+      if (!connues.has(m[0]))
+        signale("routes", `${nom} nomme « ${m[0] } », qui n'existe ni dans api/ ni dans les réécritures : l'appel échoue, ou le message d'erreur envoie chercher au mauvais endroit`);
+    }
 }
 
 // --- rapport ---

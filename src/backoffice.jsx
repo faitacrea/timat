@@ -1476,7 +1476,7 @@ function SitePages(){
         const r=await boFetch("/api/backoffice?action=orphan-pages");
         const j=await r.json();
         if(alive)setOrphans(j);
-      }catch(e){ if(alive)setOrphans({ok:false,error:"Impossible de contacter /api/orphan-pages."}); }
+      }catch(e){ if(alive)setOrphans({ok:false,error:"Impossible de contacter /api/backoffice?action=orphan-pages."}); }
     })();
     return ()=>{alive=false;};
   },[]);
@@ -1576,7 +1576,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
         const r=await boFetch("/api/backoffice?action=stripe-mrr");
         const j=await r.json();
         if(!cancel)setStripeMrr(j);
-      }catch(e){ if(!cancel)setStripeMrr({ok:false,error:"Impossible de contacter /api/stripe-mrr."}); }
+      }catch(e){ if(!cancel)setStripeMrr({ok:false,error:"Impossible de contacter /api/backoffice?action=stripe-mrr."}); }
     })();
     return ()=>{cancel=true;};
   },[]);
