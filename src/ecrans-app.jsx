@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase.js";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, regimeLocalDe, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 } from "./App.jsx";
 import {
   ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
@@ -1703,7 +1703,7 @@ export function MesEmployeurs({enfants,role,user}){
     // Le bulletin fait foi quand il existe ; sinon on annonce une estimation
     // fondee sur la mensualisation, et on le dit.
     const sansContrat=!ct||!(Number(ct.heuresHebdo)>0&&Number(ct.tauxHoraire)>0);
-    const net=bul?Number(bul.salaire_net)||0:(sansContrat?0:netDepuisBrut(salaireMensualise(ct)));
+    const net=bul?Number(bul.salaire_net)||0:(sansContrat?0:netDepuisBrut(salaireMensualise(ct),regimeLocalDe(user)));
     const entretien=bul?Number(bul.entretien)||0:0;
     const verse=versements.filter(v=>v.enfant_id===e.id).reduce((s,v)=>s+(Number(v.montant)||0),0);
     const attendu=Math.round((net+entretien)*100)/100;
@@ -2765,7 +2765,7 @@ export function KitCMG({enfants,role,pEId,user}){
   // qui ne correspond a rien : il AUGMENTE le brut au lieu d'en retirer les
   // cotisations. On passe par le calcul du bulletin.
   const salaireBrutMois=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*100)/100;
-  const salaireNet=nbf(netDepuisBrut(salaireBrutMois),2);
+  const salaireNet=nbf(netDepuisBrut(salaireBrutMois,regimeLocalDe(user)),2);
   const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
 
   return <div className="fi">
@@ -2827,7 +2827,7 @@ export function KitCMG({enfants,role,pEId,user}){
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
           <InfoRow label="Taux horaire brut" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
-          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="tauxNet"/>
+          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user)),2)+"€/h"} copyKey="tauxNet"/>
           <InfoRow label="Salaire brut mensuel (estimé)" value={nbf(salaireBrutMois,2)+"€"} copyKey="salaireBrut"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
           <InfoRow label="Indemnité d'entretien/jour" value={nbf((contrat.entretien||3.92),2)+"€"} copyKey="entretien"/>
@@ -2952,7 +2952,7 @@ export function RapportAnnuel({enfants,role,pEId,user}){
   const joursAnnuels=realStats?.jours||Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat));
   // Salaire brut = heures * taux (avec majoration 25% au dessus de 45h/sem si pas mensualise)
   const salaireBrutCalc=Math.round(heuresAnnuelles*tauxH);
-  const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(netDepuisBrut(salaireBrutCalc));
+  const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(netDepuisBrut(salaireBrutCalc,regimeLocalDe(user)));
   const salaireAnnuel=salaireNet;
   // Entretien = jours travailles * indemnite jour
   const entretienAnnuel=Math.round(joursAnnuels*entretienJour);
@@ -3722,7 +3722,7 @@ export function AttestationFiscale({enfants,role,pEId,user}){
   })();
   const versementsList=realStats?.versements||[];
   // Estimation indicative (à défaut de versements réels)
-  const estSalNet=netDepuisBrut(hMens*tauxH)*moisTravailles;
+  const estSalNet=netDepuisBrut(hMens*tauxH,regimeLocalDe(user))*moisTravailles;
   // Les jours d'accueil se comptaient ici en divisant les heures mensualisees
   // par 8 — un troisieme comptage, apres ceux du recapitulatif Pajemploi. On
   // part du nombre de jours reellement prevus au contrat.
@@ -3822,7 +3822,7 @@ const jsPDF=await chargerJsPDF();
         ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
         ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" €/h");
         ligneSimple("Salaire mensuel brut estimé",nbf(salMensBrut,2)+" €");
-        ligneSimple("Salaire mensuel net estimé",nbf(netDepuisBrut(salMensBrut),2)+" €");
+        ligneSimple("Salaire mensuel net estimé",nbf(netDepuisBrut(salMensBrut,regimeLocalDe(user)),2)+" €");
         ligneSimple("Mois d'accueil retenus",moisTravailles+" mois");
         y+=8;
       }

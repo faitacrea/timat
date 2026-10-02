@@ -754,11 +754,43 @@ export const TAUX_COTISATIONS={
 // netDepuisBrut() est la seule conversion : elle applique les vraies
 // cotisations salariales, celles du bulletin, au lieu du coefficient 0,78
 // invente qui trainait dans le recapitulatif Pajemploi.
-export const netDepuisBrut=(brut)=>{
+// LE REGIME LOCAL D'ALSACE-MOSELLE.
+//
+// Dans le Bas-Rhin, le Haut-Rhin et la Moselle, une cotisation maladie
+// supplementaire de 1,30 % s'ajoute, A LA CHARGE DU SEUL SALARIE (taux inchange
+// depuis le 1er avril 2022). Le total salarial y est donc de 23,18 % et non de
+// 21,88 %, soit cinq centimes de moins par heure sur un taux a 4,20 EUR.
+//
+// Le simulateur public le proposait deja, et le blog l'ecrivait ; l'application
+// ne le connaissait pas. Une assistante maternelle de Moselle lisait donc
+// 3,23 EUR net sur le site et 3,28 EUR dans son espace, pour le meme contrat.
+//
+// Le regime depend du lieu de travail, c'est-a-dire du domicile de l'assistante
+// maternelle : il se deduit de son code postal, deja en base. Rien a demander,
+// rien a cocher — un reglage qu'on oublie de cocher est un reglage faux.
+export const TAUX_REGIME_LOCAL = 1.30;
+export const DEPTS_REGIME_LOCAL = ["67", "68", "57"];
+// Le regime se lit sur la salariee, jamais sur l'employeur : c'est son lieu de
+// travail qui compte. Dans l'espace parent, l'assistante maternelle n'est pas la
+// personne connectee — d'ou ce second parametre, qui porte SON profil.
+export const regimeLocalDe=(user,profilAsmat)=>{
+  if(profilAsmat&&profilAsmat.code_postal)return estRegimeLocal(profilAsmat.code_postal);
+  if(user&&user.role==="asmat")return estRegimeLocal(user.code_postal);
+  return false;
+};
+
+export const estRegimeLocal=(codePostal)=>{
+  const cp=String(codePostal||"").replace(/\s/g,"");
+  if(!/^\d{5}$/.test(cp))return false;
+  return DEPTS_REGIME_LOCAL.includes(cp.slice(0,2));
+};
+
+export const netDepuisBrut=(brut,regimeLocal=false)=>{
   const b=Number(brut)||0;
   if(b<=0)return 0;
   const cotSal=Object.values(TAUX_COTISATIONS).reduce((s,t)=>s+(t.sal>0?b*(t.base||1)*t.sal/100:0),0);
-  return Math.round((b-cotSal)*100)/100;
+  const local=regimeLocal?b*TAUX_REGIME_LOCAL/100:0;
+  return Math.round((b-cotSal-local)*100)/100;
 };
 
 // La conversion inverse, net -> brut. Le simulateur de cout parent divisait par
@@ -767,6 +799,9 @@ export const netDepuisBrut=(brut)=>{
 // premiere revalorisation des cotisations ; celle-ci, non, elle sort de la table.
 export const TAUX_SALARIAL_TOTAL = Object.values(TAUX_COTISATIONS)
   .reduce((s, t) => s + (t.sal > 0 ? (t.base || 1) * t.sal / 100 : 0), 0);
+// Le total en Alsace-Moselle : 23,18 %. Il sert au simulateur public, qui doit
+// afficher exactement le meme coefficient que celui applique ici.
+export const TAUX_SALARIAL_REGIME_LOCAL = TAUX_SALARIAL_TOTAL + TAUX_REGIME_LOCAL / 100;
 export const unionMinutes = (intervalles) => {
   const v = (intervalles || [])
     .map((i) => [Number(i[0]), Number(i[1])])
@@ -5820,7 +5855,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?980:720, margin:"0 auto", marginBottom: 24 }}>
             {[
-              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n61 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
+              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n62 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
               { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Les versements", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nMois par mois, employeur par employeur" },
               { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nSignature horodatée, archivée avec le contrat" }
             ].map((d, i) => (
