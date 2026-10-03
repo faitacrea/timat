@@ -302,6 +302,9 @@ for (const ecran of ECRANS_A_FAIRE()) {
       await p.waitForTimeout(500);
     }
 
+    const compterChamps = () => p.evaluate(() => [...document.querySelectorAll("input,textarea,select")]
+      .filter((c) => !c.disabled && !c.readOnly && c.offsetParent !== null && !["hidden","submit","button","file"].includes(c.type)).length);
+
     // ON LIT LES BOUTONS D'ENVOI AVANT DE REMPLIR.
     //
     // Remplir coute cher : c'est lui, et pas les envois, qui faisait durer un
@@ -342,13 +345,15 @@ for (const ecran of ECRANS_A_FAIRE()) {
 
     erreurs = [];
     // SAISIE — on remplit tout ce qui est visible, avec de vraies frappes.
-    const champs = await p.evaluate((indice) => {
+    let champs = [];
+    const reperer = async () => { champs = await p.evaluate((indice) => {
       const lire = eval(indice);
       return [...document.querySelectorAll("input,textarea,select")]
         .filter((c) => !c.disabled && !c.readOnly && c.offsetParent !== null && !["hidden","submit","button","file"].includes(c.type))
         .slice(0, 25)
         .map((c, i) => { c.setAttribute("data-verif", String(i)); return { i, type: c.type || c.tagName.toLowerCase(), balise: c.tagName.toLowerCase(), indice: lire(c) }; });
-    }, INDICE);
+    }, INDICE); };
+    await reperer();
     if (!champs.length) continue;
 
     const muets = [];
@@ -392,6 +397,7 @@ for (const ecran of ECRANS_A_FAIRE()) {
       const empreinte = ecran + "|" + libelle;
       if (dejaEnvoyes.has(empreinte)) continue;
       dejaEnvoyes.add(empreinte);
+      const champsAvant = await compterChamps();
       await remplirTout(false);
       await p.waitForTimeout(250);
       erreurs = [];
@@ -407,6 +413,50 @@ for (const ecran of ECRANS_A_FAIRE()) {
       // defaut (certains attendent une selection ailleurs), mais c'est toujours
       // un endroit que ce controle ne traverse pas.
       if (fait === "inactif") { inactifs.push(`${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle}`); continue; }
+      await p.waitForTimeout(700);
+
+      // UN CLIC QUI FAIT APPARAITRE DES CHAMPS EST UN OUVREUR, QUEL QUE SOIT
+      // SON NOM.
+      //
+      // Le formulaire de saisie des versements est derriere un bouton appele
+      // « + Enregistrer ». Le classement binaire ouvreur/envoi le rangeait du
+      // cote des envois — il etait donc clique, le formulaire s'ouvrait, et le
+      // parcours passait au suivant sans jamais le remplir. C'est la derniere
+      // raison pour laquelle le filet laissait passer la cassure volontaire
+      // placee dans « Enregistrer le versement ».
+      //
+      // On compte donc les champs avant et apres : s'il en est apparu, on
+      // remplit et on cherche l'envoi qui vient de naitre.
+      const champsApres = await compterChamps();
+      if (champsApres > champsAvant) {
+        const nouveaux = await p.evaluate((d) => {
+          const re = new RegExp(d.source, d.flags), env = new RegExp(d.envoi, "i");
+          return [...document.querySelectorAll("button")]
+            .filter((b) => !b.closest("nav, header") && b.offsetParent)
+            .map((b) => (b.innerText || b.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim())
+            .filter((t) => t && t.length < 50 && !re.test(t) && env.test(t));
+        }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
+        for (const suite of [...new Set(nouveaux)]) {
+          const emp2 = ecran + "|" + suite;
+          if (dejaEnvoyes.has(emp2)) continue;
+          dejaEnvoyes.add(emp2);
+          await reperer();
+          await remplirTout(true);
+          await p.waitForTimeout(250);
+          erreurs = [];
+          const fait2 = await p.evaluate((t) => {
+            const b = [...document.querySelectorAll("button")].find((x) => ((x.innerText || x.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim()) === t);
+            if (!b || b.disabled) return false; b.click(); return true;
+          }, suite);
+          if (!fait2) continue;
+          envois++;
+          portee.set(ecran, (portee.get(ecran) || 0) + 1);
+          if (process.env.TRACE) console.log(`      → ${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle} › ${suite}`);
+          await p.waitForTimeout(1000);
+          const dur2 = erreurs.find((e) => CODE_MANQUANT.test(e));
+          if (dur2) { ko++; console.log(`  KO  ${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle} › ${suite}`); console.log(`        le code casse à l'envoi : ${dur2.slice(0, 130)}`); }
+        }
+      }
       envois++;
       portee.set(ecran, (portee.get(ecran) || 0) + 1);
       // TRACE=1 : la liste de ce qu'on a reellement envoye. C'est ce qui dit la
