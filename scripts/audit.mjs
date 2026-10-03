@@ -1040,6 +1040,10 @@ for (const u of fichiersAppSrc()) {
   const groq = `{
     "publiesSansImage": *[_type=="article" && !(_id in path("drafts.**")) && !defined(imageCouverture)]{"s": slug.current},
     "brouillonsSansImage": *[_type=="article" && _id in path("drafts.**") && !defined(imageCouverture)]{"s": slug.current},
+    "alts": *[_type=="article" && defined(imageCouverture.asset)]{
+      "s": slug.current, "alt": imageCouverture.alt,
+      "t": titre + " " + chapo + " " + pt::text(corps)
+    },
     "tropLongs": *[_type=="article" && (length(chapo) > ${MAX.chapo} || length(titre) > ${MAX.titre} || length(seoTitre) > ${MAX.seoTitre} || length(seoDescription) > ${MAX.seoDescription})]{
       "s": slug.current, "chapo": length(chapo), "titre": length(titre),
       "seoTitre": length(seoTitre), "seoDescription": length(seoDescription)
@@ -1057,6 +1061,46 @@ for (const u of fichiersAppSrc()) {
     if (pub.length) {
       signale("blog", `${pub.length} article(s) en ligne sans image de couverture — leur carte s'affiche sans visuel et leur partage n'a pas d'aperçu : ${pub.slice(0, 3).join(", ")}${pub.length > 3 ? "…" : ""}`);
     }
+    // LE TEXTE ALTERNATIF DE LA COUVERTURE.
+    //
+    // « Droits et devoirs de l'assistante maternelle » portait « Les heures
+    // majorée ne peuvent pas être majorée de moins de 10 % » : deux fautes
+    // d'accord, et le sujet d'un AUTRE article — c'etait la phrase des heures
+    // majorees, posee sur le mauvais article. La phrase est ecrite sur l'image,
+    // donc elle etait lisible en ligne, et c'est elle que lit un lecteur
+    // d'ecran.
+    //
+    // J'AI ESSAYE DE DETECTER « HORS SUJET » AUTOMATIQUEMENT, SANS Y ARRIVER.
+    // Comparer les mots du texte alternatif a ceux du titre et du chapo attrape
+    // bien celui-la, mais accuse trois textes parfaitement justes — « Le taux
+    // horaire ne represente qu'une partie de ce que paie reellement le parent
+    // employeur », sur l'article des questions a poser, n'emploie aucun mot du
+    // titre et dit pourtant exactement ce qu'il faut. Comparer au corps entier
+    // ne denonce plus personne, mais laisse passer le defaut d'origine :
+    // l'article des droits et devoirs parle bien, quelque part, des heures
+    // majorees. Un comptage de mots ne distingue pas « hors sujet » de
+    // « apporte un fait que le titre ne dit pas ».
+    //
+    // On garde donc les deux verifications qui ne se trompent jamais : un texte
+    // alternatif absent, et deux articles qui portent le MEME. Le reste se lit
+    // a l'oeil — les soixante-dix-neuf ont ete relus le 3 octobre 2026, et
+    // celui-la etait le seul en defaut.
+    const sansAlt = [], doublons = [];
+    const vus = new Map();
+    for (const a of result?.alts || []) {
+      const alt = String(a.alt || "").trim();
+      if (!alt) { sansAlt.push(a.s); continue; }
+      const cle = alt.toLowerCase().replace(/\s+/g, " ");
+      if (vus.has(cle)) doublons.push(`${vus.get(cle)} et ${a.s}`);
+      else vus.set(cle, a.s);
+    }
+    if (sansAlt.length) {
+      signale("blog", `${sansAlt.length} couverture(s) sans texte alternatif — un lecteur d'écran n'a rien à annoncer : ${sansAlt.slice(0, 3).join(", ")}${sansAlt.length > 3 ? "…" : ""}`);
+    }
+    if (doublons.length) {
+      signale("blog", `${doublons.length} texte(s) alternatif(s) identiques sur deux articles — l'un des deux est posé sur le mauvais article : ${doublons.slice(0, 2).join(" ; ")}`);
+    }
+
     if (bro.length) {
       signale("blog", `${bro.length} brouillon(s) sans image de couverture — ils seront publiés tels quels, un par jour : ${bro.slice(0, 3).join(", ")}${bro.length > 3 ? "…" : ""}`);
     }
