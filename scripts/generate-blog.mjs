@@ -11,7 +11,7 @@
  * Si un article n'apparait pas : verifier que statut = "publie" dans le Studio.
  */
 
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
@@ -1219,6 +1219,28 @@ async function main() {
   }
 
   await writeFile(path.join(PUBLIC_DIR, "sitemap-blog.xml"), sitemap(valides), "utf8");
+
+  // LE NOMBRE DE GUIDES NE SE RECOPIE PLUS A LA MAIN.
+  //
+  // « 62 guides pratiques » etait ecrit en dur dans la landing ET dans
+  // index.html. Le cron publie un article par jour : le chiffre devenait donc
+  // faux chaque matin, et l'audit le signalait chaque matin. Le generateur, lui,
+  // compte les articles — il ecrit le nombre, et les deux endroits le lisent.
+  await writeFile(
+    path.join(ROOT, "data", "nombre-guides.js"),
+    "// Ecrit par scripts/generate-blog.mjs a chaque build. Ne pas modifier a la main.\n" +
+    "export const NOMBRE_GUIDES = " + valides.length + ";\nexport default NOMBRE_GUIDES;\n",
+    "utf8"
+  );
+
+  // index.html est servi tel quel, sans passer par React : il faut y ecrire le
+  // nombre, pas l'y lire.
+  try {
+    const ih = path.join(ROOT, "index.html");
+    const avant = await readFile(ih, "utf8");
+    const apres = avant.replace(/\d+ guides pratiques/g, valides.length + " guides pratiques");
+    if (apres !== avant) { await writeFile(ih, apres, "utf8"); console.log(`[blog] index.html : « ${valides.length} guides pratiques ».`); }
+  } catch (e) { console.error("[blog] index.html non mis a jour :", e.message); }
 
   console.log(
     `[blog] ${valides.length} article(s) + ${rubs.length} rubrique(s) + index + sitemap-blog.xml (mode ${FLAT ? "plat" : "dossiers"}).`

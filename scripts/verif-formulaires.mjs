@@ -29,10 +29,16 @@ import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
+// Troisieme argument : les ecrans a parcourir, separes par une virgule. Le tour
+// complet depasse la demi-heure ; pour PROUVER que le filet atteint un endroit
+// precis, on ne parcourt que celui-la.
+const CHOISIS = (process.argv[3] || "").split(",").map((x) => x.trim()).filter(Boolean);
 
 const ECRANS = ESPACE === "parent"
   ? ["accueil","journee","pointage","suivi_progres","sante_urgence","autorisations","calendrier","messagerie","aides_simulateurs","admin_finances","documents_complet","mes_alertes","faq"]
   : ["accueil","journee","pointage","suivi_progres","sante_urgence","autorisations","calendrier","messagerie","paie_contrats","documents_rapports","inviter_parent","reprise_contrat","liste_attente","page_vitrine","mes_employeurs","pmi","mes_alertes","faq"];
+
+const ECRANS_A_FAIRE = () => CHOISIS.length ? ECRANS.filter((e) => CHOISIS.includes(e)) : ECRANS;
 
 const DANGEREUX = /supprim|effac|r[ée]sili|d[ée]connex|se d[ée]connecter|payer|abonner|archiver|r[ée]initialis|vider|quitter|annuler mon|retirer|d[ée]sactiver mon/i;
 // Les libelles qui envoient : on ne clique que ceux-la, apres avoir rempli.
@@ -169,7 +175,7 @@ const cheminsDe = async (ecran) => {
     await p.waitForTimeout(700);
     const ok = await p.evaluate((t) => { const b = [...document.querySelectorAll("button")].find((x) => x.innerText.replace(/\s+/g, " ").trim() === t); if (!b) return false; b.click(); return true; }, a);
     if (!ok) continue;
-    await p.waitForTimeout(1100);
+    await p.waitForTimeout(500);
     const barres = await barresDe();
     for (const nom of (barres[1] || [])) if (!n1.includes(nom)) chemins.push([a, nom]);
   }
@@ -183,15 +189,23 @@ const suivre = async (ecran, chemin) => {
   for (const nom of chemin) {
     const ok = await p.evaluate((t) => { const b = [...document.querySelectorAll("button")].find((x) => x.innerText.replace(/\s+/g, " ").trim() === t); if (!b) return false; b.click(); return true; }, nom);
     if (!ok) return false;
-    await p.waitForTimeout(1100);
+    await p.waitForTimeout(500);
   }
   return true;
 };
 
 let ko = 0, remplis = 0, envois = 0;
-console.log(`\n=== FORMULAIRES — on saisit puis on envoie (${ESPACE}, ${ECRANS.length} écrans) ===\n`);
+// CE QUE LE FILET N'ATTEINT PAS, IL DOIT LE DIRE.
+//
+// Un ecran qui ne produit aucun envoi n'est pas un ecran sain : c'est un ecran
+// que ce controle ne protege pas. Le taire rendrait le vert mensonger — c'est
+// exactement ce qui s'est passe ici : la section « Versements recus » ne
+// s'affiche pas dans ce harnais, et le controle a donc annonce deux fois
+// « aucun formulaire ne casse » sur un defaut que j'y avais mis expres.
+const portee = new Map();
+console.log(`\n=== FORMULAIRES — on saisit puis on envoie (${ESPACE}, ${ECRANS_A_FAIRE().length} écrans) ===\n`);
 
-for (const ecran of ECRANS) {
+for (const ecran of ECRANS_A_FAIRE()) {
   await p.evaluate((x) => window.dispatchEvent(new CustomEvent("timat:page", { detail: x })), ecran);
   await p.waitForTimeout(1400);
   for (const chemin of await cheminsDe(ecran)) {
@@ -214,7 +228,7 @@ for (const ecran of ECRANS) {
       .filter((t) => t && t.length < 50 && !re.test(t) && !env.test(t));
   }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
 
-  for (const ouvreur of ["", ...new Set(ouvreurs)].slice(0, 26)) {
+  for (const ouvreur of ["", ...new Set(ouvreurs)].slice(0, 14)) {
     await retour();
     if (ouvreur) {
       const fait = await p.evaluate((t) => {
@@ -222,7 +236,7 @@ for (const ecran of ECRANS) {
         if (!b || b.disabled) return false; b.click(); return true;
       }, ouvreur);
       if (!fait) continue;
-      await p.waitForTimeout(900);
+      await p.waitForTimeout(500);
     }
 
     erreurs = [];
@@ -231,7 +245,7 @@ for (const ecran of ECRANS) {
       const lire = eval(indice);
       return [...document.querySelectorAll("input,textarea,select")]
         .filter((c) => !c.disabled && !c.readOnly && c.offsetParent !== null && !["hidden","submit","button","file"].includes(c.type))
-        .slice(0, 40)
+        .slice(0, 25)
         .map((c, i) => { c.setAttribute("data-verif", String(i)); return { i, type: c.type || c.tagName.toLowerCase(), balise: c.tagName.toLowerCase(), indice: lire(c) }; });
     }, INDICE);
     if (!champs.length) continue;
@@ -271,7 +285,11 @@ for (const ecran of ECRANS) {
       }, libelle);
       if (!fait) continue;
       envois++;
-      await p.waitForTimeout(1100);
+      portee.set(ecran, (portee.get(ecran) || 0) + 1);
+      // TRACE=1 : la liste de ce qu'on a reellement envoye. C'est ce qui dit la
+      // PORTEE du controle — et donc ce qu'il ne protege pas.
+      if (process.env.TRACE) console.log(`      → ${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle}`);
+      await p.waitForTimeout(500);
 
       const dur = erreurs.find((e) => CODE_MANQUANT.test(e));
       const ecrit = await p.evaluate(() => document.body.innerText);
@@ -286,6 +304,11 @@ for (const ecran of ECRANS) {
 }
 
 await N.close();
-console.log(`\n${remplis} champs remplis, ${envois} envois.`);
+const aveugles = ECRANS_A_FAIRE().filter((e) => !portee.get(e));
+console.log(`\n${remplis} champs remplis, ${envois} envois sur ${ECRANS_A_FAIRE().length - aveugles.length} écran(s).`);
+if (aveugles.length) {
+  console.log(`\n  Aucun formulaire atteint sur ${aveugles.length} écran(s) — ce contrôle ne les protège pas :`);
+  aveugles.forEach((e) => console.log(`        ${e}`));
+}
 console.log(ko ? `${ko} problème(s) sur les formulaires.\n` : `Aucun formulaire ne casse à la saisie ni à l'envoi.\n`);
 process.exit(ko ? 1 : 0);

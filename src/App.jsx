@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useMemo, lazy, Suspense, Component } from "react";
+// Ecrit par scripts/generate-blog.mjs : le nombre reel d'articles publies.
+import { NOMBRE_GUIDES } from "../data/nombre-guides.js";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import qrcode from "qrcode-generator";
@@ -5902,7 +5904,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?980:720, margin:"0 auto", marginBottom: 24 }}>
             {[
-              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n62 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
+              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||`Les exigences de la PMI, département par département\n${NOMBRE_GUIDES} guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier` },
               { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Les versements", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nMois par mois, employeur par employeur" },
               { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nSignature horodatée, archivée avec le contrat" }
             ].map((d, i) => (
