@@ -84,7 +84,14 @@ const DANGEREUX = /supprim|effac|r[ée]sili|d[ée]connex|se d[ée]connecter|paye
 // d'enregistrement et tournait dessus jusqu'a epuiser son temps, sans jamais
 // atteindre « Enregistrer le mot du jour ». Un signe ne dit pas ce qu'il fait :
 // seuls ceux dont le sens est sans ambiguite entrent dans cette liste.
-const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|^(?:➤|✓|✔|💾|📧)$/i;
+//
+// Cette liste a ete allongee a chaque trou trouve — « Inscrire au registre »,
+// le formulaire a six champs du registre des medicaments, n'en faisait pas
+// partie et tout l'ecran passait pour vide. Deviner des verbes a l'infini ne
+// marche pas : c'est pour cela que le controle signale desormais les
+// formulaires qu'il n'arrive PAS a classer (plusieurs champs, aucun envoi
+// reconnu). C'est lui qui dit ou la liste est encore trop courte.
+const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|inscrire|transmettre|signer|d[ée]clarer|marquer|importer|t[ée]l[ée]verser|noter|^(?:➤|✓|✔|💾|📧)$/i;
 const CODE_MANQUANT = /is not defined|is not a function|cannot read propert|undefined is not|null is not an object/i;
 
 const estParent = ESPACE === "parent";
@@ -190,14 +197,30 @@ const INDICE = `(c) => {
 // fois de suite sur un defaut volontaire. On enumere donc les barres, et on
 // parcourt le deuxieme niveau pour chaque entree du premier.
 const barresDe = () => p.evaluate(() => {
-  const bar = [...document.querySelectorAll("div")].filter((d) =>
-    d.children.length >= 2 && [...d.children].every((c) => c.tagName === "BUTTON") &&
-    [...d.children].every((c) => c.innerText.trim().length > 0 && c.innerText.trim().length < 40));
-  // Les barres imbriquees l'une dans l'autre comptent pour une : on garde les
-  // plus exterieures, et on relit la page apres chaque clic de toute facon.
-  return bar.filter((d, i) => !bar.some((o, j) => j !== i && o.contains(d)))
+  // Une barre d'onglets : un element qui porte au moins deux boutons visibles
+  // au libelle court, DIRECTEMENT sous lui. Le critere precedent exigeait que
+  // TOUS ses enfants soient des boutons, et les vraies barres ont des elements
+  // qui n'en sont pas : « Santé & Urgence » et « Autorisations » n'etaient donc
+  // pas reconnus du tout.
+  //
+  // La navigation principale est ecartee par ce qui la distingue vraiment :
+  // elle est dans un <nav>. Pas par ses libelles — ils viennent du back-office
+  // et changent. Sans cela, le parcours la prenait pour la barre de l'ecran et
+  // QUITTAIT l'ecran au lieu d'y descendre.
+  const trouvees = [];
+  for (const d of document.querySelectorAll("*")) {
+    if (d.closest("nav, header")) continue;
+    const bs = [...d.children].filter((c) => c.tagName === "BUTTON" && c.offsetParent &&
+      c.innerText.trim().length > 0 && c.innerText.trim().length < 40);
+    if (bs.length >= 2) trouvees.push({ el: d, haut: d.getBoundingClientRect().top, labels: bs.map((b) => b.innerText.replace(/\s+/g, " ").trim()) });
+  }
+  // Les barres imbriquees comptent pour une : on garde les plus exterieures,
+  // puis on les range de haut en bas — le premier niveau est au-dessus.
+  return trouvees
+    .filter((t, i) => !trouvees.some((o, k) => k !== i && o.el.contains(t.el)))
+    .sort((a, b) => a.haut - b.haut)
     .slice(0, 3)
-    .map((d) => [...d.children].map((b) => b.innerText.replace(/\s+/g, " ").trim()));
+    .map((t) => t.labels);
 });
 
 // Les chemins a parcourir : la page nue, chaque entree du premier niveau, puis
@@ -212,8 +235,7 @@ const cheminsDe = async (ecran) => {
     const ok = await p.evaluate((t) => { const b = [...document.querySelectorAll("button")].find((x) => x.innerText.replace(/\s+/g, " ").trim() === t); if (!b) return false; b.click(); return true; }, a);
     if (!ok) continue;
     await p.waitForTimeout(500);
-    const barres = await barresDe();
-    for (const nom of (barres[1] || [])) if (!n1.includes(nom)) chemins.push([a, nom]);
+    for (const nom of ((await barresDe())[1] || [])) if (!n1.includes(nom)) chemins.push([a, nom]);
   }
   return chemins;
 };
@@ -241,6 +263,7 @@ let ko = 0, remplis = 0, envois = 0;
 const portee = new Map();
 const inactifs = [];
 const dejaEnvoyes = new Set();
+const nonClasses = [];
 console.log(`\n=== FORMULAIRES — on saisit puis on envoie (${ESPACE}, ${ECRANS_A_FAIRE().length} écrans) ===\n`);
 
 for (const ecran of ECRANS_A_FAIRE()) {
@@ -262,8 +285,10 @@ for (const ecran of ECRANS_A_FAIRE()) {
   const ouvreurs = await p.evaluate((d) => {
     const re = new RegExp(d.source, d.flags), env = new RegExp(d.envoi, "i");
     return [...document.querySelectorAll("button")]
-      .map((b) => (b.innerText || "").replace(/\s+/g, " ").trim())
-      .filter((t) => t && t.length < 50 && !re.test(t) && !env.test(t));
+      .filter((b) => !b.closest("nav, header"))
+      .map((b) => ({ t: (b.innerText || "").replace(/\s+/g, " ").trim() }))
+      .filter(({ t }) => t && t.length < 50 && !re.test(t) && !env.test(t))
+      .map(({ t }) => t);
   }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
 
   for (const ouvreur of ["", ...new Set(ouvreurs)].slice(0, 14)) {
@@ -294,7 +319,26 @@ for (const ecran of ECRANS_A_FAIRE()) {
         .filter((t) => t && t.length < 50 && !re.test(t) && env.test(t));
     }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
     const aFaire = [...new Set(envoyeurs)].filter((t) => !dejaEnvoyes.has(ecran + "|" + t));
-    if (!aFaire.length) continue;
+    if (!aFaire.length) {
+      // UN FORMULAIRE QUE JE N'ARRIVE PAS A CLASSER.
+      //
+      // Plusieurs champs a remplir, et aucun bouton dont le libelle ressemble a
+      // un envoi : c'est soit un formulaire dont le verbe manque a la liste
+      // ci-dessus, soit un formulaire qu'on ne peut pas envoyer. Dans les deux
+      // cas le controle ne le traverse pas, et il doit le dire plutot que de se
+      // taire.
+      if (!envoyeurs.length) {
+        const n = await p.evaluate(() => [...document.querySelectorAll("input,textarea,select")]
+          .filter((c) => !c.disabled && !c.readOnly && c.offsetParent !== null && !["hidden","submit","button","file","checkbox","radio"].includes(c.type)).length);
+        if (n >= 3) {
+          const noms = await p.evaluate(() => [...document.querySelectorAll("button")]
+            .filter((b) => !b.closest("nav, header") && b.offsetParent)
+            .map((b) => (b.innerText || "").replace(/\s+/g, " ").trim()).filter((t) => t && t.length < 40).slice(-4));
+          nonClasses.push(`${ou} — ${n} champs, aucun envoi reconnu (boutons présents : ${noms.join(", ") || "aucun"})`);
+        }
+      }
+      continue;
+    }
 
     erreurs = [];
     // SAISIE — on remplit tout ce qui est visible, avec de vraies frappes.
@@ -385,6 +429,10 @@ for (const ecran of ECRANS_A_FAIRE()) {
 await N.close();
 const aveugles = ECRANS_A_FAIRE().filter((e) => !portee.get(e));
 console.log(`\n${remplis} champs remplis, ${envois} envois sur ${ECRANS_A_FAIRE().length - aveugles.length} écran(s).`);
+if (nonClasses.length) {
+  console.log(`\n  ${nonClasses.length} formulaire(s) que ce contrôle n'arrive pas à classer — plusieurs champs, aucun envoi reconnu :`);
+  [...new Set(nonClasses)].slice(0, 15).forEach((x) => console.log(`        ${x}`));
+}
 if (inactifs.length) {
   console.log(`\n  ${inactifs.length} bouton(s) d'envoi restés éteints alors que tous les champs visibles étaient remplis :`);
   [...new Set(inactifs)].slice(0, 20).forEach((x) => console.log(`        ${x}`));
