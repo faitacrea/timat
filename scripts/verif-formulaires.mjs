@@ -65,6 +65,12 @@
 // verifier a la main sur un vrai compte : soit un etat particulier les fait
 // apparaitre, soit la saisie d'un versement est devenue inaccessible.
 //
+// COMPTER UNE BONNE DEMI-HEURE PAR ESPACE. Chaque ecran prend environ six
+// minutes : le temps part dans le parcours des onglets et des ouvreurs, pas dans
+// la saisie. Le tour complet d'un espace depasse donc la demi-heure, et il se
+// lance par tranches de quatre ou cinq ecrans — le troisieme argument est la
+// pour cela.
+//
 // Hors chaine de build : Vercel n'a pas de navigateur.
 //   node scripts/verif-formulaires.mjs [asmat|parent] [ecran,ecran...]
 //   TRACE=1 pour lister chaque envoi, donc la portee reelle.
