@@ -78,7 +78,13 @@ const DANGEREUX = /supprim|effac|r[ée]sili|d[ée]connex|se d[ée]connecter|paye
 // Les libelles qui envoient — ET les boutons qui n'ont qu'un signe pour tout
 // libelle. La messagerie envoie par une fleche « ➤ » : sans elle dans cette
 // liste, l'ecran entier passait pour depourvu de formulaire.
-const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|^(?:➤|✓|✔|💾|📧|▶)$/i;
+//
+// « ▶ » en revanche a ete RETIREE : c'est la fleche qui change de jour sur le
+// cahier du jour, pas un envoi. Le parcours la prenait pour un bouton
+// d'enregistrement et tournait dessus jusqu'a epuiser son temps, sans jamais
+// atteindre « Enregistrer le mot du jour ». Un signe ne dit pas ce qu'il fait :
+// seuls ceux dont le sens est sans ambiguite entrent dans cette liste.
+const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|^(?:➤|✓|✔|💾|📧)$/i;
 const CODE_MANQUANT = /is not defined|is not a function|cannot read propert|undefined is not|null is not an object/i;
 
 const estParent = ESPACE === "parent";
