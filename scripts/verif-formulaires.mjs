@@ -57,6 +57,9 @@
 //   TRACE=1 pour lister chaque envoi, donc la portee reelle.
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+// Le jeu de donnees du harnais : de vraies lignes, aux colonnes de la vraie
+// base. Sans elles, la moitie des ecrans n'affiche aucun formulaire.
+import { REPONSE, UID, EID, PID } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
 // Troisieme argument : les ecrans a parcourir, separes par une virgule. Le tour
@@ -72,12 +75,12 @@ const ECRANS_A_FAIRE = () => CHOISIS.length ? ECRANS.filter((e) => CHOISIS.inclu
 
 const DANGEREUX = /supprim|effac|r[ée]sili|d[ée]connex|se d[ée]connecter|payer|abonner|archiver|r[ée]initialis|vider|quitter|annuler mon|retirer|d[ée]sactiver mon/i;
 // Les libelles qui envoient : on ne clique que ceux-la, apres avoir rempli.
-const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer/i;
+// Les libelles qui envoient — ET les boutons qui n'ont qu'un signe pour tout
+// libelle. La messagerie envoie par une fleche « ➤ » : sans elle dans cette
+// liste, l'ecran entier passait pour depourvu de formulaire.
+const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|^(?:➤|✓|✔|💾|📧|▶)$/i;
 const CODE_MANQUANT = /is not defined|is not a function|cannot read propert|undefined is not|null is not an object/i;
 
-const UID = "11111111-1111-4111-8111-111111111111";
-const EID = "22222222-2222-4222-8222-222222222222";
-const PID = "33333333-3333-4333-8333-333333333333";
 const estParent = ESPACE === "parent";
 const utilisateur = {
   id: estParent ? PID : UID, aud: "authenticated", role: "authenticated",
@@ -140,10 +143,7 @@ const json = (b) => ({ status: 200, contentType: "application/json", body: JSON.
 await p.route("**/storage/v1/**", (r) => r.fulfill(json([])));
 await p.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/(?:rpc\/)?([a-z_]+)/) || [])[1];
-  if (t === "profiles") return r.fulfill(json([{ id: utilisateur.id, role: utilisateur.user_metadata.role, prenom: utilisateur.user_metadata.prenom, nom: "Test", email: utilisateur.email, code_postal: "94230", subscription_status: "pro", is_admin: false }]));
-  if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, parent_id: PID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F", actif: true, allergies: [] }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, entretien: 3.92, jours: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"], horaires: "07h30–17h30" }]));
-  return r.fulfill(json([]));
+  return r.fulfill(json(REPONSE(t, ESPACE === "parent" ? "parent" : "asmat")));
 });
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 
@@ -233,6 +233,7 @@ let ko = 0, remplis = 0, envois = 0;
 // s'affiche pas dans ce harnais, et le controle a donc annonce deux fois
 // « aucun formulaire ne casse » sur un defaut que j'y avais mis expres.
 const portee = new Map();
+const inactifs = [];
 console.log(`\n=== FORMULAIRES — on saisit puis on envoie (${ESPACE}, ${ECRANS_A_FAIRE().length} écrans) ===\n`);
 
 for (const ecran of ECRANS_A_FAIRE()) {
@@ -281,6 +282,14 @@ for (const ecran of ECRANS_A_FAIRE()) {
     if (!champs.length) continue;
 
     const muets = [];
+    // UN RENDU PASSE ENTRE LA FRAPPE ET LE CLIC.
+    //
+    // Sur la messagerie, le bouton « Envoyer » etait bien trouve, mais
+    // DESACTIVE au moment du clic, alors que la saisie dans le textarea avait
+    // pris (aucun champ muet signale) : le chargement des donnees re-rend le
+    // composant et remet son etat a zero. On remplit donc une seconde fois,
+    // juste avant d'envoyer.
+    const remplirTout = async (compter) => {
     for (const c of champs) {
       const sel = `[data-verif="${c.i}"]`;
       const l = p.locator(sel).first();
@@ -289,14 +298,16 @@ for (const ecran of ECRANS_A_FAIRE()) {
         if (c.type === "checkbox" || c.type === "radio") { await l.check({ timeout: 1500 }); continue; }
         const v = VALEUR(c.indice, c.type);
         await l.fill(v, { timeout: 1500 });
-        remplis++;
+        if (compter) remplis++;
         // LE CHAMP QUI REFUSE LA FRAPPE. On relit ce qu'on vient d'ecrire : si
         // ce n'est pas la, le onChange ne rend pas la valeur au champ et
         // l'utilisatrice tape dans le vide.
         const relu = await l.inputValue().catch(() => null);
-        if (relu !== null && relu === "" && v !== "") muets.push(c.indice || c.type);
+        if (compter && relu !== null && relu === "" && v !== "") muets.push(c.indice || c.type);
       } catch (e) { /* champ masque entre-temps : il n'est pas a nous */ }
     }
+    };
+    await remplirTout(true);
     if (muets.length) { ko += muets.length; console.log(`  KO  ${ou}${ouvreur ? " › " + ouvreur : ""}`); muets.forEach((m) => console.log(`        le champ « ${m} » n'accepte pas la frappe : la valeur ne s'inscrit pas`)); }
 
     // ENVOI — uniquement les boutons qui enregistrent, et un seul par tour.
@@ -308,12 +319,21 @@ for (const ecran of ECRANS_A_FAIRE()) {
     }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
 
     for (const libelle of [...new Set(envoyeurs)].slice(0, 4)) {
+      await remplirTout(false);
+      await p.waitForTimeout(250);
       erreurs = [];
       const fait = await p.evaluate((t) => {
         const b = [...document.querySelectorAll("button")].find((x) => ((x.innerText || x.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim()) === t);
-        if (!b || b.disabled) return false; b.click(); return true;
+        if (!b) return "absent";
+        if (b.disabled) return "inactif";
+        b.click(); return "clique";
       }, libelle);
-      if (!fait) continue;
+      if (fait === "absent") continue;
+      // Un bouton d'envoi qui reste eteint alors que TOUS les champs visibles
+      // sont remplis : on le compte et on le nomme. Ce n'est pas toujours un
+      // defaut (certains attendent une selection ailleurs), mais c'est toujours
+      // un endroit que ce controle ne traverse pas.
+      if (fait === "inactif") { inactifs.push(`${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle}`); continue; }
       envois++;
       portee.set(ecran, (portee.get(ecran) || 0) + 1);
       // TRACE=1 : la liste de ce qu'on a reellement envoye. C'est ce qui dit la
@@ -336,6 +356,10 @@ for (const ecran of ECRANS_A_FAIRE()) {
 await N.close();
 const aveugles = ECRANS_A_FAIRE().filter((e) => !portee.get(e));
 console.log(`\n${remplis} champs remplis, ${envois} envois sur ${ECRANS_A_FAIRE().length - aveugles.length} écran(s).`);
+if (inactifs.length) {
+  console.log(`\n  ${inactifs.length} bouton(s) d'envoi restés éteints alors que tous les champs visibles étaient remplis :`);
+  [...new Set(inactifs)].slice(0, 20).forEach((x) => console.log(`        ${x}`));
+}
 if (aveugles.length) {
   console.log(`\n  Aucun formulaire atteint sur ${aveugles.length} écran(s) — ce contrôle ne les protège pas :`);
   aveugles.forEach((e) => console.log(`        ${e}`));
