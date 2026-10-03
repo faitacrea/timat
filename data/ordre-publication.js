@@ -82,5 +82,17 @@ export const ordre = [
   "premiere-declaration-pajemploi-parent-employeur",
   "assistante-maternelle-ou-garde-a-domicile-cout",
   "trouver-une-assistante-maternelle-ou-chercher-quand",
+  // Quatre sujets que le blog ne couvrait nulle part, et qui reviennent chaque
+  // annee a date fixe. Places en tete de ce qui reste a publier : le
+  // periscolaire se decide en aout, les dates de conges avant le 1er mars, et
+  // la revalorisation au moment ou elle tombe.
+  //
+  // Le periscolaire d'abord : c'est le seul ecran de l'application qu'aucun
+  // article n'expliquait, et la question arrive en meme temps pour toutes les
+  // familles — a la rentree.
+  "accueil-periscolaire-avenant-assistante-maternelle",
+  "conges-payes-dates-assistante-maternelle",
+  "revalorisation-smic-avenant-assistante-maternelle",
+  "journee-solidarite-assistante-maternelle",
 ];
 export default ordre;

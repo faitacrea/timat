@@ -33,6 +33,14 @@ const UA =
 // établit. C'est la règle des cinquante couvertures déjà en ligne, et c'est ce
 // qui rend la vignette utile quand elle circule seule.
 export const COUVERTURES = [
+  ["accueil-periscolaire-avenant-assistante-maternelle", "Contrat et paie",
+   "Deux rythmes dans la même année, une seule mensualisation. La formule, et le piège du mercredi"],
+  ["conges-payes-dates-assistante-maternelle", "Contrat et paie",
+   "D'un commun accord avant le 1er mars. Sans accord, qui tranche dépend du nombre d'employeurs"],
+  ["revalorisation-smic-avenant-assistante-maternelle", "Contrat et paie",
+   "Un taux déjà au-dessus du plancher n'augmente pas tout seul. Quand l'avenant devient obligatoire"],
+  ["journee-solidarite-assistante-maternelle", "Situation pratique",
+   "Elle ne s'applique pas aux assistantes maternelles du particulier employeur. Et le lundi de Pentecôte"],
   ["quel-logiciel-assistante-maternelle", "Situation pratique",
    "Trois outils sur le marché français. Un seul est habilité à déclarer à Pajemploi à votre place"],
   ["visite-domicile-pmi-agrement-assistante-maternelle", "Devenir assistante maternelle",
