@@ -4665,11 +4665,11 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
       </div>
 
       {mode==="inscription"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        <input placeholder="Prénom *" value={form.prenom} onChange={e=>setForm({...form,prenom:e.target.value})} style={inp}/>
-        <input placeholder="Nom" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} style={inp}/>
+        <input name="prenom" autoComplete="given-name" placeholder="Prénom *" value={form.prenom} onChange={e=>setForm({...form,prenom:e.target.value})} style={inp}/>
+        <input name="nom" autoComplete="family-name" placeholder="Nom" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} style={inp}/>
       </div>}
-      <input type="email" placeholder="Email *" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} style={inp}/>
-      <input type="password" placeholder="Mot de passe *" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")(mode==="inscription"?inscription:connexion)();}} style={inp}/>
+      <input type="email" name="email" autoComplete="email" inputMode="email" placeholder="Email *" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} style={inp}/>
+      <input type="password" name="password" autoComplete={mode==="inscription"?"new-password":"current-password"} placeholder="Mot de passe *" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")(mode==="inscription"?inscription:connexion)();}} style={inp}/>
 
       {mode==="inscription"&&<label style={{display:"flex",gap:8,alignItems:"flex-start",fontSize:11.5,color:"rgba(255,255,255,.92)",margin:"4px 0 12px",cursor:"pointer",lineHeight:1.5}}>
         <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} style={{marginTop:2}}/>
@@ -4988,7 +4988,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   useEffect(()=>{const f=()=>setIsWeb(window.innerWidth>=900);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
   const [showAllFaq, setShowAllFaq] = useState(false);
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
-  const [err, setErr] = useState("");
+  // Relu UNE fois, puis efface : la raison d'un refus de role, ecrite juste
+  // avant la deconnexion qui a remonte cet ecran.
+  const [refusRole] = useState(()=>{
+    try{ const v=sessionStorage.getItem("timat:refusRole"); if(v)sessionStorage.removeItem("timat:refusRole"); return v||""; }
+    catch(e){ return ""; }
+  });
+  const [err, setErr] = useState(refusRole);
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
@@ -5127,6 +5133,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       if(p.get("role")==="parent"||p.has("invite")){ const tk=p.get("invite"); if(tk){try{localStorage.setItem("timat:invite",tk);}catch(e){}} setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
       else if(p.get("role")==="asmat"){ setRole("asmat"); setShowModal(true); }
     }catch(e){}
+    // Un refus de role a remonte cet ecran : la fenetre doit se rouvrir sur la
+    // connexion, sinon le message est ecrit dans un formulaire ferme.
+    if(refusRole){ setRole("asmat"); setModeAuth("connexion"); setShowModal(true); }
   },[]);
   // Démo : enfants enrichis (signatures dérivées) + stats fictives pour le vrai écran Accueil
   const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
@@ -5217,7 +5226,22 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         // GATING ROLE : un compte parent ne peut pas se connecter via la landing (espace assmat)
         let _r=data.user.user_metadata?.role;
         try{const{data:prof}=await supabase.from("profiles").select("role").eq("id",data.user.id).single(); if(prof?.role)_r=prof.role;}catch(e){}
-        if(_r==="parent"){ await supabase.auth.signOut(); setErr("Cet espace est réservé aux assistantes maternelles. Pour votre espace parent, connectez-vous via le lien d'invitation envoyé par votre assistante maternelle."); setLoading(false); return; }
+        if(_r==="parent"){
+          // LE MESSAGE NE SURVIVAIT PAS A SA PROPRE DECONNEXION.
+          //
+          // signOut() declenche SIGNED_OUT, l'application remet user a null, et
+          // cet ecran est REMONTE : l'erreur qu'on vient d'ecrire disparait avec
+          // l'etat du composant, et la fenetre se referme. Un parent qui tentait
+          // la porte des pros voyait donc tout se reinitialiser sans un mot —
+          // apres que l'application avait charge son espace parent une seconde.
+          //
+          // On confie donc la raison au stockage de session, que le remontage
+          // relit. Et on deconnecte APRES, pour que rien ne la precede.
+          try{sessionStorage.setItem("timat:refusRole","Cet espace est réservé aux assistantes maternelles. Pour votre espace parent, connectez-vous via le lien d'invitation envoyé par votre assistante maternelle.");}catch(e){}
+          setLoading(false);
+          await supabase.auth.signOut();
+          return;
+        }
         // Pass minimal user data - auth listener will enrich with profile from DB
         onLogin({
           id: data.user.id,
@@ -7574,7 +7598,34 @@ export default function App(){
           try{if(profil.role)localStorage.setItem("timat:lastRole",profil.role);}catch(e){}
           setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true,_profilePanne:false})); // P16D
         }else{
-          setUser(u=>({...u,_needsProfileFetch:false}));
+          // AUCUNE LIGNE : le compte existe cote authentification, mais son
+          // profil n'a jamais ete ecrit. Cela arrive quand l'enregistrement du
+          // profil echoue a l'inscription — un refus de la base, une coupure
+          // reseau pendant la demi-seconde qui suit la creation du compte.
+          //
+          // Jusqu'ici cette branche ne faisait RIEN : elle marquait le
+          // chargement termine, et l'utilisatrice entrait dans un espace sans
+          // role et sans abonnement, sans que rien ne dise pourquoi. Les deux
+          // ecrans d'inscription prevoyaient bien un message, mais aucun ne
+          // pouvait l'afficher : ils appellent onLogin AVANT d'enregistrer le
+          // profil, et disparaissent donc avant d'avoir de quoi se plaindre.
+          //
+          // On repare ici, une fois pour les deux parcours : on recree le
+          // profil depuis ce que l'authentification sait deja du compte. Si
+          // meme cela echoue, on s'arrete sur l'ecran de panne plutot que de la
+          // laisser croire que son abonnement a saute.
+          const m=user.user_metadata||{};
+          const roleRetrouve=m.role||user.role||(()=>{try{return localStorage.getItem("timat:lastRole");}catch(e){return null;}})()||"asmat";
+          const{data:recree,error:eRecree}=await supabase.from("profiles").upsert({
+            id:user.id,email:user.email,
+            prenom:m.prenom||user.prenom||"Utilisateur",nom:m.nom||user.nom||"",
+            role:roleRetrouve,couleur:COULEUR_ROLE[roleRetrouve]||COULEUR_ROLE.asmat,
+            ...abonnementInitial(roleRetrouve),
+          },{onConflict:"id"}).select("*").maybeSingle();
+          if(cancelled)return;
+          if(eRecree||!recree){ setUser(u=>({...u,_needsProfileFetch:false,_profilePanne:true})); return; }
+          try{localStorage.setItem("timat:lastRole",recree.role);}catch(e){}
+          setUser(u=>({...u,...recree,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true,_profilePanne:false}));
         }
       }catch(e){
         console.log("Profile fetch error:",e.message);
