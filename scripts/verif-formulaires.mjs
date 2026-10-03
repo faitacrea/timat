@@ -240,6 +240,7 @@ let ko = 0, remplis = 0, envois = 0;
 // « aucun formulaire ne casse » sur un defaut que j'y avais mis expres.
 const portee = new Map();
 const inactifs = [];
+const dejaEnvoyes = new Set();
 console.log(`\n=== FORMULAIRES — on saisit puis on envoie (${ESPACE}, ${ECRANS_A_FAIRE().length} écrans) ===\n`);
 
 for (const ecran of ECRANS_A_FAIRE()) {
@@ -275,6 +276,25 @@ for (const ecran of ECRANS_A_FAIRE()) {
       if (!fait) continue;
       await p.waitForTimeout(500);
     }
+
+    // ON LIT LES BOUTONS D'ENVOI AVANT DE REMPLIR.
+    //
+    // Remplir coute cher : c'est lui, et pas les envois, qui faisait durer un
+    // seul ecran sept minutes — 340 champs remplis pour six envois utiles. Si
+    // un chemin n'offre aucun envoi qu'on n'ait pas deja exerce sur cet ecran,
+    // on l'abandonne sans rien saisir.
+    //
+    // Le prix de ce raccourci : un bouton d'envoi qui n'APPARAITRAIT qu'apres
+    // la saisie resterait invisible. Un bouton seulement desactive, lui, est vu
+    // — la lecture ne regarde pas son etat.
+    const envoyeurs = await p.evaluate((d) => {
+      const re = new RegExp(d.source, d.flags), env = new RegExp(d.envoi, "i");
+      return [...document.querySelectorAll("button")]
+        .map((b) => (b.innerText || b.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim())
+        .filter((t) => t && t.length < 50 && !re.test(t) && env.test(t));
+    }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
+    const aFaire = [...new Set(envoyeurs)].filter((t) => !dejaEnvoyes.has(ecran + "|" + t));
+    if (!aFaire.length) continue;
 
     erreurs = [];
     // SAISIE — on remplit tout ce qui est visible, avec de vraies frappes.
@@ -316,15 +336,18 @@ for (const ecran of ECRANS_A_FAIRE()) {
     await remplirTout(true);
     if (muets.length) { ko += muets.length; console.log(`  KO  ${ou}${ouvreur ? " › " + ouvreur : ""}`); muets.forEach((m) => console.log(`        le champ « ${m} » n'accepte pas la frappe : la valeur ne s'inscrit pas`)); }
 
-    // ENVOI — uniquement les boutons qui enregistrent, et un seul par tour.
-    const envoyeurs = await p.evaluate((d) => {
-      const re = new RegExp(d.source, d.flags), env = new RegExp(d.envoi, "i");
-      return [...document.querySelectorAll("button")]
-        .map((b) => (b.innerText || b.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim())
-        .filter((t) => t && t.length < 50 && !re.test(t) && env.test(t));
-    }, { source: DANGEREUX.source, flags: DANGEREUX.flags, envoi: ENVOI.source });
-
-    for (const libelle of [...new Set(envoyeurs)].slice(0, 4)) {
+    for (const libelle of aFaire.slice(0, 4)) {
+      // UN MEME ENVOI NE SE REFAIT PAS DEPUIS TRENTE CHEMINS.
+      //
+      // L'ecran « journee » a produit 243 envois pour huit boutons distincts :
+      // le parcours rejouait « Enregistrer le mot du jour » depuis chaque
+      // combinaison d'onglets et de boutons qui y menait. Cela ne verifie rien
+      // de plus — le meme code s'execute — et cela rendait le tour complet
+      // impossible a finir dans le temps imparti. Un bouton d'envoi est donc
+      // exerce UNE fois par ecran.
+      const empreinte = ecran + "|" + libelle;
+      if (dejaEnvoyes.has(empreinte)) continue;
+      dejaEnvoyes.add(empreinte);
       await remplirTout(false);
       await p.waitForTimeout(250);
       erreurs = [];
