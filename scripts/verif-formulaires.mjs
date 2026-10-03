@@ -23,8 +23,38 @@
 // Rien n'est ecrit nulle part : Supabase est intercepte. Les boutons
 // destructeurs ne sont pas touches.
 //
+// CE QU'IL NE COUVRE PAS ENCORE — a lire avant de se fier a son vert.
+//
+// Mesure du 3 octobre 2026 : 249 champs remplis et 216 envois, mais TOUS sur
+// l'ecran « accueil ». Les huit autres ecrans de la premiere moitie n'ont
+// produit aucun envoi. Le chiffre global (763 champs, 213 envois) donnait donc
+// une impression de couverture que la realite ne porte pas — c'est pour cela
+// que le controle nomme desormais les ecrans ou il n'atteint rien.
+//
+// Deux causes identifiees, aucune encore reparee :
+//
+//   1. L'interception renvoie un tableau vide pour presque toutes les tables.
+//      La messagerie n'a donc aucun echange, la paie aucun bulletin, les
+//      versements aucune ligne : les formulaires qui en dependent ne
+//      s'affichent pas. La section « Versements recus » ne rend rien du tout
+//      dans ce harnais — c'est la que j'avais casse le code pour verifier ce
+//      controle, et c'est pour cela qu'il est passe au vert deux fois sur un
+//      defaut volontaire. Il faut donner au harnais un jeu de donnees
+//      plausible, table par table.
+//
+//   2. Sur la messagerie, le bouton « Envoyer » est trouve mais DESACTIVE au
+//      moment du clic, alors que la saisie dans le textarea a bien pris (aucun
+//      champ muet signale). Un rendu intervient entre la frappe et le clic et
+//      remet l'etat a zero. Il faudra attendre que le bouton s'active plutot
+//      que de cliquer a l'aveugle.
+//
+// Ce qui EST prouve : la barriere attrape bien un defaut place expres. Le
+// handler derriere « Envoyer l'invitation » casse, et les huit envois du
+// parcours le signalent.
+//
 // Hors chaine de build : Vercel n'a pas de navigateur.
-//   node scripts/verif-formulaires.mjs [asmat|parent]
+//   node scripts/verif-formulaires.mjs [asmat|parent] [ecran,ecran...]
+//   TRACE=1 pour lister chaque envoi, donc la portee reelle.
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
