@@ -23,34 +23,32 @@
 // Rien n'est ecrit nulle part : Supabase est intercepte. Les boutons
 // destructeurs ne sont pas touches.
 //
-// CE QU'IL NE COUVRE PAS ENCORE — a lire avant de se fier a son vert.
+// CE QU'IL COUVRE, ET CE QU'IL NE COUVRE PAS — a lire avant de se fier a son vert.
 //
-// Mesure du 3 octobre 2026 : 249 champs remplis et 216 envois, mais TOUS sur
-// l'ecran « accueil ». Les huit autres ecrans de la premiere moitie n'ont
-// produit aucun envoi. Le chiffre global (763 champs, 213 envois) donnait donc
-// une impression de couverture que la realite ne porte pas — c'est pour cela
-// que le controle nomme desormais les ecrans ou il n'atteint rien.
+// Mesure du 3 octobre 2026, espace assistante maternelle. Il atteint et envoie
+// sur : accueil, journee (le mot du jour, les repas, l'humeur), messagerie (la
+// fleche ➤), inviter_parent, sante_urgence (le registre des medicaments),
+// paie_contrats (9 envois distincts, jusqu'a trois niveaux d'onglets),
+// documents_rapports, reprise_contrat.
 //
-// Deux causes identifiees, aucune encore reparee :
+// Il n'atteint rien sur : pointage et autorisations — et c'est normal, ces deux
+// ecrans n'ont aucun champ de saisie, ils se commandent au bouton. C'est le
+// parcours des boutons qui les couvre.
 //
-//   1. L'interception renvoie un tableau vide pour presque toutes les tables.
-//      La messagerie n'a donc aucun echange, la paie aucun bulletin, les
-//      versements aucune ligne : les formulaires qui en dependent ne
-//      s'affichent pas. La section « Versements recus » ne rend rien du tout
-//      dans ce harnais — c'est la que j'avais casse le code pour verifier ce
-//      controle, et c'est pour cela qu'il est passe au vert deux fois sur un
-//      defaut volontaire. Il faut donner au harnais un jeu de donnees
-//      plausible, table par table.
+// LA BARRIERE EST PROUVEE : le handler derriere « Envoyer l'invitation » casse,
+// et le parcours le signale. Elle l'a ete apres huit corrections, dont chacune
+// venait d'un vert mensonger. Elles sont toutes dans l'historique git, et le
+// controle nomme desormais lui-meme, a chaque passage, les ecrans ou il
+// n'atteint rien, les envois qu'il n'arrive pas a classer et les boutons restes
+// eteints : c'est ce qui a rendu ces huit diagnostics possibles.
 //
-//   2. Sur la messagerie, le bouton « Envoyer » est trouve mais DESACTIVE au
-//      moment du clic, alors que la saisie dans le textarea a bien pris (aucun
-//      champ muet signale). Un rendu intervient entre la frappe et le clic et
-//      remet l'etat a zero. Il faudra attendre que le bouton s'active plutot
-//      que de cliquer a l'aveugle.
-//
-// Ce qui EST prouve : la barriere attrape bien un defaut place expres. Le
-// handler derriere « Envoyer l'invitation » casse, et les huit envois du
-// parcours le signalent.
+// UNE QUESTION RESTE OUVERTE, et elle concerne l'application, pas ce controle.
+// La section « Versements recus » n'offre, avec un contrat et un versement en
+// base, que des boutons « Relancer » — aucun formulaire de saisie. La fonction
+// ajouterVersement et son bouton « Enregistrer le versement » existent dans le
+// code (src/gestion.jsx) mais rien, sur cet ecran, ne semble y conduire. A
+// verifier a la main sur un vrai compte : soit un etat particulier les fait
+// apparaitre, soit la saisie d'un versement est devenue inaccessible.
 //
 // Hors chaine de build : Vercel n'a pas de navigateur.
 //   node scripts/verif-formulaires.mjs [asmat|parent] [ecran,ecran...]
