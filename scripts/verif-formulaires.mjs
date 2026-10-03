@@ -31,6 +31,12 @@
 // paie_contrats (9 envois distincts, jusqu'a trois niveaux d'onglets),
 // documents_rapports, reprise_contrat.
 //
+// Espace parent : accueil, journee, pointage, sante_urgence, autorisations,
+// calendrier, messagerie, admin_finances (dont « Soumettre la demande »),
+// documents_complet, faq. Les simulateurs sont exempts : ils calculent au fil
+// de la frappe, sans bouton, et ont leurs propres controles
+// (verif-outils-publics.mjs, verif-calculs-identiques.mjs).
+//
 // Il n'atteint rien sur : pointage et autorisations — et c'est normal, ces deux
 // ecrans n'ont aucun champ de saisie, ils se commandent au bouton. C'est le
 // parcours des boutons qui les couvre.
@@ -98,7 +104,7 @@ const DANGEREUX = /supprim|effac|r[ée]sili|d[ée]connex|se d[ée]connecter|paye
 // marche pas : c'est pour cela que le controle signale desormais les
 // formulaires qu'il n'arrive PAS a classer (plusieurs champs, aucun envoi
 // reconnu). C'est lui qui dit ou la liste est encore trop courte.
-const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|inscrire|transmettre|signer|d[ée]clarer|marquer|importer|t[ée]l[ée]verser|noter|^(?:➤|✓|✔|💾|📧)$/i;
+const ENVOI = /enregistr|valider|ajouter|cr[ée]er|envoyer|g[ée]n[ée]rer|calculer|inviter|confirmer|appliquer|sauvegarder|publier|simuler|rechercher|continuer|terminer|inscrire|transmettre|signer|d[ée]clarer|marquer|importer|t[ée]l[ée]verser|noter|soumettre|^(?:➤|✓|✔|💾|📧)$/i;
 const CODE_MANQUANT = /is not defined|is not a function|cannot read propert|undefined is not|null is not an object/i;
 
 const estParent = ESPACE === "parent";
@@ -337,7 +343,13 @@ for (const ecran of ECRANS_A_FAIRE()) {
       // ci-dessus, soit un formulaire qu'on ne peut pas envoyer. Dans les deux
       // cas le controle ne le traverse pas, et il doit le dire plutot que de se
       // taire.
-      if (!envoyeurs.length) {
+      // LES SIMULATEURS N'ONT PAS DE BOUTON, ET C'EST VOULU : ils calculent au
+      // fil de la frappe. Les signaler comme « non classes » a chaque passage
+      // noierait les vrais manques. Ils ont leurs propres controles :
+      // verif-outils-publics.mjs les pilote champ par champ, et
+      // verif-calculs-identiques.mjs compare leurs resultats a ceux des
+      // fonctions de l'application.
+      if (!envoyeurs.length && !/aides_simulateurs/.test(ecran)) {
         const n = await p.evaluate(() => [...document.querySelectorAll("input,textarea,select")]
           .filter((c) => !c.disabled && !c.readOnly && c.offsetParent !== null && !["hidden","submit","button","file","checkbox","radio"].includes(c.type)).length);
         if (n >= 3) {
