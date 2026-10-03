@@ -42,6 +42,15 @@
 // n'atteint rien, les envois qu'il n'arrive pas a classer et les boutons restes
 // eteints : c'est ce qui a rendu ces huit diagnostics possibles.
 //
+// LES FORMULAIRES A SIGNATURE RESTENT HORS D'ATTEINTE. Les autorisations et la
+// signature du contrat passent par un pave de signature dont le bouton
+// « Enregistrer » est disabled={!hasDrawn}. On trace bien un trait a la souris
+// sur le canvas — cela debloque « Répondre et signer » — mais hasDrawn ne
+// bascule pas, et le bouton reste eteint. Le controle le signale a chaque
+// passage sous « boutons restes eteints » : c'est une limite connue, PAS un
+// defaut de l'application. Ce bouton doit rester eteint tant que rien n'est
+// signe ; c'est le trait synthetique qui n'est pas reconnu.
+//
 // UNE QUESTION RESTE OUVERTE, et elle concerne l'application, pas ce controle.
 // La section « Versements recus » n'offre, avec un contrat et un versement en
 // base, que des boutons « Relancer » — aucun formulaire de saisie. La fonction
@@ -352,6 +361,33 @@ for (const ecran of ECRANS_A_FAIRE()) {
         .map((c, i) => { c.setAttribute("data-verif", String(i)); return { i, type: c.type || c.tagName.toLowerCase(), balise: c.tagName.toLowerCase(), indice: lire(c) }; });
     }, INDICE); };
     await reperer();
+
+    // ON SIGNE.
+    //
+    // Les autorisations et la signature du contrat passent par un pave de
+    // signature : son bouton « Enregistrer » est disabled={!hasDrawn}, et aucune
+    // frappe au clavier ne le reveille. Le controle les signalait donc comme
+    // « boutons restes eteints » — une fausse alerte, et surtout une famille
+    // entiere de formulaires hors d'atteinte, justement ceux qui ont une valeur
+    // juridique. On trace un trait a la souris sur chaque canvas visible.
+    const canvas = p.locator("canvas").first();
+    if (await canvas.isVisible().catch(() => false)) {
+      // Les coordonnees de la souris sont celles de la FENETRE, pas de la page :
+      // a 390 px de large, le pave est souvent sous la ligne de flottaison et le
+      // trait tombait a cote.
+      await canvas.scrollIntoViewIfNeeded().catch(() => {});
+      await p.waitForTimeout(250);
+      const b = await canvas.boundingBox().catch(() => null);
+      if (b && b.width > 20 && b.height > 20) {
+        await p.mouse.move(b.x + b.width * 0.25, b.y + b.height * 0.5);
+        await p.mouse.down();
+        await p.mouse.move(b.x + b.width * 0.5, b.y + b.height * 0.35, { steps: 8 });
+        await p.mouse.move(b.x + b.width * 0.75, b.y + b.height * 0.6, { steps: 8 });
+        await p.mouse.up();
+        await p.waitForTimeout(400);
+        await reperer();
+      }
+    }
     if (!champs.length) continue;
 
     const muets = [];
