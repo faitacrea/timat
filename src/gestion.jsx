@@ -1723,11 +1723,43 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
       setToast("Relance envoyée au parent ✓");
     }catch(e){setToast("Erreur lors de la relance");}
   };
+  // TROIS DEFAUTS TENAIENT DANS CES QUATRE LIGNES.
+  //
+  // 1. La periode etait remplie avec le LIBELLE (« Juillet 2026 ») alors que la
+  //    liste deroulante ne connait que des CLES (« 2026-07 »). Aucune option ne
+  //    correspondait : le champ retombait sur « — », juste apres qu'on avait
+  //    cliqué sur le mois voulu. Et si le parent ne le voyait pas, le versement
+  //    etait enregistre avec une periode au mauvais format, differente de toutes
+  //    les autres lignes.
+  //
+  // 2. La date etait mise a AUJOURD'HUI, quel que soit le mois choisi. Or le
+  //    rapprochement groupe les versements par le mois de leur DATE : enregistrer
+  //    en octobre un versement de juillet le comptait en octobre, et juillet
+  //    restait marque impaye pour toujours. Un parent a jour pouvait donc etre
+  //    relance pour un mois qu'il avait paye. On prend desormais le dernier jour
+  //    du mois concerne quand il est passe — une date plausible, dans le bon
+  //    mois, et que le parent corrige en un geste puisque le champ est devant
+  //    lui.
+  //
+  // 3. Le formulaire s'ouvre SOUS le tableau de suivi. Sur un telephone, la liste
+  //    des mois fait plusieurs ecrans : on appuyait sur « + Enregistrer » et il
+  //    ne se passait rien de visible. Il s'ouvrait pourtant, hors de vue. On
+  //    l'amene maintenant sous les yeux.
+  const formRef=useRef(null);
   const prefillVersement=(m)=>{
-    setFPeriode(m.label);
+    setFPeriode(m.key);
     setFMontant(String(m.ecart>1?m.ecart:m.du));
-    setFDate(todayStr);
+    const [an,mo]=String(m.key).split("-").map(Number);
+    const finDuMois=isoJour(new Date(an,mo,0));
+    setFDate(finDuMois<todayStr?finDuMois:todayStr);
     setShowForm(true);
+    // Apres le rendu : le formulaire n'existe pas encore au moment du clic.
+    setTimeout(()=>{
+      try{
+        formRef.current?.scrollIntoView({behavior:"smooth",block:"center"});
+        formRef.current?.querySelector("input")?.focus({preventScroll:true});
+      }catch(e){/* navigateur sans scrollIntoView lisse : le formulaire est la quand meme */}
+    },60);
   };
 
   // Charger les versements de l'enfant selectionne
@@ -1874,7 +1906,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
           </div>}
 
           {/* Formulaire de saisie */}
-          {role==="parent"&&showForm&&<div className="card"style={{marginBottom:14}}>
+          {role==="parent"&&showForm&&<div ref={formRef} className="card"style={{marginBottom:14}}>
             <div style={{fontWeight:800,fontSize:14,color:"var(--b)",marginBottom:14}}>Nouveau versement</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
               <div>
