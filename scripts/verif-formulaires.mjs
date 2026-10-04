@@ -48,14 +48,15 @@
 // n'atteint rien, les envois qu'il n'arrive pas a classer et les boutons restes
 // eteints : c'est ce qui a rendu ces huit diagnostics possibles.
 //
-// LES FORMULAIRES A SIGNATURE RESTENT HORS D'ATTEINTE. Les autorisations et la
-// signature du contrat passent par un pave de signature dont le bouton
-// « Enregistrer » est disabled={!hasDrawn}. On trace bien un trait a la souris
-// sur le canvas — cela debloque « Répondre et signer » — mais hasDrawn ne
-// bascule pas, et le bouton reste eteint. Le controle le signale a chaque
-// passage sous « boutons restes eteints » : c'est une limite connue, PAS un
-// defaut de l'application. Ce bouton doit rester eteint tant que rien n'est
-// signe ; c'est le trait synthetique qui n'est pas reconnu.
+// LES FORMULAIRES A SIGNATURE : CE QUE J'AI ECRIT ICI ETAIT FAUX.
+//
+// J'avais conclu que le pave de signature ne pouvait pas etre pilote, et je
+// l'avais consigne comme une limite connue. C'etait mon erreur : ce controle
+// prenait le PREMIER canvas de la page, qui n'est pas celui du pave. Avec le
+// bon — 600x200, la taille fixee dans SignaturePad — le trait s'inscrit,
+// « Enregistrer » s'allume, et la reponse part signee.
+// scripts/verif-signature.mjs le prouve, et le prouve a l'envers : en
+// supprimant le setHasDrawn ou le stroke, il repasse au rouge.
 //
 // UNE QUESTION RESTE OUVERTE, et elle concerne l'application, pas ce controle.
 // La section « Versements recus » n'offre, avec un contrat et un versement en
@@ -388,7 +389,17 @@ for (const ecran of ECRANS_A_FAIRE()) {
     // « boutons restes eteints » — une fausse alerte, et surtout une famille
     // entiere de formulaires hors d'atteinte, justement ceux qui ont une valeur
     // juridique. On trace un trait a la souris sur chaque canvas visible.
-    const canvas = p.locator("canvas").first();
+    // LE CANVAS DU PAVÉ, PAS LE PREMIER VENU. On le reconnaît à sa taille
+    // interne, 600×200, fixée dans SignaturePad. Prendre le premier canvas de
+    // la page m'a fait conclure pendant deux essais que la signature ne prenait
+    // pas à la souris — c'était faux, et scripts/verif-signature.mjs le prouve.
+    await p.evaluate(() => {
+      document.querySelectorAll('canvas[data-pad]').forEach((c) => c.removeAttribute("data-pad"));
+      const l = [...document.querySelectorAll("canvas")];
+      const pad = l.find((c) => c.width === 600 && c.height === 200);
+      if (pad) pad.setAttribute("data-pad", "1");
+    });
+    const canvas = p.locator('canvas[data-pad="1"]').first();
     if (await canvas.isVisible().catch(() => false)) {
       // Les coordonnees de la souris sont celles de la FENETRE, pas de la page :
       // a 390 px de large, le pave est souvent sous la ligne de flottaison et le
@@ -464,7 +475,23 @@ for (const ecran of ECRANS_A_FAIRE()) {
       // sont remplis : on le compte et on le nomme. Ce n'est pas toujours un
       // defaut (certains attendent une selection ailleurs), mais c'est toujours
       // un endroit que ce controle ne traverse pas.
-      if (fait === "inactif") { inactifs.push(`${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle}`); continue; }
+      if (fait === "inactif") {
+        // UN BOUTON DE PAVÉ DE SIGNATURE N'EST PAS UNE ALERTE. Celui-ci reste
+        // éteint tant que rien n'est signé, et c'est exactement ce qu'il doit
+        // faire. Le parcours ne signe pas toujours — le pavé n'est ouvert que
+        // sur certains chemins — et il criait alors au loup sur un écran sain.
+        // Le geste de signer est vérifié ailleurs, par
+        // scripts/verif-signature.mjs, qui le prouve dans les deux sens.
+        const dansUnPave = await p.evaluate((t) => {
+          const b = [...document.querySelectorAll("button")].find((x) => ((x.innerText || "").replace(/\s+/g, " ").trim()) === t);
+          if (!b) return false;
+          let n = b.parentElement;
+          for (let k = 0; k < 4 && n; k++) { if (n.querySelector("canvas")) return true; n = n.parentElement; }
+          return false;
+        }, libelle);
+        if (!dansUnPave) inactifs.push(`${ou}${ouvreur ? " › " + ouvreur : ""} › ${libelle}`);
+        continue;
+      }
       await p.waitForTimeout(700);
 
       // UN CLIC QUI FAIT APPARAITRE DES CHAMPS EST UN OUVREUR, QUEL QUE SOIT
