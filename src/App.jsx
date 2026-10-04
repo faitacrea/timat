@@ -7903,9 +7903,22 @@ export default function App(){
 
   if(_isBO){
     const _onLoginBO=u=>{ setUser({...u,_needsProfileFetch:true,_profileConfirmed:false}); };
-    return <><Styles/><Suspense fallback={<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--m)",fontFamily:"'DM Sans',sans-serif",fontSize:14}}>Chargement du back-office…</div>}>
+    // LE BACK-OFFICE ETAIT HORS DU FILET.
+    //
+    // Tous les ecrans de l'application sont enveloppes dans FiletEcrans : si
+    // l'un tombe, il affiche « cet ecran n'a pas pu s'ouvrir » et le reste
+    // continue. Le back-office, lui, etait monte dans un simple Suspense. Une
+    // seule de ses sections qui leve — et il a suffi d'une reponse d'API a
+    // laquelle il manquait un champ pour que la section SEO leve « Cannot read
+    // properties of undefined » — demontait TOUT l'arbre : page entierement
+    // blanche, aucun message, et plus rien de cliquable. La seule issue etait
+    // de recharger, ce que rien n'indique.
+    //
+    // Le meme filet l'enveloppe desormais : une section en panne reste une
+    // section en panne.
+    return <><Styles/><FiletEcrans><Suspense fallback={<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--m)",fontFamily:"'DM Sans',sans-serif",fontSize:14}}>Chargement du back-office…</div>}>
       <BackofficePage user={user} appConfig={appConfig} setAppConfig={setAppConfig} onLogin={_onLoginBO}/>
-    </Suspense></>;
+    </Suspense></FiletEcrans></>;
   }
 
   // - Utiliser données réelles

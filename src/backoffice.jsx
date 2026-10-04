@@ -1407,14 +1407,16 @@ function SeoAudit(){
     <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Audit de tes propres pages : titres, meta description, H1/H2, Open Graph, liens morts et contenu lisible par les robots. Relançable à tout moment.</div>
     <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:13,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
     {err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}</div>}
-    {history&&history.ok&&history.history.length>0&&<div className="bo-card" style={{marginBottom:16}}>
+    {/* Une reponse a laquelle il manque « history » ne doit pas faire tomber
+        l'ecran : on lit prudemment ce qui vient du reseau. */}
+    {history?.ok&&history.history?.length>0&&<div className="bo-card" style={{marginBottom:16}}>
       <h3>Historique des audits</h3>
       <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:8}}>
         {history.history.map((h,i)=>{
-          const prev=history.history[i+1];
+          const prev=history.history?.[i+1];
           const dDead=prev?h.dead-prev.dead:null;
           const dWarn=prev?h.with_warn-prev.with_warn:null;
-          return <div key={h.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12.5,padding:"7px 0",borderBottom:i<history.history.length-1?"1px solid #F2ECF0":"none"}}>
+          return <div key={h.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12.5,padding:"7px 0",borderBottom:i<(history.history?.length||0)-1?"1px solid #F2ECF0":"none"}}>
             <span style={{color:"#6B4F5A"}}>{new Date(h.created_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
             <span style={{display:"flex",gap:12}}>
               <span style={{color:h.dead>0?"#C84B31":"#1F8A5B",fontWeight:700}}>{h.dead} mort{h.dead>1?"s":""}{dDead?(dDead>0?" ▲":" ▼"):""}</span>
