@@ -1,3 +1,3 @@
 // Ecrit par scripts/generate-blog.mjs a chaque build. Ne pas modifier a la main.
-export const NOMBRE_GUIDES = 63;
+export const NOMBRE_GUIDES = 64;
 export default NOMBRE_GUIDES;

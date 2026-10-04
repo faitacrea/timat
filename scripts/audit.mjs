@@ -1049,10 +1049,26 @@ for (const u of fichiersAppSrc()) {
       "seoTitre": length(seoTitre), "seoDescription": length(seoDescription)
     }
   }`;
+  // LES BROUILLONS N'ETAIENT PAS LUS DU TOUT.
+  //
+  // L'API publique de Sanity ne renvoie que le PUBLIE. Les deux controles qui
+  // portent sur les brouillons — couverture manquante, champ trop long —
+  // interrogeaient donc le vide : la reponse valait zero quoi qu'il arrive, et
+  // l'audit annoncait « aucune anomalie » sans avoir rien regarde. Quinze
+  // articles ecrits, en attente de publication, n'etaient controles par
+  // personne.
+  //
+  // Il faut un jeton de lecture, et surtout il faut le DIRE quand il manque :
+  // un controle qui ne peut pas s'executer doit se taire bruyamment, pas
+  // passer au vert.
+  const jeton = process.env.SANITY_WRITE_TOKEN || process.env.SANITY_READ_TOKEN || "";
+  if (!jeton) {
+    console.log("  (brouillons du blog : NON VÉRIFIÉS, SANITY_WRITE_TOKEN absent)");
+  }
   try {
     const r = await fetch(
-      `https://${PROJET}.api.sanity.io/v2024-01-01/data/query/${JEU}?query=${encodeURIComponent(groq)}`,
-      { signal: AbortSignal.timeout(8000) }
+      `https://${PROJET}.api.sanity.io/v2024-01-01/data/query/${JEU}?perspective=raw&query=${encodeURIComponent(groq)}`,
+      { signal: AbortSignal.timeout(8000), headers: jeton ? { Authorization: "Bearer " + jeton } : {} }
     );
     if (!r.ok) throw new Error("HTTP " + r.status);
     const { result } = await r.json();
@@ -3609,24 +3625,68 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
 {
   const ABROGEES = [
     // On ne cherche pas la MENTION de la regle abrogee — l'expliquer est utile —
-    // mais la mention qui ne dit pas qu'elle ne s'applique plus. D'ou la
-    // negation : la phrase doit contenir « supprime », « remplace », « avant la
-    // reforme » ou equivalent dans les 160 caracteres qui suivent.
-    [/5\s*(?:fois|x)\s*(?:le\s*)?SMIC\s*horaires?\s*(?:par\s*jour|journalier)(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))/i,
+    // mais la mention qui ne dit pas qu'elle ne s'applique plus.
+    //
+    // LA MISE AU POINT N'EST PAS TOUJOURS APRES. Premiere version, elle ne
+    // regardait que les caracteres qui SUIVENT, et sur la meme phrase : elle a
+    // donc accuse trois articles parfaitement justes, qui disent « deux regles
+    // qui n'existent plus », « ce systeme a disparu » et « il n'y a plus de
+    // reste a charge minimum de 15 % » — les deux derniers AVANT ou APRES un
+    // point. On regarde desormais tout autour, des deux cotes, sans s'arreter a
+    // la ponctuation.
+    [/5\s*(?:fois|x)\s*(?:le\s*)?SMIC\s*horaires?\s*(?:par\s*jour|journalier)/i,
       "le plafond journalier de 5 SMIC horaires est présenté comme en vigueur : il a été supprimé par la réforme du CMG de septembre 2025"],
-    [/plafond journalier(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))[^.]{0,80}CMG/i,
+    [/plafond journalier[^.]{0,80}CMG/i,
       "le CMG n'a plus de plafond journalier depuis septembre 2025, mais un plafond horaire de 8,09 EUR"],
-    [/reste à charge minimum de 15\s*%(?![^.]{0,120}(?:supprim|dispar|n'existe plus|aboli))/i, "le reste à charge minimum de 15 % a été supprimé en septembre 2025"],
+    [/reste à charge minimum de 15\s*%/i, "le reste à charge minimum de 15 % a été supprimé en septembre 2025"],
   ];
+  // Les mots qui disent qu'une regle ne s'applique plus. Cherches DE PART ET
+  // D'AUTRE de la mention, ponctuation comprise.
+  const MISE_AU_POINT = /supprim|dispar|n'existe plus|n'existent plus|n'y a plus|aboli|remplac|avant la réforme|jusqu'en|ancien|périmé|ne s'applique plus/i;
+  const FENETRE = 260;
+  // L'APOSTROPHE ECHAPPEE. Dans le HTML genere, « n'y a plus » s'ecrit
+  // « n&#39;y a plus » : la mise au point etait bien la, et la barriere ne la
+  // voyait pas. Elle a donc accuse un article juste — deux fois la meme phrase,
+  // une fois en clair dans les donnees structurees et une fois echappee dans le
+  // texte, et seule la seconde passait au rouge.
+  const normalise = (t) => t.replace(/&#0*39;|&apos;|&rsquo;|’/g, "'").replace(/&#0*34;|&quot;/g, '"').replace(/&amp;/g, "&");
+  // LE BLOG AUSSI. Cette barriere ne lisait que la racine de public/ : les
+  // soixante-trois articles, qui vivent dans public/blog/<slug>/index.html,
+  // n'etaient relus par personne. Ce sont pourtant eux qui expliquent les
+  // regles en detail, donc eux qui risquent le plus de porter une regle
+  // abrogee — et eux qu'un lecteur trouve par une recherche.
+  const pagesBlog = [];
+  {
+    const racine = new URL("../public/blog/", import.meta.url);
+    const empiler = (dossier, prefixe) => {
+      let entrees = [];
+      try { entrees = readdirSync(dossier, { withFileTypes: true }); } catch (e) { return; }
+      for (const e of entrees) {
+        if (e.isDirectory()) empiler(new URL(e.name + "/", dossier), prefixe + e.name + "/");
+        else if (e.name === "index.html") {
+          try { pagesBlog.push([prefixe + "index.html", readFileSync(new URL(e.name, dossier), "utf8")]); } catch (err) { /* page illisible : signalee ailleurs */ }
+        }
+      }
+    };
+    empiler(racine, "public/blog/");
+  }
   const aLire = [
     ["src/App.jsx", appSrc],
     ...readdirSync(new URL("../public/", import.meta.url))
       .filter((f) => f.endsWith(".html"))
       .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+    ...pagesBlog,
   ];
   for (const [nom, contenu] of aLire)
-    for (const [re, msg] of ABROGEES)
-      if (re.test(contenu)) signale("règles abrogées", `${nom} : ${msg}`);
+    for (const [re, msg] of ABROGEES) {
+      const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+      let m, enDefaut = false;
+      while ((m = g.exec(contenu)) !== null) {
+        const autour = contenu.slice(Math.max(0, m.index - FENETRE), m.index + m[0].length + FENETRE);
+        if (!MISE_AU_POINT.test(normalise(autour))) { enDefaut = true; break; }
+      }
+      if (enDefaut) signale("règles abrogées", `${nom} : ${msg}`);
+    }
 }
 
 // --- une seule adresse de contact dans les pages legales ---
