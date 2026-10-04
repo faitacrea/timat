@@ -40,8 +40,16 @@ verifie("le délai avant rappel est de 3 jours, comme annoncé au parent",
 verifie("le nombre de lignes traitées par passage est borné", /\.limit\(200\)/.test(src));
 
 console.log("\n=== LA PROMESSE FAITE AU PARENT EST LA MÊME ===");
-const app = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
-const promesse = /rappel automatique sera envoye sous (\d+) jours/.exec(app);
+// ON LIT LE COURRIEL QUI PART, PAS UNE COPIE.
+//
+// Ce test lisait src/App.jsx, ou vivait un SECOND jeu de gabarits qui ne
+// servait qu'a fournir les lignes d'objet : son corps n'etait jamais envoye.
+// La phrase surveillee etait donc dans du code mort — et elle y avait d'ailleurs
+// perdu son accent (« envoye »), ce que personne ne pouvait voir puisque le
+// parent recevait l'autre. Le gabarit reellement envoye vit dans
+// api/send-email.js.
+const courriels = readFileSync(new URL("../api/send-email.js", import.meta.url), "utf8");
+const promesse = /rappel automatique sera envoyé sous (\d+) jours/.exec(courriels);
 verifie("le courriel annonce bien un délai", !!promesse);
 verifie("et ce délai est celui que la tâche applique",
   !!promesse && promesse[1] === (/JOURS_AVANT_RAPPEL\s*=\s*(\d+)/.exec(src) || [])[1]);

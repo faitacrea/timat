@@ -8,13 +8,13 @@ export const config = {
   runtime: 'edge',
 };
 
-const EMAIL_TEMPLATES = {
+export const EMAIL_TEMPLATES = {
   signature_asmat_signed: {
     subject: "Votre assistante maternelle a signé le contrat",
     html: (v) => `<h2>Bonjour ${esc(v.parent_prenom)},</h2>
 <p>${esc(v.asmat_prenom)} vient de signer électroniquement le contrat de ${esc(v.enfant_prenom)}.</p>
 <p>Connectez-vous à TiMat pour le signer à votre tour :</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Signer le contrat</a></p>`,
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Signer le contrat</a></p>`,
   },
   signature_parent_signed: {
     subject: "Le parent a signé le contrat",
@@ -38,7 +38,7 @@ const EMAIL_TEMPLATES = {
 <p>Vous ne vous êtes pas connectée à TiMat depuis <strong>deux ans</strong>. Nous vous le signalons parce que la CNIL le recommande, et parce que c'est normal de savoir ce qu'un service garde de vous.</p>
 <p><strong>Vos données sont toujours là</strong> : vos dossiers d'enfants, vos pointages, vos contrats et vos bulletins n'ont pas été touchés. Nous ne les supprimons pas de notre propre initiative — ce sont vos justificatifs, et vous seule savez quand ils ne vous servent plus.</p>
 <p>Une seule connexion suffit à remettre le compte en activité :</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Me reconnecter</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Me reconnecter</a></p>
 <p style="color:#55707C;font-size:14px">Si vous préférez que tout soit effacé, écrivez-nous : la suppression est faite, et nous vous envoyons une attestation écrite si vous la demandez.</p>`,
   },
   essai_rappel_7: {
@@ -46,7 +46,7 @@ const EMAIL_TEMPLATES = {
     html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
 <p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>, dans ${esc(v.jours)} jours.</p>
 <p>Vous n'avez rien à faire tout de suite, et aucune carte bancaire ne vous a été demandée. Si vous souhaitez continuer, vous pourrez le faire d'un clic depuis votre espace.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir TiMat</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir TiMat</a></p>
 <p style="color:#55707C;font-size:14px">Si vous ne continuez pas, votre compte repasse simplement en formule gratuite. Vos enfants, vos pointages et vos documents restent là où ils sont.</p>`,
   },
   essai_rappel_3: {
@@ -54,13 +54,13 @@ const EMAIL_TEMPLATES = {
     html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
 <p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>.</p>
 <p>Pour garder les bulletins de salaire, le récapitulatif Pajemploi et les contrats illimités, continuez avec TiMat à 9,99 € par mois — sans engagement, résiliable en un clic.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Continuer avec TiMat</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Continuer avec TiMat</a></p>
 <p style="color:#55707C;font-size:14px">Si vous ne faites rien, votre compte repasse en formule gratuite. <strong>Rien n'est supprimé</strong> : vos enfants, vos pointages et vos documents vous attendent, et reprendre l'abonnement rouvre exactement le dossier que vous aviez laissé.</p>`,
   },
   signature_reminder: {
     subject: "Rappel : signature de contrat en attente",
     html: (v) => `<p>Le contrat de ${esc(v.enfant_prenom)} attend votre signature depuis le ${esc(v.date)}.</p>
-<p><a href="${esc(v.url)}">Signer maintenant</a></p>`,
+<p><a href="${lien(v.url)}">Signer maintenant</a></p>`,
   },
   bulletin_sent: {
     subject: "Votre bulletin de salaire est disponible",
@@ -72,7 +72,7 @@ const EMAIL_TEMPLATES = {
     html: (v) => `<h2>Bonjour ${esc(v.parent_prenom)},</h2>
 <p>${esc(v.asmat_prenom)} vous invite à rejoindre TiMat pour suivre ${esc(v.enfant_prenom)}.</p>
 <p>Votre espace parent est <strong>entièrement gratuit</strong> : vous y suivrez la journée de ${esc(v.enfant_prenom)} (repas, sieste, activités, photos privées), les heures de présence, vos documents et votre déclaration Pajemploi.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Créer mon espace parent</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Créer mon espace parent</a></p>
 <div style="background:#FDFBF8;border:1px solid #EDE6DE;border-radius:10px;padding:14px 16px;margin:22px 0">
   <p style="margin:0 0 8px;font-size:14px;color:#2E4859"><strong>À quoi sert votre espace parent ?</strong></p>
   <p style="margin:0;font-size:13px;color:#6B7A82;line-height:1.6">Découvrez en images tout ce que vous pourrez y faire, et comprenez le coût réel de la garde (CMG, crédit d'impôt) :<br/>
@@ -86,13 +86,13 @@ const EMAIL_TEMPLATES = {
 <p>L'assistante maternelle a enregistré le pointage de ${esc(v.enfant_prenom)} du ${esc(v.date)}.</p>
 <p>Durée d'accueil : <strong>${esc(v.duree)}</strong></p>
 <p>Merci de valider ce pointage dans votre application :</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Valider le pointage</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Valider le pointage</a></p>
 <p style="font-size:11px;color:#888;margin-top:24px">Si vous oubliez, un rappel automatique sera envoyé sous 3 jours.</p>`,
   }, pointage_rappel: {
     subject: "Rappel : pointage en attente de validation depuis 3 jours",
     html: (v) => `<p>Bonjour ${esc(v.parent_prenom)},</p>
 <p>Un pointage de ${esc(v.enfant_prenom)} est en attente de votre validation depuis le ${esc(v.date)}.</p>
-<p><a href="${esc(v.url)}">Valider maintenant</a></p>`,
+<p><a href="${lien(v.url)}">Valider maintenant</a></p>`,
   },
   versement_recu: {
     subject: "Nouveau versement enregistré sur TiMat",
@@ -101,6 +101,21 @@ const EMAIL_TEMPLATES = {
 <p>Retrouvez le détail dans l'onglet Versements de votre espace TiMat.</p>`,
   },
 };
+
+// UN BOUTON DE COURRIEL NE PEUT PAS POINTER VERS LE VIDE.
+//
+// Les gabarits ecrivaient href="${esc(v.url)}". Quand l'appel oublie « url » —
+// un parametre mal passe, une donnee manquante — esc rend la chaine vide, et le
+// courriel part avec un bouton qui ne mene nulle part. La destinataire clique,
+// il ne se passe rien, et elle n'ecrira pas pour le dire.
+//
+// A defaut d'adresse precise, le bouton ramene a l'application. C'est toujours
+// mieux que rien, et c'est vrai.
+const SITE = "https://www.timat.app";
+function lien(u) {
+  const v = String(u ?? "").trim();
+  return esc(/^https:\/\//i.test(v) ? v : SITE);
+}
 
 function esc(s) {
   if (s === null || s === undefined) return '';

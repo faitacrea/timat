@@ -18,7 +18,7 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EMAIL_TEMPLATES, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
 , logAction
 } from "./App.jsx";
 import {
@@ -397,8 +397,7 @@ export function Contrats({enfants,role,pEId,user}){
             sendNotificationEmail({
               type:"signature_asmat_signed",
               to:p.email,
-              subject:EMAIL_TEMPLATES.signature_asmat_signed.subject,
-              template:"signature_asmat_signed",
+template:"signature_asmat_signed",
               vars:{
                 parent_prenom:p.prenom||"",
                 asmat_prenom:user?.prenom||"Votre assistante maternelle",
@@ -1101,8 +1100,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
             sendNotificationEmail({
               type:"bulletin_sent",
               to:p.email,
-              subject:EMAIL_TEMPLATES.bulletin_sent.subject,
-              template:"bulletin_sent",
+template:"bulletin_sent",
               vars:{parent_prenom:p.prenom||"",mois:moisSel},
             });
           }
@@ -1805,7 +1803,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
         if(d?.email){
           sendNotificationEmail({
             type:"versement_recu",to:d.email,
-            subject:EMAIL_TEMPLATES.versement_recu.subject,template:"versement_recu",
+template:"versement_recu",
             vars:{prenom:d.prenom||"",enfant_prenom:enfant?.prenom||"",montant:fmtEur(montant),date:fmtDate(fDate),qui:(role==="parent"?(user?.prenom||"Un parent"):"Votre assistante maternelle")},
           });
         }
@@ -2454,8 +2452,7 @@ export function SignatureContratParent({enfants,pEId,user}){
           sendNotificationEmail({
             type:"signature_parent_signed",
             to:a.email,
-            subject:EMAIL_TEMPLATES.signature_parent_signed.subject,
-            template:"signature_parent_signed",
+template:"signature_parent_signed",
             vars:{
               asmat_prenom:a.prenom||"",
               parent_prenom:user?.prenom||"",

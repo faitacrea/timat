@@ -436,63 +436,16 @@ async function envoyerPush({userId,titre,corps,url,tag}){
 }
 
 
-// EMAILS TEMPLATES P13 - templates pretes a brancher (HTML simple, surchargeable depuis backoffice)
-export const EMAIL_TEMPLATES={
-  signature_asmat_signed:{
-    subject:"Votre assistante maternelle a signe le contrat",
-    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
-      +"<p>"+H(v.asmat_prenom)+" vient de signer electroniquement le contrat de "+H(v.enfant_prenom)+".</p>"
-      +"<p>Connectez-vous a TiMat pour le signer a votre tour :</p>"
-      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
-  },
-  signature_parent_signed:{
-    subject:"Le parent a signe le contrat",
-    html:(v)=>"<h2>Bonjour "+H(v.asmat_prenom)+",</h2>"
-      +"<p>"+H(v.parent_prenom)+" "+H(v.parent_nom)+" vient de signer le contrat de "+H(v.enfant_prenom)+".</p>"
-      +"<p>Le contrat est finalise et archive dans vos documents.</p>",
-  },
-  signature_reminder:{
-    subject:"Rappel : signature de contrat en attente",
-    html:(v)=>"<p>Le contrat de "+H(v.enfant_prenom)+" attend votre signature depuis le "+v.date+".</p>"
-      +"<p><a href='"+H(v.url)+"'>Signer maintenant</a></p>",
-  },
-  bulletin_sent:{
-    subject:"Votre bulletin de salaire est disponible",
-    html:(v)=>"<p>Bonjour "+H(v.parent_prenom)+",</p>"
-      +"<p>Le bulletin de salaire pour "+v.mois+" est disponible dans votre espace TiMat.</p>",
-  },
-  invitation_parent:{
-    subject:"Invitation : votre assistante maternelle vous invite sur TiMat",
-    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
-      +"<p>"+H(v.asmat_prenom)+" vous invite a rejoindre TiMat pour suivre "+H(v.enfant_prenom)+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
-      +"<p>C'est 100% gratuit pour vous, sans carte bancaire.</p>"
-      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
-      +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://www.timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
-  },
-  // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
-  pointage_a_valider:{
-    subject:"Un pointage attend votre validation",
-    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
-      +"<p>L'assistante maternelle a enregistre le pointage de "+H(v.enfant_prenom)+" du "+v.date+".</p>"
-      +"<p>Duree d'accueil : <strong>"+v.duree+"</strong></p>"
-      +"<p>Merci de valider ce pointage dans votre application :</p>"
-      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
-      +"<p style='font-size:11px;color:#888;margin-top:24px'>Si vous oubliez, un rappel automatique sera envoye sous 3 jours.</p>",
-  },
-  pointage_rappel:{
-    subject:"Rappel : pointage en attente de validation depuis 3 jours",
-    html:(v)=>"<p>Bonjour "+H(v.parent_prenom)+",</p>"
-      +"<p>Un pointage de "+H(v.enfant_prenom)+" est en attente de votre validation depuis le "+v.date+".</p>"
-      +"<p><a href='"+H(v.url)+"'>Valider maintenant</a></p>",
-  },
-  // VERSEMENTS P34 - notification d'un versement enregistre (parent->assmat ou assmat->parent)
-  versement_recu:{
-    subject:"Nouveau versement enregistre sur TiMat",
-    html:(v)=>"<h2>Bonjour "+H(v.prenom)+",</h2>"
-      +"<p>"+H(v.qui)+" a enregistre un versement de <strong>"+v.montant+"</strong>"+(v.enfant_prenom?(" pour "+v.enfant_prenom):"")+" le "+v.date+".</p>"
-      +"<p>Retrouvez le detail dans l'onglet Versements de votre espace TiMat.</p>",
-  },
-};
+// LES SUJETS DES COURRIELS VIVENT AU SERVEUR, ET NULLE PART AILLEURS.
+//
+// Il y avait ici un SECOND jeu de gabarits, qui ne servait qu'a fournir la
+// ligne d'objet : le corps venait de api/send-email.js, l'objet de cette copie.
+// Les deux ont diverge, et c'est l'objet qui gagnait — trois courriels
+// partaient donc sans leurs accents : « Votre assistante maternelle a signe le
+// contrat », « Nouveau versement enregistre sur TiMat ».
+//
+// send-email.js retombe sur le sujet du gabarit quand l'appel n'en donne pas
+// (finalSubject = subject || tpl.subject). Les appels n'en donnent plus.
 
 // Couleur de chaque role, d'apres les logos : bleu pour l'assistante
 // maternelle (c'est aussi celui de la landing), corail / terracotta pour le
@@ -2017,8 +1970,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       await sendNotificationEmail({
         type:"signature_reminder",
         to:email,
-        subject:EMAIL_TEMPLATES.signature_reminder.subject,
-        template:"signature_reminder",
+template:"signature_reminder",
         vars:{enfant_prenom:e.prenom,date:ct.created_at?String(ct.created_at).slice(0,10):"—",url},
       });
       setRappelState(p=>({...p,[ct.id]:"sent"}));
