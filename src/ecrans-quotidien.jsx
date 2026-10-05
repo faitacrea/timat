@@ -2497,6 +2497,46 @@ export function ExportDonnees({enfants,user,role}){
     {id:"messages",l:"Messages",checked:false,table:"messages",field:"enfant_id",scope:"enfant"},
     {id:"documents",l:"Metadonnees des documents",checked:false,table:"documents_meta",field:role==="asmat"?"asmat_id":"enfant_id",scope:role==="asmat"?"user":"enfant"},
     {id:"audit_log",l:"Journal des actions (audit)",checked:false,table:"audit_log",field:"user_id",scope:"user"},
+
+    // VINGT-QUATRE TABLES MANQUAIENT A L'APPEL.
+    //
+    // L'export annonce « droit a la portabilite (article 20 RGPD) » et ne
+    // couvrait que dix-neuf tables sur les cinquante que l'application ecrit.
+    // Manquaient, entre autres : les BULLETINS DE SALAIRE, les VERSEMENTS
+    // recus, les AUTORISATIONS signees, le REGISTRE DES MEDICAMENTS et la FICHE
+    // D'URGENCE — ces deux dernieres portent des donnees de sante.
+    //
+    // Aucune n'etait techniquement hors de portee : toutes ont un lien vers
+    // l'utilisateur, l'enfant ou le contrat. Elles avaient simplement ete
+    // oubliees au fil des ajouts, et rien ne le signalait.
+    //
+    // data/tables-donnees.js tient desormais le registre de ce que chaque table
+    // contient, et l'audit refuse qu'une table ecrite par l'application n'y
+    // figure pas.
+    {id:"bulletins",l:"Bulletins de salaire",checked:true,table:"bulletins",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"versements",l:"Versements reçus",checked:true,table:"versements",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"historique_mois",l:"Récapitulatif mensuel",checked:true,table:"historique_mois",field:"enfant_id",scope:"enfant"},
+    {id:"autorisations",l:"Autorisations parentales signées",checked:true,table:"autorisations",field:"enfant_id",scope:"enfant"},
+    {id:"medicaments",l:"Registre des médicaments",checked:true,table:"medicaments",field:"enfant_id",scope:"enfant"},
+    {id:"fiche_urgence",l:"Fiche de renseignements et d'urgence",checked:true,table:"fiche_urgence",field:"enfant_id",scope:"enfant"},
+    {id:"planning_periscolaire",l:"Planning périscolaire",checked:false,table:"planning_periscolaire",field:"enfant_id",scope:"enfant"},
+    {id:"cahier_jour",l:"Cahier du jour",checked:false,table:"cahier_jour",field:"enfant_id",scope:"enfant"},
+    {id:"activites_faites",l:"Activités réalisées",checked:false,table:"activites_faites",field:"enfant_id",scope:"enfant"},
+    {id:"trajets",l:"Trajets et frais kilométriques",checked:false,table:"trajets",field:"enfant_id",scope:"enfant"},
+    {id:"evenements",l:"Événements du calendrier",checked:false,table:"evenements",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"projet_accueil",l:"Projet d'accueil",checked:false,table:"projet_accueil",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"activites_perso",l:"Activités personnelles",checked:false,table:"activites_perso",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"messages_pmi",l:"Échanges avec la PMI",checked:false,table:"messages_pmi",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"demandes",l:"Demandes d'accueil reçues",checked:false,table:"demandes",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"invitations",l:"Invitations envoyées",checked:false,table:"invitations",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"contestations_pointage",l:"Contestations de pointage",checked:false,table:"contestations_pointage",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"declarations_pajemploi",l:"Déclarations Pajemploi",checked:false,table:"declarations_pajemploi",field:"enfant_id",scope:"enfant"},
+    {id:"transmissions_pajemploi",l:"Transmissions Pajemploi",checked:false,table:"transmissions_pajemploi",field:"enfant_id",scope:"enfant"},
+    {id:"mandats_pajemploi",l:"Mandats Pajemploi",checked:false,table:"mandats_pajemploi",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"consentements",l:"Preuves de consentement",checked:false,table:"consentements",field:"user_id",scope:"user"},
+    {id:"notifications",l:"Notifications reçues",checked:false,table:"notifications",field:"user_id",scope:"user"},
+    {id:"support_messages",l:"Messages au support",checked:false,table:"support_messages",field:"email",scope:"email"},
+    {id:"achats_boutique",l:"Achats à la boutique",checked:false,table:"achats_boutique",field:"email",scope:"email"},
   ],[role]);
 
   const [sel,setSel]=useState(()=>Object.fromEntries(modulesConfig.map(m=>[m.id,m.checked])));
@@ -2543,6 +2583,17 @@ export function ExportDonnees({enfants,user,role}){
         }else if(m.scope==="enfant"){
           if(!enfantIds.length){exportData[m.id]=[];continue;}
           q=q.in(m.field,enfantIds);
+        }else if(m.scope==="email"){
+          // Ces tables ne connaissent pas l'identifiant du compte, seulement
+          // l'adresse : c'est par elle qu'on retrouve ce qui appartient a la
+          // personne.
+          if(!user?.email){exportData[m.id]=[];continue;}
+          q=q.eq("email",user.email);
+        }else if(m.scope==="neant"){
+          // Sans objet pour ce role : la table n'a rien qui lui appartienne.
+          // On l'ecrit quand meme, vide, pour que l'export dise ce qu'il a
+          // regarde plutot que de passer la table sous silence.
+          exportData[m.id]=[];continue;
         }else if(m.scope==="enfant_via_contrat"){
           if(!contratIds.length){exportData[m.id]=[];continue;}
           q=q.in(m.field,contratIds);

@@ -3611,6 +3611,60 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     if (re.test(appSrc)) signale("promesses", msg);
 }
 
+// --- l'export RGPD n'oublie aucune table ---
+//
+// L'export annonce « droit a la portabilite (article 20) » et ne couvrait que
+// dix-neuf tables sur les cinquante que l'application ecrit : il manquait les
+// bulletins de salaire, les versements, les autorisations signees, le registre
+// des medicaments et la fiche d'urgence — les deux dernieres portent des
+// donnees de sante. Aucune n'etait hors de portee ; elles avaient ete oubliees
+// au fil des ajouts, et rien ne le disait.
+//
+// On verifie trois choses, et la premiere est la seule qui tienne dans la
+// duree : toute table que le CODE ecrit ou lit doit etre rangee au registre.
+// Une table ajoutee demain ne peut plus passer inapercue.
+{
+  const registre = await import(new URL("../data/tables-donnees.js", import.meta.url))
+    .then((m) => m.TABLES).catch(() => null);
+  if (!registre) {
+    signale("rgpd", "data/tables-donnees.js est illisible : le registre des tables ne protege plus rien");
+  } else {
+    const modules = appSrc + readFileSync(new URL("../src/ecrans-quotidien.jsx", import.meta.url), "utf8");
+    const srcTous = ["src", "api", "lib"].flatMap((d) => {
+      let noms = [];
+      try { noms = readdirSync(new URL("../" + d + "/", import.meta.url)); } catch (e) { return []; }
+      return noms.filter((f) => /\.(jsx?|mjs)$/.test(f))
+        .map((f) => { try { return readFileSync(new URL(`../${d}/${f}`, import.meta.url), "utf8"); } catch (e) { return ""; } });
+    }).join("\n");
+    // Les tables que le code touche vraiment.
+    const touchees = new Set();
+    // « supabase.storage.from("documents") » DESIGNE UN SEAU, PAS UNE TABLE.
+    //
+    // Sans cette distinction, la barriere reclamait « photos » et « documents »
+    // au registre des tables : ce sont les deux espaces de stockage des fichiers.
+    // Elle m'a quand meme rendu service en passant — c'est elle qui a fait
+    // sortir vingt-trois fonctions mortes de lib/supabase.js, dont deux
+    // ecrivaient dans une table « photos » qui, elle, n'existe pas.
+    for (const m of srcTous.matchAll(/(?<!storage)\s*\.from\(\s*["'`]([a-z_]{3,})["'`]\s*\)/g)) touchees.add(m[1]);
+    const inconnues = [...touchees].filter((t) => !(t in registre));
+    if (inconnues.length) {
+      signale("rgpd", `${inconnues.length} table(s) que le code utilise et que le registre ignore — leur contenu ne partirait dans aucun export : ${inconnues.slice(0, 5).join(", ")}`);
+    }
+    // Les tables declarees exportees doivent l'etre pour de vrai.
+    const exportees = Object.entries(registre).filter(([, v]) => v === "exportee").map(([t]) => t);
+    const dansExport = new Set([...modules.matchAll(/table:\s*["'`]([a-z_]+)["'`]/g)].map((m) => m[1]));
+    const promises = exportees.filter((t) => !dansExport.has(t));
+    if (promises.length) {
+      signale("rgpd", `${promises.length} table(s) déclarée(s) « exportee » au registre mais absente(s) de l'export : ${promises.slice(0, 5).join(", ")}`);
+    }
+    // Une exclusion sans raison est une exclusion qu'on ne peut pas discuter.
+    const sansRaison = Object.entries(registre).filter(([, v]) => v !== "exportee" && !/^exclue\s*:\s*\S/.test(String(v))).map(([t]) => t);
+    if (sansRaison.length) {
+      signale("rgpd", `${sansRaison.length} table(s) exclue(s) de l'export sans raison écrite : ${sansRaison.join(", ")}`);
+    }
+  }
+}
+
 // --- aucune regle abrogee presentee comme en vigueur ---
 //
 // Une page outil publique affirmait encore : « si le salaire brut depasse
