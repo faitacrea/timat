@@ -28,12 +28,27 @@ const ANNEE = Number(jour().slice(0, 4));
 // doivent etre relatives au jour du controle, sinon les ecrans qui filtrent sur
 // « ce mois-ci » se retrouvent vides en debut de mois suivant.
 export const LIGNES = (role = "asmat") => ({
-  profiles: [{
-    id: role === "parent" ? PID : UID, email: role === "parent" ? "sophie@test.fr" : "marie@test.fr",
-    prenom: role === "parent" ? "Sophie" : "Marie", nom: "Test", role,
-    code_postal: "94230", ville: "Cachan", telephone: "0620873380",
-    subscription_status: "pro", subscription_end_date: null, is_admin: false,
-  }],
+  // LES DEUX PARTIES, PAS UNE SEULE.
+  //
+  // Il n'y avait qu'un profil, rendu quel que soit l'identifiant demandé : le
+  // contrat sortait donc avec la MÊME personne comme employeur et comme
+  // salariée — « Le particulier employeur Marie Test » face à « Le salarié
+  // Marie Test ». Tant que le harnais répond de travers, les contrôles
+  // regardent un document qui n'existe pas.
+  profiles: [
+    {
+      id: UID, email: "marie@test.fr", prenom: "Marie", nom: "Dupont", role: "asmat",
+      code_postal: "94230", ville: "Cachan", adresse: "8 rue des Lilas",
+      telephone: "0620000001", numero_agrement: "94-2026-001",
+      subscription_status: "pro", subscription_end_date: null, is_admin: false,
+    },
+    {
+      id: PID, email: "sophie@test.fr", prenom: "Sophie", nom: "Martin", role: "parent",
+      code_postal: "94230", ville: "Cachan", adresse: "12 rue Étienne Dolet",
+      telephone: "0620000002",
+      subscription_status: "free", subscription_end_date: null, is_admin: false,
+    },
+  ],
   enfants: [{
     id: EID, asmat_id: UID, parent_id: PID, prenom: "Léo", nom: "Durand",
     naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F", actif: true, allergies: [],
@@ -44,6 +59,12 @@ export const LIGNES = (role = "asmat") => ({
     annee_complete: true, entretien: 3.92, repas: 5.00,
     jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30",
     signe_asmat: true, signe_parent: true,
+    // SANS CE CHEMIN, LE BOUTON N'EXISTE PAS. L'ecran n'affiche « Mettre a jour
+    // le PDF » que si un PDF a deja ete depose ; sinon il ecrit « le PDF est en
+    // cours de preparation ». Le controle des documents ne pouvait donc jamais
+    // atteindre le contrat.
+    pdf_storage_path: UID + "/contrats/" + CID + ".pdf",
+    signe_asmat_at: jour(10), signe_parent_at: jour(9),
   }],
   pointages: [
     { id: "p1", enfant_id: EID, asmat_id: UID, date: jour(1), arrivee: "07:35", depart: "17:40", total_minutes: 605, valide_parent: true, mode_pointage: "manuel" },
@@ -78,4 +99,22 @@ export const LIGNES = (role = "asmat") => ({
 // La reponse pour une table donnee. Les tables absentes rendent un tableau vide,
 // comme avant : on n'invente pas de donnees qu'aucun ecran ne demande.
 export const REPONSE = (table, role = "asmat") => LIGNES(role)[table] || [];
+
+// La réponse pour une requête PostgREST réelle : on honore « id=eq.<x> » et
+// « .single() ». Sans cela, toute vérification qui met deux personnes en
+// présence lit deux fois la même.
+export const REPONSE_URL = (url, entetes = {}, role = "asmat") => {
+  const table = (String(url).match(/rest\/v1\/(?:rpc\/)?([a-z_]+)/) || [])[1];
+  let lignes = REPONSE(table, role);
+  for (const m of String(url).matchAll(/[?&]([a-z_]+)=eq\.([^&]+)/g)) {
+    const [, champ, valeur] = m;
+    const v = decodeURIComponent(valeur);
+    const filtre = lignes.filter((l) => String(l[champ]) === v);
+    // Un filtre qui ne garde rien vient souvent d'une colonne que le jeu de
+    // données ne porte pas : on préfère ne pas vider la réponse à tort.
+    if (filtre.length || lignes.some((l) => champ in l)) lignes = filtre;
+  }
+  const unSeul = /vnd\.pgrst\.object/.test(entetes["accept"] || entetes["Accept"] || "");
+  return unSeul ? (lignes[0] ?? null) : lignes;
+};
 export default REPONSE;

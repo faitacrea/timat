@@ -2126,7 +2126,7 @@ template:"signature_reminder",
     setGenPdf(p=>({...p,[contratId]:"pending"}));
     const r=await generateAndStoreContratPDF(contratId);
     setGenPdf(p=>({...p,[contratId]:r.success?"done":"error"}));
-    setTabToast(r.success?"PDF du contrat regenere ✓":"Erreur : "+r.error);
+    setTabToast(r.success?"PDF du contrat régénéré ✓":"Erreur : "+r.error);
   };
 
   // STATS TEMPS REEL P14D - KPIs reels (heures semaine, revenu mois, presences jour, messages)

@@ -21,9 +21,9 @@
 // Hors chaîne de build : Vercel n'a pas de navigateur.
 //   node scripts/verif-pdf-contenu.mjs [asmat|parent]
 import { chromium } from "playwright";
-import { readFileSync, mkdirSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { inflateSync } from "node:zlib";
-import { REPONSE, UID, PID } from "./jeu-de-donnees.mjs";
+import { REPONSE_URL, UID, PID } from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
@@ -57,12 +57,27 @@ function texteDuPdf(octets) {
     morceaux.push(flux);
   }
   const contenu = morceaux.join("\n");
+  // LA PLAGE 0x80–0x9F N'EST PAS DU LATIN-1.
+  //
+  // jsPDF écrit le texte en WinAnsi : l'euro y vaut l'octet 0x80, l'apostrophe
+  // typographique 0x92, les tirets longs 0x96 et 0x97. Lus en latin-1, ce sont
+  // des caractères de commande — invisibles. Le contrat semblait donc écrire
+  // « Indemnité d'entretien 3,92  par journée », sans son euro, et j'ai failli
+  // accuser l'application d'un défaut qui n'existe pas : le symbole est bel et
+  // bien dans le fichier, c'était ce contrôle qui le perdait.
+  const WINANSI = {
+    0x80: "€", 0x82: "‚", 0x83: "ƒ", 0x84: "„", 0x85: "…", 0x86: "†", 0x87: "‡",
+    0x88: "ˆ", 0x89: "‰", 0x8a: "Š", 0x8b: "‹", 0x8c: "Œ", 0x8e: "Ž",
+    0x91: "'", 0x92: "'", 0x93: "\u201c", 0x94: "\u201d", 0x95: "•", 0x96: "–", 0x97: "—",
+    0x98: "˜", 0x99: "™", 0x9a: "š", 0x9b: "›", 0x9c: "œ", 0x9e: "ž", 0x9f: "Ÿ",
+  };
+  const versUnicode = (t) => t.replace(/[\u0080-\u009f]/g, (c) => WINANSI[c.charCodeAt(0)] ?? c);
   // Le texte d'un PDF est écrit entre parenthèses, suivi de Tj ou TJ.
   const mots = [];
   for (const m of contenu.matchAll(/\(((?:\\.|[^()\\])*)\)\s*(?:Tj|TJ)/g)) {
-    mots.push(m[1]
+    mots.push(versUnicode(m[1]
       .replace(/\\(\d{3})/g, (_, o) => String.fromCharCode(parseInt(o, 8)))
-      .replace(/\\([()\\])/g, "$1"));
+      .replace(/\\([()\\])/g, "$1")));
   }
   return { texte: mots.join(" "), pages: (brut.match(/\/Type\s*\/Page[^s]/g) || []).length };
 }
@@ -80,11 +95,24 @@ const MOTS_NUS = /\b(indemnite|salarie|calculees?|entree|remuneration|recapitula
 // conventions dans le même document.
 const POINT_DECIMAL = /\b\d+\.\d+\s*(h|€|jour|heure)/i;
 // Les mentions que la convention collective impose au contrat écrit.
+// CE QU'UN CONTRAT ÉCRIT DOIT PORTER.
+//
+// La convention collective impose des mentions, et leur absence rend le contrat
+// attaquable. On exige donc chacune, nommément, plutôt que des mots vagues : un
+// contrat qui parle de « salaire » quelque part ne prouve pas qu'il chiffre la
+// rémunération.
 const CONTRAT_EXIGE = [
-  [/assistant\w*\s+maternel/i, "la qualité d'assistante maternelle"],
-  [/employeur|parent/i, "le parent employeur"],
-  [/(taux|salaire|rémunération|r.munération)/i, "la rémunération"],
-  [/(heure|durée|dur.e)/i, "la durée d'accueil"],
+  [/IDCC\s*3239/i, "la convention collective applicable (IDCC 3239)"],
+  [/dur[ée]e\s+ind[ée]termin[ée]e|CDI/i, "la nature du contrat"],
+  [/agr[ée]ment/i, "l'agrément du salarié"],
+  [/p[ée]riode d'essai/i, "la période d'essai"],
+  [/\d+[,.]\d+\s*€/, "un montant chiffré avec son symbole €"],
+  [/indemnit[ée] d'entretien/i, "l'indemnité d'entretien"],
+  [/cong[ée]s pay[ée]s/i, "les congés payés"],
+  [/pr[ée]avis/i, "le préavis de rupture"],
+  [/1er mai/i, "le 1er mai, seul jour férié obligatoirement chômé et payé"],
+  [/deux exemplaires/i, "l'établissement en deux exemplaires"],
+  [/signature|sign[ée]/i, "la signature"],
 ];
 
 const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
@@ -130,10 +158,48 @@ await p.addInitScript(([s, cle]) => {
 }, [session, CLE]);
 
 const json = (b) => ({ status: 200, contentType: "application/json", body: JSON.stringify(b) });
-await p.route("**/storage/v1/**", (r) => r.fulfill(json({ Key: "ok", path: "x/doc.pdf" })));
+// LE CONTRAT NE S'OUVRE PAS ET NE SE TÉLÉCHARGE PAS : IL SE DÉPOSE.
+//
+// generateAndStoreContratPDF fabrique le PDF et l'envoie dans l'espace de
+// stockage. Aucune fenêtre, aucun téléchargement — c'est pour cela que ce
+// contrôle déclenchait trente-neuf boutons sans jamais voir le contrat. On lit
+// donc ce qui monte : si le corps de la requête commence par %PDF, c'est un
+// document produit, et il se lit comme les autres.
+await p.route("**/storage/v1/**", (r) => {
+  const req = r.request();
+  try {
+    // LE PDF N'EST PAS AU DÉBUT DU CORPS. Le dépôt se fait en multipart : la
+    // requête commence par la frontière « ------WebKitFormBoundary… » et le
+    // fichier vient après. Chercher « %PDF- » à l'octet zéro ne trouvait rien,
+    // et le contrat restait invisible alors qu'il partait bel et bien — 31 Ko
+    // à chaque clic.
+    const brut = req.postDataBuffer();
+    const debut = brut ? brut.indexOf(Buffer.from("%PDF-")) : -1;
+    let corps = null;
+    if (debut >= 0) {
+      const fin = brut.lastIndexOf(Buffer.from("%%EOF"));
+      corps = brut.slice(debut, fin > debut ? fin + 5 : undefined);
+    }
+    if (corps) {
+      const nom = (req.url().match(/([^/?]+\.pdf)/i) || [, "depose.pdf"])[1];
+      const chemin = `${DOSSIER}/depot-${fichiers.length}-${nom.replace(/[^\w.-]/g, "_")}`;
+      writeFileSync(chemin, corps);
+      fichiers.push({ nom, chemin, genre: "dépôt" });
+    }
+  } catch (e) { /* corps illisible : on ne retient rien plutôt que d'inventer */ }
+  return r.fulfill(json({ Key: "ok", path: "x/doc.pdf" }));
+});
+// « .single() » ATTEND UN OBJET, PAS UN TABLEAU.
+//
+// Le contrat sortait avec « Prénom et nom - » alors que l'enfant est dans le
+// jeu de données : generateAndStoreContratPDF le lit avec .single(), qui envoie
+// l'en-tête « Accept: application/vnd.pgrst.object+json » et attend UN objet.
+// Une liste lui fait rendre une erreur, l'enfant vaut null, et le PDF se
+// remplit de tirets. C'était le harnais, pas l'application — mais tant qu'il
+// répondait de travers, ce contrôle regardait un document qui n'existe pas.
 await p.route("**/rest/v1/**", (r) => {
-  const t = (r.request().url().match(/rest\/v1\/(?:rpc\/)?([a-z_]+)/) || [])[1];
-  return r.fulfill(json(REPONSE(t, estParent ? "parent" : "asmat")));
+  const req = r.request();
+  return r.fulfill(json(REPONSE_URL(req.url(), req.headers(), estParent ? "parent" : "asmat")));
 });
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 
@@ -146,14 +212,51 @@ for (let i = 0; i < 5; i++) {
 const connecte = await p.evaluate(() => !/Je suis assistante maternelle/.test(document.body.innerText));
 if (!connecte) { console.error("\n  KO  la session n'est pas ouverte : le contrôle ne vérifierait rien\n"); await N.close(); process.exit(1); }
 
+const ko = [];
+
 // --- Déclencher tout ce qui produit un PDF ------------------------------------
 const ECRANS = estParent
   ? ["documents_complet", "admin_finances", "suivi_progres"]
   : ["paie_contrats", "documents_rapports", "suivi_progres", "pmi", "sante_urgence"];
-const PDF = /pdf|imprimer|t[ée]l[ée]charger|attestation|bulletin/i;
+const PDF = /pdf|imprimer|t[ée]l[ée]charger|attestation|bulletin|contrat|r[ée]g[ée]n[ée]rer|mettre à jour/i;
 const DANGEREUX = /supprim|effac|r[ée]sili|d[ée]connex|payer|archiver/i;
 
+// LES CHEMINS CONNUS, NOMMÉS.
+//
+// Le parcours opportuniste ci-dessous trouve ce qu'il croise, et il a déjà
+// prouvé qu'il rate le contrat : celui-ci vit sous DEUX niveaux d'onglets, et
+// son bouton n'apparaît que si un PDF a déjà été déposé. Un document officiel
+// ne peut pas dépendre de la chance d'un parcours. On nomme donc les chemins
+// qu'on exige, et leur absence est un défaut en soi.
+const EXIGES = estParent ? [] : [
+  { quoi: "le contrat signé", ecran: "paie_contrats", onglets: ["Contrats", "Contrats & Avenants"], bouton: /Mettre à jour le PDF|Régénérer PDF|Générer PDF/ },
+  { quoi: "le bulletin de salaire", ecran: "paie_contrats", onglets: ["Paie", "Bulletin de salaire"], bouton: /Télécharger PDF/ },
+];
 let declenches = 0;
+for (const exige of EXIGES) {
+  await p.evaluate((x) => window.dispatchEvent(new CustomEvent("timat:page", { detail: x })), exige.ecran);
+  await p.waitForTimeout(1600);
+  let perdu = false;
+  for (const onglet of exige.onglets) {
+    const ok = await p.evaluate((t) => { const b = [...document.querySelectorAll("button")].find((x) => x.innerText.replace(/\s+/g, " ").trim() === t); if (!b) return false; b.click(); return true; }, onglet);
+    if (!ok) { ko.push(`${exige.quoi} : l'onglet « ${onglet} » est introuvable`); perdu = true; break; }
+    await p.waitForTimeout(1500);
+  }
+  if (perdu) continue;
+  const avant = fichiers.length;
+  const clique = await p.evaluate((src) => {
+    const re = new RegExp(src);
+    const b = [...document.querySelectorAll("button")].find((x) => x.offsetParent && !x.disabled && re.test((x.innerText || "").replace(/\s+/g, " ").trim()));
+    if (!b) return null;
+    const t = (b.innerText || "").replace(/\s+/g, " ").trim(); b.click(); return t;
+  }, exige.bouton.source);
+  if (!clique) { ko.push(`${exige.quoi} : aucun bouton pour le produire sur ce chemin`); continue; }
+  declenches++;
+  await p.waitForTimeout(4000);
+  if (fichiers.length === avant) ko.push(`${exige.quoi} : « ${clique} » cliqué, et rien n'est produit`);
+  else if (process.env.TRACE) console.log(`      [exigé] ${exige.quoi} › ${clique} → ${fichiers[fichiers.length - 1].nom}`);
+}
+
 for (const ecran of ECRANS) {
   await p.evaluate((x) => window.dispatchEvent(new CustomEvent("timat:page", { detail: x })), ecran);
   await p.waitForTimeout(1500);
@@ -196,15 +299,16 @@ await p.waitForTimeout(1500);
 await N.close();
 
 // --- Lire ce qui est sorti -----------------------------------------------------
-const ko = [];
 for (const f of fichiers) {
   let texte = f.texte, pages = 1;
-  if (f.genre === "fichier") {
+  if (f.genre === "fichier" || f.genre === "dépôt") {
     const octets = readFileSync(f.chemin);
     if (!/%PDF/.test(octets.slice(0, 8).toString("latin1"))) { ko.push(`${f.nom} : ce n'est pas un PDF`); continue; }
     ({ texte, pages } = texteDuPdf(octets));
+    f.texte = texte; // pour DUMP : sans cela on n'affichait rien pour un fichier
   }
   if (!String(texte || "").trim()) { ko.push(`${f.nom} : le document ne contient aucun texte`); continue; }
+  if (process.env.MESURE) console.log(`      ${f.nom} : ${pages} page(s), ${texte.length} caractères lus`);
   const trou = texte.match(TROUS);
   if (trou) ko.push(`${f.nom} : « ${trou[0]} » est écrit dans le document`);
   const casse = texte.match(ACCENTS_CASSES);
@@ -217,12 +321,12 @@ for (const f of fichiers) {
     for (const [re, quoi] of CONTRAT_EXIGE)
       if (!re.test(texte)) ko.push(`${f.nom} : ${quoi} n'apparaît pas dans le contrat`);
   }
-  if (f.genre === "fichier" && pages === 0) ko.push(`${f.nom} : aucune page`);
+  if (f.genre !== "fenêtre" && pages === 0) ko.push(`${f.nom} : aucune page`);
 }
 const dur = erreurs.find((e) => /is not defined|is not a function|cannot read propert/i.test(e));
 if (dur) ko.push(`le code casse pendant la génération : ${dur.slice(0, 120)}`);
 
-if (process.env.DUMP) for (const f of fichiers) console.log(`\n----- ${f.nom}\n` + String(f.texte || "").replace(/\n{2,}/g, "\n").slice(0, 1400));
+if (process.env.DUMP) for (const f of fichiers) console.log(`\n----- ${f.nom}\n` + String(f.texte || "").replace(/\n{2,}/g, "\n").slice(0, 20000));
 console.log(`\n=== PDF — ${declenches} bouton(s) déclenché(s), ${fichiers.length} fichier(s) produit(s) (${ESPACE}) ===\n`);
 fichiers.forEach((f) => console.log(`      [${f.genre}] ${f.nom}`));
 console.log("");
