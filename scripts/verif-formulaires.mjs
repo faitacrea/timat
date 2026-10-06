@@ -79,7 +79,7 @@ import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 // Le jeu de donnees du harnais : de vraies lignes, aux colonnes de la vraie
 // base. Sans elles, la moitie des ecrans n'affiche aucun formulaire.
-import { REPONSE, UID, EID, PID } from "./jeu-de-donnees.mjs";
+import { REPONSE_URL, UID, EID, PID } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
 // Troisieme argument : les ecrans a parcourir, separes par une virgule. Le tour
@@ -176,7 +176,7 @@ const json = (b) => ({ status: 200, contentType: "application/json", body: JSON.
 await p.route("**/storage/v1/**", (r) => r.fulfill(json([])));
 await p.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/(?:rpc\/)?([a-z_]+)/) || [])[1];
-  return r.fulfill(json(REPONSE(t, ESPACE === "parent" ? "parent" : "asmat")));
+  return r.fulfill(json(REPONSE_URL(r.request().url(), r.request().headers(), ESPACE === "parent" ? "parent" : "asmat")));
 });
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 

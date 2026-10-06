@@ -2484,7 +2484,7 @@ export function ExportDonnees({enfants,user,role}){
     {id:"modifications_contrat",l:"Demandes d'avenants",checked:true,table:"modifications_contrat",field:"contrat_id",scope:"enfant_via_contrat"},
     {id:"pointages",l:"Historique des pointages",checked:true,table:"pointages",field:"enfant_id",scope:"enfant"},
     {id:"transmissions",l:"Journal et transmissions",checked:true,table:"transmissions",field:"enfant_id",scope:"enfant"},
-    {id:"bilans",l:"Bilans periodiques",checked:true,table:"bilans",field:"enfant_id",scope:"enfant"},
+    {id:"bilans",l:"Bilans périodiques",checked:true,table:"bilans",field:"enfant_id",scope:"enfant"},
     {id:"absences",l:"Historique des absences",checked:true,table:"absences",field:"enfant_id",scope:"enfant"},
     {id:"sante",l:"Vaccins",checked:true,table:"vaccins",field:"enfant_id",scope:"enfant"},
     {id:"croissance",l:"Donnees de croissance",checked:false,table:"croissance",field:"enfant_id",scope:"enfant"},
@@ -2569,7 +2569,7 @@ export function ExportDonnees({enfants,user,role}){
           periode:periode,
           enfant_filtre:selEnfant,
           modules_selectionnes:Object.entries(sel).filter(([k,v])=>v).map(([k])=>k),
-          rgpd:"Export realise dans le cadre du droit a la portabilite (article 20 RGPD)",
+          rgpd:"Export réalisé dans le cadre du droit à la portabilité (article 20 RGPD)",
         },
       };
 
@@ -2665,14 +2665,14 @@ export function ExportDonnees({enfants,user,role}){
           +'h1{color:#B8622F}table{width:100%;border-collapse:collapse;margin:14px 0}'
           +'td,th{padding:8px;border:1px solid #ddd;text-align:left;font-size:12px}'
           +'th{background:#f5f5f5}@media print{.nb{display:none}}</style></head><body>'
-          +'<h1>Export RGPD - Synthese</h1>'
+          +'<h1>Export RGPD - Synthèse</h1>'
           +'<p>Exporte le : '+new Date().toLocaleString("fr-FR")+'</p>'
           +'<p>Utilisateur : '+H(user?.email||"-")+'</p>'
           +'<p>Période : '+H(periode)+'</p>'
           +'<p>Enfants : '+H(selEnfant)+'</p>'
-          +'<h2>Donnees exportees</h2>'
+          +'<h2>Données exportées</h2>'
           +'<table><tr><th>Module</th><th>Nombre d enregistrements</th></tr>'+summary+'</table>'
-          +'<p style="font-size:11px;color:#888;margin-top:20px">Le PDF est un resume. Pour les donnees brutes, utilisez l export JSON ou CSV.</p>'
+          +'<p style="font-size:11px;color:#888;margin-top:20px">Le PDF est un résumé. Pour les données brutes, utilisez l’export JSON ou CSV.</p>'
           +'<div style="text-align:center;margin-top:20px"><button class="nb" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Imprimer / PDF</button></div>'
           +'</body></html>';
         w.document.write(html);w.document.close();
@@ -3071,7 +3071,7 @@ export function AjouterEnfantModale({user,onClose}){
 
   const sauvegarder=async()=>{
     if(!valideEtape0()||!valideEtape1()){
-      setToast("Donnees incompletes");
+      setToast("Données incomplètes");
       return;
     }
     setSaving(true);
@@ -3104,7 +3104,7 @@ export function AjouterEnfantModale({user,onClose}){
         actif:true,
       }).select().single();
       if(errEnfant){
-        setToast("Erreur creation enfant : "+errEnfant.message);
+        setToast("Erreur création enfant : "+errEnfant.message);
         setSaving(false);
         return;
       }
@@ -3289,7 +3289,7 @@ export function AjouterEnfantModale({user,onClose}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             <div>
-              <label className="lbl">Indemnite entretien (€/jour)</label>
+              <label className="lbl">Indemnité entretien (€/jour)</label>
               <input type="number" className="inp" step="0.01" min="0" value={contrat.entretien}
                 onChange={e=>setContrat(c=>({...c,entretien:e.target.value}))}/>
             </div>
@@ -3301,7 +3301,7 @@ export function AjouterEnfantModale({user,onClose}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14,alignItems:"end"}}>
             <div>
-              <label className="lbl">Indemnite repas (€/jour, optionnel)</label>
+              <label className="lbl">Indemnité repas (€/jour, optionnel)</label>
               <input type="number" className="inp" step="0.01" min="0" value={contrat.repas||0}
                 onChange={e=>setContrat(c=>({...c,repas:e.target.value}))}/>
             </div>
@@ -3359,7 +3359,7 @@ export function AjouterEnfantModale({user,onClose}){
               style={{flex:1,justifyContent:"center",padding:"12px",background:"var(--c)",color:"var(--m)"}}>← Retour</button>
             <button className="btn bT l" onClick={sauvegarder} disabled={saving}
               style={{flex:2,justifyContent:"center",padding:"12px"}}>
-              {saving?"⏳ Enregistrement...":(parentInfo.email.trim()?"✓ Creer + Inviter parent":"✓ Creer (sans parent)")}
+              {saving?"⏳ Enregistrement...":(parentInfo.email.trim()?"✓ Créer + Inviter parent":"✓ Créer (sans parent)")}
             </button>
           </div>
         </>}
@@ -3374,7 +3374,7 @@ export function AjouterEnfantModale({user,onClose}){
             Le contrat est cree et actif.<br/>
             {parentInfo.email.trim()
               ?<>Le parent va recevoir un email d'invitation a <strong>{parentInfo.email}</strong>.</>
-              :<>Vous pourrez inviter le parent plus tard depuis la page parametres.</>}
+              :<>Vous pourrez inviter le parent plus tard depuis la page paramètres.</>}
           </div>
           <button className="btn bT l" onClick={onClose}
             style={{width:"100%",justifyContent:"center",padding:"12px"}}>
@@ -3545,7 +3545,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
     // refus, et une case cochee a une autorisation : les deux seraient faux.
     const authLines=AUTORISATIONS_FICHE.map(([t,l])=>{
       const v=etatAuth(t);
-      const marque=v===true?"[X] Oui  [ ] Non":v===false?"[ ] Oui  [X] Non":"Sans reponse a ce jour";
+      const marque=v===true?"[X] Oui  [ ] Non":v===false?"[ ] Oui  [X] Non":"Sans réponse à ce jour";
       const couleur=v===true?"#5DA9A1":v===false?"#C84B31":"#5A6870";
       return "<div style='margin:6px 0;font-size:13px'><span style='color:"+couleur+";font-weight:700'>"+marque+"</span>  "+H(l)+"</div>";
     }).join("");
@@ -3563,8 +3563,8 @@ export function FicheUrgence({enfants,role,pEId,user}){
       ".urg span{color:#C84B31;font-weight:700;font-size:18px}",
       "@media print{.noprint{display:none}}</style></head><body>",
       "<h1>FICHE D'URGENCE</h1>",
-      "<div class='sub'>Assistante maternelle agreee</div>",
-      "<div class='note'>A remettre des le debut de l'accueil | A mettre a jour chaque annee</div>",
+      "<div class='sub'>Assistante maternelle agréée</div>",
+      "<div class='note'>À remettre dès le début de l'accueil | À mettre à jour chaque année</div>",
       "<div class='line'><b>Assistante maternelle :</b> "+H(f.asmatNomH)+"</div>",
       "<div class='line'><b>Telephone :</b> "+H(f.asmatTel)+"</div>",
       "<div class='line'><b>N. d'agrement :</b> "+H(f.asmatAgrement)+"</div>",
@@ -3574,7 +3574,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Date de naissance :</b> "+f.naissance+"</div>",
       "<div class='line'><b>Sexe :</b> "+f.sexe+"</div>",
       "<div class='line'><b>Adresse :</b> "+H(f.adresse)+"</div>",
-      "<div class='sh'>02  Coordonnees des parents</div>",
+      "<div class='sh'>02  Coordonnées des parents</div>",
       (parentLive?("<div class='urg' style='background:#EFF7F6'><b>Contact parent (compte TiMat, a jour le "+new Date().toLocaleDateString("fr-FR")+")</b><br/>"
         +(nomLive||"-")+((parentLive.telephone)?" &mdash; <span style='color:#2C6F68'>"+H(parentLive.telephone)+"</span>":"")
         +(parentLive.email?"<br/>"+parentLive.email:"")
@@ -3590,9 +3590,9 @@ export function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Telephone :</b> "+H(f.pereTel)+"</div>",
       "<div class='line'><b>Email :</b> "+H(f.pereEmail)+"</div>",
       "<div class='line'><b>Employeur :</b> "+H(f.pereEmployeur)+"</div>",
-      "<div class='sh'>03  Personnes autorisees</div>",
+      "<div class='sh'>03  Personnes autorisées</div>",
       ...[1,2,3].map(n=>"<div class='stt'>Personne "+n+"</div><div class='line'><b>Nom :</b> "+f["p"+n+"Nom"]+"</div><div class='line'><b>Lien :</b> "+f["p"+n+"Lien"]+"</div><div class='line'><b>Tel :</b> "+f["p"+n+"Tel"]+"</div>"),
-      "<div class='sh'>04  Informations medicales</div>",
+      "<div class='sh'>04  Informations médicales</div>",
       "<div class='line'><b>Medecin :</b> "+H(f.medecin)+"</div>",
       "<div class='line'><b>Tel medecin :</b> "+H(f.medecinTel)+"</div>",
       "<div class='line'><b>Groupe sanguin :</b> "+H(f.groupe)+"</div>",
@@ -3625,12 +3625,12 @@ export function FicheUrgence({enfants,role,pEId,user}){
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature parent :</div></div>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature assmat :</div></div></div>",
       "<p style='color:#6B7A82;font-size:11px;line-height:1.6;margin-top:18px;border-top:1px solid #E4DCD0;padding-top:10px'>Affichez cette fiche a un endroit permanent, visible et facilement accessible : le referentiel d'agrement l'exige pour les coordonnees des services de secours, des parents et du service departemental de protection maternelle et infantile (annexe 4-8 du code de l'action sociale et des familles, section 2, sous-section 2, 2°).</p>",
-      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:14px'>Genere par TiMat - timat.app</p>",
+      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:14px'>Généré par TiMat - timat.app</p>",
       "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
     w.document.write(html);w.document.close();
-    setToast("Fiche generee ✓");
+    setToast("Fiche générée ✓");
   };
 
   // (Parent edite la fiche ; assmat en lecture seule -> rendu unifie ci-dessous)
@@ -3735,7 +3735,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🔑 Personnes autorisees</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🔑 Personnes autorisées</div>
           {[1,2,3].map(n=><div key={n}style={{marginBottom:10,padding:10,background:"var(--c)",borderRadius:8}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6}}>Personne {n}</div>
             {inp("Nom","p"+n+"Nom")}{inp("Lien","p"+n+"Lien","Grand-parent, oncle...")}{inp("Tel","p"+n+"Tel")}
@@ -3743,7 +3743,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
         </div>
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🩺 Medical</div>
-          {inp("Medecin traitant","medecin")}{inp("Tel medecin","medecinTel")}{inp("Groupe sanguin","groupe")}{inp("Vaccins a jour","vaccins","Oui / Non")}{inp("PAI","pai","Oui / Non")}
+          {inp("Médecin traitant","medecin")}{inp("Tel medecin","medecinTel")}{inp("Groupe sanguin","groupe")}{inp("Vaccins a jour","vaccins","Oui / Non")}{inp("PAI","pai","Oui / Non")}
           {ta("Allergies","allergies","Aucune connue")}{ta("Traitements","traitements","Aucun")}{ta("Particularites","particularites")}
         </div>
         <div className="card">

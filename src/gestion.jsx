@@ -430,7 +430,7 @@ template:"signature_asmat_signed",
     setMods(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
     setModDet({type:"Horaire",detail:""});
     setShowModale(false);
-    setToast("Demande envoyee");
+    setToast("Demande envoyée");
   };
   const repondre=async(modId,accepte)=>{
     const{data,error}=await supabase.from("modifications_contrat")
@@ -438,14 +438,14 @@ template:"signature_asmat_signed",
       .eq("id",modId).select().single();
     if(error){setToast("Erreur : "+error.message);return;}
     setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).map(m=>m.id===modId?data:m)}));
-    setToast(accepte?"Demande acceptee":"Demande refusee");
+    setToast(accepte?"Demande acceptée":"Demande refusée");
   };
   const supprimerMod=async(modId)=>{
     if(!window.confirm("Supprimer cette demande ?"))return;
     const{error}=await supabase.from("modifications_contrat").delete().eq("id",modId);
     if(error){setToast("Erreur : "+error.message);return;}
     setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(m=>m.id!==modId)}));
-    setToast("Demande supprimee");
+    setToast("Demande supprimée");
   };
 
   return <div className="fi">
@@ -1368,7 +1368,7 @@ template:"bulletin_sent",
           "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+nbf(heuresNorm,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(salBase,2)+" €</td></tr>",
           hSuppRow,
           "<tr><td>Indemnité d'entretien</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((contrat.entretien||3.92),2)+" €/j</td><td class=\"right\">"+nbf(entretien,2)+" €</td></tr>",
-          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"annee incomplete")+"</td><td class=\"right\">- "+nbf(retenue,2)+" €</td></tr>":"")+
+          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"année incomplète")+"</td><td class=\"right\">- "+nbf(retenue,2)+" €</td></tr>":"")+
           (repasMois>0?"<tr><td>Indemnité de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((Number(repasJour)||0),2)+" €/j</td><td class=\"right\">"+nbf(repasMois,2)+" €</td></tr>":""),
           "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" €</td></tr>",
           "</table>",
@@ -1385,7 +1385,7 @@ template:"bulletin_sent",
           "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+nbf(netPaye,2)+" €</td></tr>",
           "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+nbf(netImposable,2)+" €</td></tr>",
           "<tr><td>Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")</td><td class=\"right\">- "+nbf(abattementMois,2)+" €</td></tr>",
-          "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+nbf(netImpApresAbattement,2)+" €</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable après abattement</td><td class=\"right\">"+nbf(netImpApresAbattement,2)+" €</td></tr>",
           "<tr class=\"ni\"><td>Montant net social (référence RSA / prime d'activité, hors indemnités)</td><td class=\"right\">"+nbf(netSocial,2)+" €</td></tr>",
           "<tr><td>Congés payés acquis ce mois</td><td class=\"right\">"+nbf(cpAcquis,1)+" jours ouvrables</td></tr>",
           "<tr><td>Indemnité entretien (non imposable)</td><td class=\"right\">"+nbf(entretien,2)+" €</td></tr>",
@@ -2241,7 +2241,7 @@ export function RythmeAccueil({contrat,role,onSaved,onErr}){
   const enregistre=estAnneeComplete(contrat);
   const semainesEnregistrees=Number(contrat?.semainesAccueil??contrat?.semaines_accueil)||SEMAINES_MAX_ANNEE_INCOMPLETE;
   // Le bouton suivait la valeur ENREGISTREE, pas le clic : appuyer sur
-  // « annee incomplete » ouvrait le champ des semaines mais laissait la
+  // « année incomplète » ouvrait le champ des semaines mais laissait la
   // selection sur « annee complete ». On tient donc un choix local, qui suit le
   // clic tout de suite, et un bouton d'enregistrement quand il differe.
   const [choix,setChoix]=useState(enregistre);

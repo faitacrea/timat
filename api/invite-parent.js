@@ -67,11 +67,11 @@ export default async function handler(req, res) {
 
     if (emailError) {
       console.error("Resend error:", emailError);
-      return res.status(200).json({ success: true, warning: "Invitation enregistree, mais email non envoye : " + emailError.message });
+      return res.status(200).json({ success: true, warning: "Invitation enregistrée, mais courriel non envoyé : " + emailError.message });
     }
 
     console.log("[Invite] Email envoye a", emailParent);
-    return res.status(200).json({ success: true, message: "Invitation envoyee a " + emailParent });
+    return res.status(200).json({ success: true, message: "Invitation envoyée à " + emailParent });
 
   } catch (e) {
     console.error("Invite error:", e.message);

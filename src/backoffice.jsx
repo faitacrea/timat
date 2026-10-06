@@ -661,7 +661,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Couleur texte CTA"><BOColorInput k="navCtaColor" state={cfg.landing} setter={setLand}/></BOField>
             <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Hamburger mobile</div>
             <BOField label="Fond hamburger"><BOColorInput k="navHamburgerBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur icone hamburger"><BOColorInput k="navHamburgerColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur icône hamburger"><BOColorInput k="navHamburgerColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Bordure hamburger"><BOColorInput k="navHamburgerBorder" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
 
@@ -1115,7 +1115,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Kit de gestion"><BOTextInput k="linkSheets" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Fiche d'urgence"><BOTextInput k="linkFiche" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Projet d'accueil"><BOTextInput k="linkProjet" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-            <BOField label="Registre des medicaments"><BOTextInput k="linkRegistre" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+            <BOField label="Registre des médicaments"><BOTextInput k="linkRegistre" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Pack Complet"><BOTextInput k="linkPack" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
           </BOCard>
           <BOCard title="Table Supabase" icon="🗄️">
@@ -1396,7 +1396,7 @@ function SeoAudit(){
       const j=await r.json().catch(()=>null);
       if(!r.ok||!j||j.error) throw new Error((j&&j.error)||("HTTP "+r.status));
       setData(j);
-    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Verifie que api/backoffice.js est bien deploye."); }
+    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Vérifie que api/backoffice.js est bien déployé."); }
     setLoading(false);
   };
   const mk={ok:"✅",warn:"⚠️",fail:"❌"};
@@ -1532,7 +1532,7 @@ function BackofficeLogin({onLogin}){
       const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password:pwd});
       if(error||!data?.user){ setErr("Identifiants incorrects."); setBusy(false); return; }
       onLogin(data.user);
-    }catch(e){ setErr("Erreur reseau, reessaie."); setBusy(false); }
+    }catch(e){ setErr("Erreur réseau, réessaie."); setBusy(false); }
   };
   return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
     <div style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:28,maxWidth:380,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.12)"}}>

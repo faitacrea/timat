@@ -16,7 +16,7 @@
 //   node scripts/verif-signature.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { REPONSE, PID } from "./jeu-de-donnees.mjs";
+import { REPONSE_URL, PID } from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const utilisateur = {
@@ -50,7 +50,7 @@ await p.route("**/rest/v1/**", (r) => {
   // On garde les autorisations du jeu de données : sans aucune ligne, l'écran
   // n'affiche rien du tout et il n'y a pas de bouton à ouvrir. Avec une ligne
   // déjà répondue, il propose « Modifier ma réponse » — le même pavé.
-  return r.fulfill(json(REPONSE(t, "parent")));
+  return r.fulfill(json(REPONSE_URL(r.request().url(), r.request().headers(), "parent")));
 });
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 

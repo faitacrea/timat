@@ -27,7 +27,7 @@
 //   node scripts/verif-versements.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { REPONSE, LIGNES, PID, EID, CID } from "./jeu-de-donnees.mjs";
+import { REPONSE_URL, LIGNES, PID, EID, CID } from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 
@@ -65,7 +65,7 @@ await p.route("**/rest/v1/**", (r) => {
     const c = { ...LIGNES("parent").contrats[0], id: CID, enfant_id: EID, parent_id: PID, debut: ilYaUnAn };
     return r.fulfill(json([c]));
   }
-  return r.fulfill(json(REPONSE(t, "parent")));
+  return r.fulfill(json(REPONSE_URL(r.request().url(), r.request().headers(), "parent")));
 });
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 

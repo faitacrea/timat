@@ -1772,7 +1772,7 @@ export function ProjetAccueil({user,role}){
       // PAGE DE GARDE
       "<div class='cover'>",
       "<h1>PROJET D'ACCUEIL</h1>",
-      "<div class='sub'>Assistante maternelle agreee</div>",
+      "<div class='sub'>Assistante maternelle agréée</div>",
       "<div style='border-top:3px solid #5DA9A1;border-bottom:3px solid #5DA9A1;padding:16px 0;margin:40px 0'>",
       "<div class='line' style='font-weight:700;font-size:18px'>"+H(f.nom)+"</div>",
       "<div class='label'>Adresse</div><div class='line'>"+H(f.adresse)+"</div>",
@@ -1797,35 +1797,35 @@ export function ProjetAccueil({user,role}){
       "<div class='stt'>Bienveillance et respect du rythme</div>",
       "<p>Chaque enfant est unique et se developpe a son propre rythme. Je m'engage a respecter ses besoins sans forcer ni comparer.</p>",
       "<div class='stt'>Autonomie progressive</div>",
-      "<p>J'encourage l'enfant a faire par lui-meme dans un cadre securise.</p>",
-      "<div class='stt'>Attachement securise</div>",
-      "<p>Je m'engage a etre presente, reactive et previsible pour que l'enfant se sente en securite.</p>",
+      "<p>J'encourage l'enfant à faire par lui-même dans un cadre sécurisé.</p>",
+      "<div class='stt'>Attachement sécurisé</div>",
+      "<p>Je m'engage à être présente, réactive et prévisible pour que l'enfant se sente en sécurité.</p>",
       "<div class='stt'>Communication bienveillante</div>",
       "<p>Face a un comportement difficile, je mets des mots sur les emotions et je pose des limites claires.</p>",
-      f.valeursPerso?"<div class='stt'>Mes valeurs complementaires</div><p>"+f.valeursPerso.replace(/\n/g,"<br/>")+"</p>":"",
+      f.valeursPerso?"<div class='stt'>Mes valeurs complémentaires</div><p>"+f.valeursPerso.replace(/\n/g,"<br/>")+"</p>":"",
       "<div class='sh'>04  Organisation de la journee</div>",
       "<table>"+horairesHTML+"</table>",
       "<div class='sh'>05  Alimentation</div>",
       "<ul><li>Repas faits maison avec des produits frais et de saison</li><li>Respect des regimes alimentaires et allergies</li><li>Introduction alimentaire progressive</li><li>Ambiance calme et bienveillante a table</li></ul>",
       f.alimentationPerso?"<p>"+f.alimentationPerso.replace(/\n/g,"<br/>")+"</p>":"",
       "<div class='sh'>06  Sommeil et repos</div>",
-      "<ul><li>Espace calme, securise et personnel</li><li>Rituel d'endormissement individualise</li><li>Surveillance reguliere pendant le sommeil</li><li>Pas de reveil impose</li></ul>",
+      "<ul><li>Espace calme, sécurisé et personnel</li><li>Rituel d'endormissement individualise</li><li>Surveillance régulière pendant le sommeil</li><li>Pas de reveil impose</li></ul>",
       f.sommeilPerso?"<p>"+f.sommeilPerso.replace(/\n/g,"<br/>")+"</p>":"",
       "<div class='sh'>07  Activites et eveil</div>",
-      "<ul><li>Motricite globale : parcours, danse, ballon, jardin</li><li>Motricite fine : gommettes, pate a modeler, dessin</li><li>Eveil sensoriel : jeux d'eau, bacs sensoriels, peinture</li><li>Eveil musical : comptines, instruments</li><li>Langage : albums, imagiers, jeux de doigts</li><li>Sorties : parc, bibliotheque, RAM</li></ul>",
+      "<ul><li>Motricite globale : parcours, danse, ballon, jardin</li><li>Motricite fine : gommettes, pate a modeler, dessin</li><li>Éveil sensoriel : jeux d'eau, bacs sensoriels, peinture</li><li>Éveil musical : comptines, instruments</li><li>Langage : albums, imagiers, jeux de doigts</li><li>Sorties : parc, bibliotheque, RAM</li></ul>",
       f.activitesPerso?"<p>"+f.activitesPerso.replace(/\n/g,"<br/>")+"</p>":"",
       "<div class='sh'>08  Sante et securite</div>",
-      "<ul><li>Domicile securise selon les recommandations de la PMI</li><li>Formee aux gestes de premiers secours</li><li>En cas de maladie : parents prevenus, ordonnance obligatoire</li><li>En cas d'urgence : appel du 15 et parents prevenus</li></ul>",
+      "<ul><li>Domicile sécurisé selon les recommandations de la PMI</li><li>Formee aux gestes de premiers secours</li><li>En cas de maladie : parents prevenus, ordonnance obligatoire</li><li>En cas d'urgence : appel du 15 et parents prevenus</li></ul>",
       "<div class='sh'>09  Partenariat avec les parents</div>",
-      "<ul><li>Transmissions quotidiennes : repas, sommeil, activites, humeur</li><li>Disponible pour les questions, joignable en cas d'urgence</li><li>Respect mutuel des choix educatifs</li></ul>",
+      "<ul><li>Transmissions quotidiennes : repas, sommeil, activités, humeur</li><li>Disponible pour les questions, joignable en cas d'urgence</li><li>Respect mutuel des choix educatifs</li></ul>",
       f.communicationPerso?"<p>"+f.communicationPerso.replace(/\n/g,"<br/>")+"</p>":"",
       "<div class='sh'>10  Periode d'adaptation</div>",
       "<p>L'adaptation dure generalement 1 a 2 semaines.</p>",
       "<table>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 1</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h avec le parent present</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 1</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h avec le parent présent</td></tr>",
       "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 2-3</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>1h sans le parent, separation courte</td></tr>",
       "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Jour 4-5</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>2-3h, premier repas</td></tr>",
-      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Semaine 2</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>Demi-journees puis journees completes</td></tr>",
+      "<tr><td style='background:#F0FAF4;padding:8px 14px;font-weight:700;color:#5DA9A1;width:140px;border:1px solid #e0e0e0'>Semaine 2</td><td style='padding:8px 14px;border:1px solid #e0e0e0'>Demi-journées puis journées complètes</td></tr>",
       "</table>",
       "<div class='sh'>Pour conclure</div>",
       "<p>Ce projet d'accueil est un document vivant. N'hesitez pas a en discuter avec moi a tout moment.</p>",
@@ -1834,12 +1834,12 @@ export function ProjetAccueil({user,role}){
       "<div style='display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px'>",
       "<div><p style='font-weight:700'>L'assistante maternelle :</p><div style='height:80px'></div></div>",
       "<div><p style='font-weight:700'>Les parents :</p><div style='height:80px'></div></div></div>",
-      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:30px'>Genere par TiMat - timat.app</p>",
+      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:30px'>Généré par TiMat - timat.app</p>",
       "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
     w.document.write(html);w.document.close();
-    setToast("Projet d'accueil genere ✓");
+    setToast("Projet d'accueil généré ✓");
   };
 
   // LA LECTURE A ECHOUE. On ne propose surtout pas le formulaire vide : le
@@ -1888,23 +1888,23 @@ export function ProjetAccueil({user,role}){
         </div>
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📝"/> Mon introduction</div>
-          {ta("Pourquoi j'aime ce metier, ce qui me motive","intro","Depuis X ans, j'exerce le metier d'assistante maternelle avec passion...",4)}
+          {ta("Pourquoi j'aime ce metier, ce qui me motive","intro","Depuis X ans, j'exerce le métier d'assistante maternelle avec passion...",4)}
         </div>
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🎓 Ma presentation</div>
           {ta("Mon parcours et mes formations","parcours","CAP AEPE, formations IPERIA, experiences professionnelles...",4)}
-          {ta("Mon agrement en detail","agrementDetail","Agree pour X enfants, de X mois a X ans, depuis le...",3)}
-          {ta("Mon domicile et ses amenagements","domicile","Maison avec jardin, espace de jeu dedie, chambre de repos...",4)}
+          {ta("Mon agrement en detail","agrementDetail","Agréée pour X enfants, de X mois à X ans, depuis le...",3)}
+          {ta("Mon domicile et ses amenagements","domicile","Maison avec jardin, espace de jeu dédié, chambre de repos...",4)}
         </div>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>💛 Mes valeurs</div>
           <div style={{fontSize:11,color:"var(--l)",marginBottom:8,lineHeight:1.6}}>Les valeurs de base (bienveillance, autonomie, attachement, CNV) sont deja incluses. Ajoutez les votres ci-dessous.</div>
-          {ta("Mes valeurs complementaires","valeursPerso","Motricite libre, pedagogie Montessori, lien avec la nature...",3)}
+          {ta("Mes valeurs complémentaires","valeursPerso","Motricite libre, pedagogie Montessori, lien avec la nature...",3)}
         </div>
         <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Ma journee type</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Ma journée type</div>
           {form.horaires.map((h,i)=><div key={i}style={{display:"flex",gap:6,marginBottom:4}}>
             <input className="inp"disabled={ro}style={{width:110,flexShrink:0,fontSize:11}}value={h.h}onChange={e=>setHoraire(i,"h",e.target.value)}/>
             <input className="inp"disabled={ro}style={{flex:1,fontSize:11}}value={h.d}onChange={e=>setHoraire(i,"d",e.target.value)}/>
@@ -1913,7 +1913,7 @@ export function ProjetAccueil({user,role}){
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="🍽️"/> Mes specificites</div>
           {ta("Alimentation","alimentationPerso","Bio, potager, menus de la semaine...",2)}
-          {ta("Sommeil","sommeilPerso","Piece dediee, babyphone, gigoteuse...",2)}
+          {ta("Sommeil","sommeilPerso","Pièce dédiée, babyphone, gigoteuse...",2)}
           {ta("Activites","activitesPerso","Yoga enfant, jardinage, sorties nature...",2)}
           {ta("Communication avec les parents","communicationPerso","Application TiMat, cahier de liaison...",2)}
         </div>
@@ -2046,7 +2046,7 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       const PW=297,MX=12;let y=18;
       const orange=[184,98,47],noir=[40,40,40],gris=[120,120,120];
       doc.setFontSize(17);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
-      doc.text("Registre d'administration des medicaments",MX,y);y+=8;
+      doc.text("Registre d'administration des médicaments",MX,y);y+=8;
       doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(...gris);
       doc.text("Decret n 2021-1131 - article R.2111-1 du code de la sante publique",MX,y);y+=7;
       doc.setFontSize(10);doc.setTextColor(...noir);
@@ -2083,7 +2083,7 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
       }
       y+=6;
       doc.setFontSize(8);doc.setTextColor(...gris);
-      doc.text("Document genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
+      doc.text("Document généré par TiMat le "+new Date().toLocaleDateString("fr-FR")+" - "+lignes.length+" inscription(s).",MX,y);
       doc.save("registre-medicaments-"+(enfant?.prenom||"enfant")+".pdf");
       logAction&&logAction("registre_medicament_imprime");
     }catch(e){ setToast("Le PDF n'a pas pu être créé."); }
@@ -2621,7 +2621,7 @@ export function Autorisations({enfants,role,pEId,user}){
         doc.setDrawColor(228,220,208);doc.line(MX,y,PW-MX,y);y+=6;
       }
       doc.setFontSize(8);doc.setTextColor(...gris);
-      doc.text("Genere par TiMat le "+new Date().toLocaleDateString("fr-FR")+".",MX,y+2);
+      doc.text("Généré par TiMat le "+new Date().toLocaleDateString("fr-FR")+".",MX,y+2);
       doc.save("autorisations-"+(enfant?.prenom||"enfant")+".pdf");
     }catch(e){ setToast("Le PDF n'a pas pu être créé."); }
   };

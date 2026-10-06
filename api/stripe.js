@@ -29,7 +29,7 @@ const BOUTIQUE_PRODUCTS = {
   kit_sheets: { name: 'Kit de gestion Assmat', price: 1490 },
   fiche_urgence: { name: "Fiche d'urgence", price: 690 },
   projet_accueil: { name: "Projet d'accueil", price: 1290 },
-  registre_medicaments: { name: 'Registre des medicaments administres', price: 690 },
+  registre_medicaments: { name: 'Registre des médicaments administrés', price: 690 },
   pack_complet: { name: 'Pack Complet Assmat', price: 3490 },
 };
 

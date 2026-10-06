@@ -515,7 +515,7 @@ export function PastilleRepas({q,taille=12}){
 //
 //   annee complete   : salaire mensualise x heures non travaillees / heures
 //                      qui auraient ete reellement travaillees dans le mois
-//   annee incomplete : salaire mensualise x jours non travailles / jours qui
+//   année incomplète : salaire mensualise x jours non travailles / jours qui
 //                      auraient du etre reellement travailles
 //
 // Les periodes d'absence, les semaines de non-accueil et les jours feries
@@ -2939,7 +2939,7 @@ export const MAJORATION_TITRE_AMGE=0.04;
 //
 //   annee complete (52 semaines) : taux x heures/semaine x 52 / 12.
 //     Les conges payes sont inclus dans le lissage.
-//   annee incomplete (46 semaines ou moins) : taux x heures/semaine x semaines
+//   année incomplète (46 semaines ou moins) : taux x heures/semaine x semaines
 //     programmees / 12. Les conges payes sont payes separement.
 //
 // Pour un accueil sur l'annee scolaire — 36 a 46 semaines, le cas le plus
@@ -3461,7 +3461,7 @@ export async function viderStockageDuCompte(userId){
       for(let i=0;i<aEffacer.length;i+=100){
         const lot=aEffacer.slice(i,i+100);
         const{error:eSup}=await supabase.storage.from(bucket).remove(lot);
-        if(eSup){ restants+=lot.length; console.warn("[suppression] "+lot.length+" fichier(s) non effaces dans "+bucket+" :",eSup.message); }
+        if(eSup){ restants+=lot.length; console.warn("[suppression] "+lot.length+" fichier(s) non effacés dans "+bucket+" :",eSup.message); }
       }
       if(restants)console.warn("[suppression] TOTAL non efface dans "+bucket+" : "+restants+" fichier(s)");
     }catch(e){
@@ -3653,7 +3653,7 @@ const jsPDF=await chargerJsPDF();
     const REPAS_TEXTE={
       employeur:"Fournis par le particulier employeur",
       assmat:"Fournis par l'assistant maternel",
-      mixte:"Partages entre les parties (voir detail ci-dessous)",
+      mixte:"Partagés entre les parties (voir détail ci-dessous)",
     };
     const repasPar=REPAS_TEXTE[ct.repas_fourni_par]||null;
 
@@ -6207,13 +6207,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}><IconeOuEmoji e="🛒" taille={22}/> Boutique TiMat</div>
             <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
-          <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
+          <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement sécurisé par Stripe.</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
-              {id:"kit_sheets",name:"Kit de gestion",price:"14,90",desc:"Jusqu'a 4 contrats : heures jour par jour, mensualisation, conges payes, recap annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
+              {id:"kit_sheets",name:"Kit de gestion",price:"14,90",desc:"Jusqu'à 4 contrats : heures jour par jour, mensualisation, congés payés, récap annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
               {id:"fiche_urgence",name:"Fiche d'urgence",prix:0,desc:"Le document a afficher, que la PMI regarde. A remplir et imprimer.",icon:"🚨",color:"#C84B31",fichier:"/documents/fiche-renseignements-urgence.pdf"},
-              {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections guidees, adossees au referentiel national qualite 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
-              {id:"registre_medicaments",name:"Registre des medicaments",prix:0,desc:"Document obligatoire (article R2111-1). Aussi tenu directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
+              {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections guidées, adossées au référentiel national qualité 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
+              {id:"registre_medicaments",name:"Registre des médicaments",prix:0,desc:"Document obligatoire (article R2111-1). Aussi tenu directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
                 {p.icon}
@@ -6231,7 +6231,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>
             </div>)}
           </div>
-          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Les documents obligatoires sont gratuits · Paiement securise par Stripe pour les autres</div>
+          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Les documents obligatoires sont gratuits · Paiement sécurisé par Stripe pour les autres</div>
         </div>
       </div>}
 
@@ -7966,7 +7966,7 @@ export default function App(){
   // //  Lancer le checkout Stripe
   const lancerCheckout=async()=>{
     if(user?.id?.startsWith?.("demo-")){
-      alert("Le paiement n'est pas disponible en mode demo. Creez un compte pour continuer.");
+      alert("Le paiement n'est pas disponible en mode démo. Créez un compte pour continuer.");
       return;
     }
     try{
@@ -7978,7 +7978,7 @@ export default function App(){
       if(!res.ok){
         const txt=await res.text();
         console.error('Stripe error:', res.status, txt);
-        alert("Erreur serveur ("+res.status+"). Verifiez que Stripe est configure dans Vercel.");
+        alert("Erreur serveur ("+res.status+"). Vérifiez que Stripe est configuré dans Vercel.");
         return;
       }
       const data=await res.json();

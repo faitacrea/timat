@@ -987,7 +987,7 @@ export function Sommeil({enfants,role,pEId}){
     const[h1,m1]=nS.debut.split(":").map(Number);
     const[h2,m2]=nS.fin.split(":").map(Number);
     const d=(h2*60+m2)-(h1*60+m1);
-    if(d<=0){setToast("L'heure de fin doit etre apres le debut");return;}
+    if(d<=0){setToast("L'heure de fin doit être après le début");return;}
     const duree=Math.floor(d/60)+"h"+String(d%60).padStart(2,"0");
     const payload={
       enfant_id:enfant.id,
@@ -2990,11 +2990,11 @@ const jsPDF=await chargerJsPDF();
       y+=4;
       // Section 1 : Heures
       doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
-      doc.text("Heures travaillees "+annee,MX,y);y+=8;
+      doc.text("Heures travaillées "+annee,MX,y);y+=8;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       const tbl1=[
-        ["Heures reelles pointees",heuresAnnuelles+" h"],
-        ["Nb de jours pointes",String(realStats?.nbPointages||"-")],
+        ["Heures réelles pointées",heuresAnnuelles+" h"],
+        ["Nb de jours pointés",String(realStats?.nbPointages||"-")],
         ["Nb d absences",String(realStats?.nbAbsences||"-")],
       ];
       // Header tableau
@@ -3013,10 +3013,10 @@ const jsPDF=await chargerJsPDF();
       y+=8;
       // Section 2 : Financier
       doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
-      doc.text("Recapitulatif financier",MX,y);y+=8;
+      doc.text("Récapitulatif financier",MX,y);y+=8;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       const tbl2=[
-        ["Salaire net annuel"+(realStats?.paiements?" (donnees reelles)":" (estime)"),salaireAnnuel+" euros"],
+        ["Salaire net annuel"+(realStats?.paiements?" (données réelles)":" (estime)"),salaireAnnuel+" euros"],
         ["Indemnites d entretien (estimees)",entretienAnnuel+" euros"],
         ["Total verse",totalAnnuel+" euros"],
         ["Crédit d'impôt estimé du parent (" + nbf(CI_TAUX*100,0) + " %)",nbf(creditImpot,0)+" € — enfant de moins de 6 ans, dépenses plafonnées à 3 500 €"],
@@ -3046,17 +3046,17 @@ const jsPDF=await chargerJsPDF();
         doc.text("Le "+new Date().toLocaleDateString("fr-FR")+" - "+(user?.prenom||"")+" "+(user?.nom||""),MX+3,y+28);
       }else{
         doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
-        doc.text("Aucune signature enregistree. Voir Parametres.",MX+3,y+18);
+        doc.text("Aucune signature enregistrée. Voir Paramètres.",MX+3,y+18);
       }
       y+=36;
       // Footer
       doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
-      doc.text("Genere par TiMat - "+new Date().toLocaleDateString("fr-FR"),MX,y);
+      doc.text("Généré par TiMat - "+new Date().toLocaleDateString("fr-FR"),MX,y);
       // Save
       doc.save("rapport-annuel-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
-      setToast("Rapport telecharge ✓");
+      setToast("Rapport téléchargé ✓");
     }catch(e){
-      setToast("Erreur generation PDF : "+e.message);
+      setToast("Erreur génération PDF : "+e.message);
     }
     setGen(false);
   };
@@ -3091,13 +3091,13 @@ const jsPDF=await chargerJsPDF();
         +'<h1>Rapport annuel '+annee+'</h1>'
         +'<p><strong>Assistante maternelle:</strong> '+H((user?.prenom||"")+" "+(user?.nom||""))+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
-        +'<h2>Heures travaillees '+annee+'</h2>'
+        +'<h2>Heures travaillées '+annee+'</h2>'
         +'<table><tr><th>Indicateur</th><th>Valeur</th></tr>'
-        +'<tr><td>Heures reelles pointees</td><td>'+heuresAnnuelles+' h</td></tr>'
-        +'<tr><td>Nb de jours pointes</td><td>'+(realStats?.nbPointages||"-")+'</td></tr>'
+        +'<tr><td>Heures réelles pointées</td><td>'+heuresAnnuelles+' h</td></tr>'
+        +'<tr><td>Nb de jours pointés</td><td>'+(realStats?.nbPointages||"-")+'</td></tr>'
         +'<tr><td>Nb d absences</td><td>'+(realStats?.nbAbsences||"-")+'</td></tr>'
         +'</table>'
-        +'<h2>Recapitulatif financier</h2>'
+        +'<h2>Récapitulatif financier</h2>'
         +'<table><tr><th>Poste</th><th>Montant</th></tr>'
         +'<tr><td>Salaire net annuel'+(realStats?.paiements?" (données réelles)":" (estimé)")+'</td><td>'+nbf(salaireAnnuel,0)+' €</td></tr>'
         +"<tr><td>Indemnites d'entretien (estimees)</td><td>"+entretienAnnuel+"€</td></tr>"
@@ -3107,11 +3107,11 @@ const jsPDF=await chargerJsPDF();
         +(userSig
           ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:11px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
           :'')
-        +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
+        +'<p style="font-size:12px;color:#888;margin-top:20px">Généré par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'</body></html>';
       w.document.write(htmlRapport);
       w.document.close();
-      setToast("Aperçu ouvert. Pour PDF, utilisez le bouton Telecharger PDF dans l'app.");
+      setToast("Aperçu ouvert. Pour PDF, utilisez le bouton Télécharger PDF dans l'app.");
     },1000);
   };
 
@@ -3390,7 +3390,7 @@ export function BilansExports({enfants,role,pEId,user,pointagesDB}){
   return <div className="fi">
     <PageHeader icon="📊" title="Rapports & Exports" sub="Rapports, recapitulatifs et exports de vos donnees"/> {/* RENAME NAV P9 */}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Recap mensuel PDF",ic:"📄"},{id:"export",l:"Export donnees",ic:"📦"}].map(s=>
+      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Récap mensuel PDF",ic:"📄"},{id:"export",l:"Export données",ic:"📦"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -3871,9 +3871,9 @@ const jsPDF=await chargerJsPDF();
       doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
       doc.text("Généré par TiMat — "+new Date().toLocaleDateString("fr-FR"),PW/2,280,{align:"center"});
       doc.save("recapitulatif-versements-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
-      setToast("Recapitulatif telecharge ✓");
+      setToast("Récapitulatif téléchargé ✓");
     }catch(e){
-      setToast("Erreur generation PDF : "+e.message);
+      setToast("Erreur génération PDF : "+e.message);
     }
     setGen(false);
   };
@@ -3918,7 +3918,7 @@ const jsPDF=await chargerJsPDF();
         '</head><body>',
         '<div class="actions noprint">',
           '<button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>',
-          '<button class="btn-pdf" onclick="dlPdf()">📥 Telecharger PDF</button>',
+          '<button class="btn-pdf" onclick="dlPdf()">📥 Télécharger PDF</button>',
         '</div>',
         '<div id="doc">',
         '<h1>📋 RÉCAPITULATIF DES VERSEMENTS<br/><span style="font-size:12px;font-weight:400;color:#666">Année '+annee+' — Sommes versées à l\'assistante maternelle (justificatif indicatif)</span></h1>',
@@ -3964,7 +3964,7 @@ const jsPDF=await chargerJsPDF();
         '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#2E4859">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
         '<div class="sig">',
         '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :'
-          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:11px;font-style:italic">(Aucune signature enregistree dans Parametres)</span>')
+          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:11px;font-style:italic">(Aucune signature enregistrée dans Paramètres)</span>')
           +'</div>',
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:11px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
