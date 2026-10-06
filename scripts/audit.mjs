@@ -3651,14 +3651,48 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
       signale("rgpd", `${inconnues.length} table(s) que le code utilise et que le registre ignore — leur contenu ne partirait dans aucun export : ${inconnues.slice(0, 5).join(", ")}`);
     }
     // Les tables declarees exportees doivent l'etre pour de vrai.
-    const exportees = Object.entries(registre).filter(([, v]) => v === "exportee").map(([t]) => t);
+    const exportees = Object.entries(registre).filter(([, v]) => String(v).startsWith("exportee")).map(([t]) => t);
     const dansExport = new Set([...modules.matchAll(/table:\s*["'`]([a-z_]+)["'`]/g)].map((m) => m[1]));
     const promises = exportees.filter((t) => !dansExport.has(t));
     if (promises.length) {
       signale("rgpd", `${promises.length} table(s) déclarée(s) « exportee » au registre mais absente(s) de l'export : ${promises.slice(0, 5).join(", ")}`);
     }
+    // --- ET LA SUPPRESSION DU COMPTE EFFACE-T-ELLE TOUT CE QU'ELLE PROMET ? ---
+    //
+    // L'application dit « Effacement immediat » et « toutes mes donnees ».
+    // delete_user_account en oubliait NEUF, dont les autorisations parentales
+    // avec leur signature, le registre des medicaments — des donnees de sante —
+    // et le mandat Pajemploi lui-meme. Et comme « enfants » etait bien
+    // supprimee, ces lignes devenaient orphelines : plus rien ne pouvait les
+    // atteindre, ni les lire, ni les effacer.
+    //
+    // La fonction vit dans la base ; sa version de reference vit ici, dans
+    // sql/. C'est celle-la qu'on lit : une table « exportee » doit y etre
+    // effacee, sauf si le registre dit qu'elle est conservee, avec sa raison.
+    {
+      let suppression = "";
+      try {
+        const dossier = new URL("../sql/", import.meta.url);
+        for (const f of readdirSync(dossier).sort()) {
+          if (!/suppression-compte/.test(f)) continue;
+          suppression = readFileSync(new URL(f, dossier), "utf8");
+        }
+      } catch (e) { /* dossier absent : signale juste apres */ }
+      if (!suppression) {
+        signale("rgpd", "aucun fichier sql/*suppression-compte* : la suppression de compte n'est plus relue par personne");
+      } else {
+        const effacees = new Set([...suppression.matchAll(/delete\s+from\s+(?:public\.)?([a-z_]+)/gi)].map((m) => m[1]));
+        const oubliees = Object.entries(registre)
+          .filter(([t, v]) => String(v).startsWith("exportee") && !String(v).includes("conservee") && !effacees.has(t))
+          .map(([t]) => t);
+        if (oubliees.length) {
+          signale("rgpd", `${oubliees.length} table(s) que l'application promet d'effacer et que la suppression de compte laisse derrière elle : ${oubliees.slice(0, 6).join(", ")}`);
+        }
+      }
+    }
+
     // Une exclusion sans raison est une exclusion qu'on ne peut pas discuter.
-    const sansRaison = Object.entries(registre).filter(([, v]) => v !== "exportee" && !/^exclue\s*:\s*\S/.test(String(v))).map(([t]) => t);
+    const sansRaison = Object.entries(registre).filter(([, v]) => !String(v).startsWith("exportee") && !/^exclue\s*:\s*\S/.test(String(v))).map(([t]) => t);
     if (sansRaison.length) {
       signale("rgpd", `${sansRaison.length} table(s) exclue(s) de l'export sans raison écrite : ${sansRaison.join(", ")}`);
     }

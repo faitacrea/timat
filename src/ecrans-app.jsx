@@ -2359,7 +2359,7 @@ export function PolitiqueConfidentialite(){
       ["Prospects","3 ans après le dernier contact","Norme CNIL prospection"],
       ["Messages de support","2 ans","Suivi de la demande"],
       ["Journaux de connexion","12 mois","Sécurité"],
-      ["Consentements","5 ans","Preuve de conformité CNIL"],
+      ["Consentements","5 ans, ou effacés avec le compte s'il est supprimé avant","Preuve de conformité CNIL"],
       ["Données de l'enfant et registres professionnels","Fixée par l'assistante maternelle","TiMat n'en est que l'hébergeur"],
       ["Fin de l'abonnement","Restitution ou suppression, au choix","RGPD art. 28.3.g"],
     ],

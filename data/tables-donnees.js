@@ -12,8 +12,16 @@
 // table nouvelle doit être rangée ici, et l'audit refuse qu'une table écrite
 // par l'application n'y figure pas.
 //
-// « exportee » : ses lignes appartiennent à quelqu'un, et partent dans l'export.
-// « exclue »   : elle n'appartient à personne — et il faut dire pourquoi.
+// « exportee » : ses lignes appartiennent à quelqu'un, et partent dans l'export
+//                — et elles sont effacées avec le compte.
+// « exportee+conservee : … » : exportée, mais gardée après la suppression du
+//                compte, pour une raison que la politique annonce déjà.
+// « exclue : … » : elle n'appartient à personne — et il faut dire pourquoi.
+//
+// Ce registre sert aussi à la suppression : l'audit exige que toute table
+// « exportee » soit effacée par delete_user_account. Neuf y manquaient, dont
+// les autorisations signées, le registre des médicaments et le mandat
+// Pajemploi — voir sql/2026-10-05-suppression-compte-complete.sql.
 export const TABLES = {
   // --- Ce qui appartient à l'utilisatrice, et part dans l'export -------------
   profiles: "exportee",
@@ -34,7 +42,7 @@ export const TABLES = {
   paiements: "exportee",
   messages: "exportee",
   documents_meta: "exportee",
-  audit_log: "exportee",
+  audit_log: "exportee+conservee : journaux de connexion, 12 mois (sécurité). Annoncé au § 4 de la politique.",
   bulletins: "exportee",
   versements: "exportee",
   historique_mois: "exportee",
@@ -57,8 +65,8 @@ export const TABLES = {
   mandats_pajemploi: "exportee",
   consentements: "exportee",
   notifications: "exportee",
-  support_messages: "exportee",
-  achats_boutique: "exportee",
+  support_messages: "exportee+conservee : 2 ans, le temps du suivi de la demande. Annoncé au § 4.",
+  achats_boutique: "exportee+conservee : 10 ans, obligation comptable (code de commerce, art. L123-22). Annoncé au § 4.",
 
   // --- Ce qui n'appartient à personne, et pourquoi ---------------------------
   app_config: "exclue : les réglages du site, écrits au back-office. Ils ne décrivent aucune personne.",
