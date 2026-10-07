@@ -17,12 +17,13 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import {
   ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -779,7 +780,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   // prevus au contrat.
   const joursTravailles=useRealHours?heuresMoisReel.jours
     :Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN);
-  const entretien=(contrat.entretien||3.92)*joursTravailles;
+  const entretien=entretienDuContrat(contrat)*joursTravailles;
   // --- Retenue pour absence de l'assistante maternelle (CCN 3239, art. 111) ---
   // Elle ne s'applique QUE sur un salaire mensualise. Des que le bulletin est
   // bati sur les pointages reels, la journee non travaillee ne figure deja plus
@@ -931,7 +932,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       section("RÉMUNÉRATION");
       ligne("Salaire de base (heures normales)",nbf(heuresNorm,2)+" h",nbf(tauxH,4)+" €/h",nbf(salBase,2)+" €");
       if(hSupp>0)ligne("Heures supplémentaires (+ 25 %)",hSupp+" h",nbf((tauxH*1.25),4)+" €/h",nbf(salSupp,2)+" €");
-      ligne("Indemnité d'entretien",joursTravailles+" jours",nbf((contrat.entretien||3.92),2)+" €/j",nbf(entretien,2)+" €");
+      ligne("Indemnité d'entretien",joursTravailles+" jours",nbf(entretienDuContrat(contrat),2)+" €/j",nbf(entretien,2)+" €");
       if(repasMois>0)ligne("Indemnité de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" €/j",nbf(repasMois,2)+" €");
       if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"année complète":"année incomplète","- "+nbf(retenue,2)+" €");
       placer(9);doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
@@ -1194,7 +1195,7 @@ template:"bulletin_sent",
       </label>
       <label style={{display:"flex",alignItems:"center",gap:7,color:"var(--m)"}}>
         Indemnité repas (€/jour)
-        <input type="number" step="0.01" min="0" value={repasJour} onChange={e=>setRepasJour(e.target.value)} style={{width:74,padding:"4px 7px",borderRadius:6,border:"1px solid var(--br)",fontSize:12}}/>
+        <ChampNombre min="0" decimales={2} defaut={0} value={repasJour} onChange={v=>setRepasJour(v)} className="" style={{width:74,padding:"4px 7px",borderRadius:6,border:"1px solid var(--br)",fontSize:12}}/>
       </label>
       {!isDemoBull&&contrat?.id&&<button className="btn bG s" style={{padding:"6px 12px"}} onClick={async()=>{
         const{error}=await supabase.from("contrats").update({aeeh:!!aeeh,repas:Number(repasJour)||0}).eq("id",contrat.id);
@@ -1254,7 +1255,7 @@ template:"bulletin_sent",
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",nbf(salBase,2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+nbf((tauxH*1.25),2)+"€",nbf(salSupp,2)+"€"]]:[]),
-          ["Indemnité d'entretien",joursTravailles+" j × "+nb2(contrat.entretien||3.92)+"€",nbf(entretien,2)+"€"],
+          ["Indemnité d'entretien",joursTravailles+" j × "+nb2(entretienDuContrat(contrat))+"€",nbf(entretien,2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+nbf((Number(repasJour)||0),2)+"€",nbf(repasMois,2)+"€"]]:[]),
           ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+nbf(retenue,2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
@@ -1367,7 +1368,7 @@ template:"bulletin_sent",
           "<table><tr><th>Libellé</th><th>Heures / Jours</th><th>Taux</th><th class=\"right\">Montant brut</th></tr>",
           "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+nbf(heuresNorm,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(salBase,2)+" €</td></tr>",
           hSuppRow,
-          "<tr><td>Indemnité d'entretien</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((contrat.entretien||3.92),2)+" €/j</td><td class=\"right\">"+nbf(entretien,2)+" €</td></tr>",
+          "<tr><td>Indemnité d'entretien</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf(entretienDuContrat(contrat),2)+" €/j</td><td class=\"right\">"+nbf(entretien,2)+" €</td></tr>",
           (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"année incomplète")+"</td><td class=\"right\">- "+nbf(retenue,2)+" €</td></tr>":"")+
           (repasMois>0?"<tr><td>Indemnité de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((Number(repasJour)||0),2)+" €/j</td><td class=\"right\">"+nbf(repasMois,2)+" €</td></tr>":""),
           "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" €</td></tr>",
@@ -1773,7 +1774,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
   const resetForm=()=>{setFDate(todayStr);setFMontant("");setFMode("virement");setFPeriode("");setFNote("");};
 
   const ajouterVersement=async()=>{
-    const montant=parseFloat(String(fMontant).replace(",","."));
+    const montant=fMontant===null||fMontant===""?NaN:Number(fMontant);
     if(!enfant?.id){setToast("Aucun enfant sélectionné");setTimeout(()=>setToast(""),2500);return;}
     if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
     if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
@@ -1826,7 +1827,7 @@ template:"versement_recu",
     setShowForm(false);
   };
   const modifierVersement=async()=>{
-    const montant=parseFloat(String(fMontant).replace(",","."));
+    const montant=fMontant===null||fMontant===""?NaN:Number(fMontant);
     if(!editId)return;
     if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
     if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
@@ -1913,7 +1914,7 @@ template:"versement_recu",
               </div>
               <div>
                 <label style={labelStyle}>Montant (€)</label>
-                <input type="number"inputMode="decimal"step="0.01"min="0"placeholder="0,00"value={fMontant}onChange={e=>setFMontant(e.target.value)}style={inputStyle}/>
+                <ChampNombre min="0" decimales={2} placeholder="0,00" value={fMontant} onChange={v=>setFMontant(v)} className="" style={inputStyle}/>
               </div>
               <div>
                 <label style={labelStyle}>Mode de paiement</label>
@@ -1965,7 +1966,7 @@ template:"versement_recu",
         </div>
         <div style={{marginBottom:12}}>
           <label style={labelStyle}>Montant (€)</label>
-          <input type="number"inputMode="decimal"step="0.01"min="0"placeholder="0,00"value={fMontant}onChange={e=>setFMontant(e.target.value)}style={inputStyle}/>
+          <ChampNombre min="0" decimales={2} placeholder="0,00" value={fMontant} onChange={v=>setFMontant(v)} className="" style={inputStyle}/>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
           <div>
@@ -2181,8 +2182,8 @@ export function IndemnitesJournalieres({contrat,role,onSaved,onErr}){
       :<>
       <label className="lbl">Indemnité d'entretien (€ par journée d'accueil)</label>
       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-        <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
-          value={entretien} onChange={e=>setEntretien(Math.max(0,parseFloat(e.target.value)||0))}/>
+        <ChampNombre className="inp" style={{maxWidth:130}} min="0" decimales={2} defaut={0}
+          value={entretien} onChange={v=>setEntretien(v)}/>
         <span style={{fontSize:12,color:"var(--m)"}}>
           minimum {nb2(miniEntretien)} € pour une journée de {heuresJour||9} h
         </span>
@@ -2212,8 +2213,8 @@ export function IndemnitesJournalieres({contrat,role,onSaved,onErr}){
       </div>
       {qui&&qui!=="employeur"&&<div style={{marginTop:12}}>
         <label className="lbl">Indemnité de repas (€ par journée d'accueil)</label>
-        <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
-          value={repas} onChange={e=>setRepas(Math.max(0,parseFloat(e.target.value)||0))}/>
+        <ChampNombre className="inp" style={{maxWidth:130}} min="0" decimales={2} defaut={0}
+          value={repas} onChange={v=>setRepas(v)}/>
         <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
           Elle ne peut pas descendre sous le minimum conventionnel. La nature des repas convenue se précise sur le contrat imprimé.
         </div>
@@ -2287,8 +2288,8 @@ export function RythmeAccueil({contrat,role,onSaved,onErr}){
       </div>
       {!choix&&<div style={{marginTop:12}}>
         <label className="lbl">Semaines d'accueil dans l'année</label>
-        <input type="number" min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} step="1" className="inp" style={{maxWidth:120}}
-          value={semaines} onChange={e=>setSemaines(Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,parseFloat(e.target.value)||SEMAINES_MAX_ANNEE_INCOMPLETE)))}/>
+        <ChampNombre className="inp" style={{maxWidth:120}} min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} decimales={0} defaut={SEMAINES_MAX_ANNEE_INCOMPLETE}
+          value={semaines} onChange={v=>setSemaines(v)}/>
         <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
           Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant vous sera confié.
         </div>
@@ -3139,8 +3140,8 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
           <div style={{display:"flex",gap:14,flexWrap:"wrap",alignItems:"center",marginBottom:14,padding:"10px 12px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)"}}>
               Jours de congés déjà pris
-              <input type="number" min="0" max={cpAcquisFin} step="0.5" value={cpPris}
-                onChange={e=>{setPrisTouche(true);setCpPris(Math.max(0,Number(e.target.value)||0));}}
+              <ChampNombre min="0" max={cpAcquisFin} decimales={2} defaut={0} value={cpPris}
+                onChange={v=>{setPrisTouche(true);setCpPris(v);}} className=""
                 style={{width:72,padding:"5px 8px",borderRadius:7,border:"1px solid var(--br)",fontFamily:"inherit",fontSize:13}}/>
             </label>
             {prisRepris>0&&!prisTouche&&<span style={{fontSize:12,color:"#2F655F",fontWeight:600}}>

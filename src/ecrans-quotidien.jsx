@@ -15,13 +15,14 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import {
   ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 , enregistrerPointage
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
-  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE
 } from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
@@ -1324,8 +1325,8 @@ export function Calendrier({enfants,role,pEId,user}){
           </div>
           <div>
             <label className="lbl">Heures prévues ce jour *</label>
-            <input type="number"className="inp"placeholder="ex: 9"value={absForm.heures}
-              onChange={e=>setAbsForm(f=>({...f,heures:e.target.value}))} min="0"max="12"step="0.5"/>
+            <ChampNombre className="inp" placeholder="ex : 9 ou 7,5" value={absForm.heures}
+              onChange={v=>setAbsForm(f=>({...f,heures:v}))} min="0" max="12" decimales={2}/>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <input type="checkbox"id="indem2"checked={absForm.indemnise}
@@ -1389,8 +1390,8 @@ export function Calendrier({enfants,role,pEId,user}){
           <div><label className="lbl">Description</label><input className="inp" placeholder="Ex : RDV médecin, sortie au parc…" value={evForm.txt} onChange={e=>setEvForm(f=>({...f,txt:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addEvModal()}/></div>
           {HEURES_TYPES[evForm.type]&&<div>
             <label className="lbl">{evForm.type==="formh"?"Heures de formation ce jour":"Heures d'accueil perdues ce jour"}</label>
-            <input type="number" className="inp" min="0" max="24" step="0.5" value={evForm.heures??heuresJourContrat}
-              onChange={e=>setEvForm(f=>({...f,heures:e.target.value}))}/>
+            <ChampNombre className="inp" min="0" max="24" decimales={2} value={evForm.heures??heuresJourContrat}
+              onChange={v=>setEvForm(f=>({...f,heures:v}))}/>
             <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
               {RETENUE_TYPES[evForm.type]
                 ? "Servira à calculer la retenue sur le salaire mensualisé, selon l'article 111 de la convention collective."
@@ -2759,7 +2760,7 @@ export function OnboardingWizard({user,onFinish}){
   const [step,setStep]=useState(0);
   const [enfant,setEnfant]=useState({prenom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
-    heuresHebdo:40,tauxHoraire:4.20,entretien:3.80,
+    heuresHebdo:40,tauxHoraire:4.20,entretien:indemniteEntretienMin(40/JOURS_SEMAINE_TYPE),
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
     horaires:"07h30–17h30",debut:isoJour(new Date())
   });
@@ -2838,7 +2839,7 @@ export function OnboardingWizard({user,onFinish}){
         debut:contrat.debut||isoJour(new Date()),
         heures_hebdo:contrat.heuresHebdo||40,
         taux_horaire:contrat.tauxHoraire||minimumHoraireAu(new Date()),
-        entretien:contrat.entretien||3.92,
+        entretien:entretienDuContrat(contrat),
         // L'assistant posait la question du rythme et jetait la reponse :
         // le contrat repartait en annee complete quoi qu'on ait choisi.
         annee_complete:contrat.anneeComplete!==false,
@@ -2903,9 +2904,9 @@ export function OnboardingWizard({user,onFinish}){
           {step===1&&<>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Heures / semaine</label>
-                <input type="number"className="inp"value={contrat.heuresHebdo}onChange={e=>setContrat(c=>({...c,heuresHebdo:parseFloat(e.target.value)||40}))}/></div>
+                <ChampNombre className="inp" min="1" max="60" defaut={40} value={contrat.heuresHebdo} onChange={v=>setContrat(c=>({...c,heuresHebdo:v}))}/></div>
               <div><label className="lbl">Taux horaire brut (€)</label>
-                <input type="number"step="0.05"className="inp"value={contrat.tauxHoraire}onChange={e=>setContrat(c=>({...c,tauxHoraire:parseFloat(e.target.value)||4.05}))}/></div>
+                <ChampNombre className="inp" min="0" decimales={2} defaut={4.05} value={contrat.tauxHoraire} onChange={v=>setContrat(c=>({...c,tauxHoraire:v}))}/></div>
             </div>
             {/* Le mode de mensualisation change le salaire de plus de 10 % :
                 52 semaines conges inclus, ou les semaines reellement programmees
@@ -2926,9 +2927,9 @@ export function OnboardingWizard({user,onFinish}){
               </div>
               {contrat.anneeComplete===false&&<div style={{marginTop:10}}>
                 <label className="lbl">Semaines d'accueil dans l'année</label>
-                <input type="number" min="1" max="46" step="1" className="inp" style={{maxWidth:130}}
+                <ChampNombre className="inp" style={{maxWidth:130}} min="1" max="46" decimales={0} defaut={46}
                   value={contrat.semainesAccueil??46}
-                  onChange={e=>setContrat(c=>({...c,semainesAccueil:Math.min(46,Math.max(1,parseFloat(e.target.value)||46))}))}/>
+                  onChange={v=>setContrat(c=>({...c,semainesAccueil:v}))}/>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
                   Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant sera confié.
                 </div>
@@ -2940,13 +2941,13 @@ export function OnboardingWizard({user,onFinish}){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Indemnité entretien (€/j)</label>
-                <input type="number"step="0.05"className="inp"value={contrat.entretien}onChange={e=>setContrat(c=>({...c,entretien:parseFloat(e.target.value)||3.80}))}/></div>
+                <ChampNombre className="inp" min="0" decimales={2} defaut={indemniteEntretienMin(heuresJourDuContrat(contrat))} value={contrat.entretien} onChange={v=>setContrat(c=>({...c,entretien:v}))}/></div>
               <div><label className="lbl">Date de début</label>
                 <input type="date"className="inp"value={contrat.debut}onChange={e=>setContrat(c=>({...c,debut:e.target.value}))}/></div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12,alignItems:"end"}}>
               <div><label className="lbl">Indemnité repas (€/j, optionnel)</label>
-                <input type="number"step="0.05"min="0"className="inp"value={contrat.repas||0}onChange={e=>setContrat(c=>({...c,repas:parseFloat(e.target.value)||0}))}/></div>
+                <ChampNombre className="inp" min="0" decimales={2} defaut={0} value={contrat.repas??0} onChange={v=>setContrat(c=>({...c,repas:v}))}/></div>
               <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--m)",cursor:"pointer",paddingBottom:10}}>
                 <input type="checkbox"checked={!!contrat.aeeh}onChange={e=>setContrat(c=>({...c,aeeh:e.target.checked}))}/>
                 Enfant handicapé (AEEH) — abattement 4×SMIC
@@ -3052,7 +3053,7 @@ export function AjouterEnfantModale({user,onClose}){
     fin:"",
     heuresHebdo:40,
     tauxHoraire:4.20,
-    entretien:3.80,
+    entretien:indemniteEntretienMin(40/JOURS_SEMAINE_TYPE),
     anneeComplete:true,
     semainesAccueil:null,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
@@ -3123,7 +3124,7 @@ export function AjouterEnfantModale({user,onClose}){
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,
         taux_horaire:Number(contrat.tauxHoraire)||minimumHoraireAu(new Date()),
-        entretien:Number(contrat.entretien)||3.80,
+        entretien:entretienDuContrat(contrat),
         jours:contrat.jours,
         horaires:contrat.horaires||"07h30–17h30",
         aeeh:!!contrat.aeeh,
@@ -3251,13 +3252,13 @@ export function AjouterEnfantModale({user,onClose}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             <div>
               <label className="lbl">Heures / semaine *</label>
-              <input type="number" className="inp" min="1" max="50" value={contrat.heuresHebdo}
-                onChange={e=>setContrat(c=>({...c,heuresHebdo:e.target.value}))}/>
+              <ChampNombre className="inp" min="1" max="50" defaut={40} value={contrat.heuresHebdo}
+                onChange={v=>setContrat(c=>({...c,heuresHebdo:v}))}/>
             </div>
             <div>
               <label className="lbl">Taux horaire (€) *</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.tauxHoraire}
-                onChange={e=>setContrat(c=>({...c,tauxHoraire:e.target.value}))}/>
+              <ChampNombre className="inp" min="0" decimales={2} value={contrat.tauxHoraire}
+                onChange={v=>setContrat(c=>({...c,tauxHoraire:v}))}/>
             </div>
           </div>
           {/* Le rythme n'etait demande que dans l'assistant du premier enfant :
@@ -3278,9 +3279,9 @@ export function AjouterEnfantModale({user,onClose}){
             </div>
             {contrat.anneeComplete===false&&<div style={{marginTop:10}}>
               <label className="lbl">Semaines d'accueil dans l'année</label>
-              <input type="number" min="1" max="46" step="1" className="inp" style={{maxWidth:130}}
+              <ChampNombre className="inp" style={{maxWidth:130}} min="1" max="46" decimales={0} defaut={46}
                 value={contrat.semainesAccueil??46}
-                onChange={e=>setContrat(c=>({...c,semainesAccueil:Math.min(46,Math.max(1,parseFloat(e.target.value)||46))}))}/>
+                onChange={v=>setContrat(c=>({...c,semainesAccueil:v}))}/>
             </div>}
             <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
               Salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
@@ -3290,8 +3291,8 @@ export function AjouterEnfantModale({user,onClose}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             <div>
               <label className="lbl">Indemnité entretien (€/jour)</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.entretien}
-                onChange={e=>setContrat(c=>({...c,entretien:e.target.value}))}/>
+              <ChampNombre className="inp" min="0" decimales={2} value={contrat.entretien}
+                onChange={v=>setContrat(c=>({...c,entretien:v}))}/>
             </div>
             <div>
               <label className="lbl">Horaires (texte)</label>
@@ -3302,8 +3303,8 @@ export function AjouterEnfantModale({user,onClose}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14,alignItems:"end"}}>
             <div>
               <label className="lbl">Indemnité repas (€/jour, optionnel)</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.repas||0}
-                onChange={e=>setContrat(c=>({...c,repas:e.target.value}))}/>
+              <ChampNombre className="inp" min="0" decimales={2} defaut={0} value={contrat.repas??0}
+                onChange={v=>setContrat(c=>({...c,repas:v}))}/>
             </div>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--m)",cursor:"pointer",paddingBottom:10}}>
               <input type="checkbox" checked={!!contrat.aeeh} onChange={e=>setContrat(c=>({...c,aeeh:e.target.checked}))}/>

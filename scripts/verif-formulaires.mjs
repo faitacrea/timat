@@ -377,7 +377,18 @@ for (const ecran of ECRANS_A_FAIRE()) {
       return [...document.querySelectorAll("input,textarea,select")]
         .filter((c) => !c.disabled && !c.readOnly && c.offsetParent !== null && !["hidden","submit","button","file"].includes(c.type))
         .slice(0, 25)
-        .map((c, i) => { c.setAttribute("data-verif", String(i)); return { i, type: c.type || c.tagName.toLowerCase(), balise: c.tagName.toLowerCase(), indice: lire(c) }; });
+        .map((c, i) => {
+          c.setAttribute("data-verif", String(i));
+          // UN CHAMP CHIFFRE SE DECLARE COMME TEL, meme s'il est en type=text.
+          // Depuis champ-nombre.jsx les champs chiffres sont des
+          // <input type="text" inputMode="decimal"> — un type=number ne peut
+          // pas recevoir la virgule. Sans cette ligne, un champ chiffre sans
+          // libelle reconnaissable recevrait « Essai de saisie », que le champ
+          // refuse : il serait rapporte comme champ muet, et son bouton comme
+          // reste eteint. Deux faux defauts.
+          const t = (c.type === "text" && (c.inputMode || "").toLowerCase() === "decimal") ? "number" : (c.type || c.tagName.toLowerCase());
+          return { i, type: t, balise: c.tagName.toLowerCase(), indice: lire(c) };
+        });
     }, INDICE); };
     await reperer();
 

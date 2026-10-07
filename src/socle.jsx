@@ -20,7 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin
 } from "./App.jsx";
 
 import { anneeScolaireDe, estFerie, finVacances, feriesDe, vacancesDe, vacancesAnnee, ACADEMIES_PAR_ZONE, ZONES, ZONE_DEFAUT } from "../data/calendrier-scolaire.js";
@@ -153,8 +153,42 @@ export const heuresDepuisMinutes = (m) => Math.round(((Number(m) || 0) / 60) * 1
 
 export const JOURS_SEMAINE_TYPE = 5;
 
-export const indemniteEntretienMin = (heures) =>
-  Math.max(IE_PLANCHER_JOUR, Math.round(IE_TAUX_HORAIRE * (Number(heures) || 0) * 100) / 100);
+// Definie dans App.jsx, aupres de IE_PLANCHER_JOUR et IE_TAUX_HORAIRE dont elle
+// decoule, et re-exportee ici : App.jsx ne peut pas importer socle.jsx, c'est
+// socle.jsx qui importe App.jsx.
+export { indemniteEntretienMin };
+
+// La duree d'une journee d'accueil, telle qu'elle decoule du contrat : les
+// heures de la semaine reparties sur les jours convenus. A defaut, neuf heures,
+// la journee de reference de la convention.
+export const heuresJourDuContrat = (contrat) => {
+  const h = Number(contrat?.heuresHebdo ?? contrat?.heures_hebdo);
+  const j = Number(contrat?.jours?.length) || JOURS_SEMAINE_TYPE;
+  return h > 0 && j > 0 ? h / j : 9;
+};
+
+// L'INDEMNITE D'ENTRETIEN A APPLIQUER, en un seul endroit.
+//
+// Elle etait ecrite en dur a quatorze endroits : « contrat.entretien || 3.92 »
+// a dix, « || 3.80 » a quatre. Deux defauts en decoulaient :
+//
+//   - les deux chiffres se contredisaient DANS LE MEME ECRAN. L'assistant de
+//     creation proposait 3,80 EUR dans le champ et enregistrait 3,92 EUR ;
+//   - surtout, 3,80 EUR est SOUS LE MINIMUM CONVENTIONNEL. Depuis le 1er juin
+//     2026 le minimum garanti vaut 4,35 EUR, donc l'indemnite minimale est de
+//     3,92 EUR pour une journee de neuf heures (90 % du MG pour 9 h, soit
+//     0,435 EUR par heure, et jamais moins de 2,65 EUR par journee). Un contrat
+//     cree sans indemnite saisie, et le bulletin de salaire qui en decoule,
+//     sortaient donc sous le minimum — au detriment de l'assistante maternelle.
+//
+// Un repli en dur vieillit a chaque revalorisation du minimum garanti. Celui-ci
+// se recalcule : il suit la duree reelle de la journee et les constantes de
+// l'application.
+export const entretienDuContrat = (contrat) => {
+  const saisi = Number(contrat?.entretien);
+  if (saisi > 0) return saisi;
+  return indemniteEntretienMin(heuresJourDuContrat(contrat));
+};
 
 // Credit d'impot pour frais de garde hors domicile (CGI art. 200 quater B) :
 // 50 % des depenses, dans la limite de 3 500 EUR de DEPENSES par enfant de

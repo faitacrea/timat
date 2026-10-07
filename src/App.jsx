@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useMemo, lazy, Suspense, Component } from 
 import { NOMBRE_GUIDES } from "../data/nombre-guides.js";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import qrcode from "qrcode-generator";
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { majLisible } from "../data/documents-legaux.js";
@@ -789,6 +790,14 @@ export const minutesDepuisHeure = (h) => {
 // Duree reellement travaillee, par journee, tous enfants confondus.
 // Renvoie { "2026-09-01": { minutes, amplitude, enfants } }
 export const IE_PLANCHER_JOUR = 2.65;
+
+// Le minimum conventionnel d'indemnite d'entretien : 90 % du minimum garanti
+// pour neuf heures, soit 0,435 EUR par heure d'accueil, et jamais moins de
+// 2,65 EUR par journee. Au 1er juin 2026 (MG 4,35 EUR) cela fait 3,92 EUR pour
+// une journee de neuf heures. Elle vit ici, avec les deux constantes dont elle
+// decoule, et socle.jsx la re-exporte.
+export const indemniteEntretienMin = (heures) =>
+  Math.max(IE_PLANCHER_JOUR, Math.round(IE_TAUX_HORAIRE * (Number(heures) || 0) * 100) / 100);
 // Indemnite d'entretien minimale pour une journee d'accueil de n heures.
 export const CI_PLAFOND_DEPENSES = 3500;
 export const CI_TAUX = 0.5;
@@ -2432,7 +2441,7 @@ function AccueilParent({enfant,setPage,user}){
           </div>
           <div>
             <label className="lbl">Heures prévues ce jour</label>
-            <input type="number"className="inp"placeholder="ex: 9"value={absence.heures}onChange={e=>setAbsence(a=>({...a,heures:e.target.value}))} min="0"max="12"step="0.5"/>
+            <ChampNombre className="inp" placeholder="ex : 9 ou 7,5" value={absence.heures} onChange={v=>setAbsence(a=>({...a,heures:v}))} min="0" max="12" decimales={2}/>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <input type="checkbox"id="indem"checked={absence.indemnise}onChange={e=>setAbsence(a=>({...a,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
@@ -4429,7 +4438,20 @@ const DEMO_SCREENS=[
       const [mois,setMois]=useState("Mars");
       const data={Mars:{h:160,supp:8,ent:20},Fev:{h:152,supp:4,ent:19},Jan:{h:168,supp:12,ent:21}};
       const m=data[mois]||data.Mars;
-      const brut=(m.h*4.20+m.supp*5.25+m.ent*3.80);
+      // UNE SEULE SOURCE POUR LES TROIS LIGNES ET LE TOTAL.
+      // Le total etait calcule avec 5,25 EUR l'heure majoree et la ligne en
+      // annoncait 5,06 EUR : les trois lignes de la demonstration de la page
+      // publique n'additionnaient pas le total affiche juste en dessous. Un
+      // visiteur qui verifiait trouvait 1,52 EUR d'ecart sur l'outil meme qu'on
+      // lui vend. Et l'indemnite d'entretien y figurait a 3,80 EUR, sous le
+      // minimum conventionnel : elle se calcule maintenant comme ailleurs.
+      const TAUX=4.20, MAJORE=Math.round(TAUX*1.25*100)/100, ENT=indemniteEntretienMin(9);
+      const lignes=[
+        ["Heures réalisées",m.h+" h × "+nbf(TAUX,2)+" €",m.h*TAUX],
+        ["Indemnité entretien",m.ent+" j × "+nbf(ENT,2)+" €",m.ent*ENT],
+        ["Heures majorées",m.supp+" h × "+nbf(MAJORE,2)+" €",m.supp*MAJORE],
+      ];
+      const brut=lignes.reduce((t,[,,v])=>t+v,0);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="💰"/> Salaire — Léo 🦁</div>
@@ -4439,10 +4461,10 @@ const DEMO_SCREENS=[
             background:mois===mo?"#E49178":"#F4F7FA",color:mois===mo?"#fff":"#2E4859",transition:"all .15s"
           }}>{mo} 2024</button>)}
         </div>
-        {[["Heures réalisées",m.h+"h × 4,20€",nbf((m.h*4.20),2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",nbf((m.ent*3.80),2)+"€"],["Heures majorées",m.supp+"h × 5,06€",nbf((m.supp*5.06),2)+"€"]].map(([l,d,v])=>(
+        {lignes.map(([l,d,v])=>(
           <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
             <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:11,color:"#8FA3AD"}}>{d}</div></div>
-            <div style={{fontWeight:700,color:"#5DA9A1"}}>{v}</div>
+            <div style={{fontWeight:700,color:"#5DA9A1"}}>{nbf(v,2)}€</div>
           </div>
         ))}
         <div style={{marginTop:10,padding:"10px 12px",background:"#FFF8F3",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>

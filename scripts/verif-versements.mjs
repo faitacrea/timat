@@ -132,7 +132,10 @@ const etat = await p.evaluate(() => {
   const sel = [...(carte?.querySelectorAll("select") || [])]
     .find((x) => [...x.options].some((o) => /^\d{4}-\d{2}$/.test(o.value))) || null;
   const date = carte?.querySelector('input[type="date"]');
-  const montant = carte?.querySelector('input[type="number"]');
+    // Les champs chiffres sont des <input type="text" inputMode="decimal"> depuis
+    // champ-nombre.jsx : un type=number ne peut pas recevoir la virgule, et
+    // « 350,50 » y devenait 35050 EUR.
+    const montant = carte?.querySelector('input[inputmode="decimal"]');
   return {
     ouvert: !!carte,
     // « Sous les yeux » : une partie du formulaire est dans la fenêtre.

@@ -13,6 +13,7 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
@@ -20,7 +21,7 @@ import {
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
-  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat
 } from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
@@ -1353,8 +1354,8 @@ export function CourbeCroissance({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>+ Nouvelle mesure</div>
           <div style={{marginBottom:8}}><label className="lbl">Date</label><input type="date"className="inp"value={newM.date}onChange={e=>setNewM(p=>({...p,date:e.target.value}))}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-            <div><label className="lbl">Poids (kg)</label><input className="inp"type="number"step=".1"placeholder="10.5"value={newM.poids}onChange={e=>setNewM(p=>({...p,poids:e.target.value}))}/></div>
-            <div><label className="lbl">Taille (cm)</label><input className="inp"type="number"placeholder="75"value={newM.taille}onChange={e=>setNewM(p=>({...p,taille:e.target.value}))}/></div>
+            <div><label className="lbl">Poids (kg)</label><ChampNombre className="inp" decimales={3} min="0" placeholder="10,5" value={newM.poids} onChange={v=>setNewM(p=>({...p,poids:v}))}/></div>
+            <div><label className="lbl">Taille (cm)</label><ChampNombre className="inp" decimales={1} min="0" placeholder="75" value={newM.taille} onChange={v=>setNewM(p=>({...p,taille:v}))}/></div>
           </div>
           <button className="btn bT"style={{width:"100%"}}onClick={ajouter}>Enregistrer</button>
         </div>:<div className="card"style={{background:"var(--c)"}}>
@@ -2767,7 +2768,7 @@ export function KitCMG({enfants,role,pEId,user}){
   // cotisations. On passe par le calcul du bulletin.
   const salaireBrutMois=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*100)/100;
   const salaireNet=nbf(netDepuisBrut(salaireBrutMois,regimeLocalDe(user)),2);
-  const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
+  const entretienMensuel=Math.round(entretienDuContrat(contrat)*heuresMois/contrat.heuresHebdo*5)/10;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2831,7 +2832,7 @@ export function KitCMG({enfants,role,pEId,user}){
           <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user)),2)+"€/h"} copyKey="tauxNet"/>
           <InfoRow label="Salaire brut mensuel (estimé)" value={nbf(salaireBrutMois,2)+"€"} copyKey="salaireBrut"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
-          <InfoRow label="Indemnité d'entretien/jour" value={nbf((contrat.entretien||3.92),2)+"€"} copyKey="entretien"/>
+          <InfoRow label="Indemnité d'entretien/jour" value={nbf(entretienDuContrat(contrat),2)+"€"} copyKey="entretien"/>
           <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
             <IconeOuEmoji e="💡"/> Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
@@ -2945,7 +2946,7 @@ export function RapportAnnuel({enfants,role,pEId,user}){
   // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
   const heuresMois=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
-  const entretienJour=contrat.entretien||3.92;
+  const entretienJour=entretienDuContrat(contrat);
   const heuresAnnuelles=realStats?.heures||Math.round(((contrat.heuresHebdo)||0)*semainesDuContrat(contrat));
   // Quatrieme facon de compter les jours d'accueil dans l'application, apres
   // celles du recapitulatif Pajemploi et du recapitulatif des versements. On
@@ -3240,7 +3241,7 @@ export function SimulateurCout({enfants,pEId}){
   const [taux,setTaux]=useState(minimumHoraireAu(new Date()));
   const [heures,setHeures]=useState(40);
   const [semaines,setSemaines]=useState(47);
-  const [entretien,setEntretien]=useState(3.80);
+  const [entretien,setEntretien]=useState(indemniteEntretienMin(9));
   const [revenus,setRevenus]=useState(45000);
   const [enfants2,setEnfants2]=useState(1);
   const [aeeh,setAeeh]=useState(0); // nb d'enfants beneficiaires AEEH (decale le taux d'effort d'une tranche)
@@ -3329,7 +3330,7 @@ export function SimulateurCout({enfants,pEId}){
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>👨👩👧 Votre situation</div>
           <div style={{marginBottom:14}}>
             <label className="lbl">Revenus nets annuels du foyer (€)</label>
-            <input type="number"className="inp"value={revenus}onChange={e=>setRevenus(parseInt(e.target.value)||0)}/>
+            <ChampNombre className="inp" min="0" decimales={0} defaut={0} value={revenus} onChange={v=>setRevenus(v)}/>
           </div>
           <div>
             <label className="lbl">Nombre d'enfants à charge</label>
@@ -3709,7 +3710,7 @@ export function AttestationFiscale({enfants,role,pEId,user}){
   // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
   const hMens=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
-  const entretienJour=contrat.entretien||3.92;
+  const entretienJour=entretienDuContrat(contrat);
   const hasReal=realStats?.paiements>0;
   // Le recapitulatif comptait 12 mois par principe. Un contrat qui commence en
   // septembre n'en compte que quatre sur l'annee : l'estimation etait alors
@@ -4033,7 +4034,7 @@ const jsPDF=await chargerJsPDF();
           <div>Début : <strong>{contrat.debut}</strong></div>
           <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
           <div>Taux horaire : <strong>{contrat.tauxHoraire||minimumHoraireAu(new Date())} €</strong></div>
-          <div>Entretien : <strong>{contrat.entretien||3.92} €/jour</strong></div>
+          <div>Entretien : <strong>{nbf(entretienDuContrat(contrat),2)} €/jour</strong></div>
         </div>:<div style={{fontSize:12,color:"var(--l)"}}>Aucun contrat trouvé pour cet enfant.</div>}
       </div>
     </div>
