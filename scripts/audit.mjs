@@ -3166,6 +3166,69 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- un arrondi dont les deux facteurs ne se correspondent pas ---
+//
+// Pour arrondir a deux decimales on ecrit « Math.round(x * 100) / 100 ». Le
+// facteur du haut et le diviseur du bas doivent etre le MEME nombre : sinon
+// l'arrondi ne corrige pas, il divise.
+//
+// Le kit de declaration CMG du parent portait exactement cela :
+//
+//     Math.round(entretien * heuresMois / heuresHebdo * 5) / 10
+//
+// Le « x5 » comptait les cinq jours de la semaine, et le « /10 » voulait
+// arrondir a une decimale — il lui manquait son « x10 ». Le kit annoncait
+// 8,50 EUR d'indemnite d'entretien par mois la ou 84,77 EUR etaient dus, avec
+// un bouton « Copier » pour le recopier sur monenfant.fr.
+//
+// LA REGLE : dans « Math.round(...) / N », le facteur N doit apparaitre dans
+// l'expression arrondie. Si la division par N n'est pas un arrondi mais un vrai
+// calcul, on l'ecrit hors du Math.round, ou on le justifie par un commentaire
+// « division-voulue : <raison> » juste au-dessus.
+{
+  // On compte les parentheses au lieu de s'arreter a la premiere fermante :
+  // « Math.round(nbf(x)) / 10 » contient un appel imbrique, et une expression
+  // reguliere naive lit alors « nbf(x » comme le corps de l'arrondi. Premiere
+  // version de cette regle, elle signalait ainsi quatre calculs parfaitement
+  // justes — dont celui que je venais d'ecrire deux lignes plus haut.
+  const corpsDeLArrondi = (ligne, debut) => {
+    let prof = 0;
+    for (let k = debut; k < ligne.length; k++) {
+      if (ligne[k] === "(") prof++;
+      else if (ligne[k] === ")") { prof--; if (prof === 0) return { corps: ligne.slice(debut + 1, k), apres: ligne.slice(k + 1) }; }
+    }
+    return null;
+  };
+  for (const u of fichiersAppSrc()) {
+    const nom = u.pathname.split("/").pop();
+    const lignes = readFileSync(u, "utf8").split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      const ligne = lignes[i];
+      if (/^\s*\/\//.test(ligne)) continue;
+      for (let j = ligne.indexOf("Math.round("); j !== -1; j = ligne.indexOf("Math.round(", j + 1)) {
+        const bloc = corpsDeLArrondi(ligne, j + "Math.round".length);
+        if (!bloc) continue;
+        const suite = /^\s*\/\s*(\d+)/.exec(bloc.apres);
+        if (!suite) continue;
+        const div = suite[1];
+        if (Number(div) === 1) continue;
+        // LE DISCRIMINANT : le facteur du haut doit etre un MULTIPLE du
+        // diviseur. « * 1000 ) / 10 » garde un facteur 100 : c'est un
+        // pourcentage arrondi a une decimale, parfaitement voulu. « * 5 ) / 10 »
+        // garde un facteur 0,5 : l'arrondi divise le resultat par deux, et le
+        // kit CMG le divisait par dix sur le meme principe. Un facteur entier
+        // est un changement d'echelle choisi ; un facteur fractionnaire est un
+        // arrondi casse.
+        const facteurs = [...bloc.corps.matchAll(/\*\s*(\d+)/g)].map((x) => Number(x[1]));
+        if (facteurs.some((n) => n % Number(div) === 0)) continue;
+        const avant = lignes.slice(Math.max(0, i - 3), i).join("\n");
+        if (/division-voulue\s*:/.test(avant)) continue;
+        signale("arrondi", `${nom}:${i + 1} « Math.round(…) / ${div} » sans « * ${div} » dans l'expression : ce n'est pas un arrondi, c'est une division par ${div}. C'est ainsi que le kit CMG annonçait une indemnité dix fois trop petite. Sortez la division du Math.round, ou justifiez-la par « division-voulue : <raison> ».`);
+      }
+    }
+  }
+}
+
 // --- un bouton qui ecrit ne se clique pas deux fois ---
 //
 // Un bouton qui ne repond pas tout de suite est appuye une seconde fois. C'est

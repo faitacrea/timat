@@ -290,6 +290,16 @@ console.log(`\n=== FORMULAIRES — on saisit puis on envoie (${ESPACE}, ${ECRANS
 for (const ecran of ECRANS_A_FAIRE()) {
   await p.evaluate((x) => window.dispatchEvent(new CustomEvent("timat:page", { detail: x })), ecran);
   await p.waitForTimeout(1400);
+  // LE GARDE S'APPLIQUE A CHAQUE ECRAN, pas seulement au premier. Ce parcours
+  // dure plus d'une heure sur treize ecrans, et « vite preview » sert les
+  // fichiers du disque a chaque requete : un « npm run build » lance pendant
+  // qu'il tourne — sans VITE_SUPABASE_KEY, donc inbootable — remplace le bundle
+  // sous ses pieds. Les ecrans suivants passeraient alors pour depourvus de
+  // formulaire. C'est arrive, et un verdict entier a du etre jete.
+  if (!(await BUNDLE_TESTABLE(p))) {
+    console.error(`  (interrompu a l'ecran « ${ecran} ») `);
+    await N.close(); process.exit(2);
+  }
   for (const chemin of await cheminsDe(ecran)) {
   if (!(await suivre(ecran, chemin))) continue;
   const retour = () => suivre(ecran, chemin);
