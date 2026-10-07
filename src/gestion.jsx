@@ -1714,13 +1714,47 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
   },[contrat.debut]);
 
   // #5 - Suivi du / verse par mois (mensualisation de reference)
+  //
+  // CE SUIVI RECLAMAIT LE BRUT.
+  //
+  // L'etiquette affichee sous le tableau annonce « heures lissees x taux NET +
+  // entretien estime ». Le calcul, lui, prenait contrat.tauxHoraire — qui est
+  // le taux BRUT : c'est le libelle du champ de saisie (« Taux horaire brut »),
+  // c'est sur lui que le bulletin assied les cotisations, et c'est a lui que se
+  // compare le minimum conventionnel de 4,20 EUR.
+  //
+  // Or un parent employeur ne verse JAMAIS le brut a son assistante
+  // maternelle : il verse le net, et les cotisations passent par Pajemploi. Sur
+  // un contrat de 40 h par semaine a 4,20 EUR brut en annee complete, le suivi
+  // annoncait 814,24 EUR dus la ou 654,95 EUR etaient reellement a verser :
+  // 159,29 EUR reclames a tort chaque mois, soit 21,9 % du salaire. Un parent
+  // parfaitement a jour lisait « Reste a verser : 159,29 EUR » tous les mois,
+  // pour toujours, et l'assistante maternelle voyait un bouton « Relancer » en
+  // face d'un mois paye. C'est le meme genre de defaut que les versements
+  // comptes dans le mauvais mois : de l'argent reclame a quelqu'un qui ne le
+  // doit pas.
+  //
+  // Et l'indemnite de repas, que le parent verse aussi, etait absente du calcul
+  // — une erreur en sens inverse, qui minorait le du des contrats qui en
+  // prevoient une.
+  //
+  // Le du est donc desormais ce que le parent vire vraiment : le salaire NET,
+  // plus l'entretien, plus les repas. Le pre-remplissage du formulaire de
+  // versement lit ce meme chiffre : il propose maintenant le bon montant.
   const suivi=useMemo(()=>{
     const hMens=heuresMensualisees(contrat);
     const tx=contrat.tauxHoraire||0;
     const joursSem=(contrat.jours&&contrat.jours.length)||5;
     const joursMois=Math.round(joursSem*semainesDuContrat(contrat)/12);
-    const duMensuel=Math.round((hMens*tx+joursMois*(contrat.entretien||0))*100)/100;
-    if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0};
+    // Le regime local d'Alsace-Moselle n'est pas encore cable cote parent : le
+    // net est donc calcule au regime general. C'est le seul endroit ou ce suivi
+    // peut encore surestimer, de 1,5 % du salaire, et seulement dans les trois
+    // departements concernes.
+    const netMensuel=netDepuisBrut(hMens*tx,false);
+    const entMois=Math.round(joursMois*(Number(contrat.entretien)||0)*100)/100;
+    const repMois=Math.round(joursMois*(Number(contrat.repas)||0)*100)/100;
+    const duMensuel=Math.round((netMensuel+entMois+repMois)*100)/100;
+    if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0,netMensuel:0,entMois:0,repMois:0,brutMensuel:0};
     const lignes=moisDisponibles.map(m=>{
       const verse=versements.filter(v=>(v.date||"").slice(0,7)===m.key).reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
       const ecart=Math.round((duMensuel-verse)*100)/100;
@@ -1729,7 +1763,13 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
     });
     const totalDu=duMensuel*moisDisponibles.length;
     const totalVerse=versements.reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
-    return{lignes,duMensuel,ecart:Math.round((totalDu-totalVerse)*100)/100};
+    // On rend le detail, et pas seulement le total : c'est ce qui permet au
+    // parent de comprendre pourquoi il verse ce montant-la, et a l'assistante
+    // maternelle de le lui expliquer. C'est aussi ce que verifie
+    // scripts/verif-du-verse.mjs — un total seul n'est pas verifiable.
+    return{lignes,duMensuel,ecart:Math.round((totalDu-totalVerse)*100)/100,
+      netMensuel:Math.round(netMensuel*100)/100,entMois,repMois,
+      brutMensuel:Math.round(hMens*tx*100)/100};
   },[contrat.heuresHebdo,contrat.tauxHoraire,contrat.entretien,contrat.jours,moisDisponibles,versements]);
   const relancer=async(m)=>{
     if(!enfant?.parent_id){setToast("Parent non lié à cet enfant");return;}
@@ -1905,7 +1945,7 @@ template:"versement_recu",
               <div style={{fontWeight:800,fontSize:14,color:"var(--b)"}}>{role==="parent"?"📊 Suivi de mes versements":"📊 Suivi dû / versé"}</div>
               <div style={{fontSize:12,fontWeight:700,color:suivi.ecart>1?"#C84B31":"#5DA9A1"}}>{suivi.ecart>1?((role==="parent"?"Reste à verser : ":"Reste dû : ")+fmtEur(suivi.ecart)):"À jour ✓"}</div>
             </div>
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:12,lineHeight:1.5}}>Mensualisation de référence : {fmtEur(suivi.duMensuel)}/mois (heures lissées × taux net + entretien estimé). Rapproché par mois de versement — hors heures complémentaires et régularisations.</div>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:12,lineHeight:1.5}}>Ce que le parent verse chaque mois : {fmtEur(suivi.duMensuel)} = salaire net {fmtEur(suivi.netMensuel)} + entretien {fmtEur(suivi.entMois)}{suivi.repMois>0?" + repas "+fmtEur(suivi.repMois):""}. Le salaire brut lissé est de {fmtEur(suivi.brutMensuel)} : les cotisations ne passent pas par ce virement, elles passent par Pajemploi. Rapproché par mois de versement — hors heures complémentaires et régularisations.</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {suivi.lignes.map(m=><div key={m.key}style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"8px 10px",borderRadius:8,background:m.statut==="impaye"?"#FDECEC":m.statut==="partiel"?"#FFF6E9":"var(--c)"}}>
                 <div style={{minWidth:0}}>
