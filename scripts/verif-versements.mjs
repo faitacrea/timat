@@ -27,7 +27,7 @@
 //   node scripts/verif-versements.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { REPONSE_URL, LIGNES, PID, EID, CID } from "./jeu-de-donnees.mjs";
+import { REPONSE_URL, LIGNES, PID, EID, CID, BUNDLE_TESTABLE} from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 
@@ -71,6 +71,7 @@ await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateu
 
 await p.goto(`http://127.0.0.1:4173/?acces=${CLE}`, { waitUntil: "domcontentloaded" });
 await p.waitForTimeout(4000);
+if (!(await BUNDLE_TESTABLE(p))) { await N.close(); process.exit(2); }
 for (let i = 0; i < 5; i++) {
   const passer = p.getByRole("button", { name: /^Passer$/ });
   if (await passer.isVisible().catch(() => false)) { await passer.click(); await p.waitForTimeout(400); } else break;

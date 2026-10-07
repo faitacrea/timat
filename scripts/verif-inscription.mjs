@@ -19,6 +19,7 @@
 //   node scripts/verif-inscription.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { BUNDLE_TESTABLE } from "./jeu-de-donnees.mjs";
 
 const SRC = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = SRC.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
@@ -168,6 +169,9 @@ for (const s of SCENARIOS) {
 
   await p.goto(s.url || `${BASE}/?acces=${CLE}${s.role === "parent" ? "&connexion=parent" : "&connexion=1"}`, { waitUntil: "domcontentloaded" });
   await p.waitForTimeout(3500);
+  // Un bundle construit sans VITE_SUPABASE_KEY n'ouvre aucun ecran : tout KO
+  // rapporte ensuite serait faux. On le dit, et on s'arrete.
+  if (!(await BUNDLE_TESTABLE(p))) { await N.close(); process.exit(2); }
   for (let i = 0; i < 5; i++) {
     const passer = p.getByRole("button", { name: /^Passer$/ });
     if (await passer.isVisible().catch(() => false)) { await passer.click(); await p.waitForTimeout(300); } else break;

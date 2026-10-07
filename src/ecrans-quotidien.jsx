@@ -2843,7 +2843,7 @@ export function OnboardingWizard({user,onFinish}){
         // L'assistant posait la question du rythme et jetait la reponse :
         // le contrat repartait en annee complete quoi qu'on ait choisi.
         annee_complete:contrat.anneeComplete!==false,
-        semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE):null,
+        semaines_accueil:contrat.anneeComplete===false?Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE)):null,
         // Non renseigne a la creation : le contrat imprime une ligne a
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,
@@ -3119,7 +3119,7 @@ export function AjouterEnfantModale({user,onClose}){
         fin:contrat.fin||null,
         heures_hebdo:Number(contrat.heuresHebdo)||40,
         annee_complete:contrat.anneeComplete!==false,
-        semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||46):null,
+        semaines_accueil:contrat.anneeComplete===false?Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE)):null,
         // Non renseigne a la creation : le contrat imprime une ligne a
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,

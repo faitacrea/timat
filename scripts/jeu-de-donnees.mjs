@@ -118,3 +118,31 @@ export const REPONSE_URL = (url, entetes = {}, role = "asmat") => {
   return unSeul ? (lignes[0] ?? null) : lignes;
 };
 export default REPONSE;
+
+// LE PIÈGE DU BUNDLE SANS CLÉ.
+//
+// « npm run build » construit sans VITE_SUPABASE_KEY. L'application est alors
+// inbootable : chaque écran affiche « la session n'est pas ouverte ». Les
+// contrôles navigateur, eux, continuent de chercher leurs boutons — et
+// rapportent des KO qui n'existent pas. Ce piège a produit de faux résultats
+// deux fois : la première en accusant du code sain, la seconde en lançant un
+// build au milieu d'un parcours déjà commencé.
+//
+// Tout contrôle navigateur appelle ceci juste après avoir chargé la page. Il ne
+// cherche pas un défaut de l'application : il refuse de rendre un verdict sur
+// un bundle qu'on ne peut pas tester.
+export const BUNDLE_TESTABLE = async (p) => {
+  // On interroge le temoin pose par lib/supabase.js, et non le texte de la page :
+  // sans cle, l'application retombe sur la page vitrine sans message d'erreur,
+  // et c'est precisement ce qui rendait le piege invisible.
+  const sansCle = await p.evaluate(() => !!window.__TIMAT_SANS_CLE).catch(() => false);
+  if (sansCle) {
+    console.error("\n  ARRÊT  le bundle servi sur le port 4173 a été construit SANS VITE_SUPABASE_KEY :");
+    console.error("         l'application ne démarre pas, et tout KO rapporté ici serait faux.");
+    console.error("         Reconstruis-le, puis relance ce contrôle :\n");
+    console.error('           VITE_SUPABASE_KEY="verification-locale" npx vite build');
+    console.error("           nohup npx vite preview --port 4173 --host 127.0.0.1 &\n");
+    return false;
+  }
+  return true;
+};
