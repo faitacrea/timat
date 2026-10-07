@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -223,12 +223,17 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
 //
 
 export function Contrats({enfants,role,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   // FIX: state hydraté depuis les props (qui viennent de Supabase) au lieu de D.enfants
   const [signes,setSignes]=useState({});
   const [datesSignature,setDatesSignature]=useState({});
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
+  // La signature d'un contrat met plusieurs secondes : elle regenere le PDF et
+  // envoie les courriels. Sans retour visible, on appuie une seconde fois.
+  const [signEnCours,setSignEnCours]=useState(false);
   const [mods,setMods]=useState({});
   const [showModale,setShowModale]=useState(false);
   const [showAjout,setShowAjout]=useState(false);
@@ -561,8 +566,12 @@ template:"signature_asmat_signed",
           </div>}
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <button className="btn bG"onClick={clearSig}>Effacer</button>
-            <button className="btn bP"style={{flex:1,justifyContent:"center"}}onClick={signer}disabled={!hasSig}>
-              <IconeOuEmoji e="✍️"/> Signer le contrat
+            <button className="btn bP"style={{flex:1,justifyContent:"center"}}
+              onClick={uneFois(async()=>{setSignEnCours(true);try{await signer();}finally{setSignEnCours(false);}})}
+              disabled={!hasSig||signEnCours}>
+              {signEnCours
+                ? <>Signature en cours, ne quittez pas…</>
+                : <><IconeOuEmoji e="✍️"/> Signer le contrat</>}
             </button>
           </div>
           <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
@@ -652,7 +661,7 @@ template:"signature_asmat_signed",
           <textarea className="ta"value={modDet.detail}onChange={e=>setModDet(p=>({...p,detail:e.target.value}))}placeholder="Décrivez la modification..."style={{minHeight:90}}/></div>
         <div style={{display:"flex",gap:8}}>
           <button className="btn bG"style={{flex:1}}onClick={()=>setShowModale(false)}>Annuler</button>
-          <button className="btn bT"style={{flex:1}}onClick={addMod}>Envoyer</button>
+          <button className="btn bT"style={{flex:1}}onClick={uneFois(addMod)}>Envoyer</button>
         </div>
       </div>
     </div>}
@@ -2350,6 +2359,8 @@ export function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon 
 }
 
 export function SignatureContratParent({enfants,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   // MULTI-ENFANTS - ne montrer que les enfants dont le contrat est partage par l'assmat.
   // Le parent bascule entre eux via un selecteur (affiche seulement s'il y en a plusieurs).
   const enfantsPartages=enfants.filter(e=>e?.contrat?.partage_parent);
@@ -2367,6 +2378,9 @@ export function SignatureContratParent({enfants,pEId,user}){
   const canvasRef=useRef(null);
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
+  // La signature d'un contrat met plusieurs secondes : elle regenere le PDF et
+  // envoie les courriels. Sans retour visible, on appuie une seconde fois.
+  const [signEnCours,setSignEnCours]=useState(false);
   // SIGNATURE PARENT P10 - signature standard du parent (si dejaa enregistree dans son profil)
   const sigStandard=user?.signature_base64||null;
   // SIGNATURE PARENT P10 - sync avec le contrat reel quand il change (ou changement d'enfant)
@@ -2571,9 +2585,12 @@ template:"signature_parent_signed",
 
     {/* Bouton valider */}
     <button className="btn bS"style={{width:"100%",justifyContent:"center",padding:"13px",
-      opacity:lu&&hasSig?1:.5}}
-      onClick={valider}disabled={!lu||!hasSig}>
-      <IconeOuEmoji e="✅"/> Valider et signer le contrat
+      opacity:lu&&hasSig&&!signEnCours?1:.5}}
+      onClick={uneFois(async()=>{setSignEnCours(true);try{await valider();}finally{setSignEnCours(false);}})}
+      disabled={!lu||!hasSig||signEnCours}>
+      {signEnCours
+        ? <>Signature en cours, ne quittez pas…</>
+        : <><IconeOuEmoji e="✅"/> Valider et signer le contrat</>}
     </button>
     <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:8}}>
       <IconeOuEmoji e="🔒"/> Signature électronique conforme eIDAS - Valeur légale identique au papier

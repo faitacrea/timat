@@ -22,7 +22,7 @@ import {
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
-  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE, useUneFois
 } from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
@@ -493,6 +493,8 @@ export function ModeBorne({enfants,user,onQuitter}){
 }
 
 export function Pointage({enfants,role,pEId,user,demoMode=false}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [pts,setPts]=useState([]);
   const [toast,setToast]=useState("");
@@ -849,7 +851,7 @@ export function Pointage({enfants,role,pEId,user,demoMode=false}){
           <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
             onClick={()=>{setContester(null);setContMotif("");setContHeure("");}}>Annuler</button>
           <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
-            onClick={envoyerContestation}>Envoyer</button>
+            onClick={uneFois(envoyerContestation)}>Envoyer</button>
         </div>
       </div>
     </div>}

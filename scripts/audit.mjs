@@ -3166,6 +3166,46 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- un bouton qui ecrit ne se clique pas deux fois ---
+//
+// Un bouton qui ne repond pas tout de suite est appuye une seconde fois. C'est
+// le reflexe de n'importe qui, et c'est ce que provoque le reseau d'un
+// telephone dans une voiture. Seize boutons qui ecrivaient en base restaient
+// cliquables pendant l'ecriture.
+//
+// scripts/verif-double-clic.mjs le montre dans un vrai navigateur : deux appuis
+// a 80 ms sur « Enregistrer l'activite » inscrivaient DEUX activites. Deux
+// siestes, deux allergies, deux demandes de modification de contrat, deux
+// courriels de reinitialisation.
+//
+// LA REGLE : un bouton dont le onClick appelle un gestionnaire qui ecrit en
+// base doit, soit passer par uneFois(), soit porter son propre « disabled »
+// (celui qui change aussi de libelle, ce qui vaut mieux : il dit ce qu'il fait).
+{
+  const ECRIT = /\.(insert|update|upsert|delete)\s*\(|\.rpc\s*\(/;
+  for (const u of fichiersAppSrc()) {
+    const nom = u.pathname.split("/").pop();
+    const src = readFileSync(u, "utf8");
+    const lignes = src.split("\n");
+    // Les gestionnaires asynchrones qui ecrivent en base.
+    const ecrivains = new Set();
+    for (const m of src.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*async\s*\(/g)) {
+      const i = src.slice(0, m.index).split("\n").length - 1;
+      if (ECRIT.test(lignes.slice(i, i + 45).join("\n"))) ecrivains.add(m[1]);
+    }
+    for (let i = 0; i < lignes.length; i++) {
+      const m = /onClick=\{\s*([A-Za-z_$][\w$]*)\s*\}/.exec(lignes[i]);
+      if (!m || !ecrivains.has(m[1])) continue;
+      // La balise <button> peut tenir sur plusieurs lignes : on remonte.
+      let deb = i;
+      while (deb > 0 && !/<button/.test(lignes[deb]) && i - deb < 6) deb--;
+      const balise = lignes.slice(deb, i + 3).join("\n");
+      if (/disabled/.test(balise)) continue;
+      signale("double-clic", `${nom}:${i + 1} « onClick={${m[1]}} » ecrit en base et le bouton reste cliquable pendant l'ecriture : un second appui cree un doublon. Passez par uneFois(${m[1]}), ou desactivez le bouton pendant l'operation.`);
+    }
+  }
+}
+
 // --- une ligne relue apres ecriture peut etre nulle ---
 //
 // « .insert(...).select().single() » ne garantit PAS qu'on recupere la ligne.

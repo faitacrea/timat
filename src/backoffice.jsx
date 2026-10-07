@@ -20,7 +20,7 @@ import {
   Messagerie, Styles, Toast, IconeOuEmoji, LandingPage, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig, MAINTENANCE
 } from "./App.jsx";
 import {
-  backupCurrentConfig
+  backupCurrentConfig, useUneFois
 } from "./socle.jsx";
 
 const BOField=({label,children,hint})=>(
@@ -94,6 +94,8 @@ function IframePreview({cfg,noBezel}){
 }
 
 function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hideTabBar}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [secI,setSecI]=useState("hero");
   const sec=(secProp!==undefined&&secProp!==null)?secProp:secI;
   const setSec=setSecProp||setSecI;
@@ -549,7 +551,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
         <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
       </div>}
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
+        <button onClick={uneFois(diagnostiquer)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
         <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
         <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
         <button className="btn bG s"style={{padding:"5px 12px"}}onClick={reset}>↺ Reset</button>

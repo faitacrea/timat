@@ -21,7 +21,7 @@ import {
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
-  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois
 } from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
@@ -149,6 +149,8 @@ export function VueAideSupport({role,user}){
 }
 
 export function RepasChanges({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [nch,setNch]=useState({h:"",type:"Change",n:""});
   const [re,setRe]=useState({});
@@ -243,7 +245,7 @@ export function RepasChanges({enfants,role,pEId}){
               })}
             </div>
           </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer les repas</button>
+          <button className="btn bT"style={{width:"100%"}}onClick={uneFois(saveRp)}>Enregistrer les repas</button>
         </div>}
       </div>
 
@@ -275,7 +277,7 @@ export function RepasChanges({enfants,role,pEId}){
             </div>
           </div>
           <input className="inp"style={{marginBottom:8}}placeholder="Note (optionnel)"value={nch.n}onChange={e=>setNch(p=>({...p,n:e.target.value}))}/>
-          <button className="btn bT"style={{width:"100%"}}onClick={addCh}>+ Ajouter</button>
+          <button className="btn bT"style={{width:"100%"}}onClick={uneFois(addCh)}>+ Ajouter</button>
         </div>}
       </div>
     </div>
@@ -426,6 +428,8 @@ export function Messagerie({enfants,role,pEId,user}){
 //
 
 export function Sante({enfants,role,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   // La selection vient de l'ecran englobant : deux selections independantes
   // pouvaient afficher deux enfants differents sur le meme ecran.
   const selId=pEId||enfants[0]?.id;
@@ -563,7 +567,7 @@ export function Sante({enfants,role,pEId,user}){
             </div>}
           {role==="parent"?<div style={{marginTop:14,display:"flex",gap:8}}>
             <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
-            <button className="btn bT"style={{padding:"0 16px"}}onClick={addAllergie}>+</button>
+            <button className="btn bT"style={{padding:"0 16px"}}onClick={uneFois(addAllergie)}>+</button>
           </div>:<div style={{marginTop:12,fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="ℹ️"/> Renseignées et tenues à jour par le parent.</div>}
         </div>
       </div>
@@ -598,6 +602,8 @@ export function Sante({enfants,role,pEId,user}){
 //
 
 export function Portfolio({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(null);
   const [showForm,setShowForm]=useState(false);
   const [pfs,setPfs]=useState([]);
@@ -676,7 +682,7 @@ export function Portfolio({enfants,role,pEId}){
       </div>
       <div style={{marginBottom:10}}><label className="lbl">Description</label><textarea className="ta"value={nf.desc}onChange={e=>setNf(p=>({...p,desc:e.target.value}))}placeholder="Ce que l'enfant a appris, réalisé..."style={{minHeight:60}}/></div>
       <div style={{marginBottom:10}}><label className="lbl">Compétences (séparées par virgule)</label><input className="inp"value={nf.competences}onChange={e=>setNf(p=>({...p,competences:e.target.value}))}placeholder="Motricité fine, Créativité..."/></div>
-      <button className="btn bT"style={{width:"100%"}}onClick={add}>Enregistrer l'activité</button>
+      <button className="btn bT"style={{width:"100%"}}onClick={uneFois(add)}>Enregistrer l'activité</button>
     </div>}
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
@@ -958,6 +964,8 @@ export function Recap({enfants,role,pEId}){
 // Le PARENT verse, l'ASSMAT recoit. Saisie + gestion par les deux (RLS table versements).
 
 export function Sommeil({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sommeils,setSommeils]=useState({});
   const [nS,setNS]=useState({debut:"",fin:"",qualite:"bien"});
@@ -1064,7 +1072,7 @@ export function Sommeil({enfants,role,pEId}){
               })}
             </div>
           </div>
-          <button className="btn bS"style={{width:"100%"}}onClick={ajout}>Enregistrer</button>
+          <button className="btn bS"style={{width:"100%"}}onClick={uneFois(ajout)}>Enregistrer</button>
         </div>}
       </div>
       <div className="card">
@@ -1263,6 +1271,8 @@ export function TableauDeBord({enfants,role,pEId,setPage}){
 //
 
 export function CourbeCroissance({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [data,setData]=useState({});
   const [newM,setNewM]=useState({date:"",poids:"",taille:""});
@@ -1367,7 +1377,7 @@ export function CourbeCroissance({enfants,role,pEId}){
             <div><label className="lbl">Poids (kg)</label><ChampNombre className="inp" decimales={3} min="0" placeholder="10,5" value={newM.poids} onChange={v=>setNewM(p=>({...p,poids:v}))}/></div>
             <div><label className="lbl">Taille (cm)</label><ChampNombre className="inp" decimales={1} min="0" placeholder="75" value={newM.taille} onChange={v=>setNewM(p=>({...p,taille:v}))}/></div>
           </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={ajouter}>Enregistrer</button>
+          <button className="btn bT"style={{width:"100%"}}onClick={uneFois(ajouter)}>Enregistrer</button>
         </div>:<div className="card"style={{background:"var(--c)"}}>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}><IconeOuEmoji e="📏"/> La courbe de croissance est <b>tenue à jour par le parent</b> (poids et taille à chaque pesée). Vous la consultez ici en lecture seule.</div>
         </div>}
@@ -2074,6 +2084,8 @@ Je vous remercie par avance.`,
 ];
 
 export function CommunicationPMI({role,user,hasRealData}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const demo=!hasRealData;
   const [msgs,setMsgs]=useState([]);
   const [chargement,setChargement]=useState(!demo);
@@ -2207,7 +2219,7 @@ export function CommunicationPMI({role,user,hasRealData}){
                 <input value={pmi[k]||""} onChange={e=>setPmi(p=>({...p,[k]:e.target.value}))}
                   style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}/>
               </div>)}
-            <button className="btn bT" onClick={enregistrerContact}>Enregistrer</button>
+            <button className="btn bT" onClick={uneFois(enregistrerContact)}>Enregistrer</button>
           </div>
         : (pmi.nom||pmi.email||pmi.tel)
           ? <div style={{fontSize:13,color:"var(--b)",lineHeight:1.8,marginTop:8}}>
@@ -2266,7 +2278,7 @@ export function CommunicationPMI({role,user,hasRealData}){
               <button className="btn bT" style={{flex:"1 1 160px"}} onClick={envoyerModele}>Ouvrir dans ma messagerie</button>
               <button className="btn s" style={{flex:"1 1 110px",background:"var(--bg)",color:"var(--b)"}} onClick={copierModele}>Copier le texte</button>
             </div>
-            {!demo&&<button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}} onClick={consignerModele}>
+            {!demo&&<button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}} onClick={uneFois(consignerModele)}>
               Consigner ce courrier dans mon journal
             </button>}
           </div>}
@@ -2301,7 +2313,7 @@ export function CommunicationPMI({role,user,hasRealData}){
                 style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)",minHeight:100,resize:"vertical"}}/>
             </div>
             <div style={{display:"flex",gap:8}}>
-              <button className="btn bT" style={{flex:1}} onClick={consigner}>Enregistrer</button>
+              <button className="btn bT" style={{flex:1}} onClick={uneFois(consigner)}>Enregistrer</button>
               <button className="btn" style={{background:"var(--bg)",color:"var(--b)"}} onClick={()=>{setOuvert(false);setForm(vide());}}>Annuler</button>
             </div>
           </div>}

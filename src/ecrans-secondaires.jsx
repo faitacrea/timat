@@ -21,7 +21,7 @@ import {
 , saveAsmatSignature
 } from "./App.jsx";
 import {
-  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, MOIS_SCOLARISABLE, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT
+  DEMANDES_DEMO, GestionStockage, InstallButton, JOURS_SEM, PERIODES, SignaturePad, SupprimerCompte, ACADEMIES_PAR_ZONE, ageEnMois, MOIS_SCOLARISABLE, anneeScolaireDe, finVacances, minimumHoraireAu, periodesVacances, ZONES, ZONE_DEFAUT, useUneFois
 } from "./socle.jsx";
 
 export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user pour PDF
@@ -1076,6 +1076,8 @@ const demandeDepuisBase=(d)=>({
 });
 
 export function ListeAttente({role,enfants,user,setPage}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const isDemoMode=(enfants||[]).every(e=>["e1","e2","e3"].includes(e.id));
   const [demandes,setDemandes]=useState(isDemoMode?DEMANDES_DEMO:[]);
   const [chargement,setChargement]=useState(!isDemoMode);
@@ -1201,14 +1203,14 @@ export function ListeAttente({role,enfants,user,setPage}){
                 catch(e){setToast("Copie impossible : sélectionnez le lien à la main.");}
               }}>Copier</button>
             </div>
-            <button className="btn s" style={{marginTop:9,background:"var(--bg)",color:"var(--m)"}} onClick={nouveauJeton}>
+            <button className="btn s" style={{marginTop:9,background:"var(--bg)",color:"var(--m)"}} onClick={uneFois(nouveauJeton)}>
               Créer un nouveau lien
             </button>
             <div style={{fontSize:11.5,color:"var(--m)",marginTop:6}}>
               Créer un nouveau lien met fin à l'ancien : à faire si vous l'avez affiché quelque part que vous ne maîtrisez plus.
             </div>
           </>
-        : <button className="btn bT" onClick={nouveauJeton}>Créer mon lien</button>}
+        : <button className="btn bT" onClick={uneFois(nouveauJeton)}>Créer mon lien</button>}
     </div>
 
     {/* Le lien de demande est un FORMULAIRE : seul, il ne dit rien d'elle. Un
@@ -2976,6 +2978,8 @@ ${commune?`<div class="c">${H(commune)}</div>`:""}
 // La base impose deja cette regle : l'ecran ne fait que la rendre lisible.
 // ===========================================================================
 export function MandatPajemploi({enfants,role,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const [selId,setSelId]=useState(liste[0]?.id);
   const enfant=liste.find(e=>e.id===selId)||liste[0];
@@ -3114,7 +3118,7 @@ export function MandatPajemploi({enfants,role,pEId,user}){
         </>}
 
         {actif&&<>
-          <button className="btn bG" onClick={retirer} style={{minHeight:40}}>Retirer le mandat</button>
+          <button className="btn bG" onClick={uneFois(retirer)} style={{minHeight:40}}>Retirer le mandat</button>
           <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.55}}>
             Le retrait est immédiat. Les déclarations déjà transmises restent valables : elles étaient autorisées le jour de leur envoi.
           </div>

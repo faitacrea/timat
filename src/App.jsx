@@ -789,6 +789,32 @@ export const minutesDepuisHeure = (h) => {
 
 // Duree reellement travaillee, par journee, tous enfants confondus.
 // Renvoie { "2026-09-01": { minutes, amplitude, enfants } }
+
+// UN BOUTON QUI ÉCRIT NE PART QU'UNE FOIS À LA FOIS.
+//
+// Seize boutons qui ecrivent en base restaient cliquables pendant l'ecriture.
+// Un bouton qui ne repond pas tout de suite est appuye une seconde fois —
+// c'est le reflexe de n'importe qui, et c'est ce que provoque le reseau d'un
+// telephone dans une voiture. scripts/verif-double-clic.mjs le montre : deux
+// appuis a 80 ms sur « Enregistrer l'activite » inscrivaient DEUX activites.
+//
+// Un seul appel de ce crochet par ecran, puis « onClick={uneFois(add)} ». Le
+// second appui ne fait rien tant que le premier n'a pas rendu la main — ce qui
+// est exactement ce qu'on veut : le premier, lui, travaille.
+//
+// On ne le branche pas sur les boutons qui LISENT, ni sur ceux qui portent deja
+// leur propre « disabled={saving} » avec un libelle qui change : ceux-la
+// disent ce qu'ils font, et c'est mieux.
+export const useUneFois = () => {
+  const enCours = useRef(false);
+  return (fn) => async (...args) => {
+    if (enCours.current) return;
+    enCours.current = true;
+    try { return await fn(...args); }
+    finally { enCours.current = false; }
+  };
+};
+
 export const IE_PLANCHER_JOUR = 2.65;
 
 // Le minimum conventionnel d'indemnite d'entretien : 90 % du minimum garanti
@@ -4546,6 +4572,8 @@ function fmtInline(text){
   return parts;
 }
 function ParentInvitationScreen({onLogin,initialMode="inscription"}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [mode,setMode]=useState(initialMode);
   const [form,setForm]=useState({email:"",password:"",prenom:"",nom:""});
   const [err,setErr]=useState("");
@@ -4659,9 +4687,9 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
           <button type="button" onClick={()=>{setMode("connexion");setErr("");setErrAction(null);}} style={{display:"block",width:"100%",marginTop:9,background:"#fff",color:"#C84B31",border:"none",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Se connecter avec cet email →</button>
           {/@(gmail|googlemail)\.com\s*$/i.test(form.email||"")&&<div style={{marginTop:9,fontSize:11,lineHeight:1.5,opacity:.95}}><IconeOuEmoji e="💡"/> Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici.</div>}
         </>}
-        {errAction==="reset"&&<button type="button" onClick={envoyerReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
+        {errAction==="reset"&&<button type="button" onClick={uneFois(envoyerReset)} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
       </div>}
-      {mode==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#fff",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0,opacity:.9}}>Mot de passe oublié ?</button></div>}
+      {mode==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={uneFois(envoyerReset)} style={{background:"none",border:"none",color:"#fff",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0,opacity:.9}}>Mot de passe oublié ?</button></div>}
 
       <button onClick={mode==="inscription"?inscription:connexion} disabled={loading} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:"pointer",background:"#fff",color:"#2E4A5A",fontSize:15,fontWeight:700,fontFamily:"inherit",boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
         {loading?"…":(mode==="inscription"?"Créer mon espace parent":"Se connecter")}
@@ -4879,6 +4907,8 @@ export function ModaleListeAttente({ ouverte, fermer }){
 }
 
 export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModalBrut, setShowModalBrut] = useState(false);
   // Lus ici, et pas cent lignes plus bas : la minuterie de la liste
@@ -5393,7 +5423,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <div style={{ fontSize:11, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
-              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
+              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={uneFois(envoyerReset)} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
@@ -6621,7 +6651,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <div style={{ fontSize:11, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
-              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
+              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={uneFois(envoyerReset)} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
