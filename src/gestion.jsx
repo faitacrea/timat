@@ -428,6 +428,10 @@ template:"signature_asmat_signed",
       setToast("Erreur : "+(error.message||error.code||"inconnue"));
       return;
     }
+    // Insertion acceptee mais ligne non relue (RLS en ecriture sans lecture) :
+    // data et error valent tous deux null, et ce null faisait planter la liste
+    // des demandes de modification au rendu suivant.
+    if(!data){setToast("Demande envoyée. Actualisez pour la voir.");setShowModale(false);return;}
     setMods(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
     setModDet({type:"Horaire",detail:""});
     setShowModale(false);
@@ -438,6 +442,9 @@ template:"signature_asmat_signed",
       .update({accepte,date_decision:new Date().toISOString()})
       .eq("id",modId).select().single();
     if(error){setToast("Erreur : "+error.message);return;}
+    // Mise a jour acceptee mais ligne non relue : data et error valent tous
+    // deux null, et remplacer la demande par ce null faisait planter la liste.
+    if(!data){setToast(accepte?"Demande acceptée. Actualisez pour la voir.":"Demande refusée. Actualisez pour la voir.");return;}
     setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).map(m=>m.id===modId?data:m)}));
     setToast(accepte?"Demande acceptée":"Demande refusée");
   };

@@ -3166,6 +3166,51 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- une ligne relue apres ecriture peut etre nulle ---
+//
+// « .insert(...).select().single() » ne garantit PAS qu'on recupere la ligne.
+// Une politique RLS autorise tres souvent l'ecriture sans autoriser la lecture
+// de ce qu'on vient d'ecrire : PostgREST accepte l'insertion et ne renvoie
+// rien. Supabase rend alors data=null ET error=null — le cas qu'aucun code ne
+// voit venir, parce qu'on verifie « error » et qu'on s'arrete la.
+//
+// Le parcours des formulaires l'a attrape en vrai sur le cahier de reussites :
+// « Cannot read properties of null (reading 'enfant_id') ». Le null etait
+// pousse dans la liste, l'ecran entier plantait au rendu suivant, et l'activite
+// paraissait perdue alors qu'elle etait bien enregistree. Le meme motif se
+// trouvait dans les deux assistants de creation d'enfant, juste avant la ligne
+// qui lit « enfantData.id » pour y rattacher le contrat.
+//
+// LA REGLE : apres un .single(), la variable qui porte la ligne doit etre
+// testee (« if(!data) », « data?.x », « ins?.id »...) avant d'etre utilisee.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  for (const [nom, src] of sources) {
+    const lignes = src.split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      if (!/\.single\(\)/.test(lignes[i])) continue;
+      // Le nom sous lequel la ligne est recuperee, dans les cinq lignes qui
+      // precedent : « const{data,error}= », « const{data:ins,...}= », « res= ».
+      const entete = lignes.slice(Math.max(0, i - 5), i + 1).join("\n");
+      const m = entete.match(/\{\s*data\s*:\s*([A-Za-z_$][\w$]*)/) || entete.match(/\{\s*(data)\b/);
+      const nomVar = m ? m[1] : (/(^|\s)(res)\s*=/.test(entete) ? "res.data" : null);
+      if (!nomVar) continue;
+      // La suite immediate doit contenir un test de nullite sur cette variable.
+      const suite = lignes.slice(i, i + 14).join("\n");
+      const base = nomVar.replace(".data", "");
+      const teste = new RegExp(
+        "(!\\s*" + base + "\\b)|(" + base + "\\s*\\?\\.)|(if\\s*\\(\\s*" + base + "\\b)|(" + base + "\\s*(===|!==|==|!=)\\s*null)"
+      );
+      if (teste.test(suite)) continue;
+      // La variable doit vraiment etre utilisee ensuite, sinon il n'y a rien a
+      // proteger : un .single() dont on ne lit que « error » est legitime.
+      const utilisee = new RegExp("\\b" + base.replace("$", "\\$") + "\\b");
+      if (!utilisee.test(lignes.slice(i + 1, i + 14).join("\n"))) continue;
+      signale("relecture", `${nom}:${i + 1} utilise « ${nomVar} » apres un .single() sans verifier qu'il n'est pas null. Une ecriture acceptee sans droit de relecture rend data=null ET error=null : le null part dans l'etat de React et l'ecran plante au rendu suivant.`);
+    }
+  }
+}
+
 // --- aucune lecture d'argent ou de droit jetee en silence ---
 //
 // LE MIROIR EXACT DE LA BARRIERE « ecritures ». Une lecture qui echoue rend

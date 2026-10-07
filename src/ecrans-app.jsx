@@ -636,6 +636,13 @@ export function Portfolio({enfants,role,pEId}){
     };
     const{data,error}=await supabase.from("portfolio").insert(payload).select().single();
     if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    // Une insertion peut reussir SANS renvoyer la ligne : une politique RLS
+    // autorise souvent l'ecriture sans autoriser la lecture de ce qu'on vient
+    // d'ecrire. Supabase renvoie alors data=null ET error=null. On poussait ce
+    // null dans la liste, et l'ecran entier plantait au rendu suivant
+    // (« Cannot read properties of null (reading 'enfant_id') ») : l'activite
+    // semblait perdue alors qu'elle etait bien enregistree.
+    if(!data){setToast("Activité enregistrée. Actualisez pour la voir.");setShowForm(false);return;}
     setPfs(p=>[data,...p]);
     setNf({titre:"",desc:"",emoji:"🎨",competences:""});
     setShowForm(false);
@@ -1000,6 +1007,9 @@ export function Sommeil({enfants,role,pEId}){
     };
     const{data,error}=await supabase.from("sommeil").insert(payload).select().single();
     if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    // Insertion acceptee mais ligne non relue (RLS en ecriture sans lecture) :
+    // data et error valent tous deux null. Voir Portfolio.add().
+    if(!data){setToast("Sieste enregistrée. Actualisez pour la voir.");setNS({debut:"",fin:"",qualite:"bien"});return;}
     setSommeils(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
     setNS({debut:"",fin:"",qualite:"bien"});
     setToast("Sieste enregistrée ✓");
@@ -2113,6 +2123,8 @@ export function CommunicationPMI({role,user,hasRealData}){
     };
     const {data,error}=await supabase.from("messages_pmi").insert(ligne).select().single();
     if(error){setToast("L'enregistrement a échoué.");return;}
+    // Insertion acceptee mais ligne non relue : voir Portfolio.add().
+    if(!data){setToast("Échange consigné. Actualisez pour le voir.");setForm(vide());setOuvert(false);return;}
     setMsgs(m=>[data,...m]); setForm(vide()); setOuvert(false);
     setToast("Échange consigné.");
     logAction&&logAction("pmi_echange_consigne");
@@ -2152,6 +2164,8 @@ export function CommunicationPMI({role,user,hasRealData}){
       date_echange:isoJour(new Date()), canal:"E-mail", lu:true,
     }).select().single();
     if(error){setToast("L'enregistrement a échoué.");return;}
+    // Insertion acceptee mais ligne non relue : voir Portfolio.add().
+    if(!data){setToast("Courrier consigné. Actualisez pour le voir.");setModele(null);return;}
     setMsgs(m=>[data,...m]); setModele(null);
     setToast("Courrier consigné dans votre journal.");
     logAction&&logAction("pmi_modele_consigne");

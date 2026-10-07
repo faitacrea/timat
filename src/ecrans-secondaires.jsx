@@ -2026,6 +2026,10 @@ export function RegistreMedicaments({enfants,role,pEId,user}){
     }
     setSaving(false);
     if(res.error){setToast("L'enregistrement a échoué. Rien n'a été inscrit.");return;}
+    // Ecriture acceptee mais ligne non relue (RLS en ecriture sans lecture) :
+    // res.data et res.error valent tous deux null. Pousser ce null dans le
+    // registre des medicaments faisait planter l'ecran au rendu suivant.
+    if(!res.data){setToast("Enregistré. Actualisez pour le voir.");return;}
     setLignes(l=>edite?l.map(x=>x.id===edite?res.data:x):[res.data,...l]);
     setForm(vide()); setEdite(null);
     setToast(edite?"Ligne corrigée.":"Inscrit au registre.");
@@ -3013,6 +3017,13 @@ export function MandatPajemploi({enfants,role,pEId,user}){
       preuve:{le:new Date().toISOString(), version:VERSION_MANDAT},
     }).select("id,parent_id,version_texte,accorde_le,revoque_le").single();
     if(error){setToast("Le mandat n'a pas pu être enregistré — réessayez");return;}
+    // Le mandat peut etre enregistre SANS que la ligne nous soit relue (une
+    // politique RLS autorise souvent l'ecriture sans la lecture de ce qu'on
+    // vient d'ecrire) : data et error valent alors tous deux null. setMandat(null)
+    // remettait l'ecran a « aucun mandat » juste apres que le parent l'a donne :
+    // il aurait cru que son autorisation n'avait pas pris, et l'assistante
+    // maternelle n'aurait pas su qu'elle l'avait.
+    if(!data){setToast("Mandat donné ✓ — rouvrez l'écran pour le voir");return;}
     setMandat(data);
     setToast("Mandat donné ✓");
     createNotification({

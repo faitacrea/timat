@@ -2831,6 +2831,16 @@ export function OnboardingWizard({user,onFinish}){
         setToast('❌ Erreur: '+errEnfant.message);
         setSaving(false);return;
       }
+      // L'enfant peut etre cree SANS que la ligne nous soit relue (une politique
+      // RLS autorise souvent l'ecriture sans la lecture de ce qu'on vient
+      // d'ecrire) : data et error valent alors tous deux null. La ligne
+      // suivante lit enfantData.id pour y rattacher le contrat — sans ce
+      // garde-fou, l'accompagnement plantait sur une page blanche juste apres
+      // avoir cree l'enfant, et rien ne disait que l'enfant existait.
+      if(!enfantData?.id){
+        setToast("L'enfant est enregistré, mais son contrat n'a pas pu être rattaché. Rouvrez l'application pour le compléter.");
+        setSaving(false);return;
+      }
 
       // 3. Créer le contrat lié à l'enfant
       const{error:errContrat}=await withRetry(()=>supabase.from('contrats').insert({
@@ -3106,6 +3116,12 @@ export function AjouterEnfantModale({user,onClose}){
       }).select().single();
       if(errEnfant){
         setToast("Erreur création enfant : "+errEnfant.message);
+        setSaving(false);
+        return;
+      }
+      // Creation acceptee mais ligne non relue : voir l'accompagnement.
+      if(!enfantData?.id){
+        setToast("L'enfant est enregistré, mais son contrat n'a pas pu être rattaché. Rouvrez l'application pour le compléter.");
         setSaving(false);
         return;
       }
