@@ -20,7 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat
 } from "./App.jsx";
 
 import { anneeScolaireDe, estFerie, finVacances, feriesDe, vacancesDe, vacancesAnnee, ACADEMIES_PAR_ZONE, ZONES, ZONE_DEFAUT } from "../data/calendrier-scolaire.js";
@@ -165,6 +165,30 @@ export const heuresJourDuContrat = (contrat) => {
   const h = Number(contrat?.heuresHebdo ?? contrat?.heures_hebdo);
   const j = Number(contrat?.jours?.length) || JOURS_SEMAINE_TYPE;
   return h > 0 && j > 0 ? h / j : 9;
+};
+
+// LE NOMBRE DE JOURNEES D'ACCUEIL DANS UN MOIS, en un seul endroit.
+//
+// Trois endroits le calculaient, et l'un des trois etait faux. Le kit de
+// declaration CMG du parent l'ecrivait ainsi :
+//
+//     Math.round(entretien * heuresMois / heuresHebdo * 5) / 10
+//
+// « heuresMois / heuresHebdo » donne bien les semaines du mois (4,33), et « x5 »
+// les cinq jours : jusque-la c'est juste. Mais le « /10 » final, qui devait
+// arrondir a une decimale, divise le resultat par dix. Le kit annoncait
+// 8,50 EUR d'indemnite d'entretien par mois la ou 84,77 EUR etaient dus.
+//
+// Ce n'est pas un affichage decoratif : la ligne porte un bouton « Copier »,
+// et le parent recopie ce chiffre sur monenfant.fr pour que la CAF calcule son
+// Complement Mode de Garde. Un montant divise par dix fausse son aide, et ne
+// concorde pas avec ce qui est declare a Pajemploi.
+//
+// Le nombre de jours se deduit des jours convenus au contrat et des semaines
+// reellement accueillies — pas d'un detour par les heures.
+export const joursAccueilParMois = (contrat) => {
+  const joursSem = Number(contrat?.jours?.length) || JOURS_SEMAINE_TYPE;
+  return Math.round((joursSem * semainesDuContrat(contrat)) / 12);
 };
 
 // L'INDEMNITE D'ENTRETIEN A APPLIQUER, en un seul endroit.

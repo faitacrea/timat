@@ -21,7 +21,7 @@ import {
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
-  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois, joursAccueilParMois
 } from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
@@ -2793,8 +2793,16 @@ export function KitCMG({enfants,role,pEId,user}){
   // qui ne correspond a rien : il AUGMENTE le brut au lieu d'en retirer les
   // cotisations. On passe par le calcul du bulletin.
   const salaireBrutMois=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*100)/100;
-  const salaireNet=nbf(netDepuisBrut(salaireBrutMois,regimeLocalDe(user)),2);
-  const entretienMensuel=Math.round(entretienDuContrat(contrat)*heuresMois/contrat.heuresHebdo*5)/10;
+  // Le regime local d'Alsace-Moselle depend du code postal de la SALARIEE.
+  // regimeLocalDe(user) regardait le PARENT qui consulte ce kit, pour qui la
+  // reponse est toujours « non » : une assistante maternelle d'Alsace-Moselle
+  // voyait donc un net surestime de 1,5 %. Son profil est charge sur cet ecran,
+  // asmatProfil : c'est lui qui porte la bonne reponse.
+  const salaireNet=nbf(netDepuisBrut(salaireBrutMois,regimeLocalDe(user,asmatProfil)),2);
+  // Le « /10 » final de la formule precedente divisait le resultat par dix : le
+  // kit annoncait 8,50 EUR d'indemnite d'entretien par mois la ou 84,77 EUR
+  // etaient dus — et le parent recopiait ce chiffre sur monenfant.fr.
+  const entretienMensuel=Math.round(entretienDuContrat(contrat)*joursAccueilParMois(contrat)*100)/100;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2855,11 +2863,11 @@ export function KitCMG({enfants,role,pEId,user}){
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
           <InfoRow label="Taux horaire brut" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
-          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user)),2)+"€/h"} copyKey="tauxNet"/>
+          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user,asmatProfil)),2)+"€/h"} copyKey="tauxNet"/>
           <InfoRow label="Salaire brut mensuel (estimé)" value={nbf(salaireBrutMois,2)+"€"} copyKey="salaireBrut"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
           <InfoRow label="Indemnité d'entretien/jour" value={nbf(entretienDuContrat(contrat),2)+"€"} copyKey="entretien"/>
-          <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
+          <InfoRow label="Indemnité entretien/mois" value={nbf(entretienMensuel,2)+"€"} copyKey="entretienMois"/>
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
             <IconeOuEmoji e="💡"/> Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
           </div>

@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -1744,12 +1744,13 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
   const suivi=useMemo(()=>{
     const hMens=heuresMensualisees(contrat);
     const tx=contrat.tauxHoraire||0;
-    const joursSem=(contrat.jours&&contrat.jours.length)||5;
-    const joursMois=Math.round(joursSem*semainesDuContrat(contrat)/12);
-    // Le regime local d'Alsace-Moselle n'est pas encore cable cote parent : le
-    // net est donc calcule au regime general. C'est le seul endroit ou ce suivi
-    // peut encore surestimer, de 1,5 % du salaire, et seulement dans les trois
-    // departements concernes.
+    const joursMois=joursAccueilParMois(contrat);
+    // Regime general, volontairement, et non regimeLocalDe(user) : la cotisation
+    // supplementaire d'Alsace-Moselle depend du code postal de la SALARIEE, que
+    // l'ecran du parent n'a pas sous la main. Le cabler a moitie afficherait
+    // deux montants dus differents selon qui regarde le meme tableau — pire
+    // qu'un ecart uniforme. Ce suivi peut donc encore surestimer de 1,5 % du
+    // salaire, et seulement dans les trois departements concernes.
     const netMensuel=netDepuisBrut(hMens*tx,false);
     const entMois=Math.round(joursMois*(Number(contrat.entretien)||0)*100)/100;
     const repMois=Math.round(joursMois*(Number(contrat.repas)||0)*100)/100;
