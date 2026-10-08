@@ -162,10 +162,17 @@ ecrits = [];
 // fichier) : aucun appel ne sort. Le 500 qui en résulte est attendu — ce qu'on
 // vérifie, c'est que la fonction est ARRIVÉE jusque-là, avec l'identifiant
 // client lu dans le profil.
-portails = []; lectures = [];
+portails = []; lectures = []; appelsStripe = [];
 {
   const res = faireRes();
+  // La fonction journalise l'echec de l'appel Stripe — c'est normal, c'est nous
+  // qui l'avons arrete. On tait cette ligne : dans le journal de build, « An
+  // error occurred with our connection to Stripe » inquiete pour rien.
+  const vraiErreur = console.error;
+  console.error = (...a) => { if (!String(a[0] || "").includes("Customer portal error")) vraiErreur(...a); };
   await stripe(faireReq({ authorization: "Bearer " + JETON_BON }, {}, { action: "portail" }), res);
+  console.error = vraiErreur;
+  console.log("  --  l'appel Stripe est arrêté net par le contrôle : aucune requête ne sort (vérifié au proxy)");
   dire(res.code !== 401, `stripe laisse passer un appel légitime (${res.code}, pas 401)`,
     "une utilisatrice ne pourrait plus gérer ni résilier son abonnement");
   dire(res.code !== 404, "et elle trouve un identifiant client rattaché au compte",
