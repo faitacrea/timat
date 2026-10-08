@@ -112,17 +112,35 @@ export const lireHorsLigne=(cle)=>{
 };
 
 export const fileHorsLigne=()=>{const f=_lireJSON(CLE_FILE);return Array.isArray(f)?f:[];};
+// ON LIT SI L'ECRITURE A REUSSI.
+//
+// _ecrireJSON rend false quand le stockage du telephone est plein : setItem
+// leve une exception, elle l'attrape et le dit. Personne ne l'ecoutait.
+//
+// Consequence, et c'est le defaut exact que l'en-tete de
+// scripts/test-hors-ligne.mjs declare inacceptable — « une journee de travail
+// disparait sans un message d'erreur » : une assistante maternelle qui pointe
+// sans reseau, sur un telephone sature, lisait « Arrivee notee a 08:00 — en
+// attente de reseau » alors que RIEN n'etait enregistre. Le pointage n'etait
+// ni envoye, ni mis en file, et le message la rassurait.
+//
+// Cette application stocke des photos, des documents et des copies hors ligne :
+// un telephone sature n'est pas un cas d'ecole.
 const _ecrireFile=(f)=>{
-  _ecrireJSON(CLE_FILE,f.slice(-MAX_FILE));
+  const ok=_ecrireJSON(CLE_FILE,f.slice(-MAX_FILE));
   try{window.dispatchEvent(new CustomEvent("timat:file-hors-ligne"));}catch{}
+  return ok;
 };
+// Rend l'entree mise en file, ou NULL si le stockage n'a pas voulu d'elle.
+// L'appelant DOIT distinguer les deux : c'est toute la difference entre « c'est
+// note, ca partira » et « ce n'est nulle part ».
 export const filerOperation=(op)=>{
   const f=fileHorsLigne();
   // Une seule entree par cle : re-pointer le meme jour remplace, n'empile pas.
   const sansDoublon=op.cle?f.filter(x=>x.cle!==op.cle):f;
   const entree={id:"hl"+Date.now()+"-"+Math.random().toString(36).slice(2,7),faitLe:new Date().toISOString(),conflit:null,...op};
   sansDoublon.push(entree);
-  _ecrireFile(sansDoublon);
+  if(!_ecrireFile(sansDoublon))return null;
   return entree;
 };
 const retirerDeLaFile=(id)=>_ecrireFile(fileHorsLigne().filter(x=>x.id!==id));
@@ -143,21 +161,30 @@ const panneReseau=(e)=>{
 // la demande (src/ecrans-quotidien.jsx) : sans export ni import, l'appel leve
 // « enregistrerPointage is not defined » au moment ou l'on tape sur le bouton,
 // et le pointage n'est ni enregistre, ni mis en file, ni signale.
+// LA MISE EN FILE PEUT ECHOUER, et il faut le dire.
+//
+// Le message qui suit est la seule chose qui separe une journee sauvee d'une
+// journee perdue : si le stockage refuse l'entree, l'assistante maternelle doit
+// l'apprendre TOUT DE SUITE, pendant qu'elle a encore l'heure en tete.
+const MESSAGE_FILE_PLEINE="Le téléphone n'a plus de place : ce pointage n'a pas pu être gardé. Notez l'heure, libérez de l'espace (Réglages → Stockage), puis ressaisissez-le.";
+const mettreEnFile=(cle,ligne)=>filerOperation({table:"pointages",cle,charge:ligne})
+  ? {etat:"en-file"}
+  : {etat:"erreur",message:MESSAGE_FILE_PLEINE};
+
 export async function enregistrerPointage(ligne){
   const cle="pointage:"+ligne.enfant_id+":"+ligne.date;
   if(typeof navigator!=="undefined"&&navigator.onLine===false){
-    filerOperation({table:"pointages",cle,charge:ligne});
-    return{etat:"en-file"};
+    return mettreEnFile(cle,ligne);
   }
   try{
     const{error}=await supabase.from("pointages").upsert(ligne,{onConflict:"enfant_id,date"});
     if(error){
-      if(panneReseau(error)){filerOperation({table:"pointages",cle,charge:ligne});return{etat:"en-file"};}
+      if(panneReseau(error))return mettreEnFile(cle,ligne);
       return{etat:"erreur",message:error.message};
     }
     return{etat:"envoye"};
   }catch(e){
-    if(panneReseau(e)){filerOperation({table:"pointages",cle,charge:ligne});return{etat:"en-file"};}
+    if(panneReseau(e))return mettreEnFile(cle,ligne);
     return{etat:"erreur",message:String(e&&e.message||e)};
   }
 }

@@ -23,9 +23,19 @@ const module = src.slice(debut, fin);
 
 // --- Le monde autour du module, entierement sous controle ---
 const memoire = new Map();
+// LE STOCKAGE PEUT REFUSER. C'est ce que ce faux localStorage ne savait pas
+// faire, et c'est pour cela qu'un defaut grave a survecu a vingt-sept
+// verifications : sur un telephone sature, setItem leve une exception, la file
+// n'etait pas ecrite, et l'ecran affichait quand meme « en attente de reseau ».
+// Une journee de travail disparaissait sans un message — exactement ce que
+// l'en-tete de ce fichier declare inacceptable.
+let stockagePlein = false;
 const localStorage = {
   getItem: (k) => (memoire.has(k) ? memoire.get(k) : null),
-  setItem: (k, v) => memoire.set(k, String(v)),
+  setItem: (k, v) => {
+    if (stockagePlein) { const e = new Error("QuotaExceededError"); e.name = "QuotaExceededError"; throw e; }
+    memoire.set(k, String(v));
+  },
   removeItem: (k) => memoire.delete(k),
 };
 const navigator = { onLine: true };
@@ -183,6 +193,32 @@ memoire.set("timat:hl:pointages:e1", "{ceci n'est pas du json");
 verifie("copie illisible : traitee comme absente", M.lireHorsLigne("pointages:e1"), null);
 memoire.set("timat:hl:file", "pas du json non plus");
 verifie("file illisible : traitee comme vide", M.fileHorsLigne(), []);
+
+// 12. LE TELEPHONE N'A PLUS DE PLACE.
+//
+// Le cas qui manquait. Sur un telephone sature — et cette application stocke
+// des photos, des documents et des copies hors ligne, donc ce n'est pas un cas
+// d'ecole — la mise en file echoue. Elle doit le DIRE : le pointage n'est ni
+// envoye, ni garde, et l'assistante maternelle doit l'apprendre pendant qu'elle
+// a encore l'heure en tete.
+raz();
+navigator.onLine = false;
+stockagePlein = true;
+{
+  const r = await M.enregistrerPointage(ligne("2026-09-12", "08:00", null));
+  verifie("stockage plein : l'etat est une erreur, pas « en-file »", r.etat, "erreur");
+  verifie("stockage plein : le message dit quoi faire", /place|espace/i.test(r.message || ""), true);
+  verifie("stockage plein : filerOperation rend null", M.filerOperation({ table: "pointages", cle: "k", charge: {} }), null);
+}
+stockagePlein = false;
+verifie("stockage plein : rien n'a ete garde", M.fileHorsLigne().length, 0);
+// Et quand la place revient, la mise en file remarche.
+{
+  const r = await M.enregistrerPointage(ligne("2026-09-12", "08:00", null));
+  verifie("place revenue : la mise en file remarche", r.etat, "en-file");
+  verifie("place revenue : la file garde l'entree", M.fileHorsLigne().length, 1);
+}
+navigator.onLine = true;
 
 console.log(ko ? `\n${ko} anomalie(s)\n` : "\nAucune anomalie\n");
 process.exit(ko ? 1 : 0);
