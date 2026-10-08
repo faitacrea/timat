@@ -3154,7 +3154,29 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     const lignes = src.split("\n");
     for (let i = 0; i < lignes.length; i++) {
       const l = lignes[i];
-      if (!/^\s*await\s+supabase\s*\.\s*from\s*\(/.test(l)) continue;
+      if (/^\s*\/\//.test(l)) continue;
+      // L'ANGLE MORT DE LA PREMIERE VERSION : elle n'attrapait que les
+      // « await supabase » en DEBUT de ligne. Six ecritures silencieuses lui
+      // echappaient donc, toutes ecrites en une ligne compacte :
+      //
+      //   const supprimer=async(id)=>{await supabase.from("trajets").delete()...}
+      //   if(ex){ await supabase.from("activites_faites").delete()... }
+      //
+      // dont la case « activite faite », qui se cochait meme quand rien ne
+      // s'enregistrait. On cherche donc l'appel OU QU'IL SOIT dans la ligne, et
+      // on regarde ce qui le precede : si la valeur est affectee (« =await »),
+      // le retour est lu ; sinon il est jete.
+      const pos = l.indexOf("await supabase");
+      if (pos === -1) continue;
+      const avantAppel = l.slice(0, pos).replace(/\s+$/, "");
+      // Le retour est recupere quand l'appel est affecte, passe en argument, ou
+      // place dans une branche de ternaire dont la valeur est affectee :
+      //   const{error}=ex ? await supabase...delete() : await supabase...insert();
+      // Sans « ? » et « : » ici, la regle signalait ce code — qui lit l'erreur.
+      // Un « => await supabase... » reste signale : une fonction qui rend une
+      // promesse que personne ne lit, c'est le meme silence.
+      if (/(?:[=(,?:]|&&|\|\||\breturn)$/.test(avantAppel)) continue;
+      if (!/supabase\s*\.\s*from\s*\(/.test(l.slice(pos))) continue;
       // L'appel peut tenir sur plusieurs lignes : on regarde la suite.
       const bloc5 = lignes.slice(i, i + 6).join("\n");
       if (!ECRITURES.test(bloc5)) continue;

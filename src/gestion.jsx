@@ -2929,6 +2929,9 @@ export function AlerteTauxKm({taux,cv}){
 }
 
 export function IndemnitesKilometriques({enfants,role,user}){
+  // Supprimer un trajet pouvait echouer sans que rien ne le dise : cet ecran
+  // n'avait pas de bandeau de message.
+  const [toast,setToast]=useState("");
   const asmatId=user?.id||enfants[0]?.asmat_id;
   const [mois,setMois]=useState(isoMois(new Date()));
   const [cv,setCv]=useState(5);
@@ -2965,7 +2968,11 @@ export function IndemnitesKilometriques({enfants,role,user}){
     setSaving(false);
     if(!error){setNt({...blank,taux:BAREME_KM_2026[cv]});charger();}
   };
-  const supprimer=async(id)=>{await supabase.from("trajets").delete().eq("id",id);charger();};
+  const supprimer=async(id)=>{
+    const{error}=await supabase.from("trajets").delete().eq("id",id);
+    if(error){setToast("Le trajet n'a pas pu être supprimé : "+error.message);return;}
+    charger();
+  };
 
   const totalKm=trajets.reduce((s,t)=>s+(+t.km||0),0);
   const totalEur=trajets.reduce((s,t)=>s+(+t.km||0)*(+t.taux||0),0);
@@ -2982,6 +2989,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
   if(role!=="asmat")return <div className="fi"><PageHeader icon="🚗" title="Frais kilométriques"/><div className="card"style={{textAlign:"center",color:"var(--m)"}}>Section réservée à l'assistante maternelle.</div></div>;
 
   return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="🚗" title="Frais kilométriques (IK)" sub="Trajets, barème 2026 et feuille de route Pajemploi"/>
     {trajetsPanne&&<div className="card" style={{marginBottom:14,background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
       <div style={{fontSize:13,lineHeight:1.65,color:"var(--b)"}}>

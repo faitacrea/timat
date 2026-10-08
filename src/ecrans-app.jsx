@@ -1309,7 +1309,11 @@ export function CourbeCroissance({enfants,role,pEId}){
   const supprimer=async(m)=>{
     if(!window.confirm("Supprimer cette mesure ?"))return;
     if(estDemo){setData(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(x=>x!==m)}));return;}
-    if(m.id){await supabase.from("croissance").delete().eq("id",m.id);rechargerC(enfant.id);}
+    if(m.id){
+      const{error}=await supabase.from("croissance").delete().eq("id",m.id);
+      if(error){setToast("La mesure n'a pas pu être supprimée : "+error.message);return;}
+      rechargerC(enfant.id);
+    }
   };
 
   const last=mesures[mesures.length-1];
@@ -1401,6 +1405,10 @@ export function CourbeCroissance({enfants,role,pEId}){
 //
 
 export function ActivitesSuggerees({enfants,role,pEId}){
+  // Cet ecran n'avait aucun moyen de dire qu'une operation avait echoue : ni
+  // bandeau, ni message. Cocher une activite ou supprimer une activite perso
+  // pouvait ne rien enregistrer, en silence.
+  const [toast,setToast]=useState("");
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [catFilt,setCatFilt]=useState("tous");
   const [ageFilt,setAgeFilt]=useState("tous");
@@ -1435,8 +1443,14 @@ export function ActivitesSuggerees({enfants,role,pEId}){
   const toggleFait=async(titre)=>{
     if(role!=="asmat"||!enfant?.id||!asmatId)return;
     const ex=faitDe(titre);
-    if(ex){ await supabase.from("activites_faites").delete().eq("id",ex.id); }
-    else{ await supabase.from("activites_faites").insert({asmat_id:asmatId,enfant_id:enfant.id,activite_titre:titre,date:jour}); }
+    // La case se cochait meme quand rien ne s'enregistrait : le retour n'etait
+    // pas lu, et « chargerFaites() » rechargeait ensuite une liste inchangee —
+    // l'activite reapparaissait non faite au rechargement suivant, sans que
+    // personne sache pourquoi.
+    const{error}=ex
+      ? await supabase.from("activites_faites").delete().eq("id",ex.id)
+      : await supabase.from("activites_faites").insert({asmat_id:asmatId,enfant_id:enfant.id,activite_titre:titre,date:jour});
+    if(error){setToast("Impossible d'enregistrer : "+error.message);return;}
     chargerFaites();
   };
 
@@ -1460,9 +1474,14 @@ export function ActivitesSuggerees({enfants,role,pEId}){
     setSaving(false);
     if(!error){setNa(blankAct);setShowForm(false);chargerPerso();}
   };
-  const supprimer=async(id)=>{ await supabase.from("activites_perso").delete().eq("id",id); chargerPerso(); };
+  const supprimer=async(id)=>{
+    const{error}=await supabase.from("activites_perso").delete().eq("id",id);
+    if(error){setToast("L'activité n'a pas pu être supprimée : "+error.message);return;}
+    chargerPerso();
+  };
 
   return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="💡" title="Activités suggérées" sub="Bibliothèque d'éveil 0-6 ans · filtrez par âge et par domaine"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}

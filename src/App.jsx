@@ -4571,6 +4571,45 @@ function fmtInline(text){
   if(rest) parts.push(rest);
   return parts;
 }
+// CREER LE PROFIL APRES UNE INSCRIPTION, en un seul endroit.
+//
+// Sans profil, le compte existe cote authentification et n'a rien d'autre :
+// l'utilisatrice se connecte et tombe sur un espace vide, sans role et sans
+// abonnement, sans que rien ne dise pourquoi.
+//
+// Ce code existait en DEUX exemplaires. Celui de la page d'accueil avait ete
+// corrige — il relit l'erreur, retente une fois, puis le dit. Son jumeau de
+// l'ecran d'invitation parent etait reste tel quel :
+//
+//   setTimeout(async()=>{try{await supabase.from('profiles').upsert({...});}catch(e){}},500);
+//
+// Le retour n'etait pas lu, et le catch etait vide : un parent invite par son
+// assistante maternelle pouvait se retrouver avec un compte sans profil, en
+// silence. Deux exemplaires, et c'est toujours celui qu'on ne regarde pas qui
+// garde le defaut : il n'y en a plus qu'un.
+//
+// Le delai de 500 ms laisse l'ecouteur d'authentification se poser avant
+// l'ecriture : sans lui, les deux se disputent le verrou de session.
+const creerProfilApresInscription = ({ utilisateur, prenom, nom, role, onEchec }) => {
+  const ligne = {
+    id: utilisateur.id, email: utilisateur.email,
+    prenom, nom: nom || "",
+    role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
+    ...abonnementInitial(role),
+  };
+  const echec = "Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous.";
+  setTimeout(async () => {
+    try {
+      const { error } = await supabase.from("profiles").upsert(ligne, { onConflict: "id" });
+      if (!error) return;
+      // On retente une fois : l'echec le plus courant est la course avec
+      // l'ecouteur d'authentification, et elle ne se reproduit pas.
+      const { error: eBis } = await supabase.from("profiles").upsert(ligne, { onConflict: "id" });
+      if (eBis) onEchec?.(echec);
+    } catch (e) { onEchec?.(echec); }
+  }, 500);
+};
+
 function ParentInvitationScreen({onLogin,initialMode="inscription"}){
   // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
   const uneFois=useUneFois();
@@ -4648,7 +4687,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         }
         else setErr(error.message||"Erreur lors de l'inscription.");
       }else if(data?.user){
-        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,...abonnementInitial("parent")},{onConflict:'id'});}catch(e){}},500);
+        creerProfilApresInscription({utilisateur:data.user,prenom:form.prenom,nom:form.nom,role:"parent",onEchec:setErr});
         await claim();
         try{if(typeof logConsent==="function")logConsent(data.user.id,{politique:true,cgu:true,newsletter:false});}catch(e){}
         onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:COULEUR_ROLE.parent});
@@ -5317,30 +5356,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
-        // Delay profile upsert so auth listener settles first (avoids lock race)
-        setTimeout(async()=>{
-          try{
-            const { error: eProfil } = await supabase.from('profiles').upsert({
-              id: data.user.id, email: data.user.email,
-              prenom: form.prenom, nom: form.nom||'',
-              role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
-              ...abonnementInitial(role),
-            },{onConflict:'id'});
-            // Sans cette ligne, le compte existe cote authentification mais n'a
-            // aucun profil : l'utilisatrice se connecte et tombe sur un espace
-            // vide, sans role et sans abonnement, sans que rien ne dise
-            // pourquoi. On retente une fois, puis on le dit.
-            if(eProfil){
-              const { error: eBis } = await supabase.from('profiles').upsert({
-                id: data.user.id, email: data.user.email,
-                prenom: form.prenom, nom: form.nom||'',
-                role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
-                ...abonnementInitial(role),
-              },{onConflict:'id'});
-              if(eBis) setErr("Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous.");
-            }
-          }catch(e){ setErr("Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous."); }
-        },500);
+        // Le profil, par la routine partagee : voir creerProfilApresInscription().
+        creerProfilApresInscription({utilisateur:data.user,prenom:form.prenom,nom:form.nom,role,onEchec:setErr});
         // RATTACHEMENT IMMEDIAT (session fraiche apres signUp) : lien token + invitations par email
         try{
           const tk=new URLSearchParams(window.location.search).get("invite")||(()=>{try{return localStorage.getItem("timat:invite");}catch(e){return null;}})();
