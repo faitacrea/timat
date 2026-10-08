@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect, useMemo, lazy, Suspense, Component } from "react";
+// Ecrit par scripts/generate-blog.mjs : le nombre reel d'articles publies.
+import { NOMBRE_GUIDES } from "../data/nombre-guides.js";
 import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import qrcode from "qrcode-generator";
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { majLisible } from "../data/documents-legaux.js";
@@ -293,12 +296,52 @@ async function logConsent(user_id, consents={}){
 // Mode actuel : POST vers /api/send-email (a creer sur Vercel comme Edge Function avec Resend).
 // Tant que Resend n'est pas configure, l'appel echoue silencieusement et on logge dans audit_log
 // pour pouvoir relancer ces emails plus tard (rappel : ajouter `email_log` table optionnelle).
-export async function sendNotificationEmail({type,to,subject,template,vars={}}){
+// UN APPEL D'API PRESENTE TOUJOURS LE JETON DE SESSION.
+//
+// Quatre fonctions serverless s'ouvraient a n'importe qui sur Internet :
+// /api/send-email, /api/invite-parent, /api/support et /api/stripe. Elles sont
+// fermees cote serveur ; cette fonction est la clé, et il n'y en a qu'une pour
+// que personne n'oublie de la presenter.
+//
+// Elle rend { ok, status, data } : « ok: false » avec « status: 401 » signifie
+// que la session n'est plus ouverte, et non que l'operation a echoue.
+export async function appelApi(chemin, corps){
+  let jeton=null;
   try{
-    const payload={type,to,subject,template,vars,from:`TiMat <${EMAIL_EXPEDITEUR}>`};
+    const{data:{session}={}}=await supabase.auth.getSession();
+    jeton=session?.access_token||null;
+  }catch(e){ /* stockage indisponible : on part sans jeton, le serveur refusera */ }
+  if(!jeton)return{ok:false,status:401,data:{error:"Session non ouverte"}};
+  const res=await fetch(chemin,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+jeton},
+    body:JSON.stringify(corps||{}),
+  });
+  const data=await res.json().catch(()=>({}));
+  return{ok:res.ok,status:res.status,data};
+}
+
+// L'APPEL PRESENTE LE JETON DE SESSION.
+//
+// /api/send-email n'avait aucune authentification : n'importe qui sur Internet
+// pouvait la poster et faire partir un courriel signe par le domaine timat.app.
+// La porte est maintenant fermee, et c'est ce jeton qui l'ouvre.
+//
+// « subject » a disparu des parametres : le sujet appartient au gabarit, cote
+// serveur. Le laisser choisir a l'appelant permettait d'ecrire n'importe quelle
+// ligne d'objet sous notre signature.
+export async function sendNotificationEmail({type,to,template,vars={}}){
+  try{
+    const payload={type,to,template,vars,from:`TiMat <${EMAIL_EXPEDITEUR}>`};
+    const{data:{session}={}}=await supabase.auth.getSession();
+    const jeton=session?.access_token;
+    if(!jeton){
+      console.warn("[email] pas de session ouverte : l'envoi est refuse cote serveur");
+      return{success:false,error:"session absente"};
+    }
     const res=await fetch("/api/send-email",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+jeton},
       body:JSON.stringify(payload),
     });
     if(!res.ok){
@@ -434,63 +477,16 @@ async function envoyerPush({userId,titre,corps,url,tag}){
 }
 
 
-// EMAILS TEMPLATES P13 - templates pretes a brancher (HTML simple, surchargeable depuis backoffice)
-export const EMAIL_TEMPLATES={
-  signature_asmat_signed:{
-    subject:"Votre assistante maternelle a signe le contrat",
-    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
-      +"<p>"+H(v.asmat_prenom)+" vient de signer electroniquement le contrat de "+H(v.enfant_prenom)+".</p>"
-      +"<p>Connectez-vous a TiMat pour le signer a votre tour :</p>"
-      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Signer le contrat</a></p>",
-  },
-  signature_parent_signed:{
-    subject:"Le parent a signe le contrat",
-    html:(v)=>"<h2>Bonjour "+H(v.asmat_prenom)+",</h2>"
-      +"<p>"+H(v.parent_prenom)+" "+H(v.parent_nom)+" vient de signer le contrat de "+H(v.enfant_prenom)+".</p>"
-      +"<p>Le contrat est finalise et archive dans vos documents.</p>",
-  },
-  signature_reminder:{
-    subject:"Rappel : signature de contrat en attente",
-    html:(v)=>"<p>Le contrat de "+H(v.enfant_prenom)+" attend votre signature depuis le "+v.date+".</p>"
-      +"<p><a href='"+H(v.url)+"'>Signer maintenant</a></p>",
-  },
-  bulletin_sent:{
-    subject:"Votre bulletin de salaire est disponible",
-    html:(v)=>"<p>Bonjour "+H(v.parent_prenom)+",</p>"
-      +"<p>Le bulletin de salaire pour "+v.mois+" est disponible dans votre espace TiMat.</p>",
-  },
-  invitation_parent:{
-    subject:"Invitation : votre assistante maternelle vous invite sur TiMat",
-    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
-      +"<p>"+H(v.asmat_prenom)+" vous invite a rejoindre TiMat pour suivre "+H(v.enfant_prenom)+" : sa journee en direct, vos montants Pajemploi prets a declarer, et tous vos documents au meme endroit.</p>"
-      +"<p>C'est 100% gratuit pour vous, sans carte bancaire.</p>"
-      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Rejoindre TiMat</a></p>"
-      +"<p style='font-size:12px;color:#888;margin-top:18px'>Envie d'en savoir plus avant de creer votre compte ? <a href='https://www.timat.app/brochure-parents.html' style='color:#C84B31'>Decouvrez ce que TiMat va changer pour vous</a>.</p>",
-  },
-  // POINTAGE WORKFLOW P14E - notification au parent qu'un pointage attend sa validation
-  pointage_a_valider:{
-    subject:"Un pointage attend votre validation",
-    html:(v)=>"<h2>Bonjour "+H(v.parent_prenom)+",</h2>"
-      +"<p>L'assistante maternelle a enregistre le pointage de "+H(v.enfant_prenom)+" du "+v.date+".</p>"
-      +"<p>Duree d'accueil : <strong>"+v.duree+"</strong></p>"
-      +"<p>Merci de valider ce pointage dans votre application :</p>"
-      +"<p><a href='"+H(v.url)+"' style='display:inline-block;background:#E49178;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700'>Valider le pointage</a></p>"
-      +"<p style='font-size:11px;color:#888;margin-top:24px'>Si vous oubliez, un rappel automatique sera envoye sous 3 jours.</p>",
-  },
-  pointage_rappel:{
-    subject:"Rappel : pointage en attente de validation depuis 3 jours",
-    html:(v)=>"<p>Bonjour "+H(v.parent_prenom)+",</p>"
-      +"<p>Un pointage de "+H(v.enfant_prenom)+" est en attente de votre validation depuis le "+v.date+".</p>"
-      +"<p><a href='"+H(v.url)+"'>Valider maintenant</a></p>",
-  },
-  // VERSEMENTS P34 - notification d'un versement enregistre (parent->assmat ou assmat->parent)
-  versement_recu:{
-    subject:"Nouveau versement enregistre sur TiMat",
-    html:(v)=>"<h2>Bonjour "+H(v.prenom)+",</h2>"
-      +"<p>"+H(v.qui)+" a enregistre un versement de <strong>"+v.montant+"</strong>"+(v.enfant_prenom?(" pour "+v.enfant_prenom):"")+" le "+v.date+".</p>"
-      +"<p>Retrouvez le detail dans l'onglet Versements de votre espace TiMat.</p>",
-  },
-};
+// LES SUJETS DES COURRIELS VIVENT AU SERVEUR, ET NULLE PART AILLEURS.
+//
+// Il y avait ici un SECOND jeu de gabarits, qui ne servait qu'a fournir la
+// ligne d'objet : le corps venait de api/send-email.js, l'objet de cette copie.
+// Les deux ont diverge, et c'est l'objet qui gagnait — trois courriels
+// partaient donc sans leurs accents : « Votre assistante maternelle a signe le
+// contrat », « Nouveau versement enregistre sur TiMat ».
+//
+// send-email.js retombe sur le sujet du gabarit quand l'appel n'en donne pas
+// (finalSubject = subject || tpl.subject). Les appels n'en donnent plus.
 
 // Couleur de chaque role, d'apres les logos : bleu pour l'assistante
 // maternelle (c'est aussi celui de la landing), corail / terracotta pour le
@@ -560,7 +556,7 @@ export function PastilleRepas({q,taille=12}){
 //
 //   annee complete   : salaire mensualise x heures non travaillees / heures
 //                      qui auraient ete reellement travaillees dans le mois
-//   annee incomplete : salaire mensualise x jours non travailles / jours qui
+//   année incomplète : salaire mensualise x jours non travailles / jours qui
 //                      auraient du etre reellement travailles
 //
 // Les periodes d'absence, les semaines de non-accueil et les jours feries
@@ -833,7 +829,41 @@ export const minutesDepuisHeure = (h) => {
 
 // Duree reellement travaillee, par journee, tous enfants confondus.
 // Renvoie { "2026-09-01": { minutes, amplitude, enfants } }
+
+// UN BOUTON QUI ÉCRIT NE PART QU'UNE FOIS À LA FOIS.
+//
+// Seize boutons qui ecrivent en base restaient cliquables pendant l'ecriture.
+// Un bouton qui ne repond pas tout de suite est appuye une seconde fois —
+// c'est le reflexe de n'importe qui, et c'est ce que provoque le reseau d'un
+// telephone dans une voiture. scripts/verif-double-clic.mjs le montre : deux
+// appuis a 80 ms sur « Enregistrer l'activite » inscrivaient DEUX activites.
+//
+// Un seul appel de ce crochet par ecran, puis « onClick={uneFois(add)} ». Le
+// second appui ne fait rien tant que le premier n'a pas rendu la main — ce qui
+// est exactement ce qu'on veut : le premier, lui, travaille.
+//
+// On ne le branche pas sur les boutons qui LISENT, ni sur ceux qui portent deja
+// leur propre « disabled={saving} » avec un libelle qui change : ceux-la
+// disent ce qu'ils font, et c'est mieux.
+export const useUneFois = () => {
+  const enCours = useRef(false);
+  return (fn) => async (...args) => {
+    if (enCours.current) return;
+    enCours.current = true;
+    try { return await fn(...args); }
+    finally { enCours.current = false; }
+  };
+};
+
 export const IE_PLANCHER_JOUR = 2.65;
+
+// Le minimum conventionnel d'indemnite d'entretien : 90 % du minimum garanti
+// pour neuf heures, soit 0,435 EUR par heure d'accueil, et jamais moins de
+// 2,65 EUR par journee. Au 1er juin 2026 (MG 4,35 EUR) cela fait 3,92 EUR pour
+// une journee de neuf heures. Elle vit ici, avec les deux constantes dont elle
+// decoule, et socle.jsx la re-exporte.
+export const indemniteEntretienMin = (heures) =>
+  Math.max(IE_PLANCHER_JOUR, Math.round(IE_TAUX_HORAIRE * (Number(heures) || 0) * 100) / 100);
 // Indemnite d'entretien minimale pour une journee d'accueil de n heures.
 export const CI_PLAFOND_DEPENSES = 3500;
 export const CI_TAUX = 0.5;
@@ -2015,8 +2045,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
       await sendNotificationEmail({
         type:"signature_reminder",
         to:email,
-        subject:EMAIL_TEMPLATES.signature_reminder.subject,
-        template:"signature_reminder",
+template:"signature_reminder",
         vars:{enfant_prenom:e.prenom,date:ct.created_at?String(ct.created_at).slice(0,10):"—",url},
       });
       setRappelState(p=>({...p,[ct.id]:"sent"}));
@@ -2172,7 +2201,7 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     setGenPdf(p=>({...p,[contratId]:"pending"}));
     const r=await generateAndStoreContratPDF(contratId);
     setGenPdf(p=>({...p,[contratId]:r.success?"done":"error"}));
-    setTabToast(r.success?"PDF du contrat regenere ✓":"Erreur : "+r.error);
+    setTabToast(r.success?"PDF du contrat régénéré ✓":"Erreur : "+r.error);
   };
 
   // STATS TEMPS REEL P14D - KPIs reels (heures semaine, revenu mois, presences jour, messages)
@@ -2478,7 +2507,7 @@ function AccueilParent({enfant,setPage,user}){
           </div>
           <div>
             <label className="lbl">Heures prévues ce jour</label>
-            <input type="number"className="inp"placeholder="ex: 9"value={absence.heures}onChange={e=>setAbsence(a=>({...a,heures:e.target.value}))} min="0"max="12"step="0.5"/>
+            <ChampNombre className="inp" placeholder="ex : 9 ou 7,5" value={absence.heures} onChange={v=>setAbsence(a=>({...a,heures:v}))} min="0" max="12" decimales={2}/>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <input type="checkbox"id="indem"checked={absence.indemnise}onChange={e=>setAbsence(a=>({...a,indemnise:e.target.checked}))}style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
@@ -2985,7 +3014,7 @@ export const MAJORATION_TITRE_AMGE=0.04;
 //
 //   annee complete (52 semaines) : taux x heures/semaine x 52 / 12.
 //     Les conges payes sont inclus dans le lissage.
-//   annee incomplete (46 semaines ou moins) : taux x heures/semaine x semaines
+//   année incomplète (46 semaines ou moins) : taux x heures/semaine x semaines
 //     programmees / 12. Les conges payes sont payes separement.
 //
 // Pour un accueil sur l'annee scolaire — 36 a 46 semaines, le cas le plus
@@ -3507,7 +3536,7 @@ export async function viderStockageDuCompte(userId){
       for(let i=0;i<aEffacer.length;i+=100){
         const lot=aEffacer.slice(i,i+100);
         const{error:eSup}=await supabase.storage.from(bucket).remove(lot);
-        if(eSup){ restants+=lot.length; console.warn("[suppression] "+lot.length+" fichier(s) non effaces dans "+bucket+" :",eSup.message); }
+        if(eSup){ restants+=lot.length; console.warn("[suppression] "+lot.length+" fichier(s) non effacés dans "+bucket+" :",eSup.message); }
       }
       if(restants)console.warn("[suppression] TOTAL non efface dans "+bucket+" : "+restants+" fichier(s)");
     }catch(e){
@@ -3699,7 +3728,7 @@ const jsPDF=await chargerJsPDF();
     const REPAS_TEXTE={
       employeur:"Fournis par le particulier employeur",
       assmat:"Fournis par l'assistant maternel",
-      mixte:"Partages entre les parties (voir detail ci-dessous)",
+      mixte:"Partagés entre les parties (voir détail ci-dessous)",
     };
     const repasPar=REPAS_TEXTE[ct.repas_fourni_par]||null;
 
@@ -4475,7 +4504,20 @@ const DEMO_SCREENS=[
       const [mois,setMois]=useState("Mars");
       const data={Mars:{h:160,supp:8,ent:20},Fev:{h:152,supp:4,ent:19},Jan:{h:168,supp:12,ent:21}};
       const m=data[mois]||data.Mars;
-      const brut=(m.h*4.20+m.supp*5.25+m.ent*3.80);
+      // UNE SEULE SOURCE POUR LES TROIS LIGNES ET LE TOTAL.
+      // Le total etait calcule avec 5,25 EUR l'heure majoree et la ligne en
+      // annoncait 5,06 EUR : les trois lignes de la demonstration de la page
+      // publique n'additionnaient pas le total affiche juste en dessous. Un
+      // visiteur qui verifiait trouvait 1,52 EUR d'ecart sur l'outil meme qu'on
+      // lui vend. Et l'indemnite d'entretien y figurait a 3,80 EUR, sous le
+      // minimum conventionnel : elle se calcule maintenant comme ailleurs.
+      const TAUX=4.20, MAJORE=Math.round(TAUX*1.25*100)/100, ENT=indemniteEntretienMin(9);
+      const lignes=[
+        ["Heures réalisées",m.h+" h × "+nbf(TAUX,2)+" €",m.h*TAUX],
+        ["Indemnité entretien",m.ent+" j × "+nbf(ENT,2)+" €",m.ent*ENT],
+        ["Heures majorées",m.supp+" h × "+nbf(MAJORE,2)+" €",m.supp*MAJORE],
+      ];
+      const brut=lignes.reduce((t,[,,v])=>t+v,0);
       return(
       <div style={{padding:20,fontFamily:"system-ui"}}>
         <div style={{fontSize:13,fontWeight:700,color:"#2E4859",marginBottom:12}}><IconeOuEmoji e="💰"/> Salaire — Léo 🦁</div>
@@ -4485,10 +4527,10 @@ const DEMO_SCREENS=[
             background:mois===mo?"#E49178":"#F4F7FA",color:mois===mo?"#fff":"#2E4859",transition:"all .15s"
           }}>{mo} 2024</button>)}
         </div>
-        {[["Heures réalisées",m.h+"h × 4,20€",nbf((m.h*4.20),2)+"€"],["Indemnité entretien",m.ent+"j × 3,80€",nbf((m.ent*3.80),2)+"€"],["Heures majorées",m.supp+"h × 5,06€",nbf((m.supp*5.06),2)+"€"]].map(([l,d,v])=>(
+        {lignes.map(([l,d,v])=>(
           <div key={l}style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #E8E4E0",fontSize:12}}>
             <div><div style={{fontWeight:600,color:"#2E4859"}}>{l}</div><div style={{fontSize:11,color:"#8FA3AD"}}>{d}</div></div>
-            <div style={{fontWeight:700,color:"#5DA9A1"}}>{v}</div>
+            <div style={{fontWeight:700,color:"#5DA9A1"}}>{nbf(v,2)}€</div>
           </div>
         ))}
         <div style={{marginTop:10,padding:"10px 12px",background:"#FFF8F3",borderRadius:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -4569,7 +4611,48 @@ function fmtInline(text){
   if(rest) parts.push(rest);
   return parts;
 }
+// CREER LE PROFIL APRES UNE INSCRIPTION, en un seul endroit.
+//
+// Sans profil, le compte existe cote authentification et n'a rien d'autre :
+// l'utilisatrice se connecte et tombe sur un espace vide, sans role et sans
+// abonnement, sans que rien ne dise pourquoi.
+//
+// Ce code existait en DEUX exemplaires. Celui de la page d'accueil avait ete
+// corrige — il relit l'erreur, retente une fois, puis le dit. Son jumeau de
+// l'ecran d'invitation parent etait reste tel quel :
+//
+//   setTimeout(async()=>{try{await supabase.from('profiles').upsert({...});}catch(e){}},500);
+//
+// Le retour n'etait pas lu, et le catch etait vide : un parent invite par son
+// assistante maternelle pouvait se retrouver avec un compte sans profil, en
+// silence. Deux exemplaires, et c'est toujours celui qu'on ne regarde pas qui
+// garde le defaut : il n'y en a plus qu'un.
+//
+// Le delai de 500 ms laisse l'ecouteur d'authentification se poser avant
+// l'ecriture : sans lui, les deux se disputent le verrou de session.
+const creerProfilApresInscription = ({ utilisateur, prenom, nom, role, onEchec }) => {
+  const ligne = {
+    id: utilisateur.id, email: utilisateur.email,
+    prenom, nom: nom || "",
+    role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
+    ...abonnementInitial(role),
+  };
+  const echec = "Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous.";
+  setTimeout(async () => {
+    try {
+      const { error } = await supabase.from("profiles").upsert(ligne, { onConflict: "id" });
+      if (!error) return;
+      // On retente une fois : l'echec le plus courant est la course avec
+      // l'ecouteur d'authentification, et elle ne se reproduit pas.
+      const { error: eBis } = await supabase.from("profiles").upsert(ligne, { onConflict: "id" });
+      if (eBis) onEchec?.(echec);
+    } catch (e) { onEchec?.(echec); }
+  }, 500);
+};
+
 function ParentInvitationScreen({onLogin,initialMode="inscription"}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [mode,setMode]=useState(initialMode);
   const [form,setForm]=useState({email:"",password:"",prenom:"",nom:""});
   const [err,setErr]=useState("");
@@ -4644,7 +4727,7 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
         }
         else setErr(error.message||"Erreur lors de l'inscription.");
       }else if(data?.user){
-        setTimeout(async()=>{try{await supabase.from('profiles').upsert({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom||'',role:"parent",couleur:COULEUR_ROLE.parent,...abonnementInitial("parent")},{onConflict:'id'});}catch(e){}},500);
+        creerProfilApresInscription({utilisateur:data.user,prenom:form.prenom,nom:form.nom,role:"parent",onEchec:setErr});
         await claim();
         try{if(typeof logConsent==="function")logConsent(data.user.id,{politique:true,cgu:true,newsletter:false});}catch(e){}
         onLogin({id:data.user.id,email:data.user.email,prenom:form.prenom,nom:form.nom,role:"parent",couleur:COULEUR_ROLE.parent});
@@ -4665,11 +4748,11 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
       </div>
 
       {mode==="inscription"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        <input placeholder="Prénom *" value={form.prenom} onChange={e=>setForm({...form,prenom:e.target.value})} style={inp}/>
-        <input placeholder="Nom" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} style={inp}/>
+        <input name="prenom" autoComplete="given-name" placeholder="Prénom *" value={form.prenom} onChange={e=>setForm({...form,prenom:e.target.value})} style={inp}/>
+        <input name="nom" autoComplete="family-name" placeholder="Nom" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} style={inp}/>
       </div>}
-      <input type="email" placeholder="Email *" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} style={inp}/>
-      <input type="password" placeholder="Mot de passe *" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")(mode==="inscription"?inscription:connexion)();}} style={inp}/>
+      <input type="email" name="email" autoComplete="email" inputMode="email" placeholder="Email *" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} style={inp}/>
+      <input type="password" name="password" autoComplete={mode==="inscription"?"new-password":"current-password"} placeholder="Mot de passe *" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} onKeyDown={e=>{if(e.key==="Enter")(mode==="inscription"?inscription:connexion)();}} style={inp}/>
 
       {mode==="inscription"&&<label style={{display:"flex",gap:8,alignItems:"flex-start",fontSize:11.5,color:"rgba(255,255,255,.92)",margin:"4px 0 12px",cursor:"pointer",lineHeight:1.5}}>
         <input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} style={{marginTop:2}}/>
@@ -4683,9 +4766,9 @@ function ParentInvitationScreen({onLogin,initialMode="inscription"}){
           <button type="button" onClick={()=>{setMode("connexion");setErr("");setErrAction(null);}} style={{display:"block",width:"100%",marginTop:9,background:"#fff",color:"#C84B31",border:"none",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Se connecter avec cet email →</button>
           {/@(gmail|googlemail)\.com\s*$/i.test(form.email||"")&&<div style={{marginTop:9,fontSize:11,lineHeight:1.5,opacity:.95}}><IconeOuEmoji e="💡"/> Avec Gmail, les points sont ignorés : <b>prenom.nom@gmail.com</b> et <b>prenomnom@gmail.com</b> reçoivent les mêmes emails, mais forment deux comptes différents ici.</div>}
         </>}
-        {errAction==="reset"&&<button type="button" onClick={envoyerReset} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
+        {errAction==="reset"&&<button type="button" onClick={uneFois(envoyerReset)} style={{display:"block",width:"100%",marginTop:9,background:"transparent",color:"#fff",border:"1.5px solid #fff",borderRadius:10,padding:"9px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mot de passe oublié ? Recevoir un lien</button>}
       </div>}
-      {mode==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#fff",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0,opacity:.9}}>Mot de passe oublié ?</button></div>}
+      {mode==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={uneFois(envoyerReset)} style={{background:"none",border:"none",color:"#fff",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0,opacity:.9}}>Mot de passe oublié ?</button></div>}
 
       <button onClick={mode==="inscription"?inscription:connexion} disabled={loading} style={{width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:"pointer",background:"#fff",color:"#2E4A5A",fontSize:15,fontWeight:700,fontFamily:"inherit",boxShadow:"0 6px 18px rgba(0,0,0,.18)"}}>
         {loading?"…":(mode==="inscription"?"Créer mon espace parent":"Se connecter")}
@@ -4903,6 +4986,8 @@ export function ModaleListeAttente({ ouverte, fermer }){
 }
 
 export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=false,authOnly=false,forceRole=null,vitrine=false}) {
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModalBrut, setShowModalBrut] = useState(false);
   // Lus ici, et pas cent lignes plus bas : la minuterie de la liste
@@ -4988,7 +5073,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   useEffect(()=>{const f=()=>setIsWeb(window.innerWidth>=900);window.addEventListener("resize",f);return()=>window.removeEventListener("resize",f);},[]);
   const [showAllFaq, setShowAllFaq] = useState(false);
   const [form, setForm] = useState({email:"", password:"", prenom:"", nom:""});
-  const [err, setErr] = useState("");
+  // Relu UNE fois, puis efface : la raison d'un refus de role, ecrite juste
+  // avant la deconnexion qui a remonte cet ecran.
+  const [refusRole] = useState(()=>{
+    try{ const v=sessionStorage.getItem("timat:refusRole"); if(v)sessionStorage.removeItem("timat:refusRole"); return v||""; }
+    catch(e){ return ""; }
+  });
+  const [err, setErr] = useState(refusRole);
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState({politique:false, cgu:false, newsletter:false});
   const consentValide = consent.politique && consent.cgu;
@@ -5127,6 +5218,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
       if(p.get("role")==="parent"||p.has("invite")){ const tk=p.get("invite"); if(tk){try{localStorage.setItem("timat:invite",tk);}catch(e){}} setRole("parent"); setModeAuth("inscription"); setShowModal(true); }
       else if(p.get("role")==="asmat"){ setRole("asmat"); setShowModal(true); }
     }catch(e){}
+    // Un refus de role a remonte cet ecran : la fenetre doit se rouvrir sur la
+    // connexion, sinon le message est ecrit dans un formulaire ferme.
+    if(refusRole){ setRole("asmat"); setModeAuth("connexion"); setShowModal(true); }
   },[]);
   // Démo : enfants enrichis (signatures dérivées) + stats fictives pour le vrai écran Accueil
   const demoEnfants = D.enfants.map(e=>({...e, contrat:{...e.contrat, signe_asmat:e.signe, signe_parent:e.signe, id:"c_"+e.id}}));
@@ -5217,7 +5311,22 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         // GATING ROLE : un compte parent ne peut pas se connecter via la landing (espace assmat)
         let _r=data.user.user_metadata?.role;
         try{const{data:prof}=await supabase.from("profiles").select("role").eq("id",data.user.id).single(); if(prof?.role)_r=prof.role;}catch(e){}
-        if(_r==="parent"){ await supabase.auth.signOut(); setErr("Cet espace est réservé aux assistantes maternelles. Pour votre espace parent, connectez-vous via le lien d'invitation envoyé par votre assistante maternelle."); setLoading(false); return; }
+        if(_r==="parent"){
+          // LE MESSAGE NE SURVIVAIT PAS A SA PROPRE DECONNEXION.
+          //
+          // signOut() declenche SIGNED_OUT, l'application remet user a null, et
+          // cet ecran est REMONTE : l'erreur qu'on vient d'ecrire disparait avec
+          // l'etat du composant, et la fenetre se referme. Un parent qui tentait
+          // la porte des pros voyait donc tout se reinitialiser sans un mot —
+          // apres que l'application avait charge son espace parent une seconde.
+          //
+          // On confie donc la raison au stockage de session, que le remontage
+          // relit. Et on deconnecte APRES, pour que rien ne la precede.
+          try{sessionStorage.setItem("timat:refusRole","Cet espace est réservé aux assistantes maternelles. Pour votre espace parent, connectez-vous via le lien d'invitation envoyé par votre assistante maternelle.");}catch(e){}
+          setLoading(false);
+          await supabase.auth.signOut();
+          return;
+        }
         // Pass minimal user data - auth listener will enrich with profile from DB
         onLogin({
           id: data.user.id,
@@ -5287,30 +5396,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         else setErr(error.message||"Erreur lors de l'inscription.");
       }
       else if (data?.user) {
-        // Delay profile upsert so auth listener settles first (avoids lock race)
-        setTimeout(async()=>{
-          try{
-            const { error: eProfil } = await supabase.from('profiles').upsert({
-              id: data.user.id, email: data.user.email,
-              prenom: form.prenom, nom: form.nom||'',
-              role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
-              ...abonnementInitial(role),
-            },{onConflict:'id'});
-            // Sans cette ligne, le compte existe cote authentification mais n'a
-            // aucun profil : l'utilisatrice se connecte et tombe sur un espace
-            // vide, sans role et sans abonnement, sans que rien ne dise
-            // pourquoi. On retente une fois, puis on le dit.
-            if(eProfil){
-              const { error: eBis } = await supabase.from('profiles').upsert({
-                id: data.user.id, email: data.user.email,
-                prenom: form.prenom, nom: form.nom||'',
-                role: role, couleur: role === "asmat" ? COULEUR_ROLE.asmat : COULEUR_ROLE.parent,
-                ...abonnementInitial(role),
-              },{onConflict:'id'});
-              if(eBis) setErr("Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous.");
-            }
-          }catch(e){ setErr("Votre compte est créé, mais votre profil n'a pas pu être enregistré. Reconnectez-vous ; si le problème persiste, écrivez-nous."); }
-        },500);
+        // Le profil, par la routine partagee : voir creerProfilApresInscription().
+        creerProfilApresInscription({utilisateur:data.user,prenom:form.prenom,nom:form.nom,role,onEchec:setErr});
         // RATTACHEMENT IMMEDIAT (session fraiche apres signUp) : lien token + invitations par email
         try{
           const tk=new URLSearchParams(window.location.search).get("invite")||(()=>{try{return localStorage.getItem("timat:invite");}catch(e){return null;}})();
@@ -5393,7 +5480,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <div style={{ fontSize:11, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
-              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
+              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={uneFois(envoyerReset)} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
@@ -5878,7 +5965,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           {/* Differenciateurs (editables via back-office : L.diffN* + diffNPuces) */}
           <div style={{ display:"grid", gridTemplateColumns:isWeb?"repeat(3,1fr)":"1fr", gap:10, maxWidth:isWeb?980:720, margin:"0 auto", marginBottom: 24 }}>
             {[
-              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||"Les exigences de la PMI, département par département\n62 guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier" },
+              { ic: L.diff1Ic||"🏛️", badge: L.diff1Badge||"Le métier", titre: L.diff1Titre||"Le métier, pas seulement les calculs", puces: L.diff1Puces||`Les exigences de la PMI, département par département\n${NOMBRE_GUIDES} guides pratiques, gratuits et sourcés\nChaque règle citée, pour que vous puissiez vérifier` },
               { ic: L.diff2Ic||"✅", badge: L.diff2Badge||"Les versements", titre: L.diff2Titre||"Le suivi des versements", puces: L.diff2Puces||"Voyez qui a vraiment payé\nRelances des retards en 1 clic\nMois par mois, employeur par employeur" },
               { ic: L.diff3Ic||"✍️", badge: L.diff3Badge||"Zéro impression", titre: L.diff3Titre||"Signez en ligne, sans imprimer", puces: L.diff3Puces||"Contrats & avenants signés en 1 clic\nAucune impression, aucun scan\nSignature horodatée, archivée avec le contrat" }
             ].map((d, i) => (
@@ -6229,13 +6316,13 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             <div style={{fontFamily:fTitle,fontSize:22,fontWeight:700,color:"#2E4859"}}><IconeOuEmoji e="🛒" taille={22}/> Boutique TiMat</div>
             <button onClick={()=>setShowBoutique(false)}style={{background:"#F4F7FA",border:"none",borderRadius:10,padding:"8px 12px",cursor:"pointer",fontSize:13,color:"#2E4859",fontWeight:700}}>✕</button>
           </div>
-          <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement securise par Stripe.</div>
+          <div style={{fontSize:13,color:"#5F7A86",marginBottom:24,lineHeight:1.6}}>Templates et outils pour simplifier votre quotidien d'assistante maternelle. Paiement sécurisé par Stripe.</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:16}}>
             {[
-              {id:"kit_sheets",name:"Kit de gestion",price:"14,90",desc:"Jusqu'a 4 contrats : heures jour par jour, mensualisation, conges payes, recap annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
+              {id:"kit_sheets",name:"Kit de gestion",price:"14,90",desc:"Jusqu'à 4 contrats : heures jour par jour, mensualisation, congés payés, récap annuel.",icon:"📊",color:"#5DA9A1",link:config.boutique?.linkSheets},
               {id:"fiche_urgence",name:"Fiche d'urgence",prix:0,desc:"Le document a afficher, que la PMI regarde. A remplir et imprimer.",icon:"🚨",color:"#C84B31",fichier:"/documents/fiche-renseignements-urgence.pdf"},
-              {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections guidees, adossees au referentiel national qualite 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
-              {id:"registre_medicaments",name:"Registre des medicaments",prix:0,desc:"Document obligatoire (article R2111-1). Aussi tenu directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
+              {id:"projet_accueil",name:"Projet d'accueil",price:"12,90",desc:"13 sections guidées, adossées au référentiel national qualité 2025.",icon:"🌿",color:"#2E4859",link:config.boutique?.linkProjet},
+              {id:"registre_medicaments",name:"Registre des médicaments",prix:0,desc:"Document obligatoire (article R2111-1). Aussi tenu directement dans l'application.",icon:"💊",color:"#5DA9A1",fichier:"/documents/registre-medicaments-administres.pdf"},
             ].map(p=><div key={p.id}style={{background:"#fff",borderRadius:14,overflow:"hidden",border:"1px solid #E8E4E0",display:"flex",flexDirection:"column"}}>
               <div style={{height:70,background:"linear-gradient(135deg,"+p.color+"18,"+p.color+"08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,position:"relative"}}>
                 {p.icon}
@@ -6253,7 +6340,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               </div>
             </div>)}
           </div>
-          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Les documents obligatoires sont gratuits · Paiement securise par Stripe pour les autres</div>
+          <div style={{marginTop:16,textAlign:"center",fontSize:11,color:"#B0BEC5"}}><IconeOuEmoji e="🔒"/> Les documents obligatoires sont gratuits · Paiement sécurisé par Stripe pour les autres</div>
         </div>
       </div>}
 
@@ -6621,7 +6708,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <div style={{ fontSize:11, color:"#A68970", marginTop:4 }}>* Obligatoire · Données hébergées en France · Suppression possible à tout moment</div>
               </div>}
               <BlocErreurAuth err={err} errAction={errAction} email={form.email} resetInfo={resetInfo} onSwitch={()=>{setModeAuth("connexion");setErr("");setErrAction(null);}} onReset={envoyerReset}/>
-              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={envoyerReset} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
+              {modeAuth==="connexion"&&errAction!=="reset"&&<div style={{textAlign:"right",marginTop:-4,marginBottom:12}}><button type="button" onClick={uneFois(envoyerReset)} style={{background:"none",border:"none",color:"#A68970",fontSize:12,fontWeight:600,textDecoration:"underline",cursor:"pointer",fontFamily:"inherit",padding:0}}>Mot de passe oublié ?</button></div>}
               <button type="submit" disabled={loading || (modeAuth==="inscription" && !consentValide)} style={{ width:"100%", background: role==="asmat" ? "linear-gradient(135deg,#B4543F,#A8452F)" : "linear-gradient(135deg,#3A5A6E,#2E4859)", color:"#fff", border:"none", borderRadius:10, padding:"13px", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"inherit", marginBottom:16, opacity: (loading||(modeAuth==="inscription"&&!consentValide)) ? .6 : 1 }}>
                 {loading ? "⏳ Chargement..." : modeAuth==="connexion" ? (role==="asmat" ? "Accéder à mon espace →" : "Accéder à l'espace famille →") : (role==="asmat" ? "Créer mon espace pro →" : "Créer mon compte parent →")}
               </button>
@@ -7574,7 +7661,34 @@ export default function App(){
           try{if(profil.role)localStorage.setItem("timat:lastRole",profil.role);}catch(e){}
           setUser(u=>({...u,...profil,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true,_profilePanne:false})); // P16D
         }else{
-          setUser(u=>({...u,_needsProfileFetch:false}));
+          // AUCUNE LIGNE : le compte existe cote authentification, mais son
+          // profil n'a jamais ete ecrit. Cela arrive quand l'enregistrement du
+          // profil echoue a l'inscription — un refus de la base, une coupure
+          // reseau pendant la demi-seconde qui suit la creation du compte.
+          //
+          // Jusqu'ici cette branche ne faisait RIEN : elle marquait le
+          // chargement termine, et l'utilisatrice entrait dans un espace sans
+          // role et sans abonnement, sans que rien ne dise pourquoi. Les deux
+          // ecrans d'inscription prevoyaient bien un message, mais aucun ne
+          // pouvait l'afficher : ils appellent onLogin AVANT d'enregistrer le
+          // profil, et disparaissent donc avant d'avoir de quoi se plaindre.
+          //
+          // On repare ici, une fois pour les deux parcours : on recree le
+          // profil depuis ce que l'authentification sait deja du compte. Si
+          // meme cela echoue, on s'arrete sur l'ecran de panne plutot que de la
+          // laisser croire que son abonnement a saute.
+          const m=user.user_metadata||{};
+          const roleRetrouve=m.role||user.role||(()=>{try{return localStorage.getItem("timat:lastRole");}catch(e){return null;}})()||"asmat";
+          const{data:recree,error:eRecree}=await supabase.from("profiles").upsert({
+            id:user.id,email:user.email,
+            prenom:m.prenom||user.prenom||"Utilisateur",nom:m.nom||user.nom||"",
+            role:roleRetrouve,couleur:COULEUR_ROLE[roleRetrouve]||COULEUR_ROLE.asmat,
+            ...abonnementInitial(roleRetrouve),
+          },{onConflict:"id"}).select("*").maybeSingle();
+          if(cancelled)return;
+          if(eRecree||!recree){ setUser(u=>({...u,_needsProfileFetch:false,_profilePanne:true})); return; }
+          try{localStorage.setItem("timat:lastRole",recree.role);}catch(e){}
+          setUser(u=>({...u,...recree,id:user.id,email:user.email,_needsProfileFetch:false,_profileConfirmed:true,_profilePanne:false}));
         }
       }catch(e){
         console.log("Profile fetch error:",e.message);
@@ -7850,9 +7964,22 @@ export default function App(){
 
   if(_isBO){
     const _onLoginBO=u=>{ setUser({...u,_needsProfileFetch:true,_profileConfirmed:false}); };
-    return <><Styles/><Suspense fallback={<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--m)",fontFamily:"'DM Sans',sans-serif",fontSize:14}}>Chargement du back-office…</div>}>
+    // LE BACK-OFFICE ETAIT HORS DU FILET.
+    //
+    // Tous les ecrans de l'application sont enveloppes dans FiletEcrans : si
+    // l'un tombe, il affiche « cet ecran n'a pas pu s'ouvrir » et le reste
+    // continue. Le back-office, lui, etait monte dans un simple Suspense. Une
+    // seule de ses sections qui leve — et il a suffi d'une reponse d'API a
+    // laquelle il manquait un champ pour que la section SEO leve « Cannot read
+    // properties of undefined » — demontait TOUT l'arbre : page entierement
+    // blanche, aucun message, et plus rien de cliquable. La seule issue etait
+    // de recharger, ce que rien n'indique.
+    //
+    // Le meme filet l'enveloppe desormais : une section en panne reste une
+    // section en panne.
+    return <><Styles/><FiletEcrans><Suspense fallback={<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--m)",fontFamily:"'DM Sans',sans-serif",fontSize:14}}>Chargement du back-office…</div>}>
       <BackofficePage user={user} appConfig={appConfig} setAppConfig={setAppConfig} onLogin={_onLoginBO}/>
-    </Suspense></>;
+    </Suspense></FiletEcrans></>;
   }
 
   // - Utiliser données réelles
@@ -7948,22 +8075,20 @@ export default function App(){
   // //  Lancer le checkout Stripe
   const lancerCheckout=async()=>{
     if(user?.id?.startsWith?.("demo-")){
-      alert("Le paiement n'est pas disponible en mode demo. Creez un compte pour continuer.");
+      alert("Le paiement n'est pas disponible en mode démo. Créez un compte pour continuer.");
       return;
     }
     try{
-      const res=await fetch('/api/checkout-session',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
-      });
-      if(!res.ok){
-        const txt=await res.text();
-        console.error('Stripe error:', res.status, txt);
-        alert("Erreur serveur ("+res.status+"). Verifiez que Stripe est configure dans Vercel.");
+      // L'identite n'est plus envoyee : le serveur la prend dans le jeton.
+      // La passer dans le corps permettait de faire crediter l'abonnement du
+      // compte de quelqu'un d'autre.
+      const{ok,status,data}=await appelApi('/api/checkout-session',{prenom:user.prenom});
+      if(!ok){
+        if(status===401){alert("Votre session a expiré. Reconnectez-vous puis réessayez.");return;}
+        console.error('Stripe error:', status, data);
+        alert("Erreur serveur ("+status+"). Vérifiez que Stripe est configuré dans Vercel.");
         return;
       }
-      const data=await res.json();
       if(data.url)window.location.href=data.url;
       else alert("Erreur: "+JSON.stringify(data));
     }catch(e){
@@ -7977,12 +8102,10 @@ export default function App(){
   const ouvrirPortail=async()=>{
     if(!user?.stripe_customer_id){alert("Aucun abonnement actif trouvé.");return;}
     try{
-      const res=await fetch('/api/customer-portal',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({stripeCustomerId:user.stripe_customer_id}),
-      });
-      const data=await res.json();
+      // L'identifiant client n'est plus envoye : le serveur le lit dans le
+      // profil de l'appelante. Le passer dans le corps ouvrait le portail de
+      // facturation de n'importe quel client dont on avait l'identifiant.
+      const{data}=await appelApi('/api/customer-portal',{});
       if(data.url)window.location.href=data.url;
     }catch(e){alert("Erreur lors de l'ouverture du portail.");}
   };

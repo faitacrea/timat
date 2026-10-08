@@ -20,7 +20,7 @@ import {
   Messagerie, Styles, Toast, IconeOuEmoji, LandingPage, DEFAULT_CONFIG, G, applyColsToDOM, loadConfig, MAINTENANCE
 } from "./App.jsx";
 import {
-  backupCurrentConfig
+  backupCurrentConfig, useUneFois
 } from "./socle.jsx";
 
 const BOField=({label,children,hint})=>(
@@ -94,6 +94,8 @@ function IframePreview({cfg,noBezel}){
 }
 
 function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hideTabBar}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [secI,setSecI]=useState("hero");
   const sec=(secProp!==undefined&&secProp!==null)?secProp:secI;
   const setSec=setSecProp||setSecI;
@@ -549,7 +551,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
         <input className="inp"placeholder="🔍 Rechercher..."value={search}onChange={e=>setSearch(e.target.value)}style={{fontSize:11,padding:"4px 10px",width:160}}/>
       </div>}
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        <button onClick={diagnostiquer}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
+        <button onClick={uneFois(diagnostiquer)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Vérifier la config en base Supabase">🔍 Diag</button>
         <button onClick={rechargerDepuisSupabase}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}title="Recharger depuis Supabase">↻ Recharger</button>
         <button onClick={()=>setShowPreview(p=>!p)}style={{background:"none",border:"1px solid var(--br)",borderRadius:10,padding:"5px 10px",fontSize:11,cursor:"pointer",fontWeight:600,color:"var(--m)"}}>{showPreview?"👁 Masquer":"👁 Afficher"}</button>
         <button className="btn bG s"style={{padding:"5px 12px"}}onClick={reset}>↺ Reset</button>
@@ -661,7 +663,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Couleur texte CTA"><BOColorInput k="navCtaColor" state={cfg.landing} setter={setLand}/></BOField>
             <div style={{fontSize:11,color:"var(--l)",margin:"12px 0 8px",fontWeight:600,textTransform:"uppercase",letterSpacing:".5px"}}>Hamburger mobile</div>
             <BOField label="Fond hamburger"><BOColorInput k="navHamburgerBg" state={cfg.landing} setter={setLand}/></BOField>
-            <BOField label="Couleur icone hamburger"><BOColorInput k="navHamburgerColor" state={cfg.landing} setter={setLand}/></BOField>
+            <BOField label="Couleur icône hamburger"><BOColorInput k="navHamburgerColor" state={cfg.landing} setter={setLand}/></BOField>
             <BOField label="Bordure hamburger"><BOColorInput k="navHamburgerBorder" state={cfg.landing} setter={setLand}/></BOField>
           </BOCard>
 
@@ -1115,7 +1117,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="Kit de gestion"><BOTextInput k="linkSheets" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Fiche d'urgence"><BOTextInput k="linkFiche" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Projet d'accueil"><BOTextInput k="linkProjet" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
-            <BOField label="Registre des medicaments"><BOTextInput k="linkRegistre" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
+            <BOField label="Registre des médicaments"><BOTextInput k="linkRegistre" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
             <BOField label="Pack Complet"><BOTextInput k="linkPack" state={cfg.boutique||{}} setter={(k,v)=>setCfg(c=>({...c,boutique:{...(c.boutique||{}),[k]:v}}))} placeholder="https://buy.stripe.com/..."/></BOField>
           </BOCard>
           <BOCard title="Table Supabase" icon="🗄️">
@@ -1396,7 +1398,7 @@ function SeoAudit(){
       const j=await r.json().catch(()=>null);
       if(!r.ok||!j||j.error) throw new Error((j&&j.error)||("HTTP "+r.status));
       setData(j);
-    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Verifie que api/backoffice.js est bien deploye."); }
+    }catch(e){ setErr("L'audit a echoue : "+(e.message||"")+". Vérifie que api/backoffice.js est bien déployé."); }
     setLoading(false);
   };
   const mk={ok:"✅",warn:"⚠️",fail:"❌"};
@@ -1407,14 +1409,16 @@ function SeoAudit(){
     <div style={{fontSize:13.5,color:"#6B4F5A",marginBottom:16,lineHeight:1.5}}>Audit de tes propres pages : titres, meta description, H1/H2, Open Graph, liens morts et contenu lisible par les robots. Relançable à tout moment.</div>
     <button onClick={run} disabled={loading} style={{background:"#E49178",color:"#fff",border:"none",borderRadius:10,padding:"12px 20px",fontSize:13,fontWeight:700,cursor:loading?"wait":"pointer",fontFamily:"inherit",marginBottom:16}}>{loading?"⏳ Analyse en cours…":(data?"↻ Relancer l'audit":"🔍 Lancer l'audit")}</button>
     {err&&<div style={{background:"#FBF1EF",border:"1px solid #F3D3CC",color:"#C84B31",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:14,lineHeight:1.5}}>{err}</div>}
-    {history&&history.ok&&history.history.length>0&&<div className="bo-card" style={{marginBottom:16}}>
+    {/* Une reponse a laquelle il manque « history » ne doit pas faire tomber
+        l'ecran : on lit prudemment ce qui vient du reseau. */}
+    {history?.ok&&history.history?.length>0&&<div className="bo-card" style={{marginBottom:16}}>
       <h3>Historique des audits</h3>
       <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:8}}>
         {history.history.map((h,i)=>{
-          const prev=history.history[i+1];
+          const prev=history.history?.[i+1];
           const dDead=prev?h.dead-prev.dead:null;
           const dWarn=prev?h.with_warn-prev.with_warn:null;
-          return <div key={h.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12.5,padding:"7px 0",borderBottom:i<history.history.length-1?"1px solid #F2ECF0":"none"}}>
+          return <div key={h.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12.5,padding:"7px 0",borderBottom:i<(history.history?.length||0)-1?"1px solid #F2ECF0":"none"}}>
             <span style={{color:"#6B4F5A"}}>{new Date(h.created_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
             <span style={{display:"flex",gap:12}}>
               <span style={{color:h.dead>0?"#C84B31":"#1F8A5B",fontWeight:700}}>{h.dead} mort{h.dead>1?"s":""}{dDead?(dDead>0?" ▲":" ▼"):""}</span>
@@ -1530,7 +1534,7 @@ function BackofficeLogin({onLogin}){
       const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password:pwd});
       if(error||!data?.user){ setErr("Identifiants incorrects."); setBusy(false); return; }
       onLogin(data.user);
-    }catch(e){ setErr("Erreur reseau, reessaie."); setBusy(false); }
+    }catch(e){ setErr("Erreur réseau, réessaie."); setBusy(false); }
   };
   return <div style={{minHeight:"100vh",background:"var(--c)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
     <div style={{background:"var(--w)",border:"1px solid var(--br)",borderRadius:18,padding:28,maxWidth:380,width:"100%",boxShadow:"0 12px 40px rgba(0,0,0,.12)"}}>

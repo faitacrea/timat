@@ -33,6 +33,12 @@ const UA =
 // établit. C'est la règle des cinquante couvertures déjà en ligne, et c'est ce
 // qui rend la vignette utile quand elle circule seule.
 export const COUVERTURES = [
+  // Refaite : la precedente portait « Les heures majorée ne peuvent pas être
+  // majorée de moins de 10 % » — deux fautes d'accord, et un sujet qui n'est pas
+  // celui de l'article. C'etait la phrase des heures majorees, posee sur
+  // l'article des droits et devoirs. Elle etait lisible sur l'image, en ligne.
+  ["droits-et-devoirs-assistante-maternelle", "Contrat et paie",
+   "Depuis le 1er janvier 2022, une convention collective unique a remplacé celle des assistants maternels"],
   ["accueil-periscolaire-avenant-assistante-maternelle", "Contrat et paie",
    "Deux rythmes dans la même année, une seule mensualisation. La formule, et le piège du mercredi"],
   ["conges-payes-dates-assistante-maternelle", "Contrat et paie",

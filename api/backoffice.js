@@ -55,12 +55,12 @@ async function requireAdmin(req, res) {
     const { data: profile, error: pErr } = await supabase
       .from("profiles").select("is_admin").eq("id", data.user.id).maybeSingle();
     if (pErr || !profile || profile.is_admin !== true) {
-      res.status(403).json({ ok: false, error: "Acces reserve a l administrateur." });
+      res.status(403).json({ ok: false, error: "Accès réservé à l'administrateur." });
       return null;
     }
     return data.user;
   } catch (e) {
-    res.status(500).json({ ok: false, error: "Erreur de verification des droits." });
+    res.status(500).json({ ok: false, error: "Erreur de vérification des droits." });
     return null;
   }
 }
@@ -136,14 +136,14 @@ async function actionSeoAudit(req, res) {
       push("Sous-titres H2", h2count > 0 ? "ok" : "warn", h2count + " balise(s) H2");
 
       const ogAll = ogTitle && ogDesc && ogImg;
-      push("Open Graph (partage reseaux)", ogAll ? "ok" : ((ogTitle || ogDesc || ogImg) ? "warn" : "fail"),
-        ogAll ? "Titre, description et image presents" : "Incomplet (og:title / og:description / og:image)");
+      push("Open Graph (partage réseaux)", ogAll ? "ok" : ((ogTitle || ogDesc || ogImg) ? "warn" : "fail"),
+        ogAll ? "Titre, description et image présents" : "Incomplet (og:title / og:description / og:image)");
 
       push("Contenu lisible", textLen > 600 ? "ok" : (textLen > 200 ? "warn" : "fail"),
         Math.round(textLen) + " caracteres de texte" + (textLen <= 200 ? " (page quasi vide pour les robots)" : ""));
 
     } catch (e) {
-      r.error = (e && e.name === "AbortError") ? "Delai depasse" : "Erreur de chargement";
+      r.error = (e && e.name === "AbortError") ? "Délai dépassé" : "Erreur de chargement";
     }
     return r;
   }));
@@ -336,7 +336,7 @@ async function getGoogleAccessToken(clientEmail, privateKey) {
     body: "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=" + encodeURIComponent(jwt)
   });
   const j = await resp.json();
-  if (!j.access_token) throw new Error(j.error_description || j.error || "Authentification Google echouee");
+  if (!j.access_token) throw new Error(j.error_description || j.error || "Authentification Google échouée");
   return j.access_token;
 }
 

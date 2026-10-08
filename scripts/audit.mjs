@@ -1040,15 +1040,35 @@ for (const u of fichiersAppSrc()) {
   const groq = `{
     "publiesSansImage": *[_type=="article" && !(_id in path("drafts.**")) && !defined(imageCouverture)]{"s": slug.current},
     "brouillonsSansImage": *[_type=="article" && _id in path("drafts.**") && !defined(imageCouverture)]{"s": slug.current},
+    "alts": *[_type=="article" && defined(imageCouverture.asset)]{
+      "s": slug.current, "alt": imageCouverture.alt,
+      "t": titre + " " + chapo + " " + pt::text(corps)
+    },
     "tropLongs": *[_type=="article" && (length(chapo) > ${MAX.chapo} || length(titre) > ${MAX.titre} || length(seoTitre) > ${MAX.seoTitre} || length(seoDescription) > ${MAX.seoDescription})]{
       "s": slug.current, "chapo": length(chapo), "titre": length(titre),
       "seoTitre": length(seoTitre), "seoDescription": length(seoDescription)
     }
   }`;
+  // LES BROUILLONS N'ETAIENT PAS LUS DU TOUT.
+  //
+  // L'API publique de Sanity ne renvoie que le PUBLIE. Les deux controles qui
+  // portent sur les brouillons — couverture manquante, champ trop long —
+  // interrogeaient donc le vide : la reponse valait zero quoi qu'il arrive, et
+  // l'audit annoncait « aucune anomalie » sans avoir rien regarde. Quinze
+  // articles ecrits, en attente de publication, n'etaient controles par
+  // personne.
+  //
+  // Il faut un jeton de lecture, et surtout il faut le DIRE quand il manque :
+  // un controle qui ne peut pas s'executer doit se taire bruyamment, pas
+  // passer au vert.
+  const jeton = process.env.SANITY_WRITE_TOKEN || process.env.SANITY_READ_TOKEN || "";
+  if (!jeton) {
+    console.log("  (brouillons du blog : NON VÉRIFIÉS, SANITY_WRITE_TOKEN absent)");
+  }
   try {
     const r = await fetch(
-      `https://${PROJET}.api.sanity.io/v2024-01-01/data/query/${JEU}?query=${encodeURIComponent(groq)}`,
-      { signal: AbortSignal.timeout(8000) }
+      `https://${PROJET}.api.sanity.io/v2024-01-01/data/query/${JEU}?perspective=raw&query=${encodeURIComponent(groq)}`,
+      { signal: AbortSignal.timeout(8000), headers: jeton ? { Authorization: "Bearer " + jeton } : {} }
     );
     if (!r.ok) throw new Error("HTTP " + r.status);
     const { result } = await r.json();
@@ -1057,6 +1077,46 @@ for (const u of fichiersAppSrc()) {
     if (pub.length) {
       signale("blog", `${pub.length} article(s) en ligne sans image de couverture — leur carte s'affiche sans visuel et leur partage n'a pas d'aperçu : ${pub.slice(0, 3).join(", ")}${pub.length > 3 ? "…" : ""}`);
     }
+    // LE TEXTE ALTERNATIF DE LA COUVERTURE.
+    //
+    // « Droits et devoirs de l'assistante maternelle » portait « Les heures
+    // majorée ne peuvent pas être majorée de moins de 10 % » : deux fautes
+    // d'accord, et le sujet d'un AUTRE article — c'etait la phrase des heures
+    // majorees, posee sur le mauvais article. La phrase est ecrite sur l'image,
+    // donc elle etait lisible en ligne, et c'est elle que lit un lecteur
+    // d'ecran.
+    //
+    // J'AI ESSAYE DE DETECTER « HORS SUJET » AUTOMATIQUEMENT, SANS Y ARRIVER.
+    // Comparer les mots du texte alternatif a ceux du titre et du chapo attrape
+    // bien celui-la, mais accuse trois textes parfaitement justes — « Le taux
+    // horaire ne represente qu'une partie de ce que paie reellement le parent
+    // employeur », sur l'article des questions a poser, n'emploie aucun mot du
+    // titre et dit pourtant exactement ce qu'il faut. Comparer au corps entier
+    // ne denonce plus personne, mais laisse passer le defaut d'origine :
+    // l'article des droits et devoirs parle bien, quelque part, des heures
+    // majorees. Un comptage de mots ne distingue pas « hors sujet » de
+    // « apporte un fait que le titre ne dit pas ».
+    //
+    // On garde donc les deux verifications qui ne se trompent jamais : un texte
+    // alternatif absent, et deux articles qui portent le MEME. Le reste se lit
+    // a l'oeil — les soixante-dix-neuf ont ete relus le 3 octobre 2026, et
+    // celui-la etait le seul en defaut.
+    const sansAlt = [], doublons = [];
+    const vus = new Map();
+    for (const a of result?.alts || []) {
+      const alt = String(a.alt || "").trim();
+      if (!alt) { sansAlt.push(a.s); continue; }
+      const cle = alt.toLowerCase().replace(/\s+/g, " ");
+      if (vus.has(cle)) doublons.push(`${vus.get(cle)} et ${a.s}`);
+      else vus.set(cle, a.s);
+    }
+    if (sansAlt.length) {
+      signale("blog", `${sansAlt.length} couverture(s) sans texte alternatif — un lecteur d'écran n'a rien à annoncer : ${sansAlt.slice(0, 3).join(", ")}${sansAlt.length > 3 ? "…" : ""}`);
+    }
+    if (doublons.length) {
+      signale("blog", `${doublons.length} texte(s) alternatif(s) identiques sur deux articles — l'un des deux est posé sur le mauvais article : ${doublons.slice(0, 2).join(" ; ")}`);
+    }
+
     if (bro.length) {
       signale("blog", `${bro.length} brouillon(s) sans image de couverture — ils seront publiés tels quels, un par jour : ${bro.slice(0, 3).join(", ")}${bro.length > 3 ? "…" : ""}`);
     }
@@ -3094,7 +3154,29 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     const lignes = src.split("\n");
     for (let i = 0; i < lignes.length; i++) {
       const l = lignes[i];
-      if (!/^\s*await\s+supabase\s*\.\s*from\s*\(/.test(l)) continue;
+      if (/^\s*\/\//.test(l)) continue;
+      // L'ANGLE MORT DE LA PREMIERE VERSION : elle n'attrapait que les
+      // « await supabase » en DEBUT de ligne. Six ecritures silencieuses lui
+      // echappaient donc, toutes ecrites en une ligne compacte :
+      //
+      //   const supprimer=async(id)=>{await supabase.from("trajets").delete()...}
+      //   if(ex){ await supabase.from("activites_faites").delete()... }
+      //
+      // dont la case « activite faite », qui se cochait meme quand rien ne
+      // s'enregistrait. On cherche donc l'appel OU QU'IL SOIT dans la ligne, et
+      // on regarde ce qui le precede : si la valeur est affectee (« =await »),
+      // le retour est lu ; sinon il est jete.
+      const pos = l.indexOf("await supabase");
+      if (pos === -1) continue;
+      const avantAppel = l.slice(0, pos).replace(/\s+$/, "");
+      // Le retour est recupere quand l'appel est affecte, passe en argument, ou
+      // place dans une branche de ternaire dont la valeur est affectee :
+      //   const{error}=ex ? await supabase...delete() : await supabase...insert();
+      // Sans « ? » et « : » ici, la regle signalait ce code — qui lit l'erreur.
+      // Un « => await supabase... » reste signale : une fonction qui rend une
+      // promesse que personne ne lit, c'est le meme silence.
+      if (/(?:[=(,?:]|&&|\|\||\breturn)$/.test(avantAppel)) continue;
+      if (!/supabase\s*\.\s*from\s*\(/.test(l.slice(pos))) continue;
       // L'appel peut tenir sur plusieurs lignes : on regarde la suite.
       const bloc5 = lignes.slice(i, i + 6).join("\n");
       if (!ECRITURES.test(bloc5)) continue;
@@ -3102,6 +3184,154 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
       const avant = lignes.slice(Math.max(0, i - 4), i).join("\n");
       if (/sans-retour\s*:/.test(avant)) continue;
       signale("ecritures", `${nom}:${i + 1} ecrit en base sans lire le retour. La bibliotheque RETOURNE l'erreur : un echec passerait inapercu et la donnee serait perdue. Lisez « error », ou justifiez avec « sans-retour : <raison> ».`);
+    }
+  }
+}
+
+// --- un arrondi dont les deux facteurs ne se correspondent pas ---
+//
+// Pour arrondir a deux decimales on ecrit « Math.round(x * 100) / 100 ». Le
+// facteur du haut et le diviseur du bas doivent etre le MEME nombre : sinon
+// l'arrondi ne corrige pas, il divise.
+//
+// Le kit de declaration CMG du parent portait exactement cela :
+//
+//     Math.round(entretien * heuresMois / heuresHebdo * 5) / 10
+//
+// Le « x5 » comptait les cinq jours de la semaine, et le « /10 » voulait
+// arrondir a une decimale — il lui manquait son « x10 ». Le kit annoncait
+// 8,50 EUR d'indemnite d'entretien par mois la ou 84,77 EUR etaient dus, avec
+// un bouton « Copier » pour le recopier sur monenfant.fr.
+//
+// LA REGLE : dans « Math.round(...) / N », le facteur N doit apparaitre dans
+// l'expression arrondie. Si la division par N n'est pas un arrondi mais un vrai
+// calcul, on l'ecrit hors du Math.round, ou on le justifie par un commentaire
+// « division-voulue : <raison> » juste au-dessus.
+{
+  // On compte les parentheses au lieu de s'arreter a la premiere fermante :
+  // « Math.round(nbf(x)) / 10 » contient un appel imbrique, et une expression
+  // reguliere naive lit alors « nbf(x » comme le corps de l'arrondi. Premiere
+  // version de cette regle, elle signalait ainsi quatre calculs parfaitement
+  // justes — dont celui que je venais d'ecrire deux lignes plus haut.
+  const corpsDeLArrondi = (ligne, debut) => {
+    let prof = 0;
+    for (let k = debut; k < ligne.length; k++) {
+      if (ligne[k] === "(") prof++;
+      else if (ligne[k] === ")") { prof--; if (prof === 0) return { corps: ligne.slice(debut + 1, k), apres: ligne.slice(k + 1) }; }
+    }
+    return null;
+  };
+  for (const u of fichiersAppSrc()) {
+    const nom = u.pathname.split("/").pop();
+    const lignes = readFileSync(u, "utf8").split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      const ligne = lignes[i];
+      if (/^\s*\/\//.test(ligne)) continue;
+      for (let j = ligne.indexOf("Math.round("); j !== -1; j = ligne.indexOf("Math.round(", j + 1)) {
+        const bloc = corpsDeLArrondi(ligne, j + "Math.round".length);
+        if (!bloc) continue;
+        const suite = /^\s*\/\s*(\d+)/.exec(bloc.apres);
+        if (!suite) continue;
+        const div = suite[1];
+        if (Number(div) === 1) continue;
+        // LE DISCRIMINANT : le facteur du haut doit etre un MULTIPLE du
+        // diviseur. « * 1000 ) / 10 » garde un facteur 100 : c'est un
+        // pourcentage arrondi a une decimale, parfaitement voulu. « * 5 ) / 10 »
+        // garde un facteur 0,5 : l'arrondi divise le resultat par deux, et le
+        // kit CMG le divisait par dix sur le meme principe. Un facteur entier
+        // est un changement d'echelle choisi ; un facteur fractionnaire est un
+        // arrondi casse.
+        const facteurs = [...bloc.corps.matchAll(/\*\s*(\d+)/g)].map((x) => Number(x[1]));
+        if (facteurs.some((n) => n % Number(div) === 0)) continue;
+        const avant = lignes.slice(Math.max(0, i - 3), i).join("\n");
+        if (/division-voulue\s*:/.test(avant)) continue;
+        signale("arrondi", `${nom}:${i + 1} « Math.round(…) / ${div} » sans « * ${div} » dans l'expression : ce n'est pas un arrondi, c'est une division par ${div}. C'est ainsi que le kit CMG annonçait une indemnité dix fois trop petite. Sortez la division du Math.round, ou justifiez-la par « division-voulue : <raison> ».`);
+      }
+    }
+  }
+}
+
+// --- un bouton qui ecrit ne se clique pas deux fois ---
+//
+// Un bouton qui ne repond pas tout de suite est appuye une seconde fois. C'est
+// le reflexe de n'importe qui, et c'est ce que provoque le reseau d'un
+// telephone dans une voiture. Seize boutons qui ecrivaient en base restaient
+// cliquables pendant l'ecriture.
+//
+// scripts/verif-double-clic.mjs le montre dans un vrai navigateur : deux appuis
+// a 80 ms sur « Enregistrer l'activite » inscrivaient DEUX activites. Deux
+// siestes, deux allergies, deux demandes de modification de contrat, deux
+// courriels de reinitialisation.
+//
+// LA REGLE : un bouton dont le onClick appelle un gestionnaire qui ecrit en
+// base doit, soit passer par uneFois(), soit porter son propre « disabled »
+// (celui qui change aussi de libelle, ce qui vaut mieux : il dit ce qu'il fait).
+{
+  const ECRIT = /\.(insert|update|upsert|delete)\s*\(|\.rpc\s*\(/;
+  for (const u of fichiersAppSrc()) {
+    const nom = u.pathname.split("/").pop();
+    const src = readFileSync(u, "utf8");
+    const lignes = src.split("\n");
+    // Les gestionnaires asynchrones qui ecrivent en base.
+    const ecrivains = new Set();
+    for (const m of src.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*async\s*\(/g)) {
+      const i = src.slice(0, m.index).split("\n").length - 1;
+      if (ECRIT.test(lignes.slice(i, i + 45).join("\n"))) ecrivains.add(m[1]);
+    }
+    for (let i = 0; i < lignes.length; i++) {
+      const m = /onClick=\{\s*([A-Za-z_$][\w$]*)\s*\}/.exec(lignes[i]);
+      if (!m || !ecrivains.has(m[1])) continue;
+      // La balise <button> peut tenir sur plusieurs lignes : on remonte.
+      let deb = i;
+      while (deb > 0 && !/<button/.test(lignes[deb]) && i - deb < 6) deb--;
+      const balise = lignes.slice(deb, i + 3).join("\n");
+      if (/disabled/.test(balise)) continue;
+      signale("double-clic", `${nom}:${i + 1} « onClick={${m[1]}} » ecrit en base et le bouton reste cliquable pendant l'ecriture : un second appui cree un doublon. Passez par uneFois(${m[1]}), ou desactivez le bouton pendant l'operation.`);
+    }
+  }
+}
+
+// --- une ligne relue apres ecriture peut etre nulle ---
+//
+// « .insert(...).select().single() » ne garantit PAS qu'on recupere la ligne.
+// Une politique RLS autorise tres souvent l'ecriture sans autoriser la lecture
+// de ce qu'on vient d'ecrire : PostgREST accepte l'insertion et ne renvoie
+// rien. Supabase rend alors data=null ET error=null — le cas qu'aucun code ne
+// voit venir, parce qu'on verifie « error » et qu'on s'arrete la.
+//
+// Le parcours des formulaires l'a attrape en vrai sur le cahier de reussites :
+// « Cannot read properties of null (reading 'enfant_id') ». Le null etait
+// pousse dans la liste, l'ecran entier plantait au rendu suivant, et l'activite
+// paraissait perdue alors qu'elle etait bien enregistree. Le meme motif se
+// trouvait dans les deux assistants de creation d'enfant, juste avant la ligne
+// qui lit « enfantData.id » pour y rattacher le contrat.
+//
+// LA REGLE : apres un .single(), la variable qui porte la ligne doit etre
+// testee (« if(!data) », « data?.x », « ins?.id »...) avant d'etre utilisee.
+{
+  const sources = fichiersAppSrc().map((u) => [u.pathname.split("/").pop(), readFileSync(u, "utf8")]);
+  for (const [nom, src] of sources) {
+    const lignes = src.split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      if (!/\.single\(\)/.test(lignes[i])) continue;
+      // Le nom sous lequel la ligne est recuperee, dans les cinq lignes qui
+      // precedent : « const{data,error}= », « const{data:ins,...}= », « res= ».
+      const entete = lignes.slice(Math.max(0, i - 5), i + 1).join("\n");
+      const m = entete.match(/\{\s*data\s*:\s*([A-Za-z_$][\w$]*)/) || entete.match(/\{\s*(data)\b/);
+      const nomVar = m ? m[1] : (/(^|\s)(res)\s*=/.test(entete) ? "res.data" : null);
+      if (!nomVar) continue;
+      // La suite immediate doit contenir un test de nullite sur cette variable.
+      const suite = lignes.slice(i, i + 14).join("\n");
+      const base = nomVar.replace(".data", "");
+      const teste = new RegExp(
+        "(!\\s*" + base + "\\b)|(" + base + "\\s*\\?\\.)|(if\\s*\\(\\s*" + base + "\\b)|(" + base + "\\s*(===|!==|==|!=)\\s*null)"
+      );
+      if (teste.test(suite)) continue;
+      // La variable doit vraiment etre utilisee ensuite, sinon il n'y a rien a
+      // proteger : un .single() dont on ne lit que « error » est legitime.
+      const utilisee = new RegExp("\\b" + base.replace("$", "\\$") + "\\b");
+      if (!utilisee.test(lignes.slice(i + 1, i + 14).join("\n"))) continue;
+      signale("relecture", `${nom}:${i + 1} utilise « ${nomVar} » apres un .single() sans verifier qu'il n'est pas null. Une ecriture acceptee sans droit de relecture rend data=null ET error=null : le null part dans l'etat de React et l'ecran plante au rendu suivant.`);
     }
   }
 }
@@ -3551,6 +3781,270 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     if (re.test(appSrc)) signale("promesses", msg);
 }
 
+// --- l'export RGPD n'oublie aucune table ---
+//
+// L'export annonce « droit a la portabilite (article 20) » et ne couvrait que
+// dix-neuf tables sur les cinquante que l'application ecrit : il manquait les
+// bulletins de salaire, les versements, les autorisations signees, le registre
+// des medicaments et la fiche d'urgence — les deux dernieres portent des
+// donnees de sante. Aucune n'etait hors de portee ; elles avaient ete oubliees
+// au fil des ajouts, et rien ne le disait.
+//
+// On verifie trois choses, et la premiere est la seule qui tienne dans la
+// duree : toute table que le CODE ecrit ou lit doit etre rangee au registre.
+// Une table ajoutee demain ne peut plus passer inapercue.
+{
+  const registre = await import(new URL("../data/tables-donnees.js", import.meta.url))
+    .then((m) => m.TABLES).catch(() => null);
+  if (!registre) {
+    signale("rgpd", "data/tables-donnees.js est illisible : le registre des tables ne protege plus rien");
+  } else {
+    const modules = appSrc + readFileSync(new URL("../src/ecrans-quotidien.jsx", import.meta.url), "utf8");
+    const srcTous = ["src", "api", "lib"].flatMap((d) => {
+      let noms = [];
+      try { noms = readdirSync(new URL("../" + d + "/", import.meta.url)); } catch (e) { return []; }
+      return noms.filter((f) => /\.(jsx?|mjs)$/.test(f))
+        .map((f) => { try { return readFileSync(new URL(`../${d}/${f}`, import.meta.url), "utf8"); } catch (e) { return ""; } });
+    }).join("\n");
+    // Les tables que le code touche vraiment.
+    const touchees = new Set();
+    // « supabase.storage.from("documents") » DESIGNE UN SEAU, PAS UNE TABLE.
+    //
+    // Sans cette distinction, la barriere reclamait « photos » et « documents »
+    // au registre des tables : ce sont les deux espaces de stockage des fichiers.
+    // Elle m'a quand meme rendu service en passant — c'est elle qui a fait
+    // sortir vingt-trois fonctions mortes de lib/supabase.js, dont deux
+    // ecrivaient dans une table « photos » qui, elle, n'existe pas.
+    for (const m of srcTous.matchAll(/(?<!storage)\s*\.from\(\s*["'`]([a-z_]{3,})["'`]\s*\)/g)) touchees.add(m[1]);
+    const inconnues = [...touchees].filter((t) => !(t in registre));
+    if (inconnues.length) {
+      signale("rgpd", `${inconnues.length} table(s) que le code utilise et que le registre ignore — leur contenu ne partirait dans aucun export : ${inconnues.slice(0, 5).join(", ")}`);
+    }
+    // Les tables declarees exportees doivent l'etre pour de vrai.
+    const exportees = Object.entries(registre).filter(([, v]) => String(v).startsWith("exportee")).map(([t]) => t);
+    const dansExport = new Set([...modules.matchAll(/table:\s*["'`]([a-z_]+)["'`]/g)].map((m) => m[1]));
+    const promises = exportees.filter((t) => !dansExport.has(t));
+    if (promises.length) {
+      signale("rgpd", `${promises.length} table(s) déclarée(s) « exportee » au registre mais absente(s) de l'export : ${promises.slice(0, 5).join(", ")}`);
+    }
+    // --- ET LA SUPPRESSION DU COMPTE EFFACE-T-ELLE TOUT CE QU'ELLE PROMET ? ---
+    //
+    // L'application dit « Effacement immediat » et « toutes mes donnees ».
+    // delete_user_account en oubliait NEUF, dont les autorisations parentales
+    // avec leur signature, le registre des medicaments — des donnees de sante —
+    // et le mandat Pajemploi lui-meme. Et comme « enfants » etait bien
+    // supprimee, ces lignes devenaient orphelines : plus rien ne pouvait les
+    // atteindre, ni les lire, ni les effacer.
+    //
+    // La fonction vit dans la base ; sa version de reference vit ici, dans
+    // sql/. C'est celle-la qu'on lit : une table « exportee » doit y etre
+    // effacee, sauf si le registre dit qu'elle est conservee, avec sa raison.
+    {
+      let suppression = "";
+      try {
+        const dossier = new URL("../sql/", import.meta.url);
+        for (const f of readdirSync(dossier).sort()) {
+          if (!/suppression-compte/.test(f)) continue;
+          suppression = readFileSync(new URL(f, dossier), "utf8");
+        }
+      } catch (e) { /* dossier absent : signale juste apres */ }
+      if (!suppression) {
+        signale("rgpd", "aucun fichier sql/*suppression-compte* : la suppression de compte n'est plus relue par personne");
+      } else {
+        const effacees = new Set([...suppression.matchAll(/delete\s+from\s+(?:public\.)?([a-z_]+)/gi)].map((m) => m[1]));
+        const oubliees = Object.entries(registre)
+          .filter(([t, v]) => String(v).startsWith("exportee") && !String(v).includes("conservee") && !effacees.has(t))
+          .map(([t]) => t);
+        if (oubliees.length) {
+          signale("rgpd", `${oubliees.length} table(s) que l'application promet d'effacer et que la suppression de compte laisse derrière elle : ${oubliees.slice(0, 6).join(", ")}`);
+        }
+      }
+    }
+
+    // Une exclusion sans raison est une exclusion qu'on ne peut pas discuter.
+    const sansRaison = Object.entries(registre).filter(([, v]) => !String(v).startsWith("exportee") && !/^exclue\s*:\s*\S/.test(String(v))).map(([t]) => t);
+    if (sansRaison.length) {
+      signale("rgpd", `${sansRaison.length} table(s) exclue(s) de l'export sans raison écrite : ${sansRaison.join(", ")}`);
+    }
+  }
+}
+
+// --- le coefficient brut-net d'un simulateur public ---
+//
+// Le simulateur de salaire public calcule le net avec un coefficient plat :
+// « brut x 0,7812 », et « x 0,7682 » en Alsace-Moselle. L'application, elle,
+// calcule cotisation par cotisation (TAUX_COTISATIONS).
+//
+// Verifie au centime : les deux concordent aujourd'hui, le coefficient exact de
+// l'application valant 0,781198 et 0,768198. Mais le coefficient est FIGE dans
+// la page : le jour ou un taux de cotisation change — la retraite
+// complementaire, la CSG, le regime local — le simulateur public continuera
+// d'annoncer l'ancien net, et l'application le nouveau. Deux chiffres pour la
+// meme question, dont un sur la porte d'entree Google du site.
+//
+// Cette regle recalcule le coefficient depuis TAUX_COTISATIONS et le compare a
+// ce que la page annonce. On tolere l'arrondi a quatre decimales, pas davantage.
+{
+  const bloc = (appSrc.match(/TAUX_COTISATIONS\s*=\s*\{([\s\S]*?)\n\};/) || [])[1] || "";
+  const lignes = [...bloc.matchAll(/\{\s*sal:\s*([\d.]+)[^}]*?(?:base:\s*([\d.]+))?\s*\}/g)];
+  const tauxLocal = Number((appSrc.match(/TAUX_REGIME_LOCAL\s*=\s*([\d.]+)/) || [])[1]);
+  if (!lignes.length || !tauxLocal) {
+    signale("coefficient", "TAUX_COTISATIONS ou TAUX_REGIME_LOCAL ne se lisent plus dans App.jsx : la comparaison avec le simulateur public ne vérifie plus rien");
+  } else {
+    // La base (0,9825 pour la CSG et la CRDS) se trouve APRES « sal: » dans la
+    // meme accolade : l'expression ci-dessus la capture quand elle est la.
+    let somme = 0;
+    for (const m of lignes) somme += Number(m[1]) * (m[2] ? Number(m[2]) : 1) / 100;
+    const coefGeneral = Math.round((1 - somme) * 10000) / 10000;
+    const coefLocal = Math.round((1 - somme - tauxLocal / 100) * 10000) / 10000;
+
+    const page = "public/simulateur-salaire-assistante-maternelle.html";
+    let contenu = "";
+    try { contenu = readFileSync(new URL("../" + page, import.meta.url), "utf8"); } catch (e) { contenu = ""; }
+    if (contenu) {
+      const annonces = [...contenu.matchAll(/\b0\.(\d{4})\b/g)].map((m) => Number("0." + m[1]));
+      const attendus = [coefGeneral, coefLocal];
+      for (const attendu of attendus) {
+        const proche = annonces.find((v) => Math.abs(v - attendu) < 0.0002);
+        if (!proche) {
+          signale("coefficient", `le simulateur public de salaire n'annonce pas le coefficient brut→net ${attendu} que donne TAUX_COTISATIONS (il annonce ${annonces.join(", ") || "aucun"}). Le site public et l'application diraient deux nets différents pour le même brut.`);
+        }
+      }
+    }
+  }
+}
+
+// --- un bareme perime sur une page publique ---
+//
+// Huit pages publiques portent les baremes legaux ECRITS EN DUR : le minimum
+// conventionnel, l'indemnite d'entretien, le minimum garanti, le coefficient de
+// 0,281, la majoration du titre. Ce sont les simulateurs — les portes d'entree
+// du site — et les chiffres qu'on y lit, on les recopie sur une declaration.
+//
+// Aujourd'hui ils concordent tous avec l'application, verifie. Mais a la
+// prochaine revalorisation, il faudra penser a NEUF endroits : huit pages plus
+// l'application. C'est la forme la plus commune de fausse promesse — le chiffre
+// a ete juste un jour. Le kit CMG et l'indemnite d'entretien l'ont deja montre
+// dans cette seance, a quatorze endroits.
+//
+// LA REGLE : l'application est la source. Tout montant d'une famille de
+// baremes qui apparait sur une page publique doit etre le montant COURANT de
+// cette famille, sauf s'il est accompagne d'une date ou d'un mot qui dit qu'il
+// ne s'applique plus.
+{
+  const nb = (motif, defaut) => {
+    const m = appSrc.match(motif);
+    return m ? Number(m[1]) : defaut;
+  };
+  // Les valeurs courantes, lues dans App.jsx — jamais recopiees ici.
+  const minConv = nb(/MINIMUM_CONV_HISTO\s*=\s*\[\s*\[\s*"[\d-]+"\s*,\s*([\d.]+)/, null);
+  const mg = nb(/MINIMUM_GARANTI\s*=\s*([\d.]+)/, null);
+  const plancherIE = nb(/IE_PLANCHER_JOUR\s*=\s*([\d.]+)/, null);
+  const coef = nb(/COEF_MINIMUM_LEGAL\s*=\s*([\d.]+)/, null);
+  const majTitre = nb(/MAJORATION_TITRE_AMGE\s*=\s*([\d.]+)/, null);
+  // Les valeurs anciennes du minimum conventionnel, telles que l'historique les
+  // garde : elles deviennent perimees d'elles-memes a chaque revalorisation.
+  //
+  // ON NE LIT QUE LE BLOC MINIMUM_CONV_HISTO. Premiere version, l'expression
+  // ramassait TOUTES les paires [date, nombre] de App.jsx — donc l'historique
+  // du SMIC. Elle aurait signale « 12,31 EUR » comme un minimum conventionnel
+  // perime, alors que c'est le SMIC horaire EN VIGUEUR. Une barriere qui accuse
+  // la valeur juste est pire que pas de barriere.
+  const blocHisto = (appSrc.match(/MINIMUM_CONV_HISTO\s*=\s*\[([\s\S]*?)\]\s*;/) || [])[1] || "";
+  const anciensMinConv = [...blocHisto.matchAll(/\[\s*"[\d-]+"\s*,\s*([\d.]+)\s*\]/g)]
+    .map((m) => Number(m[1])).filter((v) => v && v !== minConv);
+
+  if (minConv && mg && plancherIE && coef && majTitre) {
+    const tauxIEHoraire = Math.round((mg * 0.9 / 9) * 1000) / 1000;
+    const ieNeufHeures = Math.max(plancherIE, Math.round(tauxIEHoraire * 9 * 100) / 100);
+    const titre = Math.round(minConv * (1 + majTitre) * 100) / 100;
+
+    // Pour chaque famille : le montant courant, et ce qui ne doit plus etre
+    // presente comme en vigueur. On ne cherche la valeur que dans un contexte
+    // qui parle bien de ce bareme — sinon « 4,20 » attrape un prix de boutique.
+    const FAMILLES = [
+      { nom: "minimum conventionnel horaire", courant: minConv, perimes: anciensMinConv,
+        contexte: /minimum\s+conventionnel|salaire\s+minimum|taux\s+horaire\s+minimum/i },
+      { nom: "indemnité d'entretien pour 9 h", courant: ieNeufHeures, perimes: [3.80, 3.83],
+        contexte: /indemnit[ée]\s+d.entretien/i },
+      { nom: "minimum garanti", courant: mg, perimes: [],
+        contexte: /minimum\s+garanti/i },
+      { nom: "majoration du titre AM-GE", courant: titre, perimes: [],
+        contexte: /titre\s+(?:professionnel|AM-?GE)/i },
+    ];
+    // Les mots qui disent qu'un montant ne vaut plus : une page qui raconte
+    // l'historique a le droit de citer l'ancien chiffre.
+    //
+    // PREMIERE VERSION, ELLE AVALAIT TOUT. Elle contenait « 20\d\d » et
+    // « depuis le » : or les pages datent leurs baremes (« 4,20 EUR depuis le
+    // 1er juin 2026 », « avenant du 5 fevrier 2026 »), donc une annee se
+    // trouvait toujours dans la fenetre et chaque page etait exoneree. Je l'ai
+    // su en simulant la revalorisation suivante : la barriere n'a rien dit.
+    //
+    // Seuls les mots qui situent le montant DANS LE PASSE exonerent.
+    // « depuis le » n'en fait pas partie : il annonce au contraire un montant
+    // presente comme courant.
+    const PERIME_DIT = /avant\s+(?:le|la|juin|janvier)|jusqu'au|jusqu.au|ancien|précédent|precedent|n'était|n.etait|ne\s+s.appliqu\w*\s+plus|a\s+été\s+remplac|était\s+de|etait\s+de|historique/i;
+
+    const pages = readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]);
+
+    for (const [nomPage, contenu] of pages) {
+      const texte = contenu.replace(/&#0*39;|&apos;|&rsquo;|’/g, "'");
+
+      // UN TAUX HORAIRE PREREMPLI NE PEUT PAS ETRE SOUS LE MINIMUM.
+      //
+      // Les simulateurs preremplissent « Taux horaire brut (€) » avec 4,20 EUR.
+      // Ce n'est pas une affirmation — c'est un exemple — donc la regle des
+      // montants perimes ne s'y applique pas : le libelle ne dit pas
+      // « minimum ». Mais le jour ou le minimum monte, un exemple reste sous le
+      // plancher legal, et un visiteur qui le garde calcule un salaire
+      // illegal. C'est la seule chose qu'on peut affirmer sans se tromper : un
+      // exemple de taux horaire doit au moins valoir le minimum.
+      for (const m of texte.matchAll(/<label[^>]*>([^<]{0,60}taux\s+horaire[^<]{0,60})<\/label>\s*<input[^>]*value="([\d.]+)"/gi)) {
+        const propose = Number(m[2]);
+        if (propose > 0 && propose < minConv) {
+          signale("bareme", `${nomPage} propose ${propose.toFixed(2).replace(".", ",")} € dans « ${m[1].trim()} », sous le minimum conventionnel de ${minConv.toFixed(2).replace(".", ",")} € (source : App.jsx). Un visiteur qui garde cet exemple calcule un salaire illégal.`);
+        }
+      }
+
+      for (const fam of FAMILLES) {
+        for (const perime of fam.perimes) {
+          // « 4.2 » tel que JavaScript l'ecrit ne retrouve pas « 4,20 » tel que
+          // la page l'ecrit : on cherche les deux formes, a une et a deux
+          // decimales, avec le point ou la virgule. C'est ce detail qui faisait
+          // passer la premiere version au vert sur une revalorisation simulee.
+          const formes = new Set([String(perime), perime.toFixed(2), perime.toFixed(1)]);
+          const motif = [...formes].map((v) => v.replace(".", "[.,]")).join("|");
+          const re = new RegExp("(.{0,160})(?:" + motif + ")\\s*(?:€|EUR|&euro;)", "gi");
+          for (const m of texte.matchAll(re)) {
+            const autour = m[1];
+            if (!fam.contexte.test(autour)) continue;
+            if (PERIME_DIT.test(autour)) continue;
+            signale("bareme", `${nomPage} annonce ${perime.toFixed(2).replace(".", ",")} € comme ${fam.nom} : le montant en vigueur est ${fam.courant.toFixed(2).replace(".", ",")} € (source : App.jsx). Un chiffre juste un jour, recopié sur une déclaration.`);
+          }
+
+          // ET LES VALEURS PREREMPLIES DES CHAMPS.
+          //
+          // Les simulateurs portent le bareme dans value="4.20" : c'est le
+          // chiffre que le visiteur trouve deja en place et avec lequel il
+          // calcule. Perime, il ne s'affiche nulle part comme une affirmation —
+          // il fait juste calculer faux, en silence. Les trois premieres
+          // versions de cette regle ne regardaient que le texte visible.
+          const reChamp = new RegExp("(.{0,200})value=[\"'](?:" + motif + ")[\"']", "gi");
+          for (const m of texte.matchAll(reChamp)) {
+            if (!fam.contexte.test(m[1])) continue;
+            signale("bareme", `${nomPage} préremplit un champ avec ${perime.toFixed(2).replace(".", ",")} € pour ${fam.nom} : le montant en vigueur est ${fam.courant.toFixed(2).replace(".", ",")} € (source : App.jsx). Le visiteur calcule avec un chiffre périmé sans le voir.`);
+          }
+        }
+      }
+    }
+  } else {
+    signale("bareme", "les barèmes légaux ne se lisent plus dans App.jsx : la règle qui compare les pages publiques à l'application ne vérifie plus rien");
+  }
+}
+
 // --- aucune regle abrogee presentee comme en vigueur ---
 //
 // Une page outil publique affirmait encore : « si le salaire brut depasse
@@ -3565,24 +4059,68 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
 {
   const ABROGEES = [
     // On ne cherche pas la MENTION de la regle abrogee — l'expliquer est utile —
-    // mais la mention qui ne dit pas qu'elle ne s'applique plus. D'ou la
-    // negation : la phrase doit contenir « supprime », « remplace », « avant la
-    // reforme » ou equivalent dans les 160 caracteres qui suivent.
-    [/5\s*(?:fois|x)\s*(?:le\s*)?SMIC\s*horaires?\s*(?:par\s*jour|journalier)(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))/i,
+    // mais la mention qui ne dit pas qu'elle ne s'applique plus.
+    //
+    // LA MISE AU POINT N'EST PAS TOUJOURS APRES. Premiere version, elle ne
+    // regardait que les caracteres qui SUIVENT, et sur la meme phrase : elle a
+    // donc accuse trois articles parfaitement justes, qui disent « deux regles
+    // qui n'existent plus », « ce systeme a disparu » et « il n'y a plus de
+    // reste a charge minimum de 15 % » — les deux derniers AVANT ou APRES un
+    // point. On regarde desormais tout autour, des deux cotes, sans s'arreter a
+    // la ponctuation.
+    [/5\s*(?:fois|x)\s*(?:le\s*)?SMIC\s*horaires?\s*(?:par\s*jour|journalier)/i,
       "le plafond journalier de 5 SMIC horaires est présenté comme en vigueur : il a été supprimé par la réforme du CMG de septembre 2025"],
-    [/plafond journalier(?![^.]{0,160}(?:supprim|dispar|n'existe plus|aboli|remplac|avant la réforme|ancien))[^.]{0,80}CMG/i,
+    [/plafond journalier[^.]{0,80}CMG/i,
       "le CMG n'a plus de plafond journalier depuis septembre 2025, mais un plafond horaire de 8,09 EUR"],
-    [/reste à charge minimum de 15\s*%(?![^.]{0,120}(?:supprim|dispar|n'existe plus|aboli))/i, "le reste à charge minimum de 15 % a été supprimé en septembre 2025"],
+    [/reste à charge minimum de 15\s*%/i, "le reste à charge minimum de 15 % a été supprimé en septembre 2025"],
   ];
+  // Les mots qui disent qu'une regle ne s'applique plus. Cherches DE PART ET
+  // D'AUTRE de la mention, ponctuation comprise.
+  const MISE_AU_POINT = /supprim|dispar|n'existe plus|n'existent plus|n'y a plus|aboli|remplac|avant la réforme|jusqu'en|ancien|périmé|ne s'applique plus/i;
+  const FENETRE = 260;
+  // L'APOSTROPHE ECHAPPEE. Dans le HTML genere, « n'y a plus » s'ecrit
+  // « n&#39;y a plus » : la mise au point etait bien la, et la barriere ne la
+  // voyait pas. Elle a donc accuse un article juste — deux fois la meme phrase,
+  // une fois en clair dans les donnees structurees et une fois echappee dans le
+  // texte, et seule la seconde passait au rouge.
+  const normalise = (t) => t.replace(/&#0*39;|&apos;|&rsquo;|’/g, "'").replace(/&#0*34;|&quot;/g, '"').replace(/&amp;/g, "&");
+  // LE BLOG AUSSI. Cette barriere ne lisait que la racine de public/ : les
+  // soixante-trois articles, qui vivent dans public/blog/<slug>/index.html,
+  // n'etaient relus par personne. Ce sont pourtant eux qui expliquent les
+  // regles en detail, donc eux qui risquent le plus de porter une regle
+  // abrogee — et eux qu'un lecteur trouve par une recherche.
+  const pagesBlog = [];
+  {
+    const racine = new URL("../public/blog/", import.meta.url);
+    const empiler = (dossier, prefixe) => {
+      let entrees = [];
+      try { entrees = readdirSync(dossier, { withFileTypes: true }); } catch (e) { return; }
+      for (const e of entrees) {
+        if (e.isDirectory()) empiler(new URL(e.name + "/", dossier), prefixe + e.name + "/");
+        else if (e.name === "index.html") {
+          try { pagesBlog.push([prefixe + "index.html", readFileSync(new URL(e.name, dossier), "utf8")]); } catch (err) { /* page illisible : signalee ailleurs */ }
+        }
+      }
+    };
+    empiler(racine, "public/blog/");
+  }
   const aLire = [
     ["src/App.jsx", appSrc],
     ...readdirSync(new URL("../public/", import.meta.url))
       .filter((f) => f.endsWith(".html"))
       .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+    ...pagesBlog,
   ];
   for (const [nom, contenu] of aLire)
-    for (const [re, msg] of ABROGEES)
-      if (re.test(contenu)) signale("règles abrogées", `${nom} : ${msg}`);
+    for (const [re, msg] of ABROGEES) {
+      const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+      let m, enDefaut = false;
+      while ((m = g.exec(contenu)) !== null) {
+        const autour = contenu.slice(Math.max(0, m.index - FENETRE), m.index + m[0].length + FENETRE);
+        if (!MISE_AU_POINT.test(normalise(autour))) { enDefaut = true; break; }
+      }
+      if (enDefaut) signale("règles abrogées", `${nom} : ${msg}`);
+    }
 }
 
 // --- une seule adresse de contact dans les pages legales ---

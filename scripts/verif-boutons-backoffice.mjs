@@ -13,6 +13,7 @@
 //   node scripts/verif-boutons-backoffice.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 
 const DANGEREUX = /enregistr|sauvegard|publier|supprim|effac|r[ée]initialis|vider|envoyer|d[ée]connex|appliquer|valider|restaurer|importer|exporter|purger|migrer/i;
@@ -47,7 +48,7 @@ await p.route("**/rest/v1/**", (r) => {
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 
 await p.goto(`http://127.0.0.1:4173/backoffice?acces=${CLE}`, { waitUntil: "domcontentloaded" });
-await p.waitForTimeout(4500);
+await ATTENDRE_PRET(p);
 const dedans = await p.evaluate(() => !/Accès réservé|Je suis assistante maternelle|Se connecter/.test(document.body.innerText.slice(0, 400)));
 if (!dedans) {
   console.error("\n  KO  le back-office ne s'ouvre pas : le contrôle ne vérifierait rien\n");

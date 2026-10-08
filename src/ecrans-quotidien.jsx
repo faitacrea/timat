@@ -15,13 +15,14 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import {
   ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 , enregistrerPointage
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
-  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE, useUneFois, appelApi
 } from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
@@ -492,6 +493,8 @@ export function ModeBorne({enfants,user,onQuitter}){
 }
 
 export function Pointage({enfants,role,pEId,user,demoMode=false}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [pts,setPts]=useState([]);
   const [toast,setToast]=useState("");
@@ -646,7 +649,6 @@ export function Pointage({enfants,role,pEId,user,demoMode=false}){
           sendNotificationEmail({
             type:"pointage_a_valider",
             to:p.email,
-            subject:"Un pointage attend votre validation",
             template:"pointage_a_valider",
             vars:{parent_prenom:p.prenom||"",enfant_prenom:enfant.prenom||"",date:new Date().toLocaleDateString("fr-FR"),duree:totStr,url:window.location.origin},
           });
@@ -848,7 +850,7 @@ export function Pointage({enfants,role,pEId,user,demoMode=false}){
           <button type="button" className="btn bG" style={{flex:1,justifyContent:"center"}}
             onClick={()=>{setContester(null);setContMotif("");setContHeure("");}}>Annuler</button>
           <button type="button" className="btn bT" style={{flex:1,justifyContent:"center"}}
-            onClick={envoyerContestation}>Envoyer</button>
+            onClick={uneFois(envoyerContestation)}>Envoyer</button>
         </div>
       </div>
     </div>}
@@ -1324,8 +1326,8 @@ export function Calendrier({enfants,role,pEId,user}){
           </div>
           <div>
             <label className="lbl">Heures prévues ce jour *</label>
-            <input type="number"className="inp"placeholder="ex: 9"value={absForm.heures}
-              onChange={e=>setAbsForm(f=>({...f,heures:e.target.value}))} min="0"max="12"step="0.5"/>
+            <ChampNombre className="inp" placeholder="ex : 9 ou 7,5" value={absForm.heures}
+              onChange={v=>setAbsForm(f=>({...f,heures:v}))} min="0" max="12" decimales={2}/>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <input type="checkbox"id="indem2"checked={absForm.indemnise}
@@ -1389,8 +1391,8 @@ export function Calendrier({enfants,role,pEId,user}){
           <div><label className="lbl">Description</label><input className="inp" placeholder="Ex : RDV médecin, sortie au parc…" value={evForm.txt} onChange={e=>setEvForm(f=>({...f,txt:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addEvModal()}/></div>
           {HEURES_TYPES[evForm.type]&&<div>
             <label className="lbl">{evForm.type==="formh"?"Heures de formation ce jour":"Heures d'accueil perdues ce jour"}</label>
-            <input type="number" className="inp" min="0" max="24" step="0.5" value={evForm.heures??heuresJourContrat}
-              onChange={e=>setEvForm(f=>({...f,heures:e.target.value}))}/>
+            <ChampNombre className="inp" min="0" max="24" decimales={2} value={evForm.heures??heuresJourContrat}
+              onChange={v=>setEvForm(f=>({...f,heures:v}))}/>
             <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
               {RETENUE_TYPES[evForm.type]
                 ? "Servira à calculer la retenue sur le salaire mensualisé, selon l'article 111 de la convention collective."
@@ -2484,7 +2486,7 @@ export function ExportDonnees({enfants,user,role}){
     {id:"modifications_contrat",l:"Demandes d'avenants",checked:true,table:"modifications_contrat",field:"contrat_id",scope:"enfant_via_contrat"},
     {id:"pointages",l:"Historique des pointages",checked:true,table:"pointages",field:"enfant_id",scope:"enfant"},
     {id:"transmissions",l:"Journal et transmissions",checked:true,table:"transmissions",field:"enfant_id",scope:"enfant"},
-    {id:"bilans",l:"Bilans periodiques",checked:true,table:"bilans",field:"enfant_id",scope:"enfant"},
+    {id:"bilans",l:"Bilans périodiques",checked:true,table:"bilans",field:"enfant_id",scope:"enfant"},
     {id:"absences",l:"Historique des absences",checked:true,table:"absences",field:"enfant_id",scope:"enfant"},
     {id:"sante",l:"Vaccins",checked:true,table:"vaccins",field:"enfant_id",scope:"enfant"},
     {id:"croissance",l:"Donnees de croissance",checked:false,table:"croissance",field:"enfant_id",scope:"enfant"},
@@ -2497,6 +2499,46 @@ export function ExportDonnees({enfants,user,role}){
     {id:"messages",l:"Messages",checked:false,table:"messages",field:"enfant_id",scope:"enfant"},
     {id:"documents",l:"Metadonnees des documents",checked:false,table:"documents_meta",field:role==="asmat"?"asmat_id":"enfant_id",scope:role==="asmat"?"user":"enfant"},
     {id:"audit_log",l:"Journal des actions (audit)",checked:false,table:"audit_log",field:"user_id",scope:"user"},
+
+    // VINGT-QUATRE TABLES MANQUAIENT A L'APPEL.
+    //
+    // L'export annonce « droit a la portabilite (article 20 RGPD) » et ne
+    // couvrait que dix-neuf tables sur les cinquante que l'application ecrit.
+    // Manquaient, entre autres : les BULLETINS DE SALAIRE, les VERSEMENTS
+    // recus, les AUTORISATIONS signees, le REGISTRE DES MEDICAMENTS et la FICHE
+    // D'URGENCE — ces deux dernieres portent des donnees de sante.
+    //
+    // Aucune n'etait techniquement hors de portee : toutes ont un lien vers
+    // l'utilisateur, l'enfant ou le contrat. Elles avaient simplement ete
+    // oubliees au fil des ajouts, et rien ne le signalait.
+    //
+    // data/tables-donnees.js tient desormais le registre de ce que chaque table
+    // contient, et l'audit refuse qu'une table ecrite par l'application n'y
+    // figure pas.
+    {id:"bulletins",l:"Bulletins de salaire",checked:true,table:"bulletins",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"versements",l:"Versements reçus",checked:true,table:"versements",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"historique_mois",l:"Récapitulatif mensuel",checked:true,table:"historique_mois",field:"enfant_id",scope:"enfant"},
+    {id:"autorisations",l:"Autorisations parentales signées",checked:true,table:"autorisations",field:"enfant_id",scope:"enfant"},
+    {id:"medicaments",l:"Registre des médicaments",checked:true,table:"medicaments",field:"enfant_id",scope:"enfant"},
+    {id:"fiche_urgence",l:"Fiche de renseignements et d'urgence",checked:true,table:"fiche_urgence",field:"enfant_id",scope:"enfant"},
+    {id:"planning_periscolaire",l:"Planning périscolaire",checked:false,table:"planning_periscolaire",field:"enfant_id",scope:"enfant"},
+    {id:"cahier_jour",l:"Cahier du jour",checked:false,table:"cahier_jour",field:"enfant_id",scope:"enfant"},
+    {id:"activites_faites",l:"Activités réalisées",checked:false,table:"activites_faites",field:"enfant_id",scope:"enfant"},
+    {id:"trajets",l:"Trajets et frais kilométriques",checked:false,table:"trajets",field:"enfant_id",scope:"enfant"},
+    {id:"evenements",l:"Événements du calendrier",checked:false,table:"evenements",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"projet_accueil",l:"Projet d'accueil",checked:false,table:"projet_accueil",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"activites_perso",l:"Activités personnelles",checked:false,table:"activites_perso",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"messages_pmi",l:"Échanges avec la PMI",checked:false,table:"messages_pmi",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"demandes",l:"Demandes d'accueil reçues",checked:false,table:"demandes",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"invitations",l:"Invitations envoyées",checked:false,table:"invitations",field:"asmat_id",scope:role==="asmat"?"user":"neant"},
+    {id:"contestations_pointage",l:"Contestations de pointage",checked:false,table:"contestations_pointage",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"declarations_pajemploi",l:"Déclarations Pajemploi",checked:false,table:"declarations_pajemploi",field:"enfant_id",scope:"enfant"},
+    {id:"transmissions_pajemploi",l:"Transmissions Pajemploi",checked:false,table:"transmissions_pajemploi",field:"enfant_id",scope:"enfant"},
+    {id:"mandats_pajemploi",l:"Mandats Pajemploi",checked:false,table:"mandats_pajemploi",field:role==="asmat"?"asmat_id":"parent_id",scope:"user"},
+    {id:"consentements",l:"Preuves de consentement",checked:false,table:"consentements",field:"user_id",scope:"user"},
+    {id:"notifications",l:"Notifications reçues",checked:false,table:"notifications",field:"user_id",scope:"user"},
+    {id:"support_messages",l:"Messages au support",checked:false,table:"support_messages",field:"email",scope:"email"},
+    {id:"achats_boutique",l:"Achats à la boutique",checked:false,table:"achats_boutique",field:"email",scope:"email"},
   ],[role]);
 
   const [sel,setSel]=useState(()=>Object.fromEntries(modulesConfig.map(m=>[m.id,m.checked])));
@@ -2529,7 +2571,7 @@ export function ExportDonnees({enfants,user,role}){
           periode:periode,
           enfant_filtre:selEnfant,
           modules_selectionnes:Object.entries(sel).filter(([k,v])=>v).map(([k])=>k),
-          rgpd:"Export realise dans le cadre du droit a la portabilite (article 20 RGPD)",
+          rgpd:"Export réalisé dans le cadre du droit à la portabilité (article 20 RGPD)",
         },
       };
 
@@ -2543,6 +2585,17 @@ export function ExportDonnees({enfants,user,role}){
         }else if(m.scope==="enfant"){
           if(!enfantIds.length){exportData[m.id]=[];continue;}
           q=q.in(m.field,enfantIds);
+        }else if(m.scope==="email"){
+          // Ces tables ne connaissent pas l'identifiant du compte, seulement
+          // l'adresse : c'est par elle qu'on retrouve ce qui appartient a la
+          // personne.
+          if(!user?.email){exportData[m.id]=[];continue;}
+          q=q.eq("email",user.email);
+        }else if(m.scope==="neant"){
+          // Sans objet pour ce role : la table n'a rien qui lui appartienne.
+          // On l'ecrit quand meme, vide, pour que l'export dise ce qu'il a
+          // regarde plutot que de passer la table sous silence.
+          exportData[m.id]=[];continue;
         }else if(m.scope==="enfant_via_contrat"){
           if(!contratIds.length){exportData[m.id]=[];continue;}
           q=q.in(m.field,contratIds);
@@ -2614,14 +2667,14 @@ export function ExportDonnees({enfants,user,role}){
           +'h1{color:#B8622F}table{width:100%;border-collapse:collapse;margin:14px 0}'
           +'td,th{padding:8px;border:1px solid #ddd;text-align:left;font-size:12px}'
           +'th{background:#f5f5f5}@media print{.nb{display:none}}</style></head><body>'
-          +'<h1>Export RGPD - Synthese</h1>'
+          +'<h1>Export RGPD - Synthèse</h1>'
           +'<p>Exporte le : '+new Date().toLocaleString("fr-FR")+'</p>'
           +'<p>Utilisateur : '+H(user?.email||"-")+'</p>'
           +'<p>Période : '+H(periode)+'</p>'
           +'<p>Enfants : '+H(selEnfant)+'</p>'
-          +'<h2>Donnees exportees</h2>'
+          +'<h2>Données exportées</h2>'
           +'<table><tr><th>Module</th><th>Nombre d enregistrements</th></tr>'+summary+'</table>'
-          +'<p style="font-size:11px;color:#888;margin-top:20px">Le PDF est un resume. Pour les donnees brutes, utilisez l export JSON ou CSV.</p>'
+          +'<p style="font-size:11px;color:#888;margin-top:20px">Le PDF est un résumé. Pour les données brutes, utilisez l’export JSON ou CSV.</p>'
           +'<div style="text-align:center;margin-top:20px"><button class="nb" onclick="window.print()" style="background:#B8622F;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Imprimer / PDF</button></div>'
           +'</body></html>';
         w.document.write(html);w.document.close();
@@ -2708,7 +2761,7 @@ export function OnboardingWizard({user,onFinish}){
   const [step,setStep]=useState(0);
   const [enfant,setEnfant]=useState({prenom:"",naissance:"",emoji:"🦁",photo:null});
   const [contrat,setContrat]=useState({
-    heuresHebdo:40,tauxHoraire:4.20,entretien:3.80,
+    heuresHebdo:40,tauxHoraire:4.20,entretien:indemniteEntretienMin(40/JOURS_SEMAINE_TYPE),
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
     horaires:"07h30–17h30",debut:isoJour(new Date())
   });
@@ -2779,6 +2832,16 @@ export function OnboardingWizard({user,onFinish}){
         setToast('❌ Erreur: '+errEnfant.message);
         setSaving(false);return;
       }
+      // L'enfant peut etre cree SANS que la ligne nous soit relue (une politique
+      // RLS autorise souvent l'ecriture sans la lecture de ce qu'on vient
+      // d'ecrire) : data et error valent alors tous deux null. La ligne
+      // suivante lit enfantData.id pour y rattacher le contrat — sans ce
+      // garde-fou, l'accompagnement plantait sur une page blanche juste apres
+      // avoir cree l'enfant, et rien ne disait que l'enfant existait.
+      if(!enfantData?.id){
+        setToast("L'enfant est enregistré, mais son contrat n'a pas pu être rattaché. Rouvrez l'application pour le compléter.");
+        setSaving(false);return;
+      }
 
       // 3. Créer le contrat lié à l'enfant
       const{error:errContrat}=await withRetry(()=>supabase.from('contrats').insert({
@@ -2787,11 +2850,11 @@ export function OnboardingWizard({user,onFinish}){
         debut:contrat.debut||isoJour(new Date()),
         heures_hebdo:contrat.heuresHebdo||40,
         taux_horaire:contrat.tauxHoraire||minimumHoraireAu(new Date()),
-        entretien:contrat.entretien||3.92,
+        entretien:entretienDuContrat(contrat),
         // L'assistant posait la question du rythme et jetait la reponse :
         // le contrat repartait en annee complete quoi qu'on ait choisi.
         annee_complete:contrat.anneeComplete!==false,
-        semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE):null,
+        semaines_accueil:contrat.anneeComplete===false?Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE)):null,
         // Non renseigne a la creation : le contrat imprime une ligne a
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,
@@ -2852,9 +2915,9 @@ export function OnboardingWizard({user,onFinish}){
           {step===1&&<>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Heures / semaine</label>
-                <input type="number"className="inp"value={contrat.heuresHebdo}onChange={e=>setContrat(c=>({...c,heuresHebdo:parseFloat(e.target.value)||40}))}/></div>
+                <ChampNombre className="inp" min="1" max="60" defaut={40} value={contrat.heuresHebdo} onChange={v=>setContrat(c=>({...c,heuresHebdo:v}))}/></div>
               <div><label className="lbl">Taux horaire brut (€)</label>
-                <input type="number"step="0.05"className="inp"value={contrat.tauxHoraire}onChange={e=>setContrat(c=>({...c,tauxHoraire:parseFloat(e.target.value)||4.05}))}/></div>
+                <ChampNombre className="inp" min="0" decimales={2} defaut={4.05} value={contrat.tauxHoraire} onChange={v=>setContrat(c=>({...c,tauxHoraire:v}))}/></div>
             </div>
             {/* Le mode de mensualisation change le salaire de plus de 10 % :
                 52 semaines conges inclus, ou les semaines reellement programmees
@@ -2875,9 +2938,9 @@ export function OnboardingWizard({user,onFinish}){
               </div>
               {contrat.anneeComplete===false&&<div style={{marginTop:10}}>
                 <label className="lbl">Semaines d'accueil dans l'année</label>
-                <input type="number" min="1" max="46" step="1" className="inp" style={{maxWidth:130}}
+                <ChampNombre className="inp" style={{maxWidth:130}} min="1" max="46" decimales={0} defaut={46}
                   value={contrat.semainesAccueil??46}
-                  onChange={e=>setContrat(c=>({...c,semainesAccueil:Math.min(46,Math.max(1,parseFloat(e.target.value)||46))}))}/>
+                  onChange={v=>setContrat(c=>({...c,semainesAccueil:v}))}/>
                 <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
                   Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant sera confié.
                 </div>
@@ -2889,13 +2952,13 @@ export function OnboardingWizard({user,onFinish}){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Indemnité entretien (€/j)</label>
-                <input type="number"step="0.05"className="inp"value={contrat.entretien}onChange={e=>setContrat(c=>({...c,entretien:parseFloat(e.target.value)||3.80}))}/></div>
+                <ChampNombre className="inp" min="0" decimales={2} defaut={indemniteEntretienMin(heuresJourDuContrat(contrat))} value={contrat.entretien} onChange={v=>setContrat(c=>({...c,entretien:v}))}/></div>
               <div><label className="lbl">Date de début</label>
                 <input type="date"className="inp"value={contrat.debut}onChange={e=>setContrat(c=>({...c,debut:e.target.value}))}/></div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12,alignItems:"end"}}>
               <div><label className="lbl">Indemnité repas (€/j, optionnel)</label>
-                <input type="number"step="0.05"min="0"className="inp"value={contrat.repas||0}onChange={e=>setContrat(c=>({...c,repas:parseFloat(e.target.value)||0}))}/></div>
+                <ChampNombre className="inp" min="0" decimales={2} defaut={0} value={contrat.repas??0} onChange={v=>setContrat(c=>({...c,repas:v}))}/></div>
               <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--m)",cursor:"pointer",paddingBottom:10}}>
                 <input type="checkbox"checked={!!contrat.aeeh}onChange={e=>setContrat(c=>({...c,aeeh:e.target.checked}))}/>
                 Enfant handicapé (AEEH) — abattement 4×SMIC
@@ -2933,23 +2996,23 @@ export function OnboardingWizard({user,onFinish}){
                 onClick={async()=>{
                   if(!parentEmail.trim()){setStep(3);return;}
                   setSaving(true);
-                  let inviteUrl=null;
+                  // On ne garde que le JETON : le lien est bati cote serveur.
+                  let inviteToken=null;
                   try{
                     const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfant.id});
-                    if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?invite="+tk;
-                  }catch(e){}
+                    if(tk)inviteToken=String(tk);
+                  }catch(e){ /* pas de jeton : le courriel renverra vers la page d'accueil parent */ }
                   try{
-                    const res=await fetch('/api/invite-parent',{
-                      method:'POST',headers:{'Content-Type':'application/json'},
-                      body:JSON.stringify({
-                        emailParent:parentEmail,
-                        prenomEnfant:enfant.prenom,
-                        prenomAsmat:user?.prenom||"Votre assistante maternelle",
-                        asmatId:user?.id,enfantId:enfant?.id||null,
-                        inviteUrl,
-                      })
+                    // On envoie le JETON, pas l'adresse complete : le serveur
+                    // batit le lien. « inviteUrl » recu entier faisait du
+                    // courriel d'invitation un vehicule vers n'importe quel site.
+                    const{data:d}=await appelApi('/api/invite-parent',{
+                      emailParent:parentEmail,
+                      prenomEnfant:enfant.prenom,
+                      prenomAsmat:user?.prenom||"Votre assistante maternelle",
+                      enfantId:enfant?.id||null,
+                      inviteToken,
                     });
-                    const d=await res.json();
                     setToast(d.success?"✉️ Invitation envoyée - le parent recevra un email":"Erreur: "+d.error);
                     if(d.success) logAction('invitation_parent', {table_name:'invitations'}); // AUDIT LOG P8
                   }catch(e){setToast("Erreur réseau");}
@@ -3001,7 +3064,7 @@ export function AjouterEnfantModale({user,onClose}){
     fin:"",
     heuresHebdo:40,
     tauxHoraire:4.20,
-    entretien:3.80,
+    entretien:indemniteEntretienMin(40/JOURS_SEMAINE_TYPE),
     anneeComplete:true,
     semainesAccueil:null,
     jours:["Lundi","Mardi","Mercredi","Jeudi","Vendredi"],
@@ -3020,7 +3083,7 @@ export function AjouterEnfantModale({user,onClose}){
 
   const sauvegarder=async()=>{
     if(!valideEtape0()||!valideEtape1()){
-      setToast("Donnees incompletes");
+      setToast("Données incomplètes");
       return;
     }
     setSaving(true);
@@ -3053,7 +3116,13 @@ export function AjouterEnfantModale({user,onClose}){
         actif:true,
       }).select().single();
       if(errEnfant){
-        setToast("Erreur creation enfant : "+errEnfant.message);
+        setToast("Erreur création enfant : "+errEnfant.message);
+        setSaving(false);
+        return;
+      }
+      // Creation acceptee mais ligne non relue : voir l'accompagnement.
+      if(!enfantData?.id){
+        setToast("L'enfant est enregistré, mais son contrat n'a pas pu être rattaché. Rouvrez l'application pour le compléter.");
         setSaving(false);
         return;
       }
@@ -3067,12 +3136,12 @@ export function AjouterEnfantModale({user,onClose}){
         fin:contrat.fin||null,
         heures_hebdo:Number(contrat.heuresHebdo)||40,
         annee_complete:contrat.anneeComplete!==false,
-        semaines_accueil:contrat.anneeComplete===false?(Number(contrat.semainesAccueil)||46):null,
+        semaines_accueil:contrat.anneeComplete===false?Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE)):null,
         // Non renseigne a la creation : le contrat imprime une ligne a
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,
         taux_horaire:Number(contrat.tauxHoraire)||minimumHoraireAu(new Date()),
-        entretien:Number(contrat.entretien)||3.80,
+        entretien:entretienDuContrat(contrat),
         jours:contrat.jours,
         horaires:contrat.horaires||"07h30–17h30",
         aeeh:!!contrat.aeeh,
@@ -3088,26 +3157,22 @@ export function AjouterEnfantModale({user,onClose}){
       if(parentInfo.email.trim()){
         try{
           // Lien de rattachement automatique au bon enfant (token de partage)
-          let inviteUrl=null;
+          // On ne garde que le JETON : le lien est bati cote serveur.
+          let inviteToken=null;
           try{
             const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfantData.id});
-            if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?invite="+tk;
-          }catch(e){}
-          const res=await fetch("/api/invite-parent",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({
-              emailParent:parentInfo.email.trim(),
-              prenomParent:parentInfo.prenom.trim()||null,
-              nomParent:parentInfo.nom.trim()||null,
-              prenomEnfant:enfant.prenom.trim(),
-              prenomAsmat:user?.prenom||"Votre assistante maternelle",
-              asmatId:user.id,
-              enfantId:enfantData.id,
-              inviteUrl,
-            }),
+            if(tk)inviteToken=String(tk);
+          }catch(e){ /* pas de jeton : le courriel renverra vers la page d'accueil parent */ }
+          // On envoie le JETON, pas l'adresse complete : voir l'autre appel.
+          const{data:d}=await appelApi("/api/invite-parent",{
+            emailParent:parentInfo.email.trim(),
+            prenomParent:parentInfo.prenom.trim()||null,
+            nomParent:parentInfo.nom.trim()||null,
+            prenomEnfant:enfant.prenom.trim(),
+            prenomAsmat:user?.prenom||"Votre assistante maternelle",
+            enfantId:enfantData.id,
+            inviteToken,
           });
-          const d=await res.json().catch(()=>({}));
           if(d.success) logAction('invitation_parent', {table_name:'invitations', record_id:enfantData.id}); // AUDIT LOG P8
           if(!d.success){
             console.warn("Invitation parent : ",d.error||"erreur inconnue");
@@ -3200,13 +3265,13 @@ export function AjouterEnfantModale({user,onClose}){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             <div>
               <label className="lbl">Heures / semaine *</label>
-              <input type="number" className="inp" min="1" max="50" value={contrat.heuresHebdo}
-                onChange={e=>setContrat(c=>({...c,heuresHebdo:e.target.value}))}/>
+              <ChampNombre className="inp" min="1" max="50" defaut={40} value={contrat.heuresHebdo}
+                onChange={v=>setContrat(c=>({...c,heuresHebdo:v}))}/>
             </div>
             <div>
               <label className="lbl">Taux horaire (€) *</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.tauxHoraire}
-                onChange={e=>setContrat(c=>({...c,tauxHoraire:e.target.value}))}/>
+              <ChampNombre className="inp" min="0" decimales={2} value={contrat.tauxHoraire}
+                onChange={v=>setContrat(c=>({...c,tauxHoraire:v}))}/>
             </div>
           </div>
           {/* Le rythme n'etait demande que dans l'assistant du premier enfant :
@@ -3227,9 +3292,9 @@ export function AjouterEnfantModale({user,onClose}){
             </div>
             {contrat.anneeComplete===false&&<div style={{marginTop:10}}>
               <label className="lbl">Semaines d'accueil dans l'année</label>
-              <input type="number" min="1" max="46" step="1" className="inp" style={{maxWidth:130}}
+              <ChampNombre className="inp" style={{maxWidth:130}} min="1" max="46" decimales={0} defaut={46}
                 value={contrat.semainesAccueil??46}
-                onChange={e=>setContrat(c=>({...c,semainesAccueil:Math.min(46,Math.max(1,parseFloat(e.target.value)||46))}))}/>
+                onChange={v=>setContrat(c=>({...c,semainesAccueil:v}))}/>
             </div>}
             <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
               Salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
@@ -3238,9 +3303,9 @@ export function AjouterEnfantModale({user,onClose}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             <div>
-              <label className="lbl">Indemnite entretien (€/jour)</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.entretien}
-                onChange={e=>setContrat(c=>({...c,entretien:e.target.value}))}/>
+              <label className="lbl">Indemnité entretien (€/jour)</label>
+              <ChampNombre className="inp" min="0" decimales={2} value={contrat.entretien}
+                onChange={v=>setContrat(c=>({...c,entretien:v}))}/>
             </div>
             <div>
               <label className="lbl">Horaires (texte)</label>
@@ -3250,9 +3315,9 @@ export function AjouterEnfantModale({user,onClose}){
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14,alignItems:"end"}}>
             <div>
-              <label className="lbl">Indemnite repas (€/jour, optionnel)</label>
-              <input type="number" className="inp" step="0.01" min="0" value={contrat.repas||0}
-                onChange={e=>setContrat(c=>({...c,repas:e.target.value}))}/>
+              <label className="lbl">Indemnité repas (€/jour, optionnel)</label>
+              <ChampNombre className="inp" min="0" decimales={2} defaut={0} value={contrat.repas??0}
+                onChange={v=>setContrat(c=>({...c,repas:v}))}/>
             </div>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"var(--m)",cursor:"pointer",paddingBottom:10}}>
               <input type="checkbox" checked={!!contrat.aeeh} onChange={e=>setContrat(c=>({...c,aeeh:e.target.checked}))}/>
@@ -3308,7 +3373,7 @@ export function AjouterEnfantModale({user,onClose}){
               style={{flex:1,justifyContent:"center",padding:"12px",background:"var(--c)",color:"var(--m)"}}>← Retour</button>
             <button className="btn bT l" onClick={sauvegarder} disabled={saving}
               style={{flex:2,justifyContent:"center",padding:"12px"}}>
-              {saving?"⏳ Enregistrement...":(parentInfo.email.trim()?"✓ Creer + Inviter parent":"✓ Creer (sans parent)")}
+              {saving?"⏳ Enregistrement...":(parentInfo.email.trim()?"✓ Créer + Inviter parent":"✓ Créer (sans parent)")}
             </button>
           </div>
         </>}
@@ -3323,7 +3388,7 @@ export function AjouterEnfantModale({user,onClose}){
             Le contrat est cree et actif.<br/>
             {parentInfo.email.trim()
               ?<>Le parent va recevoir un email d'invitation a <strong>{parentInfo.email}</strong>.</>
-              :<>Vous pourrez inviter le parent plus tard depuis la page parametres.</>}
+              :<>Vous pourrez inviter le parent plus tard depuis la page paramètres.</>}
           </div>
           <button className="btn bT l" onClick={onClose}
             style={{width:"100%",justifyContent:"center",padding:"12px"}}>
@@ -3494,7 +3559,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
     // refus, et une case cochee a une autorisation : les deux seraient faux.
     const authLines=AUTORISATIONS_FICHE.map(([t,l])=>{
       const v=etatAuth(t);
-      const marque=v===true?"[X] Oui  [ ] Non":v===false?"[ ] Oui  [X] Non":"Sans reponse a ce jour";
+      const marque=v===true?"[X] Oui  [ ] Non":v===false?"[ ] Oui  [X] Non":"Sans réponse à ce jour";
       const couleur=v===true?"#5DA9A1":v===false?"#C84B31":"#5A6870";
       return "<div style='margin:6px 0;font-size:13px'><span style='color:"+couleur+";font-weight:700'>"+marque+"</span>  "+H(l)+"</div>";
     }).join("");
@@ -3512,8 +3577,8 @@ export function FicheUrgence({enfants,role,pEId,user}){
       ".urg span{color:#C84B31;font-weight:700;font-size:18px}",
       "@media print{.noprint{display:none}}</style></head><body>",
       "<h1>FICHE D'URGENCE</h1>",
-      "<div class='sub'>Assistante maternelle agreee</div>",
-      "<div class='note'>A remettre des le debut de l'accueil | A mettre a jour chaque annee</div>",
+      "<div class='sub'>Assistante maternelle agréée</div>",
+      "<div class='note'>À remettre dès le début de l'accueil | À mettre à jour chaque année</div>",
       "<div class='line'><b>Assistante maternelle :</b> "+H(f.asmatNomH)+"</div>",
       "<div class='line'><b>Telephone :</b> "+H(f.asmatTel)+"</div>",
       "<div class='line'><b>N. d'agrement :</b> "+H(f.asmatAgrement)+"</div>",
@@ -3523,7 +3588,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Date de naissance :</b> "+f.naissance+"</div>",
       "<div class='line'><b>Sexe :</b> "+f.sexe+"</div>",
       "<div class='line'><b>Adresse :</b> "+H(f.adresse)+"</div>",
-      "<div class='sh'>02  Coordonnees des parents</div>",
+      "<div class='sh'>02  Coordonnées des parents</div>",
       (parentLive?("<div class='urg' style='background:#EFF7F6'><b>Contact parent (compte TiMat, a jour le "+new Date().toLocaleDateString("fr-FR")+")</b><br/>"
         +(nomLive||"-")+((parentLive.telephone)?" &mdash; <span style='color:#2C6F68'>"+H(parentLive.telephone)+"</span>":"")
         +(parentLive.email?"<br/>"+parentLive.email:"")
@@ -3539,9 +3604,9 @@ export function FicheUrgence({enfants,role,pEId,user}){
       "<div class='line'><b>Telephone :</b> "+H(f.pereTel)+"</div>",
       "<div class='line'><b>Email :</b> "+H(f.pereEmail)+"</div>",
       "<div class='line'><b>Employeur :</b> "+H(f.pereEmployeur)+"</div>",
-      "<div class='sh'>03  Personnes autorisees</div>",
+      "<div class='sh'>03  Personnes autorisées</div>",
       ...[1,2,3].map(n=>"<div class='stt'>Personne "+n+"</div><div class='line'><b>Nom :</b> "+f["p"+n+"Nom"]+"</div><div class='line'><b>Lien :</b> "+f["p"+n+"Lien"]+"</div><div class='line'><b>Tel :</b> "+f["p"+n+"Tel"]+"</div>"),
-      "<div class='sh'>04  Informations medicales</div>",
+      "<div class='sh'>04  Informations médicales</div>",
       "<div class='line'><b>Medecin :</b> "+H(f.medecin)+"</div>",
       "<div class='line'><b>Tel medecin :</b> "+H(f.medecinTel)+"</div>",
       "<div class='line'><b>Groupe sanguin :</b> "+H(f.groupe)+"</div>",
@@ -3574,12 +3639,12 @@ export function FicheUrgence({enfants,role,pEId,user}){
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature parent :</div></div>",
       "<div><div style='font-weight:700;margin-bottom:60px'>Signature assmat :</div></div></div>",
       "<p style='color:#6B7A82;font-size:11px;line-height:1.6;margin-top:18px;border-top:1px solid #E4DCD0;padding-top:10px'>Affichez cette fiche a un endroit permanent, visible et facilement accessible : le referentiel d'agrement l'exige pour les coordonnees des services de secours, des parents et du service departemental de protection maternelle et infantile (annexe 4-8 du code de l'action sociale et des familles, section 2, sous-section 2, 2°).</p>",
-      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:14px'>Genere par TiMat - timat.app</p>",
+      "<p style='text-align:center;color:#ccc;font-size:11px;margin-top:14px'>Généré par TiMat - timat.app</p>",
       "<div class='noprint' style='text-align:center;margin-top:16px'><button onclick='window.print()' style='background:#5DA9A1;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer'>Imprimer / PDF</button></div>",
       "</body></html>"
     ].join("");
     w.document.write(html);w.document.close();
-    setToast("Fiche generee ✓");
+    setToast("Fiche générée ✓");
   };
 
   // (Parent edite la fiche ; assmat en lecture seule -> rendu unifie ci-dessous)
@@ -3684,7 +3749,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
         <div className="card">
-          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🔑 Personnes autorisees</div>
+          <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🔑 Personnes autorisées</div>
           {[1,2,3].map(n=><div key={n}style={{marginBottom:10,padding:10,background:"var(--c)",borderRadius:8}}>
             <div style={{fontSize:11,fontWeight:700,color:"var(--l)",marginBottom:6}}>Personne {n}</div>
             {inp("Nom","p"+n+"Nom")}{inp("Lien","p"+n+"Lien","Grand-parent, oncle...")}{inp("Tel","p"+n+"Tel")}
@@ -3692,7 +3757,7 @@ export function FicheUrgence({enfants,role,pEId,user}){
         </div>
         <div className="card">
           <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:12}}>🩺 Medical</div>
-          {inp("Medecin traitant","medecin")}{inp("Tel medecin","medecinTel")}{inp("Groupe sanguin","groupe")}{inp("Vaccins a jour","vaccins","Oui / Non")}{inp("PAI","pai","Oui / Non")}
+          {inp("Médecin traitant","medecin")}{inp("Tel medecin","medecinTel")}{inp("Groupe sanguin","groupe")}{inp("Vaccins a jour","vaccins","Oui / Non")}{inp("PAI","pai","Oui / Non")}
           {ta("Allergies","allergies","Aucune connue")}{ta("Traitements","traitements","Aucun")}{ta("Particularites","particularites")}
         </div>
         <div className="card">

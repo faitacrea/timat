@@ -18,6 +18,7 @@
 //   node scripts/verif-boutons.mjs [asmat|parent]
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
 
@@ -81,7 +82,7 @@ await p.route("**/rest/v1/**", (r) => {
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 
 await p.goto(`http://127.0.0.1:4173/?acces=${CLE}`, { waitUntil: "domcontentloaded" });
-await p.waitForTimeout(4000);
+await ATTENDRE_PRET(p);
 for (let i = 0; i < 5; i++) {
   const passer = p.getByRole("button", { name: /^Passer$/ });
   if (await passer.isVisible().catch(() => false)) { await passer.click(); await p.waitForTimeout(400); } else break;

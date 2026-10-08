@@ -13,6 +13,7 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
@@ -20,7 +21,7 @@ import {
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
-  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois, joursAccueilParMois, appelApi
 } from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
@@ -148,6 +149,8 @@ export function VueAideSupport({role,user}){
 }
 
 export function RepasChanges({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [nch,setNch]=useState({h:"",type:"Change",n:""});
   const [re,setRe]=useState({});
@@ -242,7 +245,7 @@ export function RepasChanges({enfants,role,pEId}){
               })}
             </div>
           </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={saveRp}>Enregistrer les repas</button>
+          <button className="btn bT"style={{width:"100%"}}onClick={uneFois(saveRp)}>Enregistrer les repas</button>
         </div>}
       </div>
 
@@ -274,7 +277,7 @@ export function RepasChanges({enfants,role,pEId}){
             </div>
           </div>
           <input className="inp"style={{marginBottom:8}}placeholder="Note (optionnel)"value={nch.n}onChange={e=>setNch(p=>({...p,n:e.target.value}))}/>
-          <button className="btn bT"style={{width:"100%"}}onClick={addCh}>+ Ajouter</button>
+          <button className="btn bT"style={{width:"100%"}}onClick={uneFois(addCh)}>+ Ajouter</button>
         </div>}
       </div>
     </div>
@@ -425,6 +428,8 @@ export function Messagerie({enfants,role,pEId,user}){
 //
 
 export function Sante({enfants,role,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   // La selection vient de l'ecran englobant : deux selections independantes
   // pouvaient afficher deux enfants differents sur le meme ecran.
   const selId=pEId||enfants[0]?.id;
@@ -562,7 +567,7 @@ export function Sante({enfants,role,pEId,user}){
             </div>}
           {role==="parent"?<div style={{marginTop:14,display:"flex",gap:8}}>
             <input className="inp"placeholder="Ajouter une allergie..."style={{flex:1}}value={newAllergie}onChange={e=>setNewAllergie(e.target.value)}onKeyDown={e=>{if(e.key==="Enter")addAllergie();}}/>
-            <button className="btn bT"style={{padding:"0 16px"}}onClick={addAllergie}>+</button>
+            <button className="btn bT"style={{padding:"0 16px"}}onClick={uneFois(addAllergie)}>+</button>
           </div>:<div style={{marginTop:12,fontSize:11,color:"var(--l)"}}><IconeOuEmoji e="ℹ️"/> Renseignées et tenues à jour par le parent.</div>}
         </div>
       </div>
@@ -597,6 +602,8 @@ export function Sante({enfants,role,pEId,user}){
 //
 
 export function Portfolio({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(null);
   const [showForm,setShowForm]=useState(false);
   const [pfs,setPfs]=useState([]);
@@ -635,6 +642,13 @@ export function Portfolio({enfants,role,pEId}){
     };
     const{data,error}=await supabase.from("portfolio").insert(payload).select().single();
     if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    // Une insertion peut reussir SANS renvoyer la ligne : une politique RLS
+    // autorise souvent l'ecriture sans autoriser la lecture de ce qu'on vient
+    // d'ecrire. Supabase renvoie alors data=null ET error=null. On poussait ce
+    // null dans la liste, et l'ecran entier plantait au rendu suivant
+    // (« Cannot read properties of null (reading 'enfant_id') ») : l'activite
+    // semblait perdue alors qu'elle etait bien enregistree.
+    if(!data){setToast("Activité enregistrée. Actualisez pour la voir.");setShowForm(false);return;}
     setPfs(p=>[data,...p]);
     setNf({titre:"",desc:"",emoji:"🎨",competences:""});
     setShowForm(false);
@@ -668,7 +682,7 @@ export function Portfolio({enfants,role,pEId}){
       </div>
       <div style={{marginBottom:10}}><label className="lbl">Description</label><textarea className="ta"value={nf.desc}onChange={e=>setNf(p=>({...p,desc:e.target.value}))}placeholder="Ce que l'enfant a appris, réalisé..."style={{minHeight:60}}/></div>
       <div style={{marginBottom:10}}><label className="lbl">Compétences (séparées par virgule)</label><input className="inp"value={nf.competences}onChange={e=>setNf(p=>({...p,competences:e.target.value}))}placeholder="Motricité fine, Créativité..."/></div>
-      <button className="btn bT"style={{width:"100%"}}onClick={add}>Enregistrer l'activité</button>
+      <button className="btn bT"style={{width:"100%"}}onClick={uneFois(add)}>Enregistrer l'activité</button>
     </div>}
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
@@ -950,6 +964,8 @@ export function Recap({enfants,role,pEId}){
 // Le PARENT verse, l'ASSMAT recoit. Saisie + gestion par les deux (RLS table versements).
 
 export function Sommeil({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [sommeils,setSommeils]=useState({});
   const [nS,setNS]=useState({debut:"",fin:"",qualite:"bien"});
@@ -987,7 +1003,7 @@ export function Sommeil({enfants,role,pEId}){
     const[h1,m1]=nS.debut.split(":").map(Number);
     const[h2,m2]=nS.fin.split(":").map(Number);
     const d=(h2*60+m2)-(h1*60+m1);
-    if(d<=0){setToast("L'heure de fin doit etre apres le debut");return;}
+    if(d<=0){setToast("L'heure de fin doit être après le début");return;}
     const duree=Math.floor(d/60)+"h"+String(d%60).padStart(2,"0");
     const payload={
       enfant_id:enfant.id,
@@ -999,6 +1015,9 @@ export function Sommeil({enfants,role,pEId}){
     };
     const{data,error}=await supabase.from("sommeil").insert(payload).select().single();
     if(error){setToast("Erreur : "+(error.message||error.code||"inconnue"));return;}
+    // Insertion acceptee mais ligne non relue (RLS en ecriture sans lecture) :
+    // data et error valent tous deux null. Voir Portfolio.add().
+    if(!data){setToast("Sieste enregistrée. Actualisez pour la voir.");setNS({debut:"",fin:"",qualite:"bien"});return;}
     setSommeils(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
     setNS({debut:"",fin:"",qualite:"bien"});
     setToast("Sieste enregistrée ✓");
@@ -1053,7 +1072,7 @@ export function Sommeil({enfants,role,pEId}){
               })}
             </div>
           </div>
-          <button className="btn bS"style={{width:"100%"}}onClick={ajout}>Enregistrer</button>
+          <button className="btn bS"style={{width:"100%"}}onClick={uneFois(ajout)}>Enregistrer</button>
         </div>}
       </div>
       <div className="card">
@@ -1252,6 +1271,8 @@ export function TableauDeBord({enfants,role,pEId,setPage}){
 //
 
 export function CourbeCroissance({enfants,role,pEId}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [data,setData]=useState({});
   const [newM,setNewM]=useState({date:"",poids:"",taille:""});
@@ -1288,7 +1309,11 @@ export function CourbeCroissance({enfants,role,pEId}){
   const supprimer=async(m)=>{
     if(!window.confirm("Supprimer cette mesure ?"))return;
     if(estDemo){setData(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(x=>x!==m)}));return;}
-    if(m.id){await supabase.from("croissance").delete().eq("id",m.id);rechargerC(enfant.id);}
+    if(m.id){
+      const{error}=await supabase.from("croissance").delete().eq("id",m.id);
+      if(error){setToast("La mesure n'a pas pu être supprimée : "+error.message);return;}
+      rechargerC(enfant.id);
+    }
   };
 
   const last=mesures[mesures.length-1];
@@ -1353,10 +1378,10 @@ export function CourbeCroissance({enfants,role,pEId}){
           <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"var(--b)"}}>+ Nouvelle mesure</div>
           <div style={{marginBottom:8}}><label className="lbl">Date</label><input type="date"className="inp"value={newM.date}onChange={e=>setNewM(p=>({...p,date:e.target.value}))}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-            <div><label className="lbl">Poids (kg)</label><input className="inp"type="number"step=".1"placeholder="10.5"value={newM.poids}onChange={e=>setNewM(p=>({...p,poids:e.target.value}))}/></div>
-            <div><label className="lbl">Taille (cm)</label><input className="inp"type="number"placeholder="75"value={newM.taille}onChange={e=>setNewM(p=>({...p,taille:e.target.value}))}/></div>
+            <div><label className="lbl">Poids (kg)</label><ChampNombre className="inp" decimales={3} min="0" placeholder="10,5" value={newM.poids} onChange={v=>setNewM(p=>({...p,poids:v}))}/></div>
+            <div><label className="lbl">Taille (cm)</label><ChampNombre className="inp" decimales={1} min="0" placeholder="75" value={newM.taille} onChange={v=>setNewM(p=>({...p,taille:v}))}/></div>
           </div>
-          <button className="btn bT"style={{width:"100%"}}onClick={ajouter}>Enregistrer</button>
+          <button className="btn bT"style={{width:"100%"}}onClick={uneFois(ajouter)}>Enregistrer</button>
         </div>:<div className="card"style={{background:"var(--c)"}}>
           <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5}}><IconeOuEmoji e="📏"/> La courbe de croissance est <b>tenue à jour par le parent</b> (poids et taille à chaque pesée). Vous la consultez ici en lecture seule.</div>
         </div>}
@@ -1380,6 +1405,10 @@ export function CourbeCroissance({enfants,role,pEId}){
 //
 
 export function ActivitesSuggerees({enfants,role,pEId}){
+  // Cet ecran n'avait aucun moyen de dire qu'une operation avait echoue : ni
+  // bandeau, ni message. Cocher une activite ou supprimer une activite perso
+  // pouvait ne rien enregistrer, en silence.
+  const [toast,setToast]=useState("");
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [catFilt,setCatFilt]=useState("tous");
   const [ageFilt,setAgeFilt]=useState("tous");
@@ -1414,8 +1443,14 @@ export function ActivitesSuggerees({enfants,role,pEId}){
   const toggleFait=async(titre)=>{
     if(role!=="asmat"||!enfant?.id||!asmatId)return;
     const ex=faitDe(titre);
-    if(ex){ await supabase.from("activites_faites").delete().eq("id",ex.id); }
-    else{ await supabase.from("activites_faites").insert({asmat_id:asmatId,enfant_id:enfant.id,activite_titre:titre,date:jour}); }
+    // La case se cochait meme quand rien ne s'enregistrait : le retour n'etait
+    // pas lu, et « chargerFaites() » rechargeait ensuite une liste inchangee —
+    // l'activite reapparaissait non faite au rechargement suivant, sans que
+    // personne sache pourquoi.
+    const{error}=ex
+      ? await supabase.from("activites_faites").delete().eq("id",ex.id)
+      : await supabase.from("activites_faites").insert({asmat_id:asmatId,enfant_id:enfant.id,activite_titre:titre,date:jour});
+    if(error){setToast("Impossible d'enregistrer : "+error.message);return;}
     chargerFaites();
   };
 
@@ -1439,9 +1474,14 @@ export function ActivitesSuggerees({enfants,role,pEId}){
     setSaving(false);
     if(!error){setNa(blankAct);setShowForm(false);chargerPerso();}
   };
-  const supprimer=async(id)=>{ await supabase.from("activites_perso").delete().eq("id",id); chargerPerso(); };
+  const supprimer=async(id)=>{
+    const{error}=await supabase.from("activites_perso").delete().eq("id",id);
+    if(error){setToast("L'activité n'a pas pu être supprimée : "+error.message);return;}
+    chargerPerso();
+  };
 
   return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="💡" title="Activités suggérées" sub="Bibliothèque d'éveil 0-6 ans · filtrez par âge et par domaine"/>
     {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
       {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
@@ -2063,6 +2103,8 @@ Je vous remercie par avance.`,
 ];
 
 export function CommunicationPMI({role,user,hasRealData}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const demo=!hasRealData;
   const [msgs,setMsgs]=useState([]);
   const [chargement,setChargement]=useState(!demo);
@@ -2112,6 +2154,8 @@ export function CommunicationPMI({role,user,hasRealData}){
     };
     const {data,error}=await supabase.from("messages_pmi").insert(ligne).select().single();
     if(error){setToast("L'enregistrement a échoué.");return;}
+    // Insertion acceptee mais ligne non relue : voir Portfolio.add().
+    if(!data){setToast("Échange consigné. Actualisez pour le voir.");setForm(vide());setOuvert(false);return;}
     setMsgs(m=>[data,...m]); setForm(vide()); setOuvert(false);
     setToast("Échange consigné.");
     logAction&&logAction("pmi_echange_consigne");
@@ -2151,6 +2195,8 @@ export function CommunicationPMI({role,user,hasRealData}){
       date_echange:isoJour(new Date()), canal:"E-mail", lu:true,
     }).select().single();
     if(error){setToast("L'enregistrement a échoué.");return;}
+    // Insertion acceptee mais ligne non relue : voir Portfolio.add().
+    if(!data){setToast("Courrier consigné. Actualisez pour le voir.");setModele(null);return;}
     setMsgs(m=>[data,...m]); setModele(null);
     setToast("Courrier consigné dans votre journal.");
     logAction&&logAction("pmi_modele_consigne");
@@ -2192,7 +2238,7 @@ export function CommunicationPMI({role,user,hasRealData}){
                 <input value={pmi[k]||""} onChange={e=>setPmi(p=>({...p,[k]:e.target.value}))}
                   style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)"}}/>
               </div>)}
-            <button className="btn bT" onClick={enregistrerContact}>Enregistrer</button>
+            <button className="btn bT" onClick={uneFois(enregistrerContact)}>Enregistrer</button>
           </div>
         : (pmi.nom||pmi.email||pmi.tel)
           ? <div style={{fontSize:13,color:"var(--b)",lineHeight:1.8,marginTop:8}}>
@@ -2251,7 +2297,7 @@ export function CommunicationPMI({role,user,hasRealData}){
               <button className="btn bT" style={{flex:"1 1 160px"}} onClick={envoyerModele}>Ouvrir dans ma messagerie</button>
               <button className="btn s" style={{flex:"1 1 110px",background:"var(--bg)",color:"var(--b)"}} onClick={copierModele}>Copier le texte</button>
             </div>
-            {!demo&&<button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}} onClick={consignerModele}>
+            {!demo&&<button className="btn s" style={{background:"var(--bg)",color:"var(--b)"}} onClick={uneFois(consignerModele)}>
               Consigner ce courrier dans mon journal
             </button>}
           </div>}
@@ -2286,7 +2332,7 @@ export function CommunicationPMI({role,user,hasRealData}){
                 style={{border:"1px solid var(--br)",borderRadius:9,padding:"10px 11px",fontSize:15,fontFamily:"inherit",background:"var(--bg)",color:"var(--b)",minHeight:100,resize:"vertical"}}/>
             </div>
             <div style={{display:"flex",gap:8}}>
-              <button className="btn bT" style={{flex:1}} onClick={consigner}>Enregistrer</button>
+              <button className="btn bT" style={{flex:1}} onClick={uneFois(consigner)}>Enregistrer</button>
               <button className="btn" style={{background:"var(--bg)",color:"var(--b)"}} onClick={()=>{setOuvert(false);setForm(vide());}}>Annuler</button>
             </div>
           </div>}
@@ -2359,7 +2405,7 @@ export function PolitiqueConfidentialite(){
       ["Prospects","3 ans après le dernier contact","Norme CNIL prospection"],
       ["Messages de support","2 ans","Suivi de la demande"],
       ["Journaux de connexion","12 mois","Sécurité"],
-      ["Consentements","5 ans","Preuve de conformité CNIL"],
+      ["Consentements","5 ans, ou effacés avec le compte s'il est supprimé avant","Preuve de conformité CNIL"],
       ["Données de l'enfant et registres professionnels","Fixée par l'assistante maternelle","TiMat n'en est que l'hébergeur"],
       ["Fin de l'abonnement","Restitution ou suppression, au choix","RGPD art. 28.3.g"],
     ],
@@ -2766,8 +2812,16 @@ export function KitCMG({enfants,role,pEId,user}){
   // qui ne correspond a rien : il AUGMENTE le brut au lieu d'en retirer les
   // cotisations. On passe par le calcul du bulletin.
   const salaireBrutMois=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*100)/100;
-  const salaireNet=nbf(netDepuisBrut(salaireBrutMois,regimeLocalDe(user)),2);
-  const entretienMensuel=Math.round((contrat.entretien||3.92)*heuresMois/contrat.heuresHebdo*5)/10;
+  // Le regime local d'Alsace-Moselle depend du code postal de la SALARIEE.
+  // regimeLocalDe(user) regardait le PARENT qui consulte ce kit, pour qui la
+  // reponse est toujours « non » : une assistante maternelle d'Alsace-Moselle
+  // voyait donc un net surestime de 1,5 %. Son profil est charge sur cet ecran,
+  // asmatProfil : c'est lui qui porte la bonne reponse.
+  const salaireNet=nbf(netDepuisBrut(salaireBrutMois,regimeLocalDe(user,asmatProfil)),2);
+  // Le « /10 » final de la formule precedente divisait le resultat par dix : le
+  // kit annoncait 8,50 EUR d'indemnite d'entretien par mois la ou 84,77 EUR
+  // etaient dus — et le parent recopiait ce chiffre sur monenfant.fr.
+  const entretienMensuel=Math.round(entretienDuContrat(contrat)*joursAccueilParMois(contrat)*100)/100;
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -2828,11 +2882,11 @@ export function KitCMG({enfants,role,pEId,user}){
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
           <InfoRow label="Taux horaire brut" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
-          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user)),2)+"€/h"} copyKey="tauxNet"/>
+          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user,asmatProfil)),2)+"€/h"} copyKey="tauxNet"/>
           <InfoRow label="Salaire brut mensuel (estimé)" value={nbf(salaireBrutMois,2)+"€"} copyKey="salaireBrut"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
-          <InfoRow label="Indemnité d'entretien/jour" value={nbf((contrat.entretien||3.92),2)+"€"} copyKey="entretien"/>
-          <InfoRow label="Indemnité entretien/mois" value={entretienMensuel+"€"} copyKey="entretienMois"/>
+          <InfoRow label="Indemnité d'entretien/jour" value={nbf(entretienDuContrat(contrat),2)+"€"} copyKey="entretien"/>
+          <InfoRow label="Indemnité entretien/mois" value={nbf(entretienMensuel,2)+"€"} copyKey="entretienMois"/>
           <div style={{marginTop:12,padding:"10px 12px",background:"var(--Gp)",borderRadius:10,fontSize:12,color:"var(--G)",lineHeight:1.6}}>
             <IconeOuEmoji e="💡"/> Le CMG prend en charge une partie du salaire selon vos revenus. Le calcul est automatique sur monenfant.fr après votre déclaration.
           </div>
@@ -2945,7 +2999,7 @@ export function RapportAnnuel({enfants,role,pEId,user}){
   // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
   const heuresMois=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
-  const entretienJour=contrat.entretien||3.92;
+  const entretienJour=entretienDuContrat(contrat);
   const heuresAnnuelles=realStats?.heures||Math.round(((contrat.heuresHebdo)||0)*semainesDuContrat(contrat));
   // Quatrieme facon de compter les jours d'accueil dans l'application, apres
   // celles du recapitulatif Pajemploi et du recapitulatif des versements. On
@@ -2990,11 +3044,11 @@ const jsPDF=await chargerJsPDF();
       y+=4;
       // Section 1 : Heures
       doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
-      doc.text("Heures travaillees "+annee,MX,y);y+=8;
+      doc.text("Heures travaillées "+annee,MX,y);y+=8;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       const tbl1=[
-        ["Heures reelles pointees",heuresAnnuelles+" h"],
-        ["Nb de jours pointes",String(realStats?.nbPointages||"-")],
+        ["Heures réelles pointées",heuresAnnuelles+" h"],
+        ["Nb de jours pointés",String(realStats?.nbPointages||"-")],
         ["Nb d absences",String(realStats?.nbAbsences||"-")],
       ];
       // Header tableau
@@ -3013,10 +3067,10 @@ const jsPDF=await chargerJsPDF();
       y+=8;
       // Section 2 : Financier
       doc.setFontSize(14);doc.setFont("helvetica","bold");doc.setTextColor(...orange);
-      doc.text("Recapitulatif financier",MX,y);y+=8;
+      doc.text("Récapitulatif financier",MX,y);y+=8;
       doc.setFontSize(10);doc.setFont("helvetica","normal");doc.setTextColor(...noir);
       const tbl2=[
-        ["Salaire net annuel"+(realStats?.paiements?" (donnees reelles)":" (estime)"),salaireAnnuel+" euros"],
+        ["Salaire net annuel"+(realStats?.paiements?" (données réelles)":" (estime)"),salaireAnnuel+" euros"],
         ["Indemnites d entretien (estimees)",entretienAnnuel+" euros"],
         ["Total verse",totalAnnuel+" euros"],
         ["Crédit d'impôt estimé du parent (" + nbf(CI_TAUX*100,0) + " %)",nbf(creditImpot,0)+" € — enfant de moins de 6 ans, dépenses plafonnées à 3 500 €"],
@@ -3046,17 +3100,17 @@ const jsPDF=await chargerJsPDF();
         doc.text("Le "+new Date().toLocaleDateString("fr-FR")+" - "+(user?.prenom||"")+" "+(user?.nom||""),MX+3,y+28);
       }else{
         doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
-        doc.text("Aucune signature enregistree. Voir Parametres.",MX+3,y+18);
+        doc.text("Aucune signature enregistrée. Voir Paramètres.",MX+3,y+18);
       }
       y+=36;
       // Footer
       doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
-      doc.text("Genere par TiMat - "+new Date().toLocaleDateString("fr-FR"),MX,y);
+      doc.text("Généré par TiMat - "+new Date().toLocaleDateString("fr-FR"),MX,y);
       // Save
       doc.save("rapport-annuel-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
-      setToast("Rapport telecharge ✓");
+      setToast("Rapport téléchargé ✓");
     }catch(e){
-      setToast("Erreur generation PDF : "+e.message);
+      setToast("Erreur génération PDF : "+e.message);
     }
     setGen(false);
   };
@@ -3091,13 +3145,13 @@ const jsPDF=await chargerJsPDF();
         +'<h1>Rapport annuel '+annee+'</h1>'
         +'<p><strong>Assistante maternelle:</strong> '+H((user?.prenom||"")+" "+(user?.nom||""))+'</p>'
         +'<p><strong>Enfant:</strong> '+(enfant?.prenom||'')+' '+(enfant?.nom||'')+'</p>'
-        +'<h2>Heures travaillees '+annee+'</h2>'
+        +'<h2>Heures travaillées '+annee+'</h2>'
         +'<table><tr><th>Indicateur</th><th>Valeur</th></tr>'
-        +'<tr><td>Heures reelles pointees</td><td>'+heuresAnnuelles+' h</td></tr>'
-        +'<tr><td>Nb de jours pointes</td><td>'+(realStats?.nbPointages||"-")+'</td></tr>'
+        +'<tr><td>Heures réelles pointées</td><td>'+heuresAnnuelles+' h</td></tr>'
+        +'<tr><td>Nb de jours pointés</td><td>'+(realStats?.nbPointages||"-")+'</td></tr>'
         +'<tr><td>Nb d absences</td><td>'+(realStats?.nbAbsences||"-")+'</td></tr>'
         +'</table>'
-        +'<h2>Recapitulatif financier</h2>'
+        +'<h2>Récapitulatif financier</h2>'
         +'<table><tr><th>Poste</th><th>Montant</th></tr>'
         +'<tr><td>Salaire net annuel'+(realStats?.paiements?" (données réelles)":" (estimé)")+'</td><td>'+nbf(salaireAnnuel,0)+' €</td></tr>'
         +"<tr><td>Indemnites d'entretien (estimees)</td><td>"+entretienAnnuel+"€</td></tr>"
@@ -3107,11 +3161,11 @@ const jsPDF=await chargerJsPDF();
         +(userSig
           ?'<div style="margin-top:24px;padding:14px;border:1px solid #ddd;border-radius:6px"><div style="font-size:11px;font-weight:700;margin-bottom:8px">Signature de l\'assistante maternelle</div><img src="'+userSig+'" style="max-height:60px;max-width:250px"/><div style="font-size:11px;color:#888;margin-top:4px">Le '+new Date().toLocaleDateString('fr-FR')+' - '+(user?.prenom||'')+' '+(user?.nom||'')+'</div></div>'
           :'')
-        +'<p style="font-size:12px;color:#888;margin-top:20px">Genere par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
+        +'<p style="font-size:12px;color:#888;margin-top:20px">Généré par TiMat - '+new Date().toLocaleDateString('fr-FR')+'</p>'
         +'</body></html>';
       w.document.write(htmlRapport);
       w.document.close();
-      setToast("Aperçu ouvert. Pour PDF, utilisez le bouton Telecharger PDF dans l'app.");
+      setToast("Aperçu ouvert. Pour PDF, utilisez le bouton Télécharger PDF dans l'app.");
     },1000);
   };
 
@@ -3240,7 +3294,7 @@ export function SimulateurCout({enfants,pEId}){
   const [taux,setTaux]=useState(minimumHoraireAu(new Date()));
   const [heures,setHeures]=useState(40);
   const [semaines,setSemaines]=useState(47);
-  const [entretien,setEntretien]=useState(3.80);
+  const [entretien,setEntretien]=useState(indemniteEntretienMin(9));
   const [revenus,setRevenus]=useState(45000);
   const [enfants2,setEnfants2]=useState(1);
   const [aeeh,setAeeh]=useState(0); // nb d'enfants beneficiaires AEEH (decale le taux d'effort d'une tranche)
@@ -3329,7 +3383,7 @@ export function SimulateurCout({enfants,pEId}){
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>👨👩👧 Votre situation</div>
           <div style={{marginBottom:14}}>
             <label className="lbl">Revenus nets annuels du foyer (€)</label>
-            <input type="number"className="inp"value={revenus}onChange={e=>setRevenus(parseInt(e.target.value)||0)}/>
+            <ChampNombre className="inp" min="0" decimales={0} defaut={0} value={revenus} onChange={v=>setRevenus(v)}/>
           </div>
           <div>
             <label className="lbl">Nombre d'enfants à charge</label>
@@ -3390,7 +3444,7 @@ export function BilansExports({enfants,role,pEId,user,pointagesDB}){
   return <div className="fi">
     <PageHeader icon="📊" title="Rapports & Exports" sub="Rapports, recapitulatifs et exports de vos donnees"/> {/* RENAME NAV P9 */}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Recap mensuel PDF",ic:"📄"},{id:"export",l:"Export donnees",ic:"📦"}].map(s=>
+      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Récap mensuel PDF",ic:"📄"},{id:"export",l:"Export données",ic:"📦"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -3476,19 +3530,16 @@ export function Support({role,user}){
     if(!msg.trim()){setErreur("Écrivez votre message avant d'envoyer.");return;}
     setSending(true);setErreur("");
     try{
-      const res=await fetch('/api/support',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          email:user?.email||'inconnu',
-          prenom:user?.prenom||'',
-          nom:user?.nom||'',
-          role:role||'asmat',
-          sujet:sujet,
-          message:msg,
-          prioritaire:isPro,
-          timestamp:new Date().toISOString(),
-        })
+      // L'adresse et l'horodatage ne sont plus envoyes : le serveur prend ceux
+      // du compte et son horloge. Cette porte ecrit avec la cle de service, et
+      // s'ouvrait a n'importe qui, au nom de l'adresse qu'on voulait.
+      const res=await appelApi('/api/support',{
+        prenom:user?.prenom||'',
+        nom:user?.nom||'',
+        role:role||'asmat',
+        sujet:sujet,
+        message:msg,
+        prioritaire:isPro,
       });
       if(res.ok){
         setEnvoye(true);
@@ -3709,7 +3760,7 @@ export function AttestationFiscale({enfants,role,pEId,user}){
   // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
   const hMens=heuresMensualisees(contrat);
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
-  const entretienJour=contrat.entretien||3.92;
+  const entretienJour=entretienDuContrat(contrat);
   const hasReal=realStats?.paiements>0;
   // Le recapitulatif comptait 12 mois par principe. Un contrat qui commence en
   // septembre n'en compte que quatre sur l'annee : l'estimation etait alors
@@ -3871,9 +3922,9 @@ const jsPDF=await chargerJsPDF();
       doc.setFontSize(8);doc.setFont("helvetica","italic");doc.setTextColor(...gris);
       doc.text("Généré par TiMat — "+new Date().toLocaleDateString("fr-FR"),PW/2,280,{align:"center"});
       doc.save("recapitulatif-versements-"+annee+"-"+(enfant?.prenom||"enfant")+".pdf");
-      setToast("Recapitulatif telecharge ✓");
+      setToast("Récapitulatif téléchargé ✓");
     }catch(e){
-      setToast("Erreur generation PDF : "+e.message);
+      setToast("Erreur génération PDF : "+e.message);
     }
     setGen(false);
   };
@@ -3918,7 +3969,7 @@ const jsPDF=await chargerJsPDF();
         '</head><body>',
         '<div class="actions noprint">',
           '<button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>',
-          '<button class="btn-pdf" onclick="dlPdf()">📥 Telecharger PDF</button>',
+          '<button class="btn-pdf" onclick="dlPdf()">📥 Télécharger PDF</button>',
         '</div>',
         '<div id="doc">',
         '<h1>📋 RÉCAPITULATIF DES VERSEMENTS<br/><span style="font-size:12px;font-weight:400;color:#666">Année '+annee+' — Sommes versées à l\'assistante maternelle (justificatif indicatif)</span></h1>',
@@ -3964,7 +4015,7 @@ const jsPDF=await chargerJsPDF();
         '<p style="margin-top:16px;font-size:11px;text-align:center;font-weight:600;color:#2E4859">Je soussigné(e), '+(user?.prenom||'[Prénom]')+' '+(user?.nom||'[Nom]')+', assistante maternelle agréée, certifie exacts les renseignements ci-dessus.</p>',
         '<div class="sig">',
         '<div class="sig-box">Fait à ____________<br/>Le '+new Date().toLocaleDateString('fr-FR')+'<br/><br/>Signature :'
-          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:11px;font-style:italic">(Aucune signature enregistree dans Parametres)</span>')
+          +(userSig?'<br/><img src="'+userSig+'" style="max-height:50px;max-width:100%;margin-top:4px"/>':'<br/><span style="color:#999;font-size:11px;font-style:italic">(Aucune signature enregistrée dans Paramètres)</span>')
           +'</div>',
         '<div class="sig-box">Remis au parent le :<br/>____________<br/><br/>Signature parent :</div></div>',
         '<p style="font-size:11px;color:#999;margin-top:20px;text-align:center">Généré par TiMat — timat.app — '+new Date().toLocaleDateString('fr-FR')+'</p>',
@@ -4033,7 +4084,7 @@ const jsPDF=await chargerJsPDF();
           <div>Début : <strong>{contrat.debut}</strong></div>
           <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
           <div>Taux horaire : <strong>{contrat.tauxHoraire||minimumHoraireAu(new Date())} €</strong></div>
-          <div>Entretien : <strong>{contrat.entretien||3.92} €/jour</strong></div>
+          <div>Entretien : <strong>{nbf(entretienDuContrat(contrat),2)} €/jour</strong></div>
         </div>:<div style={{fontSize:12,color:"var(--l)"}}>Aucun contrat trouvé pour cet enfant.</div>}
       </div>
     </div>
@@ -4073,18 +4124,16 @@ export function InviterParent({enfants,user,demoMode=false}){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr("Email invalide.");return;}
     setSending(true);setErr("");
     try{
-      const res=await fetch('/api/invite-parent',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          emailParent:email.trim(),
-          prenomEnfant:enfant.prenom,
-          prenomAsmat:user?.prenom||"Votre assistante maternelle",
-          asmatId:user?.id,
-          enfantId:enfant.id,
-        })
+      // « asmatId » n'est plus envoye : le serveur le prend dans le jeton.
+      // Cette porte ecrit avec la cle de service, et acceptait d'attribuer
+      // l'invitation a l'assistante maternelle que l'appelant designait.
+      const{data,ok:okApi}=await appelApi('/api/invite-parent',{
+        emailParent:email.trim(),
+        prenomEnfant:enfant.prenom,
+        prenomAsmat:user?.prenom||"Votre assistante maternelle",
+        enfantId:enfant.id,
       });
-      const data=await res.json();
+      const res={ok:okApi};
       if(data.success||res.ok){
         logAction('invitation_parent', {table_name:'invitations', record_id:enfant.id}); // AUDIT LOG P8
         setSent(true);

@@ -17,12 +17,13 @@
 // ============================================================
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
+import { ChampNombre } from "./champ-nombre.jsx";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EMAIL_TEMPLATES, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -222,12 +223,17 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
 //
 
 export function Contrats({enfants,role,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   const [selId,setSelId]=useState(enfants[0]?.id);
   // FIX: state hydraté depuis les props (qui viennent de Supabase) au lieu de D.enfants
   const [signes,setSignes]=useState({});
   const [datesSignature,setDatesSignature]=useState({});
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
+  // La signature d'un contrat met plusieurs secondes : elle regenere le PDF et
+  // envoie les courriels. Sans retour visible, on appuie une seconde fois.
+  const [signEnCours,setSignEnCours]=useState(false);
   const [mods,setMods]=useState({});
   const [showModale,setShowModale]=useState(false);
   const [showAjout,setShowAjout]=useState(false);
@@ -397,8 +403,7 @@ export function Contrats({enfants,role,pEId,user}){
             sendNotificationEmail({
               type:"signature_asmat_signed",
               to:p.email,
-              subject:EMAIL_TEMPLATES.signature_asmat_signed.subject,
-              template:"signature_asmat_signed",
+template:"signature_asmat_signed",
               vars:{
                 parent_prenom:p.prenom||"",
                 asmat_prenom:user?.prenom||"Votre assistante maternelle",
@@ -428,25 +433,32 @@ export function Contrats({enfants,role,pEId,user}){
       setToast("Erreur : "+(error.message||error.code||"inconnue"));
       return;
     }
+    // Insertion acceptee mais ligne non relue (RLS en ecriture sans lecture) :
+    // data et error valent tous deux null, et ce null faisait planter la liste
+    // des demandes de modification au rendu suivant.
+    if(!data){setToast("Demande envoyée. Actualisez pour la voir.");setShowModale(false);return;}
     setMods(p=>({...p,[enfant.id]:[data,...(p[enfant.id]||[])]}));
     setModDet({type:"Horaire",detail:""});
     setShowModale(false);
-    setToast("Demande envoyee");
+    setToast("Demande envoyée");
   };
   const repondre=async(modId,accepte)=>{
     const{data,error}=await supabase.from("modifications_contrat")
       .update({accepte,date_decision:new Date().toISOString()})
       .eq("id",modId).select().single();
     if(error){setToast("Erreur : "+error.message);return;}
+    // Mise a jour acceptee mais ligne non relue : data et error valent tous
+    // deux null, et remplacer la demande par ce null faisait planter la liste.
+    if(!data){setToast(accepte?"Demande acceptée. Actualisez pour la voir.":"Demande refusée. Actualisez pour la voir.");return;}
     setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).map(m=>m.id===modId?data:m)}));
-    setToast(accepte?"Demande acceptee":"Demande refusee");
+    setToast(accepte?"Demande acceptée":"Demande refusée");
   };
   const supprimerMod=async(modId)=>{
     if(!window.confirm("Supprimer cette demande ?"))return;
     const{error}=await supabase.from("modifications_contrat").delete().eq("id",modId);
     if(error){setToast("Erreur : "+error.message);return;}
     setMods(p=>({...p,[enfant.id]:(p[enfant.id]||[]).filter(m=>m.id!==modId)}));
-    setToast("Demande supprimee");
+    setToast("Demande supprimée");
   };
 
   return <div className="fi">
@@ -554,8 +566,12 @@ export function Contrats({enfants,role,pEId,user}){
           </div>}
           <div style={{display:"flex",gap:8,marginTop:10}}>
             <button className="btn bG"onClick={clearSig}>Effacer</button>
-            <button className="btn bP"style={{flex:1,justifyContent:"center"}}onClick={signer}disabled={!hasSig}>
-              <IconeOuEmoji e="✍️"/> Signer le contrat
+            <button className="btn bP"style={{flex:1,justifyContent:"center"}}
+              onClick={uneFois(async()=>{setSignEnCours(true);try{await signer();}finally{setSignEnCours(false);}})}
+              disabled={!hasSig||signEnCours}>
+              {signEnCours
+                ? <>Signature en cours, ne quittez pas…</>
+                : <><IconeOuEmoji e="✍️"/> Signer le contrat</>}
             </button>
           </div>
           <div style={{fontSize:11,color:"var(--l)",marginTop:8}}>
@@ -645,7 +661,7 @@ export function Contrats({enfants,role,pEId,user}){
           <textarea className="ta"value={modDet.detail}onChange={e=>setModDet(p=>({...p,detail:e.target.value}))}placeholder="Décrivez la modification..."style={{minHeight:90}}/></div>
         <div style={{display:"flex",gap:8}}>
           <button className="btn bG"style={{flex:1}}onClick={()=>setShowModale(false)}>Annuler</button>
-          <button className="btn bT"style={{flex:1}}onClick={addMod}>Envoyer</button>
+          <button className="btn bT"style={{flex:1}}onClick={uneFois(addMod)}>Envoyer</button>
         </div>
       </div>
     </div>}
@@ -780,7 +796,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   // prevus au contrat.
   const joursTravailles=useRealHours?heuresMoisReel.jours
     :Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN);
-  const entretien=(contrat.entretien||3.92)*joursTravailles;
+  const entretien=entretienDuContrat(contrat)*joursTravailles;
   // --- Retenue pour absence de l'assistante maternelle (CCN 3239, art. 111) ---
   // Elle ne s'applique QUE sur un salaire mensualise. Des que le bulletin est
   // bati sur les pointages reels, la journee non travaillee ne figure deja plus
@@ -930,9 +946,9 @@ export function BulletinSalaire({enfants,role,pEId,user}){
         y+=6;
       };
       section("RÉMUNÉRATION");
-      ligne("Salaire de base (heures normales)",heuresNorm+" h",nbf(tauxH,4)+" €/h",nbf(salBase,2)+" €");
+      ligne("Salaire de base (heures normales)",nbf(heuresNorm,2)+" h",nbf(tauxH,4)+" €/h",nbf(salBase,2)+" €");
       if(hSupp>0)ligne("Heures supplémentaires (+ 25 %)",hSupp+" h",nbf((tauxH*1.25),4)+" €/h",nbf(salSupp,2)+" €");
-      ligne("Indemnité d'entretien",joursTravailles+" jours",nbf((contrat.entretien||3.92),2)+" €/j",nbf(entretien,2)+" €");
+      ligne("Indemnité d'entretien",joursTravailles+" jours",nbf(entretienDuContrat(contrat),2)+" €/j",nbf(entretien,2)+" €");
       if(repasMois>0)ligne("Indemnité de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" €/j",nbf(repasMois,2)+" €");
       if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"année complète":"année incomplète","- "+nbf(retenue,2)+" €");
       placer(9);doc.setFillColor(251,240,232);doc.rect(MX,y,PW-2*MX,7,"F");
@@ -1101,8 +1117,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
             sendNotificationEmail({
               type:"bulletin_sent",
               to:p.email,
-              subject:EMAIL_TEMPLATES.bulletin_sent.subject,
-              template:"bulletin_sent",
+template:"bulletin_sent",
               vars:{parent_prenom:p.prenom||"",mois:moisSel},
             });
           }
@@ -1196,7 +1211,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       </label>
       <label style={{display:"flex",alignItems:"center",gap:7,color:"var(--m)"}}>
         Indemnité repas (€/jour)
-        <input type="number" step="0.01" min="0" value={repasJour} onChange={e=>setRepasJour(e.target.value)} style={{width:74,padding:"4px 7px",borderRadius:6,border:"1px solid var(--br)",fontSize:12}}/>
+        <ChampNombre min="0" decimales={2} defaut={0} value={repasJour} onChange={v=>setRepasJour(v)} className="" style={{width:74,padding:"4px 7px",borderRadius:6,border:"1px solid var(--br)",fontSize:12}}/>
       </label>
       {!isDemoBull&&contrat?.id&&<button className="btn bG s" style={{padding:"6px 12px"}} onClick={async()=>{
         const{error}=await supabase.from("contrats").update({aeeh:!!aeeh,repas:Number(repasJour)||0}).eq("id",contrat.id);
@@ -1256,7 +1271,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",nbf(salBase,2)+"€"],
           ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+nbf((tauxH*1.25),2)+"€",nbf(salSupp,2)+"€"]]:[]),
-          ["Indemnité d'entretien",joursTravailles+" j × "+nb2(contrat.entretien||3.92)+"€",nbf(entretien,2)+"€"],
+          ["Indemnité d'entretien",joursTravailles+" j × "+nb2(entretienDuContrat(contrat))+"€",nbf(entretien,2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+nbf((Number(repasJour)||0),2)+"€",nbf(repasMois,2)+"€"]]:[]),
           ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+nbf(retenue,2)+"€"]]:[]),
         ].map(([l,d,v])=><div key={l}style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px dotted var(--br)"}}>
@@ -1362,37 +1377,37 @@ export function BulletinSalaire({enfants,role,pEId,user}){
           // remplir sinon.
           "N° Pajemploi : "+H(enfant?.parent?.numero_pajemploi||"________________")+"<br/>",
           "Emploi : Assistante maternelle agréée<br/>Code APE : 8891A</div>",
-          "<div><strong>SALARIE(E)</strong><br/>"+(user?.prenom||"Prénom")+" "+(user?.nom||"Nom")+"<br/>",
-          "Entree le : "+(contrat.debut||"-")+" - CDI</div>",
+          "<div><strong>SALARIÉ(E)</strong><br/>"+(user?.prenom||"Prénom")+" "+(user?.nom||"Nom")+"<br/>",
+          "Entré le : "+(contrat.debut?fmtDatePdf(contrat.debut):"-")+" — CDI</div>",
           "</div>",
-          "<div class=\"st\">REMUNERATION</div>",
+          "<div class=\"st\">RÉMUNÉRATION</div>",
           "<table><tr><th>Libellé</th><th>Heures / Jours</th><th>Taux</th><th class=\"right\">Montant brut</th></tr>",
-          "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+heuresNorm+" h</td><td class=\"right\">"+nbf(tauxH,4)+" euros/h</td><td class=\"right\">"+nbf(salBase,2)+" euros</td></tr>",
+          "<tr><td>Salaire de base (heures normales)</td><td class=\"right\">"+nbf(heuresNorm,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(salBase,2)+" €</td></tr>",
           hSuppRow,
-          "<tr><td>Indemnité d'entretien</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((contrat.entretien||3.92),2)+" €/j</td><td class=\"right\">"+nbf(entretien,2)+" euros</td></tr>",
-          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"annee incomplete")+"</td><td class=\"right\">- "+nbf(retenue,2)+" euros</td></tr>":"")+
-          (repasMois>0?"<tr><td>Indemnite de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((Number(repasJour)||0),2)+" euros/j</td><td class=\"right\">"+nbf(repasMois,2)+" euros</td></tr>":""),
-          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" euros</td></tr>",
+          "<tr><td>Indemnité d'entretien</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf(entretienDuContrat(contrat),2)+" €/j</td><td class=\"right\">"+nbf(entretien,2)+" €</td></tr>",
+          (retenue>0?"<tr><td>Retenue pour absence (art. 111 CCN)</td><td class=\"right\">"+(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours")+"</td><td class=\"right\">"+(anneeComplete?"annee complete":"année incomplète")+"</td><td class=\"right\">- "+nbf(retenue,2)+" €</td></tr>":"")+
+          (repasMois>0?"<tr><td>Indemnité de repas</td><td class=\"right\">"+joursTravailles+" jours</td><td class=\"right\">"+nbf((Number(repasJour)||0),2)+" €/j</td><td class=\"right\">"+nbf(repasMois,2)+" €</td></tr>":""),
+          "<tr class=\"brut\"><td colspan=\"3\">SALAIRE BRUT MENSUEL</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" €</td></tr>",
           "</table>",
           "<div class=\"st\">COTISATIONS SOCIALES</div>",
-          "<table><tr><th>Cotisation</th><th class=\"right\">Part salarie</th><th class=\"right\">Part employeur</th></tr>",
+          "<table><tr><th>Cotisation</th><th class=\"right\">Part salarié</th><th class=\"right\">Part employeur</th></tr>",
           cotisDetails,
-          "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+nbf(totalCotSal,2)+" euros</td><td class=\"right\">"+nbf(totalCotPat,2)+" euros</td></tr>",
+          "<tr style=\"font-weight:700;background:#f5f5f5\"><td>TOTAL</td><td class=\"right\" style=\"color:#c44a6a\">-"+nbf(totalCotSal,2)+" €</td><td class=\"right\">"+nbf(totalCotPat,2)+" €</td></tr>",
           "</table>",
-          "<div style=\"font-size:11px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculees sur 98,25 % du brut.</div>",
-          "<div class=\"st\">RECAPITULATIF NET</div>",
+          "<div style=\"font-size:11px;color:#888;font-style:italic;margin:4px 0 8px\">« - » = pas de cotisation sur cette part. CSG/CRDS calculées sur 98,25 % du brut.</div>",
+          "<div class=\"st\">RÉCAPITULATIF NET</div>",
           "<table>",
-          "<tr><td>Salaire brut</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" euros</td></tr>",
-          "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+nbf(totalCotSal,2)+" euros</td></tr>",
-          "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+nbf(netPaye,2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+nbf(netImposable,2)+" euros</td></tr>",
-          "<tr><td>Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")</td><td class=\"right\">- "+nbf(abattementMois,2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Net imposable apres abattement</td><td class=\"right\">"+nbf(netImpApresAbattement,2)+" euros</td></tr>",
-          "<tr class=\"ni\"><td>Montant net social (reference RSA / prime d activite, hors indemnites)</td><td class=\"right\">"+nbf(netSocial,2)+" euros</td></tr>",
-          "<tr><td>Conges payes acquis ce mois</td><td class=\"right\">"+cpAcquis+" jours ouvrables</td></tr>",
-          "<tr><td>Indemnite entretien (non imposable)</td><td class=\"right\">"+nbf(entretien,2)+" euros</td></tr>",
-          (repasMois>0?"<tr><td>Indemnite repas (non imposable)</td><td class=\"right\">"+nbf(repasMois,2)+" euros</td></tr>":""),
-          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+nbf((coutEmployeur+entretien+repasMois),2)+" euros</td></tr>",
+          "<tr><td>Salaire brut</td><td class=\"right\">"+nbf(brutApresRetenue,2)+" €</td></tr>",
+          "<tr><td>Cotisations salariales</td><td class=\"right\" style=\"color:#c44a6a\">- "+nbf(totalCotSal,2)+" €</td></tr>",
+          "<tr class=\"net\"><td>NET A PAYER</td><td class=\"right\">"+nbf(netPaye,2)+" €</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable</td><td class=\"right\">"+nbf(netImposable,2)+" €</td></tr>",
+          "<tr><td>Abattement regime special assmat ("+abLabel.replace(/×/g," x ").replace(/≥/g,">=")+")</td><td class=\"right\">- "+nbf(abattementMois,2)+" €</td></tr>",
+          "<tr class=\"ni\"><td>Net imposable après abattement</td><td class=\"right\">"+nbf(netImpApresAbattement,2)+" €</td></tr>",
+          "<tr class=\"ni\"><td>Montant net social (référence RSA / prime d'activité, hors indemnités)</td><td class=\"right\">"+nbf(netSocial,2)+" €</td></tr>",
+          "<tr><td>Congés payés acquis ce mois</td><td class=\"right\">"+nbf(cpAcquis,1)+" jours ouvrables</td></tr>",
+          "<tr><td>Indemnité entretien (non imposable)</td><td class=\"right\">"+nbf(entretien,2)+" €</td></tr>",
+          (repasMois>0?"<tr><td>Indemnité repas (non imposable)</td><td class=\"right\">"+nbf(repasMois,2)+" €</td></tr>":""),
+          "<tr class=\"ce\"><td>Cout total employeur (brut + cotis. patronales)</td><td class=\"right\">"+nbf((coutEmployeur+entretien+repasMois),2)+" €</td></tr>",
           "</table>",
           "<div class=\"sz\">",
           "<div><div style=\"font-size:11px;font-weight:700;margin-bottom:6px\">Signature de l employeur</div><div class=\"sb\">Date: ________________</div></div>",
@@ -1699,13 +1714,48 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
   },[contrat.debut]);
 
   // #5 - Suivi du / verse par mois (mensualisation de reference)
+  //
+  // CE SUIVI RECLAMAIT LE BRUT.
+  //
+  // L'etiquette affichee sous le tableau annonce « heures lissees x taux NET +
+  // entretien estime ». Le calcul, lui, prenait contrat.tauxHoraire — qui est
+  // le taux BRUT : c'est le libelle du champ de saisie (« Taux horaire brut »),
+  // c'est sur lui que le bulletin assied les cotisations, et c'est a lui que se
+  // compare le minimum conventionnel de 4,20 EUR.
+  //
+  // Or un parent employeur ne verse JAMAIS le brut a son assistante
+  // maternelle : il verse le net, et les cotisations passent par Pajemploi. Sur
+  // un contrat de 40 h par semaine a 4,20 EUR brut en annee complete, le suivi
+  // annoncait 814,24 EUR dus la ou 654,95 EUR etaient reellement a verser :
+  // 159,29 EUR reclames a tort chaque mois, soit 21,9 % du salaire. Un parent
+  // parfaitement a jour lisait « Reste a verser : 159,29 EUR » tous les mois,
+  // pour toujours, et l'assistante maternelle voyait un bouton « Relancer » en
+  // face d'un mois paye. C'est le meme genre de defaut que les versements
+  // comptes dans le mauvais mois : de l'argent reclame a quelqu'un qui ne le
+  // doit pas.
+  //
+  // Et l'indemnite de repas, que le parent verse aussi, etait absente du calcul
+  // — une erreur en sens inverse, qui minorait le du des contrats qui en
+  // prevoient une.
+  //
+  // Le du est donc desormais ce que le parent vire vraiment : le salaire NET,
+  // plus l'entretien, plus les repas. Le pre-remplissage du formulaire de
+  // versement lit ce meme chiffre : il propose maintenant le bon montant.
   const suivi=useMemo(()=>{
     const hMens=heuresMensualisees(contrat);
     const tx=contrat.tauxHoraire||0;
-    const joursSem=(contrat.jours&&contrat.jours.length)||5;
-    const joursMois=Math.round(joursSem*semainesDuContrat(contrat)/12);
-    const duMensuel=Math.round((hMens*tx+joursMois*(contrat.entretien||0))*100)/100;
-    if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0};
+    const joursMois=joursAccueilParMois(contrat);
+    // Regime general, volontairement, et non regimeLocalDe(user) : la cotisation
+    // supplementaire d'Alsace-Moselle depend du code postal de la SALARIEE, que
+    // l'ecran du parent n'a pas sous la main. Le cabler a moitie afficherait
+    // deux montants dus differents selon qui regarde le meme tableau — pire
+    // qu'un ecart uniforme. Ce suivi peut donc encore surestimer de 1,5 % du
+    // salaire, et seulement dans les trois departements concernes.
+    const netMensuel=netDepuisBrut(hMens*tx,false);
+    const entMois=Math.round(joursMois*(Number(contrat.entretien)||0)*100)/100;
+    const repMois=Math.round(joursMois*(Number(contrat.repas)||0)*100)/100;
+    const duMensuel=Math.round((netMensuel+entMois+repMois)*100)/100;
+    if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0,netMensuel:0,entMois:0,repMois:0,brutMensuel:0};
     const lignes=moisDisponibles.map(m=>{
       const verse=versements.filter(v=>(v.date||"").slice(0,7)===m.key).reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
       const ecart=Math.round((duMensuel-verse)*100)/100;
@@ -1714,7 +1764,13 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
     });
     const totalDu=duMensuel*moisDisponibles.length;
     const totalVerse=versements.reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
-    return{lignes,duMensuel,ecart:Math.round((totalDu-totalVerse)*100)/100};
+    // On rend le detail, et pas seulement le total : c'est ce qui permet au
+    // parent de comprendre pourquoi il verse ce montant-la, et a l'assistante
+    // maternelle de le lui expliquer. C'est aussi ce que verifie
+    // scripts/verif-du-verse.mjs — un total seul n'est pas verifiable.
+    return{lignes,duMensuel,ecart:Math.round((totalDu-totalVerse)*100)/100,
+      netMensuel:Math.round(netMensuel*100)/100,entMois,repMois,
+      brutMensuel:Math.round(hMens*tx*100)/100};
   },[contrat.heuresHebdo,contrat.tauxHoraire,contrat.entretien,contrat.jours,moisDisponibles,versements]);
   const relancer=async(m)=>{
     if(!enfant?.parent_id){setToast("Parent non lié à cet enfant");return;}
@@ -1723,11 +1779,43 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
       setToast("Relance envoyée au parent ✓");
     }catch(e){setToast("Erreur lors de la relance");}
   };
+  // TROIS DEFAUTS TENAIENT DANS CES QUATRE LIGNES.
+  //
+  // 1. La periode etait remplie avec le LIBELLE (« Juillet 2026 ») alors que la
+  //    liste deroulante ne connait que des CLES (« 2026-07 »). Aucune option ne
+  //    correspondait : le champ retombait sur « — », juste apres qu'on avait
+  //    cliqué sur le mois voulu. Et si le parent ne le voyait pas, le versement
+  //    etait enregistre avec une periode au mauvais format, differente de toutes
+  //    les autres lignes.
+  //
+  // 2. La date etait mise a AUJOURD'HUI, quel que soit le mois choisi. Or le
+  //    rapprochement groupe les versements par le mois de leur DATE : enregistrer
+  //    en octobre un versement de juillet le comptait en octobre, et juillet
+  //    restait marque impaye pour toujours. Un parent a jour pouvait donc etre
+  //    relance pour un mois qu'il avait paye. On prend desormais le dernier jour
+  //    du mois concerne quand il est passe — une date plausible, dans le bon
+  //    mois, et que le parent corrige en un geste puisque le champ est devant
+  //    lui.
+  //
+  // 3. Le formulaire s'ouvre SOUS le tableau de suivi. Sur un telephone, la liste
+  //    des mois fait plusieurs ecrans : on appuyait sur « + Enregistrer » et il
+  //    ne se passait rien de visible. Il s'ouvrait pourtant, hors de vue. On
+  //    l'amene maintenant sous les yeux.
+  const formRef=useRef(null);
   const prefillVersement=(m)=>{
-    setFPeriode(m.label);
+    setFPeriode(m.key);
     setFMontant(String(m.ecart>1?m.ecart:m.du));
-    setFDate(todayStr);
+    const [an,mo]=String(m.key).split("-").map(Number);
+    const finDuMois=isoJour(new Date(an,mo,0));
+    setFDate(finDuMois<todayStr?finDuMois:todayStr);
     setShowForm(true);
+    // Apres le rendu : le formulaire n'existe pas encore au moment du clic.
+    setTimeout(()=>{
+      try{
+        formRef.current?.scrollIntoView({behavior:"smooth",block:"center"});
+        formRef.current?.querySelector("input")?.focus({preventScroll:true});
+      }catch(e){/* navigateur sans scrollIntoView lisse : le formulaire est la quand meme */}
+    },60);
   };
 
   // Charger les versements de l'enfant selectionne
@@ -1743,7 +1831,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
   const resetForm=()=>{setFDate(todayStr);setFMontant("");setFMode("virement");setFPeriode("");setFNote("");};
 
   const ajouterVersement=async()=>{
-    const montant=parseFloat(String(fMontant).replace(",","."));
+    const montant=fMontant===null||fMontant===""?NaN:Number(fMontant);
     if(!enfant?.id){setToast("Aucun enfant sélectionné");setTimeout(()=>setToast(""),2500);return;}
     if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
     if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
@@ -1773,7 +1861,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
         if(d?.email){
           sendNotificationEmail({
             type:"versement_recu",to:d.email,
-            subject:EMAIL_TEMPLATES.versement_recu.subject,template:"versement_recu",
+template:"versement_recu",
             vars:{prenom:d.prenom||"",enfant_prenom:enfant?.prenom||"",montant:fmtEur(montant),date:fmtDate(fDate),qui:(role==="parent"?(user?.prenom||"Un parent"):"Votre assistante maternelle")},
           });
         }
@@ -1796,7 +1884,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
     setShowForm(false);
   };
   const modifierVersement=async()=>{
-    const montant=parseFloat(String(fMontant).replace(",","."));
+    const montant=fMontant===null||fMontant===""?NaN:Number(fMontant);
     if(!editId)return;
     if(!fDate){setToast("La date est requise");setTimeout(()=>setToast(""),2500);return;}
     if(!(montant>=0)||isNaN(montant)){setToast("Montant invalide");setTimeout(()=>setToast(""),2500);return;}
@@ -1858,7 +1946,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
               <div style={{fontWeight:800,fontSize:14,color:"var(--b)"}}>{role==="parent"?"📊 Suivi de mes versements":"📊 Suivi dû / versé"}</div>
               <div style={{fontSize:12,fontWeight:700,color:suivi.ecart>1?"#C84B31":"#5DA9A1"}}>{suivi.ecart>1?((role==="parent"?"Reste à verser : ":"Reste dû : ")+fmtEur(suivi.ecart)):"À jour ✓"}</div>
             </div>
-            <div style={{fontSize:11,color:"var(--l)",marginBottom:12,lineHeight:1.5}}>Mensualisation de référence : {fmtEur(suivi.duMensuel)}/mois (heures lissées × taux net + entretien estimé). Rapproché par mois de versement — hors heures complémentaires et régularisations.</div>
+            <div style={{fontSize:11,color:"var(--l)",marginBottom:12,lineHeight:1.5}}>Ce que le parent verse chaque mois : {fmtEur(suivi.duMensuel)} = salaire net {fmtEur(suivi.netMensuel)} + entretien {fmtEur(suivi.entMois)}{suivi.repMois>0?" + repas "+fmtEur(suivi.repMois):""}. Le salaire brut lissé est de {fmtEur(suivi.brutMensuel)} : les cotisations ne passent pas par ce virement, elles passent par Pajemploi. Rapproché par mois de versement — hors heures complémentaires et régularisations.</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {suivi.lignes.map(m=><div key={m.key}style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"8px 10px",borderRadius:8,background:m.statut==="impaye"?"#FDECEC":m.statut==="partiel"?"#FFF6E9":"var(--c)"}}>
                 <div style={{minWidth:0}}>
@@ -1874,7 +1962,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
           </div>}
 
           {/* Formulaire de saisie */}
-          {role==="parent"&&showForm&&<div className="card"style={{marginBottom:14}}>
+          {role==="parent"&&showForm&&<div ref={formRef} className="card"style={{marginBottom:14}}>
             <div style={{fontWeight:800,fontSize:14,color:"var(--b)",marginBottom:14}}>Nouveau versement</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
               <div>
@@ -1883,7 +1971,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
               </div>
               <div>
                 <label style={labelStyle}>Montant (€)</label>
-                <input type="number"inputMode="decimal"step="0.01"min="0"placeholder="0,00"value={fMontant}onChange={e=>setFMontant(e.target.value)}style={inputStyle}/>
+                <ChampNombre min="0" decimales={2} placeholder="0,00" value={fMontant} onChange={v=>setFMontant(v)} className="" style={inputStyle}/>
               </div>
               <div>
                 <label style={labelStyle}>Mode de paiement</label>
@@ -1935,7 +2023,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
         </div>
         <div style={{marginBottom:12}}>
           <label style={labelStyle}>Montant (€)</label>
-          <input type="number"inputMode="decimal"step="0.01"min="0"placeholder="0,00"value={fMontant}onChange={e=>setFMontant(e.target.value)}style={inputStyle}/>
+          <ChampNombre min="0" decimales={2} placeholder="0,00" value={fMontant} onChange={v=>setFMontant(v)} className="" style={inputStyle}/>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
           <div>
@@ -2151,8 +2239,8 @@ export function IndemnitesJournalieres({contrat,role,onSaved,onErr}){
       :<>
       <label className="lbl">Indemnité d'entretien (€ par journée d'accueil)</label>
       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-        <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
-          value={entretien} onChange={e=>setEntretien(Math.max(0,parseFloat(e.target.value)||0))}/>
+        <ChampNombre className="inp" style={{maxWidth:130}} min="0" decimales={2} defaut={0}
+          value={entretien} onChange={v=>setEntretien(v)}/>
         <span style={{fontSize:12,color:"var(--m)"}}>
           minimum {nb2(miniEntretien)} € pour une journée de {heuresJour||9} h
         </span>
@@ -2182,8 +2270,8 @@ export function IndemnitesJournalieres({contrat,role,onSaved,onErr}){
       </div>
       {qui&&qui!=="employeur"&&<div style={{marginTop:12}}>
         <label className="lbl">Indemnité de repas (€ par journée d'accueil)</label>
-        <input type="number" min="0" step="0.05" className="inp" style={{maxWidth:130}}
-          value={repas} onChange={e=>setRepas(Math.max(0,parseFloat(e.target.value)||0))}/>
+        <ChampNombre className="inp" style={{maxWidth:130}} min="0" decimales={2} defaut={0}
+          value={repas} onChange={v=>setRepas(v)}/>
         <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
           Elle ne peut pas descendre sous le minimum conventionnel. La nature des repas convenue se précise sur le contrat imprimé.
         </div>
@@ -2211,7 +2299,7 @@ export function RythmeAccueil({contrat,role,onSaved,onErr}){
   const enregistre=estAnneeComplete(contrat);
   const semainesEnregistrees=Number(contrat?.semainesAccueil??contrat?.semaines_accueil)||SEMAINES_MAX_ANNEE_INCOMPLETE;
   // Le bouton suivait la valeur ENREGISTREE, pas le clic : appuyer sur
-  // « annee incomplete » ouvrait le champ des semaines mais laissait la
+  // « année incomplète » ouvrait le champ des semaines mais laissait la
   // selection sur « annee complete ». On tient donc un choix local, qui suit le
   // clic tout de suite, et un bouton d'enregistrement quand il differe.
   const [choix,setChoix]=useState(enregistre);
@@ -2257,8 +2345,8 @@ export function RythmeAccueil({contrat,role,onSaved,onErr}){
       </div>
       {!choix&&<div style={{marginTop:12}}>
         <label className="lbl">Semaines d'accueil dans l'année</label>
-        <input type="number" min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} step="1" className="inp" style={{maxWidth:120}}
-          value={semaines} onChange={e=>setSemaines(Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,parseFloat(e.target.value)||SEMAINES_MAX_ANNEE_INCOMPLETE)))}/>
+        <ChampNombre className="inp" style={{maxWidth:120}} min="1" max={SEMAINES_MAX_ANNEE_INCOMPLETE} decimales={0} defaut={SEMAINES_MAX_ANNEE_INCOMPLETE}
+          value={semaines} onChange={v=>setSemaines(v)}/>
         <div style={{fontSize:11,color:"var(--l)",marginTop:6,lineHeight:1.5}}>
           Ce nombre découle du calendrier convenu, pas d'un montant souhaité : comptez les semaines où l'enfant vous sera confié.
         </div>
@@ -2312,6 +2400,8 @@ export function BoutonContratPdf({contrat,onErr,compact=false,label="Ouvrir mon 
 }
 
 export function SignatureContratParent({enfants,pEId,user}){
+  // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
+  const uneFois=useUneFois();
   // MULTI-ENFANTS - ne montrer que les enfants dont le contrat est partage par l'assmat.
   // Le parent bascule entre eux via un selecteur (affiche seulement s'il y en a plusieurs).
   const enfantsPartages=enfants.filter(e=>e?.contrat?.partage_parent);
@@ -2329,6 +2419,9 @@ export function SignatureContratParent({enfants,pEId,user}){
   const canvasRef=useRef(null);
   const [drawing,setDrawing]=useState(false);
   const [hasSig,setHasSig]=useState(false);
+  // La signature d'un contrat met plusieurs secondes : elle regenere le PDF et
+  // envoie les courriels. Sans retour visible, on appuie une seconde fois.
+  const [signEnCours,setSignEnCours]=useState(false);
   // SIGNATURE PARENT P10 - signature standard du parent (si dejaa enregistree dans son profil)
   const sigStandard=user?.signature_base64||null;
   // SIGNATURE PARENT P10 - sync avec le contrat reel quand il change (ou changement d'enfant)
@@ -2422,8 +2515,7 @@ export function SignatureContratParent({enfants,pEId,user}){
           sendNotificationEmail({
             type:"signature_parent_signed",
             to:a.email,
-            subject:EMAIL_TEMPLATES.signature_parent_signed.subject,
-            template:"signature_parent_signed",
+template:"signature_parent_signed",
             vars:{
               asmat_prenom:a.prenom||"",
               parent_prenom:user?.prenom||"",
@@ -2534,9 +2626,12 @@ export function SignatureContratParent({enfants,pEId,user}){
 
     {/* Bouton valider */}
     <button className="btn bS"style={{width:"100%",justifyContent:"center",padding:"13px",
-      opacity:lu&&hasSig?1:.5}}
-      onClick={valider}disabled={!lu||!hasSig}>
-      <IconeOuEmoji e="✅"/> Valider et signer le contrat
+      opacity:lu&&hasSig&&!signEnCours?1:.5}}
+      onClick={uneFois(async()=>{setSignEnCours(true);try{await valider();}finally{setSignEnCours(false);}})}
+      disabled={!lu||!hasSig||signEnCours}>
+      {signEnCours
+        ? <>Signature en cours, ne quittez pas…</>
+        : <><IconeOuEmoji e="✅"/> Valider et signer le contrat</>}
     </button>
     <div style={{textAlign:"center",fontSize:11,color:"var(--l)",marginTop:8}}>
       <IconeOuEmoji e="🔒"/> Signature électronique conforme eIDAS - Valeur légale identique au papier
@@ -2834,6 +2929,9 @@ export function AlerteTauxKm({taux,cv}){
 }
 
 export function IndemnitesKilometriques({enfants,role,user}){
+  // Supprimer un trajet pouvait echouer sans que rien ne le dise : cet ecran
+  // n'avait pas de bandeau de message.
+  const [toast,setToast]=useState("");
   const asmatId=user?.id||enfants[0]?.asmat_id;
   const [mois,setMois]=useState(isoMois(new Date()));
   const [cv,setCv]=useState(5);
@@ -2870,7 +2968,11 @@ export function IndemnitesKilometriques({enfants,role,user}){
     setSaving(false);
     if(!error){setNt({...blank,taux:BAREME_KM_2026[cv]});charger();}
   };
-  const supprimer=async(id)=>{await supabase.from("trajets").delete().eq("id",id);charger();};
+  const supprimer=async(id)=>{
+    const{error}=await supabase.from("trajets").delete().eq("id",id);
+    if(error){setToast("Le trajet n'a pas pu être supprimé : "+error.message);return;}
+    charger();
+  };
 
   const totalKm=trajets.reduce((s,t)=>s+(+t.km||0),0);
   const totalEur=trajets.reduce((s,t)=>s+(+t.km||0)*(+t.taux||0),0);
@@ -2887,6 +2989,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
   if(role!=="asmat")return <div className="fi"><PageHeader icon="🚗" title="Frais kilométriques"/><div className="card"style={{textAlign:"center",color:"var(--m)"}}>Section réservée à l'assistante maternelle.</div></div>;
 
   return <div className="fi">
+    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="🚗" title="Frais kilométriques (IK)" sub="Trajets, barème 2026 et feuille de route Pajemploi"/>
     {trajetsPanne&&<div className="card" style={{marginBottom:14,background:"#FFF6F2",border:"1px solid #E8C4B4"}}>
       <div style={{fontSize:13,lineHeight:1.65,color:"var(--b)"}}>
@@ -3110,8 +3213,8 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
           <div style={{display:"flex",gap:14,flexWrap:"wrap",alignItems:"center",marginBottom:14,padding:"10px 12px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)"}}>
               Jours de congés déjà pris
-              <input type="number" min="0" max={cpAcquisFin} step="0.5" value={cpPris}
-                onChange={e=>{setPrisTouche(true);setCpPris(Math.max(0,Number(e.target.value)||0));}}
+              <ChampNombre min="0" max={cpAcquisFin} decimales={2} defaut={0} value={cpPris}
+                onChange={v=>{setPrisTouche(true);setCpPris(v);}} className=""
                 style={{width:72,padding:"5px 8px",borderRadius:7,border:"1px solid var(--br)",fontFamily:"inherit",fontSize:13}}/>
             </label>
             {prisRepris>0&&!prisTouche&&<span style={{fontSize:12,color:"#2F655F",fontWeight:600}}>

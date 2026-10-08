@@ -13,6 +13,7 @@
 //   node scripts/verif-avis.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 
 const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
@@ -44,7 +45,7 @@ for (const [libelle, avis, attendu] of CAS) {
     headers: { "Content-Range": "0-0/1" },
     body: JSON.stringify({ config: { testimonials: avis, sectionsVisibles: { temoignages: true } } }) }));
   await p.goto(`http://127.0.0.1:4173/?acces=${CLE}`, { waitUntil: "domcontentloaded" });
-  await p.waitForTimeout(4000);
+  await ATTENDRE_PRET(p);
   const t = await p.locator("body").innerText();
   const etoiles = (t.match(/⭐⭐⭐⭐⭐/g) || []).length;
   const soucis = [];

@@ -1,20 +1,20 @@
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 // api/send-email.js
 // Edge Function Vercel pour envoyer des emails via Resend
-// Frontend envoie : { type, to, subject, template, vars, from }
+// Frontend envoie : { type, to, template, vars, from } + son jeton de session
 // L'API compose le HTML, valide et envoie via Resend
 
 export const config = {
   runtime: 'edge',
 };
 
-const EMAIL_TEMPLATES = {
+export const EMAIL_TEMPLATES = {
   signature_asmat_signed: {
     subject: "Votre assistante maternelle a signé le contrat",
     html: (v) => `<h2>Bonjour ${esc(v.parent_prenom)},</h2>
 <p>${esc(v.asmat_prenom)} vient de signer électroniquement le contrat de ${esc(v.enfant_prenom)}.</p>
 <p>Connectez-vous à TiMat pour le signer à votre tour :</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Signer le contrat</a></p>`,
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Signer le contrat</a></p>`,
   },
   signature_parent_signed: {
     subject: "Le parent a signé le contrat",
@@ -38,7 +38,7 @@ const EMAIL_TEMPLATES = {
 <p>Vous ne vous êtes pas connectée à TiMat depuis <strong>deux ans</strong>. Nous vous le signalons parce que la CNIL le recommande, et parce que c'est normal de savoir ce qu'un service garde de vous.</p>
 <p><strong>Vos données sont toujours là</strong> : vos dossiers d'enfants, vos pointages, vos contrats et vos bulletins n'ont pas été touchés. Nous ne les supprimons pas de notre propre initiative — ce sont vos justificatifs, et vous seule savez quand ils ne vous servent plus.</p>
 <p>Une seule connexion suffit à remettre le compte en activité :</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Me reconnecter</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Me reconnecter</a></p>
 <p style="color:#55707C;font-size:14px">Si vous préférez que tout soit effacé, écrivez-nous : la suppression est faite, et nous vous envoyons une attestation écrite si vous la demandez.</p>`,
   },
   essai_rappel_7: {
@@ -46,7 +46,7 @@ const EMAIL_TEMPLATES = {
     html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
 <p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>, dans ${esc(v.jours)} jours.</p>
 <p>Vous n'avez rien à faire tout de suite, et aucune carte bancaire ne vous a été demandée. Si vous souhaitez continuer, vous pourrez le faire d'un clic depuis votre espace.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir TiMat</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir TiMat</a></p>
 <p style="color:#55707C;font-size:14px">Si vous ne continuez pas, votre compte repasse simplement en formule gratuite. Vos enfants, vos pointages et vos documents restent là où ils sont.</p>`,
   },
   essai_rappel_3: {
@@ -54,13 +54,13 @@ const EMAIL_TEMPLATES = {
     html: (v) => `<h2>Bonjour ${esc(v.prenom)},</h2>
 <p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>.</p>
 <p>Pour garder les bulletins de salaire, le récapitulatif Pajemploi et les contrats illimités, continuez avec TiMat à 9,99 € par mois — sans engagement, résiliable en un clic.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Continuer avec TiMat</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Continuer avec TiMat</a></p>
 <p style="color:#55707C;font-size:14px">Si vous ne faites rien, votre compte repasse en formule gratuite. <strong>Rien n'est supprimé</strong> : vos enfants, vos pointages et vos documents vous attendent, et reprendre l'abonnement rouvre exactement le dossier que vous aviez laissé.</p>`,
   },
   signature_reminder: {
     subject: "Rappel : signature de contrat en attente",
     html: (v) => `<p>Le contrat de ${esc(v.enfant_prenom)} attend votre signature depuis le ${esc(v.date)}.</p>
-<p><a href="${esc(v.url)}">Signer maintenant</a></p>`,
+<p><a href="${lien(v.url)}">Signer maintenant</a></p>`,
   },
   bulletin_sent: {
     subject: "Votre bulletin de salaire est disponible",
@@ -72,7 +72,7 @@ const EMAIL_TEMPLATES = {
     html: (v) => `<h2>Bonjour ${esc(v.parent_prenom)},</h2>
 <p>${esc(v.asmat_prenom)} vous invite à rejoindre TiMat pour suivre ${esc(v.enfant_prenom)}.</p>
 <p>Votre espace parent est <strong>entièrement gratuit</strong> : vous y suivrez la journée de ${esc(v.enfant_prenom)} (repas, sieste, activités, photos privées), les heures de présence, vos documents et votre déclaration Pajemploi.</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Créer mon espace parent</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Créer mon espace parent</a></p>
 <div style="background:#FDFBF8;border:1px solid #EDE6DE;border-radius:10px;padding:14px 16px;margin:22px 0">
   <p style="margin:0 0 8px;font-size:14px;color:#2E4859"><strong>À quoi sert votre espace parent ?</strong></p>
   <p style="margin:0;font-size:13px;color:#6B7A82;line-height:1.6">Découvrez en images tout ce que vous pourrez y faire, et comprenez le coût réel de la garde (CMG, crédit d'impôt) :<br/>
@@ -86,13 +86,13 @@ const EMAIL_TEMPLATES = {
 <p>L'assistante maternelle a enregistré le pointage de ${esc(v.enfant_prenom)} du ${esc(v.date)}.</p>
 <p>Durée d'accueil : <strong>${esc(v.duree)}</strong></p>
 <p>Merci de valider ce pointage dans votre application :</p>
-<p><a href="${esc(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Valider le pointage</a></p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Valider le pointage</a></p>
 <p style="font-size:11px;color:#888;margin-top:24px">Si vous oubliez, un rappel automatique sera envoyé sous 3 jours.</p>`,
   }, pointage_rappel: {
     subject: "Rappel : pointage en attente de validation depuis 3 jours",
     html: (v) => `<p>Bonjour ${esc(v.parent_prenom)},</p>
 <p>Un pointage de ${esc(v.enfant_prenom)} est en attente de votre validation depuis le ${esc(v.date)}.</p>
-<p><a href="${esc(v.url)}">Valider maintenant</a></p>`,
+<p><a href="${lien(v.url)}">Valider maintenant</a></p>`,
   },
   versement_recu: {
     subject: "Nouveau versement enregistré sur TiMat",
@@ -101,6 +101,37 @@ const EMAIL_TEMPLATES = {
 <p>Retrouvez le détail dans l'onglet Versements de votre espace TiMat.</p>`,
   },
 };
+
+// UN BOUTON DE COURRIEL NE PEUT PAS POINTER VERS LE VIDE.
+//
+// Les gabarits ecrivaient href="${esc(v.url)}". Quand l'appel oublie « url » —
+// un parametre mal passe, une donnee manquante — esc rend la chaine vide, et le
+// courriel part avec un bouton qui ne mene nulle part. La destinataire clique,
+// il ne se passe rien, et elle n'ecrira pas pour le dire.
+//
+// A defaut d'adresse precise, le bouton ramene a l'application. C'est toujours
+// mieux que rien, et c'est vrai.
+// ET IL NE PEUT PAS POINTER AILLEURS QUE CHEZ NOUS.
+//
+// Cette fonction acceptait n'importe quelle adresse en https. Combinee a une
+// porte ouverte (voir plus bas), elle faisait de cet endroit un kit
+// d'hameconnage : un courriel signe par le domaine timat.app, portant un vrai
+// gabarit TiMat (« Votre bulletin de salaire est disponible »), avec un bouton
+// vers le site de n'importe qui. Le danger n'est pas seulement pour la
+// destinataire : un domaine qui sert a hameconner finit sur les listes noires,
+// et les vrais courriels — demandes de signature, bulletins — cessent
+// d'arriver.
+//
+// Un bouton dans un courriel TiMat n'a aucune raison legitime de mener
+// ailleurs que sur timat.app ou l'un de ses sous-domaines.
+const SITE = "https://www.timat.app";
+const DOMAINE_AUTORISE = /^https:\/\/(?:[a-z0-9-]+\.)*timat\.app(?:[/?#]|$)/i;
+function lien(u) {
+  const v = String(u ?? "").trim();
+  if (DOMAINE_AUTORISE.test(v)) return esc(v);
+  if (v) console.warn("[send-email] lien hors domaine refusé, repli sur le site :", v.slice(0, 120));
+  return esc(SITE);
+}
 
 function esc(s) {
   if (s === null || s === undefined) return '';
@@ -166,6 +197,52 @@ export default async function handler(req) {
     });
   }
 
+  // --- QUI A LE DROIT D'ENVOYER ----------------------------------------------
+  //
+  // Cette porte n'avait AUCUNE authentification. N'importe qui sur Internet
+  // pouvait la poster et faire partir un courriel signe par le domaine
+  // timat.app, vers n'importe quelle adresse, avec le sujet de son choix et un
+  // bouton vers son propre site. La limite de dix par minute et par IP n'y
+  // changeait rien : elle se contourne en changeant d'IP, et elle est tenue en
+  // memoire d'une fonction edge, donc par instance.
+  //
+  // Deux appelants legitimes, et deux seulement :
+  //   - l'application, qui presente le jeton de session de l'utilisatrice ;
+  //   - la tache planifiee des rappels d'essai, qui presente le secret du cron.
+  // Tout le reste repart avec un 401.
+  const secretInterne = process.env.CRON_SECRET;
+  const enteteInterne = req.headers.get("x-timat-interne") || "";
+  const estInterne = Boolean(secretInterne) && enteteInterne === secretInterne;
+
+  if (!estInterne) {
+    const porteur = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    const urlSupabase = process.env.VITE_SUPABASE_URL;
+    const cleSupabase = process.env.VITE_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    if (!porteur || !urlSupabase || !cleSupabase) {
+      return new Response(JSON.stringify({ error: 'Authentification requise' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+    // On demande a Supabase si ce jeton designe quelqu'un. Cela ne reclame que
+    // la cle publique : la cle de service n'a rien a faire ici.
+    let valide = false;
+    try {
+      const r = await fetch(`${urlSupabase}/auth/v1/user`, {
+        headers: { apikey: cleSupabase, Authorization: `Bearer ${porteur}` },
+      });
+      valide = r.ok;
+    } catch (e) {
+      console.error('[send-email] vérification du jeton impossible :', e.message);
+    }
+    if (!valide) {
+      return new Response(JSON.stringify({ error: 'Jeton de session invalide ou expiré' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+  }
+
   if (!process.env.RESEND_API_KEY) {
     console.error('[send-email] RESEND_API_KEY non configurée dans Vercel');
     return new Response(JSON.stringify({ error: 'Email service not configured' }), {
@@ -192,7 +269,13 @@ export default async function handler(req) {
     });
   }
 
-  const { type, to, subject, template, vars = {}, from } = body;
+  // LE SUJET APPARTIENT AU GABARIT, et n'est plus negociable par l'appelant.
+  // « finalSubject = subject || tpl.subject » laissait choisir librement la
+  // ligne d'objet d'un courriel signe par le domaine : de quoi fabriquer
+  // « Votre virement a ete rejete » sous notre signature. Aucun appel n'en a
+  // besoin : le seul qui en passait encore un donnait exactement le sujet du
+  // gabarit.
+  const { type, to, template, vars = {}, from } = body;
 
   if (!type || typeof type !== 'string') {
     return new Response(JSON.stringify({ error: 'Missing or invalid type' }), {
@@ -215,7 +298,7 @@ export default async function handler(req) {
     });
   }
 
-  const finalSubject = subject || tpl.subject;
+  const finalSubject = tpl.subject;
   let finalHtml;
   try {
     finalHtml = tpl.html(vars);
