@@ -10,6 +10,7 @@
 //
 // Prealable : une version construite servie (npm run build puis vite preview).
 import { chromium } from "playwright";
+import { BUNDLE_TESTABLE, CHROMIUM } from "./jeu-de-donnees.mjs";
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 
@@ -26,7 +27,7 @@ const chercherChromium = () => {
   return undefined;
 };
 const URL_BASE = process.argv[2] || "http://localhost:4173";
-const b=await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
+const b=await chromium.launch({ executablePath: CHROMIUM() });
 const p=await b.newPage({viewport:{width:390,height:844}});
 const err=[];
 p.on("pageerror",e=>err.push("erreur JS : "+e.message.slice(0,180)));
@@ -54,6 +55,11 @@ await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/
 await p.route("**/rest/v1/profiles**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:faussSession.user.id,is_admin:true,role:"asmat",prenom:"Admin",nom:"Test",email:"admin@timat.test"}])}));
 
 await p.goto(URL_BASE+"/backoffice",{waitUntil:"domcontentloaded"});
+// LE PIÈGE DU BUNDLE SANS CLÉ : « npm run build » construit sans
+// VITE_SUPABASE_KEY, l'application retombe alors sur la page vitrine sans
+// un mot, et ce contrôle rendrait un KO qui n'existe pas. verif-avis a
+// accusé un code sain pour cette raison exacte.
+if(!await BUNDLE_TESTABLE(p)){await b.close();process.exit(1);}
 await p.waitForTimeout(3000);
 const champs=await p.$$('input');
 if(champs.length>=2){await champs[0].fill("admin@timat.test");await champs[1].fill("motdepasse");}

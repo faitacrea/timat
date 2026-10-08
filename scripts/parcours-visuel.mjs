@@ -15,7 +15,7 @@
 // emprunte deja quand les identifiants sont refuses.
 import { chromium } from "playwright";
 import { readFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
-import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 import path from "node:path";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
@@ -89,7 +89,7 @@ const chercherChromium = () => {
   }
   return undefined;
 };
-const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
+const navigateur = await chromium.launch({ executablePath: CHROMIUM() });
 const page = await navigateur.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 
 const erreurs = [];

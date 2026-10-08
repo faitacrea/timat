@@ -13,10 +13,10 @@
 //   node scripts/verif-avis.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
+import { BUNDLE_TESTABLE, CHROMIUM, ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 let ko = 0;
 // Le back-office enregistre la configuration de la landing : on la lui sert.
 const CAS = [
@@ -45,6 +45,11 @@ for (const [libelle, avis, attendu] of CAS) {
     headers: { "Content-Range": "0-0/1" },
     body: JSON.stringify({ config: { testimonials: avis, sectionsVisibles: { temoignages: true } } }) }));
   await p.goto(`http://127.0.0.1:4173/?acces=${CLE}`, { waitUntil: "domcontentloaded" });
+  // LE PIÈGE DU BUNDLE SANS CLÉ : « npm run build » construit sans
+  // VITE_SUPABASE_KEY, l'application retombe alors sur la page vitrine sans
+  // un mot, et ce contrôle rendrait un KO qui n'existe pas. verif-avis a
+  // accusé un code sain pour cette raison exacte.
+  if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
   await ATTENDRE_PRET(p);
   const t = await p.locator("body").innerText();
   const etoiles = (t.match(/⭐⭐⭐⭐⭐/g) || []).length;

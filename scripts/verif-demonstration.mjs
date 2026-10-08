@@ -30,13 +30,13 @@
 //   node scripts/verif-demonstration.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BUNDLE_TESTABLE, ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BUNDLE_TESTABLE, ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
   .match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const BASE = process.env.URL_BASE || "http://127.0.0.1:4173";
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const ctx = await N.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR", serviceWorkers: "block" });
 const p = await ctx.newPage();
 

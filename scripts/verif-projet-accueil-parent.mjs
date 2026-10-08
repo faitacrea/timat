@@ -9,9 +9,9 @@
 // Hors chaine de build : Vercel n'a pas de navigateur.
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE=(readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
-const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const N=await chromium.launch({executablePath: CHROMIUM()});
 const ctx=await N.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
 const p=await ctx.newPage();
 // LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.

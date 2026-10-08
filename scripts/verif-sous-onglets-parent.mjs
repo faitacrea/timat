@@ -15,14 +15,14 @@
 //   node scripts/verif-sous-onglets-parent.mjs
 import { chromium } from "playwright";
 import { readFileSync, mkdirSync } from "node:fs";
-import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 
 const LARGEUR = 390; // iPhone 14/15, le format le plus etroit encore courant
 const SORTIE = "captures-sous-onglets-parent";
 const CLE = (readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/) || [])[1];
 mkdirSync(SORTIE, { recursive: true });
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const ctx = await N.newContext({ viewport: { width: LARGEUR, height: 844 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris", serviceWorkers: "block" });
 const p = await ctx.newPage();
 let err = [];

@@ -11,10 +11,10 @@
 //   node scripts/verif-calendrier.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE=(readFileSync(new URL("../src/App.jsx",import.meta.url),"utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
 let ko=0;
-const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const N=await chromium.launch({executablePath: CHROMIUM()});
 const p=await N.newPage({viewport:{width:390,height:844}});
 // LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
 // Ce contrôle doublait « rest/v1 » par « [] » et se connectait en

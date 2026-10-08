@@ -1,0 +1,179 @@
+# LES 38 CONTRÔLES NAVIGATEUR, LANCÉS TOUT SEULS.
+#
+# POURQUOI PAS DANS « npm run build » : Vercel n'a pas de navigateur. Ces
+# contrôles ouvrent une vraie page dans Chromium, se connectent, cliquent. Les
+# mettre dans la chaîne de mise en ligne, c'est casser la mise en ligne.
+#
+# POURQUOI ICI QUAND MÊME : ils ne tournaient qu'à la main. Le plus parlant est
+# verif-calculs-identiques, qui prouve que le site et l'application donnent le
+# MÊME chiffre — le jour où un barème changerait d'un côté seulement, personne
+# ne l'aurait vu avant une utilisatrice.
+#
+# POURQUOI UNE MATRICE : un seul script qui les enchaîne, c'est le premier
+# échec qui cache les trente-sept autres. Chaque groupe rend son verdict.
+#
+# CE QU'IL FAUT FAIRE : RIEN. Il tourne le dimanche matin et ouvre une issue
+# s'il trouve quelque chose. Pour le lancer à la main, ouvrir l'onglet
+# « Actions » du dépôt sur GitHub, choisir « Contrôles navigateur » puis
+# « Run workflow » — aucun terminal.
+
+name: Contrôles navigateur
+
+on:
+  schedule:
+    # Le dimanche à 6 h 13 UTC. Minute décalée : les tâches planifiées à
+    # l'heure ronde s'entassent et partent en retard.
+    - cron: "13 6 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  controler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Les chiffres : ce qu'une utilisatrice lit comme un montant.
+          - groupe: chiffres
+            scripts: >-
+              verif-calculs-identiques verif-nombres verif-du-verse
+              verif-kit-cmg verif-versements parcours-bulletin parcours-frais-km
+          # Les écrans : ce qui s'ouvre, ou pas.
+          - groupe: ecrans
+            scripts: >-
+              verif-filet-ecrans verif-calendrier verif-onglets-fusionnes
+              verif-semaine-type verif-sous-onglets-parent
+              verif-projet-accueil-parent verif-bascule-pajemploi
+          # Les gestes : cliquer, saisir, signer.
+          - groupe: gestes
+            scripts: >-
+              verif-boutons verif-double-clic verif-formulaires verif-signature
+              verif-inscription verif-demonstration
+          # La lisibilité et les pages publiques.
+          - groupe: lisibilite
+            scripts: >-
+              verif-contraste verif-contraste-app verif-avis
+              verif-outils-publics verif-pdf-contenu
+          # Le back-office.
+          - groupe: backoffice
+            scripts: >-
+              verif-boutons-backoffice verif-backoffice-enregistre
+              parcours-backoffice
+          # Les parcours complets.
+          - groupe: parcours
+            scripts: >-
+              parcours-alertes parcours-contrat parcours-documents
+              parcours-documents-imprimes parcours-mes-employeurs
+              parcours-temps-travail parcours-calendrier-parent
+              parcours-compte-neuf parcours-hors-ligne parcours-visuel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+
+      # LE PIÈGE DU BUNDLE SANS CLÉ.
+      #
+      # Construit sans VITE_SUPABASE_KEY, l'application retombe sur la page
+      # vitrine sans un mot : les contrôles cherchent alors des boutons qui
+      # n'existent pas et rapportent des KO qui n'existent pas non plus. La clé
+      # ici est factice — aucun contrôle ne parle à la vraie base, tous la
+      # doublent. Elle sert uniquement à ce que l'application démarre.
+      - name: Construire
+        run: VITE_SUPABASE_KEY="verification-locale" npx vite build
+
+      - name: Servir
+        run: |
+          nohup npx vite preview --port 4173 --host 127.0.0.1 > /tmp/preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://127.0.0.1:4173/; then echo "servi"; exit 0; fi
+            sleep 1
+          done
+          echo "la page ne répond pas :"; cat /tmp/preview.log; exit 1
+
+      - name: Lancer le groupe « ${{ matrix.groupe }} »
+        id: lancer
+        run: |
+          echo "## Groupe ${{ matrix.groupe }}" > /tmp/rapport.md
+          echos=0
+          for s in ${{ matrix.scripts }}; do
+            echo "::group::$s"
+            set +e
+            timeout 600 node "scripts/$s.mjs" 2>&1 | tee "/tmp/$s.txt"
+            code=${PIPESTATUS[0]}
+            set -e
+            echo "::endgroup::"
+            if [ "$code" != "0" ]; then
+              echos=$((echos+1))
+              {
+                echo ""
+                echo "### $s — code $code"
+                echo '```'
+                tail -40 "/tmp/$s.txt"
+                echo '```'
+              } >> /tmp/rapport.md
+            fi
+          done
+          echo "echos=$echos" >> "$GITHUB_OUTPUT"
+          cat /tmp/rapport.md
+          [ "$echos" = "0" ]
+
+      # Les captures du parcours visuel servent à regarder, pas à décider :
+      # on les garde même quand tout passe.
+      - name: Garder les captures
+        if: always() && matrix.groupe == 'parcours'
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-parcours
+          path: captures/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Ouvrir une issue si un contrôle a échoué
+        if: failure() && steps.lancer.outputs.echos != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const rapport = fs.readFileSync("/tmp/rapport.md", "utf8").slice(0, 55000);
+            const titre = "Un contrôle navigateur échoue";
+            // Une seule issue ouverte à la fois : on commente celle qui existe
+            // plutôt que d'en empiler une par groupe et par semaine.
+            const { data: ouvertes } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: "open", labels: "controles-navigateur",
+            });
+            const corps = [
+              "Un ou plusieurs contrôles navigateur ne passent plus.",
+              "",
+              "Ces contrôles ouvrent une vraie page dans Chromium et doublent la base :",
+              "ils ne touchent pas aux données réelles. Un échec désigne donc le code,",
+              "pas une donnée de production.",
+              "",
+              rapport,
+              "",
+              `_[Voir le journal complet](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})_`,
+            ].join("\n");
+            if (ouvertes.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: ouvertes[0].number, body: corps,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: titre, body: corps, labels: ["controles-navigateur"],
+              });
+            }

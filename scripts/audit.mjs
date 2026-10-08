@@ -4320,6 +4320,33 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- UN CONTRÔLE NAVIGATEUR SANS GARDE-FOU DU BUNDLE ------------------------
+//
+// « npm run build » construit SANS VITE_SUPABASE_KEY. L'application est alors
+// inbootable : elle retombe sur la page vitrine, sans un mot. Un contrôle qui
+// cherche ses boutons là-dedans rend un KO qui n'existe pas — et un faux KO est
+// pire qu'une absence de contrôle : il apprend à ignorer le rapport. verif-avis
+// a accusé un code parfaitement sain pour cette raison exacte.
+//
+// Tout contrôle qui démarre l'application doit donc appeler BUNDLE_TESTABLE
+// juste après son premier « goto ». Les contrôles qui ne visitent que des pages
+// HTML publiques n'en ont pas besoin : la clé n'y joue aucun rôle.
+{
+  const dossier = new URL("./", import.meta.url);
+  const SANS_APPLICATION = new Set([
+    "verif-contraste.mjs",          // pages publiques
+    "verif-outils-publics.mjs",     // pages publiques
+    "verif-calculs-identiques.mjs", // simulateurs publics + fonctions extraites
+  ]);
+  for (const nom of readdirSync(dossier).filter((f) => /^(verif|parcours)-.*\.mjs$/.test(f))) {
+    if (SANS_APPLICATION.has(nom)) continue;
+    const src = readFileSync(new URL(nom, dossier), "utf8");
+    if (!/\bchromium\b/.test(src)) continue;
+    if (/BUNDLE_TESTABLE\s*\(/.test(src.replace(/^\s*\/\/.*$/gm, ""))) continue;
+    signale("bundle-sans-garde-fou", `${nom} démarre l'application sans appeler BUNDLE_TESTABLE : construit sans VITE_SUPABASE_KEY, le bundle est inbootable et ce contrôle rendrait un KO imaginaire`);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

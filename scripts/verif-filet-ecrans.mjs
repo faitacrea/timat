@@ -8,9 +8,9 @@
 //   node scripts/verif-filet-ecrans.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE=(readFileSync(new URL("../src/App.jsx",import.meta.url),"utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
-const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const N=await chromium.launch({executablePath: CHROMIUM()});
 // Le service worker sert /assets/ depuis son cache et court-circuiterait
 // l'interception : on le desactive pour que le test porte bien sur le reseau.
 const ctx=await N.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});

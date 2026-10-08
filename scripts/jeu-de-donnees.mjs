@@ -246,3 +246,29 @@ export const BRANCHER = async (p, role = "asmat", cle = null, surcharge = null) 
   await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...s, ...s.user })));
   return s;
 };
+
+// OÙ EST CHROMIUM ? PAS AU MÊME ENDROIT PARTOUT.
+//
+// Les quarante contrôles navigateur portaient le chemin de CETTE machine :
+// « /opt/pw-browsers/chromium-1194/chrome-linux/chrome », parfois en dur,
+// parfois derrière un CHROMIUM_PATH dont le secours était ce même chemin. Sur
+// un runner GitHub, ce dossier n'existe pas : les quarante auraient échoué au
+// lancement, et l'atelier qui doit les faire tourner tout seuls n'aurait
+// jamais rendu qu'une erreur de chemin.
+//
+// On cherche donc, dans l'ordre : ce qu'on nous donne, le dossier des
+// navigateurs de Playwright s'il est désigné, puis rien du tout — et « rien »
+// est la bonne réponse sur un runner, où Playwright sait trouver le navigateur
+// qu'il a lui-même installé.
+import { existsSync, readdirSync as _lireDossier } from "node:fs";
+import { join as _joindre } from "node:path";
+export const CHROMIUM = () => {
+  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+  const racine = process.env.PLAYWRIGHT_BROWSERS_PATH;
+  if (racine && existsSync(racine))
+    for (const d of _lireDossier(racine).filter((x) => x.startsWith("chromium-")).sort().reverse()) {
+      const bin = _joindre(racine, d, "chrome-linux", "chrome");
+      if (existsSync(bin)) return bin;
+    }
+  return undefined; // Playwright trouvera son propre navigateur
+};

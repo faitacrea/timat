@@ -13,6 +13,7 @@
 // Hors chaine de build : Vercel n'a pas de navigateur.
 //   node scripts/verif-contraste.mjs
 import { chromium } from "playwright";
+import { CHROMIUM } from "./jeu-de-donnees.mjs";
 import { readdirSync, readFileSync } from "node:fs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
@@ -123,7 +124,7 @@ const MESURE = () => {
   return { mauvais: uniq, nonMesurables };
 };
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const CIBLES = [
   ["la page d'accueil", `/?acces=${CLE}`],
   ...readdirSync(new URL("../public/", import.meta.url))

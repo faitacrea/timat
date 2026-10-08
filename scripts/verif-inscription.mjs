@@ -19,7 +19,7 @@
 //   node scripts/verif-inscription.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BUNDLE_TESTABLE, ATTENDRE_PRET} from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BUNDLE_TESTABLE, ATTENDRE_PRET} from "./jeu-de-donnees.mjs";
 
 const SRC = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
 const CLE = SRC.match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
@@ -133,7 +133,7 @@ const SCENARIOS = [
 ];
 
 // ---------------------------------------------------------------------------
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 let ko = 0;
 console.log("\n=== PARCOURS D'INSCRIPTION — on saisit et on envoie ===\n");
 

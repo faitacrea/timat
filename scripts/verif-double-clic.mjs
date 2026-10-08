@@ -13,7 +13,7 @@
 //   node scripts/verif-double-clic.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { REPONSE_URL, UID, BUNDLE_TESTABLE, ATTENDRE_PRET} from "./jeu-de-donnees.mjs";
+import { CHROMIUM, REPONSE_URL, UID, BUNDLE_TESTABLE, ATTENDRE_PRET} from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const utilisateur = {
@@ -24,7 +24,7 @@ const utilisateur = {
 const session = { access_token: "faux", token_type: "bearer", expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: "faux", user: utilisateur };
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const ctx = await N.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR", timezoneId: "Europe/Paris", serviceWorkers: "block" });
 const p = await ctx.newPage();
 const erreurs = [];

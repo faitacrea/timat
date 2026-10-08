@@ -12,7 +12,7 @@
 //   node scripts/verif-contraste-app.mjs [asmat|parent]
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
 
@@ -23,7 +23,7 @@ const ECRANS = ESPACE === "parent"
 const MESURE = readFileSync(new URL("./verif-contraste.mjs", import.meta.url), "utf8")
   .match(/const MESURE = \(\) => \{[\s\S]*?\n\};/)[0];
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const ctx = await N.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR", serviceWorkers: "block" });
 const p = await ctx.newPage();
 // LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
