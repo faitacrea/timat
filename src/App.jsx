@@ -296,12 +296,27 @@ async function logConsent(user_id, consents={}){
 // Mode actuel : POST vers /api/send-email (a creer sur Vercel comme Edge Function avec Resend).
 // Tant que Resend n'est pas configure, l'appel echoue silencieusement et on logge dans audit_log
 // pour pouvoir relancer ces emails plus tard (rappel : ajouter `email_log` table optionnelle).
-export async function sendNotificationEmail({type,to,subject,template,vars={}}){
+// L'APPEL PRESENTE LE JETON DE SESSION.
+//
+// /api/send-email n'avait aucune authentification : n'importe qui sur Internet
+// pouvait la poster et faire partir un courriel signe par le domaine timat.app.
+// La porte est maintenant fermee, et c'est ce jeton qui l'ouvre.
+//
+// « subject » a disparu des parametres : le sujet appartient au gabarit, cote
+// serveur. Le laisser choisir a l'appelant permettait d'ecrire n'importe quelle
+// ligne d'objet sous notre signature.
+export async function sendNotificationEmail({type,to,template,vars={}}){
   try{
-    const payload={type,to,subject,template,vars,from:`TiMat <${EMAIL_EXPEDITEUR}>`};
+    const payload={type,to,template,vars,from:`TiMat <${EMAIL_EXPEDITEUR}>`};
+    const{data:{session}={}}=await supabase.auth.getSession();
+    const jeton=session?.access_token;
+    if(!jeton){
+      console.warn("[email] pas de session ouverte : l'envoi est refuse cote serveur");
+      return{success:false,error:"session absente"};
+    }
     const res=await fetch("/api/send-email",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+jeton},
       body:JSON.stringify(payload),
     });
     if(!res.ok){

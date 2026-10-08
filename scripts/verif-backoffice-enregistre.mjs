@@ -20,7 +20,7 @@
 //   node scripts/verif-backoffice-enregistre.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { BUNDLE_TESTABLE } from "./jeu-de-donnees.mjs";
+import { BUNDLE_TESTABLE, ATTENDRE_PRET} from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ADMIN = "99999999-9999-4999-8999-999999999999";
@@ -64,7 +64,7 @@ await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateu
 await p.route("**/api/**", (r) => r.fulfill(json({ ok: true })));
 
 await p.goto(`http://127.0.0.1:4173/backoffice?acces=${CLE}`, { waitUntil: "domcontentloaded" });
-await p.waitForTimeout(4500);
+await ATTENDRE_PRET(p);
 if (!(await BUNDLE_TESTABLE(p))) { await N.close(); process.exit(2); }
 const dedans = await p.evaluate(() => !/Accès réservé|Je suis assistante maternelle|Se connecter/.test(document.body.innerText.slice(0, 400)));
 if (!dedans) { console.error("\n  KO  le back-office ne s'ouvre pas : le contrôle ne vérifierait rien\n"); await N.close(); process.exit(1); }

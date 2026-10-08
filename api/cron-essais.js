@@ -54,7 +54,7 @@ const APP_URL = process.env.APP_URL || 'https://www.timat.app';
 async function rappeler(profil, jours) {
   const res = await fetch(`${APP_URL}/api/send-email`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-timat-interne': process.env.CRON_SECRET || '' },
     body: JSON.stringify({
       type: jours === 7 ? 'essai_rappel_7' : 'essai_rappel_3',
       to: profil.email,
@@ -104,7 +104,7 @@ const JOURS_MAX_REMONTEE = 30;
 async function rappelerPointage(ligne, urlParent) {
   const res = await fetch(`${APP_URL}/api/send-email`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-timat-interne': process.env.CRON_SECRET || '' },
     body: JSON.stringify({
       type: 'pointage_rappel',
       to: ligne.parent_email,
@@ -385,7 +385,7 @@ export default async function handler(request) {
       if (simulation) continue;
       try {
         await fetch(`${APP_URL}/api/send-email`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-timat-interne': process.env.CRON_SECRET || '' },
           body: JSON.stringify({ type: 'inactivite_avertissement', to: c.email,
             vars: { prenom: c.prenom || '', jours: String(JOURS_APRES_AVERTISSEMENT), url: APP_URL } }),
         });

@@ -146,3 +146,22 @@ export const BUNDLE_TESTABLE = async (p) => {
   }
   return true;
 };
+
+// ATTENDRE QUE L'APPLICATION RÉPONDE, au lieu d'un délai fixe.
+//
+// Les contrôles navigateur attendaient 4 000 ms après le chargement. C'est
+// assez quand « vite preview » tourne depuis un moment ; au premier appel après
+// son redémarrage, il compile et sert plus lentement. Le parcours d'inscription
+// a ainsi rendu un KO sur « un compte parent tente la porte des pros », puis six
+// « ok » d'affilée ensuite — un faux KO, et un faux KO est pire qu'une absence
+// de contrôle : il apprend à ignorer le rapport.
+//
+// On attend donc un signe réel : l'application a monté quelque chose de
+// cliquable. Le petit délai qui suit laisse les écrans se poser.
+export const ATTENDRE_PRET = async (p, delai = 900) => {
+  await p.waitForFunction(
+    () => document.querySelectorAll("button, input").length > 0,
+    null, { timeout: 25000 },
+  ).catch(() => { /* la page ne répond pas : les vérifications qui suivent le diront */ });
+  await p.waitForTimeout(delai);
+};

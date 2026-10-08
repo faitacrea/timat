@@ -23,7 +23,7 @@
 import { chromium } from "playwright";
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { inflateSync } from "node:zlib";
-import { REPONSE_URL, UID, PID, BUNDLE_TESTABLE} from "./jeu-de-donnees.mjs";
+import { REPONSE_URL, UID, PID, BUNDLE_TESTABLE, ATTENDRE_PRET} from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
@@ -204,7 +204,7 @@ await p.route("**/rest/v1/**", (r) => {
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 
 await p.goto(`http://127.0.0.1:4173/?acces=${CLE}`, { waitUntil: "domcontentloaded" });
-await p.waitForTimeout(4000);
+await ATTENDRE_PRET(p);
 if (!(await BUNDLE_TESTABLE(p))) { await N.close(); process.exit(2); }
 for (let i = 0; i < 5; i++) {
   const passer = p.getByRole("button", { name: /^Passer$/ });
@@ -253,7 +253,7 @@ for (const exige of EXIGES) {
   }, exige.bouton.source);
   if (!clique) { ko.push(`${exige.quoi} : aucun bouton pour le produire sur ce chemin`); continue; }
   declenches++;
-  await p.waitForTimeout(4000);
+  await ATTENDRE_PRET(p);
   if (fichiers.length === avant) ko.push(`${exige.quoi} : « ${clique} » cliqué, et rien n'est produit`);
   else if (process.env.TRACE) console.log(`      [exigé] ${exige.quoi} › ${clique} → ${fichiers[fichiers.length - 1].nom}`);
 }

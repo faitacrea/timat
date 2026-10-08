@@ -649,7 +649,6 @@ export function Pointage({enfants,role,pEId,user,demoMode=false}){
           sendNotificationEmail({
             type:"pointage_a_valider",
             to:p.email,
-            subject:"Un pointage attend votre validation",
             template:"pointage_a_valider",
             vars:{parent_prenom:p.prenom||"",enfant_prenom:enfant.prenom||"",date:new Date().toLocaleDateString("fr-FR"),duree:totStr,url:window.location.origin},
           });

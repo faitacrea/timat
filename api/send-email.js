@@ -1,7 +1,7 @@
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
 // api/send-email.js
 // Edge Function Vercel pour envoyer des emails via Resend
-// Frontend envoie : { type, to, subject, template, vars, from }
+// Frontend envoie : { type, to, template, vars, from } + son jeton de session
 // L'API compose le HTML, valide et envoie via Resend
 
 export const config = {
@@ -111,10 +111,26 @@ export const EMAIL_TEMPLATES = {
 //
 // A defaut d'adresse precise, le bouton ramene a l'application. C'est toujours
 // mieux que rien, et c'est vrai.
+// ET IL NE PEUT PAS POINTER AILLEURS QUE CHEZ NOUS.
+//
+// Cette fonction acceptait n'importe quelle adresse en https. Combinee a une
+// porte ouverte (voir plus bas), elle faisait de cet endroit un kit
+// d'hameconnage : un courriel signe par le domaine timat.app, portant un vrai
+// gabarit TiMat (« Votre bulletin de salaire est disponible »), avec un bouton
+// vers le site de n'importe qui. Le danger n'est pas seulement pour la
+// destinataire : un domaine qui sert a hameconner finit sur les listes noires,
+// et les vrais courriels — demandes de signature, bulletins — cessent
+// d'arriver.
+//
+// Un bouton dans un courriel TiMat n'a aucune raison legitime de mener
+// ailleurs que sur timat.app ou l'un de ses sous-domaines.
 const SITE = "https://www.timat.app";
+const DOMAINE_AUTORISE = /^https:\/\/(?:[a-z0-9-]+\.)*timat\.app(?:[/?#]|$)/i;
 function lien(u) {
   const v = String(u ?? "").trim();
-  return esc(/^https:\/\//i.test(v) ? v : SITE);
+  if (DOMAINE_AUTORISE.test(v)) return esc(v);
+  if (v) console.warn("[send-email] lien hors domaine refusé, repli sur le site :", v.slice(0, 120));
+  return esc(SITE);
 }
 
 function esc(s) {
@@ -181,6 +197,52 @@ export default async function handler(req) {
     });
   }
 
+  // --- QUI A LE DROIT D'ENVOYER ----------------------------------------------
+  //
+  // Cette porte n'avait AUCUNE authentification. N'importe qui sur Internet
+  // pouvait la poster et faire partir un courriel signe par le domaine
+  // timat.app, vers n'importe quelle adresse, avec le sujet de son choix et un
+  // bouton vers son propre site. La limite de dix par minute et par IP n'y
+  // changeait rien : elle se contourne en changeant d'IP, et elle est tenue en
+  // memoire d'une fonction edge, donc par instance.
+  //
+  // Deux appelants legitimes, et deux seulement :
+  //   - l'application, qui presente le jeton de session de l'utilisatrice ;
+  //   - la tache planifiee des rappels d'essai, qui presente le secret du cron.
+  // Tout le reste repart avec un 401.
+  const secretInterne = process.env.CRON_SECRET;
+  const enteteInterne = req.headers.get("x-timat-interne") || "";
+  const estInterne = Boolean(secretInterne) && enteteInterne === secretInterne;
+
+  if (!estInterne) {
+    const porteur = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    const urlSupabase = process.env.VITE_SUPABASE_URL;
+    const cleSupabase = process.env.VITE_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    if (!porteur || !urlSupabase || !cleSupabase) {
+      return new Response(JSON.stringify({ error: 'Authentification requise' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+    // On demande a Supabase si ce jeton designe quelqu'un. Cela ne reclame que
+    // la cle publique : la cle de service n'a rien a faire ici.
+    let valide = false;
+    try {
+      const r = await fetch(`${urlSupabase}/auth/v1/user`, {
+        headers: { apikey: cleSupabase, Authorization: `Bearer ${porteur}` },
+      });
+      valide = r.ok;
+    } catch (e) {
+      console.error('[send-email] vérification du jeton impossible :', e.message);
+    }
+    if (!valide) {
+      return new Response(JSON.stringify({ error: 'Jeton de session invalide ou expiré' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+  }
+
   if (!process.env.RESEND_API_KEY) {
     console.error('[send-email] RESEND_API_KEY non configurée dans Vercel');
     return new Response(JSON.stringify({ error: 'Email service not configured' }), {
@@ -207,7 +269,13 @@ export default async function handler(req) {
     });
   }
 
-  const { type, to, subject, template, vars = {}, from } = body;
+  // LE SUJET APPARTIENT AU GABARIT, et n'est plus negociable par l'appelant.
+  // « finalSubject = subject || tpl.subject » laissait choisir librement la
+  // ligne d'objet d'un courriel signe par le domaine : de quoi fabriquer
+  // « Votre virement a ete rejete » sous notre signature. Aucun appel n'en a
+  // besoin : le seul qui en passait encore un donnait exactement le sujet du
+  // gabarit.
+  const { type, to, template, vars = {}, from } = body;
 
   if (!type || typeof type !== 'string') {
     return new Response(JSON.stringify({ error: 'Missing or invalid type' }), {
@@ -230,7 +298,7 @@ export default async function handler(req) {
     });
   }
 
-  const finalSubject = subject || tpl.subject;
+  const finalSubject = tpl.subject;
   let finalHtml;
   try {
     finalHtml = tpl.html(vars);
