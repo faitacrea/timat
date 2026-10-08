@@ -144,7 +144,13 @@ export function ReglagesBorne({enfants,user,onDemarrer}){
       for(const e of list)m[e.id]=await empreinteCode(e.id,codeDe(e.id));
       borneMemoriserEmpreintes(m);
     }catch(err){setToast("❌ Empreintes des codes impossibles à calculer : "+String(err&&err.message||err));return;}
-    borneOuvrir(sortie);
+    // ON N'ENTRE PAS DANS UNE BORNE DONT LE CODE DE SORTIE N'EST PAS GARDE.
+    // Sans ce test, le stockage plein suffisait a enfermer : la borne
+    // s'ouvrait, et le bon code de sortie etait refuse indefiniment.
+    if(!borneOuvrir(sortie)){
+      setToast("❌ Le téléphone n'a plus de place : le code de sortie n'a pas pu être gardé, et la borne ne s'ouvre pas — vous ne pourriez plus en sortir. Libérez de l'espace, puis réessayez.");
+      return;
+    }
     onDemarrer();
   };
 
