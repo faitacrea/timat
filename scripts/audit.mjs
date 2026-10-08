@@ -3869,6 +3869,182 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- le coefficient brut-net d'un simulateur public ---
+//
+// Le simulateur de salaire public calcule le net avec un coefficient plat :
+// « brut x 0,7812 », et « x 0,7682 » en Alsace-Moselle. L'application, elle,
+// calcule cotisation par cotisation (TAUX_COTISATIONS).
+//
+// Verifie au centime : les deux concordent aujourd'hui, le coefficient exact de
+// l'application valant 0,781198 et 0,768198. Mais le coefficient est FIGE dans
+// la page : le jour ou un taux de cotisation change — la retraite
+// complementaire, la CSG, le regime local — le simulateur public continuera
+// d'annoncer l'ancien net, et l'application le nouveau. Deux chiffres pour la
+// meme question, dont un sur la porte d'entree Google du site.
+//
+// Cette regle recalcule le coefficient depuis TAUX_COTISATIONS et le compare a
+// ce que la page annonce. On tolere l'arrondi a quatre decimales, pas davantage.
+{
+  const bloc = (appSrc.match(/TAUX_COTISATIONS\s*=\s*\{([\s\S]*?)\n\};/) || [])[1] || "";
+  const lignes = [...bloc.matchAll(/\{\s*sal:\s*([\d.]+)[^}]*?(?:base:\s*([\d.]+))?\s*\}/g)];
+  const tauxLocal = Number((appSrc.match(/TAUX_REGIME_LOCAL\s*=\s*([\d.]+)/) || [])[1]);
+  if (!lignes.length || !tauxLocal) {
+    signale("coefficient", "TAUX_COTISATIONS ou TAUX_REGIME_LOCAL ne se lisent plus dans App.jsx : la comparaison avec le simulateur public ne vérifie plus rien");
+  } else {
+    // La base (0,9825 pour la CSG et la CRDS) se trouve APRES « sal: » dans la
+    // meme accolade : l'expression ci-dessus la capture quand elle est la.
+    let somme = 0;
+    for (const m of lignes) somme += Number(m[1]) * (m[2] ? Number(m[2]) : 1) / 100;
+    const coefGeneral = Math.round((1 - somme) * 10000) / 10000;
+    const coefLocal = Math.round((1 - somme - tauxLocal / 100) * 10000) / 10000;
+
+    const page = "public/simulateur-salaire-assistante-maternelle.html";
+    let contenu = "";
+    try { contenu = readFileSync(new URL("../" + page, import.meta.url), "utf8"); } catch (e) { contenu = ""; }
+    if (contenu) {
+      const annonces = [...contenu.matchAll(/\b0\.(\d{4})\b/g)].map((m) => Number("0." + m[1]));
+      const attendus = [coefGeneral, coefLocal];
+      for (const attendu of attendus) {
+        const proche = annonces.find((v) => Math.abs(v - attendu) < 0.0002);
+        if (!proche) {
+          signale("coefficient", `le simulateur public de salaire n'annonce pas le coefficient brut→net ${attendu} que donne TAUX_COTISATIONS (il annonce ${annonces.join(", ") || "aucun"}). Le site public et l'application diraient deux nets différents pour le même brut.`);
+        }
+      }
+    }
+  }
+}
+
+// --- un bareme perime sur une page publique ---
+//
+// Huit pages publiques portent les baremes legaux ECRITS EN DUR : le minimum
+// conventionnel, l'indemnite d'entretien, le minimum garanti, le coefficient de
+// 0,281, la majoration du titre. Ce sont les simulateurs — les portes d'entree
+// du site — et les chiffres qu'on y lit, on les recopie sur une declaration.
+//
+// Aujourd'hui ils concordent tous avec l'application, verifie. Mais a la
+// prochaine revalorisation, il faudra penser a NEUF endroits : huit pages plus
+// l'application. C'est la forme la plus commune de fausse promesse — le chiffre
+// a ete juste un jour. Le kit CMG et l'indemnite d'entretien l'ont deja montre
+// dans cette seance, a quatorze endroits.
+//
+// LA REGLE : l'application est la source. Tout montant d'une famille de
+// baremes qui apparait sur une page publique doit etre le montant COURANT de
+// cette famille, sauf s'il est accompagne d'une date ou d'un mot qui dit qu'il
+// ne s'applique plus.
+{
+  const nb = (motif, defaut) => {
+    const m = appSrc.match(motif);
+    return m ? Number(m[1]) : defaut;
+  };
+  // Les valeurs courantes, lues dans App.jsx — jamais recopiees ici.
+  const minConv = nb(/MINIMUM_CONV_HISTO\s*=\s*\[\s*\[\s*"[\d-]+"\s*,\s*([\d.]+)/, null);
+  const mg = nb(/MINIMUM_GARANTI\s*=\s*([\d.]+)/, null);
+  const plancherIE = nb(/IE_PLANCHER_JOUR\s*=\s*([\d.]+)/, null);
+  const coef = nb(/COEF_MINIMUM_LEGAL\s*=\s*([\d.]+)/, null);
+  const majTitre = nb(/MAJORATION_TITRE_AMGE\s*=\s*([\d.]+)/, null);
+  // Les valeurs anciennes du minimum conventionnel, telles que l'historique les
+  // garde : elles deviennent perimees d'elles-memes a chaque revalorisation.
+  //
+  // ON NE LIT QUE LE BLOC MINIMUM_CONV_HISTO. Premiere version, l'expression
+  // ramassait TOUTES les paires [date, nombre] de App.jsx — donc l'historique
+  // du SMIC. Elle aurait signale « 12,31 EUR » comme un minimum conventionnel
+  // perime, alors que c'est le SMIC horaire EN VIGUEUR. Une barriere qui accuse
+  // la valeur juste est pire que pas de barriere.
+  const blocHisto = (appSrc.match(/MINIMUM_CONV_HISTO\s*=\s*\[([\s\S]*?)\]\s*;/) || [])[1] || "";
+  const anciensMinConv = [...blocHisto.matchAll(/\[\s*"[\d-]+"\s*,\s*([\d.]+)\s*\]/g)]
+    .map((m) => Number(m[1])).filter((v) => v && v !== minConv);
+
+  if (minConv && mg && plancherIE && coef && majTitre) {
+    const tauxIEHoraire = Math.round((mg * 0.9 / 9) * 1000) / 1000;
+    const ieNeufHeures = Math.max(plancherIE, Math.round(tauxIEHoraire * 9 * 100) / 100);
+    const titre = Math.round(minConv * (1 + majTitre) * 100) / 100;
+
+    // Pour chaque famille : le montant courant, et ce qui ne doit plus etre
+    // presente comme en vigueur. On ne cherche la valeur que dans un contexte
+    // qui parle bien de ce bareme — sinon « 4,20 » attrape un prix de boutique.
+    const FAMILLES = [
+      { nom: "minimum conventionnel horaire", courant: minConv, perimes: anciensMinConv,
+        contexte: /minimum\s+conventionnel|salaire\s+minimum|taux\s+horaire\s+minimum/i },
+      { nom: "indemnité d'entretien pour 9 h", courant: ieNeufHeures, perimes: [3.80, 3.83],
+        contexte: /indemnit[ée]\s+d.entretien/i },
+      { nom: "minimum garanti", courant: mg, perimes: [],
+        contexte: /minimum\s+garanti/i },
+      { nom: "majoration du titre AM-GE", courant: titre, perimes: [],
+        contexte: /titre\s+(?:professionnel|AM-?GE)/i },
+    ];
+    // Les mots qui disent qu'un montant ne vaut plus : une page qui raconte
+    // l'historique a le droit de citer l'ancien chiffre.
+    //
+    // PREMIERE VERSION, ELLE AVALAIT TOUT. Elle contenait « 20\d\d » et
+    // « depuis le » : or les pages datent leurs baremes (« 4,20 EUR depuis le
+    // 1er juin 2026 », « avenant du 5 fevrier 2026 »), donc une annee se
+    // trouvait toujours dans la fenetre et chaque page etait exoneree. Je l'ai
+    // su en simulant la revalorisation suivante : la barriere n'a rien dit.
+    //
+    // Seuls les mots qui situent le montant DANS LE PASSE exonerent.
+    // « depuis le » n'en fait pas partie : il annonce au contraire un montant
+    // presente comme courant.
+    const PERIME_DIT = /avant\s+(?:le|la|juin|janvier)|jusqu'au|jusqu.au|ancien|précédent|precedent|n'était|n.etait|ne\s+s.appliqu\w*\s+plus|a\s+été\s+remplac|était\s+de|etait\s+de|historique/i;
+
+    const pages = readdirSync(new URL("../public/", import.meta.url))
+      .filter((f) => f.endsWith(".html"))
+      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]);
+
+    for (const [nomPage, contenu] of pages) {
+      const texte = contenu.replace(/&#0*39;|&apos;|&rsquo;|’/g, "'");
+
+      // UN TAUX HORAIRE PREREMPLI NE PEUT PAS ETRE SOUS LE MINIMUM.
+      //
+      // Les simulateurs preremplissent « Taux horaire brut (€) » avec 4,20 EUR.
+      // Ce n'est pas une affirmation — c'est un exemple — donc la regle des
+      // montants perimes ne s'y applique pas : le libelle ne dit pas
+      // « minimum ». Mais le jour ou le minimum monte, un exemple reste sous le
+      // plancher legal, et un visiteur qui le garde calcule un salaire
+      // illegal. C'est la seule chose qu'on peut affirmer sans se tromper : un
+      // exemple de taux horaire doit au moins valoir le minimum.
+      for (const m of texte.matchAll(/<label[^>]*>([^<]{0,60}taux\s+horaire[^<]{0,60})<\/label>\s*<input[^>]*value="([\d.]+)"/gi)) {
+        const propose = Number(m[2]);
+        if (propose > 0 && propose < minConv) {
+          signale("bareme", `${nomPage} propose ${propose.toFixed(2).replace(".", ",")} € dans « ${m[1].trim()} », sous le minimum conventionnel de ${minConv.toFixed(2).replace(".", ",")} € (source : App.jsx). Un visiteur qui garde cet exemple calcule un salaire illégal.`);
+        }
+      }
+
+      for (const fam of FAMILLES) {
+        for (const perime of fam.perimes) {
+          // « 4.2 » tel que JavaScript l'ecrit ne retrouve pas « 4,20 » tel que
+          // la page l'ecrit : on cherche les deux formes, a une et a deux
+          // decimales, avec le point ou la virgule. C'est ce detail qui faisait
+          // passer la premiere version au vert sur une revalorisation simulee.
+          const formes = new Set([String(perime), perime.toFixed(2), perime.toFixed(1)]);
+          const motif = [...formes].map((v) => v.replace(".", "[.,]")).join("|");
+          const re = new RegExp("(.{0,160})(?:" + motif + ")\\s*(?:€|EUR|&euro;)", "gi");
+          for (const m of texte.matchAll(re)) {
+            const autour = m[1];
+            if (!fam.contexte.test(autour)) continue;
+            if (PERIME_DIT.test(autour)) continue;
+            signale("bareme", `${nomPage} annonce ${perime.toFixed(2).replace(".", ",")} € comme ${fam.nom} : le montant en vigueur est ${fam.courant.toFixed(2).replace(".", ",")} € (source : App.jsx). Un chiffre juste un jour, recopié sur une déclaration.`);
+          }
+
+          // ET LES VALEURS PREREMPLIES DES CHAMPS.
+          //
+          // Les simulateurs portent le bareme dans value="4.20" : c'est le
+          // chiffre que le visiteur trouve deja en place et avec lequel il
+          // calcule. Perime, il ne s'affiche nulle part comme une affirmation —
+          // il fait juste calculer faux, en silence. Les trois premieres
+          // versions de cette regle ne regardaient que le texte visible.
+          const reChamp = new RegExp("(.{0,200})value=[\"'](?:" + motif + ")[\"']", "gi");
+          for (const m of texte.matchAll(reChamp)) {
+            if (!fam.contexte.test(m[1])) continue;
+            signale("bareme", `${nomPage} préremplit un champ avec ${perime.toFixed(2).replace(".", ",")} € pour ${fam.nom} : le montant en vigueur est ${fam.courant.toFixed(2).replace(".", ",")} € (source : App.jsx). Le visiteur calcule avec un chiffre périmé sans le voir.`);
+          }
+        }
+      }
+    }
+  } else {
+    signale("bareme", "les barèmes légaux ne se lisent plus dans App.jsx : la règle qui compare les pages publiques à l'application ne vérifie plus rien");
+  }
+}
+
 // --- aucune regle abrogee presentee comme en vigueur ---
 //
 // Une page outil publique affirmait encore : « si le salaire brut depasse
