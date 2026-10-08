@@ -80,6 +80,20 @@ const MESURE = () => {
     const t = (n.innerText || n.textContent || "").trim();
     if (!t) continue;
     if (/^(SCRIPT|STYLE|NOSCRIPT|TITLE)$/.test(n.tagName)) continue;
+    // UN EMOJI N'EST PAS DU TEXTE DONT LE CONTRASTE SE MESURE.
+    //
+    // Ce controle accusait « 🏛️ » : noir sur marine, 3,12:1. Or « color » ne
+    // decide pas de la couleur d'un emoji — il se dessine avec les siennes,
+    // dans une fonte en couleurs. La valeur lue n'etait donc pas celle qu'on
+    // voit, et la correction qu'elle suggerait (eclaircir le texte) n'aurait
+    // rien change a l'ecran.
+    //
+    // On exempte donc les morceaux qui ne contiennent QUE des pictogrammes.
+    // Un emoji pose seul sur un fond reste couvert par ailleurs : c'est un
+    // element graphique, pas du texte, et WCAG 1.4.3 ne parle que du texte.
+    // Attention a ne pas elargir : des qu'un seul caractere de texte accompagne
+    // le pictogramme, on mesure, parce que ce texte-la, il faut le lire.
+    if (!/[\p{L}\p{N}]/u.test((n.innerText || n.textContent || ""))) continue;
     const st = getComputedStyle(n);
     if (st.visibility === "hidden" || st.display === "none" || Number(st.opacity) < 0.1) continue;
     const r = n.getBoundingClientRect();

@@ -15,6 +15,7 @@
 //   node scripts/verif-sous-onglets-parent.mjs
 import { chromium } from "playwright";
 import { readFileSync, mkdirSync } from "node:fs";
+import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 
 const LARGEUR = 390; // iPhone 14/15, le format le plus etroit encore courant
 const SORTIE = "captures-sous-onglets-parent";
@@ -32,24 +33,23 @@ p.on("console", (m) => { const t = m.text(); if (m.type() === "error" && !/ERR_|
 // l'espace meme sans Supabase. On ne peut donc pas y entrer par un faux compte :
 // on repond a sa place une session valide, exactement ce que Supabase renverrait
 // pour un vrai parent. C'est le parcours reel, pas un raccourci.
-const UTILISATEUR = { id: "p1", aud: "authenticated", role: "authenticated", email: "sophie.martin@mail.fr",
-  user_metadata: { prenom: "Sophie", nom: "Martin", role: "parent" }, app_metadata: {}, created_at: new Date().toISOString() };
-const SESSION = { access_token: "jeton-de-verification", token_type: "bearer", expires_in: 3600,
-  expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: "rafraichir", user: UTILISATEUR };
-await p.route("**/auth/v1/token**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(SESSION) }));
-await p.route("**/auth/v1/user**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(UTILISATEUR) }));
-await p.route("**/rest/v1/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
+// La session vient de BRANCHER : ce fichier portait la sienne, avec un
+// identifiant « p1 » qu'aucune ligne du jeu de données ne connaissait.
+// LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
+// Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
+// démonstration : l'application ne trouvait aucun profil, et la connexion
+// s'arrêtait sur « Votre compte n'a pas pu être chargé ». Tout ce qu'il
+// déclarait « ok » était mesuré derrière cette carte d'erreur.
+await BRANCHER(p,"parent",CLE);
 
 await p.goto(`http://127.0.0.1:4173/?acces=${CLE}&connexion=parent`, { waitUntil: "domcontentloaded" });
 await p.waitForTimeout(2500);
-// L'espace parent s'ouvre DIRECTEMENT sur le formulaire : pas d'ecran
-// intermediaire comme cote assistante maternelle. On remplit, puis on valide.
-await p.fill('input[type="email"]', "sophie.martin@mail.fr");
-await p.fill('input[type="password"]', "demonstration");
-await p.getByRole("button", { name: /^Se connecter$/ }).first().click();
-await p.waitForTimeout(3000);
+if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
+await ATTENDRE_PRET(p,2200);
+// La session est deja ouverte par BRANCHER : plus de formulaire a remplir.
 const passer = p.getByRole("button", { name: /^Passer$/ });
 if (await passer.isVisible().catch(() => false)) { await passer.click(); await p.waitForTimeout(600); }
+if(!await DANS_L_APP(p,"le contrôle des sous-onglets de l'espace parent")){await N.close();process.exit(1);}
 
 // Qui suis-je ? Un espace assmat ouvert par erreur invaliderait tout le reste.
 const estParent = await p.evaluate(() => /Mon enfant/.test(document.body.innerText));

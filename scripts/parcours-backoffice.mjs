@@ -42,9 +42,16 @@ const faussSession={
 };
 await p.route("**/auth/v1/token**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(faussSession)}));
 await p.route("**/auth/v1/user**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify(faussSession.user)}));
+// L'ORDRE COMPTE, ET IL ETAIT INVERSE.
+//
+// Playwright applique la DERNIERE route declaree EN PREMIER. La regle generale
+// « rest/v1/** » etait ecrite apres celle des profils : c'est donc elle qui
+// repondait aux profils, par « [] ». Le back-office ne recevait aucun profil,
+// donc aucun « is_admin » — exactement la porte que ce parcours pretend
+// verifier. On declare donc le general d'abord, le particulier ensuite.
+await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/json",body:"[]"}));
 // Le profil renvoie is_admin : c'est la porte que le back-office controle.
 await p.route("**/rest/v1/profiles**",r=>r.fulfill({status:200,contentType:"application/json",body:JSON.stringify([{id:faussSession.user.id,is_admin:true,role:"asmat",prenom:"Admin",nom:"Test",email:"admin@timat.test"}])}));
-await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/json",body:"[]"}));
 
 await p.goto(URL_BASE+"/backoffice",{waitUntil:"domcontentloaded"});
 await p.waitForTimeout(3000);

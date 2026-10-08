@@ -12,6 +12,7 @@
 //   node scripts/verif-contraste-app.mjs [asmat|parent]
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 const ESPACE = process.argv[2] || "asmat";
 
@@ -25,24 +26,20 @@ const MESURE = readFileSync(new URL("./verif-contraste.mjs", import.meta.url), "
 const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
 const ctx = await N.newContext({ viewport: { width: 390, height: 844 }, locale: "fr-FR", serviceWorkers: "block" });
 const p = await ctx.newPage();
-await p.route("**/rest/v1/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
-if (ESPACE === "parent") {
-  const U = { id: "p1", aud: "authenticated", role: "authenticated", email: "sophie.martin@mail.fr", user_metadata: { prenom: "Sophie", nom: "Martin", role: "parent" }, app_metadata: {}, created_at: new Date().toISOString() };
-  await p.route("**/auth/v1/token**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ access_token: "x", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now()/1000)+3600, refresh_token: "y", user: U }) }));
-  await p.route("**/auth/v1/user**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(U) }));
-} else {
-  await p.route("**/auth/v1/token**", (r) => r.fulfill({ status: 400, contentType: "application/json", body: '{"error":"x"}' }));
-}
+// LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
+// Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
+// démonstration : l'application ne trouvait aucun profil, et la connexion
+// s'arrêtait sur « Votre compte n'a pas pu être chargé ». Tout ce qu'il
+// déclarait « ok » était mesuré derrière cette carte d'erreur.
+await BRANCHER(p,ESPACE==="parent"?"parent":"asmat",CLE);
 await p.goto(`http://127.0.0.1:4173/?acces=${CLE}&connexion=${ESPACE === "parent" ? "parent" : "1"}`, { waitUntil: "domcontentloaded" });
 await p.waitForTimeout(2600);
-const seCo = p.getByRole("button", { name: /^Se connecter$/ });
-if (ESPACE !== "parent" && await seCo.isVisible().catch(() => false)) { await seCo.first().click(); await p.waitForTimeout(600); }
-await p.fill('input[type="email"]', ESPACE === "parent" ? "sophie.martin@mail.fr" : "marie.dupont@mail.fr");
-await p.fill('input[type="password"]', "demonstration");
-await p.getByRole("button", { name: ESPACE === "parent" ? /^Se connecter$/ : /Accéder à mon espace/ }).first().click();
+if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
+await ATTENDRE_PRET(p,2200);
 await p.waitForTimeout(3000);
 const passer = p.getByRole("button", { name: /^Passer$/ });
 if (await passer.isVisible().catch(() => false)) { await passer.click(); await p.waitForTimeout(600); }
+if(!await DANS_L_APP(p,"le contrôle du contraste dans l'application")){await N.close();process.exit(1);}
 
 let ko = 0;
 const vus = new Set();
