@@ -21,7 +21,7 @@ import {
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
-  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois, joursAccueilParMois
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois, joursAccueilParMois, appelApi
 } from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
@@ -3530,19 +3530,16 @@ export function Support({role,user}){
     if(!msg.trim()){setErreur("Écrivez votre message avant d'envoyer.");return;}
     setSending(true);setErreur("");
     try{
-      const res=await fetch('/api/support',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          email:user?.email||'inconnu',
-          prenom:user?.prenom||'',
-          nom:user?.nom||'',
-          role:role||'asmat',
-          sujet:sujet,
-          message:msg,
-          prioritaire:isPro,
-          timestamp:new Date().toISOString(),
-        })
+      // L'adresse et l'horodatage ne sont plus envoyes : le serveur prend ceux
+      // du compte et son horloge. Cette porte ecrit avec la cle de service, et
+      // s'ouvrait a n'importe qui, au nom de l'adresse qu'on voulait.
+      const res=await appelApi('/api/support',{
+        prenom:user?.prenom||'',
+        nom:user?.nom||'',
+        role:role||'asmat',
+        sujet:sujet,
+        message:msg,
+        prioritaire:isPro,
       });
       if(res.ok){
         setEnvoye(true);
@@ -4127,18 +4124,16 @@ export function InviterParent({enfants,user,demoMode=false}){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr("Email invalide.");return;}
     setSending(true);setErr("");
     try{
-      const res=await fetch('/api/invite-parent',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          emailParent:email.trim(),
-          prenomEnfant:enfant.prenom,
-          prenomAsmat:user?.prenom||"Votre assistante maternelle",
-          asmatId:user?.id,
-          enfantId:enfant.id,
-        })
+      // « asmatId » n'est plus envoye : le serveur le prend dans le jeton.
+      // Cette porte ecrit avec la cle de service, et acceptait d'attribuer
+      // l'invitation a l'assistante maternelle que l'appelant designait.
+      const{data,ok:okApi}=await appelApi('/api/invite-parent',{
+        emailParent:email.trim(),
+        prenomEnfant:enfant.prenom,
+        prenomAsmat:user?.prenom||"Votre assistante maternelle",
+        enfantId:enfant.id,
       });
-      const data=await res.json();
+      const res={ok:okApi};
       if(data.success||res.ok){
         logAction('invitation_parent', {table_name:'invitations', record_id:enfant.id}); // AUDIT LOG P8
         setSent(true);

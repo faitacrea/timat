@@ -296,6 +296,31 @@ async function logConsent(user_id, consents={}){
 // Mode actuel : POST vers /api/send-email (a creer sur Vercel comme Edge Function avec Resend).
 // Tant que Resend n'est pas configure, l'appel echoue silencieusement et on logge dans audit_log
 // pour pouvoir relancer ces emails plus tard (rappel : ajouter `email_log` table optionnelle).
+// UN APPEL D'API PRESENTE TOUJOURS LE JETON DE SESSION.
+//
+// Quatre fonctions serverless s'ouvraient a n'importe qui sur Internet :
+// /api/send-email, /api/invite-parent, /api/support et /api/stripe. Elles sont
+// fermees cote serveur ; cette fonction est la clé, et il n'y en a qu'une pour
+// que personne n'oublie de la presenter.
+//
+// Elle rend { ok, status, data } : « ok: false » avec « status: 401 » signifie
+// que la session n'est plus ouverte, et non que l'operation a echoue.
+export async function appelApi(chemin, corps){
+  let jeton=null;
+  try{
+    const{data:{session}={}}=await supabase.auth.getSession();
+    jeton=session?.access_token||null;
+  }catch(e){ /* stockage indisponible : on part sans jeton, le serveur refusera */ }
+  if(!jeton)return{ok:false,status:401,data:{error:"Session non ouverte"}};
+  const res=await fetch(chemin,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+jeton},
+    body:JSON.stringify(corps||{}),
+  });
+  const data=await res.json().catch(()=>({}));
+  return{ok:res.ok,status:res.status,data};
+}
+
 // L'APPEL PRESENTE LE JETON DE SESSION.
 //
 // /api/send-email n'avait aucune authentification : n'importe qui sur Internet
@@ -8054,18 +8079,16 @@ export default function App(){
       return;
     }
     try{
-      const res=await fetch('/api/checkout-session',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({userId:user.id,email:user.email,prenom:user.prenom}),
-      });
-      if(!res.ok){
-        const txt=await res.text();
-        console.error('Stripe error:', res.status, txt);
-        alert("Erreur serveur ("+res.status+"). Vérifiez que Stripe est configuré dans Vercel.");
+      // L'identite n'est plus envoyee : le serveur la prend dans le jeton.
+      // La passer dans le corps permettait de faire crediter l'abonnement du
+      // compte de quelqu'un d'autre.
+      const{ok,status,data}=await appelApi('/api/checkout-session',{prenom:user.prenom});
+      if(!ok){
+        if(status===401){alert("Votre session a expiré. Reconnectez-vous puis réessayez.");return;}
+        console.error('Stripe error:', status, data);
+        alert("Erreur serveur ("+status+"). Vérifiez que Stripe est configuré dans Vercel.");
         return;
       }
-      const data=await res.json();
       if(data.url)window.location.href=data.url;
       else alert("Erreur: "+JSON.stringify(data));
     }catch(e){
@@ -8079,12 +8102,10 @@ export default function App(){
   const ouvrirPortail=async()=>{
     if(!user?.stripe_customer_id){alert("Aucun abonnement actif trouvé.");return;}
     try{
-      const res=await fetch('/api/customer-portal',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({stripeCustomerId:user.stripe_customer_id}),
-      });
-      const data=await res.json();
+      // L'identifiant client n'est plus envoye : le serveur le lit dans le
+      // profil de l'appelante. Le passer dans le corps ouvrait le portail de
+      // facturation de n'importe quel client dont on avait l'identifiant.
+      const{data}=await appelApi('/api/customer-portal',{});
       if(data.url)window.location.href=data.url;
     }catch(e){alert("Erreur lors de l'ouverture du portail.");}
   };

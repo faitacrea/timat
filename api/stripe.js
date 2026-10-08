@@ -18,6 +18,8 @@
 // paiement — c'est ce que l'application envoyait deja.
 
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
+import { poserCors, utilisateurDeLaRequete } from './_authentifier.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -34,18 +36,31 @@ const BOUTIQUE_PRODUCTS = {
 };
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  poserCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+  // Les deux chemins touchent a de l'argent : ils exigent une session ouverte.
+  const appelant = await utilisateurDeLaRequete(req);
+  if (!appelant) return res.status(401).json({ error: 'Authentification requise' });
 
   // --- Le portail client : gerer ou resilier un abonnement en cours. ---
   const action = req.query?.action || req.body?.action;
   if (action === 'portail') {
     try {
-      const { stripeCustomerId } = req.body || {};
-      if (!stripeCustomerId) return res.status(400).json({ error: 'stripeCustomerId requis' });
+      // L'IDENTIFIANT CLIENT VIENT DU PROFIL DE L'APPELANTE, PLUS DU CORPS.
+      //
+      // « stripeCustomerId » arrivait dans la requete, sans authentification :
+      // quiconque disposait d'un identifiant « cus_... » obtenait l'URL du
+      // portail de facturation de cette personne — ses factures, les quatre
+      // derniers chiffres de sa carte, son adresse, et le bouton de
+      // resiliation de son abonnement.
+      const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data: profil, error } = await sb.from('profiles')
+        .select('stripe_customer_id').eq('id', appelant.id).maybeSingle();
+      if (error) return res.status(502).json({ error: 'Profil illisible : ' + error.message });
+      const stripeCustomerId = profil?.stripe_customer_id;
+      if (!stripeCustomerId) return res.status(404).json({ error: "Aucun abonnement Stripe rattaché à ce compte" });
       const session = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
         return_url: process.env.NEXT_PUBLIC_APP_URL || 'https://www.timat.app',
@@ -61,11 +76,14 @@ export default async function handler(req, res) {
 
 
   try {
-    const { userId, email, prenom, productId } = req.body;
-
-    if (!userId || !email) {
-      return res.status(400).json({ error: 'userId et email requis' });
-    }
+    // L'identite vient du jeton : « userId » et « email » arrivaient dans le
+    // corps, et se retrouvaient dans les metadonnees Stripe — donc dans le
+    // webhook qui accorde l'abonnement. Les accepter du corps permettait de
+    // faire crediter le compte de quelqu'un d'autre.
+    const { prenom, productId } = req.body || {};
+    const userId = appelant.id;
+    const email = appelant.email;
+    if (!email) return res.status(400).json({ error: 'Compte sans adresse e-mail' });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://timat-rho.vercel.app';
 

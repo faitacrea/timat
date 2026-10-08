@@ -22,7 +22,7 @@ import {
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
-  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE, useUneFois
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE, useUneFois, appelApi
 } from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
@@ -2996,23 +2996,23 @@ export function OnboardingWizard({user,onFinish}){
                 onClick={async()=>{
                   if(!parentEmail.trim()){setStep(3);return;}
                   setSaving(true);
-                  let inviteUrl=null;
+                  // On ne garde que le JETON : le lien est bati cote serveur.
+                  let inviteToken=null;
                   try{
                     const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfant.id});
-                    if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?invite="+tk;
-                  }catch(e){}
+                    if(tk)inviteToken=String(tk);
+                  }catch(e){ /* pas de jeton : le courriel renverra vers la page d'accueil parent */ }
                   try{
-                    const res=await fetch('/api/invite-parent',{
-                      method:'POST',headers:{'Content-Type':'application/json'},
-                      body:JSON.stringify({
-                        emailParent:parentEmail,
-                        prenomEnfant:enfant.prenom,
-                        prenomAsmat:user?.prenom||"Votre assistante maternelle",
-                        asmatId:user?.id,enfantId:enfant?.id||null,
-                        inviteUrl,
-                      })
+                    // On envoie le JETON, pas l'adresse complete : le serveur
+                    // batit le lien. « inviteUrl » recu entier faisait du
+                    // courriel d'invitation un vehicule vers n'importe quel site.
+                    const{data:d}=await appelApi('/api/invite-parent',{
+                      emailParent:parentEmail,
+                      prenomEnfant:enfant.prenom,
+                      prenomAsmat:user?.prenom||"Votre assistante maternelle",
+                      enfantId:enfant?.id||null,
+                      inviteToken,
                     });
-                    const d=await res.json();
                     setToast(d.success?"✉️ Invitation envoyée - le parent recevra un email":"Erreur: "+d.error);
                     if(d.success) logAction('invitation_parent', {table_name:'invitations'}); // AUDIT LOG P8
                   }catch(e){setToast("Erreur réseau");}
@@ -3157,26 +3157,22 @@ export function AjouterEnfantModale({user,onClose}){
       if(parentInfo.email.trim()){
         try{
           // Lien de rattachement automatique au bon enfant (token de partage)
-          let inviteUrl=null;
+          // On ne garde que le JETON : le lien est bati cote serveur.
+          let inviteToken=null;
           try{
             const{data:tk}=await supabase.rpc("get_or_create_share_token",{p_enfant_id:enfantData.id});
-            if(tk)inviteUrl=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?invite="+tk;
-          }catch(e){}
-          const res=await fetch("/api/invite-parent",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({
-              emailParent:parentInfo.email.trim(),
-              prenomParent:parentInfo.prenom.trim()||null,
-              nomParent:parentInfo.nom.trim()||null,
-              prenomEnfant:enfant.prenom.trim(),
-              prenomAsmat:user?.prenom||"Votre assistante maternelle",
-              asmatId:user.id,
-              enfantId:enfantData.id,
-              inviteUrl,
-            }),
+            if(tk)inviteToken=String(tk);
+          }catch(e){ /* pas de jeton : le courriel renverra vers la page d'accueil parent */ }
+          // On envoie le JETON, pas l'adresse complete : voir l'autre appel.
+          const{data:d}=await appelApi("/api/invite-parent",{
+            emailParent:parentInfo.email.trim(),
+            prenomParent:parentInfo.prenom.trim()||null,
+            nomParent:parentInfo.nom.trim()||null,
+            prenomEnfant:enfant.prenom.trim(),
+            prenomAsmat:user?.prenom||"Votre assistante maternelle",
+            enfantId:enfantData.id,
+            inviteToken,
           });
-          const d=await res.json().catch(()=>({}));
           if(d.success) logAction('invitation_parent', {table_name:'invitations', record_id:enfantData.id}); // AUDIT LOG P8
           if(!d.success){
             console.warn("Invitation parent : ",d.error||"erreur inconnue");
