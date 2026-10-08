@@ -362,8 +362,16 @@ export function ModeBorne({enfants,user,onQuitter}){
       }
       const maintenant=new Date().toTimeString().slice(0,5);
       const st=statut[e.id]||{};
-      filerOperation({rpc:"pointage_borne",cle:"borne:"+e.id+":"+TODAY_STR,
+      // LA MISE EN FILE PEUT ECHOUER : le stockage du telephone peut etre
+      // plein. Sans ce test, la borne affichait « en attente de reseau » et le
+      // pointage n'etait nulle part. C'est la borne : personne ne revient
+      // verifier, et l'heure est perdue avec la journee.
+      const enFile=filerOperation({rpc:"pointage_borne",cle:"borne:"+e.id+":"+TODAY_STR,
         charge:{enfant_id:e.id,code,heure:maintenant,date:TODAY_STR}});
+      if(!enFile){
+        setErreur("Le téléphone n'a plus de place : ce pointage n'a pas pu être gardé. Notez l'heure de "+maintenant+" et libérez de l'espace.");
+        setCode("");return;
+      }
       essais.current[e.id]={n:0,bloqueJusqu:0};
       setFait({prenom:e.prenom||"Enfant",emoji:e.emoji||"👶",
         action:st.arrivee?"depart":"arrivee",heure:maintenant,enFile:true});
