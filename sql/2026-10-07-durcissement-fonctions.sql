@@ -1,5 +1,15 @@
 -- DURCISSEMENT DES FONCTIONS-DÉCLENCHEURS
--- À coller dans Supabase → SQL Editor → Run. Rien à installer, aucun terminal.
+--
+-- APPLIQUÉ le 8 octobre 2026, et vérifié : les sept fonctions-déclencheurs de
+-- « public » sont désormais à anon=false, authenticated=false, PUBLIC=false, et
+-- toutes portent « search_path=public ».
+--
+-- Les déclencheurs continuent de fonctionner — vérifié pour de vrai, pas
+-- supposé : une modification de contrat met toujours « updated_at » à jour
+-- (le_declencheur_a_agi: true). Un déclencheur s'exécute sous l'identité du
+-- propriétaire de la table, pas sous les droits de l'appelant.
+--
+-- Rien à refaire. Ce fichier reste comme trace de ce qui a été passé.
 --
 -- Ce que les advisors Supabase signalaient, et ce que j'ai vérifié avant d'y
 -- toucher :
