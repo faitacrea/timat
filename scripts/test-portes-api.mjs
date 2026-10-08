@@ -57,28 +57,51 @@ dire(serverless.length <= 12, `${serverless.length} fonctions serverless (douze 
 
 // Les portes qui n'écrivent rien et ne lisent que du public : elles n'ont pas
 // besoin d'authentification, et on dit pourquoi plutôt que de les oublier.
+// CHAQUE RAISON EST VÉRIFIÉE DANS LE CODE, PAS SUPPOSÉE.
+//
+// Première version de cette liste, deux entrées étaient fausses — et toutes
+// deux SOUS-ESTIMAIENT le code, ce qui est le pire sens pour une exemption :
+// elle dispensait de vérifier des portes qui vérifient très bien.
+//
+//   - « backoffice.js : protégée par la clé de maintenance ». Non : elle exige
+//     une session Supabase valide ET profiles.is_admin === true ;
+//   - « send-push.js : vérifie l'abonnement push de la destinataire ». Non :
+//     elle exige un jeton, lit qui appelle par auth.getUser(), puis demande à
+//     la base, par peut_notifier(), s'il a le droit de notifier ce
+//     destinataire-là.
+//
+// Les deux sont donc sorties de cette liste : elles passent le contrôle normal,
+// et c'est mieux ainsi — une exemption est un angle mort qu'on s'accorde.
 const SANS_AUTHENTIFICATION = {
-  "webhook.js": "appelée par Stripe, qui signe sa requête (STRIPE_WEBHOOK_SECRET vérifié)",
+  "webhook.js": "appelée par Stripe, qui signe sa requête (constructEvent avec STRIPE_WEBHOOK_SECRET)",
   "cron-essais.js": "appelée par le planificateur Vercel, qui présente CRON_SECRET",
   "pointage-public.js": "la borne de pointage : son jeton EST l'authentification",
-  "demande-publique.js": "formulaire de contact public : son jeton de page l'identifie",
-  "vitrine.js": "page vitrine publique, en lecture seule",
-  "telecharger.js": "téléchargement d'un achat : le jeton de la commande l'autorise",
-  "infolettre.js": "inscription à l'infolettre : volontairement ouverte",
-  "publier-article.js": "appelée par Sanity, qui présente son secret",
-  "backoffice.js": "protégée par la clé de maintenance",
-  "send-push.js": "vérifie l'abonnement push de la destinataire",
+  "demande-publique.js": "formulaire public : le jeton de la page identifie l'assistante maternelle",
+  "vitrine.js": "page vitrine publique, servie par jeton de partage, en lecture seule",
+  "telecharger.js": "le jeton de la commande, cherché dans achats_boutique, avec date d'expiration et un refus uniforme",
+  "infolettre.js": "désinscription par jeton signé (lib/infolettre-jeton.js) ; l'inscription est volontairement ouverte",
+  "publier-article.js": "exige « Bearer CRON_SECRET », et ne publie rien si le secret n'est pas configuré",
 };
 
 for (const nom of routes.sort()) {
   const src = readFileSync(new URL(nom, dossier), "utf8");
   const code = src.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
 
-  const accepteUnPost = /req\.method\s*[!=]==?\s*['"]POST['"]|method:\s*['"]POST['"]/.test(code);
   const cleDeService = /SUPABASE_SERVICE_KEY/.test(code);
   const envoieUnCourriel = /resend|Resend/.test(code);
   const toucheALArgent = /stripe|Stripe/.test(code);
-  const sensible = accepteUnPost && (cleDeService || envoieUnCourriel || toucheALArgent);
+
+  // L'ANGLE MORT DE LA PREMIERE VERSION : elle exigeait que la fonction PARLE
+  // de POST (« req.method !== 'POST' ») pour la juger sensible. Or
+  // backoffice.js ne teste pas sa methode du tout — donc elle accepte GET,
+  // POST, n'importe quoi — et elle ecrit en base AVEC LA CLE DE SERVICE. Elle
+  // echappait donc entierement au controle, parce qu'elle est PLUS permissive,
+  // pas moins. Une regle qui saute les fonctions les plus ouvertes ne sert a
+  // rien.
+  //
+  // Ce qui rend une porte sensible, c'est le secret qu'elle manipule, pas la
+  // methode qu'elle accepte.
+  const sensible = cleDeService || envoieUnCourriel || toucheALArgent;
   if (!sensible) continue;
 
   if (SANS_AUTHENTIFICATION[nom]) {
@@ -96,10 +119,27 @@ for (const nom of routes.sort()) {
   // expres, et elle n'a rien vu.
   //
   // Il faut donc l'APPEL effectif, et le REFUS qui en decoule.
-  const appelleLaVerification = /await\s+(?:utilisateurDeLaRequete\(req\)|verifierJeton)/.test(code)
-    || /fetch\([^)]*auth\/v1\/user/.test(code)
-    || /estInterne\(req\)/.test(code)
-    || /CRON_SECRET/.test(code);
+  // LA VERIFICATION DOIT ETRE APPELEE DANS LE GESTIONNAIRE, pas seulement
+  // presente dans le fichier.
+  //
+  // Troisieme fois que je me fais prendre par la meme chose. En retirant la
+  // ligne « if (!(await requireAdmin(req, res))) return; » de backoffice.js,
+  // j'ai laisse la porte grande ouverte — et la regle est restee verte, parce
+  // que la fonction requireAdmin, devenue morte, contient toujours
+  // « auth.getUser » et « 401 ». Un nom present dans un fichier ne prouve rien.
+  //
+  // On lit donc le CORPS DU GESTIONNAIRE, et on y exige soit une verification
+  // directe, soit l'appel d'une garde locale dont le corps, lui, verifie.
+  const iHandler = code.search(/export\s+default\s+async\s+function\s+handler/);
+  const corpsHandler = iHandler === -1 ? code : code.slice(iHandler);
+  const DIRECTE = /await\s+(?:utilisateurDeLaRequete\(req\)|verifierJeton)|fetch\([^)]*auth\/v1\/user|auth\.getUser\(|estInterne\(req\)|CRON_SECRET/;
+  // Les gardes locales : une fonction du fichier dont le corps verifie.
+  const gardesLocales = [...code.matchAll(/(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/g)]
+    .map((m) => ({ nom: m[1], depuis: m.index }))
+    .filter(({ nom, depuis }) => nom !== "handler" && DIRECTE.test(code.slice(depuis, depuis + 1400)))
+    .map(({ nom }) => nom);
+  const appelleUneGarde = gardesLocales.some((nom) => new RegExp("await\\s+" + nom + "\\s*\\(").test(corpsHandler));
+  const appelleLaVerification = DIRECTE.test(corpsHandler) || appelleUneGarde;
   const refuseSansJeton = /401/.test(code);
   dire(appelleLaVerification && refuseSansJeton, `${nom} vérifie qui appelle, et refuse sinon`,
     "elle accepte un POST et écrit ou envoie avec un secret du serveur : sans l'appel ET le 401, n'importe qui sur Internet peut l'utiliser");
@@ -110,7 +150,14 @@ for (const nom of routes.sort()) {
   // pas : tant que le corps peut designer qui on est, la verification ne sert
   // a rien.
   const IDENTITES = ["asmatId", "asmat_id", "userId", "user_id", "stripeCustomerId", "parentId", "parent_id"];
-  const prisDansLeCorps = IDENTITES.filter((nomChamp) =>
+  // UN DESTINATAIRE N'EST PAS UNE IDENTITE.
+  //
+  // send-push.js recoit « userId » dans le corps : c'est la personne a
+  // NOTIFIER, pas celle qui appelle. Elle est legitime, et la base tranche par
+  // peut_notifier(). Sans cette nuance, la regle aurait signale comme une
+  // faille le motif exactement inverse : une cible verifiee par une garde.
+  const gardeLaCible = /peut_notifier|peut_acceder_enfant/.test(code);
+  const prisDansLeCorps = gardeLaCible ? [] : IDENTITES.filter((nomChamp) =>
     new RegExp("req\\.body\\??\\.?\\s*\\??\\.?" + nomChamp + "\\b").test(code)
     || new RegExp("\\{[^}]*\\b" + nomChamp + "\\b[^}]*\\}\\s*=\\s*req\\.body").test(code));
   dire(prisDansLeCorps.length === 0, `${nom} ne prend aucune identité dans le corps de la requête`,
