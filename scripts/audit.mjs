@@ -3984,11 +3984,40 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     // Seuls les mots qui situent le montant DANS LE PASSE exonerent.
     // « depuis le » n'en fait pas partie : il annonce au contraire un montant
     // presente comme courant.
-    const PERIME_DIT = /avant\s+(?:le|la|juin|janvier)|jusqu'au|jusqu.au|ancien|précédent|precedent|n'était|n.etait|ne\s+s.appliqu\w*\s+plus|a\s+été\s+remplac|était\s+de|etait\s+de|historique/i;
+    //
+    // LES MOTS DU BLOG AUSSI. En etendant cette regle aux soixante-neuf
+    // articles, trois d'entre eux sont ressortis — et les trois avaient raison :
+    // « ces montants sont perimes depuis le 1er juin 2026 », « contre 3,64 EUR
+    // brut auparavant », « perime depuis le 1er juin 2026 ». Aucun de ces trois
+    // tours n'etait reconnu. Un article qui explique qu'un chiffre ne vaut plus
+    // rend service ; l'accuser l'aurait fait supprimer.
+    const PERIME_DIT = /avant\s+(?:le|la|juin|janvier)|auparavant|jusqu'au|jusqu.au|ancien|précédent|precedent|périm|perim|n'était|n.etait|n'existe\w*\s+plus|n.existe\w*\s+plus|ne\s+s.appliqu\w*\s+plus|a\s+été\s+remplac|était\s+de|etait\s+de|historique|vérifiez\s+toujours|verifiez\s+toujours/i;
 
-    const pages = readdirSync(new URL("../public/", import.meta.url))
-      .filter((f) => f.endsWith(".html"))
-      .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]);
+    // LES ARTICLES DU BLOG AUSSI : ce sont eux qui expliquent les baremes en
+    // detail, donc eux qui risquent le plus d'en garder un perime — et eux
+    // qu'une assistante maternelle trouve par une recherche. Un taux perime lu
+    // dans un article, c'est un salaire sous le plancher legal.
+    const articles = [];
+    {
+      const racine = new URL("../public/blog/", import.meta.url);
+      const empiler = (dossier, prefixe) => {
+        let entrees = [];
+        try { entrees = readdirSync(dossier, { withFileTypes: true }); } catch (e) { return; }
+        for (const e of entrees) {
+          if (e.isDirectory()) empiler(new URL(e.name + "/", dossier), prefixe + e.name + "/");
+          else if (e.name === "index.html") {
+            try { articles.push([prefixe + "index.html", readFileSync(new URL(e.name, dossier), "utf8")]); } catch (err) { /* page illisible : signalee ailleurs */ }
+          }
+        }
+      };
+      empiler(racine, "public/blog/");
+    }
+    const pages = [
+      ...readdirSync(new URL("../public/", import.meta.url))
+        .filter((f) => f.endsWith(".html"))
+        .map((f) => ["public/" + f, readFileSync(new URL("../public/" + f, import.meta.url), "utf8")]),
+      ...articles,
+    ];
 
     for (const [nomPage, contenu] of pages) {
       const texte = contenu.replace(/&#0*39;|&apos;|&rsquo;|’/g, "'");
@@ -4017,10 +4046,19 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
           // passer la premiere version au vert sur une revalorisation simulee.
           const formes = new Set([String(perime), perime.toFixed(2), perime.toFixed(1)]);
           const motif = [...formes].map((v) => v.replace(".", "[.,]")).join("|");
-          const re = new RegExp("(.{0,160})(?:" + motif + ")\\s*(?:€|EUR|&euro;)", "gi");
+          // ON REGARDE DES DEUX COTES.
+          //
+          // Premiere version, la fenetre ne couvrait que ce qui PRECEDE le
+          // montant. Or un article ecrit « contre 3,64 EUR brut auparavant » :
+          // la mise au point suit le chiffre. La regle a donc accuse un article
+          // parfaitement juste — et c'est exactement l'erreur que la barriere
+          // des regles abrogees, quelques lignes plus bas dans ce meme fichier,
+          // documente avoir commise avant moi. Je l'ai refaite.
+          const re = new RegExp("(.{0,160})(?:" + motif + ")\\s*(?:€|EUR|&euro;)(.{0,160})", "gis");
           for (const m of texte.matchAll(re)) {
-            const autour = m[1];
-            if (!fam.contexte.test(autour)) continue;
+            const avant = m[1], apres = m[2] || "";
+            const autour = avant + " " + apres;
+            if (!fam.contexte.test(avant)) continue;
             if (PERIME_DIT.test(autour)) continue;
             signale("bareme", `${nomPage} annonce ${perime.toFixed(2).replace(".", ",")} € comme ${fam.nom} : le montant en vigueur est ${fam.courant.toFixed(2).replace(".", ",")} € (source : App.jsx). Un chiffre juste un jour, recopié sur une déclaration.`);
           }
