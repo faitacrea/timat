@@ -165,3 +165,110 @@ export const ATTENDRE_PRET = async (p, delai = 900) => {
   ).catch(() => { /* la page ne répond pas : les vérifications qui suivent le diront */ });
   await p.waitForTimeout(delai);
 };
+
+// EST-ON VRAIMENT ENTRÉ DANS L'APPLICATION ?
+//
+// Ce garde-fou vient d'un contrôle qui mentait. verif-contraste-app annonçait
+// « ok » pour seize écrans ; il mesurait en réalité une carte d'erreur de six
+// lignes. Onze contrôles navigateur doublaient « rest/v1 » par un « [] » :
+// aucune ligne « profiles », donc l'application recrée le profil, l'écriture
+// renvoie « [] » elle aussi, et la connexion s'arrête sur « Votre compte n'a
+// pas pu être chargé ». L'application a raison de s'arrêter là. Les contrôles
+// avaient tort de continuer à chercher des boutons derrière cette carte.
+//
+// Un contrôle qui vérifie le vide est pire qu'une absence de contrôle : il
+// rassure. Tout contrôle qui se connecte appelle donc ceci juste après, et
+// s'arrête si la réponse est « non ».
+export const DANS_L_APP = async (p, quoi = "ce contrôle") => {
+  const t = await p.locator("body").innerText().catch(() => "");
+  const panne = /Votre compte n'a pas pu être chargé/.test(t);
+  const dehors = /Se connecter|Accéder à mon espace/.test(t) && !/Accueil/.test(t);
+  if (!panne && !dehors) return true;
+  console.error(`\n  ARRÊT  ${quoi} n'est pas entré dans l'application :`);
+  console.error(panne
+    ? "         la connexion s'arrête sur « Votre compte n'a pas pu être chargé »."
+    : "         la page est restée sur l'écran de connexion.");
+  console.error("         Tout « ok » rendu ici serait creux. La cause la plus fréquente :");
+  console.error("         doubler « **/rest/v1/** » par « [] » — l'application n'a alors aucun");
+  console.error("         profil. Utiliser REPONSE_URL de ce fichier à la place :\n");
+  console.error('           await p.route("**/rest/v1/**", (r) => r.fulfill({ status: 200,');
+  console.error('             contentType: "application/json",');
+  console.error('             body: JSON.stringify(REPONSE_URL(r.request().url(), r.request().headers())) }));\n');
+  console.error(`         Début de la page vue : « ${t.replace(/\s+/g, " ").slice(0, 120)} »\n`);
+  return false;
+};
+
+// UNE SESSION OUVERTE, SANS PASSER PAR LE COMPTE DE DÉMONSTRATION.
+//
+// Deux raisons de ne pas se connecter en démonstration : les actions y sont
+// volontairement désactivées (un contrôle a cliqué 226 boutons sans rien
+// trouver), et son identifiant ne correspond à aucune ligne de ce jeu de
+// données — donc aucun profil, donc l'écran de panne.
+//
+// On ouvre donc directement une session, comme le fait déjà verif-boutons, et
+// on la sert sur « auth/v1 ». Les contrôles n'ont plus à recopier ces douze
+// lignes, ni à se tromper dessus.
+export const UTILISATEUR = (role = "asmat") => ({
+  id: role === "parent" ? PID : UID, aud: "authenticated", role: "authenticated",
+  email: role === "parent" ? "sophie@test.fr" : "marie@test.fr", app_metadata: {},
+  user_metadata: { prenom: role === "parent" ? "Sophie" : "Marie", nom: "Test", role },
+  created_at: new Date().toISOString(),
+});
+export const SESSION = (role = "asmat") => {
+  const user = UTILISATEUR(role);
+  return { access_token: "faux", token_type: "bearer", expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: "faux", user };
+};
+// Branche l'authentification ET la base sur le jeu de données. À appeler AVANT
+// le « goto » : l'application lit sa session au premier rendu.
+// « surcharge » retouche la ligne « profiles » servie : un contrôle qui veut
+// voir le mur du forfait gratuit passe { subscription_status: "free" } au lieu
+// de recopier tout un stub — et la retouche est alors VISIBLE à la lecture.
+export const BRANCHER = async (p, role = "asmat", cle = null, surcharge = null) => {
+  const s = SESSION(role);
+  // La session est posée dans le stockage dès le premier script de la page :
+  // le client Supabase la lit là, pas sur le réseau.
+  await p.addInitScript(([ses, c]) => {
+    try {
+      if (c) localStorage.setItem("timat_acces", c);
+      localStorage.setItem("sb-akicyckmbsjnewnvvcil-auth-token", JSON.stringify(ses));
+    } catch (e) { /* stockage indisponible : la page reste testable */ }
+  }, [s, cle]);
+  const json = (corps) => ({ status: 200, contentType: "application/json", body: JSON.stringify(corps) });
+  await p.route("**/rest/v1/**", (r) => {
+    let corps = REPONSE_URL(r.request().url(), r.request().headers(), role);
+    if (surcharge && /rest\/v1\/profiles/.test(r.request().url()))
+      corps = Array.isArray(corps) ? corps.map((l) => ({ ...l, ...surcharge }))
+        : (corps ? { ...corps, ...surcharge } : corps);
+    return r.fulfill(json(corps));
+  });
+  await p.route("**/storage/v1/**", (r) => r.fulfill(json([])));
+  await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...s, ...s.user })));
+  return s;
+};
+
+// OÙ EST CHROMIUM ? PAS AU MÊME ENDROIT PARTOUT.
+//
+// Les quarante contrôles navigateur portaient le chemin de CETTE machine :
+// « /opt/pw-browsers/chromium-1194/chrome-linux/chrome », parfois en dur,
+// parfois derrière un CHROMIUM_PATH dont le secours était ce même chemin. Sur
+// un runner GitHub, ce dossier n'existe pas : les quarante auraient échoué au
+// lancement, et l'atelier qui doit les faire tourner tout seuls n'aurait
+// jamais rendu qu'une erreur de chemin.
+//
+// On cherche donc, dans l'ordre : ce qu'on nous donne, le dossier des
+// navigateurs de Playwright s'il est désigné, puis rien du tout — et « rien »
+// est la bonne réponse sur un runner, où Playwright sait trouver le navigateur
+// qu'il a lui-même installé.
+import { existsSync, readdirSync as _lireDossier } from "node:fs";
+import { join as _joindre } from "node:path";
+export const CHROMIUM = () => {
+  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+  const racine = process.env.PLAYWRIGHT_BROWSERS_PATH;
+  if (racine && existsSync(racine))
+    for (const d of _lireDossier(racine).filter((x) => x.startsWith("chromium-")).sort().reverse()) {
+      const bin = _joindre(racine, d, "chrome-linux", "chrome");
+      if (existsSync(bin)) return bin;
+    }
+  return undefined; // Playwright trouvera son propre navigateur
+};

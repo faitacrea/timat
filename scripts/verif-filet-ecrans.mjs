@@ -8,8 +8,9 @@
 //   node scripts/verif-filet-ecrans.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE=(readFileSync(new URL("../src/App.jsx",import.meta.url),"utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
-const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const N=await chromium.launch({executablePath: CHROMIUM()});
 // Le service worker sert /assets/ depuis son cache et court-circuiterait
 // l'interception : on le desactive pour que le test porte bien sur le reseau.
 const ctx=await N.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
@@ -26,15 +27,16 @@ await p.route("**/assets/*.js",r=>{
   if(/^(index|socle)-/.test(n)) return r.continue();
   return r.fulfill({status:404,body:"introuvable"});
 });
-await p.route("**/auth/v1/token**",r=>r.fulfill({status:400,contentType:"application/json",body:'{"error":"x"}'}));
-await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/json",body:"[]"}));
+// LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
+// Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
+// démonstration : aucun profil, donc la connexion s'arrêtait sur l'écran de
+// panne, et il cherchait son filet derrière cette carte d'erreur.
+await BRANCHER(p,"asmat",CLE);
 await p.goto(`http://localhost:4173/?acces=${CLE}&connexion=1`,{waitUntil:"domcontentloaded"});
-await p.waitForTimeout(2200);
-await p.getByRole("button",{name:/^Se connecter$/}).first().click(); await p.waitForTimeout(500);
-await p.fill('input[type="email"]',"marie.dupont@mail.fr");
-await p.fill('input[type="password"]',"demonstration");
-await p.getByRole("button",{name:/Accéder à mon espace/}).click(); await p.waitForTimeout(2800);
+if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
+await ATTENDRE_PRET(p,2200);
 const passer=p.getByRole("button",{name:/^Passer$/}); if(await passer.isVisible().catch(()=>false)){await passer.click();await p.waitForTimeout(500);}
+if(!await DANS_L_APP(p,"le contrôle du filet sous les écrans")){await N.close();process.exit(1);}
 
 // A partir de maintenant, tout fichier d'ecran demande repond 404, comme apres
 // une mise en ligne. On neutralise aussi le rechargement automatique, sinon la

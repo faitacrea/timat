@@ -10,21 +10,27 @@
 //   node scripts/verif-onglets-fusionnes.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE=(readFileSync(new URL("../src/App.jsx",import.meta.url),"utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
-const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const N=await chromium.launch({executablePath: CHROMIUM()});
 const ctx=await N.newContext({viewport:{width:390,height:844},serviceWorkers:"block"});
 const p=await ctx.newPage();
 let ko=0, err=[];
 p.on("pageerror",e=>err.push(e.message.slice(0,120)));
-await p.route("**/auth/v1/token**",r=>r.fulfill({status:400,contentType:"application/json",body:'{"error":"x"}'}));
-await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/json",body:"[]"}));
+// LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
+// Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
+// démonstration : l'application ne trouvait aucun profil, et la connexion
+// s'arrêtait sur « Votre compte n'a pas pu être chargé ». Tout ce qu'il
+// déclarait « ok » était mesuré derrière cette carte d'erreur.
+// On sert un profil GRATUIT : ce contrôle vérifie justement que le mur du
+// forfait Pro s'affiche. Le jeu de données est « pro » par défaut.
+await BRANCHER(p,"asmat",CLE,{subscription_status:"free"});
 await p.goto(`http://127.0.0.1:4173/?acces=${CLE}&connexion=1`,{waitUntil:"domcontentloaded"});
 await p.waitForTimeout(2200);
-await p.getByRole("button",{name:/^Se connecter$/}).first().click(); await p.waitForTimeout(500);
-await p.fill('input[type="email"]',"marie.dupont@mail.fr");
-await p.fill('input[type="password"]',"demonstration");
-await p.getByRole("button",{name:/Accéder à mon espace/}).click(); await p.waitForTimeout(2800);
+if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
+await ATTENDRE_PRET(p,2200);
 const passer=p.getByRole("button",{name:/^Passer$/}); if(await passer.isVisible().catch(()=>false)){await passer.click();await p.waitForTimeout(500);}
+if(!await DANS_L_APP(p,"le contrôle des onglets fusionnés")){await N.close();process.exit(1);}
 const clic=(t)=>p.evaluate(x=>{const n=[...document.querySelectorAll("button")].find(b=>b.innerText.replace(/\s+/g," ").trim().includes(x));if(n){n.click();return true}return false;},t);
 
 for (const [page,onglet,attendu,libelle] of [

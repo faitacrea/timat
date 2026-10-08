@@ -9,6 +9,7 @@
 //
 //   node scripts/parcours-temps-travail.mjs [url]
 import { chromium } from "playwright";
+import { BUNDLE_TESTABLE, CHROMIUM } from "./jeu-de-donnees.mjs";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { lireApp } from "./sources-app.mjs";
@@ -55,7 +56,7 @@ const session = {
 };
 
 mkdirSync(SORTIE, { recursive: true });
-const nav = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
+const nav = await chromium.launch({ executablePath: CHROMIUM() });
 const page = await nav.newPage({ viewport: { width: 420, height: 900 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 const erreurs = [];
 page.on("pageerror", (e) => erreurs.push(e.message.slice(0, 200)));
@@ -110,6 +111,11 @@ await page.route("**/rest/v1/**", (r) => {
 });
 
 await page.goto(`${URL_BASE}/?acces=${CLE}`, { waitUntil: "domcontentloaded" });
+// LE PIÈGE DU BUNDLE SANS CLÉ : « npm run build » construit sans
+// VITE_SUPABASE_KEY, l'application retombe alors sur la page vitrine sans
+// un mot, et ce contrôle rendrait un KO qui n'existe pas. verif-avis a
+// accusé un code sain pour cette raison exacte.
+if(!await BUNDLE_TESTABLE(page)){await nav.close();process.exit(1);}
 await page.waitForTimeout(4000);
 const passer = async () => {
   for (let i = 0; i < 6; i++) {

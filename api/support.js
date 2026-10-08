@@ -56,7 +56,10 @@ export default async function handler(req, res) {
     // For now, messages are stored in the DB and can be viewed in the backoffice
     // You can add Resend, SendGrid, or Supabase Edge Function email later
 
-    console.log(`[Support] ${prioritaire ? '⭐ PRO' : '📩'} ${sujet} from ${prenom} ${nom} (${email})`);
+    // « from Marie undefined » : le nom est facultatif, et le journal l'ecrivait
+    // tel quel. On ne garde que ce qui existe.
+    const quiEcrit = [prenom, nom].filter(Boolean).join(' ') || 'sans nom';
+    console.log(`[Support] ${prioritaire ? '⭐ PRO' : '📩'} ${sujet} from ${quiEcrit} (${email})`);
 
     return res.status(200).json({ 
       success: true, 

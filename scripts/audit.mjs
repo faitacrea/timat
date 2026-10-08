@@ -4241,6 +4241,112 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     }
 }
 
+// --- LES CONTRÔLES NAVIGATEUR QUI NE VÉRIFIENT RIEN -------------------------
+//
+// Onze contrôles doublaient la base par « body: "[]" » puis se connectaient
+// avec le compte de démonstration. L'application ne trouvait alors aucun
+// profil, tentait de le recréer, recevait « [] » pour cette écriture aussi, et
+// s'arrêtait sur « Votre compte n'a pas pu être chargé ». Les contrôles
+// continuaient à chercher leurs boutons derrière cette carte d'erreur :
+// verif-contraste-app annonçait « ok » pour seize écrans qu'il n'avait jamais
+// ouverts.
+//
+// Un contrôle qui vérifie le vide est pire qu'une absence de contrôle : il
+// rassure. On exige donc deux choses de tout contrôle navigateur qui entre
+// dans l'application : qu'il branche la base sur le jeu de données partagé, et
+// qu'il appelle DANS_L_APP — le garde-fou qui s'arrête si la page n'est pas
+// celle d'une session ouverte.
+{
+  const dossier = new URL("./", import.meta.url);
+  for (const nom of readdirSync(dossier).filter((f) => /^(verif|parcours)-.*\.mjs$/.test(f))) {
+    const src = readFileSync(new URL(nom, dossier), "utf8");
+    if (!/\bchromium\b/.test(src)) continue;                       // pas un contrôle navigateur
+    if (!/rest\/v1/.test(src)) continue;                            // n'entre pas dans l'application
+    const sansCommentaires = src.replace(/^\s*\/\/.*$/gm, "");
+    // OUVRE-T-IL VRAIMENT UNE SESSION ?
+    //
+    // La première version de cette règle accusait verif-contraste et
+    // verif-avis, qui ne visitent que les pages publiques : ils doublent la
+    // base par « [] » et c'est très bien, personne ne se connecte. Accuser un
+    // fichier sain, c'est le même tort que de laisser passer un fichier creux.
+    const seConnecte = /demonstration|auth-token|BRANCHER\s*\(|auth\/v1\/token/.test(sansCommentaires);
+    if (!seConnecte) continue;
+    // Un contrôle qui branche déjà le jeu de données a raison de répondre « [] »
+    // pour les tables qu'aucun écran ne lui demande.
+    if (/REPONSE_URL|BRANCHER\s*\(/.test(sansCommentaires)) continue;
+    // Un contrôle peut aussi servir son propre profil, à la main. C'est le cas
+    // de parcours-backoffice, qui a besoin d'un profil « is_admin » que le jeu
+    // de données ne porte pas. Ce qui compte n'est pas la méthode : c'est qu'un
+    // profil arrive. La règle ci-dessus sur les routes masquées veille à ce que
+    // cette route serve vraiment.
+    if (/\.route\("\*\*\/rest\/v1\/profiles/.test(sansCommentaires)) continue;
+    // verif-demonstration.mjs double exprès : son objet est justement le compte
+    // de démonstration, qui n'a PAS de profil en base — c'est lui qui vérifie
+    // que l'application ne va plus en chercher un.
+    if (nom === "verif-demonstration.mjs") continue;
+    // On ne signale QUE le stub vide. L'absence de DANS_L_APP n'est pas une
+    // preuve : un contrôle qui branche le jeu de données entre bien dans
+    // l'application. Avoir signalé les vingt aurait noyé le seul défaut réel —
+    // et un rapport qui crie pour rien apprend à ne plus être lu.
+    if (/body:\s*"\[\]"/.test(sansCommentaires))
+      signale("controles-creux", `${nom} double « rest/v1 » par « [] » : sans profil, la connexion s'arrête sur « Votre compte n'a pas pu être chargé » et tout « ok » rendu derrière est creux — brancher BRANCHER/REPONSE_URL de jeu-de-donnees.mjs, puis appeler DANS_L_APP`);
+  }
+}
+
+// --- UNE ROUTE DE TEST MASQUÉE PAR UNE AUTRE --------------------------------
+//
+// Playwright applique la DERNIÈRE route déclarée EN PREMIER. parcours-backoffice
+// déclarait sa règle des profils AVANT la règle générale « rest/v1/** » : c'est
+// donc la générale qui répondait aux profils, par « [] ». Le back-office ne
+// recevait aucun « is_admin » — précisément la porte que ce parcours prétend
+// vérifier. Rien ne le disait : le parcours s'exécutait, et affichait des
+// colonnes de zéros rassurantes.
+//
+// La règle est mécanique : une route particulière écrite avant une route
+// générale, dans le même fichier, ne sert jamais.
+{
+  const dossier = new URL("./", import.meta.url);
+  for (const nom of readdirSync(dossier).filter((f) => f.endsWith(".mjs"))) {
+    const lignes = readFileSync(new URL(nom, dossier), "utf8").split("\n");
+    const routes = lignes.map((l, i) => [i + 1, l])
+      .filter(([, l]) => /\.route\("\*\*\/rest\/v1\//.test(l));
+    const generales = routes.filter(([, l]) => /rest\/v1\/\*\*"/.test(l)).map(([i]) => i);
+    for (const [i, l] of routes) {
+      if (/rest\/v1\/\*\*"/.test(l)) continue;
+      const apres = generales.find((g) => g > i);
+      if (apres !== undefined)
+        signale("routes-masquees", `${nom}:${i} double une table précise, mais la règle générale « rest/v1/** » est déclarée plus bas (ligne ${apres}) : Playwright applique la dernière d'abord, donc cette ligne-ci ne sert jamais — la déclarer APRÈS la générale`);
+    }
+  }
+}
+
+// --- UN CONTRÔLE NAVIGATEUR SANS GARDE-FOU DU BUNDLE ------------------------
+//
+// « npm run build » construit SANS VITE_SUPABASE_KEY. L'application est alors
+// inbootable : elle retombe sur la page vitrine, sans un mot. Un contrôle qui
+// cherche ses boutons là-dedans rend un KO qui n'existe pas — et un faux KO est
+// pire qu'une absence de contrôle : il apprend à ignorer le rapport. verif-avis
+// a accusé un code parfaitement sain pour cette raison exacte.
+//
+// Tout contrôle qui démarre l'application doit donc appeler BUNDLE_TESTABLE
+// juste après son premier « goto ». Les contrôles qui ne visitent que des pages
+// HTML publiques n'en ont pas besoin : la clé n'y joue aucun rôle.
+{
+  const dossier = new URL("./", import.meta.url);
+  const SANS_APPLICATION = new Set([
+    "verif-contraste.mjs",          // pages publiques
+    "verif-outils-publics.mjs",     // pages publiques
+    "verif-calculs-identiques.mjs", // simulateurs publics + fonctions extraites
+  ]);
+  for (const nom of readdirSync(dossier).filter((f) => /^(verif|parcours)-.*\.mjs$/.test(f))) {
+    if (SANS_APPLICATION.has(nom)) continue;
+    const src = readFileSync(new URL(nom, dossier), "utf8");
+    if (!/\bchromium\b/.test(src)) continue;
+    if (/BUNDLE_TESTABLE\s*\(/.test(src.replace(/^\s*\/\/.*$/gm, ""))) continue;
+    signale("bundle-sans-garde-fou", `${nom} démarre l'application sans appeler BUNDLE_TESTABLE : construit sans VITE_SUPABASE_KEY, le bundle est inbootable et ce contrôle rendrait un KO imaginaire`);
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

@@ -14,6 +14,7 @@
 // Hors chaine de build : Vercel n'a pas de navigateur.
 //   node scripts/verif-calculs-identiques.mjs
 import { chromium } from "playwright";
+import { CHROMIUM } from "./jeu-de-donnees.mjs";
 import { build } from "esbuild";
 import { writeFileSync, unlinkSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -65,7 +66,7 @@ const CAS = [
                rmn: () => eur((30 / 6) * 40 * 5.00) } },
 ];
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const ctx = await N.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
 const p = await ctx.newPage();
 let ko = 0;

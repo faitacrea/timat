@@ -13,7 +13,7 @@
 //   node scripts/verif-boutons-backoffice.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
+import { BUNDLE_TESTABLE, CHROMIUM, ATTENDRE_PRET } from "./jeu-de-donnees.mjs";
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
 
 const DANGEREUX = /enregistr|sauvegard|publier|supprim|effac|r[ée]initialis|vider|envoyer|d[ée]connex|appliquer|valider|restaurer|importer|exporter|purger|migrer/i;
@@ -25,7 +25,7 @@ const utilisateur = { id: ADMIN, aud: "authenticated", role: "authenticated", em
 const session = { access_token: "faux", token_type: "bearer", expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: "faux", user: utilisateur };
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 const ctx = await N.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR", serviceWorkers: "block" });
 const p = await ctx.newPage();
 let erreurs = [];
@@ -48,6 +48,11 @@ await p.route("**/rest/v1/**", (r) => {
 await p.route("**/auth/v1/**", (r) => r.fulfill(json({ ...session, ...utilisateur })));
 
 await p.goto(`http://127.0.0.1:4173/backoffice?acces=${CLE}`, { waitUntil: "domcontentloaded" });
+// LE PIÈGE DU BUNDLE SANS CLÉ : « npm run build » construit sans
+// VITE_SUPABASE_KEY, l'application retombe alors sur la page vitrine sans
+// un mot, et ce contrôle rendrait un KO qui n'existe pas. verif-avis a
+// accusé un code sain pour cette raison exacte.
+if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
 await ATTENDRE_PRET(p);
 const dedans = await p.evaluate(() => !/Accès réservé|Je suis assistante maternelle|Se connecter/.test(document.body.innerText.slice(0, 400)));
 if (!dedans) {

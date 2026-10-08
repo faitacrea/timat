@@ -1725,7 +1725,38 @@ export const todayStr=()=>new Date().toLocaleDateString("fr-FR",{weekday:"long",
 const moodVal={"😄":5,"😊":4,"😐":3,"😴":2,"😢":1,"😠":1,"🥰":5,"😬":2};
 
 //
-function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,background:c+"22",color:c,fontSize:Math.max(11,s*.34),minWidth:s}}>{t}</div>}
+// LES INITIALES DANS LES AVATARS ETAIENT ILLISIBLES.
+//
+// Cet avatar ecrivait la couleur de la personne sur une teinte a 13 % de CETTE
+// MEME couleur. Avec les couleurs de la charte, qui sont pastel, cela donne
+// 2,18:1 pour « MD » en 11 px, quand la norme WCAG AA demande 4,5:1. Le defaut
+// touchait tous les avatars — le sien dans l'en-tete, et celui de chaque
+// enfant, chacun avec sa couleur.
+//
+// Aucun controle ne l'avait vu : verif-contraste-app annoncait « ok » pour
+// seize ecrans qu'il n'ouvrait jamais, arrete sans le dire sur une carte
+// d'erreur.
+//
+// On assombrit donc la couleur du TEXTE jusqu'a franchir le seuil, en gardant
+// la teinte : c'est bien la couleur de la personne qu'on lit, en plus sombre.
+// Le fond, lui, ne change pas : c'est lui qui porte l'identite visuelle.
+const _lum=(r,g,b)=>{const f=(x)=>{x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);};return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b);};
+const _rgb=(h)=>{const x=String(h||"").replace("#","");const v=x.length===3?x.split("").map(c=>c+c).join(""):x;return [parseInt(v.slice(0,2),16)||0,parseInt(v.slice(2,4),16)||0,parseInt(v.slice(4,6),16)||0];};
+const _ratio=(a,b)=>{const l1=_lum(...a),l2=_lum(...b);return (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);};
+export const couleurLisible=(c,seuil=4.5)=>{
+  const [r,g,b]=_rgb(c);
+  // Le fond de l'avatar : la couleur a 13,3 % par-dessus du blanc.
+  const a=0x22/255, fond=[r,g,b].map(x=>Math.round(x*a+255*(1-a)));
+  let k=1;
+  // On assombrit par pas de 6 % ; vingt pas suffisent a atteindre le noir.
+  for(let i=0;i<20;i++){
+    const essai=[r,g,b].map(x=>Math.round(x*k));
+    if(_ratio(essai,fond)>=seuil) return `rgb(${essai.join(",")})`;
+    k*=0.94;
+  }
+  return "#1A1A1A";
+};
+function Av({t,c,s=36}){return <div className="av"style={{width:s,height:s,background:c+"22",color:couleurLisible(c),fontSize:Math.max(11,s*.34),minWidth:s}}>{t}</div>}
 export function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(sel?"on":"")+""}onClick={onClick}style={{padding:"9px 13px",display:"flex",alignItems:"center",gap:9,position:"relative"}}>
   <span style={{fontSize:20}}>{e.emoji}</span><div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{e.prenom}</div><div style={{fontSize:11,color:"var(--l)"}}>{age(e.naissance)}</div></div>{badge&&<span style={{position:"absolute",top:-6,right:-6}}>{badge}</span>}</div>}
 
@@ -7778,6 +7809,13 @@ export default function App(){
   useEffect(()=>{
     if(!user?.id)return;
     if(user._needsProfileFetch)return; // attendre la fin du fetch profil
+    // UN COMPTE DE DEMONSTRATION NE LIT RIEN EN BASE.
+    //
+    // Son identifiant est « demo-asmat », et la colonne qu'on interroge est de
+    // type uuid : la base refusait chaque requete avec « invalid input syntax
+    // for type uuid ». Deux requetes pour rien, deux refus dans le journal, a
+    // chaque ouverture. La demonstration porte ses propres donnees.
+    if(user.isDemo||String(user.id).startsWith("demo-")){setDbLoading(false);setDataFetched(true);return;}
     const charger=async()=>{
       setDbLoading(true);
       try{
@@ -7910,6 +7948,9 @@ export default function App(){
   // NOTIFICATIONS - charger la cloche depuis Supabase (au login + a chaque refresh-data)
   useEffect(()=>{
     if(!user?.id){setNotifs([]);return;}
+    // Meme raison que pour le chargement des donnees : « demo-asmat » n'est pas
+    // un uuid, la base refuse la requete. La cloche reste vide, comme il faut.
+    if(user.isDemo||String(user.id).startsWith("demo-")){setNotifs([]);return;}
     let cancelled=false;
     (async()=>{
       const{data,error}=await supabase.from("notifications")
@@ -8011,7 +8052,30 @@ export default function App(){
 
   // - Utiliser données réelles
   if(!user){
-    const _onLogin=u=>{setUser({...u,_needsProfileFetch:true,_profileConfirmed:false});setPage("accueil");};
+    // UN COMPTE DE DEMONSTRATION N'A PAS DE PROFIL EN BASE, PAR CONSTRUCTION.
+    //
+    // On demandait la lecture du profil pour TOUT le monde, y compris pour les
+    // trois comptes de demonstration de la page d'accueil, dont l'identifiant
+    // est « demo-asmat », « demo-parent1 », « demo-parent2 ». La colonne « id »
+    // de la table profiles est de type uuid : PostgREST refuse la requete avec
+    // « invalid input syntax for type uuid » (22P02). L'application reessayait
+    // 1,5 s plus tard, obtenait le meme refus, et s'arretait sur « Votre compte
+    // n'a pas pu etre charge ».
+    //
+    // Autrement dit : les trois comptes de demonstration proposes sur la page
+    // d'accueil ne s'ouvraient pas du tout en production. C'est aussi par la
+    // que passe le chemin de secours quand Supabase ne repond pas — il devenait
+    // donc inutilisable au moment ou l'on en a le plus besoin.
+    //
+    // La demonstration porte ses propres donnees ; elle ne lit rien en base.
+    const _onLogin=u=>{
+      const demo=!!u?.isDemo||String(u?.id||"").startsWith("demo-");
+      // On ne « confirme » pas le profil : la demonstration n'en a pas, et le
+      // confirmer ferait proposer l'accompagnement du premier enfant a la place
+      // du jeu de demonstration.
+      setUser({...u,_needsProfileFetch:!demo,_profileConfirmed:false});
+      setPage("accueil");
+    };
     let _isInvite=false; try{const _p=new URLSearchParams(window.location.search); _isInvite=_p.has("invite")||_p.get("role")==="parent";}catch(e){}
     if(_isInvite)return <><Styles/><div className={"app"+(dark?" dark":"")}><ParentInvitationScreen onLogin={_onLogin}/></div></>;
     let _isConnexion=false,_connexionParent=false;

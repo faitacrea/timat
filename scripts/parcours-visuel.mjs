@@ -15,6 +15,7 @@
 // emprunte deja quand les identifiants sont refuses.
 import { chromium } from "playwright";
 import { readFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 import path from "node:path";
 
 const URL_BASE = process.argv[2] || "http://localhost:4173";
@@ -88,7 +89,7 @@ const chercherChromium = () => {
   }
   return undefined;
 };
-const navigateur = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || chercherChromium() });
+const navigateur = await chromium.launch({ executablePath: CHROMIUM() });
 const page = await navigateur.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: "fr-FR", timezoneId: "Europe/Paris" });
 
 const erreurs = [];
@@ -99,19 +100,24 @@ page.on("console", (m) => {
   // d'audience, Supabase injoignable), pas de l'application.
   if (m.type() === "error" && !/ERR_|Failed to load resource|Failed to fetch/.test(t)) erreurs.push("console : " + t.slice(0, 160));
 });
-await page.route("**/auth/v1/token**", (r) => r.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ error: "invalid_grant" }) }));
-await page.route("**/rest/v1/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: "[]" }));
+// LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
+// Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
+// démonstration : l'application ne trouvait aucun profil, et la connexion
+// s'arrêtait sur « Votre compte n'a pas pu être chargé ». Tout ce qu'il
+// déclarait « ok » était mesuré derrière cette carte d'erreur.
+await BRANCHER(page,ESPACE==="parent"?"parent":"asmat",CLE);
 
 await page.goto(`${URL_BASE}/?acces=${CLE}&connexion=1`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2500);
+if(!await BUNDLE_TESTABLE(page)){await navigateur.close();process.exit(1);}
+await ATTENDRE_PRET(page,2200);
 await page.getByRole("button", { name: /^Se connecter$/ }).first().click();
 await page.waitForTimeout(600);
-await page.fill('input[type="email"]', COMPTE.email);
-await page.fill('input[type="password"]', "demonstration");
 await page.getByRole("button", { name: /Accéder à mon espace/ }).click();
 await page.waitForTimeout(3000);
 const passer = page.getByRole("button", { name: /^Passer$/ });
 if (await passer.isVisible().catch(() => false)) { await passer.click(); await page.waitForTimeout(600); }
+if(!await DANS_L_APP(page,"le parcours visuel")){await navigateur.close();process.exit(1);}
 
 // Les entrees du menu sont des <button>. Les lignes des Parametres sont des
 // <div onClick> : les chercher aussi, sinon un ecran atteignable uniquement

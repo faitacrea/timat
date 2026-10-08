@@ -14,25 +14,29 @@
 //   node scripts/verif-bascule-pajemploi.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP } from "./jeu-de-donnees.mjs";
 const CLE=(readFileSync(new URL("../src/App.jsx",import.meta.url),"utf8").match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)||[])[1];
-const N=await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const N=await chromium.launch({executablePath: CHROMIUM()});
 let ko=0;
 for(const [libelle, clientId, attendu] of [["sans identifiant","",false],["avec un identifiant","demo-urssaf",true]]){
   const p=await N.newPage({viewport:{width:390,height:844}});
   p.on("pageerror",e=>{console.log("      [ERREUR JS]",e.message.slice(0,160));ko++;});
   // Playwright applique la DERNIERE route declaree en premier : la regle
   // generale doit donc etre posee AVANT la specifique, sinon elle l'ecrase.
-  await p.route("**/rest/v1/**",r=>r.fulfill({status:200,contentType:"application/json",body:"[]"}));
-  await p.route("**/auth/v1/token**",r=>r.fulfill({status:400,contentType:"application/json",body:'{"error":"x"}'}));
+  // LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
+  // Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
+  // démonstration : l'application ne trouvait aucun profil, et la connexion
+  // s'arrêtait sur « Votre compte n'a pas pu être chargé ». Tout ce qu'il
+  // déclarait « ok » était mesuré derrière cette carte d'erreur.
+  await BRANCHER(p,"asmat",CLE);
   await p.route("**/rest/v1/app_config**",r=>r.fulfill({status:200,contentType:"application/json",
     body:JSON.stringify({config:{pajemploi:{clientId}}})}));
   await p.goto(`http://localhost:4173/?acces=${CLE}&connexion=1`,{waitUntil:"domcontentloaded"});
   await p.waitForTimeout(2500);
-  await p.getByRole("button",{name:/^Se connecter$/}).first().click(); await p.waitForTimeout(600);
-  await p.fill('input[type="email"]',"marie.dupont@mail.fr");
-  await p.fill('input[type="password"]',"demonstration");
-  await p.getByRole("button",{name:/Accéder à mon espace/}).click(); await p.waitForTimeout(3000);
+  if(!await BUNDLE_TESTABLE(p)){await N.close();process.exit(1);}
+  await ATTENDRE_PRET(p,2200);
   const passer=p.getByRole("button",{name:/^Passer$/}); if(await passer.isVisible().catch(()=>false)){await passer.click();await p.waitForTimeout(600);}
+  if(!await DANS_L_APP(p,"le contrôle de la bascule Pajemploi")){await N.close();process.exit(1);}
   const ouvert=await p.evaluate(()=>{const n=[...document.querySelectorAll("button")].find(b=>b.innerText.replace(/\s+/g," ").trim().includes("Administratif"));if(n){n.click();return true}return false;});
   if(!ouvert){console.log("  KO  le menu « Administratif » est introuvable");ko++;}
   await p.waitForTimeout(1200);

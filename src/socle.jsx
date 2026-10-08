@@ -341,7 +341,19 @@ export const BORNE_BLOCAGE_MS=60000;
 
 export const borneCodeSortie=()=>{try{return localStorage.getItem(BORNE_CLE_SORTIE)||"";}catch(e){return"";}};
 
-export const borneOuvrir=(codeSortie)=>{try{localStorage.setItem(BORNE_CLE_SORTIE,String(codeSortie||""));localStorage.setItem(BORNE_CLE_ACTIVE,"1");}catch(e){}};
+// ENTRER DANS LA BORNE SANS POUVOIR EN SORTIR.
+//
+// Cette fonction avalait son echec. Or c'est elle qui garde le CODE DE SORTIE,
+// et tenterSortie() compare le code tape a ce qui a ete garde : si rien ne l'a
+// ete, borneCodeSortie() rend la chaine vide, et le bon code est refuse —
+// « Code de sortie incorrect », indefiniment.
+//
+// Sur une tablette laissee dans l'entree, c'est un piege sans issue : la borne
+// est ouverte, le code juste est refuse, et il faut effacer les donnees du site
+// pour en sortir. Le stockage plein suffit a le declencher.
+//
+// Elle rend donc si elle a reussi, et l'ecran refuse d'entrer sinon.
+export const borneOuvrir=(codeSortie)=>{try{localStorage.setItem(BORNE_CLE_SORTIE,String(codeSortie||""));localStorage.setItem(BORNE_CLE_ACTIVE,"1");return borneCodeSortie()===String(codeSortie||"");}catch(e){return false;}};
 
 export const borneFermer=()=>{try{localStorage.removeItem(BORNE_CLE_ACTIVE);}catch(e){}};
 

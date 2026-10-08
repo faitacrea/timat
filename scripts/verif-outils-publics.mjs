@@ -12,13 +12,14 @@
 // Hors chaine de build : Vercel n'a pas de navigateur.
 //   node scripts/verif-outils-publics.mjs
 import { chromium } from "playwright";
+import { CHROMIUM } from "./jeu-de-donnees.mjs";
 import { readdirSync, readFileSync } from "node:fs";
 
 const LARGEUR = 390;
 const pages = readdirSync(new URL("../public/", import.meta.url))
   .filter((f) => f.endsWith(".html") && f !== "maintenance.html");
 
-const N = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const N = await chromium.launch({ executablePath: CHROMIUM() });
 let ko = 0;
 for (const f of pages) {
   const ctx = await N.newContext({ viewport: { width: LARGEUR, height: 844 }, locale: "fr-FR", serviceWorkers: "block" });
