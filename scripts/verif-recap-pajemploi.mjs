@@ -123,7 +123,10 @@ dire(net !== undefined && nb(net) > 0, `le salaire net à déclarer n'est pas nu
     logLevel: "error",
   });
   const app = createRequire(import.meta.url)(SORTIE);
+  // On nettoie les DEUX fichiers : j'avais laissé le bundle derrière moi, et
+  // il s'est retrouvé commité dans le dépôt.
   unlinkSync(ENTREE);
+  try { unlinkSync(SORTIE); } catch (e) { /* déjà parti */ }
   const taux = nb((txt.match(/Taux horaire brut \(contrat\)\s*([0-9  ,.]+)\s*€/i) || [])[1]);
   // PIÈGE : le libellé contient lui-même un nombre — « au-delà de 45 h/semaine ».
   // Ma première expression attrapait ce 45 et calculait un net de 899,82 €

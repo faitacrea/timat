@@ -1819,10 +1819,28 @@ if (demoOrphelins.length) {
 if (!/RETENUE_TYPES=\{[^}]*form:false/.test(appSrc)) {
   signale("calendrier", "la formation n'est plus exclue des retenues pour absence : une formation suivie sur le temps d'accueil est pourtant rémunérée (CCN 3239)");
 }
-// La retenue ne doit s'appliquer que sur un salaire mensualise : sur des
-// pointages reels, la journee absente est deja hors des heures comptees.
-if (!/const retenue=useRealHours\?0:retenueAbsence\(/.test(appSrc)) {
-  signale("calendrier", "la retenue pour absence ne dépend plus du mode mensualisé : sur des pointages réels, elle retirerait deux fois la même journée");
+// NE JAMAIS DEDUIRE DEUX FOIS LA MEME JOURNEE.
+//
+// Cette regle disait : « la retenue ne doit s'appliquer que sur un salaire
+// mensualise ; sur des pointages reels, la journee absente est deja hors des
+// heures comptees ». C'etait juste TANT QUE la base du bulletin etait les
+// heures pointees — et c'etait precisement le defaut : trois journees pointees
+// sur vingt-deux donnaient un bulletin a 88,59 EUR au lieu de 567,62 EUR, et le
+// recapitulatif Pajemploi du meme mois en declarait 567,62. Deux documents du
+// meme mois qui se contredisaient de 479 EUR.
+//
+// La base est desormais la mensualisation, toujours. La journee absente n'est
+// donc plus exclue de rien : la retenue est le SEUL chemin par lequel une
+// absence diminue la paie, et elle doit s'appliquer.
+//
+// L'intention de la regle, elle, n'a pas bouge : une absence se deduit une fois
+// et une seule. On verifie donc les deux moities de l'invariant — la base est
+// la mensualisation, et la retenue porte sur elle.
+if (!/const heuresNorm=hMens;/.test(appSrc)) {
+  signale("calendrier", "le bulletin ne se calcule plus sur les heures mensualisées : sur un mois mal pointé, il paierait une fraction du salaire dû, et contredirait le récapitulatif Pajemploi du même mois");
+}
+if (!/const retenue=retenueAbsence\(\{\s*salaireMensualise:salBase,/.test(appSrc)) {
+  signale("calendrier", "la retenue pour absence ne porte plus sur le salaire mensualisé : soit l'absence n'est plus déduite du tout, soit elle l'est deux fois");
 }
 // L'assiette des cotisations doit rester unique. Elle etait recalculee dans
 // quatre rendus (totaux, ecran, PDF, HTML) : la retenue pour absence

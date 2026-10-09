@@ -826,10 +826,28 @@ export function BulletinSalaire({enfants,role,pEId,user}){
     :{real:useRealHours?heuresMoisReel.heures:hMens,prev:hMens};
   const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
   const heuresJourRef=Math.round(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))*10)/10;
-  const heuresNorm=Math.min(h.real,45*4);
-  const hSupp=Math.max(0,h.real-heuresNorm);
+  // UN CONTRAT MENSUALISE SE PAIE SUR LA MENSUALISATION, PAS SUR LE POINTAGE.
+  //
+  // Le bulletin basculait sur les heures POINTEES des qu'UN SEUL pointage
+  // existait dans le mois. Or rien n'oblige a pointer tous les jours : la
+  // borne et le QR sont facultatifs. Trois journees pointees sur vingt-deux
+  // donnaient donc un bulletin a 88,59 EUR net au lieu de 567,62 EUR — et le
+  // recapitulatif Pajemploi du meme mois, lui, declarait 567,62 EUR. Deux
+  // documents du meme mois qui se contredisent de 479 EUR.
+  //
+  // La regle est celle que le blog de TiMat ecrit deja : « le principe meme de
+  // la mensualisation, c'est de lisser ». On paie donc les heures du contrat,
+  // on AJOUTE les heures faites en plus, et on DEDUIT les absences — par la
+  // retenue, qui existait deja et se trouvait desactivee des qu'on pointait.
+  //
+  // Les heures pointees restent affichees a cote : elles servent a voir un
+  // ecart qui meriterait un avenant, pas a calculer la paie.
+  const heuresEnPlus=Math.max(0,(h.real||0)-hMens);
+  const heuresNorm=hMens;
+  const hSupp=Math.min(heuresEnPlus,Math.max(0,45*4-hMens));
+  const hMaj=Math.max(0,heuresEnPlus-hSupp);
   const salBase=heuresNorm*tauxH;
-  const salSupp=hSupp*tauxH*1.25;
+  const salSupp=hSupp*tauxH+hMaj*tauxH*1.25;
   const brut=salBase+salSupp;
   // Le nombre de jours d'accueil se deduisait des heures divisees par 8, et
   // les trois rendus du bulletin — ecran, page imprimable, PDF — n'affichaient
@@ -852,8 +870,11 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   const heuresFormationHors=absAsmat.filter(a=>a.type==="formh").reduce((t,a)=>t+(Number(a.heures)||0),0);
   const allocFormation=allocationFormation(heuresFormationHors);
   const anneeComplete=contrat.anneeComplete!==false;
-  const retenue=useRealHours?0:retenueAbsence({
-    salaireMensualise:brut,
+  // La retenue s'applique TOUJOURS : elle est le seul chemin par lequel une
+  // absence diminue la paie, maintenant que la base est la mensualisation.
+  // Elle porte sur le salaire mensualise, pas sur les heures faites en plus.
+  const retenue=retenueAbsence({
+    salaireMensualise:salBase,
     anneeComplete,
     heuresAbsence:heuresAbsAsmat,
     // Denominateur : les heures qui auraient ete travaillees dans le mois si
