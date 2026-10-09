@@ -65,8 +65,38 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   // Le nombre de jours d'accueil se comptait aussi de DEUX facons sur le meme
   // document : heures/5 pour l'entretien, heures/(hebdo/5) pour les « jours
   // d'activite ». Un seul compte desormais.
-  const joursAccueil=contrat?Math.max(0,Math.round(h.real/(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))||8))):0;
-  const salBrut=contrat?h.real*contrat.tauxHoraire:0;
+  // CE QUI SE DECLARE A PAJEMPLOI, C'EST LA MENSUALISATION.
+  //
+  // Tout ce recapitulatif partait des heures POINTEES. Pour un contrat
+  // mensualise — et TiMat n'en connait pas d'autre — c'est une erreur, et le
+  // blog de TiMat l'ecrit noir sur blanc : « le principe meme de la
+  // mensualisation, c'est de lisser ». Les heures normales a declarer sont
+  // celles du contrat, quel que soit le pointage ; seules les heures faites
+  // EN PLUS s'ajoutent, dans leurs propres cases.
+  //
+  // Le document le savait a moitie : il AVERTISSAIT que les heures pointees
+  // different des mensualisees, puis ordonnait trois lignes plus bas
+  // « Entrez le nombre d'heures : <heures pointees> ». Il disait donc de faire
+  // l'erreur qu'il venait de signaler.
+  //
+  // Et au pire : « h.real » est la somme des pointages. Une assistante
+  // maternelle qui ne pointe pas tous les jours obtenait un recapitulatif
+  // disant de declarer ZERO heure et ZERO euro.
+  //
+  // Les heures au-dela de 45 h par semaine sont majorees. Ce document raisonne
+  // au mois : on reprend la convention deja retenue par le bulletin, 45 h x 4
+  // semaines, et une majoration de 25 %.
+  const hMensDecl=heuresMensualisees(contrat);
+  const hEnPlus=Math.max(0,(h.real||0)-hMensDecl);
+  const hCompl=Math.min(hEnPlus,Math.max(0,45*4-hMensDecl));
+  const hMajorees=Math.max(0,hEnPlus-hCompl);
+  // Les jours d'accueil : ceux reellement pointes, sinon ceux prevus au
+  // contrat. Sans ce repli, une assistante maternelle qui ne pointe pas voyait
+  // aussi son entretien et ses repas tomber a zero.
+  const joursPointes=contrat?Math.max(0,Math.round((h.real||0)/(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))||8))):0;
+  const joursPrevus=contrat?Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN):0;
+  const joursAccueil=joursPointes>0?joursPointes:joursPrevus;
+  const salBrut=contrat?(hMensDecl*contrat.tauxHoraire+hCompl*contrat.tauxHoraire+hMajorees*contrat.tauxHoraire*1.25):0;
   const entretienMois=contrat?Math.round((contrat.entretien||0)*joursAccueil*100)/100:0;
   const repasMoisPaj=contrat&&contrat.repasFourniPar!=="employeur"?Math.round((Number(contrat.repas)||0)*joursAccueil*100)/100:0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
@@ -80,7 +110,6 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
     const w=window.open('','_blank');
     if(!w){setToast('Autorisez les popups');return;}
     const mois=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-    const hMens=heuresMensualisees(contrat);
     const netMois=netDepuisBrut(totalBrut);
     const salNet=nbf(netMois,2);
     const totalVerse=Math.round((netMois+entretienMois+repasMoisPaj)*100)/100;
@@ -110,17 +139,27 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<tr><td>Enfant gardé</td><td>'+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'</td></tr>',
       '<tr><td>Période</td><td>'+mois+'</td></tr></table></div>',
       '<div class="box"><h2>⏰ Heures à déclarer</h2>',
-      '<table><tr><td>Heures mensualisées (contrat)</td><td>'+hMens+' h</td></tr>',
-      '<tr><td>Heures réellement effectuées</td><td>'+h.real+' h</td></tr>',
-      '<tr><td>Heures complémentaires / supplémentaires</td><td>'+Math.max(0,h.real-hMens)+' h</td></tr>',
-      '<tr><td>Jours d\'activité</td><td>'+joursAccueil+' jours</td></tr>',
+      '<table><tr class="hl"><td>Heures normales À DÉCLARER (mensualisées)</td><td>'+hMensDecl+' h</td></tr>',
+      '<tr><td>Heures complémentaires (jusqu\'à 45 h/semaine)</td><td>'+hCompl+' h</td></tr>',
+      '<tr><td>Heures majorées (au-delà de 45 h/semaine, +25 %)</td><td>'+hMajorees+' h</td></tr>',
+      '<tr><td>Heures réellement pointées ce mois</td><td>'+h.real+' h <span style="color:#888;font-weight:400">(information)</span></td></tr>',
+      '<tr><td>Jours d\'activité</td><td>'+joursAccueil+' jours'+(joursPointes>0?'':' <span style="color:#888;font-weight:400">(prévus au contrat : aucun pointage ce mois)</span>')+'</td></tr>',
       '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table>',
       // Le recapitulatif calcule sur les heures POINTEES. Un contrat mensualise
       // se declare sur les heures mensualisees, meme si le pointage est
       // incomplet. Quand les deux divergent, le document le dit au lieu de
       // laisser croire que le chiffre est celui a declarer.
-      (h.real!==hMens
-        ? '<p style="font-size:10.5px;color:#B8452F;margin-top:8px;line-height:1.5">Attention : ce calcul part des heures <strong>pointées</strong> ('+h.real+' h), qui diffèrent des heures <strong>mensualisées</strong> du contrat ('+hMens+' h). Un contrat mensualisé se déclare normalement sur les heures mensualisées, quel que soit le pointage. Vérifiez laquelle des deux correspond à ce mois avant de déclarer.</p>'
+      '<p style="font-size:10.5px;color:#555;margin-top:8px;line-height:1.5">Un contrat mensualisé se déclare sur les heures <strong>prévues au contrat</strong>, pas sur celles pointées : le principe de la mensualisation est justement de lisser. Seules les heures faites <strong>en plus</strong> s\'ajoutent, dans leurs propres cases. Les heures pointées sont données ici pour information, et pour repérer un écart qui mériterait un avenant.</p>'
+      + (h.real===0 ? '<p style="font-size:10.5px;color:#B8452F;margin-top:6px;line-height:1.5">Aucun pointage enregistré ce mois : les jours d\'activité et les indemnités sont ceux prévus au contrat. Si des heures ont été faites en plus, ajoutez-les vous-même.</p>' : '')
+      // L'INDEMNITE D'ENTRETIEN SUIT LES JOURS REELS, ELLE.
+      //
+      // Contrairement au salaire, elle ne se mensualise pas : on la doit pour
+      // chaque journee d'accueil effectivement realisee. Le calcul ci-dessous
+      // est donc juste — mais trois jours pointes quand le contrat en prevoit
+      // vingt-deux, c'est presque surement un pointage incomplet, pas trois
+      // journees travaillees. On ne choisit pas a sa place : on le dit.
+      + (joursPointes>0&&joursPrevus>0&&joursPointes<joursPrevus-2
+        ? '<p style="font-size:10.5px;color:#B8452F;margin-top:6px;line-height:1.5">Seuls <strong>'+joursPointes+' jours</strong> sont pointés ce mois, alors que le contrat en prévoit <strong>'+joursPrevus+'</strong>. L\'indemnité d\'entretien et celle de repas se calculent sur les jours réellement réalisés : si des journées n\'ont pas été pointées, les montants ci-dessous sont trop bas. Vérifiez avant de déclarer.</p>'
         : ''),
       '</div>',
       '<div class="box"><h2>💰 Salaire à déclarer</h2>',
@@ -134,7 +173,9 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<div class="steps"><h3>📝 Comment déclarer sur Pajemploi :</h3>',
       '<ol><li>Connectez-vous sur <strong>pajemploi.urssaf.fr</strong></li>',
       '<li>Cliquez sur <strong>"Déclarer"</strong> > sélectionnez votre assistante maternelle</li>',
-      '<li>Entrez le nombre d\'heures : <strong>'+h.real+'h</strong></li>',
+      '<li>Entrez les heures normales : <strong>'+hMensDecl+' h</strong> (les heures mensualisées du contrat)</li>',
+      (hCompl>0?'<li>Entrez les heures complémentaires : <strong>'+hCompl+' h</strong></li>':''),
+      (hMajorees>0?'<li>Entrez les heures majorées : <strong>'+hMajorees+' h</strong></li>':''),
       '<li>Entrez le nombre de jours d\'activité : <strong>'+joursAccueil+'</strong></li>',
       '<li>Entrez le salaire net : <strong>'+salNet+' €</strong> (sans les indemnités)</li>',
       '<li>Entrez l\'indemnité d\'entretien : <strong>'+nbf(entretienMois,2)+' €</strong></li>',
