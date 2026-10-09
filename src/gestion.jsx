@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -845,11 +845,14 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   const joursHeures=(useRealHours&&Array.isArray(heuresMoisReel.parJour)&&heuresMoisReel.parJour.length)
     ?heuresMoisReel.parJour.map(min=>min/60)
     :Array(Math.max(0,joursTravailles)).fill(heuresJourEst);
+  // La regle elle-meme vit dans socle.jsx (abattementJour), parce que la page
+  // publique « simulateur-abattement-fiscal » en avait sa propre version, plus
+  // pauvre. Deux codes pour une meme regle, c'est deux regles le jour ou l'une
+  // bouge. Ici on ne fait plus que compter les journees et additionner.
   let abMois=0,jPlein=0,jPart=0,jNuit=0;
   joursHeures.forEach(hJ=>{
-    if(hJ>=23.5){jNuit++;abMois+=(baseMult+1)*SMIC_H;}          // 24h consecutives : forfait plein, +1 SMIC, pas de prorata
-    else if(hJ>=8){jPlein++;abMois+=baseMult*SMIC_H;}            // journee pleine
-    else{jPart++;abMois+=(baseMult*SMIC_H/8)*hJ;}               // journee courte : prorata
+    if(hJ>=23.5)jNuit++; else if(hJ>=8)jPlein++; else jPart++;
+    abMois+=abattementJour(hJ,SMIC_H,{aeeh});
   });
   // Plafond legal : l'abattement ne peut exceder le total des sommes versees
   // (CGI art. 80 sexies). Sans ce plafond, le bulletin affichait un abattement

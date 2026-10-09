@@ -1031,3 +1031,33 @@ export const backupCurrentConfig = async (reason) => {
 // Ne garde que ce qui DIFFERE des defauts du code -> les defauts non modifies
 // restent pilotes par le code (une modif de code s'affiche toujours), et le
 // back-office continue de fonctionner (il enregistre uniquement tes surcharges).
+
+// L'ABATTEMENT FISCAL D'UNE JOURNEE D'ACCUEIL, EN UN SEUL ENDROIT.
+//
+// Regime propre aux assistantes maternelles agreees : article 80 sexies du code
+// general des impots, commente au BOFiP BOI-RSA-CHAMP-10-20-10.
+//
+// La regle tenait dans le calcul du bulletin, et nulle part ailleurs. La page
+// publique « simulateur-abattement-fiscal » en avait sa propre version, plus
+// pauvre : elle ignorait la journee de 24 heures, et sous-estimait donc
+// l'abattement d'un SMIC entier pour chacune de ces journees. Deux codes pour
+// une meme regle, c'est deux regles le jour ou l'une bouge.
+//
+//   journee de 24 h consecutives : (base + 1) x SMIC, jamais proratisee ;
+//   journee d'au moins 8 h       : base x SMIC ;
+//   journee plus courte          : base x SMIC x heures / 8.
+//
+// « base » vaut 3, ou 4 pour un enfant handicape, malade ou inadapte ouvrant
+// droit a une majoration de salaire.
+export const abattementJour = (heuresJour, smicHoraire, { aeeh = false } = {}) => {
+  const h = Number(heuresJour) || 0;
+  const smic = Number(smicHoraire) || 0;
+  const base = aeeh ? 4 : 3;
+  // ON N'ARRONDIT PAS ICI. Le calcul d'origine additionnait les journees
+  // exactes et n'arrondissait qu'a la fin ; arrondir chaque journee ferait
+  // deriver le total de pres d'un euro sur une annee d'accueil. L'arrondi
+  // appartient a l'affichage, pas a la regle.
+  if (h >= 23.5) return (base + 1) * smic;
+  if (h >= 8) return base * smic;
+  return (base * smic / 8) * h;
+};

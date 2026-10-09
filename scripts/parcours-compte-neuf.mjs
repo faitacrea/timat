@@ -13,7 +13,7 @@
 //
 //   node scripts/parcours-compte-neuf.mjs [url] [asmat|parent]
 import { chromium } from "playwright";
-import { BUNDLE_TESTABLE, CHROMIUM } from "./jeu-de-donnees.mjs";
+import { CLIQUER, BUNDLE_TESTABLE, CHROMIUM } from "./jeu-de-donnees.mjs";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { lireApp } from "./sources-app.mjs";
@@ -58,10 +58,14 @@ const ENFANT_NU = {
 const ECRANS_ASMAT = [
   ["accueil", "Accueil", null], ["journee", "L'enfant", "Journée"], ["pointage", "L'enfant", "Pointage"],
   ["suivi-progres", "L'enfant", "Suivi & Progrès"], ["sante-urgence", "L'enfant", "Santé & Urgence"],
-  ["bilans", "L'enfant", "Bilans"], ["calendrier", "Administratif", "Calendrier"],
+  ["bilans", "L'enfant", "Suivi & Progrès", "Bilans"], ["calendrier", "Administratif", "Calendrier"],
   ["messagerie", "Administratif", "Messagerie"], ["paie-contrats", "Administratif", "Paie & Contrats"],
   ["documents", "Administratif", "Documents & Rapports"], ["inviter", "Outils Pro", "Inviter un parent"],
-  ["projet-accueil", "Outils Pro", "Projet d'accueil"], ["pmi", "Outils Pro", "PMI"], ["faq", "Outils Pro", "Aide & Support"],
+  ["projet-accueil", "Administratif", "Documents & Rapports", "Projet d'accueil"],
+  ["pmi", "Outils Pro", "PMI"],
+  // L'aide n'est plus un outil de metier : c'est un reglage, et elle vit
+  // desormais dans les Parametres, ouverts par l'engrenage de l'en-tete.
+  ["faq", "@parametres", "Aide & Support"],
 ];
 const ECRANS_PARENT = [
   ["accueil", "Accueil", null], ["journee", "Mon enfant", "Journée"], ["pointage", "Mon enfant", "Pointage"],
@@ -112,24 +116,34 @@ const passer = async () => {
   }
 };
 await passer();
-const clic = (t) => page.evaluate((t) => {
-  const L = (b) => b.innerText.replace(/\s+/g, " ").trim();
-  const n = [...document.querySelectorAll("button")].find((b) => L(b) === t)
-    || [...document.querySelectorAll("button")].find((b) => L(b).startsWith(t));
-  if (n) { n.click(); return true; }
-  return false;
-}, t);
+// Le clic partagé : il sait trouver une entrée qui n'est pas un bouton.
+const clic = (t) => CLIQUER(page, t);
 
 const lignes = [];
-for (const [nom, groupe, entree] of ECRANS) {
+// UN QUATRIEME ELEMENT : LE SOUS-ONGLET.
+//
+// Trois ecrans ont quitte le menu pour devenir des sous-onglets : les bilans
+// sont passes dans « Suivi & Progres », le projet d'accueil dans « Documents »,
+// et l'aide a rejoint les Parametres. Ce parcours cliquait des entrees qui
+// n'existent plus et declarait quatre ecrans en defaut, sans qu'aucun d'eux ne
+// soit casse. Il a echoue en silence tant que personne ne le lancait a la main.
+for (const [nom, groupe, entree, sousOnglet] of ECRANS) {
   erreurs = [];
   // On repasse par l'accueil entre deux écrans : cliquer un groupe déjà actif
   // est sans effet, et le sous-menu resterait celui de l'écran précédent.
   await clic("Accueil"); await page.waitForTimeout(350);
-  if (!(await clic(groupe))) { lignes.push({ nom, souci: `groupe « ${groupe} » introuvable` }); continue; }
+  if (groupe === "@parametres") {
+    const ouvert = await page.getByRole("button", { name: "Paramètres" }).first().click().then(() => true).catch(() => false);
+    if (!ouvert) { lignes.push({ nom, souci: "l'engrenage des Paramètres est introuvable" }); continue; }
+  } else if (!(await clic(groupe))) { lignes.push({ nom, souci: `groupe « ${groupe} » introuvable` }); continue; }
   await page.waitForTimeout(450);
   if (entree && !(await clic(entree))) { const dispo = await page.evaluate(() => [...document.querySelectorAll("button")].map((b) => b.innerText.split("\n")[0].trim()).filter(Boolean).slice(0, 18).join(" | ")); lignes.push({ nom, souci: `entrée « ${entree} » introuvable — proposées : ${dispo}` }); continue; }
   await page.waitForTimeout(1300);
+  if (sousOnglet && !(await clic(sousOnglet))) {
+    const dispo = await page.evaluate(() => [...document.querySelectorAll("button")].map((b) => b.innerText.split("\n")[0].trim()).filter(Boolean).slice(0, 18).join(" | "));
+    lignes.push({ nom, souci: `sous-onglet « ${sousOnglet} » introuvable — proposés : ${dispo}` }); continue;
+  }
+  if (sousOnglet) await page.waitForTimeout(1200);
   await passer();
   await page.screenshot({ path: `${SORTIE}/${nom}.png`, fullPage: true });
   // Un écran qui a planté est vide : React démonte tout le sous-arbre.
