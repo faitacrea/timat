@@ -83,3 +83,8 @@ captures-contraste/
 # reconstruit a chaque execution de scripts/verif-calculs-identiques.mjs.
 .calculs-app.cjs
 .entree-calculs.js
+# Memes artefacts, pour verif-recap-pajemploi : le bundle qu'il construit pour
+# lire netDepuisBrut. Je l'avais commite par megarde — 100 ko de code genere
+# dans le depot, qui change a chaque execution.
+.recap-app.cjs
+.entree-recap.js

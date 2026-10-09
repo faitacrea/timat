@@ -41,8 +41,9 @@ jobs:
           # Les chiffres : ce qu'une utilisatrice lit comme un montant.
           - groupe: chiffres
             scripts: >-
-              verif-calculs-identiques verif-nombres verif-du-verse
-              verif-kit-cmg verif-versements parcours-bulletin parcours-frais-km
+              verif-calculs-identiques verif-recap-pajemploi verif-bulletin-recap verif-nombres
+              verif-du-verse verif-kit-cmg verif-versements parcours-bulletin
+              parcours-frais-km
           # Les écrans : ce qui s'ouvre, ou pas.
           - groupe: ecrans
             scripts: >-

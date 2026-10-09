@@ -20,7 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, MOIS_PAR_AN
 } from "./App.jsx";
 
 import { anneeScolaireDe, estFerie, finVacances, feriesDe, vacancesDe, vacancesAnnee, ACADEMIES_PAR_ZONE, ZONES, ZONE_DEFAUT } from "../data/calendrier-scolaire.js";
@@ -1060,4 +1060,56 @@ export const abattementJour = (heuresJour, smicHoraire, { aeeh = false } = {}) =
   if (h >= 23.5) return (base + 1) * smic;
   if (h >= 8) return base * smic;
   return (base * smic / 8) * h;
+};
+
+// LE SEUIL MENSUEL DES HEURES MAJOREES.
+//
+// La majoration commence a la 46e heure d'une meme semaine (CCN 3239). Le
+// bulletin et le recapitulatif Pajemploi raisonnent au mois : il leur faut
+// l'equivalent mensuel de ce seuil.
+//
+// Le code retenait « 45 x 4 », soit 180 h. C'est faux : un mois ne compte pas
+// quatre semaines. Pour une annee complete, 45 h par semaine font
+// 45 x 52 / 12 = 195 h par mois. Quinze heures etaient donc majorees a tort
+// chaque mois — 15,75 EUR de trop a 4,20 EUR de l'heure, payes par le parent
+// employeur.
+//
+// On compte donc avec les semaines du contrat, comme la mensualisation
+// elle-meme : c'est la meme arithmetique, et elle doit donner le meme rythme.
+export const SEUIL_MAJORATION_HEBDO = 45;
+
+// LE TAUX DE MAJORATION DES HEURES AU-DELA DU SEUIL.
+//
+// La CCN 3239 dit que ce taux est FIXE AU CONTRAT et ne peut pas etre inferieur
+// a 10 %. Le bulletin le codait en dur a 1,25, a trois endroits ; le simulateur
+// public « heures majorees » propose 10 % par defaut. Les deux repondaient donc
+// differemment a la meme question — et le contrat, lui, ne porte pas ce taux.
+//
+// On ne tranche pas ici : changer ce taux change ce qu'une assistante
+// maternelle touche, et c'est une decision de Sophie. On le nomme, on ecrit
+// d'ou il vient, et l'audit signale l'ecart avec le site tant qu'il dure.
+export const TAUX_MAJORATION_HEURES = 1.25;
+export const seuilMajorationMois = (contrat) =>
+  Math.round((SEUIL_MAJORATION_HEBDO * semainesDuContrat(contrat) / MOIS_PAR_AN) * 10) / 10;
+
+// LA REPARTITION DES HEURES D'UN MOIS, EN UN SEUL ENDROIT.
+//
+// Le bulletin et le recapitulatif Pajemploi la calculaient chacun de leur cote.
+// Deux codes pour une meme regle, c'est deux regles le jour ou l'une bouge —
+// et c'est exactement ce qui est arrive : le bulletin payait 88,59 EUR quand le
+// recapitulatif en declarait 567,62.
+//
+//   normales      : les heures du contrat, dans la limite du seuil ;
+//   majoreesBase  : celles du contrat qui depassent deja le seuil ;
+//   complementaires : les heures faites EN PLUS, jusqu'au seuil ;
+//   majorees      : le reste des heures faites en plus, plus majoreesBase.
+export const repartitionHeures = (contrat, heuresPointees) => {
+  const hMens = Number(heuresMensualisees(contrat)) || 0;
+  const seuil = seuilMajorationMois(contrat);
+  const normales = Math.min(hMens, seuil);
+  const majoreesBase = Math.max(0, hMens - seuil);
+  const enPlus = Math.max(0, (Number(heuresPointees) || 0) - hMens);
+  const complementaires = Math.min(enPlus, Math.max(0, seuil - hMens));
+  const majorees = Math.max(0, enPlus - complementaires) + majoreesBase;
+  return { hMens, seuil, normales, complementaires, majorees };
 };
