@@ -62,30 +62,43 @@ jobs:
           # passage de l'atelier. Ce n'était pas un blocage, c'était sa durée.
           # Seul dans son groupe, il ne mange plus le budget des autres, et son
           # échec ne masque plus le leur.
-          # LES FORMULAIRES, DÉCOUPÉS PAR ÉCRANS.
+          # LES FORMULAIRES, DÉCOUPÉS PAR ÉCRANS — ET DIMENSIONNÉS SUR UNE MESURE.
           #
           # Ce contrôle saisit puis envoie dans dix-huit écrans, un champ à la
           # fois. 600 s n'ont pas suffi, 1 500 non plus, 2 400 non plus : il a
-          # été tué trois fois de suite, et chaque fois j'ai augmenté le budget.
-          # C'était une fuite en avant. Sur le runner il dépasse quarante
-          # minutes, et le job lui-même s'arrête à quarante-cinq.
+          # été tué trois fois, et chaque fois j'ai augmenté le budget. C'était
+          # une fuite en avant.
           #
-          # Il accepte déjà une liste d'écrans en argument. On le découpe donc
-          # en trois, et chacun tient largement dans un budget normal. Bénéfice
-          # de plus : un échec nomme le tiers où il s'est produit, au lieu de
-          # « le contrôle des formulaires a expiré ».
+          # J'ai donc chronométré au lieu de deviner : SIX écrans prennent
+          # 1 172 s sur ma machine, soit ~195 s par écran. Le runner GitHub est
+          # plus lent — il n'a pas fini les dix-huit en 2 400 s. Avec une marge
+          # de 1,5× on compte donc ~300 s par écran là-bas.
+          #
+          # TROIS écrans par groupe : ~900 s au pire, dans un budget de 1 200 s.
+          # Mon premier découpage en trois groupes de six aurait été tué lui
+          # aussi — j'avais redimensionné au jugé, l'erreur même que je venais
+          # de corriger.
+          #
+          # Bénéfice de plus : un échec nomme les trois écrans concernés, au
+          # lieu de « le contrôle des formulaires a expiré ».
           - groupe: formulaires-1
             budget: 1200
-            scripts: >-
-              verif-formulaires:asmat:accueil,journee,pointage,suivi_progres,sante_urgence,autorisations
+            scripts: verif-formulaires:asmat:accueil,journee,pointage
           - groupe: formulaires-2
             budget: 1200
-            scripts: >-
-              verif-formulaires:asmat:calendrier,messagerie,paie_contrats,documents_rapports,inviter_parent,reprise_contrat
+            scripts: verif-formulaires:asmat:suivi_progres,sante_urgence,autorisations
           - groupe: formulaires-3
             budget: 1200
-            scripts: >-
-              verif-formulaires:asmat:liste_attente,page_vitrine,mes_employeurs,pmi,mes_alertes,faq
+            scripts: verif-formulaires:asmat:calendrier,messagerie,paie_contrats
+          - groupe: formulaires-4
+            budget: 1200
+            scripts: verif-formulaires:asmat:documents_rapports,inviter_parent,reprise_contrat
+          - groupe: formulaires-5
+            budget: 1200
+            scripts: verif-formulaires:asmat:liste_attente,page_vitrine,mes_employeurs
+          - groupe: formulaires-6
+            budget: 1200
+            scripts: verif-formulaires:asmat:pmi,mes_alertes,faq
           # La lisibilité et les pages publiques.
           - groupe: lisibilite
             scripts: >-
