@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -86,17 +86,17 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   // Les heures au-dela de 45 h par semaine sont majorees. Ce document raisonne
   // au mois : on reprend la convention deja retenue par le bulletin, 45 h x 4
   // semaines, et une majoration de 25 %.
-  const hMensDecl=heuresMensualisees(contrat);
-  const hEnPlus=Math.max(0,(h.real||0)-hMensDecl);
-  const hCompl=Math.min(hEnPlus,Math.max(0,45*4-hMensDecl));
-  const hMajorees=Math.max(0,hEnPlus-hCompl);
+  const repPaj=repartitionHeures(contrat,h.real);
+  const hMensDecl=repPaj.normales;
+  const hCompl=repPaj.complementaires;
+  const hMajorees=repPaj.majorees;
   // Les jours d'accueil : ceux reellement pointes, sinon ceux prevus au
   // contrat. Sans ce repli, une assistante maternelle qui ne pointe pas voyait
   // aussi son entretien et ses repas tomber a zero.
   const joursPointes=contrat?Math.max(0,Math.round((h.real||0)/(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))||8))):0;
   const joursPrevus=contrat?Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN):0;
   const joursAccueil=joursPointes>0?joursPointes:joursPrevus;
-  const salBrut=contrat?(hMensDecl*contrat.tauxHoraire+hCompl*contrat.tauxHoraire+hMajorees*contrat.tauxHoraire*1.25):0;
+  const salBrut=contrat?(hMensDecl*contrat.tauxHoraire+hCompl*contrat.tauxHoraire+hMajorees*contrat.tauxHoraire*TAUX_MAJORATION_HEURES):0;
   const entretienMois=contrat?Math.round((contrat.entretien||0)*joursAccueil*100)/100:0;
   const repasMoisPaj=contrat&&contrat.repasFourniPar!=="employeur"?Math.round((Number(contrat.repas)||0)*joursAccueil*100)/100:0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
@@ -201,11 +201,15 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       <div style={{background:"linear-gradient(135deg,var(--Tp),var(--Sp))",padding:"16px 18px"}}>
         <div style={{fontSize:11,fontWeight:700,color:"var(--T)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Total brut · {moisCourant}</div>
         <div className="pf"style={{fontSize:30,fontWeight:800,color:"var(--b)",lineHeight:1.1}}>{nbf(totalBrut,2)} €</div>
-        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{h.real} h{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {nbf(netEstime,2)} €</div>
+        {/* L'ecran annoncait les heures POINTEES a cote d'un net calcule sur la
+            mensualisation : deux chiffres qui ne parlaient pas du meme mois.
+            On annonce ce qui se declare, et on garde le pointage a cote. */}
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{hMensDecl+hCompl+hMajorees} h à déclarer{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {nbf(netEstime,2)} €</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{h.real} h pointées ce mois{h.real!==hMensDecl?" (le contrat en prévoit "+hMensDecl+")":""}</div>
         {indemAbs>0&&<div style={{fontSize:11,color:"var(--m)",marginTop:2}}>dont absences indemnisées : +{nbf(indemAbs,2)} € ({absMois.filter(a=>a.indemnise).length} j)</div>}
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
-        {[["Heures × taux",nbf((h.real*contrat.tauxHoraire),2)+" €","var(--B)","var(--Bp)"],
+        {[["Heures × taux",nbf(salBrut,2)+" €","var(--B)","var(--Bp)"],
           ["Entretien",nbf(entretienMois,2)+" €","var(--S)","var(--Sp)"],
           ["Net estimé",nbf(netEstime,2)+" €","var(--T)","var(--Tp)"],
         ].map(([l,v,c,bg])=><div key={l}style={{background:bg,borderRadius:12,padding:"11px 10px",textAlign:"center",minWidth:0}}>
@@ -225,7 +229,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:11,color:"var(--l)"}}>Export direct vers l'URSSAF</div></div>
           </div>
           <div style={{fontSize:13,color:"var(--b)",marginBottom:12,lineHeight:1.6}}>
-            Heures : <strong>{h.real}h</strong> · Salaire net : <strong>{nbf(netEstime,2)}€</strong> · Mois : <strong>{moisCourant}</strong>
+            Heures : <strong>{hMensDecl+hCompl+hMajorees}h</strong> · Salaire net : <strong>{nbf(netEstime,2)}€</strong> · Mois : <strong>{moisCourant}</strong>
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exportPajemploi}>
             <IconeOuEmoji e="🏛️"/> Exporter vers Pajemploi
@@ -842,12 +846,25 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   //
   // Les heures pointees restent affichees a cote : elles servent a voir un
   // ecart qui meriterait un avenant, pas a calculer la paie.
-  const heuresEnPlus=Math.max(0,(h.real||0)-hMens);
-  const heuresNorm=hMens;
-  const hSupp=Math.min(heuresEnPlus,Math.max(0,45*4-hMens));
-  const hMaj=Math.max(0,heuresEnPlus-hSupp);
+  // LE SEUIL DE 45 H/SEMAINE SE COMPTE AVEC LES SEMAINES DU CONTRAT.
+  //
+  // Le code retenait « 45 x 4 », soit 180 h par mois. Un mois ne compte pas
+  // quatre semaines : pour une annee complete, 45 h par semaine font 195 h.
+  // Quinze heures etaient majorees a tort chaque mois — 15,75 EUR de trop,
+  // payes par le parent employeur. Et un contrat au-dela de 45 h/semaine
+  // n'avait AUCUNE de ses heures contractuelles majoree, alors qu'elles le
+  // sont par definition.
+  //
+  // La repartition vit dans socle.jsx : le recapitulatif Pajemploi la lit
+  // aussi, pour que les deux documents ne puissent plus diverger.
+  // Le taux vient de socle.jsx : il etait code en dur a trois endroits.
+  const TAUX_MAJORATION=TAUX_MAJORATION_HEURES;
+  const rep=repartitionHeures(contrat,h.real);
+  const heuresNorm=rep.normales;
+  const hSupp=rep.complementaires;
+  const hMaj=rep.majorees;
   const salBase=heuresNorm*tauxH;
-  const salSupp=hSupp*tauxH+hMaj*tauxH*1.25;
+  const salSupp=hSupp*tauxH+hMaj*tauxH*TAUX_MAJORATION;
   const brut=salBase+salSupp;
   // Le nombre de jours d'accueil se deduisait des heures divisees par 8, et
   // les trois rendus du bulletin — ecran, page imprimable, PDF — n'affichaient
@@ -1012,7 +1029,12 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       };
       section("RÉMUNÉRATION");
       ligne("Salaire de base (heures normales)",nbf(heuresNorm,2)+" h",nbf(tauxH,4)+" €/h",nbf(salBase,2)+" €");
-      if(hSupp>0)ligne("Heures supplémentaires (+ 25 %)",hSupp+" h",nbf((tauxH*1.25),4)+" €/h",nbf(salSupp,2)+" €");
+      // Deux lignes distinctes, parce que ce sont deux taux distincts : les
+      // heures complementaires se paient au taux normal, les majorees au taux
+      // majore. Une seule ligne « + 25 % » les melangeait et annoncait un taux
+      // que la moitie d'entre elles ne touchait pas.
+      if(hSupp>0)ligne("Heures complémentaires",nbf(hSupp,2)+" h",nbf(tauxH,4)+" €/h",nbf(hSupp*tauxH,2)+" €");
+      if(hMaj>0)ligne("Heures majorées (+ "+Math.round((TAUX_MAJORATION-1)*100)+" %)",nbf(hMaj,2)+" h",nbf((tauxH*TAUX_MAJORATION),4)+" €/h",nbf(hMaj*tauxH*TAUX_MAJORATION,2)+" €");
       ligne("Indemnité d'entretien",joursTravailles+" jours",nbf(entretienDuContrat(contrat),2)+" €/j",nbf(entretien,2)+" €");
       if(repasMois>0)ligne("Indemnité de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" €/j",nbf(repasMois,2)+" €");
       if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"année complète":"année incomplète","- "+nbf(retenue,2)+" €");
@@ -1253,6 +1275,20 @@ template:"bulletin_sent",
       {useRealHours?<span style={{marginLeft:8,fontSize:11,color:"var(--S)"}}>· {heuresMoisReel.heures} h pointées sur {heuresMoisReel.jours} j</span>
         :<span style={{marginLeft:8,fontSize:11,color:"var(--l)",fontStyle:"italic"}}>· basé sur le contrat (aucun pointage)</span>}
     </div>}
+    {/* CE QUI A CHANGE, ET QU'IL FAUT DIRE.
+        Avant, une journee NON POINTEE reduisait la paie toute seule : le
+        bulletin se calculait sur les heures pointees. C'etait confondre « pas
+        pointe » et « pas travaille » — trois journees pointees sur vingt-deux
+        donnaient un bulletin au sixieme du salaire du.
+        Desormais la paie suit le contrat, et seules les absences ENREGISTREES
+        la diminuent. C'est la bonne regle, mais elle deplace le geste : on le
+        dit, au lieu de laisser quelqu'un s'etonner. */}
+    {!isDemoBull&&useRealHours&&heuresMoisReel.heures<hMens&&<div style={{padding:"10px 14px",background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--b)",lineHeight:1.6}}>
+      <strong>{heuresMoisReel.heures} h pointées</strong> ce mois, pour <strong>{hMens} h</strong> prévues au contrat.
+      Le salaire reste celui du contrat : c&rsquo;est le principe de la mensualisation.
+      Si des journées n&rsquo;ont pas été travaillées, enregistrez-les comme <strong>absences</strong> dans le calendrier —
+      c&rsquo;est par là que la retenue se fait, pas par l&rsquo;absence de pointage.
+    </div>}
 
     {/* L'allocation de formation n'est pas une ligne de salaire : elle est
         versée par IPERIA, pas par le parent employeur. Elle s'affiche donc à
@@ -1335,7 +1371,8 @@ template:"bulletin_sent",
         </div>
         <div style={{fontSize:11,fontWeight:700,color:"var(--l)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:8}}>RÉMUNÉRATION</div>
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",nbf(salBase,2)+"€"],
-          ...(hSupp>0?[["Heures majorées 25%",hSupp+"h × "+nbf((tauxH*1.25),2)+"€",nbf(salSupp,2)+"€"]]:[]),
+          ...(hSupp>0?[["Heures complémentaires",nbf(hSupp,2)+"h × "+nbf(tauxH,2)+"€",nbf(hSupp*tauxH,2)+"€"]]:[]),
+          ...(hMaj>0?[["Heures majorées +"+Math.round((TAUX_MAJORATION-1)*100)+"%",nbf(hMaj,2)+"h × "+nbf((tauxH*TAUX_MAJORATION),2)+"€",nbf(hMaj*tauxH*TAUX_MAJORATION,2)+"€"]]:[]),
           ["Indemnité d'entretien",joursTravailles+" j × "+nb2(entretienDuContrat(contrat))+"€",nbf(entretien,2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+nbf((Number(repasJour)||0),2)+"€",nbf(repasMois,2)+"€"]]:[]),
           ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+nbf(retenue,2)+"€"]]:[]),
@@ -1403,7 +1440,11 @@ template:"bulletin_sent",
             +"<td class=\"right\">"+(t.sal>0?nbf(cotisation(t,"sal"),2)+"€":"-")+"</td>"
             +"<td class=\"right\">"+(t.pat>0?nbf(cotisation(t,"pat"),2)+"€":"-")+"</td></tr>";
         }).join("");
-        var hSuppRow=hSupp>0?"<tr><td>Heures compl. (maj. 25%)</td><td class=\"right\">"+hSupp+" h</td><td class=\"right\">"+nbf((tauxH*1.25),4)+" €/h</td><td class=\"right\">"+nbf(salSupp,2)+" €</td></tr>":"";
+        // Deux lignes, deux taux : les complementaires au taux normal, les
+        // majorees au taux majore. Une seule ligne « maj. 25% » annoncait un
+        // taux que la moitie d'entre elles ne touchait pas.
+        var hSuppRow=(hSupp>0?"<tr><td>Heures complémentaires</td><td class=\"right\">"+nbf(hSupp,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(hSupp*tauxH,2)+" €</td></tr>":"")
+          +(hMaj>0?"<tr><td>Heures majorées (+ "+Math.round((TAUX_MAJORATION-1)*100)+" %)</td><td class=\"right\">"+nbf(hMaj,2)+" h</td><td class=\"right\">"+nbf((tauxH*TAUX_MAJORATION),4)+" €/h</td><td class=\"right\">"+nbf(hMaj*tauxH*TAUX_MAJORATION,2)+" €</td></tr>":"");
         var htmlParts=[
           "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"UTF-8\"/>",
           "<title>Bulletin de salaire "+moisSel+"</title>",

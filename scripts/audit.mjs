@@ -1836,8 +1836,17 @@ if (!/RETENUE_TYPES=\{[^}]*form:false/.test(appSrc)) {
 // L'intention de la regle, elle, n'a pas bouge : une absence se deduit une fois
 // et une seule. On verifie donc les deux moities de l'invariant — la base est
 // la mensualisation, et la retenue porte sur elle.
-if (!/const heuresNorm=hMens;/.test(appSrc)) {
-  signale("calendrier", "le bulletin ne se calcule plus sur les heures mensualisées : sur un mois mal pointé, il paierait une fraction du salaire dû, et contredirait le récapitulatif Pajemploi du même mois");
+// On verifie l'INVARIANT, pas une chaine. Ma premiere version cherchait
+// « const heuresNorm=hMens; » mot pour mot : elle a crie des que la ligne est
+// devenue « rep.normales », alors que le calcul etait devenu PLUS juste. Une
+// regle qui lit la forme et non le sens finit par empecher les corrections.
+{
+  const ligne = (appSrc.match(/const heuresNorm\s*=\s*([^;]+);/) || [])[1] || "";
+  if (/h\.real/.test(ligne)) {
+    signale("calendrier", `le bulletin repart des heures pointées (« ${ligne.trim()} ») : sur un mois mal pointé, il paierait une fraction du salaire dû, et contredirait le récapitulatif Pajemploi du même mois`);
+  } else if (!/hMens|rep\.normales|repartitionHeures/.test(ligne)) {
+    signale("calendrier", `la base du bulletin ne vient plus de la mensualisation (« ${ligne.trim()} ») : elle doit venir de heuresMensualisees ou de repartitionHeures`);
+  }
 }
 if (!/const retenue=retenueAbsence\(\{\s*salaireMensualise:salBase,/.test(appSrc)) {
   signale("calendrier", "la retenue pour absence ne porte plus sur le salaire mensualisé : soit l'absence n'est plus déduite du tout, soit elle l'est deux fois");
@@ -4362,6 +4371,32 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     if (!/\bchromium\b/.test(src)) continue;
     if (/BUNDLE_TESTABLE\s*\(/.test(src.replace(/^\s*\/\/.*$/gm, ""))) continue;
     signale("bundle-sans-garde-fou", `${nom} démarre l'application sans appeler BUNDLE_TESTABLE : construit sans VITE_SUPABASE_KEY, le bundle est inbootable et ce contrôle rendrait un KO imaginaire`);
+  }
+}
+
+// --- LE TAUX DE MAJORATION : LE SITE ET L'APPLICATION NE DISENT PAS PAREIL ---
+//
+// La CCN 3239 fixe ce taux AU CONTRAT, avec un plancher de 10 %. L'application
+// retient 1,25 (TAUX_MAJORATION_HEURES, dans socle.jsx) ; le simulateur public
+// « heures majorées » propose 10 % par défaut. Une assistante maternelle qui
+// simule sur le site puis regarde son bulletin lit donc deux chiffres
+// différents pour les mêmes heures.
+//
+// CE N'EST PAS UNE RÈGLE QUI SE CORRIGE TOUTE SEULE : changer ce taux change ce
+// qu'une assistante maternelle touche, et le contrat ne porte pas encore ce
+// champ. Elle reste donc là, à signaler l'écart tant qu'il dure, plutôt qu'un
+// silence qui le ferait oublier.
+{
+  const socle = readFileSync(new URL("../src/socle.jsx", import.meta.url), "utf8");
+  const appTaux = Number((socle.match(/TAUX_MAJORATION_HEURES\s*=\s*([0-9.]+)/) || [])[1]);
+  const page = new URL("../public/simulateur-heures-majorees-assistante-maternelle.html", import.meta.url);
+  if (existsSync(page) && Number.isFinite(appTaux)) {
+    const html = readFileSync(page, "utf8");
+    const sitePct = Number((html.match(/id="mj"[^>]*value="([0-9.]+)"/) || [])[1]);
+    const appPct = Math.round((appTaux - 1) * 100);
+    if (Number.isFinite(sitePct) && sitePct !== appPct) {
+      signale("heures-majorees", `le simulateur public propose ${sitePct} % de majoration, l'application en applique ${appPct} % (TAUX_MAJORATION_HEURES) : pour 20 h majorées à 4,20 €/h, cela fait ${((20 * 4.20 * (appPct - sitePct)) / 100).toFixed(2)} € d'écart sur un bulletin. La CCN 3239 fixe ce taux au contrat, plancher 10 % — c'est une décision, pas un bug à corriger en douce`);
+    }
   }
 }
 
