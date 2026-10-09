@@ -13,7 +13,7 @@
 //
 // Hors chaine de build : Vercel n'a pas de navigateur.
 // CE QU'IL COUVRE, ET CE QU'IL NE COUVRE PAS. Le site compte douze outils
-// publics ; ce controle en pilote quatre. Les huit autres ne sont compares a
+// publics ; ce controle en pilote six. Les huit autres ne sont compares a
 // rien, et il faut le savoir plutot que de croire le site entierement
 // surveille. La liste ci-dessous est faite pour grandir.
 //
@@ -29,7 +29,7 @@ const ENTREE = new URL("../.entree-calculs.js", import.meta.url).pathname;
 const SORTIE = new URL("../.calculs-app.cjs", import.meta.url).pathname;
 writeFileSync(ENTREE, `
 export { salaireMensualise, netDepuisBrut, smicHoraireAu, IE_TAUX_HORAIRE, IE_PLANCHER_JOUR, CHR_AM, PLAFOND_H, CMG_MAX, TAUX_SALARIAL_TOTAL, montantCMG, tauxEffortCMG } from "./src/App.jsx";
-export { minimumHoraireAu, iccpCalcul, congesAcquis, preavisJours, indemniteRupture, abattementJour } from "./src/socle.jsx";
+export { minimumHoraireAu, iccpCalcul, congesAcquis, preavisJours, indemniteRupture, abattementJour, retenueAbsence } from "./src/socle.jsx";
 `);
 await build({
   entryPoints: [ENTREE], bundle: true, format: "cjs", platform: "node", outfile: SORTIE,
@@ -85,6 +85,24 @@ const CAS = [
   { page: "simulateur-abattement-fiscal-assistante-maternelle.html", nom: "abattement, journée de 24 h",
     champs: { smic: "12.31", jours: "40", heures: "24", enfants: "1", handi: false, nuit: true },
     sorties: { abat: () => eur(app.abattementJour(24, 12.31) * 40) } },
+  // LA DÉDUCTION D'UNE ABSENCE. La page et le bulletin plafonnent tous deux la
+  // retenue au salaire : une absence plus longue que le mois ne peut pas créer
+  // une dette. On vérifie les deux côtés du plafond.
+  { page: "simulateur-deduction-absence-assistante-maternelle.html", nom: "absence, retenue proportionnelle",
+    champs: { sal: "728", abs: "14", prev: "140" },
+    sorties: { ded: () => app.retenueAbsence({ salaireMensualise: 728, anneeComplete: true, heuresAbsence: 14, heuresMois: 140 }) } },
+  { page: "simulateur-deduction-absence-assistante-maternelle.html", nom: "absence plus longue que le mois (plafond)",
+    champs: { sal: "728", abs: "200", prev: "140" },
+    sorties: { ded: () => app.retenueAbsence({ salaireMensualise: 728, anneeComplete: true, heuresAbsence: 200, heuresMois: 140 }) } },
+  // LA FIN DE CONTRAT. Le préavis (8 / 15 / 30 jours) et l'indemnité de rupture
+  // (le brut total divisé par 80, à partir de 9 mois d'ancienneté) sont écrits
+  // des deux côtés. Ils concordent aujourd'hui ; rien ne le garantissait demain.
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "fin de contrat, 18 mois, retrait de l'enfant",
+    champs: { mot: "retrait", anc: "18", brut: "9600", mens: "800" },
+    sorties: { rInd: () => app.indemniteRupture({ brutTotal: 9600, moisAnciennete: 18, parEmployeur: true }) } },
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "fin de contrat, 6 mois : pas d'indemnité",
+    champs: { mot: "retrait", anc: "6", brut: "3200", mens: "800" },
+    sorties: { rInd: () => app.indemniteRupture({ brutTotal: 3200, moisAnciennete: 6, parEmployeur: true }) } },
 ];
 
 const N = await chromium.launch({ executablePath: CHROMIUM() });
