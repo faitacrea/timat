@@ -62,13 +62,43 @@ jobs:
           # passage de l'atelier. Ce n'était pas un blocage, c'était sa durée.
           # Seul dans son groupe, il ne mange plus le budget des autres, et son
           # échec ne masque plus le leur.
-          - groupe: formulaires
-            # 1 500 s n'ont pas suffi non plus sur le runner : il y est plus
-            # lent qu'ici. Le job lui-même s'arrête à 45 minutes, et « -k »
-            # garantit qu'un vrai blocage rend la main ; 2 400 s laissent donc
-            # la marge sans rien masquer.
-            budget: 2400
-            scripts: verif-formulaires
+          # LES FORMULAIRES, DÉCOUPÉS PAR ÉCRANS — ET DIMENSIONNÉS SUR UNE MESURE.
+          #
+          # Ce contrôle saisit puis envoie dans dix-huit écrans, un champ à la
+          # fois. 600 s n'ont pas suffi, 1 500 non plus, 2 400 non plus : il a
+          # été tué trois fois, et chaque fois j'ai augmenté le budget. C'était
+          # une fuite en avant.
+          #
+          # J'ai donc chronométré au lieu de deviner : SIX écrans prennent
+          # 1 172 s sur ma machine, soit ~195 s par écran. Le runner GitHub est
+          # plus lent — il n'a pas fini les dix-huit en 2 400 s. Avec une marge
+          # de 1,5× on compte donc ~300 s par écran là-bas.
+          #
+          # TROIS écrans par groupe : ~900 s au pire, dans un budget de 1 200 s.
+          # Mon premier découpage en trois groupes de six aurait été tué lui
+          # aussi — j'avais redimensionné au jugé, l'erreur même que je venais
+          # de corriger.
+          #
+          # Bénéfice de plus : un échec nomme les trois écrans concernés, au
+          # lieu de « le contrôle des formulaires a expiré ».
+          - groupe: formulaires-1
+            budget: 1200
+            scripts: verif-formulaires:asmat:accueil,journee,pointage
+          - groupe: formulaires-2
+            budget: 1200
+            scripts: verif-formulaires:asmat:suivi_progres,sante_urgence,autorisations
+          - groupe: formulaires-3
+            budget: 1200
+            scripts: verif-formulaires:asmat:calendrier,messagerie,paie_contrats
+          - groupe: formulaires-4
+            budget: 1200
+            scripts: verif-formulaires:asmat:documents_rapports,inviter_parent,reprise_contrat
+          - groupe: formulaires-5
+            budget: 1200
+            scripts: verif-formulaires:asmat:liste_attente,page_vitrine,mes_employeurs
+          - groupe: formulaires-6
+            budget: 1200
+            scripts: verif-formulaires:asmat:pmi,mes_alertes,faq
           # La lisibilité et les pages publiques.
           - groupe: lisibilite
             scripts: >-
@@ -123,14 +153,18 @@ jobs:
         run: |
           echo "## Groupe ${{ matrix.groupe }}" > /tmp/rapport.md
           echos=0
-          for s in ${{ matrix.scripts }}; do
-            echo "::group::$s"
+          # Un contrôle peut porter ses arguments, séparés par « : » — c'est
+          # ainsi que les formulaires sont découpés par écrans.
+          for entree in ${{ matrix.scripts }}; do
+            s="${entree%%:*}"
+            args="${entree#"$s"}"; args="${args//:/ }"
+            echo "::group::$s $args"
             set +e
             # « timeout » seul ne suffit pas : un contrôle Playwright bloqué a
             # survécu 900 s à son SIGTERM sur ma machine. Sans « -k », c'est le
             # job entier qui expire — et GitHub rapporte alors « timeout » sans
             # nommer le contrôle coupable. « -k 30 » force la main 30 s après.
-            timeout -k 30 "${{ matrix.budget || 600 }}" node "scripts/$s.mjs" 2>&1 | tee "/tmp/$s.txt"
+            timeout -k 30 "${{ matrix.budget || 600 }}" node "scripts/$s.mjs" $args 2>&1 | tee "/tmp/$s.txt"
             code=${PIPESTATUS[0]}
             set -e
             echo "::endgroup::"
@@ -138,7 +172,7 @@ jobs:
               echos=$((echos+1))
               {
                 echo ""
-                echo "### $s — code $code"
+                echo "### $s $args — code $code"
                 echo '```'
                 tail -40 "/tmp/$s.txt"
                 echo '```'
