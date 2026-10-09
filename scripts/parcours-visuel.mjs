@@ -98,7 +98,17 @@ page.on("console", (m) => {
   const t = m.text();
   // Les echecs reseau viennent de l'environnement de test (polices, mesure
   // d'audience, Supabase injoignable), pas de l'application.
-  if (m.type() === "error" && !/ERR_|Failed to load resource|Failed to fetch/.test(t)) erreurs.push("console : " + t.slice(0, 160));
+  // LE WEBSOCKET DU TEMPS RÉEL N'EST PAS UNE ERREUR ICI.
+  //
+  // Ce parcours double la base avec une fausse clé. Supabase Realtime, lui,
+  // ouvre un WebSocket qui ne passe pas par « fetch » : il part pour de vrai,
+  // et se fait refuser — « HTTP Authentication failed ». Cinq lignes rouges
+  // sur cinq écrans, à chaque passage, qui ne disent rien du code.
+  //
+  // On ne l'exempte que pour ce qu'il est : un refus d'authentification du
+  // temps réel. Une vraie erreur JavaScript sur le même écran reste comptée.
+  const bruitDuDoublage = /realtime\/v1\/websocket/.test(t) && /Authentication failed|WebSocket/.test(t);
+  if (m.type() === "error" && !bruitDuDoublage && !/ERR_|Failed to load resource|Failed to fetch/.test(t)) erreurs.push("console : " + t.slice(0, 160));
 });
 // LA BASE ET LA SESSION, DEPUIS LE JEU DE DONNÉES PARTAGÉ.
 // Ce contrôle doublait « rest/v1 » par « [] » et se connectait en
@@ -147,7 +157,23 @@ for (const [nom, groupe, entree] of ECRANS) {
     let petit = 0, cibles = 0; const coupables = [];
     for (const n of document.querySelectorAll("body *")) {
       const st = getComputedStyle(n);
-      if (!n.childElementCount && n.textContent.trim() && parseFloat(st.fontSize) < 11) petit++;
+      // UN EXPOSANT N'EST PAS DU TEXTE À LIRE.
+      //
+      // Les deux « textes sous 11 px » de « Mon activité » étaient le « er » de
+      // « 1ᵉʳ mars » : un <sup>, que le navigateur rend à 0,83 em par
+      // définition. L'abaisser à 11 px ferait un ordinal difforme, et le
+      // chiffre qui porte le sens, lui, est à sa taille normale.
+      //
+      // On n'exempte que <sup> et <sub>, et seulement eux : tout le reste du
+      // texte continue d'être mesuré.
+      if (/^(SUP|SUB)$/.test(n.tagName)) continue;
+      if (!n.childElementCount && n.textContent.trim() && parseFloat(st.fontSize) < 11) {
+        petit++;
+        // « 2 textes sous 11 px » ne dit pas lesquels : on ne peut rien en
+        // faire sans rouvrir l'écran à la main. Même raison que pour les
+        // cibles trop petites, quelques lignes plus bas.
+        if (coupables.length < 8) coupables.push(`texte ${parseFloat(st.fontSize)} px : « ${n.textContent.trim().slice(0, 40)} »`);
+      }
       if (/^(BUTTON|A)$/.test(n.tagName)) {
         // UN LIEN DANS UNE PHRASE N'EST PAS UNE CIBLE TACTILE.
         //

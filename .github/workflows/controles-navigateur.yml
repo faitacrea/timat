@@ -62,7 +62,11 @@ jobs:
           # Seul dans son groupe, il ne mange plus le budget des autres, et son
           # échec ne masque plus le leur.
           - groupe: formulaires
-            budget: 1500
+            # 1 500 s n'ont pas suffi non plus sur le runner : il y est plus
+            # lent qu'ici. Le job lui-même s'arrête à 45 minutes, et « -k »
+            # garantit qu'un vrai blocage rend la main ; 2 400 s laissent donc
+            # la marge sans rien masquer.
+            budget: 2400
             scripts: verif-formulaires
           # La lisibilité et les pages publiques.
           - groupe: lisibilite

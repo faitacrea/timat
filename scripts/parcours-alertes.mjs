@@ -67,6 +67,25 @@ await page.addInitScript(([s, cle, passe]) => {
   if (passe === "refus") {
     Object.defineProperty(Notification, "permission", { get: () => "denied", configurable: true });
   }
+  // LA PASSE « DEFAUT » DOIT ÊTRE DÉTERMINISTE, ELLE AUSSI.
+  //
+  // Les passes « refus » et « iphone » forcent l'état du navigateur ; la passe
+  // par défaut, elle, s'en remettait au navigateur réel. Sur ma machine il
+  // offre le push, sur le runner GitHub il ne l'offre pas : le bouton
+  // « Recevoir les notifications ici » n'apparaissait donc pas là-bas, et le
+  // contrôle rendait un KO qui ne parlait que de Chromium, pas de TiMat.
+  //
+  // On pose donc les trois choses que etatPush() exige — Notification,
+  // serviceWorker, PushManager — et une permission accordée. Ce que l'on teste
+  // est alors l'écran, partout pareil.
+  if (passe === "defaut") {
+    try {
+      if (!("Notification" in window)) window.Notification = function () {};
+      Object.defineProperty(window.Notification, "permission", { get: () => "granted", configurable: true });
+      if (!("PushManager" in window)) window.PushManager = function () {};
+      if (!("serviceWorker" in navigator)) Object.defineProperty(navigator, "serviceWorker", { value: {}, configurable: true });
+    } catch (e) { /* le contrôle le dira si l'écran ne s'ouvre pas */ }
+  }
   if (passe === "iphone") {
     // Un iPhone hors ecran d'accueil : Apple n'y donne pas le push.
     delete window.PushManager;
