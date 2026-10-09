@@ -52,8 +52,18 @@ jobs:
           # Les gestes : cliquer, saisir, signer.
           - groupe: gestes
             scripts: >-
-              verif-boutons verif-double-clic verif-formulaires verif-signature
+              verif-boutons verif-double-clic verif-signature
               verif-inscription verif-demonstration
+          # LES FORMULAIRES, SEULS DANS LEUR GROUPE.
+          #
+          # Il saisit puis envoie dans dix-huit écrans, un champ à la fois :
+          # 693 s mesurées sur ma machine, et il a été tué à 600 s au premier
+          # passage de l'atelier. Ce n'était pas un blocage, c'était sa durée.
+          # Seul dans son groupe, il ne mange plus le budget des autres, et son
+          # échec ne masque plus le leur.
+          - groupe: formulaires
+            budget: 1500
+            scripts: verif-formulaires
           # La lisibilité et les pages publiques.
           - groupe: lisibilite
             scripts: >-
@@ -115,7 +125,7 @@ jobs:
             # survécu 900 s à son SIGTERM sur ma machine. Sans « -k », c'est le
             # job entier qui expire — et GitHub rapporte alors « timeout » sans
             # nommer le contrôle coupable. « -k 30 » force la main 30 s après.
-            timeout -k 30 600 node "scripts/$s.mjs" 2>&1 | tee "/tmp/$s.txt"
+            timeout -k 30 "${{ matrix.budget || 600 }}" node "scripts/$s.mjs" 2>&1 | tee "/tmp/$s.txt"
             code=${PIPESTATUS[0]}
             set -e
             echo "::endgroup::"
