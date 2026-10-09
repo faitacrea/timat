@@ -4400,6 +4400,37 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- LE PLAFOND MENSUEL DU CMG : L'APPLICATION EN POSE UN, PAS LE SITE -------
+//
+// L'application plafonne le CMG à CMG_MAX (825,16 €). Le simulateur public
+// « CMG reste à charge » ne plafonne pas du tout. Pour 200 h à 6,50 €/h et des
+// ressources au plancher, la page annonce 1 255,43 € là où l'application en
+// annonce 825,16 : 430 € d'écart sur une aide qu'une famille met dans son
+// budget.
+//
+// JE N'AI PAS TRANCHÉ, ET JE NE DOIS PAS. La réforme du 1er septembre 2025
+// (décret n° 2025-515 du 30 mai 2025, article D. 531-18 du code de la sécurité
+// sociale) a remplacé le plafond journalier par un plafond HORAIRE et supprimé
+// le reste à charge minimal de 15 % en emploi direct. Plusieurs sources en
+// déduisent qu'il n'existe plus de plafond mensuel fixe ; d'autres citent
+// 825,16 €, mais ce chiffre vient de calculateurs privés, pas d'une source
+// officielle. Les deux codes peuvent donc avoir tort.
+//
+// À VÉRIFIER AUPRÈS DE LA SOURCE : le simulateur officiel de la CAF ou de
+// Pajemploi, ou le texte de l'article D. 531-18. Tant que ce n'est pas tranché,
+// cette règle garde l'écart sous les yeux plutôt que de le laisser s'oublier.
+{
+  const page = new URL("../public/simulateur-cmg-reste-a-charge.html", import.meta.url);
+  if (existsSync(page)) {
+    const html = readFileSync(page, "utf8");
+    const appMax = Number((appSrc.match(/CMG_MAX\s*=\s*([0-9.]+)/) || [])[1]);
+    const pagePlafonne = /CMG_MAX|plafondMensuel|Math\.min\([^)]*82[0-9]/.test(html);
+    if (Number.isFinite(appMax) && !pagePlafonne) {
+      signale("cmg", `l'application plafonne le CMG à ${appMax} € par mois, le simulateur public ne le plafonne pas : pour 200 h à 6,50 €/h et des ressources au plancher, la page annonce 1 255,43 € contre ${appMax} € dans l'application, soit 430 € d'écart sur une aide qu'une famille met dans son budget. Lequel des deux a raison n'est PAS tranché : la réforme du 1er septembre 2025 a remplacé le plafond journalier par un plafond horaire, et les sources se contredisent sur l'existence d'un plafond mensuel. À vérifier sur le simulateur officiel CAF/Pajemploi ou l'article D. 531-18 du code de la sécurité sociale`);
+    }
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {
