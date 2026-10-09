@@ -12,7 +12,7 @@
 //
 //   node scripts/parcours-alertes.mjs [url] [refus|iphone]
 import { chromium } from "playwright";
-import { BUNDLE_TESTABLE, CHROMIUM } from "./jeu-de-donnees.mjs";
+import { CLIQUER, BUNDLE_TESTABLE, CHROMIUM } from "./jeu-de-donnees.mjs";
 import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { lireApp } from "./sources-app.mjs";
@@ -103,15 +103,16 @@ const passer = async () => {
   }
 };
 await passer();
-const clic = (t) => page.evaluate((t) => {
-  const L = (b) => b.innerText.split("\n")[0].trim();
-  const n = [...document.querySelectorAll("button")].find((b) => L(b) === t)
-    || [...document.querySelectorAll("button")].find((b) => L(b).includes(t));
-  if (n) { n.click(); return true; }
-  return false;
-}, t);
+// Le clic partagé (jeu-de-donnees.mjs) sait trouver une entrée qui n'est pas
+// un bouton : « Mes alertes » est une ligne cliquable des Paramètres.
+const clic = (t) => CLIQUER(page, t);
 
-const okG = await clic(PARENT ? "Administratif" : "Outils Pro"); await page.waitForTimeout(1000);
+// Le chemin reel : l'engrenage de l'en-tete ouvre les Parametres — ce n'est
+// pas une entree du menu du bas, c'est un bouton a l'aria-label « Parametres ».
+// Puis la carte « Notifications & aide », puis l'entree.
+const okG = await page.getByRole("button", { name: "Paramètres" }).first().click()
+  .then(() => true).catch(() => false);
+await page.waitForTimeout(1400);
 const okS = await clic("Mes alertes"); await page.waitForTimeout(2200);
 await passer();
 await page.screenshot({ path: `${SORTIE}/alertes-${PASSE}.png`, fullPage: true });

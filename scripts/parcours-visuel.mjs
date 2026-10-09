@@ -107,14 +107,13 @@ page.on("console", (m) => {
 // déclarait « ok » était mesuré derrière cette carte d'erreur.
 await BRANCHER(page,ESPACE==="parent"?"parent":"asmat",CLE);
 
-await page.goto(`${URL_BASE}/?acces=${CLE}&connexion=1`, { waitUntil: "domcontentloaded" });
+await page.goto(`${URL_BASE}/?acces=${CLE}&connexion=${ESPACE==="parent"?"parent":"1"}`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(2500);
 if(!await BUNDLE_TESTABLE(page)){await navigateur.close();process.exit(1);}
 await ATTENDRE_PRET(page,2200);
-await page.getByRole("button", { name: /^Se connecter$/ }).first().click();
-await page.waitForTimeout(600);
-await page.getByRole("button", { name: /Accéder à mon espace/ }).click();
-await page.waitForTimeout(3000);
+// La session est deja ouverte par BRANCHER : plus de formulaire a remplir.
+// Ces deux clics etaient restes apres la conversion, et le parcours attendait
+// 30 s un bouton « Se connecter » que l'application n'affiche plus.
 const passer = page.getByRole("button", { name: /^Passer$/ });
 if (await passer.isVisible().catch(() => false)) { await passer.click(); await page.waitForTimeout(600); }
 if(!await DANS_L_APP(page,"le parcours visuel")){await navigateur.close();process.exit(1);}

@@ -272,3 +272,33 @@ export const CHROMIUM = () => {
     }
   return undefined; // Playwright trouvera son propre navigateur
 };
+
+// CLIQUER UNE ENTRÉE, QU'ELLE SOIT UN BOUTON OU NON.
+//
+// Les contrôles cherchaient leurs entrées parmi les seuls « button ». Or
+// plusieurs écrans de réglages présentent leurs entrées comme des lignes
+// cliquables : « Mes alertes » et « Aide & Support » en sont. Trois parcours
+// déclaraient donc en défaut des écrans parfaitement sains — et ils ont échoué
+// en silence tant que personne ne les lançait à la main.
+//
+// Deux précautions, apprises en me trompant une première fois : on cherche
+// d'abord parmi les boutons, qui sont le cas normal et le moins ambigu ; et
+// quand il faut élargir, on prend l'élément le PLUS PROFOND dont le texte
+// correspond, jamais le conteneur qui l'enveloppe — sinon on clique la carte
+// entière au lieu de la ligne.
+export const CLIQUER = (p, texte) => p.evaluate((t) => {
+  const L = (e) => (e.innerText || "").split("\n")[0].replace(/\s+/g, " ").trim();
+  const visible = (e) => e.offsetParent !== null || getComputedStyle(e).position === "fixed";
+  const boutons = [...document.querySelectorAll("button,[role='button']")].filter(visible);
+  let n = boutons.find((b) => L(b) === t) || boutons.find((b) => L(b).startsWith(t));
+  if (!n) {
+    // Les lignes cliquables : on garde celles dont le texte correspond, puis on
+    // choisit la plus profonde — celle qui ne contient aucune autre candidate.
+    const lignes = [...document.querySelectorAll("div,li,a")]
+      .filter((e) => visible(e) && (L(e) === t || L(e).startsWith(t)));
+    n = lignes.find((e) => !lignes.some((a) => a !== e && e.contains(a)));
+  }
+  if (!n) return false;
+  n.click();
+  return true;
+}, texte);

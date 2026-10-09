@@ -132,7 +132,15 @@ const clic = (t) => page.evaluate((t) => {
   return false;
 }, t);
 
+// LES DEUX ECRANS ONT FUSIONNE SOUS « MON ACTIVITE ».
+//
+// « Mes employeurs » et « Mon temps de travail » ne sont plus deux entrees du
+// menu « Outils Pro » : ce sont deux onglets d'un meme ecran, « Mon activite ».
+// Ce parcours cliquait donc une entree qui n'existe plus, et declarait en
+// defaut un ecran parfaitement sain. Il a echoue en silence tant que personne
+// ne le lancait a la main.
 const okG = await clic("Outils Pro"); await page.waitForTimeout(1200);
+await clic("Mon activité"); await page.waitForTimeout(2200);
 const okS = await clic("Mon temps de travail"); await page.waitForTimeout(2500);
 console.log("  .. clics :", okG, okS);
 console.log("  .. boutons :", (await page.evaluate(() => [...document.querySelectorAll("button")].map(b => b.innerText.split("\n")[0].trim()).filter(Boolean).join(" | "))).slice(0, 600));

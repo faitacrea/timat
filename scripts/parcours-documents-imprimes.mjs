@@ -175,7 +175,7 @@ const defauts = (nom, d) => {
   dire(!/\d+\.\d{2}\s*€/.test(d.texte), `${nom} : les montants s'écrivent avec une virgule`);
 };
 
-const att = await ouvrirEtLire(["Administratif", "Documents & Rapports", "Att. France Travail"], "Voir / télécharger l'attestation", "attestation-france-travail");
+const att = await ouvrirEtLire(["Administratif", "Documents & Rapports", "Attestation France Travail" /* renomme : c'etait « Att. France Travail » */], "Voir / télécharger l'attestation", "attestation-france-travail");
 defauts("attestation France Travail", att);
 if (att) {
   dire(/télétransmise via Pajemploi/i.test(att.texte), "l'attestation dit que l'officielle passe par Pajemploi");
