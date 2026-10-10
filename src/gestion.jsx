@@ -3261,10 +3261,12 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   const cp=iccpCalcul({brutPeriode:brutTotal,joursAcquis:cpAcquisFin,joursPris:cpPris,salaireJournalier});
   const iccp=cp.montant;
   const congesRestants=cp.restants;
-  const preavis=preavisJours(moisAnciennete);
-  const indemPreavis=Math.round((preavis/30)*salMensuel*100)/100;
   const fauteGrave=motif===MOTIF_FAUTE;
   const retraitAgrement=motif===MOTIF_AGREMENT;
+  // Art. 120 : ces deux motifs privent aussi du preavis, pas seulement de
+  // l'indemnite de rupture. Le calcul le sait desormais tout seul.
+  const preavis=preavisJours(moisAnciennete,{fauteGrave,retraitAgrement});
+  const indemPreavis=Math.round((preavis/30)*salMensuel*100)/100;
   const indemRupture=indemniteRupture({brutTotal,moisAnciennete,parEmployeur:ruptureParEmployeur,fauteGrave,retraitAgrement});
   const total=Math.round((iccp+indemPreavis+indemRupture)*100)/100;
 
@@ -3279,9 +3281,11 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
     w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>${H(titre)}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:28px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-top:32px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
     w.document.close();setToast(titre+" généré ✓");
   };
-  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p><p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature</span></div>`);
+  const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>${preavis>0
+  ?`La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p>`
+  :`La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, sans préavis : la convention collective des particuliers employeurs n'en prévoit pas pour ce motif (article 120).</p>`}<p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature</span></div>`);
   const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNomH}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
-  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} € + indemnité de préavis ${nbf(indemPreavis,2)} €.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} €${indemPreavis>0?` + indemnité compensatrice de préavis ${nbf(indemPreavis,2)} €`:""}${indemRupture>0?` + indemnité de rupture ${nbf(indemRupture,2)} €`:""}.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -3358,9 +3362,11 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
             ["Indemnité compensatrice de congés payés",
               congesRestants+" jours restants · méthode retenue : "+cp.methode+" (dixième "+nbf(cp.dixieme,2)+"€ / maintien "+nbf(cp.maintien,2)+"€)",
               nbf(iccp,2)+"€","var(--S)"],
-            ["Indemnité de préavis ("+preavis+" jours)",
-              preavis+" jours calendaires — "+(moisAnciennete<3?"moins de 3 mois d'ancienneté":moisAnciennete<12?"de 3 mois à 1 an":"1 an et plus")+" (CCN 3239)",
-              nbf(indemPreavis,2)+"€","var(--B)"],
+            [preavis>0?"Indemnité compensatrice de préavis ("+preavis+" jours)":"Indemnité compensatrice de préavis",
+              preavis>0
+                ?preavis+" jours calendaires — "+(moisAnciennete<3?"moins de 3 mois d'ancienneté":moisAnciennete<12?"de 3 mois à 1 an":"1 an et plus")+" (CCN 3239, art. 120)"
+                :"Pas de préavis : "+(fauteGrave?"faute grave ou lourde":"retrait imposé aux parties")+" (CCN 3239, art. 120)",
+              nbf(indemPreavis,2)+"€",preavis>0?"var(--B)":"var(--l)"],
             ...(indemRupture>0?[["Indemnité de rupture",
               "1/80 du brut total perçu ("+nbf(brutTotal,2)+"€) — due à partir de 9 mois d'ancienneté, ni cotisée ni imposable",
               nbf(indemRupture,2)+"€","var(--T)"]]

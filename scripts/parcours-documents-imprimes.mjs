@@ -192,6 +192,87 @@ if (recapVers) {
 const fin = await ouvrirEtLire(["Administratif", "Paie & Contrats", "Contrats", "Fin de contrat"], "Lettre de rupture", "lettre-rupture");
 defauts("lettre de rupture", fin);
 
+// --- LA RUPTURE POUR FAUTE GRAVE ---
+//
+// Convention collective IDCC 3239 : l'article 120 exclut le preavis « en cas de
+// faute grave et faute lourde et de retrait impose aux parties », et l'article
+// 121.1 exclut l'indemnite de rupture dans les memes cas. L'ecran ne proposait
+// aucun de ces motifs et comptait preavis et indemnite dans tous les cas : une
+// rupture pour faute grave annonçait un mois de salaire et une indemnite qui ne
+// sont pas dus. Le reçu pour solde de tout compte, lui, detaillait un total
+// dont il omettait l'indemnite de rupture : la somme ecrite ne correspondait
+// pas a sa propre decomposition.
+//
+// On rejoue donc l'ecran avec le motif de faute grave et on lit les deux
+// documents. Sur un solde de tout compte, c'est de l'argent reclame a un
+// parent : rien ici ne doit rester a l'appreciation du lecteur.
+const choisirMotif = (valeur) => page.evaluate((v) => {
+  const sel = [...document.querySelectorAll("select")]
+    .find((s) => [...s.options].some((o) => o.value.includes(v) || o.text.includes(v)));
+  if (!sel) return false;
+  const o = [...sel.options].find((x) => x.value.includes(v) || x.text.includes(v));
+  sel.value = o.value;
+  sel.dispatchEvent(new Event("change", { bubbles: true }));
+  return true;
+}, valeur);
+
+// Le detail ne s'affiche qu'une fois la date de fin saisie et le calcul lance.
+const dateFinPosee = await page.evaluate(() => {
+  const i = document.querySelector('input[type="date"]');
+  if (!i) return false;
+  const d = new Date(); d.setMonth(d.getMonth() + 1);
+  const v = d.toISOString().slice(0, 10);
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+  setter.call(i, v);
+  i.dispatchEvent(new Event("input", { bubbles: true }));
+  i.dispatchEvent(new Event("change", { bubbles: true }));
+  return true;
+});
+dire(dateFinPosee, "la date de fin de contrat est saisissable");
+await page.waitForTimeout(400);
+await clic("Calculer le solde de tout compte");
+await page.waitForTimeout(800);
+
+// Le total ecrit sur le reçu doit etre exactement la somme des montants qu'il
+// detaille. C'est au motif par defaut que ça compte : preavis ET indemnite de
+// rupture sont dus, et c'est justement l'indemnite de rupture que le detail
+// oubliait — le reçu annonçait donc une somme superieure a sa decomposition.
+const sommeDuRecu = async (nom, cle) => {
+  const d = await ouvrirEtLire([], "Reçu pour solde de tout compte", cle);
+  defauts(`reçu (${nom})`, d);
+  if (!d) return;
+  const montants = [...d.texte.matchAll(/(\d[\d  ]*,\d{2})\s*€/g)]
+    .map((m) => Number(m[1].replace(/[  ]/g, "").replace(",", ".")));
+  const total = montants[0];
+  const detail = montants.slice(1);
+  const somme = Math.round(detail.reduce((a, b) => a + b, 0) * 100) / 100;
+  dire(detail.length > 0, `reçu (${nom}) : le total est décomposé`, "détail : " + detail.join(" + "));
+  dire(Math.abs(total - somme) < 0.02,
+    `reçu (${nom}) : le total est exactement la somme de son détail`,
+    `total ${total} / détail ${detail.join(" + ")} = ${somme}`);
+};
+await sommeDuRecu("démission du parent", "recu-demission");
+
+const motifPose = await choisirMotif("Faute grave");
+dire(motifPose, "le motif « faute grave » est proposé à l'écran");
+if (motifPose) {
+  await page.waitForTimeout(600);
+  const ecran = await page.evaluate(() => document.body.innerText);
+  dire(/Pas de préavis/.test(ecran), "l'écran dit qu'aucun préavis n'est dû",
+    (ecran.match(/.{0,60}préavis.{0,60}/i) || [""])[0]);
+  dire(!/préavis \(0 jours\)|0 jours calendaires/.test(ecran), "aucun « préavis de 0 jours » affiché");
+  dire(/Non due : faute grave/.test(ecran), "l'indemnité de rupture est annoncée non due, avec son motif");
+
+  const lettre = await ouvrirEtLire([], "Lettre de rupture", "lettre-rupture-faute-grave");
+  defauts("lettre de rupture (faute grave)", lettre);
+  if (lettre) {
+    dire(/sans préavis/.test(lettre.texte), "la lettre écrit « sans préavis » au lieu de « préavis de 0 jours »");
+    dire(!/préavis de 0 jours|préavis de <b>0/.test(lettre.texte), "la lettre ne parle pas d'un préavis de 0 jours");
+  }
+
+  await sommeDuRecu("faute grave", "recu-faute-grave");
+}
+
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 await nav.close();
 console.log(ko ? `\n${ko} problème(s)\n` : `\nTout est conforme. Captures dans ${SORTIE}\n`);

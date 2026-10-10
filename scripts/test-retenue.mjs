@@ -11,6 +11,26 @@
 // « Deduction des periodes d'absence ».
 //   annee complete   : salaire mensualise x heures absence / heures du mois
 //   annee incomplete : salaire mensualise x jours absence / jours du mois
+// LE NOMBRE DE CAS, COMPTE AU LIEU D'ETRE ECRIT.
+//
+// La ligne de total etait « cas.length + casAlloc.length + casMin.length + 1 +
+// 21 + 13 » : trois sections comptees, trois sections ecrites a la main. Huit
+// cas ajoutes sur le preavis et l'indemnite de rupture s'executaient donc sans
+// jamais apparaitre au total, qui restait fige a 56. Un fichier de tests qui
+// se trompe sur son propre nombre de cas ne peut plus servir de preuve.
+//
+// On compte desormais les verdicts reellement imprimes : chaque ligne qui
+// commence par « ok » ou « KO » est un cas. Aucun ajout futur ne peut
+// echapper au total.
+let casImprimes = 0;
+{
+  const brut = console.log.bind(console);
+  console.log = (...a) => {
+    if (/^ {2}(ok|KO) /.test(String(a[0] ?? ""))) casImprimes++;
+    brut(...a);
+  };
+}
+
 import { readFileSync } from "node:fs";
 import { lireAppExecutable } from "./sources-app.mjs";
 
@@ -185,6 +205,16 @@ v("pile 3 mois", finContrat.preavisJours(3), 15, 0);
 v("11 mois", finContrat.preavisJours(11), 15, 0);
 v("pile 1 an", finContrat.preavisJours(12), 30, 0);
 v("5 ans", finContrat.preavisJours(60), 30, 0);
+// Art. 120 : pas de preavis en cas de faute grave, de faute lourde ni de
+// retrait impose aux parties. Verifie sur Legifrance (KALIARTI000043942318).
+v("5 ans mais faute grave", finContrat.preavisJours(60,{fauteGrave:true}), 0, 0);
+v("5 ans mais retrait d'agrement", finContrat.preavisJours(60,{retraitAgrement:true}), 0, 0);
+v("5 ans mais periode d'essai", finContrat.preavisJours(60,{periodeEssai:true}), 0, 0);
+v("un objet d'options vide ne change rien", finContrat.preavisJours(60,{}), 30, 0);
+// Art. 121.1 : les deux memes motifs privent de l'indemnite de rupture.
+v("18 mois, 9600 euros de brut", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18}), 120, 0);
+v("... mais faute grave", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18,fauteGrave:true}), 0, 0);
+v("... mais retrait d'agrement", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18,retraitAgrement:true}), 0, 0);
 
 console.log("\n  congés payés acquis (2,5 j ouvrables par mois, plafond 30)");
 v("4 mois travaillés", finContrat.congesAcquis(4), 10, 0);
@@ -221,7 +251,7 @@ for (const c of cas) {
   if (!ok) ko++;
   console.log(`  ${ok ? "ok " : "KO "} ${c.n.padEnd(48)} ${r.toFixed(2)} € (attendu ${c.attendu.toFixed(2)} €)`);
 }
-const total = cas.length + casAlloc.length + casMin.length + 1 + 21 + 13;
+
 
 // === BRUT ET NET ===
 // Pourquoi : le taux du contrat est un BRUT, et la moitie de l'application
@@ -365,5 +395,5 @@ const total = cas.length + casAlloc.length + casMin.length + 1 + 21 + 13;
   console.log(`  ${ecart ? "ok " : "KO "} ${"la somme naive surestime bien la journee".padEnd(52)} ${naive / 60} h contre ${juste / 60} h`);
 }
 
-console.log(ko ? `\n${ko} cas en échec\n` : `\n${total} cas sur ${total} conformes\n`);
+console.log(ko ? `\n${ko} cas en échec sur ${casImprimes}\n` : `\n${casImprimes} cas sur ${casImprimes} conformes\n`);
 process.exit(ko ? 1 : 0);

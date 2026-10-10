@@ -482,7 +482,24 @@ export const DOCS_DEMO=[
 // donc continuer d'utiliser le SMIC de cette annee-la, pas celui d'aujourd'hui.
 // Sources : info.gouv.fr et Insee. A completer a chaque revalorisation.
 
-export const preavisJours=(moisAnciennete)=>{
+// LE PREAVIS, ET LES CAS OU IL N'EST PAS DU.
+//
+// Convention collective IDCC 3239, article 120, verifie sur Legifrance :
+// « En dehors de la periode d'essai, des cas de faute grave et faute lourde et
+// de retrait impose aux parties », un preavis est a effectuer en cas de rupture
+// a l'initiative du particulier employeur ou du salarie. Les durees minimales
+// sont de 8 jours calendaires en dessous de 3 mois d'accueil, 15 jours de 3
+// mois a moins d'un an, un mois a partir d'un an.
+//
+// Les trois cas d'exclusion sont les memes qui privent de l'indemnite de
+// rupture (art. 121.1), a un pres : le texte du preavis ecrit « retrait impose
+// aux parties », ce qui couvre le retrait, la suspension ou la modification de
+// l'agrement. Le calcul du solde de tout compte comptait le preavis dans tous
+// les cas : une rupture pour faute grave annonçait donc un mois de salaire qui
+// n'est pas du. L'exclusion est portee ici, dans le calcul lui-meme, pour
+// qu'aucun appelant ne puisse l'oublier.
+export const preavisJours=(moisAnciennete,{fauteGrave=false,retraitAgrement=false,periodeEssai=false}={})=>{
+  if(fauteGrave||retraitAgrement||periodeEssai)return 0;
   const m=Number(moisAnciennete)||0;
   if(m<3)return 8;
   if(m<12)return 15;
