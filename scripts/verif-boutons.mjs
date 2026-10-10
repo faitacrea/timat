@@ -97,6 +97,14 @@ if (!connecte) { console.error("\n  KO  la session n'est pas ouverte : le contr�
 
 let ko = 0, cliques = 0;
 const vus = new Set();
+// CE QU'ON A CLIQUÉ, ÉCRAN PAR ÉCRAN.
+//
+// Ce contrôle annonçait « N boutons cliqués » pour les dix-huit écrans
+// ensemble. Un écran où rien n'est cliquable passait donc inaperçu : son
+// silence se noyait dans le total. verif-formulaires, lui, dit depuis
+// longtemps sur quels écrans il n'atteint rien — c'est ainsi qu'on a su qu'il
+// ne protège ni le pointage ni les autorisations. La même discipline ici.
+const portee = new Map();
 for (const ecran of ECRANS) {
   await p.evaluate((x) => window.dispatchEvent(new CustomEvent("timat:page", { detail: x })), ecran);
   await p.waitForTimeout(1200);
@@ -123,6 +131,7 @@ for (const ecran of ECRANS) {
     }, libelle);
     if (!trouve) continue;
     cliques++;
+    portee.set(ecran, (portee.get(ecran) || 0) + 1);
     await p.waitForTimeout(650);
     const fautes = [...new Set(erreurs.filter((e) => CODE_MANQUANT.test(e)))];
     if (fautes.length) {
@@ -132,6 +141,17 @@ for (const ecran of ECRANS) {
   }
 }
 await N.close();
+
+// La portée, avant le verdict : un « aucun bouton en panne » sur un écran où
+// l'on n'a rien cliqué ne veut rien dire.
+const aveugles = ECRANS.filter((e) => !portee.get(e));
+console.log("\nécran                boutons cliqués");
+for (const e of ECRANS) console.log(`  ${e.padEnd(20)} ${portee.get(e) || 0}`);
+if (aveugles.length) {
+  console.log(`\n  Aucun bouton cliqué sur ${aveugles.length} écran(s) — ce contrôle ne les protège pas :`);
+  aveugles.forEach((e) => console.log(`        ${e}`));
+}
+
 console.log(ko
   ? `\n${ko} bouton(s) en panne sur ${cliques} cliqués dans l'espace ${ESPACE}\n`
   : `\n${cliques} boutons cliqués dans l'espace ${ESPACE} : aucun ne tombe sur du code manquant.\n`);
