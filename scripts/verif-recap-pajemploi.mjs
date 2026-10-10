@@ -19,7 +19,7 @@
 //   node scripts/verif-recap-pajemploi.mjs
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
-import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP, CLIQUER } from "./jeu-de-donnees.mjs";
+import { CHROMIUM, BRANCHER, BUNDLE_TESTABLE, ATTENDRE_PRET, DANS_L_APP, CLIQUER, LIGNES } from "./jeu-de-donnees.mjs";
 
 const CLE = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8")
   .match(/MAINTENANCE_CLE\s*=\s*"([^"]+)"/)[1];
@@ -134,11 +134,32 @@ dire(net !== undefined && nb(net) > 0, `le salaire net à déclarer n'est pas nu
   // la parenthèse fermante du libellé, là où elle se trouve vraiment.
   const compl = nb((txt.match(/Heures complémentaires[^)]*\)\s*([0-9]+)\s*h/i) || [])[1]);
   const maj = nb((txt.match(/Heures majorées[^)]*\)\s*([0-9]+)\s*h/i) || [])[1]);
-  const brutAttendu = nb(ligneNormales) * taux + compl * taux + maj * taux * 1.25;
+  // LE NET NE SE CALCULE PAS SUR L'ENTIER DECLARE.
+  //
+  // Ce controle multipliait le nombre d'heures LU SUR LE DOCUMENT — un entier,
+  // 173 h — par le taux. Pajemploi l'interdit : « l'arrondi du nombre d'heures
+  // ne doit pas servir au calcul du salaire verse ». Le document declare bien
+  // 173 h, mais il paie 40 x 52 / 12 = 173,33 h, et c'est 728,00 EUR de brut,
+  // le chiffre de la formule officielle. Le controle reproduit donc la formule
+  // exacte, et il verifie au passage que l'entier declare, lui, est bien arrondi.
+  // On NE LIT PAS les heures hebdomadaires dans le texte : le libellé de la
+  // majoration contient « au-delà de 45 h/semaine », et mon expression a
+  // attrapé ce 45 — le piège que ce fichier documente dix lignes plus haut, et
+  // dans lequel je suis retombé. On prend la valeur à la source, dans le jeu de
+  // données qui alimente la page.
+  const ctr = LIGNES("asmat").contrats[0];
+  const hExactes = (Number(ctr.heures_hebdo) || 0) * 52 / 12;
+  dire(Math.abs(nb(ligneNormales) - Math.round(hExactes)) < 0.01,
+    `les heures déclarées sont bien l'entier arrondi (${ligneNormales} h pour ${Math.round(hExactes * 100) / 100} h exactes)`,
+    `Pajemploi n'accepte qu'un entier : ${Math.round(hExactes)} h attendues, ${ligneNormales} h affichées.`);
+  // Le taux de majoration vient du contrat, plancher conventionnel a 10 %
+  // (CCN 3239 art. 96.4) : il etait ecrit 1,25 ici, sans base legale.
+  const coefMaj = app.tauxMajorationDu ? app.tauxMajorationDu({}) : 1.10;
+  const brutAttendu = hExactes * taux + compl * taux + maj * taux * coefMaj;
   const netAttendu = app.netDepuisBrut(brutAttendu);
   const ecart = Math.abs(nb(net) - netAttendu);
   dire(ecart <= 0.02,
-    `le net déclaré correspond aux heures déclarées (${net} € pour ${ligneNormales} h × ${taux} €)`,
+    `le net déclaré se calcule sur les heures exactes (${net} € pour ${Math.round(hExactes * 100) / 100} h × ${taux} €)`,
     `le document annonce ${ligneNormales} h à ${taux} €/h, soit ${netAttendu} € net — mais il affiche ${net} €. Écart : ${Math.round(ecart * 100) / 100} €. C'est le défaut d'origine : le texte disait la mensualisation, le montant partait des heures pointées.`);
 }
 const entretien = (txt.match(/Indemnité d'entretien \(ligne distincte\)\s*([0-9  ,.]+)\s*€/i) || [])[1];

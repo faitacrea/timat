@@ -19,7 +19,7 @@ import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, heuresDeclarees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
 , logAction
 } from "./App.jsx";
 import {
@@ -50,11 +50,11 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   const isDemoFact=enfants.every(e=>["e1","e2","e3"].includes(e.id));
   // Calculate hours from real pointages or fallback to demo
   const calcHeures=()=>{
-    if(isDemoFact)return D.heures[enfant?.id]||{real:0,prev:heuresMensualisees(contrat)};
-    if(!pointagesDB||!enfant?.id)return{real:0,prev:heuresMensualisees(contrat)};
+    if(isDemoFact)return D.heures[enfant?.id]||{real:0,prev:heuresDeclarees(contrat)};
+    if(!pointagesDB||!enfant?.id)return{real:0,prev:heuresDeclarees(contrat)};
     const moisPointages=pointagesDB.filter(p=>p.enfant_id===enfant.id);
     const totalMin=moisPointages.reduce((s,p)=>s+(p.total_minutes||0),0);
-    return{real:Math.round(totalMin/60),prev:heuresMensualisees(contrat)};
+    return{real:Math.round(totalMin/60),prev:heuresDeclarees(contrat)};
   };
   const h=calcHeures();
   // L'indemnite d'entretien n'est PAS du salaire : elle ne se cotise pas, ne
@@ -90,6 +90,15 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   const hMensDecl=repPaj.normales;
   const hCompl=repPaj.complementaires;
   const hMajorees=repPaj.majorees;
+  // CE QU'ON ECRIT SUR LA DECLARATION N'EST PAS CE QU'ON MULTIPLIE.
+  //
+  // Pajemploi n'accepte qu'un nombre d'heures entier, mais sa page « Determiner
+  // le salaire » precise que « l'arrondi du nombre d'heures ne doit pas servir
+  // au calcul du salaire verse ». Les heures mensualisees exactes servent donc
+  // au salaire (salBrut ci-dessous), et ces deux valeurs-ci, arrondies, ne
+  // servent qu'a remplir le formulaire et a l'afficher.
+  const hNormalesDecl=Math.round(hMensDecl);
+  const hTotalDecl=Math.round(hMensDecl+hCompl+hMajorees);
   // Les jours d'accueil : ceux reellement pointes, sinon ceux prevus au
   // contrat. Sans ce repli, une assistante maternelle qui ne pointe pas voyait
   // aussi son entretien et ses repas tomber a zero.
@@ -139,7 +148,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<tr><td>Enfant gardé</td><td>'+(enfant?.prenom||'-')+' '+(enfant?.emoji||'')+'</td></tr>',
       '<tr><td>Période</td><td>'+mois+'</td></tr></table></div>',
       '<div class="box"><h2>⏰ Heures à déclarer</h2>',
-      '<table><tr class="hl"><td>Heures normales À DÉCLARER (mensualisées)</td><td>'+hMensDecl+' h</td></tr>',
+      '<table><tr class="hl"><td>Heures normales À DÉCLARER (mensualisées)</td><td>'+hNormalesDecl+' h</td></tr>',
       '<tr><td>Heures complémentaires (jusqu\'à 45 h/semaine)</td><td>'+hCompl+' h</td></tr>',
       '<tr><td>Heures majorées (au-delà de 45 h/semaine, +25 %)</td><td>'+hMajorees+' h</td></tr>',
       '<tr><td>Heures réellement pointées ce mois</td><td>'+h.real+' h <span style="color:#888;font-weight:400">(information)</span></td></tr>',
@@ -173,7 +182,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<div class="steps"><h3>📝 Comment déclarer sur Pajemploi :</h3>',
       '<ol><li>Connectez-vous sur <strong>pajemploi.urssaf.fr</strong></li>',
       '<li>Cliquez sur <strong>"Déclarer"</strong> > sélectionnez votre assistante maternelle</li>',
-      '<li>Entrez les heures normales : <strong>'+hMensDecl+' h</strong> (les heures mensualisées du contrat)</li>',
+      '<li>Entrez les heures normales : <strong>'+hNormalesDecl+' h</strong> (les heures mensualisées du contrat)</li>',
       (hCompl>0?'<li>Entrez les heures complémentaires : <strong>'+hCompl+' h</strong></li>':''),
       (hMajorees>0?'<li>Entrez les heures majorées : <strong>'+hMajorees+' h</strong></li>':''),
       '<li>Entrez le nombre de jours d\'activité : <strong>'+joursAccueil+'</strong></li>',
@@ -204,8 +213,8 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
         {/* L'ecran annoncait les heures POINTEES a cote d'un net calcule sur la
             mensualisation : deux chiffres qui ne parlaient pas du meme mois.
             On annonce ce qui se declare, et on garde le pointage a cote. */}
-        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{hMensDecl+hCompl+hMajorees} h à déclarer{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {nbf(netEstime,2)} €</div>
-        <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{h.real} h pointées ce mois{h.real!==hMensDecl?" (le contrat en prévoit "+hMensDecl+")":""}</div>
+        <div style={{fontSize:11,color:"var(--m)",marginTop:3}}>{hTotalDecl} h à déclarer{enfant?.prenom?(" · "+enfant.prenom):""} · net estimé ≈ {nbf(netEstime,2)} €</div>
+        <div style={{fontSize:11,color:"var(--l)",marginTop:2}}>{h.real} h pointées ce mois{h.real!==hNormalesDecl?" (le contrat en prévoit "+hNormalesDecl+")":""}</div>
         {indemAbs>0&&<div style={{fontSize:11,color:"var(--m)",marginTop:2}}>dont absences indemnisées : +{nbf(indemAbs,2)} € ({absMois.filter(a=>a.indemnise).length} j)</div>}
       </div>
       <div className="g3"style={{padding:14,gap:10}}>
@@ -229,7 +238,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:11,color:"var(--l)"}}>Export direct vers l'URSSAF</div></div>
           </div>
           <div style={{fontSize:13,color:"var(--b)",marginBottom:12,lineHeight:1.6}}>
-            Heures : <strong>{hMensDecl+hCompl+hMajorees}h</strong> · Salaire net : <strong>{nbf(netEstime,2)}€</strong> · Mois : <strong>{moisCourant}</strong>
+            Heures : <strong>{hTotalDecl}h</strong> · Salaire net : <strong>{nbf(netEstime,2)}€</strong> · Mois : <strong>{moisCourant}</strong>
           </div>
           <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={exportPajemploi}>
             <IconeOuEmoji e="🏛️"/> Exporter vers Pajemploi
@@ -998,7 +1007,7 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       doc.text("Emploi : assistant maternel agréé — accueil de "+(enfant?.prenom||"l'enfant")
         +". Mensualisation en "+(anneeComplete?"année complète":"année incomplète")+" : "
         +semainesDuContrat(contrat)+" semaines × "+(contrat.heuresHebdo||0)+" h ÷ 12 = "
-        +heuresMensualisees(contrat)+" h par mois.",MX+2,y);
+        +heuresDeclarees(contrat)+" h par mois.",MX+2,y);
       doc.setTextColor(...noir);doc.setFontSize(8);
       y+=6;
       // GARDE DE PAGE - jsPDF n'avertit pas : ce qui depasse le bas de la page
@@ -1376,7 +1385,7 @@ template:"bulletin_sent",
             etre lisible sur le bulletin, pas seulement dans le contrat. */}
         <div style={{fontSize:11.5,color:"var(--m)",marginBottom:10,lineHeight:1.5}}>
           Mensualisation {estAnneeComplete(contrat)?"en année complète":"en année incomplète"} :
-          {" "}{semainesDuContrat(contrat)} semaines × {contrat.heuresHebdo||0} h ÷ 12 = <b>{heuresMensualisees(contrat)} h/mois</b>.
+          {" "}{semainesDuContrat(contrat)} semaines × {contrat.heuresHebdo||0} h ÷ 12 = <b>{nb2(heuresMensualisees(contrat))} h/mois</b>{heuresDeclarees(contrat)!==heuresMensualisees(contrat)&&<>, déclarées <b>{heuresDeclarees(contrat)} h</b> (Pajemploi arrondit le nombre déclaré, mais le salaire se calcule sur les heures exactes)</>}.
           {estAnneeComplete(contrat)?" Les congés payés sont inclus dans ce lissage."
             :" Les congés payés sont versés séparément."}
         </div>
@@ -2443,7 +2452,7 @@ export function RythmeAccueil({contrat,role,onSaved,onErr}){
     <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:4}}><IconeOuEmoji e="🗓️"/> Rythme d'accueil</div>
     <div style={{fontSize:12,color:"var(--m)",lineHeight:1.55,marginBottom:12}}>
       C'est lui qui fixe le salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
-      {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines).
+      {" "}({heuresDeclarees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines).
     </div>
     {lecture
       ?<div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{enregistre?"Année complète — 52 semaines, congés inclus dans le salaire":"Année incomplète — "+semainesDuContrat(contrat)+" semaines, congés payés versés à part"}</div>
@@ -2471,7 +2480,7 @@ export function RythmeAccueil({contrat,role,onSaved,onErr}){
       {modifie&&<div style={{marginTop:12,padding:"11px 13px",background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10}}>
         <div style={{fontSize:12.5,color:"var(--b)",lineHeight:1.55,marginBottom:9}}>
           Nouveau salaire mensualisé : <b>{nb2(salaireMensualise(apercu))} €</b>
-          {" "}({heuresMensualisees(apercu)} h/mois sur {semainesDuContrat(apercu)} semaines),
+          {" "}({heuresDeclarees(apercu)} h/mois sur {semainesDuContrat(apercu)} semaines),
           {" "}au lieu de {nb2(salaireMensualise(contrat))} €.
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>

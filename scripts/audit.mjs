@@ -634,6 +634,53 @@ for (const { nom, motif, source } of BAREME) {
     }
   }
 }
+// --- l'arrondi des heures ne doit jamais servir a calculer de l'argent ---
+//
+// Pajemploi, page « Determiner le salaire » : le nombre d'heures mensualisees
+// declare est un entier arrondi au plus proche, mais « l'arrondi du nombre
+// d'heures ne doit pas servir au calcul du salaire verse ». Leur propre exemple
+// le prouve : 32 h x 52 / 12 = 138,66 h, declarees 139 h, salaire 416 EUR. En
+// calculant sur l'entier on tomberait sur 417 EUR.
+//
+// heuresMensualisees() rendait l'entier arrondi, et c'est lui qui partait dans
+// toute la paie : l'ecart allait dans les deux sens selon le sens de l'arrondi,
+// quelques euros par mois sur chaque contrat, et un bulletin qui ne retombait
+// jamais sur le chiffre de Pajemploi. Les deux fonctions sont desormais
+// separees. Cette regle empeche qu'elles se remelangent.
+{
+  const racines = ["src", "api", "lib"];
+  const fichiers = [];
+  const balayer = (d) => {
+    let entrees = [];
+    try { entrees = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) balayer(f);
+      else if (/\.(jsx?|mjs)$/.test(e.name)) fichiers.push(f);
+    }
+  };
+  for (const r of racines) balayer(path.join(RACINE, r));
+
+  for (const f of fichiers) {
+    let src = "";
+    try { src = fs.readFileSync(f, "utf8"); } catch { continue; }
+    const rel = path.relative(RACINE, f);
+
+    // 1. heuresMensualisees() doit garder ses decimales.
+    const def = src.match(/const heuresMensualisees=\(contrat\)=>\{[\s\S]*?\n\};/);
+    if (def && /return\s*Math\.round\(\(\s*h\s*\*/.test(def[0])) {
+      signale("heures-arrondies", `${rel} : heuresMensualisees() arrondit a l'heure entiere. Pajemploi interdit de calculer le salaire sur l'arrondi (« l'arrondi du nombre d'heures ne doit pas servir au calcul du salaire verse »). Les decimales doivent rester : c'est heuresDeclarees() qui arrondit, et elle ne sert qu'a l'affichage et a la declaration`);
+    }
+
+    // 2. heuresDeclarees() ne doit jamais etre multipliee, ni servir de base a
+    //    un salaire. On cherche une multiplication a droite ou a gauche.
+    for (const m of src.matchAll(/heuresDeclarees\([^)]*\)\s*\*|\*\s*heuresDeclarees\(/g)) {
+      const ligne = src.slice(0, m.index).split("\n").length;
+      signale("heures-arrondies", `${rel}:${ligne} : heuresDeclarees() est multipliee. C'est l'entier arrondi, reserve a l'affichage et a la declaration Pajemploi ; multiplier par un taux donne un salaire faux (l'exemple de Pajemploi donne 417 EUR au lieu de 416 EUR). Utiliser heuresMensualisees()`);
+    }
+  }
+}
+
 // --- valeurs perimees : l'interdiction, pas seulement la presence ---
 //
 // BAREME ci-dessus verifie qu'une valeur juste EXISTE quelque part. Il ne dit

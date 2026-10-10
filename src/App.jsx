@@ -3122,10 +3122,32 @@ export const semainesDuContrat=(contrat)=>{
   return Math.min(s,SEMAINES_ANNEE_COMPLETE);
 };
 
+// LES HEURES MENSUALISEES, ET POURQUOI IL EN FAUT DEUX.
+//
+// Pajemploi l'ecrit noir sur blanc sur sa page « Determiner le salaire » : le
+// nombre d'heures declare doit etre un entier, arrondi au plus proche, mais
+// « l'arrondi du nombre d'heures ne doit pas servir au calcul du salaire
+// verse ». Leur propre exemple le montre : 32 h x 52 / 12 = 138,66 h, declarees
+// 139 h, et le salaire calcule sur 138,66.
+//
+// Cette fonction rendait l'entier arrondi, et c'est lui qui partait dans tous
+// les calculs de paie. Sur les contrats reels, l'ecart va dans les deux sens
+// selon le sens de l'arrondi : 40 h/semaine donnent 173,33 h arrondies a 173,
+// donc un salaire ampute ; 32 h/semaine donnent 138,66 h arrondies a 139, donc
+// un salaire gonfle. Quelques euros par mois a chaque fois, dans le mauvais
+// sens une fois sur deux, et un bulletin qui ne retombe jamais sur le chiffre
+// de Pajemploi.
+//
+// D'ou deux fonctions, et une regle simple : heuresMensualisees pour l'argent,
+// heuresDeclarees pour ce qu'on ecrit et ce qu'on declare.
 export const heuresMensualisees=(contrat)=>{
   const h=Number(contrat?.heuresHebdo??contrat?.heures_hebdo)||0;
-  return Math.round((h*semainesDuContrat(contrat))/MOIS_PAR_AN);
+  return (h*semainesDuContrat(contrat))/MOIS_PAR_AN;
 };
+
+// Le nombre qu'on ecrit sur un document et qu'on declare a Pajemploi : entier.
+// Il ne doit jamais etre multiplie par un taux.
+export const heuresDeclarees=(contrat)=>Math.round(heuresMensualisees(contrat));
 
 export const salaireMensualise=(contrat,taux)=>{
   const t=Number(taux??contrat?.tauxHoraire??contrat?.taux_horaire)||0;

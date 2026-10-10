@@ -17,7 +17,7 @@ import { ChampNombre } from "./champ-nombre.jsx";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, regimeLocalDe, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, heuresDeclarees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, regimeLocalDe, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
@@ -879,7 +879,7 @@ export function Recap({enfants,role,pEId}){
   const enfant=liste.find(e=>e.id===selId)||liste[0];
   const contrat=enfant?.contrat;
   const isDemoRecap=enfants.every(e=>["e1","e2","e3"].includes(e.id));
-  const h=isDemoRecap?(D.heures[enfant?.id]||{real:0,prev:0}):{real:0,prev:heuresMensualisees(contrat)};
+  const h=isDemoRecap?(D.heures[enfant?.id]||{real:0,prev:0}):{real:0,prev:heuresDeclarees(contrat)};
   const rep=D.repas.filter(r=>r.eId===enfant?.id);
   const ms=D.milestones[enfant?.id]||[];
 

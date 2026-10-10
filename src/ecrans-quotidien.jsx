@@ -17,7 +17,7 @@ import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import {
-  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
+  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, heuresDeclarees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 , enregistrerPointage
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
@@ -2961,7 +2961,7 @@ export function OnboardingWizard({user,onFinish}){
               </div>}
               <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
                 Salaire mensualisé : <b style={{color:"var(--b)"}}>{nbf(salaireMensualise(contrat),2)} €</b>
-                {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
+                {" "}({heuresDeclarees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
@@ -3312,7 +3312,7 @@ export function AjouterEnfantModale({user,onClose}){
             </div>}
             <div style={{marginTop:10,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
               Salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
-              {" "}({heuresMensualisees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
+              {" "}({heuresDeclarees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
             </div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>

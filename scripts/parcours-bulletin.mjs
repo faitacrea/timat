@@ -186,13 +186,20 @@ console.log(`  ${m.rendu ? "ok " : "KO "} l'écran du bulletin s'affiche`);
 if (!m.rendu) ecarts.push("le bulletin ne s'affiche pas");
 console.log(`  ${m.art111 ? "ok " : "KO "} la retenue cite l'article 111 de la CCN`);
 if (!m.art111) ecarts.push("l'article 111 n'est pas cité");
-// 173 h mensualisées x 4,20 = 726,60 ; retenue = 726,60 x 16/173 = 67,20.
+// 40 h x 52 / 12 = 173,33 h mensualisées x 4,20 = 728,00 ; retenue = 728,00 x 16/173,33 = 67,20.
+//
+// Ces chiffres attendaient 726,60 EUR, soit 173 h x 4,20 : le salaire se
+// calculait sur les heures ARRONDIES. Pajemploi l'interdit explicitement
+// (« l'arrondi du nombre d'heures ne doit pas servir au calcul du salaire
+// verse ») et sa propre formule donne 40 x 52 / 12 x 4,20 = 728,00 EUR. Les
+// 1,40 EUR d'ecart partaient dans le mauvais sens une fois sur deux selon le
+// sens de l'arrondi. C'est le chiffre de Pajemploi qui est attendu ici.
 // 16 h et non 24 : la formation ne se déduit pas.
 attendu("heures retenues (maladie + fermeture, sans formation)", m.heuresRetenues, 16, 0);
-attendu("salaire de base", m.base, 726.6);
+attendu("salaire de base", m.base, 728.00);
 attendu("montant de la retenue", m.montant, 67.2);
-attendu("salaire brut après retenue", m.brut, 659.4);
-attendu("vieillesse plafonnée assise sur le brut après retenue", m.vieillesse, +(659.4 * 0.069).toFixed(2), 0.02);
+attendu("salaire brut après retenue", m.brut, 660.80);
+attendu("vieillesse plafonnée assise sur le brut après retenue", m.vieillesse, +(660.80 * 0.069).toFixed(2), 0.02);
 // 6 h x 5,57 EUR = 33,42 EUR, affichés à côté du bulletin et non dedans.
 attendu("allocation de formation hors temps d'accueil", m.alloc, 33.42);
 console.log(`  ${m.allocHorsBulletin ? "ok " : "KO "} l'allocation reste hors du bulletin (versée par IPERIA)`);
