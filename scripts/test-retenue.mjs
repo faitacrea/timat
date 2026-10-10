@@ -134,8 +134,9 @@ const mens = eval(`(function(){
   ${(src.match(/const estAnneeComplete=\([\s\S]*?;\n/) || [""])[0]}
   ${(src.match(/const semainesDuContrat=\([\s\S]*?\n\};/) || [""])[0]}
   ${(src.match(/const heuresMensualisees=\([\s\S]*?\n\};/) || [""])[0]}
+  ${(src.match(/const heuresDeclarees=\([^\n]+/) || [""])[0]}
   ${(src.match(/const salaireMensualise=\([\s\S]*?\n\};/) || [""])[0]}
-  return {semainesDuContrat, heuresMensualisees, salaireMensualise, estAnneeComplete};
+  return {semainesDuContrat, heuresMensualisees, heuresDeclarees, salaireMensualise, estAnneeComplete};
 })()`);
 
 let koMens = 0;
@@ -146,16 +147,35 @@ const m = (n, r, a, tol = 0.011) => {
 };
 
 console.log("\n=== MENSUALISATION — CCN 3239 ===\n");
-// Annee complete : 40 h x 52 / 12 = 173,33 -> 173 h ; x 4,20 = 728,00 EUR.
+// L'ARRONDI NE DOIT PAS SERVIR AU CALCUL DU SALAIRE.
+//
+// Pajemploi, page « Determiner le salaire » : le nombre d'heures declare est un
+// entier arrondi au plus proche, mais « l'arrondi du nombre d'heures ne doit pas
+// servir au calcul du salaire verse ». Leur exemple : 32 h x 52 / 12 = 138,66 h,
+// declarees 139 h, salaire calcule sur 138,66.
+//
+// heuresMensualisees() rendait l'entier arrondi, et c'est lui qui partait dans
+// toute la paie. D'ou deux fonctions : les heures exactes pour l'argent, les
+// heures declarees pour ce qu'on ecrit.
 const complet = { heuresHebdo: 40, tauxHoraire: 4.20 };
 m("année complète — semaines retenues", mens.semainesDuContrat(complet), 52, 0);
-m("année complète — heures par mois", mens.heuresMensualisees(complet), 173, 0);
+m("année complète — heures exactes", mens.heuresMensualisees(complet), 173.33);
+m("année complète — heures déclarées", mens.heuresDeclarees(complet), 173, 0);
 m("année complète — salaire mensualisé", mens.salaireMensualise(complet), 728.00);
+// L'exemple de Pajemploi lui-meme, repris mot pour mot.
+const pajemploi = { heuresHebdo: 32, tauxHoraire: 3.00 };
+m("exemple Pajemploi — heures exactes", mens.heuresMensualisees(pajemploi), 138.67);
+m("exemple Pajemploi — heures déclarées", mens.heuresDeclarees(pajemploi), 139, 0);
+m("exemple Pajemploi — salaire (416 EUR)", mens.salaireMensualise(pajemploi), 416.00);
+// Le piege : si le salaire se calculait sur l'entier declare, on tomberait sur
+// 417 EUR, et non sur les 416 EUR que Pajemploi annonce.
+m("l'entier déclaré donnerait un autre salaire", mens.heuresDeclarees(pajemploi) * 3, 417.00);
 
 // Annee scolaire : 40 h x 46 / 12 = 153,33 -> 153 h ; x 4,20 = 644,00 EUR.
 const scolaire = { heuresHebdo: 40, tauxHoraire: 4.20, anneeComplete: false, semainesAccueil: 46 };
 m("année incomplète 46 sem. — semaines", mens.semainesDuContrat(scolaire), 46, 0);
-m("année incomplète 46 sem. — heures", mens.heuresMensualisees(scolaire), 153, 0);
+m("année incomplète 46 sem. — heures exactes", mens.heuresMensualisees(scolaire), 153.33);
+m("année incomplète 46 sem. — déclarées", mens.heuresDeclarees(scolaire), 153, 0);
 m("année incomplète 46 sem. — salaire", mens.salaireMensualise(scolaire), 644.00);
 
 // 36 semaines : le cas ou l'ecart est le plus fort.
