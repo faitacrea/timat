@@ -3204,7 +3204,12 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{contrat:{}};
   const contrat=enfant?.contrat||{};
 
-  const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée","Autre"];
+  // Les deux motifs qui privent de l'indemnite de rupture (CCN 3239, art. 121.1)
+  // n'etaient pas proposes : l'ecran annonçait donc une indemnite qui n'est pas
+  // due. Ils le sont, et ils coupent le calcul.
+  const MOTIF_FAUTE="Faute grave ou lourde de l'assistante maternelle";
+  const MOTIF_AGREMENT="Retrait, suspension ou modification de l'agrément";
+  const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée",MOTIF_FAUTE,MOTIF_AGREMENT,"Autre"];
 
   // --- Solde de tout compte, sur les données réelles du contrat ---
   // Tout ce bloc était écrit en dur : six jours de congés, un an et demi
@@ -3258,7 +3263,9 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   const congesRestants=cp.restants;
   const preavis=preavisJours(moisAnciennete);
   const indemPreavis=Math.round((preavis/30)*salMensuel*100)/100;
-  const indemRupture=indemniteRupture({brutTotal,moisAnciennete,parEmployeur:ruptureParEmployeur});
+  const fauteGrave=motif===MOTIF_FAUTE;
+  const retraitAgrement=motif===MOTIF_AGREMENT;
+  const indemRupture=indemniteRupture({brutTotal,moisAnciennete,parEmployeur:ruptureParEmployeur,fauteGrave,retraitAgrement});
   const total=Math.round((iccp+indemPreavis+indemRupture)*100)/100;
 
   const today=new Date().toLocaleDateString("fr-FR");
@@ -3358,7 +3365,9 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
               "1/80 du brut total perçu ("+nbf(brutTotal,2)+"€) — due à partir de 9 mois d'ancienneté, ni cotisée ni imposable",
               nbf(indemRupture,2)+"€","var(--T)"]]
               :[["Indemnité de rupture",
-              ruptureParEmployeur?"Non due : "+moisAnciennete+" mois d'ancienneté, il en faut 9":"Non due : la rupture ne vient pas du parent employeur",
+              fauteGrave?"Non due : faute grave ou lourde (CCN 3239, art. 121.1)"
+              :retraitAgrement?"Non due : retrait, suspension ou modification de l'agrément (CCN 3239, art. 121.1)"
+              :ruptureParEmployeur?"Non due : "+moisAnciennete+" mois d'ancienneté, il en faut 9":"Non due : la rupture ne vient pas du parent employeur",
               "0.00€","var(--l)"]]),
           ].map(([l,d,v,c])=><div key={l}style={{padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
