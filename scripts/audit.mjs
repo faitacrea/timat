@@ -562,7 +562,7 @@ const BAREME = [
   { nom: "plus de plafond mensuel CMG",    motif: /CMG_MAX\s*=\s*null\b/,            source: "décret n° 2025-515, art. 1er 6° : D. 531-21 et D. 531-22 abrogés" },
   { nom: "plancher de ressources CMG",     motif: /PLANCHER_RESSOURCES=814\.02\b/, source: "CAF/Urssaf 2026, trois sources concordantes" },
   { nom: "plafond de ressources CMG",      motif: /PLAFOND_RESSOURCES=8500\b/,     source: "CAF/Urssaf 2026" },
-  { nom: "allocation de formation horaire",  motif: /ALLOC_FORMATION_H = 5\.57\b/, source: "IPERIA / France Emploi Domicile, 1er avril 2025" },
+  { nom: "allocation de formation horaire",  motif: /ALLOC_FORMATION_H = 5\.57\b/, source: "IPERIA / France Emploi Domicile, 1er avril 2025 — revérifié le 10 octobre 2026 : aucune revalorisation 2026 trouvée" },
   { nom: "plafond annuel formation",         motif: /ALLOC_FORMATION_PLAFOND_H = 58\b/, source: "plan de développement des compétences, 58 h/an" },
   { nom: "minimum conventionnel assmat",     motif: /\["2026-06-01",4\.20\]/,       source: "CCN 3239, avenant n° 10, 1er juin 2026" },
   { nom: "majoration du titre AM-GE",       motif: /MAJORATION_TITRE_AMGE=0\.04/,   source: "CCN 3239, art. 113 et annexe 5 : + 4 %" },
@@ -591,6 +591,47 @@ const sourcesChiffres = lireApp()
 for (const { nom, motif, source } of BAREME) {
   if (!motif.test(sourcesChiffres)) {
     signale("chiffre", `${nom} ne vaut plus la valeur vérifiée (${source}) — vérifier à la source avant de modifier`);
+  }
+}
+
+// --- UN BARÈME JUSTE HIER PEUT ÊTRE FAUX AUJOURD'HUI ------------------------
+//
+// La liste ci-dessus vérifie qu'une valeur n'a pas CHANGÉ. Elle ne dit rien de
+// celles qui auraient dû changer : un chiffre figé depuis deux ans y passe au
+// vert, exactement comme un chiffre vérifié ce matin.
+//
+// C'est ce qui a laissé passer le plafond mensuel du CMG. Il valait 825,16 €,
+// « source CNAF », et la règle veillait fidèlement à ce qu'il ne bouge pas —
+// alors que l'article qui le portait avait été ABROGÉ le 1er septembre 2025
+// (décret n° 2025-515, art. 1er 6°). La règle gardait une valeur morte.
+//
+// On lit donc la DATE citée dans chaque source, et on demande une
+// re-vérification au-delà de dix-huit mois. Ce n'est pas une erreur : c'est une
+// échéance. Les sources sans date — une référence d'article, un taux fixé par
+// la loi — ne sont pas concernées : elles ne se revalorisent pas.
+{
+  const MOIS = { janvier: 0, "février": 1, fevrier: 1, mars: 2, avril: 3, mai: 4, juin: 5,
+    juillet: 6, "août": 7, aout: 7, septembre: 8, octobre: 9, novembre: 10, "décembre": 11, decembre: 11 };
+  const LIMITE_MOIS = 18;
+  const maintenant = new Date();
+  for (const { nom, source } of BAREME) {
+    // LA DERNIÈRE DATE CITÉE, PAS LA PREMIÈRE.
+    //
+    // Une source porte souvent deux dates : celle du barème et celle de la
+    // dernière vérification — « 1er avril 2025, revérifié le 10 octobre 2026 ».
+    // C'est la seconde qui compte : elle dit quand quelqu'un est allé voir.
+    // Sans cela, la règle redemanderait éternellement une vérification qui
+    // vient d'être faite, et on apprendrait à l'ignorer.
+    const toutes = [...String(source).matchAll(/(\d{1,2})?\s*(?:er)?\s*([a-zéèûô]+)\s+(20\d\d)/gi)];
+    if (!toutes.length) continue;
+    const m = toutes[toutes.length - 1];
+    const mois = MOIS[m[2].toLowerCase()];
+    if (mois === undefined) continue;
+    const date = new Date(Number(m[3]), mois, Number(m[1] || 1));
+    const age = (maintenant - date) / (1000 * 60 * 60 * 24 * 30.44);
+    if (age > LIMITE_MOIS) {
+      signale("barèmes-à-revérifier", `« ${nom} » n'a pas été revérifié depuis ${m[2]} ${m[3]}, soit ${Math.round(age)} mois : aller voir à la source, puis noter la date de vérification dans « source ». Un barème figé passe au vert comme un barème juste — c'est ainsi que le plafond du CMG est resté un an après l'abrogation de l'article qui le portait`);
+    }
   }
 }
 // --- valeurs perimees : l'interdiction, pas seulement la presence ---
