@@ -516,8 +516,24 @@ export const iccpCalcul=({brutPeriode=0,joursAcquis=0,joursPris=0,salaireJournal
 // n'entre pas dans l'assiette des cotisations et n'est pas imposable, et elle
 // exclut les indemnites d'entretien, de repas et kilometriques.
 
-export const indemniteRupture=({brutTotal=0,moisAnciennete=0,parEmployeur=true,fauteGrave=false})=>{
-  if(!parEmployeur||fauteGrave)return 0;
+// L'INDEMNITE DE RUPTURE, ET LES DEUX CAS OU ELLE N'EST PAS DUE.
+//
+// Convention collective IDCC 3239, article 121.1 : en cas de retrait de
+// l'enfant, l'indemnite est due a l'assistant maternel qui accueille l'enfant
+// depuis au moins 9 mois. Elle vaut 1/80 du total des salaires BRUTS percus
+// pendant le contrat, hors indemnites non soumises a cotisations — kilometres,
+// entretien, repas. Elle n'est ni cotisee ni imposable.
+//
+// Elle n'est PAS due dans deux cas, que le texte nomme :
+//   - faute grave ou lourde de l'assistant maternel ;
+//   - modification, suspension ou retrait de l'agrement.
+//
+// « fauteGrave » existait ici et n'etait JAMAIS passe par l'ecran de fin de
+// contrat, qui ne proposait d'ailleurs aucun de ces deux motifs. Une rupture
+// pour faute grave annonçait donc une indemnite qui n'est pas due — sur un
+// solde de tout compte, c'est une somme qu'un parent se serait vu reclamer.
+export const indemniteRupture=({brutTotal=0,moisAnciennete=0,parEmployeur=true,fauteGrave=false,retraitAgrement=false})=>{
+  if(!parEmployeur||fauteGrave||retraitAgrement)return 0;
   if((Number(moisAnciennete)||0)<ANCIENNETE_MIN_RUPTURE_MOIS)return 0;
   return Math.round(((Number(brutTotal)||0)/DIVISEUR_INDEMNITE_RUPTURE)*100)/100;
 };
