@@ -589,7 +589,15 @@ if (inactifs.length) {
   [...new Set(inactifs)].slice(0, 20).forEach((x) => console.log(`        ${x}`));
 }
 if (aveugles.length) {
-  console.log(`\n  Aucun formulaire atteint sur ${aveugles.length} écran(s) — ce contrôle ne les protège pas :`);
+  // CE CONTRÔLE-CI, PAS TOUS LES CONTRÔLES.
+  //
+  // Le message disait « ce contrôle ne les protège pas », ce qui se lisait
+  // comme « rien ne les protège ». Mesuré depuis : verif-boutons clique 11
+  // boutons sur le pointage et 11 sur les autorisations — leurs actions sont
+  // des clics, pas des envois de formulaire. Aucun des dix-huit écrans n'est
+  // aveugle. On le dit, plutôt que de laisser une inquiétude sans objet.
+  console.log(`\n  Aucun formulaire atteint sur ${aveugles.length} écran(s) — CE contrôle ne les couvre pas`);
+  console.log(`  (leurs actions sont peut-être des clics : verif-boutons.mjs rend le compte écran par écran) :`);
   aveugles.forEach((e) => console.log(`        ${e}`));
 }
 console.log(ko ? `${ko} problème(s) sur les formulaires.\n` : `Aucun formulaire ne casse à la saisie ni à l'envoi.\n`);
