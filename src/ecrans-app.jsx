@@ -17,7 +17,7 @@ import { ChampNombre } from "./champ-nombre.jsx";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CMG_MAX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, regimeLocalDe, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
+  Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, regimeLocalDe, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
@@ -3420,7 +3420,7 @@ export function SimulateurCout({enfants,pEId}){
           </div>)}
         </div>
         {cmgPlafonne&&<div style={{fontSize:11,color:"var(--T)",background:"var(--Tp)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
-          <IconeOuEmoji e="ℹ️"/> CMG plafonné à {fmt2(CMG_MAX)}/mois (montant maximum assmat 2026).
+          <IconeOuEmoji e="ℹ️"/> Le CMG atteint le coût de la garde : il ne peut pas le dépasser. Il n&rsquo;existe plus de plafond mensuel en euros depuis le 1<sup>er</sup> septembre 2025 (articles D. 531-21 et D. 531-22 abrogés) — seul le plafond horaire de {nbf(PLAFOND_H,2)} €/h s&rsquo;applique.
         </div>}
         {cmgCapped&&<div style={{fontSize:11,color:"var(--m)",background:"var(--c)",border:"1px solid var(--br)",borderRadius:8,padding:"8px 10px",lineHeight:1.5}}>
           <IconeOuEmoji e="⚠️"/> Votre taux horaire dépasse le plafond CMG de {nbf(PLAFOND_H,2)} €/h : le surcoût au-delà reste intégralement à votre charge.

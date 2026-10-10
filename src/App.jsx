@@ -915,7 +915,29 @@ const CI_PLAFOND_CREDIT = CI_PLAFOND_DEPENSES * CI_TAUX; // 1 750
 const PLANCHER_RESSOURCES=814.02, PLAFOND_RESSOURCES=8500;
 export const CHR_AM=4.91;        // cout horaire de reference assmat 2026
 export const PLAFOND_H=8.09;     // plafond tarifaire horaire pris en compte 2026
-export const CMG_MAX=825.16;     // plafond mensuel CMG assmat 2026 (reval. avril 2026)
+// LE PLAFOND MENSUEL DU CMG N'EXISTE PLUS. Il venait d'un article ABROGE.
+//
+// L'application plafonnait le CMG a 825,16 EUR par mois. Ce montant est
+// 172,57 % de la BMAF 2026 (478,17 EUR) : il venait de l'ancien article
+// D. 531-21 du code de la securite sociale, qui fixait des plafonds mensuels en
+// pourcentage de la BMAF.
+//
+// Le decret n° 2025-515 du 30 mai 2025 dit, article 1er, 6° : « Les articles
+// D. 531-21 et D. 531-22 sont abroges ». Depuis le 1er septembre 2025, le CMG
+// en emploi direct se calcule heure par heure (nouvel article D. 531-18), et
+// les seuls plafonds sont HORAIRES : 8,09 EUR de l'heure pour un assistant
+// maternel au 1er avril 2026, et le montant ne peut evidemment pas depasser le
+// cout de la garde.
+//
+// L'application annonçait donc 825,16 EUR a une famille qui a droit a davantage,
+// et affichait « CMG plafonne a 825,16 EUR/mois (montant maximum assmat 2026) » —
+// une phrase fausse, sur une aide que la famille met dans son budget.
+//
+// La constante reste exportee : des ecrans et des controles la nomment, et la
+// supprimer d'un coup casserait plus que cela ne repare. Elle ne sert plus a
+// plafonner.
+export const CMG_MAX_ABROGE=825.16; // ancien plafond, art. D. 531-21 abroge le 01/09/2025
+export const CMG_MAX=null;          // plus de plafond mensuel : voir ci-dessus
 // Taux d'effort horaire = bareme PSU accueil collectif (CNAF 2026) :
 // 1 enfant -> 0,0619 ; 2 -> 0,0516 ; 3 -> 0,0413 ; 4 a 7 -> 0,0310 ; 8+ -> 0,0206.
 const TE_BAREME={1:0.000619,2:0.000516,3:0.000413,4:0.000310,5:0.000310,6:0.000310,7:0.000310,8:0.000206};
@@ -929,8 +951,13 @@ export const montantCMG=({tauxHoraire,heuresMois,revenusAnnuels,nbEnfants=1,aeeh
   const coutGarde=tarifRetenu*(Number(heuresMois)||0);
   const ressources=Math.max(PLANCHER_RESSOURCES,Math.min((Number(revenusAnnuels)||0)/12,PLAFOND_RESSOURCES));
   const brut=coutGarde*(1-(ressources*tauxEffortCMG(nbEnfants,aeeh)/CHR_AM));
-  const montant=Math.round(Math.max(0,Math.min(brut,coutGarde,CMG_MAX))*100)/100;
-  return {montant,tarifRetenu,coutGarde,plafonne:montant>=CMG_MAX-0.01,tarifDepasse:tarifRetenu<(Number(tauxHoraire)||0)};
+  // Plus de plafond mensuel (voir CMG_MAX ci-dessus) : le montant reste borne
+  // par le cout de la garde — on ne rembourse pas plus que ce qui est verse —
+  // et par le plafond HORAIRE, deja applique a « tarifRetenu ».
+  const montant=Math.round(Math.max(0,Math.min(brut,coutGarde))*100)/100;
+  // « plafonne » dit desormais ce qui plafonne vraiment : l'aide atteint le
+  // cout de la garde et ne peut pas aller au-dela.
+  return {montant,tarifRetenu,coutGarde,plafonne:coutGarde>0&&montant>=coutGarde-0.01,tarifDepasse:tarifRetenu<(Number(tauxHoraire)||0)};
 };
 
 export const isoJour=(d)=>{

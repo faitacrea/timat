@@ -1080,15 +1080,40 @@ export const SEUIL_MAJORATION_HEBDO = 45;
 
 // LE TAUX DE MAJORATION DES HEURES AU-DELA DU SEUIL.
 //
-// La CCN 3239 dit que ce taux est FIXE AU CONTRAT et ne peut pas etre inferieur
-// a 10 %. Le bulletin le codait en dur a 1,25, a trois endroits ; le simulateur
-// public « heures majorees » propose 10 % par defaut. Les deux repondaient donc
-// differemment a la meme question — et le contrat, lui, ne porte pas ce taux.
+// CE TAUX APPARTIENT AU CONTRAT, PAS AU LOGICIEL.
 //
-// On ne tranche pas ici : changer ce taux change ce qu'une assistante
-// maternelle touche, et c'est une decision de Sophie. On le nomme, on ecrit
-// d'ou il vient, et l'audit signale l'ecart avec le site tant qu'il dure.
-export const TAUX_MAJORATION_HEURES = 1.25;
+// Convention collective IDCC 3239, article 96.4 : les heures majorees sont
+// celles au-dela de 45 heures de travail par semaine. Le taux se fixe d'un
+// commun accord entre les parties, il est ecrit dans le contrat, et il ne peut
+// pas etre inferieur a 10 % (Urssaf et Pajemploi le rappellent, et le modele
+// officiel de contrat Pajemploi porte la mention).
+//
+// Le bulletin codait 1,25 en dur, a trois endroits, sans qu'aucun contrat ne
+// l'ait jamais dit ; le simulateur public proposait 10 %. Les deux repondaient
+// differemment a la meme question.
+//
+// 25 % n'a aucune base : ce n'est ni le plancher, ni une valeur que la
+// convention nomme. On retient donc le PLANCHER CONVENTIONNEL, le seul chiffre
+// que le texte donne, et le bulletin dit lequel il applique. Un contrat qui
+// prevoit davantage se lit par « contrat.majorationHeures » — le champ n'existe
+// pas encore en base, et la fonction ci-dessous est prete a le recevoir sans
+// qu'on retouche un seul calcul.
+//
+// SENS DE L'ERREUR, ASSUME : sans taux au contrat, le bulletin sous-estime ces
+// heures plutot que de les surestimer. Une sous-estimation VISIBLE — le taux est
+// ecrit sur le bulletin — appelle une correction ; une surestimation silencieuse,
+// non.
+export const TAUX_MAJORATION_PLANCHER = 0.10; // CCN 3239 art. 96.4, plancher legal
+export const TAUX_MAJORATION_HEURES = 1 + TAUX_MAJORATION_PLANCHER;
+// Le taux reellement applique : celui du contrat s'il en porte un, jamais sous
+// le plancher conventionnel.
+export const tauxMajorationDu = (contrat) => {
+  const t = Number(contrat?.majorationHeures ?? contrat?.majoration_heures);
+  if (!Number.isFinite(t) || t <= 0) return TAUX_MAJORATION_HEURES;
+  // Le contrat peut l'ecrire en pourcentage (20) ou en coefficient (1,20).
+  const coef = t > 1.5 ? 1 + t / 100 : t;
+  return Math.max(coef, TAUX_MAJORATION_HEURES);
+};
 export const seuilMajorationMois = (contrat) =>
   Math.round((SEUIL_MAJORATION_HEBDO * semainesDuContrat(contrat) / MOIS_PAR_AN) * 10) / 10;
 
