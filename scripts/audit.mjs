@@ -555,7 +555,11 @@ const BAREME = [
   { nom: "plafond depenses credit impot",  motif: /CI_PLAFOND_DEPENSES\s*=\s*3500\b/, source: "CGI art. 200 quater B" },
   { nom: "cout horaire de reference CMG",  motif: /CHR_AM\s*=\s*4\.91\b/,           source: "Urssaf, 1er avril 2026" },
   { nom: "plafond horaire CMG",            motif: /PLAFOND_H\s*=\s*8\.09\b/,        source: "Urssaf, 1er avril 2026" },
-  { nom: "plafond mensuel CMG",            motif: /CMG_MAX\s*=\s*825\.16\b/,        source: "CNAF, 1er avril 2026" },
+  // Le plafond mensuel du CMG a été ABROGÉ (décret n° 2025-515 du 30 mai 2025,
+  // art. 1er, 6° : « Les articles D. 531-21 et D. 531-22 sont abrogés »). Cette
+  // règle exigeait qu'il reste à 825,16 € — elle aurait empêché la correction.
+  // On vérifie désormais l'inverse : qu'il ne plafonne plus.
+  { nom: "plus de plafond mensuel CMG",    motif: /CMG_MAX\s*=\s*null\b/,            source: "décret n° 2025-515, art. 1er 6° : D. 531-21 et D. 531-22 abrogés" },
   { nom: "plancher de ressources CMG",     motif: /PLANCHER_RESSOURCES=814\.02\b/, source: "CAF/Urssaf 2026, trois sources concordantes" },
   { nom: "plafond de ressources CMG",      motif: /PLAFOND_RESSOURCES=8500\b/,     source: "CAF/Urssaf 2026" },
   { nom: "allocation de formation horaire",  motif: /ALLOC_FORMATION_H = 5\.57\b/, source: "IPERIA / France Emploi Domicile, 1er avril 2025" },
@@ -4374,59 +4378,68 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
-// --- LE TAUX DE MAJORATION : LE SITE ET L'APPLICATION NE DISENT PAS PAREIL ---
+// --- LE TAUX DE MAJORATION : TRANCHÉ, SUR LE TEXTE --------------------------
 //
-// La CCN 3239 fixe ce taux AU CONTRAT, avec un plancher de 10 %. L'application
-// retient 1,25 (TAUX_MAJORATION_HEURES, dans socle.jsx) ; le simulateur public
-// « heures majorées » propose 10 % par défaut. Une assistante maternelle qui
-// simule sur le site puis regarde son bulletin lit donc deux chiffres
-// différents pour les mêmes heures.
+// Cette règle signalait un écart que je n'avais pas su trancher : 25 % dans
+// l'application, 10 % sur le site.
 //
-// CE N'EST PAS UNE RÈGLE QUI SE CORRIGE TOUTE SEULE : changer ce taux change ce
-// qu'une assistante maternelle touche, et le contrat ne porte pas encore ce
-// champ. Elle reste donc là, à signaler l'écart tant qu'il dure, plutôt qu'un
-// silence qui le ferait oublier.
+// Tranché depuis. Convention collective IDCC 3239, article 96.4 : les heures
+// majorées sont celles au-delà de 45 h par semaine, et leur taux se fixe d'un
+// commun accord entre les parties, écrit au contrat, jamais sous 10 %. L'Urssaf
+// et Pajemploi le rappellent, et le modèle officiel de contrat Pajemploi porte
+// la mention.
+//
+// 25 % n'était ni le plancher, ni une valeur nommée par la convention : aucune
+// base. L'application retient désormais le plancher, le seul chiffre que le
+// texte donne, et lit « contrat.majorationHeures » dès que le contrat en
+// portera un.
+//
+// La règle veille maintenant à ce que les deux restent d'accord, et à ce qu'un
+// taux ne revienne pas en dur sous le plancher.
 {
   const socle = readFileSync(new URL("../src/socle.jsx", import.meta.url), "utf8");
-  const appTaux = Number((socle.match(/TAUX_MAJORATION_HEURES\s*=\s*([0-9.]+)/) || [])[1]);
+  const plancher = Number((socle.match(/TAUX_MAJORATION_PLANCHER\s*=\s*([0-9.]+)/) || [])[1]);
+  if (!Number.isFinite(plancher) || plancher < 0.10) {
+    signale("heures-majorees", `le plancher de majoration vaut ${plancher} : la convention collective IDCC 3239 (art. 96.4) interdit d'aller sous 10 %`);
+  }
   const page = new URL("../public/simulateur-heures-majorees-assistante-maternelle.html", import.meta.url);
-  if (existsSync(page) && Number.isFinite(appTaux)) {
-    const html = readFileSync(page, "utf8");
-    const sitePct = Number((html.match(/id="mj"[^>]*value="([0-9.]+)"/) || [])[1]);
-    const appPct = Math.round((appTaux - 1) * 100);
+  if (existsSync(page) && Number.isFinite(plancher)) {
+    const sitePct = Number((readFileSync(page, "utf8").match(/id="mj"[^>]*value="([0-9.]+)"/) || [])[1]);
+    const appPct = Math.round(plancher * 100);
     if (Number.isFinite(sitePct) && sitePct !== appPct) {
-      signale("heures-majorees", `le simulateur public propose ${sitePct} % de majoration, l'application en applique ${appPct} % (TAUX_MAJORATION_HEURES) : pour 20 h majorées à 4,20 €/h, cela fait ${((20 * 4.20 * (appPct - sitePct)) / 100).toFixed(2)} € d'écart sur un bulletin. La CCN 3239 fixe ce taux au contrat, plancher 10 % — c'est une décision, pas un bug à corriger en douce`);
+      signale("heures-majorees", `le simulateur public propose ${sitePct} % de majoration et l'application applique ${appPct} % par défaut : les deux doivent nommer le même plancher conventionnel`);
     }
   }
 }
 
-// --- LE PLAFOND MENSUEL DU CMG : L'APPLICATION EN POSE UN, PAS LE SITE -------
+// --- LE PLAFOND MENSUEL DU CMG : TRANCHÉ, SUR LE TEXTE -----------------------
 //
-// L'application plafonne le CMG à CMG_MAX (825,16 €). Le simulateur public
-// « CMG reste à charge » ne plafonne pas du tout. Pour 200 h à 6,50 €/h et des
-// ressources au plancher, la page annonce 1 255,43 € là où l'application en
-// annonce 825,16 : 430 € d'écart sur une aide qu'une famille met dans son
-// budget.
+// Cette règle signalait un écart que je n'avais pas su trancher : l'application
+// plafonnait le CMG à 825,16 €, la page publique ne le plafonnait pas, et les
+// sources secondaires se contredisaient.
 //
-// JE N'AI PAS TRANCHÉ, ET JE NE DOIS PAS. La réforme du 1er septembre 2025
-// (décret n° 2025-515 du 30 mai 2025, article D. 531-18 du code de la sécurité
-// sociale) a remplacé le plafond journalier par un plafond HORAIRE et supprimé
-// le reste à charge minimal de 15 % en emploi direct. Plusieurs sources en
-// déduisent qu'il n'existe plus de plafond mensuel fixe ; d'autres citent
-// 825,16 €, mais ce chiffre vient de calculateurs privés, pas d'une source
-// officielle. Les deux codes peuvent donc avoir tort.
+// Tranché depuis, sur Légifrance. Le décret n° 2025-515 du 30 mai 2025 dit,
+// article 1er, 6° : « Les articles D. 531-21 et D. 531-22 sont abrogés ». Ces
+// articles portaient les plafonds mensuels en pourcentage de la BMAF — et
+// 825,16 € valait exactement 172,57 % de la BMAF 2026. Depuis le 1er septembre
+// 2025, le CMG en emploi direct se calcule heure par heure (D. 531-18), avec
+// pour seuls plafonds le plafond HORAIRE (8,09 € pour un assistant maternel au
+// 1er avril 2026) et le coût de la garde lui-même.
 //
-// À VÉRIFIER AUPRÈS DE LA SOURCE : le simulateur officiel de la CAF ou de
-// Pajemploi, ou le texte de l'article D. 531-18. Tant que ce n'est pas tranché,
-// cette règle garde l'écart sous les yeux plutôt que de le laisser s'oublier.
+// C'était donc l'application qui avait tort, et la page publique qui avait
+// raison. La règle veille maintenant à ce que le plafond abrogé ne revienne
+// pas : ni dans le code de l'application, ni dans une page publique.
 {
-  const page = new URL("../public/simulateur-cmg-reste-a-charge.html", import.meta.url);
-  if (existsSync(page)) {
-    const html = readFileSync(page, "utf8");
-    const appMax = Number((appSrc.match(/CMG_MAX\s*=\s*([0-9.]+)/) || [])[1]);
-    const pagePlafonne = /CMG_MAX|plafondMensuel|Math\.min\([^)]*82[0-9]/.test(html);
-    if (Number.isFinite(appMax) && !pagePlafonne) {
-      signale("cmg", `l'application plafonne le CMG à ${appMax} € par mois, le simulateur public ne le plafonne pas : pour 200 h à 6,50 €/h et des ressources au plancher, la page annonce 1 255,43 € contre ${appMax} € dans l'application, soit 430 € d'écart sur une aide qu'une famille met dans son budget. Lequel des deux a raison n'est PAS tranché : la réforme du 1er septembre 2025 a remplacé le plafond journalier par un plafond horaire, et les sources se contredisent sur l'existence d'un plafond mensuel. À vérifier sur le simulateur officiel CAF/Pajemploi ou l'article D. 531-18 du code de la sécurité sociale`);
+  const pages = ["simulateur-cmg-reste-a-charge.html", "comparateur-assistante-maternelle-creche.html"];
+  if (/Math\.min\([^)]*\bCMG_MAX\b/.test(appSrc)) {
+    signale("cmg", "l'application plafonne de nouveau le CMG à un montant mensuel : ce plafond vient de l'article D. 531-21, abrogé le 1er septembre 2025 par le décret n° 2025-515. Les seuls plafonds sont horaires");
+  }
+  for (const nom of pages) {
+    const u = new URL("../public/" + nom, import.meta.url);
+    if (!existsSync(u)) continue;
+    const html = readFileSync(u, "utf8");
+    if (/82[0-9][.,][0-9]{2}/.test(html)) {
+      signale("cmg", `${nom} contient un montant proche de 825,16 € : si c'est un plafond mensuel du CMG, il vient de l'article D. 531-21, abrogé le 1er septembre 2025`);
     }
   }
 }

@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -96,7 +96,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   const joursPointes=contrat?Math.max(0,Math.round((h.real||0)/(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))||8))):0;
   const joursPrevus=contrat?Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN):0;
   const joursAccueil=joursPointes>0?joursPointes:joursPrevus;
-  const salBrut=contrat?(hMensDecl*contrat.tauxHoraire+hCompl*contrat.tauxHoraire+hMajorees*contrat.tauxHoraire*TAUX_MAJORATION_HEURES):0;
+  const salBrut=contrat?(hMensDecl*contrat.tauxHoraire+hCompl*contrat.tauxHoraire+hMajorees*contrat.tauxHoraire*tauxMajorationDu(contrat)):0;
   const entretienMois=contrat?Math.round((contrat.entretien||0)*joursAccueil*100)/100:0;
   const repasMoisPaj=contrat&&contrat.repasFourniPar!=="employeur"?Math.round((Number(contrat.repas)||0)*joursAccueil*100)/100:0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
@@ -857,8 +857,9 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   //
   // La repartition vit dans socle.jsx : le recapitulatif Pajemploi la lit
   // aussi, pour que les deux documents ne puissent plus diverger.
-  // Le taux vient de socle.jsx : il etait code en dur a trois endroits.
-  const TAUX_MAJORATION=TAUX_MAJORATION_HEURES;
+  // Le taux vient du CONTRAT s'il en porte un, sinon du plancher conventionnel
+  // (CCN 3239 art. 96.4). Il etait code en dur a 1,25, a trois endroits.
+  const TAUX_MAJORATION=tauxMajorationDu(contrat);
   const rep=repartitionHeures(contrat,h.real);
   const heuresNorm=rep.normales;
   const hSupp=rep.complementaires;
@@ -1283,6 +1284,16 @@ template:"bulletin_sent",
         Desormais la paie suit le contrat, et seules les absences ENREGISTREES
         la diminuent. C'est la bonne regle, mais elle deplace le geste : on le
         dit, au lieu de laisser quelqu'un s'etonner. */}
+    {/* LE TAUX DE MAJORATION VIENT DU CONTRAT — ET LE CONTRAT NE LE PORTE PAS.
+        La CCN 3239 (art. 96.4) laisse ce taux aux parties, avec un plancher de
+        10 %. Faute de taux au contrat, le bulletin applique ce plancher : c'est
+        le seul chiffre que le texte donne. Si le contrat en prevoit un autre,
+        ces heures sont sous-estimees — et il vaut mieux le dire que de laisser
+        passer un chiffre qu'on ne peut pas justifier. */}
+    {!isDemoBull&&hMaj>0&&!(contrat?.majorationHeures)&&<div style={{padding:"10px 14px",background:"var(--Bp)",border:"1px solid var(--B)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--b)",lineHeight:1.6}}>
+      <strong>{nbf(hMaj,2)} h majorées</strong> à <strong>+{Math.round((TAUX_MAJORATION-1)*100)} %</strong>, le minimum prévu par la convention collective (IDCC 3239, art. 96.4).
+      Ce taux se fixe <strong>au contrat</strong> : si le vôtre en prévoit un plus élevé, ces heures sont sous-estimées ici.
+    </div>}
     {!isDemoBull&&useRealHours&&heuresMoisReel.heures<hMens&&<div style={{padding:"10px 14px",background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--b)",lineHeight:1.6}}>
       <strong>{heuresMoisReel.heures} h pointées</strong> ce mois, pour <strong>{hMens} h</strong> prévues au contrat.
       Le salaire reste celui du contrat : c&rsquo;est le principe de la mensualisation.
