@@ -5173,7 +5173,35 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     }, 7000);
     return ()=>clearTimeout(t);
   },[vitrine,preview,demoNu]);
-  const [showLegal, setShowLegal] = useState(null);
+  // LES TEXTES LEGAUX DOIVENT AVOIR UNE ADRESSE.
+  //
+  // Les mentions legales et les CGU ne vivaient que dans cette fenetre, ouverte
+  // par un clic et par rien d'autre. Consequences : on ne pouvait pas les lier,
+  // un moteur ne pouvait pas les indexer, et on ne pouvait pas en donner
+  // l'adresse — ni a un parent qui la demande, ni a l'URSSAF dans un dossier
+  // d'habilitation. La LCEN (art. 6 III-1) exige pourtant qu'elles soient
+  // accessibles sur un site qui propose un service.
+  //
+  // On ne cree pas de page : on rend la fenetre adressable. « ?legal=mentions »
+  // l'ouvre au chargement, et l'ouvrir met l'adresse a jour sans recharger,
+  // pour qu'elle soit copiable depuis la barre du navigateur. La fermer la
+  // retire. Aucun changement visuel, un lien qui existe enfin.
+  const LEGAL_VALIDES = ["mentions", "cgu", "confidentialite"];
+  const [showLegal, setShowLegal] = useState(() => {
+    try {
+      const v = new URLSearchParams(window.location.search).get("legal");
+      return LEGAL_VALIDES.includes(v) ? v : null;
+    } catch { return null; }
+  });
+  useEffect(() => {
+    try {
+      const u = new URL(window.location.href);
+      if (showLegal) u.searchParams.set("legal", showLegal);
+      else u.searchParams.delete("legal");
+      // replaceState : on ne veut pas que « retour » repasse par chaque texte.
+      window.history.replaceState(null, "", u.pathname + (u.search || "") + u.hash);
+    } catch { /* un navigateur sans history ne doit pas casser l'ecran */ }
+  }, [showLegal]);
   const [showBlog, setShowBlog] = useState(null);
   const [showBoutique, setShowBoutique] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
