@@ -3106,6 +3106,25 @@ export const MAJORATION_TITRE_AMGE=0.04;
 // frequent — l'application annoncait jusqu'a 13 % de trop, et les conges payes
 // se retrouvaient comptes deux fois : une fois dans le lissage, une fois verses
 // a part.
+// LE PLANCHER DE MAJORATION DES HEURES AU-DELA DE 45 H/SEMAINE.
+//
+// CCN 3239 art. 96.4 : le taux appartient au CONTRAT, pas au logiciel. Il se
+// fixe d'un commun accord, il est ecrit dans le contrat, et il ne peut pas etre
+// inferieur a 10 %. Seul ce plancher est un chiffre que le texte donne — 25 %
+// n'en est pas un, et il a pourtant longtemps ete code en dur, y compris dans
+// la demonstration de la page publique juste en dessous.
+//
+// Ces trois constantes sont declarees ICI et non dans socle.jsx, ou vivent les
+// fonctions qui les utilisent : socle.jsx importe App.jsx, jamais l'inverse, et
+// la demonstration publique est dans ce fichier. socle.jsx les reexporte, pour
+// que tout ce qui les importait de la-bas continue de fonctionner.
+export const TAUX_MAJORATION_PLANCHER=0.10;
+export const TAUX_MAJORATION_HEURES=1+TAUX_MAJORATION_PLANCHER;
+// Le meme plancher en pourcentage : la forme sous laquelle un contrat papier
+// l'ecrit, sous laquelle le formulaire le demande et sous laquelle la base le
+// stocke. Changer le plancher ci-dessus le change partout, formulaire inclus.
+export const MAJORATION_PLANCHER_PCT=Math.round(TAUX_MAJORATION_PLANCHER*100);
+
 export const SEMAINES_ANNEE_COMPLETE=52;
 export const SEMAINES_MAX_ANNEE_INCOMPLETE=46;
 export const MOIS_PAR_AN=12;
@@ -4618,11 +4637,20 @@ const DEMO_SCREENS=[
       // visiteur qui verifiait trouvait 1,52 EUR d'ecart sur l'outil meme qu'on
       // lui vend. Et l'indemnite d'entretien y figurait a 3,80 EUR, sous le
       // minimum conventionnel : elle se calcule maintenant comme ailleurs.
-      const TAUX=4.20, MAJORE=Math.round(TAUX*1.25*100)/100, ENT=indemniteEntretienMin(9);
+      // LE TAUX DE MAJORATION DE LA DEMONSTRATION PUBLIQUE.
+      //
+      // Il etait ecrit « TAUX*1.25 » : une majoration de 25 % montree aux
+      // visiteurs de la page qui vend l'outil, alors que la convention
+      // (IDCC 3239 art. 96.4) laisse ce taux au contrat avec un plancher de
+      // 10 %, et que l'application applique ce plancher a defaut. La vitrine
+      // annonçait donc un calcul que le produit ne fait pas. On montre le
+      // plancher, et on le dit.
+      const COEF_MAJ=TAUX_MAJORATION_HEURES;
+      const TAUX=4.20, MAJORE=Math.round(TAUX*COEF_MAJ*100)/100, ENT=indemniteEntretienMin(9);
       const lignes=[
         ["Heures réalisées",m.h+" h × "+nbf(TAUX,2)+" €",m.h*TAUX],
         ["Indemnité entretien",m.ent+" j × "+nbf(ENT,2)+" €",m.ent*ENT],
-        ["Heures majorées",m.supp+" h × "+nbf(MAJORE,2)+" €",m.supp*MAJORE],
+        ["Heures majorées (+ "+Math.round((COEF_MAJ-1)*100)+" % mini, art. 96.4)",m.supp+" h × "+nbf(MAJORE,2)+" €",m.supp*MAJORE],
       ];
       const brut=lignes.reduce((t,[,,v])=>t+v,0);
       return(
@@ -7906,6 +7934,11 @@ export default function App(){
                 anneeComplete:ct.annee_complete,
                 repasFourniPar:ct.repas_fourni_par,
                 semainesAccueil:ct.semaines_accueil,
+                // Cet objet est construit champ par champ, sans « ...ct » : un
+                // champ oublie ici ne remonte jamais dans le formulaire, et le
+                // taux de majoration du contrat serait reparti au plancher a
+                // chaque enregistrement.
+                majorationHeures:ct.majoration_heures,
                 entretien:ct.entretien,
                 aeeh:!!ct.aeeh,
                 repas:Number(ct.repas)||0,

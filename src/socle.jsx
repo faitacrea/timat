@@ -20,7 +20,8 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, MOIS_PAR_AN
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, MOIS_PAR_AN,
+  TAUX_MAJORATION_PLANCHER, TAUX_MAJORATION_HEURES, MAJORATION_PLANCHER_PCT
 } from "./App.jsx";
 
 import { anneeScolaireDe, estFerie, finVacances, feriesDe, vacancesDe, vacancesAnnee, ACADEMIES_PAR_ZONE, ZONES, ZONE_DEFAUT } from "../data/calendrier-scolaire.js";
@@ -1136,8 +1137,16 @@ export const SEUIL_MAJORATION_HEBDO = 45;
 // heures plutot que de les surestimer. Une sous-estimation VISIBLE — le taux est
 // ecrit sur le bulletin — appelle une correction ; une surestimation silencieuse,
 // non.
-export const TAUX_MAJORATION_PLANCHER = 0.10; // CCN 3239 art. 96.4, plancher legal
-export const TAUX_MAJORATION_HEURES = 1 + TAUX_MAJORATION_PLANCHER;
+// LES CONSTANTES VIVENT DANS App.jsx, ET NON ICI.
+//
+// La demonstration de la page publique, qui est dans App.jsx, montrait une
+// majoration de 25 % ecrite a la main. Pour qu'elle applique le plancher
+// conventionnel comme le reste, il faut que le plancher soit lisible depuis
+// App.jsx — et l'import ne va QUE dans ce sens : socle.jsx importe App.jsx,
+// jamais l'inverse. Les trois constantes sont donc declarees la-bas et
+// reexportees ici, pour que tout ce qui les importait depuis socle.jsx continue
+// de fonctionner. Une seule source, et la regle d'import respectee.
+export { TAUX_MAJORATION_PLANCHER, TAUX_MAJORATION_HEURES, MAJORATION_PLANCHER_PCT };
 // Le taux reellement applique : celui du contrat s'il en porte un, jamais sous
 // le plancher conventionnel.
 export const tauxMajorationDu = (contrat) => {
@@ -1147,6 +1156,33 @@ export const tauxMajorationDu = (contrat) => {
   const coef = t > 1.5 ? 1 + t / 100 : t;
   return Math.max(coef, TAUX_MAJORATION_HEURES);
 };
+// CE QU'ON ECRIT DANS LA BASE, EN UN SEUL ENDROIT.
+//
+// Deux formulaires enregistrent un contrat — la creation guidee et la fiche
+// enfant. Chacun aurait eu sa propre facon de normaliser ce taux, et c'est
+// ainsi qu'on finit avec deux regles. Celle-ci est la seule :
+//
+//   - le contrat ne depasse pas 45 h/semaine  -> null, il n'y a rien a majorer
+//     et stocker un taux donnerait a croire le contraire ;
+//   - rien de saisi                           -> null, le plancher s'applique ;
+//   - une valeur saisie                       -> ramenee entre 10 et 100.
+//
+// Le plancher est aussi grave dans la base, en contrainte CHECK : meme un
+// appel direct a l'API ne peut pas enregistrer un taux illegal.
+export const majorationPourBase = (contrat) => {
+  const hebdo = Number(contrat?.heuresHebdo ?? contrat?.heures_hebdo) || 0;
+  if (hebdo <= SEUIL_MAJORATION_HEBDO) return null;
+  const t = Number(contrat?.majorationHeures ?? contrat?.majoration_heures);
+  if (!Number.isFinite(t) || t <= 0) return null;
+  // On tolere qu'un coefficient soit saisi la ou on attend un pourcentage —
+  // 1,25 pour 25 %. Mais la conversion doit etre la MEME que celle de
+  // tauxMajorationDu(), sinon le formulaire enregistre un taux et le calcul en
+  // lit un autre : ma premiere version faisait « t * 100 » et transformait
+  // 1,25 en 125 %, plafonne a 100 %, quand le calcul y lisait 25 %.
+  const pct = t <= 1.5 ? (t - 1) * 100 : t;
+  return Math.min(100, Math.max(MAJORATION_PLANCHER_PCT, Math.round(pct)));
+};
+
 export const seuilMajorationMois = (contrat) =>
   Math.round((SEUIL_MAJORATION_HEBDO * semainesDuContrat(contrat) / MOIS_PAR_AN) * 10) / 10;
 

@@ -85,7 +85,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   //
   // Les heures au-dela de 45 h par semaine sont majorees. Ce document raisonne
   // au mois : on reprend la convention deja retenue par le bulletin, 45 h x 4
-  // semaines, et une majoration de 25 %.
+  // semaines, et le taux de majoration du contrat (plancher 10 %, art. 96.4).
   const repPaj=repartitionHeures(contrat,h.real);
   const hMensDecl=repPaj.normales;
   const hCompl=repPaj.complementaires;
@@ -150,7 +150,11 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<div class="box"><h2>⏰ Heures à déclarer</h2>',
       '<table><tr class="hl"><td>Heures normales À DÉCLARER (mensualisées)</td><td>'+hNormalesDecl+' h</td></tr>',
       '<tr><td>Heures complémentaires (jusqu\'à 45 h/semaine)</td><td>'+hCompl+' h</td></tr>',
-      '<tr><td>Heures majorées (au-delà de 45 h/semaine, +25 %)</td><td>'+hMajorees+' h</td></tr>',
+      // Ce libelle annonçait « +25 % » en dur, un reste de l'ancien coefficient
+      // code a la main, alors que le calcul juste a cote appliquait le taux du
+      // contrat (10 % a defaut). Le document de declaration contredisait donc
+      // le montant qu'il declarait.
+      '<tr><td>Heures majorées (au-delà de 45 h/semaine, + '+Math.round((tauxMajorationDu(contrat)-1)*100)+' %)</td><td>'+hMajorees+' h</td></tr>',
       '<tr><td>Heures réellement pointées ce mois</td><td>'+h.real+' h <span style="color:#888;font-weight:400">(information)</span></td></tr>',
       '<tr><td>Jours d\'activité</td><td>'+joursAccueil+' jours'+(joursPointes>0?'':' <span style="color:#888;font-weight:400">(prévus au contrat : aucun pointage ce mois)</span>')+'</td></tr>',
       '<tr><td>Jours de congés payés pris</td><td>0 jours</td></tr></table>',

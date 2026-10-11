@@ -150,6 +150,7 @@
   "id",
   "jeton_borne",
   "jours",
+  "majoration_heures",
   "parent_id",
   "partage_parent",
   "pdf_generated_at",

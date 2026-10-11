@@ -22,7 +22,7 @@ import {
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
-  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE, useUneFois, appelApi
+  BORNE_BLOCAGE_MS, BORNE_ESSAIS_MAX, CATS, DOCS_DEMO, HEURES_TYPES, JOURS_SEM, RETENUE_TYPES, THEMES_CAL, borneCodeSortie, borneEmpreintes, borneFermer, borneMemoriserEmpreintes, borneOuvrir, empreinteCode, fmtDateHeureCourte, anneeScolaireDe, estFerie, estVacances, finVacances, FERIES_DE, minimumHoraireAu, nb2, nomVacances, periodesVacances, tirerJetonBorne, ZONE_DEFAUT, SEUIL_MAJORATION_HEBDO, MAJORATION_PLANCHER_PCT, majorationPourBase, entretienDuContrat, heuresJourDuContrat, indemniteEntretienMin, JOURS_SEMAINE_TYPE, useUneFois, appelApi
 } from "./socle.jsx";
 
 export function PaveNumerique({longueur=4,valeur,setValeur,onAnnuler,libelleAnnuler="Annuler"}){
@@ -2869,6 +2869,10 @@ export function OnboardingWizard({user,onFinish}){
         // le contrat repartait en annee complete quoi qu'on ait choisi.
         annee_complete:contrat.anneeComplete!==false,
         semaines_accueil:contrat.anneeComplete===false?Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE)):null,
+        // CCN 3239 art. 96.4 : taux fixe par le contrat, jamais sous 10 %.
+        // La normalisation vit dans socle.jsx, pour que les deux formulaires
+        // qui enregistrent un contrat ne puissent pas en avoir deux versions.
+        majoration_heures:majorationPourBase(contrat),
         // Non renseigne a la creation : le contrat imprime une ligne a
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,
@@ -2963,6 +2967,26 @@ export function OnboardingWizard({user,onFinish}){
                 Salaire mensualisé : <b style={{color:"var(--b)"}}>{nbf(salaireMensualise(contrat),2)} €</b>
                 {" "}({heuresDeclarees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
               </div>
+              {/* LE TAUX DE MAJORATION DES HEURES AU-DELA DE 45 H/SEMAINE.
+                  CCN 3239 art. 96.4 : le taux est fixe par le contrat, et il ne
+                  peut pas etre inferieur a 10 %. L'application n'avait aucun
+                  endroit pour le porter : elle appliquait donc le plancher a tous
+                  les contrats, y compris a ceux qui prevoient davantage.
+                  Le champ n'apparait que si le contrat depasse reellement le
+                  seuil : sous 45 h/semaine il n'y a rien a majorer, et le
+                  demander ferait croire a une obligation qui n'existe pas. */}
+              {Number(contrat.heuresHebdo||0)>SEUIL_MAJORATION_HEBDO&&<div style={{marginTop:12,padding:"10px 12px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
+                <label className="lbl">Majoration des heures au-delà de 45 h/semaine (%)</label>
+                <ChampNombre className="inp" style={{maxWidth:130}} min="10" max="100" decimales={0}
+                  defaut={MAJORATION_PLANCHER_PCT}
+                  value={contrat.majorationHeures??MAJORATION_PLANCHER_PCT}
+                  onChange={v=>setContrat(c=>({...c,majorationHeures:v}))}/>
+                <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
+                  Recopiez ce qui est écrit sur le contrat signé. La convention collective
+                  (art. 96.4) laisse ce taux au contrat mais interdit d'aller sous <b>{MAJORATION_PLANCHER_PCT} %</b>.
+                  Ce contrat dépasse le seuil de <b>{Math.round((Number(contrat.heuresHebdo||0)-SEUIL_MAJORATION_HEBDO)*10)/10} h par semaine</b>.
+                </div>
+              </div>}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div><label className="lbl">Indemnité entretien (€/j)</label>
@@ -3151,6 +3175,10 @@ export function AjouterEnfantModale({user,onClose}){
         heures_hebdo:Number(contrat.heuresHebdo)||40,
         annee_complete:contrat.anneeComplete!==false,
         semaines_accueil:contrat.anneeComplete===false?Math.min(SEMAINES_MAX_ANNEE_INCOMPLETE,Math.max(1,Number(contrat.semainesAccueil)||SEMAINES_MAX_ANNEE_INCOMPLETE)):null,
+        // CCN 3239 art. 96.4 : taux fixe par le contrat, jamais sous 10 %.
+        // La normalisation vit dans socle.jsx, pour que les deux formulaires
+        // qui enregistrent un contrat ne puissent pas en avoir deux versions.
+        majoration_heures:majorationPourBase(contrat),
         // Non renseigne a la creation : le contrat imprime une ligne a
         // completer plutot que d'affirmer qui fournit les repas.
         repas_fourni_par:contrat.repasFourniPar||null,
@@ -3314,6 +3342,21 @@ export function AjouterEnfantModale({user,onClose}){
               Salaire mensualisé : <b style={{color:"var(--b)"}}>{nb2(salaireMensualise(contrat))} €</b>
               {" "}({heuresDeclarees(contrat)} h/mois sur {semainesDuContrat(contrat)} semaines)
             </div>
+            {/* Le meme champ que dans la creation guidee : les deux formulaires
+                enregistrent un contrat, les deux doivent pouvoir porter le taux.
+                CCN 3239 art. 96.4. */}
+            {Number(contrat.heuresHebdo||0)>SEUIL_MAJORATION_HEBDO&&<div style={{marginTop:12,padding:"10px 12px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>
+              <label className="lbl">Majoration des heures au-delà de 45 h/semaine (%)</label>
+              <ChampNombre className="inp" style={{maxWidth:130}} min="10" max="100" decimales={0}
+                defaut={MAJORATION_PLANCHER_PCT}
+                value={contrat.majorationHeures??MAJORATION_PLANCHER_PCT}
+                onChange={v=>setContrat(c=>({...c,majorationHeures:v}))}/>
+              <div style={{fontSize:11,color:"var(--l)",marginTop:5,lineHeight:1.5}}>
+                Recopiez ce qui est écrit sur le contrat signé. La convention collective
+                (art. 96.4) laisse ce taux au contrat mais interdit d'aller sous <b>{MAJORATION_PLANCHER_PCT} %</b>.
+                Ce contrat dépasse le seuil de <b>{Math.round((Number(contrat.heuresHebdo||0)-SEUIL_MAJORATION_HEBDO)*10)/10} h par semaine</b>.
+              </div>
+            </div>}
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
             <div>
