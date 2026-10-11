@@ -681,6 +681,70 @@ for (const { nom, motif, source } of BAREME) {
   }
 }
 
+// --- aucun taux de majoration ecrit a la main ---
+//
+// CCN 3239 art. 96.4 : le taux des heures au-dela de 45 h/semaine est fixe par
+// le CONTRAT, avec un plancher de 10 %. Il a longtemps ete code en dur a 1,25
+// a trois endroits, sans aucune base legale. Apres correction, un « +25 % »
+// ecrit a la main subsistait encore dans le libelle du recapitulatif Pajemploi :
+// le document de declaration annonçait 25 % pendant que le calcul juste a cote
+// appliquait 10 %. Un libelle faux sur un document de declaration est une
+// erreur comme une autre.
+//
+// On interdit donc tout coefficient ou pourcentage de majoration ecrit en dur.
+// Le seul chemin est tauxMajorationDu(contrat).
+{
+  const fichiers = [];
+  const balayer = (d) => {
+    let entrees = [];
+    try { entrees = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) balayer(f);
+      else if (/\.(jsx?|mjs)$/.test(e.name)) fichiers.push(f);
+    }
+  };
+  for (const r of ["src", "api", "lib"]) balayer(path.join(RACINE, r));
+
+  for (const f of fichiers) {
+    let src = "";
+    try { src = fs.readFileSync(f, "utf8"); } catch { continue; }
+    const rel = path.relative(RACINE, f);
+    const lignes = src.split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      const ligne = lignes[i];
+      // On ne lit pas les commentaires : cette regle s'est signalee elle-meme
+      // sur le commentaire qui explique le defaut qu'elle traque. Et le numero
+      // de ligne se compte, il ne se cherche pas par indexOf — sinon deux
+      // lignes identiques pointent toutes les deux vers la premiere.
+      const nu = ligne.trim();
+      if (nu.startsWith("//") || nu.startsWith("*") || nu.startsWith("/*")) continue;
+      // Un libelle qui annonce un taux de majoration figé.
+      if (/majorée?s?[^\n]{0,60}[+＋]\s*\d{1,3}\s*%/i.test(ligne)) {
+        signale("majoration-en-dur", `${rel}:${i + 1} : un taux de majoration est écrit à la main dans un libellé. Le taux vient du contrat (CCN 3239 art. 96.4, plancher 10 %) : utiliser tauxMajorationDu(contrat), sinon le document annonce un taux et le calcul en applique un autre`);
+      }
+      // Un coefficient de majoration figé — multiplié, ou simplement affecté à
+      // une variable qui le porte. Ma première version ne cherchait que
+      // « major » : elle est passée à côté de « const COEF_MAJ=1.25 », qui est
+      // précisément ce que je venais de corriger sur la page publique.
+      // Trop large fait autant de degats que trop etroit : ma deuxieme version
+      // attrapait « lineHeight:1.6 », une hauteur de ligne CSS, sur une ligne
+      // qui contenait « hMaj ». On exige donc un vrai contexte de calcul :
+      //   - une MULTIPLICATION par le coefficient, sur une ligne qui parle de
+      //     majoration ou de taux horaire ;
+      //   - ou une AFFECTATION du coefficient a une variable qui porte « maj ».
+      const coef = "1\\.(?:1[5-9]|[2-9]\\d?)";
+      const multiplie = new RegExp("\\*\\s*" + coef + "\\b").test(ligne)
+        || new RegExp(coef + "\\s*\\*").test(ligne);
+      const parleDeMajoration = /maj/i.test(ligne) || /tauxH\b|taux_horaire|tauxHoraire/.test(ligne);
+      const affecteAUnMaj = new RegExp("\\w*maj\\w*\\s*[=:]\\s*" + coef + "\\b", "i").test(ligne);
+      if ((multiplie && parleDeMajoration) || affecteAUnMaj) {
+        signale("majoration-en-dur", `${rel}:${i + 1} : un coefficient de majoration est écrit à la main. Il doit venir de tauxMajorationDu(contrat), ou du plancher TAUX_MAJORATION_HEURES — jamais d'un nombre posé là`);
+      }
+    }
+  }
+}
+
 // --- valeurs perimees : l'interdiction, pas seulement la presence ---
 //
 // BAREME ci-dessus verifie qu'une valeur juste EXISTE quelque part. Il ne dit
@@ -4485,7 +4549,13 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
 // La règle veille maintenant à ce que les deux restent d'accord, et à ce qu'un
 // taux ne revienne pas en dur sous le plancher.
 {
-  const socle = readFileSync(new URL("../src/socle.jsx", import.meta.url), "utf8");
+  // Le plancher a demenage de socle.jsx vers App.jsx — la demonstration de la
+  // page publique, qui est dans App.jsx, doit pouvoir le lire, et l'import ne
+  // va que dans un sens. Cette regle a d'ailleurs signale le NaN des que la
+  // constante a bouge : c'est exactement ce qu'on lui demande. On lit donc les
+  // deux fichiers, pour qu'un futur deplacement ne la rende pas aveugle.
+  const socle = readFileSync(new URL("../src/socle.jsx", import.meta.url), "utf8")
+    + "\n" + readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
   const plancher = Number((socle.match(/TAUX_MAJORATION_PLANCHER\s*=\s*([0-9.]+)/) || [])[1]);
   if (!Number.isFinite(plancher) || plancher < 0.10) {
     signale("heures-majorees", `le plancher de majoration vaut ${plancher} : la convention collective IDCC 3239 (art. 96.4) interdit d'aller sous 10 %`);

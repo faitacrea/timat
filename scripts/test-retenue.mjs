@@ -191,6 +191,75 @@ m("plus de 52 semaines — ramené à 52", mens.semainesDuContrat({ heuresHebdo:
 m("colonnes en base (annee_complete/semaines_accueil)", mens.semainesDuContrat({ heures_hebdo: 40, annee_complete: false, semaines_accueil: 40 }), 40, 0);
 m("heures nulles", mens.salaireMensualise({ heuresHebdo: 0, tauxHoraire: 4.2 }), 0);
 
+// --- LE TAUX DE MAJORATION DU CONTRAT (CCN 3239 art. 96.4) ---
+//
+// Le taux est fixe par le contrat et ne peut pas etre inferieur a 10 %.
+// L'application n'avait aucune colonne pour le porter : elle appliquait donc le
+// plancher a tous les contrats, y compris a ceux qui prevoient davantage. Sur
+// un contrat reel de 50 h/semaine a 5,50 EUR, l'ecart entre 10 % et 25 % vaut
+// 17,87 EUR par mois, soit 214 EUR par an.
+//
+// majorationPourBase() est le seul endroit ou l'on decide ce qui part dans la
+// base, parce que DEUX formulaires enregistrent un contrat.
+const maj = eval(`(function(){
+  ${(src.match(/const SEUIL_MAJORATION_HEBDO = \d+;/) || [""])[0]}
+  ${(src.match(/const TAUX_MAJORATION_PLANCHER\s*=\s*[\d.]+;/) || [""])[0]}
+  const TAUX_MAJORATION_HEURES = 1 + TAUX_MAJORATION_PLANCHER;
+  ${(src.match(/const MAJORATION_PLANCHER_PCT\s*=\s*[^\n]+/) || [""])[0]}
+  ${(src.match(/const tauxMajorationDu = \(contrat\) => \{[\s\S]*?\n\};/) || [""])[0]}
+  ${(src.match(/const majorationPourBase = \(contrat\) => \{[\s\S]*?\n\};/) || [""])[0]}
+  return {tauxMajorationDu, majorationPourBase, MAJORATION_PLANCHER_PCT};
+})()`);
+
+console.log("\n=== MAJORATION DES HEURES — CCN 3239 art. 96.4 ===\n");
+m("le plancher légal est bien 10 %", maj.MAJORATION_PLANCHER_PCT, 10, 0);
+// Le coefficient applique au calcul.
+m("rien au contrat — plancher appliqué", maj.tauxMajorationDu({}), 1.10);
+m("le contrat dit 25 % — 25 % appliqués", maj.tauxMajorationDu({ majorationHeures: 25 }), 1.25);
+m("le contrat dit 1,25 (coefficient)", maj.tauxMajorationDu({ majorationHeures: 1.25 }), 1.25);
+m("colonne en base (majoration_heures)", maj.tauxMajorationDu({ majoration_heures: 20 }), 1.20);
+// Un taux sous le plancher ne peut jamais sortir d'ici.
+m("le contrat dit 5 % — ramené au plancher", maj.tauxMajorationDu({ majorationHeures: 5 }), 1.10);
+m("un taux négatif — plancher", maj.tauxMajorationDu({ majorationHeures: -3 }), 1.10);
+m("un taux absurde (texte) — plancher", maj.tauxMajorationDu({ majorationHeures: "beaucoup" }), 1.10);
+
+// Ce qui part dans la base. Sous 45 h/semaine : rien a majorer, donc null.
+const estNul = (v) => v === null;
+const d = (n, r, attendu) => {
+  const ok = attendu === null ? estNul(r) : Math.abs(r - attendu) < 0.001;
+  if (!ok) koMens++;
+  console.log(`  ${ok ? "ok " : "KO "} ${n.padEnd(52)} ${r} (attendu ${attendu})`);
+};
+d("40 h/semaine : rien à majorer", maj.majorationPourBase({ heuresHebdo: 40, majorationHeures: 25 }), null);
+d("pile 45 h/semaine : rien à majorer", maj.majorationPourBase({ heuresHebdo: 45, majorationHeures: 25 }), null);
+d("50 h/semaine, rien saisi : null (plancher)", maj.majorationPourBase({ heuresHebdo: 50 }), null);
+d("50 h/semaine, 25 % saisis", maj.majorationPourBase({ heuresHebdo: 50, majorationHeures: 25 }), 25);
+d("50 h/semaine, 5 % saisis : ramenés à 10", maj.majorationPourBase({ heuresHebdo: 50, majorationHeures: 5 }), 10);
+// Un coefficient saisi la ou on attend un pourcentage doit etre converti
+// EXACTEMENT comme le fait tauxMajorationDu(), sinon le formulaire enregistre
+// un taux et le calcul en lit un autre.
+d("50 h/semaine, 1,25 saisi : lu comme 25 %", maj.majorationPourBase({ heuresHebdo: 50, majorationHeures: 1.25 }), 25);
+d("50 h/semaine, 1,10 saisi : lu comme 10 %", maj.majorationPourBase({ heuresHebdo: 50, majorationHeures: 1.10 }), 10);
+// La coherence elle-meme, verifiee sur les deux fonctions.
+for (const v of [25, 1.25, 30, 1.3, 12, 1.12]) {
+  const stocke = maj.majorationPourBase({ heuresHebdo: 50, majorationHeures: v });
+  const relu = Math.round((maj.tauxMajorationDu({ majorationHeures: v }) - 1) * 100);
+  d(`saisir ${v} : enregistré ${stocke} %, relu ${relu} %`, stocke, relu);
+}
+d("50 h/semaine, 500 % : plafonné à 100", maj.majorationPourBase({ heuresHebdo: 50, majorationHeures: 500 }), 100);
+d("colonnes en base", maj.majorationPourBase({ heures_hebdo: 50, majoration_heures: 25 }), 25);
+
+// L'ECART REEL, sur le contrat de 50 h/semaine a 5,50 EUR de la base.
+{
+  const hExactes = 50 * 52 / 12;              // 216,67 h
+  const seuil = Math.round((45 * 52 / 12) * 10) / 10; // 195 h
+  const hMaj = hExactes - seuil;              // 21,67 h
+  const a10 = hMaj * 5.50 * maj.tauxMajorationDu({});
+  const a25 = hMaj * 5.50 * maj.tauxMajorationDu({ majorationHeures: 25 });
+  m("heures majorées du contrat de 50 h", hMaj, 21.67);
+  m("écart mensuel entre 10 % et 25 %", a25 - a10, 17.88, 0.02);
+}
+
 // --- Fin de contrat : preavis, conges payes, indemnite de rupture ---
 const fn = (nom, motif) => {
   const m = src.match(motif);

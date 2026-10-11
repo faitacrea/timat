@@ -3005,7 +3005,7 @@ export function RapportAnnuel({enfants,role,pEId,user}){
   // celles du recapitulatif Pajemploi et du recapitulatif des versements. On
   // part des jours prevus au contrat.
   const joursAnnuels=realStats?.jours||Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat));
-  // Salaire brut = heures * taux (avec majoration 25% au dessus de 45h/sem si pas mensualise)
+  // Salaire brut = heures * taux (majoration du contrat au-dela de 45 h/sem, plancher 10 % — art. 96.4)
   const salaireBrutCalc=Math.round(heuresAnnuelles*tauxH);
   const salaireNet=realStats?.paiements>0?realStats.paiements:Math.round(netDepuisBrut(salaireBrutCalc,regimeLocalDe(user)));
   const salaireAnnuel=salaireNet;
