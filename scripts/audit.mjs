@@ -15,6 +15,7 @@
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { lireApp, fichiersApp as fichiersAppSrc } from "./sources-app.mjs";
 
 // Tout ce qui lit « le code de l'application » passe par scripts/sources-app.mjs :
@@ -677,6 +678,107 @@ for (const { nom, motif, source } of BAREME) {
     for (const m of src.matchAll(/heuresDeclarees\([^)]*\)\s*\*|\*\s*heuresDeclarees\(/g)) {
       const ligne = src.slice(0, m.index).split("\n").length;
       signale("heures-arrondies", `${rel}:${ligne} : heuresDeclarees() est multipliee. C'est l'entier arrondi, reserve a l'affichage et a la declaration Pajemploi ; multiplier par un taux donne un salaire faux (l'exemple de Pajemploi donne 417 EUR au lieu de 416 EUR). Utiliser heuresMensualisees()`);
+    }
+  }
+}
+
+// --- le modele de contrat ne bouge pas sans que la date de peremption bouge ---
+//
+// Un PDF stocke n'est JAMAIS recalcule : il garde pour toujours le texte et les
+// chiffres du jour ou il a ete fait. DOCUMENTS_REFONTE est le seul moyen de
+// dire « ce document vient d'une version depassee du modele », et il ne vaut
+// que si quelqu'un pense a le bouger.
+//
+// Personne n'y a pense. Le seuil valait « 2026-09-10T00:00:00Z » — MINUIT —
+// alors que la correction brut/net du contrat a ete livree ce jour-la a
+// 14 h 43 UTC. Tout PDF produit apres 14 h 43 et jamais retouche depuis etait
+// donc declare a jour en portant deja le mauvais texte : quatorze heures de
+// fenetre, le jour meme du changement.
+//
+// Les trois contrats reels de la base, eux, etaient bien signales — non par ce
+// seuil mais par l'autre critere, leur contrat ayant ete modifie apres la
+// generation du PDF. Le trou est reel, il ne les touchait pas. Il touche le
+// PDF genere puis laisse tel quel, c'est-a-dire le cas normal apres signature.
+//
+// On garde donc une empreinte du modele. S'il change sans que la date change,
+// l'audit le refuse : la personne qui touche au modele est forcee de decider
+// si les documents deja signes sont perimes ou non.
+{
+  const app = fs.readFileSync(path.join(RACINE, "src/App.jsx"), "utf8");
+  const debut = app.indexOf('R.article(1,"LES PARTIES")');
+  const fin = app.indexOf('R.article(10,"RUPTURE DU CONTRAT")');
+  if (debut < 0 || fin < 0 || fin <= debut) {
+    signale("modele-contrat", "src/App.jsx : le modèle de contrat imprimé est introuvable (les repères « R.article(1,…) » / « R.article(10,…) » ont changé). Cette barrière ne protège plus rien : rétablir les repères ou corriger l'audit");
+  } else {
+    const empreinte = crypto.createHash("sha256").update(app.slice(debut, fin)).digest("hex").slice(0, 16);
+    // L'empreinte attendue, et la date qu'elle accompagne. Les deux changent
+    // ensemble, jamais l'une sans l'autre.
+    const ATTENDUE = "e6090501c7b1b991";
+    const DATE_ATTENDUE = "2026-10-11T12:00:00Z";
+    const dateCode = (app.match(/DOCUMENTS_REFONTE="([^"]+)"/) || [])[1];
+    if (empreinte !== ATTENDUE) {
+      signale("modele-contrat", `le modèle du contrat imprimé a changé (empreinte ${empreinte} au lieu de ${ATTENDUE}). Un PDF déjà généré n'est jamais recalculé : décider si les contrats déjà signés sont périmés. Si oui, avancer DOCUMENTS_REFONTE à l'HEURE du changement — pas à minuit, un document produit le jour même APRÈS le changement passerait sinon au travers. Puis reporter la nouvelle empreinte ici`);
+    }
+    if (dateCode !== DATE_ATTENDUE) {
+      signale("modele-contrat", `DOCUMENTS_REFONTE vaut « ${dateCode} » alors que cette barrière attend « ${DATE_ATTENDUE} ». Les deux doivent être mis à jour ensemble, sinon l'empreinte ne garantit plus rien`);
+    }
+    if (/T00:00:00/.test(dateCode || "")) {
+      signale("modele-contrat", `DOCUMENTS_REFONTE est réglé à minuit (« ${dateCode} »). Un document généré le même jour APRÈS le changement de modèle serait déclaré à jour alors qu'il ne l'est pas . Mettre l'heure réelle du changement`);
+    }
+  }
+}
+
+// --- les heures exactes ne s'impriment jamais brutes ---
+//
+// heuresMensualisees() rend desormais une valeur NON ARRONDIE, parce que
+// Pajemploi interdit de calculer le salaire sur l'arrondi. Consequence
+// immediate, et que j'ai ratee : partout ou cette valeur etait IMPRIMEE, elle
+// s'est mise a produire « 216.66666666666666 h par mois ». C'est arrive sur le
+// contrat PDF — le document que deux personnes signent — et c'etait une
+// regression introduite par la correction precedente.
+//
+// Regle : cette valeur ne se concatene ni ne s'interpole jamais telle quelle.
+// Pour l'afficher, soit heuresDeclarees() (l'entier a declarer), soit un
+// formateur (nbf, nb2) qui en fixe les decimales.
+{
+  const fichiers = [];
+  const balayer = (d) => {
+    let entrees = [];
+    try { entrees = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) balayer(f);
+      else if (/\.jsx?$/.test(e.name)) fichiers.push(f);
+    }
+  };
+  for (const r of ["src"]) balayer(path.join(RACINE, r));
+
+  for (const f of fichiers) {
+    let src = "";
+    try { src = fs.readFileSync(f, "utf8"); } catch { continue; }
+    const rel = path.relative(RACINE, f);
+    const lignes = src.split("\n");
+    // Les variables qui portent la valeur exacte, pour suivre « +hMois+ ».
+    const porteuses = new Set();
+    for (const m of src.matchAll(/const\s+(\w+)\s*=\s*(?:Number\()?heuresMensualisees\(/g)) porteuses.add(m[1]);
+
+    for (let i = 0; i < lignes.length; i++) {
+      const ligne = lignes[i];
+      const nu = ligne.trim();
+      if (nu.startsWith("//") || nu.startsWith("*") || nu.startsWith("/*")) continue;
+      if (rel.endsWith("App.jsx") && /export const heuresDeclarees/.test(ligne)) continue;
+
+      // Appel direct concatene ou interpole sans formateur.
+      const direct = /(?:\+\s*|\$\{|\{)\s*heuresMensualisees\(/.test(ligne)
+        && !/(?:nbf|nb2|nb3|Math\.round|toFixed)\s*\(\s*heuresMensualisees\(/.test(ligne);
+      // Une variable qui porte la valeur exacte, concatenee dans une chaine.
+      let viaVariable = false;
+      for (const v of porteuses) {
+        if (new RegExp("\\+\\s*" + v + "\\s*\\+").test(ligne) || new RegExp("\\$\\{\\s*" + v + "\\s*\\}").test(ligne)) viaVariable = true;
+      }
+      if (direct || viaVariable) {
+        signale("heures-exactes-imprimees", `${rel}:${i + 1} : les heures mensualisées exactes sont imprimées telles quelles. Non arrondies, elles donnent « 216.66666666666666 ». Utiliser heuresDeclarees() pour le nombre à déclarer, ou nbf()/nb2() pour fixer les décimales`);
+      }
     }
   }
 }
