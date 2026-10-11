@@ -20,7 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, heuresDeclarees, MOIS_PAR_AN, SEUIL_MAJORATION_HEBDO, tauxMajorationDu,
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, heuresDeclarees, MOIS_PAR_AN, SEUIL_MAJORATION_HEBDO, tauxMajorationDu, MAJORATION_PREMIER_MAI, MAJORATION_FERIE_TRAVAILLE,
   TAUX_MAJORATION_PLANCHER, TAUX_MAJORATION_HEURES, MAJORATION_PLANCHER_PCT
 } from "./App.jsx";
 
@@ -1182,6 +1182,53 @@ export const majorationPourBase = (contrat) => {
   // 1,25 en 125 %, plafonne a 100 %, quand le calcul y lisait 25 %.
   const pct = t <= 1.5 ? (t - 1) * 100 : t;
   return Math.min(100, Math.max(MAJORATION_PLANCHER_PCT, Math.round(pct)));
+};
+
+// LES JOURS FERIES TRAVAILLES.
+//
+// Convention collective IDCC 3239 : le 1er mai est un jour ferie chome et paye
+// quand il tombe un jour habituellement travaille, et son chomage n'entraine
+// aucune reduction de salaire. Les parties peuvent convenir qu'il soit
+// travaille : la remuneration est alors MAJOREE DE 100 %, soit doublee.
+// Pour les autres jours feries travailles, la majoration est de 10 %.
+//
+// L'application connaissait estFerie() depuis toujours — le calendrier s'en
+// sert — mais le BULLETIN ne l'ouvrait jamais. Un 1er mai travaille etait donc
+// paye comme un mardi ordinaire : la moitie de ce qui est du. Sur dix heures
+// d'accueil a 5,50 EUR, cela fait 55 EUR qui ne figuraient nulle part.
+//
+// La majoration est calculee comme un SUPPLEMENT, sur une ligne a part : elle
+// s'ajoute au bulletin sans rien deplacer dans la mensualisation, qui reste la
+// base. C'est aussi ainsi qu'elle se lit sur un bulletin.
+// Les deux taux sont declares dans App.jsx : le contrat imprime y est genere et
+// doit les ecrire, or l'import ne va que dans un sens. Reexportes ici.
+export { MAJORATION_PREMIER_MAI, MAJORATION_FERIE_TRAVAILLE };
+
+export const heuresFerieesTravaillees = (pointages = []) => {
+  let premierMai = 0, autres = 0;
+  for (const p of pointages) {
+    const iso = String(p?.date || "").slice(0, 10);
+    if (!iso || !estFerie(iso)) continue;
+    const h = (Number(p?.total_minutes) || 0) / 60;
+    if (h <= 0) continue;
+    // Le 1er mai se reconnait a sa date, pas a son nom : le libelle du
+    // calendrier peut changer, le 5 mai ne peut pas.
+    if (iso.slice(5) === "05-01") premierMai += h;
+    else autres += h;
+  }
+  const arr = (v) => Math.round(v * 100) / 100;
+  return { premierMai: arr(premierMai), autres: arr(autres) };
+};
+
+// Le supplement du, en euros. On majore le taux horaire : les heures elles-
+// memes sont deja payees par la mensualisation ou par les heures en plus.
+export const supplementJoursFeries = (pointages = [], tauxHoraire = 0) => {
+  const { premierMai, autres } = heuresFerieesTravaillees(pointages);
+  const t = Number(tauxHoraire) || 0;
+  const mai = Math.round(premierMai * t * MAJORATION_PREMIER_MAI * 100) / 100;
+  const aut = Math.round(autres * t * MAJORATION_FERIE_TRAVAILLE * 100) / 100;
+  return { premierMai, autres, montantPremierMai: mai, montantAutres: aut,
+    total: Math.round((mai + aut) * 100) / 100 };
 };
 
 export const seuilMajorationMois = (contrat) =>

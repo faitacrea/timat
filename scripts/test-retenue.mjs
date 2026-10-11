@@ -286,6 +286,46 @@ d("colonnes en base", maj.majorationPourBase({ heures_hebdo: 50, majoration_heur
   m("écart mensuel entre 10 % et 25 %", a25 - a10, 17.88, 0.02);
 }
 
+// --- LES JOURS FERIES TRAVAILLES (CCN 3239) ---
+//
+// Le 1er mai travaille est remunere avec une majoration de 100 %, soit une
+// remuneration doublee. Les autres jours feries travailles : +10 %.
+//
+// estFerie() existait depuis toujours — le calendrier s'en sert — mais le
+// BULLETIN ne l'ouvrait jamais. Un 1er mai travaille etait paye comme un mardi
+// ordinaire : la moitie de ce qui est du.
+const feries = eval(`(function(){
+  const estFerie = (iso) => ({"2026-05-01":"Fête du Travail","2026-07-14":"Fête nationale","2026-12-25":"Noël"})[iso] || null;
+  ${cherche("MAJORATION_PREMIER_MAI", /const MAJORATION_PREMIER_MAI\s*=\s*[\d.]+;/)}
+  ${cherche("MAJORATION_FERIE_TRAVAILLE", /const MAJORATION_FERIE_TRAVAILLE\s*=\s*[\d.]+;/)}
+  ${cherche("heuresFerieesTravaillees", /const heuresFerieesTravaillees\s*=\s*\(pointages = \[\]\) => \{[\s\S]*?\n\};/)}
+  ${cherche("supplementJoursFeries", /const supplementJoursFeries\s*=\s*\(pointages = \[\], tauxHoraire = 0\) => \{[\s\S]*?\n\};/)}
+  return {heuresFerieesTravaillees, supplementJoursFeries};
+})()`);
+
+console.log("\n=== JOURS FÉRIÉS TRAVAILLÉS — CCN 3239 ===\n");
+const pts = [
+  { date: "2026-05-01", total_minutes: 600 }, // 10 h le 1er mai
+  { date: "2026-07-14", total_minutes: 480 }, // 8 h le 14 juillet
+  { date: "2026-05-04", total_minutes: 600 }, // un lundi ordinaire
+];
+const fh = feries.heuresFerieesTravaillees(pts);
+m("heures du 1er mai repérées", fh.premierMai, 10, 0);
+m("heures des autres fériés repérées", fh.autres, 8, 0);
+const sup = feries.supplementJoursFeries(pts, 5.50);
+m("supplément du 1er mai (10 h × 5,50 × 100 %)", sup.montantPremierMai, 55.00);
+m("supplément du 14 juillet (8 h × 5,50 × 10 %)", sup.montantAutres, 4.40);
+m("supplément total", sup.total, 59.40);
+// Sans jour férié, rien ne doit apparaître.
+const rien = feries.supplementJoursFeries([{ date: "2026-05-04", total_minutes: 600 }], 5.50);
+m("aucun férié travaillé : supplément nul", rien.total, 0, 0);
+m("liste vide : supplément nul", feries.supplementJoursFeries([], 5.50).total, 0, 0);
+// Un férié déclaré mais sans heures ne compte pas.
+m("férié chômé (0 minute) : rien", feries.supplementJoursFeries([{ date: "2026-05-01", total_minutes: 0 }], 5.50).total, 0, 0);
+// Le 1er mai se reconnaît à sa DATE, pas à son libellé.
+m("le 1er mai d'une autre année compte aussi",
+  feries.supplementJoursFeries([{ date: "2026-05-01", total_minutes: 60 }], 10).montantPremierMai, 10.00);
+
 // --- Fin de contrat : preavis, conges payes, indemnite de rupture ---
 const fn = (nom, motif) => {
   const m = src.match(motif);

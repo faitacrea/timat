@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,titreAmge}){
@@ -805,10 +805,14 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       const byDate={};
       (pts||[]).forEach(p=>{if((p.total_minutes||0)>0){byDate[p.date]=(byDate[p.date]||0)+p.total_minutes;}});
       const parJour=Object.values(byDate); // minutes par journee d'accueil reelle
+      // Les minutes AVEC leur date : le bulletin en a besoin pour reconnaitre
+      // un jour ferie travaille. Regroupees par jour, comme le reste, pour
+      // qu'un accueil du matin et un de l'apres-midi comptent une seule fois.
+      const joursDates=Object.entries(byDate).map(([date,total_minutes])=>({date,total_minutes}));
       const totalMin=parJour.reduce((s,m)=>s+m,0);
       const jours=parJour.length;
       if(ePts){ setHeuresMoisReel(h=>({...(h||{}),panne:true})); return; }
-      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,parJour,nbPointages:pts?.length||0,panne:false});
+      setHeuresMoisReel({heures:Math.round(totalMin/60*100)/100,jours,parJour,joursDates,nbPointages:pts?.length||0,panne:false});
     })();
     return()=>{cancelled=true;};
   },[enfant?.id,moisSelKey,isDemoBull]);
@@ -879,7 +883,27 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   const hMaj=rep.majorees;
   const salBase=heuresNorm*tauxH;
   const salSupp=hSupp*tauxH+hMaj*tauxH*TAUX_MAJORATION;
-  const brut=salBase+salSupp;
+  // LES JOURS FERIES TRAVAILLES (CCN 3239).
+  //
+  // Le 1er mai travaille est remunere avec une majoration de 100 %, soit une
+  // remuneration doublee ; les autres jours feries travailles, +10 %.
+  // estFerie() existait depuis toujours — le calendrier s'en sert — mais le
+  // bulletin ne l'ouvrait jamais : un 1er mai travaille etait paye comme un
+  // mardi ordinaire, la moitie de ce qui est du. Sur dix heures d'accueil a
+  // 5,50 EUR, 55 EUR qui ne figuraient nulle part.
+  //
+  // C'est un SUPPLEMENT : les heures elles-memes sont deja payees par la
+  // mensualisation ou par les heures en plus. On n'ajoute donc que la
+  // majoration, sur une ligne a part — sans rien deplacer dans la base.
+  // LES POINTAGES VIENNENT DE heuresMoisReel, PAS D'UNE VARIABLE INVENTEE.
+  //
+  // J'avais ecrit « (pointagesDB||[]).filter(...) » : pointagesDB n'est pas un
+  // parametre de ce composant. En JavaScript, nommer une variable qui n'existe
+  // pas leve une erreur AVANT que le « || » soit evalue — le garde-fou ne
+  // protegeait donc de rien, et l'ecran du bulletin ne s'affichait plus du
+  // tout. Le chargement des heures du mois lit deja les dates : on s'y branche.
+  const feries=supplementJoursFeries(heuresMoisReel?.joursDates||[],tauxH);
+  const brut=salBase+salSupp+feries.total;
   // Le nombre de jours d'accueil se deduisait des heures divisees par 8, et
   // les trois rendus du bulletin — ecran, page imprimable, PDF — n'affichaient
   // pas le meme. Une seule origine : les jours reellement pointes, sinon ceux
@@ -1049,6 +1073,9 @@ export function BulletinSalaire({enfants,role,pEId,user}){
       // que la moitie d'entre elles ne touchait pas.
       if(hSupp>0)ligne("Heures complémentaires",nbf(hSupp,2)+" h",nbf(tauxH,4)+" €/h",nbf(hSupp*tauxH,2)+" €");
       if(hMaj>0)ligne("Heures majorées (+ "+Math.round((TAUX_MAJORATION-1)*100)+" %)",nbf(hMaj,2)+" h",nbf((tauxH*TAUX_MAJORATION),4)+" €/h",nbf(hMaj*tauxH*TAUX_MAJORATION,2)+" €");
+      // Les jours feries travailles : un supplement, pas des heures en plus.
+      if(feries.montantPremierMai>0)ligne("Majoration 1er mai travaillé (+ 100 %)",nbf(feries.premierMai,2)+" h",nbf(tauxH,4)+" €/h",nbf(feries.montantPremierMai,2)+" €");
+      if(feries.montantAutres>0)ligne("Majoration jours fériés travaillés (+ 10 %)",nbf(feries.autres,2)+" h",nbf(tauxH,4)+" €/h",nbf(feries.montantAutres,2)+" €");
       ligne("Indemnité d'entretien",joursTravailles+" jours",nbf(entretienDuContrat(contrat),2)+" €/j",nbf(entretien,2)+" €");
       if(repasMois>0)ligne("Indemnité de repas",joursTravailles+" jours",nbf((Number(repasJour)||0),2)+" €/j",nbf(repasMois,2)+" €");
       if(retenue>0)ligne("Retenue pour absence (art. 111 CCN)",(anneeComplete?heuresAbsAsmat+" h":joursAbsAsmat+" jours"),anneeComplete?"année complète":"année incomplète","- "+nbf(retenue,2)+" €");
@@ -1397,6 +1424,8 @@ template:"bulletin_sent",
         {[["Salaire de base",heuresNorm+"h × "+tauxH+"€/h",nbf(salBase,2)+"€"],
           ...(hSupp>0?[["Heures complémentaires",nbf(hSupp,2)+"h × "+nbf(tauxH,2)+"€",nbf(hSupp*tauxH,2)+"€"]]:[]),
           ...(hMaj>0?[["Heures majorées +"+Math.round((TAUX_MAJORATION-1)*100)+"%",nbf(hMaj,2)+"h × "+nbf((tauxH*TAUX_MAJORATION),2)+"€",nbf(hMaj*tauxH*TAUX_MAJORATION,2)+"€"]]:[]),
+          ...(feries.montantPremierMai>0?[["Majoration 1er mai travaillé +100%",nbf(feries.premierMai,2)+"h × "+nbf(tauxH,2)+"€",nbf(feries.montantPremierMai,2)+"€"]]:[]),
+          ...(feries.montantAutres>0?[["Majoration jours fériés travaillés +10%",nbf(feries.autres,2)+"h × "+nbf(tauxH,2)+"€",nbf(feries.montantAutres,2)+"€"]]:[]),
           ["Indemnité d'entretien",joursTravailles+" j × "+nb2(entretienDuContrat(contrat))+"€",nbf(entretien,2)+"€"],
           ...(repasMois>0?[["Indemnité de repas",joursTravailles+" j × "+nbf((Number(repasJour)||0),2)+"€",nbf(repasMois,2)+"€"]]:[]),
           ...(retenue>0?[["Retenue absence"+(anneeComplete?"":" (année incomplète)"),(anneeComplete?heuresAbsAsmat+"h":joursAbsAsmat+"j")+" · art. 111 CCN","− "+nbf(retenue,2)+"€"]]:[]),
@@ -1468,7 +1497,9 @@ template:"bulletin_sent",
         // majorees au taux majore. Une seule ligne « maj. 25% » annoncait un
         // taux que la moitie d'entre elles ne touchait pas.
         var hSuppRow=(hSupp>0?"<tr><td>Heures complémentaires</td><td class=\"right\">"+nbf(hSupp,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(hSupp*tauxH,2)+" €</td></tr>":"")
-          +(hMaj>0?"<tr><td>Heures majorées (+ "+Math.round((TAUX_MAJORATION-1)*100)+" %)</td><td class=\"right\">"+nbf(hMaj,2)+" h</td><td class=\"right\">"+nbf((tauxH*TAUX_MAJORATION),4)+" €/h</td><td class=\"right\">"+nbf(hMaj*tauxH*TAUX_MAJORATION,2)+" €</td></tr>":"");
+          +(hMaj>0?"<tr><td>Heures majorées (+ "+Math.round((TAUX_MAJORATION-1)*100)+" %)</td><td class=\"right\">"+nbf(hMaj,2)+" h</td><td class=\"right\">"+nbf((tauxH*TAUX_MAJORATION),4)+" €/h</td><td class=\"right\">"+nbf(hMaj*tauxH*TAUX_MAJORATION,2)+" €</td></tr>":"")
+          +(feries.montantPremierMai>0?"<tr><td>Majoration 1er mai travaillé (+ 100 %)</td><td class=\"right\">"+nbf(feries.premierMai,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(feries.montantPremierMai,2)+" €</td></tr>":"")
+          +(feries.montantAutres>0?"<tr><td>Majoration jours fériés travaillés (+ 10 %)</td><td class=\"right\">"+nbf(feries.autres,2)+" h</td><td class=\"right\">"+nbf(tauxH,4)+" €/h</td><td class=\"right\">"+nbf(feries.montantAutres,2)+" €</td></tr>":"");
         var htmlParts=[
           "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"UTF-8\"/>",
           "<title>Bulletin de salaire "+moisSel+"</title>",

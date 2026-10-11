@@ -682,6 +682,76 @@ for (const { nom, motif, source } of BAREME) {
   }
 }
 
+// --- « (variable||[]) » : une barriere que je n'ai PAS su construire ---
+//
+// Le defaut est reel et il m'est arrive : j'ai ecrit
+// « (pointagesDB||[]).filter(...) » dans BulletinSalaire, qui ne reçoit pas ce
+// parametre. En JavaScript, nommer une variable non declaree leve une
+// ReferenceError AVANT que le « || » soit evalue : le garde-fou ne protege de
+// rien, et l'ecran du bulletin ne s'affichait plus du tout. Le build passait,
+// les 137 cas de test passaient — seul le navigateur voyait l'ecran vide.
+//
+// J'ai essaye quatre fois d'en faire une regle ici. A chaque fois elle s'est
+// trompee : la destructuration avec renommage (« const {data:paie} = … »),
+// « const{…} » sans espace, puis les fonctions flechees comme frontieres de
+// portee — vingt-et-un faux positifs a la derniere tentative. Analyser une
+// portee de variable a l'expression reguliere est le mauvais outil, et une
+// regle qui crie faux vingt fois est celle qu'on finit par desactiver.
+//
+// CE QUI PROTEGE REELLEMENT DE CE DEFAUT : les parcours en vrai navigateur.
+// C'est parcours-bulletin qui l'a attrape, avec dix KO, parce qu'il ouvre
+// l'ecran pour de bon. Le jour ou quelqu'un voudra reprendre cette regle, le
+// bon outil est un analyseur de portee (ESLint, no-undef), pas un motif.
+
+// --- le bulletin doit ouvrir le calendrier des jours feries ---
+//
+// CCN 3239 : le 1er mai travaille est remunere avec une majoration de 100 %,
+// soit une remuneration doublee ; les autres jours feries travailles, +10 %.
+//
+// estFerie() existait depuis toujours — le calendrier de l'application s'en
+// sert pour afficher les jours feries — mais le BULLETIN ne l'ouvrait jamais.
+// Un 1er mai travaille etait donc paye comme un mardi ordinaire : la moitie de
+// ce qui est du. Sur dix heures d'accueil a 5,50 EUR, 55 EUR qui ne figuraient
+// nulle part, sur aucun des trois rendus du bulletin.
+//
+// La regle verifie que le calcul existe, qu'il est appele par le bulletin, et
+// que les deux taux sont ceux de la convention.
+{
+  // Les deux fichiers : les constantes ont demenage de socle.jsx vers App.jsx
+  // pour que le contrat imprime puisse les ecrire, et cette regle a signale un
+  // NaN des que ça a bouge — c'est bien, mais une regle aveugle au deplacement
+  // est une regle qu'on finit par faire taire. Elle lit donc les deux.
+  const socle = fs.readFileSync(path.join(RACINE, "src/socle.jsx"), "utf8")
+    + "\n" + fs.readFileSync(path.join(RACINE, "src/App.jsx"), "utf8");
+  const gestion = fs.readFileSync(path.join(RACINE, "src/gestion.jsx"), "utf8");
+
+  const mai = Number((socle.match(/MAJORATION_PREMIER_MAI\s*=\s*([\d.]+)/) || [])[1]);
+  const autres = Number((socle.match(/MAJORATION_FERIE_TRAVAILLE\s*=\s*([\d.]+)/) || [])[1]);
+  if (mai !== 1) {
+    signale("jours-feries", `la majoration du 1er mai travaillé vaut ${mai} au lieu de 1 (+100 %, rémunération doublée — CCN 3239). Vérifier sur pajemploi.urssaf.fr avant de changer ce chiffre`);
+  }
+  if (autres !== 0.10) {
+    signale("jours-feries", `la majoration des autres jours fériés travaillés vaut ${autres} au lieu de 0,10 (+10 % — CCN 3239)`);
+  }
+  // On cherche un APPEL, pas le nom : ma premiere version se contentait de la
+  // presence du mot, et la ligne d'import suffisait a la rassurer alors que le
+  // bulletin n'appelait plus rien.
+  if (!/supplementJoursFeries\s*\(/.test(gestion.split("\n").filter((l) => !/^\s*(import|\s+\w+,)/.test(l)).join("\n"))) {
+    signale("jours-feries", "src/gestion.jsx : le bulletin n'appelle plus supplementJoursFeries(). Un 1er mai travaillé serait payé comme un jour ordinaire, soit la moitié de ce qui est dû");
+  } else {
+    // Les trois rendus du bulletin — ecran, PDF, page imprimable — doivent
+    // tous porter la ligne. C'est deja arrive qu'un seul l'oublie.
+    // On compte les LIGNES, pas les occurrences : chaque rendu nomme deux fois
+    // le montant — une fois en condition, une fois en valeur. Ma premiere
+    // version comptait six occurrences pour trois rendus et laissait donc
+    // passer la disparition de l'un d'eux.
+    const rendus = gestion.split("\n").filter((l) => l.includes("feries.montantPremierMai")).length;
+    if (rendus < 3) {
+      signale("jours-feries", `src/gestion.jsx : la majoration du 1er mai n'apparaît que dans ${rendus} rendu(s) du bulletin sur 3 (écran, PDF, page imprimable). Les trois doivent la porter, sinon deux documents du même mois ne disent pas la même chose`);
+    }
+  }
+}
+
 // --- le modele de contrat ne bouge pas sans que la date de peremption bouge ---
 //
 // Un PDF stocke n'est JAMAIS recalcule : il garde pour toujours le texte et les
@@ -713,8 +783,8 @@ for (const { nom, motif, source } of BAREME) {
     const empreinte = crypto.createHash("sha256").update(app.slice(debut, fin)).digest("hex").slice(0, 16);
     // L'empreinte attendue, et la date qu'elle accompagne. Les deux changent
     // ensemble, jamais l'une sans l'autre.
-    const ATTENDUE = "e6090501c7b1b991";
-    const DATE_ATTENDUE = "2026-10-11T12:00:00Z";
+    const ATTENDUE = "b00a7f3b6628b7e1";
+    const DATE_ATTENDUE = "2026-10-11T20:25:10Z";
     const dateCode = (app.match(/DOCUMENTS_REFONTE="([^"]+)"/) || [])[1];
     if (empreinte !== ATTENDUE) {
       signale("modele-contrat", `le modèle du contrat imprimé a changé (empreinte ${empreinte} au lieu de ${ATTENDUE}). Un PDF déjà généré n'est jamais recalculé : décider si les contrats déjà signés sont périmés. Si oui, avancer DOCUMENTS_REFONTE à l'HEURE du changement — pas à minuit, un document produit le jour même APRÈS le changement passerait sinon au travers. Puis reporter la nouvelle empreinte ici`);
