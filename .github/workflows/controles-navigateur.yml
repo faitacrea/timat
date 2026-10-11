@@ -50,6 +50,7 @@ jobs:
               verif-filet-ecrans verif-calendrier verif-onglets-fusionnes
               verif-semaine-type verif-sous-onglets-parent
               verif-projet-accueil-parent verif-bascule-pajemploi
+              verif-textes-legaux
           # Les gestes : cliquer, saisir, signer.
           - groupe: gestes
             scripts: >-
