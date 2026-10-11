@@ -3128,6 +3128,20 @@ export const MAJORATION_PLANCHER_PCT=Math.round(TAUX_MAJORATION_PLANCHER*100);
 // lieu d'ecrire un taux de majoration. socle.jsx le reexporte.
 export const SEUIL_MAJORATION_HEBDO=45;
 
+// LES JOURS FERIES TRAVAILLES.
+//
+// Contrairement au taux des heures au-dela de 45 h/semaine, que le contrat doit
+// fixer lui-meme, la convention donne ici des chiffres fermes : le 1er mai
+// travaille est remunere avec une majoration de 100 % — soit une remuneration
+// doublee — et les autres jours feries travailles, 10 %.
+//
+// Ici aussi parce que le contrat imprime, genere dans ce fichier, doit les
+// ecrire : il se contentait de « majores conformement a la convention
+// collective », exact mais invérifiable pour qui le signe. socle.jsx les
+// reexporte, et c'est la que vivent les calculs.
+export const MAJORATION_PREMIER_MAI=1.00;
+export const MAJORATION_FERIE_TRAVAILLE=0.10;
+
 // LE TAUX REELLEMENT APPLIQUE : celui du contrat s'il en porte un, jamais sous
 // le plancher conventionnel. Le contrat peut l'ecrire en pourcentage (20) ou en
 // coefficient (1,20) ; les deux se lisent de la meme facon ici et dans
@@ -3813,7 +3827,7 @@ export const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICON
 // A METTRE A JOUR A CHAQUE FOIS QUE LE MODELE D'UN DOCUMENT CHANGE. Une
 // barriere d'audit le verifie : elle garde l'empreinte du modele de contrat et
 // refuse que le modele bouge sans que cette date bouge.
-export const DOCUMENTS_REFONTE="2026-10-11T12:00:00Z";
+export const DOCUMENTS_REFONTE="2026-10-11T20:25:10Z";
 // Le PDF est perime s'il a ete ecrit AVANT la derniere modification du contrat,
 // ou avant la refonte des documents. La premiere comparaison est la vraie :
 // sans elle, une fois le fichier refait le bouton disparaissait pour de bon, et
@@ -3998,7 +4012,18 @@ const jsPDF=await chargerJsPDF();
     R.texte("Lorsque le salarié accueille les enfants de plusieurs particuliers employeurs, les parties s'efforcent de fixer d'un commun accord les dates de congés au plus tard le 1er mars de chaque année.",{taille:8.5});
 
     R.article(8,"JOURS FÉRIÉS");
-    R.texte("Le 1er mai est chômé et payé lorsqu'il tombe un jour habituellement travaillé. Les autres jours fériés sont chômés et payés ou travaillés selon ce que les parties conviennent ; les jours fériés travaillés sont majorés conformément à la convention collective.",{taille:8.5});
+    // LES TAUX DES JOURS FERIES SONT, EUX, FIXES PAR LA CONVENTION.
+    //
+    // Contrairement au taux des heures au-dela de 45 h/semaine, que le contrat
+    // doit fixer lui-meme, la convention donne ici des chiffres : 100 % pour le
+    // 1er mai travaille — soit une remuneration doublee — et 10 % pour les
+    // autres jours feries travailles. Le contrat ecrivait « majores
+    // conformement a la convention collective » sans les dire : exact, mais
+    // inutile a qui le signe, et impossible a verifier sur un bulletin.
+    R.texte("Le 1er mai est chômé et payé lorsqu'il tombe un jour habituellement travaillé, sans aucune réduction de rémunération. "
+      + "Les parties peuvent convenir qu'il soit travaillé : la rémunération est alors majorée de "+Math.round(MAJORATION_PREMIER_MAI*100)+" %, soit doublée. "
+      + "Les autres jours fériés sont chômés et payés ou travaillés selon ce que les parties conviennent ; "
+      + "lorsqu'ils sont travaillés, la rémunération est majorée de "+Math.round(MAJORATION_FERIE_TRAVAILLE*100)+" %.",{taille:8.5});
 
     R.article(9,"ABSENCES");
     R.texte("Les absences du salarié qui ne sont pas rémunérées donnent lieu à une retenue sur le salaire mensualisé, proportionnelle à la durée de l'absence (article 111 de la convention collective).",{taille:8.5});
