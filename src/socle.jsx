@@ -20,7 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import {
-  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, MOIS_PAR_AN,
+  ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, heuresDeclarees, MOIS_PAR_AN, SEUIL_MAJORATION_HEBDO, tauxMajorationDu,
   TAUX_MAJORATION_PLANCHER, TAUX_MAJORATION_HEURES, MAJORATION_PLANCHER_PCT
 } from "./App.jsx";
 
@@ -1110,7 +1110,10 @@ export const abattementJour = (heuresJour, smicHoraire, { aeeh = false } = {}) =
 //
 // On compte donc avec les semaines du contrat, comme la mensualisation
 // elle-meme : c'est la meme arithmetique, et elle doit donner le meme rythme.
-export const SEUIL_MAJORATION_HEBDO = 45;
+// Declare dans App.jsx, avec le plancher et tauxMajorationDu() : le contrat
+// imprime en PDF y est genere et doit savoir s'il y a lieu d'ecrire un taux.
+// Reexporte ici — une seule valeur, deux chemins d'import.
+export { SEUIL_MAJORATION_HEBDO };
 
 // LE TAUX DE MAJORATION DES HEURES AU-DELA DU SEUIL.
 //
@@ -1149,13 +1152,11 @@ export const SEUIL_MAJORATION_HEBDO = 45;
 export { TAUX_MAJORATION_PLANCHER, TAUX_MAJORATION_HEURES, MAJORATION_PLANCHER_PCT };
 // Le taux reellement applique : celui du contrat s'il en porte un, jamais sous
 // le plancher conventionnel.
-export const tauxMajorationDu = (contrat) => {
-  const t = Number(contrat?.majorationHeures ?? contrat?.majoration_heures);
-  if (!Number.isFinite(t) || t <= 0) return TAUX_MAJORATION_HEURES;
-  // Le contrat peut l'ecrire en pourcentage (20) ou en coefficient (1,20).
-  const coef = t > 1.5 ? 1 + t / 100 : t;
-  return Math.max(coef, TAUX_MAJORATION_HEURES);
-};
+// tauxMajorationDu() vit dans App.jsx, avec les constantes du plancher : le
+// contrat imprime en PDF est genere la-bas et doit ecrire le taux qu'il fixe,
+// or l'import ne va que dans un sens. Reexportee ici pour que tout ce qui
+// l'importait de socle.jsx continue de fonctionner.
+export { tauxMajorationDu };
 // CE QU'ON ECRIT DANS LA BASE, EN UN SEUL ENDROIT.
 //
 // Deux formulaires enregistrent un contrat — la creation guidee et la fiche

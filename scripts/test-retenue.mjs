@@ -35,6 +35,28 @@ import { readFileSync } from "node:fs";
 import { lireAppExecutable } from "./sources-app.mjs";
 
 const src = lireAppExecutable();
+
+// UNE EXTRACTION QUI ÉCHOUE DOIT LE DIRE.
+//
+// Ce fichier découpe le code de l'application par expressions régulières, puis
+// l'exécute. Quand une expression ne trouve plus rien — parce qu'une fonction a
+// changé de style d'écriture, ou de fichier — le motif « || [""] » glissait une
+// chaîne vide dans le morceau exécuté, et le fichier plantait sur un
+// « ReferenceError: tauxMajorationDu is not defined » qui ne dit pas où
+// chercher. Pire : filtrer la sortie laissait croire que la chaîne de
+// construction était verte alors qu'elle s'arrêtait là.
+//
+// « cherche » remplace ce motif : elle nomme ce qui manque, et s'arrête.
+const cherche = (nom, re) => {
+  const m = src.match(re);
+  if (!m) {
+    console.error(`\n  KO  « ${nom} » est introuvable dans le code de l'application.`);
+    console.error(`      L'expression ${re} ne correspond plus à rien. La fonction a sans doute`);
+    console.error(`      changé de style d'écriture ou de fichier. Corriger l'expression, et non ce test.\n`);
+    process.exit(1);
+  }
+  return m[0];
+};
 const extrait = src.match(/const retenueAbsence=\([\s\S]*?\n\};/);
 if (!extrait) {
   console.error("retenueAbsence introuvable dans src/App.jsx");
@@ -128,14 +150,14 @@ console.log(`  ${legalIgnore ? "ok " : "KO "} ${"le conventionnel l'emporte sur 
 
 // --- Mensualisation : deux formules, pas une ---
 const mens = eval(`(function(){
-  ${(src.match(/const SEMAINES_ANNEE_COMPLETE=\d+;/) || [""])[0]}
-  ${(src.match(/const SEMAINES_MAX_ANNEE_INCOMPLETE=\d+;/) || [""])[0]}
-  ${(src.match(/const MOIS_PAR_AN=\d+;/) || [""])[0]}
-  ${(src.match(/const estAnneeComplete=\([\s\S]*?;\n/) || [""])[0]}
-  ${(src.match(/const semainesDuContrat=\([\s\S]*?\n\};/) || [""])[0]}
-  ${(src.match(/const heuresMensualisees=\([\s\S]*?\n\};/) || [""])[0]}
-  ${(src.match(/const heuresDeclarees=\([^\n]+/) || [""])[0]}
-  ${(src.match(/const salaireMensualise=\([\s\S]*?\n\};/) || [""])[0]}
+  ${cherche("SEMAINES_ANNEE_COMPLETE", /const SEMAINES_ANNEE_COMPLETE=\d+;/)}
+  ${cherche("SEMAINES_MAX_ANNEE_INCOMPLETE", /const SEMAINES_MAX_ANNEE_INCOMPLETE=\d+;/)}
+  ${cherche("MOIS_PAR_AN", /const MOIS_PAR_AN=\d+;/)}
+  ${cherche("estAnneeComplete", /const estAnneeComplete=\([\s\S]*?;\n/)}
+  ${cherche("semainesDuContrat", /const semainesDuContrat=\([\s\S]*?\n\};/)}
+  ${cherche("heuresMensualisees", /const heuresMensualisees=\([\s\S]*?\n\};/)}
+  ${cherche("heuresDeclarees", /const heuresDeclarees=\([^\n]+/)}
+  ${cherche("salaireMensualise", /const salaireMensualise=\([\s\S]*?\n\};/)}
   return {semainesDuContrat, heuresMensualisees, heuresDeclarees, salaireMensualise, estAnneeComplete};
 })()`);
 
@@ -202,12 +224,16 @@ m("heures nulles", mens.salaireMensualise({ heuresHebdo: 0, tauxHoraire: 4.2 }),
 // majorationPourBase() est le seul endroit ou l'on decide ce qui part dans la
 // base, parce que DEUX formulaires enregistrent un contrat.
 const maj = eval(`(function(){
-  ${(src.match(/const SEUIL_MAJORATION_HEBDO = \d+;/) || [""])[0]}
-  ${(src.match(/const TAUX_MAJORATION_PLANCHER\s*=\s*[\d.]+;/) || [""])[0]}
+  // Ces expressions exigeaient des espaces autour du « = » et de la flèche.
+  // Déplacer une fonction d'un fichier à l'autre, avec un autre style
+  // d'écriture, les a rendues aveugles : elles rendaient une chaîne vide, et
+  // le fichier de tests plantait au lieu de signaler. On tolère les deux.
+  ${cherche("SEUIL_MAJORATION_HEBDO", /const SEUIL_MAJORATION_HEBDO\s*=\s*\d+;/)}
+  ${cherche("TAUX_MAJORATION_PLANCHER", /const TAUX_MAJORATION_PLANCHER\s*=\s*[\d.]+;/)}
   const TAUX_MAJORATION_HEURES = 1 + TAUX_MAJORATION_PLANCHER;
-  ${(src.match(/const MAJORATION_PLANCHER_PCT\s*=\s*[^\n]+/) || [""])[0]}
-  ${(src.match(/const tauxMajorationDu = \(contrat\) => \{[\s\S]*?\n\};/) || [""])[0]}
-  ${(src.match(/const majorationPourBase = \(contrat\) => \{[\s\S]*?\n\};/) || [""])[0]}
+  ${cherche("MAJORATION_PLANCHER_PCT", /const MAJORATION_PLANCHER_PCT\s*=\s*[^\n]+/)}
+  ${cherche("tauxMajorationDu", /const tauxMajorationDu\s*=\s*\(contrat\)\s*=>\s*\{[\s\S]*?\n\};/)}
+  ${cherche("majorationPourBase", /const majorationPourBase\s*=\s*\(contrat\)\s*=>\s*\{[\s\S]*?\n\};/)}
   return {tauxMajorationDu, majorationPourBase, MAJORATION_PLANCHER_PCT};
 })()`);
 

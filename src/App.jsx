@@ -3124,6 +3124,21 @@ export const TAUX_MAJORATION_HEURES=1+TAUX_MAJORATION_PLANCHER;
 // l'ecrit, sous laquelle le formulaire le demande et sous laquelle la base le
 // stocke. Changer le plancher ci-dessus le change partout, formulaire inclus.
 export const MAJORATION_PLANCHER_PCT=Math.round(TAUX_MAJORATION_PLANCHER*100);
+// Le seuil hebdomadaire, ici aussi : le contrat imprime doit savoir s'il y a
+// lieu d'ecrire un taux de majoration. socle.jsx le reexporte.
+export const SEUIL_MAJORATION_HEBDO=45;
+
+// LE TAUX REELLEMENT APPLIQUE : celui du contrat s'il en porte un, jamais sous
+// le plancher conventionnel. Le contrat peut l'ecrire en pourcentage (20) ou en
+// coefficient (1,20) ; les deux se lisent de la meme facon ici et dans
+// majorationPourBase(), sans quoi le formulaire enregistrerait un taux et le
+// calcul en lirait un autre.
+export const tauxMajorationDu=(contrat)=>{
+  const t=Number(contrat?.majorationHeures??contrat?.majoration_heures);
+  if(!Number.isFinite(t)||t<=0)return TAUX_MAJORATION_HEURES;
+  const coef=t>1.5?1+t/100:t;
+  return Math.max(coef,TAUX_MAJORATION_HEURES);
+};
 
 export const SEMAINES_ANNEE_COMPLETE=52;
 export const SEMAINES_MAX_ANNEE_INCOMPLETE=46;
@@ -3776,7 +3791,29 @@ export const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICON
 // l'ancien pour toutes les autres, sans que rien ne le signale.
 // Cette date est celle de la refonte des deux documents. Un fichier ecrit avant
 // est perime : l'application le dit et propose de le refaire.
-export const DOCUMENTS_REFONTE="2026-09-10T00:00:00Z";
+// LE SEUIL DE PEREMPTION DES DOCUMENTS DEJA GENERES.
+//
+// Un PDF stocke n'est jamais recalcule : il garde pour toujours le texte et les
+// chiffres du jour ou il a ete fait. Ce seuil est le seul moyen de dire « ce
+// document a ete produit par une version depassee du modele ».
+//
+// IL DOIT PORTER L'HEURE DU CHANGEMENT, PAS MINUIT CE JOUR-LA. Il valait
+// « 2026-09-10T00:00:00Z » alors que la correction brut/net du modele de
+// contrat a ete livree le 10 septembre a 14 h 43 UTC. Tout PDF produit ce
+// jour-la APRES 14 h 43 et jamais retouche depuis etait donc declare a jour
+// alors qu'il portait deja le mauvais texte : le seuil laissait passer une
+// fenetre de quatorze heures sur le jour meme du changement.
+//
+// Precision, parce qu'elle compte : les trois contrats reels de la base, eux,
+// etaient bien signales — non par ce seuil, mais par l'autre critere, leur
+// contrat ayant ete modifie apres la generation du PDF. Le trou est reel, il
+// ne les touchait simplement pas. Il touche le PDF genere puis laisse tel
+// quel, qui est le cas le plus courant une fois un contrat signe.
+//
+// A METTRE A JOUR A CHAQUE FOIS QUE LE MODELE D'UN DOCUMENT CHANGE. Une
+// barriere d'audit le verifie : elle garde l'empreinte du modele de contrat et
+// refuse que le modele bouge sans que cette date bouge.
+export const DOCUMENTS_REFONTE="2026-10-11T12:00:00Z";
 // Le PDF est perime s'il a ete ecrit AVANT la derniere modification du contrat,
 // ou avant la refonte des documents. La premiere comparaison est la vraie :
 // sans elle, une fois le fichier refait le bouton disparaissait pour de bon, et
@@ -3835,6 +3872,7 @@ const jsPDF=await chargerJsPDF();
     const complete=estAnneeComplete(cadre);
     const semaines=semainesDuContrat(cadre);
     const hMois=heuresMensualisees(cadre);
+    const hMoisDecl=heuresDeclarees(cadre);
     const salMois=salaireMensualise(cadre);
     // Deux mois si l'enfant est confie quatre jours ou plus par semaine, trois
     // sinon (CCN 3239). La duree doit figurer au contrat : sans elle, il n'y a
@@ -3897,13 +3935,38 @@ const jsPDF=await chargerJsPDF();
     R.champ("Durée hebdomadaire d'accueil",(ct.heures_hebdo||0)+" heures");
     R.champ("Rythme d'accueil",complete?"Année complète (52 semaines)":"Année incomplète ("+semaines+" semaines par an)");
     if(ct.fin)R.champ("Fin prévue de l'accueil",fmtDatePdf(ct.fin));
-    R.texte("Toute heure effectuée au-delà de la durée hebdomadaire convenue est une heure complémentaire, rémunérée en sus du salaire mensualisé. Au-delà de 45 heures par semaine, les heures sont majorées selon le taux fixé par la convention collective. Toute modification durable des jours ou des horaires fait l'objet d'un avenant écrit signé des deux parties.",{taille:8.5});
+    // LE TAUX DE MAJORATION EST FIXE PAR CE CONTRAT, PAS PAR LA CONVENTION.
+    //
+    // Cette phrase disait « majorées selon le taux fixé par la convention
+    // collective ». C'est faux en droit, et c'est surtout faux ICI : l'article
+    // 96.4 laisse le taux au commun accord des parties et se borne a interdire
+    // d'aller sous 10 %. Un contrat qui renvoie le taux a la convention ne fixe
+    // donc rien du tout, alors que c'est precisement son role. Le contrat porte
+    // maintenant le chiffre, et dit d'ou il vient.
+    R.texte("Toute heure effectuée au-delà de la durée hebdomadaire convenue est une heure complémentaire, rémunérée en sus du salaire mensualisé."
+      + (Number(ct.heures_hebdo||0)>SEUIL_MAJORATION_HEBDO
+        ? " Au-delà de 45 heures par semaine, les heures sont majorées de "+Math.round((tauxMajorationDu(cadre)-1)*100)+" %"
+          + (ct.majoration_heures ? ", taux convenu entre les parties." : ", minimum prévu par la convention collective (art. 96.4), les parties n'ayant pas convenu de taux supérieur.")
+        : " Au-delà de 45 heures par semaine, les heures seraient majorées d'au moins 10 % (convention collective, art. 96.4).")
+      + " Toute modification durable des jours ou des horaires fait l'objet d'un avenant écrit signé des deux parties.",{taille:8.5});
 
     R.article(5,"RÉMUNÉRATION");
     R.champ("Salaire horaire brut",nbf(ct.taux_horaire||0,2)+" € par heure et par enfant");
     R.champ("Soit, net, environ",nbf(netDepuisBrut(ct.taux_horaire||0),2)+" € par heure");
     R.champ("Mode de mensualisation",complete?"Année complète":"Année incomplète");
-    R.champ("Calcul",(ct.heures_hebdo||0)+" h x "+semaines+" semaines ÷ 12 mois = "+hMois+" h par mois");
+    // LA LIGNE DE CALCUL DU CONTRAT.
+    //
+    // Elle imprimait « = 217 h par mois » alors que 50 x 52 / 12 fait 216,67 :
+    // la formule ecrite ne donnait pas le resultat ecrit juste a cote, sur un
+    // document que deux personnes signent. Puis, quand heuresMensualisees() a
+    // cesse d'arrondir — Pajemploi interdit de calculer le salaire sur
+    // l'arrondi — cette ligne s'est mise a pouvoir imprimer
+    // « 216.66666666666666 h par mois ». Les deux etaient faux, differemment.
+    //
+    // On ecrit donc ce que Pajemploi ecrit lui-meme : la valeur exacte, puis
+    // l'entier a declarer.
+    R.champ("Calcul",(ct.heures_hebdo||0)+" h x "+semaines+" semaines ÷ 12 mois = "+nbf(hMois,2)+" h par mois"
+      +(hMoisDecl!==hMois?" (arrondi a "+hMoisDecl+" h pour la declaration Pajemploi ; le salaire se calcule sur les heures exactes)":""));
     R.champ("Salaire mensuel brut de base",nbf(salMois,2)+" €");
     R.champ("Soit, net, environ",nbf(netDepuisBrut(salMois),2)+" €");
     R.texte(complete
