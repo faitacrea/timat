@@ -157,6 +157,20 @@ async function handler(req, res) {
     return res.status(400).json({ error: e.message });
   }
 
+  // UNE ÉCRITURE QUI ÉCHOUE DOIT RÉPONDRE 500.
+  //
+  // Les écritures en base n'étaient pas vérifiées : une panne Supabase (clé de
+  // service invalide, base injoignable) laissait le webhook répondre 200. Stripe
+  // tenait alors l'événement pour livré et ne le renvoyait jamais — une
+  // assistante maternelle venait de payer et restait en formule gratuite, sans
+  // que rien ne le signale. Une réponse 500 fait au contraire réessayer Stripe,
+  // pendant trois jours.
+  const ecrire = async (requete, quoi) => {
+    const { data, error } = await requete;
+    if (error) throw new Error(quoi + ' : ' + error.message);
+    return data;
+  };
+
   try {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
@@ -165,11 +179,11 @@ async function handler(req, res) {
       // fiche a 6,90 EUR ouvrait l'acces Pro.
       const estAbonnement = session.mode === 'subscription' || (session.metadata && session.metadata.type === 'subscription');
       if (userId && estAbonnement) {
-        await supabase.from('profiles').update({
+        await ecrire(supabase.from('profiles').update({
           subscription_status: 'pro',
           stripe_customer_id: session.customer,
           subscription_updated_at: new Date().toISOString(),
-        }).eq('id', userId);
+        }).eq('id', userId), 'passage en Pro');
         console.log('[Stripe] User ' + userId + ' upgraded to Pro');
       }
 
@@ -192,26 +206,26 @@ async function handler(req, res) {
 
     if (event.type === 'customer.subscription.deleted') {
       const sub = event.data.object;
-      const { data: profile } = await supabase.from('profiles')
-        .select('id').eq('stripe_customer_id', sub.customer).maybeSingle();
+      const profile = await ecrire(supabase.from('profiles')
+        .select('id').eq('stripe_customer_id', sub.customer).maybeSingle(), 'lecture du profil');
       if (profile) {
-        await supabase.from('profiles').update({
+        await ecrire(supabase.from('profiles').update({
           subscription_status: 'free',
           subscription_updated_at: new Date().toISOString(),
-        }).eq('id', profile.id);
+        }).eq('id', profile.id), 'retour en gratuit');
       }
     }
 
     if (event.type === 'customer.subscription.updated') {
       const sub = event.data.object;
-      const { data: profile } = await supabase.from('profiles')
-        .select('id').eq('stripe_customer_id', sub.customer).maybeSingle();
+      const profile = await ecrire(supabase.from('profiles')
+        .select('id').eq('stripe_customer_id', sub.customer).maybeSingle(), 'lecture du profil');
       if (profile) {
         const status = ['active', 'trialing'].includes(sub.status) ? 'pro' : 'free';
-        await supabase.from('profiles').update({
+        await ecrire(supabase.from('profiles').update({
           subscription_status: status,
           subscription_updated_at: new Date().toISOString(),
-        }).eq('id', profile.id);
+        }).eq('id', profile.id), 'mise à jour de l\'abonnement');
       }
     }
   } catch (e) {
