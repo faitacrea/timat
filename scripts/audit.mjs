@@ -2446,10 +2446,16 @@ if (!miniCourant) {
     signale("chiffre", `${sousLePlancher.length} taux horaire par défaut sous le minimum de ${miniCourant} € (${[...new Set(sousLePlancher)].join(", ")}) : un contrat créé sans saisie partirait sur une rémunération illégale`);
   }
 }
-// L'alerte doit exister et etre posee sur le bulletin comme sur le contrat.
+// Le CONTRAT doit porter l'alerte (il faut un avenant), et le BULLETIN doit
+// dire qu'il a releve le taux au minimum. Jusqu'au 12 octobre 2026, cette
+// regle exigeait l'alerte rouge aux deux endroits ; mais le bulletin
+// continuait alors de calculer au taux trop bas, sous l'alerte. Il paie
+// desormais au minimum du mois (tauxHoraireAu) et l'explique par une note :
+// c'est cette note qu'on exige de lui.
 const posesAlerte = [...appSrc.matchAll(/<AlerteTauxMinimum\b/g)].length;
-if (posesAlerte < 2) {
-  signale("chiffre", `l'alerte de taux minimum n'est posée qu'à ${posesAlerte} endroit(s) : elle doit l'être sur le bulletin et sur le contrat`);
+const noteReleve = /Taux relevé au minimum légal/.test(appSrc) && /tauxReleve&&/.test(appSrc);
+if (posesAlerte < 1 || !noteReleve) {
+  signale("chiffre", `alerte de taux minimum : ${posesAlerte} sur le contrat (1 attendue), note « taux relevé » sur le bulletin : ${noteReleve ? "présente" : "absente"}. Le contrat doit signaler qu'un avenant est nécessaire, et le bulletin dire qu'il paie au minimum`);
 }
 
 // --- mensualisation ---
@@ -4066,6 +4072,28 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   for (const m of g.matchAll(/<AlerteTauxMinimum[^>]*date=\{contrat\.debut\}/g)) {
     const ligne = g.slice(0, m.index).split("\n").length;
     signale("paie", `src/gestion.jsx:${ligne} : l'alerte « taux sous le minimum » compare au minimum de la date de DÉBUT du contrat. Un contrat conforme à sa signature devient non conforme quand le minimum est revalorisé — comparer au minimum d'aujourd'hui (ou de la date de fin, si elle est passée)`);
+  }
+}
+
+// --- aucun calcul de paie ne multiplie directement par le taux du contrat ---
+//
+// Le taux d'un mois est tauxHoraireAu(contrat, date) : le taux convenu, ou le
+// minimum en vigueur ce mois-la s'il est plus haut. Multiplier directement par
+// contrat.tauxHoraire, c'est payer sous le minimum des qu'une revalorisation a
+// lieu — ce que faisaient le bulletin, le recapitulatif Pajemploi, le suivi des
+// versements et le solde de tout compte, pour un contrat reel de la base.
+{
+  for (const f of ["src/gestion.jsx", "src/ecrans-app.jsx", "src/App.jsx", "src/socle.jsx"]) {
+    const lignes = fs.readFileSync(path.join(RACINE, f), "utf8").split("\n");
+    for (let i = 0; i < lignes.length; i++) {
+      const l = lignes[i];
+      if (/^\s*(\/\/|\*)/.test(l)) continue;
+      const direct = /\*\s*\(?\s*contrat\??\.tauxHoraire\b/.test(l) || /contrat\??\.tauxHoraire\s*\*/.test(l);
+      const repli = /contrat\??\.tauxHoraire\s*\|\|\s*minimumHoraireAu\(/.test(l);
+      if (direct || repli) {
+        signale("paie", `${f}:${i + 1} : un montant est calculé directement sur le taux du contrat. Passer par tauxHoraireAu(contrat, date) : sinon, après une revalorisation du minimum, la paie tombe sous le plancher légal`);
+      }
+    }
   }
 }
 

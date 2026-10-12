@@ -21,7 +21,7 @@ import {
 , activerPush, desactiverPush
 } from "./App.jsx";
 import {
-  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois, joursAccueilParMois, appelApi
+  ACTIVITES_PAR_AGE, CROISSANCE_DEMO, DATE_ACCORD_CONGES, FAQ_DATA, JALONS_REF, JOURS_SEMAINE_TYPE, OMS_POIDS, PLAFOND_AMPLITUDE_JOUR, PLAFOND_ANNUEL_HEURES, PLAFOND_HEBDO_HEURES, PMI_MESSAGES, QUALITE_SIESTE, TAUX_PATRONAL_TOTAL, ageEnMois, brutDepuisNet, catColors, decalerMois, fmtMoisLong, heuresDepuisMinutes, indemniteEntretienMin, journeesTravaillees, minimumHoraireAu, nb2, parseAgeAttendu, entretienDuContrat, useUneFois, joursAccueilParMois, appelApi, tauxHoraireAu
 } from "./socle.jsx";
 
 const SEMAINES_MOYENNE_HEBDO = 17; // quatre mois
@@ -930,7 +930,7 @@ export function Recap({enfants,role,pEId}){
             <tr><td>Heures prévues</td><td>Contrat mensuel</td><td><strong>{h.prev}h</strong></td></tr>
             <tr><td>Heures réalisées</td><td>Pointage validé</td><td><strong>{h.real}h</strong></td></tr>
             <tr><td>Solde</td><td>Différence</td><td style={{color:h.real-h.prev<0?"#DC2626":"#16A34A"}}><strong>{h.real-h.prev}h</strong></td></tr>
-            <tr><td>Salaire brut</td><td>Taux {contrat?.tauxHoraire}€/h</td><td><strong>{nbf((h.real*(contrat?.tauxHoraire||minimumHoraireAu(new Date()))),2)}€</strong></td></tr>
+            <tr><td>Salaire brut</td><td>Taux {nbf(tauxHoraireAu(contrat,new Date()),2)}€/h</td><td><strong>{nbf((h.real*tauxHoraireAu(contrat,new Date())),2)}€</strong></td></tr>
             <tr><td>Repas suivis</td><td>Journaux renseignés</td><td><strong>{rep.length} jours</strong></td></tr>
             <tr><td>Étapes dév.</td><td>Jalons OMS</td><td><strong>{ms.filter(m=>m.ok).length}/{ms.length}</strong></td></tr>
           </tbody>
@@ -2811,7 +2811,7 @@ export function KitCMG({enfants,role,pEId,user}){
   // Le « salaire net » du parent etait le brut multiplie par 1,1 — un coefficient
   // qui ne correspond a rien : il AUGMENTE le brut au lieu d'en retirer les
   // cotisations. On passe par le calcul du bulletin.
-  const salaireBrutMois=Math.round(heuresMois*(contrat.tauxHoraire||minimumHoraireAu(new Date()))*100)/100;
+  const salaireBrutMois=Math.round(heuresMois*tauxHoraireAu(contrat,new Date())*100)/100;
   // Le regime local d'Alsace-Moselle depend du code postal de la SALARIEE.
   // regimeLocalDe(user) regardait le PARENT qui consulte ce kit, pour qui la
   // reponse est toujours « non » : une assistante maternelle d'Alsace-Moselle
@@ -2881,8 +2881,8 @@ export function KitCMG({enfants,role,pEId,user}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:14,display:"flex",gap:6,alignItems:"center"}}>
             <IconeOuEmoji e="💰"/> Rémunération mensuelle
           </div>
-          <InfoRow label="Taux horaire brut" value={nbf((contrat.tauxHoraire||minimumHoraireAu(new Date())),2)+"€/h"} copyKey="taux"/>
-          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(contrat.tauxHoraire||minimumHoraireAu(new Date()),regimeLocalDe(user,asmatProfil)),2)+"€/h"} copyKey="tauxNet"/>
+          <InfoRow label="Taux horaire brut" value={nbf(tauxHoraireAu(contrat,new Date()),2)+"€/h"} copyKey="taux"/>
+          <InfoRow label="Soit, net, environ" value={nbf(netDepuisBrut(tauxHoraireAu(contrat,new Date()),regimeLocalDe(user,asmatProfil)),2)+"€/h"} copyKey="tauxNet"/>
           <InfoRow label="Salaire brut mensuel (estimé)" value={nbf(salaireBrutMois,2)+"€"} copyKey="salaireBrut"/>
           <InfoRow label="Salaire net mensuel (estimé)" value={salaireNet+"€"} copyKey="salaire"/>
           <InfoRow label="Indemnité d'entretien/jour" value={nbf(entretienDuContrat(contrat),2)+"€"} copyKey="entretien"/>
@@ -2998,7 +2998,7 @@ export function RapportAnnuel({enfants,role,pEId,user}){
 
   // RAPPORT REEL P13 - calculs base sur donnees reelles si dispo, sinon estimation
   const heuresMois=heuresMensualisees(contrat);
-  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
+  const tauxH=tauxHoraireAu(contrat,new Date());
   const entretienJour=entretienDuContrat(contrat);
   const heuresAnnuelles=realStats?.heures||Math.round(((contrat.heuresHebdo)||0)*semainesDuContrat(contrat));
   // Quatrieme facon de compter les jours d'accueil dans l'application, apres
@@ -3610,7 +3610,7 @@ export function AttestationPoleEmploi({enfants,role,pEId,user}){
   const contrat=enfant.contrat||{};
   const motifs=["Fin de contrat","Démission du parent","Retrait de l'enfant","Rupture conventionnelle","Retraite","Autre"];
   const parent=(D.parents||[]).find(p=>p.id===enfant.parentId)||{};
-  const salRef=Math.round(salaireMensualise(contrat,contrat.tauxHoraire||minimumHoraireAu(new Date())));
+  const salRef=Math.round(salaireMensualise(contrat,tauxHoraireAu(contrat,new Date())));
   const [form,setForm]=useState({});
   useEffect(()=>{
     setForm({
@@ -3759,7 +3759,7 @@ export function AttestationFiscale({enfants,role,pEId,user}){
 
   // RECAP VERSEMENTS - calculs : réel si versements enregistrés, sinon estimation indicative
   const hMens=heuresMensualisees(contrat);
-  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
+  const tauxH=tauxHoraireAu(contrat,new Date());
   const entretienJour=entretienDuContrat(contrat);
   const hasReal=realStats?.paiements>0;
   // Le recapitulatif comptait 12 mois par principe. Un contrat qui commence en
@@ -3872,7 +3872,7 @@ const jsPDF=await chargerJsPDF();
           y+=8;
         };
         ligneSimple("Heures hebdomadaires (contrat)",(contrat.heuresHebdo||40)+" h");
-        ligneSimple("Taux horaire brut",(contrat.tauxHoraire||minimumHoraireAu(new Date()))+" €/h");
+        ligneSimple("Taux horaire brut",nbf(tauxHoraireAu(contrat,new Date()),2)+" €/h");
         ligneSimple("Salaire mensuel brut estimé",nbf(salMensBrut,2)+" €");
         ligneSimple("Salaire mensuel net estimé",nbf(netDepuisBrut(salMensBrut,regimeLocalDe(user)),2)+" €");
         ligneSimple("Mois d'accueil retenus",moisTravailles+" mois");
@@ -3999,7 +3999,7 @@ const jsPDF=await chargerJsPDF();
           : '<h3 style="font-size:12px;color:#2E4859;margin:16px 0 8px;padding-left:4px">📊 Éléments du contrat (base d\'estimation)</h3>'
             +'<table>'
             +'<tr><td>Heures hebdomadaires (contrat)</td><td style="text-align:right">'+(contrat.heuresHebdo||40)+' h</td></tr>'
-            +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+(contrat.tauxHoraire||minimumHoraireAu(new Date()))+' €/h</td></tr>'
+            +'<tr><td>Taux horaire brut</td><td style="text-align:right">'+nbf(tauxHoraireAu(contrat,new Date()),2)+' €/h</td></tr>'
             +'<tr><td>Salaire mensuel brut estimé</td><td style="text-align:right">'+nbf(salMensBrut,2)+' €</td></tr>'
             +'<tr><td>Salaire mensuel net estimé</td><td style="text-align:right">'+nbf(netDepuisBrut(salMensBrut),2)+' €</td></tr>'
             +'<tr><td>Mois travaillés</td><td style="text-align:right">'+moisTravailles+' mois</td></tr>'
@@ -4083,7 +4083,7 @@ const jsPDF=await chargerJsPDF();
         {contrat.debut?<div style={{fontSize:12,lineHeight:2}}>
           <div>Début : <strong>{contrat.debut}</strong></div>
           <div>Heures/semaine : <strong>{contrat.heuresHebdo||40}h</strong></div>
-          <div>Taux horaire : <strong>{contrat.tauxHoraire||minimumHoraireAu(new Date())} €</strong></div>
+          <div>Taux horaire : <strong>{nbf(tauxHoraireAu(contrat,new Date()),2)} €</strong></div>
           <div>Entretien : <strong>{nbf(entretienDuContrat(contrat),2)} €/jour</strong></div>
         </div>:<div style={{fontSize:12,color:"var(--l)"}}>Aucun contrat trouvé pour cet enfant.</div>}
       </div>

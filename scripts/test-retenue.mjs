@@ -286,6 +286,39 @@ d("colonnes en base", maj.majorationPourBase({ heures_hebdo: 50, majoration_heur
   m("écart mensuel entre 10 % et 25 %", a25 - a10, 17.88, 0.02);
 }
 
+// --- LE TAUX PAYE UN MOIS DONNE : JAMAIS SOUS LE MINIMUM DE CE MOIS ---
+//
+// Le cas reel de la base : contrat de 40 h signe le 5 janvier 2026 a 4,05 EUR.
+// Minimum conventionnel : 3,64 EUR jusqu'au 31 mai 2026, 4,20 EUR depuis le
+// 1er juin 2026 (avenant n° 10 du 5 fevrier 2026, etendu le 4 mai 2026). Le
+// bulletin calculait a 4,05 EUR pour tous les mois, sous le minimum depuis juin.
+{
+  const s2 = src;
+  const corps = [
+    cherche("MINIMUM_CONV_HISTO", /const MINIMUM_CONV_HISTO\s*=\s*\[[\s\S]*?\];/),
+    cherche("COEF_MINIMUM_LEGAL", /const COEF_MINIMUM_LEGAL\s*=\s*[\d.]+;/),
+    cherche("MAJORATION_TITRE_AMGE", /const MAJORATION_TITRE_AMGE\s*=\s*[\d.]+;/),
+    cherche("minimumHoraireAu", /const minimumHoraireAu\s*=\s*\(d,titreAmge=false\)\s*=>\s*\{[\s\S]*?\n\};/),
+    cherche("tauxHoraireAu", /const tauxHoraireAu\s*=\s*\(contrat,date,titreAmge=false\)\s*=>\s*\{[\s\S]*?\n\};/),
+  ].join("\n");
+  const T = new Function("isoJour", "smicHoraireAu", corps + "\nreturn {tauxHoraireAu, minimumHoraireAu};")(
+    (d) => (typeof d === "string" ? d.slice(0, 10) : new Date(d).toISOString().slice(0, 10)),
+    (d) => { const j = typeof d === "string" ? d : new Date(d).toISOString().slice(0, 10); return j >= "2026-06-01" ? 12.31 : j >= "2026-01-01" ? 12.02 : 11.88; },
+  );
+  console.log("\n=== TAUX PAYÉ PAR MOIS — jamais sous le minimum ===\n");
+  const reel = { tauxHoraire: 4.05, debut: "2026-01-05" };
+  m("contrat réel, mars 2026 : 4,05 € (au-dessus de 3,64)", T.tauxHoraireAu(reel, "2026-03-15"), 4.05);
+  m("contrat réel, mai 2026 : 4,05 € encore", T.tauxHoraireAu(reel, "2026-05-31"), 4.05);
+  m("contrat réel, juin 2026 : relevé à 4,20 €", T.tauxHoraireAu(reel, "2026-06-01"), 4.20);
+  m("contrat réel, octobre 2026 : 4,20 €", T.tauxHoraireAu(reel, "2026-10-15"), 4.20);
+  m("un taux au-dessus du minimum n'est jamais touché", T.tauxHoraireAu({ tauxHoraire: 5.50 }, "2026-10-15"), 5.50);
+  m("titre AM-GE : plancher majoré de 4 % (4,37 €)", T.tauxHoraireAu(reel, "2026-10-15", true), 4.37);
+  m("contrat sans taux : le minimum du mois", T.tauxHoraireAu({}, "2026-10-15"), 4.20);
+  m("colonne en base (taux_horaire)", T.tauxHoraireAu({ taux_horaire: 4.05 }, "2026-10-15"), 4.20);
+  // L'ecart reel, sur le contrat de 40 h (173,33 h/mois).
+  m("écart mensuel brut depuis juin sur le contrat réel", (4.20 - 4.05) * 40 * 52 / 12, 26.00);
+}
+
 // --- LES JOURS FERIES TRAVAILLES (CCN 3239) ---
 //
 // Le 1er mai travaille est remunere avec une majoration de 100 %, soit une

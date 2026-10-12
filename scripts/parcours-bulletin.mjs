@@ -137,6 +137,8 @@ const m = await page.evaluate(() => {
     base: nb(/Salaire de base[^\n]*\n[^\n]*\n\s*([\d.,]+)€/),
     art111: /art\. 111/.test(t),
     alerteMini: /sous le minimum légal/i.test(t),
+    // Le bulletin ne paie plus sous le minimum : il releve le taux et le dit.
+    releve: /Taux relevé au minimum légal/i.test(t),
     semainesAffichees: (t.match(/Mensualisation en année (?:in)?complète\s*:\s*(\d+) semaines/) || [])[1],
     modeAffiche: /Mensualisation en année incomplète/.test(t) ? "incomplète" : /Mensualisation en année complète/.test(t) ? "complète" : null,
     // Une cotisation prise au hasard doit etre assise sur le brut APRES retenue.
@@ -211,8 +213,17 @@ if (!m.allocHorsBulletin) ecarts.push("l'allocation apparaît dans la rémunéra
   if (!okMode) ecarts.push(`mensualisation : ${m.modeAffiche} sur ${m.semainesAffichees} semaines`);
   console.log(`  ${okMode ? "ok " : "KO "} mensualisation annoncée : ${m.modeAffiche} sur ${m.semainesAffichees} semaines`);
 }
-console.log(`  ${m.alerteMini === SOUS_MINIMUM ? "ok " : "KO "} l'alerte « taux sous le minimum légal » ${SOUS_MINIMUM ? "s'affiche sur un taux de 3,50 €" : "reste absente sur un taux conforme"}`);
-if (m.alerteMini !== SOUS_MINIMUM) ecarts.push("alerte de taux minimum incorrecte");
+// UN TAUX SOUS LE MINIMUM N'EST PLUS PAYE TEL QUEL.
+// Le bulletin affichait une alerte rouge et calculait quand meme au taux trop
+// bas. Il releve desormais le taux au minimum du mois et le dit : sur un
+// contrat a 3,50 EUR, la base doit etre celle de 4,20 EUR — 728,00 EUR.
+console.log(`  ${m.releve === SOUS_MINIMUM ? "ok " : "KO "} la note « taux relevé au minimum légal » ${SOUS_MINIMUM ? "s'affiche sur un taux de 3,50 €" : "reste absente sur un taux conforme"}`);
+if (m.releve !== SOUS_MINIMUM) ecarts.push("note de taux relevé incorrecte");
+if (SOUS_MINIMUM) {
+  const okBase = m.base !== null && Math.abs(m.base - 728.00) < 0.02;
+  console.log(`  ${okBase ? "ok " : "KO "} le salaire est calculé au minimum, pas au taux du contrat   ${m.base} (attendu 728,00 = 173,33 h × 4,20 €)`);
+  if (!okBase) ecarts.push("salaire calculé sous le minimum");
+}
 console.log(`\nerreurs JavaScript : ${erreurs.length}`);
 for (const e of erreurs) console.log("    " + e);
 console.log(ecarts.length || erreurs.length ? `\n${ecarts.length} écart(s)\n` : "\nTout est conforme.\n");

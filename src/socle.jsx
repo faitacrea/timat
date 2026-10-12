@@ -565,6 +565,34 @@ export const minimumHoraireAu=(d,titreAmge=false)=>{
   return Math.max(conv,legal);
 };
 
+// LE TAUX QUI SE PAIE UN MOIS DONNE : JAMAIS SOUS LE MINIMUM DE CE MOIS-LA.
+//
+// L'application calculait toute la paie sur le taux ecrit au contrat. Quand le
+// minimum conventionnel est revalorise, un contrat conforme a sa signature
+// passe sous le plancher — et le bulletin continuait de calculer a l'ancien
+// taux, en affichant une alerte rouge juste au-dessus. Il produisait donc une
+// paie inferieure au minimum legal tout en le signalant.
+//
+// Le cas est reel : un contrat de la base, signe le 5 janvier 2026 a 4,05 EUR
+// (minimum alors : 3,64 EUR), sous le minimum depuis le 1er juin 2026 (4,20 EUR,
+// avenant n° 10 du 5 fevrier 2026, etendu par arrete du 4 mai 2026).
+//
+// Or le minimum s'impose de lui-meme a sa date d'effet : le contrat imprime le
+// rappelle a son article 12, « toute clause du contrat moins favorable au
+// salarie que la convention collective est reputee non ecrite ». On paie donc,
+// pour chaque mois, le plus haut des deux : le taux convenu, ou le minimum en
+// vigueur CE mois-la.
+//
+// POURQUOI PAS SIMPLEMENT REECRIRE LE TAUX DU CONTRAT : ce serait recalculer
+// aussi les mois de janvier a mai a 4,20 EUR, alors que 4,05 EUR y etait
+// parfaitement legal. Le taux du contrat reste ce qui a ete signe ; c'est le
+// mois paye qui decide du plancher.
+export const tauxHoraireAu=(contrat,date,titreAmge=false)=>{
+  const convenu=Number(contrat?.tauxHoraire??contrat?.taux_horaire)||0;
+  const mini=minimumHoraireAu(date||new Date(),titreAmge);
+  return convenu>0?Math.max(convenu,mini):mini;
+};
+
 // jsPDF est charge a la demande, mais depuis le paquet installe et non plus
 // depuis un CDN : le PDF continue de ne peser sur aucun chargement de page
 // (Vite en fait un morceau separe), tout en restant generable hors ligne et
