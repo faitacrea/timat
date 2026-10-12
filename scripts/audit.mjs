@@ -703,6 +703,45 @@ for (const { nom, motif, source } of BAREME) {
 // l'ecran pour de bon. Le jour ou quelqu'un voudra reprendre cette regle, le
 // bon outil est un analyseur de portee (ESLint, no-undef), pas un motif.
 
+// --- l'indemnite de rupture : 1/80 du BRUT, jamais du net ---
+//
+// Convention collective IDCC 3239, article 121.1, verifie mot pour mot sur
+// Legifrance : « Le montant de l'indemnite est egal a 1/80 du total des
+// salaires bruts perçus pendant la duree du contrat ».
+//
+// Le contrat imprime ecrivait « 1/80e du total des salaires NETS ». C'est un
+// melange de deux textes : la convention de 2004 disait 1/120e du total des
+// salaires NETS, celle de 2021 dit 1/80e du BRUT. Le contrat gardait le
+// nouveau diviseur et l'ancienne base, et promettait donc environ un cinquieme
+// de moins que ce que la convention prevoit — et que le calcul de
+// l'application verse reellement. Un contrat signe qui annonce moins que ce
+// qui est du, pendant que le blog du site, lui, ecrivait la bonne regle.
+{
+  const app = fs.readFileSync(path.join(RACINE, "src/App.jsx"), "utf8");
+  const socle = fs.readFileSync(path.join(RACINE, "src/socle.jsx"), "utf8");
+  const gestion = fs.readFileSync(path.join(RACINE, "src/gestion.jsx"), "utf8");
+
+  // Le diviseur, cote calcul.
+  const div = Number((app.match(/DIVISEUR_INDEMNITE_RUPTURE\s*=\s*(\d+)/) || [])[1]);
+  if (div !== 80) {
+    signale("indemnite-rupture", `le diviseur de l'indemnité de rupture vaut ${div} au lieu de 80 (CCN 3239 art. 121.1). 120 était celui de la convention de 2004, abrogée`);
+  }
+  // Le mot « nets » accole a l'indemnite, dans n'importe quel texte affiche.
+  for (const [nom, src] of [["src/App.jsx", app], ["src/socle.jsx", socle], ["src/gestion.jsx", gestion]]) {
+    for (const ligne of src.split("\n")) {
+      const nu = ligne.trim();
+      if (nu.startsWith("//")) continue; // les commentaires expliquent le defaut
+      if (/1\/80[^"']{0,80}(?:salaires?\s+)?nets?\b/i.test(ligne)) {
+        signale("indemnite-rupture", `${nom} : un texte annonce « 1/80 » sur des salaires NETS. L'article 121.1 dit BRUTS ; 1/120 du net était la convention de 2004, abrogée. Le document promettrait environ un cinquième de moins que ce que l'application verse`);
+      }
+    }
+  }
+  // Et le calcul doit bien partir d'un brut.
+  if (!/brutTotal/.test(socle)) {
+    signale("indemnite-rupture", "src/socle.jsx : indemniteRupture() ne prend plus un total BRUT. L'article 121.1 l'exige");
+  }
+}
+
 // --- le bulletin doit ouvrir le calendrier des jours feries ---
 //
 // CCN 3239 : le 1er mai travaille est remunere avec une majoration de 100 %,
@@ -775,16 +814,23 @@ for (const { nom, motif, source } of BAREME) {
 // si les documents deja signes sont perimes ou non.
 {
   const app = fs.readFileSync(path.join(RACINE, "src/App.jsx"), "utf8");
+  // L'EMPREINTE DOIT COUVRIR TOUT LE CONTRAT, PAS LES NEUF PREMIERS ARTICLES.
+  //
+  // Elle s'arretait a l'article 10 : les articles 10, 11 et 12 n'etaient donc
+  // pas couverts. C'est precisement la que se trouvait l'erreur de droit la
+  // plus grave du document — « 1/80e du total des salaires NETS » au lieu de
+  // BRUTS — et la barriere n'a rien dit quand je l'ai corrigee. Une empreinte
+  // partielle donne l'illusion d'une protection complete.
   const debut = app.indexOf('R.article(1,"LES PARTIES")');
-  const fin = app.indexOf('R.article(10,"RUPTURE DU CONTRAT")');
+  const fin = app.indexOf('Il est à conserver au moins cinq ans.');
   if (debut < 0 || fin < 0 || fin <= debut) {
     signale("modele-contrat", "src/App.jsx : le modèle de contrat imprimé est introuvable (les repères « R.article(1,…) » / « R.article(10,…) » ont changé). Cette barrière ne protège plus rien : rétablir les repères ou corriger l'audit");
   } else {
     const empreinte = crypto.createHash("sha256").update(app.slice(debut, fin)).digest("hex").slice(0, 16);
     // L'empreinte attendue, et la date qu'elle accompagne. Les deux changent
     // ensemble, jamais l'une sans l'autre.
-    const ATTENDUE = "b00a7f3b6628b7e1";
-    const DATE_ATTENDUE = "2026-10-11T20:25:10Z";
+    const ATTENDUE = "a7847a21ef086356";
+    const DATE_ATTENDUE = "2026-10-12T05:21:23Z";
     const dateCode = (app.match(/DOCUMENTS_REFONTE="([^"]+)"/) || [])[1];
     if (empreinte !== ATTENDUE) {
       signale("modele-contrat", `le modèle du contrat imprimé a changé (empreinte ${empreinte} au lieu de ${ATTENDUE}). Un PDF déjà généré n'est jamais recalculé : décider si les contrats déjà signés sont périmés. Si oui, avancer DOCUMENTS_REFONTE à l'HEURE du changement — pas à minuit, un document produit le jour même APRÈS le changement passerait sinon au travers. Puis reporter la nouvelle empreinte ici`);
