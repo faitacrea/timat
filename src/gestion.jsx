@@ -26,17 +26,24 @@ import {
   BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries
 } from "./socle.jsx";
 
-export function AlerteTauxMinimum({taux,date,titreAmge}){
+export function AlerteTauxMinimum({taux,date,debut,titreAmge}){
   const mini=minimumHoraireAu(date||new Date(),titreAmge);
   const t=Number(taux)||0;
   if(t<=0||t>=mini)return null;
+  // Conforme a la signature, devenu non conforme depuis : c'est une
+  // revalorisation du minimum, et il faut le dire — sinon on croit a une erreur
+  // de saisie alors que c'est la loi qui a bouge.
+  const miniDebut=debut?minimumHoraireAu(debut,titreAmge):mini;
+  const revalorise=debut&&t>=miniDebut;
   return <div style={{display:"flex",gap:9,alignItems:"flex-start",background:"var(--Rp)",
     border:"1px solid var(--R)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
     fontSize:12.5,color:"var(--R)",lineHeight:1.55}}>
     <IconeOuEmoji e="⚠️" taille={16}/>
     <span><b>Taux horaire sous le minimum légal.</b> {nbf(t,2)} € par heure et par enfant,
-    alors que le minimum est de {nbf(mini,2)} € à cette date{titreAmge?" avec le titre AM-GE (+ 4 %)":""} (convention collective IDCC 3239).
-    Un avenant est nécessaire pour régulariser.</span>
+    alors que le minimum est de {nbf(mini,2)} €{titreAmge?" avec le titre AM-GE (+ 4 %)":""} (convention collective IDCC 3239).
+    {revalorise
+      ?<> Ce taux était conforme à la signature ({nbf(miniDebut,2)} € alors) : c'est le minimum qui a été revalorisé depuis. Un avenant au contrat est nécessaire pour le porter au moins à {nbf(mini,2)} €, avec effet à la date de la revalorisation.</>
+      :" Un avenant est nécessaire pour régulariser."}</span>
   </div>;
 }
 
@@ -583,7 +590,18 @@ template:"signature_asmat_signed",
 
         <div className="card"style={{marginBottom:12}}>
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Détail du contrat</div>
-          <AlerteTauxMinimum taux={contrat.tauxHoraire} date={contrat.debut} titreAmge={user?.titre_amge}/>
+          {/* LE TAUX SE COMPARE AU MINIMUM D'AUJOURD'HUI, PAS A CELUI DE LA SIGNATURE.
+              L'alerte comparait au minimum en vigueur a la date de DEBUT du
+              contrat. Un contrat signe le 5 janvier 2026 a 4,05 EUR etait
+              conforme (minimum 3,64 EUR) — mais le minimum est passe a 4,20 EUR
+              le 1er juin 2026 (avenant n° 10 du 5 fevrier 2026, etendu le 4 mai)
+              et le contrat est depuis sous le plancher. L'ecran du contrat n'en
+              disait rien : il se taisait precisement au moment ou un avenant
+              devenait necessaire. On compare donc au dernier jour ou le contrat
+              est en vigueur — aujourd'hui, ou sa date de fin si elle est passee. */}
+          <AlerteTauxMinimum taux={contrat.tauxHoraire}
+            date={(()=>{const auj=isoJour(new Date());return contrat.fin&&contrat.fin<auj?contrat.fin:auj;})()}
+            debut={contrat.debut} titreAmge={user?.titre_amge}/>
           {[["Période",fmt(contrat.debut)+" → "+fmt(contrat.fin)],
             ["Jours",(contrat.jours||[]).join(", ")],["Horaires",contrat.horaires],
             ["Heures / semaine",contrat.heuresHebdo+"h"],

@@ -17,9 +17,17 @@ import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { lireApp } from "./sources-app.mjs";
 
-const URL_BASE = process.argv[2] || "http://localhost:4173";
+// L'adresse est le premier argument qui ressemble a une adresse, et le mode
+// peut venir seul : l'integration continue separe les arguments par « : »,
+// ce qui casserait « http://localhost:4173 » si on devait le passer en premier.
+const URL_BASE = process.argv.slice(2).find((a) => /^https?:\/\//.test(a)) || "http://localhost:4173";
 // Passe « sous-minimum » : le contrat porte un taux illegal, l'alerte doit sortir.
 const SOUS_MINIMUM = process.argv[3] === "sous-minimum";
+// Passe « revalorise » : le contrat reel de la base. Signe le 5 janvier 2026 a
+// 4,05 EUR — conforme alors (minimum 3,64 EUR) — mais sous le minimum depuis le
+// 1er juin 2026 (4,20 EUR, avenant n° 10). L'ecran du contrat comparait au
+// minimum de la date de debut et ne disait rien.
+const REVALORISE = process.argv.slice(2).includes("revalorise");
 // Passe « annee-incomplete » : accueil sur 36 semaines. La mensualisation doit
 // tomber a 504 EUR au lieu de 728 — l'application appliquait 52 semaines a tous
 // les contrats.
@@ -78,7 +86,7 @@ await ctx.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/([a-z_]+)/) || [])[1];
   if (t === "profiles") return r.fulfill(json([{ id: UID, role: "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
   if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: UID, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: SOUS_MINIMUM ? 3.5 : 4.20, annee_complete: !ANNEE_INCOMPLETE, semaines_accueil: ANNEE_INCOMPLETE ? 36 : null, entretien: 3.8, jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
+  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: UID, debut: REVALORISE ? "2026-01-05" : "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: SOUS_MINIMUM ? 3.5 : REVALORISE ? 4.05 : 4.20, annee_complete: !ANNEE_INCOMPLETE, semaines_accueil: ANNEE_INCOMPLETE ? 36 : null, entretien: 3.8, jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
   // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a
@@ -150,6 +158,25 @@ const ouvrirEtLire = async (chemin, bouton, nom) => {
   await onglet.close();
   return { html, texte };
 };
+
+if (REVALORISE) {
+  console.log("  — l'écran du contrat, sur un contrat devenu non conforme —");
+  for (const t of ["Administratif", "Paie & Contrats", "Contrats"]) { await clic(t); await page.waitForTimeout(1200); }
+  const ecran = await page.evaluate(() => document.body.innerText);
+  dire(/sous le minimum légal/i.test(ecran), "l'écran du contrat signale le taux sous le minimum",
+    (ecran.match(/.{0,40}minimum légal.{0,60}/i) || ["(aucune alerte)"])[0]);
+  // On lit l'ALERTE, pas toute la page : « revalorisé » apparaît ailleurs sur
+  // l'écran, et ma première version validait ce mot alors que l'alerte
+  // n'existait même pas.
+  const alerte = (ecran.match(/Taux horaire sous le minimum légal[\s\S]{0,400}/i) || [""])[0];
+  dire(/4,20/.test(alerte), "l'alerte donne le minimum d'aujourd'hui, 4,20 €");
+  dire(/revaloris/i.test(alerte), "elle explique que c'est le minimum qui a été revalorisé");
+  dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
+  await page.screenshot({ path: `${SORTIE}/contrat-revalorise.png`, fullPage: true }).catch(() => {});
+  await nav.close();
+  console.log(ko ? `\n${ko} problème(s)\n` : "\nL'écran du contrat signale le contrat devenu non conforme.\n");
+  process.exit(ko ? 1 : 0);
+}
 
 const recap = await ouvrirEtLire(["Administratif", "Paie & Contrats", "Facturation"], "Exporter vers Pajemploi", "recap-pajemploi");
 if (recap) {
