@@ -163,6 +163,26 @@ verifie("rejeu sans reseau : rien d'envoye, rien de perdu", [r9.envoyees, r9.res
 // les deux lisent la meme file et renvoient la meme entree : pointage_borne()
 // bascule arrivee -> depart, donc le second appel refermerait la journee a
 // l'heure de l'arrivee. Deux evenements « online » de suite suffisent.
+console.log("\nUN DEPART AVANT L'ARRIVEE N'EST PAS ENREGISTRE");
+// Une arrivee a 18:00 et un depart a 17:00 enregistraient -60 minutes, que la
+// facturation additionnait : une heure retiree du mois, sans un message. Le
+// refus doit avoir lieu AVANT tout envoi et avant toute mise en file — une
+// ligne fausse mise en file repartirait seule au retour du reseau.
+for (const [arr, dep, quoi] of [["18:00", "17:00", "depart une heure avant"], ["08:00", "08:00", "depart a la minute de l'arrivee"], ["09:30", "9:15", "heure sans zero initial"]]) {
+  raz();
+  const r = await M.enregistrerPointage(ligne("2026-09-12", arr, dep));
+  verifie(`${quoi} : refuse`, r.etat, "erreur");
+  verifie(`${quoi} : le message le dit`, /départ doit être après/.test(r.message || ""), true);
+  verifie(`${quoi} : rien sur le serveur`, serveur.lignes.length, 0);
+}
+raz();
+navigator.onLine = false;
+verifie("hors ligne, depart avant l'arrivee : refuse aussi", (await M.enregistrerPointage(ligne("2026-09-12", "18:00", "17:00"))).etat, "erreur");
+verifie("hors ligne, depart avant l'arrivee : rien en file", M.fileHorsLigne().length, 0);
+raz();
+verifie("journee normale : toujours acceptee", (await M.enregistrerPointage(ligne("2026-09-12", "08:00", "17:00"))).etat, "envoye");
+verifie("arrivee seule : toujours acceptee", (await M.enregistrerPointage(ligne("2026-09-13", "08:00", null))).etat, "envoye");
+
 console.log("\nUN SEUL REJEU A LA FOIS");
 serveur.coupe = true;
 memoire.clear();

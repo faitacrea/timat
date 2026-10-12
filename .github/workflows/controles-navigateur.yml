@@ -118,6 +118,7 @@ jobs:
               parcours-mes-employeurs
               parcours-temps-travail parcours-calendrier-parent
               parcours-compte-neuf parcours-hors-ligne parcours-visuel
+              verif-pointage-parent
     steps:
       - uses: actions/checkout@v4
 

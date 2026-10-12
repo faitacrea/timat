@@ -18,7 +18,7 @@ import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import {
   ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, heuresDeclarees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
-, enregistrerPointage
+, enregistrerPointage, departAvantArrivee, MESSAGE_DEPART_AVANT_ARRIVEE
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
 import {
@@ -810,6 +810,10 @@ export function Pointage({enfants,role,pEId,user,demoMode=false}){
   const modifierEtValider=async()=>{
     if(demoMode){setToast("Démo : action désactivée");return;}
     if(!modifParent?.id||!modifParent.arr)return;
+    // Ce chemin ne passe pas par enregistrerPointage : c'est une fonction en
+    // base, qui calcule depart - arrivee sans plancher. Le meme verrou doit
+    // donc etre pose ici (voir departAvantArrivee dans App.jsx).
+    if(departAvantArrivee(modifParent.arr,modifParent.dep)){setToast("Erreur : "+MESSAGE_DEPART_AVANT_ARRIVEE);return;}
     const sigFinale=user?.signature_base64||null;
     const{data,error}=await supabase.rpc("modify_and_validate_pointage_as_parent",{
       p_pointage_id:modifParent.id,
@@ -924,13 +928,16 @@ export function Pointage({enfants,role,pEId,user,demoMode=false}){
                 onChange={e=>setModifParent(m=>({...m,dep:e.target.value}))}/>
             </div>
           </div>
+          {departAvantArrivee(modifParent.arr,modifParent.dep)&&<div role="alert" style={{padding:"8px 12px",background:"var(--Rp)",borderRadius:8,fontSize:11.5,color:"var(--R)",fontWeight:600,lineHeight:1.5,marginBottom:10}}>
+            {MESSAGE_DEPART_AVANT_ARRIVEE}
+          </div>}
           <div style={{padding:"10px 12px",background:"var(--Bp)",borderRadius:8,fontSize:11,color:"var(--B)",lineHeight:1.5,marginBottom:14}}>
             <IconeOuEmoji e="ℹ️"/> En enregistrant, vous validez le pointage avec ces nouvelles heures.
             {user?.signature_base64?" Votre signature sera apposée automatiquement.":" Aucune signature ne sera apposée (vous pouvez en créer une dans Paramètres)."}
           </div>
           <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
             <button className="btn bG" onClick={()=>setModifParent(null)}>Annuler</button>
-            <button className="btn bT" onClick={modifierEtValider} disabled={!modifParent.arr}>
+            <button className="btn bT" onClick={modifierEtValider} disabled={!modifParent.arr||departAvantArrivee(modifParent.arr,modifParent.dep)}>
               <IconeOuEmoji e="✅"/> Enregistrer et valider
             </button>
           </div>

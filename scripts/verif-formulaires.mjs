@@ -133,7 +133,10 @@ const session = { access_token: "faux", token_type: "bearer", expires_in: 3600,
 const VALEUR = (indice, type) => {
   const i = (indice || "").toLowerCase();
   if (type === "date") return "2026-03-02";
-  if (type === "time") return "08:30";
+  // Une heure de depart egale a l'arrivee est refusee par l'application (une
+  // journee de zero minute n'en est pas une) : sans cette distinction, le
+  // formulaire du parent restait eteint et ce controle le signalait a tort.
+  if (type === "time") return /d[ée]part|fin\b|sortie|jusqu/.test(i) ? "17:30" : "08:30";
   if (type === "email") return "parent.test@mail.fr";
   if (type === "tel" || /t[ée]l[ée]phone|portable/.test(i)) return "0620873380";
   if (/code postal|cp\b/.test(i)) return "94230";

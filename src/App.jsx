@@ -171,7 +171,25 @@ const mettreEnFile=(cle,ligne)=>filerOperation({table:"pointages",cle,charge:lig
   ? {etat:"en-file"}
   : {etat:"erreur",message:MESSAGE_FILE_PLEINE};
 
+// UN DEPART AVANT L'ARRIVEE N'EST PAS UNE JOURNEE DE TRAVAIL.
+//
+// Le depart « maintenant », la correction manuelle et la modification par le
+// parent calculaient depart - arrivee sans plancher : une arrivee saisie a
+// 18:00 puis un depart a 17:00 enregistraient -60 minutes. La facturation et
+// les recapitulatifs additionnent ces minutes : une heure disparaissait du
+// mois, donc du salaire, sans un message. Le pointage par QR et par borne, eux,
+// ne descendent jamais sous zero. Un depart a la meme minute que l'arrivee est
+// une fausse manipulation, pas zero minute de travail : il est refuse aussi.
+const minutesDe=(h)=>{const m=/^(\d{1,2}):(\d{2})/.exec(String(h??""));return m?Number(m[1])*60+Number(m[2]):null;};
+export const departAvantArrivee=(arr,dep)=>{
+  const a=minutesDe(arr),d=minutesDe(dep);
+  return a!==null&&d!==null&&d<=a;
+};
+export const MESSAGE_DEPART_AVANT_ARRIVEE="L'heure de départ doit être après l'heure d'arrivée.";
+
 export async function enregistrerPointage(ligne){
+  if(departAvantArrivee(ligne?.arrivee,ligne?.depart))
+    return{etat:"erreur",message:MESSAGE_DEPART_AVANT_ARRIVEE+" Corrigez l'arrivée ("+ligne.arrivee+") si elle est fausse."};
   const cle="pointage:"+ligne.enfant_id+":"+ligne.date;
   if(typeof navigator!=="undefined"&&navigator.onLine===false){
     return mettreEnFile(cle,ligne);
