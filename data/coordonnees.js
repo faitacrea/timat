@@ -34,11 +34,29 @@ export const EMAIL_EXPEDITEUR = "contact@timat.app";
 // par diverger : il n'y en a plus qu'une, et une barriere d'audit interdit de
 // la reecrire ailleurs.
 //
-// L'adresse est celle que Vercel publie pour ses mentions legales et sa
-// politique de confidentialite ; plusieurs sources independantes la citent a
-// l'identique. C'est bien celle de la landing d'origine : la seconde, que
-// j'avais ecrite dans l'application (« 440 N Barranca Ave, Covina »), etait
-// fausse.
+// CORRECTION DU 12 OCTOBRE 2026 — J'AVAIS TRANCHE DANS LE MAUVAIS SENS.
+//
+// Le 30 septembre, j'ai retenu « 340 S Lemon Ave, Walnut » en ecrivant que
+// c'etait l'adresse « que Vercel publie », et j'ai qualifie Covina de fausse.
+// C'etait l'inverse. Verifie le 12 octobre sur les documents de Vercel
+// lui-meme : sa politique de confidentialite (Privacy Notice), son avenant de
+// traitement des donnees (DPA, « main address »), ses conditions generales
+// (adresse de la demande d'arbitrage), sa politique DMCA et son ancienne
+// politique de 2021 donnent TOUS « 440 N Barranca Ave #4133, Covina, CA
+// 91723 ». Walnut n'apparait que dans un accord passe avec un tiers (Sitecore),
+// et dans des annuaires qui le recopient. Le telephone, +1 559 288 7060, est
+// celui de la politique DMCA de Vercel.
+//
+// La LCEN (art. 6 III-1) exige le nom, l'adresse ET le telephone de
+// l'hebergeur. Le telephone manquait.
+//
+// SUPABASE N'EST PAS SUR OVHCLOUD. Ses regions sont des regions Amazon Web
+// Services, et « eu-west-3 » est le code d'AWS Paris (documentation Supabase,
+// « Available regions »). La ligne disait « Supabase, sur OVHcloud » : faux,
+// sur la page meme qui dit aux familles ou sont les donnees de leurs enfants.
+// L'entite qui contracte avec un client direct est Supabase Pte. Ltd., a
+// Singapour (conditions generales et DPA de Supabase) ; Supabase ne publie pas
+// de numero de telephone, seulement legal@supabase.io.
 //
 // ATTENTION AU CONTRESENS : Vercel est une societe AMERICAINE, et la loi
 // impose de publier l'identite et l'adresse de l'hebergeur — donc celles-la.
@@ -46,6 +64,9 @@ export const EMAIL_EXPEDITEUR = "contact@timat.app";
 // l'endroit ou les donnees sont stockees (Supabase, eu-west-3). Ecrire
 // « Vercel est en France » serait faux ; les deux phrases ci-dessous disent
 // exactement ce qui est vrai, et elles sont les memes partout.
-export const HEBERGEUR_WEB = "Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis";
-export const HEBERGEUR_BASE = "Supabase, sur OVHcloud — région eu-west-3 (Paris, France)";
+export const HEBERGEUR_WEB = "Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis — tél. +1 559 288 7060";
+export const HEBERGEUR_BASE = "Supabase Pte. Ltd., 65 Chulia Street #38-02/03, OCBC Centre, Singapour 049513 (legal@supabase.io) — données stockées chez Amazon Web Services, région eu-west-3 (Paris, France)";
+// La meme verite, en une ligne courte, pour les textes ou la phrase longue ne
+// tient pas (FAQ, ecran RGPD). Une seule formulation, reprise partout.
+export const STOCKAGE_DONNEES = "à Paris, chez Amazon Web Services (région eu-west-3), via Supabase";
 export const HEBERGEUR_REGION = "Fonctions serveur exécutées en région cdg1 (Paris, France).";

@@ -100,8 +100,8 @@
 
 <h2>4. Hébergement et sécurité</h2>
 <div class="green">
-  🔒 Base de données : <strong>Supabase</strong> — région Europe, Paris (France)<br>
-  🌐 Site web : <strong>Vercel</strong> — CDN mondial, données en Europe<br>
+  🔒 Base de données : <strong>Supabase</strong> — données stockées à Paris, chez Amazon Web Services (région eu-west-3)<br>
+  🌐 Site web : <strong>Vercel</strong> — fonctions serveur à Paris (cdg1), pages distribuées mondialement<br>
   💳 Paiement : <strong>Stripe</strong> — certifié PCI-DSS Level 1<br>
   🛡️ Chiffrement : TLS 1.3 en transit, AES-256 au repos<br>
   🔑 Mots de passe : hachés avec bcrypt (irréversible)<br>
@@ -131,14 +131,16 @@
 <h2>7. Sous-traitants</h2>
 <table>
   <tr><th>Sous-traitant</th><th>Finalité</th><th>Localisation</th></tr>
-  <tr><td>Supabase</td><td>Base de données</td><td>Paris, France</td></tr>
-  <tr><td>Vercel</td><td>Hébergement web</td><td>Europe (CDN)</td></tr>
-  <tr><td>Stripe</td><td>Paiement</td><td>Europe (Dublin)</td></tr>
+  <tr><td>Supabase</td><td>Base de données et fichiers</td><td>Paris, France (AWS eu-west-3)</td></tr>
+  <tr><td>Vercel</td><td>Hébergement web</td><td>Fonctions serveur à Paris (cdg1) · pages distribuées mondialement</td></tr>
+  <tr><td>Stripe</td><td>Paiement</td><td>Irlande (Dublin)</td></tr>
+  <tr><td>Resend</td><td>Envoi des courriels (invitations, alertes)</td><td>États-Unis — clauses contractuelles types</td></tr>
+  <tr><td>Have I Been Pwned</td><td>Contrôle des mots de passe fuités</td><td>Aucun mot de passe transmis (seuls 5 caractères d'empreinte)</td></tr>
 </table>
 <p>Tous les sous-traitants sont conformes au RGPD et bénéficient de garanties contractuelles appropriées.</p>
 
 <h2>8. Transferts hors Union européenne</h2>
-<p>Les données sont hébergées en France et en Europe. En cas de transfert vers les États-Unis (CDN Vercel), celui-ci est encadré par les clauses contractuelles types de la Commission européenne.</p>
+<p>Les données sont stockées en France. Deux prestataires sont établis aux États-Unis : Vercel, qui héberge le site, et Resend, qui envoie les courriels (nom et adresse électronique du destinataire). Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne.</p>
 
 <h2>9. Cookies et mesure d'audience</h2>
 <p>TiMat utilise uniquement des cookies techniques strictement nécessaires (authentification, session). Aucun cookie publicitaire ni de traçage n'est utilisé. Aucun consentement spécifique n'est requis pour ces cookies, conformément à l'article 82 de la loi Informatique et Libertés.</p>

@@ -4053,6 +4053,78 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- les textes legaux disent VRAI, et les deux politiques disent la meme chose ---
+//
+// La regle ci-dessus garantit qu'il n'y a qu'UNE adresse de l'hebergeur. Elle
+// ne dit pas si c'est la BONNE — et ce n'etait pas la bonne. Le 12 octobre,
+// verification faite sur les documents de Vercel lui-meme (politique de
+// confidentialite, avenant de traitement des donnees, conditions generales,
+// politique DMCA), l'adresse est Covina ; le site affichait Walnut, qu'on ne
+// trouve que dans un accord passe avec un tiers.
+//
+// Le meme jour : « Supabase, sur OVHcloud » ecrit a cinq endroits. Faux —
+// Supabase est chez Amazon Web Services, eu-west-3 est le code d'AWS Paris. Et
+// la FAQ affirmait « aucun transfert hors de l'Union Europeenne » pendant que
+// la politique publique, elle, mentionnait un transfert vers les Etats-Unis.
+//
+// Enfin il existe DEUX politiques de confidentialite : la page statique
+// /confidentialite.html — celle dont l'adresse est donnee a l'URSSAF — et la
+// fenetre de l'application. La premiere oubliait Resend, qui reçoit pourtant
+// le nom et l'adresse electronique des parents a chaque courriel.
+{
+  const lire = (f) => { try { return fs.readFileSync(path.join(RACINE, f), "utf8"); } catch { return ""; } };
+  const sansCommentaires = (t) => t.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+  const coord = lire("data/coordonnees.js");
+  const web = (coord.match(/HEBERGEUR_WEB\s*=\s*"([^"]+)"/) || [])[1] || "";
+  const base = (coord.match(/HEBERGEUR_BASE\s*=\s*"([^"]+)"/) || [])[1] || "";
+
+  if (!/440 N Barranca/.test(web) || !/Covina/.test(web)) {
+    signale("textes-legaux", `HEBERGEUR_WEB ne donne pas l'adresse que Vercel publie lui-même (440 N Barranca Ave #4133, Covina, CA 91723) : « ${web} ». Vérifier sur vercel.com/legal avant de changer`);
+  }
+  if (!/\+?1?\s?559[\s.-]?288[\s.-]?7060/.test(web)) {
+    signale("textes-legaux", "HEBERGEUR_WEB ne porte pas le téléphone de Vercel. La LCEN (art. 6 III-1) exige nom, adresse ET téléphone de l'hébergeur");
+  }
+  if (!/Amazon Web Services/.test(base) || /OVH/i.test(base)) {
+    signale("textes-legaux", `HEBERGEUR_BASE : « ${base} ». Supabase stocke les données chez Amazon Web Services (eu-west-3 = AWS Paris), pas chez OVHcloud`);
+  }
+
+  // « OVHcloud » comme hebergeur des donnees, dans un texte montre au public.
+  // OVH reste legitime ailleurs : c'est le registraire du domaine et la
+  // redirection de contact@timat.app.
+  const montres = ["src/App.jsx", "src/socle.jsx", "src/ecrans-app.jsx", "src/ecrans-secondaires.jsx",
+    "src/composants-rgpd.jsx", "public/confidentialite.html", "data/coordonnees.js"];
+  for (const f of montres) {
+    const t = sansCommentaires(lire(f));
+    for (const l of t.split("\n")) {
+      if (/OVH/i.test(l) && /(Supabase|donn[ée]es|serveurs?|h[ée]berg)/i.test(l) && !/redirect|registr|domaine|courriel|mail/i.test(l)) {
+        signale("textes-legaux", `${f} : « ${l.trim().slice(0, 90)}… » — les données ne sont pas chez OVHcloud mais chez Amazon Web Services (eu-west-3, Paris), via Supabase`);
+      }
+      if (/aucun transfert hors de l.Union/i.test(l)) {
+        signale("textes-legaux", `${f} : « aucun transfert hors de l'Union européenne » — faux : Vercel et Resend sont établis aux États-Unis, et la politique de confidentialité publique le dit`);
+      }
+    }
+  }
+
+  // Les deux politiques de confidentialite nomment les memes sous-traitants.
+  const statique = lire("public/confidentialite.html");
+  const app = lire("src/App.jsx");
+  const fenetre = (app.match(/7\. Sous-traitants[\s\S]{0,4000}?Tous les sous-traitants/) || [""])[0];
+  for (const st of ["Supabase", "Vercel", "Stripe", "Resend", "Have I Been Pwned"]) {
+    const dansStatique = new RegExp("<td>" + st).test(statique);
+    const dansApp = fenetre.includes(st);
+    if (dansStatique !== dansApp) {
+      signale("textes-legaux", `le sous-traitant « ${st} » figure dans ${dansApp ? "la politique de l'application" : "/confidentialite.html"} mais pas dans ${dansApp ? "/confidentialite.html" : "celle de l'application"}. Les deux doivent nommer les mêmes — et /confidentialite.html est la page donnée à l'URSSAF`);
+    }
+  }
+
+  // Les mentions legales ne peuvent pas s'afficher vides si la base ne repond
+  // pas : les valeurs par defaut doivent etre remplies.
+  const defLegal = (app.match(/legal:\{\s*nom:"([^"]*)",\s*siret:"([^"]*)",\s*adresse:"([^"]*)"/) || []);
+  if (!defLegal[1] || !defLegal[2] || !defLegal[3]) {
+    signale("textes-legaux", "DEFAULT_CONFIG.legal : le nom, le SIRET ou l'adresse est vide. Si la configuration en base ne se charge pas, les mentions légales s'affichent sans éditeur — vérifié le 12 octobre sur les fichiers servis par timat.app");
+  }
+}
+
 // --- le sommaire du HTML brut dit la meme chose que la page ---
 //
 // Le HTML brut de la page d'accueil comptait 370 caracteres et aucun titre de
@@ -4835,4 +4907,46 @@ for (const [cat, msgs] of [...parCat].sort((a, b) => b[1].length - a[1].length))
   if (msgs.length > 12) console.log(`   … et ${msgs.length - 12} autres`);
 }
 console.log();
+
+// CE QUI BLOQUE LE DEPLOIEMENT, ET CE QUI NE FAIT QU'AVERTIR.
+//
+// Jusqu'au 12 octobre 2026, cet audit ne faisait echouer la construction
+// qu'avec l'option --strict — et la chaine de construction l'appelait SANS.
+// Ni Vercel ni GitHub ne lançaient jamais le mode strict. Les quelque 290
+// regles de ce fichier AFFICHAIENT donc leurs defauts, mais n'en bloquaient
+// aucun : une regression du calcul de la paie, un taux de majoration ecrit en
+// dur, un contrat qui promet des salaires nets au lieu de bruts, tout cela
+// partait en production avec un « code 0 ». Chaque fois que j'ai ecrit qu'une
+// barriere « mordait », c'etait vrai de son message, pas du deploiement.
+//
+// Tout bloquer serait une autre erreur : une partie de ces regles lit le
+// contenu du blog, ecrit dans Sanity, hors du code. Un article mal relu
+// bloquerait alors le deploiement d'un correctif urgent sans rapport.
+//
+// D'ou deux familles. Bloquent : l'argent, les documents legaux, la securite
+// des donnees et l'integrite du code — a condition que le defaut ne porte pas
+// sur une page /blog/. Avertissent seulement : le contenu editorial, le
+// referencement, la presentation, et les echeances de reverification, qui ne
+// doivent pas faire echouer un deploiement parce qu'une date est passee.
+const BLOQUANTES = new Set([
+  // l'argent
+  "paie", "bareme", "cmg", "chiffre", "chiffres", "coefficient", "arrondi", "repas", "forfait",
+  "heures-majorees", "heures-arrondies", "heures-exactes-imprimees", "majoration-en-dur",
+  "indemnite-rupture", "jours-feries",
+  // les documents legaux
+  "textes-legaux", "legal", "modele-contrat", "hébergeur", "rgpd", "coordonnées", "contact",
+  // la securite et les donnees
+  "rls", "supabase", "sql", "schéma", "serveur", "ecritures", "acces", "stockage",
+  "back-office", "environnement", "expediteur",
+  // l'integrite du code et des controles
+  "conflit", "construction", "module", "paresseux", "bundle-sans-garde-fou", "controles-creux",
+]);
+const bloquantes = anomalies.filter((a) => BLOQUANTES.has(a.cat) && !/\/blog\//.test(a.msg));
+if (bloquantes.length) {
+  console.error(`\n=== ${bloquantes.length} ANOMALIE(S) BLOQUANTE(S) — le déploiement s'arrête ici ===\n`);
+  for (const a of bloquantes.slice(0, 20)) console.error(`  [${a.cat}] ${a.msg}`);
+  console.error("\nCes catégories touchent l'argent, les documents légaux, la sécurité ou l'intégrité du code.");
+  console.error("Elles ne doivent jamais partir en production. Corriger, puis relancer la construction.\n");
+  process.exit(1);
+}
 if (strict && anomalies.length) process.exit(1);

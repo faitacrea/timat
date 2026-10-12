@@ -18,7 +18,7 @@
 // ============================================================
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase.js";
-import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, STOCKAGE_DONNEES } from "../data/coordonnees.js";
 import {
   ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, ANCIENNETE_MIN_RUPTURE_MOIS, BORNE_CLE_ACTIVE, BORNE_CLE_EMPREINTES, BORNE_CLE_SORTIE, CLE_HL, COEF_MINIMUM_LEGAL, CP_MAX_AN, CP_PAR_MOIS, D, DIVISEUR_INDEMNITE_RUPTURE, DOCUMENTS_REFONTE, Documents, G, IE_PLANCHER_JOUR, IE_TAUX_HORAIRE, IconeOuEmoji, InstallGuide, JETON_BORNE_ALPHABET, MAJORATION_TITRE_AMGE, MINIMUM_CONV_HISTO, Parametres, Pointage, QUOTAS, Sommeil, TAUX_COTISATIONS, TAUX_DIXIEME, TAUX_SALARIAL_TOTAL, TODAY_STR, _ecrireJSON, _lireJSON, enMo, estPro, fmt, isoJour, isoMois, lireQuota, logAction, minutesDepuisHeure, nbf, quotaDe, salaireMensualise, smicHoraireAu, unionMinutes, useInstallPWA, viderStockageDuCompte, indemniteEntretienMin, useUneFois, semainesDuContrat, appelApi, heuresMensualisees, heuresDeclarees, MOIS_PAR_AN, SEUIL_MAJORATION_HEBDO, tauxMajorationDu, MAJORATION_PREMIER_MAI, MAJORATION_FERIE_TRAVAILLE,
   TAUX_MAJORATION_PLANCHER, TAUX_MAJORATION_HEURES, MAJORATION_PLANCHER_PCT
@@ -1021,7 +1021,14 @@ export const FAQ_DATA=[
   {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
    r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive (RGPD, droit à l'effacement, article 17). Assistante maternelle : tout votre dossier part avec le compte, y compris les données des enfants accueillis et vos fichiers. Parent : vos données personnelles sont effacées et vous êtes détaché du dossier, mais le registre de présence et les bulletins restent chez l'assistante maternelle — ce sont ses pièces justificatives, elle en a besoin pour se défendre en cas de litige."},
   {cat:"RGPD",q:"Où sont stockées mes données ?",
-   r:"Exclusivement en France, sur des serveurs OVHcloud à Paris via Supabase. Aucun transfert hors de l'Union Européenne."},
+   // Cette reponse disait « sur des serveurs OVHcloud » — faux, Supabase est
+   // chez Amazon Web Services — et « aucun transfert hors de l'Union
+   // Europeenne », ce que la politique de confidentialite publique dement elle-
+   // meme : elle mentionne un transfert vers les Etats-Unis via Vercel, et
+   // Resend, qui envoie les courriels, est une societe americaine. Deux textes
+   // du meme site ne peuvent pas se contredire sur la question qu'un parent
+   // pose en premier.
+   r:"Les données (comptes, enfants, contrats, pointages, documents) sont stockées "+STOCKAGE_DONNEES+". Certains prestataires sont établis hors de l'Union européenne — Vercel (hébergement du site) et Resend (envoi des courriels) aux États-Unis : ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne. La liste complète figure dans la politique de confidentialité."},
   {cat:"Abonnement",q:"Puis-je changer d'offre ou résilier ?",
    r:"Oui, à tout moment depuis Paramètres → Mon abonnement. Pas d'engagement, pas de frais de résiliation. Si vous résiliez, votre accès Pro reste actif jusqu'à la fin de la période payée."},
 ];

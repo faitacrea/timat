@@ -15,7 +15,7 @@ import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { supabase } from "../lib/supabase.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import { HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
-import { EMAIL_CONTACT } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, STOCKAGE_DONNEES } from "../data/coordonnees.js";
 import {
   Documents, AdminFinances, AjouterEnfantModale, AvatarEditeur, AvatarEnfant, Bilans, BoutonAjouterEnfant, CHR_AM, CI_PLAFOND_DEPENSES, CI_TAUX, CPill, CahierJour, D, EmptyState, ExportDonnees, FicheUrgence, G, H, IconeOuEmoji, MOIS_PAR_AN, PLAFOND_H, SEMAINES_ANNEE_COMPLETE, PageHeader, Parametres, Calendrier, PastilleRepas, ProjetAccueil, PlanningPeriscolaire, QUALITE_REPAS, RegistreMedicaments, TODAY_H, TODAY_STR, Toast, VerrouPro, _quotidien, age, chargerJsPDF, estPro, etatPush, fmt, fmtDatePdf, fratrieDe, heuresMensualisees, heuresDeclarees, isoJour, isoMois, minutesDepuisHeure, montantCMG, nbf, netDepuisBrut, regimeLocalDe, protegerPdf, salaireMensualise, semainesDuContrat, tauxEffortCMG, todayStr, logAction
 , activerPush, desactiverPush
@@ -2371,7 +2371,7 @@ export function CommunicationPMI({role,user,hasRealData}){
 
 export function PolitiqueConfidentialite(){
   const sections=[
-    {titre:"1. Rôles",contenu:`TiMat - contact : ${EMAIL_CONTACT}\nHébergement des données : France (OVHcloud Paris via Supabase).\n\nTiMat est responsable de traitement pour ce qu'elle décide elle-même : les comptes, l'abonnement, la facturation, la prospection, le support et les journaux techniques.\n\nTiMat est sous-traitante pour les données professionnelles de l'assistante maternelle : le dossier de l'enfant, les pointages, les contrats et les bulletins. Ces données sont hébergées sur instruction, et l'assistante maternelle en reste seule responsable.`},
+    {titre:"1. Rôles",contenu:`TiMat - contact : ${EMAIL_CONTACT}\nHébergement des données : ${STOCKAGE_DONNEES}.\n\nTiMat est responsable de traitement pour ce qu'elle décide elle-même : les comptes, l'abonnement, la facturation, la prospection, le support et les journaux techniques.\n\nTiMat est sous-traitante pour les données professionnelles de l'assistante maternelle : le dossier de l'enfant, les pointages, les contrats et les bulletins. Ces données sont hébergées sur instruction, et l'assistante maternelle en reste seule responsable.`},
     {titre:"2. Données collectées",contenu:""},
     {titre:"3. Qui décide de quoi",contenu:""},
     {titre:"4. Durées de conservation",contenu:""},
