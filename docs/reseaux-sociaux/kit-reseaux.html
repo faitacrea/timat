@@ -1,0 +1,532 @@
+<title>Kit réseaux TiMat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Nunito+Sans:wght@400;600;700&display=swap">
+<style>
+/* Mise en page : une colonne de lecture, une barre d'onglets collante, des
+   blocs « à coller » reconnaissables (fond sable, bouton Copier). */
+:root{
+  --fond:#FDFBF8; --surface:#FFFFFF; --sable:#F6EDE3; --encre:#2E4A5A; --texte:#33434D;
+  --doux:#5E6E78; --terre:#A94C2F; --peche:#E4917A; --trait:#E8DED3; --ok:#2F6B64;
+  --titre:"Quicksand","Nunito Sans",system-ui,sans-serif; --corps:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#17222B; --surface:#1E2B35; --sable:#263642; --encre:#E6EEF2; --texte:#D3DDE3;
+  --doux:#9FB0BA; --terre:#F0A58C; --peche:#E4917A; --trait:#33444F; --ok:#7CC3B8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --fond:#17222B; --surface:#1E2B35; --sable:#263642; --encre:#E6EEF2; --texte:#D3DDE3;
+  --doux:#9FB0BA; --terre:#F0A58C; --peche:#E4917A; --trait:#33444F; --ok:#7CC3B8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--fond);color:var(--texte);font-family:var(--corps);font-size:16px;line-height:1.6;margin:0}
+.page{max-width:820px;margin:0 auto;padding-inline:18px;padding-block:8px 72px}
+h1,h2,h3{font-family:var(--titre);color:var(--encre);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(28px,6vw,40px)}
+h2{font-size:clamp(23px,4.6vw,30px);padding-top:8px}
+h3{font-size:19px}
+p{margin:0}
+a{color:var(--terre)}
+.chapeau{color:var(--doux);font-size:17px;max-width:62ch}
+.entete{display:flex;flex-direction:column;gap:12px;padding-block:28px 18px}
+.onglets{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--fond);border-bottom:1px solid var(--trait);
+  display:flex;gap:6px;overflow-x:auto;padding-block:10px;margin-inline:-18px;padding-inline:18px}
+.onglets a{flex:0 0 auto;text-decoration:none;font-weight:700;font-size:14px;color:var(--encre);padding:7px 14px;border-radius:20px;border:1px solid var(--trait);background:var(--surface)}
+.onglets a:focus-visible,button:focus-visible{outline:3px solid var(--peche);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:18px;padding-top:34px;scroll-margin-top:64px}
+.groupe{display:flex;flex-direction:column;gap:12px}
+.etiquette{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--terre)}
+.reglage{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr);gap:4px 16px;padding:12px 0;border-bottom:1px solid var(--trait)}
+.reglage dt{font-weight:700;color:var(--encre)}
+.reglage dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:520px){.reglage{grid-template-columns:1fr}}
+.colle{background:var(--sable);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.colle .haut{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.colle .nom{font-weight:700;color:var(--encre);font-size:15px}
+.colle pre{margin:0;white-space:pre-wrap;font-family:var(--corps);font-size:15.5px;line-height:1.6;color:var(--texte);min-width:0;overflow-wrap:anywhere}
+.compte{font-size:12.5px;color:var(--doux);font-variant-numeric:tabular-nums}
+button.copier{font:700 14px var(--corps);color:#fff;background:var(--encre);border:0;border-radius:10px;padding:8px 14px;cursor:pointer;min-height:38px}
+:root[data-theme="dark"] button.copier{color:#17222B}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.copier{color:#17222B}}
+button.copier.fait{background:var(--ok)}
+.visuel{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:14px;align-items:start}
+.visuel img{width:100%;border-radius:8px;border:1px solid var(--trait);display:block}
+.visuel .large{grid-column:1/-1}
+@media (max-width:520px){.visuel{grid-template-columns:minmax(0,110px) minmax(0,1fr)}}
+.pub{border-top:1px solid var(--trait);padding-top:22px;display:flex;flex-direction:column;gap:12px}
+.quand{font-size:14px;color:var(--doux);font-weight:600}
+.note{border-left:4px solid var(--peche);padding:10px 14px;background:var(--surface);border-radius:0 10px 10px 0}
+.note.ferme{border-left-color:var(--terre)}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.tableau{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--trait);vertical-align:top}
+th{font-family:var(--titre);color:var(--encre)}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.grille figure{margin:0;display:flex;flex-direction:column;gap:4px}
+.grille img{width:100%;border-radius:8px;border:1px solid var(--trait)}
+.grille figcaption{font-size:12.5px;color:var(--doux)}
+.sources{font-size:14px;color:var(--doux)}
+@media (prefers-reduced-motion:no-preference){button.copier{transition:background .2s}}
+</style>
+
+<div class="page">
+  <header class="entete">
+    <span class="etiquette">TiMat · lancement des réseaux · octobre 2026</span>
+    <h1>Kit réseaux TiMat</h1>
+    <p class="chapeau">Tout ce qu'il faut pour ouvrir la Page Facebook, le groupe Facebook et le compte Instagram : les réglages, les textes à coller, les images, les cinq premières publications de chaque réseau et les sondages. Chaque texte a son bouton « Copier ».</p>
+    <p class="note">Les images vous sont envoyées en fichiers dans la conversation avec Claude, et sont rangées dans le dépôt, dossier <code>docs/reseaux-sociaux/visuels</code>. Les miniatures ci-dessous servent à les reconnaître.</p>
+  </header>
+
+  <nav class="onglets" aria-label="Sections">
+    <a href="#demarrer">Démarrer</a><a href="#page">Page Facebook</a><a href="#groupe">Groupe</a><a href="#instagram">Instagram</a><a href="#calendrier">Calendrier</a><a href="#publier">Publier à votre place</a>
+  </nav>
+
+  <!-- ================= DEMARRER ================= -->
+  <section id="demarrer">
+    <h2>Démarrer</h2>
+    <div class="groupe">
+      <span class="etiquette">L'ordre de création, le même jour</span>
+      <ol>
+        <li><b>La Page Facebook</b> d'abord : Instagram et l'outil de programmation de Meta (Meta Business Suite) s'y rattachent.</li>
+        <li><b>Le compte Instagram</b>, en compte professionnel, relié à la Page.</li>
+        <li><b>Le groupe</b>, créé depuis votre profil personnel, puis relié à la Page dans ses paramètres.</li>
+      </ol>
+      <p>Ensuite, l'essentiel de votre énergie va au groupe. Repère concurrent relevé le 23 septembre 2026 en pied de page de Pandi-Panda : plus de 800 fans sur leur Page, plus de 2 000 membres dans leur groupe. Le groupe pèse deux fois et demie la Page.</p>
+    </div>
+    <div class="groupe">
+      <span class="etiquette">Trois règles qui ne se discutent pas</span>
+      <div class="note ferme"><b>Aucune photo d'enfant.</b> Même floue, même de dos. Le droit à l'image d'un enfant appartient à ses parents, et une Page professionnelle n'en a pas besoin : tous les visuels du kit sont graphiques.</div>
+      <div class="note ferme"><b>Jamais « agréée ».</b> Votre agrément est en préparation. Les textes du kit parlent de votre CAP petite enfance et de TiMat, jamais d'un agrément.</div>
+      <div class="note ferme"><b>Dans le groupe, on aide, on ne vend pas.</b> Le lien vers TiMat est dans votre présentation et sur la Page. Le jour où quelqu'un demande « vous utilisez quoi comme appli ? », ce sont les membres qui répondent.</div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE ================= -->
+  <section id="page">
+    <h2>Page Facebook</h2>
+    <dl class="groupe">
+      <div class="reglage"><dt>Nom</dt><dd>TiMat</dd></div>
+      <div class="reglage"><dt>Catégorie</dt><dd>Logiciel (ajoutez « Application » si Facebook la propose)</dd></div>
+      <div class="reglage"><dt>Nom d'utilisateur</dt><dd><b>timat.app</b> · s'il est pris : <b>timatapp</b></dd></div>
+      <div class="reglage"><dt>Site web</dt><dd>https://www.timat.app</dd></div>
+      <div class="reglage"><dt>E-mail</dt><dd>contact@timat.app</dd></div>
+      <div class="reglage"><dt>Bouton d'action</dt><dd>« S'inscrire », vers https://www.timat.app</dd></div>
+      <div class="reglage"><dt>Téléphone</dt><dd>Facultatif sur Facebook. Laissez vide si vous ne voulez pas l'afficher.</dd></div>
+    </dl>
+
+    <div class="visuel">
+      <img src="visuels/01-photo-profil-1080x1080.png" alt="Logo TiMat blanc sur fond bleu ardoise">
+      <div class="groupe"><span class="etiquette">Photo de profil</span><p>Fichier <b>01-photo-profil</b>, 1080 × 1080. Le logo tient dans le cercle de recadrage. La même photo sert pour Instagram.</p></div>
+      <img class="large" src="visuels/02-couverture-page-1702x630.png" alt="Couverture : logo TiMat, « L'application des assistantes maternelles », Contrat, Salaire, Congés payés, Pajemploi">
+      <div class="groupe large"><span class="etiquette">Photo de couverture</span><p>Fichier <b>02-couverture-page</b>, 1702 × 630 : le double du format recommandé par Meta (851 × 315), pour rester net. Le texte est au centre, le bas à gauche reste libre pour la photo de profil.</p></div>
+    </div>
+
+    <div class="colle"><div class="haut"><span class="nom">Bio (courte)</span><span class="compte" data-compte="bio-page"></span><button class="copier" data-cible="bio-page">Copier</button></div>
+<pre id="bio-page">L'application des assistantes maternelles et des parents employeurs : contrat, salaire, Pajemploi.</pre></div>
+
+    <div class="colle"><div class="haut"><span class="nom">Détails / À propos (version longue)</span><button class="copier" data-cible="apropos-page">Copier</button></div>
+<pre id="apropos-page">TiMat réunit dans une seule application ce qui est aujourd'hui éparpillé entre un cahier, un tableur et plusieurs sites : le contrat et ses avenants, le pointage des heures signé des deux côtés, le salaire mensualisé, les congés payés, les indemnités, les bulletins de salaire et le récapitulatif à reporter sur Pajemploi.
+
+Le parent employeur a son propre accès, gratuit : il voit les mêmes heures et les mêmes calculs.
+
+Compte gratuit pour un enfant accueilli : contrat, pointage des heures, cahier de liaison. Bulletins de salaire et récapitulatif Pajemploi avec l'abonnement Pro à 9,99 € par mois, quel que soit le nombre d'enfants. 2 mois offerts, sans carte bancaire.
+
+Créée en France par Sophie, titulaire du CAP petite enfance. Base de données hébergée à Paris.</pre></div>
+
+    <h3>Les cinq premières publications</h3>
+    <p>Une par jour ouvré la première semaine suffit, puis trois par semaine. Chaque publication part avec son image ; les mêmes images servent sur Instagram.</p>
+
+    <article class="pub">
+      <span class="quand">P1 · lundi, semaine 1 · image 04</span>
+      <div class="visuel"><img src="visuels/04-publication-1-presentation.png" alt="Moins de temps sur la paie. Plus de temps pour les enfants."><p>Présentation. À épingler en haut de la Page.</p></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte de P1</span><button class="copier" data-cible="p1">Copier</button></div>
+<pre id="p1">Bonjour à toutes et à tous 👋
+
+Je m'appelle Sophie, j'ai mon CAP petite enfance, et j'ai créé TiMat pour une raison simple : la partie administrative du métier d'assistante maternelle prend trop de temps, et une erreur de calcul coûte cher, d'un côté comme de l'autre.
+
+TiMat réunit au même endroit le contrat, les heures, le salaire mensualisé, les congés payés, les indemnités et le récapitulatif à reporter sur Pajemploi. Le parent employeur a son propre accès, gratuit, et voit les mêmes chiffres.
+
+Sur cette Page, je publierai chaque semaine un repère officiel, toujours avec sa source. Vos questions sont les bienvenues en commentaire.
+
+👉 www.timat.app</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">P2 · mardi, semaine 1 · image 05</span>
+      <div class="visuel"><img src="visuels/05-publication-2-minimum-4-20.png" alt="4,20 € brut de l'heure, par enfant, depuis le 1er juin 2026"><p>Le minimum horaire. Le sujet qui concerne tous les contrats signés avant juin.</p></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte de P2</span><button class="copier" data-cible="p2">Copier</button></div>
+<pre id="p2">Depuis le 1er juin 2026, le salaire minimum conventionnel d'une assistante maternelle est de 4,20 € brut de l'heure et par enfant (4,37 € avec le titre professionnel de la branche).
+
+Votre contrat a été signé avant juin à un taux plus bas ? C'est le minimum qui s'applique depuis cette date. Un avenant permet de l'écrire noir sur blanc.
+
+Le plancher légal, lui, suit le SMIC : 0,281 × SMIC, soit 3,46 € depuis le 1er juin 2026. C'est le plus favorable des deux qui s'applique.
+
+Source : DREETS Pays de la Loire, fiche « Assistants maternels : rémunération, indemnités et frais » du 12 juin 2026.
+https://pays-de-la-loire.dreets.gouv.fr/sites/pays-de-la-loire.dreets.gouv.fr/IMG/pdf/fiche_remu_indemnites_frais_au_12062026.pdf</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">P3 · mercredi, semaine 1 · image 06</span>
+      <div class="visuel"><img src="visuels/06-publication-3-entretien-3-92.png" alt="Indemnité d'entretien : 3,92 € minimum pour 9 heures d'accueil"><p>L'indemnité d'entretien, avec un exemple chiffré.</p></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte de P3</span><button class="copier" data-cible="p3">Copier</button></div>
+<pre id="p3">L'indemnité d'entretien couvre ce que l'accueil coûte chez vous : eau, chauffage, électricité, jeux, petit matériel. Ce n'est pas du salaire : elle n'est pas soumise aux cotisations sociales.
+
+Son minimum depuis le 1er juin 2026 :
+• 3,92 € pour une journée de 9 heures (90 % du minimum garanti, 4,35 €)
+• moins de 9 h : 0,435 € par heure, jamais moins de 2,65 € par jour
+• au-delà de 9 h : 3,92 € + 0,435 € par heure supplémentaire
+
+Exemple : 8 h d'accueil → 8 × 0,435 = 3,48 € minimum.
+
+Source : DREETS Pays de la Loire, fiche du 12 juin 2026.
+https://pays-de-la-loire.dreets.gouv.fr/sites/pays-de-la-loire.dreets.gouv.fr/IMG/pdf/fiche_remu_indemnites_frais_au_12062026.pdf</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">P4 · jeudi, semaine 1 · image 07</span>
+      <div class="visuel"><img src="visuels/07-publication-4-pajemploi-par-enfant.png" alt="Pajemploi : une déclaration par enfant depuis janvier 2026"><p>Un changement Pajemploi que beaucoup découvrent au moment de déclarer.</p></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte de P4</span><button class="copier" data-cible="p4">Copier</button></div>
+<pre id="p4">Depuis janvier 2026, Pajemploi demande une déclaration par enfant.
+
+Deux enfants de la même famille gardés par la même assistante maternelle : deux déclarations distinctes, chaque mois.
+
+La période de déclaration, elle, ne change pas : du 25 du mois travaillé au 5 du mois suivant.
+
+Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 ».
+https://www.urssaf.fr/accueil/actualites/pajemploi-declaration-par-enfant.html</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">P5 · vendredi, semaine 1 · image 08</span>
+      <div class="visuel"><img src="visuels/08-publication-5-mensualisation.png" alt="40 h × 52 semaines ÷ 12 = 173,33 h par mois, × 4,20 € = 728,00 € brut"><p>La mensualisation, le calcul qui explique tout le reste.</p></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte de P5</span><button class="copier" data-cible="p5">Copier</button></div>
+<pre id="p5">Pourquoi le salaire d'une assistante maternelle est-il le même en février et en mars ? Parce qu'il est mensualisé : on calcule sur l'année, puis on divise par douze.
+
+Année complète : heures par semaine × 52 ÷ 12.
+Exemple à 40 h par semaine : 173,33 h par mois, soit 728,00 € brut au minimum de 4,20 €.
+
+Année incomplète : on remplace 52 par le nombre de semaines d'accueil prévues au contrat.
+Exemple de l'URSSAF : 40 h sur 37 semaines = 123,33 h par mois.
+
+Source : urssaf.fr, « Rémunérer un salarié à domicile ou un assistant maternel ».
+https://www.urssaf.fr/accueil/particulier/particulier-employeur/embaucher-un-salarie/remunerer-salarie-domicile.html</pre></div>
+    </article>
+  </section>
+
+  <!-- ================= GROUPE ================= -->
+  <section id="groupe">
+    <h2>Groupe Facebook</h2>
+    <dl class="groupe">
+      <div class="reglage"><dt>Nom</dt><dd><b>Assistantes maternelles — paie, contrat et Pajemploi</b><br><span class="compte">Les mots que les gens tapent dans la recherche Facebook. Pas « Groupe TiMat » : personne ne rejoint le groupe d'une marque.</span></dd></div>
+      <div class="reglage"><dt>Confidentialité</dt><dd><b>Privé</b> (seuls les membres lisent les échanges) et <b>visible</b> (on peut le trouver dans la recherche).</dd></div>
+      <div class="reglage"><dt>Adhésion</dt><dd>Avec approbation et les trois questions ci-dessous.</dd></div>
+      <div class="reglage"><dt>Relier à la Page</dt><dd>Oui, dans les paramètres du groupe, une fois la Page créée.</dd></div>
+    </dl>
+    <div class="visuel">
+      <img class="large" src="visuels/03-couverture-groupe-1640x856.png" alt="Couverture du groupe : Assistantes maternelles, paie, contrat et Pajemploi">
+      <div class="groupe large"><span class="etiquette">Photo de couverture</span><p>Fichier <b>03-couverture-groupe</b>, 1640 × 856. Format donné par plusieurs guides spécialisés ; je n'ai pas trouvé de page officielle de Meta qui le précise. Le texte est centré, il reste lisible si le téléphone rogne les côtés.</p></div>
+    </div>
+
+    <div class="colle"><div class="haut"><span class="nom">Description du groupe</span><button class="copier" data-cible="desc-groupe">Copier</button></div>
+<pre id="desc-groupe">Un groupe pour s'entraider sur tout ce qui entoure le métier : le contrat, la mensualisation, les congés payés, les indemnités, la déclaration Pajemploi, la fin de contrat.
+
+On y pose ses questions sans avoir peur d'avoir l'air de ne pas savoir. Il n'y a pas de question bête quand on est seule face à un bulletin de salaire.
+
+Les réponses s'appuient sur la convention collective (IDCC 3239) et sur les textes officiels, avec le lien à chaque fois. Quand personne ne sait, on le dit.
+
+Assistantes maternelles, futures assistantes maternelles et parents employeurs sont les bienvenus.
+
+Le groupe est animé par Sophie, qui a créé TiMat, une application de gestion pour assistantes maternelles. C'est dit dès le départ pour que ce soit clair : ici, on répond aux questions, on ne vend pas.</pre></div>
+
+    <h3>Les règles (titre + détail)</h3>
+    <div class="colle"><div class="haut"><span class="nom">Règle 1 · On répond avec la source</span><button class="copier" data-cible="r1">Copier</button></div>
+<pre id="r1">Convention collective, URSSAF, Pajemploi, service-public : le lien, ou à défaut « je crois, à vérifier ». Un chiffre sans source fait plus de mal que pas de réponse.</pre></div>
+    <div class="colle"><div class="haut"><span class="nom">Règle 2 · Aucune donnée personnelle, aucune photo d'enfant</span><button class="copier" data-cible="r2">Copier</button></div>
+<pre id="r2">Pas de nom de famille, pas d'adresse, pas de photo d'enfant. Masquez les noms et les numéros avant de publier une capture de bulletin, de contrat ou de déclaration.</pre></div>
+    <div class="colle"><div class="haut"><span class="nom">Règle 3 · Pas de publicité</span><button class="copier" data-cible="r3">Copier</button></div>
+<pre id="r3">Pas de publicité, pas de recrutement, pas de démarchage en message privé. Les liens vers des outils ou des formations sont retirés, TiMat compris.</pre></div>
+    <div class="colle"><div class="haut"><span class="nom">Règle 4 · Bienveillance</span><button class="copier" data-cible="r4">Copier</button></div>
+<pre id="r4">On ne juge pas les collègues, ni les parents employeurs. Un désaccord sur des heures se raconte sans nommer personne.</pre></div>
+    <div class="colle"><div class="haut"><span class="nom">Règle 5 · Le groupe ne remplace pas les professionnels</span><button class="copier" data-cible="r5">Copier</button></div>
+<pre id="r5">Ce groupe ne remplace ni un juriste, ni la PMI, ni l'URSSAF, ni un syndicat. Pour un litige, on oriente vers le bon interlocuteur.</pre></div>
+
+    <h3>Les trois questions d'adhésion</h3>
+    <div class="colle"><div class="haut"><span class="nom">Questions</span><button class="copier" data-cible="questions">Copier</button></div>
+<pre id="questions">1. Êtes-vous assistante maternelle, en cours d'agrément, ou parent employeur ?
+2. Acceptez-vous les règles du groupe, en particulier l'absence de publicité ?
+3. Quelle est la question administrative qui vous bloque le plus en ce moment ?</pre></div>
+    <p class="note">Notez les réponses à la question 3 : ce sont vos sujets de publication pour les mois qui viennent.</p>
+
+    <h3>Les cinq premières publications</h3>
+    <p>Invitez d'abord à la main : vos collègues de CAP, vos formatrices, les assistantes maternelles de votre secteur. Visez 30 membres avant d'en parler publiquement : un groupe vide ne recrute personne.</p>
+
+    <article class="pub">
+      <span class="quand">G1 · lundi, semaine 1 · à épingler (« Annonce »)</span>
+      <div class="colle"><div class="haut"><span class="nom">Bienvenue</span><button class="copier" data-cible="g1">Copier</button></div>
+<pre id="g1">Bienvenue dans le groupe 👋
+
+Je m'appelle Sophie. J'ai mon CAP petite enfance, et j'ai ouvert ce groupe parce que la partie administrative du métier — contrat, mensualisation, congés payés, Pajemploi — mérite un endroit où l'on peut poser ses questions sans se sentir jugée.
+
+Trois choses à savoir :
+• on répond avec la source (convention collective, URSSAF, Pajemploi) ;
+• pas de publicité, ni la mienne ni celle des autres ;
+• aucune photo d'enfant, aucun nom de famille.
+
+Pour commencer, présentez-vous en commentaire : assistante maternelle depuis combien de temps (ou en cours d'agrément, ou parent employeur), et votre département. Et si une question vous travaille, posez-la : c'est fait pour ça.</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">G2 · mardi, semaine 1 · sondage</span>
+      <div class="colle"><div class="haut"><span class="nom">Sondage : la question</span><button class="copier" data-cible="g2q">Copier</button></div>
+<pre id="g2q">Qu'est-ce qui vous prend le plus de temps, chaque mois ?</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Sondage : les réponses (une par ligne)</span><button class="copier" data-cible="g2r">Copier</button></div>
+<pre id="g2r">Calculer les heures et le salaire
+Les congés payés
+La déclaration Pajemploi
+Les absences et les heures en plus
+La fin de contrat
+Autre chose (dites-le en commentaire)</pre></div>
+      <p class="compte">Dans le groupe, choisissez « Sondage » parmi les options de publication, puis collez la question et les réponses.</p>
+    </article>
+
+    <article class="pub">
+      <span class="quand">G3 · jeudi, semaine 1 · repère sourcé (sans lien vers TiMat)</span>
+      <div class="colle"><div class="haut"><span class="nom">Le minimum horaire</span><button class="copier" data-cible="g3">Copier</button></div>
+<pre id="g3">Petit rappel qui concerne beaucoup de contrats signés avant l'été 👇
+
+Depuis le 1er juin 2026, le minimum conventionnel est de 4,20 € brut de l'heure et par enfant (4,37 € avec le titre professionnel de la branche). Un contrat signé plus bas avant juin passe au minimum à cette date ; un avenant permet de l'écrire.
+
+Le plancher légal (0,281 × SMIC) est de 3,46 € : c'est le plus favorable des deux qui s'applique.
+
+Source : DREETS Pays de la Loire, fiche du 12 juin 2026.
+https://pays-de-la-loire.dreets.gouv.fr/sites/pays-de-la-loire.dreets.gouv.fr/IMG/pdf/fiche_remu_indemnites_frais_au_12062026.pdf
+
+Vous avez vérifié votre taux ? Dites en commentaire si vous avez dû faire un avenant.</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">G4 · mardi, semaine 2 · sondage</span>
+      <div class="colle"><div class="haut"><span class="nom">Sondage : la question</span><button class="copier" data-cible="g4q">Copier</button></div>
+<pre id="g4q">Comment suivez-vous vos heures d'accueil ?</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Sondage : les réponses</span><button class="copier" data-cible="g4r">Copier</button></div>
+<pre id="g4r">Un cahier papier
+Un tableur (Excel, Google Sheets…)
+Une application
+Seulement au moment de déclarer sur Pajemploi
+Je ne les note pas</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">G5 · jeudi, semaine 2 · sondage + explication en commentaire</span>
+      <div class="colle"><div class="haut"><span class="nom">Sondage : la question</span><button class="copier" data-cible="g5q">Copier</button></div>
+<pre id="g5q">Vos contrats sont plutôt en année complète ou en année incomplète ?</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Sondage : les réponses</span><button class="copier" data-cible="g5r">Copier</button></div>
+<pre id="g5r">Année complète
+Année incomplète
+J'ai les deux
+Je ne sais pas trop</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Votre premier commentaire, sous le sondage</span><button class="copier" data-cible="g5c">Copier</button></div>
+<pre id="g5c">Pour celles qui hésitent, la différence tient en une ligne :
+
+• Année complète : heures par semaine × 52 ÷ 12. Les congés payés sont compris dans le salaire mensualisé.
+• Année incomplète : heures par semaine × nombre de semaines d'accueil prévues ÷ 12. Les congés payés se paient en plus.
+
+Exemple de l'URSSAF : 40 h sur 37 semaines = 123,33 h par mois.
+Source : https://www.urssaf.fr/accueil/particulier/particulier-employeur/embaucher-un-salarie/remunerer-salarie-domicile.html</pre></div>
+    </article>
+  </section>
+
+  <!-- ================= INSTAGRAM ================= -->
+  <section id="instagram">
+    <h2>Instagram</h2>
+    <dl class="groupe">
+      <div class="reglage"><dt>Type de compte</dt><dd>Compte professionnel, type « Entreprise », relié à la Page Facebook (nécessaire pour programmer depuis Meta Business Suite).</dd></div>
+      <div class="reglage"><dt>Nom d'utilisateur</dt><dd><b>timat.app</b> · s'il est pris : <b>timatapp</b></dd></div>
+      <div class="reglage"><dt>Nom affiché</dt><dd><b>TiMat · Assistante maternelle</b><br><span class="compte">Le nom est cherchable sur Instagram : « assistante maternelle » y fait venir les bonnes personnes.</span></dd></div>
+      <div class="reglage"><dt>Catégorie</dt><dd>Logiciel (ou « Application » si proposée)</dd></div>
+      <div class="reglage"><dt>Lien</dt><dd>https://www.timat.app</dd></div>
+      <div class="reglage"><dt>Photo de profil</dt><dd>La même que la Page : image <b>01</b>.</dd></div>
+    </dl>
+    <div class="colle"><div class="haut"><span class="nom">Bio</span><span class="compte" data-compte="bio-ig"></span><button class="copier" data-cible="bio-ig">Copier</button></div>
+<pre id="bio-ig">Contrat, salaire et Pajemploi des assistantes maternelles 🇫🇷
+Repères officiels sourcés, chaque semaine
+2 mois offerts sans carte bancaire ↓</pre></div>
+
+    <h3>Les six stories « à la une »</h3>
+    <p>Publiez chaque image 09 à 14 en story, puis ajoutez-la à la une avec le titre indiqué. Instagram recadre la couverture en cercle : l'icône est au centre exprès. Ajoutez ensuite dans chaque « à la une » les stories du même sujet.</p>
+    <div class="grille">
+      <figure><img src="visuels/09-story-a-la-une-salaire-1080x1920.png" alt="Couverture Salaire"><figcaption>09 · Salaire</figcaption></figure>
+      <figure><img src="visuels/10-story-a-la-une-conges-1080x1920.png" alt="Couverture Congés"><figcaption>10 · Congés</figcaption></figure>
+      <figure><img src="visuels/11-story-a-la-une-pajemploi-1080x1920.png" alt="Couverture Pajemploi"><figcaption>11 · Pajemploi</figcaption></figure>
+      <figure><img src="visuels/12-story-a-la-une-indemnites-1080x1920.png" alt="Couverture Indemnités"><figcaption>12 · Indemnités</figcaption></figure>
+      <figure><img src="visuels/13-story-a-la-une-appli-1080x1920.png" alt="Couverture L'appli"><figcaption>13 · L'appli</figcaption></figure>
+      <figure><img src="visuels/14-story-a-la-une-questions-1080x1920.png" alt="Couverture Vos questions"><figcaption>14 · Vos questions</figcaption></figure>
+    </div>
+
+    <h3>Les cinq premières publications</h3>
+    <p>Les mêmes images que la Page (04 à 08), en format 4:5 ; le texte reste dans la zone que le quadrillage du profil affiche. Sur Instagram, les liens des légendes ne sont pas cliquables : la source est citée en toutes lettres, le lien de TiMat est dans la bio.</p>
+
+    <article class="pub">
+      <span class="quand">I1 · image 04 · présentation</span>
+      <div class="colle"><div class="haut"><span class="nom">Légende I1</span><button class="copier" data-cible="i1">Copier</button></div>
+<pre id="i1">Bonjour 👋 Je m'appelle Sophie, j'ai mon CAP petite enfance, et j'ai créé TiMat pour que la paie prenne moins de temps aux assistantes maternelles.
+
+Contrat, heures, salaire mensualisé, congés payés, indemnités et récapitulatif Pajemploi, au même endroit. Le parent employeur a son accès gratuit et voit les mêmes chiffres.
+
+Ici : un repère officiel par semaine, toujours avec sa source. Posez vos questions en commentaire, elles deviendront les prochaines publications.
+
+Lien dans la bio.
+
+#assistantematernelle #assmat #assistantesmaternelles #nounou #pajemploi #parentemployeur #petiteenfance</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte alternatif I1 (accessibilité)</span><button class="copier" data-cible="i1a">Copier</button></div>
+<pre id="i1a">Texte sur fond crème : « Moins de temps sur la paie. Plus de temps pour les enfants. » Présentation de Sophie, fondatrice de TiMat.</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">I2 · image 05 · minimum 4,20 €</span>
+      <div class="colle"><div class="haut"><span class="nom">Légende I2</span><button class="copier" data-cible="i2">Copier</button></div>
+<pre id="i2">4,20 € brut de l'heure et par enfant : c'est le minimum conventionnel depuis le 1er juin 2026 (4,37 € avec le titre professionnel de la branche).
+
+Un contrat signé plus bas avant juin passe au minimum à cette date. Un avenant permet de l'écrire.
+
+Le plancher légal, 0,281 × SMIC, est de 3,46 € : c'est le plus favorable des deux qui s'applique.
+
+Source : DREETS Pays de la Loire, fiche du 12 juin 2026.
+
+#assistantematernelle #assmat #salaire #pajemploi #conventioncollective #parentemployeur</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte alternatif I2</span><button class="copier" data-cible="i2a">Copier</button></div>
+<pre id="i2a">Grand chiffre blanc sur fond bleu : 4,20 €, minimum brut de l'heure par enfant pour les assistantes maternelles depuis le 1er juin 2026.</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">I3 · image 06 · indemnité d'entretien</span>
+      <div class="colle"><div class="haut"><span class="nom">Légende I3</span><button class="copier" data-cible="i3">Copier</button></div>
+<pre id="i3">L'indemnité d'entretien n'est pas du salaire : elle couvre ce que l'accueil coûte chez vous, et n'est pas soumise aux cotisations sociales.
+
+Minimum depuis le 1er juin 2026 :
+• 3,92 € pour 9 heures d'accueil
+• moins de 9 h : 0,435 € par heure, jamais moins de 2,65 € par jour
+• exemple : 8 h → 3,48 €
+
+Source : DREETS Pays de la Loire, fiche du 12 juin 2026.
+
+#assistantematernelle #assmat #indemnitedentretien #pajemploi #parentemployeur #petiteenfance</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte alternatif I3</span><button class="copier" data-cible="i3a">Copier</button></div>
+<pre id="i3a">Grand chiffre bleu sur fond crème : 3,92 €, indemnité d'entretien minimale pour une journée de 9 heures, avec les règles en dessous et au-delà de 9 heures.</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">I4 · image 07 · Pajemploi par enfant</span>
+      <div class="colle"><div class="haut"><span class="nom">Légende I4</span><button class="copier" data-cible="i4">Copier</button></div>
+<pre id="i4">Depuis janvier 2026 : une déclaration Pajemploi par enfant.
+
+Deux enfants de la même famille chez la même assistante maternelle → deux déclarations, chaque mois. La période ne change pas : du 25 du mois au 5 du mois suivant.
+
+Source : urssaf.fr, actualité « Pajemploi : une déclaration par enfant à partir de janvier 2026 ».
+
+#pajemploi #assistantematernelle #assmat #parentemployeur #nounou</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte alternatif I4</span><button class="copier" data-cible="i4a">Copier</button></div>
+<pre id="i4a">Texte : « Une déclaration par enfant. » Depuis janvier 2026 sur Pajemploi, à déclarer du 25 du mois au 5 du mois suivant.</pre></div>
+    </article>
+
+    <article class="pub">
+      <span class="quand">I5 · image 08 · mensualisation</span>
+      <div class="colle"><div class="haut"><span class="nom">Légende I5</span><button class="copier" data-cible="i5">Copier</button></div>
+<pre id="i5">Le même salaire en février et en mars ? C'est la mensualisation : on calcule sur l'année, puis on divise par 12.
+
+40 h × 52 semaines ÷ 12 = 173,33 h par mois
+× 4,20 € = 728,00 € brut
+
+En année incomplète, on remplace 52 par le nombre de semaines d'accueil prévues au contrat.
+
+Source : urssaf.fr, « Rémunérer un salarié à domicile ou un assistant maternel ».
+
+#assistantematernelle #assmat #mensualisation #salaire #pajemploi #parentemployeur</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte alternatif I5</span><button class="copier" data-cible="i5a">Copier</button></div>
+<pre id="i5a">Calcul en grands chiffres sur fond bleu : 40 heures fois 52 semaines divisé par 12 égale 173,33 heures par mois, fois 4,20 € égale 728,00 € brut.</pre></div>
+    </article>
+
+    <h3>Deux stories sondage</h3>
+    <p>Publiez l'image en story, ajoutez le sticker « Sondage » dans l'espace vide au centre, puis tapez la question et les réponses ci-dessous. Instagram limite le nombre de réponses : si votre application n'en propose que deux, gardez les deux premières.</p>
+    <div class="grille">
+      <figure><img src="visuels/15-story-sondage-temps-paie-1080x1920.png" alt="Fond de sondage : Combien de temps vous prend la paie chaque mois ?"><figcaption>15 · temps passé</figcaption></figure>
+      <figure><img src="visuels/16-story-sondage-minimum-1080x1920.png" alt="Fond de sondage : Votre taux horaire est-il au moins de 4,20 € brut ?"><figcaption>16 · minimum</figcaption></figure>
+    </div>
+    <div class="colle"><div class="haut"><span class="nom">S1 · image 15 · réponses du sticker</span><button class="copier" data-cible="s1">Copier</button></div>
+<pre id="s1">Moins d'1 h
+1 à 3 h
+Plus de 3 h
+Je n'ose pas compter</pre></div>
+    <div class="colle"><div class="haut"><span class="nom">S2 · image 16 · réponses du sticker</span><button class="copier" data-cible="s2">Copier</button></div>
+<pre id="s2">Oui
+Non
+Je vais vérifier</pre></div>
+  </section>
+
+  <!-- ================= CALENDRIER ================= -->
+  <section id="calendrier">
+    <h2>Les deux premières semaines</h2>
+    <div class="tableau">
+      <table>
+        <thead><tr><th>Jour</th><th>Page Facebook</th><th>Instagram</th><th>Groupe</th></tr></thead>
+        <tbody>
+          <tr><td>Lun. S1</td><td>P1 présentation, épinglée</td><td>I1 + photo de profil, bio, à la une</td><td>G1 bienvenue, épinglée</td></tr>
+          <tr><td>Mar. S1</td><td>P2 minimum 4,20 €</td><td>I2</td><td>G2 sondage « ce qui prend du temps »</td></tr>
+          <tr><td>Mer. S1</td><td>P3 indemnité d'entretien</td><td>I3 + story S2</td><td>Répondre aux présentations</td></tr>
+          <tr><td>Jeu. S1</td><td>P4 Pajemploi par enfant</td><td>I4</td><td>G3 rappel du minimum</td></tr>
+          <tr><td>Ven. S1</td><td>P5 mensualisation</td><td>I5</td><td>—</td></tr>
+          <tr><td>Mar. S2</td><td>Le sujet le plus voté au sondage G2, expliqué avec sa source</td><td>Story S1</td><td>G4 sondage « suivi des heures »</td></tr>
+          <tr><td>Jeu. S2</td><td>—</td><td>—</td><td>G5 sondage + commentaire</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Ensuite : trois publications par semaine sur la Page et Instagram (un chiffre, une question, un cas concret), et chaque jour quelques minutes de réponses dans le groupe.</p>
+  </section>
+
+  <!-- ================= PUBLIER A VOTRE PLACE ================= -->
+  <section id="publier">
+    <h2>Publier à votre place</h2>
+    <div class="groupe">
+      <span class="etiquette">Page Facebook et Instagram : oui, par un connecteur</span>
+      <p>Il existe un connecteur officiel <b>Metricool</b> dans l'annuaire des connecteurs de Claude. Metricool est un outil de programmation de publications ; son centre d'aide indique que son connecteur fonctionne avec le forfait gratuit, limité à 20 publications programmées par mois. Une fois branché, je peux préparer et programmer vos publications sur la Page et sur Instagram.</p>
+      <ol>
+        <li>Créez un compte gratuit sur metricool.com, puis ajoutez-y votre Page Facebook et votre compte Instagram.</li>
+        <li>Sur claude.ai : Paramètres → Connecteurs → cherchez « Metricool » → Connecter, et acceptez l'accès.</li>
+        <li>Dans une nouvelle conversation, demandez-moi de programmer la semaine. Je vous montre chaque publication et j'attends votre accord avant de la programmer.</li>
+      </ol>
+      <p class="note">Sans aucun connecteur, vous pouvez aussi tout programmer vous-même en une fois : Meta Business Suite (gratuit, l'outil de Meta) programme une même publication sur la Page et sur Instagram, à la date choisie.</p>
+    </div>
+    <div class="groupe">
+      <span class="etiquette">Le groupe : non, à la main</span>
+      <p>Selon plusieurs éditeurs d'outils de programmation, dont Agorapulse, Meta a retiré en avril 2024 la possibilité pour les applications de publier dans les groupes. Aucun outil, connecteur compris, ne peut donc publier dans votre groupe : ces publications se font à la main. Je n'ai pas pu consulter la page officielle de Meta qui l'annonce, qui n'est pas joignable depuis mon environnement.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sources</h2>
+    <ul class="sources">
+      <li>Minimum horaire, plancher légal, indemnité d'entretien : <a href="https://pays-de-la-loire.dreets.gouv.fr/sites/pays-de-la-loire.dreets.gouv.fr/IMG/pdf/fiche_remu_indemnites_frais_au_12062026.pdf">DREETS Pays de la Loire, fiche du 12 juin 2026</a></li>
+      <li>Une déclaration par enfant : <a href="https://www.urssaf.fr/accueil/actualites/pajemploi-declaration-par-enfant.html">urssaf.fr</a> · période du 25 au 5 : <a href="https://www.urssaf.fr/accueil/services/services-particuliers/service-pajemploi/declarer-service-pajemploi.html">urssaf.fr, déclarer avec Pajemploi</a></li>
+      <li>Mensualisation : <a href="https://www.urssaf.fr/accueil/particulier/particulier-employeur/embaucher-un-salarie/remunerer-salarie-domicile.html">urssaf.fr, rémunérer un assistant maternel</a></li>
+      <li>Couverture de Page 851 × 315 : <a href="https://www.facebook.com/help/125379114252045">centre d'aide Facebook</a> · programmation Page + Instagram : <a href="https://www.facebook.com/business/help/266630520743543">Meta Business Suite</a></li>
+      <li>Groupes : <a href="https://support.agorapulse.com/en/articles/9167708-facebook-groups-update-april-2024">Agorapulse, avril 2024</a> · connecteur et forfait gratuit : <a href="https://help.metricool.com/mcp-limits-and-plan-requirements-h72jg">centre d'aide Metricool</a></li>
+    </ul>
+  </section>
+</div>
+
+<script>
+// Copier : dans le geste du clic ; si le presse-papiers est refuse, on
+// selectionne le texte pour que l'appui long « Copier » marche quand meme.
+document.querySelectorAll("button.copier").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var el = document.getElementById(b.dataset.cible);
+    var texte = el.textContent;
+    var marquer = function () { b.textContent = "Copié"; b.classList.add("fait"); setTimeout(function () { b.textContent = "Copier"; b.classList.remove("fait"); }, 1800); };
+    var selectionner = function () { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Texte sélectionné"; };
+    try { navigator.clipboard.writeText(texte).then(marquer, selectionner); } catch (e) { selectionner(); }
+  });
+});
+// Les longueurs qui ont une limite : on les affiche.
+document.querySelectorAll("[data-compte]").forEach(function (s) {
+  var t = document.getElementById(s.dataset.compte).textContent;
+  s.textContent = Array.from(t).length + " caractères";
+});
+</script>

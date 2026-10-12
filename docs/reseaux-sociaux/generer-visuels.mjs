@@ -1,0 +1,168 @@
+// Genere les visuels reseaux sociaux de TiMat (PNG) avec Chromium.
+//   node docs/reseaux-sociaux/generer-visuels.mjs
+// A relancer quand un chiffre change (minimum horaire, minimum garanti) :
+// les montants sont ecrits dans les publications 05 a 08 ci-dessous.
+// Formats : profil 1080x1080 ; couverture de Page 1702x630 (2x 851x315,
+// recommandation Meta) ; couverture de groupe 1640x856 ; publications
+// 1080x1350 (4:5) ; stories 1080x1920.
+import { chromium } from "playwright";
+import { CHROMIUM } from "../../scripts/jeu-de-donnees.mjs";
+import { readFileSync, mkdirSync } from "node:fs";
+
+const SORTIE = process.argv[2] || new URL("./visuels", import.meta.url).pathname;
+mkdirSync(SORTIE, { recursive: true });
+const b64 = (p) => readFileSync(p).toString("base64");
+const POLICE = b64(new URL("./police/quicksand-latin.woff2", import.meta.url));
+const LOGO = "data:image/png;base64," + b64(new URL("../../public/logo.png", import.meta.url));
+const LOGO_CLAIR = "data:image/png;base64," + b64(new URL("../../public/logo-dark.png", import.meta.url));
+
+const NAVY = "#2E4A5A", TERRA = "#A94C2F", PECHE = "#E4917A", CREME = "#FDFBF8", SABLE = "#F6EDE3";
+
+const base = (w, h, corps, fond = CREME) => `<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Q;src:url(data:font/woff2;base64,${POLICE}) format("woff2");font-weight:300 700}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:${w}px;height:${h}px;overflow:hidden}
+body{font-family:Q,sans-serif;background:${fond};color:${NAVY};position:relative;-webkit-font-smoothing:antialiased}
+.rond{position:absolute;border-radius:50%}
+.src{font-weight:600;color:#5E6E78}
+</style></head><body>${corps}</body></html>`;
+
+const visuels = [];
+
+// 1. PHOTO DE PROFIL — logo clair sur marine, dans le cercle de recadrage.
+visuels.push(["01-photo-profil-1080x1080.png", 1080, 1080, base(1080, 1080, `
+  <img src="${LOGO_CLAIR}" style="position:absolute;left:50%;top:50%;width:720px;transform:translate(-50%,-46%)">
+`, NAVY)]);
+
+// 2. COUVERTURE DE PAGE — tout l'essentiel au centre ; le bas a gauche et le
+// bas au centre restent libres (la photo de profil s'y pose).
+visuels.push(["02-couverture-page-1702x630.png", 1702, 630, base(1702, 630, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-140px;top:-210px;opacity:.9"></div>
+  <div class="rond" style="width:300px;height:300px;background:${TERRA};right:-60px;top:-140px;opacity:.85"></div>
+  <div class="rond" style="width:220px;height:220px;background:${SABLE};left:-70px;bottom:-90px"></div>
+  <div style="position:absolute;left:0;right:0;top:92px;text-align:center">
+    <img src="${LOGO}" style="height:96px">
+    <div style="font-size:54px;font-weight:700;margin-top:26px;letter-spacing:-.5px">L'application des assistantes maternelles</div>
+    <div style="font-size:31px;font-weight:600;margin-top:16px;color:${TERRA}">Contrat · Salaire · Congés payés · Pajemploi</div>
+    <div style="font-size:25px;font-weight:600;margin-top:16px;color:#4E5E68">Accès gratuit pour les parents employeurs · timat.app</div>
+  </div>
+`, `linear-gradient(180deg,#FDF6EF,#F7EEE4)`)]);
+
+// 3. COUVERTURE DE GROUPE — pas de photo de profil par-dessus, contenu centre.
+visuels.push(["03-couverture-groupe-1640x856.png", 1640, 856, base(1640, 856, `
+  <div class="rond" style="width:640px;height:640px;background:#3A5A6B;left:-220px;top:-260px"></div>
+  <div class="rond" style="width:420px;height:420px;background:${PECHE};right:-150px;bottom:-170px;opacity:.95"></div>
+  <div style="position:absolute;left:0;right:0;top:190px;text-align:center;color:#fff">
+    <div style="display:inline-block;font-size:26px;font-weight:700;padding:10px 26px;border-radius:40px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35)">Groupe d'entraide</div>
+    <div style="font-size:74px;font-weight:700;margin-top:30px;line-height:1.08">Assistantes maternelles</div>
+    <div style="font-size:52px;font-weight:600;margin-top:12px;color:#F7C7B3">paie, contrat et Pajemploi</div>
+    <div style="font-size:28px;font-weight:600;margin-top:34px;opacity:.92">Des réponses avec la source · Zéro publicité · Bienveillance</div>
+  </div>
+`, NAVY)]);
+
+// Gabarit commun des publications 1080x1350 : marges de 80 px (la zone 3:4 du
+// quadrillage Instagram coupe 34 px de chaque cote).
+const pub = (nom, contenu, fond = CREME) => visuels.push([nom, 1080, 1350, base(1080, 1350, `
+  <div style="position:absolute;left:92px;right:92px;top:70px;bottom:190px;display:flex;flex-direction:column;justify-content:center">${contenu}</div>
+  <div style="position:absolute;left:92px;right:92px;bottom:74px;display:flex;align-items:center;justify-content:space-between">
+    <img src="${fond === NAVY ? LOGO_CLAIR : LOGO}" style="height:46px">
+    <div style="font-size:26px;font-weight:700;color:${fond === NAVY ? "#F7C7B3" : TERRA}">timat.app</div>
+  </div>`, fond)]);
+
+// 4. PRESENTATION
+pub("04-publication-1-presentation.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Bonjour !</div>
+  <div style="font-size:80px;font-weight:700;line-height:1.08;margin-top:22px;max-width:800px">Moins de temps sur la paie. Plus de temps pour les enfants.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.45;margin-top:48px;color:#3C5463;max-width:860px">Je m'appelle Sophie. J'ai créé TiMat, une application pour les assistantes maternelles et les parents employeurs : contrat, heures, salaire, congés payés et récapitulatif Pajemploi, au même endroit.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:52px;color:${TERRA}">Ici : des repères officiels, sourcés, chaque semaine.</div>
+  <div style="font-size:30px;font-weight:600;margin-top:18px;color:#5E6E78">— Sophie, fondatrice de TiMat</div>
+`);
+
+// 5. LE MINIMUM HORAIRE
+pub("05-publication-2-minimum-4-20.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Depuis le 1<sup style=\"font-size:.6em\">er</sup> juin 2026</div>
+  <div style="font-size:230px;font-weight:700;line-height:1;margin-top:34px;color:#fff;letter-spacing:-4px">4,20 €</div>
+  <div style="font-size:44px;font-weight:600;line-height:1.3;margin-top:26px;color:#fff;max-width:860px">brut de l'heure, par enfant : c'est le minimum conventionnel des assistantes maternelles.</div>
+  <div style="font-size:33px;font-weight:600;line-height:1.45;margin-top:40px;color:#D6E1E7;max-width:860px">4,37 € avec le titre professionnel de la branche. Un contrat signé plus bas avant juin passe au minimum à cette date.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:44px;color:#AFC0CA">Source : DREETS Pays de la Loire, fiche du 12 juin 2026 (avenant n° 10 de la convention collective IDCC 3239)</div>
+`, NAVY);
+
+// 6. INDEMNITE D'ENTRETIEN
+pub("06-publication-3-entretien-3-92.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Indemnité d'entretien · depuis le 1<sup style=\"font-size:.6em\">er</sup> juin 2026</div>
+  <div style="font-size:230px;font-weight:700;line-height:1;margin-top:34px;letter-spacing:-4px">3,92 €</div>
+  <div style="font-size:44px;font-weight:600;line-height:1.3;margin-top:26px;max-width:860px">minimum pour une journée de 9 heures d'accueil.</div>
+  <div style="margin-top:44px;font-size:33px;font-weight:600;line-height:1.55;color:#3C5463">
+    <div>• Au-delà de 9 h : + 0,435 € par heure</div>
+    <div>• Moins de 9 h : 0,435 € par heure,</div>
+    <div style="padding-left:30px">jamais moins de 2,65 € par jour</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:40px" class="src">Source : DREETS Pays de la Loire, fiche du 12 juin 2026 (90 % du minimum garanti, 4,35 €)</div>
+`);
+
+// 7. PAJEMPLOI : UNE DECLARATION PAR ENFANT
+pub("07-publication-4-pajemploi-par-enfant.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Pajemploi · depuis janvier 2026</div>
+  <div style="font-size:92px;font-weight:700;line-height:1.05;margin-top:30px;max-width:880px">Une déclaration par enfant.</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.45;margin-top:40px;color:#3C5463;max-width:860px">Deux enfants de la même famille chez la même assistante maternelle ? Deux déclarations distinctes, chaque mois.</div>
+  <div style="margin-top:56px;padding:40px 44px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Quand déclarer ?</div>
+    <div style="font-size:46px;font-weight:700;margin-top:12px;line-height:1.2">Du 25 du mois au 5 du mois suivant</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:36px" class="src">Source : urssaf.fr et pajemploi.urssaf.fr</div>
+`);
+
+// 8. LA MENSUALISATION
+pub("08-publication-5-mensualisation.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">La mensualisation, en une ligne</div>
+  <div style="font-size:62px;font-weight:700;line-height:1.2;margin-top:40px;color:#fff">40 h × 52 semaines ÷ 12</div>
+  <div style="font-size:62px;font-weight:700;line-height:1.2;margin-top:14px;color:#F7C7B3">= 173,33 h par mois</div>
+  <div style="font-size:62px;font-weight:700;line-height:1.2;margin-top:14px;color:#fff">× 4,20 € = 728,00 € brut</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.45;margin-top:52px;color:#D6E1E7;max-width:860px">Le même salaire chaque mois, février compris. En année incomplète, on remplace 52 par le nombre de semaines d'accueil prévues au contrat.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:40px;color:#AFC0CA">Source : urssaf.fr, « Rémunérer un salarié à domicile ou un assistant maternel »</div>
+`, NAVY);
+
+// 9-14. COUVERTURES DES STORIES A LA UNE — l'icone tient dans le cercle central.
+const icones = {
+  salaire: `<div style="font-size:360px;font-weight:700;color:#fff;line-height:1;margin-top:-20px">€</div>`,
+  conges: `<svg width="380" height="380" viewBox="0 0 100 100"><circle cx="50" cy="50" r="19" fill="#fff"/>${[...Array(8)].map((_, i) => { const a = i * Math.PI / 4; return `<line x1="${50 + 28 * Math.cos(a)}" y1="${50 + 28 * Math.sin(a)}" x2="${50 + 40 * Math.cos(a)}" y2="${50 + 40 * Math.sin(a)}" stroke="#fff" stroke-width="7" stroke-linecap="round"/>`; }).join("")}</svg>`,
+  pajemploi: `<svg width="330" height="380" viewBox="0 0 80 100"><rect x="6" y="4" width="68" height="92" rx="9" fill="none" stroke="#fff" stroke-width="7"/><line x1="20" y1="30" x2="60" y2="30" stroke="#fff" stroke-width="7" stroke-linecap="round"/><line x1="20" y1="50" x2="60" y2="50" stroke="#fff" stroke-width="7" stroke-linecap="round"/><line x1="20" y1="70" x2="46" y2="70" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg>`,
+  indemnites: `<svg width="380" height="380" viewBox="0 0 100 100"><path d="M14 48 L50 16 L86 48" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 44 V86 H76 V44" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/><rect x="42" y="60" width="16" height="26" rx="3" fill="#fff"/></svg>`,
+  appli: `<svg width="260" height="400" viewBox="0 0 64 100"><rect x="5" y="4" width="54" height="92" rx="11" fill="none" stroke="#fff" stroke-width="7"/><circle cx="32" cy="82" r="5" fill="#fff"/><line x1="24" y1="13" x2="40" y2="13" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>`,
+  questions: `<div style="font-size:400px;font-weight:700;color:#fff;line-height:1;margin-top:-30px">?</div>`,
+};
+const couleurs = [NAVY, TERRA, NAVY, TERRA, NAVY, TERRA];
+Object.entries(icones).forEach(([nom, svg], i) => {
+  const libelle = { salaire: "Salaire", conges: "Congés", pajemploi: "Pajemploi", indemnites: "Indemnités", appli: "L'appli", questions: "Vos questions" }[nom];
+  visuels.push([`${String(9 + i).padStart(2, "0")}-story-a-la-une-${nom}-1080x1920.png`, 1080, 1920, base(1080, 1920, `
+    <div class="rond" style="width:760px;height:760px;left:160px;top:580px;background:${couleurs[i]};display:flex;align-items:center;justify-content:center">${svg}</div>
+    <div style="position:absolute;left:0;right:0;top:1420px;text-align:center;font-size:64px;font-weight:700">${libelle}</div>
+  `, CREME)]);
+});
+
+// 15-16. FONDS DE SONDAGE EN STORY — la question en haut, la place du
+// sticker « Sondage » au milieu, le logo en bas.
+const sondage = (nom, question, aide) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
+  <div style="position:absolute;left:90px;right:90px;top:300px">
+    <div style="font-size:34px;font-weight:700;color:${TERRA}">Sondage</div>
+    <div style="font-size:76px;font-weight:700;line-height:1.12;margin-top:22px">${question}</div>
+    <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:30px;color:#4E5E68">${aide}</div>
+  </div>
+  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
+`, CREME)]);
+sondage("15-story-sondage-temps-paie-1080x1920.png", "Combien de temps vous prend la paie chaque mois ?", "Heures, congés, indemnités, Pajemploi : tout compris.");
+sondage("16-story-sondage-minimum-1080x1920.png", "Votre taux horaire est-il au moins de 4,20 € brut ?", "C'est le minimum depuis le 1<sup style=\"font-size:.6em\">er</sup> juin 2026.");
+
+const nav = await chromium.launch({ executablePath: CHROMIUM() });
+for (const [nom, w, h, html] of visuels) {
+  const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+  await p.setContent(html, { waitUntil: "load" });
+  await p.evaluate(() => document.fonts.ready);
+  const deborde = await p.evaluate(() => [...document.querySelectorAll("div")].filter((d) => d.scrollWidth > d.clientWidth + 2 && getComputedStyle(d).overflow === "visible" && d.clientWidth > 0).length);
+  await p.screenshot({ path: `${SORTIE}/${nom}`, type: "png" });
+  console.log(nom, w + "x" + h, deborde ? `(${deborde} débordement(s) ?)` : "");
+  await p.close();
+}
+await nav.close();
