@@ -185,6 +185,9 @@ export const departAvantArrivee=(arr,dep)=>{
   const a=minutesDe(arr),d=minutesDe(dep);
   return a!==null&&d!==null&&d<=a;
 };
+// Un lien d'invitation vit 30 jours, et ne sert qu'une fois (fonction
+// claim_invite_token en base).
+export const MESSAGE_LIEN_INVITATION_INVALIDE="Ce lien d'invitation n'est plus valable : il a expiré (30 jours) ou a déjà servi. Demandez un nouveau lien à votre assistante maternelle.";
 export const MESSAGE_DEPART_AVANT_ARRIVEE="L'heure de départ doit être après l'heure d'arrivée.";
 
 export async function enregistrerPointage(ligne){
@@ -1813,7 +1816,15 @@ export function CPill({e,sel,onClick,badge}){return <div className={"card cp "+(
 // La reconnaissance se fait ici, une fois, plutot que dans les ~150 appels.
 const ICONE_MESSAGE=(msg)=>/^(erreur|échec|impossible)|erreur\s*:/i.test(String(msg||""))?"⚠️"
   :/en attente de réseau|hors ligne/i.test(String(msg||""))?"📵":"✅";
-export function Toast({msg,onClose,icone}){useEffect(()=>{const t=setTimeout(onClose,3000);return()=>clearTimeout(t)},[]);
+// LE TEMPS DE LIRE.
+// Chaque message disparaissait au bout de 3 secondes, quelle que soit sa
+// longueur. « Lien copié ✓ » s'y lit ; « Le téléphone n'a plus de place : ce
+// pointage n'a pas pu être gardé. Notez l'heure… » (190 caractères), non — et
+// c'est le message qui dit qu'une journee de travail n'est enregistree nulle
+// part. Environ 70 ms par caractere (une lecture de quatre mots par seconde),
+// jamais moins de 3 s, jamais plus de 12 s.
+export const dureeToast=(msg)=>Math.min(12000,Math.max(3000,String(msg??"").length*70));
+export function Toast({msg,onClose,icone}){useEffect(()=>{const t=setTimeout(onClose,dureeToast(msg));return()=>clearTimeout(t)},[]);
   return <div className="toast"><IconeOuEmoji e={icone||ICONE_MESSAGE(msg)}/>{msg}</div>}
 
 // Affiche le trace correspondant a un emoji, ou l'emoji lui-meme s'il n'est
@@ -7814,11 +7825,22 @@ export default function App(){
     if(!hasInvite)return;
     (async()=>{
       if(user.role==="parent"){
+        // LE MESSAGE DIT CE QUI S'EST PASSE, PAS CE QU'ON ESPERAIT.
+        // « Enfant rattaché ✓ » s'affichait a chaque fois : supabase.rpc ne
+        // leve pas d'exception, il rend {error}. Or les deux fonctions de
+        // rattachement echouaient en base (operateur text = uuid, fonction
+        // norm_email disparue) : le parent lisait une confirmation, et ne
+        // voyait jamais son enfant.
         try{
-          if(tk&&tk.length>20)await supabase.rpc("claim_invite_token",{p_token:tk});
-          await supabase.rpc("claim_invitations");
-          setGToast("Enfant rattaché à votre espace ✓");
-          setDataRefreshKey(k=>k+1);
+          let relie=false,lienRefuse=false;
+          if(tk&&tk.length>20){
+            const{data}=await supabase.rpc("claim_invite_token",{p_token:tk});
+            if(data)relie=true;else lienRefuse=true;
+          }
+          const{data:n}=await supabase.rpc("claim_invitations");
+          if(Number(n)>0)relie=true;
+          if(relie){setGToast("Enfant rattaché à votre espace ✓");setDataRefreshKey(k=>k+1);}
+          else if(lienRefuse)setGToast(MESSAGE_LIEN_INVITATION_INVALIDE);
         }catch(e){}
       }else{
         setGToast("Ce lien d'invitation est destiné aux parents. Ouvrez-le en navigation privée (ou déconnectez-vous) pour le tester.");
@@ -8088,7 +8110,10 @@ export default function App(){
           try{ await supabase.rpc("claim_invitations"); }catch(_e){}
           try{
             const tk=new URLSearchParams(window.location.search).get("invite")||(()=>{try{return localStorage.getItem("timat:invite");}catch(e){return null;}})();
-            if(tk&&tk.length>20){ const{data}=await supabase.rpc("claim_invite_token",{p_token:tk}); if(data){try{localStorage.removeItem("timat:invite");}catch(e){}} }
+            // Un lien refuse (expire, deja utilise, enfant deja relie) etait garde
+            // et rejoue a chaque chargement, sans un mot. On le retire, et on
+            // le dit.
+            if(tk&&tk.length>20){ const{data}=await supabase.rpc("claim_invite_token",{p_token:tk}); try{localStorage.removeItem("timat:invite");}catch(e){} if(!data)setGToast(MESSAGE_LIEN_INVITATION_INVALIDE); }
           }catch(_e){}
         }
         // Enfants
