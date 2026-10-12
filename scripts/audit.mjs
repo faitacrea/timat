@@ -4053,6 +4053,22 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- le taux d'un contrat se compare au minimum d'AUJOURD'HUI ---
+//
+// L'ecran du contrat comparait le taux horaire au minimum en vigueur a la date
+// de DEBUT du contrat. Un contrat signe le 5 janvier 2026 a 4,05 EUR etait
+// conforme (3,64 EUR) ; le minimum est passe a 4,20 EUR le 1er juin 2026
+// (avenant n° 10 du 5 fevrier 2026) — et l'ecran ne disait toujours rien. Il
+// se taisait precisement au moment ou un avenant devenait obligatoire. C'etait
+// le cas d'un contrat reel de la base.
+{
+  const g = fs.readFileSync(path.join(RACINE, "src/gestion.jsx"), "utf8");
+  for (const m of g.matchAll(/<AlerteTauxMinimum[^>]*date=\{contrat\.debut\}/g)) {
+    const ligne = g.slice(0, m.index).split("\n").length;
+    signale("paie", `src/gestion.jsx:${ligne} : l'alerte « taux sous le minimum » compare au minimum de la date de DÉBUT du contrat. Un contrat conforme à sa signature devient non conforme quand le minimum est revalorisé — comparer au minimum d'aujourd'hui (ou de la date de fin, si elle est passée)`);
+  }
+}
+
 // --- les textes legaux disent VRAI, et les deux politiques disent la meme chose ---
 //
 // La regle ci-dessus garantit qu'il n'y a qu'UNE adresse de l'hebergeur. Elle
