@@ -119,6 +119,7 @@ jobs:
               parcours-temps-travail parcours-calendrier-parent
               parcours-compte-neuf parcours-hors-ligne parcours-visuel
               verif-pointage-parent verif-invitations verif-suppression-compte
+              verif-relance-signature
     steps:
       - uses: actions/checkout@v4
 

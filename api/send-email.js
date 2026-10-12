@@ -73,7 +73,8 @@ export const EMAIL_TEMPLATES = {
   },
   signature_reminder: {
     subject: "Rappel : signature de contrat en attente",
-    html: (v) => `<p>Le contrat de ${esc(v.enfant_prenom)} attend votre signature depuis le ${esc(v.date)}.</p>
+    html: (v) => `<h2>${salut(v.parent_prenom)}</h2>
+<p>Le contrat de ${esc(v.enfant_prenom) || "votre enfant"} attend votre signature${v.date ? " depuis le " + esc(v.date) : ""}.</p>
 <p><a href="${lien(v.url)}">Signer maintenant</a></p>`,
   },
   bulletin_sent: {
@@ -202,6 +203,58 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
 
+// LES COURRIELS QUE L'APPLICATION PEUT DEMANDER — ET A QUI.
+//
+// Jusqu'ici, une fois connecte, n'importe quel compte (l'inscription est libre)
+// pouvait faire partir n'importe quel gabarit TiMat vers n'importe quelle
+// adresse : « Votre assistante maternelle ferme son compte » a une inconnue,
+// avec le prenom de son choix dans le texte, signe par notre domaine. Les
+// liens etaient deja bornes a timat.app ; le destinataire, lui, ne l'etait pas.
+//
+// Deux bornes desormais, pour tout appel qui vient du navigateur :
+//   - seuls les gabarits que l'application envoie reellement (ci-dessous) ;
+//     les autres — fin d'essai, fermeture de compte, inactivite — ne partent
+//     que du serveur, avec le secret interne ;
+//   - le destinataire doit etre relie a l'appelante par un enfant : la meme
+//     regle que get_recipient_email(), deja en base, qui fournit a
+//     l'application l'adresse qu'elle passe ici.
+// La verification se fait AVEC LE JETON DE L'APPELANTE, sous ses propres
+// droits : la cle de service n'a rien a faire dans cette porte.
+export const GABARITS_APPLICATION = [
+  'signature_asmat_signed', 'signature_parent_signed', 'signature_reminder',
+  'bulletin_sent', 'pointage_a_valider', 'versement_recu',
+];
+
+// Rend true (relie), false (personne de relie n'a cette adresse) ou null
+// (verification impossible : on refuse, on ne devine pas).
+async function destinataireRelie({ urlSupabase, cleSupabase, porteur, moi, to }) {
+  const entetes = { apikey: cleSupabase, Authorization: `Bearer ${porteur}` };
+  try {
+    const r = await fetch(`${urlSupabase}/rest/v1/enfants?select=asmat_id,parent_id`, { headers: entetes });
+    if (!r.ok) return null;
+    const lignes = await r.json();
+    const ids = new Set();
+    for (const l of Array.isArray(lignes) ? lignes : []) {
+      for (const id of [l.asmat_id, l.parent_id]) if (id && id !== moi) ids.add(id);
+    }
+    const cible = String(to).trim().toLowerCase();
+    const reponses = await Promise.all([...ids].slice(0, 50).map(async (id) => {
+      const rr = await fetch(`${urlSupabase}/rest/v1/rpc/get_recipient_email`, {
+        method: 'POST', headers: { ...entetes, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_user_id: id }),
+      });
+      if (!rr.ok) return { erreur: true };
+      const d = await rr.json().catch(() => null);
+      return { email: d && typeof d.email === 'string' ? d.email.trim().toLowerCase() : null };
+    }));
+    if (reponses.some((x) => x.email === cible)) return true;
+    return reponses.some((x) => x.erreur) ? null : false;
+  } catch (e) {
+    console.error('[send-email] vérification du destinataire impossible :', e.message);
+    return null;
+  }
+}
+
 const rateLimitMap = new Map();
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60 * 1000;
@@ -268,10 +321,11 @@ export default async function handler(req) {
   const enteteInterne = req.headers.get("x-timat-interne") || "";
   const estInterne = Boolean(secretInterne) && enteteInterne === secretInterne;
 
+  const porteur = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  const urlSupabase = process.env.VITE_SUPABASE_URL;
+  const cleSupabase = process.env.VITE_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  let moi = null;
   if (!estInterne) {
-    const porteur = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
-    const urlSupabase = process.env.VITE_SUPABASE_URL;
-    const cleSupabase = process.env.VITE_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
     if (!porteur || !urlSupabase || !cleSupabase) {
       return new Response(JSON.stringify({ error: 'Authentification requise' }), {
         status: 401,
@@ -286,6 +340,7 @@ export default async function handler(req) {
         headers: { apikey: cleSupabase, Authorization: `Bearer ${porteur}` },
       });
       valide = r.ok;
+      if (valide) moi = (await r.json().catch(() => ({}))).id || null;
     } catch (e) {
       console.error('[send-email] vérification du jeton impossible :', e.message);
     }
@@ -350,6 +405,18 @@ export default async function handler(req) {
       status: 400,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
+  }
+
+  if (!estInterne) {
+    const refus = (status, error) => new Response(JSON.stringify({ error }), {
+      status, headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+    if (!GABARITS_APPLICATION.includes(type)) {
+      return refus(403, "Ce courriel ne part pas de l'application");
+    }
+    const relie = await destinataireRelie({ urlSupabase, cleSupabase, porteur, moi, to });
+    if (relie === null) return refus(503, 'Vérification du destinataire impossible, réessayez');
+    if (!relie) return refus(403, 'Destinataire non relié à votre compte');
   }
 
   const finalSubject = tpl.subject;
