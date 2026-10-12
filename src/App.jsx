@@ -6733,7 +6733,16 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 Auto-entrepreneur<br/>
                 SIRET : {config.legal?.siret}<br/>
                 Adresse : {config.legal?.adresse||DEFAULT_CONFIG.legal.adresse}<br/>
-                {config.legal?.telephone&&<>Téléphone : {config.legal.telephone}<br/></>}
+                {config.legal?.telephone&&<>Téléphone : <a href={"tel:"+String(config.legal.telephone).replace(/[^\d+]/g,"")} style={{color:"inherit"}}>{config.legal.telephone}</a><br/></>}
+                {/* Le lien WhatsApp met le numero en format international (France :
+                    0X... devient 33X...), comme l'exige wa.me. Il ne remplace pas le
+                    numero ci-dessus : la loi demande un numero, pas un lien. */}
+                {config.legal?.whatsapp&&(()=>{
+                  let n=String(config.legal.whatsapp).replace(/\D/g,"");
+                  if(n.startsWith("00"))n=n.slice(2);
+                  else if(n.length===10&&n.startsWith("0"))n="33"+n.slice(1);
+                  return n.length>=10?<>WhatsApp : <a href={"https://wa.me/"+n} target="_blank" rel="noopener noreferrer" style={{color:"inherit"}}>écrire sur WhatsApp</a><br/></>:null;
+                })()}
                 Email : {emailLegal}<br/>
                 Directrice de la publication : {config.legal?.nom}
               </div>

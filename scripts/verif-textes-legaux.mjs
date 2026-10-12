@@ -82,6 +82,45 @@ dire(statique && statique.ok(), "/confidentialite.html répond toujours",
 
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
 
+// LE TELEPHONE ET LE LIEN WHATSAPP DES MENTIONS LEGALES.
+//
+// La LCEN (art. 6 III-1) exige un numero de telephone ; il se saisit dans le
+// back-office et arrive par app_config. On simule donc cette reponse. Le lien
+// WhatsApp exige le format international sans « + » ni « 00 » (FAQ WhatsApp,
+// « click to chat ») : un « 0033 6… » saisi tel quel donnait wa.me/0033…, un
+// lien qui n'ouvre aucune conversation. Et sans numero renseigne, aucune
+// ligne « Téléphone : » vide ne doit s'afficher.
+const mentionsAvec = async (legal) => {
+  const p = await nav.newPage();
+  await BUNDLE_TESTABLE(p);
+  await p.route("**/rest/v1/app_config**", (r) => r.fulfill({
+    status: 200, contentType: "application/json", body: JSON.stringify({ config: { legal } }),
+  }));
+  await p.goto(`${BASE}/?legal=mentions`, { waitUntil: "networkidle" });
+  await p.waitForTimeout(1200);
+  const r = await p.evaluate(() => {
+    const n = [...document.querySelectorAll("div")].find((d) => {
+      const s = getComputedStyle(d);
+      return s.position === "fixed" && s.zIndex === "250";
+    });
+    return n ? { texte: n.innerText, liens: [...n.querySelectorAll("a")].map((a) => a.getAttribute("href") || "") } : null;
+  });
+  await p.close();
+  return r || { texte: "", liens: [] };
+};
+for (const [saisi, attendu] of [["06 12 34 56 78", "https://wa.me/33612345678"],
+  ["+33 6 12 34 56 78", "https://wa.me/33612345678"], ["0033 6 12 34 56 78", "https://wa.me/33612345678"]]) {
+  const m = await mentionsAvec({ telephone: saisi, whatsapp: saisi });
+  dire(/Téléphone : /.test(m.texte) && m.liens.some((h) => h.startsWith("tel:")),
+    `téléphone « ${saisi} » affiché et cliquable`);
+  const wa = m.liens.find((h) => h.startsWith("https://wa.me/")) || "aucun lien";
+  dire(wa === attendu, `WhatsApp « ${saisi} » → ${attendu.replace("https://", "")}`, wa);
+}
+const vide = await mentionsAvec({ telephone: "", whatsapp: "" });
+dire(!!vide.texte && !/Téléphone :|WhatsApp/.test(vide.texte), "rien de renseigné : aucune ligne téléphone ni WhatsApp");
+const court = await mentionsAvec({ whatsapp: "1234" });
+dire(!court.liens.some((h) => h.startsWith("https://wa.me/")), "numéro WhatsApp invalide : aucun lien");
+
 await nav.close();
 console.log(ko ? `\n${ko} problème(s)\n` : "\nLes trois textes légaux ont une adresse, et elle fonctionne.\n");
 process.exit(ko ? 1 : 0);
