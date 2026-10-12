@@ -61,7 +61,7 @@ Adresse :12 rue étienne dolet 94230 cachan, France
 | Catégorie | Durée | Justification |
 |-----------|-------|---------------|
 | Compte actif | Durée de l'abonnement | Nécessité du service |
-| Données après suppression | 0 jour | Droit à l'effacement immédiat |
+| Données après suppression | 0 jour, ou 15 jours si l'assistante maternelle programme la suppression pour prévenir les familles reliées | Droit à l'effacement |
 | Données financières / contrats | 10 ans | Obligation légale comptable |
 | Logs de connexion | 12 mois | Sécurité |
 | Consentements RGPD | 5 ans | Preuve de conformité |
@@ -99,7 +99,7 @@ Conformément au RGPD (articles 15 à 22), vous disposez des droits suivants :
 
 - **Droit d'accès** : télécharger toutes vos données depuis Administratif → Documents → Export dossier
 - **Droit de rectification** : modifier vos informations dans Paramètres
-- **Droit à l'effacement** : bouton "Supprimer mon compte" dans Paramètres → suppression immédiate et définitive
+- **Droit à l'effacement** : bouton "Supprimer mon compte" dans Paramètres → suppression immédiate et définitive, ou programmée 15 jours plus tard quand des familles sont reliées (elles sont prévenues par e-mail) ; l'abonnement est arrêté dans les deux cas
 - **Droit à la portabilité** : export en CSV/PDF depuis l'application
 - **Droit d'opposition** : pour les traitements basés sur l'intérêt légitime
 - **Droit à la limitation** : contactez contact@timat.app

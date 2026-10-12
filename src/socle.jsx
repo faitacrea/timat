@@ -762,26 +762,94 @@ export function InstallButton(){
   </>;
 }
 
+// LA SUPPRESSION DU COMPTE, SANS LAISSER PERSONNE DERRIERE.
+//
+// Deux defauts, corriges ensemble :
+//   - supprimer son compte n'arretait pas l'abonnement Stripe : une
+//     assistante maternelle abonnee qui partait continuait d'etre prelevee ;
+//   - la suppression effacait sur-le-champ le contrat, les bulletins et le
+//     registre des heures que voient aussi les parents employeurs, sans
+//     qu'ils soient prevenus.
+// Desormais l'abonnement est regle par le serveur AVANT toute suppression
+// (s'il refuse, rien n'est supprime), et une assistante maternelle qui a des
+// familles reliees peut programmer la suppression a quinze jours : les
+// familles recoivent un courriel, un bandeau dans leur espace, un rappel trois
+// jours avant, et le temps de telecharger leurs documents.
+// Meme delai que DELAI_FERMETURE_JOURS dans api/_fermeture.js (l'audit verifie).
+export const DELAI_FERMETURE_JOURS=15;
+const dateLongueFr=(d)=>new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+const listeFr=(noms)=>{const n=(noms||[]).filter(Boolean);return n.length<=1?(n[0]||""):n.slice(0,-1).join(", ")+" et "+n[n.length-1];};
+
 export function SupprimerCompte({onDeleted}){
-  const [etape,setEtape]=useState("idle");
+  const [etape,setEtape]=useState("chargement");
+  const [mode,setMode]=useState("immediat");
+  const [info,setInfo]=useState({role:null,enfants:[],nbFamilles:0,prevueLe:null});
   const [confirmation,setConfirmation]=useState("");
   const [erreur,setErreur]=useState("");
+  const [bilan,setBilan]=useState("");
   const MOT="SUPPRIMER";
+
+  useEffect(()=>{
+    let vivant=true;
+    (async()=>{
+      try{
+        const{data:{user}}=await supabase.auth.getUser();
+        if(!user){if(vivant)setEtape("idle");return;}
+        // Une lecture en panne ne doit pas se lire « aucune famille » : ce
+        // serait proposer une suppression immediate sans prevenir personne.
+        const{data:p,error:eP}=await supabase.from("profiles").select("role,suppression_prevue_le").eq("id",user.id).maybeSingle();
+        if(eP)throw eP;
+        let enfants=[],nbFamilles=0;
+        if(p?.role!=="parent"){
+          const{data:e,error:eE}=await supabase.from("enfants").select("prenom,parent_id").eq("asmat_id",user.id).not("parent_id","is",null);
+          if(eE)throw eE;
+          enfants=(e||[]).map(x=>x.prenom).filter(Boolean);
+          nbFamilles=new Set((e||[]).map(x=>x.parent_id)).size;
+        }
+        if(!vivant)return;
+        setInfo({role:p?.role||null,enfants,nbFamilles,prevueLe:p?.suppression_prevue_le||null});
+        setEtape(p?.suppression_prevue_le?"programmee":"idle");
+      }catch(e){if(vivant){setInfo(i=>({...i,lectureKo:true}));setEtape("idle");}}
+    })();
+    return()=>{vivant=false;};
+  },[]);
+
+  const dateCible=dateLongueFr(Date.now()+DELAI_FERMETURE_JOURS*86400000);
+
+  const commencer=()=>{
+    if(info.lectureKo){setErreur("Impossible de vérifier les familles reliées à votre compte : rien n'a été supprimé. Vérifiez votre connexion et rechargez la page.");setEtape("error");return;}
+    if(info.nbFamilles>0){setEtape("choix");return;}
+    setMode("immediat");setEtape("confirm2");
+  };
 
   const handleSupprimer=async()=>{
     if(confirmation!==MOT)return;
-    setEtape("deleting");
+    setEtape("deleting");setErreur("");
     try{
       const{data:{user}}=await supabase.auth.getUser();
       if(!user)throw new Error("Non connecté");
+      if(mode==="programmer"){
+        const r=await appelApi("/api/stripe",{action:"fermeture",mode:"programmer"});
+        if(!r.ok)throw new Error(r.data?.error||"La suppression n'a pas pu être programmée.");
+        setInfo(i=>({...i,prevueLe:r.data.le}));
+        setBilan(r.data.courriels<r.data.familles
+          ?`${r.data.courriels} e-mail(s) envoyé(s) sur ${r.data.familles} famille(s) : prévenez les autres vous-même.`
+          :`${r.data.familles} famille(s) prévenue(s) par e-mail.`);
+        await logAction("schedule_delete_account",{table_name:"profiles",record_id:user.id});
+        setConfirmation("");setEtape("programmee");
+        return;
+      }
+      // L'abonnement d'abord. Si le serveur ne peut pas l'arreter, on ne
+      // supprime rien : un compte efface dont le prelevement continue est le
+      // pire des deux mondes.
+      const r=await appelApi("/api/stripe",{action:"fermeture",mode:"immediat"});
+      if(!r.ok)throw new Error((r.data?.error?r.data.error+". ":"")+"Votre abonnement n'a pas pu être arrêté : rien n'a été supprimé. Réessayez, ou écrivez à "+EMAIL_CONTACT+".");
       // Les photos et documents doivent partir AVANT les lignes de base : une
       // fois le compte supprime, plus aucune session ne peut y acceder et ils
-      // resteraient indefiniment sur le stockage. Supabase interdit de les
-      // effacer depuis SQL, cela ne peut donc pas se faire cote serveur.
+      // resteraient indefiniment sur le stockage.
       await viderStockageDuCompte(user.id);
       const{error}=await supabase.rpc("delete_user_account",{p_user_id:user.id});
       if(error)throw error;
-      // AUDIT LOG P8 : trace de suppression de compte (avant signOut, user_id explicite car user supprimé en DB)
       await logAction('delete_account', {table_name:'profiles', record_id:user.id, user_id:user.id});
       await supabase.auth.signOut();
       setEtape("done");
@@ -792,45 +860,85 @@ export function SupprimerCompte({onDeleted}){
     }
   };
 
-  if(etape==="idle")return(
-    <div style={{background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:12,padding:20}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}><IconeOuEmoji e="⚠️"/> Zone de danger</div>
-      <div style={{fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.6}}>
-        La suppression est <strong>définitive et irréversible</strong>. Toutes vos données (enfants, contrats, transmissions, photos, bilans) seront effacées immédiatement conformément au RGPD.
+  const annulerProgrammation=async()=>{
+    setEtape("deleting");setErreur("");
+    try{
+      const r=await appelApi("/api/stripe",{action:"fermeture",mode:"annuler"});
+      if(!r.ok)throw new Error(r.data?.error||"L'annulation n'a pas pu être enregistrée.");
+      setInfo(i=>({...i,prevueLe:null}));
+      setBilan("Suppression annulée : votre compte est conservé. "+(r.data.familles?r.data.familles+" famille(s) prévenue(s). ":"")
+        +(r.data.abonnement_a_relancer?"Attention : votre abonnement n'a pas pu être relancé automatiquement, il s'arrêtera à la fin de la période payée. Écrivez à "+EMAIL_CONTACT+" pour le relancer."
+          :r.data.abonnements_repris?"Votre abonnement reprend normalement.":""));
+      setEtape("idle");
+    }catch(e){setErreur(e.message);setEtape("error");}
+  };
+
+  const cadre={background:"var(--Rp)",border:"1px solid var(--R)",borderRadius:12,padding:20};
+  const texte={fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.6};
+
+  if(etape==="chargement")return <div style={cadre}><div style={texte}>Chargement…</div></div>;
+
+  if(etape==="programmee")return(
+    <div style={{...cadre,background:"var(--c)",border:"1.5px solid var(--R)"}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}><IconeOuEmoji e="⏳"/> Suppression programmée</div>
+      <div style={texte}>
+        Votre compte sera supprimé à partir du <strong>{dateLongueFr(info.prevueLe)}</strong>. Les familles ont été prévenues par e-mail et peuvent télécharger leurs documents d'ici là. Votre abonnement ne sera plus renouvelé.
+        {bilan&&<><br/><strong>{bilan}</strong></>}
       </div>
-      <button onClick={()=>setEtape("confirm1")}style={{background:"none",border:"1.5px solid var(--R)",color:"var(--R)",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:600}}>
+      <button onClick={annulerProgrammation} className="btn bG">Annuler la suppression</button>
+    </div>
+  );
+
+  if(etape==="idle")return(
+    <div style={cadre}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}><IconeOuEmoji e="⚠️"/> Zone de danger</div>
+      {bilan&&<div style={{...texte,color:"var(--S)",fontWeight:700}}>{bilan}</div>}
+      <div style={texte}>
+        La suppression est <strong>définitive et irréversible</strong>. Toutes vos données (enfants, contrats, transmissions, photos, bilans) sont effacées conformément au RGPD, et votre abonnement est arrêté.
+      </div>
+      <button onClick={commencer}style={{background:"none",border:"1.5px solid var(--R)",color:"var(--R)",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontSize:13,fontWeight:600}}>
         Supprimer mon compte et toutes mes données
       </button>
     </div>
   );
 
-  if(etape==="confirm1")return(
-    <div style={{background:"var(--Rp)",border:"2px solid var(--R)",borderRadius:12,padding:20}}>
-      <div style={{fontWeight:700,fontSize:15,color:"var(--R)",marginBottom:12}}>Êtes-vous absolument sûre ?</div>
-      <div style={{fontSize:13,color:"var(--m)",marginBottom:14,lineHeight:1.7}}>
-        Seront supprimés : votre profil, toutes les fiches enfants, tous les contrats, pointages, transmissions, bilans et photos.
+  if(etape==="choix")return(
+    <div style={{...cadre,border:"2px solid var(--R)"}}>
+      <div style={{fontWeight:700,fontSize:15,color:"var(--R)",marginBottom:10}}>{info.nbFamilles} famille{info.nbFamilles>1?"s":""} {info.nbFamilles>1?"voient":"voit"} votre dossier</div>
+      <div style={texte}>
+        Le contrat, le registre des heures et les bulletins de {listeFr(info.enfants)||"vos enfants accueillis"} disparaissent aussi pour {info.nbFamilles>1?"ces familles":"cette famille"}. Laissez-leur le temps de télécharger ce qu'elles veulent garder.
       </div>
-      <div style={{display:"flex",gap:10}}>
-        <button onClick={()=>setEtape("idle")}className="btn bG"style={{flex:1}}>Annuler</button>
-        <button onClick={()=>setEtape("confirm2")}className="btn bR"style={{flex:1}}>Oui, continuer</button>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        <button onClick={()=>{setMode("programmer");setEtape("confirm2");}} className="btn bR" style={{justifyContent:"center",whiteSpace:"normal"}}>
+          Prévenir les familles et supprimer le {dateCible}
+        </button>
+        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5,marginTop:-4}}>Recommandé. Elles reçoivent un e-mail tout de suite et un rappel 3 jours avant. Vous pouvez annuler d'ici là.</div>
+        <button onClick={()=>{setMode("immediat");setEtape("confirm2");}} className="btn bG" style={{justifyContent:"center",whiteSpace:"normal"}}>
+          Supprimer tout de suite
+        </button>
+        <div style={{fontSize:12,color:"var(--m)",lineHeight:1.5,marginTop:-4}}>Les familles ne pourront plus rien récupérer dans TiMat. Leurs déclarations restent sur Pajemploi.</div>
+        <button onClick={()=>setEtape("idle")} className="btn bG" style={{justifyContent:"center"}}>Annuler</button>
       </div>
     </div>
   );
 
   if(etape==="confirm2")return(
-    <div style={{background:"var(--Rp)",border:"2px solid var(--R)",borderRadius:12,padding:20}}>
+    <div style={{...cadre,border:"2px solid var(--R)"}}>
       <div style={{fontWeight:700,fontSize:14,color:"var(--R)",marginBottom:8}}>Confirmation finale</div>
-      <div style={{fontSize:13,color:"var(--m)",marginBottom:12}}>
+      <div style={{fontSize:13,color:"var(--m)",marginBottom:12,lineHeight:1.6}}>
+        {mode==="programmer"
+          ?<>Votre compte et toutes vos données seront supprimés le <strong>{dateCible}</strong>. </>
+          :<>Seront supprimés tout de suite : votre profil, les fiches enfants, les contrats, pointages, transmissions, bilans et photos. </>}
         Tapez <strong style={{fontFamily:"'DM Mono',monospace",color:"var(--R)"}}>SUPPRIMER</strong> pour confirmer.
       </div>
       <input className="inp"value={confirmation}onChange={e=>setConfirmation(e.target.value.toUpperCase())}
-        placeholder="SUPPRIMER"style={{textAlign:"center",fontFamily:"'DM Mono',monospace",marginBottom:12,
+        placeholder="SUPPRIMER" aria-label="Tapez SUPPRIMER pour confirmer" style={{textAlign:"center",fontFamily:"'DM Mono',monospace",marginBottom:12,
           borderColor:confirmation===MOT?"var(--R)":"var(--br)"}}/>
       <div style={{display:"flex",gap:10}}>
         <button onClick={()=>{setEtape("idle");setConfirmation("");}}className="btn bG"style={{flex:1}}>Annuler</button>
         <button onClick={handleSupprimer}disabled={confirmation!==MOT}
           className="btn bR"style={{flex:1,opacity:confirmation===MOT?1:.5}}>
-          Supprimer définitivement
+          {mode==="programmer"?"Programmer la suppression":"Supprimer définitivement"}
         </button>
       </div>
     </div>
@@ -839,7 +947,7 @@ export function SupprimerCompte({onDeleted}){
   if(etape==="deleting")return(
     <div style={{textAlign:"center",padding:24,background:"var(--Rp)",borderRadius:12,border:"1px solid var(--R)"}}>
       <div style={{fontSize:32,marginBottom:8}}>⏳</div>
-      <div style={{fontSize:14,color:"var(--R)",fontWeight:600}}>Suppression en cours...</div>
+      <div style={{fontSize:14,color:"var(--R)",fontWeight:600}}>Un instant…</div>
     </div>
   );
 
@@ -854,7 +962,7 @@ export function SupprimerCompte({onDeleted}){
     <div style={{padding:20,background:"var(--Rp)",borderRadius:12,border:"1px solid var(--R)"}}>
       <div style={{fontWeight:700,color:"var(--R)",marginBottom:8}}>Erreur</div>
       <div style={{fontSize:13,color:"var(--m)",marginBottom:12}}>{erreur}</div>
-      <button onClick={()=>setEtape("idle")}className="btn bG">Réessayer</button>
+      <button onClick={()=>setEtape(info.prevueLe?"programmee":"idle")}className="btn bG">Revenir</button>
     </div>
   );
 }
@@ -1058,7 +1166,7 @@ export const FAQ_DATA=[
   {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
    r:"Dans Paie & Contrats > Solde de tout compte. Saisissez la date de fin et le motif. TiMat calcule automatiquement l'ICCP (indemnité compensatrice de congés payés) et l'indemnité de préavis selon la CCN."}, // RENAME NAV P9
   {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
-   r:"Dans Paramètres → Supprimer mon compte. La suppression est immédiate et définitive (RGPD, droit à l'effacement, article 17). Assistante maternelle : tout votre dossier part avec le compte, y compris les données des enfants accueillis et vos fichiers. Parent : vos données personnelles sont effacées et vous êtes détaché du dossier, mais le registre de présence et les bulletins restent chez l'assistante maternelle — ce sont ses pièces justificatives, elle en a besoin pour se défendre en cas de litige."},
+   r:"Dans Paramètres → Supprimer mon compte. La suppression est définitive (RGPD, droit à l'effacement, article 17), et votre abonnement est arrêté en même temps. Assistante maternelle : tout votre dossier part avec le compte, y compris les données des enfants accueillis et vos fichiers. Si des familles sont reliées à votre compte, vous pouvez programmer la suppression 15 jours plus tard : elles sont prévenues par e-mail et peuvent télécharger leurs documents d'ici là. Vous pouvez aussi supprimer immédiatement. Parent : vos données personnelles sont effacées et vous êtes détaché du dossier, mais le registre de présence et les bulletins restent chez l'assistante maternelle — ce sont ses pièces justificatives, elle en a besoin pour se défendre en cas de litige."},
   {cat:"RGPD",q:"Où sont stockées mes données ?",
    // Cette reponse disait « sur des serveurs OVHcloud » — faux, Supabase est
    // chez Amazon Web Services — et « aucun transfert hors de l'Union

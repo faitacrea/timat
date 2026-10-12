@@ -126,6 +126,34 @@ export const EMAIL_TEMPLATES = {
 <p>${esc(v.qui)} a enregistré un versement${v.enfant_prenom ? ' pour ' + esc(v.enfant_prenom) : ''} le ${esc(v.date)}.</p>
 <p>Retrouvez le détail dans l'onglet Versements de votre espace TiMat.</p>`,
   },
+  // LA FERMETURE D'UN COMPTE D'ASSISTANTE MATERNELLE, DITE AUX FAMILLES.
+  //
+  // Supprimer le compte efface le contrat, les bulletins et le registre des
+  // heures que voit aussi le parent employeur. Ces trois courriels lui laissent
+  // le temps de garder ce dont il a besoin. Ils disent la date, ce qui
+  // disparait, ou le telecharger, et ce qui ne disparait pas (Pajemploi).
+  // Envoyes par le serveur seulement (/api/stripe, action « fermeture », et la
+  // tache quotidienne), jamais depuis le navigateur.
+  fermeture_compte_parent: {
+    subject: "Votre assistante maternelle ferme son compte TiMat",
+    html: (v) => `<h2>${salut(v.parent_prenom)}</h2>
+<p>${esc(v.asmat_prenom) || "Votre assistante maternelle"} a demandé la fermeture de son compte TiMat. Il sera supprimé à partir du <strong>${esc(v.date)}</strong>, avec le dossier de ${esc(v.enfants) || "votre enfant"} : contrat, registre des heures, bulletins et récapitulatifs.</p>
+<p><strong>D'ici là, téléchargez ce que vous souhaitez garder.</strong> Dans votre espace parent, un bandeau en haut de l'écran vous mène à « Exporter mes données » (l'ensemble de vos informations) et à « Documents & Attestations » (le contrat signé).</p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir mon espace parent</a></p>
+<p style="color:#55707C;font-size:14px">Vos déclarations restent consultables dans votre espace pajemploi.urssaf.fr : elles ne dépendent pas de TiMat. Votre propre compte TiMat n'est pas supprimé.</p>`,
+  },
+  fermeture_compte_rappel_parent: {
+    subject: "Rappel : le dossier TiMat de votre enfant sera supprimé dans 3 jours",
+    html: (v) => `<h2>${salut(v.parent_prenom)}</h2>
+<p>Le compte TiMat de ${esc(v.asmat_prenom) || "votre assistante maternelle"} sera supprimé à partir du <strong>${esc(v.date)}</strong>, avec le dossier de ${esc(v.enfants) || "votre enfant"}.</p>
+<p>Si ce n'est pas déjà fait, téléchargez vos documents : dans votre espace parent, le bandeau en haut de l'écran mène à « Exporter mes données » et à « Documents & Attestations ».</p>
+<p><a href="${lien(v.url)}" style="display:inline-block;background:#C4714A;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Télécharger mes documents</a></p>`,
+  },
+  fermeture_compte_annulee_parent: {
+    subject: "Le dossier TiMat de votre enfant est conservé",
+    html: (v) => `<h2>${salut(v.parent_prenom)}</h2>
+<p>${esc(v.asmat_prenom) || "Votre assistante maternelle"} a annulé la fermeture de son compte TiMat. Le dossier de ${esc(v.enfants) || "votre enfant"} est conservé, et rien ne change pour vous.</p>`,
+  },
 };
 
 // UN BOUTON DE COURRIEL NE PEUT PAS POINTER VERS LE VIDE.

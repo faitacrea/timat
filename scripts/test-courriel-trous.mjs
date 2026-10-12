@@ -124,6 +124,35 @@ for (const f of fichiers) {
     }
   }
 }
+// LES COURRIELS DE FERMETURE, ENVOYES PAR prevenirFamilles().
+//
+// Ces trois envois ne s'ecrivent pas « type, to, vars » au meme endroit : le
+// gabarit est choisi par l'appelant (« prevenirFamilles({ type: '…' }) » dans
+// api/stripe.js et api/cron-essais.js), et les variables sont construites une
+// seule fois, dans api/_fermeture.js. On rapproche donc les deux : chaque
+// gabarit appele doit trouver toutes ses variables dans ce bloc commun.
+{
+  const module = readFileSync(new URL("../api/_fermeture.js", import.meta.url), "utf8");
+  const envoi = module.slice(module.indexOf("export async function prevenirFamilles"));
+  const bloc = blocVars(envoi.slice(envoi.indexOf("JSON.stringify(")));
+  const fournies = bloc === null ? null : clesDe(bloc);
+  if (fournies === null) dire(false, "api/_fermeture.js", "bloc « vars » introuvable dans prevenirFamilles()");
+  for (const f of fichiers) {
+    const src = readFileSync(new URL("../" + f, import.meta.url), "utf8");
+    for (const m of src.matchAll(/prevenirFamilles\(\{[^)]*?type\s*:\s*["']([a-z_0-9]+)["']/g)) {
+      const nom = m[1];
+      if (!besoin[nom]) { dire(false, `${f} appelle le gabarit « ${nom} »`, "ce gabarit n'existe pas dans EMAIL_TEMPLATES"); continue; }
+      const signature = f + "|" + nom + "|prevenirFamilles";
+      if (vus.has(signature) || !fournies) continue;
+      vus.add(signature);
+      appels++;
+      const manque = besoin[nom].filter((v) => !fournies.has(v));
+      dire(manque.length === 0, `${f} · ${nom} (par prevenirFamilles)`,
+        `variable(s) non fournie(s) : ${manque.join(", ")} — le courriel partirait avec un trou à la place`);
+    }
+  }
+}
+
 // LES GABARITS QUE PERSONNE N'APPELLE.
 //
 // « invitation_parent » est écrit ici et n'est appelé par aucun code du dépôt :

@@ -6907,6 +6907,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p style={{marginTop:10}}><strong>Données dont l'assistante maternelle est responsable</strong></p>
               <p>Le dossier de l'enfant, les pointages, les contrats et les bulletins sont conservés aussi longtemps qu'elle en a l'usage, et effacés à sa demande ou avec son compte. TiMat ne les supprime pas d'office à la fin d'un accueil : ces pièces justifient les bulletins de salaire, et un salarié dispose de trois ans pour réclamer un rappel de salaire. Les effacer automatiquement priverait l'assistante maternelle de ses propres preuves.</p>
               <p style={{marginTop:8}}>Un parent qui supprime son compte est détaché du dossier sans que celui-ci soit détruit, pour la même raison.</p>
+              <p style={{marginTop:8}}>Quand une assistante maternelle dont le compte est relié à des familles le supprime, elle peut programmer la suppression quinze jours plus tard : les familles sont prévenues par e-mail, puis trois jours avant, et peuvent télécharger leurs documents d'ici là. Elle peut aussi supprimer immédiatement. Dans les deux cas, son abonnement est arrêté.</p>
               <p style={{marginTop:10}}><strong>À la fin de votre abonnement</strong></p>
               <p>Le RGPD (article 28.3.g) impose à TiMat, en tant que sous-traitante, de vous <strong>restituer ou supprimer</strong> vos données professionnelles à la fin de la prestation, <strong>à votre choix</strong>, et de détruire les copies existantes.</p>
               <p style={{marginTop:8}}>Concrètement : votre espace reste consultable et exportable pendant <strong>30 jours</strong> après la fin de l'abonnement, pour vous laisser récupérer vos dossiers. Passé ce délai, rien n'est supprimé pour autant : votre compte repasse simplement en formule gratuite, et vos dossiers restent consultables et exportables. La suppression n'intervient que si vous la demandez. Vous pouvez à tout moment demander l'effacement immédiat, ou une attestation écrite de suppression, à {EMAIL_CONTACT}.</p>
@@ -7784,6 +7785,39 @@ export const RegistreMedicaments = lazy(() => _ecrans().then(m => ({ default: m.
 export const RepriseContrat = lazy(() => _ecrans().then(m => ({ default: m.RepriseContrat })));
 export const Autorisations = lazy(() => _ecrans().then(m => ({ default: m.Autorisations })));
 export const ProjetAccueil = lazy(() => _ecrans().then(m => ({ default: m.ProjetAccueil })));
+
+// LA FERMETURE ANNONCEE, VUE PAR LE PARENT.
+//
+// Quand l'assistante maternelle programme la suppression de son compte, le
+// dossier de l'enfant disparaitra a la date dite : contrat, registre des
+// heures, bulletins. Le courriel peut se perdre ; ce bandeau, lui, est la a
+// chaque ouverture, avec les deux boutons qui permettent de tout garder.
+function AlerteFermetures({setPage,user}){
+  const [lignes,setLignes]=useState([]);
+  useEffect(()=>{
+    if(!user?.id||user.isDemo||String(user.id).startsWith("demo-"))return;
+    let vivant=true;
+    supabase.rpc("fermetures_prevues").then(({data,error})=>{if(vivant&&!error&&Array.isArray(data))setLignes(data);});
+    return()=>{vivant=false;};
+  },[user?.id]);
+  if(!lignes.length)return null;
+  const groupes=[...lignes.reduce((m,l)=>{
+    const k=(l.asmat_prenom||"")+"|"+l.le;
+    if(!m.has(k))m.set(k,{asmat:l.asmat_prenom,le:l.le,enfants:[]});
+    m.get(k).enfants.push(l.enfant_prenom);
+    return m;
+  },new Map()).values()];
+  const liste=(n)=>{const x=n.filter(Boolean);return x.length<=1?(x[0]||"votre enfant"):x.slice(0,-1).join(", ")+" et "+x[x.length-1];};
+  return <div role="status" style={{background:"var(--Rp)",border:"1.5px solid var(--R)",borderRadius:12,padding:"14px 16px",marginBottom:16,display:"flex",flexDirection:"column",gap:10}}>
+    {groupes.map(g=><div key={g.asmat+g.le} style={{fontSize:13.5,color:"var(--b)",lineHeight:1.55}}>
+      <strong>{g.asmat||"Votre assistante maternelle"} ferme son compte TiMat.</strong> Le dossier de {liste(g.enfants)} (contrat, registre des heures, bulletins) sera supprimé à partir du <strong>{new Date(g.le).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}</strong>. Téléchargez d'ici là ce que vous souhaitez garder.
+    </div>)}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+      <button className="btn bR s" onClick={()=>setPage("export_donnees")}>Exporter mes données</button>
+      <button className="btn bG s" onClick={()=>setPage("documents_complet")}>Documents &amp; Attestations</button>
+    </div>
+  </div>;
+}
 
 export default function App(){
   const [maintOk] = useState(()=>maintenanceBypass());
@@ -8716,6 +8750,7 @@ export default function App(){
               <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
             </div>
           )}
+          {role==="parent"&&<AlerteFermetures setPage={setPage} user={user}/>}
           {renderPage()}
         </div>
         <BottomNav groups={groups} page={page} setPage={setPage} role={role} pmiNonLus={role==="parent"?0:pmiNonLus}/>

@@ -34,6 +34,7 @@
  * fasse à notre place.
  */
 import { createClient } from '@supabase/supabase-js';
+import { prevenirFamilles, reglerAbonnements, viderStockage } from './_fermeture.js';
 
 export const config = { runtime: 'edge' };
 
@@ -197,7 +198,7 @@ export default async function handler(request) {
   // « simulation=1 » dit ce qui serait fait, sans rien écrire ni envoyer.
   const simulation = new URL(request.url).searchParams.get('simulation') === '1';
   const maintenant = new Date();
-  const journal = { simulation, rappels: [], expires: [], pointages: [], purges: [], inactifs: [], erreurs: [] };
+  const journal = { simulation, rappels: [], expires: [], pointages: [], purges: [], inactifs: [], fermetures: [], erreurs: [] };
 
   // ---- LES ESSAIS QUI FINISSENT ----
   //
@@ -399,6 +400,53 @@ export default async function handler(request) {
   } catch (e) {
     console.error('[cron-essais] inactifs', e.message);
     journal.erreurs.push({ etape: 'inactifs', raison: e.message });
+  }
+
+  // ---- LES FERMETURES PROGRAMMEES ----
+  //
+  // Une assistante maternelle qui avait des familles reliees a choisi de
+  // supprimer son compte dans quinze jours, pour leur laisser le temps de
+  // telecharger leurs documents. Ce n'est pas une suppression decidee par une
+  // tache : c'est la sienne, executee a la date qu'elle a acceptee. Trois
+  // jours avant, les familles recoivent un rappel ; la date passee, le compte
+  // est supprime — l'abonnement Stripe d'abord, et si Stripe refuse, rien
+  // n'est supprime ce jour-la : on reessaie demain plutot que de laisser un
+  // prelevement courir sur un compte qui n'existe plus.
+  try {
+    const dans2 = new Date(maintenant.getTime() + 2 * 86400000).toISOString();
+    const dans3 = new Date(maintenant.getTime() + 3 * 86400000).toISOString();
+    const { data: aRappeler, error: eR } = await supabase.from('profiles')
+      .select('id, prenom, suppression_prevue_le')
+      .gte('suppression_prevue_le', dans2).lt('suppression_prevue_le', dans3);
+    if (eR) throw new Error(eR.message);
+    for (const p of aRappeler || []) {
+      journal.fermetures.push({ id: p.id, etape: 'rappel' });
+      if (simulation) continue;
+      const envoi = await prevenirFamilles({ supabase, asmatId: p.id, asmatPrenom: p.prenom,
+        type: 'fermeture_compte_rappel_parent', le: p.suppression_prevue_le, appUrl: APP_URL, secret: process.env.CRON_SECRET });
+      if (envoi.envoyes < envoi.familles) journal.erreurs.push({ id: p.id, raison: `rappel : ${envoi.envoyes} courriel(s) sur ${envoi.familles}` });
+    }
+
+    const { data: aSupprimer, error: eS } = await supabase.from('profiles')
+      .select('id, stripe_customer_id').lte('suppression_prevue_le', maintenant.toISOString());
+    if (eS) throw new Error(eS.message);
+    for (const p of aSupprimer || []) {
+      journal.fermetures.push({ id: p.id, etape: 'suppression' });
+      if (simulation) continue;
+      try {
+        await reglerAbonnements(p.stripe_customer_id, 'immediat');
+        const restants = await viderStockage(supabase, p.id);
+        if (restants) journal.erreurs.push({ id: p.id, raison: `${restants} fichier(s) non effacé(s)` });
+        const { data: fait, error: eD } = await supabase.rpc('supprimer_compte_programme', { p_user_id: p.id });
+        if (eD) throw new Error(eD.message);
+        if (!fait) journal.erreurs.push({ id: p.id, raison: 'suppression non effectuée (date modifiée entre-temps ?)' });
+      } catch (e) {
+        journal.erreurs.push({ id: p.id, raison: 'fermeture : ' + e.message });
+      }
+    }
+  } catch (e) {
+    console.error('[cron-essais] fermetures', e.message);
+    journal.erreurs.push({ etape: 'fermetures', raison: e.message });
   }
 
   // Une erreur sur un compte n'arrête pas les autres, mais elle doit se voir :
