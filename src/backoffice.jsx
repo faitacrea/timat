@@ -1111,6 +1111,21 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             <BOField label="SIRET"><BOTextInput k="siret" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
             <BOField label="Adresse"><BOTextInput k="adresse" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
             <BOField label="Email de contact"><BOTextInput k="email" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))}/></BOField>
+            {/* LE TELEPHONE, EXIGE PAR LA LOI, ET LE WHATSAPP, FACULTATIF.
+                La LCEN impose a une editrice personne physique de publier un
+                numero de telephone « pour contacter l'entreprise »
+                (economie.gouv.fr) — pas forcement un portable personnel. Un
+                lien WhatsApp ne le remplace pas : il contient le numero en
+                clair dans son adresse (FAQ WhatsApp, « click to chat »), donc
+                il ne le cache pas, et ce n'est pas un numero. D'ou deux
+                champs : le numero (obligatoire), et le WhatsApp (facultatif),
+                qui peut etre le meme. */}
+            <BOField label="Téléphone (obligatoire — mentions légales)"><BOTextInput k="telephone" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))} placeholder="06 00 00 00 00 — une ligne professionnelle convient"/></BOField>
+            <BOField label="WhatsApp (facultatif)"><BOTextInput k="whatsapp" state={cfg.legal||{}} setter={(k,v)=>setCfg(c=>({...c,legal:{...(c.legal||{}),[k]:v}}))} placeholder="Même numéro, ou laisser vide"/></BOField>
+            <div style={{fontSize:11,color:"var(--l)",lineHeight:1.5,marginTop:4}}>
+              Le numéro s'affiche en clair dans les mentions légales : la loi l'exige. Pour ne pas publier votre portable personnel,
+              une ligne dédiée à TiMat suffit. Le bouton WhatsApp montre lui aussi le numéro — il ne le cache pas.
+            </div>
           </BOCard>
           <BOCard title="Boutique — Liens de paiement Stripe" icon="🛒">
             <div style={{fontSize:11,color:"var(--l)",marginBottom:10}}>Collez ici vos liens Stripe. Dashboard Stripe → Produits → Liens de paiement.</div>

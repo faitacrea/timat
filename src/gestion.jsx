@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,debut,titreAmge}){
@@ -112,11 +112,15 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
   const joursPointes=contrat?Math.max(0,Math.round((h.real||0)/(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))||8))):0;
   const joursPrevus=contrat?Math.round(((contrat.jours?.length)||5)*semainesDuContrat(contrat)/MOIS_PAR_AN):0;
   const joursAccueil=joursPointes>0?joursPointes:joursPrevus;
-  const salBrut=contrat?(hMensDecl*contrat.tauxHoraire+hCompl*contrat.tauxHoraire+hMajorees*contrat.tauxHoraire*tauxMajorationDu(contrat)):0;
+  // Le taux DECLARE ce mois : jamais sous le minimum en vigueur. Le
+  // recapitulatif Pajemploi est le document de declaration — il ne doit pas
+  // faire declarer un salaire inferieur au minimum legal.
+  const tauxPaj=contrat?tauxHoraireAu(contrat,new Date(),user?.titre_amge):0;
+  const salBrut=contrat?(hMensDecl*tauxPaj+hCompl*tauxPaj+hMajorees*tauxPaj*tauxMajorationDu(contrat)):0;
   const entretienMois=contrat?Math.round((contrat.entretien||0)*joursAccueil*100)/100:0;
   const repasMoisPaj=contrat&&contrat.repasFourniPar!=="employeur"?Math.round((Number(contrat.repas)||0)*joursAccueil*100)/100:0;
   const absMois=abs.filter(a=>a.eId===enfant?.id);
-  const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*((contrat?.tauxHoraire||minimumHoraireAu(new Date()))*(contrat?.indemniteAbsence||0.5)),0);
+  const indemAbs=absMois.filter(a=>a.indemnise).reduce((s,a)=>s+a.heures*(tauxPaj*(contrat?.indemniteAbsence||0.5)),0);
   const totalBrut=salBrut+indemAbs;
   const moisCourant=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
   const netEstime=netDepuisBrut(totalBrut);
@@ -183,7 +187,9 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
         : ''),
       '</div>',
       '<div class="box"><h2>💰 Salaire à déclarer</h2>',
-      '<table><tr><td>Taux horaire brut (contrat)</td><td>'+nbf((contrat?.tauxHoraire||0),2)+' €/h</td></tr>',
+      // Le taux applique, et s'il a ete releve au minimum, le taux du contrat a
+      // cote : le parent qui compare a son contrat doit comprendre l'ecart.
+      '<table><tr><td>Taux horaire brut '+(tauxPaj>(Number(contrat?.tauxHoraire)||0)?'(minimum légal ; contrat : '+nbf((contrat?.tauxHoraire||0),2)+' €)':'(contrat)')+'</td><td>'+nbf(tauxPaj,2)+' €/h</td></tr>',
       '<tr><td>Salaire brut du mois</td><td>'+nbf(totalBrut,2)+' €</td></tr>',
       '<tr class="hl"><td>Salaire NET à déclarer</td><td>'+salNet+' €</td></tr>',
       '<tr><td>Indemnité d\'entretien (ligne distincte)</td><td>'+nbf(entretienMois,2)+' €</td></tr>',
@@ -266,7 +272,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
               <div style={{fontSize:11,color:"var(--l)"}}>{a.heures}h · {a.indemnise?"Indemnisée":"Non indemnisée"}</div>
             </div>
             <span className="badge"style={{background:a.indemnise?"var(--Gp)":"var(--Rp)",color:a.indemnise?"var(--G)":"var(--R)"}}>
-              {a.indemnise?"+"+(nbf((a.heures*(contrat.tauxHoraire*contrat.indemniteAbsence)),2))+"€":"0€"}</span>
+              {a.indemnise?"+"+(nbf((a.heures*(tauxPaj*(contrat.indemniteAbsence||0.5))),2))+"€":"0€"}</span>
           </div>)}
           {role==="asmat"&&<button className="btn bG"style={{width:"100%",marginTop:12}}>+ Déclarer une absence</button>}
         </div>
@@ -863,7 +869,13 @@ export function BulletinSalaire({enfants,role,pEId,user}){
   const h=isDemoBull
     ?(D.heures[enfant?.id]||{real:160,prev:174})
     :{real:useRealHours?heuresMoisReel.heures:hMens,prev:hMens};
-  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date());
+  // Le taux paye CE mois : jamais sous le minimum en vigueur ce mois-la. Il
+  // prenait le taux du contrat tel quel, et un contrat devenu inferieur au
+  // minimum apres une revalorisation produisait un bulletin sous le plancher
+  // legal — avec l'alerte rouge affichee juste au-dessus.
+  const tauxContrat=Number(contrat.tauxHoraire)||0;
+  const tauxH=tauxHoraireAu(contrat,moisSelKey?moisSelKey+"-15":new Date(),user?.titre_amge);
+  const tauxReleve=tauxContrat>0&&tauxH>tauxContrat;
   const heuresJourRef=Math.round(((contrat.heuresHebdo||40)/((contrat.jours?.length)||5))*10)/10;
   // UN CONTRAT MENSUALISE SE PAIE SUR LA MENSUALISATION, PAS SUR LE POINTAGE.
   //
@@ -1429,7 +1441,18 @@ template:"bulletin_sent",
 
       {/* Rémunération */}
       <div style={{marginBottom:14}}>
-        <AlerteTauxMinimum taux={tauxH} date={moisSelKey?moisSelKey+"-15":new Date()} titreAmge={user?.titre_amge}/>
+        {/* Le bulletin ne paie plus sous le minimum : il releve le taux et le
+            dit. L'alerte rouge d'avant restait affichee pendant que le calcul
+            continuait au taux trop bas. */}
+        {tauxReleve&&<div style={{display:"flex",gap:9,alignItems:"flex-start",background:"var(--Bp)",
+          border:"1px solid var(--B)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
+          fontSize:12.5,color:"var(--b)",lineHeight:1.55}}>
+          <IconeOuEmoji e="ℹ️" taille={16}/>
+          <span><b>Taux relevé au minimum légal.</b> Le contrat prévoit {nbf(tauxContrat,2)} € de l'heure,
+          mais le minimum conventionnel en vigueur ce mois-ci est de {nbf(tauxH,2)} €{user?.titre_amge?" avec le titre AM-GE (+ 4 %)":""} (IDCC 3239).
+          Ce bulletin est donc calculé à {nbf(tauxH,2)} € : une clause moins favorable que la convention est réputée non écrite.
+          Un avenant au contrat est recommandé pour le mettre à jour.</span>
+        </div>}
         {/* Le mode de mensualisation change le montant de plus de 10 % : il doit
             etre lisible sur le bulletin, pas seulement dans le contrat. */}
         <div style={{fontSize:11.5,color:"var(--m)",marginBottom:10,lineHeight:1.5}}>
@@ -1930,18 +1953,28 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
     // deux montants dus differents selon qui regarde le meme tableau — pire
     // qu'un ecart uniforme. Ce suivi peut donc encore surestimer de 1,5 % du
     // salaire, et seulement dans les trois departements concernes.
-    const netMensuel=netDepuisBrut(hMens*tx,false);
     const entMois=Math.round(joursMois*(Number(contrat.entretien)||0)*100)/100;
     const repMois=Math.round(joursMois*(Number(contrat.repas)||0)*100)/100;
+    // LE DU SE CALCULE MOIS PAR MOIS. Il etait unique pour toute la duree du
+    // contrat : un contrat passe sous le minimum apres une revalorisation
+    // affichait le meme du avant et apres, au taux trop bas. Chaque mois est
+    // desormais du a son propre taux — jamais sous le minimum de ce mois-la.
+    const duDuMois=(key)=>{
+      const t=tauxHoraireAu(contrat,key?key+"-15":new Date(),user?.titre_amge);
+      return Math.round((netDepuisBrut(hMens*t,false)+entMois+repMois)*100)/100;
+    };
+    const txCourant=tauxHoraireAu(contrat,new Date(),user?.titre_amge);
+    const netMensuel=netDepuisBrut(hMens*txCourant,false);
     const duMensuel=Math.round((netMensuel+entMois+repMois)*100)/100;
     if(!hMens||!tx)return{lignes:[],duMensuel:0,ecart:0,netMensuel:0,entMois:0,repMois:0,brutMensuel:0};
     const lignes=moisDisponibles.map(m=>{
+      const du=duDuMois(m.key);
       const verse=versements.filter(v=>(v.date||"").slice(0,7)===m.key).reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
-      const ecart=Math.round((duMensuel-verse)*100)/100;
+      const ecart=Math.round((du-verse)*100)/100;
       const statut=verse<=0?"impaye":(ecart>1?"partiel":"paye");
-      return{...m,du:duMensuel,verse:Math.round(verse*100)/100,ecart,statut};
+      return{...m,du,verse:Math.round(verse*100)/100,ecart,statut};
     });
-    const totalDu=duMensuel*moisDisponibles.length;
+    const totalDu=lignes.reduce((t,l)=>t+l.du,0);
     const totalVerse=versements.reduce((s,v)=>s+(parseFloat(v.montant)||0),0);
     // On rend le detail, et pas seulement le total : c'est ce qui permet au
     // parent de comprendre pourquoi il verse ce montant-la, et a l'assistante
@@ -1949,7 +1982,7 @@ export function Versements({enfants,role,pEId,user,demoMode=false}){
     // scripts/verif-du-verse.mjs — un total seul n'est pas verifiable.
     return{lignes,duMensuel,ecart:Math.round((totalDu-totalVerse)*100)/100,
       netMensuel:Math.round(netMensuel*100)/100,entMois,repMois,
-      brutMensuel:Math.round(hMens*tx*100)/100};
+      brutMensuel:Math.round(hMens*txCourant*100)/100};
   },[contrat.heuresHebdo,contrat.tauxHoraire,contrat.entretien,contrat.jours,moisDisponibles,versements]);
   const relancer=async(m)=>{
     if(!enfant?.parent_id){setToast("Parent non lié à cet enfant");return;}
@@ -3276,11 +3309,14 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   // --- Solde de tout compte, sur les données réelles du contrat ---
   // Tout ce bloc était écrit en dur : six jours de congés, un an et demi
   // d'ancienneté, un préavis de 30/60/90 jours. Il est maintenant calculé.
-  const tauxH=contrat.tauxHoraire||minimumHoraireAu(new Date(),user?.titre_amge);
-  const heuresMois=heuresMensualisees(contrat);
-  const salMensuel=heuresMois*tauxH;
   // Ancienneté réelle, du début du contrat à la date de fin saisie.
   const finRetenue=dateFin||isoJour(new Date());
+  // Le salaire de fin de contrat — celui qui sert au preavis et au maintien de
+  // salaire des conges — est celui de la DATE DE FIN, jamais sous le minimum
+  // alors en vigueur. Il partait du taux du contrat tel quel.
+  const tauxH=tauxHoraireAu(contrat,finRetenue,user?.titre_amge);
+  const heuresMois=heuresMensualisees(contrat);
+  const salMensuel=heuresMois*tauxH;
   const moisAnciennete=(()=>{
     if(!contrat.debut)return 0;
     const d=new Date(contrat.debut+"T12:00:00"), f=new Date(finRetenue+"T12:00:00");
@@ -3319,7 +3355,22 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   // conventionnel compte 26 jours ouvrables.
   const salaireJournalier=Math.round((salMensuel/26)*100)/100;
   const cpAcquisFin=congesAcquis(moisAnciennete);
-  const brutTotal=Math.round(salMensuel*moisAnciennete*100)/100;
+  // LE TOTAL BRUT SE SOMME MOIS PAR MOIS, chacun a son propre taux. Il valait
+  // « salaire de fin x nombre de mois » : un contrat revalorise en cours de
+  // route voyait tout son passe compte au taux final, ou tout son avenir au taux
+  // initial. Or c'est ce total qui fonde l'indemnite de rupture (1/80 du BRUT
+  // PERÇU, art. 121.1) et la regle du dixieme des conges : il doit etre ce qui
+  // a reellement ete du, mois apres mois.
+  const brutTotal=(()=>{
+    if(!contrat.debut||moisAnciennete<=0)return 0;
+    const d=new Date(contrat.debut+"T12:00:00");
+    let t=0;
+    for(let i=0;i<moisAnciennete;i++){
+      const m=new Date(d.getFullYear(),d.getMonth()+i,15);
+      t+=heuresMois*tauxHoraireAu(contrat,m,user?.titre_amge);
+    }
+    return Math.round(t*100)/100;
+  })();
   const cp=iccpCalcul({brutPeriode:brutTotal,joursAcquis:cpAcquisFin,joursPris:cpPris,salaireJournalier});
   const iccp=cp.montant;
   const congesRestants=cp.restants;
