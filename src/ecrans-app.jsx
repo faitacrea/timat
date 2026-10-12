@@ -4103,6 +4103,7 @@ export function InviterParent({enfants,user,demoMode=false}){
   const [invitations,setInvitations]=useState(demoMode?[{id:"inv_demo",email_parent:"parent.leo@email.fr",prenom_enfant:"Léo",statut:"envoyée",created_at:new Date().toISOString()}]:[]);
   const [shareToken,setShareToken]=useState(null);
   const enfant=enfants.find(e=>e.id===selId)||enfants[0];
+  const envoyees=invitations.filter(inv=>inv.email_parent||inv.email);
   useEffect(()=>{
     setShareToken(null);
     if(demoMode||!enfant?.id){return;}
@@ -4188,6 +4189,7 @@ export function InviterParent({enfants,user,demoMode=false}){
           <div style={{fontWeight:700,fontSize:13,color:"var(--B)",marginBottom:8}}><IconeOuEmoji e="🔗"/> Ou partagez ce lien directement</div>
           <div style={{fontSize:11,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
             Envoyez ce lien par SMS, WhatsApp ou autre. Le parent n'a qu'à créer son compte.
+            Il est valable 30 jours et ne sert qu'une fois ; passé ce délai, cette page en affiche un nouveau.
           </div>
           <div style={{display:"flex",gap:8,minWidth:0}}>
             <div style={{flex:1,minWidth:0,padding:"8px 10px",background:"var(--w)",borderRadius:8,fontSize:11,color:"var(--l)",fontFamily:"'DM Mono',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
@@ -4204,21 +4206,27 @@ export function InviterParent({enfants,user,demoMode=false}){
       {/* Historique invitations */}
       <div className="card">
         <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}><IconeOuEmoji e="📋"/> Invitations envoyées</div>
-        {invitations.length===0
+        {/* LA LISTE LISAIT UNE COLONNE QUI N'EXISTE PAS.
+            « inv.statut » n'est pas en base : la colonne s'appelle « acceptee »
+            (booleen). Toutes les invitations s'affichaient donc « En attente »,
+            meme acceptees. Les liens de partage (sans adresse) y figuraient
+            aussi, en lignes vides. Et « Pour … » donnait le prenom de l'enfant
+            SELECTIONNE, pas celui de l'invitation. */}
+        {envoyees.length===0
           ?<EmptyState emoji="📭" titre="Aucune invitation envoyée" texte="Invitez un parent pour partager l'espace de son enfant : les invitations envoyées apparaîtront ici."/>
           :<div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {invitations.map((inv,i)=><div key={inv.id||i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
+            {envoyees.map((inv,i)=>{const acceptee=inv.acceptee===true||inv.statut==="acceptée";return <div key={inv.id||i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:"var(--c)",borderRadius:10}}>
               <div>
                 <div style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{inv.email_parent||inv.email}</div>
                 <div style={{fontSize:11,color:"var(--l)"}}>
-                  Pour {inv.prenom_enfant||enfant?.prenom} · {new Date(inv.created_at).toLocaleDateString("fr-FR")}
+                  Pour {enfants.find(e=>e.id===inv.enfant_id)?.prenom||inv.prenom_enfant||"un enfant"} · {new Date(inv.created_at).toLocaleDateString("fr-FR")}
                 </div>
               </div>
               <span className="badge" style={{
-                background:inv.statut==="acceptée"?"var(--Sp)":"var(--Gp)",
-                color:inv.statut==="acceptée"?"var(--S)":"var(--G)",fontSize:11
-              }}>{inv.statut==="acceptée"?"✅ Acceptée":"⏳ En attente"}</span>
-            </div>)}
+                background:acceptee?"var(--Sp)":"var(--Gp)",
+                color:acceptee?"var(--S)":"var(--G)",fontSize:11
+              }}>{acceptee?"✅ Acceptée":"⏳ En attente"}</span>
+            </div>;})}
           </div>}
       </div>
     </div>
