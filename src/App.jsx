@@ -314,10 +314,14 @@ export async function logAction(action, opts={}){
 // Le courriel reste a l'appelant : son contenu depend de l'evenement.
 export async function createNotification({userId,type="info",titre="",page="accueil",meta=null,corps=""}){
   if(!userId)return;
+  // supabase.rpc ne leve pas : il rend {error}. Le catch seul ne voyait donc
+  // jamais un refus de la base (destinataire sans lien, fonction cassee) — la
+  // meme cecite qui a cache la panne des invitations.
   try{
-    await supabase.rpc("create_notification",{
+    const{error}=await supabase.rpc("create_notification",{
       p_user_id:userId, p_type:type, p_titre:titre, p_page:page, p_meta:meta,
     });
+    if(error)console.warn('[notification] refusee par la base:', error.message);
   }catch(e){ console.warn('[notification] non creee:', e?.message); }
   // Sans attente : un push qui echoue ne doit jamais retenir l'action en cours.
   envoyerPush({userId,titre,corps,url:"/?page="+encodeURIComponent(page),tag:type})
