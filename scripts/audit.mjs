@@ -4936,6 +4936,36 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- la FAQ ne promet pas ce qui n'existe pas ---
+//
+// Le 12 octobre 2026, la FAQ de l'application affirmait : « TiMat vous alerte si
+// un contrat reste non signé plus de 7 jours » (aucune alerte de ce genre
+// n'existe), « sans signature, le contrat n'a pas de valeur légale » (la
+// relation de travail existe des le premier jour, c'est l'ecrit qui est
+// obligatoire), et « indemnités d'entretien selon le barème URSSAF 2025 » (le
+// minimum vient de la convention collective, sur le minimum garanti de 2026).
+// Une promesse fausse dans l'aide est lue comme un engagement : ces trois
+// formules ne reviennent pas.
+{
+  const textes = [
+    ...readdirSync(new URL("../src/", import.meta.url)).filter((f) => /\.jsx?$/.test(f)).map((f) => "../src/" + f),
+    ...readdirSync(new URL("../public/", import.meta.url)).filter((f) => f.endsWith(".html")).map((f) => "../public/" + f),
+  ];
+  const interdites = [
+    [/alerte si un contrat reste non sign/i, "promet une alerte « contrat non signé » qui n'existe pas"],
+    [/n'a pas de valeur l[ée]gale/i, "affirme qu'un contrat non signé « n'a pas de valeur légale » : la relation de travail existe, c'est l'écrit qui est obligatoire"],
+    [/entretien[^\n]{0,80}bar[èe]me URSSAF|bar[èe]me URSSAF[^\n]{0,40}entretien/i, "rattache l'indemnité d'entretien à un « barème URSSAF » : son minimum vient de la convention collective (90 % du minimum garanti pour 9 h)"],
+  ];
+  for (const f of textes) {
+    const lignes = readFileSync(new URL(f, import.meta.url), "utf8").split("\n");
+    lignes.forEach((l, i) => {
+      if (/^\s*(\/\/|\*|\/\*)/.test(l)) return;
+      for (const [re, quoi] of interdites)
+        if (re.test(l)) signale("legal", `${f.replace("../", "")}:${i + 1} ${quoi}`);
+    });
+  }
+}
+
 // --- rapport ---
 const parCat = new Map();
 for (const a of anomalies) {

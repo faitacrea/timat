@@ -1037,11 +1037,22 @@ export const FAQ_DATA=[
   {cat:"Pajemploi",q:"Comment exporter mes données vers Pajemploi ?",
    r:"Dans Paie & Contrats > Facturation & Pajemploi, cliquez sur 'Exporter vers Pajemploi'. TiMat génère un récapitulatif avec toutes les données nécessaires (heures, salaire net, indemnités) prêtes à saisir sur pajemploi.urssaf.fr entre le 25 et le 5 du mois suivant."}, // RENAME NAV P9
   {cat:"Pajemploi",q:"Mon calcul de salaire est-il conforme à la convention collective ?",
-   r:"Oui. TiMat applique automatiquement les règles de la CCN des particuliers employeurs : mensualisation, heures complémentaires, majorées au-delà de 45h/semaine, indemnités d'entretien selon le barème URSSAF 2025."},
+   // « selon le barème URSSAF 2025 » : faux deux fois. L'indemnite d'entretien
+   // minimale vient de la convention collective (90 % du minimum garanti pour
+   // neuf heures), pas d'un bareme URSSAF, et le minimum garanti applique est
+   // celui de 2026. Et « heures complémentaires, majorées au-delà de 45 h » se
+   // lisait comme si les heures complementaires etaient majorees : elles ne le
+   // sont que si le contrat le prevoit.
+   r:"TiMat applique les règles de la convention collective des particuliers employeurs : mensualisation, heures complémentaires, heures majorées au-delà de 45 h par semaine (au taux prévu au contrat, 10 % au minimum), taux horaire jamais sous le minimum en vigueur le mois concerné, et indemnité d'entretien jamais sous le minimum conventionnel (90 % du minimum garanti pour 9 heures d'accueil)."},
   {cat:"Contrats",q:"Puis-je modifier un contrat en cours ?",
    r:"Oui, via un avenant. Dans Paie & Contrats > Contrats & Avenants, choisissez 'Avenant - Modification d'horaires' ou 'Avenant - Revalorisation salaire'. L'avenant est daté et tracé automatiquement."}, // RENAME NAV P9
   {cat:"Contrats",q:"Que se passe-t-il si un parent ne signe pas le contrat ?",
-   r:"Relancez via la messagerie TiMat. Sans signature, le contrat n'a pas de valeur légale. TiMat vous alerte si un contrat reste non signé plus de 7 jours."},
+   // Deux affirmations fausses. « TiMat vous alerte si un contrat reste non
+   // signé plus de 7 jours » : aucune alerte de ce genre n'existe, ni dans
+   // l'application ni dans les taches planifiees. Et « sans signature, le
+   // contrat n'a pas de valeur légale » : la relation de travail existe des le
+   // premier jour d'accueil, signee ou non ; c'est l'ecrit qui est obligatoire.
+   r:"Le contrat doit être écrit et signé par les deux parties, en principe avant le premier jour d'accueil : c'est une obligation de la convention collective. Relancez le parent par la messagerie TiMat. Sur l'écran d'accueil, « Statut des signatures » indique les contrats qui attendent encore une signature."},
   {cat:"PMI",q:"Comment préparer ma visite de renouvellement d'agrément ?",
    r:"Dans Documents, exportez votre 'Dossier PMI complet' : il contient l'historique des enfants accueillis, les bilans trimestriels, le planning périscolaire et vos échanges avec la PMI. Tout est daté et structuré."},
   {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
