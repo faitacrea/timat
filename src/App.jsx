@@ -2153,21 +2153,31 @@ function AccueilAssMat({enfants,setPage,user,demoStats=null}){
     const ct=e.contrat; if(!ct)return;
     setRappelState(p=>({...p,[ct.id]:"sending"}));
     try{
-      let email=e.parent_email||null;
-      if(!email&&e.parent_id){
-        const{data}=await supabase.from("profiles").select("email").eq("id",e.parent_id).maybeSingle();
-        email=data?.email||null;
-      }
-      if(!email){setRappelState(p=>({...p,[ct.id]:"noemail"}));return;}
-      const url=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?role=parent";
-      await sendNotificationEmail({
+      // L'ADRESSE DU PARENT VIENT DE get_recipient_email, PAS DE « profiles ».
+      // La lecture directe de « profiles » ne rend que son propre profil (règle
+      // d'accès profiles_own) : pour le profil du parent, elle revenait vide,
+      // et le bouton affichait « Email parent manquant » à chaque fois — le
+      // rappel n'est jamais parti. C'est la fonction qu'utilisent déjà les
+      // autres courriels (bulletin, pointage, partage du contrat).
+      const parentId=ct.parent_id||e.parent_id;
+      const{data:p,error:eDest}=parentId?await supabase.rpc("get_recipient_email",{p_user_id:parentId}):{data:null,error:null};
+      if(eDest)throw eDest;
+      if(!p?.email){setRappelState(s=>({...s,[ct.id]:"noemail"}));return;}
+      const url=(typeof window!=="undefined"?window.location.origin:"https://www.timat.app")+"/?goto=signature";
+      // « created_at » n'est pas dans l'objet contrat de l'accueil : le courriel
+      // disait « depuis le — » à chaque fois. La date utile est celle où
+      // l'assistante maternelle a signé.
+      const depuis=ct.date_signature_asmat;
+      const r=await sendNotificationEmail({
         type:"signature_reminder",
-        to:email,
+        to:p.email,
 template:"signature_reminder",
-        vars:{enfant_prenom:e.prenom,date:ct.created_at?String(ct.created_at).slice(0,10):"—",url},
+        vars:{parent_prenom:p.prenom||"",enfant_prenom:e.prenom,date:depuis?new Date(depuis).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}):"",url},
       });
-      setRappelState(p=>({...p,[ct.id]:"sent"}));
-    }catch(err){ setRappelState(p=>({...p,[ct.id]:"error"})); }
+      // « Rappel envoyé » s'affichait même quand l'envoi échouait :
+      // sendNotificationEmail ne lève pas, elle rend { success:false }.
+      setRappelState(s=>({...s,[ct.id]:r?.success?"sent":"error"}));
+    }catch(err){ setRappelState(s=>({...s,[ct.id]:"error"})); }
   };
   const [tabToast,setTabToast]=useState("");
   // STATS TEMPS REEL P14D - vraies stats Supabase (ou stats de démo injectées)
@@ -2478,7 +2488,7 @@ template:"signature_reminder",
             <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
               {none&&<button className="btn bP s"style={{padding:"6px 12px"}}onClick={()=>setPage("admin_finances")}>Signer →</button>}
               {onlyA&&<button className="btn bT s"style={{padding:"6px 11px"}}disabled={["sending","sent"].includes(rappelState[ct.id])}onClick={()=>rappelSignature(e)}>
-                {rappelState[ct.id]==="sent"?"✅ Rappel envoyé":rappelState[ct.id]==="sending"?"Envoi…":rappelState[ct.id]==="noemail"?"⚠️ Email parent manquant":"📧 Relancer le parent"}
+                {rappelState[ct.id]==="sent"?"✅ Rappel envoyé":rappelState[ct.id]==="sending"?"Envoi…":rappelState[ct.id]==="noemail"?"⚠️ Parent sans compte relié":rappelState[ct.id]==="error"?"⚠️ Échec — réessayer":"📧 Relancer le parent"}
               </button>}
               {(both||onlyA)&&<button className="btn bG s"style={{padding:"6px 11px"}}disabled={genState==="pending"}onClick={()=>regenererPDF(ct.id)}>
                 {genState==="pending"?"…":(ct.pdf_storage_path?"Régénérer PDF":"Générer PDF")}

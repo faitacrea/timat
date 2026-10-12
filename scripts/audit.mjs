@@ -543,6 +543,15 @@ const modelesApi = new Set([...apiMail.matchAll(/^\s{2}([a-z_]+):\s*\{/gm)].map(
 for (const m of new Set([...lireApp().matchAll(/template:"([a-z_]+)"/g)].map((x) => x[1]))) {
   if (!modelesApi.has(m)) signale("courriel", `le modèle « ${m} » est demandé par l'application mais inconnu de api/send-email.js`);
 }
+// Depuis le navigateur, la porte n'accepte que les gabarits de
+// GABARITS_APPLICATION. Un gabarit demande par l'application et absent de
+// cette liste serait refuse en 403 — et sendNotificationEmail ne le dit qu'a
+// la console : le parent ne recevrait rien, sans que personne le sache.
+const autorises = new Set(((apiMail.match(/GABARITS_APPLICATION\s*=\s*\[([^\]]*)\]/) || [])[1] || "").match(/[a-z_]+/g) || []);
+if (!autorises.size) signale("courriel", "GABARITS_APPLICATION introuvable dans api/send-email.js : la porte refuserait tout appel du navigateur");
+for (const m of new Set([...lireApp().matchAll(/sendNotificationEmail\(\{\s*type:\s*"([a-z_]+)"/g)].map((x) => x[1]))) {
+  if (autorises.size && !autorises.has(m)) signale("courriel", `le courriel « ${m} » part de l'application mais n'est pas dans GABARITS_APPLICATION : la porte le refuserait`);
+}
 
 // --- chiffres reglementaires ---
 // Le SMIC etait fige a 11,88 EUR, soit deux revalorisations de retard, et le
