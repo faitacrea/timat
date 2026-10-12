@@ -3827,7 +3827,7 @@ export const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICON
 // A METTRE A JOUR A CHAQUE FOIS QUE LE MODELE D'UN DOCUMENT CHANGE. Une
 // barriere d'audit le verifie : elle garde l'empreinte du modele de contrat et
 // refuse que le modele bouge sans que cette date bouge.
-export const DOCUMENTS_REFONTE="2026-10-11T20:25:10Z";
+export const DOCUMENTS_REFONTE="2026-10-12T05:21:23Z";
 // Le PDF est perime s'il a ete ecrit AVANT la derniere modification du contrat,
 // ou avant la refonte des documents. La premiere comparaison est la vraie :
 // sans elle, une fois le fichier refait le bouton disparaissait pour de bon, et
@@ -4032,7 +4032,27 @@ const jsPDF=await chargerJsPDF();
 
     R.article(10,"RUPTURE DU CONTRAT");
     R.texte("Hors période d'essai, la partie qui souhaite rompre le contrat notifie sa décision à l'autre par lettre recommandée avec avis de réception, ou par lettre remise en main propre contre décharge. La date de première présentation fixe le point de départ du préavis.",{taille:8.5});
-    R.texte("Le préavis est de 8 jours calendaires pour une ancienneté inférieure à 3 mois, de 15 jours pour une ancienneté de 3 mois à moins d'un an, et d'un mois au-delà. Le retrait de l'enfant à l'initiative du particulier employeur ouvre droit, après 9 mois d'ancienneté et hors faute grave, à une indemnité de rupture égale au minimum à 1/80e du total des salaires nets perçus.",{taille:8.5});
+    // « SALAIRES NETS » VENAIT DE L'ANCIENNE CONVENTION, ABROGEE.
+    //
+    // Le contrat imprimait « 1/80e du total des salaires NETS ». C'est un
+    // melange de deux textes : la convention de 2004 disait 1/120e du total des
+    // salaires NETS ; celle de 2021, en vigueur, dit 1/80e du total des
+    // salaires BRUTS (art. 121.1, verifie mot pour mot sur Legifrance :
+    // « Le montant de l'indemnite est egal a 1/80 du total des salaires bruts
+    // perçus pendant la duree du contrat »). Le contrat gardait le nouveau
+    // diviseur et l'ancienne base — et promettait donc environ un cinquieme de
+    // moins que ce que la convention prevoit, et que le calcul de
+    // l'application verse reellement. Un contrat signe qui annonce moins que
+    // ce qui est du.
+    //
+    // L'article nomme aussi ce qui est EXCLU de l'assiette. Le contrat ne le
+    // disait pas, alors que c'est precisement ce qui fait la difference entre
+    // deux calculs possibles.
+    R.texte("Le préavis est de 8 jours calendaires pour une ancienneté inférieure à 3 mois, de 15 jours pour une ancienneté de 3 mois à moins d'un an, et d'un mois au-delà. "
+      + "Le retrait de l'enfant à l'initiative du particulier employeur ouvre droit, après 9 mois d'accueil, à une indemnité de rupture égale à 1/80e du total des salaires BRUTS perçus pendant la durée du contrat, "
+      + "hors indemnités non soumises à cotisations (indemnité kilométrique, indemnité d'entretien, frais de repas). "
+      + "Elle n'est pas due en cas de faute grave ou lourde du salarié, ni en cas de retrait, de suspension ou de modification de son agrément. "
+      + "Elle n'est ni soumise à cotisations ni imposable.",{taille:8.5});
     R.texte("Au terme du contrat, le particulier employeur remet au salarié un certificat de travail, un solde de tout compte et une attestation destinée à France Travail. Le retrait de l'agrément du salarié entraîne la rupture de plein droit du contrat.",{taille:8.5});
 
     R.article(11,"AUTORISATIONS DU PARTICULIER EMPLOYEUR");
