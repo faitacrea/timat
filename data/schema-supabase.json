@@ -425,6 +425,7 @@
   "subscription_end_date",
   "subscription_status",
   "subscription_updated_at",
+  "suppression_prevue_le",
   "telephone",
   "titre_amge",
   "vitrine_active",

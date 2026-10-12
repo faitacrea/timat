@@ -20,6 +20,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { poserCors, utilisateurDeLaRequete } from './_authentifier.js';
+import { DELAI_FERMETURE_JOURS, famillesDe, prevenirFamilles, reglerAbonnements } from './_fermeture.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -44,8 +45,72 @@ export default async function handler(req, res) {
   const appelant = await utilisateurDeLaRequete(req);
   if (!appelant) return res.status(401).json({ error: 'Authentification requise' });
 
-  // --- Le portail client : gerer ou resilier un abonnement en cours. ---
   const action = req.query?.action || req.body?.action;
+
+  // --- La fermeture du compte : programmer, annuler, ou supprimer tout de suite. ---
+  //
+  // Elle vit ici parce qu'elle touche a l'abonnement : supprimer son compte
+  // n'arretait pas Stripe, et une assistante maternelle partie continuait
+  // d'etre prelevee. Aucune suppression ne se fait plus sans que l'abonnement
+  // soit regle d'abord ; si Stripe refuse, rien n'est supprime ni programme.
+  if (action === 'fermeture') {
+    try {
+      const mode = req.body?.mode;
+      const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      const { data: profil, error } = await sb.from('profiles')
+        .select('prenom, role, stripe_customer_id, suppression_prevue_le').eq('id', appelant.id).maybeSingle();
+      if (error) return res.status(502).json({ error: 'Profil illisible : ' + error.message });
+      if (!profil) return res.status(404).json({ error: 'Profil introuvable' });
+      const appUrl = process.env.APP_URL || 'https://www.timat.app';
+      const secret = process.env.CRON_SECRET;
+
+      if (mode === 'immediat') {
+        const arretes = await reglerAbonnements(profil.stripe_customer_id, 'immediat');
+        return res.status(200).json({ ok: true, abonnements_arretes: arretes });
+      }
+
+      if (mode === 'programmer') {
+        if (profil.role === 'parent') return res.status(400).json({ error: "La suppression d'un compte parent est immédiate." });
+        const familles = await famillesDe(sb, appelant.id);
+        if (!familles.length) return res.status(409).json({ error: 'Aucune famille reliée : la suppression peut être immédiate.' });
+        // L'abonnement d'abord : si Stripe refuse, on n'a encore rien promis.
+        await reglerAbonnements(profil.stripe_customer_id, 'fin_periode');
+        const le = new Date(Date.now() + DELAI_FERMETURE_JOURS * 86400000).toISOString();
+        const { error: eMaj } = await sb.from('profiles').update({ suppression_prevue_le: le }).eq('id', appelant.id);
+        if (eMaj) {
+          // Rien n'est programme : l'abonnement ne doit pas s'arreter pour autant.
+          await reglerAbonnements(profil.stripe_customer_id, 'reprendre').catch((e) => console.error('Fermeture, reprise :', e.message));
+          return res.status(502).json({ error: 'Date non enregistrée : ' + eMaj.message });
+        }
+        const envoi = await prevenirFamilles({ supabase: sb, asmatId: appelant.id, asmatPrenom: profil.prenom,
+          type: 'fermeture_compte_parent', le, appUrl, secret, dejaLues: familles });
+        return res.status(200).json({ ok: true, le, familles: envoi.familles, courriels: envoi.envoyes });
+      }
+
+      if (mode === 'annuler') {
+        if (!profil.suppression_prevue_le) return res.status(200).json({ ok: true, deja: true });
+        const { error: eMaj } = await sb.from('profiles').update({ suppression_prevue_le: null }).eq('id', appelant.id);
+        if (eMaj) return res.status(502).json({ error: 'Annulation non enregistrée : ' + eMaj.message });
+        // La suppression est annulee quoi qu'il arrive ensuite : si Stripe
+        // refuse de relancer l'abonnement, on le dit au lieu de pretendre
+        // l'echec de toute l'annulation (le compte, lui, est bien conserve).
+        let repris = 0, abonnementARelancer = false;
+        try { repris = await reglerAbonnements(profil.stripe_customer_id, 'reprendre'); }
+        catch (e) { console.error('Fermeture, reprise :', e.message); abonnementARelancer = true; }
+        const envoi = await prevenirFamilles({ supabase: sb, asmatId: appelant.id, asmatPrenom: profil.prenom,
+          type: 'fermeture_compte_annulee_parent', le: null, appUrl, secret });
+        return res.status(200).json({ ok: true, abonnements_repris: repris, abonnement_a_relancer: abonnementARelancer,
+          familles: envoi.familles, courriels: envoi.envoyes });
+      }
+
+      return res.status(400).json({ error: 'Mode inconnu' });
+    } catch (e) {
+      console.error('Fermeture error:', e.message);
+      return res.status(502).json({ error: e.message });
+    }
+  }
+
+  // --- Le portail client : gerer ou resilier un abonnement en cours. ---
   if (action === 'portail') {
     try {
       // L'IDENTIFIANT CLIENT VIENT DU PROFIL DE L'APPELANTE, PLUS DU CORPS.

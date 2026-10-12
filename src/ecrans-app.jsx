@@ -2399,7 +2399,7 @@ export function PolitiqueConfidentialite(){
     "4. Durées de conservation":[
       ["Données","Durée","Justification"],
       ["Compte actif","Durée de l'abonnement","Nécessité du service"],
-      ["Après suppression du compte","Effacement immédiat","Droit à l'effacement (RGPD art. 17)"],
+      ["Après suppression du compte","Effacement immédiat, ou à la date programmée (15 jours) quand des familles sont reliées","Droit à l'effacement (RGPD art. 17)"],
       ["Compte inactif","Signalé à 2 ans ; supprimé seulement après un avertissement resté sans réponse","Recommandation CNIL"],
       ["Facturation et comptabilité TiMat","10 ans","Code de commerce, art. L123-22"],
       ["Prospects","3 ans après le dernier contact","Norme CNIL prospection"],
@@ -2413,7 +2413,7 @@ export function PolitiqueConfidentialite(){
       ["Droit","Comment l'exercer"],
       ["Accès à vos données","Administratif → Documents → Export dossier"],
       ["Rectification","Paramètres → Modifier mon profil"],
-      ["Effacement (oubli)","Paramètres → Supprimer mon compte (immédiat et définitif)"],
+      ["Effacement (oubli)","Paramètres → Supprimer mon compte (immédiat, ou programmé à 15 jours pour prévenir les familles)"],
       ["Portabilité","Export CSV/PDF depuis l'application"],
       ["Opposition",`Contactez ${EMAIL_CONTACT}`],
       ["Réclamation CNIL","www.cnil.fr - 3 Place de Fontenoy, 75007 Paris"],

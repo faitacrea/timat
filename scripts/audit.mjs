@@ -4936,6 +4936,35 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- la politique publique porte la meme date que celle de l'application ---
+//
+// public/confidentialite.html affichait « Dernière mise à jour : 24 août 2026 »
+// le 12 octobre, apres cinq modifications (hebergeur, sous-traitants,
+// adresse de contact, purge). La date de l'application, elle, est tenue par
+// l'empreinte ci-dessus. Les deux textes disent la meme chose : ils portent
+// la meme date.
+{
+  const { majLisible } = await import(new URL("../data/documents-legaux.js", import.meta.url));
+  const statique = readFileSync(new URL("../public/confidentialite.html", import.meta.url), "utf8");
+  const dateStatique = (statique.match(/Dernière mise à jour : ([^<]+)</) || [])[1];
+  if (!dateStatique) signale("legal", "public/confidentialite.html : « Dernière mise à jour » introuvable");
+  else if (dateStatique.trim() !== majLisible())
+    signale("legal", `public/confidentialite.html date sa mise à jour du « ${dateStatique.trim()} », l'application du « ${majLisible()} » : alignez-les (data/documents-legaux.js)`);
+}
+
+// --- le delai de fermeture est le meme des deux cotes ---
+//
+// L'application annonce « supprimer le … » avec DELAI_FERMETURE_JOURS de
+// src/socle.jsx ; le serveur programme la date avec celui d'api/_fermeture.js.
+// Deux valeurs differentes, et la date promise a l'ecran ne serait pas celle
+// ecrite aux familles.
+{
+  const app = (readFileSync(new URL("../src/socle.jsx", import.meta.url), "utf8").match(/export const DELAI_FERMETURE_JOURS\s*=\s*(\d+)/) || [])[1];
+  const serveur = (readFileSync(new URL("../api/_fermeture.js", import.meta.url), "utf8").match(/export const DELAI_FERMETURE_JOURS\s*=\s*(\d+)/) || [])[1];
+  if (!app || !serveur) signale("rgpd", "DELAI_FERMETURE_JOURS introuvable dans src/socle.jsx ou api/_fermeture.js");
+  else if (app !== serveur) signale("rgpd", `délai de fermeture : ${app} jours à l'écran, ${serveur} jours côté serveur`);
+}
+
 // --- la FAQ ne promet pas ce qui n'existe pas ---
 //
 // Le 12 octobre 2026, la FAQ de l'application affirmait : « TiMat vous alerte si
