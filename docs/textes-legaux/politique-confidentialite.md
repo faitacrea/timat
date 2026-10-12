@@ -71,8 +71,9 @@ Adresse :12 rue étienne dolet 94230 cachan, France
 ## 4. Hébergement et localisation des données
 
 Toutes les données sont hébergées **en France** (région Paris) via :
-- **Supabase** (PostgreSQL, stockage fichiers) — serveurs OVHcloud Paris
-- **Vercel** (application web) — Edge Network Europe
+- **Supabase** (PostgreSQL, stockage fichiers) — Amazon Web Services, région eu-west-3 (Paris)
+- **Vercel** (application web) — fonctions serveur à Paris (cdg1), pages distribuées mondialement
+- **Resend** (envoi des courriels) — États-Unis, clauses contractuelles types
 
 Aucun transfert de données hors de l'Union Européenne n'est effectué, à l'exception de :
 - **Stripe** (paiements) — encadré par les clauses contractuelles types UE

@@ -25,15 +25,22 @@ Email : contact@timat.app
 
 ## Hébergement
 
+> Document de référence, non servi aux utilisateurs. Le texte réellement
+> affiché vit dans `data/coordonnees.js` (HEBERGEUR_WEB, HEBERGEUR_BASE) :
+> c'est lui qui fait foi. Corrigé le 12 octobre 2026 — ce fichier donnait
+> trois informations fausses : une troisième adresse de Vercel, et OVH comme
+> hébergeur de la base, alors que Supabase est chez Amazon Web Services.
+
 **Application web (Vercel)**
 Vercel Inc.
-340 Pine Street, Suite 701
-San Francisco, CA 94104, États-Unis
-[Les données sont traitées sur des serveurs européens — voir politique de confidentialité]
+440 N Barranca Ave #4133
+Covina, CA 91723, États-Unis — tél. +1 559 288 7060
+Fonctions serveur exécutées en région cdg1 (Paris, France).
 
-**Base de données (Supabase / OVHcloud Paris)**
-OVH SAS
-2 rue Kellermann, 59100 Roubaix, France
+**Base de données (Supabase)**
+Supabase Pte. Ltd.
+65 Chulia Street #38-02/03, OCBC Centre, Singapour 049513 — legal@supabase.io
+Données stockées chez Amazon Web Services, région eu-west-3 (Paris, France).
 
 ---
 

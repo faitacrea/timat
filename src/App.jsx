@@ -6732,7 +6732,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 <strong>{config.legal?.nom}</strong><br/>
                 Auto-entrepreneur<br/>
                 SIRET : {config.legal?.siret}<br/>
-                Adresse : {config.legal?.adresse||"— à compléter"}<br/>
+                Adresse : {config.legal?.adresse||DEFAULT_CONFIG.legal.adresse}<br/>
+                {config.legal?.telephone&&<>Téléphone : {config.legal.telephone}<br/></>}
                 Email : {emailLegal}<br/>
                 Directrice de la publication : {config.legal?.nom}
               </div>
@@ -7453,10 +7454,30 @@ export const DEFAULT_CONFIG = {
   // Aucune valeur par defaut inventee : ces informations sont obligatoires
   // (LCEN), et un gabarit plausible se publie sans qu'on le remarque, la ou un
   // champ vide se voit et se signale en rouge.
+  // LES MENTIONS LEGALES NE DOIVENT JAMAIS S'AFFICHER VIDES.
+  //
+  // Ces quatre champs etaient vides par defaut : seule la configuration lue en
+  // base les remplissait. Que la lecture echoue — pare-feu d'entreprise,
+  // bloqueur, coupure passagere — et la page affichait un editeur sans nom,
+  // « SIRET : » suivi de rien et « Adresse : — a completer ». Verifie en
+  // ouvrant les fichiers servis par timat.app sans acces a la base : c'est
+  // exactement ce qui s'affichait. Or c'est la page dont l'adresse figure dans
+  // la demande d'habilitation envoyee a l'URSSAF.
+  //
+  // Ces valeurs sont deja publiques : le nom et le SIRET figurent sur
+  // /confidentialite.html, et la publication de l'adresse a ete decidee le
+  // 1er octobre (docs/habilitation-pajemploi.md). Le back-office peut toujours
+  // les remplacer ; il ne peut plus les faire disparaitre.
+  //
+  // Le TELEPHONE est exige par la LCEN (art. 6 III-1 a) pour un editeur
+  // personne physique. Il reste vide ici a dessein : publier un numero de
+  // portable personnel est une decision qui appartient a l'editrice, pas au
+  // code. Il s'affiche des qu'il est renseigne au back-office.
   legal:{
-    nom:"",
-    siret:"",
-    adresse:"",
+    nom:"Lefort Sophie",
+    siret:"902 648 088 00026",
+    adresse:"12 rue Étienne Dolet, 94230 Cachan, France",
+    telephone:"",
     email:EMAIL_CONTACT,
   },
   // Vide = l'ecran de mandat Pajemploi est masque. Il ne s'ouvre que le jour
@@ -7523,7 +7544,10 @@ export const loadConfig = async () => {
         freeItems: saved.freeItems||DEFAULT_CONFIG.freeItems,
         proItems: saved.proItems||DEFAULT_CONFIG.proItems,
         guarantees: saved.guarantees||DEFAULT_CONFIG.guarantees,
-        legal:{...DEFAULT_CONFIG.legal,...(saved.legal||{})},
+        // Un champ VIDE en base ne doit pas effacer la valeur par defaut : un
+        // « nom: "" » sauvegarde par megarde au back-office referait apparaitre
+        // un editeur sans nom. On ne garde du sauvegarde que ce qui est rempli.
+        legal:{...DEFAULT_CONFIG.legal,...Object.fromEntries(Object.entries(saved.legal||{}).filter(([,v])=>String(v??"").trim()))},
         pajemploi:{...DEFAULT_CONFIG.pajemploi,...(saved.pajemploi||{})},
         boutique:{...DEFAULT_CONFIG.boutique,...(saved.boutique||{})},
         sectionsVisibles:{...DEFAULT_CONFIG.sectionsVisibles,...(saved.sectionsVisibles||{})},
