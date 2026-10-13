@@ -5,6 +5,18 @@ Application pour assistantes maternelles et parents employeurs
 `docs/passation-2026-10-13.md` : état du projet, ce qui reste à faire,
 identifiants utiles.
 
+## Continuité entre les sessions
+
+Une session ne se souvient pas des précédentes : seuls ce fichier, le dépôt
+et l'historique git font le lien. Donc :
+
+- au début, lire la passation ci-dessus et l'historique récent
+  (`git log --oneline -20`) ;
+- à la fin, ou dès que Sophie annonce qu'elle ouvre une nouvelle session :
+  mettre à jour la passation (fait, reste à faire, décisions, état des
+  comptes externes), la pousser et la fusionner — sans attendre qu'elle le
+  demande.
+
 ## Règles de Sophie (permanentes)
 
 - Être honnête et précis, avec de vraies informations ; chercher sur le net
