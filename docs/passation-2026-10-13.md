@@ -54,6 +54,10 @@ www.timat.app. Ce fichier sert de point de départ à la session suivante.
   Vercel équipe `team_RtgE3GvC9MI93wJASvENljPE`, projet
   `prj_dAewWDgybJnz9vsGyZgutqJpPvKO` ; Metricool marque `7382551`
   (Europe/Paris, Page Facebook `832950663238296`, Instagram `timat_app`).
+- Connecteurs disponibles en fin de session : Metricool (marque « Timat »)
+  et Stripe (reconnecté par Sophie le 13 octobre : la session suivante peut
+  vérifier elle-même le webhook, les e-mails clients et le pied de page des
+  factures).
 - Kit réseaux : `docs/reseaux-sociaux/kit-reseaux.html`, publié aussi sur
   https://claude.ai/artifact/BPTUbrHqAeVPDfs2w6cc5J ; images des
   publications en ligne sur `https://www.timat.app/reseaux/`.
@@ -112,7 +116,8 @@ déclencheur, fonctions `fermetures_prevues()` et
 ## Ce qu'il reste à faire
 
 **Sophie**
-- Stripe : vérifier le webhook, activer le reçu « Paiements réussis »,
+- Stripe : portail client FAIT (annulation en fin de période) ; e-mail
+  d'échec de paiement ACTIVÉ. Reste : vérifier le webhook, activer le reçu « Paiements réussis »,
   renseigner les informations publiques et le pied de page des factures
   (détail dans la conversation du 13 octobre), puis faire le vrai test
   d'abonnement et se rembourser.
