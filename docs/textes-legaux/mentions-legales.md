@@ -7,7 +7,7 @@
 ## Éditeur du site
 
 **TiMat**
-Forme juridique : Auto-entrepreneur
+Forme juridique : Entrepreneur individuel (EI), régime micro-entrepreneur
 Numéro SIRET : 90264808800026
 Représentant légal : Sophie LEFORT
 Adresse : 12 rue étienne dolet, 94230 cachan, France

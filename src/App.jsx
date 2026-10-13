@@ -6707,7 +6707,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                   visible de tous, qui fait douter du reste. Un champ vide ne
                   s'annonce pas. */}
               © {new Date().getFullYear()} TiMat — Tous droits réservés
-              {config.legal?.nom ? ` · Auto-entrepreneur ${config.legal.nom}` : ""}
+              {config.legal?.nom ? ` · ${config.legal.nom} EI` : ""}
               {config.legal?.siret ? ` · SIRET : ${config.legal.siret}` : ""}
             </div>
             <div style={{ display: "flex", gap: 16 }}>
@@ -6774,7 +6774,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p>Le site <strong>timat.app</strong> (ci-après "TiMat") est édité par :</p>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
                 <strong>{config.legal?.nom}</strong><br/>
-                Auto-entrepreneur<br/>
+                {/* « Auto-entrepreneur » n'est pas une forme juridique. Depuis le
+                    15 mai 2022 (décret n° 2022-725), le nom de l'entrepreneur
+                    individuel est suivi de « entrepreneur individuel » ou « EI »
+                    sur ses documents professionnels. */}
+                Entrepreneur individuel (EI), régime micro-entrepreneur<br/>
                 SIRET : {config.legal?.siret}<br/>
                 Adresse : {config.legal?.adresse||DEFAULT_CONFIG.legal.adresse}<br/>
                 {config.legal?.telephone&&<>Téléphone : <a href={"tel:"+String(config.legal.telephone).replace(/[^\d+]/g,"")} style={{color:"inherit"}}>{config.legal.telephone}</a><br/></>}
@@ -6868,7 +6872,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
             {showLegal==="confidentialite"&&<div>
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",marginBottom:12}}>1. Responsable du traitement</h3>
               <div style={{background:"#F4F7FA",borderRadius:10,padding:14,margin:"12px 0",fontSize:12,lineHeight:2}}>
-                {config.legal?.nom} — Auto-entrepreneur<br/>
+                {config.legal?.nom} — Entrepreneur individuel (EI)<br/>
                 Email : {emailLegal}<br/>
                 SIRET : {config.legal?.siret}
               </div>
