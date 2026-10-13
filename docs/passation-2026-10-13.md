@@ -117,16 +117,31 @@ déclencheur, fonctions `fermetures_prevues()` et
 
 **Sophie**
 - Stripe : portail client FAIT (annulation en fin de période) ; e-mail
-  d'échec de paiement ACTIVÉ. Reste : vérifier le webhook, activer le reçu « Paiements réussis »,
-  renseigner les informations publiques et le pied de page des factures
-  (détail dans la conversation du 13 octobre), puis faire le vrai test
-  d'abonnement et se rembourser.
+  d'échec de paiement ACTIVÉ. **Vérifié par le connecteur le 13 octobre
+  (compte réel `acct_1TGy7E1AsEXBU0aL`) : AUCUN webhook** — liste
+  `webhook_endpoints` vide, aucune destination d'événements v2, et tous les
+  événements portent `pending_webhooks: 0`. Le secret `STRIPE_WEBHOOK_SECRET`
+  existe pourtant dans Vercel (créé le 31 mars 2026) : il ne correspond donc
+  à aucun point de réception du mode réel. Conséquence : un paiement ne
+  ferait jamais passer le compte en Pro, et la boutique ne livrerait rien.
+  Personne n'est touché à ce jour (aucun abonnement, aucun paiement en mode
+  réel). À FAIRE AVANT LE VRAI TEST : créer la destination
+  `https://www.timat.app/api/webhook` (événements
+  `checkout.session.completed`, `customer.subscription.updated`,
+  `customer.subscription.deleted`), copier son secret `whsec_…` dans la
+  variable Vercel `STRIPE_WEBHOOK_SECRET` (Production), redéployer. Également
+  vu : e-mail et adresse d'assistance vides dans les informations publiques,
+  ni logo ni icône. Non lisibles par l'API (à vérifier à l'écran) : reçu
+  « Paiements réussis » et pied de page des factures. Ensuite : vrai test
+  d'abonnement et remboursement.
 - Facebook : finir « À propos » ; envoyer le lien direct de la Page (pour
   l'ajouter au site) ; vérifier ce qui a déjà été publié sur la Page et dans
   le groupe.
 - Instagram : relier le compte à la Page Facebook ; vérifier la grille (I1 à
   I5 publiés ?).
 - Valider la série 2 (kit, onglet « Série 2 ») avant toute programmation.
+  Montrée à Sophie le 13 octobre ; Metricool vérifié le même jour : aucune
+  publication programmée.
 - Facultatif : clés Vercel en « Sensitive » (le garde-fou de la session a
   bloqué Claude ; procédure dans la conversation du 12 octobre).
 - Décisions produit en attente : gratuité, offre intermédiaire, offre MAM
