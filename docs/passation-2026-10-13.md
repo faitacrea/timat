@@ -123,22 +123,20 @@ déclencheur, fonctions `fermetures_prevues()` et
   `checkout.session.completed`, `customer.subscription.updated`,
   `customer.subscription.deleted`) ; son secret est dans la variable Vercel
   `STRIPE_WEBHOOK_SECRET` (désormais « Sensitive », Production + Preview) ;
-  `STRIPE_PRICE_ID` remis PROVISOIREMENT à l'ancien prix de test
-  (`price_1TGyFp1pl8ynUceg2B9qDm3y`) pour que la fusion du 13/10 ne casse
-  pas « Passer Pro » ; le prix réel à y mettre en même temps que la clé est
-  `price_1U00xu1AsEXBU0aL9ARcyMVN` (Timat Pro 9,99 €/mois). **Découverte : la production tournait sur des clés de TEST.**
+  `STRIPE_PRICE_ID` = `price_1U00xu1AsEXBU0aL9ARcyMVN` (Timat Pro 9,99 €/mois,
+  mode réel), remis le 13/10 au soir. **Découverte : la production tournait sur des clés de TEST.**
   L'ancien `STRIPE_PRICE_ID` (`price_1TGyFp1pl8ynUceg2B9qDm3y`) n'existe pas
   sur le compte réel ; les trois variables Stripe dataient du 31 mars, avant
   la création du prix réel (août). Aucun abonnement ni paiement réel à ce
   jour ; un seul profil a un `stripe_customer_id`, absent du compte réel
-  (test de Sophie). **RESTE, SOPHIE SEULE** : remplacer `STRIPE_SECRET_KEY`
-  dans Vercel par la clé secrète du mode réel (`sk_live_…` ou clé restreinte
-  `rk_live_…`), que Claude ne peut ni créer ni lire ; ne pas la lui
-  transmettre. **PUIS CLAUDE** : remettre le prix réel dans
-  `STRIPE_PRICE_ID`, redéployer la production (les variables ne s'appliquent
-  qu'au déploiement suivant), vérifier un appel signé sur `/api/webhook`,
-  puis au vrai test d'abonnement : livraison réussie dans Stripe,
-  `pending_webhooks: 0`, profil en Pro. Également vu : e-mail et adresse d'assistance
+  (test de Sophie). **FAIT le 13/10 au soir** : Sophie a remplacé
+  `STRIPE_SECRET_KEY` par la clé du mode réel (date de modification vérifiée
+  dans Vercel, valeur jamais lue) ; Claude a remis le prix réel et redéployé
+  la production. `STRIPE_PUBLISHABLE_KEY` est encore la clé de test, mais le
+  code ne l'utilise nulle part. **RESTE** : le vrai test d'abonnement de
+  Sophie, puis vérifier dans Stripe la livraison au webhook
+  (`pending_webhooks: 0`) et en base le passage en Pro, puis le
+  remboursement. Également vu : e-mail et adresse d'assistance
   vides dans les informations publiques, ni logo ni icône. Non lisibles par
   l'API (à vérifier à l'écran) : reçu « Paiements réussis » et pied de page
   des factures.
