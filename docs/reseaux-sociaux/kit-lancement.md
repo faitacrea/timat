@@ -11,6 +11,16 @@ Les images sont dans `visuels/` et se régénèrent avec
 `node docs/reseaux-sociaux/generer-visuels.mjs` — à relancer quand le minimum
 horaire ou le minimum garanti change, les montants y sont écrits.
 
+Les images des publications (04 à 08, puis 17 à 21 de la « Série 2 ») sont
+aussi copiées dans `public/reseaux/`, donc en ligne sur
+https://www.timat.app/reseaux/… : Metricool a besoin d'une adresse publique
+pour envoyer une image à Instagram. Après une régénération, recopier les
+fichiers modifiés dans `public/reseaux/`.
+
+Compte Metricool « Timat » : identifiant de marque 7382551, fuseau
+Europe/Paris, Page Facebook et Instagram @timat_app reliés (13 octobre 2026).
+Règle : rien n'est programmé sans l'accord explicite de Sophie.
+
 ## Pourquoi l'ancienne version a été retirée
 
 - Elle annonçait « Compte gratuit sans date de fin » à côté des bulletins et de
