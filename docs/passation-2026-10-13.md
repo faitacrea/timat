@@ -151,7 +151,11 @@ déclencheur, fonctions `fermetures_prevues()` et
   publications Metricool à 20 h 30 — P1 à P5 sur la Page du 19 au 23 octobre
   (Instagram les avait déjà, capture du 13 octobre), puis 6 à 10 sur la Page
   ET Instagram les 26, 28, 30 octobre, 2 et 4 novembre. Vérifié : 15
-  publications « Pending », aucun doublon.
+  publications « Pending », aucun doublon. Groupe (programmé par Sophie
+  dans Facebook, vérifié sur ses captures) : G2 sondage le 14/10, G3 rappel
+  du minimum le 15/10, G4 sondage le 19/10, G5 sondage le 20/10, tous à
+  10 h 30, conformes au kit. Le commentaire G5 (année complète/incomplète)
+  est à poster à la main sous le sondage le 20/10.
 - Facultatif : clés Vercel en « Sensitive » (le garde-fou de la session a
   bloqué Claude ; procédure dans la conversation du 12 octobre).
 - Décisions produit en attente : gratuité, offre intermédiaire, offre MAM
