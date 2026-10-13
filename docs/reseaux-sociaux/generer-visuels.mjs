@@ -155,6 +155,73 @@ const sondage = (nom, question, aide) => visuels.push([nom, 1080, 1920, base(108
 sondage("15-story-sondage-temps-paie-1080x1920.png", "Combien de temps vous prend la paie chaque mois ?", "Heures, congés, indemnités, Pajemploi : tout compris.");
 sondage("16-story-sondage-minimum-1080x1920.png", "Votre taux horaire est-il au moins de 4,20 € brut ?", "C'est le minimum depuis le 1<sup style=\"font-size:.6em\">er</sup> juin 2026.");
 
+// 17-21. LA DEUXIEME SERIE DE PUBLICATIONS (13 octobre 2026). Chaque chiffre
+// porte sa source sur l'image ; les legendes sont dans kit-reseaux.html.
+
+// 17. LES CONGES PAYES
+pub("17-publication-6-conges-payes.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Congés payés des assistantes maternelles</div>
+  <div style="font-size:170px;font-weight:700;line-height:1;margin-top:34px;letter-spacing:-3px">2,5 jours</div>
+  <div style="font-size:42px;font-weight:600;line-height:1.3;margin-top:22px;max-width:860px">ouvrables acquis par mois de travail (ou par période de 4 semaines), dans la limite de 30 jours par an.</div>
+  <div style="margin-top:44px;padding:36px 42px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Combien sont-ils payés ?</div>
+    <div style="font-size:38px;font-weight:700;margin-top:12px;line-height:1.3">Le plus favorable des deux : le maintien de salaire ou le dixième de ce qui a été perçu sur l'année.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:34px" class="src">Sources : DREETS Auvergne-Rhône-Alpes, fiches année complète et incomplète · convention collective IDCC 3239</div>
+`);
+
+// 18. LE CREDIT D'IMPOT POUR LES PARENTS
+pub("18-publication-7-credit-impot.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Parents employeurs · crédit d'impôt</div>
+  <div style="font-size:230px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-4px">50 %</div>
+  <div style="font-size:42px;font-weight:600;line-height:1.3;margin-top:22px;color:#fff;max-width:880px">des frais de garde chez une assistante maternelle, pour un enfant de moins de 6 ans au 1<sup style="font-size:.6em">er</sup> janvier.</div>
+  <div style="font-size:34px;font-weight:600;line-height:1.5;margin-top:40px;color:#D6E1E7;max-width:880px">
+    <div>• Dépenses retenues : 3 500 € maximum par enfant</div>
+    <div>• Soit 1 750 € de crédit au plus</div>
+    <div>• Les aides reçues, comme le CMG, se déduisent</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:36px;color:#AFC0CA">Source : Code général des impôts, article 200 quater B</div>
+`, NAVY);
+
+// 19. AU-DELA DE 45 HEURES
+pub("19-publication-8-heures-majorees.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Heures majorées</div>
+  <div style="font-size:72px;font-weight:700;line-height:1.1;margin-top:30px;max-width:880px">Au-delà de 45 heures par semaine,</div>
+  <div style="font-size:72px;font-weight:700;line-height:1.1;margin-top:8px;color:${TERRA};max-width:880px">l'heure est majorée.</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.45;margin-top:40px;color:#3C5463;max-width:860px">Le taux est écrit dans le contrat, et il ne peut pas être inférieur à 10 %.</div>
+  <div style="margin-top:44px;padding:34px 40px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Et entre le contrat et 45 h ?</div>
+    <div style="font-size:34px;font-weight:600;margin-top:10px;line-height:1.4">Ce sont des heures complémentaires : majorées seulement si le contrat le prévoit.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:32px" class="src">Sources : code.travail.gouv.fr (convention IDCC 3239) · DREETS Occitanie et Pays de la Loire</div>
+`);
+
+// 20. L'INDEMNITE DE RUPTURE
+pub("20-publication-9-indemnite-rupture.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Fin de contrat · indemnité de rupture</div>
+  <div style="font-size:200px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-3px">1/80<sup style="font-size:.35em">e</sup></div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:22px;color:#fff;max-width:880px">des salaires bruts perçus pendant le contrat, quand le parent retire l'enfant après au moins 9 mois d'accueil.</div>
+  <div style="font-size:31px;font-weight:600;line-height:1.5;margin-top:36px;color:#D6E1E7;max-width:880px">
+    <div>• Ni cotisée, ni imposable</div>
+    <div>• Pas due en cas de faute grave, ni de retrait, suspension ou modification de l'agrément</div>
+    <div>• Exemple : 36 mois à 728 € brut → 327,60 €</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:32px;color:#AFC0CA">Source : convention collective IDCC 3239, article 121.1</div>
+`, NAVY);
+
+// 21. LE POINTAGE SIGNE DES DEUX COTES (TiMat)
+pub("21-publication-10-pointage-signe.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">Les heures, signées des deux côtés.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. L'assistante maternelle pointe l'arrivée et le départ.</div>
+    <div style="margin-top:10px">2. Le parent valide, depuis son accès gratuit.</div>
+    <div style="margin-top:10px">3. Le salaire et le récapitulatif Pajemploi partent de ces heures-là.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
