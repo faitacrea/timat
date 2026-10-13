@@ -19,7 +19,7 @@
 
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { poserCors, utilisateurDeLaRequete } from './_authentifier.js';
+import { poserCors, utilisateurDeLaRequete, origineDeRetour } from './_authentifier.js';
 import { DELAI_FERMETURE_JOURS, famillesDe, prevenirFamilles, reglerAbonnements } from './_fermeture.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -128,7 +128,7 @@ export default async function handler(req, res) {
       if (!stripeCustomerId) return res.status(404).json({ error: "Aucun abonnement Stripe rattaché à ce compte" });
       const session = await stripe.billingPortal.sessions.create({
         customer: stripeCustomerId,
-        return_url: process.env.NEXT_PUBLIC_APP_URL || 'https://www.timat.app',
+        return_url: origineDeRetour(req),
       });
       return res.status(200).json({ url: session.url });
     } catch (e) {
@@ -150,7 +150,7 @@ export default async function handler(req, res) {
     const email = appelant.email;
     if (!email) return res.status(400).json({ error: 'Compte sans adresse e-mail' });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://timat-rho.vercel.app';
+    const appUrl = origineDeRetour(req);
 
     // BOUTIQUE: one-time payment
     if (productId && BOUTIQUE_PRODUCTS[productId]) {

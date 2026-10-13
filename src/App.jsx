@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import qrcode from "qrcode-generator";
-import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB, INSTAGRAM_URL, INSTAGRAM_NOM } from "../data/coordonnees.js";
 import { majLisible } from "../data/documents-legaux.js";
 import { habilitationActive } from "../data/pajemploi.js";
 
@@ -6693,7 +6693,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{ fontSize: 12, lineHeight: 2, color: "rgba(255,255,255,.6)" }}>
                 📧 {F.contactEmail}<br/>
                 🌐 {F.contactWeb}<br/>
-                📍 {F.contactLieu}
+                📍 {F.contactLieu}<br/>
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.72)", textDecoration: "none" }}>📷 Instagram · {INSTAGRAM_NOM}</a>
               </div>
             </div>
           </div>

@@ -30,6 +30,20 @@ const ORIGINES = [
   "https://timat-rho.vercel.app",
 ];
 
+/**
+ * L'ADRESSE OÙ RAMENER LA PERSONNE APRÈS STRIPE.
+ *
+ * Le retour du paiement et du portail lisait NEXT_PUBLIC_APP_URL, et à défaut
+ * l'ancienne adresse timat-rho.vercel.app. Or la session de connexion est
+ * rangée par le navigateur pour UNE adresse : revenir sur une autre, c'est se
+ * retrouver déconnectée juste après avoir payé. On ramène donc la personne là
+ * d'où elle vient — si c'est une adresse de TiMat —, sinon sur le site.
+ */
+export const origineDeRetour = (req) => {
+  const origine = req.headers?.origin || req.headers?.get?.("origin") || "";
+  return ORIGINES.includes(origine) ? origine : "https://www.timat.app";
+};
+
 /** Les en-têtes CORS, limités aux origines de TiMat. « * » laissait n'importe
  *  quel site appeler ces portes depuis le navigateur de ses visiteurs. */
 export const corsDe = (req) => {
