@@ -117,38 +117,55 @@ déclencheur, fonctions `fermetures_prevues()` et
 
 **Sophie**
 - Stripe : portail client FAIT (annulation en fin de période) ; e-mail
-  d'échec de paiement ACTIVÉ. **Vérifié par le connecteur le 13 octobre
-  (compte réel `acct_1TGy7E1AsEXBU0aL`) : AUCUN webhook** — liste
-  `webhook_endpoints` vide, aucune destination d'événements v2, et tous les
-  événements portent `pending_webhooks: 0`. Le secret `STRIPE_WEBHOOK_SECRET`
-  existe pourtant dans Vercel (créé le 31 mars 2026) : il ne correspond donc
-  à aucun point de réception du mode réel. Conséquence : un paiement ne
-  ferait jamais passer le compte en Pro, et la boutique ne livrerait rien.
-  Personne n'est touché à ce jour (aucun abonnement, aucun paiement en mode
-  réel). À FAIRE AVANT LE VRAI TEST : créer la destination
-  `https://www.timat.app/api/webhook` (événements
+  d'échec de paiement ACTIVÉ. **13 octobre, fait par Claude avec l'accord
+  de Sophie** : webhook créé sur le compte réel (`we_1UQ7Pu1AsEXBU0aLwngtYYAI`,
+  `https://www.timat.app/api/webhook`, événements
   `checkout.session.completed`, `customer.subscription.updated`,
-  `customer.subscription.deleted`), copier son secret `whsec_…` dans la
-  variable Vercel `STRIPE_WEBHOOK_SECRET` (Production), redéployer. Également
-  vu : e-mail et adresse d'assistance vides dans les informations publiques,
-  ni logo ni icône. Non lisibles par l'API (à vérifier à l'écran) : reçu
-  « Paiements réussis » et pied de page des factures. Ensuite : vrai test
-  d'abonnement et remboursement.
+  `customer.subscription.deleted`) ; son secret est dans la variable Vercel
+  `STRIPE_WEBHOOK_SECRET` (désormais « Sensitive », Production + Preview) ;
+  `STRIPE_PRICE_ID` remis PROVISOIREMENT à l'ancien prix de test
+  (`price_1TGyFp1pl8ynUceg2B9qDm3y`) pour que la fusion du 13/10 ne casse
+  pas « Passer Pro » ; le prix réel à y mettre en même temps que la clé est
+  `price_1U00xu1AsEXBU0aL9ARcyMVN` (Timat Pro 9,99 €/mois). **Découverte : la production tournait sur des clés de TEST.**
+  L'ancien `STRIPE_PRICE_ID` (`price_1TGyFp1pl8ynUceg2B9qDm3y`) n'existe pas
+  sur le compte réel ; les trois variables Stripe dataient du 31 mars, avant
+  la création du prix réel (août). Aucun abonnement ni paiement réel à ce
+  jour ; un seul profil a un `stripe_customer_id`, absent du compte réel
+  (test de Sophie). **RESTE, SOPHIE SEULE** : remplacer `STRIPE_SECRET_KEY`
+  dans Vercel par la clé secrète du mode réel (`sk_live_…` ou clé restreinte
+  `rk_live_…`), que Claude ne peut ni créer ni lire ; ne pas la lui
+  transmettre. **PUIS CLAUDE** : remettre le prix réel dans
+  `STRIPE_PRICE_ID`, redéployer la production (les variables ne s'appliquent
+  qu'au déploiement suivant), vérifier un appel signé sur `/api/webhook`,
+  puis au vrai test d'abonnement : livraison réussie dans Stripe,
+  `pending_webhooks: 0`, profil en Pro. Également vu : e-mail et adresse d'assistance
+  vides dans les informations publiques, ni logo ni icône. Non lisibles par
+  l'API (à vérifier à l'écran) : reçu « Paiements réussis » et pied de page
+  des factures.
 - Facebook : finir « À propos » ; envoyer le lien direct de la Page (pour
   l'ajouter au site) ; vérifier ce qui a déjà été publié sur la Page et dans
   le groupe.
 - Instagram : relier le compte à la Page Facebook ; vérifier la grille (I1 à
   I5 publiés ?).
-- Valider la série 2 (kit, onglet « Série 2 ») avant toute programmation.
-  Montrée à Sophie le 13 octobre ; Metricool vérifié le même jour : aucune
-  publication programmée.
+- Série 2 VALIDÉE et PROGRAMMÉE le 13 octobre (accord de Sophie) : 15
+  publications Metricool à 20 h 30 — P1 à P5 sur la Page du 19 au 23 octobre
+  (Instagram les avait déjà, capture du 13 octobre), puis 6 à 10 sur la Page
+  ET Instagram les 26, 28, 30 octobre, 2 et 4 novembre. Vérifié : 15
+  publications « Pending », aucun doublon. Groupe (programmé par Sophie
+  dans Facebook, vérifié sur ses captures) : G2 sondage le 14/10, G3 rappel
+  du minimum le 15/10, G4 sondage le 19/10, G5 sondage le 20/10, tous à
+  10 h 30, conformes au kit. Le commentaire G5 (année complète/incomplète)
+  est à poster à la main sous le sondage le 20/10. G1 (bienvenue,
+  épinglée) n'était NI publié NI programmé au 13/10 au soir : texte redonné
+  à Sophie pour publication immédiate, avant le sondage du 14/10.
 - Facultatif : clés Vercel en « Sensitive » (le garde-fou de la session a
   bloqué Claude ; procédure dans la conversation du 12 octobre).
 - Décisions produit en attente : gratuité, offre intermédiaire, offre MAM
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
-- Programmer sur Metricool ce que Sophie aura validé (marque 7382551).
+- Vérifier dans Metricool que les publications du 19 octobre sont bien
+  parties (statut), puis préparer la série 3 (Sophie valide avant).
 - Ajouter le lien de la Page Facebook au site (`data/coordonnees.js`,
   pied de page, `sameAs` de `index.html`) quand Sophie l'envoie.
 - Après le vrai test Stripe : vérifier en base `stripe_customer_id`,
