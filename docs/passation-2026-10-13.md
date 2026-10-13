@@ -123,8 +123,10 @@ déclencheur, fonctions `fermetures_prevues()` et
   `checkout.session.completed`, `customer.subscription.updated`,
   `customer.subscription.deleted`) ; son secret est dans la variable Vercel
   `STRIPE_WEBHOOK_SECRET` (désormais « Sensitive », Production + Preview) ;
-  `STRIPE_PRICE_ID` = `price_1U00xu1AsEXBU0aL9ARcyMVN` (Timat Pro 9,99 €/mois,
-  mode réel). **Découverte : la production tournait sur des clés de TEST.**
+  `STRIPE_PRICE_ID` remis PROVISOIREMENT à l'ancien prix de test
+  (`price_1TGyFp1pl8ynUceg2B9qDm3y`) pour que la fusion du 13/10 ne casse
+  pas « Passer Pro » ; le prix réel à y mettre en même temps que la clé est
+  `price_1U00xu1AsEXBU0aL9ARcyMVN` (Timat Pro 9,99 €/mois). **Découverte : la production tournait sur des clés de TEST.**
   L'ancien `STRIPE_PRICE_ID` (`price_1TGyFp1pl8ynUceg2B9qDm3y`) n'existe pas
   sur le compte réel ; les trois variables Stripe dataient du 31 mars, avant
   la création du prix réel (août). Aucun abonnement ni paiement réel à ce
@@ -132,13 +134,11 @@ déclencheur, fonctions `fermetures_prevues()` et
   (test de Sophie). **RESTE, SOPHIE SEULE** : remplacer `STRIPE_SECRET_KEY`
   dans Vercel par la clé secrète du mode réel (`sk_live_…` ou clé restreinte
   `rk_live_…`), que Claude ne peut ni créer ni lire ; ne pas la lui
-  transmettre. **PUIS CLAUDE** : redéployer la production (les variables ne
-  s'appliquent qu'au déploiement suivant ; d'ici là, la production garde les
-  anciennes valeurs), vérifier un appel signé sur `/api/webhook`, puis au vrai
-  test d'abonnement : livraison réussie dans Stripe, `pending_webhooks: 0`,
-  profil en Pro. Attention : toute fusion sur main redéploie avec la clé de
-  test + le prix réel, et « Passer Pro » échouera (« No such price ») tant que
-  la clé n'est pas changée. Également vu : e-mail et adresse d'assistance
+  transmettre. **PUIS CLAUDE** : remettre le prix réel dans
+  `STRIPE_PRICE_ID`, redéployer la production (les variables ne s'appliquent
+  qu'au déploiement suivant), vérifier un appel signé sur `/api/webhook`,
+  puis au vrai test d'abonnement : livraison réussie dans Stripe,
+  `pending_webhooks: 0`, profil en Pro. Également vu : e-mail et adresse d'assistance
   vides dans les informations publiques, ni logo ni icône. Non lisibles par
   l'API (à vérifier à l'écran) : reçu « Paiements réussis » et pied de page
   des factures.
@@ -155,7 +155,9 @@ déclencheur, fonctions `fermetures_prevues()` et
   dans Facebook, vérifié sur ses captures) : G2 sondage le 14/10, G3 rappel
   du minimum le 15/10, G4 sondage le 19/10, G5 sondage le 20/10, tous à
   10 h 30, conformes au kit. Le commentaire G5 (année complète/incomplète)
-  est à poster à la main sous le sondage le 20/10.
+  est à poster à la main sous le sondage le 20/10. G1 (bienvenue,
+  épinglée) n'était NI publié NI programmé au 13/10 au soir : texte redonné
+  à Sophie pour publication immédiate, avant le sondage du 14/10.
 - Facultatif : clés Vercel en « Sensitive » (le garde-fou de la session a
   bloqué Claude ; procédure dans la conversation du 12 octobre).
 - Décisions produit en attente : gratuité, offre intermédiaire, offre MAM
