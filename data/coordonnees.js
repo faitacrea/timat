@@ -25,6 +25,14 @@
 export const EMAIL_CONTACT = "contact@timat.app";
 export const EMAIL_EXPEDITEUR = "contact@timat.app";
 
+// LES RESEAUX SOCIAUX, au meme endroit que le reste des coordonnees.
+// Instagram : compte cree par Sophie le 12 octobre 2026 (@timat_app). La Page
+// Facebook viendra ici quand son lien direct sera connu — le lien de partage
+// envoye par l'application (facebook.com/share/...) n'est pas l'adresse de la
+// Page, et elle est encore en cours de modification.
+export const INSTAGRAM_URL = "https://www.instagram.com/timat_app/";
+export const INSTAGRAM_NOM = "@timat_app";
+
 // L'HEBERGEUR, ECRIT UNE SEULE FOIS.
 //
 // Deux adresses differentes coexistaient : « 340 S Lemon Ave, Walnut » sur la
