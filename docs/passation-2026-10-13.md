@@ -126,11 +126,13 @@ déclencheur, fonctions `fermetures_prevues()` et
 - **Blog — 8 nouveaux brouillons** ajoutés à la file (voir
   `docs/ordre-publication-blog.md`) : la file tient désormais jusqu'au
   27 octobre environ. Couvertures fabriquées (`scripts/couvertures-blog.mjs`)
-  et servies depuis `public/couvertures-blog/` ; **reste à les importer dans
-  Sanity** (`dataset_assets_upload_from_url` depuis
-  `https://www.timat.app/couvertures-blog/<slug>.png`) puis à poser
-  `imageCouverture` (+ `alt`) sur chaque brouillon. L'envoi direct est bloqué
-  par le proxy de l'environnement (mcp.sanity.io refusé).
+  et servies depuis `public/couvertures-blog/`. **FAIT** : importées dans
+  Sanity (`dataset_assets_upload_from_url` depuis
+  `https://www.timat.app/couvertures-blog/<slug>.png`, l'envoi direct étant
+  bloqué par le proxy) et posées sur les 8 brouillons avec un `alt` distinct
+  chacun. Construction du 14/10 : l'audit ne signale plus de brouillon sans
+  couverture ; seul avertissement blog restant, les 7 paragraphes en double
+  ci-dessus (corrigés en brouillon, en attente de l'accord de Sophie).
 - **Purge quotidienne en panne depuis le 29/09** : `borne_tentatives` n'a pas
   de colonne `id` ; la purge demandait les `id` effacés et échouait chaque
   jour. Corrigé (`cle: 'jeton'`), le test vérifie désormais aussi la colonne
