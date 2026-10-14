@@ -94,5 +94,23 @@ export const ordre = [
   "conges-payes-dates-assistante-maternelle",
   "revalorisation-smic-avenant-assistante-maternelle",
   "journee-solidarite-assistante-maternelle",
+  // Huit articles écrits le 14 octobre 2026, quand la file ne tenait plus que
+  // cinq jours. Quatre répondent aux questions d'agrément les plus posées, en
+  // s'appuyant sur les fiches pratiques que le ministère a adressées aux PMI
+  // entre janvier et avril 2026 — la première fois qu'un texte national y
+  // répond aussi nettement. Ils alternent avec quatre sujets de contrat et
+  // côté parent, pour ne pas enchaîner quatre jours d'agrément.
+  //
+  // Aucun ne cite d'article encore en brouillon : leurs liens internes ne
+  // pointent que vers des articles déjà en ligne. Ils n'ont donc aucune
+  // dépendance et peuvent se publier dans cet ordre sans attendre.
+  "reunion-information-agrement-assistante-maternelle",
+  "indemnites-kilometriques-assistante-maternelle",
+  "sante-arret-maladie-pmi-agrement-assistante-maternelle",
+  "freres-soeurs-deux-contrats-assistante-maternelle",
+  "controle-pmi-droits-assistante-maternelle",
+  "rupture-conventionnelle-assistante-maternelle",
+  "modification-agrement-augmenter-capacite-assistante-maternelle",
+  "attestation-fiscale-pajemploi-credit-impot-parent",
 ];
 export default ordre;
