@@ -113,6 +113,41 @@ et #249 (colonne `profiles.suppression_prevue_le` protégée par
 déclencheur, fonctions `fermetures_prevues()` et
 `supprimer_compte_programme()` réservée à la clé de service).
 
+## Session du 14 octobre 2026
+
+- **Blog — 7 paragraphes en double dans 3 articles en ligne** (coût réel,
+  salaire net/brut, déclaration Pajemploi) : une ancienne correction avait
+  réécrit le premier morceau sans retirer les suivants. Corrigés dans des
+  BROUILLONS (`drafts.9e6b8b20-…`, `drafts.7bc11c82-…`,
+  `drafts.fa1cc744-…`) ; **la publication attend l'accord de Sophie** (le
+  garde-fou de la session a refusé de publier sans elle). Barrière ajoutée à
+  l'audit (catégorie blog, non bloquante) : elle signale ces 7 paragraphes
+  tant que les corrections ne sont pas publiées, et aucun autre.
+- **Blog — 8 nouveaux brouillons** ajoutés à la file (voir
+  `docs/ordre-publication-blog.md`) : la file tient désormais jusqu'au
+  27 octobre environ. Couvertures fabriquées (`scripts/couvertures-blog.mjs`)
+  et servies depuis `public/couvertures-blog/` ; **reste à les importer dans
+  Sanity** (`dataset_assets_upload_from_url` depuis
+  `https://www.timat.app/couvertures-blog/<slug>.png`) puis à poser
+  `imageCouverture` (+ `alt`) sur chaque brouillon. L'envoi direct est bloqué
+  par le proxy de l'environnement (mcp.sanity.io refusé).
+- **Purge quotidienne en panne depuis le 29/09** : `borne_tentatives` n'a pas
+  de colonne `id` ; la purge demandait les `id` effacés et échouait chaque
+  jour. Corrigé (`cle: 'jeton'`), le test vérifie désormais aussi la colonne
+  renvoyée (prouvé en cassant). Vérifier au passage du cron de 7 h UTC que
+  l'erreur « borne_tentatives.id does not exist » a disparu.
+- **Sécurité** : les 18 fonctions SECURITY DEFINER signalées par Supabase ont
+  été relues ; celles qui touchent aux données d'autrui (`get_recipient_email`,
+  `get_parent_contact`, `create_notification`, `delete_user_account`,
+  `fichiers_anciens`, `quota_stockage`, `fermetures_prevues`) vérifient toutes
+  `auth.uid()`. Restent signalés, non traités : search_path non fixé sur deux
+  fonctions de déclencheur, et la protection contre les mots de passe divulgués
+  (réglage Auth, à activer par Sophie dans Supabase).
+- **URSSAF (tierce déclaration)** : aucun courriel envoyé trouvé dans le Gmail
+  de Sophie (elle a sans doute écrit depuis contact@timat.app). Aucun délai
+  officiel publié. Conseil donné : relancer vers le 4 novembre (3 semaines),
+  en réponse au premier envoi.
+
 ## Ce qu'il reste à faire
 
 **Sophie**

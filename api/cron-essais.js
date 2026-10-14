@@ -162,7 +162,13 @@ const PURGES = [
   { table: 'notifications', colonne: 'created_at', mois: 12 },
   // Les tentatives ratees sur la borne servent a bloquer une attaque en cours.
   // Un mois plus tard, elles ne protegent plus de rien.
-  { table: 'borne_tentatives', colonne: 'dernier_echec', mois: 1 },
+  //
+  // Cette table n'a pas de colonne « id » : sa cle est le jeton. Demander les
+  // « id » des lignes effacees faisait echouer TOUTE la suppression, chaque
+  // jour depuis le 29 septembre 2026 — l'erreur ne vivait que dans le journal
+  // Vercel, et aucune tentative n'etait jamais purgee. « cle » dit quelle
+  // colonne renvoyer pour compter les lignes effacees.
+  { table: 'borne_tentatives', colonne: 'dernier_echec', mois: 1, cle: 'jeton' },
 ];
 
 /** Deux ans sans connexion : la CNIL recommande de signaler, puis de supprimer. */
@@ -350,7 +356,7 @@ export default async function handler(request) {
       // « select() » fait renvoyer les lignes effacees : sans lui, on ecrirait
       // « purge : 0 » sans savoir si c'est vrai.
       const { data, error } = await supabase
-        .from(p.table).delete().lt(p.colonne, limite).select('id');
+        .from(p.table).delete().lt(p.colonne, limite).select(p.cle || 'id');
       if (error) throw new Error(error.message);
       journal.purges.push({ table: p.table, mois: p.mois, supprimees: (data || []).length });
     } catch (e) {

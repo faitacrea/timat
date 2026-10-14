@@ -87,6 +87,38 @@ rubriques qui étaient vides. Ils sont répartis dans le premier tiers du
 calendrier, de façon à faire vivre le filtre « Je suis → Parent employeur »
 plutôt que de le laisser ne montrer qu'un seul article.
 
+## Réapprovisionnement du 14 octobre 2026
+
+La file ne tenait plus que cinq jours (dernier brouillon prévu le 19 octobre).
+Huit articles ajoutés à la fin de `data/ordre-publication.js`, sans aucune
+dépendance — leurs liens internes ne visent que des articles déjà en ligne :
+
+| Ordre | Slug | Rubrique |
+|---:|---|---|
+| 1 | `reunion-information-agrement-assistante-maternelle` | Devenir assistante maternelle |
+| 2 | `indemnites-kilometriques-assistante-maternelle` | Contrat et paie |
+| 3 | `sante-arret-maladie-pmi-agrement-assistante-maternelle` | Démarches et agrément |
+| 4 | `freres-soeurs-deux-contrats-assistante-maternelle` | Côté parent employeur |
+| 5 | `controle-pmi-droits-assistante-maternelle` | Démarches et agrément |
+| 6 | `rupture-conventionnelle-assistante-maternelle` | Contrat et paie |
+| 7 | `modification-agrement-augmenter-capacite-assistante-maternelle` | Démarches et agrément |
+| 8 | `attestation-fiscale-pajemploi-credit-impot-parent` | Côté parent employeur |
+
+Les quatre articles d'agrément s'appuient sur les fiches pratiques de
+l'animation nationale des services de PMI (DGCS, janvier à avril 2026,
+publiées sur solidarites.gouv.fr) : réunion d'information facultative,
+contrôle proportionné et compte rendu écrit, santé de l'assistante maternelle,
+et sur la démarche « silence vaut accord » de service-public.fr pour la
+modification d'agrément. Les autres : Code du travail numérique (rupture
+conventionnelle impossible), fiche DREETS Pays de la Loire du 12 juin 2026
+(indemnités kilométriques), Pajemploi et Urssaf (attestation fiscale,
+déclaration par enfant).
+
+Sujets écartés faute de source officielle solide : le CDD d'assistante
+maternelle (sources privées contradictoires sur les cas de recours), et
+l'exercice en logement loué ou en copropriété (jurisprudence citée par des
+cabinets d'avocats, non vérifiée à la source).
+
 ## Comment publier (le piège)
 
 La publication se fait en **deux temps**, et oublier le second laisse

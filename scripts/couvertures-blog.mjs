@@ -114,6 +114,26 @@ export const COUVERTURES = [
    "Cent pour cent des cotisations prises en charge chez une assistante maternelle, cinquante à domicile"],
   ["trouver-une-assistante-maternelle-ou-chercher-quand", "Choisir son mode de garde",
    "Les places se libèrent au printemps, quand les départs à l'école se confirment"],
+  // Huit articles écrits le 14 octobre 2026. Quatre sur l'agrément s'appuient
+  // sur les fiches pratiques que le ministère a adressées aux PMI entre janvier
+  // et avril 2026 : ce sont les questions les plus posées par les candidates,
+  // et la première fois qu'un texte national y répond aussi nettement.
+  ["reunion-information-agrement-assistante-maternelle", "Devenir assistante maternelle",
+   "Facultative, et jamais un préalable au dépôt du dossier d'agrément"],
+  ["indemnites-kilometriques-assistante-maternelle", "Contrat et paie",
+   "Ni sous le barème de l'administration, ni au-dessus du barème fiscal. Et partagées entre familles"],
+  ["sante-arret-maladie-pmi-agrement-assistante-maternelle", "Démarches et agrément",
+   "Aucun texte n'oblige à signaler à la PMI un arrêt maladie ou une grossesse"],
+  ["freres-soeurs-deux-contrats-assistante-maternelle", "Côté parent employeur",
+   "Un contrat, un salaire minimum et une déclaration Pajemploi par enfant"],
+  ["controle-pmi-droits-assistante-maternelle", "Démarches et agrément",
+   "Des demandes proportionnées, un compte rendu écrit, et un délai raisonnable"],
+  ["rupture-conventionnelle-assistante-maternelle", "Contrat et paie",
+   "Elle n'est pas possible. Il reste le retrait de l'enfant ou la démission"],
+  ["modification-agrement-augmenter-capacite-assistante-maternelle", "Démarches et agrément",
+   "Trois mois pour répondre. Au-delà, le silence du département vaut accord"],
+  ["attestation-fiscale-pajemploi-credit-impot-parent", "Côté parent employeur",
+   "Salaires nets et cotisations, moins la part du CMG. L'entretien ne compte que pour 2,65 € par jour"],
 ];
 
 async function polices() {

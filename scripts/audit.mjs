@@ -1427,6 +1427,10 @@ for (const u of fichiersAppSrc()) {
       "s": slug.current, "alt": imageCouverture.alt,
       "t": titre + " " + chapo + " " + pt::text(corps)
     },
+    "paragraphes": *[_type=="article"]{
+      "s": slug.current, "brouillon": _id in path("drafts.**"),
+      "b": corps[_type=="block" && count(children) > 1]{_key, "liens": markDefs[]._key, "c": children[]{text, marks}}
+    },
     "tropLongs": *[_type=="article" && (length(chapo) > ${MAX.chapo} || length(titre) > ${MAX.titre} || length(seoTitre) > ${MAX.seoTitre} || length(seoDescription) > ${MAX.seoDescription})]{
       "s": slug.current, "chapo": length(chapo), "titre": length(titre),
       "seoTitre": length(seoTitre), "seoDescription": length(seoDescription)
@@ -1490,6 +1494,11 @@ for (const u of fichiersAppSrc()) {
       const alt = String(a.alt || "").trim();
       if (!alt) { sansAlt.push(a.s); continue; }
       const cle = alt.toLowerCase().replace(/\s+/g, " ");
+      // Un article en ligne et son brouillon en cours de correction portent
+      // la meme couverture : c'est le MEME article, pas deux. Sans ce filtre,
+      // corriger un article suffisait a declencher « l'un des deux est pose
+      // sur le mauvais article ».
+      if (vus.has(cle) && vus.get(cle) === a.s) continue;
       if (vus.has(cle)) doublons.push(`${vus.get(cle)} et ${a.s}`);
       else vus.set(cle, a.s);
     }
@@ -1498,6 +1507,41 @@ for (const u of fichiersAppSrc()) {
     }
     if (doublons.length) {
       signale("blog", `${doublons.length} texte(s) alternatif(s) identiques sur deux articles — l'un des deux est posé sur le mauvais article : ${doublons.slice(0, 2).join(" ; ")}`);
+    }
+
+    // UN PARAGRAPHE QUI DIT DEUX FOIS LA MEME CHOSE.
+    //
+    // Une correction ancienne a reecrit le premier morceau de sept paragraphes
+    // en entier, sans retirer les morceaux qui suivaient : l'ancienne phrase
+    // restait collee derriere la nouvelle. En ligne, on lisait « …detaille plus
+    // bas. : verse chaque mois par la CAF… » ou « …au contrat qui ne peut pas
+    // etre inferieur a 10 %. — les heures complementaires sont celles… ». Trois
+    // articles etaient touches, dont le guide Pajemploi, sans que rien le dise.
+    //
+    // Deux signatures, et elles seules : un morceau suivant deja contenu dans
+    // le premier (un lien ne compte pas — il reprend souvent un mot de la
+    // phrase), ou un premier morceau en gras de plus de 70 caracteres suivi de
+    // texte normal (le gras d'un libelle ne fait jamais une phrase entiere).
+    // Sur les 74 articles en ligne, elles trouvent les sept paragraphes, et
+    // aucun autre.
+    const doublesTextes = [];
+    const norm = (t) => String(t || "").replace(/\s+/g, " ").trim().replace(/^[\s.,;:—-]+|[\s.,;:—-]+$/g, "").toLowerCase();
+    for (const a of result?.paragraphes || []) {
+      for (const b of a.b || []) {
+        const c = b.c || [];
+        if (c.length < 2) continue;
+        const liens = new Set(b.liens || []);
+        const premier = norm(c[0].text);
+        const repete = c.slice(1).some((x) => {
+          const t = norm(x.text);
+          return t.length >= 12 && !(x.marks || []).some((m) => liens.has(m)) && premier.includes(t);
+        });
+        const grasPhrase = (c[0].marks || []).includes("strong") && String(c[0].text || "").length > 70 && !(c[1].marks || []).includes("strong");
+        if (repete || grasPhrase) doublesTextes.push(`${a.s}${a.brouillon ? " (brouillon)" : ""} [${b._key}]`);
+      }
+    }
+    if (doublesTextes.length) {
+      signale("blog", `${doublesTextes.length} paragraphe(s) où l'ancienne phrase reste collée derrière la nouvelle — le texte se lit en double : ${doublesTextes.slice(0, 4).join(", ")}${doublesTextes.length > 4 ? "…" : ""}`);
     }
 
     if (bro.length) {

@@ -21,14 +21,14 @@ const verifie = (nom, condition) => {
 
 // Les durées déclarées dans le code, lues depuis le code lui-même.
 const durees = new Map();
-for (const m of cron.matchAll(/\{\s*table:\s*'([a-z_]+)',\s*colonne:\s*'[a-z_]+',\s*mois:\s*(\d+)\s*\}/g)) {
+for (const m of cron.matchAll(/\{\s*table:\s*'([a-z_]+)',\s*colonne:\s*'[a-z_]+',\s*mois:\s*(\d+)(?:,\s*cle:\s*'[a-z_]+')?\s*\}/g)) {
   durees.set(m[1], Number(m[2]));
 }
 
 console.log("\n=== LA PURGE EXISTE ET DIT CE QU'ELLE FAIT ===");
 verifie("des durées sont déclarées", durees.size >= 5);
 verifie("chaque suppression renvoie les lignes effacées (sinon on journalise 0 à l'aveugle)",
-  /\.delete\(\)\.lt\(p\.colonne, limite\)\.select\('id'\)/.test(cron));
+  /\.delete\(\)\.lt\(p\.colonne, limite\)\.select\(p\.cle \|\| 'id'\)/.test(cron));
 verifie("« simulation=1 » compte sans rien effacer",
   /if \(simulation\) \{[\s\S]{0,300}head: true[\s\S]{0,200}continue;/.test(cron));
 verifie("une purge en échec n'empêche pas les autres",
@@ -49,10 +49,15 @@ console.log("\n=== LES COLONNES DE PURGE EXISTENT VRAIMENT ===");
 // tous les jours, en silence, dans un journal que personne ne lit. C'est la
 // base reelle qui l'a trouve, pas ce test — d'ou ce controle.
 const schema = JSON.parse(readFileSync(new URL("../data/schema-supabase.json", import.meta.url), "utf8"));
-for (const m of cron.matchAll(/\{\s*table:\s*'([a-z_]+)',\s*colonne:\s*'([a-z_]+)'/g)) {
-  const [, table, colonne] = m;
+// La colonne RENVOYÉE compte autant que la colonne filtrée : la purge demande
+// les lignes effacées pour les compter. « borne_tentatives » n'a pas d'« id »
+// — sa clé est « jeton » —, et ce seul nom faisait échouer toute la
+// suppression, chaque jour, du 29 septembre au 14 octobre 2026.
+for (const m of cron.matchAll(/\{\s*table:\s*'([a-z_]+)',\s*colonne:\s*'([a-z_]+)',\s*mois:\s*\d+(?:,\s*cle:\s*'([a-z_]+)')?\s*\}/g)) {
+  const [, table, colonne, cle = "id"] = m;
   verifie(`« ${table} » est déclarée dans le schéma`, Array.isArray(schema[table]));
   verifie(`« ${table}.${colonne} » existe`, (schema[table] || []).includes(colonne));
+  verifie(`« ${table}.${cle} », renvoyée pour compter les lignes effacées, existe`, (schema[table] || []).includes(cle));
 }
 for (const col of ["derniere_connexion_at", "inactivite_avertie_at"]) {
   verifie(`« profiles.${col} » existe`, (schema.profiles || []).includes(col));
