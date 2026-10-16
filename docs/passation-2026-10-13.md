@@ -136,8 +136,9 @@ déclencheur, fonctions `fermetures_prevues()` et
 - **Purge quotidienne en panne depuis le 29/09** : `borne_tentatives` n'a pas
   de colonne `id` ; la purge demandait les `id` effacés et échouait chaque
   jour. Corrigé (`cle: 'jeton'`), le test vérifie désormais aussi la colonne
-  renvoyée (prouvé en cassant). Vérifier au passage du cron de 7 h UTC que
-  l'erreur « borne_tentatives.id does not exist » a disparu.
+  renvoyée (prouvé en cassant). **Vérifié le 16/10** dans les journaux
+  Supabase : le 15/10 à 07:49 UTC, `DELETE borne_tentatives …&select=jeton`
+  a répondu 200 (les journaux Vercel ne gardent qu'une heure en Hobby).
 - **Sécurité** : les 18 fonctions SECURITY DEFINER signalées par Supabase ont
   été relues ; celles qui touchent aux données d'autrui (`get_recipient_email`,
   `get_parent_contact`, `create_notification`, `delete_user_account`,
@@ -149,6 +150,18 @@ déclencheur, fonctions `fermetures_prevues()` et
   de Sophie (elle a sans doute écrit depuis contact@timat.app). Aucun délai
   officiel publié. Conseil donné : relancer vers le 4 novembre (3 semaines),
   en réponse au premier envoi.
+  Envoyé depuis **contact.timat.app@gmail.com**, que le connecteur Gmail
+  (relié à faitacreapro@gmail.com) ne lit pas : un connecteur = un compte.
+  Conseillé : un filtre de transfert des courriels `urssaf.fr` vers
+  faitacreapro@gmail.com.
+- **Fiches PMI de la DGCS (2026) chez les concurrents** : Nounou-Top a déjà
+  traité la fiche n°5 (santé, article du 15/05/2026) et le guide national des
+  contrôles. Rien trouvé chez Pandi-Panda, AssmatZen, Mam360 — recherche web,
+  pas une preuve d'absence. L'angle propre à TiMat : la fiche n°1 (réunion
+  d'information facultative), non trouvée chez les quatre.
+- **3 corrections d'articles** : Sophie a répondu « Oui oublie les 3
+  corrections » (dictée, probablement « publie ») ; publication refusée par le
+  garde-fou, confirmation écrite sans ambiguïté demandée.
 
 ## Ce qu'il reste à faire
 
