@@ -145,7 +145,12 @@ déclencheur, fonctions `fermetures_prevues()` et
   `fichiers_anciens`, `quota_stockage`, `fermetures_prevues`) vérifient toutes
   `auth.uid()`. Restent signalés, non traités : search_path non fixé sur deux
   fonctions de déclencheur, et la protection contre les mots de passe divulgués
-  (réglage Auth, à activer par Sophie dans Supabase).
+  (réglage Auth). **Vérifié le 16/10 : réservé au plan Pro de Supabase**
+  (doc officielle « Password security »), l'organisation est en plan gratuit
+  — et l'application fait déjà ce contrôle elle-même (Have I Been Pwned,
+  k-anonymat, `scripts/test-mdp-fuite.mjs`). Ne pas payer pour ça ; Sophie
+  peut seulement aligner la longueur minimale Supabase sur celle de l'appli
+  (8 caractères, lettres + chiffres).
 - **URSSAF (tierce déclaration)** : aucun courriel envoyé trouvé dans le Gmail
   de Sophie (elle a sans doute écrit depuis contact@timat.app). Aucun délai
   officiel publié. Conseil donné : relancer vers le 4 novembre (3 semaines),
@@ -154,6 +159,17 @@ déclencheur, fonctions `fermetures_prevues()` et
   (relié à faitacreapro@gmail.com) ne lit pas : un connecteur = un compte.
   Conseillé : un filtre de transfert des courriels `urssaf.fr` vers
   faitacreapro@gmail.com.
+- **Revérification du 16/10** : les 8 brouillons ont tous au moins une
+  source officielle avec lien (les références de code — CASF, CGI — sont
+  citées sans lien) ; ajout de la page impots.gouv.fr qui fixe les 2,65 €
+  par journée d'accueil sur `attestation-fiscale`. Fiches n°2 (janvier 2026)
+  et n°6 (mai 2026) lues dans le texte : non encore traitées par TiMat.
+  Nounou-Top : toutes ses actualités passées en revue (plan du site) —
+  fiche 5 traitée, contrôle PMI traité (rapport transmis, délai précis,
+  sans la proportionnalité ni le compte rendu systématique de la fiche 3),
+  rien sur les fiches 1, 2, 6. Pandi-Panda, AssmatZen (assmatzen.fr),
+  Mam360 (mam360.fr) : sites inaccessibles depuis l'environnement, rien
+  trouvé par recherche web.
 - **Fiches PMI de la DGCS (2026) chez les concurrents** : Nounou-Top a déjà
   traité la fiche n°5 (santé, article du 15/05/2026) et le guide national des
   contrôles. Rien trouvé chez Pandi-Panda, AssmatZen, Mam360 — recherche web,
