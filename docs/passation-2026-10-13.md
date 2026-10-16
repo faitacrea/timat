@@ -159,9 +159,11 @@ déclencheur, fonctions `fermetures_prevues()` et
   contrôles. Rien trouvé chez Pandi-Panda, AssmatZen, Mam360 — recherche web,
   pas une preuve d'absence. L'angle propre à TiMat : la fiche n°1 (réunion
   d'information facultative), non trouvée chez les quatre.
-- **3 corrections d'articles** : Sophie a répondu « Oui oublie les 3
-  corrections » (dictée, probablement « publie ») ; publication refusée par le
-  garde-fou, confirmation écrite sans ambiguïté demandée.
+- **3 corrections d'articles PUBLIÉES le 16/10** sur confirmation écrite de
+  Sophie (`dateMiseAJour` = 2026-10-16), production redéployée
+  (`dpl_EqdGrrrGWNajS5deHYmRUrLyQUCh`) ; les 3 pages en ligne portent
+  `dateModified` 2026-10-16 et l'audit local ne signale plus rien en blog.
+  Purge RGPD du 16/10 07:49 UTC : les 4 suppressions ont répondu 200.
 
 ## Ce qu'il reste à faire
 
