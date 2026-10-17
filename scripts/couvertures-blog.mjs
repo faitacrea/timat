@@ -134,6 +134,12 @@ export const COUVERTURES = [
    "Trois mois pour répondre. Au-delà, le silence du département vaut accord"],
   ["attestation-fiscale-pajemploi-credit-impot-parent", "Côté parent employeur",
    "Salaires nets et cotisations, moins la part du CMG. L'entretien ne compte que pour 2,65 € par jour"],
+  // Deux articles écrits le 17 octobre 2026, sur les fiches n°2 et n°6 : celles
+  // que le blog n'avait pas encore traitées, et qu'aucun concurrent ne traitait.
+  ["decision-agrement-nombre-enfants-assistante-maternelle", "Démarches et agrément",
+   "Le nombre d'enfants demandé, c'est vous qui le fixez. La PMI instruit, elle ne réécrit pas"],
+  ["accueillir-stagiaire-assistante-maternelle", "Le quotidien de l'accueil",
+   "Pas d'autorisation de la PMI. L'accord des parents, oui"],
 ];
 
 async function polices() {

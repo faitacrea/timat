@@ -112,5 +112,11 @@ export const ordre = [
   "rupture-conventionnelle-assistante-maternelle",
   "modification-agrement-augmenter-capacite-assistante-maternelle",
   "attestation-fiscale-pajemploi-credit-impot-parent",
+  // Deux articles écrits le 17 octobre 2026 sur les fiches pratiques n°2
+  // (décision d'agrément, janvier 2026) et n°6 (stagiaires, mai 2026) : les
+  // deux que le blog ne couvrait pas encore. Leurs liens internes ne visent que
+  // des articles déjà en ligne : aucune dépendance.
+  "decision-agrement-nombre-enfants-assistante-maternelle",
+  "accueillir-stagiaire-assistante-maternelle",
 ];
 export default ordre;
