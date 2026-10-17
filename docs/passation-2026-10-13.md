@@ -181,6 +181,23 @@ déclencheur, fonctions `fermetures_prevues()` et
   `dateModified` 2026-10-16 et l'audit local ne signale plus rien en blog.
   Purge RGPD du 16/10 07:49 UTC : les 4 suppressions ont répondu 200.
 
+## Session du 17 octobre 2026
+
+- **2 nouveaux brouillons** (fiches PMI n°2 et n°6), couvertures posées,
+  ajoutés en fin de file : `decision-agrement-nombre-enfants-assistante-maternelle`
+  (`drafts.bb4cf842-…`) et `accueillir-stagiaire-assistante-maternelle`
+  (`drafts.4bd35aa4-…`). File : 13 brouillons, dernier prévu vers le 30/10.
+  Construction du 17/10 : code 0, « Aucune anomalie. ».
+- **Erreur trouvée dans un article en ligne** : `devenir-assistante-maternelle-agrement`
+  disait que la décision d'agrément précise l'âge des enfants (contraire à
+  D421-12 et à la fiche n°2). Corrigé en brouillon (`drafts.cac3c578-…`, bloc
+  a012), source fiche n°2 ajoutée ; la phrase « doit être affiché à votre
+  domicile », sans source trouvée, a été retirée. **Publication en attente de
+  l'accord de Sophie.**
+- **Groupe Facebook** : G6 à G9 écrits dans le kit (22/10, 27/10, 29/10,
+  3/11), d'après les fiches n°1, 5, 6 et 3. Correction : G5 tombe le
+  **mardi** 20/10 (et non lundi), G4 le lundi 19/10.
+
 ## Ce qu'il reste à faire
 
 **Sophie**
