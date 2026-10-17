@@ -119,6 +119,23 @@ maternelle (sources privées contradictoires sur les cas de recours), et
 l'exercice en logement loué ou en copropriété (jurisprudence citée par des
 cabinets d'avocats, non vérifiée à la source).
 
+## Ajout du 17 octobre 2026
+
+Deux articles à la suite des huit précédents, sur les deux fiches pratiques
+de l'animation nationale des services de PMI que le blog ne couvrait pas :
+
+| Ordre | Slug | Rubrique | Source principale |
+|---:|---|---|---|
+| 9 | `decision-agrement-nombre-enfants-assistante-maternelle` | Démarches et agrément | Fiche n°2, DGCS, janvier 2026 |
+| 10 | `accueillir-stagiaire-assistante-maternelle` | Le quotidien de l'accueil | Fiche n°6, DGCS, mai 2026 |
+
+Liens internes uniquement vers des articles en ligne (recours contre un refus,
+nombre d'enfants, retrait/suspension, formation 120 h, honorabilité).
+
+La fiche n°2 a aussi révélé une erreur dans `devenir-assistante-maternelle-agrement`
+(« l'arrêté précise […] leur âge ») : corrigée en brouillon le 16/10, publication
+soumise à l'accord de Sophie.
+
 ## Comment publier (le piège)
 
 La publication se fait en **deux temps**, et oublier le second laisse
