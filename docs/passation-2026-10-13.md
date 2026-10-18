@@ -192,8 +192,16 @@ déclencheur, fonctions `fermetures_prevues()` et
   disait que la décision d'agrément précise l'âge des enfants (contraire à
   D421-12 et à la fiche n°2). Corrigé en brouillon (`drafts.cac3c578-…`, bloc
   a012), source fiche n°2 ajoutée ; la phrase « doit être affiché à votre
-  domicile », sans source trouvée, a été retirée. **Publication en attente de
-  l'accord de Sophie.**
+  domicile », sans source trouvée, a été retirée. **Publiée le 18/10** sur
+  accord écrit de Sophie, production redéployée, vérifiée en ligne.
+- **Metricool vérifié le 18/10** : 15 publications en attente (10 Page
+  Facebook du 19/10 au 4/11, 5 Instagram du 26/10 au 4/11), toutes en
+  publication automatique, sans doublon ; textes alternatifs présents sur les
+  5 Instagram, absents sur la Page (facultatif sur Facebook).
+- **Nouveau concurrent signalé par Sophie** : compte Instagram
+  « assmartgestion ». Instagram et les domaines devinés sont inaccessibles
+  depuis l'environnement, aucune trace par recherche web : à documenter à
+  partir de captures de Sophie.
 - **Groupe Facebook** : G6 à G9 écrits dans le kit (22/10, 27/10, 29/10,
   3/11), d'après les fiches n°1, 5, 6 et 3. Correction : G5 tombe le
   **mardi** 20/10 (et non lundi), G4 le lundi 19/10.
