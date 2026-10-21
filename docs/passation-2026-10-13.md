@@ -206,6 +206,31 @@ déclencheur, fonctions `fermetures_prevues()` et
   3/11), d'après les fiches n°1, 5, 6 et 3. Correction : G5 tombe le
   **mardi** 20/10 (et non lundi), G4 le lundi 19/10.
 
+## Session du 21 octobre 2026
+
+- **Groupe Facebook** : G2 à G5 publiés par Sophie (G5 le 20/10, avec son
+  commentaire). G6 à G9 transmis pour le 22/10, 27/10, 29/10 et 3/11.
+- **Metricool** : P1 (19/10) et P2 (20/10) publiés sur la Page. Texte
+  alternatif ajouté aux 8 publications de la Page encore à venir (même texte
+  que sur Instagram quand l'image est la même) ; Sophie a ajouté elle-même
+  ceux des deux déjà publiées. 13 publications en attente, sans doublon.
+- **Référencement** :
+  - `timat.app` (sans www) redirigeait vers `www.timat.app` en **307
+    temporaire** : le domaine nu n'était pas rattaché au projet, la règle
+    `permanent: true` de `vercel.json` ne s'appliquait donc jamais. Domaine
+    ajouté au projet avec redirection **308** vers www (Google : 301/308 =
+    signal canonique, 307 = non). Vérifié en ligne.
+  - Les 308 adresses des trois sitemaps répondent 200, sans redirection,
+    canonique = adresse, aucune balise noindex, aucun titre en double, toutes
+    ont une description.
+  - Search Console : branchée au back-office (`GSC_SERVICE_ACCOUNT`,
+    `GSC_SITE_URL`), mais pas lisible depuis la session : il faut des
+    captures de Sophie (Pages, Sitemaps, Performances).
+- **Vercel signale « readable-secret »** sur GSC_SERVICE_ACCOUNT,
+  SUPABASE_SERVICE_KEY, STRIPE_SECRET_KEY et VAPID_PRIVATE_KEY (non marquées
+  « Sensitive »). Les passer en Sensitive suppose de ressaisir la valeur :
+  à faire par Sophie, jamais en me transmettant les clés.
+
 ## Ce qu'il reste à faire
 
 **Sophie**
