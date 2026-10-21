@@ -231,6 +231,24 @@ déclencheur, fonctions `fermetures_prevues()` et
   « Sensitive »). Les passer en Sensitive suppose de ressaisir la valeur :
   à faire par Sophie, jamais en me transmettant les clés.
 
+## Nuit du 21 au 22 octobre 2026
+
+- **Search Console (captures de Sophie)** : 3 mois = 522 clics, 22,8 k
+  impressions, CTR 2,3 %. Index au 12/10 : 255 indexées, 46 non (5 motifs :
+  redirection, canonique correcte, explorée non indexée, double canonique,
+  détectée non indexée). **Sitemap mal saisi : « /sitemap.xml. » (point
+  final), type Inconnu, jamais lu** → à supprimer et renvoyer « sitemap.xml ».
+- **Erreur dans l'article en ligne `jours-feries-assistante-maternelle`** :
+  il disait que le paiement d'un férié ordinaire chômé dépend du contrat. La
+  convention (art. 47.2) prévoit le maintien du salaire si l'assistante
+  maternelle a travaillé le dernier jour prévu avant et le premier après.
+  Corrigé en brouillon (`drafts.80387f13-…`), **publication en attente de
+  l'accord de Sophie**.
+- **Groupe** : G10 à G13 écrits dans le kit (5, 10, 12 et 17/11). Rappels
+  programmés dans cette session pour les commentaires G7 (27/10), G9 (3/11)
+  et G11 (10/11) : `trig_01GPp6WuaCG1bdw7ZtdsQctg`, `trig_01UtaNvVuP4hphx6JBHb7NMT`,
+  `trig_01R9NpUwAQjCvbcG8KpYkDnW`.
+
 ## Ce qu'il reste à faire
 
 **Sophie**
