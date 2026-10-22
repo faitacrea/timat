@@ -11,6 +11,7 @@
  * Si un article n'apparait pas : verifier que statut = "publie" dans le Studio.
  */
 
+import { INSTAGRAM_URL, FACEBOOK_PAGE_URL, FACEBOOK_GROUPE_URL } from "../data/coordonnees.js";
 import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -540,7 +541,7 @@ ${body}
 <footer>
   <div class="wrap">
     <span>© ${new Date().getFullYear()} TiMat — L'application des assistantes maternelles et des parents employeurs.</span>
-    <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a></span>
+    <span><a href="/">Accueil</a> · <a href="${indexTarget().url}">Blog</a> · <a href="/parents">Espace parent employeur</a> · <a href="/confidentialite.html">Confidentialité</a> · <a href="${INSTAGRAM_URL}" rel="noopener">Instagram</a> · <a href="${FACEBOOK_PAGE_URL}" rel="noopener">Page Facebook</a> · <a href="${FACEBOOK_GROUPE_URL}" rel="noopener">Groupe d'entraide</a></span>
   </div>
 </footer>
 ${script ? `<script>${script}</script>` : ""}
