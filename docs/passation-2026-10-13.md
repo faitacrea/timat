@@ -242,8 +242,15 @@ déclencheur, fonctions `fermetures_prevues()` et
   il disait que le paiement d'un férié ordinaire chômé dépend du contrat. La
   convention (art. 47.2) prévoit le maintien du salaire si l'assistante
   maternelle a travaillé le dernier jour prévu avant et le premier après.
-  Corrigé en brouillon (`drafts.80387f13-…`), **publication en attente de
-  l'accord de Sophie**.
+  Corrigé et **publié le 22/10** sur accord écrit de Sophie (règle confirmée
+  par la page Pajemploi « Tout savoir sur les jours fériés »), vérifié en ligne.
+- **22/10, Search Console** : sitemap.xml renvoyé par Sophie. « Explorée, non
+  indexée » = les 3 fichiers sitemap eux-mêmes (normal). « Détectée, non
+  indexée » = 37 adresses, presque toutes des articles du blog et 3 pages
+  locales : connues, jamais explorées. Cause plausible : l'accueil pré-affiché
+  n'avait aucun lien. PR #268 : 9 liens en dur dans `index.html` + règle
+  d'audit bloquante `liens-statiques` (prouvée en cassant). Vérifié en ligne.
+  À suivre dans la Search Console d'ici 2 à 4 semaines.
 - **Groupe** : G10 à G13 écrits dans le kit (5, 10, 12 et 17/11). Rappels
   programmés dans cette session pour les commentaires G7 (27/10), G9 (3/11)
   et G11 (10/11) : `trig_01GPp6WuaCG1bdw7ZtdsQctg`, `trig_01UtaNvVuP4hphx6JBHb7NMT`,
