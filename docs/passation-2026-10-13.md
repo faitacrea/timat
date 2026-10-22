@@ -251,6 +251,13 @@ déclencheur, fonctions `fermetures_prevues()` et
   n'avait aucun lien. PR #268 : 9 liens en dur dans `index.html` + règle
   d'audit bloquante `liens-statiques` (prouvée en cassant). Vérifié en ligne.
   À suivre dans la Search Console d'ici 2 à 4 semaines.
+- **22/10, PR #270** : « Page en double » (heures-complementaires, sommeil) →
+  chaque page répondait aussi avec « / » final et « /index.html ». Ajout de
+  `trailingSlash: false` + redirection `/:chemin+/index.html` (308, vérifié en
+  production). Sommaire et rubriques du blog sans og:image → image de partage
+  du site par défaut, règle d'audit `apercu` (prouvée en cassant). Liens
+  internes des 308 pages : tous en 200. Aucune image sans alt, un seul h1 par
+  page, aucune date de modification antérieure à la publication.
 - **Groupe** : G10 à G13 écrits dans le kit (5, 10, 12 et 17/11). Rappels
   programmés dans cette session pour les commentaires G7 (27/10), G9 (3/11)
   et G11 (10/11) : `trig_01GPp6WuaCG1bdw7ZtdsQctg`, `trig_01UtaNvVuP4hphx6JBHb7NMT`,
