@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import qrcode from "qrcode-generator";
-import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB, INSTAGRAM_URL, INSTAGRAM_NOM } from "../data/coordonnees.js";
+import { EMAIL_CONTACT, EMAIL_EXPEDITEUR, HEBERGEUR_BASE, HEBERGEUR_REGION, HEBERGEUR_WEB, INSTAGRAM_URL, INSTAGRAM_NOM, FACEBOOK_PAGE_URL, FACEBOOK_GROUPE_URL } from "../data/coordonnees.js";
 import { majLisible } from "../data/documents-legaux.js";
 import { habilitationActive } from "../data/pajemploi.js";
 
@@ -6694,7 +6694,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 📧 {F.contactEmail}<br/>
                 🌐 {F.contactWeb}<br/>
                 📍 {F.contactLieu}<br/>
-                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.72)", textDecoration: "none" }}>📷 Instagram · {INSTAGRAM_NOM}</a>
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.72)", textDecoration: "none" }}>📷 Instagram · {INSTAGRAM_NOM}</a><br/>
+                <a href={FACEBOOK_PAGE_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.72)", textDecoration: "none" }}>👍 Page Facebook TiMat</a><br/>
+                <a href={FACEBOOK_GROUPE_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,.72)", textDecoration: "none" }}>💬 Groupe d'entraide Facebook</a>
               </div>
             </div>
           </div>
