@@ -4095,6 +4095,23 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- l'accueil pre-affiche doit contenir de vrais liens vers le blog ---
+//
+// Le sommaire d'index.html est ce que lit un moteur AVANT d'executer le
+// JavaScript. En octobre 2026 il ne contenait aucun lien : le blog n'etait
+// relie a l'accueil qu'apres le rendu de l'application, et la Search Console
+// classait 37 pages « Detectees, actuellement non indexees » — connues par le
+// sitemap, jamais explorees. Un lien ecrit en dur ne coute rien et ne se perd
+// pas au rendu suivant.
+{
+  const indexSrc = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const racine = indexSrc.slice(indexSrc.indexOf('<div id="root">'));
+  for (const cible of ["/blog", "/outils.html", "/parents"]) {
+    if (!racine.includes(`href="${cible}"`))
+      signale("liens-statiques", `index.html : le sommaire pré-affiché n'a plus de lien vers ${cible} — les moteurs ne le voient qu'après le rendu JavaScript`);
+  }
+}
+
 // --- l'adresse de l'hebergeur ne s'ecrit qu'a un endroit ---
 //
 // Deux adresses differentes de Vercel coexistaient, l'une sur la landing,
@@ -5096,6 +5113,8 @@ const BLOQUANTES = new Set([
   "back-office", "environnement", "expediteur",
   // l'integrite du code et des controles
   "conflit", "construction", "module", "paresseux", "bundle-sans-garde-fou", "controles-creux",
+  // ce que voient les moteurs
+  "liens-statiques",
 ]);
 const bloquantes = anomalies.filter((a) => BLOQUANTES.has(a.cat) && !/\/blog\//.test(a.msg));
 if (bloquantes.length) {
