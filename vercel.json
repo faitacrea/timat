@@ -2,6 +2,7 @@
   "regions": [
     "cdg1"
   ],
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/api/desinscription",
@@ -68,6 +69,11 @@
       "source": "/index.html",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/:chemin+/index.html",
+      "destination": "/:chemin+",
+      "permanent": true
     },
     {
       "source": "/calcul-mensualisation-assistante-maternelle.html",

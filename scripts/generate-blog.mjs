@@ -496,6 +496,11 @@ const descriptionCourte = (d) => {
   return (espace > 100 ? coupe.slice(0, espace) : coupe).replace(/[\s,;:.\u2026-]+$/, "") + "\u2026";
 };
 
+// Le sommaire du blog et les rubriques n'ont pas de couverture propre. Sans
+// og:image, un lien partagé dans une conversation ou sur Facebook arrive sans
+// aperçu : on retombe sur l'image de partage du site, la même que l'accueil.
+const IMAGE_PARTAGE_DEFAUT = "https://www.timat.app/og-image.png";
+
 function layout({ title, description, canonical, ogImage, jsonLd, body, wide, script }) {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -511,7 +516,7 @@ function layout({ title, description, canonical, ogImage, jsonLd, body, wide, sc
 <meta property="og:title" content="${escAttr(title)}">
 <meta property="og:description" content="${escAttr(descriptionCourte(description))}">
 <meta property="og:url" content="${escAttr(canonical)}">
-${ogImage ? `<meta property="og:image" content="${escAttr(ogImage)}">` : ""}
+<meta property="og:image" content="${escAttr(ogImage || IMAGE_PARTAGE_DEFAUT)}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/assmat.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">

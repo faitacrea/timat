@@ -4112,6 +4112,28 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- chaque page du blog a une image d'apercu ---
+//
+// En octobre 2026, le sommaire du blog et ses neuf rubriques n'en avaient pas :
+// partages, ils arrivaient sans image. On verifie toutes les pages generees.
+{
+  const dossier = new URL("../public/blog/", import.meta.url);
+  if (fs.existsSync(dossier)) {
+    const sans = [];
+    const parcourir = (d) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = new URL(e.name + (e.isDirectory() ? "/" : ""), d);
+        if (e.isDirectory()) parcourir(p);
+        else if (e.name.endsWith(".html") && !/property="og:image"/.test(fs.readFileSync(p, "utf8")))
+          sans.push(p.pathname.replace(/.*\/public\/blog\//, "")); // sans « /blog/ » : l'audit classe ces messages en non bloquants
+      }
+    };
+    parcourir(dossier);
+    if (sans.length)
+      signale("apercu", `${sans.length} page(s) générée(s) du blog sans image d'aperçu (og:image), dans public/blog : ${sans.slice(0, 4).join(", ")}${sans.length > 4 ? "…" : ""}`);
+  }
+}
+
 // --- l'adresse de l'hebergeur ne s'ecrit qu'a un endroit ---
 //
 // Deux adresses differentes de Vercel coexistaient, l'une sur la landing,
@@ -5114,7 +5136,7 @@ const BLOQUANTES = new Set([
   // l'integrite du code et des controles
   "conflit", "construction", "module", "paresseux", "bundle-sans-garde-fou", "controles-creux",
   // ce que voient les moteurs
-  "liens-statiques",
+  "liens-statiques", "apercu",
 ]);
 const bloquantes = anomalies.filter((a) => BLOQUANTES.has(a.cat) && !/\/blog\//.test(a.msg));
 if (bloquantes.length) {
