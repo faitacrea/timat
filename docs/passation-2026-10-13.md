@@ -258,6 +258,15 @@ déclencheur, fonctions `fermetures_prevues()` et
   du site par défaut, règle d'audit `apercu` (prouvée en cassant). Liens
   internes des 308 pages : tous en 200. Aucune image sans alt, un seul h1 par
   page, aucune date de modification antérieure à la publication.
+- **22/10, PR #272** : liens Page et groupe Facebook (liens de partage donnés
+  par Sophie, `data/coordonnees.js`) dans le pied de page de l'accueil et du
+  blog, et dans `sameAs`. Vérifié en ligne. Bio Instagram : à faire par
+  Sophie (5 liens possibles). Kit : section « Canal de diffusion Instagram »
+  (C1 à C3), éligibilité au canal non confirmée par une source Meta.
+- **Rappels d'indexation programmés** (10 adresses par jour, 23, 24 et 25/10) :
+  `trig_01SbCujjLpPG4fhFMBkDoJHn`, `trig_016eyWBEruwdfAjsi4hH3Qmi`,
+  `trig_01BWDBRUKZ2DMnTucHW7RtcW`. Le 25/10 : demander une nouvelle capture
+  du rapport pour la suite.
 - **Groupe** : G10 à G13 écrits dans le kit (5, 10, 12 et 17/11). Rappels
   programmés dans cette session pour les commentaires G7 (27/10), G9 (3/11)
   et G11 (10/11) : `trig_01GPp6WuaCG1bdw7ZtdsQctg`, `trig_01UtaNvVuP4hphx6JBHb7NMT`,
