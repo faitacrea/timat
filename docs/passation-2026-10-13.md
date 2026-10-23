@@ -288,6 +288,14 @@ déclencheur, fonctions `fermetures_prevues()` et
   détails » ; relier le groupe à la Page depuis les paramètres du groupe
   (aide Facebook « Make a Page an admin of a Facebook group you manage »,
   illisible d'ici : proxy).
+- **Groupe relié à la Page** : Sophie a choisi TiMat dans « Affiliation »
+  (paramètres du groupe) le 23/10 ; selon les guides, la Page s'affiche
+  alors sous la couverture du groupe (à vérifier sur l'écran).
+- **ST1 et ST2 publiées** le 23/10. Kit : une story par jour du 24 au 30/10
+  (images 25 à 29 : boîte à questions, sondage, quiz minimum 4,20 €,
+  11 novembre art. 47.2 avec lien vers l'article, quiz Pajemploi par
+  enfant) ; les 26, 28 et 30/10, partage en story des publications de
+  20 h 30. Semaine suivante à préparer.
 
 ## Ce qu'il reste à faire
 
