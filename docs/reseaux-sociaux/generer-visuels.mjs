@@ -243,6 +243,36 @@ visuels.push(["24-story-a-la-une-groupe-1080x1920.png", 1080, 1920, base(1080, 1
   <div style="position:absolute;left:0;right:0;top:1420px;text-align:center;font-size:64px;font-weight:700">Le groupe</div>
 `, CREME)]);
 
+// 25-29. STORIES DU 24 AU 30 OCTOBRE 2026 — meme mise en page que les
+// sondages : le texte en haut, la place de l'autocollant au milieu, la
+// source au-dessus du logo quand l'image affirme une regle.
+const story = (nom, etiquette, titre, aide, source = "") => visuels.push([nom, 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
+  <div style="position:absolute;left:90px;right:90px;top:300px">
+    <div style="font-size:34px;font-weight:700;color:${TERRA}">${etiquette}</div>
+    <div style="font-size:72px;font-weight:700;line-height:1.12;margin-top:22px">${titre}</div>
+    <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:30px;color:#4E5E68">${aide}</div>
+  </div>
+  ${source ? `<div style="position:absolute;left:90px;right:90px;bottom:290px;font-size:26px;text-align:center" class="src">${source}</div>` : ""}
+  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
+`, CREME)]);
+story("25-story-boite-questions-1080x1920.png", "Vos questions", "Une question sur votre contrat, votre salaire ou Pajemploi ?", "Posez-la ici 👇 Les réponses viendront avec leur source officielle.");
+story("26-story-sondage-1080x1920.png", "Sondage", "Votre avis en un clic", "La question est juste en dessous 👇");
+story("27-story-quiz-minimum-1080x1920.png", "Quiz", "Le salaire minimum d'une assistante maternelle depuis le 1<sup style=\"font-size:.6em\">er</sup> juin 2026 ?", "Brut, par heure et par enfant, sans le titre professionnel.", "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");
+story("29-story-quiz-pajemploi-1080x1920.png", "Quiz", "Deux enfants de la même famille : combien de déclarations Pajemploi par mois ?", "Depuis janvier 2026.", "Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 »");
+
+visuels.push(["28-story-11-novembre-1080x1920.png", 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:560px;height:560px;background:#3A5A6B;left:-220px;top:-220px"></div>
+  <div style="position:absolute;left:90px;right:90px;top:300px;color:#fff">
+    <div style="font-size:34px;font-weight:700;color:#F7C7B3">Mercredi 11 novembre · jour férié</div>
+    <div style="font-size:80px;font-weight:700;line-height:1.1;margin-top:26px">Pas travaillé : payé ou pas ?</div>
+    <div style="font-size:38px;font-weight:600;line-height:1.42;margin-top:36px;color:#E3EBF0">Payé normalement s'il tombe un jour habituellement travaillé, si vous avez travaillé le dernier jour prévu avant et le premier jour prévu après (sauf absence autorisée).</div>
+    <div style="font-size:38px;font-weight:700;line-height:1.42;margin-top:26px;color:#F7C7B3">Travaillé : +10 % sur les heures du jour.</div>
+  </div>
+  <div style="position:absolute;left:90px;right:90px;bottom:250px;font-size:26px;font-weight:600;text-align:center;color:#AFC0CA">Source : convention collective IDCC 3239, article 47.2</div>
+  <img src="${LOGO_CLAIR}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:140px;height:70px">
+`, NAVY)]);
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
