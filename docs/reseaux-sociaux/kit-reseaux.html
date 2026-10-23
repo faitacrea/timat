@@ -76,7 +76,7 @@ th{font-family:var(--titre);color:var(--encre)}
   </header>
 
   <nav class="onglets" aria-label="Sections">
-    <a href="#demarrer">Démarrer</a><a href="#page">Page Facebook</a><a href="#groupe">Groupe</a><a href="#instagram">Instagram</a><a href="#calendrier">Calendrier</a><a href="#serie2">Série 2</a><a href="#publier">Publier à votre place</a>
+    <a href="#demarrer">Démarrer</a><a href="#page">Page Facebook</a><a href="#groupe">Groupe</a><a href="#stories-groupe">Stories</a><a href="#instagram">Instagram</a><a href="#calendrier">Calendrier</a><a href="#serie2">Série 2</a><a href="#publier">Publier à votre place</a>
   </nav>
 
   <!-- ================= DEMARRER ================= -->
@@ -115,6 +115,7 @@ th{font-family:var(--titre);color:var(--encre)}
       <div class="reglage"><dt>Catégorie</dt><dd>Logiciel (ajoutez « Application » si Facebook la propose)</dd></div>
       <div class="reglage"><dt>Nom d'utilisateur</dt><dd><b>timatapp</b>. Sur Facebook, seuls les lettres, les chiffres et le point sont acceptés (pas de « _ » comme sur Instagram), et une extension de domaine comme « .app » est refusée selon plusieurs guides — je n'ai pas pu lire la page officielle.</dd></div>
       <div class="reglage"><dt>Site web</dt><dd>https://www.timat.app</dd></div>
+      <div class="reglage"><dt>Lien Instagram</dt><dd>@timat_app, à ajouter dans « Modifier les détails » (rubrique des liens ou des réseaux sociaux ; le libellé change selon la version) pour qu'il s'affiche sur la Page.</dd></div>
       <div class="reglage"><dt>E-mail</dt><dd>contact@timat.app</dd></div>
       <div class="reglage"><dt>Bouton d'action</dt><dd>« S'inscrire », vers https://www.timat.app</dd></div>
       <div class="reglage"><dt>Téléphone</dt><dd>Facultatif sur Facebook. Laissez vide si vous ne voulez pas l'afficher.</dd></div>
@@ -484,48 +485,63 @@ Posez-la en commentaire : on y répondra dans les prochaines publications, avec 
   </section>
 
 
-  <!-- ================= CANAL INSTAGRAM ================= -->
-  <section id="canal">
-    <h2>Canal de diffusion Instagram</h2>
-    <p class="compte">À créer depuis le profil Instagram : « + » puis « Canal de diffusion », si l'option apparaît. Les conditions d'accès (compte professionnel, nombre d'abonnés) ne sont pas publiées clairement par Meta : c'est l'application qui dit si le compte y a droit. Un message par semaine, pas plus.</p>
+  <!-- ================= STORIES VERS LE GROUPE ================= -->
+  <section id="stories-groupe">
+    <h2>Stories Instagram : sondage et lien vers le groupe</h2>
+    <p class="compte">Remplace le canal de diffusion, abandonné le 23 octobre 2026. À publier vous-même depuis l'application Instagram : selon plusieurs outils de programmation, l'API d'Instagram ne permet pas d'ajouter les autocollants « Sondage » et « Lien » depuis Metricool. Les deux stories se suivent le même jour : d'abord le sondage, puis le lien.</p>
+    <div class="grille">
+      <figure><img src="visuels/22-story-sondage-desaccord-heures-1080x1920.png" alt="Fond de sondage : Un désaccord sur les heures avec un parent, ça vous est déjà arrivé ?"><figcaption>22 · sondage</figcaption></figure>
+      <figure><img src="visuels/23-story-lien-groupe-1080x1920.png" alt="Fond bleu : Groupe d'entraide Facebook, vos questions sur la paie, le contrat et Pajemploi, on y répond avec la source"><figcaption>23 · lien groupe</figcaption></figure>
+      <figure><img src="visuels/24-story-a-la-une-groupe-1080x1920.png" alt="Couverture À la une : deux bulles de discussion, Le groupe"><figcaption>24 · « Le groupe »</figcaption></figure>
+    </div>
+
     <article class="pub">
-      <span class="quand">C1 · message de bienvenue (à la création)</span>
-      <div class="colle"><div class="haut"><span class="nom">Message</span><button class="copier" data-cible="c1">Copier</button></div>
-<pre id="c1">Bienvenue dans le canal TiMat 👋
-
-Ici, une fois par semaine : un repère officiel sur le contrat, le salaire ou Pajemploi des assistantes maternelles, toujours avec sa source. Et de temps en temps, un sondage pour savoir ce qui vous pose question.
-
-Pour échanger entre professionnelles et poser vos questions, rejoignez le groupe d'entraide sur Facebook :
-https://www.facebook.com/share/g/1DrVY3qE2W/
-
-Et la Page TiMat :
-https://www.facebook.com/share/1EREng5TZz/</pre></div>
+      <span class="quand">ST1 · story sondage · image 22</span>
+      <ol>
+        <li>Instagram → <b>+</b> → <b>Story</b>, choisissez l'image <b>22</b> dans vos photos.</li>
+        <li>Touchez l'icône des autocollants (le carré souriant) → <b>Sondage</b>.</li>
+        <li>Collez la question et les deux réponses ci-dessous, posez l'autocollant dans l'espace vide au milieu.</li>
+        <li><b>Partager</b> → <b>Votre story</b>.</li>
+      </ol>
+      <div class="colle"><div class="haut"><span class="nom">Question de l'autocollant</span><button class="copier" data-cible="st1q">Copier</button></div>
+<pre id="st1q">Déjà eu un désaccord sur les heures ?</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Réponses (une par case)</span><button class="copier" data-cible="st1r">Copier</button></div>
+<pre id="st1r">Oui, déjà
+Jamais</pre></div>
     </article>
 
     <article class="pub">
-      <span class="quand">C2 · sondage (semaine suivante)</span>
-      <div class="colle"><div class="haut"><span class="nom">Sondage : la question</span><button class="copier" data-cible="c2q">Copier</button></div>
-<pre id="c2q">Ce qui vous prend le plus de temps chaque mois ?</pre></div>
-      <div class="colle"><div class="haut"><span class="nom">Sondage : les réponses</span><button class="copier" data-cible="c2r">Copier</button></div>
-<pre id="c2r">Les heures et le salaire
-Les congés payés
-La déclaration Pajemploi
-Les absences</pre></div>
+      <span class="quand">ST2 · story lien vers le groupe · image 23 · juste après ST1</span>
+      <ol>
+        <li><b>+</b> → <b>Story</b>, image <b>23</b>.</li>
+        <li>Autocollants → <b>Lien</b> → collez l'adresse du groupe ci-dessous.</li>
+        <li><b>Personnaliser le texte de l'autocollant</b> → collez « Rejoindre le groupe ». Sans texte, Instagram affiche l'adresse.</li>
+        <li>Posez l'autocollant dans l'espace vide au milieu → <b>Partager</b> → <b>Votre story</b>.</li>
+      </ol>
+      <div class="colle"><div class="haut"><span class="nom">Adresse du lien</span><button class="copier" data-cible="st2l">Copier</button></div>
+<pre id="st2l">https://www.facebook.com/share/g/1DrVY3qE2W/</pre></div>
+      <div class="colle"><div class="haut"><span class="nom">Texte de l'autocollant</span><button class="copier" data-cible="st2t">Copier</button></div>
+<pre id="st2t">Rejoindre le groupe</pre></div>
     </article>
 
-    <article class="pub">
-      <span class="quand">C3 · repère (reprend G10, jours fériés)</span>
-      <div class="colle"><div class="haut"><span class="nom">Message</span><button class="copier" data-cible="c3">Copier</button></div>
-<pre id="c3">11 novembre : payé ou pas ? 👇
+    <div class="groupe">
+      <span class="etiquette">Les ranger « à la une » (les stories disparaissent après 24 h)</span>
+      <ol>
+        <li>Ouvrez votre story ST1 → <b>À la une</b> (en bas) → choisissez <b>Vos questions</b>.</li>
+        <li>Ouvrez ST2 → <b>À la une</b> → <b>Nouveau</b> → titre <b>Le groupe</b> → <b>Ajouter</b>.</li>
+        <li>Couverture : sur votre profil, appui long sur la bulle « Le groupe » → <b>Modifier la story à la une</b> → <b>Modifier la couverture</b> → icône de la galerie → image <b>24</b>. Si la galerie n'est pas proposée, publiez l'image 24 en story et ajoutez-la à « Le groupe », comme les couvertures 09 à 14.</li>
+        <li>Faites glisser « Le groupe » en première position si l'application le permet ; sinon, elle se place selon la dernière story ajoutée.</li>
+      </ol>
+      <p class="note">Les libellés changent selon les versions de l'application. Le lien reste cliquable dans « à la une » : c'est le chemin permanent vers le groupe, en plus de la bio.</p>
+    </div>
 
-Un férié non travaillé qui tombe un jour habituellement travaillé est payé normalement, si vous avez travaillé le dernier jour prévu avant et le premier jour prévu après (sauf absence autorisée).
-
-Travaillé : +10 % sur les heures du jour. Le 1er mai, lui, est payé double s'il est travaillé.
-
-Source : convention collective IDCC 3239, article 47.2.
-
-Vos questions sur les fériés : on en parle dans le groupe 👉 https://www.facebook.com/share/g/1DrVY3qE2W/</pre></div>
-    </article>
+    <h3>Les sondages des semaines suivantes</h3>
+    <p>Une story sondage par semaine, suivie de la story ST2 (republier l'image 23 avec le même lien). Le fond 22 peut resservir : la question écrite dans l'autocollant suffit. Ce sont des questions d'expérience, pas de réglementation : aucune ne demande de source.</p>
+    <div class="colle"><div class="haut"><span class="nom">Idées de questions (réponses entre parenthèses)</span><button class="copier" data-cible="st-idees">Copier</button></div>
+<pre id="st-idees">Vos parents signent-ils un relevé d'heures chaque mois ? (Oui / Non)
+Vous calculez vos congés payés seule ? (Oui / Avec de l'aide)
+La fin de contrat, ça vous stresse ? (Oui / Non)
+Plutôt cahier papier ou appli pour les heures ? (Cahier / Appli)</pre></div>
   </section>
 
   <!-- ================= INSTAGRAM ================= -->
