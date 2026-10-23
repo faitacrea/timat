@@ -272,6 +272,23 @@ déclencheur, fonctions `fermetures_prevues()` et
   et G11 (10/11) : `trig_01GPp6WuaCG1bdw7ZtdsQctg`, `trig_01UtaNvVuP4hphx6JBHb7NMT`,
   `trig_01R9NpUwAQjCvbcG8KpYkDnW`.
 
+## Session du 23 octobre 2026
+
+- **Indexation jour 1** : les 10 adresses vérifiées en 200, demandées par
+  Sophie le 23/10. Jours 2 et 3 : rappels déjà programmés (24 et 25/10).
+- **Bio Instagram** : liens ajoutés par Sophie le 23/10.
+- **Canal de diffusion abandonné** (décision de Sophie) → stories Instagram
+  à la place. Kit, section « Stories » : ST1 (sondage « désaccord sur les
+  heures », image 22), ST2 (autocollant Lien vers le groupe, image 23),
+  à la une « Le groupe » (couverture 24), idées de sondages suivants. Images
+  produites par `generer-visuels.mjs`. Stories publiées par Sophie dans
+  l'application : les autocollants ne passent pas par Metricool (API
+  Instagram, selon des sources tierces, pas de page Meta trouvée).
+- **Page Facebook** : ajouter le lien Instagram dans « Modifier les
+  détails » ; relier le groupe à la Page depuis les paramètres du groupe
+  (aide Facebook « Make a Page an admin of a Facebook group you manage »,
+  illisible d'ici : proxy).
+
 ## Ce qu'il reste à faire
 
 **Sophie**
@@ -323,8 +340,7 @@ déclencheur, fonctions `fermetures_prevues()` et
 **Claude, à la prochaine session**
 - Vérifier dans Metricool que les publications du 19 octobre sont bien
   parties (statut), puis préparer la série 3 (Sophie valide avant).
-- Ajouter le lien de la Page Facebook au site (`data/coordonnees.js`,
-  pied de page, `sameAs` de `index.html`) quand Sophie l'envoie.
+- Lien de la Page Facebook sur le site : FAIT (PR #272).
 - Après le vrai test Stripe : vérifier en base `stripe_customer_id`,
   `subscription_status`, puis le retour en gratuit après résiliation.
 - Points mineurs connus : `profiles.role` n'est pas protégé par le

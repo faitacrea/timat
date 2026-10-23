@@ -222,6 +222,27 @@ pub("21-publication-10-pointage-signe.png", `
   <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
 `);
 
+// 22-24. STORIES DU 23 OCTOBRE 2026 (a la place du canal de diffusion) :
+// un sondage, puis une story qui porte le sticker « Lien » vers le groupe,
+// et la couverture d'une « a la une » Groupe pour garder le lien.
+sondage("22-story-sondage-desaccord-heures-1080x1920.png", "Un désaccord sur les heures avec un parent, ça vous est déjà arrivé ?", "Retards, dépassements, heures oubliées sur le relevé…");
+
+visuels.push(["23-story-lien-groupe-1080x1920.png", 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:640px;height:640px;background:#3A5A6B;left:-240px;top:-240px"></div>
+  <div class="rond" style="width:420px;height:420px;background:${PECHE};right:-170px;bottom:-150px;opacity:.95"></div>
+  <div style="position:absolute;left:90px;right:90px;top:330px;color:#fff">
+    <div style="display:inline-block;font-size:32px;font-weight:700;padding:10px 26px;border-radius:40px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35)">Groupe d'entraide Facebook</div>
+    <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:36px">Vos questions sur la paie, le contrat et Pajemploi</div>
+    <div style="font-size:40px;font-weight:600;line-height:1.4;margin-top:30px;color:#F7C7B3">On y répond avec la source.</div>
+  </div>
+  <div style="position:absolute;left:0;right:0;top:1440px;text-align:center;font-size:30px;font-weight:600;color:#D6E1E7">Assistantes maternelles et parents employeurs · zéro publicité</div>
+`, NAVY)]);
+
+visuels.push(["24-story-a-la-une-groupe-1080x1920.png", 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:760px;height:760px;left:160px;top:580px;background:${NAVY};display:flex;align-items:center;justify-content:center"><svg width="420" height="380" viewBox="0 0 110 100"><path d="M46 30 h52 a8 8 0 0 1 8 8 v28 a8 8 0 0 1 -8 8 h-10 v12 l-14 -12 h-28 a8 8 0 0 1 -8 -8 v-28 a8 8 0 0 1 8 -8 z" fill="#F7C7B3"/><path d="M10 12 h56 a8 8 0 0 1 8 8 v28 a8 8 0 0 1 -8 8 h-30 l-14 12 v-12 h-12 a8 8 0 0 1 -8 -8 v-28 a8 8 0 0 1 8 -8 z" fill="#fff" stroke="${NAVY}" stroke-width="5" stroke-linejoin="round"/></svg></div>
+  <div style="position:absolute;left:0;right:0;top:1420px;text-align:center;font-size:64px;font-weight:700">Le groupe</div>
+`, CREME)]);
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
