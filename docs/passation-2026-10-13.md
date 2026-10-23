@@ -295,7 +295,26 @@ déclencheur, fonctions `fermetures_prevues()` et
   (images 25 à 29 : boîte à questions, sondage, quiz minimum 4,20 €,
   11 novembre art. 47.2 avec lien vers l'article, quiz Pajemploi par
   enfant) ; les 26, 28 et 30/10, partage en story des publications de
-  20 h 30. Semaine suivante à préparer.
+  20 h 30.
+- **Rappel quotidien des stories** (demandé par Sophie) : tous les jours à
+  8 h 39 (Paris), `trig_019T4fYCSVA7h4risE2danFL`. Il lit les tableaux « Une
+  story par jour » du kit sur origin/main ; à désactiver si elle le demande.
+- **Stories du 31/10 au 6/11** dans le kit (images 40 à 42 : quiz congés,
+  rappel Pajemploi du 5/11 avec lien vers le simulateur, quiz préavis).
+- **Série 3 (publications 11 à 20, images 30 à 39) PRÉPARÉE, NON
+  PROGRAMMÉE** : en attente de la validation de Sophie. Dates proposées :
+  6, 9, 13, 16, 18, 20, 23, 27 novembre, 2 et 4 décembre à 20 h 30 (8 en
+  novembre à cause de la limite de 20 publications par mois du forfait
+  gratuit de Metricool). Images en ligne dans `public/reseaux/`.
+  Source principale : guide assistants maternels de la DREETS
+  Bourgogne-Franche-Comté (mise à jour juin 2026), lu en entier.
+- **Absences de l'enfant malade (5 jours / 14 jours)** : ce guide DREETS
+  (art. 105) tranche la question laissée ouverte ; publication 18 de la
+  série 3, à valider par Sophie. Légifrance toujours illisible d'ici.
+- **Écart relevé** : la fiche DREETS Pays de la Loire du 12/06/2026 montre
+  encore le barème kilométrique de l'administration de 2022 (0,32 €) ;
+  l'application utilise celui de l'arrêté du 29 mai 2026 (0,33 €), qui
+  s'applique du 1er juin au 31 décembre 2026.
 
 ## Ce qu'il reste à faire
 
