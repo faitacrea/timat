@@ -273,6 +273,130 @@ visuels.push(["28-story-11-novembre-1080x1920.png", 1080, 1920, base(1080, 1920,
   <img src="${LOGO_CLAIR}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:140px;height:70px">
 `, NAVY)]);
 
+// 30-39. LA TROISIEME SERIE DE PUBLICATIONS (23 octobre 2026). Les regles
+// viennent surtout du guide de la DREETS Bourgogne-Franche-Comte mis a jour
+// en juin 2026 ; les legendes sont dans kit-reseaux.html.
+const liste = (lignes, couleur, taille = 36) => `<div style="font-size:${taille}px;font-weight:600;line-height:1.45;margin-top:34px;color:${couleur};max-width:880px">${lignes.map((l, i) => `<div style="margin-top:${i ? 12 : 0}px">${l}</div>`).join("")}</div>`;
+const SRC_BFC = "DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026)";
+
+// 30. LE PREAVIS
+pub("30-publication-11-preavis.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Retrait de l'enfant · le préavis</div>
+  <div style="font-size:120px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-2px">8 j · 15 j · 1 mois</div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:26px;color:#fff">selon l'ancienneté avec le parent employeur :</div>
+  ${liste(["• moins de 3 mois : 8 jours calendaires", "• de 3 mois à moins d'un an : 15 jours calendaires", "• un an et plus : 1 mois"], "#D6E1E7")}
+  <div style="font-size:30px;font-weight:600;line-height:1.45;margin-top:30px;color:#F7C7B3">Il part de la première présentation de la lettre recommandée (ou de la remise en main propre).</div>
+  <div style="font-size:23px;font-weight:600;margin-top:30px;color:#AFC0CA">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 119.1</div>
+`, NAVY);
+
+// 31. LE CONGE POUR ENFANT MALADE
+pub("31-publication-12-conge-enfant-malade.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Votre enfant est malade</div>
+  <div style="font-size:190px;font-weight:700;line-height:1;margin-top:30px;letter-spacing:-3px">3 jours</div>
+  <div style="font-size:42px;font-weight:600;line-height:1.3;margin-top:22px;max-width:880px">de congé par an, sur certificat médical, pour un enfant de moins de 16 ans à votre charge.</div>
+  <div style="margin-top:42px;padding:34px 40px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:36px;font-weight:700;line-height:1.35">5 jours si l'enfant a moins d'un an, ou si vous avez au moins trois enfants de moins de 16 ans.</div>
+    <div style="font-size:31px;font-weight:600;margin-top:14px;color:${TERRA}">Ce congé n'est pas rémunéré.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:32px" class="src">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 48-2-2</div>
+`);
+
+// 32. LES DOCUMENTS DE FIN DE CONTRAT
+pub("32-publication-13-documents-fin-contrat.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Fin de contrat</div>
+  <div style="font-size:76px;font-weight:700;line-height:1.1;margin-top:26px;max-width:880px">3 documents à remettre à la fin du contrat</div>
+  ${liste(["1. Le certificat de travail", "2. L'attestation France Travail", "3. Le reçu pour solde de tout compte"], NAVY, 44)}
+  <div style="margin-top:40px;padding:30px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:33px;font-weight:700;line-height:1.4">Le reçu peut être contesté dans les 6 mois qui suivent sa signature.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:32px" class="src">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 69</div>
+`);
+
+// 33. LES INDEMNITES KILOMETRIQUES
+pub("33-publication-14-indemnites-kilometriques.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Frais kilométriques</div>
+  <div style="font-size:150px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-3px">0,33 €/km</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.35;margin-top:24px;color:#fff;max-width:880px">au minimum pour une voiture de 5 CV et moins, jusqu'à 2 000 km par an, du 1<sup style="font-size:.6em">er</sup> juin au 31 décembre 2026.</div>
+  ${liste(["• Le taux est écrit au contrat : ni sous le barème de l'administration, ni au-dessus du barème fiscal.", "• Plusieurs familles : chacune paie sa part, au prorata des enfants transportés."], "#D6E1E7", 33)}
+  <div style="font-size:23px;font-weight:600;margin-top:32px;color:#AFC0CA">Sources : convention collective IDCC 3239, art. 57 et 113 (DREETS Pays de la Loire, juin 2026) · arrêté du 29 mai 2026</div>
+`, NAVY);
+
+// 34. LA FIN DE CONTRAT DANS TIMAT
+pub("34-publication-15-fin-de-contrat-timat.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">La fin de contrat, calculée pour vous.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. Le préavis, selon l'ancienneté.</div>
+    <div style="margin-top:10px">2. Les congés payés restants et l'indemnité de rupture, quand elle est due.</div>
+    <div style="margin-top:10px">3. La lettre, le certificat de travail et le reçu pour solde de tout compte, prêts à imprimer.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
+// 35. LES REPAS
+pub("35-publication-16-repas.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Les repas</div>
+  <div style="font-size:72px;font-weight:700;line-height:1.1;margin-top:26px;max-width:880px">Qui les fournit ? C'est écrit au contrat.</div>
+  <div style="margin-top:40px;padding:30px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Vous les fournissez</div>
+    <div style="font-size:33px;font-weight:600;margin-top:8px;line-height:1.4">Une indemnité de repas s'ajoute au salaire. Le contrat fixe la nature des repas, leur nombre et le montant.</div>
+  </div>
+  <div style="margin-top:22px;padding:30px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Le parent les fournit</div>
+    <div style="font-size:33px;font-weight:600;margin-top:8px;line-height:1.4">Pas d'indemnité. Il vous indique par écrit le coût des repas fournis.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:30px" class="src">Sources : DREETS Pays de la Loire, fiche du 12 juin 2026 · convention collective IDCC 3239, art. 114-2</div>
+`);
+
+// 36. LA PERIODE D'ESSAI
+pub("36-publication-17-periode-essai.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Embauche · la période d'essai</div>
+  <div style="font-size:112px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-2px">3 mois ou 2 mois</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.3;margin-top:24px;color:#fff">au maximum, selon les jours d'accueil prévus au contrat :</div>
+  ${liste(["• 1, 2 ou 3 jours par semaine : 3 mois", "• 4 jours et plus : 2 mois", "• autre enfant de la même famille, essai déjà concluant : 30 jours"], "#D6E1E7", 34)}
+  <div style="font-size:30px;font-weight:600;line-height:1.45;margin-top:30px;color:#F7C7B3">Facultative : elle n'existe que si le contrat la prévoit.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:30px;color:#AFC0CA">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 95</div>
+`, NAVY);
+
+// 37. L'ENFANT ABSENT POUR MALADIE
+pub("37-publication-18-absence-enfant-malade.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">L'enfant accueilli est malade</div>
+  <div style="font-size:68px;font-weight:700;line-height:1.1;margin-top:26px;max-width:880px">Une retenue sur salaire est possible, dans deux limites.</div>
+  <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:28px;color:#3C5463;max-width:880px">Avec un certificat médical ou un bulletin d'hospitalisation, sur 12 mois à partir de l'embauche :</div>
+  ${liste(["• 5 jours au plus pour de courtes absences, consécutives ou non", "• 14 jours calendaires consécutifs au plus"], NAVY, 36)}
+  <div style="margin-top:34px;padding:28px 36px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:32px;font-weight:700;line-height:1.4">Au-delà, le salaire est dû.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:30px" class="src">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 105</div>
+`);
+
+// 38. LA DEMISSION
+pub("38-publication-19-demission.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Vous démissionnez</div>
+  <div style="font-size:66px;font-weight:700;line-height:1.12;margin-top:28px;color:#fff;max-width:880px">Une lettre recommandée avec accusé de réception, puis le préavis.</div>
+  ${liste(["• De 3 mois à moins d'un an d'ancienneté : 15 jours calendaires", "• Un an et plus : 1 mois", "• Moins de 3 mois : pas de préavis", "• Pas d'indemnité de rupture ; l'indemnité de congés payés reste due"], "#D6E1E7", 34)}
+  <div style="font-size:23px;font-weight:600;margin-top:36px;color:#AFC0CA">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 119.2.1 · CASF, art. L. 423-26</div>
+`, NAVY);
+
+// 39. LES TRAJETS DANS TIMAT
+pub("39-publication-20-trajets-timat.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">Vos trajets, au bon taux.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. Vous notez chaque trajet : la date, l'enfant, les kilomètres.</div>
+    <div style="margin-top:10px">2. TiMat vous prévient si le taux est sous le minimum de la convention.</div>
+    <div style="margin-top:10px">3. Le total du mois et la feuille de route sont prêts pour le parent.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
+// 40-42. STORIES DU 31 OCTOBRE AU 6 NOVEMBRE 2026.
+story("40-story-quiz-conges-1080x1920.png", "Quiz", "Combien de jours de congés payés acquis par mois de travail ?", "Jours ouvrables, dans la limite de 30 par an.", "Source : DREETS Auvergne-Rhône-Alpes, fiches année complète et incomplète");
+story("41-story-pajemploi-5-novembre-1080x1920.png", "Rappel Pajemploi", "Octobre se déclare jusqu'au 5 novembre.", "Une déclaration par enfant, depuis janvier 2026. La période va du 25 du mois au 5 du mois suivant.", "Sources : caf.fr, dépliant Pajemploi · urssaf.fr");
+story("42-story-quiz-preavis-1080x1920.png", "Quiz", "6 mois d'accueil, le parent retire l'enfant : quel préavis ?", "Réponse détaillée vendredi soir 👇", "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026)");
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
