@@ -318,6 +318,38 @@ déclencheur, fonctions `fermetures_prevues()` et
   l'application utilise celui de l'arrêté du 29 mai 2026 (0,33 €), qui
   s'applique du 1er juin au 31 décembre 2026.
 
+## Session du 24 octobre 2026
+
+- **Indexation jour 2** : 10 adresses vérifiées en 200, envoyées à Sophie.
+  Story du 24/10 rappelée (boîte à questions, image 25).
+- **Série 3 programmée** (voir plus haut) après la validation de Sophie.
+- **Relecture des articles du blog sur les sujets de la série 3**, contre le
+  guide DREETS Bourgogne-Franche-Comté (juin 2026) et le guide CDI DREETS
+  Occitanie (2024). Cinq erreurs, corrigées EN BROUILLON (publication sur
+  accord écrit de Sophie seulement), `dateMiseAJour` = 2026-10-24, source
+  ajoutée à chacun :
+  - `indemnites-kilometriques-assistante-maternelle` : plancher 0,32 € →
+    0,33 € du 1/6 au 31/12/2026 (arrêté du 29 mai 2026, +3,2 %) ;
+  - `enfant-malade-absence-ce-que-le-parent-doit-payer` : « quatre mois » et
+    « si votre contrat prévoit la déduction » faux → limites de 5 jours et
+    14 jours (art. 105) ;
+  - `rompre-contrat-assistante-maternelle-parent-employeur` et
+    `periode-adaptation-assistante-maternelle-parent` : « délai de prévenance
+    prévu par la convention » pendant l'essai → il n'y en a aucun ;
+  - `fin-de-contrat-assistante-maternelle` : démission avant 3 mois
+    d'ancienneté = pas de préavis (L. 423-26 CASF).
+- **Même erreur dans le contrat imprimé par l'application** (`src/App.jsx`,
+  article période d'essai) : corrigée ; nouvelle règle d'audit bloquante
+  (« délai de prévenance prévu par la convention » interdit dans src/ et
+  public/), prouvée en cassant (code 1) puis en réparant (code 0).
+  `DOCUMENTS_REFONTE` avancé au 2026-10-24T08:37:22Z (texte faux dans un
+  document signé : les contrats générés avant sont signalés périmés),
+  empreinte du modèle mise à jour.
+- **Nouvel article (brouillon)** `accueil-occasionnel-cdd-assistante-maternelle`
+  (`drafts.ce986df4-eb9a-4476-8790-710822630019`), rubrique Contrat et paie,
+  4 sources officielles, ajouté en fin de file de publication, couverture
+  dans `public/couvertures-blog/`.
+
 ## Ce qu'il reste à faire
 
 **Sophie**

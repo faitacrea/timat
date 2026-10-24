@@ -3870,7 +3870,7 @@ export const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICON
 // A METTRE A JOUR A CHAQUE FOIS QUE LE MODELE D'UN DOCUMENT CHANGE. Une
 // barriere d'audit le verifie : elle garde l'empreinte du modele de contrat et
 // refuse que le modele bouge sans que cette date bouge.
-export const DOCUMENTS_REFONTE="2026-10-12T05:21:23Z";
+export const DOCUMENTS_REFONTE="2026-10-24T08:37:22Z";
 // Le PDF est perime s'il a ete ecrit AVANT la derniere modification du contrat,
 // ou avant la refonte des documents. La premiere comparaison est la vraie :
 // sans elle, une fois le fichier refait le bouton disparaissait pour de bon, et
@@ -3982,7 +3982,7 @@ const jsPDF=await chargerJsPDF();
     R.article(3,"DATE D'EMBAUCHE, PÉRIODE D'ESSAI ET PÉRIODE D'ADAPTATION");
     R.champ("Premier jour d'accueil",ct.debut?fmtDatePdf(ct.debut):"-");
     R.champ("Durée de la période d'essai",nbJours>0?essaiMois+" mois":A_COMPLETER);
-    R.texte("La période d'essai est de deux mois lorsque l'enfant est confié quatre jours calendaires ou plus par semaine, et de trois mois en deçà (convention collective IDCC 3239). Elle court à compter du premier jour d'accueil. Pendant cette période, chacune des parties peut rompre le contrat sans motif ni indemnité, en respectant le délai de prévenance prévu par la convention.",{taille:8.5});
+    R.texte("La période d'essai est de deux mois lorsque l'enfant est confié quatre jours calendaires ou plus par semaine, et de trois mois en deçà (convention collective IDCC 3239). Elle court à compter du premier jour d'accueil. Pendant cette période, chacune des parties peut rompre le contrat par écrit, sans motif ni indemnité ; la convention n'impose aucun délai de prévenance.",{taille:8.5});
     R.texte("Une période d'adaptation de 30 jours calendaires au maximum, destinée à familiariser progressivement l'enfant à son nouveau mode d'accueil, s'ouvre au premier jour de travail effectif. Elle est comprise dans la période d'essai. Ses modalités (jours et horaires progressifs) sont convenues entre les parties ; le salaire y est calculé sur les heures réellement effectuées.",{taille:8.5});
 
     R.article(4,"DURÉE ET HORAIRES DE L'ACCUEIL");
