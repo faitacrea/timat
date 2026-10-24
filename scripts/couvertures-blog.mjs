@@ -91,8 +91,11 @@ export const COUVERTURES = [
    "Trois mois de salaires fixent l’indemnité de tout le congé. Un contrat perdu avant pèse longtemps"],
   ["conges-evenements-familiaux-assistante-maternelle", "Contrat et paie",
    "Sans ancienneté, sans perte de salaire, et l’employeur ne peut pas les refuser"],
+  // Refaite le 24 octobre 2026 : la précédente disait « Une indemnité par
+  // famille » — faux. L'indemnité est versée une fois par l'APNI, après dix
+  // ans dans la branche (guide DREETS Bourgogne-Franche-Comté, juin 2026).
   ["indemnite-depart-retraite-assistante-maternelle", "Contrat et paie",
-   "Une indemnité par famille, et ce n’est pas la famille qui la paie"],
+   "Une seule indemnité, versée par l’APNI : pas par les familles"],
   ["formation-continue-assistante-maternelle-58-heures", "Devenir assistante maternelle",
    "Cinquante-huit heures par an, remises à zéro chaque janvier et jamais reportées"],
   // Les huit articles écrits pour le parent employeur. Même règle : la phrase
@@ -144,6 +147,15 @@ export const COUVERTURES = [
   // Occitanie) : le seul sujet du guide officiel que le blog ne couvrait pas.
   ["accueil-occasionnel-cdd-assistante-maternelle", "Contrat et paie",
    "Un CDD, seulement pour remplacer une assistante maternelle absente"],
+  // Refaites le 24 octobre 2026 : les précédentes portaient une erreur.
+  // Arrêt de travail : avec Pajemploi, l'attestation de salaire du parent n'est
+  // plus le passage obligé (l'assistante maternelle déclare son dernier jour
+  // travaillé). MAM : de un à six professionnels depuis l'ordonnance de 2021,
+  // et non « quatre au plus ».
+  ["arret-travail-assistante-maternelle", "Démarches et Pajemploi",
+   "Arrêt maladie : la CPAM et l’Ircem indemnisent, pas l’employeur"],
+  ["maison-assistantes-maternelles-mam", "Devenir assistante maternelle",
+   "Jusqu’à six assistantes maternelles, quatre à la fois, vingt enfants"],
 ];
 
 async function polices() {

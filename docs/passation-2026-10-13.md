@@ -350,6 +350,35 @@ déclencheur, fonctions `fermetures_prevues()` et
   4 sources officielles, ajouté en fin de file de publication, couverture
   dans `public/couvertures-blog/`.
 
+- **24/10, après-midi** : les 5 corrections du matin PUBLIÉES sur accord
+  écrit de Sophie (« je confirme : publie les 5 corrections »). Le schéma
+  Sanity refuse les liens internes relatifs (« /blog/… ») : convertis en
+  « https://www.timat.app/… » (le générateur les traite comme internes).
+- **Vérification de tous les articles (84 publiés)** : contrôle mécanique
+  (mots doublés, espaces, guillemets, phrases répétées, longueurs SEO) sans
+  défaut ; correcteur orthographique (pyspellchecker, dictionnaire FR) :
+  3 fautes ; relecture des faits contre le guide DREETS
+  Bourgogne-Franche-Comté (juin 2026) : 3 articles faux. Six corrections EN
+  BROUILLON, à publier sur accord écrit de Sophie :
+  - `indemnite-depart-retraite-assistante-maternelle` : RÉÉCRIT — l'indemnité
+    n'est pas « une par famille après un an » : une seule, versée par l'APNI,
+    après 10 ans dans la branche dont 60 mois sur 7 ans ; préavis de départ à
+    la retraite 1 mois (6 mois-2 ans) / 2 mois (2 ans et plus) ; nouvelle
+    couverture ;
+  - `arret-travail-assistante-maternelle` : avec Pajemploi, c'est
+    l'assistante maternelle qui envoie une attestation sur l'honneur (réponses
+    des conseillers ameli), pas d'attestation de salaire obligatoire du
+    parent ; un arrêt maladie ordinaire ne suspend pas le préavis ; nouvelle
+    couverture ;
+  - `maison-assistantes-maternelles-mam` : 1 à 6 professionnels dont 4
+    simultanément (ordonnance 2021-611, réponse AN n° 9652 d'avril 2026),
+    20 enfants dont 16 de moins de 3 ans ; nouvelle couverture ;
+  - fautes : « dûs » → « dus » (chômage), « dénivélé » → « dénivelé »
+    (visite PMI), « une représaille » → « des représailles » (tarif horaire).
+- **Textes réseaux du kit** (97 textes : Page, Instagram, groupe, stories) :
+  correcteur et contrôle mécanique sans défaut ; G12 (1er mars) conforme au
+  guide DREETS.
+
 ## Ce qu'il reste à faire
 
 **Sophie**
