@@ -203,3 +203,23 @@ Bourgogne-Franche-Comté (juin 2026) que le blog ne couvrait pas.
 Les deux DREETS se nuancent sur l'accueil occasionnel (BFC : CDI si la date de
 fin n'est pas connue ; Occitanie : CDI recommandé dans tous les cas) :
 l'article le dit tel quel. Aucun lien interne vers un brouillon.
+
+## Ajout du 24 octobre 2026 (suite) : cinq articles pour réapprovisionner la file
+
+La file ne comptait plus que six brouillons (dernier prévu le 30 octobre).
+Sophie : « il faut refaire des brouillons d'articles, on arrive à la fin ».
+Cinq articles sur des points du guide DREETS Bourgogne-Franche-Comté (juin
+2026) que le blog ne traitait pas, chacun vérifié sur une seconde source
+officielle. Aucun lien interne : aucune dépendance. Dates prévues avec une
+publication par jour à 6 h UTC (7 h à Paris depuis le passage à l'heure d'hiver, le 25 octobre).
+
+| Ordre | Date prévue | Slug | Rubrique | Sources principales |
+|---:|---|---|---|---|
+| 12 | 31 octobre | `conge-naissance-2026-assistante-maternelle` | Situation pratique | DREETS BFC fiche 03 ; ameli ; décret n° 2026-426 du 30 mai 2026 |
+| 13 | 1er novembre | `engagement-reciproque-promesse-embauche-assistante-maternelle` | Contrat et paie | DREETS BFC ; DREETS Occitanie (FAQ 16/12/2025, guide 52 semaines) |
+| 14 | 2 novembre | `conges-complementaires-non-remuneres-assistante-maternelle` | Contrat et paie | DREETS BFC fiche 03 (art. 102-2) ; DREETS Occitanie FAQ q. 2.30 ; code du travail L3141-7 |
+| 15 | 3 novembre | `conge-parental-education-assistante-maternelle` | Situation pratique | DREETS BFC fiche 03 (art. 48-1-2-5) ; code du travail L1225-47 à L1225-54 |
+| 16 | 4 novembre | `conge-proche-aidant-solidarite-familiale-assistante-maternelle` | Situation pratique | DREETS BFC fiche 03 (art. 48-2-4 et 48-2-5) ; pour-les-personnes-agees.gouv.fr (AJPA) ; ameli (AJAP) |
+
+Après le 4 novembre, la file est vide : il faudra d'autres brouillons d'ici là
+(le cron envoie une alerte dès qu'il en reste cinq ou moins).

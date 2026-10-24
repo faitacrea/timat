@@ -122,5 +122,15 @@ export const ordre = [
   // article nouveau, bien sourcé »). Sources : guides DREETS
   // Bourgogne-Franche-Comté (juin 2026) et Occitanie (novembre 2024).
   "accueil-occasionnel-cdd-assistante-maternelle",
+  // 24 octobre 2026, la file s'épuisait (« on arrive à la fin », Sophie) : cinq
+  // articles sur des points du guide DREETS Bourgogne-Franche-Comté (juin 2026)
+  // que le blog ne traitait pas. Le congé de naissance d'abord : il est en
+  // vigueur depuis le 1er juillet 2026 et les familles le découvrent. Aucun
+  // lien interne : aucune dépendance.
+  "conge-naissance-2026-assistante-maternelle",
+  "engagement-reciproque-promesse-embauche-assistante-maternelle",
+  "conges-complementaires-non-remuneres-assistante-maternelle",
+  "conge-parental-education-assistante-maternelle",
+  "conge-proche-aidant-solidarite-familiale-assistante-maternelle",
 ];
 export default ordre;
