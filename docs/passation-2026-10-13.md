@@ -410,6 +410,43 @@ déclencheur, fonctions `fermetures_prevues()` et
   matinée. Conseil donné : ne PAS demander l'indexation de
   `indemnite-depart-retraite-assistante-maternelle` tant que sa correction
   n'est pas publiée (la version en ligne est fausse).
+- **24/10, après-midi — « je confirme : publie les 6 corrections »** : retraite,
+  arrêt de travail, MAM, chômage, visite PMI, tarif PUBLIÉS et relus en ligne.
+  La page retraite peut être indexée.
+- **Indexation** : quota Google dépassé pour Sophie le 24/10 ; seule
+  `retraite-assistante-maternelle-trimestres-ircem` était déjà indexée. Rappel
+  du 25/10 (`trig_01BWDBRUKZ2DMnTucHW7RtcW`) réécrit : les 8 restantes + la
+  page retraite corrigée + `formation-obligatoire-120-heures` ; nouveau rappel
+  le 26/10 (`trig_01WBYgTYWpoL97XdsZdC5dRS`) : reste de l'ancienne liste du
+  jour 3 + `arret-travail` corrigée, puis demander une nouvelle capture.
+- **Revérification générale (« re vérifie tout »)** :
+  - PR #281 (fusionnée, vérifiée en production) : écran « Fin de contrat » —
+    retrait de « Démission du parent » et « Rupture amiable » (rupture
+    conventionnelle inapplicable, DREETS BFC fiche 10-IV) ; démission sans
+    préavis avant 3 mois (CASF L. 423-26) ; retraite 1 mois / 2 mois
+    (art. 63-2-2), sans indemnité de rupture ; fin de CDD avec précarité 10 %
+    (aussi sur le reçu). Simulateur public corrigé (démission < 3 mois) et
+    complété (retraite). Barrières : test-retenue, verif-calculs-identiques
+    (durées comparées en toutes lettres), parcours-documents-imprimes.
+  - Chiffres revérifiés : SMIC 12,31 € et MG 4,35 € (arrêté du 22 mai 2026,
+    pas de revalorisation depuis) ; CMG 4,91 € / 8,09 € (1/4/2026) ;
+    allocation de formation 5,57 € (Iperia) ; abattement fiscal par période de
+    SMIC (précédent BOFiP 2012).
+  - Brouillons de la file : 5 avaient des liens relatifs (« /blog/… »),
+    convertis ; `rupture-conventionnelle` disait 8 jours de préavis pour une
+    démission avant 3 mois (corrigé) ; `attestation-fiscale` : phrase non
+    sourcée « le CMG de décembre est versé en janvier » remplacée.
+  - Pages départements « devenir » (98) : « extrait de casier judiciaire »
+    → attestation d'honorabilité ; 80 h dans les 6 mois (8 dans les petits
+    départements, D. 421-44) ; renouvellement « au moins quatre mois avant »
+    (D. 421-19).
+  - Article `devenir-assistante-maternelle-agrement` : même correction
+    (casier → honorabilité) EN BROUILLON, attend l'accord écrit de Sophie.
+  - Non tranché : date de généralisation de l'attestation d'honorabilité
+    (1/10/2025 dans `data/documents-assmat.json`, 1/1/2026 dans l'article
+    honorabilité ; un centre de gestion évoque une transition jusqu'au
+    31/12/2026 pour les assistants maternels). Arrêté du 8 juillet 2024 non
+    lisible depuis la session : ne rien changer sans le texte.
 
 ## Ce qu'il reste à faire
 

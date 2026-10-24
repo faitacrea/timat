@@ -676,7 +676,7 @@ function pageDevenir(d, st, stats, ctx, pmi, exigences) {
     <thead><tr><th>Étape</th><th>Ce qui se passe</th><th>Délai</th></tr></thead>
     <tbody>
       <tr><td>1. Réunion d'information</td><td>Organisée par le conseil départemental. Le plus souvent obligatoire avant le dépôt du dossier.</td><td class="n">variable</td></tr>
-      <tr><td>2. Dépôt du dossier</td><td>Cerfa n° 13394*05, certificat médical, extrait de casier judiciaire, pièce d'identité, justificatif de domicile.</td><td class="n">—</td></tr>
+      <tr><td>2. Dépôt du dossier</td><td>Cerfa n° 13394*05, attestation d'honorabilité de moins de six mois (pour vous et pour chaque personne de 13 ans ou plus qui vit chez vous), certificat médical, pièce d'identité, justificatif de domicile.</td><td class="n">—</td></tr>
       <tr><td>3. Entretiens et visite</td><td>Une puéricultrice ou une infirmière de la PMI vient chez vous : sécurité et dimensions du logement, espace de couchage, projet d'accueil.</td><td class="n">—</td></tr>
       <tr><td>4. Décision</td><td>Notifiée par le président du conseil départemental. Son silence vaut agrément.</td><td class="n">3 mois</td></tr>
       <tr><td>5. Formation, 1re partie</td><td>80 heures, gratuites, avant tout accueil d'enfant. Une évaluation les clôture et vaut autorisation d'accueillir.</td><td class="n">6 mois</td></tr>
@@ -684,7 +684,7 @@ function pageDevenir(d, st, stats, ctx, pmi, exigences) {
     </tbody>
   </table>
 
-  <div class="warn">⚠️ Le compte à rebours des 80 heures ne part pas de votre agrément, mais de la <strong>réception de votre dossier complet</strong> par la PMI : vous avez six mois à partir de cette date. C'est le point sur lequel la plupart des sites se trompent, en annonçant deux ans ou six mois « après l'agrément ». Attendre l'arrêté pour chercher une session, c'est consommer une partie du délai.</div>
+  <div class="warn">⚠️ Le compte à rebours des 80 heures ne part pas de votre agrément, mais de la <strong>réception de votre dossier complet</strong> par la PMI : elles doivent être suivies dans les six mois qui suivent cette date, huit mois dans les départements qui ont agréé au plus cent nouvelles assistantes maternelles l'année précédente (article D. 421-44 du code de l'action sociale et des familles). C'est le point sur lequel la plupart des sites se trompent, en annonçant deux ans ou six mois « après l'agrément ». Attendre l'arrêté pour chercher une session, c'est consommer une partie du délai.</div>
 
   <h2>Ce qu'il faut, et ce qu'il ne faut pas</h2>
   <p><strong>Aucun diplôme n'est exigé.</strong> Ce qui est demandé tient en quelques points : présenter les garanties de santé, de moralité et d'aptitude éducative nécessaires à l'accueil d'enfants, disposer d'un logement dont l'état, les dimensions et l'environnement permettent d'accueillir en sécurité, résider en France et maîtriser le français oral.</p>
@@ -699,7 +699,7 @@ function pageDevenir(d, st, stats, ctx, pmi, exigences) {
   <div class="box">On lit souvent qu'il faudrait saisir la commission consultative paritaire départementale après un refus. C'est inexact pour une première demande : cette commission n'est consultée que lorsque le président du conseil départemental envisage de retirer un agrément, d'y apporter une restriction ou de ne pas le renouveler — et c'est lui qui la saisit, pas vous.</div>
 
   <h2>Le renouvellement</h2>
-  <p>Le conseil départemental adresse le dossier quatre à six mois avant l'échéance ; il se retourne au plus tard trois mois avant. Pour tout agrément délivré depuis 2018, le premier renouvellement suppose de s'être présentée aux épreuves EP1 et EP3 du CAP Accompagnant éducatif petite enfance. L'obligation porte sur le fait de s'y présenter, pas de les réussir : c'est un relevé de notes qui est demandé. Les valider fait passer l'agrément à dix ans au lieu de cinq.</p>
+  <p>Au moins quatre mois avant l'échéance, le conseil départemental vous prévient et vous adresse le formulaire ; le dossier se retourne au plus tard trois mois avant (article D. 421-19 du code de l'action sociale et des familles). Pour tout agrément délivré depuis 2018, le premier renouvellement suppose de s'être présentée aux épreuves EP1 et EP3 du CAP Accompagnant éducatif petite enfance. L'obligation porte sur le fait de s'y présenter, pas de les réussir : c'est un relevé de notes qui est demandé. Les valider fait passer l'agrément à dix ans au lieu de cinq.</p>
 
   <div class="box">Le parcours complet est détaillé dans nos guides <a href="/blog/devenir-assistante-maternelle-agrement">Devenir assistante maternelle : le parcours vers l'agrément</a> et <a href="/blog/renouvellement-agrement-assistante-maternelle">Le renouvellement de l'agrément</a>.</div>
 
