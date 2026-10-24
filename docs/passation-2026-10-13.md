@@ -398,6 +398,18 @@ déclencheur, fonctions `fermetures_prevues()` et
   **La file sera vide après le 4 novembre** : écrire d'autres brouillons
   avant (idée sans seconde source pour l'instant : art. 103, arrivée d'un
   nouvel enfant au foyer et agrément).
+- **Vérifications de fin de journée (24/10)** : PR #279 fusionnée ; les 5
+  couvertures répondent en 200 (image/png) sur www.timat.app et sont
+  rattachées aux brouillons (requête Sanity : les 11 brouillons de la file
+  ont une image et un texte alternatif). Les 5 corrections du matin sont
+  lues en ligne (API publique et pages du blog). Metricool : 30 publications
+  en attente du 26/10 au 4/12, une par réseau et par date, aucun doublon
+  (série 2 : 26/10 → 4/11 ; série 3 : 6/11 → 4/12).
+- **Indexation jour 2** : le matin, seule une notification était partie,
+  sans les adresses ; liste redonnée en entier à Sophie le 24/10 en fin de
+  matinée. Conseil donné : ne PAS demander l'indexation de
+  `indemnite-depart-retraite-assistante-maternelle` tant que sa correction
+  n'est pas publiée (la version en ligne est fausse).
 
 ## Ce qu'il reste à faire
 
