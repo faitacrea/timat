@@ -301,8 +301,10 @@ déclencheur, fonctions `fermetures_prevues()` et
   story par jour » du kit sur origin/main ; à désactiver si elle le demande.
 - **Stories du 31/10 au 6/11** dans le kit (images 40 à 42 : quiz congés,
   rappel Pajemploi du 5/11 avec lien vers le simulateur, quiz préavis).
-- **Série 3 (publications 11 à 20, images 30 à 39) PRÉPARÉE, NON
-  PROGRAMMÉE** : en attente de la validation de Sophie. Dates proposées :
+- **Série 3 (publications 11 à 20, images 30 à 39) VALIDÉE par Sophie le
+  23/10 et PROGRAMMÉE le 24/10** dans Metricool (20 publications : Page +
+  Instagram, texte alternatif sur chacune ; vérifié : 20 « Pending », aucun
+  doublon ; identifiants 404814612 à 404846991). Dates :
   6, 9, 13, 16, 18, 20, 23, 27 novembre, 2 et 4 décembre à 20 h 30 (8 en
   novembre à cause de la limite de 20 publications par mois du forfait
   gratuit de Metricool). Images en ligne dans `public/reseaux/`.
