@@ -156,6 +156,18 @@ export const COUVERTURES = [
    "Arrêt maladie : la CPAM et l’Ircem indemnisent, pas l’employeur"],
   ["maison-assistantes-maternelles-mam", "Devenir assistante maternelle",
    "Jusqu’à six assistantes maternelles, quatre à la fois, vingt enfants"],
+  // Quatre articles écrits le 24 octobre 2026 sur des points du guide DREETS
+  // Bourgogne-Franche-Comté (juin 2026) que le blog ne traitait pas encore.
+  ["conge-naissance-2026-assistante-maternelle", "Situation pratique",
+   "Enfant né depuis 2026 : un ou deux mois de congé de naissance en plus"],
+  ["engagement-reciproque-promesse-embauche-assistante-maternelle", "Contrat et paie",
+   "Réserver la place par écrit : se dédire coûte un demi-mois de salaire"],
+  ["conge-proche-aidant-solidarite-familiale-assistante-maternelle", "Situation pratique",
+   "Aider un proche : deux congés, qui ne sont pas payés par les familles"],
+  ["conges-complementaires-non-remuneres-assistante-maternelle", "Contrat et paie",
+   "Trente jours de repos, même sans trente jours de congés acquis"],
+  ["conge-parental-education-assistante-maternelle", "Situation pratique",
+   "Congé parental : les familles ne peuvent pas le refuser"],
 ];
 
 async function polices() {

@@ -378,6 +378,26 @@ déclencheur, fonctions `fermetures_prevues()` et
 - **Textes réseaux du kit** (97 textes : Page, Instagram, groupe, stories) :
   correcteur et contrôle mécanique sans défaut ; G12 (1er mars) conforme au
   guide DREETS.
+- **File de publication réapprovisionnée** (« on arrive à la fin », Sophie) :
+  il ne restait que 6 brouillons (dernier le 30/10). Cinq nouveaux articles
+  EN BROUILLON, sur des points du guide DREETS BFC (juin 2026) que le blog ne
+  traitait pas, chacun recoupé avec une seconde source officielle (ameli,
+  décret n° 2026-426, DREETS Occitanie, code du travail numérique,
+  pour-les-personnes-agees.gouv.fr) ; aucun lien interne ; correcteur
+  orthographique passé. Ajoutés à `data/ordre-publication.js` (ordres 12 à
+  16, détail et dates dans `docs/ordre-publication-blog.md`) ; ils partent
+  seuls avec le cron, du 31/10 au 4/11 :
+  - `conge-naissance-2026-assistante-maternelle` (`drafts.25a7cdda-b78d-46f2-bc72-47e962e0c7ed`) ;
+  - `engagement-reciproque-promesse-embauche-assistante-maternelle` (`drafts.3ea3a754-2bd7-4685-8a26-762cc2594ac9`) ;
+  - `conges-complementaires-non-remuneres-assistante-maternelle` (`drafts.075c9189-bf00-47f8-bf9d-2751e8cb6844`) ;
+  - `conge-parental-education-assistante-maternelle` (`drafts.deae3276-eeee-4adc-a92d-306247fa50d3`) ;
+  - `conge-proche-aidant-solidarite-familiale-assistante-maternelle` (`drafts.a9904241-36a6-4b55-bbd7-eff2f95d032b`).
+  Couvertures dans `public/couvertures-blog/`, rattachées aux brouillons
+  après le déploiement. Montants de la PreParE volontairement absents : le
+  barème caf.fr n'était pas lisible depuis la session.
+  **La file sera vide après le 4 novembre** : écrire d'autres brouillons
+  avant (idée sans seconde source pour l'instant : art. 103, arrivée d'un
+  nouvel enfant au foyer et agrément).
 
 ## Ce qu'il reste à faire
 
