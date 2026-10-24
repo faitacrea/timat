@@ -499,13 +499,42 @@ export const DOCS_DEMO=[
 // les cas : une rupture pour faute grave annonçait donc un mois de salaire qui
 // n'est pas du. L'exclusion est portee ici, dans le calcul lui-meme, pour
 // qu'aucun appelant ne puisse l'oublier.
-export const preavisJours=(moisAnciennete,{fauteGrave=false,retraitAgrement=false,periodeEssai=false}={})=>{
+//
+// La demission suit la meme echelle, a une exception pres : en dessous de trois
+// mois d'anciennete, l'assistante maternelle qui demissionne n'a pas de preavis
+// a respecter (code de l'action sociale et des familles, art. L. 423-26 ; guide
+// de la DREETS Bourgogne-Franche-Comte, juin 2026, fiche 10-II). L'ecran de fin
+// de contrat et le simulateur public lui en annonçaient huit jours.
+export const preavisJours=(moisAnciennete,{fauteGrave=false,retraitAgrement=false,periodeEssai=false,demission=false}={})=>{
   if(fauteGrave||retraitAgrement||periodeEssai)return 0;
   const m=Number(moisAnciennete)||0;
+  if(demission&&m<3)return 0;
   if(m<3)return 8;
   if(m<12)return 15;
   return 30;
 };
+
+// LE PREAVIS DU DEPART VOLONTAIRE A LA RETRAITE.
+//
+// Ce n'est pas celui du retrait de l'enfant. CCN 3239, article 63-2-2, et code
+// du travail, article L. 1237-9, repris par le guide de la DREETS
+// Bourgogne-Franche-Comte (juin 2026, fiche 10-II) : selon les usages de la
+// localite et de la profession en dessous de six mois d'anciennete, un mois de
+// six mois a moins de deux ans, deux mois a partir de deux ans. L'ecran de fin
+// de contrat appliquait les 8 / 15 / 30 jours du retrait : un depart apres
+// trois ans annonçait un mois au lieu de deux. En dessous de six mois, la
+// convention ne chiffre rien : null, a l'appelant de dire « selon les usages ».
+export const preavisRetraiteJours=(moisAnciennete)=>{
+  const m=Number(moisAnciennete)||0;
+  if(m<6)return null;
+  if(m<24)return 30;
+  return 60;
+};
+
+// L'indemnite de fin de CDD (dite de precarite) : 10 % des salaires bruts du
+// contrat, indemnite de conges payes comprise (DREETS Bourgogne-Franche-Comte,
+// juin 2026, fiche 09 ; code du travail, art. L. 1243-8).
+export const TAUX_PRECARITE_CDD=0.10;
 
 // Conges payes acquis : 2,5 jours ouvrables par mois de travail effectif,
 // plafonnes a 30 jours ouvrables par periode de reference (art. L. 3141-3 du
@@ -618,6 +647,10 @@ export const CATS={
 export const TAUX_PATRONAL_TOTAL = Object.values(TAUX_COTISATIONS)
   .reduce((s, t) => s + (t.pat > 0 ? t.pat * (t.base || 1) : 0), 0) / 100;
 
+// Plus de modèle « Rupture amiable » : la rupture conventionnelle n'est pas
+// applicable aux assistants maternels (guide de la DREETS
+// Bourgogne-Franche-Comté, juin 2026, fiche 10-IV). Une fin de contrat passe
+// par l'écran « Fin de contrat », qui connaît les vrais motifs.
 export const MODELES_CONTRATS=[
   {id:"ct1",titre:"Contrat standard - Temps plein",desc:"Accueil 5j/semaine, mensualisation 47 semaines, conforme CCN.",
    champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
@@ -629,8 +662,6 @@ export const MODELES_CONTRATS=[
    champs:["Contrat concerné","Nouveaux horaires","Date d'effet","Motif"],avenant:true},
   {id:"ct5",titre:"Avenant - Revalorisation salaire",desc:"Augmenter le taux horaire suite SMIC ou accord.",
    champs:["Contrat concerné","Nouveau taux horaire","Date d'effet","Motif"],avenant:true},
-  {id:"ct6",titre:"Rupture amiable",desc:"Fin de contrat d'un commun accord avec solde tout compte.",
-   champs:["Contrat concerné","Date de fin","Motif","Congés payés restants"],avenant:true},
 ];
 
 export const COURRIERS_DATA=[

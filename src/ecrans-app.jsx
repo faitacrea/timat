@@ -3608,7 +3608,11 @@ export function AttestationPoleEmploi({enfants,role,pEId,user}){
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
   const enfant=liste.find(e=>e.id===selId)||liste[0]||{};
   const contrat=enfant.contrat||{};
-  const motifs=["Fin de contrat","Démission du parent","Retrait de l'enfant","Rupture conventionnelle","Retraite","Autre"];
+  // Ni « Démission du parent » (un parent retire l'enfant, il ne démissionne
+  // pas), ni « Rupture conventionnelle » : elle n'est pas applicable aux
+  // assistants maternels (guide de la DREETS Bourgogne-Franche-Comté, juin
+  // 2026, fiche 10-IV).
+  const motifs=["Fin de contrat","Retrait de l'enfant","Démission de l'assistante maternelle","Départ volontaire à la retraite","Fin de CDD","Autre"];
   const parent=(D.parents||[]).find(p=>p.id===enfant.parentId)||{};
   const salRef=Math.round(salaireMensualise(contrat,tauxHoraireAu(contrat,new Date())));
   const [form,setForm]=useState({});

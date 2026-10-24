@@ -29,7 +29,7 @@ const ENTREE = new URL("../.entree-calculs.js", import.meta.url).pathname;
 const SORTIE = new URL("../.calculs-app.cjs", import.meta.url).pathname;
 writeFileSync(ENTREE, `
 export { salaireMensualise, netDepuisBrut, smicHoraireAu, IE_TAUX_HORAIRE, IE_PLANCHER_JOUR, CHR_AM, PLAFOND_H, CMG_MAX, TAUX_SALARIAL_TOTAL, montantCMG, tauxEffortCMG } from "./src/App.jsx";
-export { minimumHoraireAu, iccpCalcul, congesAcquis, preavisJours, indemniteRupture, abattementJour, retenueAbsence } from "./src/socle.jsx";
+export { minimumHoraireAu, iccpCalcul, congesAcquis, preavisJours, preavisRetraiteJours, indemniteRupture, abattementJour, retenueAbsence } from "./src/socle.jsx";
 `);
 await build({
   entryPoints: [ENTREE], bundle: true, format: "cjs", platform: "node", outfile: SORTIE,
@@ -42,6 +42,8 @@ unlinkSync(ENTREE);
 
 const eur = (n) => Math.round(n * 100) / 100;
 const lire = (txt) => Number(String(txt).replace(/\s| |€/g, "").replace(",", ".")) || 0;
+// La duree de preavis, telle que le simulateur de fin de contrat l'ecrit.
+const libellePreavis = (j) => j === null ? "selon les usages" : j === 0 ? "aucun" : j === 30 ? "1 mois" : j === 60 ? "2 mois" : `${j} jours`;
 
 // --- 2. Les cas, et ce que l'application repond ---
 const CAS = [
@@ -103,6 +105,27 @@ const CAS = [
   { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "fin de contrat, 6 mois : pas d'indemnité",
     champs: { mot: "retrait", anc: "6", brut: "3200", mens: "800" },
     sorties: { rInd: () => app.indemniteRupture({ brutTotal: 3200, moisAnciennete: 6, parEmployeur: true }) } },
+  // LA DEMISSION ET LE DEPART A LA RETRAITE. Le simulateur annonçait 8 jours de
+  // preavis a une demission avant trois mois (il n'y en a aucun, CASF
+  // L. 423-26) et ne connaissait pas la retraite (1 mois, puis 2 mois apres
+  // deux ans). Les durees ecrites sur la page sont comparees a celles de
+  // l'application, en toutes lettres.
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "démission à 2 mois : aucun préavis",
+    champs: { mot: "demission", anc: "2", brut: "1400", mens: "700" },
+    sorties: { rInd: () => 0 },
+    textes: { rPre: () => libellePreavis(app.preavisJours(2, { demission: true })) } },
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "démission à 18 mois : 1 mois",
+    champs: { mot: "demission", anc: "18", brut: "9600", mens: "800" },
+    sorties: { rInd: () => 0 },
+    textes: { rPre: () => libellePreavis(app.preavisJours(18, { demission: true })) } },
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "retraite à 3 ans : 2 mois",
+    champs: { mot: "retraite", anc: "36", brut: "28000", mens: "800" },
+    sorties: { rInd: () => 0 },
+    textes: { rPre: () => libellePreavis(app.preavisRetraiteJours(36)) } },
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "retraite à 4 mois : selon les usages",
+    champs: { mot: "retraite", anc: "4", brut: "2800", mens: "700" },
+    sorties: { rInd: () => 0 },
+    textes: { rPre: () => libellePreavis(app.preavisRetraiteJours(4)) } },
 ];
 
 const N = await chromium.launch({ executablePath: CHROMIUM() });
@@ -140,6 +163,13 @@ for (const cas of CAS) {
     const bon = ecart <= 0.01;
     if (!bon) ko++;
     console.log(`  ${bon ? "ok " : "KO "} ${cas.nom.padEnd(42)} ${id.padEnd(5)} site ${String(siteVal).padStart(9)}  application ${String(appVal).padStart(9)}${bon ? "" : `   ÉCART ${eur(ecart)}`}`);
+  }
+  for (const [id, attendu] of Object.entries(cas.textes || {})) {
+    const site = ((await p.evaluate((x) => (document.getElementById(x) || {}).textContent || "", id)) || "").trim();
+    const appTxt = attendu();
+    const bon = site === appTxt;
+    if (!bon) ko++;
+    console.log(`  ${bon ? "ok " : "KO "} ${cas.nom.padEnd(42)} ${id.padEnd(5)} site « ${site} »  application « ${appTxt} »`);
   }
 }
 await N.close();
