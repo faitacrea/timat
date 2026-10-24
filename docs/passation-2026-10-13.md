@@ -447,6 +447,21 @@ déclencheur, fonctions `fermetures_prevues()` et
     honorabilité ; un centre de gestion évoque une transition jusqu'au
     31/12/2026 pour les assistants maternels). Arrêté du 8 juillet 2024 non
     lisible depuis la session : ne rien changer sans le texte.
+- **24/10, soir — « Je confirme : publie la correction Devenir assistante
+  maternelle »** : PUBLIÉE (casier → attestation d'honorabilité, 4 liens
+  relatifs convertis), lue en ligne.
+- **Stripe** : Sophie « laisse le test d'abonnement » pour l'instant (24/10).
+  Ne plus le relancer ; il reste à faire le jour où elle le décide.
+- **Simulateurs de fin de contrat des concurrents** (recherche web ; sites de
+  Pandi-Panda, AssmatZen et Mam360 injoignables depuis la session) :
+  - Pandi-Panda : un « simulateur de préavis » (durée et date de fin selon
+    le motif et l'ancienneté), motifs non vérifiables ;
+  - Nounou-Top : outil de calcul dans son service ; sa page « démission » se
+    contredit (tableau « aucun préavis » avant 3 mois, FAQ « 8 jours ») ; sa
+    page des motifs n'a ni durée de préavis pour la retraite, ni fin de CDD ;
+  - AssmatZen, Mam360 : aucun simulateur de fin de contrat trouvé.
+  - Idée proposée à Sophie (non faite) : calculer aussi la DATE de fin du
+    préavis à partir de la date de la lettre, comme Pandi-Panda.
 
 ## Ce qu'il reste à faire
 
@@ -468,7 +483,7 @@ déclencheur, fonctions `fermetures_prevues()` et
   `STRIPE_SECRET_KEY` par la clé du mode réel (date de modification vérifiée
   dans Vercel, valeur jamais lue) ; Claude a remis le prix réel et redéployé
   la production. `STRIPE_PUBLISHABLE_KEY` est encore la clé de test, mais le
-  code ne l'utilise nulle part. **RESTE** : le vrai test d'abonnement de
+  code ne l'utilise nulle part. **RESTE (mis de côté par Sophie le 24/10, ne pas relancer)** : le vrai test d'abonnement de
   Sophie, puis vérifier dans Stripe la livraison au webhook
   (`pending_webhooks: 0`) et en base le passage en Pro, puis le
   remboursement. Également vu : e-mail et adresse d'assistance
