@@ -278,7 +278,36 @@ const sommeDuRecu = async (nom, cle) => {
     `reçu (${nom}) : le total est exactement la somme de son détail`,
     `total ${total} / détail ${detail.join(" + ")} = ${somme}`);
 };
-await sommeDuRecu("démission du parent", "recu-demission");
+await sommeDuRecu("retrait de l'enfant", "recu-retrait");
+
+// --- LES MOTIFS EUX-MEMES ---
+//
+// La liste proposait « Démission du parent » et « Rupture amiable » (la rupture
+// conventionnelle n'est pas applicable aux assistants maternels : DREETS
+// Bourgogne-Franche-Comte, juin 2026, fiche 10-IV), et calculait la retraite
+// comme un retrait de l'enfant, indemnite de rupture comprise. La demission
+// de l'assistante maternelle n'y figurait pas.
+const optionsMotif = await page.evaluate(() => {
+  const sel = [...document.querySelectorAll("select")]
+    .find((s) => [...s.options].some((o) => o.text.includes("Faute grave")));
+  return sel ? [...sel.options].map((o) => o.text) : [];
+});
+dire(!optionsMotif.some((t) => /Rupture amiable|Rupture conventionnelle|Démission du parent/.test(t)),
+  "aucun motif inapplicable (rupture amiable ou conventionnelle, « démission du parent »)", optionsMotif.join(" | "));
+for (const [motif, attendu, nom] of [
+  ["Démission de l'assistante maternelle", /Non due : démission/, "démission"],
+  ["Départ volontaire à la retraite", /Non due : départ volontaire à la retraite/, "retraite"],
+  ["Fin d'un CDD", /précarité/, "fin de CDD"],
+]) {
+  const pose = await choisirMotif(motif);
+  dire(pose, `le motif « ${nom} » est proposé à l'écran`);
+  if (!pose) continue;
+  await page.waitForTimeout(600);
+  const ecran = await page.evaluate(() => document.body.innerText);
+  dire(attendu.test(ecran), `${nom} : l'écran applique ses propres règles`,
+    (ecran.match(/.{0,80}(Non due|précarité).{0,80}/) || [""])[0]);
+  await sommeDuRecu(nom, `recu-${nom.replace(/\W+/g, "-")}`);
+}
 
 const motifPose = await choisirMotif("Faute grave");
 dire(motifPose, "le motif « faute grave » est proposé à l'écran");

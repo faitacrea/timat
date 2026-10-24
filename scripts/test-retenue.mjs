@@ -375,7 +375,8 @@ const finContrat = eval(`(function(){
   ${fn("DIVISEUR_INDEMNITE_RUPTURE", /const DIVISEUR_INDEMNITE_RUPTURE=\d+;/)}
   ${fn("ANCIENNETE_MIN_RUPTURE_MOIS", /const ANCIENNETE_MIN_RUPTURE_MOIS=\d+;/)}
   ${fn("indemniteRupture", /const indemniteRupture=\(\{[\s\S]*?\n\};/)}
-  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture};
+  ${fn("preavisRetraiteJours", /const preavisRetraiteJours=\([\s\S]*?\n\};/)}
+  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture, preavisRetraiteJours};
 })()`);
 
 let koFin = 0;
@@ -399,6 +400,20 @@ v("5 ans mais faute grave", finContrat.preavisJours(60,{fauteGrave:true}), 0, 0)
 v("5 ans mais retrait d'agrement", finContrat.preavisJours(60,{retraitAgrement:true}), 0, 0);
 v("5 ans mais periode d'essai", finContrat.preavisJours(60,{periodeEssai:true}), 0, 0);
 v("un objet d'options vide ne change rien", finContrat.preavisJours(60,{}), 30, 0);
+// Demission : la meme echelle, sauf en dessous de trois mois d'anciennete, ou
+// l'assistante maternelle n'a aucun preavis a respecter (CASF, L. 423-26 ;
+// DREETS Bourgogne-Franche-Comte, juin 2026, fiche 10-II).
+v("démission à 2 mois : aucun préavis", finContrat.preavisJours(2,{demission:true}), 0, 0);
+v("démission à 2 mois et demi : aucun préavis", finContrat.preavisJours(2.9,{demission:true}), 0, 0);
+v("démission pile 3 mois : 15 jours", finContrat.preavisJours(3,{demission:true}), 15, 0);
+v("démission à 2 ans : 1 mois", finContrat.preavisJours(24,{demission:true}), 30, 0);
+// Depart volontaire a la retraite : son echelle a elle (CCN 3239, art. 63-2-2 ;
+// code du travail, L. 1237-9). Sous six mois, « selon les usages » : null.
+v("retraite à 5 mois : selon les usages", String(finContrat.preavisRetraiteJours(5)), "null");
+v("retraite pile 6 mois : 1 mois", finContrat.preavisRetraiteJours(6), 30, 0);
+v("retraite à 23 mois : 1 mois", finContrat.preavisRetraiteJours(23), 30, 0);
+v("retraite pile 2 ans : 2 mois", finContrat.preavisRetraiteJours(24), 60, 0);
+v("retraite à 10 ans : 2 mois", finContrat.preavisRetraiteJours(120), 60, 0);
 // Art. 121.1 : les deux memes motifs privent de l'indemnite de rupture.
 v("18 mois, 9600 euros de brut", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18}), 120, 0);
 v("... mais faute grave", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18,fauteGrave:true}), 0, 0);

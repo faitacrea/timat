@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, preavisRetraiteJours, TAUX_PRECARITE_CDD, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,debut,titreAmge}){
@@ -3289,10 +3289,27 @@ export function IndemnitesKilometriques({enfants,role,user}){
   </div>;
 }
 
+// LES MOTIFS DE FIN DE CONTRAT, ET CE QUE CHACUN CHANGE.
+//
+// La liste proposait « Démission du parent » (un parent ne démissionne pas : il
+// retire l'enfant), « Rupture amiable » (la rupture conventionnelle n'est pas
+// applicable aux assistants maternels : guide de la DREETS
+// Bourgogne-Franche-Comté, juin 2026, fiche 10-IV) et « Retraite asmat »,
+// calculée comme un retrait : préavis de 8 / 15 / 30 jours et, la case
+// « initiative du parent » étant cochée par défaut, une indemnité de rupture
+// que la convention exclut (art. 121.1). La démission de l'assistante
+// maternelle n'y figurait pas, ni la fin d'un CDD. Chaque motif porte
+// maintenant ses règles ; seul « Autre » laisse la case décider.
+const MOTIF_RETRAIT="Retrait de l'enfant (décision du parent)";
+const MOTIF_DEMISSION="Démission de l'assistante maternelle";
+const MOTIF_RETRAITE="Départ volontaire à la retraite de l'assistante maternelle";
+const MOTIF_CDD="Fin d'un CDD à son terme";
+const MOTIF_DECES="Décès de l'enfant";
+
 export function SoldeDeCompte({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [dateFin,setDateFin]=useState("");
-  const [motif,setMotif]=useState("Démission du parent");
+  const [motif,setMotif]=useState(MOTIF_RETRAIT);
   const [calcule,setCalcule]=useState(false);
   const [toast,setToast]=useState("");
   const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
@@ -3304,7 +3321,7 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   // due. Ils le sont, et ils coupent le calcul.
   const MOTIF_FAUTE="Faute grave ou lourde de l'assistante maternelle";
   const MOTIF_AGREMENT="Retrait, suspension ou modification de l'agrément";
-  const motifs=["Démission du parent","Rupture amiable","Retraite asmat","Déménagement","Fin de contrat à durée déterminée",MOTIF_FAUTE,MOTIF_AGREMENT,"Autre"];
+  const motifs=[MOTIF_RETRAIT,MOTIF_DEMISSION,MOTIF_RETRAITE,MOTIF_CDD,MOTIF_DECES,MOTIF_FAUTE,MOTIF_AGREMENT,"Autre"];
 
   // --- Solde de tout compte, sur les données réelles du contrat ---
   // Tout ce bloc était écrit en dur : six jours de congés, un an et demi
@@ -3376,12 +3393,37 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   const congesRestants=cp.restants;
   const fauteGrave=motif===MOTIF_FAUTE;
   const retraitAgrement=motif===MOTIF_AGREMENT;
-  // Art. 120 : ces deux motifs privent aussi du preavis, pas seulement de
-  // l'indemnite de rupture. Le calcul le sait desormais tout seul.
-  const preavis=preavisJours(moisAnciennete,{fauteGrave,retraitAgrement});
-  const indemPreavis=Math.round((preavis/30)*salMensuel*100)/100;
-  const indemRupture=indemniteRupture({brutTotal,moisAnciennete,parEmployeur:ruptureParEmployeur,fauteGrave,retraitAgrement});
-  const total=Math.round((iccp+indemPreavis+indemRupture)*100)/100;
+  const demission=motif===MOTIF_DEMISSION;
+  const departRetraite=motif===MOTIF_RETRAITE;
+  const finCdd=motif===MOTIF_CDD;
+  // Qui rompt : le motif le dit. Seul « Autre » laisse la case décider.
+  const parEmployeur=motif===MOTIF_RETRAIT||motif===MOTIF_DECES?true:motif==="Autre"?ruptureParEmployeur:false;
+  // Art. 120 : faute grave et retrait d'agrement privent aussi du preavis, pas
+  // seulement de l'indemnite de rupture. Une demission avant trois mois n'en
+  // doit pas (CASF, L. 423-26) ; le depart a la retraite a sa propre echelle
+  // (null en dessous de six mois : « selon les usages », pas de duree chiffree) ;
+  // un CDD prend fin a son terme, sans preavis.
+  const preavisRetraite=departRetraite?preavisRetraiteJours(moisAnciennete):null;
+  const preavis=finCdd?0:departRetraite?(preavisRetraite||0):preavisJours(moisAnciennete,{fauteGrave,retraitAgrement,demission});
+  // Le preavis d'une demission ou d'un depart en retraite se travaille et se
+  // paie comme du salaire : le parent ne doit pas d'indemnite compensatrice,
+  // sauf s'il dispense lui-meme l'assistante maternelle de l'effectuer.
+  const preavisIndemnise=!(demission||departRetraite);
+  const indemPreavis=preavisIndemnise?Math.round((preavis/30)*salMensuel*100)/100:0;
+  const indemRupture=indemniteRupture({brutTotal,moisAnciennete,parEmployeur,fauteGrave,retraitAgrement});
+  // Fin de CDD : indemnite de precarite, 10 % des salaires bruts du contrat,
+  // indemnite de conges payes comprise (DREETS Bourgogne-Franche-Comte, juin
+  // 2026, fiche 09 ; DREETS Occitanie, guide CDD, novembre 2024).
+  const indemPrecarite=finCdd?Math.round((brutTotal+iccp)*TAUX_PRECARITE_CDD*100)/100:0;
+  const total=Math.round((iccp+indemPreavis+indemRupture+indemPrecarite)*100)/100;
+  // Depart en retraite avant six mois : un preavis existe, mais la convention
+  // ne le chiffre pas (« selon les usages »). Ce n'est pas une fin sans preavis.
+  const preavisUsages=departRetraite&&preavisRetraite===null;
+  const USAGES="préavis selon les usages de la localité et de la profession, en dessous de six mois d'ancienneté (CCN 3239, art. 63-2-2)";
+  // La raison d'une fin sans preavis, ecrite une fois pour l'ecran et la lettre.
+  const sansPreavis=finCdd?"le contrat à durée déterminée prend fin à son terme"
+    :demission?"démission avant trois mois d'ancienneté (code de l'action sociale et des familles, art. L. 423-26)"
+    :(fauteGrave?"faute grave ou lourde":"retrait imposé aux parties")+" (CCN 3239, art. 120)";
 
   const today=new Date().toLocaleDateString("fr-FR");
   // Echappe des sa construction : il part dans trois lettres imprimees, et une
@@ -3396,9 +3438,10 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   };
   const genRupture=()=>printDoc("Lettre de rupture de contrat",`<h1>RUPTURE DU CONTRAT D'ACCUEIL</h1><p>Madame, Monsieur,</p><p>Je vous informe de la rupture du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b>, pour le motif suivant : <b>${H(motif)}</b>.</p><p>${preavis>0
   ?`La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue du préavis de <b>${preavis} jours</b> prévu par la convention collective des particuliers employeurs.</p>`
-  :`La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, sans préavis : la convention collective des particuliers employeurs n'en prévoit pas pour ce motif (article 120).</p>`}<p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature</span></div>`);
+  :preavisUsages?`La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, à l'issue d'un ${H(USAGES)}.</p>`
+  :`La fin du contrat prendra effet le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>, sans préavis : ${H(sansPreavis)}.</p>`}<p>Le solde de tout compte, le certificat de travail et l'attestation France Travail (via Pajemploi) seront remis dans les délais légaux.</p><p>Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature</span></div>`);
   const genCertificat=()=>printDoc("Certificat de travail",`<h1>CERTIFICAT DE TRAVAIL</h1><p>Je soussigné(e) <b>[Nom du parent employeur]</b>, demeurant <b>[adresse de l'employeur]</b>,</p><p>certifie avoir employé <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}), en qualité d'assistante maternelle pour l'accueil de l'enfant <b>${H(enfant?.prenom||"[Prénom]")}</b>,</p><p>du <b>${contrat.debut?fmt(contrat.debut):"[date de début]"}</b> au <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>.</p><p><b>${asmatNomH}</b> est libre de tout engagement.</p><p>En foi de quoi ce certificat est délivré pour servir et valoir ce que de droit.</p><div class="sign"><span>Fait à [lieu], le ${today}</span><span>Signature de l'employeur</span></div><p class="muted">Le certificat de travail est établi et signé par le parent employeur (mentions obligatoires : identité des parties, dates d'entrée et de sortie, nature de l'emploi).</p>`);
-  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} €${indemPreavis>0?` + indemnité compensatrice de préavis ${nbf(indemPreavis,2)} €`:""}${indemRupture>0?` + indemnité de rupture ${nbf(indemRupture,2)} €`:""}.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
+  const genRecu=()=>printDoc("Reçu pour solde de tout compte",`<h1>REÇU POUR SOLDE DE TOUT COMPTE</h1><p>Je soussigné(e) <b>${asmatNomH}</b>, assistant(e) maternel(le) agréé(e) (agrément n° ${agr}),</p><p>reconnais avoir reçu de <b>[Nom du parent employeur]</b>, pour solde de tout compte au titre de la fin du contrat d'accueil de <b>${H(enfant?.prenom||"[Prénom]")}</b> (fin le <b>${dateFin?fmt(dateFin):"[date de fin]"}</b>), la somme de :</p><p style="font-size:20px;text-align:center;margin:22px 0"><b>${nbf(total,2)} €</b></p><p>Détail : indemnité compensatrice de congés payés ${nbf(iccp,2)} €${indemPreavis>0?` + indemnité compensatrice de préavis ${nbf(indemPreavis,2)} €`:""}${indemRupture>0?` + indemnité de rupture ${nbf(indemRupture,2)} €`:""}${indemPrecarite>0?` + indemnité de fin de contrat (précarité) ${nbf(indemPrecarite,2)} €`:""}.</p><p>Le présent reçu est établi en deux exemplaires.</p><div class="sign"><span>Fait le ${today}</span><span><b>${asmatNomH}</b><br/>Signature du salarié</span></div><p class="muted">Montants indicatifs (CCN des particuliers employeurs) — à vérifier au cas par cas.</p>`);
 
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
@@ -3461,11 +3504,11 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
             {prisRepris>0&&!prisTouche&&<span style={{fontSize:12,color:"#2F655F",fontWeight:600}}>
               dont {nbf(prisRepris,1)} repris de votre historique
             </span>}
-            <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)",cursor:"pointer"}}>
+            {motif==="Autre"&&<label style={{display:"flex",alignItems:"center",gap:8,fontSize:12.5,color:"var(--m)",cursor:"pointer"}}>
               <input type="checkbox" checked={ruptureParEmployeur} onChange={e=>setRuptureParEmployeur(e.target.checked)}
                 style={{width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}/>
               Rupture à l'initiative du parent (retrait de l'enfant)
-            </label>
+            </label>}
           </div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6,padding:"9px 12px",background:"var(--Bp)",borderRadius:9}}>
             Ancienneté retenue : <b>{moisAnciennete} mois</b> ({contrat.debut?fmt(contrat.debut):"début inconnu"} → {fmt(finRetenue)}).
@@ -3475,19 +3518,28 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
             ["Indemnité compensatrice de congés payés",
               congesRestants+" jours restants · méthode retenue : "+cp.methode+" (dixième "+nbf(cp.dixieme,2)+"€ / maintien "+nbf(cp.maintien,2)+"€)",
               nbf(iccp,2)+"€","var(--S)"],
-            [preavis>0?"Indemnité compensatrice de préavis ("+preavis+" jours)":"Indemnité compensatrice de préavis",
-              preavis>0
+            [preavis>0?(preavisIndemnise?"Indemnité compensatrice de préavis ("+preavis+" jours)":"Préavis à effectuer ("+preavis+" jours)"):"Indemnité compensatrice de préavis",
+              preavis>0&&departRetraite
+                ?preavis+" jours calendaires — départ à la retraite, "+(moisAnciennete<24?"de 6 mois à moins de 2 ans":"2 ans et plus")+" d'ancienneté (CCN 3239, art. 63-2-2). Effectué et payé comme salaire : pas d'indemnité compensatrice, sauf si le parent vous en dispense"
+              :preavis>0
                 ?preavis+" jours calendaires — "+(moisAnciennete<3?"moins de 3 mois d'ancienneté":moisAnciennete<12?"de 3 mois à 1 an":"1 an et plus")+" (CCN 3239, art. 120)"
-                :"Pas de préavis : "+(fauteGrave?"faute grave ou lourde":"retrait imposé aux parties")+" (CCN 3239, art. 120)",
-              nbf(indemPreavis,2)+"€",preavis>0?"var(--B)":"var(--l)"],
+                  +(demission?". Effectué et payé comme salaire : pas d'indemnité compensatrice, sauf si le parent vous en dispense":"")
+                :preavisUsages?"Moins de 6 mois d'ancienneté : "+USAGES:"Pas de préavis : "+sansPreavis,
+              nbf(indemPreavis,2)+"€",indemPreavis>0?"var(--B)":"var(--l)"],
             ...(indemRupture>0?[["Indemnité de rupture",
               "1/80 du brut total perçu ("+nbf(brutTotal,2)+"€) — due à partir de 9 mois d'ancienneté, ni cotisée ni imposable",
               nbf(indemRupture,2)+"€","var(--T)"]]
               :[["Indemnité de rupture",
               fauteGrave?"Non due : faute grave ou lourde (CCN 3239, art. 121.1)"
               :retraitAgrement?"Non due : retrait, suspension ou modification de l'agrément (CCN 3239, art. 121.1)"
-              :ruptureParEmployeur?"Non due : "+moisAnciennete+" mois d'ancienneté, il en faut 9":"Non due : la rupture ne vient pas du parent employeur",
+              :demission?"Non due : démission (CCN 3239, art. 121.1)"
+              :departRetraite?"Non due : départ volontaire à la retraite (CCN 3239, art. 121.1). L'indemnité de départ à la retraite, elle, est versée par l'APNI, pas par le parent"
+              :finCdd?"Non due : le CDD prend fin à son terme, ce n'est pas un retrait de l'enfant"
+              :parEmployeur?"Non due : "+moisAnciennete+" mois d'ancienneté, il en faut 9":"Non due : la rupture ne vient pas du parent employeur",
               "0.00€","var(--l)"]]),
+            ...(finCdd?[["Indemnité de fin de contrat (précarité)",
+              "10 % des salaires bruts du contrat, congés payés compris ("+nbf(brutTotal+iccp,2)+"€). Pas due si un CDI vous a été proposé par écrit et que vous l'avez refusé, ni si l'accueil continue en CDI",
+              nbf(indemPrecarite,2)+"€","var(--T)"]]:[]),
           ].map(([l,d,v,c])=><div key={l}style={{padding:"10px 0",borderBottom:"1px solid var(--br)"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
               <span style={{fontSize:13,fontWeight:600,color:"var(--b)"}}>{l}</span>

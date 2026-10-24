@@ -21,7 +21,7 @@
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
 {"@type":"Question","name":"Comment se calcule l&#39;indemnité de rupture ?","acceptedAnswer":{"@type":"Answer","text":"Elle vaut 1/80e du total des salaires bruts per\u00e7us pendant toute la durée du contrat, hors indemnités d&#39;entretien, de repas et kilométriques. Elle est due dès 9 mois d&#39;ancienneté, en cas de retrait de l&#39;enfant par l&#39;employeur."}},
 {"@type":"Question","name":"Est-ce 1/80e des bruts ou 1/120e des nets ?","acceptedAnswer":{"@type":"Answer","text":"1/80e des salaires bruts. La règle du 1/120e des salaires nets appartenait à l&#39;ancienne convention collective de 2004, remplacée au 1er janvier 2022. L&#39;Urssaf confirme le 1/80e des bruts dès 9 mois d&#39;ancienneté."}},
-{"@type":"Question","name":"Quelle est la durée du préavis ?","acceptedAnswer":{"@type":"Answer","text":"8 jours calendaires si l&#39;accueil dure depuis moins de 3 mois, 15 jours entre 3 mois et moins d&#39;un an, 1 mois à partir d&#39;un an. Il court à partir de la première présentation de la lettre recommandée."}}
+{"@type":"Question","name":"Quelle est la durée du préavis ?","acceptedAnswer":{"@type":"Answer","text":"8 jours calendaires si l&#39;accueil dure depuis moins de 3 mois, 15 jours entre 3 mois et moins d&#39;un an, 1 mois à partir d&#39;un an. Il court à partir de la première présentation de la lettre recommandée. Une assistante maternelle qui démissionne avec moins de 3 mois d&#39;ancienneté n&#39;a pas de préavis à respecter."}}
 ]}
 </script>
 <style>
@@ -105,6 +105,7 @@
         <select id="mot">
           <option value="retrait">Retrait de l&#39;enfant par l&#39;employeur</option>
           <option value="demission">D&eacute;mission de l&#39;assistante maternelle</option>
+          <option value="retraite">D&eacute;part volontaire &agrave; la retraite de l&#39;assistante maternelle</option>
           <option value="faute">Faute grave ou lourde</option>
           <option value="agrement">Retrait ou suspension d&#39;agr&eacute;ment</option>
         </select>
@@ -130,14 +131,15 @@
       <tr><td>De 3 mois &agrave; moins d&#39;un an</td><td>15 jours calendaires</td></tr>
       <tr><td>1 an ou plus</td><td>1 mois calendaire</td></tr>
     </table>
-    <p>Le point de d&eacute;part est la <strong>premi&egrave;re pr&eacute;sentation</strong> de la lettre recommand&eacute;e, ou la remise en main propre contre d&eacute;charge. Le pr&eacute;avis ne se cumule pas avec des cong&eacute;s pay&eacute;s : s&#39;ils sont d&eacute;j&agrave; pos&eacute;s, ils repoussent son d&eacute;but. Si l&#39;une des parties ne l&#39;effectue pas, elle doit &agrave; l&#39;autre une indemnit&eacute; &eacute;gale &agrave; la r&eacute;mun&eacute;ration correspondante &mdash; sauf accord &eacute;crit de dispense.</p>
+    <p>Ces dur&eacute;es valent pour le retrait de l&#39;enfant et pour la d&eacute;mission, avec une exception : l&#39;assistante maternelle qui d&eacute;missionne avec <strong>moins de 3 mois d&#39;anciennet&eacute;</strong> n&#39;a aucun pr&eacute;avis &agrave; respecter (article L. 423-26 du code de l&#39;action sociale et des familles). Le <strong>d&eacute;part volontaire &agrave; la retraite</strong> a sa propre &eacute;chelle : selon les usages en dessous de 6 mois d&#39;anciennet&eacute;, 1 mois de 6 mois &agrave; moins de 2 ans, 2 mois &agrave; partir de 2 ans (article 63-2-2 de la convention collective).</p>
+    <p>Le point de d&eacute;part est la <strong>premi&egrave;re pr&eacute;sentation</strong> de la lettre recommand&eacute;e, ou la remise en main propre contre d&eacute;charge. Le pr&eacute;avis ne se confond pas avec des cong&eacute;s pay&eacute;s : des cong&eacute;s pris pendant le pr&eacute;avis le suspendent et en reportent la fin, sauf accord des deux parties. Si l&#39;une des parties ne l&#39;effectue pas, elle doit &agrave; l&#39;autre une indemnit&eacute; &eacute;gale &agrave; la r&eacute;mun&eacute;ration correspondante &mdash; sauf accord &eacute;crit de dispense.</p>
 
     <h2>L&#39;indemnit&eacute; de rupture</h2>
     <p>Elle est due par l&#39;employeur qui retire son enfant, d&egrave;s <strong>9 mois d&#39;anciennet&eacute;</strong>. Son montant vaut <strong>1/80<sup>e</sup> du total des salaires bruts</strong> per&ccedil;us pendant toute la dur&eacute;e du contrat, hors indemnit&eacute;s d&#39;entretien, de repas et kilom&eacute;triques. Elle n&#39;a pas le caract&egrave;re de salaire, et reste exon&eacute;r&eacute;e de cotisations et d&#39;imp&ocirc;t sur le revenu dans les limites l&eacute;gales.</p>
 
     <div class="warnbox"><strong>1/80<sup>e</sup> des bruts, et non 1/120<sup>e</sup> des nets.</strong> Plusieurs sites annoncent encore un calcul en 1/120<sup>e</sup> des salaires nets, avec un seuil d&#39;un an d&#39;anciennet&eacute;. C&#39;&eacute;tait la r&egrave;gle de la convention collective de 2004, remplac&eacute;e le 1<sup>er</sup> janvier 2022. La r&egrave;gle actuelle, confirm&eacute;e par l&#39;Urssaf, est bien 1/80<sup>e</sup> des salaires <strong>bruts</strong> d&egrave;s <strong>9 mois</strong>. L&#39;&eacute;cart est important : sur 14 400 &euro; de salaires bruts, 180 &euro; contre environ 94 &euro;.</div>
 
-    <p>Elle n&#39;est pas due en cas de d&eacute;mission, de faute grave ou lourde, ni lorsque la rupture d&eacute;coule d&#39;un retrait, d&#39;une suspension ou d&#39;une modification de l&#39;agr&eacute;ment.</p>
+    <p>Elle n&#39;est pas due en cas de d&eacute;mission, de d&eacute;part volontaire &agrave; la retraite, de faute grave ou lourde, ni lorsque la rupture d&eacute;coule d&#39;un retrait, d&#39;une suspension ou d&#39;une modification de l&#39;agr&eacute;ment.</p>
 
     <h2>Ce qu&#39;il reste &agrave; verser et &agrave; remettre</h2>
     <ul class="chk">
@@ -187,7 +189,17 @@
           pre='aucun';
           msg='Faute grave ou lourde : ni préavis, ni indemnité compensatrice de préavis, ni indemnité de rupture.';
         } else if(motif==='demission'){
-          msg='Démission : le préavis reste dû, mais aucune indemnité de rupture n\u2019est versée \u2014 elle ne concerne que le retrait de l\u2019enfant par l\u2019employeur.';
+          // Moins de 3 mois d'anciennete : aucun preavis (CASF, L. 423-26).
+          if(a<3){
+            pre='aucun';
+            msg='Démission avec moins de 3 mois d\u2019ancienneté : aucun préavis à respecter (article L. 423-26 du code de l\u2019action sociale et des familles), et aucune indemnité de rupture.';
+          } else {
+            msg='Démission : le préavis reste dû, mais aucune indemnité de rupture n\u2019est versée \u2014 elle ne concerne que le retrait de l\u2019enfant par l\u2019employeur.';
+          }
+        } else if(motif==='retraite'){
+          // CCN 3239, art. 63-2-2 : selon les usages, 1 mois, puis 2 mois.
+          pre = a<6 ? 'selon les usages' : (a<24 ? '1 mois' : '2 mois');
+          msg='Départ volontaire à la retraite : aucune indemnité de rupture. L\u2019indemnité de départ à la retraite, si les conditions sont remplies, est versée par l\u2019APNI, pas par le parent employeur.';
         } else {
           if(a>=9){
             indemnite=b/80;
