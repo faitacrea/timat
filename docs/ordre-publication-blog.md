@@ -189,3 +189,17 @@ un, et le site continue alors de servir l'ancien déploiement.
 
 Appelé avec le bon en-tête, le mode simulation renvoie aussi
 `deploiementConfigure`, qui dit si `VERCEL_DEPLOY_HOOK` est en place.
+
+## Ajout du 24 octobre 2026
+
+Un article demandé par Sophie (« un article nouveau, bien sourcé ») : le seul
+sujet du guide officiel des assistants maternels de la DREETS
+Bourgogne-Franche-Comté (juin 2026) que le blog ne couvrait pas.
+
+| Ordre | Slug | Rubrique | Source principale |
+|---:|---|---|---|
+| 11 | `accueil-occasionnel-cdd-assistante-maternelle` | Contrat et paie | DREETS BFC, fiche 09 (juin 2026) ; DREETS Occitanie, guide CDD (novembre 2024) |
+
+Les deux DREETS se nuancent sur l'accueil occasionnel (BFC : CDI si la date de
+fin n'est pas connue ; Occitanie : CDI recommandé dans tous les cas) :
+l'article le dit tel quel. Aucun lien interne vers un brouillon.

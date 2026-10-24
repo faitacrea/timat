@@ -140,6 +140,10 @@ export const COUVERTURES = [
    "Le nombre d'enfants demandé, c'est vous qui le fixez. La PMI instruit, elle ne réécrit pas"],
   ["accueillir-stagiaire-assistante-maternelle", "Le quotidien de l'accueil",
    "Pas d'autorisation de la PMI. L'accord des parents, oui"],
+  // Article du 24 octobre 2026 (guides DREETS Bourgogne-Franche-Comté et
+  // Occitanie) : le seul sujet du guide officiel que le blog ne couvrait pas.
+  ["accueil-occasionnel-cdd-assistante-maternelle", "Contrat et paie",
+   "Un CDD, seulement pour remplacer une assistante maternelle absente"],
 ];
 
 async function polices() {

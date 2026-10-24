@@ -838,8 +838,11 @@ for (const { nom, motif, source } of BAREME) {
     const empreinte = crypto.createHash("sha256").update(app.slice(debut, fin)).digest("hex").slice(0, 16);
     // L'empreinte attendue, et la date qu'elle accompagne. Les deux changent
     // ensemble, jamais l'une sans l'autre.
-    const ATTENDUE = "a7847a21ef086356";
-    const DATE_ATTENDUE = "2026-10-12T05:21:23Z";
+    // 24 octobre 2026 : l'article sur la periode d'essai promettait un « delai
+    // de prevenance prevu par la convention » qui n'existe pas. Texte faux dans
+    // un document signe : les contrats generes avant sont perimes.
+    const ATTENDUE = "6241b628454a11a5";
+    const DATE_ATTENDUE = "2026-10-24T08:37:22Z";
     const dateCode = (app.match(/DOCUMENTS_REFONTE="([^"]+)"/) || [])[1];
     if (empreinte !== ATTENDUE) {
       signale("modele-contrat", `le modèle du contrat imprimé a changé (empreinte ${empreinte} au lieu de ${ATTENDUE}). Un PDF déjà généré n'est jamais recalculé : décider si les contrats déjà signés sont périmés. Si oui, avancer DOCUMENTS_REFONTE à l'HEURE du changement — pas à minuit, un document produit le jour même APRÈS le changement passerait sinon au travers. Puis reporter la nouvelle empreinte ici`);
@@ -4109,6 +4112,25 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   for (const cible of ["/blog", "/outils.html", "/parents"]) {
     if (!racine.includes(`href="${cible}"`))
       signale("liens-statiques", `index.html : le sommaire pré-affiché n'a plus de lien vers ${cible} — les moteurs ne le voient qu'après le rendu JavaScript`);
+  }
+}
+
+// --- pas de delai de prevenance « conventionnel » pendant l'essai ---
+//
+// Le contrat imprime par l'application promettait une rupture d'essai « en
+// respectant le delai de prevenance prevu par la convention ». Il n'y en a pas :
+// « aucun delai de prevenance n'est a respecter » (DREETS Occitanie, guide CDI,
+// novembre 2024) ; le contrat peut seulement en prevoir un (DREETS
+// Bourgogne-Franche-Comte, juin 2026). La meme phrase etait dans deux articles.
+{
+  const fichiers = [
+    ...fs.readdirSync(new URL("../src/", import.meta.url)).filter((f) => f.endsWith(".jsx")).map((f) => "src/" + f),
+    ...fs.readdirSync(new URL("../public/", import.meta.url)).filter((f) => f.endsWith(".html")).map((f) => "public/" + f),
+  ];
+  for (const f of fichiers) {
+    const texte = fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
+    if (/délai de prévenance prévu par la convention/i.test(texte))
+      signale("modele-contrat", `${f} : « délai de prévenance prévu par la convention » pendant l'essai — la convention n'en prévoit aucun`);
   }
 }
 

@@ -118,5 +118,9 @@ export const ordre = [
   // des articles déjà en ligne : aucune dépendance.
   "decision-agrement-nombre-enfants-assistante-maternelle",
   "accueillir-stagiaire-assistante-maternelle",
+  // 24 octobre 2026 : accueil occasionnel et CDD, demandé par Sophie (« un
+  // article nouveau, bien sourcé »). Sources : guides DREETS
+  // Bourgogne-Franche-Comté (juin 2026) et Occitanie (novembre 2024).
+  "accueil-occasionnel-cdd-assistante-maternelle",
 ];
 export default ordre;
