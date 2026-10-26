@@ -463,6 +463,47 @@ déclencheur, fonctions `fermetures_prevues()` et
   - Idée proposée à Sophie (non faite) : calculer aussi la DATE de fin du
     préavis à partir de la date de la lettre, comme Pandi-Panda.
 
+## Session du 26 octobre 2026
+
+- **Indexation** : listes du 25/10 (10, faites le 26 au matin) et du 26/10
+  (seules 1 et 2 faites : `formation-continue-58-heures`,
+  `developpement-moteur` ; quota dépassé ensuite, parce que les deux listes
+  ont été faites le même jour). Le quota semble glissant sur 24 h (une
+  dizaine de demandes ; chiffre non officiel, Google ne le publie pas).
+  Capture du rapport « Détectée, actuellement non indexée » : 37 adresses,
+  toutes vérifiées (200, présentes dans les sitemaps, pas de noindex,
+  canonique juste) — aucun défaut technique, c'est l'exploration qui attend.
+  Rappels programmés : 27/10 (`trig_01LY9LRLPSFVHbzNwgSACH6R`), 28/10
+  (`trig_01YbwdWvNDjzuJVkYLLJsAL7`), 29/10 (`trig_01KsrS1YcpEnqcEEBYPjQMkm`),
+  avec les 8 restantes du 26, le reste des 37, les nouveaux articles du cron
+  et les pages corrigées le 24/10. Nouvelle capture à demander vers le 2/11.
+- **Stories / Metricool** : Metricool publie seul les publications du fil
+  (Page et Instagram). Le « partage en story » du kit (lundi, mercredi) est
+  un geste FACULTATIF de Sophie dans l'application, que Metricool ne fait pas.
+- **Chasse aux erreurs (suite)** :
+  - **Mensualisation sur 47 semaines** : le simulateur de salaire (défaut 47)
+    et le vérificateur de bulletin multipliaient par 47 en année complète —
+    658 € au lieu de 728 € pour 40 h à 4,20 € ; le vérificateur jugeait donc
+    « exacte » une mensualisation trop basse. Les ~100 pages « tarif » des
+    départements chiffraient leurs écarts sur 156,7 h au lieu de 173,3 h.
+    Tout corrigé (année complète = 52 semaines, congés compris ; au-delà de
+    46 semaines saisies, on retient 52), modèle « ct1 » corrigé. Barrières :
+    règle d'audit bloquante (« paie ») et cas « 47 semaines » dans
+    verif-calculs-identiques, prouvées en cassant (code 1 / KO 658 contre
+    728) puis en réparant.
+  - **Engagement réciproque** (modèle de lettre r8 de l'application) : il
+    disait que la convention ne le prévoit pas et que le dédit se négocie.
+    Article 93 : facultatif, dédit = un demi-mois de salaire brut, pas dû si
+    décès de l'enfant ou retrait/suspension/non-renouvellement de
+    l'agrément. Modèle réécrit ; règle d'audit bloquante prouvée.
+  - Articles corrigés EN BROUILLON (accord écrit de Sophie attendu) :
+    `calcul-mensualisation-assistante-maternelle` (formule 52 semaines ;
+    régularisation seulement en année incomplète, définitive en fin de
+    contrat — DREETS BFC fiche 11-IV, Occitanie FAQ 3.23-3.25) et
+    `salaire-assistante-maternelle-par-departement` (173,3 h : écarts 76 €,
+    149 €, 315 € au lieu de 69, 135, 285 ; « plancher légal » → « minimum
+    conventionnel »).
+
 ## Ce qu'il reste à faire
 
 **Sophie**

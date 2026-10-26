@@ -4134,6 +4134,54 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- l'annee complete se mensualise sur 52 semaines, pas sur 47 ---
+//
+// Le simulateur de salaire proposait 47 semaines par defaut et multipliait par
+// ce nombre : 658 EUR au lieu de 728 EUR pour 40 h a 4,20 EUR. Le verificateur
+// de bulletin faisait de meme, et jugeait donc « exacte » une mensualisation
+// trop basse. Les pages departements chiffraient leurs ecarts sur 156,7 h au
+// lieu de 173,3 h. La convention mensualise l'annee complete sur 52 semaines,
+// conges payes compris (guide de la DREETS Bourgogne-Franche-Comte, juin 2026,
+// fiche 07). « 47 semaines de presence » reste une facon juste de decrire
+// l'annee complete ; c'est le CALCUL sur 47 qui est interdit.
+{
+  const motifs = [
+    [/47 en année complète/, "« 47 en année complète »"],
+    [/\(≥ 47 semaines\)|\(47 semaines ou plus\)/, "« année complète (≥ 47 semaines) » sans les 52 semaines du calcul"],
+    [/mensualisé sur 47 semaines/, "« mensualisé sur 47 semaines »"],
+    [/id="(s|sem)"[^>]*value="47"/, "un simulateur réglé par défaut sur 47 semaines"],
+  ];
+  for (const f of [...fs.readdirSync(new URL("../public/", import.meta.url)).filter((x) => x.endsWith(".html")).map((x) => "public/" + x), "src/socle.jsx", "src/App.jsx", "scripts/generate-local.mjs"]) {
+    const t = fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
+    for (const [re, quoi] of motifs)
+      if (re.test(t)) signale("paie", `${f} : ${quoi} — l'année complète se mensualise sur 52 semaines, congés payés compris (DREETS BFC, fiche 07)`);
+  }
+  const gen = fs.readFileSync(new URL("../scripts/generate-local.mjs", import.meta.url), "utf8");
+  if (/HEURES_MOIS = \+\(\(40 \* 47\)/.test(gen))
+    signale("paie", "scripts/generate-local.mjs : les écarts des pages départements sont chiffrés sur 40 h × 47 semaines — c'est 40 h × 52 semaines en année complète");
+}
+
+// --- l'engagement reciproque suit l'article 93, pas un usage ---
+//
+// Le modele de lettre de l'application disait que la convention ne prevoit pas
+// l'engagement reciproque et que le dedit « se negocie ». L'article 93 le
+// prevoit (facultatif) et fixe le dedit : un demi-mois de salaire brut (guide
+// de la DREETS Bourgogne-Franche-Comte, juin 2026, fiche 01). On verifie que le
+// modele cite le demi-mois et l'article 93, et que l'ancienne phrase n'est
+// nulle part.
+{
+  const socle = fs.readFileSync(new URL("../src/socle.jsx", import.meta.url), "utf8");
+  const r8 = (socle.match(/\{id:"r8"[\s\S]*?contenu:"([\s\S]*?)"\}/) || [])[1];
+  if (!r8) signale("engagement-reciproque", "src/socle.jsx : modèle « r8 » (engagement réciproque) introuvable");
+  else if (!/demi-mois/.test(r8) || !/article 93/.test(r8))
+    signale("engagement-reciproque", "src/socle.jsx : le modèle d'engagement réciproque ne cite plus le demi-mois de salaire brut ni l'article 93 de la convention");
+  for (const f of ["src/socle.jsx", ...fs.readdirSync(new URL("../public/", import.meta.url)).filter((x) => x.endsWith(".html")).map((x) => "public/" + x)]) {
+    const t = fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
+    if (/ni la convention collective ni le code du travail ne l'imposent|Les montants se négocient entre les parties/.test(t))
+      signale("engagement-reciproque", `${f} : l'engagement réciproque présenté comme un simple usage au dédit négocié — l'article 93 fixe un demi-mois de salaire brut`);
+  }
+}
+
 // --- chaque page du blog a une image d'apercu ---
 //
 // En octobre 2026, le sommaire du blog et ses neuf rubriques n'en avaient pas :
@@ -5151,7 +5199,7 @@ const BLOQUANTES = new Set([
   "heures-majorees", "heures-arrondies", "heures-exactes-imprimees", "majoration-en-dur",
   "indemnite-rupture", "jours-feries",
   // les documents legaux
-  "textes-legaux", "legal", "modele-contrat", "hébergeur", "rgpd", "coordonnées", "contact",
+  "textes-legaux", "legal", "modele-contrat", "engagement-reciproque", "hébergeur", "rgpd", "coordonnées", "contact",
   // la securite et les donnees
   "rls", "supabase", "sql", "schéma", "serveur", "ecritures", "acces", "stockage",
   "back-office", "environnement", "expediteur",

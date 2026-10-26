@@ -20,7 +20,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
 {"@type":"Question","name":"Quel est le salaire horaire minimum d'une assistante maternelle ?","acceptedAnswer":{"@type":"Answer","text":"Deux planchers coexistent et le plus élevé s'applique. Le minimum légal vaut 0,281 fois le SMIC horaire, soit 3,46 € brut au 1er juin 2026. Le minimum conventionnel, fixé par l'avenant n° 10 du 5 février 2026 à la convention collective, vaut 4,20 € brut par heure et par enfant, soit 3,28 € net. C'est donc 4,20 € le plancher réellement applicable, porté à 4,37 € pour les titulaires du titre de branche."}},
-{"@type":"Question","name":"Comment vérifier le montant de la mensualisation ?","acceptedAnswer":{"@type":"Answer","text":"La mensualisation se calcule ainsi : taux horaire brut × nombre d'heures d'accueil par semaine × nombre de semaines d'accueil dans l'année, le tout divisé par 12. Le résultat doit correspondre au salaire de base figurant chaque mois sur le bulletin."}},
+{"@type":"Question","name":"Comment vérifier le montant de la mensualisation ?","acceptedAnswer":{"@type":"Answer","text":"La mensualisation se calcule ainsi : taux horaire brut × nombre d'heures d'accueil par semaine × 52, le tout divisé par 12, en année complète (congés payés compris). En année incomplète (46 semaines ou moins), on remplace 52 par le nombre de semaines programmées au contrat. Le résultat doit correspondre au salaire de base figurant chaque mois sur le bulletin."}},
 {"@type":"Question","name":"Quel est le minimum de l'indemnité d'entretien ?","acceptedAnswer":{"@type":"Answer","text":"Depuis le 1er juin 2026, elle se calcule à 0,435 € par heure d'accueil, sans pouvoir descendre sous 2,65 € par journée d'accueil et par enfant. Pour une journée de 9 heures, cela représente 3,92 €."}},
 {"@type":"Question","name":"Que se passe-t-il si le tarif horaire dépasse le plafond du CMG ?","acceptedAnswer":{"@type":"Answer","text":"Le CMG continue d'être versé. Depuis la réforme de septembre 2025, l'ancien plafond journalier de 5 fois le SMIC horaire a été supprimé et remplacé par un plafond horaire : 8,09 € de l'heure chez un assistant maternel. Au-delà, le CMG est calculé sur la base du plafond et seule la différence reste à la charge des parents, cotisations comprises."}}
 ]}
@@ -116,7 +116,7 @@
           <div class="sim-row"><label for="hsem">Heures d'accueil par semaine</label><input id="hsem" type="number" inputmode="decimal" step="0.25" value="45"></div>
         </div>
         <div class="two">
-          <div class="sim-row"><label for="sem">Semaines d'accueil par an <span class="hint">47 en année complète</span></label><input id="sem" type="number" inputmode="decimal" step="1" value="47"></div>
+          <div class="sim-row"><label for="sem">Semaines d'accueil programmées sur 12 mois <span class="hint">52 en année complète ; 46 au plus en année incomplète</span></label><input id="sem" type="number" inputmode="decimal" step="1" value="52"></div>
           <div class="sim-row"><label for="jsem">Jours d'accueil par semaine</label><input id="jsem" type="number" inputmode="decimal" step="0.5" value="5"></div>
         </div>
       </div>
@@ -172,7 +172,7 @@
     <p>Le titre de branche « assistant maternel – garde d'enfants » ouvre droit à une majoration de 4 %, ce qui porte le minimum à <strong>4,37 € brut</strong> (3,41 € net). Saisissez alors 4,37 dans le champ de référence.</p>
 
     <h3>2. La mensualisation</h3>
-    <p>Le salaire de base se calcule une fois pour toutes : <strong>taux horaire × heures par semaine × semaines par an ÷ 12</strong>. Il ne bouge pas d'un mois sur l'autre, quelles que soient les absences de l'enfant. Un salaire de base qui varie chaque mois est le signe d'une mensualisation mal posée — ou pas posée du tout.</p>
+    <p>Le salaire de base se calcule une fois pour toutes : <strong>taux horaire × heures par semaine × 52 ÷ 12</strong> en année complète, congés payés compris ; en année incomplète (46 semaines ou moins), on remplace 52 par les semaines programmées au contrat. Il ne bouge pas d'un mois sur l'autre, quelles que soient les absences de l'enfant, sauf les quelques absences que la convention permet de déduire (maladie de l'enfant justifiée, dans des limites précises). Un salaire de base qui varie chaque mois est le signe d'une mensualisation mal posée — ou pas posée du tout.</p>
 
     <h3>3. L'indemnité d'entretien</h3>
     <p>Elle se calcule à <strong>0,435 € par heure d'accueil</strong>, sans pouvoir descendre sous <strong>2,65 € par journée</strong> et par enfant. Pour une journée de 9 heures, cela fait 3,92 €. Ce n'est pas du salaire : elle rembourse des frais réellement engagés, et n'est due que pour les jours réellement accueillis.</p>
@@ -245,7 +245,12 @@
       function entretienJour(h){ if(h<=0) return 0; return Math.max(2.65, h*0.435); }
 
       function calc(){
-        var taux=n('taux'),hsem=n('hsem'),sem=n('sem'),jsem=n('jsem'),
+        // Au-dela de 46 semaines, c'est une annee complete, mensualisee sur 52
+        // semaines conges payes compris (DREETS BFC, juin 2026, fiche 07).
+        // Avec 47, le verificateur jugeait « exacte » une mensualisation trop
+        // basse d'environ un dixieme.
+        var semSaisies=n('sem');
+        var taux=n('taux'),hsem=n('hsem'),sem=semSaisies>46?52:semSaisies,jsem=n('jsem'),
             mens=n('mens'),jours=n('jours'),ent=n('ent'),
             hmaj=n('hmaj'),tmaj=n('tmaj'),smic=n('smic');
         var v=[];
