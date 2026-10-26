@@ -558,8 +558,9 @@ déclencheur, fonctions `fermetures_prevues()` et
   incomplète (`drafts.30acbb42-f2ac-4834-ab1b-3638e81e6467`), date de fin du
   préavis (`drafts.d7b4073e-0d96-45a9-b101-952f8b4edd59`), arrivée d'un bébé
   et article 103 (`drafts.fe6c81c7-4980-4582-9ce1-8f610c0a79ed`).
-  Couvertures dans `public/couvertures-blog/`, à importer dans Sanity
-  depuis www.timat.app une fois déployées (l'envoi direct est bloqué).
+  Couvertures dans `public/couvertures-blog/` (PR #288), importées dans
+  Sanity depuis www.timat.app (l'envoi direct est bloqué) et posées sur les
+  4 brouillons avec un texte alternatif chacun (FAIT le 26/10).
 - **Stories automatiques** (demande de Sophie) : l'API Metricool sait
   programmer une STORY (image seule, sans autocollant ni lien) sur la Page
   et sur Instagram. Mais le plan gratuit compte 20 publications par mois et
@@ -621,10 +622,6 @@ déclencheur, fonctions `fermetures_prevues()` et
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
-- Importer dans Sanity les 4 couvertures du 26/10 (depuis
-  `https://www.timat.app/couvertures-blog/<slug>.png`) et les poser sur
-  les 4 brouillons, avec un texte alternatif chacun — si ce n'est pas déjà
-  fait (vérifier par requête).
 - Publier la correction de `projet-accueil-assistante-maternelle` dès
   l'accord écrit de Sophie.
 - La file de publication se vide après le 8 novembre : écrire d'autres
