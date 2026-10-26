@@ -14,9 +14,14 @@ const code = [
   bout(/const SEMAINES_ANNEE_COMPLETE=[\s\S]*?const salaireMensualise=[\s\S]*?\n\};/),
   bout(/const MARGE=20[\s\S]*?\nfunction redacteurPdf\(doc,\{titre,sousTitre\}\)\{[\s\S]*?\n\}\n/),
   bout(/const TAUX_COTISATIONS=\{[\s\S]*?\n\};/),
-  bout(/const netDepuisBrut=\(brut\)=>\{[\s\S]*?\n\};/),
+  bout(/const TAUX_REGIME_LOCAL ?= ?[^;]*;/, "TAUX_REGIME_LOCAL"),
+  // netDepuisBrut prend desormais le regime local d'Alsace-Moselle en second argument.
+  bout(/const netDepuisBrut=\(brut[^)]*\)=>\{[\s\S]*?\n\};/, "netDepuisBrut"),
   bout(/const URL_CONVENTION="[^"]*";/),
   bout(/const fmtDatePdf=\(d\)=>\{[\s\S]*?\n\};/),
+  bout(/const SEUIL_MAJORATION_HEBDO ?= ?[^;]*;/, "SEUIL_MAJORATION_HEBDO"),
+  bout(/const MAJORATION_PREMIER_MAI ?= ?[^;]*;/, "MAJORATION_PREMIER_MAI"),
+  bout(/const MAJORATION_FERIE_TRAVAILLE ?= ?[^;]*;/, "MAJORATION_FERIE_TRAVAILLE"),
 ].join("\n");
 const corps = src.slice(src.indexOf("    // 3. Le contrat"), src.indexOf("    // 4. Convertir en blob et uploader"));
 

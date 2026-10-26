@@ -841,8 +841,14 @@ for (const { nom, motif, source } of BAREME) {
     // 24 octobre 2026 : l'article sur la periode d'essai promettait un « delai
     // de prevenance prevu par la convention » qui n'existe pas. Texte faux dans
     // un document signe : les contrats generes avant sont perimes.
-    const ATTENDUE = "6241b628454a11a5";
-    const DATE_ATTENDUE = "2026-10-24T08:37:22Z";
+    // 26 octobre 2026 : le bareme de preavis imposait 8 jours a l'assistante
+    // maternelle qui demissionne avant 3 mois (elle n'en doit aucun) et taisait
+    // l'echelle du depart a la retraite ; l'annee incomplete payait « chaque
+    // mois d'accueil » (le salaire lisse se verse les douze mois) ; le salaire
+    // etait du « au plus tard a la fin du mois », regle que la convention ne
+    // pose pas. Memes consequences : les contrats generes avant sont perimes.
+    const ATTENDUE = "873613b5157eba3b";
+    const DATE_ATTENDUE = "2026-10-26T12:24:40Z";
     const dateCode = (app.match(/DOCUMENTS_REFONTE="([^"]+)"/) || [])[1];
     if (empreinte !== ATTENDUE) {
       signale("modele-contrat", `le modèle du contrat imprimé a changé (empreinte ${empreinte} au lieu de ${ATTENDUE}). Un PDF déjà généré n'est jamais recalculé : décider si les contrats déjà signés sont périmés. Si oui, avancer DOCUMENTS_REFONTE à l'HEURE du changement — pas à minuit, un document produit le jour même APRÈS le changement passerait sinon au travers. Puis reporter la nouvelle empreinte ici`);
@@ -4180,6 +4186,35 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     if (/ni la convention collective ni le code du travail ne l'imposent|Les montants se négocient entre les parties/.test(t))
       signale("engagement-reciproque", `${f} : l'engagement réciproque présenté comme un simple usage au dédit négocié — l'article 93 fixe un demi-mois de salaire brut`);
   }
+}
+
+// --- les documents imprimes disent la regle entiere ---
+//
+// Relecture du 26 octobre 2026. Le registre des medicaments comptait QUATRE
+// verifications avant d'administrer : l'article R2111-1 du code de la sante
+// publique en pose cinq, la derniere etant que les parents ont prealablement
+// explique le geste. Le projet d'accueil invitait a donner « sa position sur
+// les ecrans » alors que la charte nationale, modifiee par l'arrete du 27 juin
+// 2025, interdit toute exposition avant trois ans. Le contrat imposait 8 jours
+// de preavis a l'assistante maternelle qui demissionne avant 3 mois (elle n'en
+// doit aucun : DREETS Auvergne-Rhone-Alpes, 18/03/2024) et payait l'annee
+// incomplete « chaque mois d'accueil » (le salaire lisse se verse douze mois).
+// Le bulletin disait « a conserver 5 ans » : le salarie le garde sans limite
+// (R. 3243-5), l'employeur cinq ans (L. 3243-4).
+{
+  const lire = (f) => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
+  const docs = lire("scripts/generer-documents.mjs");
+  if (!/cinq vérifications/.test(docs) || !/expliqué au préalable/.test(docs))
+    signale("modele-contrat", "scripts/generer-documents.mjs : le registre des médicaments ne pose plus les cinq vérifications de l'article R2111-1 (dont l'explication préalable du geste par les parents)");
+  if (/quatre vérifications|quatre conditions|position sur les écrans/.test(docs))
+    signale("modele-contrat", "scripts/generer-documents.mjs : « quatre vérifications » ou « position sur les écrans » — cinq vérifications (R2111-1), et aucun écran avant trois ans (charte nationale, arrêté du 27 juin 2025)");
+  const app = lire("src/App.jsx");
+  if (!/démissionne avec moins de 3 mois d'ancienneté n'a pas de préavis/.test(app))
+    signale("modele-contrat", "src/App.jsx : le contrat imprimé ne dit plus que la démission avant 3 mois d'ancienneté se fait sans préavis");
+  if (/versé chaque mois d'accueil|versé au plus tard à la fin du mois/.test(app))
+    signale("modele-contrat", "src/App.jsx : « versé chaque mois d'accueil » ou « au plus tard à la fin du mois » — le salaire lissé se verse douze mois, à la date convenue au contrat");
+  if (/A conserver 5 ans|À conserver 5 ans|convention collective 2024/.test(lire("src/gestion.jsx")))
+    signale("modele-contrat", "src/gestion.jsx : « à conserver 5 ans » (le salarié garde son bulletin sans limite, R. 3243-5) ou « convention collective 2024 » (elle date de 2021, en vigueur au 1er janvier 2022)");
 }
 
 // --- chaque page du blog a une image d'apercu ---

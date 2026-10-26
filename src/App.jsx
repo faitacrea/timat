@@ -3870,7 +3870,7 @@ export const URL_CONVENTION="https://www.legifrance.gouv.fr/conv_coll/id/KALICON
 // A METTRE A JOUR A CHAQUE FOIS QUE LE MODELE D'UN DOCUMENT CHANGE. Une
 // barriere d'audit le verifie : elle garde l'empreinte du modele de contrat et
 // refuse que le modele bouge sans que cette date bouge.
-export const DOCUMENTS_REFONTE="2026-10-24T08:37:22Z";
+export const DOCUMENTS_REFONTE="2026-10-26T12:24:40Z";
 // Le PDF est perime s'il a ete ecrit AVANT la derniere modification du contrat,
 // ou avant la refonte des documents. La premiere comparaison est la vraie :
 // sans elle, une fois le fichier refait le bouton disparaissait pour de bon, et
@@ -4026,10 +4026,15 @@ const jsPDF=await chargerJsPDF();
       +(hMoisDecl!==hMois?" (arrondi a "+hMoisDecl+" h pour la declaration Pajemploi ; le salaire se calcule sur les heures exactes)":""));
     R.champ("Salaire mensuel brut de base",nbf(salMois,2)+" €");
     R.champ("Soit, net, environ",nbf(netDepuisBrut(salMois),2)+" €");
+    // En annee incomplete, le salaire est lisse sur DOUZE mois et verse meme un
+    // mois sans accueil (fiche mensualisation DREETS Occitanie) : « chaque mois
+    // d'accueil » laissait croire qu'un mois d'ete sans enfant n'etait pas paye.
+    // Et la date de paiement se convient au contrat (meme fiche) : la
+    // convention ne fixe pas de « fin du mois » comme le disait la phrase d'avant.
     R.texte(complete
       ? "Le salaire est mensualisé sur 52 semaines : le même montant est versé chaque mois, quel que soit le nombre de jours d'accueil du mois, et la rémunération des congés payés est incluse dans ce montant."
-      : "Le salaire est mensualisé sur les "+semaines+" semaines d'accueil programmées : le même montant est versé chaque mois d'accueil. La rémunération des congés payés n'est PAS comprise dans ce montant ; elle est versée à part, selon les modalités de l'article 7.",{taille:8.5});
-    R.texte("Le salaire est versé au plus tard à la fin du mois. Le particulier employeur déclare la rémunération chaque mois au service Pajemploi, qui édite le bulletin de paie. Le salaire horaire ne peut être inférieur au minimum conventionnel en vigueur.",{taille:8.5});
+      : "Le salaire est mensualisé sur les "+semaines+" semaines d'accueil programmées, puis lissé sur douze mois : le même montant est versé chaque mois, y compris un mois sans accueil. La rémunération des congés payés n'est PAS comprise dans ce montant ; elle est versée à part, selon les modalités de l'article 7.",{taille:8.5});
+    R.texte("Le salaire est versé une fois par mois, à date fixe convenue entre les parties. Le particulier employeur déclare la rémunération chaque mois au service Pajemploi, qui édite le bulletin de paie. Le salaire horaire ne peut être inférieur au minimum conventionnel en vigueur.",{taille:8.5});
 
     R.article(6,"INDEMNITÉS ET FRAIS");
     R.champ("Indemnité d'entretien",nbf(ct.entretien||0,2)+" € par journée d'accueil");
@@ -4091,7 +4096,14 @@ const jsPDF=await chargerJsPDF();
     // L'article nomme aussi ce qui est EXCLU de l'assiette. Le contrat ne le
     // disait pas, alors que c'est precisement ce qui fait la difference entre
     // deux calculs possibles.
+    //
+    // Le bareme 8 jours / 15 jours / 1 mois ne vaut pas pour tout le monde :
+    // l'assistante maternelle qui demissionne avant 3 mois n'en doit aucun
+    // (fiche DREETS Auvergne-Rhone-Alpes du 18/03/2024 ; code.travail.gouv.fr,
+    // contribution 3239), et le depart a la retraite a sa propre echelle
+    // (art. 63-2-2 de la convention). Le contrat signe doit le dire.
     R.texte("Le préavis est de 8 jours calendaires pour une ancienneté inférieure à 3 mois, de 15 jours pour une ancienneté de 3 mois à moins d'un an, et d'un mois au-delà. "
+      + "L'assistante maternelle qui démissionne avec moins de 3 mois d'ancienneté n'a pas de préavis à respecter ; en cas de départ volontaire à la retraite, le préavis suit les usages en dessous de 6 mois d'ancienneté, puis il est d'un mois jusqu'à 2 ans et de deux mois au-delà. "
       + "Le retrait de l'enfant à l'initiative du particulier employeur ouvre droit, après 9 mois d'accueil, à une indemnité de rupture égale à 1/80e du total des salaires BRUTS perçus pendant la durée du contrat, "
       + "hors indemnités non soumises à cotisations (indemnité kilométrique, indemnité d'entretien, frais de repas). "
       + "Elle n'est pas due en cas de faute grave ou lourde du salarié, ni en cas de retrait, de suspension ou de modification de son agrément. "

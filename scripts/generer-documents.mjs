@@ -269,12 +269,16 @@ function registreMedicaments() {
     "#FBF1EF"
   );
 
-  section(doc, "Avant de donner un médicament : quatre vérifications");
+  // CINQ verifications, pas quatre : l'article R2111-1 (II) ajoute que les
+  // parents — ou, le cas echeant, le referent « Sante et Accueil inclusif » —
+  // ont prealablement explique le geste. Le registre l'omettait.
+  section(doc, "Avant de donner un médicament : cinq vérifications");
   const verifs = [
     "Le médecin n'a pas prescrit l'intervention d'un auxiliaire médical (infirmier, kinésithérapeute).",
     "Les titulaires de l'autorité parentale ont expressément autorisé ces soins par écrit.",
-    "Vous disposez de l'ordonnance au nom de l'enfant, en cours de validité.",
     "Le médicament et le matériel nécessaire ont été fournis par les parents.",
+    "Vous disposez de l'ordonnance au nom de l'enfant, ou d'une copie, et vous la suivez.",
+    "Les parents vous ont expliqué au préalable le geste à réaliser.",
   ];
   verifs.forEach((v, i) => {
     const y = doc.y;
@@ -287,8 +291,9 @@ function registreMedicaments() {
   doc.moveDown(0.2);
   encadre(
     doc,
-    "Si l'une de ces quatre conditions manque, n'administrez pas le médicament : appelez les parents, et en " +
-      "cas d'urgence le 15.",
+    "Si l'une de ces cinq conditions manque, n'administrez pas le médicament : appelez les parents, et en " +
+      "cas d'urgence le 15. Employée par un particulier, les modalités de ces soins sont décrites dans une " +
+      "annexe à votre contrat de travail.",
     C.rouge,
     "#FBF1EF"
   );
@@ -339,8 +344,8 @@ function registreMedicaments() {
 
   encadre(
     doc,
-    "À renouveler à chaque nouvelle ordonnance. Une autorisation générale et permanente ne suffit pas : " +
-      "elle porte sur un traitement précis, prescrit, et daté.",
+    "À remplir pour chaque nouvelle ordonnance : une autorisation qui nomme le traitement, la posologie et " +
+      "l'ordonnance ne laisse aucune place au doute.",
     C.sage,
     "#F2F8F7"
   );
@@ -489,7 +494,7 @@ function projetAccueil() {
     ["Le sommeil", "Le couchage, le rythme de chaque enfant, l'endormissement, le réveil, le couchage sur le dos.", 3],
     ["Les repas", "Qui fournit les repas, la diversification, le respect de l'appétit, l'autonomie à table, les allergies.", 3],
     ["Le change et la continence", "Votre façon de faire, le respect de l'intimité et de la pudeur, l'accompagnement sans forcer.", 3],
-    ["Le jeu, l'éveil et les sorties", "Le jeu libre, le matériel, les activités, les sorties quotidiennes, votre position sur les écrans.", 4],
+    ["Le jeu, l'éveil et les sorties", "Le jeu libre, le matériel, les activités, les sorties quotidiennes. Pas d'écran : la charte nationale l'interdit avant trois ans depuis juillet 2025.", 4],
     ["Les émotions, les pleurs, les conflits", "Comment vous accueillez une colère, un chagrin, une morsure ; les repères et les interdits que vous posez.", 4],
     ["Ma relation avec les parents", "Les transmissions du matin et du soir, la place des parents, le non-jugement, la confidentialité.", 4],
     ["L'inclusion de tous les enfants", "Votre disponibilité pour accueillir un enfant en situation de handicap ou avec un PAI.", 3],

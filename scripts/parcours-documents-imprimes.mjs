@@ -205,7 +205,10 @@ const defauts = (nom, d) => {
 const att = await ouvrirEtLire(["Administratif", "Documents & Rapports", "Attestation France Travail" /* renomme : c'etait « Att. France Travail » */], "Voir / télécharger l'attestation", "attestation-france-travail");
 defauts("attestation France Travail", att);
 if (att) {
-  dire(/télétransmise via Pajemploi/i.test(att.texte), "l'attestation dit que l'officielle passe par Pajemploi");
+  // France Travail : l'attestation faite sur l'espace Pajemploi lui est
+  // transmise automatiquement (« Nouveau service Pajemploi »).
+  dire(/sur l'espace en ligne Pajemploi/i.test(att.texte) && /transmet automatiquement à France Travail/i.test(att.texte),
+    "l'attestation dit que l'officielle passe par Pajemploi");
 }
 
 const recapVers = await ouvrirEtLire(["Administratif", "Documents & Rapports", "Récap. versements"], "Imprimer", "recap-versements");
@@ -327,6 +330,36 @@ if (motifPose) {
   }
 
   await sommeDuRecu("faute grave", "recu-faute-grave");
+}
+
+// --- LA DATE DE FIN DU PREAVIS ---
+//
+// Le simulateur public la donnait, l'ecran non. Le calcul lui-meme est teste
+// (test-retenue) et compare au site (verif-calculs-identiques) ; on verifie ici
+// que l'ecran l'affiche, et que « Reporter en date de fin » pose bien CETTE
+// date dans le champ de la date de fin, sans la decaler d'un jour.
+await choisirMotif("Retrait de l'enfant");
+await page.waitForTimeout(400);
+const notifPosee = await page.evaluate(() => {
+  const champs = document.querySelectorAll('input[type="date"]');
+  if (champs.length < 2) return false;
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+  setter.call(champs[1], "2027-01-31");
+  champs[1].dispatchEvent(new Event("input", { bubbles: true }));
+  champs[1].dispatchEvent(new Event("change", { bubbles: true }));
+  return true;
+});
+dire(notifPosee, "la date de départ du préavis est saisissable");
+await page.waitForTimeout(500);
+const finAffichee = await page.evaluate(() => document.querySelector("[data-fin-preavis]")?.innerText || "");
+const mFin = finAffichee.match(/Fin du préavis : le (\d{1,2}) (\S+) (\d{4}) inclus/);
+dire(!!mFin, "l'écran affiche la date de fin du préavis", finAffichee.slice(0, 120));
+if (mFin) {
+  await clic("Reporter en date de fin");
+  await page.waitForTimeout(400);
+  const posee = await page.evaluate(() => document.querySelector('input[type="date"]')?.value || "");
+  const lue = posee ? new Date(posee + "T00:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "";
+  dire(lue === `${mFin[1]} ${mFin[2]} ${mFin[3]}`, "« Reporter en date de fin » pose la même date", `affichée ${mFin[0]} / posée ${posee}`);
 }
 
 dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));
