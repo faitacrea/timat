@@ -221,5 +221,23 @@ publication par jour à 6 h UTC (7 h à Paris depuis le passage à l'heure d'hiv
 | 15 | 3 novembre | `conge-parental-education-assistante-maternelle` | Situation pratique | DREETS BFC fiche 03 (art. 48-1-2-5) ; code du travail L1225-47 à L1225-54 |
 | 16 | 4 novembre | `conge-proche-aidant-solidarite-familiale-assistante-maternelle` | Situation pratique | DREETS BFC fiche 03 (art. 48-2-4 et 48-2-5) ; pour-les-personnes-agees.gouv.fr (AJPA) ; ameli (AJAP) |
 
-Après le 4 novembre, la file est vide : il faudra d'autres brouillons d'ici là
+## Ajout du 26 octobre 2026 : quatre articles
+
+Sophie : « on peut faire de nouveaux brouillons d'articles pour ne pas être en
+rade ». Quatre sujets que le blog ne traitait pas, chacun appuyé sur au moins
+deux sources officielles. Leurs liens internes ne visent que des articles déjà
+en ligne (et le simulateur de fin de contrat) : aucune dépendance.
+
+| Ordre | Date prévue | Slug | Rubrique | Sources principales |
+|---:|---|---|---|---|
+| 17 | 5 novembre | `ecrans-interdits-moins-3-ans-assistante-maternelle` | Le quotidien de l'accueil | Service-Public A18388 (juillet 2025) ; arrêté du 23 septembre 2021 modifié le 27 juin 2025 ; référentiel national qualité 2025 |
+| 18 | 6 novembre | `regularisation-salaire-annee-incomplete-assistante-maternelle` | Contrat et paie | DREETS BFC fiche 11-IV (art. 109-2 et 124) ; DREETS Occitanie FAQ q. 3.23 à 3.25 ; fiche régularisation DDETS 31 |
+| 19 | 7 novembre | `calculer-date-fin-preavis-assistante-maternelle` | Contrat et paie | Service-Public F33164 ; DREETS BFC fiche 10 ; code du travail numérique |
+| 20 | 8 novembre | `naissance-enfant-assistante-maternelle-agrement-contrats` | Situation pratique | DREETS BFC fiche 10-III (art. 103 et 119.3) ; CASF L. 421-4 |
+
+Le cas du préavis parti un 31 (pas de veille du même quantième dans le mois
+d'arrivée) n'est réglé par aucun texte : l'article le dit, et donne la lecture
+retenue par le simulateur (dernier jour du mois).
+
+Après le 8 novembre, la file est vide : il faudra d'autres brouillons d'ici là
 (le cron envoie une alerte dès qu'il en reste cinq ou moins).
