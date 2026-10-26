@@ -531,6 +531,33 @@ export const preavisRetraiteJours=(moisAnciennete)=>{
   return 60;
 };
 
+// LA DATE DE FIN DU PREAVIS.
+//
+// Service-Public (fiche F33164, demission d'une assistante maternelle) : le
+// preavis part du jour de la premiere presentation de la lettre recommandee,
+// ou de la remise en main propre, et ce jour compte. Ses exemples : un mois
+// commence le 13 fevrier 2023 court jusqu'au 12 mars inclus ; commence le
+// 5 fevrier 2022, jusqu'au 4 mars inclus. Une duree en jours se compte de la
+// meme facon (8 jours a partir du 2 : jusqu'au 9 inclus). Sans quantieme
+// identique le mois d'arrivee (un 31), on s'arrete a la veille du dernier jour.
+// Retourne la date du dernier jour inclus (AAAA-MM-JJ), ou null si la duree
+// n'est pas chiffree. Le simulateur public fait le meme calcul ; le controle
+// verif-calculs-identiques compare les deux.
+export const finPreavis=(debutIso,{jours=0,mois=0}={})=>{
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(debutIso||""));
+  if(!m)return null;
+  const a=+m[1],mo=+m[2]-1,j=+m[3];
+  let d;
+  if(jours>0)d=new Date(Date.UTC(a,mo,j+jours-1));
+  else if(mois>0){
+    const dernier=new Date(Date.UTC(a,mo+mois+1,0)).getUTCDate();
+    d=new Date(Date.UTC(a,mo+mois,Math.min(j,dernier)-1));
+  }else return null;
+  // Tout est en UTC, de bout en bout : pas de fuseau pour decaler le jour.
+  const deux=(n)=>String(n).padStart(2,"0");
+  return `${d.getUTCFullYear()}-${deux(d.getUTCMonth()+1)}-${deux(d.getUTCDate())}`;
+};
+
 // L'indemnite de fin de CDD (dite de precarite) : 10 % des salaires bruts du
 // contrat, indemnite de conges payes comprise (DREETS Bourgogne-Franche-Comte,
 // juin 2026, fiche 09 ; code du travail, art. L. 1243-8).

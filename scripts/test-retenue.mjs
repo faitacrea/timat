@@ -376,7 +376,8 @@ const finContrat = eval(`(function(){
   ${fn("ANCIENNETE_MIN_RUPTURE_MOIS", /const ANCIENNETE_MIN_RUPTURE_MOIS=\d+;/)}
   ${fn("indemniteRupture", /const indemniteRupture=\(\{[\s\S]*?\n\};/)}
   ${fn("preavisRetraiteJours", /const preavisRetraiteJours=\([\s\S]*?\n\};/)}
-  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture, preavisRetraiteJours};
+  ${fn("finPreavis", /const finPreavis=\([\s\S]*?\n\};/)}
+  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture, preavisRetraiteJours, finPreavis};
 })()`);
 
 let koFin = 0;
@@ -414,6 +415,14 @@ v("retraite pile 6 mois : 1 mois", finContrat.preavisRetraiteJours(6), 30, 0);
 v("retraite à 23 mois : 1 mois", finContrat.preavisRetraiteJours(23), 30, 0);
 v("retraite pile 2 ans : 2 mois", finContrat.preavisRetraiteJours(24), 60, 0);
 v("retraite à 10 ans : 2 mois", finContrat.preavisRetraiteJours(120), 60, 0);
+// Date de fin du preavis : exemples de Service-Public (fiche F33164).
+v("1 mois depuis le 13/02/2023 (Service-Public)", finContrat.finPreavis("2023-02-13",{mois:1}), "2023-03-12");
+v("1 mois depuis le 05/02/2022 (Service-Public)", finContrat.finPreavis("2022-02-05",{mois:1}), "2022-03-04");
+v("8 jours depuis le 02/11/2026", finContrat.finPreavis("2026-11-02",{jours:8}), "2026-11-09");
+v("15 jours depuis le 20/12/2026", finContrat.finPreavis("2026-12-20",{jours:15}), "2027-01-03");
+v("1 mois depuis le 01/03/2026", finContrat.finPreavis("2026-03-01",{mois:1}), "2026-03-31");
+v("2 mois depuis le 31/12/2026", finContrat.finPreavis("2026-12-31",{mois:2}), "2027-02-27");
+v("durée non chiffrée", String(finContrat.finPreavis("2026-11-02",{})), "null");
 // Art. 121.1 : les deux memes motifs privent de l'indemnite de rupture.
 v("18 mois, 9600 euros de brut", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18}), 120, 0);
 v("... mais faute grave", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18,fauteGrave:true}), 0, 0);
