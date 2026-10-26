@@ -4188,6 +4188,24 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
   }
 }
 
+// --- les documents vendus suivent leurs generateurs ---
+//
+// La version gratuite du registre des medicaments se regenere a chaque
+// construction ; la version vendue est embarquee dans api/_fichiers-boutique.js
+// par « npm run documents:embarquer », a la main. Le 26 octobre 2026, la
+// correction du registre et du projet d'accueil n'avait atteint que la version
+// gratuite : l'acheteur aurait reçu l'ancien texte. Le module porte l'empreinte
+// des generateurs (meme liste et meme calcul que scripts/embarquer-documents.mjs) ;
+// si un generateur change sans reembarquement, la construction s'arrete.
+{
+  const h = crypto.createHash("sha256");
+  for (const f of ["scripts/generer-documents.mjs", "scripts/generer-kit.py"]) h.update(fs.readFileSync(path.join(RACINE, f)));
+  const actuelle = h.digest("hex").slice(0, 16);
+  const embarquee = (fs.readFileSync(path.join(RACINE, "api/_fichiers-boutique.js"), "utf8").match(/EMPREINTE_GENERATEURS = "([0-9a-f]+)"/) || [])[1];
+  if (embarquee !== actuelle)
+    signale("modele-contrat", `api/_fichiers-boutique.js : les documents vendus ne viennent pas des générateurs actuels (empreinte ${embarquee || "absente"} au lieu de ${actuelle}). Lancer npm run documents && npm run documents:kit && npm run documents:embarquer, puis commiter`);
+}
+
 // --- les documents imprimes disent la regle entiere ---
 //
 // Relecture du 26 octobre 2026. Le registre des medicaments comptait QUATRE
