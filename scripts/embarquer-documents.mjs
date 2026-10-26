@@ -20,6 +20,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { PRODUITS } from "../api/_catalogue-boutique.js";
 
 const RACINE = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -38,6 +39,21 @@ if (absents.length) {
   );
   process.exit(1);
 }
+
+// L'EMPREINTE DES GENERATEURS. Le 26 octobre 2026, le registre des
+// medicaments et le projet d'accueil ont ete corriges dans
+// generer-documents.mjs : la version gratuite, regeneree a chaque
+// construction, a suivi ; la version VENDUE, embarquee ici, gardait l'ancien
+// texte (« quatre verifications », « position sur les ecrans ») parce que
+// personne n'avait relance l'embarquement. On grave donc l'empreinte des
+// generateurs dans le module, et l'audit refuse la construction quand elle ne
+// correspond plus : corriger un document oblige a le reembarquer.
+const GENERATEURS = ["scripts/generer-documents.mjs", "scripts/generer-kit.py"];
+const empreinteGenerateurs = async () => {
+  const h = createHash("sha256");
+  for (const f of GENERATEURS) h.update(await readFile(path.join(RACINE, f)));
+  return h.digest("hex").slice(0, 16);
+};
 
 const entrees = [];
 for (const f of fichiers) {
@@ -61,6 +77,7 @@ const module = `// Fichier généré par scripts/embarquer-documents.mjs — ne 
 //
 // Pour mettre un document à jour : npm run documents && npm run documents:kit
 // && npm run documents:embarquer, puis commiter ce fichier.
+export const EMPREINTE_GENERATEURS = ${JSON.stringify(await empreinteGenerateurs())};
 export const FICHIERS = {
 ${entrees.join("\n")}
 };
