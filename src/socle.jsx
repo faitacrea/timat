@@ -684,7 +684,7 @@ export const TAUX_PATRONAL_TOTAL = Object.values(TAUX_COTISATIONS)
 export const MODELES_CONTRATS=[
   {id:"ct1",titre:"Contrat standard - Temps plein",desc:"Accueil 5j/semaine en année complète : mensualisation sur 52 semaines, congés payés compris (CCN 3239).",
    champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
-  {id:"ct2",titre:"Contrat - Temps partiel",desc:"Accueil moins de 5 jours ou moins de 30h/semaine.",
+  {id:"ct2",titre:"Contrat - Temps partiel",desc:"Accueil sur moins de 5 jours ou à horaires réduits. Repère : la durée conventionnelle d'accueil est de 45 h par semaine (CCN 3239).",
    champs:["Enfant","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
   {id:"ct3",titre:"Contrat périscolaire",desc:"Accueil matin, soir, mercredis et vacances scolaires.",
    champs:["Enfant","Créneaux matin/soir","Planning vacances","Taux horaire (€/h)"],avenant:false},
@@ -726,8 +726,11 @@ export const COURRIERS_DATA=[
   // avant le debut de l'accueil.
   {id:"r8",cat:"Contrat",ic:"🤝",titre:"Engagement réciproque avant contrat",
    contenu:"ENGAGEMENT RÉCIPROQUE D'ACCUEIL\n\nEntre :\n[Votre nom], assistant(e) maternel(le) agréé(e) sous le n° [Numéro agrément],\net\n[Nom du parent employeur], demeurant [Adresse].\n\nLes deux parties conviennent de l'accueil de [Prénom de l'enfant], né(e) le [Date de naissance], à compter du [Date de début].\n\nConditions convenues : [Nombre] heures par semaine, [Nombre] semaines par an, au salaire horaire brut de [Montant] €, soit un salaire mensuel brut de [Montant] €.\n\nLe contrat de travail sera signé au plus tard le [Date de signature].\n\nEn cas de renoncement (article 93 de la convention collective des particuliers employeurs et de l'emploi à domicile) :\nLa partie qui renonce à l'accueil en informe l'autre par lettre recommandée avec avis de réception ou par lettre remise en main propre contre décharge. Elle lui verse une indemnité forfaitaire égale à un demi-mois du salaire brut prévu ci-dessus, soit [Montant] €. Cette indemnité n'est pas un salaire et n'est pas soumise à cotisations.\nElle n'est pas due, sur justificatif, si l'un de ces événements survient avant le début de l'accueil : le décès de l'enfant, ou le retrait, la suspension ou le non-renouvellement de l'agrément de l'assistante maternelle.\n\nToute modification de cet engagement demande un nouvel accord écrit des deux parties.\n\nLe présent engagement est établi en deux exemplaires.\n\nFait à [Lieu], le [Date].\n\nSignature de l'assistante maternelle          Signature du parent employeur\n\nCet engagement est facultatif : les parties choisissent de le signer, mais une fois signé, la convention collective en fixe les règles."},
+  // L'agrement se renouvelle aupres du PRESIDENT DU CONSEIL DEPARTEMENTAL (CASF
+  // D. 421-19 : demande au moins trois mois avant l'echeance, sur le formulaire
+  // du departement). La lettre s'adressait au « medecin chef de PMI ».
   {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
-   contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
+   contenu:"Madame, Monsieur le Président du conseil départemental,\nService de protection maternelle et infantile\n\nMon agrément d'assistant(e) maternel(le) n° [Numéro] arrive à échéance le [Date]. Je vous adresse ma demande de renouvellement, avec le formulaire et les pièces demandés par vos services, au moins trois mois avant cette date (code de l'action sociale et des familles, art. D. 421-19).\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires, et je reste à votre disposition pour la visite d'évaluation.\n\nCordialement,\n[Votre nom]"},
 ];
 
 export const VERSEMENT_MODES={virement:"Virement",cheque:"Chèque",especes:"Espèces",cesu:"CESU",autre:"Autre"};
@@ -1231,7 +1234,7 @@ export const FAQ_DATA=[
   {cat:"PMI",q:"Comment préparer ma visite de renouvellement d'agrément ?",
    r:"Dans Documents, exportez votre 'Dossier PMI complet' : il contient l'historique des enfants accueillis, les bilans trimestriels, le planning périscolaire et vos échanges avec la PMI. Tout est daté et structuré."},
   {cat:"Finances",q:"Comment calculer le solde de tout compte ?",
-   r:"Dans Paie & Contrats > Solde de tout compte. Saisissez la date de fin et le motif. TiMat calcule automatiquement l'ICCP (indemnité compensatrice de congés payés) et l'indemnité de préavis selon la CCN."}, // RENAME NAV P9
+   r:"Dans Paie & Contrats > Contrats > Fin de contrat. Saisissez la date de fin et le motif ; avec la date de la lettre, TiMat donne aussi la fin du préavis. TiMat calcule l'indemnité compensatrice de congés payés, l'indemnité de préavis quand elle est due, l'indemnité de rupture (retrait de l'enfant, dès 9 mois d'ancienneté) et, en fin de CDD, l'indemnité de précarité."}, // RENAME NAV P9 ; chemin reel : Paie & Contrats > Contrats > Fin de contrat
   {cat:"RGPD",q:"Comment supprimer mon compte et toutes mes données ?",
    r:"Dans Paramètres → Supprimer mon compte. La suppression est définitive (RGPD, droit à l'effacement, article 17), et votre abonnement est arrêté en même temps. Assistante maternelle : tout votre dossier part avec le compte, y compris les données des enfants accueillis et vos fichiers. Si des familles sont reliées à votre compte, vous pouvez programmer la suppression 15 jours plus tard : elles sont prévenues par e-mail et peuvent télécharger leurs documents d'ici là. Vous pouvez aussi supprimer immédiatement. Parent : vos données personnelles sont effacées et vous êtes détaché du dossier, mais le registre de présence et les bulletins restent chez l'assistante maternelle — ce sont ses pièces justificatives, elle en a besoin pour se défendre en cas de litige."},
   {cat:"RGPD",q:"Où sont stockées mes données ?",

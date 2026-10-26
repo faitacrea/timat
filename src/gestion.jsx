@@ -3247,7 +3247,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
           {enfants.map(e=><option key={e.id}value={e.id}>{e.prenom}</option>)}
         </select>
       </div>
-      <input placeholder="Motif (sortie parc, RAM, médecin…)" value={nt.motif} onChange={e=>setNt({...nt,motif:e.target.value})} style={{...inp,marginBottom:8}}/>
+      <input placeholder="Motif (sortie parc, relais petite enfance, médecin…)" value={nt.motif} onChange={e=>setNt({...nt,motif:e.target.value})} style={{...inp,marginBottom:8}}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:8,alignItems:"center"}}>
         <input placeholder="Km" inputMode="decimal" value={nt.km} onChange={e=>setNt({...nt,km:e.target.value})} style={inp}/>
         <input placeholder="Taux €/km" inputMode="decimal" value={nt.taux} onChange={e=>setNt({...nt,taux:e.target.value})} style={inp}/>
