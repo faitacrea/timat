@@ -181,8 +181,12 @@ const DE_REGION = {
 };
 const deRegion = (r) => DE_REGION[r] || `de ${r}`;
 
-/** Heures mensualisées d'un contrat courant : 40 h par semaine, 47 semaines. */
-const HEURES_MOIS = +((40 * 47) / 12).toFixed(1);
+/** Heures mensualisées d'un contrat courant : 40 h par semaine en année
+ *  complète. La convention mensualise l'année complète sur 52 semaines, congés
+ *  payés compris (guide de la DREETS Bourgogne-Franche-Comté, juin 2026,
+ *  fiche 07) : 173,3 h. Le calcul sur 47 semaines (156,7 h) sous-estimait
+ *  chaque écart d'environ un dixième. */
+const HEURES_MOIS = +((40 * 52) / 12).toFixed(1);
 const parMois = (ecart) => Math.round(Math.abs(ecart) * HEURES_MOIS);
 
 const CSS = `
@@ -384,7 +388,7 @@ function pageTarif(d, st, stats, ctx) {
     }
     if (nat && ici !== nat) {
       const sens = ici > nat ? "de plus" : "de moins";
-      p.push(`<p>L'écart avec la moyenne nationale de ${eur(nat)} est de ${eur(Math.abs(ici - nat))} de l'heure. Sur un contrat de 40 heures par semaine mensualisé sur 47 semaines, soit ${HEURES_MOIS.toLocaleString("fr-FR")} heures par mois, cela représente <strong>${nb(parMois(ici - nat))} € ${sens}</strong> par mois et par enfant.</p>`);
+      p.push(`<p>L'écart avec la moyenne nationale de ${eur(nat)} est de ${eur(Math.abs(ici - nat))} de l'heure. Sur un contrat de 40 heures par semaine en année complète, mensualisé sur 52 semaines congés payés compris, soit ${HEURES_MOIS.toLocaleString("fr-FR")} heures par mois, cela représente <strong>${nb(parMois(ici - nat))} € ${sens}</strong> par mois et par enfant.</p>`);
     }
     if (ctx.moyRegion && ctx.regionNb > 1 && ctx.hautRegion && ctx.basRegion) {
       const pos = ici > ctx.moyRegion ? "au-dessus" : ici < ctx.moyRegion ? "en dessous" : "au niveau";

@@ -652,7 +652,7 @@ export const TAUX_PATRONAL_TOTAL = Object.values(TAUX_COTISATIONS)
 // Bourgogne-Franche-Comté, juin 2026, fiche 10-IV). Une fin de contrat passe
 // par l'écran « Fin de contrat », qui connaît les vrais motifs.
 export const MODELES_CONTRATS=[
-  {id:"ct1",titre:"Contrat standard - Temps plein",desc:"Accueil 5j/semaine, mensualisation 47 semaines, conforme CCN.",
+  {id:"ct1",titre:"Contrat standard - Temps plein",desc:"Accueil 5j/semaine en année complète : mensualisation sur 52 semaines, congés payés compris (CCN 3239).",
    champs:["Enfant","Date de début","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
   {id:"ct2",titre:"Contrat - Temps partiel",desc:"Accueil moins de 5 jours ou moins de 30h/semaine.",
    champs:["Enfant","Jours","Horaires","Taux horaire (€/h)","Indemnité entretien (€/j)"],avenant:false},
@@ -684,12 +684,18 @@ export const COURRIERS_DATA=[
   // retracter sans rien devoir : l'assistante maternelle a refuse d'autres
   // familles, le parent n'a plus de solution.
   //
-  // Ce n'est PAS une obligation legale, et la convention collective ne le
-  // prevoit pas : c'est un usage du metier, tres repandu. Le dedit se negocie,
-  // il ne se decrete pas — d'ou les crochets a remplir plutot qu'un montant
-  // impose.
+  // Il est FACULTATIF, mais la convention collective l'encadre : article 93
+  // (guide de la DREETS Bourgogne-Franche-Comte, juin 2026, fiche 01). Le
+  // modele disait l'inverse — « la convention ne le prevoit pas », « les
+  // montants se negocient » — et prevoyait une exception de force majeure que
+  // le texte ne connait pas. Le texte fixe tout : la partie qui renonce
+  // previent l'autre par recommande ou remise en main propre contre decharge,
+  // et lui verse une indemnite forfaitaire d'un demi-mois de salaire brut,
+  // calcule au jour de l'engagement, sans cotisations. Elle n'est pas due si
+  // l'enfant decede, ou si l'agrement est retire, suspendu ou non renouvele,
+  // avant le debut de l'accueil.
   {id:"r8",cat:"Contrat",ic:"🤝",titre:"Engagement réciproque avant contrat",
-   contenu:"ENGAGEMENT RÉCIPROQUE D'ACCUEIL\n\nEntre :\n[Votre nom], assistant(e) maternel(le) agréé(e) sous le n° [Numéro agrément],\net\n[Nom du parent employeur], demeurant [Adresse].\n\nLes deux parties conviennent de l'accueil de [Prénom de l'enfant], né(e) le [Date de naissance], à compter du [Date de début].\n\nConditions convenues : [Nombre] heures par semaine, [Nombre] semaines par an, au tarif de [Montant] € net de l'heure.\n\nLe contrat de travail sera signé au plus tard le [Date de signature].\n\nEn cas de renoncement :\nSi le parent employeur renonce à l'accueil, il versera à l'assistante maternelle une indemnité de [Montant] €.\nSi l'assistante maternelle renonce à l'accueil, elle versera au parent employeur une indemnité de [Montant] €.\nCes indemnités ne sont pas dues si le renoncement tient à un cas de force majeure, ni si l'agrément est suspendu ou retiré.\n\nLe présent engagement est établi en deux exemplaires.\n\nFait à [Lieu], le [Date].\n\nSignature de l'assistante maternelle          Signature du parent employeur\n\nDocument d'usage : ni la convention collective ni le code du travail ne l'imposent. Les montants se négocient entre les parties."},
+   contenu:"ENGAGEMENT RÉCIPROQUE D'ACCUEIL\n\nEntre :\n[Votre nom], assistant(e) maternel(le) agréé(e) sous le n° [Numéro agrément],\net\n[Nom du parent employeur], demeurant [Adresse].\n\nLes deux parties conviennent de l'accueil de [Prénom de l'enfant], né(e) le [Date de naissance], à compter du [Date de début].\n\nConditions convenues : [Nombre] heures par semaine, [Nombre] semaines par an, au salaire horaire brut de [Montant] €, soit un salaire mensuel brut de [Montant] €.\n\nLe contrat de travail sera signé au plus tard le [Date de signature].\n\nEn cas de renoncement (article 93 de la convention collective des particuliers employeurs et de l'emploi à domicile) :\nLa partie qui renonce à l'accueil en informe l'autre par lettre recommandée avec avis de réception ou par lettre remise en main propre contre décharge. Elle lui verse une indemnité forfaitaire égale à un demi-mois du salaire brut prévu ci-dessus, soit [Montant] €. Cette indemnité n'est pas un salaire et n'est pas soumise à cotisations.\nElle n'est pas due, sur justificatif, si l'un de ces événements survient avant le début de l'accueil : le décès de l'enfant, ou le retrait, la suspension ou le non-renouvellement de l'agrément de l'assistante maternelle.\n\nToute modification de cet engagement demande un nouvel accord écrit des deux parties.\n\nLe présent engagement est établi en deux exemplaires.\n\nFait à [Lieu], le [Date].\n\nSignature de l'assistante maternelle          Signature du parent employeur\n\nCet engagement est facultatif : les parties choisissent de le signer, mais une fois signé, la convention collective en fixe les règles."},
   {id:"r7",cat:"PMI",ic:"🏛️",titre:"Demande de renouvellement d'agrément",
    contenu:"Madame, Monsieur le Médecin chef de PMI,\n\nJe sollicite le renouvellement de mon agrément n° [Numéro] arrivant à échéance le [Date].\n\nJe continue d'accueillir des enfants à mon domicile situé au [Adresse] dans les conditions réglementaires.\n\nJe tiens à votre disposition l'ensemble des justificatifs.\n\nCordialement,\n[Votre nom]"},
 ];

@@ -55,6 +55,12 @@ const CAS = [
     champs: { h: "35", s: "44", t: "4.50", am: false },
     sorties: { brut: () => app.salaireMensualise({ heuresHebdo: 35, anneeComplete: false, semainesAccueil: 44 }, 4.50),
                net:  () => eur(app.salaireMensualise({ heuresHebdo: 35, anneeComplete: false, semainesAccueil: 44 }, 4.50) * (1 - app.TAUX_SALARIAL_TOTAL)) } },
+  // 47 SEMAINES DE PRESENCE, C'EST UNE ANNEE COMPLETE : la convention la
+  // mensualise sur 52 semaines, conges payes compris (DREETS BFC, fiche 07).
+  // Le simulateur multipliait par 47 et annonçait 658 EUR au lieu de 728 EUR.
+  { page: "simulateur-salaire-assistante-maternelle.html", nom: "année complète saisie « 47 semaines »",
+    champs: { h: "40", s: "47", t: "4.20", am: false },
+    sorties: { brut: () => app.salaireMensualise({ heuresHebdo: 40, anneeComplete: true }, 4.20) } },
   { page: "simulateur-indemnite-entretien-assistante-maternelle.html", nom: "entretien, journée de 9 h",
     champs: { h: "9", d: "20" },
     sorties: { jour: () => eur(Math.max(app.IE_PLANCHER_JOUR, 9 * app.IE_TAUX_HORAIRE)),
