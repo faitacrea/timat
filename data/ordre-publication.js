@@ -132,5 +132,13 @@ export const ordre = [
   "conges-complementaires-non-remuneres-assistante-maternelle",
   "conge-parental-education-assistante-maternelle",
   "conge-proche-aidant-solidarite-familiale-assistante-maternelle",
+  // 26 octobre 2026 (« de nouveaux brouillons pour ne pas être en rade »,
+  // Sophie) : les écrans d'abord, la règle est récente et les familles la
+  // découvrent ; puis trois sujets de contrat. Liens internes vers des
+  // articles déjà en ligne seulement : aucune dépendance.
+  "ecrans-interdits-moins-3-ans-assistante-maternelle",
+  "regularisation-salaire-annee-incomplete-assistante-maternelle",
+  "calculer-date-fin-preavis-assistante-maternelle",
+  "naissance-enfant-assistante-maternelle-agrement-contrats",
 ];
 export default ordre;

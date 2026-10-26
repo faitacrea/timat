@@ -479,7 +479,9 @@ déclencheur, fonctions `fermetures_prevues()` et
   et les pages corrigées le 24/10. Nouvelle capture à demander vers le 2/11.
 - **Stories / Metricool** : Metricool publie seul les publications du fil
   (Page et Instagram). Le « partage en story » du kit (lundi, mercredi) est
-  un geste FACULTATIF de Sophie dans l'application, que Metricool ne fait pas.
+  un geste FACULTATIF de Sophie dans l'application. Metricool sait
+  programmer une story à part (voir plus bas), mais pas « partager » une
+  publication en story.
 - **Chasse aux erreurs (suite)** :
   - **Mensualisation sur 47 semaines** : le simulateur de salaire (défaut 47)
     et le vérificateur de bulletin multipliaient par 47 en année complète —
@@ -503,6 +505,72 @@ déclencheur, fonctions `fermetures_prevues()` et
     `salaire-assistante-maternelle-par-departement` (173,3 h : écarts 76 €,
     149 €, 315 € au lieu de 69, 135, 285 ; « plancher légal » → « minimum
     conventionnel »).
+  - **Publiés le 26/10** avec l'accord écrit de Sophie (« Je confirme
+    publier les deux corrections ») : les deux articles ci-dessus, vérifiés
+    en ligne (52 semaines ; 173,3 h).
+- **Date de fin du préavis** (demandée par Sophie, comme Pandi-Panda) :
+  PR #285. Simulateur public ET écran « Fin de contrat » de l'application
+  (champ « Date de départ du préavis », bouton « Reporter en date de fin »,
+  PR #286). Règle Service-Public F33164 : le jour de première présentation
+  compte ; un mois finit la veille du même quantième ; sans veille dans le
+  mois d'arrivée (départ un 31), dernier jour du mois — cas qu'aucun texte
+  ne règle, dit tel quel dans l'article. Vérifié en production :
+  31/01/2027 → 28 février ; 13/02/2023 → 12 mars (exemple Service-Public).
+- **Relecture des écrans et documents (PR #286, #287)** :
+  - contrat imprimé : démission avant 3 mois sans préavis (DREETS ARA
+    18/03/2024), échelle retraite (art. 63-2-2), année incomplète lissée sur
+    douze mois et versée même un mois sans accueil, date de paie « convenue
+    entre les parties » (et non « au plus tard à la fin du mois »).
+    DOCUMENTS_REFONTE avancé au 26/10 12:24:40 UTC : les contrats générés
+    avant sont signalés périmés (même décision que le 24/10) ;
+  - registre des médicaments : cinq vérifications (R2111-1), annexe au
+    contrat ; projet d'accueil (PDF et modèle de l'application) : aucun
+    écran avant 3 ans, RPE au lieu de « RAM », ~30 accents manquants ;
+  - bulletin : conservation sans limite pour le salarié (R. 3243-5), cinq
+    ans pour l'employeur (L. 3243-4) — deux endroits ;
+  - lettre de renouvellement d'agrément adressée au président du conseil
+    départemental, au moins 3 mois avant (D. 421-19) ; aide « solde de tout
+    compte » : vrai chemin (Paie & Contrats > Contrats > Fin de contrat) ;
+  - attestation France Travail : l'adresse « findecontrat-pajemploi » et
+    « les agences refusent le papier » n'étaient pas vérifiables → démarche
+    officielle (espace Pajemploi, transmission automatique) ;
+  - **documents VENDUS** : ils sont embarqués dans `api/_fichiers-boutique.js`
+    et n'avaient pas suivi la correction (décodés depuis main : « position
+    sur les écrans », « quatre conditions »). Réembarqués ; le module porte
+    l'empreinte des générateurs et l'audit bloque si elle ne correspond plus.
+    **Toute correction de `generer-documents.mjs` ou `generer-kit.py` doit
+    être suivie de `npm run documents && npm run documents:kit && npm run
+    documents:embarquer`**, sinon la construction s'arrête ;
+  - barrières d'audit bloquantes (catégorie `modele-contrat`) sur chacune
+    de ces phrases, prouvées en cassant ; `parcours-contrat` réparé (son PDF
+    « à jour » datait du 30/09, il échouait depuis le 24/10) ;
+    `rendre-contrat` réparé.
+- **Vérifiés sans erreur trouvée** : textes du groupe G1 à G13 (minimum
+  4,20 €, plancher 3,46 €, fériés art. 47.2, congés au 1er mars) ;
+  publications programmées du 26/10 au 4/11 (congés payés, crédit d'impôt,
+  heures majorées, indemnité de rupture, offre 2 mois).
+- **Article `projet-accueil-assistante-maternelle`** : correction EN
+  BROUILLON (« sa position sur les écrans » → l'interdiction avant trois
+  ans ; source Service-Public A18388). À publier sur accord écrit de Sophie.
+- **4 nouveaux brouillons** (ordres 17 à 20, 5 au 8 novembre, détail dans
+  `docs/ordre-publication-blog.md`) : écrans interdits avant 3 ans
+  (`drafts.ee763e6d-978f-4b71-958b-c2aa9cec0ddf`), régularisation en année
+  incomplète (`drafts.30acbb42-f2ac-4834-ab1b-3638e81e6467`), date de fin du
+  préavis (`drafts.d7b4073e-0d96-45a9-b101-952f8b4edd59`), arrivée d'un bébé
+  et article 103 (`drafts.fe6c81c7-4980-4582-9ce1-8f610c0a79ed`).
+  Couvertures dans `public/couvertures-blog/`, à importer dans Sanity
+  depuis www.timat.app une fois déployées (l'envoi direct est bloqué).
+- **Stories automatiques** (demande de Sophie) : l'API Metricool sait
+  programmer une STORY (image seule, sans autocollant ni lien) sur la Page
+  et sur Instagram. Mais le plan gratuit compte 20 publications par mois et
+  par réseau, et novembre en a déjà 20 : les stories ne partiraient pas.
+  Choix laissé à Sophie : passer au plan payant de Metricool (environ 16 €
+  HT par mois en annuel, chiffre de sources tierces, à vérifier sur
+  metricool.com) ou programmer les stories elle-même dans Meta Business
+  Suite (gratuit). Rien n'est programmé sans son accord.
+- **Coquille Instagram** : la légende de présentation porte
+  « #parentemployeur petiteenfance » (dièse manquant) ; Sophie peut la
+  corriger dans Instagram (« … » > Modifier).
 
 ## Ce qu'il reste à faire
 
@@ -553,6 +621,16 @@ déclencheur, fonctions `fermetures_prevues()` et
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
+- Importer dans Sanity les 4 couvertures du 26/10 (depuis
+  `https://www.timat.app/couvertures-blog/<slug>.png`) et les poser sur
+  les 4 brouillons, avec un texte alternatif chacun — si ce n'est pas déjà
+  fait (vérifier par requête).
+- Publier la correction de `projet-accueil-assistante-maternelle` dès
+  l'accord écrit de Sophie.
+- La file de publication se vide après le 8 novembre : écrire d'autres
+  brouillons avant (pistes : titre professionnel et minimum majoré de 4 %,
+  avec la fiche DREETS Pays de la Loire du 12/06/2026 ; motif « arrivée
+  d'un enfant au foyer » à ajouter à l'écran Fin de contrat, article 103).
 - Vérifier dans Metricool que les publications du 19 octobre sont bien
   parties (statut), puis préparer la série 3 (Sophie valide avant).
 - Lien de la Page Facebook sur le site : FAIT (PR #272).

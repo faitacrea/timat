@@ -168,6 +168,19 @@ export const COUVERTURES = [
    "Trente jours de repos, même sans trente jours de congés acquis"],
   ["conge-parental-education-assistante-maternelle", "Situation pratique",
    "Congé parental : les familles ne peuvent pas le refuser"],
+  // Quatre articles écrits le 26 octobre 2026 : la régularisation en année
+  // incomplète (DREETS BFC fiche 11-IV, Occitanie FAQ 3.23 à 3.25), les écrans
+  // interdits avant trois ans (arrêté du 27 juin 2025), la date de fin du
+  // préavis (Service-Public F33164) et l'arrivée d'un bébé chez l'assistante
+  // maternelle (article 103 de la convention).
+  ["regularisation-salaire-annee-incomplete-assistante-maternelle", "Contrat et paie",
+   "Année incomplète : les heures faites et non payées se rattrapent"],
+  ["ecrans-interdits-moins-3-ans-assistante-maternelle", "Le quotidien de l'accueil",
+   "Aucun écran avant trois ans, chez l’assistante maternelle aussi"],
+  ["calculer-date-fin-preavis-assistante-maternelle", "Contrat et paie",
+   "Lettre présentée le 13 février : un mois de préavis finit le 12 mars"],
+  ["naissance-enfant-assistante-maternelle-agrement-contrats", "Situation pratique",
+   "Un bébé qui fait dépasser l’agrément\u00a0: prévenir un mois avant"],
 ];
 
 async function polices() {
