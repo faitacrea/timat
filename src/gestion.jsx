@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, preavisRetraiteJours, TAUX_PRECARITE_CDD, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, preavisRetraiteJours, finPreavis, TAUX_PRECARITE_CDD, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,debut,titreAmge}){
@@ -1521,7 +1521,7 @@ template:"bulletin_sent",
       </div>
 
       <div style={{fontSize:11,color:"var(--l)",lineHeight:1.6,marginBottom:14}}>
-        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire ({nbf(SMIC_H,2)} €) par journée d'accueil ≥ 8 h, soit {nbf((baseMult*SMIC_H),2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver 5 ans.
+        Bulletin conforme CCN particuliers employeurs. <b>Montant net social</b> (référence RSA / prime d'activité) = salaire brut − cotisations salariales, hors indemnités. <b>Congés payés acquis : 2,5 jours ouvrables/mois</b> (30 j/an). <b>Abattement régime spécifique</b> (CGI art. 80 sexies) = {baseMult} × SMIC horaire ({nbf(SMIC_H,2)} €) par journée d'accueil ≥ 8 h, soit {nbf((baseMult*SMIC_H),2)} €/j{aeeh?" (4×SMIC car enfant handicapé / AEEH)":""} ; les journées de moins de 8 h sont proratisées (× heures ÷ 8) et celles de 24 h consécutives ouvrent +1 SMIC ({(baseMult+1)}×SMIC). Calculé journée par journée d'après les pointages réels. Il couvre les frais et absorbe les indemnités d'entretien{repasMois>0?" et de repas":""} (option à la déclaration). À conserver sans limitation de durée par le salarié (code du travail, art. R. 3243-5) ; l'employeur en garde un double cinq ans (art. L. 3243-4).
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>{
@@ -1621,7 +1621,7 @@ template:"bulletin_sent",
           "</div>",
           "</div>",
           "<p style=\"margin-top:16px;font-size:11px;color:#888;line-height:1.8\">",
-          "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN particuliers employeurs et emploi a domicile (IDCC 3239) | A conserver 5 ans",
+          "Bulletin TiMat - "+new Date().toLocaleDateString("fr-FR")+" | CCN particuliers employeurs et emploi à domicile (IDCC 3239) | À conserver sans limitation de durée (code du travail, art. R. 3243-5) ; l'employeur en garde un double cinq ans (art. L. 3243-4)",
           "</p>",
           "<div style=\"text-align:center;margin-top:12px\">",
           "<button class=\"nb\" onclick=\"window.print()\" style=\"background:#B8622F;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700\">Imprimer / PDF</button>",
@@ -1749,7 +1749,7 @@ export function ContratsTypes({enfants}){
   return <div className="fi">
     {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
     <PageHeader icon="📋" title="Modèles contrats & Avenants"
-      sub="Conformes CCN · À jour de la convention collective 2024"/>
+      sub="Selon la convention collective IDCC 3239 (en vigueur depuis le 1er janvier 2022)"/>
 
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(270px,1fr))",gap:12,marginBottom:16}}>
       {MODELES_CONTRATS.map(mod=><div key={mod.id}className="card card-lift"
@@ -3247,7 +3247,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
           {enfants.map(e=><option key={e.id}value={e.id}>{e.prenom}</option>)}
         </select>
       </div>
-      <input placeholder="Motif (sortie parc, RAM, médecin…)" value={nt.motif} onChange={e=>setNt({...nt,motif:e.target.value})} style={{...inp,marginBottom:8}}/>
+      <input placeholder="Motif (sortie parc, relais petite enfance, médecin…)" value={nt.motif} onChange={e=>setNt({...nt,motif:e.target.value})} style={{...inp,marginBottom:8}}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:8,alignItems:"center"}}>
         <input placeholder="Km" inputMode="decimal" value={nt.km} onChange={e=>setNt({...nt,km:e.target.value})} style={inp}/>
         <input placeholder="Taux €/km" inputMode="decimal" value={nt.taux} onChange={e=>setNt({...nt,taux:e.target.value})} style={inp}/>
@@ -3309,6 +3309,7 @@ const MOTIF_DECES="Décès de l'enfant";
 export function SoldeDeCompte({enfants,role,pEId,user}){
   const [selId,setSelId]=useState(enfants[0]?.id);
   const [dateFin,setDateFin]=useState("");
+  const [dateNotif,setDateNotif]=useState("");
   const [motif,setMotif]=useState(MOTIF_RETRAIT);
   const [calcule,setCalcule]=useState(false);
   const [toast,setToast]=useState("");
@@ -3334,12 +3335,13 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   const tauxH=tauxHoraireAu(contrat,finRetenue,user?.titre_amge);
   const heuresMois=heuresMensualisees(contrat);
   const salMensuel=heuresMois*tauxH;
-  const moisAnciennete=(()=>{
-    if(!contrat.debut)return 0;
-    const d=new Date(contrat.debut+"T12:00:00"), f=new Date(finRetenue+"T12:00:00");
+  const moisEntre=(debut,fin)=>{
+    if(!debut)return 0;
+    const d=new Date(debut+"T12:00:00"), f=new Date(fin+"T12:00:00");
     if(isNaN(d)||isNaN(f)||f<d)return 0;
     return Math.max(0,(f.getFullYear()-d.getFullYear())*12+(f.getMonth()-d.getMonth())+(f.getDate()>=d.getDate()?0:-1));
-  })();
+  };
+  const moisAnciennete=moisEntre(contrat.debut,finRetenue);
   const [cpPris,setCpPris]=useState(0);
   const [ruptureParEmployeur,setRuptureParEmployeur]=useState(true);
 
@@ -3424,6 +3426,23 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   const sansPreavis=finCdd?"le contrat à durée déterminée prend fin à son terme"
     :demission?"démission avant trois mois d'ancienneté (code de l'action sociale et des familles, art. L. 423-26)"
     :(fauteGrave?"faute grave ou lourde":"retrait imposé aux parties")+" (CCN 3239, art. 120)";
+  // LA DATE DE FIN DU PREAVIS, a partir de la lettre. Le simulateur public la
+  // donnait, pas l'ecran : il fallait la compter soi-meme pour remplir la date
+  // de fin. La duree se lit a l'anciennete du jour de la notification, et la
+  // date se compte comme Service-Public (fiche F33164), par finPreavis : le jour
+  // de premiere presentation compte. 30 et 60 jours sont un et deux mois.
+  const finPreavisLettre=(()=>{
+    if(!dateNotif)return null;
+    const anc=moisEntre(contrat.debut,dateNotif);
+    const retraite=departRetraite?preavisRetraiteJours(anc):null;
+    if(departRetraite&&retraite===null)return {texte:"selon les usages : pas de durée chiffrée"};
+    const j=finCdd?0:departRetraite?retraite:preavisJours(anc,{fauteGrave,retraitAgrement,demission});
+    if(!(j>0))return {texte:"pas de préavis : "+sansPreavis};
+    const iso=finPreavis(dateNotif,j%30===0?{mois:j/30}:{jours:j});
+    if(!iso)return null;
+    const lisible=new Date(iso+"T00:00:00Z").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+    return {iso,texte:"le "+lisible+" inclus"};
+  })();
 
   const today=new Date().toLocaleDateString("fr-FR");
   // Echappe des sa construction : il part dans trois lettres imprimees, et une
@@ -3462,6 +3481,15 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
             <select className="sel"value={motif}onChange={e=>setMotif(e.target.value)}>
               {motifs.map(m=><option key={m}>{m}</option>)}
             </select>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label className="lbl">Date de départ du préavis <span style={{fontWeight:400,color:"var(--l)"}}>(facultatif : première présentation de la lettre recommandée, ou remise en main propre)</span></label>
+            <input type="date"className="inp"value={dateNotif}onChange={e=>setDateNotif(e.target.value)}/>
+            {finPreavisLettre&&<div data-fin-preavis style={{fontSize:12,color:"var(--b)",marginTop:6,lineHeight:1.5}}>
+              <b>Fin du préavis :</b> {finPreavisLettre.texte}
+              {finPreavisLettre.iso&&finPreavisLettre.iso!==dateFin&&<button className="btn bG s"style={{marginLeft:8}}onClick={()=>{setDateFin(finPreavisLettre.iso);setCalcule(false);}}>Reporter en date de fin</button>}
+              <div style={{color:"var(--l)",fontSize:11}}>Date indicative : des congés payés, un arrêt pour accident du travail ou un congé de maternité pendant le préavis le suspendent et en reportent la fin.</div>
+            </div>}
           </div>
           <div style={{background:"var(--c)",borderRadius:10,padding:12,marginBottom:14}}>
             <div style={{fontSize:12,fontWeight:700,color:"var(--b)",marginBottom:6}}>Données du contrat</div>

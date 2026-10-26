@@ -16,6 +16,11 @@ import { readFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { lireApp } from "./sources-app.mjs";
 
+// Le PDF « a jour » est date du moment du test. Il etait date du 30 septembre
+// 2026 : chaque fois que DOCUMENTS_REFONTE avance (24 et 26 octobre 2026, apres
+// des corrections du modele), ce PDF devenait perime et le cas echouait sans
+// que l'ecran soit en cause.
+const PDF_DU_JOUR = new Date().toISOString();
 const URL_BASE = process.argv[2] || "http://localhost:4173";
 // Passe « pdf-ancien » : le PDF stocke date d'avant la refonte du contrat. Il
 // est relu tel quel, jamais recalcule : l'application doit le dire.
@@ -72,7 +77,7 @@ await page.route("**/rest/v1/**", (r) => {
   const t = (r.request().url().match(/rest\/v1\/([a-z_]+)/) || [])[1];
   if (t === "profiles") return r.fulfill(json([{ id: UID, role: PARENT ? "parent" : "asmat", prenom: "Marie", nom: "Test", email: "marie@test.fr", subscription_status: "pro", is_admin: false }]));
   if (t === "enfants") return r.fulfill(json([{ id: EID, asmat_id: PARENT ? "asmat-autre" : UID, parent_id: PARENT ? UID : null, prenom: "Léo", naissance: "2023-03-01", emoji: "🦁", couleur: "#E4915F" }]));
-  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: PARENT ? "asmat-autre" : UID, parent_id: PARENT ? UID : null, partage_parent: true, signe_parent: PARENT, date_signature_parent: PARENT ? new Date().toISOString() : null, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : "2026-09-30T10:00:00Z", updated_at: PDF_ANCIEN ? "2026-08-15T10:00:00Z" : "2026-09-01T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
+  if (t === "contrats") return r.fulfill(json([{ id: "c1", enfant_id: EID, asmat_id: PARENT ? "asmat-autre" : UID, parent_id: PARENT ? UID : null, partage_parent: true, signe_parent: PARENT, date_signature_parent: PARENT ? new Date().toISOString() : null, debut: "2026-01-01", fin: "2027-08-31", heures_hebdo: 40, taux_horaire: 4.20, annee_complete: true, semaines_accueil: null, entretien: 3.8, signe_asmat: true, date_signature_asmat: new Date().toISOString(), pdf_storage_path: "contrats/faux.pdf", pdf_generated_at: PDF_ANCIEN ? "2026-08-01T10:00:00Z" : PDF_DU_JOUR, updated_at: PDF_ANCIEN ? "2026-08-15T10:00:00Z" : "2026-09-01T10:00:00Z", jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"], horaires: "07h30–17h30" }]));
   // Quatre journees : 8 h de maladie, 8 h de formation sur le temps d'accueil,
   // 8 h de fermeture, 6 h de formation hors temps d'accueil. Seules la maladie
   // et la fermeture se deduisent ; la formation hors accueil ouvre droit a

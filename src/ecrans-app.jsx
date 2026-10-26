@@ -3673,7 +3673,7 @@ export function AttestationPoleEmploi({enfants,role,pEId,user}){
       +'<p style="margin-top:18px;font-size:12px;background:#f9f9f9;padding:10px;border:1px solid #ddd">Je soussigné(e) certifie sur l\'honneur l\'exactitude des renseignements portés sur cette attestation.</p>'
       +'<div class="sig"><div class="sig-box">Fait à ___________, le '+today+'<br/><br/><br/>Signature de l\'employeur</div>'
       +'<div class="sig-box">Reçu le ___________<br/><br/><br/>Signature du salarié</div></div>'
-      +'<div class="note"><b>Document indicatif.</b> L\'attestation officielle prise en compte par France Travail est en général <b>télétransmise via Pajemploi</b> (findecontrat-pajemploi.urssaf.fr) par le parent employeur — de nombreuses agences refusent les versions papier. Ce document sert de brouillon pré-rempli et de justificatif.</div>'
+      +'<div class="note"><b>Document indicatif.</b> L\'attestation officielle se fait <b>sur l\'espace en ligne Pajemploi</b> du parent employeur, après la dernière déclaration : Pajemploi la transmet automatiquement à France Travail (francetravail.fr, « Nouveau service Pajemploi »). Ce document sert de brouillon pré-rempli et de justificatif.</div>'
       +'<button onclick="window.print()" style="margin-top:14px;background:#C76754;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:700">🖨️ Imprimer / PDF</button>'
       +'</body></html>';
     w.document.write(html);w.document.close();setToast("Attestation générée ✓");
