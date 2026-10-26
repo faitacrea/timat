@@ -421,7 +421,12 @@ v("1 mois depuis le 05/02/2022 (Service-Public)", finContrat.finPreavis("2022-02
 v("8 jours depuis le 02/11/2026", finContrat.finPreavis("2026-11-02",{jours:8}), "2026-11-09");
 v("15 jours depuis le 20/12/2026", finContrat.finPreavis("2026-12-20",{jours:15}), "2027-01-03");
 v("1 mois depuis le 01/03/2026", finContrat.finPreavis("2026-03-01",{mois:1}), "2026-03-31");
-v("2 mois depuis le 31/12/2026", finContrat.finPreavis("2026-12-31",{mois:2}), "2027-02-27");
+// La veille du meme quantieme ; si elle n'existe pas, le dernier jour du mois.
+v("2 mois depuis le 31/12/2026", finContrat.finPreavis("2026-12-31",{mois:2}), "2027-02-28");
+v("1 mois depuis le 31/01/2027", finContrat.finPreavis("2027-01-31",{mois:1}), "2027-02-28");
+v("1 mois depuis le 28/01/2027", finContrat.finPreavis("2027-01-28",{mois:1}), "2027-02-27");
+v("1 mois depuis le 30/01/2028 (bissextile)", finContrat.finPreavis("2028-01-30",{mois:1}), "2028-02-29");
+v("1 mois depuis le 31/03/2027", finContrat.finPreavis("2027-03-31",{mois:1}), "2027-04-30");
 v("durée non chiffrée", String(finContrat.finPreavis("2026-11-02",{})), "null");
 // Art. 121.1 : les deux memes motifs privent de l'indemnite de rupture.
 v("18 mois, 9600 euros de brut", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18}), 120, 0);

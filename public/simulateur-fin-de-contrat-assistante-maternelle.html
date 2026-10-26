@@ -226,7 +226,7 @@
           else if(mois){
             var cible=new Date(Date.UTC(p[0],p[1]-1+mois,1));
             var dernier=new Date(Date.UTC(cible.getUTCFullYear(),cible.getUTCMonth()+1,0)).getUTCDate();
-            d=new Date(Date.UTC(cible.getUTCFullYear(),cible.getUTCMonth(),Math.min(p[2],dernier)-1));
+            d=new Date(Date.UTC(cible.getUTCFullYear(),cible.getUTCMonth(),Math.min(p[2]-1,dernier)));
           }
           var fmt=function(x){return x.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});};
           if(d) finTxt='le '+fmt(d)+' inclus';

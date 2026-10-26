@@ -538,9 +538,11 @@ export const preavisRetraiteJours=(moisAnciennete)=>{
 // ou de la remise en main propre, et ce jour compte. Ses exemples : un mois
 // commence le 13 fevrier 2023 court jusqu'au 12 mars inclus ; commence le
 // 5 fevrier 2022, jusqu'au 4 mars inclus. Une duree en jours se compte de la
-// meme facon (8 jours a partir du 2 : jusqu'au 9 inclus). Sans quantieme
-// identique le mois d'arrivee (un 31), on s'arrete a la veille du dernier jour.
-// Retourne la date du dernier jour inclus (AAAA-MM-JJ), ou null si la duree
+// meme facon (8 jours a partir du 2 : jusqu'au 9 inclus). Un mois finit donc la
+// veille du meme quantieme ; si cette veille n'existe pas dans le mois
+// d'arrivee (depart un 30 ou un 31, arrivee en fevrier), il finit le dernier
+// jour de ce mois : parti le 31 janvier, le preavis court jusqu'au 28 fevrier,
+// pas jusqu'au 27 comme s'il etait parti le 28. Retourne la date du dernier jour inclus (AAAA-MM-JJ), ou null si la duree
 // n'est pas chiffree. Le simulateur public fait le meme calcul ; le controle
 // verif-calculs-identiques compare les deux.
 export const finPreavis=(debutIso,{jours=0,mois=0}={})=>{
@@ -551,7 +553,8 @@ export const finPreavis=(debutIso,{jours=0,mois=0}={})=>{
   if(jours>0)d=new Date(Date.UTC(a,mo,j+jours-1));
   else if(mois>0){
     const dernier=new Date(Date.UTC(a,mo+mois+1,0)).getUTCDate();
-    d=new Date(Date.UTC(a,mo+mois,Math.min(j,dernier)-1));
+    // Depart le 1er : jour 0, que Date.UTC lit comme le dernier jour du mois precedent.
+    d=new Date(Date.UTC(a,mo+mois,Math.min(j-1,dernier)));
   }else return null;
   // Tout est en UTC, de bout en bout : pas de fuseau pour decaler le jour.
   const deux=(n)=>String(n).padStart(2,"0");
