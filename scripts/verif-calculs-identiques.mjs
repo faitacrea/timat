@@ -29,7 +29,7 @@ const ENTREE = new URL("../.entree-calculs.js", import.meta.url).pathname;
 const SORTIE = new URL("../.calculs-app.cjs", import.meta.url).pathname;
 writeFileSync(ENTREE, `
 export { salaireMensualise, netDepuisBrut, smicHoraireAu, IE_TAUX_HORAIRE, IE_PLANCHER_JOUR, CHR_AM, PLAFOND_H, CMG_MAX, TAUX_SALARIAL_TOTAL, montantCMG, tauxEffortCMG } from "./src/App.jsx";
-export { minimumHoraireAu, iccpCalcul, congesAcquis, preavisJours, preavisRetraiteJours, indemniteRupture, abattementJour, retenueAbsence } from "./src/socle.jsx";
+export { minimumHoraireAu, iccpCalcul, congesAcquis, preavisJours, preavisRetraiteJours, finPreavis, indemniteRupture, abattementJour, retenueAbsence } from "./src/socle.jsx";
 `);
 await build({
   entryPoints: [ENTREE], bundle: true, format: "cjs", platform: "node", outfile: SORTIE,
@@ -43,6 +43,7 @@ unlinkSync(ENTREE);
 const eur = (n) => Math.round(n * 100) / 100;
 const lire = (txt) => Number(String(txt).replace(/\s| |€/g, "").replace(",", ".")) || 0;
 // La duree de preavis, telle que le simulateur de fin de contrat l'ecrit.
+const libelleFin = (iso) => `le ${new Date(iso + "T00:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })} inclus`;
 const libellePreavis = (j) => j === null ? "selon les usages" : j === 0 ? "aucun" : j === 30 ? "1 mois" : j === 60 ? "2 mois" : `${j} jours`;
 
 // --- 2. Les cas, et ce que l'application repond ---
@@ -128,6 +129,20 @@ const CAS = [
     champs: { mot: "retraite", anc: "36", brut: "28000", mens: "800" },
     sorties: { rInd: () => 0 },
     textes: { rPre: () => libellePreavis(app.preavisRetraiteJours(36)) } },
+  // LA DATE DE FIN DU PREAVIS (Service-Public, fiche F33164 : un mois
+  // commence le 13 fevrier 2023 court jusqu'au 12 mars inclus).
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "fin du préavis, 1 mois (Service-Public)",
+    champs: { mot: "retrait", anc: "18", brut: "9600", mens: "800", dnot: "2023-02-13" },
+    sorties: { rInd: () => app.indemniteRupture({ brutTotal: 9600, moisAnciennete: 18, parEmployeur: true }) },
+    textes: { rFin: () => libelleFin(app.finPreavis("2023-02-13", { mois: 1 })) } },
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "fin du préavis, 15 jours",
+    champs: { mot: "demission", anc: "6", brut: "4200", mens: "700", dnot: "2026-12-20" },
+    sorties: { rInd: () => 0 },
+    textes: { rFin: () => libelleFin(app.finPreavis("2026-12-20", { jours: 15 })) } },
+  { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "fin du préavis, retraite 2 mois",
+    champs: { mot: "retraite", anc: "36", brut: "28000", mens: "800", dnot: "2026-12-31" },
+    sorties: { rInd: () => 0 },
+    textes: { rFin: () => libelleFin(app.finPreavis("2026-12-31", { mois: 2 })) } },
   { page: "simulateur-fin-de-contrat-assistante-maternelle.html", nom: "retraite à 4 mois : selon les usages",
     champs: { mot: "retraite", anc: "4", brut: "2800", mens: "700" },
     sorties: { rInd: () => 0 },

@@ -112,6 +112,7 @@
       </div>
       <div class="sim-row"><label for="anc">Anciennet&eacute; en mois <span class="hint">au jour de la notification</span></label><input id="anc" type="number" inputmode="numeric" value="24"></div>
       <div class="sim-row"><label for="brut">Total des salaires bruts vers&eacute;s (&euro;) <span class="hint">depuis le d&eacute;but du contrat, hors indemnit&eacute;s</span></label><input id="brut" type="number" inputmode="decimal" step="0.01" value="14400"></div>
+      <div class="sim-row"><label for="dnot">Date de d&eacute;part du pr&eacute;avis <span class="hint">premi&egrave;re pr&eacute;sentation de la lettre recommand&eacute;e, ou remise en main propre</span></label><input id="dnot" type="date"></div>
       <div class="sim-row"><label for="mens">Salaire brut mensualis&eacute; actuel (&euro;) <span class="hint">sert au calcul du pr&eacute;avis non effectu&eacute;</span></label><input id="mens" type="number" inputmode="decimal" step="0.01" value="600"></div>
 
       <div class="res3">
@@ -119,6 +120,7 @@
         <div class="c c3"><div class="lbl">Indemnit&eacute; de rupture</div><div class="val" id="rInd">&mdash; &euro;</div></div>
       </div>
       <div class="verdict" id="verdict"></div>
+      <div class="note" id="rFinBloc" hidden><strong>Fin du pr&eacute;avis :</strong> <span id="rFin"></span><br><span style="font-size:12px">Date indicative, compt&eacute;e comme Service-Public : le pr&eacute;avis commence le jour de la premi&egrave;re pr&eacute;sentation de la lettre (ou de la remise en main propre), et ce jour compte. Des cong&eacute;s pay&eacute;s, un arr&ecirc;t pour accident du travail ou un cong&eacute; de maternit&eacute; pendant le pr&eacute;avis le suspendent et en reportent la fin.</span></div>
 
       <div class="note">Estimation indicative. S&#39;y ajoutent, selon les cas : le dernier salaire, la r&eacute;gularisation en ann&eacute;e incompl&egrave;te, l&#39;indemnit&eacute; compensatrice de cong&eacute;s pay&eacute;s, et l&#39;indemnit&eacute; compensatrice de pr&eacute;avis si celui-ci n&#39;est pas effectu&eacute;.</div>
     </div>
@@ -173,7 +175,7 @@
 
   <script>
     (function(){
-      var ids=['mot','anc','brut','mens'], el={};
+      var ids=['mot','anc','brut','mens','dnot'], el={};
       ids.forEach(function(i){el[i]=document.getElementById(i);});
       var rPre=document.getElementById('rPre'), rInd=document.getElementById('rInd'), verdict=document.getElementById('verdict');
       function n(x){return parseFloat(x)||0;}
@@ -211,6 +213,28 @@
         rPre.textContent=pre;
         rInd.textContent=eur(indemnite);
         verdict.textContent=msg;
+        // LA DATE DE FIN DU PREAVIS. Regle et exemples de Service-Public
+        // (fiche F33164, demission d'une assistante maternelle) : le preavis
+        // part du jour de la premiere presentation de la lettre, ce jour
+        // compte ; un mois commence le 13 fevrier finit le 12 mars inclus.
+        // Meme calcul que finPreavis() dans src/socle.jsx.
+        var dn=el.dnot.value, finTxt='';
+        if(dn){
+          var p=dn.split('-').map(Number), d=null;
+          var jours={'8 jours':8,'15 jours':15}[pre], mois={'1 mois':1,'2 mois':2}[pre];
+          if(jours){ d=new Date(Date.UTC(p[0],p[1]-1,p[2]+jours-1)); }
+          else if(mois){
+            var cible=new Date(Date.UTC(p[0],p[1]-1+mois,1));
+            var dernier=new Date(Date.UTC(cible.getUTCFullYear(),cible.getUTCMonth()+1,0)).getUTCDate();
+            d=new Date(Date.UTC(cible.getUTCFullYear(),cible.getUTCMonth(),Math.min(p[2]-1,dernier)));
+          }
+          var fmt=function(x){return x.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});};
+          if(d) finTxt='le '+fmt(d)+' inclus';
+          else if(pre==='aucun') finTxt='pas de préavis : le contrat peut prendre fin dès le '+fmt(new Date(Date.UTC(p[0],p[1]-1,p[2])));
+          else if(pre==='selon les usages') finTxt='selon les usages : pas de durée chiffrée';
+        }
+        document.getElementById('rFin').textContent=finTxt;
+        document.getElementById('rFinBloc').hidden=!finTxt;
       }
       ids.forEach(function(i){el[i].addEventListener('input',calc);el[i].addEventListener('change',calc);});
       calc();
