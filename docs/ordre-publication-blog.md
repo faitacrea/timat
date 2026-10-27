@@ -239,5 +239,18 @@ Le cas du préavis parti un 31 (pas de veille du même quantième dans le mois
 d'arrivée) n'est réglé par aucun texte : l'article le dit, et donne la lecture
 retenue par le simulateur (dernier jour du mois).
 
-Après le 8 novembre, la file est vide : il faudra d'autres brouillons d'ici là
+## Ajout du 27 octobre 2026 : un article
+
+| Ordre | Date prévue | Slug | Rubrique | Sources principales |
+|---:|---|---|---|---|
+| 21 | 9 novembre | `recu-solde-de-tout-compte-assistante-maternelle` | Contrat et paie | DREETS Occitanie FAQ q. 3.26 et 3.33 ; DREETS BFC fiche 11 (art. 69) |
+
+Piste écartée le même jour : le titre professionnel et son minimum majoré de
+4 % (4,37 €). Le titre « Assistant maternel / Garde d'enfants » (RNCP 37795)
+n'est plus enregistré depuis le 19 juillet 2026 ; France compétences le donne
+remplacé par « Assistant maternel - Assistant parental » (RNCP 42319). Rien
+trouvé d'officiel sur la majoration pour le nouveau titre : article à écrire
+seulement une fois ce point établi.
+
+Après le 9 novembre, la file est vide : il faudra d'autres brouillons d'ici là
 (le cron envoie une alerte dès qu'il en reste cinq ou moins).

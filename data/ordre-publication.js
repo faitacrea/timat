@@ -140,5 +140,8 @@ export const ordre = [
   "regularisation-salaire-annee-incomplete-assistante-maternelle",
   "calculer-date-fin-preavis-assistante-maternelle",
   "naissance-enfant-assistante-maternelle-agrement-contrats",
+  // 27 octobre 2026 : le reçu pour solde de tout compte, que le blog ne
+  // traitait qu'en passant. Un seul lien interne, vers un article en ligne.
+  "recu-solde-de-tout-compte-assistante-maternelle",
 ];
 export default ordre;
