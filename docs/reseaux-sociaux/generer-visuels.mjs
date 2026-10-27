@@ -258,8 +258,53 @@ const story = (nom, etiquette, titre, aide, source = "") => visuels.push([nom, 1
 `, CREME)]);
 story("25-story-boite-questions-1080x1920.png", "Vos questions", "Une question sur votre contrat, votre salaire ou Pajemploi ?", "Posez-la ici 👇 Les réponses viendront avec leur source officielle.");
 story("26-story-sondage-1080x1920.png", "Sondage", "Votre avis en un clic", "La question est juste en dessous 👇");
-story("27-story-quiz-minimum-1080x1920.png", "Quiz", "Le salaire minimum d'une assistante maternelle depuis le 1<sup style=\"font-size:.6em\">er</sup> juin 2026 ?", "Brut, par heure et par enfant, sans le titre professionnel.", "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");
-story("29-story-quiz-pajemploi-1080x1920.png", "Quiz", "Deux enfants de la même famille : combien de déclarations Pajemploi par mois ?", "Depuis janvier 2026.", "Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 »");
+// QUIZ « COMME SUR INSTAGRAM ». Le compte de Sophie n'a pas l'autocollant
+// Quiz (27/10/2026) : les reponses sont dessinees sur l'image (A, B, C), elle
+// pose l'autocollant Sondage « A / B / C » dans la zone indiquee en bas. Le
+// soir, la meme image revient avec la bonne reponse en vert (quizReponse,
+// demande de Sophie du 27/10 : « comme un quiz avec la bonne reponse en vert »).
+const VERT = "#23874A";
+const carte = (lettre, texte, etat = "") => {
+  const bon = etat === "bon", eteint = etat === "eteint";
+  return `<div style="display:flex;align-items:center;gap:30px;margin-top:24px;padding:22px 30px;border-radius:30px;background:${bon ? VERT : "#fff"};border:3px solid ${bon ? VERT : "#E6DCD1"};opacity:${eteint ? ".45" : "1"}">
+    <div style="flex:none;width:76px;height:76px;border-radius:50%;background:${bon ? "#fff" : NAVY};color:${bon ? VERT : "#fff"};font-size:40px;font-weight:700;display:flex;align-items:center;justify-content:center">${bon ? "✓" : lettre}</div>
+    <div style="font-size:48px;font-weight:700;line-height:1.15;color:${bon ? "#fff" : NAVY}">${texte}</div>
+  </div>`;
+};
+const LETTRES = ["A", "B", "C", "D"];
+const quiz = (nom, question, aide, options) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
+  <div style="position:absolute;left:90px;right:90px;top:270px">
+    <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${TERRA};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">QUIZ</div>
+    <div style="font-size:62px;font-weight:700;line-height:1.14;margin-top:30px">${question}</div>
+    <div style="font-size:32px;font-weight:600;line-height:1.4;margin-top:22px;color:#4E5E68">${aide}</div>
+    <div style="margin-top:26px">${options.map((o, k) => carte(LETTRES[k], o)).join("")}</div>
+    <div style="font-size:32px;font-weight:700;margin-top:40px;color:${TERRA}">Votez juste en dessous 👇 La bonne réponse ce soir.</div>
+  </div>
+  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
+`, CREME)]);
+const quizReponse = (nom, question, options, bonne, explication, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
+  <div style="position:absolute;left:90px;right:90px;top:270px">
+    <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${VERT};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">QUIZ · LA RÉPONSE</div>
+    <div style="font-size:50px;font-weight:700;line-height:1.16;margin-top:30px">${question}</div>
+    <div style="margin-top:20px">${options.map((o, k) => carte(LETTRES[k], o, k === bonne ? "bon" : "eteint")).join("")}</div>
+    <div style="font-size:36px;font-weight:600;line-height:1.4;margin-top:40px;color:#3F4F59">${explication}</div>
+    <div style="font-size:26px;margin-top:30px" class="src">${source}</div>
+  </div>
+  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
+`, CREME)]);
+const er = '<sup style="font-size:.6em">er</sup>';
+const Q_MINIMUM = `Le salaire minimum d'une assistante maternelle depuis le 1${er} juin 2026 ?`;
+const O_MINIMUM = ["3,46 € brut de l'heure", "3,64 € brut de l'heure", "4,20 € brut de l'heure"];
+const Q_PAJEMPLOI = "Deux enfants de la même famille : combien de déclarations Pajemploi par mois ?";
+const O_PAJEMPLOI = ["Une seule", "Deux"];
+const Q_CONGES = "Combien de jours de congés payés acquis par mois de travail ?";
+const O_CONGES = ["2 jours", "2,5 jours", "3 jours"];
+const Q_PREAVIS = "6 mois d'accueil, le parent retire l'enfant : quel préavis ?";
+const O_PREAVIS = ["8 jours", "15 jours", "1 mois"];
+quiz("27-story-quiz-minimum-1080x1920.png", Q_MINIMUM, "Brut, par heure et par enfant, sans le titre professionnel.", O_MINIMUM);
+quiz("29-story-quiz-pajemploi-1080x1920.png", Q_PAJEMPLOI, "Depuis janvier 2026.", O_PAJEMPLOI);
 
 visuels.push(["28-story-11-novembre-1080x1920.png", 1080, 1920, base(1080, 1920, `
   <div class="rond" style="width:560px;height:560px;background:#3A5A6B;left:-220px;top:-220px"></div>
@@ -393,9 +438,9 @@ pub("39-publication-20-trajets-timat.png", `
 `);
 
 // 40-42. STORIES DU 31 OCTOBRE AU 6 NOVEMBRE 2026.
-story("40-story-quiz-conges-1080x1920.png", "Quiz", "Combien de jours de congés payés acquis par mois de travail ?", "Jours ouvrables, dans la limite de 30 par an.", "Source : DREETS Auvergne-Rhône-Alpes, fiches année complète et incomplète");
+quiz("40-story-quiz-conges-1080x1920.png", Q_CONGES, "Jours ouvrables, dans la limite de 30 par an.", O_CONGES);
 story("41-story-pajemploi-5-novembre-1080x1920.png", "Rappel Pajemploi", "Octobre se déclare jusqu'au 5 novembre.", "Une déclaration par enfant, depuis janvier 2026. La période va du 25 du mois au 5 du mois suivant.", "Sources : caf.fr, dépliant Pajemploi · urssaf.fr");
-story("42-story-quiz-preavis-1080x1920.png", "Quiz", "6 mois d'accueil, le parent retire l'enfant : quel préavis ?", "Réponse détaillée vendredi soir 👇", "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026)");
+quiz("42-story-quiz-preavis-1080x1920.png", Q_PREAVIS, "Contrat en CDI, retrait de l'enfant par le parent.", O_PREAVIS);
 
 // 43-54. UNE STORY PAR PUBLICATION, DU 28 OCTOBRE AU 27 NOVEMBRE 2026.
 // Sophie programme ces stories elle-meme dans Meta Business Suite (le plan
@@ -432,34 +477,21 @@ storyPub("52-story-20-novembre-repas-1080x1920.png", "Les repas", "35-publicatio
 storyPub("53-story-23-novembre-periode-essai-1080x1920.png", "La période d'essai", "36-publication-17-periode-essai.png");
 storyPub("54-story-27-novembre-absence-enfant-malade-1080x1920.png", "L'enfant accueilli malade", "37-publication-18-absence-enfant-malade.png");
 
-// 55-57. LES REPONSES DES « QUIZ ». Le compte de Sophie n'a pas l'autocollant
-// Quiz (constate le 27/10 : seulement Sondage et Questions). Les quiz 27, 29
-// et 40 deviennent des sondages, et la bonne reponse se donne le soir avec
-// ces stories. Le quiz 42 (preavis) a la sienne : la publication du 6/11.
-// Pas d'autocollant a poser sur ces images : le texte est centre, sans
-// espace vide au milieu (Sophie, le 27/10 : « il y a un espace au milieu,
-// qu'est-ce que je dois mettre ? »).
-const reponse = (nom, etiquette, titre, aide, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
-  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
-  <div class="rond" style="width:300px;height:300px;background:${SABLE};left:-110px;bottom:-90px"></div>
-  <div style="position:absolute;left:90px;right:90px;top:50%;transform:translateY(-58%)">
-    <div style="font-size:38px;font-weight:700;color:${TERRA}">${etiquette}</div>
-    <div style="font-size:104px;font-weight:700;line-height:1.05;margin-top:24px">${titre}</div>
-    <div style="font-size:42px;font-weight:600;line-height:1.4;margin-top:40px;color:#4E5E68">${aide}</div>
-    <div style="font-size:28px;margin-top:48px" class="src">${source}</div>
-  </div>
-  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:230px;height:66px">
-`, CREME)]);
-const er = '<sup style="font-size:.6em">er</sup>';
-reponse("55-story-reponse-minimum-1080x1920.png", "Réponse du sondage", "4,20 € brut de l'heure",
-  `C'est le minimum par enfant depuis le 1${er} juin 2026, sans le titre professionnel (4,37 € avec). 3,46 € est le plancher légal : 0,281 × SMIC.`,
+// 55-58. LES REPONSES DES QUIZ, le soir meme : la question, les reponses du
+// matin, la bonne en vert avec une coche, les autres estompees, puis la
+// source. Aucun autocollant a poser.
+quizReponse("55-story-reponse-minimum-1080x1920.png", Q_MINIMUM, O_MINIMUM, 2,
+  "C'est le minimum conventionnel sans le titre professionnel (4,37 € avec). 3,46 € est le plancher légal : 0,281 × SMIC.",
   "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");
-reponse("56-story-reponse-pajemploi-1080x1920.png", "Réponse du sondage", "Deux déclarations",
+quizReponse("56-story-reponse-pajemploi-1080x1920.png", Q_PAJEMPLOI, O_PAJEMPLOI, 1,
   "Depuis janvier 2026, une déclaration Pajemploi par enfant, même pour deux enfants de la même famille.",
   "Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 »");
-reponse("57-story-reponse-conges-1080x1920.png", "Réponse du sondage", "2,5 jours par mois",
-  "2,5 jours ouvrables de congés payés acquis par mois de travail, dans la limite de 30 jours par an.",
+quizReponse("57-story-reponse-conges-1080x1920.png", Q_CONGES, O_CONGES, 1,
+  "2,5 jours ouvrables par mois de travail, dans la limite de 30 jours par an.",
   "Source : DREETS Auvergne-Rhône-Alpes, fiches année complète et incomplète");
+quizReponse("58-story-reponse-preavis-1080x1920.png", Q_PREAVIS, O_PREAVIS, 1,
+  "De 3 mois à moins d'un an d'ancienneté : 15 jours calendaires (8 jours avant 3 mois, 1 mois à partir d'un an).",
+  "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026), art. 119.1");
 
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {

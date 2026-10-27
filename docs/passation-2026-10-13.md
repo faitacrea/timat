@@ -621,9 +621,9 @@ l'écran Fin de contrat.
 - **Indexation du 27/10** : liste de 10 envoyée (toutes en 200), en tête
   d'un long message. Sophie a d'abord écrit « J'ai fait l'indexation jusqu'au
   numéro 10 », puis a RECTIFIÉ : elle ne l'avait pas faite, la liste lui
-  ayant échappé. Liste redonnée seule, en premier, le 27/10 au matin ; ce
-  qu'elle aura fait : à noter ici. Leçon : la liste d'indexation se donne
-  dans un message à part, en premier.
+  ayant échappé. Liste redonnée seule, en premier, le 27/10 au matin :
+  **les 10 indexations sont FAITES** (Sophie, 27/10 après-midi). Leçon : la
+  liste d'indexation se donne dans un message à part, en premier.
 - **Stories refaites le 27/10** à la demande de Sophie (« il y a un espace au
   milieu, qu'est-ce que je dois mettre ? J'aimerais juste repartager les
   publications ») : les images 43 à 54 montrent désormais la publication du
@@ -648,6 +648,59 @@ l'écran Fin de contrat.
   27/11). Règle copiée dans CLAUDE.md.
 - Couverture du brouillon `recu-solde-de-tout-compte-assistante-maternelle` :
   importée dans Sanity et posée (FAIT le 27/10).
+- **G7** : commentaire posté par Sophie sous le sondage du groupe (27/10).
+- **Stories programmées par Sophie** dans Meta Business Suite jusqu'au
+  **6/11 à 20 h 35** ; au-delà, Meta refuse la date. Pas de chiffre officiel
+  trouvé pour la version gratuite ; ce qui est officiel : depuis septembre
+  2026, l'abonnement payant Meta One (offre Advanced, à partir de 49,99 $
+  par mois) vend la programmation des stories jusqu'à 30 jours à l'avance
+  (annonce Meta, about.fb.com, septembre 2026 — page non ouvrable depuis la
+  session, lue par extrait de recherche). Constat : environ 10 jours en
+  gratuit. On ne paie pas : on programme par tranches. Rappel du **1/11**
+  (`trig_016Ufx8g9ArFdo5gaqSmDnv5`) : renvoie les stories 48 à 54 avec les
+  étapes ; Sophie programme jusqu'à la première date refusée et donne la
+  dernière date acceptée ; le rappel suivant se pose 5 jours avant.
+- **Quiz « comme un quiz, bonne réponse en vert »** (Sophie, 27/10) : les
+  images 27, 29, 40, 42 montrent la question et les réponses A, B, C ;
+  autocollant Sondage « A / B / C » sous « Votez juste en dessous » ; le
+  soir, images 55 à 58 (58 = préavis, nouvelle) : même question, bonne
+  réponse en vert avec coche, autres estompées, explication et source.
+  Fonctions `quiz` et `quizReponse` de `generer-visuels.mjs`. Chiffres
+  revérifiés (DREETS BFC juin 2026 : préavis 8 j / 15 j / 1 mois ; 2,5 jours
+  ouvrables par mois). Rappel quotidien `trig_019T4fYCSVA7h4risE2danFL`
+  réécrit en conséquence (les deux images à la fin du message).
+- **Familiarisation** (Sophie, 27/10, dit par la puéricultrice de PMI) :
+  confirmé par le référentiel national de la qualité d'accueil du jeune
+  enfant (avril 2025, publié le 2/07/2025, p. 16-17) : « La notion de
+  familiarisation est préférée à celle d'adaptation » ; il refuse le
+  protocole rigide et la présence progressive « 1 heure puis un repas »,
+  préfère une présence parentale prolongée et des moments répétés. La
+  convention collective garde « période d'adaptation » (art. 94 : « peut
+  être comprise dans l'éventuelle période d'essai », 30 jours calendaires
+  au plus, horaires fixés au contrat, heures non faites déduites du salaire
+  mensualisé, art. 108.1 et 111 ; DREETS BFC fiche 1). Fait :
+  - projet d'accueil imprimé (`ecrans-secondaires.jsx`) : « Période de
+    familiarisation », sans le protocole « Jour 1 : 1 h avec le parent… » ;
+  - contrat imprimé : « période d'adaptation, dite aussi période de
+    familiarisation », salaire par déduction des heures non faites (il
+    disait « calculé sur les heures réellement effectuées ») ;
+    `DOCUMENTS_REFONTE` = 2026-10-27T12:25:33Z, empreinte c3d7ecb1d15310d4 ;
+  - barrière d'audit (projet d'accueil + clause), prouvée en cassant le code ;
+  - kit : publication 17 (23/11, période d'essai) avec la familiarisation et
+    le référentiel en source. **Le texte programmé dans Metricool n'est PAS
+    modifié** : demander l'accord de Sophie avant.
+  - **5 brouillons Sanity, à publier sur accord écrit** :
+    `periode-adaptation-assistante-maternelle-parent` (titre, section
+    « Adaptation ou familiarisation », méthode du référentiel, FAQ, 2
+    sources) ; `periode-adaptation-essai-assistante-maternelle` ; ces deux
+    articles affirmaient à tort que l'adaptation est « toujours » dans
+    l'essai (« il ne peut pas y avoir d'adaptation sans période d'essai ») ;
+    `quand-chercher-mode-de-garde`, `budget-mensuel-parent-employeur-…`
+    (« facturées à l'heure réelle » corrigé), `vaccins-obligatoires-…`
+    (vocabulaire). Adresses (slugs) inchangées : déjà indexées.
+  - Concurrents : Nounou-Top, 62 actualités, aucune sur le sujet ;
+    Pandi-Panda, AssmatZen, Mam360 injoignables depuis la session, rien
+    trouvé par recherche. La CAF (caf.fr) écrit encore « adaptation ».
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
@@ -705,6 +758,9 @@ l'écran Fin de contrat.
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
+- Publier les 5 brouillons « familiarisation » dès l'accord écrit de
+  Sophie ; mettre à jour le texte de la publication du 23/11 dans Metricool
+  si elle est d'accord.
 - Publier la correction de `projet-accueil-assistante-maternelle` dès
   l'accord écrit de Sophie.
 - La file de publication se vide après le 8 novembre : écrire d'autres

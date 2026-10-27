@@ -847,8 +847,8 @@ for (const { nom, motif, source } of BAREME) {
     // mois d'accueil » (le salaire lisse se verse les douze mois) ; le salaire
     // etait du « au plus tard a la fin du mois », regle que la convention ne
     // pose pas. Memes consequences : les contrats generes avant sont perimes.
-    const ATTENDUE = "873613b5157eba3b";
-    const DATE_ATTENDUE = "2026-10-26T12:24:40Z";
+    const ATTENDUE = "c3d7ecb1d15310d4";
+    const DATE_ATTENDUE = "2026-10-27T12:25:33Z";
     const dateCode = (app.match(/DOCUMENTS_REFONTE="([^"]+)"/) || [])[1];
     if (empreinte !== ATTENDUE) {
       signale("modele-contrat", `le modèle du contrat imprimé a changé (empreinte ${empreinte} au lieu de ${ATTENDUE}). Un PDF déjà généré n'est jamais recalculé : décider si les contrats déjà signés sont périmés. Si oui, avancer DOCUMENTS_REFONTE à l'HEURE du changement — pas à minuit, un document produit le jour même APRÈS le changement passerait sinon au travers. Puis reporter la nouvelle empreinte ici`);
@@ -4219,6 +4219,13 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
 // incomplete « chaque mois d'accueil » (le salaire lisse se verse douze mois).
 // Le bulletin disait « a conserver 5 ans » : le salarie le garde sans limite
 // (R. 3243-5), l'employeur cinq ans (L. 3243-4).
+// Le projet d'accueil imprime proposait un protocole fixe (« Jour 1 : 1h avec
+// le parent present », puis une heure sans lui) : le referentiel national de la
+// qualite d'accueil (avril 2025, p. 16-17) prefere le mot familiarisation,
+// refuse le protocole rigide et la presence progressive « 1 heure puis un
+// repas ». Le contrat disait le salaire « calcule sur les heures reellement
+// effectuees » : la convention deduit les heures non faites du salaire
+// mensualise (art. 94, 108.1 et 111 ; DREETS Bourgogne-Franche-Comte, fiche 1).
 {
   const lire = (f) => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8");
   const docs = lire("scripts/generer-documents.mjs");
@@ -4233,6 +4240,11 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     signale("modele-contrat", "src/App.jsx : « versé chaque mois d'accueil » ou « au plus tard à la fin du mois » — le salaire lissé se verse douze mois, à la date convenue au contrat");
   if (/A conserver 5 ans|À conserver 5 ans|convention collective 2024/.test(lire("src/gestion.jsx")))
     signale("modele-contrat", "src/gestion.jsx : « à conserver 5 ans » (le salarié garde son bulletin sans limite, R. 3243-5) ou « convention collective 2024 » (elle date de 2021, en vigueur au 1er janvier 2022)");
+  const projet = lire("src/ecrans-secondaires.jsx");
+  if (!/Période de familiarisation/.test(projet) || /1h avec le parent présent|1h sans le parent/.test(projet))
+    signale("modele-contrat", "src/ecrans-secondaires.jsx : le projet d'accueil imprimé ne parle plus de « période de familiarisation » ou impose de nouveau un protocole « 1h avec / sans le parent » (référentiel national de la qualité d'accueil, avril 2025)");
+  if (!/dite aussi période de familiarisation/.test(app) || /calculé sur les heures réellement effectuées/.test(app))
+    signale("modele-contrat", "src/App.jsx : la clause d'adaptation du contrat ne cite plus la familiarisation, ou calcule de nouveau le salaire « sur les heures réellement effectuées » (la convention déduit les heures non faites du salaire mensualisé : art. 108.1 et 111)");
 }
 
 // --- chaque page du blog a une image d'apercu ---
