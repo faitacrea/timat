@@ -115,6 +115,7 @@ jobs:
             scripts: >-
               parcours-alertes parcours-contrat parcours-documents
               parcours-documents-imprimes parcours-documents-imprimes:revalorise
+              parcours-documents-imprimes:annee-incomplete
               parcours-mes-employeurs
               parcours-temps-travail parcours-calendrier-parent
               parcours-compte-neuf parcours-hors-ligne parcours-visuel

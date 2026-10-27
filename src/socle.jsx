@@ -561,6 +561,66 @@ export const finPreavis=(debutIso,{jours=0,mois=0}={})=>{
   return `${d.getUTCFullYear()}-${deux(d.getUTCMonth()+1)}-${deux(d.getUTCDate())}`;
 };
 
+// LA DUREE DU CONTRAT, DATES INCLUSES, EN MOIS ENTIERS.
+//
+// L'ecran de fin de contrat comptait les mois du premier jour au DERNIER jour
+// exclu : embauche le 1er septembre, fin le 31 mai, il trouvait 8 mois. Le
+// guide de la DREETS Bourgogne-Franche-Comte (juin 2026, fiche 11) en compte 9
+// pour le meme contrat, et c'est bien neuf mois de salaire qui ont ete verses.
+// Le mois manquant sortait du total brut (base de l'indemnite de rupture et du
+// dixieme des conges), des conges acquis, et faisait refuser l'indemnite de
+// rupture a un accueil de 9 mois tout juste. On compte donc jusqu'au
+// lendemain du dernier jour.
+export const moisDeContrat=(debutIso,finIso)=>{
+  const a=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(debutIso||""));
+  const b=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(finIso||""));
+  if(!a||!b)return 0;
+  const l=new Date(Date.UTC(+b[1],+b[2]-1,+b[3]+1)); // le lendemain du dernier jour
+  const n=(l.getUTCFullYear()-(+a[1]))*12+(l.getUTCMonth()-(+a[2]-1))+(l.getUTCDate()>=+a[3]?0:-1);
+  return Math.max(0,n);
+};
+
+// LES HEURES POINTEES, RAMENEES AUX HEURES DE BASE.
+//
+// La regularisation compare des heures DE BASE : les heures complementaires et
+// majorees sont deja payees chaque mois, en plus du salaire mensualise (DREETS
+// BFC, fiche 11-IV). On regroupe donc les pointages par semaine (du lundi au
+// dimanche) et on plafonne chaque semaine a la duree du contrat. Le pointage
+// est facultatif dans TiMat : ce total n'est qu'une proposition, que
+// l'utilisatrice reprend si elle a pointe chaque journee d'accueil.
+export const heuresPointeesPlafonnees=(pointages,heuresHebdo)=>{
+  const plafond=(Number(heuresHebdo)||0)*60;
+  const semaines={}, jours=new Set();
+  for(const p of pointages||[]){
+    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(p?.date||""));
+    const min=Number(p?.total_minutes)||0;
+    if(!m||min<=0)continue;
+    const t=Date.UTC(+m[1],+m[2]-1,+m[3]);
+    const lundi=t-((new Date(t).getUTCDay()+6)%7)*86400000;
+    semaines[lundi]=(semaines[lundi]||0)+min;
+    jours.add(p.date);
+  }
+  const minutes=Object.values(semaines).reduce((s,v)=>s+(plafond>0?Math.min(v,plafond):v),0);
+  return {heures:Math.round(minutes/60*100)/100,jours:jours.size,semaines:Object.keys(semaines).length};
+};
+
+// LA REGULARISATION EN ANNEE INCOMPLETE (CCN 3239, articles 109-2 et 124).
+//
+// A la fin d'un contrat sur 46 semaines ou moins, on compare les heures
+// reellement effectuees (heures de base, plus les jours feries chomes payes et
+// les absences avec maintien de salaire) aux heures payees au titre de la
+// mensualisation. S'il en manque, le parent les paie au taux du contrat ; si
+// l'assistante maternelle a ete payee de plus d'heures qu'elle n'en a faites,
+// le « trop-percu » lui reste acquis : la regularisation ne joue que dans un
+// sens (DREETS Occitanie, FAQ q. 3.23 et 3.24). Exemple de la DREETS BFC :
+// 670 h faites, 540 h payees, 4 EUR de l'heure : 520 EUR brut.
+export const regularisationAnneeIncomplete=({heuresFaites=0,heuresPayees=0,tauxHoraire=0}={})=>{
+  const manque=(Number(heuresFaites)||0)-(Number(heuresPayees)||0);
+  if(!(manque>0)||!(Number(tauxHoraire)>0))return {heures:0,montant:0};
+  const heures=Math.round(manque*100)/100;
+  return {heures,montant:Math.round(heures*Number(tauxHoraire)*100)/100};
+};
+
 // L'indemnite de fin de CDD (dite de precarite) : 10 % des salaires bruts du
 // contrat, indemnite de conges payes comprise (DREETS Bourgogne-Franche-Comte,
 // juin 2026, fiche 09 ; code du travail, art. L. 1243-8).

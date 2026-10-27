@@ -31,7 +31,9 @@ const REVALORISE = process.argv.slice(2).includes("revalorise");
 // Passe « annee-incomplete » : accueil sur 36 semaines. La mensualisation doit
 // tomber a 504 EUR au lieu de 728 — l'application appliquait 52 semaines a tous
 // les contrats.
-const ANNEE_INCOMPLETE = process.argv[3] === "annee-incomplete";
+// Lu comme « revalorise » : l'integration continue passe le mode seul, en
+// premier argument, et « argv[3] » ne le voyait pas.
+const ANNEE_INCOMPLETE = process.argv.slice(2).includes("annee-incomplete");
 // Passe « envoye » : le bulletin du mois a deja ete envoye au parent. Le
 // bandeau annoncait « disponible dans Documents » sans donner le moyen de
 // l'ouvrir : il fallait quitter l'ecran pour relire ce qu'on venait d'envoyer.
@@ -330,6 +332,60 @@ if (motifPose) {
   }
 
   await sommeDuRecu("faute grave", "recu-faute-grave");
+}
+
+// --- ARRIVEE D'UN ENFANT AU FOYER DE L'ASSISTANTE MATERNELLE (art. 103) ---
+//
+// Le motif manquait. Il rompt le contrat sans preavis ni indemnite de rupture
+// (procedure du retrait force, art. 119.3 ; DREETS BFC, fiche 10-III).
+const arriveePose = await choisirMotif("Arrivée d'un enfant au foyer");
+dire(arriveePose, "le motif « arrivée d'un enfant au foyer » est proposé à l'écran");
+if (arriveePose) {
+  await page.waitForTimeout(600);
+  const ecran = await page.evaluate(() => document.body.innerText);
+  dire(/Non due : arrivée d'un enfant au foyer/.test(ecran), "arrivée d'un enfant : indemnité de rupture non due, avec son motif",
+    (ecran.match(/.{0,60}Non due.{0,80}/) || [""])[0]);
+  dire(/Pas de préavis : arrivée d'un enfant au foyer/.test(ecran), "arrivée d'un enfant : pas de préavis, avec sa raison");
+  dire(/au moins un mois avant l'arrivée de votre enfant/.test(ecran), "arrivée d'un enfant : le délai d'un mois pour prévenir est rappelé");
+  await sommeDuRecu("arrivée d'un enfant", "recu-arrivee-enfant");
+}
+
+// --- LA REGULARISATION EN ANNEE INCOMPLETE (art. 109-2 et 124) ---
+//
+// Contrat de la passe : 40 h sur 36 semaines, soit 120 h payees par mois.
+// Avec 100 h faites de plus que payees, au taux de 4,20 EUR, la
+// regularisation vaut 420 EUR, et le reçu doit la detailler. Avec moins
+// d'heures faites que payees, rien n'est du : le trop-percu reste acquis.
+await choisirMotif("Retrait de l'enfant");
+await page.waitForTimeout(500);
+if (ANNEE_INCOMPLETE) {
+  const bloc = page.locator("[data-regularisation]");
+  dire(await bloc.count() === 1, "année incomplète : le bloc de régularisation est affiché");
+  const payees = await page.evaluate(() => {
+    const champs = document.querySelectorAll("[data-regularisation] input");
+    return champs[1] ? Number(String(champs[1].value).replace(",", ".")) : NaN;
+  });
+  dire(payees > 0 && Math.abs(payees / 120 - Math.round(payees / 120)) < 1e-9,
+    "les heures payées proposées sont un multiple de 120 h (40 h × 36 semaines ÷ 12)", String(payees));
+  const texteBloc = await bloc.innerText().catch(() => "");
+  dire(/Heures pointées dans TiMat sur le contrat : 20,00 h/.test(texteBloc),
+    "les heures pointées sont proposées (2 journées de 10 h, même semaine)", texteBloc.replace(/\s+/g, " ").slice(0, 160));
+  await page.locator("[data-regularisation] input").first().fill(String(payees + 100));
+  await page.locator("[data-regularisation] input").first().blur();
+  await page.waitForTimeout(400);
+  let ecran = await page.evaluate(() => document.body.innerText);
+  dire(/Régularisation de salaire \(année incomplète\)\s*420,00\s*€/.test(ecran),
+    "100 h faites et non payées à 4,20 € : 420,00 € de régularisation", (ecran.match(/Régularisation de salaire.{0,140}/s) || [""])[0].replace(/\s+/g, " "));
+  const recuRegul = await ouvrirEtLire([], "Reçu pour solde de tout compte", "recu-regularisation");
+  if (recuRegul) dire(/régularisation de salaire \(année incomplète\) 420,00/.test(recuRegul.texte), "le reçu détaille la régularisation");
+  await sommeDuRecu("régularisation", "recu-regularisation-somme");
+  await page.locator("[data-regularisation] input").first().fill(String(payees - 50));
+  await page.locator("[data-regularisation] input").first().blur();
+  await page.waitForTimeout(400);
+  ecran = await page.evaluate(() => document.body.innerText);
+  dire(/Rien à régulariser/.test(ecran), "moins d'heures faites que payées : rien à régulariser, le trop-perçu reste acquis");
+} else {
+  dire(await page.locator("[data-regularisation]").count() === 0, "année complète : pas de bloc de régularisation");
 }
 
 // --- LA DATE DE FIN DU PREAVIS ---

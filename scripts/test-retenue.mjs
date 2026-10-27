@@ -377,7 +377,10 @@ const finContrat = eval(`(function(){
   ${fn("indemniteRupture", /const indemniteRupture=\(\{[\s\S]*?\n\};/)}
   ${fn("preavisRetraiteJours", /const preavisRetraiteJours=\([\s\S]*?\n\};/)}
   ${fn("finPreavis", /const finPreavis=\([\s\S]*?\n\};/)}
-  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture, preavisRetraiteJours, finPreavis};
+  ${fn("moisDeContrat", /const moisDeContrat=\([\s\S]*?\n\};/)}
+  ${fn("heuresPointeesPlafonnees", /const heuresPointeesPlafonnees=\([\s\S]*?\n\};/)}
+  ${fn("regularisationAnneeIncomplete", /const regularisationAnneeIncomplete=\(\{[\s\S]*?\n\};/)}
+  return {preavisJours, congesAcquis, iccpCalcul, indemniteRupture, preavisRetraiteJours, finPreavis, moisDeContrat, heuresPointeesPlafonnees, regularisationAnneeIncomplete};
 })()`);
 
 let koFin = 0;
@@ -428,6 +431,32 @@ v("1 mois depuis le 28/01/2027", finContrat.finPreavis("2027-01-28",{mois:1}), "
 v("1 mois depuis le 30/01/2028 (bissextile)", finContrat.finPreavis("2028-01-30",{mois:1}), "2028-02-29");
 v("1 mois depuis le 31/03/2027", finContrat.finPreavis("2027-03-31",{mois:1}), "2027-04-30");
 v("durée non chiffrée", String(finContrat.finPreavis("2026-11-02",{})), "null");
+// Duree du contrat, dates incluses : l'exemple de la DREETS BFC (fiche 11)
+// compte 9 mois du 1er septembre au 31 mai.
+console.log("  durée du contrat, dates incluses");
+v("1er septembre 2025 au 31 mai 2026 (DREETS BFC)", finContrat.moisDeContrat("2025-09-01","2026-05-31"), 9, 0);
+v("1er janvier au 30 juin", finContrat.moisDeContrat("2026-01-01","2026-06-30"), 6, 0);
+v("1er janvier au 31 décembre", finContrat.moisDeContrat("2026-01-01","2026-12-31"), 12, 0);
+v("1er janvier au 30 septembre : 9 mois d'accueil", finContrat.moisDeContrat("2026-01-01","2026-09-30"), 9, 0);
+v("15 janvier au 14 mars", finContrat.moisDeContrat("2026-01-15","2026-03-14"), 2, 0);
+v("15 janvier au 13 mars", finContrat.moisDeContrat("2026-01-15","2026-03-13"), 1, 0);
+v("31 janvier au 28 février", finContrat.moisDeContrat("2026-01-31","2026-02-28"), 1, 0);
+v("fin avant le début", finContrat.moisDeContrat("2026-05-01","2026-04-01"), 0, 0);
+v("1er septembre au 31 mai : indemnité de rupture due", finContrat.indemniteRupture({brutTotal:7020,moisAnciennete:finContrat.moisDeContrat("2025-09-01","2026-05-31")}), 87.75);
+// Regularisation en annee incomplete : les deux exemples de la DREETS BFC
+// (fiche 11-IV) — 30 h x 36 semaines, 4 EUR de l'heure, 90 h payees par mois.
+console.log("  régularisation en année incomplète");
+v("rupture au 30 juin : 670 h faites, 540 payées", finContrat.regularisationAnneeIncomplete({heuresFaites:670,heuresPayees:540,tauxHoraire:4}).montant, 520);
+v("rupture au 31 août : 670 h faites, 720 payées", finContrat.regularisationAnneeIncomplete({heuresFaites:670,heuresPayees:720,tauxHoraire:4}).montant, 0);
+v("au minimum de juin 2026 (4,20 EUR)", finContrat.regularisationAnneeIncomplete({heuresFaites:670,heuresPayees:540,tauxHoraire:4.2}).montant, 546);
+v("heures non saisies", finContrat.regularisationAnneeIncomplete({heuresPayees:540,tauxHoraire:4}).montant, 0);
+// Pointages : plafonnes a la duree du contrat, semaine par semaine.
+const semaine = (lundi, minutesParJour) => minutesParJour.map((m, i) => ({ date: `2026-11-${String(lundi + i).padStart(2, "0")}`, total_minutes: m }));
+const ptsDeuxSemaines = [...semaine(2, [600, 600, 600, 600, 600]), ...semaine(9, [480, 480, 480, 480, 0])];
+v("50 h pointées sur un contrat de 40 h : 40 h de base", finContrat.heuresPointeesPlafonnees(semaine(2, [600, 600, 600, 600, 600]), 40).heures, 40);
+v("deux semaines (50 h et 32 h) : 72 h de base", finContrat.heuresPointeesPlafonnees(ptsDeuxSemaines, 40).heures, 72);
+v("deux semaines : 9 journées pointées", finContrat.heuresPointeesPlafonnees(ptsDeuxSemaines, 40).jours, 9, 0);
+v("dimanche 8 et lundi 9 : deux semaines distinctes", finContrat.heuresPointeesPlafonnees([{date:"2026-11-08",total_minutes:2400},{date:"2026-11-09",total_minutes:2400}], 40).heures, 80);
 // Art. 121.1 : les deux memes motifs privent de l'indemnite de rupture.
 v("18 mois, 9600 euros de brut", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18}), 120, 0);
 v("... mais faute grave", finContrat.indemniteRupture({brutTotal:9600,moisAnciennete:18,fauteGrave:true}), 0, 0);
