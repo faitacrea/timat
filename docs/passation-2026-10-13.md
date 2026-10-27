@@ -618,8 +618,21 @@ l'écran Fin de contrat.
   (`drafts.9af96d05-339a-4e7e-a136-dd6ca8271292`), ordre 21, 9 novembre ;
   couverture dans `public/couvertures-blog/`, à importer dans Sanity une
   fois déployée.
-- **Indexation du 27/10** : liste de 10 envoyée (toutes en 200). Ce que
-  Sophie dira avoir fait : à noter ici.
+- **Indexation du 27/10** : liste de 10 envoyée (toutes en 200). **Sophie :
+  « J'ai fait l'indexation jusqu'au numéro 10 »** — les 10 sont passées.
+- **Stories refaites le 27/10** à la demande de Sophie (« il y a un espace au
+  milieu, qu'est-ce que je dois mettre ? J'aimerais juste repartager les
+  publications ») : les images 43 à 54 montrent désormais la publication du
+  jour elle-même, en grand, au milieu (images identiques octet pour octet à
+  celles que Metricool publie, `www.timat.app/reseaux/`). L'espace vide des
+  images 25 à 29 et 40 à 42 reste : il sert à l'autocollant (quiz, sondage).
+  Réponse donnée : Metricool et Meta Business Suite ne se relient pas ; aucun
+  réglage d'Instagram ne repartage seul une publication en story (recherche
+  du 27/10) ; deux façons de faire, au choix de Sophie : programmer d'avance
+  les images 43 à 54 dans Meta Business Suite (20 h 35), ou repartager à la
+  main dans Instagram après 20 h 30 (avion en papier → Ajouter à votre story).
+- Couverture du brouillon `recu-solde-de-tout-compte-assistante-maternelle` :
+  importée dans Sanity et posée (FAIT le 27/10).
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France

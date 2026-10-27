@@ -398,69 +398,39 @@ story("41-story-pajemploi-5-novembre-1080x1920.png", "Rappel Pajemploi", "Octobr
 story("42-story-quiz-preavis-1080x1920.png", "Quiz", "6 mois d'accueil, le parent retire l'enfant : quel préavis ?", "Réponse détaillée vendredi soir 👇", "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026)");
 
 // 43-54. UNE STORY PAR PUBLICATION, DU 28 OCTOBRE AU 27 NOVEMBRE 2026.
-// Demande de Sophie le 26/10 : une story faite expres pour chaque publication,
-// qu'elle programme elle-meme dans Meta Business Suite (le plan gratuit de
-// Metricool est plein en novembre). Meme mise en page que les stories
-// ci-dessus ; les chiffres et les sources sont ceux de la publication du jour,
-// et une ligne renvoie vers elle pour le detail.
-const storyPub = (nom, etiquette, titre, aide, source = "") => visuels.push([nom, 1080, 1920, base(1080, 1920, `
-  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
-  <div style="position:absolute;left:90px;right:90px;top:300px">
-    <div style="font-size:34px;font-weight:700;color:${TERRA}">${etiquette}</div>
-    <div style="font-size:72px;font-weight:700;line-height:1.12;margin-top:22px">${titre}</div>
-    <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:30px;color:#4E5E68">${aide}</div>
+// Sophie programme ces stories elle-meme dans Meta Business Suite (le plan
+// gratuit de Metricool est plein en novembre). Elle voulait « juste
+// repartager la publication du jour » : la story montre donc la publication
+// elle-meme, en grand, au milieu. Une premiere version laissait un espace
+// vide, prevu pour un autocollant dont ces stories n'ont pas besoin.
+// Les images sont celles que Metricool publie (identiques octet pour octet a
+// www.timat.app/reseaux/, verifie le 27/10). Le haut et le bas restent
+// degages : Instagram y pose le nom du compte et la barre de reponse.
+const storyPub = (nom, sujet, publication) => {
+  const img = "data:image/png;base64," + b64(new URL(`./visuels/${publication}`, import.meta.url));
+  visuels.push([nom, 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-200px;top:-220px;opacity:.9"></div>
+  <div style="position:absolute;left:90px;right:90px;top:235px">
+    <div style="font-size:32px;font-weight:700;color:${TERRA}">Nouvelle publication</div>
+    <div style="font-size:54px;font-weight:700;line-height:1.1;margin-top:10px">${sujet}</div>
   </div>
-  <div style="position:absolute;left:90px;right:90px;bottom:380px;font-size:32px;font-weight:700;text-align:center;color:${TERRA}">Le détail : notre publication du jour</div>
-  ${source ? `<div style="position:absolute;left:90px;right:90px;bottom:290px;font-size:26px;text-align:center" class="src">${source}</div>` : ""}
-  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
+  <img src="${img}" style="position:absolute;left:90px;top:420px;width:900px;height:1125px;border-radius:28px;box-shadow:0 18px 50px rgba(46,74,90,.18)">
+  <div style="position:absolute;left:90px;right:90px;top:1580px;font-size:34px;font-weight:700;text-align:center;color:${TERRA}">À lire en entier sur notre page</div>
+  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);top:1650px;height:62px">
 `, CREME)]);
-const er = '<sup style="font-size:.6em">er</sup>';
-storyPub("43-story-28-octobre-credit-impot-1080x1920.png", "Parents employeurs",
-  "50 % des frais de garde en crédit d'impôt",
-  `Enfant de moins de 6 ans au 1${er} janvier. Jusqu'à 3 500 € de dépenses par enfant, soit 1 750 € de crédit. Les aides comme le CMG se déduisent.`,
-  "Source : code général des impôts, article 200 quater B");
-storyPub("44-story-30-octobre-heures-majorees-1080x1920.png", "Salaire",
-  "Au-delà de 45 h par semaine : au moins + 10 %",
-  "Le taux de majoration est écrit dans le contrat. Entre la durée du contrat et 45 h : heures complémentaires, majorées seulement si le contrat le prévoit.",
-  "Sources : code.travail.gouv.fr (convention 3239) ; DREETS Occitanie et Pays de la Loire");
-storyPub("45-story-2-novembre-indemnite-rupture-1080x1920.png", "Fin de contrat",
-  "Retrait de l'enfant après 9 mois : 1/80<sup style=\"font-size:.6em\">e</sup> des salaires bruts",
-  "Exemple : 36 mois à 728 € brut, 327,60 €. Pas due en cas de faute grave, ni de retrait, suspension ou modification de l'agrément.",
-  "Source : convention collective IDCC 3239, article 121.1");
-storyPub("46-story-4-novembre-pointage-1080x1920.png", "TiMat",
-  "Les heures, signées des deux côtés",
-  "L'assistante maternelle pointe l'arrivée et le départ, le parent valide depuis son accès gratuit. 2 mois offerts, sans carte bancaire.");
-storyPub("47-story-6-novembre-preavis-1080x1920.png", "Fin de contrat",
-  "8 jours, 15 jours, 1 mois",
-  "Le préavis quand le parent retire l'enfant, selon l'ancienneté : moins de 3 mois, de 3 mois à moins d'un an, un an et plus.",
-  "Sources : DREETS Bourgogne-Franche-Comté (juin 2026) ; convention 3239, art. 119.1");
-storyPub("48-story-9-novembre-conge-enfant-malade-1080x1920.png", "Vos droits",
-  "Votre enfant est malade : 3 jours de congé par an",
-  "5 jours s'il a moins d'un an, ou si vous avez au moins trois enfants de moins de 16 ans. Sur certificat médical. Congé non rémunéré.",
-  "Source : convention collective IDCC 3239, art. 48-2-2 (DREETS BFC, juin 2026)");
-storyPub("49-story-13-novembre-documents-fin-contrat-1080x1920.png", "Fin de contrat",
-  "3 documents à remettre",
-  "Le certificat de travail, l'attestation France Travail et le reçu pour solde de tout compte, contestable pendant 6 mois après sa signature.",
-  "Source : convention collective IDCC 3239, art. 69 (DREETS BFC, juin 2026)");
-storyPub("50-story-16-novembre-indemnites-kilometriques-1080x1920.png", "Frais",
-  "Transport de l'enfant : au moins 0,33 € du kilomètre",
-  `Voiture de 5 CV et moins, jusqu'à 2 000 km par an, du 1${er} juin au 31 décembre 2026. Le taux est écrit au contrat.`,
-  "Sources : convention 3239, art. 57 et 113 ; arrêté du 29 mai 2026");
-storyPub("51-story-18-novembre-fin-de-contrat-timat-1080x1920.png", "TiMat",
-  "La fin de contrat, calculée pour vous",
-  "Le préavis et sa date de fin, les congés payés, l'indemnité de rupture, la régularisation en année incomplète. Puis la lettre, le certificat et le reçu. 2 mois offerts.");
-storyPub("52-story-20-novembre-repas-1080x1920.png", "Contrat",
-  "Les repas : c'est écrit au contrat",
-  "L'assistante maternelle les fournit : une indemnité de repas s'ajoute au salaire. Le parent les fournit : pas d'indemnité.",
-  "Source : convention collective IDCC 3239, article 114-2");
-storyPub("53-story-23-novembre-periode-essai-1080x1920.png", "Contrat",
-  "Période d'essai : 3 mois ou 2 mois au plus",
-  "3 mois pour 1 à 3 jours d'accueil par semaine, 2 mois à partir de 4 jours. Facultative : elle n'existe que si le contrat la prévoit.",
-  "Source : convention 3239, art. 94 et 95 (DREETS BFC, juin 2026)");
-storyPub("54-story-27-novembre-absence-enfant-malade-1080x1920.png", "Salaire",
-  "Enfant accueilli malade : 5 jours et 14 jours",
-  "Retenue possible sur certificat médical, dans deux limites sur 12 mois : 5 jours de courtes absences, 14 jours consécutifs. Au-delà, le salaire est dû.",
-  "Source : DREETS BFC (juin 2026), article 105 de la convention 3239");
+};
+storyPub("43-story-28-octobre-credit-impot-1080x1920.png", "Le crédit d'impôt des parents", "18-publication-7-credit-impot.png");
+storyPub("44-story-30-octobre-heures-majorees-1080x1920.png", "Les heures majorées", "19-publication-8-heures-majorees.png");
+storyPub("45-story-2-novembre-indemnite-rupture-1080x1920.png", "L'indemnité de rupture", "20-publication-9-indemnite-rupture.png");
+storyPub("46-story-4-novembre-pointage-1080x1920.png", "Le pointage dans TiMat", "21-publication-10-pointage-signe.png");
+storyPub("47-story-6-novembre-preavis-1080x1920.png", "Le préavis", "30-publication-11-preavis.png");
+storyPub("48-story-9-novembre-conge-enfant-malade-1080x1920.png", "Le congé pour enfant malade", "31-publication-12-conge-enfant-malade.png");
+storyPub("49-story-13-novembre-documents-fin-contrat-1080x1920.png", "Les documents de fin de contrat", "32-publication-13-documents-fin-contrat.png");
+storyPub("50-story-16-novembre-indemnites-kilometriques-1080x1920.png", "Les indemnités kilométriques", "33-publication-14-indemnites-kilometriques.png");
+storyPub("51-story-18-novembre-fin-de-contrat-timat-1080x1920.png", "La fin de contrat dans TiMat", "34-publication-15-fin-de-contrat-timat.png");
+storyPub("52-story-20-novembre-repas-1080x1920.png", "Les repas", "35-publication-16-repas.png");
+storyPub("53-story-23-novembre-periode-essai-1080x1920.png", "La période d'essai", "36-publication-17-periode-essai.png");
+storyPub("54-story-27-novembre-absence-enfant-malade-1080x1920.png", "L'enfant accueilli malade", "37-publication-18-absence-enfant-malade.png");
 
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
