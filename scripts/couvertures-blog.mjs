@@ -181,6 +181,10 @@ export const COUVERTURES = [
    "Lettre présentée le 13 février : un mois de préavis finit le 12 mars"],
   ["naissance-enfant-assistante-maternelle-agrement-contrats", "Situation pratique",
    "Un bébé qui fait dépasser l’agrément\u00a0: prévenir un mois avant"],
+  // 27 octobre 2026 : le reçu pour solde de tout compte (DREETS Occitanie,
+  // FAQ 3.26 et 3.33 ; DREETS BFC, fiche 11).
+  ["recu-solde-de-tout-compte-assistante-maternelle", "Contrat et paie",
+   "Reçu pour solde de tout compte\u00a0: six mois pour le contester"],
 ];
 
 async function polices() {

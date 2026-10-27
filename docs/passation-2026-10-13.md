@@ -573,6 +573,61 @@ déclencheur, fonctions `fermetures_prevues()` et
   « #parentemployeur petiteenfance » (dièse manquant) ; Sophie peut la
   corriger dans Instagram (« … » > Modifier).
 
+## Session du 26 (soir) et du 27 octobre 2026
+
+Réponses de Sophie (26/10) : stories en **plan gratuit, option B** (elle les
+programme dans Meta Business Suite, Claude fournit les images) ; « Je
+confirme, publie la correction projet d'accueil » ; elle corrige elle-même la
+légende Instagram (hashtag) ; demandes : un nouveau brouillon, le motif
+« arrivée d'un enfant au foyer » et le calcul de la régularisation dans
+l'écran Fin de contrat.
+
+- **Publié** (accord écrit) : `projet-accueil-assistante-maternelle`
+  (écrans interdits avant 3 ans ; lien relatif converti), vérifié en ligne.
+- **PR #290, en production** (vérifiée par `parcours-documents-imprimes`
+  lancé contre www.timat.app) :
+  - régularisation en année incomplète (art. 109-2 et 124) dans l'écran Fin
+    de contrat : heures faites saisies (heures pointées proposées, plafonnées
+    chaque semaine à la durée du contrat), heures payées proposées
+    (heures mensualisées × mois du contrat) ; le manque se paie, le
+    trop-perçu reste acquis ; le montant entre dans le dixième des congés,
+    l'indemnité de rupture, la précarité, le total et le reçu ;
+  - motif « Arrivée d'un enfant au foyer de l'assistante maternelle »
+    (art. 103) : sans préavis ni indemnité de rupture ;
+  - **défaut corrigé** : les mois du contrat se comptent dates incluses
+    (DREETS BFC : 1er septembre → 31 mai = 9 mois ; l'écran en trouvait 8,
+    ce qui amputait le brut, les congés acquis, et refusait l'indemnité de
+    rupture à 9 mois tout juste) ; l'ancienneté du préavis se lit au jour de
+    la lettre quand elle est saisie ;
+  - retiré : le bouton « Envoyer au parent » du solde de tout compte, qui
+    affichait « Envoyé ✓ » sans rien envoyer ;
+  - passe `parcours-documents-imprimes:annee-incomplete` ajoutée au
+    workflow (son mode n'était pas lu quand l'intégration continue le passe).
+- **Metricool** : la publication Facebook du 6/11 (préavis) disait que
+  l'ancienneté s'apprécie à la première présentation ; la DREETS BFC dit « au
+  jour de l'envoi de la lettre ou de sa remise en main propre ». Texte
+  corrigé (même date, même image), Instagram inchangé (il n'en parle pas).
+- **Stories (option B)** : 12 images 1080 × 1920, une par publication du
+  28/10 au 27/11 (`docs/reseaux-sociaux/visuels/43` à `54`), mêmes chiffres
+  et mêmes sources que la publication du jour, avec « Le détail : notre
+  publication du jour ». Générées par `generer-visuels.mjs` (les anciens
+  visuels, redessinés au pixel près, ont été remis tels quels). Envoyées à
+  Sophie avec les étapes Meta Business Suite ; à programmer vers 20 h 35,
+  après la publication de 20 h 30. Rien programmé par Claude.
+- **Nouveau brouillon** : `recu-solde-de-tout-compte-assistante-maternelle`
+  (`drafts.9af96d05-339a-4e7e-a136-dd6ca8271292`), ordre 21, 9 novembre ;
+  couverture dans `public/couvertures-blog/`, à importer dans Sanity une
+  fois déployée.
+- **Indexation du 27/10** : liste de 10 envoyée (toutes en 200). Ce que
+  Sophie dira avoir fait : à noter ici.
+- **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
+  (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
+  « Assistant maternel - Assistant parental » (RNCP 42319, France
+  compétences). L'application majore le minimum de 4 % pour le « titre
+  AM-GE » (annexe 5, avenant n° 9) : une titulaire de l'ancien titre le
+  reste, mais rien d'officiel trouvé sur le nouveau titre. Ne rien écrire sur
+  le blog avant de l'avoir établi.
+
 ## Ce qu'il reste à faire
 
 **Sophie**
