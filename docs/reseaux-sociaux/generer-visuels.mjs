@@ -432,6 +432,35 @@ storyPub("52-story-20-novembre-repas-1080x1920.png", "Les repas", "35-publicatio
 storyPub("53-story-23-novembre-periode-essai-1080x1920.png", "La période d'essai", "36-publication-17-periode-essai.png");
 storyPub("54-story-27-novembre-absence-enfant-malade-1080x1920.png", "L'enfant accueilli malade", "37-publication-18-absence-enfant-malade.png");
 
+// 55-57. LES REPONSES DES « QUIZ ». Le compte de Sophie n'a pas l'autocollant
+// Quiz (constate le 27/10 : seulement Sondage et Questions). Les quiz 27, 29
+// et 40 deviennent des sondages, et la bonne reponse se donne le soir avec
+// ces stories. Le quiz 42 (preavis) a la sienne : la publication du 6/11.
+// Pas d'autocollant a poser sur ces images : le texte est centre, sans
+// espace vide au milieu (Sophie, le 27/10 : « il y a un espace au milieu,
+// qu'est-ce que je dois mettre ? »).
+const reponse = (nom, etiquette, titre, aide, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
+  <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
+  <div class="rond" style="width:300px;height:300px;background:${SABLE};left:-110px;bottom:-90px"></div>
+  <div style="position:absolute;left:90px;right:90px;top:50%;transform:translateY(-58%)">
+    <div style="font-size:38px;font-weight:700;color:${TERRA}">${etiquette}</div>
+    <div style="font-size:104px;font-weight:700;line-height:1.05;margin-top:24px">${titre}</div>
+    <div style="font-size:42px;font-weight:600;line-height:1.4;margin-top:40px;color:#4E5E68">${aide}</div>
+    <div style="font-size:28px;margin-top:48px" class="src">${source}</div>
+  </div>
+  <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:230px;height:66px">
+`, CREME)]);
+const er = '<sup style="font-size:.6em">er</sup>';
+reponse("55-story-reponse-minimum-1080x1920.png", "Réponse du sondage", "4,20 € brut de l'heure",
+  `C'est le minimum par enfant depuis le 1${er} juin 2026, sans le titre professionnel (4,37 € avec). 3,46 € est le plancher légal : 0,281 × SMIC.`,
+  "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");
+reponse("56-story-reponse-pajemploi-1080x1920.png", "Réponse du sondage", "Deux déclarations",
+  "Depuis janvier 2026, une déclaration Pajemploi par enfant, même pour deux enfants de la même famille.",
+  "Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 »");
+reponse("57-story-reponse-conges-1080x1920.png", "Réponse du sondage", "2,5 jours par mois",
+  "2,5 jours ouvrables de congés payés acquis par mois de travail, dans la limite de 30 jours par an.",
+  "Source : DREETS Auvergne-Rhône-Alpes, fiches année complète et incomplète");
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });

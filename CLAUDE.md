@@ -31,6 +31,13 @@ et l'historique git font le lien. Donc :
   jamais écrire qu'elle est agréée.
 - Ne rien programmer sur ses réseaux (Metricool) sans son accord ; aucune
   photo d'enfant.
+- Stories (règle du 27/10/2026, « on fait toujours comme ça ») : la story du
+  jour lui est envoyée chaque jour (rappel programmé « Story Instagram du
+  jour ») ; les stories à programmer dans Meta Business Suite lui sont
+  envoyées 5 jours avant la fin de la série programmée en cours. Toujours
+  des étapes très explicites, et les images À LA FIN du message, jamais au
+  milieu. Son compte Instagram n'a pas l'autocollant « Quiz » : sondage,
+  puis une story « Réponse ».
 - Répondre en français.
 
 ## Méthode de travail

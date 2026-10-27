@@ -618,8 +618,12 @@ l'écran Fin de contrat.
   (`drafts.9af96d05-339a-4e7e-a136-dd6ca8271292`), ordre 21, 9 novembre ;
   couverture dans `public/couvertures-blog/`, à importer dans Sanity une
   fois déployée.
-- **Indexation du 27/10** : liste de 10 envoyée (toutes en 200). **Sophie :
-  « J'ai fait l'indexation jusqu'au numéro 10 »** — les 10 sont passées.
+- **Indexation du 27/10** : liste de 10 envoyée (toutes en 200), en tête
+  d'un long message. Sophie a d'abord écrit « J'ai fait l'indexation jusqu'au
+  numéro 10 », puis a RECTIFIÉ : elle ne l'avait pas faite, la liste lui
+  ayant échappé. Liste redonnée seule, en premier, le 27/10 au matin ; ce
+  qu'elle aura fait : à noter ici. Leçon : la liste d'indexation se donne
+  dans un message à part, en premier.
 - **Stories refaites le 27/10** à la demande de Sophie (« il y a un espace au
   milieu, qu'est-ce que je dois mettre ? J'aimerais juste repartager les
   publications ») : les images 43 à 54 montrent désormais la publication du
@@ -631,6 +635,17 @@ l'écran Fin de contrat.
   du 27/10) ; deux façons de faire, au choix de Sophie : programmer d'avance
   les images 43 à 54 dans Meta Business Suite (20 h 35), ou repartager à la
   main dans Instagram après 20 h 30 (avion en papier → Ajouter à votre story).
+- **Pas d'autocollant « Quiz »** sur le compte Instagram de Sophie (27/10 :
+  seulement « Sondage » et « Questions »). Les quiz du kit (27, 29, 40, 42)
+  deviennent des sondages à trois réponses, et la bonne réponse se donne le
+  soir avec une story « Réponse » (images 55 à 57, texte centré) ; pour 42,
+  c'est la publication du 6/11. Kit mis à jour en conséquence.
+- **Règle des stories** (Sophie, 27/10, « on fait toujours comme ça ») :
+  story du jour envoyée chaque jour (rappel `trig_019T4fYCSVA7h4risE2danFL`,
+  consigne réécrite : image à la fin du message, sondage au lieu de quiz) ;
+  stories à programmer envoyées 5 jours avant la fin de la série (rappel
+  `trig_01Ax8g28ipqvukL3RXpg7Hm1`, le 22/11 pour la série qui finit le
+  27/11). Règle copiée dans CLAUDE.md.
 - Couverture du brouillon `recu-solde-de-tout-compte-assistante-maternelle` :
   importée dans Sanity et posée (FAIT le 27/10).
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
