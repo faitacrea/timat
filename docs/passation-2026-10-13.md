@@ -701,6 +701,30 @@ l'écran Fin de contrat.
   - Concurrents : Nounou-Top, 62 actualités, aucune sur le sujet ;
     Pandi-Panda, AssmatZen, Mam360 injoignables depuis la session, rien
     trouvé par recherche. La CAF (caf.fr) écrit encore « adaptation ».
+- **27/10 au soir, réponses de Sophie** :
+  - « Je confirme, publier les 5 corrections familiarisation » : **publiées**
+    (dates de mise à jour au 27/10 ; les liens internes relatifs de trois
+    articles convertis en adresses complètes, exigées par la validation
+    Sanity). Le blog se régénère au déploiement (`public/blog/` n'est pas
+    versionné) : vérifié en ligne après la fusion de la PR suivante.
+  - Accord pour la publication du 23/11 : **modifiée dans Metricool** (même
+    date 20 h 30, même image ; Facebook `408240807`, Instagram `408242179`,
+    « Pending ») : familiarisation + référentiel en source, comme le kit.
+  - **Quiz** : « je ne veux pas une image le matin et une le soir ; un quiz
+    où ils ont la réponse directement, vert ou rouge, sur le moment ». Seul
+    l'autocollant Quiz d'Instagram le fait. Il manque sur son compte ;
+    astuce rapportée par Storrito (2026, non officielle) : l'ajouter dans un
+    Reel en brouillon, il revient ensuite dans les autocollants des
+    stories. Images 27, 29, 40, 42 refaites : la question, « Touchez la
+    bonne réponse juste en dessous », la place de l'autocollant, la source ;
+    les réponses vont dans l'autocollant. 55 à 58 deviennent l'explication,
+    publiée juste après (facultatif), jamais le soir. Repli si le Quiz
+    reste introuvable : Sondage + explication tout de suite après. Kit, rappel
+    quotidien et CLAUDE.md à jour. **À noter ici** : si l'astuce a marché.
+  - Plan Meta Business Suite confirmé (rappel du 1/11).
+  - Commentaire Instagram d'`epimeno.care` sous la publication congés payés
+    (« C'est clair et utile, merci pour ce rappel ») : réponse proposée à
+    Sophie, à poster elle-même.
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
@@ -758,9 +782,6 @@ l'écran Fin de contrat.
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
-- Publier les 5 brouillons « familiarisation » dès l'accord écrit de
-  Sophie ; mettre à jour le texte de la publication du 23/11 dans Metricool
-  si elle est d'accord.
 - Publier la correction de `projet-accueil-assistante-maternelle` dès
   l'accord écrit de Sophie.
 - La file de publication se vide après le 8 novembre : écrire d'autres
