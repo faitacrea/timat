@@ -258,11 +258,14 @@ const story = (nom, etiquette, titre, aide, source = "") => visuels.push([nom, 1
 `, CREME)]);
 story("25-story-boite-questions-1080x1920.png", "Vos questions", "Une question sur votre contrat, votre salaire ou Pajemploi ?", "Posez-la ici 👇 Les réponses viendront avec leur source officielle.");
 story("26-story-sondage-1080x1920.png", "Sondage", "Votre avis en un clic", "La question est juste en dessous 👇");
-// QUIZ « COMME SUR INSTAGRAM ». Le compte de Sophie n'a pas l'autocollant
-// Quiz (27/10/2026) : les reponses sont dessinees sur l'image (A, B, C), elle
-// pose l'autocollant Sondage « A / B / C » dans la zone indiquee en bas. Le
-// soir, la meme image revient avec la bonne reponse en vert (quizReponse,
-// demande de Sophie du 27/10 : « comme un quiz avec la bonne reponse en vert »).
+// QUIZ. Sophie veut le vrai quiz d'Instagram : on touche une reponse, elle
+// devient verte (bonne) ou rouge (fausse), tout de suite (27/10/2026 : « pas
+// une image le matin et une le soir »). Seul l'autocollant Quiz le fait ; il
+// manquait sur son compte, l'astuce du Reel en brouillon le fait revenir
+// (Storrito, 2026). L'image porte donc la question et laisse la place de
+// l'autocollant sous « Touchez la bonne reponse » ; les reponses sont dans
+// l'autocollant. quizReponse (55 a 58) sert d'explication sourcee, publiee
+// juste apres le quiz, ou de solution de repli si l'autocollant manque.
 const VERT = "#23874A";
 const carte = (lettre, texte, etat = "") => {
   const bon = etat === "bon", eteint = etat === "eteint";
@@ -272,15 +275,15 @@ const carte = (lettre, texte, etat = "") => {
   </div>`;
 };
 const LETTRES = ["A", "B", "C", "D"];
-const quiz = (nom, question, aide, options) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
+const quiz = (nom, question, aide, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
   <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
   <div style="position:absolute;left:90px;right:90px;top:270px">
     <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${TERRA};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">QUIZ</div>
-    <div style="font-size:62px;font-weight:700;line-height:1.14;margin-top:30px">${question}</div>
-    <div style="font-size:32px;font-weight:600;line-height:1.4;margin-top:22px;color:#4E5E68">${aide}</div>
-    <div style="margin-top:26px">${options.map((o, k) => carte(LETTRES[k], o)).join("")}</div>
-    <div style="font-size:32px;font-weight:700;margin-top:40px;color:${TERRA}">Votez juste en dessous 👇 La bonne réponse ce soir.</div>
+    <div style="font-size:66px;font-weight:700;line-height:1.14;margin-top:30px">${question}</div>
+    <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:24px;color:#4E5E68">${aide}</div>
+    <div style="font-size:36px;font-weight:700;margin-top:44px;color:${TERRA}">Touchez la bonne réponse juste en dessous 👇</div>
   </div>
+  <div style="position:absolute;left:90px;right:90px;bottom:290px;font-size:26px;text-align:center" class="src">${source}</div>
   <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
 `, CREME)]);
 const quizReponse = (nom, question, options, bonne, explication, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
@@ -295,16 +298,16 @@ const quizReponse = (nom, question, options, bonne, explication, source) => visu
   <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
 `, CREME)]);
 const er = '<sup style="font-size:.6em">er</sup>';
-const Q_MINIMUM = `Le salaire minimum d'une assistante maternelle depuis le 1${er} juin 2026 ?`;
+const Q_MINIMUM = `Le salaire minimum d'une assistante maternelle depuis le 1${er} juin 2026 ?`;
 const O_MINIMUM = ["3,46 € brut de l'heure", "3,64 € brut de l'heure", "4,20 € brut de l'heure"];
-const Q_PAJEMPLOI = "Deux enfants de la même famille : combien de déclarations Pajemploi par mois ?";
+const Q_PAJEMPLOI = "Deux enfants de la même famille : combien de déclarations Pajemploi par mois ?";
 const O_PAJEMPLOI = ["Une seule", "Deux"];
-const Q_CONGES = "Combien de jours de congés payés acquis par mois de travail ?";
+const Q_CONGES = "Combien de jours de congés payés acquis par mois de travail ?";
 const O_CONGES = ["2 jours", "2,5 jours", "3 jours"];
-const Q_PREAVIS = "6 mois d'accueil, le parent retire l'enfant : quel préavis ?";
+const Q_PREAVIS = "6 mois d'accueil, le parent retire l'enfant : quel préavis ?";
 const O_PREAVIS = ["8 jours", "15 jours", "1 mois"];
-quiz("27-story-quiz-minimum-1080x1920.png", Q_MINIMUM, "Brut, par heure et par enfant, sans le titre professionnel.", O_MINIMUM);
-quiz("29-story-quiz-pajemploi-1080x1920.png", Q_PAJEMPLOI, "Depuis janvier 2026.", O_PAJEMPLOI);
+quiz("27-story-quiz-minimum-1080x1920.png", Q_MINIMUM, "Brut, par heure et par enfant, sans le titre professionnel.", "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");
+quiz("29-story-quiz-pajemploi-1080x1920.png", Q_PAJEMPLOI, "Depuis janvier 2026.", "Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 »");
 
 visuels.push(["28-story-11-novembre-1080x1920.png", 1080, 1920, base(1080, 1920, `
   <div class="rond" style="width:560px;height:560px;background:#3A5A6B;left:-220px;top:-220px"></div>
@@ -438,9 +441,9 @@ pub("39-publication-20-trajets-timat.png", `
 `);
 
 // 40-42. STORIES DU 31 OCTOBRE AU 6 NOVEMBRE 2026.
-quiz("40-story-quiz-conges-1080x1920.png", Q_CONGES, "Jours ouvrables, dans la limite de 30 par an.", O_CONGES);
+quiz("40-story-quiz-conges-1080x1920.png", Q_CONGES, "Jours ouvrables, dans la limite de 30 par an.", "Source : DREETS Auvergne-Rhône-Alpes, fiches année complète et incomplète");
 story("41-story-pajemploi-5-novembre-1080x1920.png", "Rappel Pajemploi", "Octobre se déclare jusqu'au 5 novembre.", "Une déclaration par enfant, depuis janvier 2026. La période va du 25 du mois au 5 du mois suivant.", "Sources : caf.fr, dépliant Pajemploi · urssaf.fr");
-quiz("42-story-quiz-preavis-1080x1920.png", Q_PREAVIS, "Contrat en CDI, retrait de l'enfant par le parent.", O_PREAVIS);
+quiz("42-story-quiz-preavis-1080x1920.png", Q_PREAVIS, "Contrat en CDI, retrait de l'enfant par le parent.", "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026)");
 
 // 43-54. UNE STORY PAR PUBLICATION, DU 28 OCTOBRE AU 27 NOVEMBRE 2026.
 // Sophie programme ces stories elle-meme dans Meta Business Suite (le plan
@@ -477,9 +480,9 @@ storyPub("52-story-20-novembre-repas-1080x1920.png", "Les repas", "35-publicatio
 storyPub("53-story-23-novembre-periode-essai-1080x1920.png", "La période d'essai", "36-publication-17-periode-essai.png");
 storyPub("54-story-27-novembre-absence-enfant-malade-1080x1920.png", "L'enfant accueilli malade", "37-publication-18-absence-enfant-malade.png");
 
-// 55-58. LES REPONSES DES QUIZ, le soir meme : la question, les reponses du
-// matin, la bonne en vert avec une coche, les autres estompees, puis la
-// source. Aucun autocollant a poser.
+// 55-58. L'EXPLICATION DES QUIZ, publiee juste apres le quiz (pas le soir) :
+// la question, les reponses dans l'ordre de l'autocollant, la bonne en vert
+// avec une coche, les autres estompees, puis la source. Aucun autocollant.
 quizReponse("55-story-reponse-minimum-1080x1920.png", Q_MINIMUM, O_MINIMUM, 2,
   "C'est le minimum conventionnel sans le titre professionnel (4,37 € avec). 3,46 € est le plancher légal : 0,281 × SMIC.",
   "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");

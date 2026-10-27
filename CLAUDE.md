@@ -36,9 +36,9 @@ et l'historique git font le lien. Donc :
   jour ») ; les stories à programmer dans Meta Business Suite lui sont
   envoyées 5 jours avant la fin de la série programmée en cours. Toujours
   des étapes très explicites, et les images À LA FIN du message, jamais au
-  milieu. Son compte Instagram n'a pas l'autocollant « Quiz » : image quiz
-  avec les réponses A/B/C + autocollant Sondage, puis le soir une story
-  « Réponse » avec la bonne réponse en vert.
+  milieu. Quiz (règle du 27/10) : le vrai autocollant « Quiz » d'Instagram,
+  réponse verte ou rouge sur le moment, jamais une réponse le soir ;
+  l'autocollant manquait sur son compte : astuce du Reel en brouillon (kit).
 - Vocabulaire : « période de familiarisation » (référentiel national de la
   qualité d'accueil, 2025, employé par la PMI) ; au contrat, le terme reste
   « période d'adaptation » (convention collective, art. 94).
