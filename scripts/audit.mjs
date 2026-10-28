@@ -2515,7 +2515,7 @@ if (!miniCourant) {
 // desormais au minimum du mois (tauxHoraireAu) et l'explique par une note :
 // c'est cette note qu'on exige de lui.
 const posesAlerte = [...appSrc.matchAll(/<AlerteTauxMinimum\b/g)].length;
-const noteReleve = /Taux relevé au minimum légal/.test(appSrc) && /tauxReleve&&/.test(appSrc);
+const noteReleve = /Taux relevé au minimum conventionnel/.test(appSrc) && /tauxReleve&&/.test(appSrc);
 if (posesAlerte < 1 || !noteReleve) {
   signale("chiffre", `alerte de taux minimum : ${posesAlerte} sur le contrat (1 attendue), note « taux relevé » sur le bulletin : ${noteReleve ? "présente" : "absente"}. Le contrat doit signaler qu'un avenant est nécessaire, et le bulletin dire qu'il paie au minimum`);
 }
@@ -4245,6 +4245,17 @@ if (!/input,\s*select,\s*textarea\{font-size:16px!important/.test(appSrc)) {
     signale("modele-contrat", "src/ecrans-secondaires.jsx : le projet d'accueil imprimé ne parle plus de « période de familiarisation » ou impose de nouveau un protocole « 1h avec / sans le parent » (référentiel national de la qualité d'accueil, avril 2025)");
   if (!/dite aussi période de familiarisation/.test(app) || /calculé sur les heures réellement effectuées/.test(app))
     signale("modele-contrat", "src/App.jsx : la clause d'adaptation du contrat ne cite plus la familiarisation, ou calcule de nouveau le salaire « sur les heures réellement effectuées » (la convention déduit les heures non faites du salaire mensualisé : art. 108.1 et 111)");
+  // Titre professionnel : l'avenant n° 10 du 5 fevrier 2026 vise « Assistant
+  // maternel – Assistant parental » (AM-AP) ; l'application et le verificateur
+  // ne parlaient que de l'ancien titre « Garde d'enfants » (AM-GE). Et un taux
+  // sous 4,20 EUR etait dit « sous le minimum legal » : le legal est 3,46 EUR,
+  // 4,20 EUR est le minimum conventionnel.
+  const gestion = lire("src/gestion.jsx");
+  const verif = lire("public/verificateur-bulletin-assistante-maternelle.html");
+  if (!/Assistant maternel – Assistant parental/.test(projet) || /avec le titre AM-GE|Titre AM-GE enregistré/.test(projet + gestion) || !/assistant maternel – assistant parental/.test(verif))
+    signale("modele-contrat", "titre professionnel : l'application ou le vérificateur de bulletin ne nomme plus le titre « Assistant maternel – Assistant parental » (avenant n° 10 du 5 février 2026), ou parle de nouveau du seul « titre AM-GE »");
+  if (/sous le minimum légal\.<\/b>|relevé au minimum légal\.<\/b>|\(minimum légal ; contrat/.test(gestion))
+    signale("modele-contrat", "src/gestion.jsx : un taux sous 4,20 € est dit « sous le minimum légal » ; le minimum légal est 0,281 × SMIC (3,46 €), 4,20 € est le minimum conventionnel");
 }
 
 // --- chaque page du blog a une image d'apercu ---

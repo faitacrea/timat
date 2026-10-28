@@ -3129,8 +3129,10 @@ export const MINIMUM_CONV_HISTO=[
   ["2024-01-01",3.64],
 ];
 export const COEF_MINIMUM_LEGAL=0.281;
-// Titre professionnel « Assistant maternel - Garde d'enfants » : le minimum
-// conventionnel est majore de 4 % (CCN 3239, article 113 et annexe 5), soit
+// Titre professionnel de branche « Assistant maternel - Assistant parental »
+// (AM-AP, avenant n° 10 du 5 fevrier 2026), qui a remplace « Assistant
+// maternel - Garde d'enfants » (AM-GE) : le minimum conventionnel est majore
+// de 4 % (CCN 3239, annexe 5), soit
 // 4,37 EUR brut au lieu de 4,20 EUR. Sans ce cas, l'application aurait declare
 // conforme un taux de 4,25 EUR pourtant sous le plancher d'une titulaire.
 export const MAJORATION_TITRE_AMGE=0.04;

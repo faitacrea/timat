@@ -844,8 +844,12 @@ export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckou
           {user?.numero_agrement&&<div style={{fontSize:11,color:"var(--S)",marginTop:4}}>
             <IconeOuEmoji e="✅"/> Numéro enregistré : {user.numero_agrement}
           </div>}
-          {/* Le titre AM-GE majore de 4 % le salaire horaire minimum (CCN 3239,
-              article 113 et annexe 5). Sans cette information, l'application
+          {/* Le titre professionnel de branche majore de 4 % le salaire horaire
+              minimum (CCN 3239, annexe 5). L'avenant n° 10 du 5 fevrier 2026 vise
+              le titre « Assistant maternel – Assistant parental » (AM-AP), qui a
+              remplace « Assistant maternel – Garde d'enfants » (AM-GE) ; la
+              DREETS Pays de la Loire (fiche du 12/06/2026) applique encore la
+              majoration a l'ancien titre. Sans cette information, l'application
               declarerait conforme un taux pourtant sous le plancher. */}
           <label style={{display:"flex",alignItems:"flex-start",gap:9,marginTop:14,cursor:"pointer"}}>
             <input type="checkbox" checked={!!user?.titre_amge} style={{marginTop:2,width:16,height:16,cursor:"pointer",accentColor:"var(--accent)"}}
@@ -854,10 +858,10 @@ export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckou
                 const{error}=await supabase.from("profiles").update({titre_amge:v}).eq("id",user.id);
                 if(error){setToast("Erreur : "+error.message);return;}
                 setUser&&setUser(u=>({...u,titre_amge:v}));
-                setToast(v?"Titre AM-GE enregistré — minimum majoré de 4 % ✓":"Titre AM-GE retiré ✓");
+                setToast(v?"Titre professionnel enregistré — minimum majoré de 4 % ✓":"Titre professionnel retiré ✓");
               }}/>
             <span style={{fontSize:13,color:"var(--b)",lineHeight:1.5}}>
-              Je suis titulaire du titre professionnel <b>Assistant maternel – Garde d'enfants</b>
+              Je suis titulaire du titre professionnel <b>Assistant maternel – Assistant parental</b> (ou de l'ancien titre <b>Assistant maternel – Garde d'enfants</b>)
               <span style={{display:"block",fontSize:11.5,color:"var(--m)",marginTop:2}}>
                 Votre salaire horaire minimum est alors majoré de 4 % : {nbf(minimumHoraireAu(new Date(),true),2)} € au lieu de {nbf(minimumHoraireAu(new Date(),false),2)} €.
               </span>

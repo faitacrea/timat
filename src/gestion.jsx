@@ -39,8 +39,8 @@ export function AlerteTauxMinimum({taux,date,debut,titreAmge}){
     border:"1px solid var(--R)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
     fontSize:12.5,color:"var(--R)",lineHeight:1.55}}>
     <IconeOuEmoji e="⚠️" taille={16}/>
-    <span><b>Taux horaire sous le minimum légal.</b> {nbf(t,2)} € par heure et par enfant,
-    alors que le minimum est de {nbf(mini,2)} €{titreAmge?" avec le titre AM-GE (+ 4 %)":""} (convention collective IDCC 3239).
+    <span><b>Taux horaire sous le minimum conventionnel.</b> {nbf(t,2)} € par heure et par enfant,
+    alors que le minimum est de {nbf(mini,2)} €{titreAmge?" avec le titre professionnel (+ 4 %)":""} (convention collective IDCC 3239).
     {revalorise
       ?<> Ce taux était conforme à la signature ({nbf(miniDebut,2)} € alors) : c'est le minimum qui a été revalorisé depuis. Un avenant au contrat est nécessaire pour le porter au moins à {nbf(mini,2)} €, avec effet à la date de la revalorisation.</>
       :" Un avenant est nécessaire pour régulariser."}</span>
@@ -189,7 +189,7 @@ export function Facturation({enfants,role,pEId,user,pointagesDB}){
       '<div class="box"><h2>💰 Salaire à déclarer</h2>',
       // Le taux applique, et s'il a ete releve au minimum, le taux du contrat a
       // cote : le parent qui compare a son contrat doit comprendre l'ecart.
-      '<table><tr><td>Taux horaire brut '+(tauxPaj>(Number(contrat?.tauxHoraire)||0)?'(minimum légal ; contrat : '+nbf((contrat?.tauxHoraire||0),2)+' €)':'(contrat)')+'</td><td>'+nbf(tauxPaj,2)+' €/h</td></tr>',
+      '<table><tr><td>Taux horaire brut '+(tauxPaj>(Number(contrat?.tauxHoraire)||0)?'(minimum conventionnel ; contrat : '+nbf((contrat?.tauxHoraire||0),2)+' €)':'(contrat)')+'</td><td>'+nbf(tauxPaj,2)+' €/h</td></tr>',
       '<tr><td>Salaire brut du mois</td><td>'+nbf(totalBrut,2)+' €</td></tr>',
       '<tr class="hl"><td>Salaire NET à déclarer</td><td>'+salNet+' €</td></tr>',
       '<tr><td>Indemnité d\'entretien (ligne distincte)</td><td>'+nbf(entretienMois,2)+' €</td></tr>',
@@ -1448,8 +1448,8 @@ template:"bulletin_sent",
           border:"1px solid var(--B)",borderRadius:10,padding:"10px 12px",margin:"10px 0",
           fontSize:12.5,color:"var(--b)",lineHeight:1.55}}>
           <IconeOuEmoji e="ℹ️" taille={16}/>
-          <span><b>Taux relevé au minimum légal.</b> Le contrat prévoit {nbf(tauxContrat,2)} € de l'heure,
-          mais le minimum conventionnel en vigueur ce mois-ci est de {nbf(tauxH,2)} €{user?.titre_amge?" avec le titre AM-GE (+ 4 %)":""} (IDCC 3239).
+          <span><b>Taux relevé au minimum conventionnel.</b> Le contrat prévoit {nbf(tauxContrat,2)} € de l'heure,
+          mais le minimum conventionnel en vigueur ce mois-ci est de {nbf(tauxH,2)} €{user?.titre_amge?" avec le titre professionnel (+ 4 %)":""} (IDCC 3239).
           Ce bulletin est donc calculé à {nbf(tauxH,2)} € : une clause moins favorable que la convention est réputée non écrite.
           Un avenant au contrat est recommandé pour le mettre à jour.</span>
         </div>}

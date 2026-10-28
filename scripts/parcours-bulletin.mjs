@@ -136,9 +136,9 @@ const m = await page.evaluate(() => {
     brut: nb(/SALAIRE BRUT\s*\n?\s*([\d.,]+)/),
     base: nb(/Salaire de base[^\n]*\n[^\n]*\n\s*([\d.,]+)€/),
     art111: /art\. 111/.test(t),
-    alerteMini: /sous le minimum légal/i.test(t),
+    alerteMini: /sous le minimum conventionnel/i.test(t),
     // Le bulletin ne paie plus sous le minimum : il releve le taux et le dit.
-    releve: /Taux relevé au minimum légal/i.test(t),
+    releve: /Taux relevé au minimum conventionnel/i.test(t),
     semainesAffichees: (t.match(/Mensualisation en année (?:in)?complète\s*:\s*(\d+) semaines/) || [])[1],
     modeAffiche: /Mensualisation en année incomplète/.test(t) ? "incomplète" : /Mensualisation en année complète/.test(t) ? "complète" : null,
     // Une cotisation prise au hasard doit etre assise sur le brut APRES retenue.
