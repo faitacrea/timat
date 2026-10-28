@@ -258,14 +258,12 @@ const story = (nom, etiquette, titre, aide, source = "") => visuels.push([nom, 1
 `, CREME)]);
 story("25-story-boite-questions-1080x1920.png", "Vos questions", "Une question sur votre contrat, votre salaire ou Pajemploi ?", "Posez-la ici 👇 Les réponses viendront avec leur source officielle.");
 story("26-story-sondage-1080x1920.png", "Sondage", "Votre avis en un clic", "La question est juste en dessous 👇");
-// QUIZ. Sophie veut le vrai quiz d'Instagram : on touche une reponse, elle
-// devient verte (bonne) ou rouge (fausse), tout de suite (27/10/2026 : « pas
-// une image le matin et une le soir »). Seul l'autocollant Quiz le fait ; il
-// manquait sur son compte, l'astuce du Reel en brouillon le fait revenir
-// (Storrito, 2026). L'image porte donc la question et laisse la place de
-// l'autocollant sous « Touchez la bonne reponse » ; les reponses sont dans
-// l'autocollant. quizReponse (55 a 58) sert d'explication sourcee, publiee
-// juste apres le quiz, ou de solution de repli si l'autocollant manque.
+// QUIZ. Sophie voulait le vrai quiz d'Instagram (reponse verte ou rouge tout
+// de suite, 27/10/2026). L'autocollant Quiz manque sur son compte, et l'astuce
+// du Reel en brouillon n'a rien change (28/10). Repli : autocollant Sondage
+// avec les reponses, et la bonne reponse sur la story SUIVANTE, publiee au
+// meme moment (jamais le soir) : on vote, on touche a droite, on voit tout de
+// suite la reponse en vert (quizReponse, images 55 a 58).
 const VERT = "#23874A";
 const carte = (lettre, texte, etat = "") => {
   const bon = etat === "bon", eteint = etat === "eteint";
@@ -281,7 +279,8 @@ const quiz = (nom, question, aide, source) => visuels.push([nom, 1080, 1920, bas
     <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${TERRA};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">QUIZ</div>
     <div style="font-size:66px;font-weight:700;line-height:1.14;margin-top:30px">${question}</div>
     <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:24px;color:#4E5E68">${aide}</div>
-    <div style="font-size:36px;font-weight:700;margin-top:44px;color:${TERRA}">Touchez la bonne réponse juste en dessous 👇</div>
+    <div style="font-size:36px;font-weight:700;margin-top:44px;color:${TERRA}">Votez juste en dessous 👇</div>
+    <div style="font-size:30px;font-weight:600;margin-top:10px;color:#4E5E68">La bonne réponse : sur la story suivante 👉</div>
   </div>
   <div style="position:absolute;left:90px;right:90px;bottom:290px;font-size:26px;text-align:center" class="src">${source}</div>
   <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
@@ -480,9 +479,9 @@ storyPub("52-story-20-novembre-repas-1080x1920.png", "Les repas", "35-publicatio
 storyPub("53-story-23-novembre-periode-essai-1080x1920.png", "La période d'essai", "36-publication-17-periode-essai.png");
 storyPub("54-story-27-novembre-absence-enfant-malade-1080x1920.png", "L'enfant accueilli malade", "37-publication-18-absence-enfant-malade.png");
 
-// 55-58. L'EXPLICATION DES QUIZ, publiee juste apres le quiz (pas le soir) :
-// la question, les reponses dans l'ordre de l'autocollant, la bonne en vert
-// avec une coche, les autres estompees, puis la source. Aucun autocollant.
+// 55-58. LA REPONSE DES QUIZ, publiee juste apres le quiz, au meme moment
+// (jamais le soir) : la question, les reponses dans l'ordre du sondage, la
+// bonne en vert avec une coche, les autres estompees, puis la source.
 quizReponse("55-story-reponse-minimum-1080x1920.png", Q_MINIMUM, O_MINIMUM, 2,
   "C'est le minimum conventionnel sans le titre professionnel (4,37 € avec). 3,46 € est le plancher légal : 0,281 × SMIC.",
   "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");

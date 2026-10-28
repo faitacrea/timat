@@ -165,12 +165,12 @@ if (REVALORISE) {
   console.log("  — l'écran du contrat, sur un contrat devenu non conforme —");
   for (const t of ["Administratif", "Paie & Contrats", "Contrats"]) { await clic(t); await page.waitForTimeout(1200); }
   const ecran = await page.evaluate(() => document.body.innerText);
-  dire(/sous le minimum légal/i.test(ecran), "l'écran du contrat signale le taux sous le minimum",
+  dire(/sous le minimum conventionnel/i.test(ecran), "l'écran du contrat signale le taux sous le minimum",
     (ecran.match(/.{0,40}minimum légal.{0,60}/i) || ["(aucune alerte)"])[0]);
   // On lit l'ALERTE, pas toute la page : « revalorisé » apparaît ailleurs sur
   // l'écran, et ma première version validait ce mot alors que l'alerte
   // n'existait même pas.
-  const alerte = (ecran.match(/Taux horaire sous le minimum légal[\s\S]{0,400}/i) || [""])[0];
+  const alerte = (ecran.match(/Taux horaire sous le minimum conventionnel[\s\S]{0,400}/i) || [""])[0];
   dire(/4,20/.test(alerte), "l'alerte donne le minimum d'aujourd'hui, 4,20 €");
   dire(/revaloris/i.test(alerte), "elle explique que c'est le minimum qui a été revalorisé");
   dire(erreurs.length === 0, "aucune erreur JavaScript", erreurs.join(" | "));

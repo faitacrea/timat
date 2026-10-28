@@ -725,6 +725,38 @@ l'écran Fin de contrat.
   - Commentaire Instagram d'`epimeno.care` sous la publication congés payés
     (« C'est clair et utile, merci pour ce rappel ») : réponse proposée à
     Sophie, à poster elle-même.
+- **28/10** :
+  - Indexation du 28/10 : liste envoyée seule (10 adresses, toutes en 200) ;
+    Sophie la fait le 28 au soir. **À noter ici** : jusqu'à quel numéro. Le
+    rappel du 29/10 (`trig_01KsrS1YcpEnqcEEBYPjQMkm`) est décalé au 29/10 à
+    21 h 13 (Paris) pour laisser passer le quota glissant d'environ 24 h.
+  - **Quiz** : l'astuce du Reel en brouillon n'a rien donné, l'autocollant
+    Quiz reste introuvable. Repli adopté : image quiz + Sondage, puis TOUT
+    DE SUITE l'image réponse (55 à 58, bonne réponse en vert). Images 27,
+    29, 40, 42 : « Votez juste en dessous » + « La bonne réponse : sur la
+    story suivante ». Kit, rappel quotidien et CLAUDE.md à jour.
+  - **Chasse** :
+    - titre professionnel : l'avenant n° 10 du 5/02/2026 (étendu, Légifrance
+      KALIARTI000054254156) vise « Assistant maternel – Assistant parental »
+      (AM-AP) ; l'application, le vérificateur de bulletin et un article ne
+      parlaient que de l'ancien « Garde d'enfants » (AM-GE). La DREETS Pays
+      de la Loire (12/06/2026) cite encore l'ancien titre avec l'avenant n° 9.
+      Corrigé (les deux titres nommés, majoration 4 % inchangée) ;
+    - un taux sous 4,20 € était dit « sous le minimum légal » (écran de
+      paie, récapitulatif Pajemploi) : c'est le minimum conventionnel (le
+      légal est 3,46 €). Corrigé ;
+    - barrière d'audit sur ces deux points, prouvée en cassant (3 fois) ;
+    - article `salaire-assistante-maternelle-net-brut` : correction du titre
+      **EN BROUILLON** (`drafts.7bc11c82-4240-463f-80ba-81d9ba7c3fe7`), à
+      publier sur accord écrit de Sophie ;
+    - vérifiés sans erreur : les 14 publications Metricool du 6 au 27/11
+      (préavis, congé enfant malade art. 48-2-2, documents de fin de
+      contrat, 0,33 €/km arrêté du 29/05/2026, fin de contrat TiMat, repas
+      art. 114-2, absences de l'enfant art. 105, période d'essai) ;
+      pages du site : aucun « Pôle emploi », « RAM » seulement en
+      « anciennement », 1/120e seulement pour dire que c'est périmé,
+      SMIC de l'abattement fiscal par période (11,88 / 12,02 / 12,31 €),
+      indemnité d'entretien (0,435 €/h, plancher 2,65 €) cohérente.
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
@@ -782,6 +814,8 @@ l'écran Fin de contrat.
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
+- Publier la correction du titre dans `salaire-assistante-maternelle-net-brut`
+  dès l'accord écrit de Sophie.
 - Publier la correction de `projet-accueil-assistante-maternelle` dès
   l'accord écrit de Sophie.
 - La file de publication se vide après le 8 novembre : écrire d'autres
