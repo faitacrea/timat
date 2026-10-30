@@ -36,10 +36,12 @@ et l'historique git font le lien. Donc :
   jour ») ; les stories à programmer dans Meta Business Suite lui sont
   envoyées 5 jours avant la fin de la série programmée en cours. Toujours
   des étapes très explicites, et les images À LA FIN du message, jamais au
-  milieu. Quiz (règle du 27/10) : réponse sur le moment, jamais le soir.
-  L'autocollant « Quiz » manque sur son compte (astuce du Reel essayée en
-  vain le 28/10) : image quiz + autocollant Sondage, puis tout de suite
-  après l'image réponse (bonne réponse en vert).
+  milieu. Sondages à bonne réponse (règles du 27 au 30/10) : dire
+  « sondage », jamais « quiz » ; question « À votre avis… » ; réponse sur le
+  moment, jamais le soir : image sondage + autocollant Sondage, puis tout de
+  suite l'image « La bonne réponse » (en vert). L'autocollant Quiz manque sur
+  son compte. Un sondage ne se programme pas dans Meta Business Suite : à la
+  main dans Instagram.
 - Vocabulaire : « période de familiarisation » (référentiel national de la
   qualité d'accueil, 2025, employé par la PMI) ; au contrat, le terme reste
   « période d'adaptation » (convention collective, art. 94).
