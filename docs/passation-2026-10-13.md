@@ -757,6 +757,30 @@ l'écran Fin de contrat.
       « anciennement », 1/120e seulement pour dire que c'est périmé,
       SMIC de l'abattement fiscal par période (11,88 / 12,02 / 12,31 €),
       indemnité d'entretien (0,435 €/h, plancher 2,65 €) cohérente.
+- **30/10, réponses de Sophie** :
+  - « Je confirme publier la correction du titre » : `salaire-assistante-
+    maternelle-net-brut` **publié** (deux liens relatifs convertis en
+    adresses complètes, exigées par la validation Sanity).
+  - Indexation : liste du 28/10 déjà indexée sauf le n° 10
+    (`contrat-assistante-maternelle-cote-parent-employeur`) ; liste du 29/10 :
+    demandées les n° 2, 4, 5, 6 (les autres étaient déjà sur Google). Une
+    adresse déjà indexée n'a pas à être redemandée.
+  - Voyage les 28 et 29/10 : stories du 27/10 (sondage salaire minimum) et du
+    29/10 (11 novembre, image 28) non faites ; la 43 (28/10) était
+    programmée. Le lien du groupe (image 23) est déjà à la une.
+  - « Ne pas appeler ça un quiz, mais un sondage », et poser la question
+    autrement : images 27, 29, 40, 42 étiquetées « SONDAGE », questions en
+    « À votre avis… » ; 55 à 58 étiquetées « LA BONNE RÉPONSE ». Autocollant
+    Sondage, question « À votre avis ? ».
+  - **Nouveau calendrier** (kit, « Calendrier repris le 30 octobre ») :
+    30/10 sondage Pajemploi (29 + 56) ; 31/10 image 28 + lien ; 1/11 sondage
+    salaire (27 + 55) ; 2/11 image 45 programmée ; 3/11 image 41 + lien
+    simulateur ; 4/11 sondage congés (40 + 57) + image 46 programmée ; 5/11
+    sondage préavis (42 + 58) ; 6/11 image 47 programmée ; 7/11 image 26
+    (sondage fin de contrat) ; 8/11 rien. Rappel quotidien réécrit.
+  - Un sondage ne se programme pas dans Meta Business Suite (plusieurs
+    guides, rien d'officiel) ; pour le lien, les guides se contredisent :
+    les deux se font à la main dans Instagram.
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
@@ -814,8 +838,6 @@ l'écran Fin de contrat.
   (Sophie préfère attendre pour la MAM).
 
 **Claude, à la prochaine session**
-- Publier la correction du titre dans `salaire-assistante-maternelle-net-brut`
-  dès l'accord écrit de Sophie.
 - Publier la correction de `projet-accueil-assistante-maternelle` dès
   l'accord écrit de Sophie.
 - La file de publication se vide après le 8 novembre : écrire d'autres

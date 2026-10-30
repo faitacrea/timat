@@ -258,10 +258,12 @@ const story = (nom, etiquette, titre, aide, source = "") => visuels.push([nom, 1
 `, CREME)]);
 story("25-story-boite-questions-1080x1920.png", "Vos questions", "Une question sur votre contrat, votre salaire ou Pajemploi ?", "Posez-la ici 👇 Les réponses viendront avec leur source officielle.");
 story("26-story-sondage-1080x1920.png", "Sondage", "Votre avis en un clic", "La question est juste en dessous 👇");
-// QUIZ. Sophie voulait le vrai quiz d'Instagram (reponse verte ou rouge tout
-// de suite, 27/10/2026). L'autocollant Quiz manque sur son compte, et l'astuce
-// du Reel en brouillon n'a rien change (28/10). Repli : autocollant Sondage
-// avec les reponses, et la bonne reponse sur la story SUIVANTE, publiee au
+// SONDAGES A BONNE REPONSE. Sophie voulait le vrai quiz d'Instagram (reponse
+// verte ou rouge tout de suite, 27/10/2026) ; l'autocollant Quiz manque sur son
+// compte, l'astuce du Reel en brouillon n'a rien change (28/10). Le 30/10 :
+// « ne pas appeler ca un quiz, mais plutot un sondage », et poser la question
+// autrement (« A votre avis… »). L'image porte la question, l'autocollant
+// Sondage les reponses ; la bonne reponse est sur la story SUIVANTE, publiee au
 // meme moment (jamais le soir) : on vote, on touche a droite, on voit tout de
 // suite la reponse en vert (quizReponse, images 55 a 58).
 const VERT = "#23874A";
@@ -276,7 +278,7 @@ const LETTRES = ["A", "B", "C", "D"];
 const quiz = (nom, question, aide, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
   <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
   <div style="position:absolute;left:90px;right:90px;top:270px">
-    <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${TERRA};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">QUIZ</div>
+    <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${TERRA};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">SONDAGE</div>
     <div style="font-size:66px;font-weight:700;line-height:1.14;margin-top:30px">${question}</div>
     <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:24px;color:#4E5E68">${aide}</div>
     <div style="font-size:36px;font-weight:700;margin-top:44px;color:${TERRA}">Votez juste en dessous 👇</div>
@@ -288,7 +290,7 @@ const quiz = (nom, question, aide, source) => visuels.push([nom, 1080, 1920, bas
 const quizReponse = (nom, question, options, bonne, explication, source) => visuels.push([nom, 1080, 1920, base(1080, 1920, `
   <div class="rond" style="width:520px;height:520px;background:${PECHE};right:-160px;top:-160px;opacity:.9"></div>
   <div style="position:absolute;left:90px;right:90px;top:270px">
-    <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${VERT};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">QUIZ · LA RÉPONSE</div>
+    <div style="display:inline-block;padding:12px 30px;border-radius:40px;background:${VERT};color:#fff;font-size:34px;font-weight:700;letter-spacing:3px">LA BONNE RÉPONSE</div>
     <div style="font-size:50px;font-weight:700;line-height:1.16;margin-top:30px">${question}</div>
     <div style="margin-top:20px">${options.map((o, k) => carte(LETTRES[k], o, k === bonne ? "bon" : "eteint")).join("")}</div>
     <div style="font-size:36px;font-weight:600;line-height:1.4;margin-top:40px;color:#3F4F59">${explication}</div>
@@ -297,13 +299,13 @@ const quizReponse = (nom, question, options, bonne, explication, source) => visu
   <img src="${LOGO}" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;height:70px">
 `, CREME)]);
 const er = '<sup style="font-size:.6em">er</sup>';
-const Q_MINIMUM = `Le salaire minimum d'une assistante maternelle depuis le 1${er} juin 2026 ?`;
+const Q_MINIMUM = `À votre avis, quel est le salaire minimum d'une assistante maternelle depuis le 1${er} juin 2026 ?`;
 const O_MINIMUM = ["3,46 € brut de l'heure", "3,64 € brut de l'heure", "4,20 € brut de l'heure"];
-const Q_PAJEMPLOI = "Deux enfants de la même famille : combien de déclarations Pajemploi par mois ?";
+const Q_PAJEMPLOI = "À votre avis, pour deux enfants de la même famille, combien de déclarations Pajemploi chaque mois ?";
 const O_PAJEMPLOI = ["Une seule", "Deux"];
-const Q_CONGES = "Combien de jours de congés payés acquis par mois de travail ?";
+const Q_CONGES = "À votre avis, combien de jours de congés payés gagne-t-on par mois de travail ?";
 const O_CONGES = ["2 jours", "2,5 jours", "3 jours"];
-const Q_PREAVIS = "6 mois d'accueil, le parent retire l'enfant : quel préavis ?";
+const Q_PREAVIS = "Le parent retire l'enfant après 6 mois d'accueil : à votre avis, quel préavis ?";
 const O_PREAVIS = ["8 jours", "15 jours", "1 mois"];
 quiz("27-story-quiz-minimum-1080x1920.png", Q_MINIMUM, "Brut, par heure et par enfant, sans le titre professionnel.", "Source : DREETS Pays de la Loire, fiche du 12 juin 2026");
 quiz("29-story-quiz-pajemploi-1080x1920.png", Q_PAJEMPLOI, "Depuis janvier 2026.", "Source : urssaf.fr, « Pajemploi : une déclaration par enfant à partir de janvier 2026 »");
