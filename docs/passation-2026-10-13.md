@@ -781,6 +781,19 @@ l'écran Fin de contrat.
   - Un sondage ne se programme pas dans Meta Business Suite (plusieurs
     guides, rien d'officiel) ; pour le lien, les guides se contredisent :
     les deux se font à la main dans Instagram.
+- **30/10 (suite)** : indexation faite — liste du 28/10 : n° 10 demandé (le
+  seul qui manquait) ; liste du 29/10 : n° 2, 4, 5, 6 demandés, les autres
+  déjà sur Google. Story 43 du 28/10 bien partie (archive). Sondage
+  Pajemploi (29 + 56) publié le 30/10 et rangé à la une « Pajemploi ».
+  « Programmer », pour Sophie, voulait dire replanifier ensemble les dates
+  (fait par le calendrier repris). Nouvelle liste d'indexation donnée le
+  30/10 (à faire 24 h après les précédentes) : le nouvel article
+  `accueil-occasionnel-cdd-assistante-maternelle` et 9 pages corrigées
+  depuis le 26/10 (adaptation ×2, salaire net/brut, mensualisation, salaire
+  par département, projet d'accueil, budget, quand chercher, vérificateur de
+  bulletin). Pour une page corrigée, « Demander une indexation » sert même
+  si l'URL est déjà sur Google : Google relit la nouvelle version.
+  **À noter ici** : ce qu'elle aura fait.
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
