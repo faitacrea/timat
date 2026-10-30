@@ -832,13 +832,53 @@ l'écran Fin de contrat.
     (capture). Pour Gmail il faut un certificat (CMC ou VMC, plusieurs
     centaines à plus de 1 000 $ par an selon des sources tierces ; VMC =
     marque déposée). Conseil : ne rien faire pour l'instant.
-- **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
-  (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
-  « Assistant maternel - Assistant parental » (RNCP 42319, France
-  compétences). L'application majore le minimum de 4 % pour le « titre
-  AM-GE » (annexe 5, avenant n° 9) : une titulaire de l'ancien titre le
-  reste, mais rien d'officiel trouvé sur le nouveau titre. Ne rien écrire sur
-  le blog avant de l'avoir établi.
+- **Titre professionnel : ÉTABLI le 30/10.** L'avenant n° 10 du 5/02/2026
+  (Légifrance KALIARTI000054254156, « En vigueur étendu », arrêté du
+  4/05/2026) fixe le minimum à 4,20 € et le majore de 4 % (4,37 €) pour le
+  titre « Assistant maternel – Assistant parental » ; indemnités exclues du
+  calcul ; titre obtenu en cours de contrat → salaire au moins à 4,37 €.
+  L'avenant ne nomme pas l'ancien titre « Garde d'enfants » ; la DREETS Pays
+  de la Loire (12/06/2026) lui applique encore la majoration. Application,
+  vérificateur et article du blog l'écrivent ainsi.
+- **30/10 (après-midi)** — demandes de Sophie : brouillons du blog, BIMI,
+  rubrique « À propos », décisions d'offres, publications de décembre ;
+  message reformulé ENVOYÉ par Sophie à l'Urssaf ; maquette de l'API jugée
+  « parfaite » par Sophie, à adapter seulement à ce que l'Urssaf demandera.
+  - **Blog, 4 brouillons** (PR #302, file 22 à 25, du 10 au 13/11) :
+    monenfant.fr et les disponibilités avant le 1er juin / 1er décembre
+    (`drafts.2fed5e1c-feb3-4244-9fb9-19c5e9e477ac`), titre professionnel
+    (`drafts.f2c55693-1d06-45bc-a7d7-e0a4a1069eab`), relais petite enfance
+    (`drafts.84be5007-80ba-4d5c-9b78-12092bc70ee8`), congé d'adoption
+    (`drafts.0d421343-6179-4188-bce3-b0254ab45942`). Couvertures importées
+    dans Sanity depuis www.timat.app et posées avec un `alt` distinct.
+    Écartés pour ne pas doubler des articles en ligne : durée maximale et
+    repos (déjà dans `heures-complementaires-majorees`), méthode de
+    familiarisation (déjà dans `periode-adaptation-assistante-maternelle-parent`).
+    Le cron publie seul, un par jour à 6 h UTC : **accord écrit de Sophie
+    demandé** dans le compte rendu du 30/10 ; sans accord avant le 9/11,
+    retirer les 4 de `data/ordre-publication.js`.
+  - **Série 4 (décembre)** préparée, NON programmée : publications 21 à 28,
+    images 59 à 66, les 7, 9, 11, 14, 16, 18, 21 et 23/12 à 20 h 30 (8 dates :
+    décembre a déjà 4 publications sur 20). Kit (onglet « Série 4 ») et PDF
+    de relecture `docs/reseaux-sociaux/serie4-decembre-a-valider.pdf`.
+    Sujet écarté : la formation continue (aucune source officielle lisible
+    sur la perte des heures au 31/12 ; iperia.eu bloqué). Les publications
+    21, 22 et 26 renvoient vers les articles du 11 au 13/11 : retirer la
+    ligne « Tout l'article » si l'un d'eux n'est pas en ligne.
+  - **BIMI** : réponse détaillée donnée (enregistrement TXT
+    `default._bimi`, logo SVG Tiny PS, DMARC déjà en application). Gmail et
+    Apple Mail exigent un certificat ; le CMC suppose un logo affiché
+    publiquement depuis au moins 12 mois (sources tierces) : pas avant 2027
+    pour TiMat. Conseil maintenu : ne rien faire maintenant.
+  - **Offres** : aucune décision n'a jamais été notée (seulement « en
+    attente », MAM : Sophie préfère attendre). Tarifs concurrents relevés
+    le 30/10 (sources tierces, sites des éditeurs bloqués sauf mention) :
+    Pandi-Panda 8 € / 15 / 21 / 26 / 30 € par mois selon les contrats actifs
+    (leur page, relevée le 23/09) ; Nounou-Top (Top Assmat) formule
+    assistante maternelle gratuite, formules parents « dès 2,99 € » ou
+    « 3,99 € » (deux sites de codes promo se contredisent) ; Mam360 palier
+    gratuit, Solo 5 €, MAM 6 €, jusqu'à 15 € (blog Mam360) ; AssmatZen :
+    rien trouvé.
 
 ## Ce qu'il reste à faire
 
@@ -848,8 +888,12 @@ l'écran Fin de contrat.
   actuellement non indexée » vers le 2/11.
 - Stories : calendrier du kit jusqu'au 8/11 ; le 1/11, programmer dans Meta
   Business Suite les stories 48 à 54 et dire la dernière date acceptée.
-- URSSAF : renvoyer le message reformulé (fil avec
-  contact.tiercedeclaration@urssaf.fr) et transmettre la réponse.
+- URSSAF : message reformulé ENVOYÉ le 30/10 ; transmettre la réponse.
+- **Valider la série 4 (décembre)** : PDF
+  `docs/reseaux-sociaux/serie4-decembre-a-valider.pdf` ; rien n'est
+  programmé avant son accord.
+- **Confirmer par écrit les 4 articles** du 10 au 13/11 (monenfant.fr,
+  titre professionnel, relais petite enfance, congé d'adoption).
 - Logo à côté des e-mails : Sophie a mis une photo de profil sur son compte
   de messagerie. Elle ne s'affiche chez les destinataires Gmail que si
   l'adresse d'envoi est un compte Google dont la photo est « visible par
@@ -878,9 +922,11 @@ l'écran Fin de contrat.
   vides dans les informations publiques, ni logo ni icône. Non lisibles par
   l'API (à vérifier à l'écran) : reçu « Paiements réussis » et pied de page
   des factures.
-- Facebook : finir « À propos » ; envoyer le lien direct de la Page (pour
-  l'ajouter au site) ; vérifier ce qui a déjà été publié sur la Page et dans
-  le groupe.
+- Facebook : finir « À propos » (liste redonnée le 30/10 : catégorie
+  Logiciel, nom d'utilisateur timatapp, site, lien Instagram, e-mail
+  contact@timat.app, bouton « S'inscrire », bio courte et version longue du
+  kit) ; envoyer le lien direct de la Page (pour l'ajouter au site) ;
+  vérifier ce qui a déjà été publié sur la Page et dans le groupe.
 - Instagram relié à la Page Facebook : FAIT (Meta Business Suite programme
   ses stories sur les deux, constaté le 27/10).
 - Série 2 VALIDÉE et PROGRAMMÉE le 13 octobre (accord de Sophie) : 15
@@ -897,15 +943,19 @@ l'écran Fin de contrat.
 - Facultatif : clés Vercel en « Sensitive » (le garde-fou de la session a
   bloqué Claude ; procédure dans la conversation du 12 octobre).
 - Décisions produit en attente : gratuité, offre intermédiaire, offre MAM
-  (Sophie préfère attendre pour la MAM).
+  (Sophie préfère attendre pour la MAM). Aucune décision prise à ce jour ;
+  tarifs des concurrents relevés le 30/10 (voir « 30/10 (après-midi) »).
 
 **Claude, à la prochaine session (état du 30/10)**
-- Blog : la file se vide après le 9/11 (dernier article : reçu pour solde de
-  tout compte). Écrire de nouveaux brouillons avant ; publication seulement
-  sur accord écrit de Sophie.
-- Metricool : novembre est plein (20 publications par réseau, plan
-  gratuit) ; préparer la série de décembre, que Sophie valide avant toute
-  programmation.
+- Blog : la file va jusqu'au 13/11 (4 brouillons du 30/10). Vérifier
+  l'accord écrit de Sophie avant le 10/11 ; sans accord, retirer ces 4
+  articles de la file. Préparer d'autres brouillons avant le 13/11.
+- Metricool : série 4 (décembre) prête ; la programmer dès l'accord de
+  Sophie (marque 7382551, Page + Instagram, 20 h 30, texte alternatif),
+  après avoir vérifié que les articles des 11, 12 et 13/11 sont en ligne.
+- Stories : la déclaration des disponibilités sur monenfant.fr est due
+  avant le 1er décembre ; la proposer en story dans la série envoyée le
+  22/11.
 - Stories : rappel quotidien ; rappel du 1/11 (stories 48 à 54) ; rappel du
   22/11 pour la série qui suit le 27/11.
 - Maquette de l'API Tierce Déclaration Pajemploi : version de travail faite

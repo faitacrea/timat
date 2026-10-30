@@ -497,6 +497,113 @@ quizReponse("58-story-reponse-preavis-1080x1920.png", Q_PREAVIS, O_PREAVIS, 1,
   "De 3 mois à moins d'un an d'ancienneté : 15 jours calendaires (8 jours avant 3 mois, 1 mois à partir d'un an).",
   "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026), art. 119.1");
 
+// 59-66. SERIE 4 : PUBLICATIONS 21 A 28, DU 7 AU 23 DECEMBRE 2026.
+// Le forfait gratuit de Metricool permet 20 publications par mois : decembre
+// en a deja 4 (publications 19 et 20, Page et Instagram, les 2 et 4), il en
+// reste 16, soit 8 dates. Trois sujets reprennent des articles du blog
+// publies du 11 au 13 novembre (titre professionnel, relais petite enfance,
+// conge d'adoption) ; les autres viennent du guide DREETS
+// Bourgogne-Franche-Comte (juin 2026). Legendes dans kit-reseaux.html.
+
+// 59. LE TITRE PROFESSIONNEL
+pub("59-publication-21-titre-professionnel.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Titre professionnel · avenant n° 10</div>
+  <div style="font-size:230px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-4px">4,37 €</div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:24px;color:#fff;max-width:880px">brut de l'heure au minimum avec le titre «&nbsp;Assistant maternel – Assistant parental&nbsp;», au lieu de 4,20&nbsp;€.</div>
+  ${liste(["• Titre obtenu pendant le contrat : le taux passe au moins à 4,37 €.", "• Les indemnités (entretien, repas, kilomètres) ne comptent pas dans ce minimum."], "#D6E1E7", 33)}
+  <div style="font-size:23px;font-weight:600;margin-top:34px;color:#AFC0CA">Sources : avenant n° 10 du 5 février 2026, étendu le 4 mai 2026 · convention collective IDCC 3239, annexe 5</div>
+`, NAVY);
+
+// 60. LE RELAIS PETITE ENFANCE
+pub("60-publication-22-relais-petite-enfance.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Le relais petite enfance</div>
+  <div style="font-size:70px;font-weight:700;line-height:1.1;margin-top:26px;max-width:880px">Gratuit, pour vous comme pour les parents.</div>
+  <div style="margin-top:38px;padding:28px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Pour l'assistante maternelle</div>
+    <div style="font-size:33px;font-weight:600;margin-top:8px;line-height:1.4">De l'information, et un cadre pour échanger sur sa pratique et son évolution.</div>
+  </div>
+  <div style="margin-top:20px;padding:28px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Pour le parent employeur</div>
+    <div style="font-size:33px;font-weight:600;margin-top:8px;line-height:1.4">De l'aide pour trouver une assistante maternelle, et ses obligations d'employeur.</div>
+  </div>
+  <div style="font-size:31px;font-weight:700;line-height:1.4;margin-top:30px;color:${NAVY}">Obligatoire depuis le 1<sup style="font-size:.6em">er</sup> janvier 2026 dans les communes de plus de 10 000 habitants.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:26px" class="src">Sources : code de l'action sociale et des familles, art. L. 214-1-3 et L. 214-2-1 · caf.fr</div>
+`);
+
+// 61. LES CONGES PAYES DANS TIMAT
+pub("61-publication-23-conges-payes-timat.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">Les congés payés, comptés pour vous.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. 2,5 jours acquis par mois de travail, 30 au plus par an.</div>
+    <div style="margin-top:10px">2. Le dixième et le maintien de salaire, comparés : la méthode la plus favorable est retenue.</div>
+    <div style="margin-top:10px">3. Le solde suivi, mois après mois.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
+// 62. LES ABSENCES DE L'ENFANT PENDANT LES FETES
+pub("62-publication-24-absence-fetes.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Pendant les fêtes</div>
+  <div style="font-size:62px;font-weight:700;line-height:1.12;margin-top:26px;max-width:880px">L'enfant reste à la maison, l'assistante maternelle travaille ?</div>
+  <div style="font-size:96px;font-weight:700;line-height:1;margin-top:30px;color:${TERRA}">Le salaire est dû.</div>
+  <div style="font-size:34px;font-weight:600;line-height:1.4;margin-top:26px;color:#3C5463;max-width:880px">Les absences de l'enfant non prévues au contrat sont rémunérées.</div>
+  <div style="margin-top:32px;padding:28px 36px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:600;line-height:1.4">Année incomplète : les semaines non travaillées prévues au contrat ne sont pas des absences. Elles sont déjà comptées dans la mensualisation.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:28px" class="src">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 105</div>
+`);
+
+// 63. LES JOURS FERIES DE FIN D'ANNEE
+pub("63-publication-25-jours-feries.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">25 décembre · 1<sup style="font-size:.6em">er</sup> janvier</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:26px;color:#fff;max-width:880px">Un jour férié, chômé ou travaillé ?</div>
+  <div style="margin-top:38px;padding:28px 38px;border-radius:28px;background:rgba(255,255,255,.1)">
+    <div style="font-size:31px;font-weight:700;color:#F7C7B3">Chômé : salaire maintenu</div>
+    <div style="font-size:31px;font-weight:600;margin-top:8px;line-height:1.4;color:#fff">si l'assistante maternelle a travaillé le dernier jour de travail avant et le premier après (sauf absence autorisée).</div>
+  </div>
+  <div style="margin-top:20px;padding:28px 38px;border-radius:28px;background:rgba(255,255,255,.1)">
+    <div style="font-size:31px;font-weight:700;color:#F7C7B3">Travaillé : + 10 %</div>
+    <div style="font-size:31px;font-weight:600;margin-top:8px;line-height:1.4;color:#fff">s'il est prévu au contrat, ou avec son accord. Chaque heure est payée 110 % du taux du contrat.</div>
+  </div>
+  <div style="font-size:23px;font-weight:600;margin-top:30px;color:#AFC0CA">Sources : ${SRC_BFC} · convention collective IDCC 3239, art. 47-2</div>
+`, NAVY);
+
+// 64. LE CONGE D'ADOPTION
+pub("64-publication-26-conge-adoption.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Vous adoptez un enfant</div>
+  <div style="font-size:138px;font-weight:700;line-height:1;margin-top:28px;letter-spacing:-3px;white-space:nowrap">16 semaines</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.3;margin-top:22px;max-width:880px">de congé d'adoption au plus. 18 si l'adoption porte à trois ou plus les enfants à charge, 22 en cas d'adoptions multiples.</div>
+  <div style="margin-top:34px;padding:28px 36px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:31px;font-weight:600;line-height:1.4">À prendre entre 7 jours avant l'arrivée de l'enfant et 8 mois après. Partagé entre les deux parents : 25 jours de plus.</div>
+  </div>
+  <div style="font-size:31px;font-weight:700;margin-top:26px;color:${TERRA}">Les contrats sont suspendus : prévenez chaque famille par écrit.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:26px" class="src">Sources : code du travail, art. L. 1225-37, L. 1225-40, D. 1225-11-1 · convention collective IDCC 3239, art. 48-1-2-4</div>
+`);
+
+// 65. LA SANTE DANS TIMAT
+pub("65-publication-27-sante-timat.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">La santé de l'enfant, au même endroit.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. La fiche d'urgence, remplie par le parent.</div>
+    <div style="margin-top:10px">2. Le registre des médicaments : la date, l'heure, le médicament, la posologie, qui l'a donné.</div>
+    <div style="margin-top:10px">3. Imprimable à tout moment.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
+// 66. LES DATES DE CONGES PAYES AVANT LE 1ER MARS
+pub("66-publication-28-dates-conges-1er-mars.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Congés payés 2027</div>
+  <div style="font-size:200px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-4px">1<sup style="font-size:.5em">er</sup> mars</div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:24px;color:#fff;max-width:880px">au plus tard pour fixer les dates de congés de l'année.</div>
+  ${liste(["• Un seul employeur : il fixe les dates et les communique au plus tard le 1<sup style=\"font-size:.6em\">er</sup> mars.", "• Plusieurs employeurs : un accord recherché dès le 1<sup style=\"font-size:.6em\">er</sup> janvier. Sans accord, l'assistante maternelle fixe elle-même 4 semaines entre le 1<sup style=\"font-size:.6em\">er</sup> mai et le 31 octobre, et 1 semaine en hiver."], "#D6E1E7", 32)}
+  <div style="font-size:23px;font-weight:600;margin-top:32px;color:#AFC0CA">Sources : ${SRC_BFC}, fiche 5 · convention collective IDCC 3239, art. 102-1-1</div>
+`, NAVY);
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
