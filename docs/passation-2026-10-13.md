@@ -842,7 +842,18 @@ l'écran Fin de contrat.
 
 ## Ce qu'il reste à faire
 
-**Sophie**
+**Sophie (état du 30/10)**
+- Indexation : liste A le 31/10, liste B le 1/11 (voir « 30/10 (soir) »),
+  puis l'article publié la veille ; capture du rapport « Détectée,
+  actuellement non indexée » vers le 2/11.
+- Stories : calendrier du kit jusqu'au 8/11 ; le 1/11, programmer dans Meta
+  Business Suite les stories 48 à 54 et dire la dernière date acceptée.
+- URSSAF : renvoyer le message reformulé (fil avec
+  contact.tiercedeclaration@urssaf.fr) et transmettre la réponse.
+- Logo à côté des e-mails : Sophie a mis une photo de profil sur son compte
+  de messagerie. Elle ne s'affiche chez les destinataires Gmail que si
+  l'adresse d'envoi est un compte Google dont la photo est « visible par
+  tous » ; pas pour les e-mails envoyés par l'application.
 - Stripe : portail client FAIT (annulation en fin de période) ; e-mail
   d'échec de paiement ACTIVÉ. **13 octobre, fait par Claude avec l'accord
   de Sophie** : webhook créé sur le compte réel (`we_1UQ7Pu1AsEXBU0aLwngtYYAI`,
@@ -870,8 +881,8 @@ l'écran Fin de contrat.
 - Facebook : finir « À propos » ; envoyer le lien direct de la Page (pour
   l'ajouter au site) ; vérifier ce qui a déjà été publié sur la Page et dans
   le groupe.
-- Instagram : relier le compte à la Page Facebook ; vérifier la grille (I1 à
-  I5 publiés ?).
+- Instagram relié à la Page Facebook : FAIT (Meta Business Suite programme
+  ses stories sur les deux, constaté le 27/10).
 - Série 2 VALIDÉE et PROGRAMMÉE le 13 octobre (accord de Sophie) : 15
   publications Metricool à 20 h 30 — P1 à P5 sur la Page du 19 au 23 octobre
   (Instagram les avait déjà, capture du 13 octobre), puis 6 à 10 sur la Page
@@ -888,16 +899,19 @@ l'écran Fin de contrat.
 - Décisions produit en attente : gratuité, offre intermédiaire, offre MAM
   (Sophie préfère attendre pour la MAM).
 
-**Claude, à la prochaine session**
-- Publier la correction de `projet-accueil-assistante-maternelle` dès
-  l'accord écrit de Sophie.
-- La file de publication se vide après le 8 novembre : écrire d'autres
-  brouillons avant (pistes : titre professionnel et minimum majoré de 4 %,
-  avec la fiche DREETS Pays de la Loire du 12/06/2026 ; motif « arrivée
-  d'un enfant au foyer » à ajouter à l'écran Fin de contrat, article 103).
-- Vérifier dans Metricool que les publications du 19 octobre sont bien
-  parties (statut), puis préparer la série 3 (Sophie valide avant).
-- Lien de la Page Facebook sur le site : FAIT (PR #272).
+**Claude, à la prochaine session (état du 30/10)**
+- Blog : la file se vide après le 9/11 (dernier article : reçu pour solde de
+  tout compte). Écrire de nouveaux brouillons avant ; publication seulement
+  sur accord écrit de Sophie.
+- Metricool : novembre est plein (20 publications par réseau, plan
+  gratuit) ; préparer la série de décembre, que Sophie valide avant toute
+  programmation.
+- Stories : rappel quotidien ; rappel du 1/11 (stories 48 à 54) ; rappel du
+  22/11 pour la série qui suit le 27/11.
+- Maquette de l'API Tierce Déclaration Pajemploi : version de travail faite
+  le 30/10 (`docs/urssaf/maquette-api-tierce-declaration-pajemploi.pdf`,
+  générée par `docs/urssaf/generer-maquette-api-pajemploi.mjs`) ; à
+  ajuster au format et aux mentions que l'Urssaf demandera.
 - Après le vrai test Stripe : vérifier en base `stripe_customer_id`,
   `subscription_status`, puis le retour en gratuit après résiliation.
 - Points mineurs connus : `profiles.role` n'est pas protégé par le
