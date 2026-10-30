@@ -815,6 +815,23 @@ l'écran Fin de contrat.
   depuis la session) : contact.tiercedeclaration@urssaf.fr — à vérifier par
   Sophie sur la fiche. Essais conseillés avant de renvoyer : autre
   navigateur, fenêtre privée, sans remplissage automatique du mot de passe.
+- **30/10 (suite)** :
+  - URSSAF : Sophie a essayé Safari, Chrome et la navigation privée, même
+    erreur au Portail API. Son premier courriel est parti vers
+    **contact.tiercedeclaration@urssaf.fr** (adresse confirmée par elle) ;
+    elle renvoie le message reformulé. **À suivre** : la réponse.
+  - Maquette pour l'API Tierce Déclaration : rien de publié par l'Urssaf
+    pour Pajemploi (recherche du 30/10) ; pour l'API Cesu, le formulaire
+    DataPass a une rubrique « Maquette du projet (facultatif) ». Contenu
+    proposé à Sophie (6 écrans : information et mandat du parent,
+    identifiants Pajemploi, estimation des cotisations, récapitulatif à
+    valider, confirmation, révocation du mandat). Proposé de la fabriquer
+    quand elle le voudra ; ne pas inventer d'exigence officielle.
+  - BIMI (MXToolbox, avertissement orange) : facultatif, sans effet sur la
+    remise des courriels ; DMARC de timat.app déjà en quarantaine/rejet
+    (capture). Pour Gmail il faut un certificat (CMC ou VMC, plusieurs
+    centaines à plus de 1 000 $ par an selon des sources tierces ; VMC =
+    marque déposée). Conseil : ne rien faire pour l'instant.
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
