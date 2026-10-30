@@ -143,5 +143,14 @@ export const ordre = [
   // 27 octobre 2026 : le reçu pour solde de tout compte, que le blog ne
   // traitait qu'en passant. Un seul lien interne, vers un article en ligne.
   "recu-solde-de-tout-compte-assistante-maternelle",
+  // 30 octobre 2026 (« commence les nouveaux brouillons du blog », Sophie) :
+  // quatre sujets que le blog ne traitait pas. monenfant.fr d'abord : la
+  // prochaine échéance de déclaration des disponibilités est le 1er décembre.
+  // Liens internes vers des articles déjà en ligne seulement : aucune
+  // dépendance.
+  "monenfant-declarer-disponibilites-assistante-maternelle",
+  "titre-professionnel-assistant-parental-majoration-assistante-maternelle",
+  "relais-petite-enfance-rpe-assistante-maternelle",
+  "conge-adoption-assistante-maternelle",
 ];
 export default ordre;
