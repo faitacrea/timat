@@ -252,5 +252,29 @@ remplacé par « Assistant maternel - Assistant parental » (RNCP 42319). Rien
 trouvé d'officiel sur la majoration pour le nouveau titre : article à écrire
 seulement une fois ce point établi.
 
-Après le 9 novembre, la file est vide : il faudra d'autres brouillons d'ici là
+## Ajout du 30 octobre 2026 : quatre articles
+
+| Ordre | Date prévue | Slug | Rubrique | Sources principales |
+|---:|---|---|---|---|
+| 22 | 10 novembre | `monenfant-declarer-disponibilites-assistante-maternelle` | Démarches et agrément | Décret n° 2021-1131 du 30 août 2021 (art. R. 421-18-1 CASF) ; loi ASAP art. 100 (art. L. 421-4 CASF) ; guide Cnaf de l'assistant maternel sur monenfant.fr (octobre 2025) |
+| 23 | 11 novembre | `titre-professionnel-assistant-parental-majoration-assistante-maternelle` | Contrat et paie | Avenant n° 10 du 5 février 2026 (Légifrance KALIARTI000054254156), étendu par arrêté du 4 mai 2026 ; DREETS Pays de la Loire (12 juin 2026) ; France compétences RNCP 42319 et 37795 |
+| 24 | 12 novembre | `relais-petite-enfance-rpe-assistante-maternelle` | Le quotidien de l'accueil | CASF art. L. 214-1-3 et L. 214-2-1 (Légifrance) ; caf.fr ; monenfant.fr |
+| 25 | 13 novembre | `conge-adoption-assistante-maternelle` | Situation pratique | Code du travail art. L. 1225-37, L. 1225-40, D. 1225-11-1 ; DREETS BFC fiche 3 (art. 48-1-2-4) et fiche 10 (art. 103) |
+
+monenfant.fr en premier : la prochaine échéance de déclaration des
+disponibilités est le 1er décembre.
+
+La piste du titre professionnel, écartée le 27 octobre, est reprise : le point
+manquant est établi. L'avenant n° 10 du 5 février 2026, étendu, fixe le minimum
+à 4,20 € et le majore de 4 % (4,37 €) pour le titre « Assistant maternel –
+Assistant parental ». Il ne nomme pas l'ancien titre « Garde d'enfants » :
+l'article le dit, sans trancher.
+
+Pistes écartées le même jour, pour ne pas doubler des articles en ligne : la
+durée maximale de travail et les repos (déjà traités en détail dans
+`heures-complementaires-majorees-assistante-maternelle`) et la méthode de
+familiarisation du référentiel national (déjà dans
+`periode-adaptation-assistante-maternelle-parent`).
+
+Après le 13 novembre, la file est vide : il faudra d'autres brouillons d'ici là
 (le cron envoie une alerte dès qu'il en reste cinq ou moins).

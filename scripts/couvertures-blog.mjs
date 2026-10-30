@@ -185,6 +185,19 @@ export const COUVERTURES = [
   // FAQ 3.26 et 3.33 ; DREETS BFC, fiche 11).
   ["recu-solde-de-tout-compte-assistante-maternelle", "Contrat et paie",
    "Reçu pour solde de tout compte\u00a0: six mois pour le contester"],
+  // 30 octobre 2026 : quatre sujets que le blog ne traitait pas. monenfant.fr
+  // (décret du 30 août 2021, article R. 421-18-1 du CASF), le titre
+  // professionnel (avenant n° 10 du 5 février 2026), le relais petite enfance
+  // (articles L. 214-1-3 et L. 214-2-1 du CASF) et le congé d'adoption
+  // (articles L. 1225-37, L. 1225-40 et D. 1225-11-1 du code du travail).
+  ["monenfant-declarer-disponibilites-assistante-maternelle", "Démarches et agrément",
+   "monenfant.fr\u00a0: vos disponibilités avant le 1er juin et le 1er décembre"],
+  ["titre-professionnel-assistant-parental-majoration-assistante-maternelle", "Contrat et paie",
+   "Titre professionnel\u00a0: 4,37\u00a0€ de l’heure au lieu de 4,20\u00a0€"],
+  ["relais-petite-enfance-rpe-assistante-maternelle", "Le quotidien de l'accueil",
+   "Relais petite enfance\u00a0: obligatoire au-delà de 10\u00a0000 habitants"],
+  ["conge-adoption-assistante-maternelle", "Situation pratique",
+   "Congé d’adoption\u00a0: seize semaines, à prendre dans les huit mois"],
 ];
 
 async function polices() {
