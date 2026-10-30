@@ -794,6 +794,27 @@ l'écran Fin de contrat.
   bulletin). Pour une page corrigée, « Demander une indexation » sert même
   si l'URL est déjà sur Google : Google relit la nouvelle version.
   **À noter ici** : ce qu'elle aura fait.
+- **30/10 (soir)** : indexation de la liste du 30/10 faite du n° 1 au n° 6.
+  Sophie veut redemander l'indexation de TOUTES les pages modifiées. Liste
+  complète des pages corrigées depuis le 22/10 (dates de mise à jour Sanity
+  et `git log` des pages statiques), donnée en deux listes de 10 :
+  - liste A (31/10) : projet-accueil, budget-mensuel, quand-chercher,
+    vérificateur de bulletin, fin-de-contrat, rompre-contrat (parent),
+    devenir-agrement, indemnites-kilometriques, MAM, enfant-malade-absence ;
+  - liste B (1/11) : arret-travail, indemnite-depart-retraite, jours-feries,
+    visite-domicile-pmi, augmenter-son-tarif, chomage-apres-fin-contrat,
+    vaccins, simulateurs fin de contrat, salaire, congés payés.
+  Puis l'article du congé de naissance (publié le 31/10).
+- **URSSAF, API Tierce Déclaration Pajemploi** : réponse reçue le 28/10
+  (« AC750 », signée Claudine Remondeau) renvoyant au Portail API Urssaf ;
+  la création du compte sur portailapi.urssaf.fr échoue (« Une erreur s'est
+  produite lors de la création de votre compte ! »). Réponse reformulée pour
+  Sophie (identité EI + SIRET, message exact, date, navigateur, demande de
+  création côté Urssaf ou de transfert au service du portail). Contact
+  officiel de l'API trouvé par recherche (fiche data.gouv, non ouvrable
+  depuis la session) : contact.tiercedeclaration@urssaf.fr — à vérifier par
+  Sophie sur la fiche. Essais conseillés avant de renvoyer : autre
+  navigateur, fenêtre privée, sans remplissage automatique du mot de passe.
 - **À vérifier** : le titre « Assistant maternel / Garde d'enfants »
   (RNCP 37795) n'est plus enregistré depuis le 19/07/2026, remplacé par
   « Assistant maternel - Assistant parental » (RNCP 42319, France
