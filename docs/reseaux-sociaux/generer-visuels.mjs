@@ -630,6 +630,125 @@ pub("66-publication-28-dates-conges-1er-mars.png", `
   <div style="font-size:23px;font-weight:600;margin-top:32px;color:#AFC0CA">Sources : ${SRC_BFC}, fiche 5 · convention collective IDCC 3239, art. 102-1-1</div>
 `, NAVY);
 
+// SERIE 5 · JANVIER 2027 (publications 29 a 38, images 76 a 85). A valider par
+// Sophie avant toute programmation. Chaque regle est verifiee dans le guide de
+// la DREETS Bourgogne-Franche-Comte (juin 2026), sur Legifrance ou sur le Code
+// du travail numerique. Aucun montant de 2027 n'est ecrit : ceux du 1er janvier
+// ne sont pas publies au moment de la preparation (verification prevue le
+// 18 decembre). Legendes dans kit-reseaux.html.
+
+// 76. BONNE ANNEE
+pub("76-publication-29-bonne-annee.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Bonne année 2027 !</div>
+  <div style="font-size:78px;font-weight:700;line-height:1.1;margin-top:22px;max-width:840px">Quelle question vous posez-vous pour cette année ?</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.45;margin-top:44px;color:#3C5463;max-width:860px">Contrat, salaire, congés, Pajemploi : écrivez-la en commentaire. Je réponds, source officielle à l'appui.</div>
+  <div style="font-size:30px;font-weight:600;margin-top:40px;color:#5E6E78">— Sophie, fondatrice de TiMat</div>
+`);
+
+// 77. LE SMIC AUGMENTE : ET VOTRE TAUX ?
+pub("77-publication-30-smic-et-minimum.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Le SMIC augmente : et votre taux ?</div>
+  <div style="font-size:230px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-4px">4,20 €</div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:24px;color:#fff;max-width:880px">brut de l'heure, par enfant : le minimum conventionnel ne suit pas le SMIC.</div>
+  ${liste(["• Le minimum légal, 0,281 × SMIC, était de 3,46 € depuis juin 2026 : c'est le plus haut des deux qui s'applique.", "• 4,37 € avec le titre professionnel de la branche.", "• L'indemnité d'entretien suit le minimum garanti : à revérifier à chaque revalorisation."], "#D6E1E7", 31)}
+  <div style="font-size:23px;font-weight:600;margin-top:30px;color:#AFC0CA">Sources : code de l'action sociale et des familles, art. <span style="white-space:nowrap">D. 423-9</span> · avenant n° 10 du 5 février 2026 (IDCC 3239) · ${SRC_BFC}</div>
+`, NAVY);
+
+// 78. LE RAPPORT ANNUEL DANS TIMAT — seulement ce que le PDF contient.
+pub("78-publication-31-rapport-annuel-timat.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">Votre année 2026, en un PDF.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. Les heures pointées, les jours d'accueil et les absences.</div>
+    <div style="margin-top:10px">2. Le salaire net de l'année et les indemnités d'entretien.</div>
+    <div style="margin-top:10px">3. Un rapport par enfant, avec votre signature.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
+// 79. AUGMENTER SON TARIF
+pub("79-publication-32-augmenter-son-tarif.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Augmenter son tarif</div>
+  <div style="font-size:80px;font-weight:700;line-height:1.1;margin-top:26px;max-width:880px">Un avenant, signé par les deux.</div>
+  <div style="font-size:35px;font-weight:600;line-height:1.4;margin-top:28px;color:#3C5463;max-width:880px">Le taux horaire fait partie du contrat : il ne change qu'avec l'accord du parent employeur.</div>
+  <div style="margin-top:34px;padding:28px 36px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Une seule exception</div>
+    <div style="font-size:32px;font-weight:600;margin-top:8px;line-height:1.4">Un taux passé sous le minimum (4,20 €, 4,37 € avec le titre professionnel) doit être relevé, sans négociation.</div>
+  </div>
+  <div style="font-size:31px;font-weight:700;line-height:1.4;margin-top:28px;color:${NAVY}">Conseil : donnez le nouveau salaire mensualisé, pas seulement le taux.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:26px" class="src">Sources : code civil, art. 1193 · avenant n° 10 du 5 février 2026 (IDCC 3239) · ${SRC_BFC}, fiche&nbsp;12</div>
+`);
+
+// 80. DEUX ENFANTS, DEUX CONTRATS
+pub("80-publication-33-fratrie-deux-contrats.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Frères et sœurs chez la même assistante maternelle</div>
+  <div style="font-size:176px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-4px;white-space:nowrap">2 contrats</div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:24px;color:#fff;max-width:880px">un par enfant, chacun avec son salaire, sa mensualisation et sa fin.</div>
+  ${liste(["• Le second contrat reprend l'ancienneté du premier, s'il est toujours en cours.", "• Le minimum s'entend par enfant : 4,20 € brut de l'heure pour chacun.", "• Depuis janvier 2026 : une déclaration Pajemploi par enfant."], "#D6E1E7", 32)}
+  <div style="font-size:23px;font-weight:600;margin-top:30px;color:#AFC0CA">Sources : ${SRC_BFC}, fiche 12 (art. 90-1 de la convention collective IDCC 3239) · Code du travail numérique · urssaf.fr</div>
+`, NAVY);
+
+// 81. LE MINIMUM SURVEILLE DANS TIMAT
+pub("81-publication-34-minimum-surveille-timat.png", `
+  <div class="rond" style="width:300px;height:300px;background:${PECHE};right:-200px;top:-150px;opacity:.9"></div>
+  <div style="font-size:32px;font-weight:700;color:${TERRA}">Dans TiMat</div>
+  <div style="font-size:84px;font-weight:700;line-height:1.08;margin-top:22px;max-width:820px">Votre taux, comparé au minimum.</div>
+  <div style="font-size:36px;font-weight:600;line-height:1.5;margin-top:44px;color:#3C5463;max-width:860px">
+    <div>1. Chaque contrat comparé au minimum du moment : 4,20 €, 4,37 € avec le titre professionnel.</div>
+    <div style="margin-top:10px">2. En dessous : une alerte sur le contrat, qui dit qu'un avenant est nécessaire.</div>
+    <div style="margin-top:10px">3. Les bulletins calculés au minimum du mois payé, jamais en dessous.</div>
+  </div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+`);
+
+// 82. LE CONGE DE NAISSANCE AVANT LE 31 MARS 2027
+pub("82-publication-35-conge-naissance-31-mars.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Enfant né ou adopté entre janvier et juin 2026</div>
+  <div style="font-size:140px;font-weight:700;line-height:1;margin-top:28px;letter-spacing:-3px;white-space:nowrap">31 mars 2027</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.3;margin-top:22px;max-width:880px">au plus tard pour commencer le congé de naissance : 1 ou 2 mois, pour chaque parent.</div>
+  <div style="margin-top:32px;padding:28px 36px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:31px;font-weight:600;line-height:1.4">Prévenir chaque employeur au moins 1 mois avant, par lettre recommandée ou remise contre récépissé. Indemnisé par l'Assurance Maladie : 70 % du salaire net le 1<sup style="font-size:.6em">er</sup> mois, 60 % le 2<sup style="font-size:.6em">e</sup>.</div>
+  </div>
+  <div style="font-size:31px;font-weight:700;margin-top:24px;color:${TERRA}">Parent en congé, enfant gardé à la maison : le salaire de l'assistante maternelle reste dû.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:24px" class="src">Sources : décret n° 2026-419 du 30 mai 2026, art. 2 · code du travail, art. <span style="white-space:nowrap">D. 1225-11-4</span> et <span style="white-space:nowrap">D. 1225-11-5</span> · ${SRC_BFC}, fiche 3</div>
+`);
+
+// 83. LA RUPTURE CONVENTIONNELLE N'EXISTE PAS
+pub("83-publication-36-rupture-conventionnelle.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Se quitter d'un commun accord ?</div>
+  <div style="font-size:64px;font-weight:700;line-height:1.12;margin-top:26px;max-width:880px">La rupture conventionnelle n'existe pas pour l'assistante maternelle.</div>
+  <div style="margin-top:36px;padding:28px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">Le parent arrête : le retrait de l'enfant</div>
+    <div style="font-size:32px;font-weight:600;margin-top:8px;line-height:1.4">Par lettre recommandée ou remise en main propre contre décharge.</div>
+  </div>
+  <div style="margin-top:20px;padding:28px 38px;border-radius:28px;background:${SABLE}">
+    <div style="font-size:30px;font-weight:700;color:${TERRA}">L'assistante maternelle arrête : la démission</div>
+    <div style="font-size:32px;font-weight:600;margin-top:8px;line-height:1.4">Par lettre recommandée avec accusé de réception.</div>
+  </div>
+  <div style="font-size:31px;font-weight:700;line-height:1.4;margin-top:28px;color:${NAVY}">Hors période d'essai, un préavis s'applique dans les deux cas.</div>
+  <div style="font-size:23px;font-weight:600;margin-top:24px" class="src">Sources : Code du travail numérique, convention IDCC 3239 · ${SRC_BFC}, fiche&nbsp;10 · CASF, art. <span style="white-space:nowrap">L. 423-2</span></div>
+`);
+
+// 84. LES CONGES COMPLEMENTAIRES NON REMUNERES
+pub("84-publication-37-conges-complementaires.png", `
+  <div style="font-size:32px;font-weight:700;color:#F7C7B3;">Moins de 30 jours de congés acquis ?</div>
+  <div style="font-size:220px;font-weight:700;line-height:1;margin-top:30px;color:#fff;letter-spacing:-4px">30 jours</div>
+  <div style="font-size:40px;font-weight:600;line-height:1.3;margin-top:24px;color:#fff;max-width:880px">ouvrables de repos par an quand même : le reste se prend en congés complémentaires, non rémunérés.</div>
+  ${liste(["• Accueil sur 52 semaines : ils se posent comme les congés payés, et se retirent du salaire.", "• 46 semaines ou moins : ils font partie des semaines non travaillées, déjà retirées de la mensualisation.", "• Ils n'ouvrent pas de droit à congés payés."], "#D6E1E7", 31)}
+  <div style="font-size:23px;font-weight:600;margin-top:30px;color:#AFC0CA">Sources : convention collective IDCC 3239, art. 102-2 · ${SRC_BFC}, fiche 3</div>
+`, NAVY);
+
+// 85. ASSISTANTE MATERNELLE EN ARRET MALADIE
+pub("85-publication-38-arret-maladie-assmat.png", `
+  <div style="font-size:32px;font-weight:700;color:${TERRA};">Assistante maternelle en arrêt maladie</div>
+  <div style="font-size:230px;font-weight:700;line-height:1;margin-top:28px;letter-spacing:-4px">48 h</div>
+  <div style="font-size:38px;font-weight:600;line-height:1.3;margin-top:22px;max-width:880px">pour remettre le justificatif d'arrêt à chaque parent employeur.</div>
+  ${liste(["• Le parent ne paie pas les jours d'arrêt : ils sont retirés du salaire.", "• L'Assurance Maladie verse des indemnités journalières, l'Ircem Prévoyance un complément, sous conditions.", "• Le contrat est suspendu, pas rompu, et l'arrêt compte pour l'ancienneté."], "#3C5463", 32)}
+  <div style="font-size:23px;font-weight:600;margin-top:30px" class="src">Sources : convention collective IDCC 3239, art. 49, 111 et annexe 3 · ${SRC_BFC}, fiche 3 · pajemploi.urssaf.fr</div>
+`);
+
 const nav = await chromium.launch({ executablePath: CHROMIUM() });
 for (const [nom, w, h, html] of visuels) {
   const p = await nav.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
