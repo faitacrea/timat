@@ -23,7 +23,7 @@ import {
 , logAction
 } from "./App.jsx";
 import {
-  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, PLANCHER_KM_CONV, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, preavisRetraiteJours, finPreavis, moisDeContrat, heuresPointeesPlafonnees, regularisationAnneeIncomplete, TAUX_PRECARITE_CDD, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
+  BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, plancherKm, hausseKmEnVigueur, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, preavisRetraiteJours, finPreavis, moisDeContrat, heuresPointeesPlafonnees, regularisationAnneeIncomplete, TAUX_PRECARITE_CDD, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
 } from "./socle.jsx";
 
 export function AlerteTauxMinimum({taux,date,debut,titreAmge}){
@@ -3126,8 +3126,8 @@ export function RecapFiscalAssmat({enfants,user}){
   </div>;
 }
 
-export function AlerteTauxKm({taux,cv}){
-  const plancher=PLANCHER_KM_CONV[cv];
+export function AlerteTauxKm({taux,cv,date}){
+  const plancher=plancherKm(cv,date);
   const t=Number(taux)||0;
   if(!plancher||t<=0||t>=plancher)return null;
   return <div style={{display:"flex",gap:9,alignItems:"flex-start",background:"var(--Rp)",
@@ -3136,7 +3136,9 @@ export function AlerteTauxKm({taux,cv}){
     <IconeOuEmoji e="⚠️" taille={16}/>
     <span><b>Taux kilométrique sous le minimum.</b> {nb3(t)} €/km, alors que la convention
     {" "}interdit de descendre sous {nb2(plancher)} €/km pour un véhicule de {cv>=6?"6 ou 7 CV":cv+" CV"}
-    {" "}(arrêté du 29 mai 2026, applicable jusqu'au 31 décembre 2026).</span>
+    {" "}{hausseKmEnVigueur(date)
+      ?"(arrêté du 29 mai 2026, applicable jusqu'au 31 décembre 2026)."
+      :"(barème de l'administration, arrêté du 14 mars 2022 : la hausse de 2026 a pris fin le 31 décembre)."}</span>
   </div>;
 }
 
@@ -3235,7 +3237,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
         </select>
         <span style={{fontSize:13,color:"var(--G)",fontWeight:700}}>→ {nbf(BAREME_KM_2026[cv],3)} €/km</span>
       </div>
-      <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.5}}>Barème kilométrique 2026 (gelé) — voiture, tranche jusqu'à 5 000 km/an. Le taux pré-remplit chaque trajet ; tu peux l'ajuster, sans descendre sous {nb2(PLANCHER_KM_CONV[cv])} €/km (barème de l'administration, minimum imposé par la convention).</div>
+      <div style={{fontSize:11,color:"var(--l)",marginTop:8,lineHeight:1.5}}>Barème kilométrique 2026 (gelé) — voiture, tranche jusqu'à 5 000 km/an. Le taux pré-remplit chaque trajet ; tu peux l'ajuster, sans descendre sous {nb2(plancherKm(cv,nt.date))} €/km (barème de l'administration, minimum imposé par la convention).</div>
     </div>
 
     <div className="card" style={{marginBottom:14}}>
@@ -3253,7 +3255,7 @@ export function IndemnitesKilometriques({enfants,role,user}){
         <input placeholder="Taux €/km" inputMode="decimal" value={nt.taux} onChange={e=>setNt({...nt,taux:e.target.value})} style={inp}/>
         <button className="btn bG" onClick={ajouter} disabled={saving||!nt.km} style={{whiteSpace:"nowrap"}}>{saving?"…":"Ajouter"}</button>
       </div>
-      <AlerteTauxKm taux={nt.taux} cv={cv}/>
+      <AlerteTauxKm taux={nt.taux} cv={cv} date={nt.date}/>
     </div>
 
     <div className="card" style={{marginBottom:14}}>

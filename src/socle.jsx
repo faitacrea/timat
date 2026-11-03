@@ -1271,6 +1271,19 @@ export const BAREME_KM_2026={3:0.529,4:0.606,5:0.636,6:0.665,7:0.697}; // voitur
 
 export const PLANCHER_KM_CONV={3:0.33,4:0.33,5:0.33,6:0.42,7:0.42};
 
+// LA HAUSSE S'ARRETE AU 31 DECEMBRE 2026, ET LE PLANCHER AVEC ELLE.
+//
+// Le plancher ci-dessus n'avait pas de date : au 1er janvier 2027, l'alerte
+// aurait continue d'exiger 0,33 €/km et de citer un arrete qui ne s'applique
+// plus. Sans texte nouveau, ce sont les taux de l'arrete du 14 mars 2022
+// (tranche jusqu'a 2 000 km) qui reviennent : 0,32 € pour 5 CV et moins,
+// 0,41 € pour 6 et 7 CV — ceux que la fiche de la DREETS Pays de la Loire du
+// 12 juin 2026 affiche encore. Le plancher se lit donc a la date du trajet.
+export const PLANCHER_KM_2022={3:0.32,4:0.32,5:0.32,6:0.41,7:0.41};
+export const FIN_HAUSSE_KM_2026="2026-12-31";
+export const hausseKmEnVigueur=(date)=>isoJour(date)<=FIN_HAUSSE_KM_2026;
+export const plancherKm=(cv,date)=>(hausseKmEnVigueur(date)?PLANCHER_KM_CONV:PLANCHER_KM_2022)[cv];
+
 export const FAQ_DATA=[
   {cat:"Pajemploi",q:"Comment exporter mes données vers Pajemploi ?",
    r:"Dans Paie & Contrats > Facturation & Pajemploi, cliquez sur 'Exporter vers Pajemploi'. TiMat génère un récapitulatif avec toutes les données nécessaires (heures, salaire net, indemnités) prêtes à saisir sur pajemploi.urssaf.fr entre le 25 et le 5 du mois suivant."}, // RENAME NAV P9
