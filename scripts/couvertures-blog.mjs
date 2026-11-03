@@ -198,6 +198,13 @@ export const COUVERTURES = [
    "Relais petite enfance\u00a0: obligatoire au-delà de 10\u00a0000 habitants"],
   ["conge-adoption-assistante-maternelle", "Situation pratique",
    "Congé d’adoption\u00a0: seize semaines, à prendre dans les huit mois"],
+  // 3 novembre 2026 : deux sujets du guide DREETS Bourgogne-Franche-Comté
+  // que le blog ne traitait pas (articles 48-2-3 et 48-1-2), le premier
+  // vérifié sur le code du travail en vigueur (L. 1225-62 et L. 1225-63).
+  ["conge-presence-parentale-assistante-maternelle", "Situation pratique",
+   "Enfant gravement malade\u00a0: jusqu’à 310 jours de congé"],
+  ["examens-grossesse-absences-payees-assistante-maternelle", "Situation pratique",
+   "Examens de grossesse\u00a0: des absences payées par les familles"],
 ];
 
 async function polices() {
