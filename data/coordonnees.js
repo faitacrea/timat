@@ -30,13 +30,13 @@ export const EMAIL_EXPEDITEUR = "contact@timat.app";
 export const INSTAGRAM_URL = "https://www.instagram.com/timat_app/";
 export const INSTAGRAM_NOM = "@timat_app";
 
-// Page et groupe Facebook, liens donnés par Sophie le 22 octobre 2026. Ce sont
-// des liens de partage (facebook.com/share/...) : ils redirigent vers la Page
-// et le groupe, et c'est la seule forme qu'on puisse vérifier d'ici (Facebook
-// est bloqué depuis l'environnement de développement). On a retiré le suivi
-// « ?mibextid=… » ajouté par l'application. Si l'adresse directe de la Page
-// (facebook.com/<nom>) est connue un jour, c'est ici qu'elle se change.
-export const FACEBOOK_PAGE_URL = "https://www.facebook.com/share/1EREng5TZz/";
+// Page et groupe Facebook. Le groupe garde le lien de partage donné par Sophie
+// le 22 octobre 2026 (facebook.com/share/g/...), sans le suivi « ?mibextid=… ».
+// La Page a désormais son adresse directe : Sophie a enregistré le nom
+// d'utilisateur timatapp et vérifié le 3 novembre que facebook.com/timatapp
+// ouvre bien la Page (Facebook est bloqué depuis l'environnement de
+// développement, la vérification ne peut se faire que de son côté).
+export const FACEBOOK_PAGE_URL = "https://www.facebook.com/timatapp";
 export const FACEBOOK_GROUPE_URL = "https://www.facebook.com/share/g/1DrVY3qE2W/";
 
 // L'HEBERGEUR, ECRIT UNE SEULE FOIS.
