@@ -20,7 +20,7 @@ import { supabase } from "../lib/supabase.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import {
   ALLOC_FORMATION_H, ALLOC_FORMATION_PLAFOND_H, AjouterEnfantModale, BoutonAjouterEnfant, CPill, D, EmptyState, H, IconeOuEmoji, MOIS_PAR_AN, PageHeader, Pastille, SEMAINES_MAX_ANNEE_INCOMPLETE, TAUX_COTISATIONS, Toast, VerrouPro, chargerJsPDF, estAnneeComplete, estPro, fmt, fmtDatePdf, heuresMensualisees, heuresDeclarees, isoJour, isoMois, nbf, netDepuisBrut, protegerPdf, salaireMensualise, semainesDuContrat, smicHoraireAu, todayStr, G, TODAY_STR, createNotification, sendNotificationEmail, generateAndStoreContratPDF
-, logAction
+, logAction, debutAnciennete
 } from "./App.jsx";
 import {
   BAREME_KM_2026, COURRIERS_DATA, HEURES_TYPES, MODELES_CONTRATS, plancherKm, hausseKmEnVigueur, REPAS_CHOIX, RETENUE_TYPES, VERSEMENT_MODES, allocationFormation, congesAcquis, decalerMois, iccpCalcul, indemniteEntretienMin, indemniteRupture, minimumHoraireAu, nb2, nb3, pdfPerime, preavisJours, preavisRetraiteJours, finPreavis, moisDeContrat, heuresPointeesPlafonnees, regularisationAnneeIncomplete, TAUX_PRECARITE_CDD, retenueAbsence, entretienDuContrat, useUneFois, joursAccueilParMois, abattementJour, repartitionHeures, TAUX_MAJORATION_HEURES, tauxMajorationDu, supplementJoursFeries, tauxHoraireAu
@@ -1643,104 +1643,55 @@ template:"bulletin_sent",
 
 //
 
-export function DemandesAvenants({enfants,role,pEId}){
-  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const enfant=liste[0];
-  const [demandes,setDemandes]=useState([]);
-  const [form,setForm]=useState({type:"Modification d'horaires",detail:"",dateEffet:""});
-  const [toast,setToast]=useState("");
+// LA « DEMANDE D'AVENANT » QUI N'ALLAIT NULLE PART
+//
+// Un second formulaire de demande d'avenant s'affichait sous les contrats. Il
+// n'ecrivait rien en base et n'envoyait rien : la demande vivait dans l'ecran,
+// disparaissait au rechargement, et le message « Demande d'avenant envoyee ✓ -
+// l'asmat sera notifiee » etait faux. Il est retire. La vraie demande de
+// modification est celle du contrat (table modifications_contrat) : proposee
+// par l'un, acceptee ou refusee par l'autre, conservee et datee.
+// LES MODELES : CE QUI SE GENERE VRAIMENT
+//
+// Le bouton « Generer le document » n'affichait qu'un message, « Avenant
+// genere ✓ » ou « Contrat genere ✓ » : aucun document n'etait produit.
+//
+// Pour un avenant, il produit maintenant le document, pret a imprimer en deux
+// exemplaires et a signer (CCN 3239, art. 41.1). Pour un contrat, il ne
+// produit rien, et c'est voulu : quatre champs ne font pas un contrat, qui a
+// ses mentions obligatoires (DREETS Bourgogne-Franche-Comte, guide de juin
+// 2026, fiche 12). Le contrat complet se cree dans l'onglet des contrats.
+export const corpsAvenant=({modele,form,enfant,user,H,mensualise})=>{
+  const ct=enfant?.contrat||{};
+  const emp=ct.employeur_snapshot||{};
+  const employeur=[emp.prenom,emp.nom].filter(Boolean).join(" ")||"[Nom du particulier employeur]";
+  const salarie=[user?.prenom,user?.nom].filter(Boolean).join(" ")||"[Nom de l'assistante maternelle]";
+  const v=(c)=>H(String(form[c]||"").trim())||"[à compléter]";
+  const objet=modele.id==="ct5"?"Revalorisation du salaire horaire":"Modification des jours ou des horaires d'accueil";
+  // Le taux se saisit a la francaise, « 4,50 » : sans ce remplacement il
+  // valait NaN, et le salaire mensualise comme l'alerte du minimum se taisaient.
+  const taux=Number(String(form["Nouveau taux horaire"]||"").replace(",","."))||0;
+  const mensuel=taux>0&&mensualise?mensualise(ct,taux):0;
+  const ligne=modele.id==="ct5"
+    ?"<p>Nouveau taux horaire brut, par heure d'accueil : <b>"+v("Nouveau taux horaire")+" €</b>.</p>"
+      +(mensuel>0?"<p>Nouveau salaire mensualisé brut : <b>"+H(nbf(mensuel,2))+" €</b>, calculé sur les heures et les semaines d'accueil du contrat.</p>":"")
+    :"<p>Nouveaux jours et horaires d'accueil : <b>"+v("Nouveaux horaires")+"</b>.</p>";
+  const debut=ct.debut?new Date(ct.debut+"T12:00:00").toLocaleDateString("fr-FR"):"[date]";
+  const effet=form["Date d'effet"]?new Date(form["Date d'effet"]+"T12:00:00").toLocaleDateString("fr-FR"):"[date]";
+  return "<h1>AVENANT AU CONTRAT DE TRAVAIL</h1>"
+    +"<p class=\"muted\">Convention collective des particuliers employeurs et de l'emploi à domicile (IDCC 3239)</p>"
+    +"<p>Entre <b>"+H(employeur)+"</b>, particulier employeur,</p>"
+    +"<p>et <b>"+H(salarie)+"</b>, assistante maternelle"+(user?.numero_agrement?" (agrément n° "+H(user.numero_agrement)+")":"")+",</p>"
+    +"<p>il est convenu de modifier le contrat de travail conclu pour l'accueil de <b>"+H(enfant?.prenom||"[prénom de l'enfant]")+"</b>, commencé le "+debut+".</p>"
+    +"<p><b>Objet :</b> "+H(objet)+".</p>"+ligne
+    +"<p><b>Date d'effet :</b> "+effet+".</p>"
+    +(String(form["Motif"]||"").trim()?"<p><b>Motif :</b> "+v("Motif")+".</p>":"")
+    +"<p>Les autres clauses du contrat restent inchangées.</p>"
+    +"<p>Fait en deux exemplaires, un pour chaque partie, à ______________________, le ______________.</p>"
+    +"<div class=\"sign\"><div>Le particulier employeur<br><br><br>Signature</div><div>L'assistante maternelle<br><br><br>Signature</div></div>";
+};
 
-  const types=["Modification d'horaires","Revalorisation du salaire","Modification des jours d'accueil","Changement de la durée du contrat","Autre modification"];
-
-  const soumettre=()=>{
-    if(!form.detail.trim()||!form.dateEffet)return;
-    setDemandes(p=>[{
-      id:"av"+Date.now(),
-      type:form.type,detail:form.detail,
-      dateEffet:form.dateEffet,
-      statut:"En attente",
-      date:TODAY_STR,
-      enfantId:enfant?.id,
-      prenomEnfant:enfant?.prenom||"Enfant",
-    },...p]);
-    setForm({type:"Modification d'horaires",detail:"",dateEffet:""});
-    setToast("Demande d'avenant envoyée ✓ - l'asmat sera notifiée");
-  };
-
-  const statutColor={
-    "En attente":"var(--G)","Acceptée":"var(--S)","Refusée":"var(--R)","Signée":"var(--T)"
-  };
-
-  return <div>
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="✏️" title="Demandes d'avenants"
-      sub="Toute modification du contrat doit faire l'objet d'un avenant signé"/>
-
-    <div className="card"style={{marginBottom:16}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:14}}>
-        <IconeOuEmoji e="➕"/> Nouvelle demande d'avenant
-      </div>
-      <div style={{display:"grid",gap:12}}>
-        <div>
-          <label className="lbl">Type de modification</label>
-          <select className="sel"value={form.type}onChange={e=>setForm(p=>({...p,type:e.target.value}))}>
-            {types.map(t=><option key={t}>{t}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="lbl">Date d'effet souhaitée *</label>
-          <input type="date"className="inp"value={form.dateEffet}
-            onChange={e=>setForm(p=>({...p,dateEffet:e.target.value}))}/>
-        </div>
-        <div>
-          <label className="lbl">Détail de la demande *</label>
-          <textarea className="ta"placeholder="Décrivez précisément la modification souhaitée..."
-            value={form.detail}onChange={e=>setForm(p=>({...p,detail:e.target.value}))}
-            style={{minHeight:80}}/>
-        </div>
-        <button className="btn bT"style={{justifyContent:"center"}}onClick={soumettre}
-          disabled={!form.detail.trim()||!form.dateEffet}>
-          <IconeOuEmoji e="📤"/> Soumettre la demande
-        </button>
-      </div>
-    </div>
-
-    {demandes.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
-      <div style={{fontWeight:700,fontSize:13,color:"var(--b)",marginBottom:6}}><IconeOuEmoji e="📋"/> Historique des demandes</div>
-      {demandes.map(d=><div key={d.id}className="card">
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
-          <div>
-            <div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{d.type}</div>
-            <div style={{fontSize:11,color:"var(--l)"}}>Demande du {fmt(d.date)} · Effet le {fmt(d.dateEffet)}</div>
-          </div>
-          <span className="badge"style={{background:"var(--Gp)",color:statutColor[d.statut],fontSize:11}}>
-            {d.statut}
-          </span>
-        </div>
-        <div style={{fontSize:12,color:"var(--m)",background:"var(--c)",borderRadius:8,padding:"8px 10px"}}>
-          {d.detail}
-        </div>
-        {role==="asmat"&&d.statut==="En attente"&&<div style={{display:"flex",gap:8,marginTop:10}}>
-          <button className="btn bG s"onClick={()=>setDemandes(p=>p.map(x=>x.id===d.id?{...x,statut:"Refusée"}:x))}>
-            ✕ Refuser
-          </button>
-          <button className="btn bT s"style={{flex:1,justifyContent:"center"}}
-            onClick={()=>setDemandes(p=>p.map(x=>x.id===d.id?{...x,statut:"Acceptée"}:x))}>
-            ✓ Accepter et créer l'avenant
-          </button>
-        </div>}
-      </div>)}
-    </div>}
-
-    {demandes.length===0&&<div className="card"style={{padding:"var(--pad-carte-l)",textAlign:"center"}}>
-      <div style={{marginBottom:8}}><IconeOuEmoji e="✏️" taille={36} couleur="var(--l)"/></div>
-      <div style={{fontSize:13,color:"var(--m)"}}>Aucune demande d'avenant en cours</div>
-      <div style={{fontSize:11,color:"var(--l)",marginTop:4}}>Les demandes soumises apparaîtront ici</div>
-    </div>}
-  </div>;
-}
-
-export function ContratsTypes({enfants}){
+export function ContratsTypes({enfants,user}){
   const [selModele,setSelModele]=useState(null);
   const [form,setForm]=useState({});
   const [toast,setToast]=useState("");
@@ -1773,7 +1724,8 @@ export function ContratsTypes({enfants}){
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
         {m.champs.map(c=><div key={c}>
           <label className="lbl">{c}</label>
-          {c==="Enfant"?<select className="sel"value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}>
+          {(c==="Enfant"||c==="Contrat concerné")?<select className="sel"value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}>
+            <option value="">Choisir…</option>
             {enfants.map(e=><option key={e.id}value={e.id}>{e.emoji} {e.prenom}</option>)}
           </select>
           :c.includes("Date")||c.includes("effet")?<input type="date"className="inp"value={form[c]||""}onChange={e=>setForm(f=>({...f,[c]:e.target.value}))}/>
@@ -1782,10 +1734,23 @@ export function ContratsTypes({enfants}){
       </div>
       <div style={{display:"flex",gap:8}}>
         <button className="btn bG"style={{flex:1}}onClick={()=>setSelModele(null)}>Annuler</button>
-        <button className="btn bT"style={{flex:2}}onClick={()=>setToast((m.avenant?"Avenant généré ✓":"Contrat généré ✓"))}>
-          <IconeOuEmoji e="📄"/> Générer le document
-        </button>
+        {m.avenant
+          ?<button className="btn bT"style={{flex:2}}onClick={()=>{
+            const enfant=enfants.find(e=>String(e.id)===String(form["Contrat concerné"]));
+            if(!enfant){setToast("Choisissez le contrat concerné");return;}
+            const w=window.open("","_blank");
+            if(!w){setToast("Autorisez les fenêtres pour ce site, puis recommencez");return;}
+            const corps=corpsAvenant({modele:m,form,enfant,user,H,mensualise:salaireMensualise});
+            w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Avenant au contrat de travail</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Calibri,Arial,sans-serif;max-width:760px;margin:0 auto;padding:48px;color:#2E4859;font-size:14px;line-height:1.9}h1{font-size:19px;text-align:center;letter-spacing:2px;margin-bottom:6px}p{margin:10px 0}.sign{margin-top:52px;display:flex;justify-content:space-between}.muted{color:#9aa;font-size:11px;text-align:center;margin-bottom:24px}@media print{.noprint{display:none}}</style></head><body>${corps}<div class="noprint"style="text-align:center;margin-top:28px"><button onclick="window.print()"style="background:#C76754;color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Imprimer / PDF</button></div></body></html>`);
+            w.document.close();
+          }}>
+            <IconeOuEmoji e="📄"/> Générer l'avenant
+          </button>
+          :<div style={{flex:2,fontSize:12,color:"var(--m)",lineHeight:1.5}}>
+            Le contrat complet, avec toutes ses mentions obligatoires, se crée dans l'onglet « Contrats &amp; Avenants ». Ce modèle en donne les grandes lignes.
+          </div>}
       </div>
+      {m.id==="ct5"&&<AlerteTauxMinimum taux={String(form["Nouveau taux horaire"]||"").replace(",",".")} date={form["Date d'effet"]||undefined} titreAmge={user?.titre_amge}/>}
     </div>}
   </div>;
 }
@@ -2375,14 +2340,11 @@ export function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false
       </div>
       {contratTab==="contrats"?<div>
         <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
-        <div style={{marginTop:24,borderTop:"2px solid var(--br)",paddingTop:20}}>
-          <DemandesAvenants enfants={enfants}role={role}pEId={pEId}/>
-        </div>
       </div>:(proActif
         ?<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}user={user}/>
         :<VerrouPro titre="La fin de contrat" desc="Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte. Cette fonction fait partie du forfait Pro."/>)}
     </div>}
-    {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}/>}
+    {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}user={user}/>}
     {section==="courriers"&&(proActif
       ?<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>
       :<VerrouPro titre="Les courriers types" desc="Modèles de courriers conformes à la convention collective, prêts à personnaliser. Cette fonction fait partie du forfait Pro."/>)}
@@ -3356,7 +3318,10 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
   // L'argent, lui, se compte sur toute la duree du contrat, dates incluses :
   // salaires bruts, conges acquis, seuil des 9 mois d'accueil de l'indemnite
   // de rupture (voir moisDeContrat dans socle.jsx).
-  const moisAnciennete=moisEntre(contrat.debut,dateNotif||finRetenue);
+  // Un contrat de fratrie reprend l'anciennete du plus ancien toujours en
+  // cours (CCN 3239, art. 90-1) : voir debutAnciennete dans App.jsx.
+  const anc=debutAnciennete(enfant,enfants);
+  const moisAnciennete=moisEntre(anc.debut||contrat.debut,dateNotif||finRetenue);
   const moisContrat=moisDeContrat(contrat.debut,finRetenue);
   const [cpPris,setCpPris]=useState(0);
   const [ruptureParEmployeur,setRuptureParEmployeur]=useState(true);
@@ -3599,7 +3564,7 @@ export function SoldeDeCompte({enfants,role,pEId,user}){
           </div>
           <div style={{fontSize:12,color:"var(--m)",marginBottom:12,lineHeight:1.6,padding:"9px 12px",background:"var(--Bp)",borderRadius:9}}>
             Durée du contrat : <b>{moisContrat} mois</b> ({contrat.debut?fmt(contrat.debut):"début inconnu"} → {fmt(finRetenue)}, dates incluses).
-            Ancienneté pour le préavis : <b>{moisAnciennete} mois</b>, au {dateNotif?"jour de la lettre":"jour de fin"}.
+            Ancienneté pour le préavis : <b>{moisAnciennete} mois</b>, au {dateNotif?"jour de la lettre":"jour de fin"}{anc.depuis?<>, reprise du contrat de {anc.depuis.prenom||"l'aîné"}, toujours en cours à l'arrivée de {enfant.prenom||"cet enfant"} (frères et sœurs : convention collective, art. 90-1)</>:null}.
             Congés acquis : <b>{cpAcquisFin} jours ouvrables</b> (2,5 par mois, plafonnés à 30).
           </div>
           {anneeIncomplete&&<div data-regularisation style={{marginBottom:12,padding:"10px 12px",background:"var(--c)",borderRadius:10,border:"1px solid var(--br)"}}>

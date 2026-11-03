@@ -871,97 +871,14 @@ export function Developpement({enfants,role,pEId}){
 // Bilans, Paramètres, Liste d'attente, Périscolaire, Forum et Projet d'accueil
 // vivent dans src/ecrans-secondaires.jsx : le routeur les charge à la demande.
 
-export function Recap({enfants,role,pEId}){
-  const [selId,setSelId]=useState(enfants[0]?.id);
-  const [showPrev,setShowPrev]=useState(false);
-  const [toast,setToast]=useState("");
-  const liste=role==="parent"?enfants.filter(e=>e.id===pEId):enfants;
-  const enfant=liste.find(e=>e.id===selId)||liste[0];
-  const contrat=enfant?.contrat;
-  const isDemoRecap=enfants.every(e=>["e1","e2","e3"].includes(e.id));
-  const h=isDemoRecap?(D.heures[enfant?.id]||{real:0,prev:0}):{real:0,prev:heuresDeclarees(contrat)};
-  const rep=D.repas.filter(r=>r.eId===enfant?.id);
-  const ms=D.milestones[enfant?.id]||[];
-
-  return <div className="fi">
-    {toast&&<Toast msg={toast}onClose={()=>setToast("")}/>}
-    <PageHeader icon="📊" title="Récapitulatif mensuel PDF" sub="Bilan complet automatique - exclusivité TiMat"
-      action={<button className="btn bT"onClick={()=>{setShowPrev(true);}}> <IconeOuEmoji e="👁️"/> Aperçu PDF</button>}/>
-    {role==="asmat"&&<div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-      {liste.map(e=><CPill key={e.id}e={e}sel={selId===e.id}onClick={()=>setSelId(e.id)}/>)}</div>}
-
-    <div className="g2"style={{marginBottom:12}}>
-      {[["⏰","Heures réalisées",h.real+"h / "+h.prev+"h prévues","var(--B)"],
-        ["🍽️","Repas enregistrés",rep.length+" jours de suivi","var(--S)"],
-        ["🌱","Étapes atteintes",ms.filter(m=>m.ok).length+" / "+ms.length+" jalons","var(--P)"],
-        ["📋","Transmissions",D.transmissions.filter(t=>t.eId===enfant?.id).length+" échanges","var(--T)"],
-      ].map(([ic,ti,su,c])=><div key={ti}className="card"style={{display:"flex",gap:10,alignItems:"center"}}>
-        <div style={{fontSize:26}}><IconeOuEmoji e={ic} taille={26}/></div>
-        <div><div style={{fontWeight:700,fontSize:13,color:"var(--b)"}}>{ti}</div>
-          <div className="pf"style={{fontSize:15,color:c,fontWeight:700}}>{su}</div></div>
-      </div>)}
-    </div>
-
-    {showPrev&&enfant&&<div className="card">
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-        <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>Aperçu du récapitulatif</div>
-        <div style={{display:"flex",gap:8}}>
-          <button className="btn bP"onClick={()=>setToast("PDF généré et envoyé par email ✓")}><IconeOuEmoji e="📧"/> Envoyer par email</button>
-          <button className="btn bS"onClick={()=>setToast("Téléchargement en cours ✓")}><IconeOuEmoji e="⬇️"/> Télécharger PDF</button>
-        </div>
-      </div>
-      <div className="pdf-preview">
-        <div style={{borderBottom:"2px solid #E49178",paddingBottom:12,marginBottom:16,display:"flex",justifyContent:"space-between"}}>
-          <div><h2 style={{color:"#E49178",fontFamily:"Georgia",fontSize:18}}><IconeOuEmoji e="🌿"/> TiMat</h2>
-            <div style={{fontSize:11,color:"#888"}}>{user?.prenom||"Assmat"} {user?.nom||""} · Assistante Maternelle agréée</div></div>
-          <div style={{textAlign:"right",fontSize:11,color:"#888"}}>
-            <div><strong>Récapitulatif mensuel</strong></div>
-            <div>{new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</div>
-            <div>Généré le {new Date().toLocaleDateString('fr-FR')}</div>
-          </div>
-        </div>
-        <div style={{background:"#f8f4ef",padding:10,borderRadius:6,marginBottom:12}}>
-          <div style={{fontWeight:700,marginBottom:4}}><IconeOuEmoji e="👶"/> {enfant.prenom} {enfant.nom} - {age(enfant.naissance)}</div>
-          <div style={{fontSize:11,color:"#666"}}>Période d'accueil : {enfant.contrat?.horaires} · {(enfant.contrat?.jours||[]).join(", ")}</div>
-        </div>
-        <table>
-          <thead><tr><th>Section</th><th>Détail</th><th>Valeur</th></tr></thead>
-          <tbody>
-            <tr><td>Heures prévues</td><td>Contrat mensuel</td><td><strong>{h.prev}h</strong></td></tr>
-            <tr><td>Heures réalisées</td><td>Pointage validé</td><td><strong>{h.real}h</strong></td></tr>
-            <tr><td>Solde</td><td>Différence</td><td style={{color:h.real-h.prev<0?"#DC2626":"#16A34A"}}><strong>{h.real-h.prev}h</strong></td></tr>
-            <tr><td>Salaire brut</td><td>Taux {nbf(tauxHoraireAu(contrat,new Date()),2)}€/h</td><td><strong>{nbf((h.real*tauxHoraireAu(contrat,new Date())),2)}€</strong></td></tr>
-            <tr><td>Repas suivis</td><td>Journaux renseignés</td><td><strong>{rep.length} jours</strong></td></tr>
-            <tr><td>Étapes dév.</td><td>Jalons OMS</td><td><strong>{ms.filter(m=>m.ok).length}/{ms.length}</strong></td></tr>
-          </tbody>
-        </table>
-        <div style={{marginTop:14,paddingTop:10,borderTop:"1px solid #ddd",fontSize:11,color:"#888",textAlign:"center"}}>
-          Document généré automatiquement par TiMat · Confidentiel
-        </div>
-      </div>
-    </div>}
-
-    {!showPrev&&<div className="card"style={{background:"var(--Pp)",border:"1px solid var(--P)"}}>
-      <div style={{fontWeight:700,fontSize:14,color:"var(--P)",marginBottom:8}}><IconeOuEmoji e="💡"/> Le récapitulatif du mois</div>
-      <div style={{fontSize:13,color:"var(--b)",lineHeight:1.7}}>
-        Un seul document qui réunit ce qui est habituellement séparé :
-        heures, repas, humeurs, étapes de développement, facturation et transmissions.
-        <br/><br/>
-        Vous le générez depuis cet écran, vous le relisez, puis vous le transmettez
-        aux parents quand il vous convient. <strong>TiMat ne l'envoie pas à votre place :</strong>
-        un document sur l'enfant de quelqu'un ne part pas sans que vous l'ayez vu.
-      </div>
-    </div>}
-  </div>;
-}
-
+// LE « RECAP MENSUEL PDF » EN DOUBLE
 //
-//
-
-
-//
-// VERSEMENTS P34 - Suivi des paiements reels recus (palier 2 : lecture + saisie)
-// Le PARENT verse, l'ASSMAT recoit. Saisie + gestion par les deux (RLS table versements).
+// Rapports & Exports avait un onglet « Recap mensuel PDF » qui lisait les
+// donnees de demonstration : pour un vrai compte, il affichait 0 heure
+// realisee, un solde negatif en rouge et un salaire de 0 EUR, et ses boutons
+// « Envoyer par email » et « Telecharger PDF » n'affichaient qu'un message.
+// Il est retire. Le recapitulatif du mois, calcule sur les presences reelles
+// et imprimable, est celui de Paie & Contrats > Facturation.
 
 export function Sommeil({enfants,role,pEId}){
   // Un bouton qui ecrit ne part qu'une fois a la fois : voir useUneFois().
@@ -3211,15 +3128,16 @@ const jsPDF=await chargerJsPDF();
         <div className="card">
           <div style={{fontWeight:700,fontSize:14,color:"var(--b)",marginBottom:12}}><IconeOuEmoji e="📋"/> Contenu du rapport PDF</div>
           {[
-            ["✅","Page de garde - identité asmat et enfant"],
-            ["✅","Récapitulatif mensuel des heures (jan→déc)"],
-            ["✅","Total salaire net mensuel et annuel"],
-            ["✅","Indemnités d'entretien et de repas"],
-            ["✅","Congés payés pris et restants"],
-            ["✅","Absences et indemnisations"],
-            ["✅","Attestation fiscale employeur (crédit d'impôt)"],
-            ["✅","Récapitulatif Pajemploi par mois"],
-            ["✅","Bilan pédagogique annuel de l'enfant"],
+            // La liste dit ce que le PDF contient, et rien d'autre : elle
+            // annoncait neuf rubriques (recapitulatif mois par mois, conges,
+            // attestation fiscale, bilan pedagogique...) que le PDF n'a jamais
+            // contenues. Voir telechargerPDF ci-dessus.
+            ["✅","Identité de l'assistante maternelle et de l'enfant"],
+            ["✅","Heures pointées, jours d'accueil et absences de l'année"],
+            ["✅","Salaire net annuel"],
+            ["✅","Indemnités d'entretien (estimées)"],
+            ["✅","Total versé, et crédit d'impôt estimé du parent"],
+            ["✅","Votre signature, si elle est enregistrée"],
           ].map(([ic,t])=><div key={t}style={{display:"flex",gap:10,padding:"6px 0",borderBottom:"1px solid var(--br)",fontSize:13}}>
             <span style={{color:"var(--S)"}}><IconeOuEmoji e={ic}/></span>
             <span style={{color:"var(--m)"}}>{t}</span>
@@ -3234,7 +3152,7 @@ const jsPDF=await chargerJsPDF();
           <div className="pf"style={{fontSize:18,fontWeight:600,color:"var(--b)",marginBottom:4}}>{enfant?.prenom} {enfant?.nom}</div>
           <div style={{fontSize:12,color:"var(--l)"}}>{age(enfant?.naissance||"")}</div>
           <div style={{marginTop:12,padding:"8px 12px",background:"var(--Sp)",borderRadius:8,fontSize:12,color:"var(--S)"}}>
-            <IconeOuEmoji e="✅"/> Contrat actif depuis {fmt(contrat.debut||"2023-09-04")}
+            <IconeOuEmoji e="✅"/> {contrat.debut?"Contrat actif depuis "+fmt(contrat.debut):"Contrat actif"}
           </div>
         </div>
 
@@ -3245,8 +3163,7 @@ const jsPDF=await chargerJsPDF();
             Rapport annuel {annee}
           </div>
           <div style={{fontSize:12,color:"var(--l)",marginBottom:16,lineHeight:1.6}}>
-            Pour {enfant?.prenom} {enfant?.nom}<br/>
-            Inclut l'attestation fiscale
+            Pour {enfant?.prenom} {enfant?.nom}
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button className="btn bT"style={{width:"100%",justifyContent:"center"}}onClick={telechargerPDF}disabled={gen}>
@@ -3260,13 +3177,12 @@ const jsPDF=await chargerJsPDF();
 
         {/* Partage parent */}
         {role==="asmat"&&<div className="card"style={{background:"var(--Gp)",border:"1px solid var(--G)"}}>
-          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}><IconeOuEmoji e="📧"/> Envoi au parent</div>
-          <div style={{fontSize:12,color:"var(--m)",marginBottom:10,lineHeight:1.6}}>
-            Ce récapitulatif peut être envoyé aux parents comme justificatif. Il ne remplace pas leur attestation fiscale officielle, que Pajemploi met à leur disposition dans leur espace en ligne, courant avril.
+          <div style={{fontWeight:700,fontSize:13,color:"var(--G)",marginBottom:8}}><IconeOuEmoji e="📧"/> Remettre au parent</div>
+          {/* Le bouton « Envoyer l'attestation au parent » n'envoyait rien : il
+              affichait « Attestation fiscale envoyée au parent ✓ ». Retiré. */}
+          <div style={{fontSize:12,color:"var(--m)",lineHeight:1.6}}>
+            Téléchargez le PDF, puis remettez-le aux parents comme justificatif, par le moyen de votre choix. Il ne remplace pas leur attestation fiscale officielle, que Pajemploi met à leur disposition dans leur espace en ligne, courant avril.
           </div>
-          <button className="btn bG"style={{width:"100%"}}onClick={()=>setToast("Attestation fiscale envoyée au parent ✓")}>
-            <IconeOuEmoji e="📧"/> Envoyer l'attestation au parent
-          </button>
         </div>}
       </div>
     </div>
@@ -3444,7 +3360,7 @@ export function BilansExports({enfants,role,pEId,user,pointagesDB}){
   return <div className="fi">
     <PageHeader icon="📊" title="Rapports & Exports" sub="Rapports, recapitulatifs et exports de vos donnees"/> {/* RENAME NAV P9 */}
     <div style={{display:"flex",gap:2,marginBottom:16,borderBottom:"2px solid var(--br)",flexWrap:"wrap"}}>
-      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"recap",l:"Récap mensuel PDF",ic:"📄"},{id:"export",l:"Export données",ic:"📦"}].map(s=>
+      {[{id:"rapport",l:"Rapport annuel",ic:"📊"},{id:"export",l:"Export données",ic:"📦"}].map(s=>
         <button key={s.id}onClick={()=>setSec(s.id)}style={{
           padding:"7px 14px",border:"none",background:"none",cursor:"pointer",
           fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12,
@@ -3457,9 +3373,6 @@ export function BilansExports({enfants,role,pEId,user,pointagesDB}){
     {sec==="rapport"&&(estPro(user)
       ?<RapportAnnuel enfants={enfants}role={role}pEId={pEId}user={user}/>
       :<VerrouPro titre="Le rapport annuel" desc="La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie du forfait Pro."/>)}
-    {sec==="recap"&&(estPro(user)
-      ?<Recap enfants={enfants}role={role}pEId={pEId}/>
-      :<VerrouPro titre="Le récapitulatif mensuel" desc="Le récapitulatif du mois en PDF, prêt à remettre au parent employeur. Cette fonction fait partie du forfait Pro."/>)}
     {sec==="export"&&<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><ExportDonnees enfants={enfants}role={role}user={user}/></Suspense>}
   </div>;
 }

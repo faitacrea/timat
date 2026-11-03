@@ -15,8 +15,8 @@ import esbuild from "esbuild";
 const src = readFileSync("src/App.jsx", "utf8");
 const bloc = src.slice(src.indexOf("export const cleFamille ="), src.indexOf("\n// ---------------------------------------------------------------------------\n// L'ESSAI DE DEUX MOIS"));
 const js = (await esbuild.transform(bloc.replace(/^export /gm, ""), { loader: "js" })).code;
-const { cleFamille, fratrieDe } = await import(
-  "data:text/javascript;base64," + Buffer.from(js + "\nexport { cleFamille, fratrieDe };").toString("base64"));
+const { cleFamille, fratrieDe, debutAnciennete } = await import(
+  "data:text/javascript;base64," + Buffer.from(js + "\nexport { cleFamille, fratrieDe, debutAnciennete };").toString("base64"));
 
 let ko = 0;
 const ok = (quoi, obtenu, attendu) => {
@@ -69,6 +69,42 @@ console.log("\n=== CE QUI NE DOIT PAS PLANTER ===");
   ok("enfant absent", fratrieDe(null, [{ id: "1" }]), []);
   ok("liste absente", fratrieDe({ id: "1", parent_id: "p" }, null), []);
   ok("trou dans la liste", noms(fratrieDe({ id: "1", parent_id: "p" }, [null, { id: "2", prenom: "B", parent_id: "p" }])), ["B"]);
+}
+
+// L'anciennete d'un contrat de fratrie : celle du contrat le plus ancien
+// toujours en cours (CCN 3239, art. 90-1 ; DREETS BFC, fiche 12 ; Code du
+// travail numerique). La fin de contrat la comptait depuis le seul contrat de
+// l'enfant : 8 jours de preavis annonces au lieu d'un mois.
+console.log("\n=== L'ANCIENNETÉ REPRISE D'UNE FRATRIE ===");
+{
+  const e = (id, prenom, debut, fin) => ({ id, prenom, parent_id: "p1", contrat: { debut, fin } });
+  const aine = e("1", "Léo", "2023-09-04");
+  const cadet = e("2", "Lina", "2026-09-01");
+  const r = debutAnciennete(cadet, [aine, cadet]);
+  ok("le cadet reprend l'ancienneté de l'aîné", r.debut, "2023-09-04");
+  ok("et l'écran peut dire de qui", r.depuis?.prenom, "Léo");
+  ok("l'aîné garde la sienne", debutAnciennete(aine, [aine, cadet]).debut, "2023-09-04");
+  ok("l'aîné ne reprend rien du cadet", debutAnciennete(aine, [aine, cadet]).depuis, null);
+
+  const clos = e("3", "Tom", "2022-01-03", "2025-06-30");
+  const apres = e("4", "Zoé", "2026-01-05");
+  ok("un contrat déjà fini à l'arrivée ne compte pas", debutAnciennete(apres, [clos, apres]).debut, "2026-01-05");
+
+  const fin = e("5", "Noé", "2022-01-03", "2026-03-31");
+  const pendant = e("6", "Ana", "2026-01-05");
+  ok("un contrat qui courait encore à l'arrivée compte", debutAnciennete(pendant, [fin, pendant]).debut, "2022-01-03");
+
+  // Chaine : A (2021) court a l'arrivee de B (2023) ; A finit ; C arrive (2026)
+  // pendant B. C reprend l'anciennete de B, qui est celle de A.
+  const A = e("7", "A", "2021-09-01", "2024-08-31");
+  const B = e("8", "B", "2023-09-04");
+  const C = e("9", "C", "2026-09-01");
+  ok("la reprise se transmet de contrat en contrat", debutAnciennete(C, [A, B, C]).debut, "2021-09-01");
+
+  const voisin = { id: "10", prenom: "Autre", parent_id: "p2", contrat: { debut: "2020-01-06" } };
+  ok("un enfant d'une autre famille ne donne rien", debutAnciennete(cadet, [voisin, cadet]).debut, "2026-09-01");
+  ok("même jour d'arrivée : rien à reprendre", debutAnciennete(e("11", "J1", "2026-09-01"), [e("12", "J2", "2026-09-01")]).debut, "2026-09-01");
+  ok("sans date de début : rien d'inventé", debutAnciennete({ id: "13", parent_id: "p1", contrat: {} }, [aine]).depuis, null);
 }
 
 console.log(ko ? `\n${ko} échec(s).` : "\nTout est conforme.");

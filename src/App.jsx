@@ -1546,6 +1546,46 @@ export const fratrieDe = (enfant, enfants) => {
   return (enfants || []).filter((e) => e && e.id !== enfant?.id && cleFamille(e) === cle);
 };
 
+// L'ANCIENNETE D'UN CONTRAT DE FRATRIE
+//
+// Un enfant de la meme famille arrive alors que le contrat d'un aine court
+// toujours : son contrat est juridiquement distinct, mais il reprend
+// l'anciennete du contrat le plus ancien toujours en cours (CCN 3239,
+// art. 90-1 ; DREETS Bourgogne-Franche-Comte, guide de juin 2026, fiche 12 ;
+// Code du travail numerique, « Comment determiner l'anciennete », 03/11/2023 :
+// « L'anciennete reprise pour chaque nouveau contrat est celle du contrat de
+// travail le plus ancien toujours en cours »).
+//
+// La fin de contrat comptait l'anciennete depuis le seul debut du contrat du
+// cadet : un cadet accueilli depuis deux mois, dont l'aine est la depuis trois
+// ans, se voyait annoncer 8 jours de preavis au lieu d'un mois.
+//
+// La reprise ne vaut QUE pour l'anciennete. Elle ne touche ni aux conges
+// payes, ni a l'indemnite de rupture, dont la condition est de 9 mois
+// d'accueil de l'enfant lui-meme (art. 121.1 ; DREETS BFC, fiche 11).
+//
+// Limite assumee : seuls les contrats actifs sont charges. Un aine dont le
+// contrat est deja clos n'est pas vu ici.
+//
+// Rend { debut, depuis } : la date a partir de laquelle compter l'anciennete,
+// et l'enfant dont le contrat la donne (null quand c'est le sien).
+export const debutAnciennete = (enfant, enfants) => {
+  const debut = String(enfant?.contrat?.debut || "").slice(0, 10);
+  if (!debut) return { debut: enfant?.contrat?.debut, depuis: null };
+  let res = { debut, depuis: null };
+  for (const f of fratrieDe(enfant, enfants)) {
+    const d = String(f?.contrat?.debut || "").slice(0, 10);
+    const fin = String(f?.contrat?.fin || "").slice(0, 10);
+    // L'aine a commence avant, et son contrat courait encore le jour ou
+    // celui-ci a commence. Strictement avant : la recursion descend toujours
+    // vers un debut plus ancien, elle s'arrete donc forcement.
+    if (!d || d >= debut || (fin && fin < debut)) continue;
+    const r = debutAnciennete(f, enfants);
+    if (r.debut && r.debut < res.debut) res = { debut: r.debut, depuis: r.depuis || f };
+  }
+  return res;
+};
+
 // ---------------------------------------------------------------------------
 // CE QUE LE FORFAIT PRO OUVRE — LA LISTE, ET RIEN QU'ELLE
 //
