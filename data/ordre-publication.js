@@ -152,5 +152,10 @@ export const ordre = [
   "titre-professionnel-assistant-parental-majoration-assistante-maternelle",
   "relais-petite-enfance-rpe-assistante-maternelle",
   "conge-adoption-assistante-maternelle",
+  // 3 novembre 2026 (« réécris de nouveaux brouillons », Sophie) : deux
+  // sujets que le blog ne traitait pas. Liens internes vers des articles déjà
+  // en ligne seulement : aucune dépendance.
+  "conge-presence-parentale-assistante-maternelle",
+  "examens-grossesse-absences-payees-assistante-maternelle",
 ];
 export default ordre;

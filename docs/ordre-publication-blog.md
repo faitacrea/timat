@@ -276,5 +276,20 @@ durée maximale de travail et les repos (déjà traités en détail dans
 familiarisation du référentiel national (déjà dans
 `periode-adaptation-assistante-maternelle-parent`).
 
-Après le 13 novembre, la file est vide : il faudra d'autres brouillons d'ici là
+## Ajout du 3 novembre 2026 : deux articles
+
+| Ordre | Date prévue | Slug | Rubrique | Sources principales |
+|---:|---|---|---|---|
+| 26 | 14 novembre | `conge-presence-parentale-assistante-maternelle` | Situation pratique | Code du travail L. 1225-62 et L. 1225-63 (version du 14/06/2026) ; DREETS BFC fiche 3 (art. 48-2-3) |
+| 27 | 15 novembre | `examens-grossesse-absences-payees-assistante-maternelle` | Situation pratique | DREETS BFC fiche 3 (art. 48-1-2) |
+
+Écart relevé : le guide DREETS BFC (juin 2026) donne 317 jours et 15 jours
+pour le congé de présence parentale ; le code du travail en vigueur dit
+310 jours ouvrés (L. 1225-62) et 10 jours (L. 1225-63, modifié le
+14/06/2026). L'article suit le code et signale l'écart.
+
+Pistes écartées le même jour : le CDD de remplacement (déjà traité dans
+`accueil-occasionnel-cdd-assistante-maternelle`).
+
+Après le 15 novembre, la file est vide : il faudra d'autres brouillons d'ici là
 (le cron envoie une alerte dès qu'il en reste cinq ou moins).
