@@ -905,6 +905,38 @@ l'écran Fin de contrat.
     29,99 €) ; décision de Sophie attendue. L'espace MAM n'existe pas dans
     l'application (rôle prévu, aucun écran).
 
+- **3/11 (suite)** :
+  - Correction de l'article « contrat de travail » PUBLIÉE (accord écrit de
+    Sophie) ; 4 liens internes relatifs passés en adresses absolues (Sanity
+    refusait la publication).
+  - Search Console : rapport « Détectée, actuellement non indexée » reçu
+    (25 pages, captures du 3/11). Indexation répartie à 10 par jour : liste
+    du 3/11 donnée ; relances programmées le 4/11
+    (`trig_01R55L1GKZ23jYzR6kM8msiq`), le 5/11 (`trig_012yyccCqGYKQ2mdC5QfECsk`)
+    et le 6/11 (`trig_01QZzp8N8WMHivBaMLRERMmq`), à 8 h 12 heure de Paris.
+  - Relance « À propos » de la Page Facebook le 3/11 à 18 h 30
+    (`trig_01YacpaiCJuodJJeXNAaFjPr`). Le site garde le lien de partage
+    actuel ; mettre `https://www.facebook.com/timatapp` dès que Sophie aura
+    enregistré ce nom d'utilisateur et vérifié qu'il s'ouvre.
+  - **Vercel** : Sophie a recréé à la main `STRIPE_SECRET_KEY`,
+    `SUPABASE_SERVICE_KEY`, `VAPID_PRIVATE_KEY`, `GSC_SERVICE_ACCOUNT` ;
+    vérifié le 3/11 : toutes « sensitive » (Production + Preview), plus aucun
+    avertissement « readable-secret ». Valeurs illisibles par construction :
+    à vérifier par les journaux (cron-essais à 7 h UTC le 4/11, envoi de
+    notifications, Search Console du back-office) et par le test Stripe.
+  - **Offres** : Sophie valide Essentiel (4,99 €, 2 enfants) + l'option à
+    l'année, en plus du Gratuit et du Pro ; MAM : attendre. Elle veut d'abord
+    une maquette de la page des offres, puis tout ce qu'il faut pour Stripe
+    et pour mettre les offres partout où sont les actuelles.
+  - Metricool : Page Facebook 1 abonné ; Instagram 26 abonnés le 12/10,
+    75 le 1/11, portée quotidienne de 1 à 23 personnes. Explique le peu de
+    réactions aux stories.
+  - Stories 48 à 54 programmées par Sophie dans Meta Business Suite jusqu'au
+    27/11 (constaté par elle le 3/11).
+  - Le connecteur Stripe n'est pas autorisé dans la session : Claude ne peut
+    ni lire ni modifier les paramètres Stripe (à autoriser dans les
+    connecteurs de claude.ai).
+
 ## Ce qu'il reste à faire
 
 **Sophie (état du 30/10)**
