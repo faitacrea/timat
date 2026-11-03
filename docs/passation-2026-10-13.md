@@ -937,6 +937,30 @@ l'écran Fin de contrat.
     ni lire ni modifier les paramètres Stripe (à autoriser dans les
     connecteurs de claude.ai).
 
+- **3/11 (soir)** :
+  - Sophie confirme par écrit les 2 articles des 14 et 15/11 (présence
+    parentale, examens de grossesse). Couvertures posées.
+  - **Stripe** (connecteur autorisé par Sophie) : maquette des offres
+    VALIDÉE ; prix CRÉÉS sur le compte réel à sa demande, le Pro mensuel
+    (`price_1U00xu1AsEXBU0aL9ARcyMVN`) n'est pas touché :
+    produit `prod_VYrw3Q8loHUwnU` « TiMat Essentiel » ;
+    `price_1UXkDL1AsEXBU0aLGZ5WMAIf` Essentiel 4,99 €/mois
+    (lookup `timat_essentiel_mensuel`) ; `price_1UXkFG1AsEXBU0aLC3xawUGf`
+    Essentiel 49 €/an (`timat_essentiel_annuel`) ;
+    `price_1UXkFg1AsEXBU0aLwtYnX6Yt` Pro 99 €/an (`timat_pro_annuel`, sur le
+    produit Pro `prod_UFTCWih3jg9fFa`). RESTE : brancher ces prix dans
+    l'application (limite de 2 enfants, choix mois/année, page des offres,
+    CGV, accueil, kit, Page Facebook), puis le test de paiement.
+  - Stripe, constaté en lecture : nom commercial « LEFORT Sophie » (à mettre
+    « TiMat »), e-mail et adresse d'assistance vides, téléphone d'assistance
+    rempli ; virements en mode MANUEL (à passer en automatique) ; logo et
+    icône déposés par Sophie, mais le logo foncé ne se voit pas sur le bleu
+    marine : utiliser `public/logo-dark.png` (logo clair).
+  - Page Facebook : nom d'utilisateur `timatapp` enregistré, adresse directe
+    vérifiée par Sophie ; le site l'utilise désormais. La nouvelle version des
+    Pages n'a pas de champ « description longue » chez elle : seule la bio
+    courte ; proposer de publier le texte long et de l'épingler.
+
 ## Ce qu'il reste à faire
 
 **Sophie (état du 30/10)**
