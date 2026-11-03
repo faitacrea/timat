@@ -4230,8 +4230,6 @@ const jsPDF=await chargerJsPDF();
   }
 }
 
-//
-const PLANCHER_KM_FIN="2026-12-31";
 
 function BottomNav({groups,page,setPage,pmiNonLus,flat,role="asmat"}){
   const activeGroup=findGroup(groups,page);

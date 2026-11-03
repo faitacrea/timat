@@ -594,6 +594,8 @@ const BAREME = [
   { nom: "barème kilométrique 7 CV",       motif: /7:\s*0\.697\b/,                  source: "impots.gouv.fr, barème 2026 reconduit" },
   { nom: "plancher kilométrique 3 à 5 CV", motif: /PLANCHER_KM_CONV=\{3:0\.33,4:0\.33,5:0\.33,/, source: "arrêté du 29 mai 2026, art. 10 du décret 2006-781 (Légifrance JORFTEXT000054154617)" },
   { nom: "plancher kilométrique 6 et 7 CV", motif: /PLANCHER_KM_CONV=\{.*6:0\.42,7:0\.42\}/,     source: "arrêté du 29 mai 2026, art. 10 du décret 2006-781 (Légifrance JORFTEXT000054154617)" },
+  { nom: "plancher kilométrique après la hausse (2022)", motif: /PLANCHER_KM_2022=\{3:0\.32,4:0\.32,5:0\.32,6:0\.41,7:0\.41\}/, source: "arrêté du 14 mars 2022, repris par la fiche DREETS Pays de la Loire du 12 juin 2026" },
+  { nom: "fin de la hausse kilométrique", motif: /FIN_HAUSSE_KM_2026="2026-12-31"/, source: "arrêté du 29 mai 2026 : hausse du 1er juin au 31 décembre 2026" },
   { nom: "abattement AEEH (4× au lieu de 3×)", motif: /baseMult\s*=\s*aeeh\s*\?\s*4\s*:\s*3/, source: "CGI art. 80 sexies, vérifié sur Légifrance" },
 ];
 const sourcesChiffres = lireApp()
@@ -601,6 +603,20 @@ const sourcesChiffres = lireApp()
 for (const { nom, motif, source } of BAREME) {
   if (!motif.test(sourcesChiffres)) {
     signale("chiffre", `${nom} ne vaut plus la valeur vérifiée (${source}) — vérifier à la source avant de modifier`);
+  }
+}
+
+// --- le plancher kilométrique se lit à la date du trajet ---
+//
+// La hausse de l'arrêté du 29 mai 2026 s'arrête au 31 décembre 2026. Un écran
+// qui lirait PLANCHER_KM_CONV directement exigerait encore 0,33 €/km en 2027
+// et citerait un arrêté qui ne s'applique plus : il doit passer par
+// plancherKm(cv, date), qui revient aux taux de 2022 après la hausse.
+for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ecrans-secondaires.jsx", "src/ecrans-quotidien.jsx"]) {
+  let src = "";
+  try { src = readFileSync(new URL("../" + f, import.meta.url), "utf8"); } catch { continue; }
+  if (/PLANCHER_KM_CONV\s*\[/.test(src)) {
+    signale("chiffre", `${f} lit PLANCHER_KM_CONV sans date : passer par plancherKm(cv, date), la hausse de 2026 s'arrête au 31 décembre`);
   }
 }
 

@@ -880,6 +880,31 @@ l'écran Fin de contrat.
     gratuit, Solo 5 €, MAM 6 €, jusqu'à 15 € (blog Mam360) ; AssmatZen :
     rien trouvé.
 
+- **31/10 au 3/11** (plusieurs redémarrages de la session) :
+  - Sophie a **confirmé par écrit les 4 articles** (10 au 13/11) et
+    **validé la série 4**. Série 4 **PROGRAMMÉE** dans Metricool les 1er et
+    2/11 : 16 publications (Page + Instagram, 20 h 30, texte alternatif),
+    identifiants 412769108, 412769323, 412827011, 413024525, 413026712,
+    413026783, 413186401, 413188338, 413201633, 413202702, 413203148,
+    413618943, 413641490, 413650131, 413822114, 413829518. Vérifié le 2/11 :
+    38 publications du 4/11 au 23/12, aucun doublon, décembre à 20/20.
+  - Stories 48 à 54 envoyées le 2/11 pour Meta Business Suite (dates des
+    publications vérifiées dans Metricool) ; Sophie les programme et doit
+    donner la dernière date acceptée.
+  - **Chasse** : l'alerte « taux kilométrique sous le minimum » exigeait
+    0,33 €/km sans date de fin ; elle suit désormais la date du trajet et
+    revient aux taux de 2022 (0,32 / 0,41 €) après le 31/12/2026, barrières
+    dans l'audit (prouvées en cassant le code). Blog relu (90 pages) : seule
+    inexactitude, « la période d'essai englobe la période d'adaptation »
+    (article contrat de travail) ; correction en BROUILLON
+    (`drafts.4a44f730-62f0-4d34-bca6-29fa6bb6bca1`), à publier sur accord
+    écrit de Sophie.
+  - **Offres** : proposition chiffrée dans
+    `docs/offres/proposition-offres-2026-11.md` (Essentiel 4,99 € pour
+    2 enfants, option annuelle, MAM 7,99 € par assistante plafonné à
+    29,99 €) ; décision de Sophie attendue. L'espace MAM n'existe pas dans
+    l'application (rôle prévu, aucun écran).
+
 ## Ce qu'il reste à faire
 
 **Sophie (état du 30/10)**
@@ -947,12 +972,13 @@ l'écran Fin de contrat.
   tarifs des concurrents relevés le 30/10 (voir « 30/10 (après-midi) »).
 
 **Claude, à la prochaine session (état du 30/10)**
-- Blog : la file va jusqu'au 13/11 (4 brouillons du 30/10). Vérifier
-  l'accord écrit de Sophie avant le 10/11 ; sans accord, retirer ces 4
-  articles de la file. Préparer d'autres brouillons avant le 13/11.
-- Metricool : série 4 (décembre) prête ; la programmer dès l'accord de
-  Sophie (marque 7382551, Page + Instagram, 20 h 30, texte alternatif),
-  après avoir vérifié que les articles des 11, 12 et 13/11 sont en ligne.
+- Blog : la file va jusqu'au 13/11 (4 articles confirmés par Sophie le
+  31/10). Préparer d'autres brouillons avant le 13/11.
+- Metricool : décembre programmé et plein ; vérifier vers le 14/11 que les
+  articles des 11, 12 et 13/11 sont en ligne (les publications des 7, 9 et
+  18/12 y renvoient). Prochaine série : janvier (le forfait repart à 20).
+- Stories : le calendrier du kit s'arrête au 8/11 ; préparer la semaine du
+  9 au 15/11 (sondages « À votre avis… » + bonne réponse) avant le 6/11.
 - Stories : la déclaration des disponibilités sur monenfant.fr est due
   avant le 1er décembre ; la proposer en story dans la série envoyée le
   22/11.
