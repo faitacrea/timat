@@ -620,6 +620,35 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
   }
 }
 
+// --- un bouton qui ne fait qu'afficher « c'est fait » ---
+//
+// Cinq boutons annonçaient une action qui n'avait pas lieu : « Demande
+// d'avenant envoyée ✓ - l'asmat sera notifiée », « Avenant généré ✓ »,
+// « Attestation fiscale envoyée au parent ✓ », « PDF généré et envoyé par
+// email ✓ », « Redirection vers la création de contrat... ». Rien n'était
+// enregistré, produit ni envoyé. Un clic dont le seul effet est un message
+// est, par construction, un mensonge à l'utilisatrice : il est refusé.
+for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ecrans-secondaires.jsx", "src/ecrans-quotidien.jsx", "src/backoffice.jsx"]) {
+  let src = "";
+  try { src = readFileSync(new URL("../" + f, import.meta.url), "utf8"); } catch { continue; }
+  const faux = src.match(/onClick=\{\s*\(\)\s*=>\s*(?:setToast\([^)]*\)\s*\}|\{\s*setToast\([^)]*\)\s*;?\s*\}\s*\})/g) || [];
+  for (const m of faux) signale("promesse", `${f} : un bouton n'a pour seul effet qu'un message (${m.slice(0, 90)}) — faire l'action, ou retirer le bouton`);
+}
+
+// --- l'ancienneté d'un contrat de fratrie ---
+//
+// Le contrat d'un cadet reprend l'ancienneté du contrat le plus ancien
+// toujours en cours (CCN 3239, art. 90-1 ; DREETS Bourgogne-Franche-Comté,
+// fiche 12 ; Code du travail numérique). La fin de contrat la comptait depuis
+// le seul contrat de l'enfant, et annonçait 8 jours de préavis au lieu d'un
+// mois. Elle doit passer par debutAnciennete (test : scripts/test-fratrie.mjs).
+{
+  const g = readFileSync(new URL("../src/gestion.jsx", import.meta.url), "utf8");
+  if (/moisAnciennete\s*=\s*moisEntre\(\s*contrat\.debut/.test(g) || !/debutAnciennete\(enfant,\s*enfants\)/.test(g)) {
+    signale("calcul", "la fin de contrat compte l'ancienneté sans la reprise d'une fratrie : passer par debutAnciennete(enfant,enfants) (CCN 3239, art. 90-1)");
+  }
+}
+
 // --- UN BARÈME JUSTE HIER PEUT ÊTRE FAUX AUJOURD'HUI ------------------------
 //
 // La liste ci-dessus vérifie qu'une valeur n'a pas CHANGÉ. Elle ne dit rien de

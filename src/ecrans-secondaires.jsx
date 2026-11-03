@@ -1350,7 +1350,9 @@ export function ListeAttente({role,enfants,user,setPage}){
             {sel.statut!=="refuse"&&<button className="btn bR s"onClick={()=>changerStatut(sel.id,"refuse")}>
               <IconeOuEmoji e="❌"/> Refuser
             </button>}
-            {sel.statut==="accepte"&&<button className="btn bP s"onClick={()=>setToast("Redirection vers la création de contrat...")}>
+            {/* « Créer le contrat » annonçait une redirection qui n'avait jamais
+                lieu. Il ouvre maintenant Paie & Contrats, où le contrat se crée. */}
+            {sel.statut==="accepte"&&setPage&&<button className="btn bP s"onClick={()=>setPage("admin_finances")}>
               <IconeOuEmoji e="📄"/> Créer le contrat
             </button>}
           </div>
