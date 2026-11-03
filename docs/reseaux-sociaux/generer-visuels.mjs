@@ -497,6 +497,32 @@ quizReponse("58-story-reponse-preavis-1080x1920.png", Q_PREAVIS, O_PREAVIS, 1,
   "De 3 mois à moins d'un an d'ancienneté : 15 jours calendaires (8 jours avant 3 mois, 1 mois à partir d'un an).",
   "Source : DREETS Bourgogne-Franche-Comté, guide assistants maternels (juin 2026), art. 119.1");
 
+// 67-75. STORIES DU 8 AU 15 NOVEMBRE 2026, ET LE RAPPEL MONENFANT DU 26/11.
+// Memes regles que les sondages 27 a 58 : « A votre avis… », la bonne reponse
+// sur la story suivante, publiee au meme moment. Les liens visent les articles
+// publies les 10 et 12 novembre. Calendrier dans kit-reseaux.html.
+const Q_MONENFANT = "À votre avis, une assistante maternelle doit-elle déclarer ses places libres sur monenfant.fr ?";
+const O_MONENFANT = ["Oui, deux fois par an", "Non, c'est facultatif"];
+const SRC_MONENFANT = "Source : décret n° 2021-1131 du 30 août 2021 (CASF, art. R. 421-18-1)";
+const Q_TITRE = "À votre avis, avec le titre professionnel « Assistant maternel – Assistant parental », quel salaire minimum ?";
+const O_TITRE = ["4,20 € brut de l'heure", "4,37 € brut de l'heure", "4,50 € brut de l'heure"];
+const SRC_TITRE = "Source : avenant n° 10 du 5 février 2026, convention collective IDCC 3239";
+const Q_RPE = "À votre avis, le relais petite enfance est-il payant ?";
+const O_RPE = ["Oui, sur abonnement", "Non, il est gratuit"];
+const SRC_RPE = "Sources : caf.fr · code de l'action sociale et des familles, art. L. 214-1-3";
+quiz("67-story-sondage-monenfant-1080x1920.png", Q_MONENFANT, "monenfant.fr, c'est le site de la Caf où les parents cherchent une assistante maternelle.", SRC_MONENFANT);
+quizReponse("68-story-reponse-monenfant-1080x1920.png", Q_MONENFANT, O_MONENFANT, 0,
+  `Au plus tard avant le 1${er} juin et avant le 1${er} décembre, pour les six mois suivants. Même sans place libre : une case le prévoit.`, SRC_MONENFANT);
+story("69-story-article-monenfant-1080x1920.png", "Nouvel article", "monenfant.fr : vos disponibilités avant le 1<sup style=\"font-size:.6em\">er</sup> décembre", "Ce que dit le texte, ce que vous pouvez ne pas afficher, et le pas à pas 👇");
+quiz("70-story-sondage-titre-professionnel-1080x1920.png", Q_TITRE, "Brut, par heure et par enfant, depuis l'avenant n° 10.", SRC_TITRE);
+quizReponse("71-story-reponse-titre-professionnel-1080x1920.png", Q_TITRE, O_TITRE, 1,
+  "4,20 € + 4 % = 4,37 €. Les indemnités d'entretien, de repas et kilométriques ne comptent pas dans ce minimum.", SRC_TITRE);
+story("72-story-article-relais-petite-enfance-1080x1920.png", "Nouvel article", "Le relais petite enfance : à quoi il sert", "Pour l'assistante maternelle comme pour les parents, et ce qu'il ne fait pas 👇");
+quiz("73-story-sondage-relais-petite-enfance-1080x1920.png", Q_RPE, "L'ancien « relais assistantes maternelles ».", SRC_RPE);
+quizReponse("74-story-reponse-relais-petite-enfance-1080x1920.png", Q_RPE, O_RPE, 1,
+  `Selon la Caf, qui le finance, il est gratuit et ouvert à tous. Depuis le 1${er} janvier 2026, il est obligatoire dans les communes de plus de 10 000 habitants.`, SRC_RPE);
+story("75-story-rappel-monenfant-1080x1920.png", `Rappel · avant le 1${er} décembre`, "Vos disponibilités sur monenfant.fr", `Deux fois par an : avant le 1${er} juin et avant le 1${er} décembre. Même sans place libre. Le pas à pas 👇`, SRC_MONENFANT);
+
 // 59-66. SERIE 4 : PUBLICATIONS 21 A 28, DU 7 AU 23 DECEMBRE 2026.
 // Le forfait gratuit de Metricool permet 20 publications par mois : decembre
 // en a deja 4 (publications 19 et 20, Page et Instagram, les 2 et 4), il en

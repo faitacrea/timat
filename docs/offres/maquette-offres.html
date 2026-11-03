@@ -1,0 +1,96 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#F7F2EC;font-family:Outfit,system-ui,sans-serif;color:#2C1F14}
+.wrap{max-width:1120px;margin:0 auto;padding:56px 24px 48px}
+.ban{background:#2E4859;color:#fff;font-size:12.5px;text-align:center;padding:7px 10px;letter-spacing:.3px}
+h2{font-family:Quicksand,sans-serif;font-size:36px;color:#2E4859;text-align:center;margin:0 0 10px}
+.sub{font-size:14px;color:#55707C;text-align:center;max-width:600px;margin:0 auto 26px;line-height:1.5}
+.bascule{display:flex;justify-content:center;margin:0 auto 34px}
+.bascule div{display:flex;background:#fff;border:1.5px solid #DDD5C8;border-radius:30px;padding:4px}
+.bascule span{padding:8px 18px;border-radius:24px;font-size:13.5px;font-weight:600;color:#55707C}
+.bascule span.on{background:#2E4859;color:#fff}
+.bascule em{font-style:normal;font-size:11.5px;color:#3D6B50;font-weight:700;margin-left:6px}
+.grille{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;align-items:start}
+.carte{background:#fff;border-radius:16px;border:1.5px solid #DDD5C8;padding:26px;position:relative}
+.carte.pro{background:#FDFBF8;border:2.5px solid #B8622F;box-shadow:0 12px 48px rgba(184,98,47,.14)}
+.carte.ess{border:2px solid #2E4859}
+.badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);color:#fff;border-radius:20px;padding:5px 16px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.pro .badge{background:#B4543F}.ess .badge{background:#2E4859}
+.lab{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.free .lab{color:#A68970}.ess .lab{color:#2E4859}.pro .lab{color:#B8622F}
+.prix{display:flex;align-items:baseline;gap:4px}
+.prix b{font-family:Quicksand,sans-serif;font-size:44px}
+.free .prix b{color:#0D1B2A}.ess .prix b{color:#2E4859}.pro .prix b{color:#B8622F}
+.prix span{font-size:13px;color:#866F5A}
+.an{font-size:13px;margin:6px 0 4px;color:#3D6B50;font-weight:600}
+.cle{font-size:13.5px;font-weight:700;margin:8px 0 4px;line-height:1.4}
+.ess .cle{color:#2E4859}.pro .cle{color:#B8622F}.free .cle{color:#6B4F3A}
+.parcontrat{font-size:11.5px;color:#A68970;margin-bottom:10px}
+.desc{font-size:13px;color:#6B4F3A;line-height:1.55;margin-bottom:18px;min-height:40px}
+.btn{display:block;text-align:center;border-radius:10px;padding:12px;font-weight:700;font-size:14px;margin-bottom:18px}
+.free .btn{background:#0D1B2A;color:#fff}.ess .btn{background:#2E4859;color:#fff}.pro .btn{background:linear-gradient(135deg,#B4543F,#A8452F);color:#fff}
+.li{display:flex;gap:9px;font-size:13px;padding:5px 0;border-bottom:1px solid #EEE6DB;line-height:1.35}
+.li:last-child{border-bottom:none}.li i{font-style:normal;color:#3D6B50;font-weight:700}
+.li.fort span{font-weight:700}
+.relais{margin-top:22px;text-align:center;font-size:13.5px;color:#55707C;line-height:1.6;max-width:640px;margin-left:auto;margin-right:auto}
+.gar{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:18px;font-size:13px;color:#55707C}
+.note{margin:34px auto 0;max-width:760px;background:#fff;border:1px dashed #A68970;border-radius:12px;padding:14px 18px;font-size:12.5px;color:#6B4F3A;line-height:1.6}
+@media (max-width:760px){.wrap{padding:36px 16px}h2{font-size:25px}.grille{grid-template-columns:1fr;gap:26px}.desc{min-height:0}.bascule span{padding:7px 12px;font-size:12.5px}}
+</style></head><body>
+<div class="ban">MAQUETTE — proposition du 3 novembre 2026, rien n'est en ligne</div>
+<div class="wrap">
+<h2>Le tarif de votre application assistante maternelle</h2>
+<div class="sub">Sans engagement. 2 mois offerts sur le Pro, sans carte bancaire. Ensuite, vous choisissez.</div>
+<div class="bascule"><div><span class="on">Au mois</span><span>À l'année<em>2 mois offerts</em></span></div></div>
+<div class="grille">
+ <div class="carte free">
+  <div class="lab">Gratuit, pour toujours</div>
+  <div class="prix"><b>0 €</b></div>
+  <div class="cle">1 enfant accueilli</div>
+  <div class="desc">Un enfant accueilli, et tout son quotidien. Sans carte bancaire, sans date de fin.</div>
+  <div class="btn">Ouvrir mon compte gratuit</div>
+  <div class="li"><i>✓</i><span>Le cahier de liaison : repas, sieste, change, activités</span></div>
+  <div class="li"><i>✓</i><span>Le pointage des heures, signé des deux côtés</span></div>
+  <div class="li"><i>✓</i><span>L'espace parent, gratuit et sans limite</span></div>
+  <div class="li"><i>✓</i><span>Le contrat et ses avenants</span></div>
+  <div class="li"><i>✓</i><span>Le registre des médicaments, imprimable</span></div>
+  <div class="li"><i>✓</i><span>Les autorisations parentales, signées en ligne</span></div>
+ </div>
+ <div class="carte ess">
+  <div class="badge">NOUVEAU · POUR DÉMARRER</div>
+  <div class="lab">Essentiel</div>
+  <div class="prix"><b>4,99 €</b><span>/mois</span></div>
+  <div class="an">ou 49 € par an, soit 4,08 € par mois</div>
+  <div class="cle">jusqu'à 2 enfants accueillis</div>
+  <div class="parcontrat">soit 2,50 € par contrat à deux familles</div>
+  <div class="desc">La paie et les documents officiels, pour un ou deux contrats.</div>
+  <div class="btn">Choisir Essentiel</div>
+  <div class="li fort"><i>✓</i><span>Les bulletins de salaire, conformes à la convention</span></div>
+  <div class="li fort"><i>✓</i><span>Le récapitulatif Pajemploi, prêt à reporter</span></div>
+  <div class="li fort"><i>✓</i><span>2 enfants accueillis</span></div>
+  <div class="li"><i>✓</i><span>Le solde de tout compte et la fin de contrat</span></div>
+  <div class="li"><i>✓</i><span>Les attestations fiscale et France Travail</span></div>
+  <div class="li"><i>✓</i><span>Le récapitulatif mensuel remis au parent</span></div>
+  <div class="li"><i>✓</i><span>Tout ce que contient le compte gratuit</span></div>
+ </div>
+ <div class="carte pro">
+  <div class="badge">⭐ TOUT INCLUS</div>
+  <div class="lab">Pro</div>
+  <div class="prix"><b>9,99 €</b><span>/mois</span></div>
+  <div class="an">ou 99 € par an, soit 8,25 € par mois</div>
+  <div class="cle">quel que soit le nombre d'enfants</div>
+  <div class="parcontrat">soit 3,33 € par contrat à trois familles</div>
+  <div class="desc">Tout ce qui touche à la paie et aux documents officiels.</div>
+  <div class="btn">Je démarre mes 2 mois offerts →</div>
+  <div class="li fort"><i>✓</i><span>Tout Essentiel, sans limite d'enfants</span></div>
+  <div class="li fort"><i>✓</i><span>Tous vos enfants accueillis, sans supplément</span></div>
+  <div class="li"><i>✓</i><span>La reprise de vos mois passés chez un autre outil</span></div>
+  <div class="li"><i>✓</i><span>Vos revenus et vos congés, tous employeurs réunis</span></div>
+  <div class="li"><i>✓</i><span>Photos sans limite et 5 Go de documents</span></div>
+ </div>
+</div>
+<div class="relais">Après vos 2 mois offerts, rien ne se ferme : le compte gratuit prend le relais, et vos données restent là.</div>
+<div class="gar"><span>✅ Résiliable en 1 clic, sans reconduction</span><span>✅ Pointages signés des deux côtés, horodatés et conservés</span><span>✅ Données en France 🇫🇷</span></div>
+<div class="note"><b>À décider avec la maquette :</b> 1) la répartition des fonctions entre Essentiel et Pro (ici : la reprise d'un autre outil, les revenus tous employeurs réunis et le stockage illimité restent au Pro) ; 2) l'essai de 2 mois reste sur le Pro ; 3) « 2 mois offerts » sert déjà pour l'essai : l'interrupteur à l'année pourrait dire « −17 % » à la place, pour éviter la confusion.</div>
+</div></body></html>
