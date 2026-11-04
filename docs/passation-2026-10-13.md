@@ -961,7 +961,66 @@ l'écran Fin de contrat.
     Pages n'a pas de champ « description longue » chez elle : seule la bio
     courte ; proposer de publier le texte long et de l'épingler.
 
+- **3/11 (fin) et 4/11** :
+  - Réponse envoyée à Sophie sur le logo Stripe, les informations publiques,
+    les prix créés, la Page Facebook et les stories du 8 au 26/11 (images
+    67 à 75 et 25 envoyées d'avance ; rien n'est programmé automatiquement :
+    sondages et boîte à questions à la main dans Instagram). Le 4/11, son
+    message du 3/11 est arrivé une seconde fois : déjà traité.
+  - **Série 5 (janvier 2027) À VALIDER** (PR #309) : publications 29 à 38,
+    images 76 à 85, lun./mer./ven. du 4 au 25/01 à 18 h (second pic
+    Metricool), 10 dates × 2 réseaux = 20 ; section « Série 5 » du kit ;
+    PDF `docs/reseaux-sociaux/serie5-janvier-a-valider.pdf`. Rien dans
+    Metricool avant accord. Aucun montant de 2027 : publications 30, 32, 33
+    et 34 à revoir à la vérification du 18/12. Sujets écartés : Pajemploi+
+    (septembre 2027 confirmé seulement par l'amendement du Sénat et des
+    sites secondaires ; un rapport du Sénat parle du 1er janvier 2027 ;
+    texte de loi non lisible depuis le poste) et les modèles d'avenant.
+  - **Chasse (PR #310, vérifiée en production le 4/11)** :
+    - ancienneté d'une fratrie : le contrat du cadet reprend celle du plus
+      ancien toujours en cours (CCN art. 90-1 ; DREETS BFC fiche 12 ; Code
+      du travail numérique) ; la fin de contrat l'ignorait (préavis trop
+      court). `debutAnciennete` (App.jsx), testée dans test-fratrie.mjs,
+      barrière d'audit. L'indemnité de rupture n'est PAS concernée :
+      9 mois d'accueil de l'enfant lui-même (art. 121.1, fiche 11) ;
+    - cinq faux boutons (message de réussite sans action) : demande
+      d'avenant non enregistrée (retirée), « Avenant généré ✓ » (produit
+      maintenant un vrai avenant imprimable), « Attestation fiscale envoyée
+      au parent ✓ » (retiré), onglet « Récap mensuel PDF » sur données de
+      démonstration (retiré : le vrai est dans Facturation), « Redirection »
+      de la liste d'attente (réelle maintenant). Barrière d'audit : tout
+      bouton dont le seul effet est un message est refusé ;
+    - rapport annuel : la liste à l'écran ne promet plus que ce que le PDF
+      contient ; plus de date de début inventée (04/09/2023).
+  - **Blog, corrections EN BROUILLON (accord écrit de Sophie attendu)** :
+    `drafts.08a4890e-6801-4c81-94ae-ebf838cb6aa2` (frères et sœurs : reprise
+    d'ancienneté ; lien interne passé en adresse absolue) et
+    `drafts.78570280-bd56-4d8a-9f41-2f32bac5c3d4` (augmenter son tarif :
+    l'article ne citait que le minimum légal, pas les 4,20 € ; « près de
+    35 € » corrigé en 39 € : 0,20 × 45 × 52 ÷ 12). Le cron ne les publie
+    pas (slugs déjà publiés). Les publications 32 et 33 de janvier y
+    renvoient : retirer « Tout l'article » si elles ne sont pas publiées.
+  - Relance « À propos » du 3/11 (18 h 30) arrivée après coup : sans objet,
+    Sophie avait déjà répondu (adresse directe en ligne, pas de champ long).
+  - Indexations du 4/11 envoyées (10 adresses, toutes en 200 vérifiées).
+
 ## Ce qu'il reste à faire
+
+**État du 4/11 (prime sur les listes plus anciennes ci-dessous)**
+- Sophie : valider la série de janvier (PDF série 5) ; confirmer par écrit
+  les 2 corrections d'articles (frères et sœurs, augmenter son tarif) ;
+  Stripe : logo clair, nom commercial TiMat, e-mail et adresse
+  d'assistance, virements automatiques ; stories du 8 au 26/11 à placer ;
+  indexations des 5 et 6/11 (relances programmées) ; URSSAF : réponse
+  attendue.
+- Claude : programmer janvier dans Metricool après accord ; publier les
+  corrections après accord ; brancher les nouvelles offres (prix Stripe
+  créés le 3/11) puis le test de paiement ; vérifier les journaux de
+  cron-essais (clé de service recréée) ; 18/12 : montants du 1er janvier.
+- À corriger plus tard (repéré, non traité) : l'article « avance immédiate »
+  écrit « la date retenue est septembre 2027 » alors que la loi dit « par
+  décret, au plus tard le 1er septembre 2027 » (sources secondaires, à
+  revérifier sur Légifrance).
 
 **Sophie (état du 30/10)**
 - Indexation : liste A le 31/10, liste B le 1/11 (voir « 30/10 (soir) »),
