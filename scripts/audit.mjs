@@ -635,6 +635,35 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
   for (const m of faux) signale("promesse", `${f} : un bouton n'a pour seul effet qu'un message (${m.slice(0, 90)}) — faire l'action, ou retirer le bouton`);
 }
 
+// --- chaque article du blog : un sommaire, et l'appel à l'essai dès le début ---
+//
+// Demande de Sophie du 5 novembre 2026 : un sommaire sur le côté et un appel
+// à l'achat dès le début, sur CHAQUE article. Le sommaire n'apparaissait qu'à
+// partir de trois intertitres (15 articles sur 96 en étaient privés) et le
+// seul appel était en bas de page. Un article est une page /blog/<slug>/ dont
+// le corps a au moins deux intertitres.
+// C'est le GABARIT qui est en cause, pas le contenu : l'anomalie est donc
+// bloquante, et nomme les articles sans leur chemin (le filtre des bloquantes
+// écarte tout message contenant « /blog/ », pensé pour le contenu de Sanity).
+{
+  const sansAppel = [], sansColonne = [], sansSommaire = [];
+  for (const p of pages) {
+    const r = routeDe(p);
+    if (!/^\/blog\/[^/]+\/$/.test(r) || r.startsWith("/blog/rubrique")) continue;
+    const html = readFileSync(p, "utf8");
+    if (!/<article>/.test(html)) continue;
+    const slug = r.split("/")[2];
+    const corps = (html.match(/<article>([\s\S]*?)<\/article>/) || [, ""])[1];
+    const intertitres = (corps.match(/<h2[\s>]/g) || []).length;
+    if (!/class="cta-debut"/.test(html)) sansAppel.push(slug);
+    if (!/class="art-cote"/.test(html)) sansColonne.push(slug);
+    if (intertitres >= 2 && !/class="sommaire sommaire-haut"/.test(html)) sansSommaire.push(slug);
+  }
+  if (sansAppel.length) signale("blog", `${sansAppel.length} article(s) sans appel à l'essai en début d'article (scripts/generate-blog.mjs) : ${sansAppel.slice(0, 5).join(", ")}`);
+  if (sansColonne.length) signale("blog", `${sansColonne.length} article(s) sans colonne de côté : ${sansColonne.slice(0, 5).join(", ")}`);
+  if (sansSommaire.length) signale("blog", `${sansSommaire.length} article(s) avec au moins deux intertitres et sans sommaire : ${sansSommaire.slice(0, 5).join(", ")}`);
+}
+
 // --- les prix affichés sont ceux qui seront prélevés ---
 //
 // La grille du 5 novembre 2026 (Gratuit, Essentiel, Pro, au mois ou à l'année)
@@ -5355,7 +5384,7 @@ const BLOQUANTES = new Set([
   // l'integrite du code et des controles
   "conflit", "construction", "module", "paresseux", "bundle-sans-garde-fou", "controles-creux",
   // ce que voient les moteurs
-  "liens-statiques", "apercu",
+  "liens-statiques", "apercu", "blog",
 ]);
 const bloquantes = anomalies.filter((a) => BLOQUANTES.has(a.cat) && !/\/blog\//.test(a.msg));
 if (bloquantes.length) {
