@@ -12,6 +12,9 @@
  */
 
 import { INSTAGRAM_URL, FACEBOOK_PAGE_URL, FACEBOOK_GROUPE_URL } from "../data/coordonnees.js";
+// Le prix d'appel des encarts vient des montants Stripe, comme la page des
+// offres : un article ne doit jamais annoncer un autre prix que celui prélevé.
+import { MONTANTS } from "../api/_offres.js";
 import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -471,6 +474,30 @@ footer{border-top:1px solid ${T.border};margin-top:60px;padding:26px 0 40px;font
 footer .wrap{max-width:1100px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
 footer a{color:${T.mauve};text-decoration:none}
 :focus-visible{outline:3px solid ${T.terracotta};outline-offset:2px;border-radius:4px}
+/* LA COLONNE DE CÔTÉ (demande de Sophie, 5/11/2026) : sur un grand écran, le
+   sommaire et l'appel à l'essai restent visibles à droite pendant la lecture.
+   Sur téléphone, la colonne n'existe pas : le sommaire reste en haut, dans le
+   texte. Les deux sommaires portent les mêmes liens ; un seul est affiché. */
+.art-cote{display:none}
+@media(min-width:1100px){
+  .art-grille{max-width:1100px;margin:0 auto;padding:0 22px;display:grid;
+    grid-template-columns:minmax(0,720px) 300px;gap:52px;justify-content:center;align-items:start}
+  .art-grille>main.wrap{padding:0;margin:0;max-width:720px}
+  .sommaire-haut{display:none}
+  .art-cote{display:block;position:sticky;top:84px;margin-top:118px;max-height:calc(100vh - 100px);overflow:auto}
+  .art-cote .sommaire{margin:0 0 16px;padding:18px 20px}
+  .art-cote .sommaire ol{font-size:14px}
+}
+.cote-cta{background:${T.white};border:1px solid ${T.terracottaLine};border-radius:14px;padding:18px 20px}
+.cote-cta b{display:block;font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:17px;line-height:1.3;margin-bottom:6px}
+.cote-cta p{font-size:14px;line-height:1.55;color:${T.mauve};margin:0 0 12px}
+.cote-cta a,.cta-debut a{display:inline-block;background:${T.terracotta};color:#fff;text-decoration:none;
+  font-weight:700;font-size:14.5px;padding:10px 16px;border-radius:10px}
+/* L'APPEL EN DÉBUT D'ARTICLE : une ligne, sous le chapeau, avant l'image.
+   Sobre, pour ne pas couper la lecture de qui est venu chercher une règle. */
+.cta-debut{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between;
+  background:${T.terracottaPale};border:1px solid ${T.terracottaLine};border-radius:14px;padding:14px 18px;margin:0 0 28px}
+.cta-debut p{margin:0;font-size:15px;line-height:1.5;color:${T.ink};flex:1 1 320px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
 @media(max-width:640px){
   body{font-size:16.5px}
@@ -680,7 +707,32 @@ function pageArticle(a, tous = []) {
     });
   }
 
+  // LE SOMMAIRE : dès deux intertitres. Il ne s'affichait qu'à partir de trois,
+  // et jamais sur les fiches « situation » : 15 articles sur 96 n'en avaient
+  // pas. Il sert aussi la colonne de côté.
+  const sommaireHtml = headings.length >= 2
+    ? (classe) => `<nav class="${classe}" aria-label="Sommaire"><h2>Au sommaire</h2><ol>${headings
+        .map((h) => `<li><a href="#${h.id}">${esc(h.texte)}</a></li>`)
+        .join("")}</ol></nav>`
+    : null;
+  // L'APPEL À L'ESSAI, DÈS LE DÉBUT. Il n'y en avait qu'un, en bas de page,
+  // que la plupart des lectrices n'atteignent pas. Il dit à qui l'article
+  // s'adresse : l'espace parent est gratuit, on ne lui propose donc pas un
+  // abonnement.
+  const prixDes = (MONTANTS.essentiel.mois / 100).toFixed(2).replace(".", ",");
+  const pourParent = audienceDe(a) === "parent";
+  const appel = pourParent
+    ? { titre: "L'espace parent TiMat est gratuit",
+        texte: "Présences, salaire, documents et aides : tout est partagé avec votre assistante maternelle, sans rien calculer.",
+        bouton: "Découvrir l'espace parent", lien: "/parents" }
+    : { titre: "TiMat fait ces calculs pour vous",
+        texte: `Salaire, congés, indemnités et récapitulatif Pajemploi, calculés à partir de vos heures. Essai gratuit de 2 mois, sans carte bancaire, puis dès ${prixDes} € par mois.`,
+        bouton: "Essayer TiMat gratuitement", lien: "/?connexion=1" };
+  const appelDebut = `<aside class="cta-debut" aria-label="TiMat"><p><b>${esc(appel.titre)}.</b> ${esc(appel.texte)}</p><a href="${escAttr(appel.lien)}">${esc(appel.bouton)}</a></aside>`;
+  const colonne = `<aside class="art-cote" aria-label="Sommaire et essai">${sommaireHtml ? sommaireHtml("sommaire") : ""}<div class="cote-cta"><b>${esc(appel.titre)}</b><p>${esc(appel.texte)}</p><a href="${escAttr(appel.lien)}">${esc(appel.bouton)}</a></div></aside>`;
+
   const body = `
+<div class="art-grille">
 <main class="wrap">
   <nav class="crumbs" aria-label="Fil d'Ariane">
     <a href="/">Accueil</a> › <a href="${indexTarget().url}">Blog</a> › <span>${esc(a.titre)}</span>
@@ -702,6 +754,7 @@ function pageArticle(a, tous = []) {
     }
     <span>${minutes} min de lecture</span>
   </div>
+  ${appelDebut}
   ${
     cover
       ? (() => {
@@ -717,11 +770,7 @@ function pageArticle(a, tous = []) {
       : ""
   }
   ${
-    !situation && headings.length >= 3
-      ? `<nav class="sommaire" aria-label="Sommaire"><h2>Au sommaire</h2><ol>${headings
-          .map((h) => `<li><a href="#${h.id}">${esc(h.texte)}</a></li>`)
-          .join("")}</ol></nav>`
-      : ""
+    sommaireHtml ? sommaireHtml("sommaire sommaire-haut") : ""
   }
   <article>
     ${renderPortableText(a.corps)}
@@ -774,7 +823,9 @@ function pageArticle(a, tous = []) {
     <p>Contrat, mensualisation, déclarations Pajemploi, journal quotidien partagé avec les parents : TiMat s'occupe du calcul et de la paperasse.</p>
     <a href="/?connexion=1">Essayer gratuitement</a>
   </section>
-</main>`;
+</main>
+${colonne}
+</div>`;
 
   return layout({
     title: title.includes("TiMat") ? title : `${title} | TiMat`,

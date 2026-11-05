@@ -1004,7 +1004,41 @@ l'écran Fin de contrat.
     Sophie avait déjà répondu (adresse directe en ligne, pas de champ long).
   - Indexations du 4/11 envoyées (10 adresses, toutes en 200 vérifiées).
 
+- **5/11** :
+  - Sophie VALIDE la série de janvier : 20 publications programmées dans
+    Metricool (18 h, 2 par date, du 4 au 25/01), identifiants dans le
+    carnet de la session ; publication 31 sans « forfait Pro ».
+  - Corrections d'articles PUBLIÉES (accord écrit) : frères et sœurs
+    (ancienneté art. 90-1), augmenter son tarif (4,20 € ; 39 € et non 35 €).
+  - Stories : sondage des congés (40 + 57) non fait le 4/11, replacé le
+    vendredi 6/11. Rappel : Metricool = fil (moi, après accord) ; Meta
+    Business Suite = stories image seule (Sophie) ; sondages et boîte à
+    questions = à la main dans Instagram.
+  - **OFFRES BRANCHÉES (PR #313, vérifiées en production)**, grille de
+    Sophie du 5/11 : Gratuit (1 enfant, limité), Essentiel (1 enfant, tout
+    TiMat, 4,99 €/mois ou 49 €/an), Pro (2 enfants et plus, 9,99 €/mois ou
+    99 €/an). `api/_offres.js` (prix Stripe + montants), webhook d'après le
+    prix, `subscription_status` « essentiel » (sans changement de schéma),
+    `offreDe`/`limiteEnfants`, carte « Mon abonnement », page des offres
+    (interrupteur « 2 mois offerts »), CGV datées du 5/11. Changement
+    d'offre = changement de prix au prorata facturé tout de suite. Produit
+    Stripe Essentiel : description passée à « 1 enfant ». RESTE : le test
+    de paiement réel (Sophie), puis vérifier `subscription_status` en base.
+  - **Blog** : sommaire dans une colonne de côté (fixe sur grand écran,
+    en haut sur téléphone) et appel à l'essai dès le début, sur les 96
+    articles (l'espace parent gratuit pour les articles « parent ») ;
+    barrière d'audit bloquante. Le sommaire manquait sur 15 articles.
+
 ## Ce qu'il reste à faire
+
+**État du 5/11 (prime sur les listes plus anciennes ci-dessous)**
+- Sophie : test de paiement réel (Essentiel ou Pro, au mois ou à l'année) ;
+  Stripe : logo clair, nom commercial TiMat, e-mail et adresse
+  d'assistance, virements automatiques ; stories du 5 au 26/11 ;
+  indexations du 5 et 6/11 ; URSSAF : réponse attendue ; MAM : attendre.
+- Claude : après le test, vérifier en base l'offre écrite par le webhook ;
+  mettre à jour le texte long de la Page Facebook avec les offres ;
+  18/12 : montants du 1er janvier (publications 30, 32, 33, 34 de janvier).
 
 **État du 4/11 (prime sur les listes plus anciennes ci-dessous)**
 - Sophie : valider la série de janvier (PDF série 5) ; confirmer par écrit
