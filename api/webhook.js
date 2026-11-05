@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { PRODUITS, reconnaitreProduit, developper } from './_catalogue-boutique.js';
 
 import { EMAIL_CONTACT, EMAIL_EXPEDITEUR } from "../data/coordonnees.js";
+import { offreValide, offreDuPrix } from './_offres.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -179,12 +180,15 @@ async function handler(req, res) {
       // fiche a 6,90 EUR ouvrait l'acces Pro.
       const estAbonnement = session.mode === 'subscription' || (session.metadata && session.metadata.type === 'subscription');
       if (userId && estAbonnement) {
+        // L'offre vient des métadonnées posées par /api/stripe, côté serveur.
+        // Sans elles (session plus ancienne que les offres), c'est le Pro.
+        const offre = offreValide(session.metadata && session.metadata.offre);
         await ecrire(supabase.from('profiles').update({
-          subscription_status: 'pro',
+          subscription_status: offre,
           stripe_customer_id: session.customer,
           subscription_updated_at: new Date().toISOString(),
-        }).eq('id', userId), 'passage en Pro');
-        console.log('[Stripe] User ' + userId + ' upgraded to Pro');
+        }).eq('id', userId), 'passage en ' + offre);
+        console.log('[Stripe] User ' + userId + ' -> ' + offre);
       }
 
       // Livraison des documents de la boutique. Un échec ici ne doit pas
@@ -221,7 +225,12 @@ async function handler(req, res) {
       const profile = await ecrire(supabase.from('profiles')
         .select('id').eq('stripe_customer_id', sub.customer).maybeSingle(), 'lecture du profil');
       if (profile) {
-        const status = ['active', 'trialing'].includes(sub.status) ? 'pro' : 'free';
+        // Actif : l'offre se lit sur le PRIX de l'abonnement, qui change quand
+        // on passe de l'Essentiel au Pro. Un prix inconnu retombe sur les
+        // métadonnées, puis sur le Pro — jamais sur un accès coupé à tort.
+        const actif = ['active', 'trialing'].includes(sub.status);
+        const prix = sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].price && sub.items.data[0].price.id;
+        const status = actif ? (offreDuPrix(prix) || offreValide(sub.metadata && sub.metadata.offre)) : 'free';
         await ecrire(supabase.from('profiles').update({
           subscription_status: status,
           subscription_updated_at: new Date().toISOString(),

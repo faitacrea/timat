@@ -21,6 +21,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { poserCors, utilisateurDeLaRequete, origineDeRetour } from './_authentifier.js';
 import { DELAI_FERMETURE_JOURS, famillesDe, prevenirFamilles, reglerAbonnements } from './_fermeture.js';
+import { offreValide, periodeValide, prixDe, LIMITE_ENFANTS } from './_offres.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -174,28 +175,74 @@ export default async function handler(req, res) {
       return res.status(200).json({ url: session.url });
     }
 
-    // SUBSCRIPTION: Pro monthly
-    if (!process.env.STRIPE_PRICE_ID) {
+    // ABONNEMENT : Essentiel ou Pro, au mois ou a l'annee (grille du 5/11/2026,
+    // voir _offres.js). Sans precision, c'est l'offre historique : Pro, au mois.
+    const offre = offreValide(req.body?.offre);
+    const periode = periodeValide(req.body?.periode);
+    const price = prixDe(offre, periode);
+    if (!price) {
       return res.status(500).json({ error: 'STRIPE_PRICE_ID manquant dans les variables Vercel' });
+    }
+
+    const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+
+    // L'ESSENTIEL EST POUR UN ENFANT. Le refuser a qui en accueille deux est
+    // la seule facon que la limite tienne : l'ecran le dit, mais un appel
+    // direct a cette route passerait sinon.
+    if (Number.isFinite(LIMITE_ENFANTS[offre])) {
+      const { count, error: errEnfants } = await sb.from('enfants')
+        .select('id', { count: 'exact', head: true })
+        .eq('asmat_id', userId).eq('actif', true);
+      if (errEnfants) return res.status(502).json({ error: 'Lecture des enfants impossible : ' + errEnfants.message });
+      if ((count || 0) > LIMITE_ENFANTS[offre]) {
+        return res.status(409).json({ error: "L'offre Essentiel est prévue pour un enfant. Avec " + count + " enfants accueillis, c'est l'offre Pro." });
+      }
+    }
+
+    // UN SEUL ABONNEMENT PAR COMPTE. Passer de l'Essentiel au Pro (ou du mois a
+    // l'annee) ouvrait une seconde session de paiement : la personne aurait
+    // paye deux abonnements. Quand un abonnement court deja, on change son prix,
+    // au prorata ; le webhook « customer.subscription.updated » met l'offre a
+    // jour dans le profil.
+    const { data: profil, error: errProfil } = await sb.from('profiles')
+      .select('stripe_customer_id').eq('id', userId).maybeSingle();
+    if (errProfil) return res.status(502).json({ error: 'Profil illisible : ' + errProfil.message });
+    if (profil?.stripe_customer_id) {
+      const { data: abonnements } = await stripe.subscriptions.list({ customer: profil.stripe_customer_id, status: 'all', limit: 10 });
+      const enCours = (abonnements || []).find((a) => ['active', 'trialing', 'past_due'].includes(a.status));
+      if (enCours) {
+        const item = enCours.items?.data?.[0];
+        if (!item) return res.status(502).json({ error: "Abonnement sans ligne de prix : changement impossible" });
+        if (item.price?.id !== price) {
+          await stripe.subscriptions.update(enCours.id, {
+            items: [{ id: item.id, price }],
+            // La différence est facturée (ou créditée) tout de suite, comme le
+            // disent les CGV : sur un abonnement annuel, « à la prochaine
+            // facture » voudrait dire dans un an.
+            proration_behavior: 'always_invoice',
+            metadata: { ...(enCours.metadata || {}), userId, offre, periode },
+          });
+        }
+        return res.status(200).json({ url: appUrl + '?abonnement=modifie', modifie: true });
+      }
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email: email,
-      line_items: [{
-        price: process.env.STRIPE_PRICE_ID,
-        quantity: 1,
-      }],
+      // Une ancienne cliente (abonnement résilié) garde son dossier Stripe :
+      // factures et carte au même endroit, plutôt qu'un second client.
+      ...(profil?.stripe_customer_id ? { customer: profil.stripe_customer_id } : { customer_email: email }),
+      line_items: [{ price, quantity: 1 }],
       success_url: appUrl + '?session_id={CHECKOUT_SESSION_ID}&success=true',
       cancel_url: appUrl + '?canceled=true',
-      metadata: { userId, prenom: prenom || '', type: 'subscription' },
+      metadata: { userId, prenom: prenom || '', type: 'subscription', offre, periode },
       // PLUS DE trial_period_days ICI. Les deux mois offerts sont consommés
       // AVANT Stripe, dans TiMat, sans carte. Les laisser aussi chez Stripe
       // offrait donc quatre mois à qui décidait de continuer — et repoussait
       // le premier paiement de deux mois de plus.
       subscription_data: {
-        metadata: { userId },
+        metadata: { userId, offre, periode },
       },
     });
 

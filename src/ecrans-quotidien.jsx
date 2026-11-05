@@ -17,7 +17,7 @@ import { supabase } from "../lib/supabase.js";
 import { EMAIL_CONTACT } from "../data/coordonnees.js";
 import { ChampNombre } from "./champ-nombre.jsx";
 import {
-  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, heuresDeclarees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
+  ALLOC_FORMATION_H, AvatarEnfant, AvatarPicker, CPill, D, EmptyState, H, IconeOuEmoji, LIMITE_ENFANTS_GRATUIT, limiteEnfants, offreDe, PageHeader, Pastille, PastilleRepas, QRPointage, QUALITE_REPAS, SEMAINES_MAX_ANNEE_INCOMPLETE, Toast, URL_CONVENTION, abonnementInitial, estPro, fileHorsLigne, filerOperation, fmt, heuresMensualisees, heuresDeclarees, isoJour, nbf, netDepuisBrut, qrSvgBalise, salaireMensualise, semainesDuContrat, typeEv, G, TODAY_STR, memoriserHorsLigne, lireHorsLigne, createNotification, sendNotificationEmail
 , enregistrerPointage, departAvantArrivee, MESSAGE_DEPART_AVANT_ARRIVEE
 , rejouerFile, logAction, activerPush, placeDisponible
 } from "./App.jsx";
@@ -3136,7 +3136,8 @@ export function AjouterEnfantModale({user,onClose}){
       // 0. Le verrou du forfait, verifie ici et pas seulement sur le bouton :
       //    un lien direct ou un bouton oublie ne doit pas contourner la limite.
       //    Le comptage se fait en base, pas sur une liste deja chargee.
-      if(!estPro(user)){
+      const limite=limiteEnfants(user);
+      if(Number.isFinite(limite)){
         // « count||0 » laissait passer l'ajout quand la lecture echouait : la
         // limite du forfait gratuit n'etait plus verifiee du tout. On ne
         // devine pas dans un sens ni dans l'autre, on le dit.
@@ -3144,9 +3145,9 @@ export function AjouterEnfantModale({user,onClose}){
           .select("id",{count:"exact",head:true})
           .eq("asmat_id",user.id);
         if(eCount){ setToast("Impossible de vérifier votre nombre d'enfants pour le moment. Réessayez dans un instant."); return; }
-        if((count||0)>=LIMITE_ENFANTS_GRATUIT){
+        if((count||0)>=limite){
           setSaving(false);
-          setToast("Le forfait gratuit couvre un enfant. Passez au Pro pour en accueillir davantage.");
+          setToast((offreDe(user)==="essentiel"?"L'offre Essentiel":"Le compte gratuit")+" couvre un enfant. Pour en accueillir davantage, passez au Pro (Paramètres, Mon abonnement).");
           return;
         }
       }

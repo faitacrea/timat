@@ -316,7 +316,7 @@ export function GestionStockage({ user }) {
           </div>)}
         </div>)}
       {!pro && <div style={{ fontSize: 11.5, color: "var(--m)", marginTop: 14, lineHeight: 1.6 }}>
-        Le forfait Pro porte les documents à {enMo(QUOTAS.pro.documentsOctets)} et lève la limite du nombre de photos.
+        Les offres Essentiel et Pro portent les documents à {enMo(QUOTAS.pro.documentsOctets)} et lève la limite du nombre de photos.
       </div>}
     </>}
   </div>;

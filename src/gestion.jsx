@@ -2327,12 +2327,12 @@ export function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false
       :<VerrouPro titre="La facturation et la déclaration Pajemploi" desc="Le récapitulatif mensuel et l'export Pajemploi préparent votre déclaration à partir de vos présences réelles. Ils font partie du forfait Pro."/>)}
     {section==="bulletin"&&(proActif
       ?<BulletinSalaire enfants={enfants}role={role}pEId={pEId}user={user}/>
-      :<VerrouPro titre="Les bulletins de salaire" desc="Salaire mensualisé, heures complémentaires, congés payés et indemnités, réunis sur un bulletin conforme à la convention collective. Cette fonction fait partie du forfait Pro."/>)}
+      :<VerrouPro titre="Les bulletins de salaire" desc="Salaire mensualisé, heures complémentaires, congés payés et indemnités, réunis sur un bulletin conforme à la convention collective. Cette fonction fait partie des offres Essentiel et Pro."/>)}
     {section==="versements"&&<Versements enfants={enfants}role={role}pEId={pEId}user={user}/>}
     {section==="frais_km"&&<IndemnitesKilometriques enfants={enfants} role={role} user={user}/>}
     {section==="recap_fiscal"&&(proActif
       ?<RecapFiscalAssmat enfants={enfants} user={user}/>
-      :<VerrouPro titre="Le récapitulatif fiscal" desc="Le montant à reporter sur votre déclaration, après abattement. Cette fonction fait partie du forfait Pro."/>)}
+      :<VerrouPro titre="Le récapitulatif fiscal" desc="Le montant à reporter sur votre déclaration, après abattement. Cette fonction fait partie des offres Essentiel et Pro."/>)}
     {section==="contrats"&&<div>
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
         {[{id:"contrats",l:"📄 Contrats & avenants"},{id:"solde",l:"🏁 Fin de contrat"}].map(t=>
@@ -2342,12 +2342,12 @@ export function AdminFinances({enfants,role,pEId,user,pointagesDB,demoMode=false
         <Contrats enfants={enfants}role={role}pEId={pEId}user={user}/>
       </div>:(proActif
         ?<SoldeDeCompte enfants={enfants}role={role}pEId={pEId}user={user}/>
-        :<VerrouPro titre="La fin de contrat" desc="Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte. Cette fonction fait partie du forfait Pro."/>)}
+        :<VerrouPro titre="La fin de contrat" desc="Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte. Cette fonction fait partie des offres Essentiel et Pro."/>)}
     </div>}
     {section==="contrats_types"&&<ContratsTypes enfants={enfants}role={role}user={user}/>}
     {section==="courriers"&&(proActif
       ?<CourriersTypes enfants={enfants}role={role}pEId={pEId}user={user}/>
-      :<VerrouPro titre="Les courriers types" desc="Modèles de courriers conformes à la convention collective, prêts à personnaliser. Cette fonction fait partie du forfait Pro."/>)}
+      :<VerrouPro titre="Les courriers types" desc="Modèles de courriers conformes à la convention collective, prêts à personnaliser. Cette fonction fait partie des offres Essentiel et Pro."/>)}
     {section==="signature_parent"&&(enfants.some(e=>e?.contrat?.partage_parent)?<SignatureContratParent enfants={enfants}pEId={pEId}user={user}/>:<div className="card" style={{textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>⏳</div><div style={{fontWeight:700,color:"var(--b)"}}>Contrat pas encore disponible</div><div style={{fontSize:12.5,color:"var(--m)",marginTop:4}}>Votre assistante maternelle ne l'a pas encore partagé. Vous serez prévenu(e) par e-mail dès qu'il sera prêt à signer.</div></div>)}
   </div>;
 }

@@ -161,7 +161,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
       // tableau de bord d'administration, c'est la premiere chose qu'on lit le
       // matin : on croit avoir tout perdu.
       const {count:u,error:eU}=await supabase.from('profiles').select('*',{count:'exact',head:true});
-      const {count:p,error:eP}=await supabase.from('profiles').select('*',{count:'exact',head:true}).eq('subscription_status','pro');
+      const {count:p,error:eP}=await supabase.from('profiles').select('*',{count:'exact',head:true}).in('subscription_status',['pro','essentiel']);
       const {count:e,error:eE}=await supabase.from('enfants').select('*',{count:'exact',head:true});
       if(eU||eP||eE){ setStats(st=>({...(st||{}),panne:true})); return; }
       setStats({users:u||0,pro:p||0,enfants:e||0,panne:false});
@@ -715,9 +715,12 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             {key:"s6",titre:"Section 6 - Tarifs",icon:"💰",fields:[
               {k:"s6Align",l:"Alignement du texte",type:"align"},
               {k:"s6Title",l:"Titre",type:"txt"},
-              {k:"prixMensuel",l:"Prix mensuel (€)",type:"txt",inTxts:true},{k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
+              // Les prix ne se règlent plus ici : ils viennent d'OFFRES_TIMAT (App.jsx),
+              // tenu égal aux prix Stripe d'api/_offres.js. Un champ « Prix mensuel »
+              // qui ne change plus rien sur la page tromperait.
+              {k:"prixEssai",l:"Durée essai",type:"txt",inTxts:true},
               
-              {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proSubtxt",l:"Texte sous prix",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
+              {k:"proLabel",l:"Badge Pro",type:"txt",inTxts:true},{k:"proDesc",l:"Description Pro",type:"txt",inTxts:true},
               {k:"freeLabel",l:"Label Gratuit",type:"txt",inTxts:true},
               {k:"section6Bg",l:"Fond section",type:"col"},{k:"s6TitleColor",l:"Couleur titre",type:"col"},
               {k:"freeBg",l:"Fond card Gratuit",type:"col"},{k:"freeLabelColor",l:"Couleur label Gratuit",type:"col"},
@@ -763,7 +766,7 @@ function Backoffice({user,setPage,appConfig,setAppConfig,secProp,setSecProp,hide
             )}
           </BOCard>
           <BOCard title="Tarifs et CTA" icon="💰">
-            {[["prixMensuel","Prix mensuel"],["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proSubtxt","Pro - sous-prix"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freePrice","Gratuit - prix (ex: 0€)"],["freeDesc","Gratuit - description"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
+            {[["prixEssai","Durée essai"],["proLabel","Badge Pro"],["proDesc","Pro - description"],["proBtnTxt","Pro - bouton"],["freeLabel","Gratuit - label"],["freePrice","Gratuit - prix (ex: 0€)"],["freeDesc","Gratuit - description"],["freeBtnTxt","Gratuit - bouton"],["ctaBtnTxt","CTA - bouton"],["ctaSub","CTA - descriptif"],["ctaFooter","CTA - footer"]].filter(([,l])=>matches(l)).map(([k,l])=>
               <BOField key={k} label={l}><BOTextInput k={k} state={cfg.txts} setter={setTxt}/></BOField>
             )}
           </BOCard>
@@ -1579,7 +1582,7 @@ function BackofficeShell({user,appConfig,setAppConfig}){
         // Meme compteur, meme piege : le catch plus bas remettait explicitement
         // 0/0/0 en cas de panne.
         const {count:u,error:eU}=await supabase.from("profiles").select("*",{count:"exact",head:true});
-        const {count:p,error:eP}=await supabase.from("profiles").select("*",{count:"exact",head:true}).eq("subscription_status","pro");
+        const {count:p,error:eP}=await supabase.from("profiles").select("*",{count:"exact",head:true}).in("subscription_status",["pro","essentiel"]);
         const {count:e,error:eE}=await supabase.from("enfants").select("*",{count:"exact",head:true});
         if(eU||eP||eE){ if(!cancel)setStats(st=>({...(st||{}),panne:true})); return; }
         if(!cancel)setStats({users:u||0,pro:p||0,enfants:e||0,panne:false});

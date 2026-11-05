@@ -1605,20 +1605,20 @@ export const debutAnciennete = (enfant, enfants) => {
 // liste avant d'appeler quoi que ce soit, et une barriere d'audit refuse
 // qu'un verrou soit re-ecrit a la main a cote.
 export const ECRANS_PRO = {
-  reprise_contrat: ["La reprise d'un contrat en cours", "Vos mois déjà passés chez un autre outil, repris en une fois, pour que vos congés et votre récapitulatif fiscal soient justes dès le premier mois. Cette fonction fait partie du forfait Pro."],
+  reprise_contrat: ["La reprise d'un contrat en cours", "Vos mois déjà passés chez un autre outil, repris en une fois, pour que vos congés et votre récapitulatif fiscal soient justes dès le premier mois. Cette fonction fait partie des offres Essentiel et Pro."],
   // Le registre des medicaments n'est PAS ici, et c'est deliberé : c'est une
   // obligation legale (decret 2021-1131). Faire payer pour tenir un registre
   // qu'on est obligee de tenir serait indefendable.
-  bilans: ["Les bilans de journée", "Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."],
-  documents_complet: ["Documents et attestations", "Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."],
-  recap_fiscal: ["Le récapitulatif fiscal", "Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie du forfait Pro."],
-  mes_employeurs: ["Vos employeurs", "Vos revenus du mois famille par famille, et vos congés à poser avec toutes. Cette fonction fait partie du forfait Pro."],
-  temps_travail: ["Votre temps de travail", "Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie du forfait Pro."],
-  pmi: ["La communication avec la PMI", "Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie du forfait Pro."],
-  solde_compte: ["Le solde de tout compte", "Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte, calculés à la fin d'un contrat. Cette fonction fait partie du forfait Pro."],
-  attestation_fiscale: ["L'attestation fiscale", "L'attestation annuelle à remettre aux parents employeurs pour leur crédit d'impôt. Cette fonction fait partie du forfait Pro."],
-  rapport_annuel: ["Le rapport annuel", "La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie du forfait Pro."],
-  attestation_pe: ["L'attestation France Travail", "L'attestation d'employeur à remettre en fin de contrat, préremplie à partir de vos bulletins. Cette fonction fait partie du forfait Pro."],
+  bilans: ["Les bilans de journée", "Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie des offres Essentiel et Pro."],
+  documents_complet: ["Documents et attestations", "Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie des offres Essentiel et Pro."],
+  recap_fiscal: ["Le récapitulatif fiscal", "Le montant à reporter sur votre déclaration, après abattement, calculé à partir de vos salaires de l'année. Cette fonction fait partie des offres Essentiel et Pro."],
+  mes_employeurs: ["Vos employeurs", "Vos revenus du mois famille par famille, et vos congés à poser avec toutes. Cette fonction fait partie des offres Essentiel et Pro."],
+  temps_travail: ["Votre temps de travail", "Vos heures réunies, tous employeurs confondus, face aux plafonds légaux. Cette fonction fait partie des offres Essentiel et Pro."],
+  pmi: ["La communication avec la PMI", "Vos échanges et vos justificatifs pour le service de PMI, réunis et datés. Cette fonction fait partie des offres Essentiel et Pro."],
+  solde_compte: ["Le solde de tout compte", "Indemnité compensatrice de congés payés, préavis et reçu pour solde de tout compte, calculés à la fin d'un contrat. Cette fonction fait partie des offres Essentiel et Pro."],
+  attestation_fiscale: ["L'attestation fiscale", "L'attestation annuelle à remettre aux parents employeurs pour leur crédit d'impôt. Cette fonction fait partie des offres Essentiel et Pro."],
+  rapport_annuel: ["Le rapport annuel", "La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie des offres Essentiel et Pro."],
+  attestation_pe: ["L'attestation France Travail", "L'attestation d'employeur à remettre en fin de contrat, préremplie à partir de vos bulletins. Cette fonction fait partie des offres Essentiel et Pro."],
 };
 // ---------------------------------------------------------------------------
 // L'ESSAI DE DEUX MOIS, SANS CARTE BANCAIRE
@@ -1661,12 +1661,42 @@ export const essaiExpire = (u) => {
   const j = joursRestantsEssai(u);
   return j !== null && j <= 0;
 };
-export const estPro = (u) =>
-  u?.role === "parent" ||
-  u?.subscription_status === "pro" ||
-  (u?.subscription_status === "trialing" && !essaiExpire(u));
+// L'OFFRE D'UN COMPTE — grille décidée par Sophie le 5 novembre 2026 :
+//   - gratuit   : 1 enfant, accès limité (le quotidien) ;
+//   - essentiel : 1 enfant, accès complet (4,99 €/mois ou 49 €/an) ;
+//   - pro       : 2 enfants et plus, accès complet (9,99 €/mois ou 99 €/an) ;
+//   - essai     : les 2 mois offerts, comme le Pro ;
+//   - parent    : l'espace parent, gratuit par construction.
+// Le statut « essentiel » est écrit par le webhook Stripe, d'après le prix de
+// l'abonnement (api/_offres.js) ; le client ne peut pas l'écrire (déclencheur
+// profiles_protege_colonnes_privilegiees).
+export const offreDe = (u) => {
+  if (u?.role === "parent") return "parent";
+  if (u?.subscription_status === "pro") return "pro";
+  if (u?.subscription_status === "essentiel") return "essentiel";
+  if (u?.subscription_status === "trialing" && !essaiExpire(u)) return "essai";
+  return "gratuit";
+};
+// estPro garde son nom, partout dans le code, mais il veut dire désormais
+// « accès complet » : l'Essentiel ouvre les mêmes écrans que le Pro. Ce qui les
+// sépare est le nombre d'enfants, lu par limiteEnfants.
+export const estPro = (u) => offreDe(u) !== "gratuit";
+export const LIMITE_ENFANTS_ESSENTIEL = 1;
+// Les prix affichés. Ils doivent rester ceux des prix Stripe d'api/_offres.js
+// (une barrière d'audit compare les deux). « an » est le prix de l'année
+// entière ; le « au lieu de » se déduit de douze mois.
+export const OFFRES_TIMAT = {
+  essentiel: { nom: "Essentiel", mois: 4.99, an: 49, enfants: "1 enfant accueilli" },
+  pro: { nom: "Pro", mois: 9.99, an: 99, enfants: "2 enfants et plus, sans limite" },
+};
+export const limiteEnfants = (u) => {
+  const o = offreDe(u);
+  if (o === "gratuit") return LIMITE_ENFANTS_GRATUIT;
+  if (o === "essentiel") return LIMITE_ENFANTS_ESSENTIEL;
+  return Infinity;
+};
 const peutAjouterEnfant = (u, enfants) =>
-  estPro(u) || (enfants || []).length < LIMITE_ENFANTS_GRATUIT;
+  (enfants || []).length < limiteEnfants(u);
 
 // STOCKAGE — le gratuit accepte 20 photos et 50 Mo de documents, le Pro
 // 5 Go de documents et des photos sans limite de nombre.
@@ -1722,7 +1752,7 @@ export async function placeDisponible(user, type, octets = 0) {
 
 // L'espace occupe, et de quoi faire de la place sans chercher soi-meme quels
 // fichiers supprimer. Sans cet ecran, une limite atteinte serait une impasse.
-export function VerrouPro({ titre, desc, cta = "Voir le forfait Pro" }) {
+export function VerrouPro({ titre, desc, cta = "Voir les offres" }) {
   return <div className="card" style={{ padding: "var(--pad-carte-l)", textAlign: "center", border: "1.5px dashed var(--accent)" }}>
     <div style={{ marginBottom: 10 }}><IconeOuEmoji e="🔒" taille={34} couleur="var(--accent)"/></div>
     <div className="pf" style={{ fontSize: 17, fontWeight: 700, color: "var(--b)", marginBottom: 8 }}>{titre}</div>
@@ -1730,7 +1760,9 @@ export function VerrouPro({ titre, desc, cta = "Voir le forfait Pro" }) {
     <button className="btn bT" onClick={() => window.dispatchEvent(new CustomEvent("timat:page", { detail: "parametres" }))}>
       {cta}
     </button>
-    <div style={{ fontSize: 11, color: "var(--l)", marginTop: 10 }}>2 mois offerts, sans carte bancaire</div>
+    {/* Ce verrou se voit une fois l'essai terminé : y promettre « 2 mois
+        offerts » était faux pour qui venait de les utiliser. */}
+    <div style={{ fontSize: 11, color: "var(--l)", marginTop: 10 }}>Essentiel {nbf(OFFRES_TIMAT.essentiel.mois,2)} € ou Pro {nbf(OFFRES_TIMAT.pro.mois,2)} € par mois, sans engagement</div>
   </div>;
 }
 
@@ -5328,6 +5360,8 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
   const uneFois=useUneFois();
   const [demoPage, setDemoPage] = useState("accueil");
   const [showModalBrut, setShowModalBrut] = useState(false);
+  // Interrupteur « Au mois / À l'année » de la section des offres.
+  const [tarifAn, setTarifAn] = useState(false);
   // Lus ici, et pas cent lignes plus bas : la minuterie de la liste
   // d'attente s'en sert, et une constante utilisée avant sa déclaration
   // fait planter tout le composant — dans le cadre de la démo, la page
@@ -5569,7 +5603,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
     const schemas=[
       {"@context":"https://schema.org","@type":"Organization","name":"TiMat","url":SITE,"logo":IMG,"description":"L'application de gestion pour les assistantes maternelles et les parents employeurs."},
       {"@context":"https://schema.org","@type":"WebSite","name":"TiMat","url":SITE},
-      {"@context":"https://schema.org","@type":"SoftwareApplication","name":"TiMat","applicationCategory":"BusinessApplication","operatingSystem":"Web, iOS, Android","description":"Gestion complète pour assistantes maternelles : salaire, mensualisation, congés, indemnités, déclaration Pajemploi, contrats et planning.","offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Gratuit"},{"@type":"Offer","price":"9.99","priceCurrency":"EUR","name":"Pro"}]}
+      {"@context":"https://schema.org","@type":"SoftwareApplication","name":"TiMat","applicationCategory":"BusinessApplication","operatingSystem":"Web, iOS, Android","description":"Gestion complète pour assistantes maternelles : salaire, mensualisation, congés, indemnités, déclaration Pajemploi, contrats et planning.","offers":[{"@type":"Offer","price":"0","priceCurrency":"EUR","name":"Gratuit"},{"@type":"Offer","price":"4.99","priceCurrency":"EUR","name":"Essentiel (par mois)"},{"@type":"Offer","price":"49","priceCurrency":"EUR","name":"Essentiel (par an)"},{"@type":"Offer","price":"9.99","priceCurrency":"EUR","name":"Pro (par mois)"},{"@type":"Offer","price":"99","priceCurrency":"EUR","name":"Pro (par an)"}]}
     ];
     if(faqs.length){schemas.push({"@context":"https://schema.org","@type":"FAQPage","mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))});}
     const scripts=schemas.map(s=>{const el=document.createElement("script");el.type="application/ld+json";el.setAttribute("data-timat-seo","1");el.textContent=JSON.stringify(s);document.head.appendChild(el);return el;});
@@ -5987,7 +6021,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 : <>
                     <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ background:"#B4543F", color:"#fff", border:"none", borderRadius:12, padding:"14px 30px", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit", boxShadow:"0 6px 18px rgba(180,84,63,.26)" }}>Créer mon compte gratuitement →</button>
                     <div style={{ fontSize:12.5, color:"#55707C", marginTop:14, lineHeight:1.6 }}>
-                      <b style={{ color:"#9E5341", fontWeight:700 }}>{T.prixMensuel} € par mois</b>, contrats illimités.<br/>{T.prixEssai}, sans engagement.
+                      <b style={{ color:"#9E5341", fontWeight:700 }}>Dès {nbf(OFFRES_TIMAT.essentiel.mois,2)} € par mois</b>, {nbf(OFFRES_TIMAT.pro.mois,2)} € sans limite d'enfants.<br/>{T.prixEssai}, sans engagement.
                     </div>
                   </>}
             </div>
@@ -6029,7 +6063,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         .lp-transfo-row{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;align-items:center}
         .lp-transfo-head{display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:20px;padding:0 20px 10px}
         .transfo-celllabel{display:none}
-        .lp-tarifs-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+        .lp-tarifs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
         .lp-logo{font-size:26px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
         .lp-logo-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
         .lp-hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
@@ -6069,6 +6103,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           width:max-content;max-width:calc(100% - 32px)}
         @media (prefers-reduced-motion:reduce){.lp-barre{transition:none}}
         @media(max-width:899px){
+          .lp-tarifs-grid{grid-template-columns:1fr!important;max-width:480px;margin-left:auto;margin-right:auto;gap:26px!important}
           .lp-barre{max-width:calc(100% - 20px)}
         }
 
@@ -6116,6 +6151,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           .lp-guarantees{flex-direction:column;gap:8px;font-size:12px}
         }
         @media(max-width:480px){
+          /* Cartes des offres plus compactes sur téléphone (demande de Sophie, 3/11). */
+          .lp-tarifs-grid > div{padding:20px 18px!important}
+          .lp-prix{font-size:36px!important}
           .lp-hero-stats>div{min-width:0}
           .lp-demo-tabs button{padding:6px 8px!important;font-size:11px!important}
           .lp-section{padding:40px 12px}
@@ -6508,7 +6546,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <FadeIn>
             <h2 style={{ margin:0, fontFamily: fTitle, fontSize: "clamp(22px,4vw,36px)", color: L.s6TitleColor||"#fff", fontWeight: 700, textAlign: L.s6Align||"center", marginBottom: 10 }}>{L.s6Title}</h2>
-            <div style={{ fontSize: 14, color: L.s6SubColor||"#55707C", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Contrats illimités, sans engagement, 2 mois offerts sans carte bancaire."}</div>
+            <div style={{ fontSize: 14, color: L.s6SubColor||"#55707C", textAlign:"center", marginBottom: 42, maxWidth:560, marginLeft:"auto", marginRight:"auto", lineHeight:1.5 }}>{L.s6Sub||"Sans engagement. Essai gratuit de 2 mois, sans carte bancaire, puis vous choisissez votre offre."}</div>
           </FadeIn>
           {/* LE COMPARATEUR EST RETIRÉ DE LA LANDING.
               Trois raisons, dans l'ordre de gravité :
@@ -6527,12 +6565,27 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               exactement le défaut que l'audit signale ailleurs. Il est dans
               l'historique git, et sa place est de toute façon sur une page
               dédiée à la comparaison, pas dans le parcours d'achat. */}
+          {/* L'INTERRUPTEUR MOIS / ANNÉE. « 2 mois offerts » à l'année : 49 € au
+              lieu de 59,88 €, 99 € au lieu de 119,88 €, soit un peu plus de deux
+              mois dans les deux cas. L'essai, lui, est appelé « essai gratuit »
+              dans cette section, pour que les deux ne se confondent pas. */}
+          <div role="group" aria-label="Période de paiement" style={{ display:"flex", justifyContent:"center", marginTop: 6 }}>
+            <div style={{ display:"inline-flex", background:"#fff", border:"1.5px solid #DDD5C8", borderRadius:99, padding:4, gap:4 }}>
+              {[[false,"Au mois"],[true,"À l'année"]].map(([v,l]) => (
+                <button key={l} type="button" aria-pressed={tarifAn===v} onClick={() => setTarifAn(v)} style={{
+                  border:"none", borderRadius:99, padding:"9px 18px", fontSize:13.5, fontWeight:700, fontFamily:"inherit", cursor:"pointer",
+                  background: tarifAn===v ? "#2E4859" : "transparent", color: tarifAn===v ? "#fff" : "#2E4859" }}>
+                  {l}{v && <span style={{ marginLeft:8, background: tarifAn ? "#F6CDBF" : "#FBE9E2", color:"#9E5341", borderRadius:99, padding:"2px 8px", fontSize:11 }}>2 mois offerts</span>}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="lp-tarifs-grid" style={{ marginTop: 26 }}>
             {/* Gratuit */}
             <div className="tarif-free" style={{ background: L.freeBg||"#fff", borderRadius: 16, border: "1.5px solid #DDD5C8", padding: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: L.freeLabelColor||"#A68970", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{T.freeLabel||"Gratuit"}</div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.freePriceColor||"#0D1B2A" }}>{T.freePrice||"0€"}</span>
+                <span className="lp-prix" style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.freePriceColor||"#0D1B2A" }}>{T.freePrice||"0€"}</span>
               </div>
               <div style={{ fontSize: 13, color: L.freeDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.freeDesc||"Pour découvrir TiMat."}</div>
               <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.freeBtnBg||"#0D1B2A", color: L.freeBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit" }}>{T.freeBtnTxt||"Commencer gratuitement"}</button>
@@ -6546,43 +6599,38 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
                 {config.freeLimite ?? DEFAULT_CONFIG.freeLimite}
               </div>}
             </div>
-            {/* Pro */}
-            <div className="tarif-pro" style={{ background: L.proBg||"#FDFBF8", borderRadius: 16, border: "2.5px solid "+(L.proBorderColor||"#B8622F"), padding: 28, position: "relative", boxShadow: "0 12px 48px rgba(184,98,47,.18)" }}>
-              <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: "#B4543F", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap", animation:"badgePulse 2.2s ease-in-out infinite", boxShadow:"0 6px 18px rgba(184,98,47,.4)" }}>{T.proLabel}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: L.proLabelColor||"#B8622F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>Pro</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-                <span style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: L.proPriceColor||"#B8622F" }}>{T.prixMensuel}€</span>
-                <span style={{ fontSize: 13, color: "#866F5A" }}>/mois</span>
-              </div>
-              {/* « quel que soit le nombre d'enfants » etait en 11 px sous le
-                  prix, la ou la visiteuse venue d'un concurrent lit « 9,99 »
-                  et le compare a « a partir de 5 € ». C'est LA difference de
-                  structure entre les deux tarifications : elle se lit avec le
-                  prix, pas sous lui. */}
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: L.proPriceColor||"#B8622F", marginBottom: 6, lineHeight: 1.4 }}>
-                {T.proSubtxt}
-              </div>
-              <div style={{ fontSize: 11, color: L.proSubColor||"#A68970", marginBottom: 8 }}>
-                {(() => {
-                  // Le prix par contrat est ce qu'une assistante maternelle compare a ce
-                  // qu'elle facture a une famille. Il se derive du forfait : l'ecrire en
-                  // dur le ferait diverger au premier changement de tarif.
-                  const f = parseFloat(String(T.prixMensuel||"").replace(",", "."));
-                  if (!(f > 0)) return null;
-                  return <span style={{ display: "block", marginTop: 3 }}>
-                    soit <b>{nbf(f/3, 2)} € par contrat</b> à trois familles
-                  </span>;
-                })()}
-              </div>
-              <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{T.proDesc}</div>
-              <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: L.proBtnBg||"linear-gradient(135deg,#B4543F,#A8452F)", color: L.proBtnColor||"#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 13, marginBottom: 24, fontFamily: "inherit", boxShadow: "0 4px 16px rgba(184,98,47,.35)" }}>{T.proBtnTxt}</button>
-              {(config.proItems||DEFAULT_CONFIG.proItems).map((t, i, arr) => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid rgba(184,98,47,.15)" : "none" }}>
-                  <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
-                  <span style={{ color: "#2C1F14", fontWeight: i < 3 ? 700 : 400 }}>{t}</span>
+            {/* Essentiel et Pro : le même accès complet ; ce qui les sépare est
+                le nombre d'enfants (grille du 5 novembre 2026). */}
+            {["essentiel","pro"].map((cle) => {
+              const o = OFFRES_TIMAT[cle];
+              const pro = cle === "pro";
+              const items = pro ? (config.proItems||DEFAULT_CONFIG.proItems) : (config.essentielItems||DEFAULT_CONFIG.essentielItems);
+              const couleur = pro ? (L.proPriceColor||"#B8622F") : "#2F655F";
+              return <div key={cle} className={pro ? "tarif-pro" : "tarif-essentiel"} style={{ background: pro ? (L.proBg||"#FDFBF8") : "#fff", borderRadius: 16,
+                border: pro ? "2.5px solid "+(L.proBorderColor||"#B8622F") : "1.5px solid #9FC3BC", padding: 28, position: "relative",
+                boxShadow: pro ? "0 12px 48px rgba(184,98,47,.18)" : "0 6px 24px rgba(47,101,95,.10)" }}>
+                <div style={{ position: "absolute", top: -15, left: "50%", transform: "translateX(-50%)", background: pro ? "#B4543F" : "#2F655F", color: "#fff", borderRadius: 20, padding: "5px 18px", fontSize: 11, fontWeight: 700, letterSpacing: ".8px", whiteSpace: "nowrap" }}>{pro ? T.proLabel : "POUR DÉMARRER"}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: pro ? (L.proLabelColor||"#B8622F") : "#2F655F", marginBottom: 10, textTransform: "uppercase", letterSpacing: "1px" }}>{o.nom}</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                  <span className="lp-prix" style={{ fontFamily: fTitle, fontSize: 46, fontWeight: 700, color: couleur }}>{nbf(tarifAn ? o.an : o.mois, tarifAn ? 0 : 2)} €</span>
+                  <span style={{ fontSize: 13, color: "#866F5A" }}>{tarifAn ? "/an" : "/mois"}</span>
                 </div>
-              ))}
-            </div>
+                <div style={{ fontSize: 12, color: L.proSubColor||"#866F5A", marginBottom: 8, lineHeight: 1.5 }}>
+                  {tarifAn
+                    ? <>au lieu de {nbf(o.mois*12, 2)} €, soit {nbf(o.an/12, 2)} € par mois</>
+                    : <>ou {nbf(o.an, 0)} € par an : 2 mois offerts</>}
+                </div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: couleur, marginBottom: 6, lineHeight: 1.4 }}>{o.enfants}</div>
+                <div style={{ fontSize: 13, color: L.proDescColor||"#6B4F3A", marginBottom: 22, lineHeight: 1.6 }}>{pro ? T.proDesc : T.essentielDesc}</div>
+                <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{ width: "100%", background: pro ? (L.proBtnBg||"linear-gradient(135deg,#B4543F,#A8452F)") : "#2F655F", color: "#fff", border: "none", borderRadius: 10, padding: "13px", cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "inherit", marginBottom: 20 }}>{pro ? T.proBtnTxt : T.essentielBtnTxt}</button>
+                {items.map((t, i, arr) => (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length-1 ? "1px solid "+(pro ? "rgba(184,98,47,.15)" : "#DCEAE7") : "none" }}>
+                    <span style={{ color: "#3D6B50", fontWeight: 700 }}>✓</span>
+                    <span style={{ color: "#2C1F14", fontWeight: i < 2 ? 700 : 400 }}>{t}</span>
+                  </div>
+                ))}
+              </div>;
+            })}
           </div>
           {/* Ces trois lignes etaient en blanc EN DUR. Le fond de la section
               tarifs est passe au creme #FDFBF8 sans que les textes suivent :
@@ -6796,9 +6844,9 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
           letterSpacing:".5px", textTransform:"uppercase", whiteSpace:"nowrap",
           boxShadow:"0 4px 12px rgba(13,27,42,.3)" }}>{T.prixEssai}</span>
         <div style={{ fontFamily:fTitle, fontWeight:700, fontSize:isWeb?22:19, lineHeight:1.1, whiteSpace:"nowrap" }}>
-          {T.prixMensuel} €
+          <span style={{ fontFamily:fBody, fontSize:isWeb?13:11.5, fontWeight:400 }}>dès </span>{nbf(OFFRES_TIMAT.essentiel.mois,2)} €
           <span style={{ display:"block", fontFamily:fBody, fontSize:isWeb?12.5:11, fontWeight:400, color:"rgba(255,255,255,.72)" }}>
-            par mois{isWeb?", contrats illimités":""}
+            par mois{isWeb?", sans engagement":""}
           </span>
         </div>
         <button onClick={() => { setShowModal(true); setRole("asmat"); }} style={{
@@ -6889,9 +6937,11 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>4. Formules et tarification</h3>
               <p><strong>Formule Gratuite :</strong> accès limité (1 enfant, fonctionnalités de base).</p>
-              <p><strong>Formule Pro :</strong> 9,99€/mois TTC. Tout compte d'assistante maternelle s'ouvre sur un essai de 2 mois offerts, à compter de la création du compte. <strong>Aucune carte bancaire n'est demandée pour cet essai</strong>, et aucun abonnement n'est créé pendant sa durée : il ne peut donc pas se transformer en prélèvement. Un rappel est envoyé 7 jours puis 3 jours avant la fin.</p>
-              <p>À l'issue des 2 mois, le compte repasse automatiquement en formule gratuite. <strong>Aucune donnée n'est supprimée</strong> : enfants, pointages, contrats et documents sont conservés, seules les fonctions de la formule Pro cessent d'être accessibles. Reprendre l'abonnement les rouvre en l'état.</p>
-              <p>La carte bancaire n'est demandée qu'au moment de souscrire l'abonnement, si vous choisissez de continuer. L'abonnement est alors mensuel et résiliable à tout moment sans frais depuis l'espace utilisateur. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
+              <p><strong>Formule Essentiel :</strong> 4,99 € TTC par mois, ou 49 € TTC par an. Accès à toutes les fonctionnalités, pour 1 enfant accueilli.</p>
+              <p><strong>Formule Pro :</strong> 9,99 € TTC par mois, ou 99 € TTC par an. Accès à toutes les fonctionnalités, sans limite du nombre d'enfants accueillis.</p>
+              <p><strong>Essai gratuit :</strong> tout compte d'assistante maternelle s'ouvre sur un essai gratuit de 2 mois, avec l'accès de la formule Pro, à compter de la création du compte. <strong>Aucune carte bancaire n'est demandée pour cet essai</strong>, et aucun abonnement n'est créé pendant sa durée : il ne peut donc pas se transformer en prélèvement. Un rappel est envoyé 7 jours puis 3 jours avant la fin.</p>
+              <p>À l'issue des 2 mois, le compte repasse automatiquement en formule gratuite. <strong>Aucune donnée n'est supprimée</strong> : enfants, pointages, contrats et documents sont conservés, seules les fonctions des formules payantes cessent d'être accessibles. Reprendre un abonnement les rouvre en l'état.</p>
+              <p>La carte bancaire n'est demandée qu'au moment de souscrire l'abonnement, si vous choisissez de continuer. L'abonnement est alors mensuel ou annuel, selon le choix fait à la souscription, et résiliable à tout moment sans frais depuis l'espace utilisateur ; la résiliation prend effet à la fin de la période déjà payée. Le passage d'une formule à l'autre, ou d'une période à l'autre, prend effet immédiatement : la différence de prix est calculée au prorata de la période en cours, puis facturée ou créditée. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
               <p>L'utilisateur reste propriétaire de toutes les données qu'il saisit dans TiMat (informations sur les enfants, contrats, pointages, transmissions, documents). TiMat ne revendique aucun droit de propriété sur ces données. L'utilisateur peut exporter ou supprimer ses données à tout moment.</p>
@@ -7131,7 +7181,7 @@ export function BoutonAjouterEnfant({onClick,compact,user,enfants}){
   const verrouille = user !== undefined && !peutAjouterEnfant(user, enfants);
   const style = compact?{padding:"8px 14px",fontSize:12}:{padding:"10px 18px",fontSize:13};
   if(verrouille) return <button className="btn" onClick={()=>window.dispatchEvent(new CustomEvent("timat:page",{detail:"parametres"}))}
-    title="Le forfait gratuit couvre un enfant. Passez au Pro pour en accueillir davantage."
+    title="Votre offre couvre un enfant. Passez au Pro pour en accueillir davantage."
     style={{...style,background:"transparent",color:"var(--m)",border:"1.5px dashed var(--br)"}}>
     <span style={{fontSize:14,marginRight:4}}>🔒</span> Ajouter un enfant — Pro
   </button>;
@@ -7248,12 +7298,12 @@ function LogoTiMat({ role, dark, hauteur, secours }) {
 }
 
 const FAQ_LANDING_DEFAULT=[
-            {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur 2 mois de formule Pro offerts — contrats illimités, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
+            {q:"TiMat est-il vraiment gratuit ?",a:"Oui : vous commencez gratuitement, sans carte bancaire. Votre compte s'ouvre sur un essai gratuit de 2 mois, avec tout TiMat — enfants sans limite, bulletins de salaire, récapitulatif Pajemploi — sans qu'aucun moyen de paiement ne vous soit demandé. Au bout des 2 mois, le compte repasse simplement en formule gratuite si vous n'avez rien fait."},
             {q:"Les calculs sont-ils conformes à la convention collective ?",a:"Oui. Salaire, mensualisation, congés payés et indemnités sont calculés selon la convention collective des assistantes maternelles (IDCC 3239) et les règles Pajemploi à jour. Chaque calcul cite le texte dont il sort, pour que vous puissiez le vérifier. Et si vous trouvez un écart, écrivez-nous : nous le corrigeons et nous le disons."},
             {q:"Mes données sont-elles en sécurité ?",a:"Oui. Vos données sont hébergées en France et conformes au RGPD, chiffrées en transit et au repos. Vos documents sont archivés en sécurité et vous pouvez demander leur suppression à tout moment."},
             {q:"Les photos et informations de mon enfant sont-elles protégées ?",a:"Oui. Les photos et le quotidien sont partagés uniquement dans l'espace privé entre le parent et l'assistante maternelle — jamais en public ni sur les réseaux sociaux. Vos données sont hébergées en France, conformes RGPD et supprimables à tout moment."},
-            {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. Avec la formule Pro, le nombre d'enfants et de contrats est illimité, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
-            {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. L'essai de 2 mois ne demande aucune carte bancaire et ne crée aucun abonnement : il ne peut donc pas se transformer en prélèvement. Nous vous prévenons 7 jours puis 3 jours avant la fin. Si vous continuez, l'abonnement est mensuel et s'arrête en un clic — ni reconduction forcée ni prélèvement surprise."},
+            {q:"Puis-je gérer plusieurs enfants et contrats ?",a:"Oui. L'offre Essentiel (4,99 € par mois) couvre un enfant ; l'offre Pro (9,99 € par mois) couvre tous vos enfants et contrats, pour un seul prix fixe — contrairement aux outils facturés par contrat, dont la note grimpe vite."},
+            {q:"Y a-t-il un engagement ?",a:"Non, aucun engagement. L'essai de 2 mois ne demande aucune carte bancaire et ne crée aucun abonnement : il ne peut donc pas se transformer en prélèvement. Nous vous prévenons 7 jours puis 3 jours avant la fin. Si vous continuez, l'abonnement est mensuel ou annuel, au choix, et s'arrête en un clic — ni reconduction forcée ni prélèvement surprise."},
             {q:"Les parents employeurs ont-ils aussi accès ?",a:"Oui. Chaque parent est invité par un lien et dispose de son espace : présences, paie, documents et messagerie. Tout est partagé, en toute transparence."},
             {q:"Je suis parent employeur, qu'est-ce que TiMat m'apporte ?",a:"Votre espace parent regroupe présences, paie, documents et messagerie. Vous suivez le coût réel et le CMG, sans mauvaise surprise de plafond, et tout est partagé en toute transparence avec votre assistante maternelle."},
             {q:"Comment fonctionne le cahier de liaison numérique ?",a:"Repas, sieste, activités et humeur se remplissent une seule fois, même pour plusieurs enfants, et le parent les consulte en temps réel. Tout est daté et gardé en historique : un compte-rendu factuel qui évite les oublis et les malentendus."},
@@ -7300,13 +7350,15 @@ export const DEFAULT_CONFIG = {
     ctaBtnTxt:"Je commence - 2 mois gratuits →",
     ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
     ctaFooter:"Créé par une professionnelle de la petite enfance · Données hébergées en France 🇫🇷",
-    proLabel:"⭐ TOUT INCLUS",
-    proSubtxt:"quel que soit le nombre d'enfants",
+    proLabel:"⭐ SANS LIMITE D'ENFANTS",
+    proSubtxt:"2 enfants et plus, sans limite",
     // La phrase qui separe l'essai de TiMat de celui des autres : ailleurs,
     // au dernier jour, l'acces s'arrete. Elle n'etait ecrite nulle part.
-    tarifsRelais:"Après vos 2 mois offerts, rien ne se ferme : le compte gratuit prend le relais, et vos données restent là.",
-    proDesc:"Tout ce qui touche à la paie et aux documents officiels.",
-    proBtnTxt:"Je démarre mes 2 mois offerts →",
+    tarifsRelais:"Essai gratuit de 2 mois, sans carte bancaire, avec tout TiMat. Ensuite, vous choisissez votre offre ; sans rien faire, le compte gratuit prend le relais et vos données restent là.",
+    proDesc:"Tout TiMat, pour tous les enfants que vous accueillez.",
+    essentielDesc:"Tout TiMat, paie et documents officiels compris, pour votre premier contrat.",
+    essentielBtnTxt:"Commencer par l'essai gratuit →",
+    proBtnTxt:"Commencer par l'essai gratuit →",
     freeLabel:"Gratuit, pour toujours",
     freeBtnTxt:"Ouvrir mon compte gratuit",
     freeDesc:"Un enfant accueilli, et tout son quotidien. Sans carte bancaire, sans date de fin.",
@@ -7546,17 +7598,24 @@ export const DEFAULT_CONFIG = {
   // La phrase qui remplace les croix. Elle est dans la config du back-office
   // comme le reste : le jour ou le partage gratuit/Pro bouge, elle se corrige
   // sans toucher au code.
-  freeLimite:"Besoin des bulletins de salaire, du récapitulatif Pajemploi, des attestations ou d'un deuxième enfant ? C'est le forfait Pro, à droite.",
-  proItems:[
+  freeLimite:"Besoin des bulletins de salaire, du récapitulatif Pajemploi ou des attestations ? C'est l'Essentiel. Un deuxième enfant ? C'est le Pro.",
+  // Essentiel et Pro ouvrent le même accès complet (grille du 5/11/2026) :
+  // la liste de l'Essentiel dit tout ce qu'il ouvre, celle du Pro ce qu'il
+  // ajoute — les enfants sans limite.
+  essentielItems:[
     "Les bulletins de salaire, conformes à la convention",
     "Le récapitulatif Pajemploi, prêt à reporter",
-    "Tous vos enfants accueillis, sans supplément",
     "Le solde de tout compte et la fin de contrat",
     "Les attestations fiscale et France Travail",
     "La reprise de vos mois passés chez un autre outil",
-    "Le récapitulatif mensuel remis au parent",
-    "Vos revenus et vos congés, tous employeurs réunis",
     "Photos sans limite et 5 Go de documents",
+    "Tout ce que contient le compte gratuit",
+  ],
+  proItems:[
+    "Tout ce que contient l'Essentiel",
+    "Tous vos enfants accueillis, sans supplément",
+    "Le récapitulatif mensuel remis à chaque famille",
+    "Vos revenus et vos congés, tous employeurs réunis",
   ],
   guarantees:[
     "✅ Résiliable en 1 clic, sans reconduction",
@@ -8565,7 +8624,10 @@ export default function App(){
   const essaiFini=essaiExpire(user);
 
   // //  Lancer le checkout Stripe
-  const lancerCheckout=async()=>{
+  // L'offre et la période arrivent du choix fait dans « Mon abonnement »
+  // (Paramètres). Un appel sans argument — ou avec l'événement d'un clic —
+  // retombe côté serveur sur l'offre historique, Pro au mois.
+  const lancerCheckout=async(offre,periode)=>{
     if(user?.id?.startsWith?.("demo-")){
       alert("Le paiement n'est pas disponible en mode démo. Créez un compte pour continuer.");
       return;
@@ -8574,9 +8636,13 @@ export default function App(){
       // L'identite n'est plus envoyee : le serveur la prend dans le jeton.
       // La passer dans le corps permettait de faire crediter l'abonnement du
       // compte de quelqu'un d'autre.
-      const{ok,status,data}=await appelApi('/api/checkout-session',{prenom:user.prenom});
+      const{ok,status,data}=await appelApi('/api/checkout-session',{prenom:user.prenom,
+        offre:typeof offre==="string"?offre:undefined,periode:typeof periode==="string"?periode:undefined});
       if(!ok){
         if(status===401){alert("Votre session a expiré. Reconnectez-vous puis réessayez.");return;}
+        // 409 : l'Essentiel demandé avec plusieurs enfants. Le serveur dit
+        // pourquoi ; c'est ce message qu'il faut lire, pas un code.
+        if(status===409&&data?.error){alert(data.error);return;}
         console.error('Stripe error:', status, data);
         alert("Erreur serveur ("+status+"). Vérifiez que Stripe est configuré dans Vercel.");
         return;
@@ -8678,7 +8744,7 @@ export default function App(){
       case "messagerie": return <Messagerie {...P}/>;
       case "politique_confidentialite": return <PolitiqueConfidentialite/>;
       case "mentions_legales": return <MentionsLegales/>;
-      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
+      case "parametres": return <Parametres user={user} onLogout={handleLogout} setPage={setPage} isPro={isPro} isTrialing={isTrialing} nbEnfants={enfants.length} lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail} setUser={setUser} openWelcome={()=>setShowWelcome(true)} recovery={recovery} clearRecovery={()=>setRecovery(false)}/>;
       case "backoffice": return null; // Backoffice deplace vers la route dediee /backoffice (hors de l app)
       case "mes_employeurs": return <VueMonActivite enfants={enfants} role={role} user={user}/>;
       case "mes_alertes": return <MesAlertes user={user}/>;
@@ -8802,7 +8868,7 @@ export default function App(){
                   Sans rien faire, votre compte repasse en formule gratuite. Rien n'est supprimé.
                 </div>
               </div>
-              <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
+              <button onClick={()=>setPage("parametres")} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Choisir mon offre</button>
             </div>
           )}
           {/* ESSAI FINI — le compte est repassé en gratuit. On dit d'abord ce
@@ -8816,7 +8882,7 @@ export default function App(){
                   Vos enfants, vos pointages et vos documents sont intacts. Reprendre l'abonnement rouvre le dossier exactement où vous l'aviez laissé.
                 </div>
               </div>
-              <button onClick={lancerCheckout} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Continuer avec TiMat</button>
+              <button onClick={()=>setPage("parametres")} style={{background:"#B4543F",color:"#fff",border:"none",borderRadius:10,padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"inherit",cursor:"pointer",whiteSpace:"nowrap"}}>Choisir mon offre</button>
             </div>
           )}
           {role==="parent"&&<AlerteFermetures setPage={setPage} user={user}/>}

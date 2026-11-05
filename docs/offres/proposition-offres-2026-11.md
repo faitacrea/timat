@@ -67,3 +67,23 @@ attente » ; pour la MAM, Sophie préférait attendre).
 1. Essentiel à 4,99 € (2 enfants) : oui ou non ?
 2. Option annuelle : oui ou non ?
 3. MAM : tarif de groupe maintenant, ou attendre ?
+
+## Décision de Sophie (5 novembre 2026) — branchée dans l'application
+
+| | Gratuit | Essentiel | Pro |
+|---|---|---|---|
+| Enfants | 1 | 1 | 2 et plus, sans limite |
+| Accès | limité (le quotidien) | complet | complet |
+| Prix | 0 € | 4,99 €/mois ou 49 €/an | 9,99 €/mois ou 99 €/an |
+
+- L'Essentiel n'est plus « jusqu'à 2 enfants » : il couvre 1 enfant, avec
+  tout TiMat. La description du produit Stripe a été mise à jour le 5/11.
+- Interrupteur annuel : « À l'année · 2 mois offerts » (49 € au lieu de
+  59,88 € ; 99 € au lieu de 119,88 €). Dans la section des offres, l'essai
+  s'appelle « essai gratuit de 2 mois » pour ne pas se confondre avec lui.
+  « −17 % » écarté : il serait faux pour l'Essentiel (−18 %), et aucune étude
+  publiée ne départage les deux formulations.
+- Prix Stripe (compte réel) : voir `api/_offres.js`. Le passage de
+  l'Essentiel au Pro change le prix de l'abonnement en cours, au prorata,
+  facturé tout de suite (pas de second abonnement).
+- MAM : toujours en attente.

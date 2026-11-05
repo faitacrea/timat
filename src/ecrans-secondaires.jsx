@@ -17,7 +17,7 @@ import { supabase } from "../lib/supabase.js";
 import { resumeDemande } from "../data/planning-periscolaire.js";
 import { ETATS_TRANSMISSION, LIBELLE_ETAT_MANDAT, TEXTE_MANDAT, VERSION_MANDAT, etatMandat } from "../data/pajemploi.js";
 import {
-  CPill, createNotification, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
+  CPill, createNotification, D, EmptyState, H, IconeOuEmoji, MDP_AIDE, OFFRES_TIMAT, offreDe, joursRestantsEssai, TODAY_STR, PageHeader, Pastille, Toast, chargerJsPDF, fmt, isoJour, messageMotDePasseFuite, motDePasseCompromis, nbf, protegerPdf, verifierMotDePasse, G, logAction, QRPointage, qrSvgBalise
 , saveAsmatSignature
 } from "./App.jsx";
 import {
@@ -612,7 +612,79 @@ export function Bilans({enfants,role,pEId,user}){ // PDF BILAN P9 - ajout user p
 
 //
 
-export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckout,ouvrirPortail,setUser,openWelcome,recovery=false,clearRecovery}){
+// « MON ABONNEMENT » — grille du 5 novembre 2026 : Gratuit (1 enfant, le
+// quotidien), Essentiel (1 enfant, tout TiMat), Pro (2 enfants et plus).
+//
+// Deux phrases fausses ont disparu avec cette carte : pendant l'essai, elle
+// disait « Votre abonnement Pro démarrera automatiquement à la fin de votre
+// période d'essai », alors que l'essai ne crée aucun abonnement et que le
+// compte repasse en gratuit ; et le bouton du portail s'affichait sans
+// abonnement Stripe, pour répondre « Aucun abonnement actif trouvé ».
+export function CarteAbonnement({user,nbEnfants=0,lancerCheckout,ouvrirPortail}){
+  const [an,setAn]=useState(false);
+  const offre=offreDe(user);
+  const jours=joursRestantsEssai(user);
+  const payant=offre==="essentiel"||offre==="pro";
+  const libelle={essai:"✨ Essai gratuit",essentiel:"✅ Essentiel",pro:"✅ Pro",gratuit:"🔓 Gratuit"}[offre]||"";
+  // Ce qu'on peut choisir : tout, sauf l'offre en cours ; l'Essentiel n'est
+  // proposé qu'à qui accueille au plus un enfant.
+  const choix=offre==="pro"?[]:offre==="essentiel"?["pro"]:["essentiel","pro"];
+  const texte={
+    essai:"Votre essai gratuit vous donne tout TiMat"+(jours!==null&&jours>0?", encore "+jours+" jour"+(jours>1?"s":""):"")+". Aucun abonnement n'est en cours : sans rien faire, le compte repasse en gratuit à la fin de l'essai, et vos données restent là. Pour continuer avec tout TiMat, choisissez votre offre.",
+    gratuit:"Compte gratuit : un enfant, et tout son quotidien. Pour la paie et les documents officiels, choisissez une offre.",
+    essentiel:"Offre Essentiel active : tout TiMat, pour un enfant."+(nbEnfants>=1?" Pour accueillir un deuxième enfant, passez au Pro : le changement se fait au prorata, sans second abonnement.":""),
+    pro:"Offre Pro active : tout TiMat, sans limite d'enfants.",
+  }[offre];
+  return <div className="card"style={{border:payant?"2px solid var(--S)":"2px solid var(--T)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+      <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="💳"/> Mon abonnement</div>
+      <span style={{background:payant?"var(--Sp)":"var(--Tp)",color:payant?"var(--S)":"var(--T)",borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:700}}>{libelle}</span>
+    </div>
+    <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:14}}>{texte}</div>
+    {choix.length>0&&<>
+      <div role="group" aria-label="Période de paiement" style={{display:"flex",justifyContent:"center",marginBottom:12}}>
+        <div style={{display:"inline-flex",border:"1.5px solid var(--br)",borderRadius:99,padding:3,gap:3}}>
+          {[[false,"Au mois"],[true,"À l'année · 2 mois offerts"]].map(([v,l])=>
+            <button key={l} type="button" aria-pressed={an===v} onClick={()=>setAn(v)} style={{border:"none",borderRadius:99,padding:"7px 13px",fontSize:12,fontWeight:700,fontFamily:"inherit",cursor:"pointer",
+              background:an===v?"var(--b)":"transparent",color:an===v?"#fff":"var(--b)"}}>{l}</button>)}
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10,marginBottom:12}}>
+        {choix.map(cle=>{
+          const o=OFFRES_TIMAT[cle];
+          const bloque=cle==="essentiel"&&nbEnfants>1;
+          return <div key={cle} style={{border:"1.5px solid "+(cle==="pro"?"var(--T)":"var(--S)"),borderRadius:12,padding:14,opacity:bloque?.6:1}}>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}>{o.nom}</div>
+            <div style={{fontSize:22,fontWeight:700,color:cle==="pro"?"var(--T)":"var(--S)",margin:"4px 0"}}>
+              {nbf(an?o.an:o.mois,an?0:2)} €<span style={{fontSize:12,fontWeight:400,color:"var(--l)"}}>{an?" /an":" /mois"}</span>
+            </div>
+            <div style={{fontSize:11.5,color:"var(--l)",marginBottom:6}}>{an?"au lieu de "+nbf(o.mois*12,2)+" €":"ou "+nbf(o.an,0)+" € par an"}</div>
+            <div style={{fontSize:12.5,fontWeight:700,color:"var(--b)",marginBottom:10}}>{o.enfants}</div>
+            {bloque
+              ?<div style={{fontSize:11.5,color:"var(--m)",lineHeight:1.5}}>Vous accueillez {nbEnfants} enfants : c'est l'offre Pro.</div>
+              :<button className={"btn "+(cle==="pro"?"bT":"bG")} style={{width:"100%",justifyContent:"center"}}
+                onClick={()=>lancerCheckout&&lancerCheckout(cle,an?"an":"mois")}>
+                {offre==="essentiel"?"Passer au Pro":"Choisir "+o.nom}
+              </button>}
+          </div>;
+        })}
+      </div>
+      <div style={{fontSize:11,color:"var(--l)",textAlign:"center",marginBottom:payant?12:0}}>
+        Paiement sécurisé par Stripe. Sans engagement : résiliable à tout moment.
+      </div>
+    </>}
+    {payant&&user?.stripe_customer_id&&<>
+      <button className="btn bG"style={{width:"100%",justifyContent:"center"}}onClick={ouvrirPortail||undefined}>
+        <IconeOuEmoji e="⚙️"/> Gérer mon abonnement (factures, carte, résiliation)
+      </button>
+      <div style={{fontSize:11,color:"var(--l)",marginTop:6,textAlign:"center"}}>
+        Vous serez redirigée vers le portail Stripe sécurisé.
+      </div>
+    </>}
+  </div>;
+}
+
+export function Parametres({user,onLogout,setPage,isPro,isTrialing,nbEnfants=0,lancerCheckout,ouvrirPortail,setUser,openWelcome,recovery=false,clearRecovery}){
   const [toast,setToast]=useState("");
   // MOT DE PASSE P16 - changement depuis l'app (usage courant + retour de lien de reinitialisation)
   const [mdp,setMdp]=useState({a:"",b:""});
@@ -678,55 +750,8 @@ export function Parametres({user,onLogout,setPage,isPro,isTrialing,lancerCheckou
     <div style={{maxWidth:600,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
 
       {/* Abonnement - uniquement pour les assmats */}
-      {user?.role==="asmat"&&<div className="card"style={{border:isPro?"2px solid var(--S)":"2px solid var(--T)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div style={{fontWeight:700,fontSize:14,color:"var(--b)"}}><IconeOuEmoji e="💳"/> Mon abonnement</div>
-          <span style={{
-            background:isPro?"var(--Sp)":"var(--Tp)",
-            color:isPro?"var(--S)":"var(--T)",
-            borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:700
-          }}>{isTrialing?"✨ Essai gratuit":isPro?"✅ Pro actif":"🔓 Gratuit"}</span>
-        </div>
-
-        {isPro?<>
-          {isTrialing&&<div style={{background:"var(--Gp)",border:"1px solid var(--G)",borderRadius:10,padding:"10px 14px",marginBottom:12,fontSize:12,color:"var(--G)"}}>
-            <IconeOuEmoji e="🎉"/> Vous bénéficiez de 2 mois d'essai gratuit. Aucun prélèvement avant la fin de l'essai.
-          </div>}
-          <div style={{fontSize:13,color:"var(--m)",lineHeight:1.7,marginBottom:14}}>
-            {isTrialing
-              ? "Votre abonnement Pro démarrera automatiquement à la fin de votre période d'essai."
-              : "Votre abonnement Pro est actif. Toutes les fonctionnalités sont débloquées."}
-          </div>
-          <button className="btn bG"style={{width:"100%",justifyContent:"center"}}onClick={ouvrirPortail||undefined}>
-            <IconeOuEmoji e="⚙️"/> Gérer mon abonnement (facturation, résiliation)
-          </button>
-          <div style={{fontSize:11,color:"var(--l)",marginTop:6,textAlign:"center"}}>
-            Vous serez redirigée vers le portail Stripe sécurisé.
-          </div>
-        </>:<>
-          <div style={{marginBottom:14}}>
-            {[
-              "✨ Bilans de journée automatiques",
-              "📜 Bulletins de salaire complets",
-              "🏛️ Export Pajemploi en 1 clic",
-              "📋 Contrats, avenants, courriers illimités",
-              "👶 Enfants illimités",
-              "❓ Support prioritaire",
-            ].map(f=><div key={f}style={{display:"flex",gap:8,padding:"5px 0",fontSize:13,borderBottom:"1px solid var(--br)"}}>
-              <span style={{color:"var(--S)"}}>✓</span>
-              <span style={{color:"var(--b)"}}>{f}</span>
-            </div>)}
-          </div>
-          <div style={{textAlign:"center",marginBottom:12}}>
-            <div style={{fontSize:26,fontWeight:700,color:"var(--T)",fontFamily:"'DM Sans',sans-serif"}}>9,99€<span style={{fontSize:13,color:"var(--l)",fontWeight:400}}>/mois</span></div>
-            <div style={{fontSize:11,color:"var(--l)"}}>2 mois gratuits · Premier paiement à J+60 · Résiliable à tout moment</div>
-          </div>
-          <button className="btn bT"style={{width:"100%",justifyContent:"center",padding:"13px"}}
-            onClick={lancerCheckout||undefined}>
-            <IconeOuEmoji e="🚀"/> Passer à Pro - Commencer mon essai gratuit
-          </button>
-        </>}
-      </div>}
+      {user?.role==="asmat"&&<CarteAbonnement user={user} nbEnfants={nbEnfants}
+        lancerCheckout={lancerCheckout} ouvrirPortail={ouvrirPortail}/>}
 
       {/* Profil - PROFIL EDITABLE P15 */}
       <div className="card">
