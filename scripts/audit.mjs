@@ -646,9 +646,14 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
 // bloquante, et nomme les articles sans leur chemin (le filtre des bloquantes
 // écarte tout message contenant « /blog/ », pensé pour le contenu de Sanity).
 {
-  const sansAppel = [], sansColonne = [], sansSommaire = [];
+  const sansAppel = [], sansColonne = [], sansSommaire = [], rubsIsolees = [];
   for (const p of pages) {
     const r = routeDe(p);
+    // Les rubriques (« collections ») se relient entre elles en fin de page.
+    if (/^\/blog\/rubrique\/[^/]+\/$/.test(r)) {
+      if (!/class="lire rubs-liees"/.test(readFileSync(p, "utf8"))) rubsIsolees.push(r.split("/")[3]);
+      continue;
+    }
     if (!/^\/blog\/[^/]+\/$/.test(r) || r.startsWith("/blog/rubrique")) continue;
     const html = readFileSync(p, "utf8");
     if (!/<article>/.test(html)) continue;
@@ -661,6 +666,7 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
   }
   if (sansAppel.length) signale("blog", `${sansAppel.length} article(s) sans appel à l'essai en début d'article (scripts/generate-blog.mjs) : ${sansAppel.slice(0, 5).join(", ")}`);
   if (sansColonne.length) signale("blog", `${sansColonne.length} article(s) sans colonne de côté : ${sansColonne.slice(0, 5).join(", ")}`);
+  if (rubsIsolees.length) signale("blog", `${rubsIsolees.length} rubrique(s) sans lien vers les autres en fin de page : ${rubsIsolees.join(", ")}`);
   if (sansSommaire.length) signale("blog", `${sansSommaire.length} article(s) avec au moins deux intertitres et sans sommaire : ${sansSommaire.slice(0, 5).join(", ")}`);
 }
 

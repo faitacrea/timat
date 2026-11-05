@@ -391,6 +391,9 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
   color:${T.light};margin:0 0 12px;font-weight:800;border:0;padding:0}
 .sources ul{margin:0;padding-left:20px;font-size:15px}
 .sources li{margin:7px 0}
+.toute-rub{margin:18px 0 0;font-weight:700}
+.toute-rub a{color:${T.terracotta}}
+.rubs-liees{margin-top:26px}
 .lire{margin:42px 0 0;background:${T.white};border:1px solid ${T.border};border-radius:14px;padding:20px 22px}
 .lire h2{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
   color:${T.light};margin:0 0 14px;font-weight:800;border:0;padding:0}
@@ -818,6 +821,12 @@ function pageArticle(a, tous = []) {
           .join("")}</ul></section>`
       : ""
   }
+  ${
+    a.categorie?.slug
+      ? `<p class="toute-rub"><a href="${categorieTarget(a.categorie.slug).url}">Tous les articles de la rubrique « ${esc(a.categorie.titre)} » &rarr;</a></p>`
+      : ""
+  }
+  ${autresRubriques(tous, a.categorie?.slug, { audience: audienceDe(a), titre: "Explorer les autres rubriques" })}
   <section class="cta">
     <h2>Gérez tout ça sans y penser</h2>
     <p>Contrat, mensualisation, déclarations Pajemploi, journal quotidien partagé avec les parents : TiMat s'occupe du calcul et de la paperasse.</p>
@@ -835,6 +844,29 @@ ${colonne}
     jsonLd,
     body,
   });
+}
+
+// LES RUBRIQUES RELIÉES ENTRE ELLES (demande de Sophie, 5/11/2026), comme les
+// articles le sont par « À lire aussi ». Une page de rubrique ne menait aux
+// autres que par les pastilles du haut ; celle qui arrivait au bout de la liste
+// n'avait plus nulle part où aller. On propose d'abord les rubriques du même
+// public (une assistante maternelle ne cherche pas d'abord « Côté parent
+// employeur »), puis les autres, avec leur nombre d'articles.
+function autresRubriques(tous, actif, { audience = null, titre = "Les autres rubriques" } = {}) {
+  const rubs = rubriques(tous).filter((r) => r.slug !== actif);
+  if (!rubs.length) return "";
+  const proche = (r) => !audience || audience === "les-deux" || (r.audience || "les-deux") === "les-deux" || r.audience === audience;
+  const tri = [...rubs.filter(proche), ...rubs.filter((r) => !proche(r))];
+  return `<section class="lire rubs-liees"><h2>${esc(titre)}</h2><ul>${tri
+    .map(
+      (r) =>
+        `<li><a href="${categorieTarget(r.slug).url}">` +
+        `<span class="cat" style="${pastilleStyle(r.titre)}">${esc(AUDIENCES[r.audience || "les-deux"] || AUDIENCES["les-deux"])}</span>` +
+        `<span class="t">${esc(r.titre)} · ${r.n} article${r.n > 1 ? "s" : ""}<span class="arw">&rarr;</span></span>` +
+        (r.description ? `<span class="d">${esc(r.description)}</span>` : "") +
+        `</a></li>`
+    )
+    .join("")}</ul></section>`;
 }
 
 /** Une carte d'article, partagee par l'index et les pages de rubrique. */
@@ -1111,6 +1143,7 @@ function pageCategorie(rub, articlesDeLaRubrique, tous) {
   <div class="cards">
     ${articlesDeLaRubrique.map(carte).join("\n")}
   </div>
+  ${autresRubriques(tous, rub.slug, { audience: rub.audience || "les-deux" })}
 </main>`;
 
   return layout({
