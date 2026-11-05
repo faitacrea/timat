@@ -52,7 +52,10 @@ verifie("il s'affiche AVANT que le routeur ne décide quoi que ce soit",
 
 console.log("\n=== CE QUI DÉPEND DE CE PROFIL ===");
 verifie("estPro lit bien subscription_status (d'où le coût d'un profil manquant)",
-  /estPro\s*=\s*\(u\)\s*=>[\s\S]{0,200}subscription_status/.test(src));
+  // Directement, ou par offreDe() depuis la grille du 5/11/2026 : estPro y
+  // lit l'offre, et offreDe lit subscription_status.
+  /estPro\s*=\s*\(u\)\s*=>[\s\S]{0,200}subscription_status/.test(src) ||
+  (/estPro\s*=\s*\(u\)\s*=>\s*offreDe\(u\)/.test(src) && /offreDe\s*=\s*\(u\)\s*=>[\s\S]{0,300}subscription_status/.test(src)));
 
 console.log(ko ? `\n${ko} vérification(s) en échec.\n` : "\nTout est conforme.\n");
 process.exit(ko ? 1 : 0);

@@ -80,7 +80,7 @@ export function VueSuiviProgres({enfants,role,pEId,user,pointagesDB,setPage}){
     :v===1?<EveilComplet {...P}/>
     :(pro
       ? <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><Bilans {...P}/></Suspense>
-      : <VerrouPro titre="Les bilans de journée" desc="Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie du forfait Pro."/>)}
+      : <VerrouPro titre="Les bilans de journée" desc="Des bilans périodiques prêts à partager avec les parents, composés à partir de ce que vous notez chaque jour. Cette fonction fait partie des offres Essentiel et Pro."/>)}
   </>;
 }
 
@@ -100,7 +100,7 @@ export function VueDocsRapports({enfants,role,pEId,user,pointagesDB}){
   // l'etait deja et qu'il n'y a aucune raison de le faire payer maintenant.
   return <><SegBar v={v} setV={setV} items={[{ic:"🗂️",l:"Documents & Attestations"},{ic:"📊",l:"Rapports & Exports"},{ic:"🌿",l:"Projet d'accueil"}]}/>
     {v===0
-      ? (pro?<DocumentsComplet {...P}/>:<VerrouPro titre="Documents et attestations" desc="Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie du forfait Pro."/>)
+      ? (pro?<DocumentsComplet {...P}/>:<VerrouPro titre="Documents et attestations" desc="Vos documents classés, l'attestation France Travail et le récapitulatif des versements. Cette fonction fait partie des offres Essentiel et Pro."/>)
       : v===1 ? <BilansExports {...P}/>
       : <Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><ProjetAccueil user={user} role={role}/></Suspense>}</>;
 }
@@ -3372,7 +3372,7 @@ export function BilansExports({enfants,role,pEId,user,pointagesDB}){
     </div>
     {sec==="rapport"&&(estPro(user)
       ?<RapportAnnuel enfants={enfants}role={role}pEId={pEId}user={user}/>
-      :<VerrouPro titre="Le rapport annuel" desc="La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie du forfait Pro."/>)}
+      :<VerrouPro titre="Le rapport annuel" desc="La synthèse de votre année : heures, revenus, indemnités et présences, réunies en un document. Cette fonction fait partie des offres Essentiel et Pro."/>)}
     {sec==="export"&&<Suspense fallback={<div style={{padding:24,textAlign:"center",color:"var(--m)",fontSize:13}}>Chargement…</div>}><ExportDonnees enfants={enfants}role={role}user={user}/></Suspense>}
   </div>;
 }
@@ -3437,7 +3437,8 @@ export function Support({role,user}){
   const [sending,setSending]=useState(false);
   const [erreur,setErreur]=useState("");
   const sujets=["Question générale","Problème technique","Facturation / abonnement","Calcul de salaire","Contrat / avenant","PMI / agrément","Suggestion","Autre"];
-  const isPro=user?.subscription_status==="pro";
+  // Support prioritaire : les deux offres payantes (Essentiel et Pro).
+  const isPro=["pro","essentiel"].includes(user?.subscription_status);
 
   const envoyer=async()=>{
     if(!msg.trim()){setErreur("Écrivez votre message avant d'envoyer.");return;}

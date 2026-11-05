@@ -56,7 +56,7 @@ const appeler = async (evenement, { secret = process.env.STRIPE_WEBHOOK_SECRET }
   console.error = silence; console.log = bavard;
   return res.code;
 };
-const abo = (statut, client = "cus_1") => ({ type: "customer.subscription.updated", data: { object: { customer: client, status: statut } } });
+const abo = (statut, client = "cus_1", { prix = null, metadata = {} } = {}) => ({ type: "customer.subscription.updated", data: { object: { customer: client, status: statut, metadata, items: { data: prix ? [{ price: { id: prix } }] : [] } } } });
 
 console.log("\nWEBHOOK STRIPE");
 verifie("signature fausse : refus 400", await appeler(abo("active"), { secret: "whsec_autre" }), 400);
@@ -66,6 +66,27 @@ ecritures = [];
 verifie("abonnement actif : 200 et le profil passe en Pro", [await appeler(abo("active")), ecritures[0]?.subscription_status], [200, "pro"]);
 ecritures = [];
 verifie("abonnement impayé : le profil repasse en gratuit", [await appeler(abo("unpaid")), ecritures[0]?.subscription_status], [200, "free"]);
+// LES OFFRES (grille du 5/11/2026) : c'est le prix de l'abonnement qui dit
+// l'offre. Un passage de l'Essentiel au Pro arrive ici comme un changement de
+// prix, et doit ouvrir les enfants supplémentaires.
+ecritures = [];
+verifie("prix Essentiel au mois : le profil passe en essentiel", [await appeler(abo("active", "cus_1", { prix: "price_1UXkDL1AsEXBU0aLGZ5WMAIf" })), ecritures[0]?.subscription_status], [200, "essentiel"]);
+ecritures = [];
+verifie("prix Essentiel à l'année : essentiel", [await appeler(abo("active", "cus_1", { prix: "price_1UXkFG1AsEXBU0aLC3xawUGf" })), ecritures[0]?.subscription_status], [200, "essentiel"]);
+ecritures = [];
+verifie("prix Pro à l'année : pro", [await appeler(abo("active", "cus_1", { prix: "price_1UXkFg1AsEXBU0aLwtYnX6Yt" })), ecritures[0]?.subscription_status], [200, "pro"]);
+ecritures = [];
+verifie("prix Pro au mois historique : pro", [await appeler(abo("active", "cus_1", { prix: "price_1U00xu1AsEXBU0aL9ARcyMVN" })), ecritures[0]?.subscription_status], [200, "pro"]);
+ecritures = [];
+verifie("prix inconnu, métadonnées Essentiel : essentiel", [await appeler(abo("active", "cus_1", { prix: "price_inconnu", metadata: { offre: "essentiel" } })), ecritures[0]?.subscription_status], [200, "essentiel"]);
+ecritures = [];
+verifie("Essentiel impayé : gratuit", [await appeler(abo("unpaid", "cus_1", { prix: "price_1UXkDL1AsEXBU0aLGZ5WMAIf" })), ecritures[0]?.subscription_status], [200, "free"]);
+ecritures = [];
+verifie("paiement réussi, offre Essentiel : essentiel", [await appeler({ type: "checkout.session.completed", data: { object: { mode: "subscription", customer: "cus_1", metadata: { userId: "u-1", offre: "essentiel" } } } }), ecritures[0]?.subscription_status], [200, "essentiel"]);
+ecritures = [];
+verifie("paiement réussi sans offre (session ancienne) : pro", [await appeler({ type: "checkout.session.completed", data: { object: { mode: "subscription", customer: "cus_1", metadata: { userId: "u-1" } } } }), ecritures[0]?.subscription_status], [200, "pro"]);
+ecritures = [];
+verifie("paiement réussi, offre fantaisiste : pro, jamais une valeur inventée", [await appeler({ type: "checkout.session.completed", data: { object: { mode: "subscription", customer: "cus_1", metadata: { userId: "u-1", offre: "admin" } } } }), ecritures[0]?.subscription_status], [200, "pro"]);
 ecritures = [];
 verifie("client inconnu : 200, rien n'est écrit", [await appeler(abo("active", "cus_inconnu")), ecritures.length], [200, 0]);
 

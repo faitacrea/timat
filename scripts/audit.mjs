@@ -635,6 +635,29 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
   for (const m of faux) signale("promesse", `${f} : un bouton n'a pour seul effet qu'un message (${m.slice(0, 90)}) — faire l'action, ou retirer le bouton`);
 }
 
+// --- les prix affichés sont ceux qui seront prélevés ---
+//
+// La grille du 5 novembre 2026 (Gratuit, Essentiel, Pro, au mois ou à l'année)
+// s'affiche à partir d'OFFRES_TIMAT (App.jsx), et se paie avec les prix Stripe
+// d'api/_offres.js. Leurs montants, relevés sur Stripe, sont écrits dans
+// MONTANTS : si l'un des deux bouge sans l'autre, la page promettrait un
+// montant que le paiement ne prélèverait pas.
+{
+  const app = readFileSync(new URL("../src/App.jsx", import.meta.url), "utf8");
+  const off = readFileSync(new URL("../api/_offres.js", import.meta.url), "utf8");
+  const affiche = {}, preleve = {};
+  for (const cle of ["essentiel", "pro"]) {
+    const a = app.match(new RegExp(cle + ":\\s*\\{[^}]*mois:\\s*([\\d.]+),\\s*an:\\s*([\\d.]+)"));
+    const m = off.match(new RegExp(cle + ":\\s*\\{\\s*mois:\\s*(\\d+),\\s*an:\\s*(\\d+)\\s*\\}"));
+    if (!a || !m) { signale("forfait", `offre « ${cle} » introuvable dans OFFRES_TIMAT (App.jsx) ou MONTANTS (api/_offres.js)`); continue; }
+    affiche[cle] = [Math.round(Number(a[1]) * 100), Math.round(Number(a[2]) * 100)];
+    preleve[cle] = [Number(m[1]), Number(m[2])];
+    if (affiche[cle][0] !== preleve[cle][0] || affiche[cle][1] !== preleve[cle][1]) {
+      signale("forfait", `offre « ${cle} » : la page affiche ${affiche[cle].map((c) => c / 100).join(" € / ")} €, Stripe prélève ${preleve[cle].map((c) => c / 100).join(" € / ")} €`);
+    }
+  }
+}
+
 // --- l'ancienneté d'un contrat de fratrie ---
 //
 // Le contrat d'un cadet reprend l'ancienneté du contrat le plus ancien
@@ -1277,11 +1300,14 @@ for (const u of fichiersAppSrc()) {
 
   const app = sources.find(([n]) => n === "App.jsx")[1];
 
-  // 2. estPro() doit consulter la date de fin.
+  // 2. estPro() doit consulter la date de fin — directement, ou par offreDe(),
+  //    qui porte la grille des offres depuis le 5 novembre 2026.
   const dEstPro = app.match(/export const estPro = \(u\) =>([\s\S]{0,400}?);\n/);
+  const dOffre = app.match(/export const offreDe = \(u\) => \{([\s\S]{0,700}?)\n\};/);
+  const corpsEstPro = dEstPro ? dEstPro[1] + (/offreDe\(u\)/.test(dEstPro[1]) && dOffre ? dOffre[1] : "") : "";
   if (!dEstPro) {
     signale("essai", "estPro() est introuvable — impossible de vérifier que l'essai finit un jour");
-  } else if (!/essaiExpire|subscription_end_date/.test(dEstPro[1])) {
+  } else if (!/essaiExpire|subscription_end_date/.test(corpsEstPro)) {
     signale("essai", "estPro() accepte « trialing » sans regarder la date de fin — l'essai ne finira jamais et tout compte restera Pro à vie");
   }
 
@@ -5319,6 +5345,8 @@ const BLOQUANTES = new Set([
   "paie", "bareme", "cmg", "chiffre", "chiffres", "coefficient", "arrondi", "repas", "forfait",
   "heures-majorees", "heures-arrondies", "heures-exactes-imprimees", "majoration-en-dur",
   "indemnite-rupture", "jours-feries",
+  // un bouton qui annonce une action qui n'a pas lieu ; l'ancienneté d'une fratrie
+  "promesse", "calcul",
   // les documents legaux
   "textes-legaux", "legal", "modele-contrat", "engagement-reciproque", "hébergeur", "rgpd", "coordonnées", "contact",
   // la securite et les donnees
