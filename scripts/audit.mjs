@@ -646,7 +646,7 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
 // bloquante, et nomme les articles sans leur chemin (le filtre des bloquantes
 // écarte tout message contenant « /blog/ », pensé pour le contenu de Sanity).
 {
-  const sansAppel = [], sansColonne = [], sansSommaire = [], rubsIsolees = [];
+  const sansAppel = [], sansColonne = [], sansSommaire = [], rubsIsolees = [], sansOutils = [];
   for (const p of pages) {
     const r = routeDe(p);
     // Les rubriques (« collections ») se relient entre elles en fin de page.
@@ -662,10 +662,13 @@ for (const f of ["src/gestion.jsx", "src/App.jsx", "src/ecrans-app.jsx", "src/ec
     const intertitres = (corps.match(/<h2[\s>]/g) || []).length;
     if (!/class="cta-debut"/.test(html)) sansAppel.push(slug);
     if (!/class="art-cote"/.test(html)) sansColonne.push(slug);
+    // Fin d'article : deux outils gratuits, et les arguments sous l'appel final.
+    if (!/class="lire outils-lies"/.test(html) || !/class="rassure"/.test(html)) sansOutils.push(slug);
     if (intertitres >= 2 && !/class="sommaire sommaire-haut"/.test(html)) sansSommaire.push(slug);
   }
   if (sansAppel.length) signale("blog", `${sansAppel.length} article(s) sans appel à l'essai en début d'article (scripts/generate-blog.mjs) : ${sansAppel.slice(0, 5).join(", ")}`);
   if (sansColonne.length) signale("blog", `${sansColonne.length} article(s) sans colonne de côté : ${sansColonne.slice(0, 5).join(", ")}`);
+  if (sansOutils.length) signale("blog", `${sansOutils.length} article(s) sans outils gratuits ou sans arguments sous l'appel final : ${sansOutils.slice(0, 5).join(", ")}`);
   if (rubsIsolees.length) signale("blog", `${rubsIsolees.length} rubrique(s) sans lien vers les autres en fin de page : ${rubsIsolees.join(", ")}`);
   if (sansSommaire.length) signale("blog", `${sansSommaire.length} article(s) avec au moins deux intertitres et sans sommaire : ${sansSommaire.slice(0, 5).join(", ")}`);
 }

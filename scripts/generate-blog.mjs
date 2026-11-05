@@ -409,6 +409,15 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .lire a:hover .t{text-decoration:underline}
 .lire .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   font-size:13px;color:${T.mauve};line-height:1.5;margin-top:4px}
+.outils-lies{margin-top:26px}
+.outils-tous{margin:10px 0 0;font-size:14px;font-weight:700}
+.outils-tous a{color:${T.terracotta}}
+/* Les arguments sous l'appel final : ce qui rassure avant de cliquer. Chaque
+   phrase est vérifiable — l'essai (DUREE_ESSAI_JOURS, App.jsx), aucune carte
+   demandée avant la fin de l'essai, la base Supabase hébergée à Paris
+   (eu-west-3). */
+.rassure{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:13.5px;color:rgba(255,255,255,.9)}
+.rassure li::before{content:"✓ ";color:#9FD3C4;font-weight:800}
 .cta{margin:48px 0;background:${T.ink};border-radius:18px;padding:32px 28px;color:#fff;text-align:center}
 .cta h2{font-family:'Quicksand','Outfit',system-ui,sans-serif;font-size:25px;margin:0 0 10px;color:#fff;border:0;padding:0;letter-spacing:-.4px}
 .cta p{color:rgba(255,255,255,.85);font-size:15.5px;margin:0 0 20px}
@@ -827,11 +836,24 @@ function pageArticle(a, tous = []) {
       : ""
   }
   ${autresRubriques(tous, a.categorie?.slug, { audience: audienceDe(a), titre: "Explorer les autres rubriques" })}
-  <section class="cta">
+  <section class="lire outils-lies"><h2>Continuer avec un outil gratuit</h2><ul>${outilsPour(a)
+    .map((o) => `<li><a href="${o.url}"><span class="t">${esc(o.nom)}<span class="arw">&rarr;</span></span><span class="d">${esc(o.desc)}</span></a></li>`)
+    .join("")}</ul><p class="outils-tous"><a href="/outils.html">Tous les outils gratuits, sans compte &rarr;</a></p></section>
+  ${
+    audienceDe(a) === "parent"
+      ? `<section class="cta">
+    <h2>Votre espace parent est gratuit</h2>
+    <p>Présences, salaire, documents et aides : tout est partagé avec votre assistante maternelle, sans rien calculer.</p>
+    <a href="/parents">Découvrir l'espace parent</a>
+    <ul class="rassure"><li>Gratuit, sans limite de durée</li><li>Sans carte bancaire</li><li>Données hébergées en France</li></ul>
+  </section>`
+      : `<section class="cta">
     <h2>Gérez tout ça sans y penser</h2>
     <p>Contrat, mensualisation, déclarations Pajemploi, journal quotidien partagé avec les parents : TiMat s'occupe du calcul et de la paperasse.</p>
     <a href="/?connexion=1">Essayer gratuitement</a>
-  </section>
+    <ul class="rassure"><li>2 mois d'essai gratuit</li><li>Sans carte bancaire</li><li>Espace parent gratuit</li><li>Données hébergées en France</li></ul>
+  </section>`
+  }
 </main>
 ${colonne}
 </div>`;
@@ -867,6 +889,43 @@ function autresRubriques(tous, actif, { audience = null, titre = "Les autres rub
         `</a></li>`
     )
     .join("")}</ul></section>`;
+}
+
+// « CONTINUER AVEC UN OUTIL GRATUIT » (demande de Sophie du 5/11/2026, sur le
+// modèle de la fin d'article de Pandi-Panda) : deux outils de la page
+// /outils.html, choisis d'après le sujet de l'article. Les descriptions sont
+// celles de cette page. Les mots sont cherchés dans le slug et le titre, sans
+// accents.
+const OUTILS = [
+  { url: "/simulateur-cmg-reste-a-charge.html", nom: "CMG et reste à charge", desc: "Estimez votre aide de la Caf et ce qui reste vraiment à payer après crédit d'impôt.", mots: /cmg|aide|credit-d-impot|credit-impot|reste-a-charge|budget|cout|avance-immediate|aeeh|caf/, parent: true },
+  { url: "/comparateur-assistante-maternelle-creche.html", nom: "Assistante maternelle ou crèche ?", desc: "Comparez votre reste à charge réel avec le barème commun depuis la réforme.", mots: /creche|mode-de-garde|garde-a-domicile|chercher|trouver/, parent: true },
+  { url: "/verificateur-bulletin-assistante-maternelle.html", nom: "Vérificateur de bulletin", desc: "Six contrôles sur votre bulletin : taux minimum, mensualisation, entretien, congés, majoration, plafond CMG.", mots: /bulletin|minimum|tarif|smic|paie|revalorisation|titre-professionnel/ },
+  { url: "/simulateur-salaire-assistante-maternelle.html", nom: "Simulateur de salaire", desc: "Mensualisation, brut et net en quelques secondes. Année complète ou incomplète.", mots: /salaire|mensualisation|annee-complete|incomplete|horaires|contrat-travail|regularisation/ },
+  { url: "/simulateur-conges-payes-assistante-maternelle.html", nom: "Simulateur congés payés", desc: "10 % ou maintien de salaire : la méthode la plus favorable, calculée pour vous.", mots: /conges|conge-paye|jours-feries/ },
+  { url: "/simulateur-indemnite-entretien-assistante-maternelle.html", nom: "Simulateur indemnité d'entretien", desc: "Le minimum obligatoire selon les heures d'accueil.", mots: /entretien|repas|kilometr/ },
+  { url: "/simulateur-declaration-pajemploi-assistante-maternelle.html", nom: "Déclaration Pajemploi mensuelle", desc: "Quel chiffre va dans quelle case : heures, jours d'activité, salaire net et indemnités.", mots: /pajemploi/ },
+  { url: "/simulateur-deduction-absence-assistante-maternelle.html", nom: "Déduction d'absence", desc: "La bonne formule selon le contrat : en heures en année complète, en jours en année incomplète.", mots: /absence|malade|maladie|arret|vacances/ },
+  { url: "/simulateur-abattement-fiscal-assistante-maternelle.html", nom: "Abattement fiscal", desc: "Le montant réellement à déclarer, après l'abattement de 3 SMIC par jour et par enfant.", mots: /abattement|revenus|impot|fiscal/ },
+  { url: "/simulateur-fin-de-contrat-assistante-maternelle.html", nom: "Fin de contrat : préavis et indemnité", desc: "Durée du préavis, indemnité de rupture au 1/80e et documents à remettre.", mots: /fin-de-contrat|rupture|preavis|demission|retrait|solde|retraite/ },
+  { url: "/simulateur-heures-majorees-assistante-maternelle.html", nom: "Heures complémentaires et majorées", desc: "Le partage à 45 h par semaine et le montant à ajouter au salaire du mois.", mots: /heures-complementaires|majore|depassement|retard/ },
+  { url: "/releve-heures-assistante-maternelle.html", nom: "Relevé mensuel d'heures", desc: "La feuille à imprimer et à faire signer chaque fin de mois.", mots: /releve|pointage|heures|preuve/ },
+  { url: "/assistante-maternelle/", nom: "Par département", desc: "Le nombre d'assistantes maternelles agréées et son évolution sur dix ans, département par département.", mots: /departement|agrement|devenir|demenagement/ },
+];
+const sansAccents = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function outilsPour(a) {
+  const slug = sansAccents(a.slug || "");
+  const titre = sansAccents((a.titre || "").replace(/[^a-zA-Z0-9À-ÿ]+/g, "-"));
+  const pourParent = audienceDe(a) === "parent";
+  // Un mot du slug pèse plus qu'un mot du titre : « Arrêt de travail : qui
+  // paie » parle d'absence, pas de bulletin, même si « paie » est dans le titre.
+  const score = (o) => (o.mots.test(slug) ? 2 : 0) + (o.mots.test(titre) ? 1 : 0)
+    + ((pourParent ? o.parent : !o.parent) ? 0.5 : 0);
+  const trouves = OUTILS.filter((o) => o.mots.test(slug) || o.mots.test(titre));
+  trouves.sort((x, y) => score(y) - score(x));
+  const repli = pourParent ? [OUTILS[0], OUTILS[1]] : [OUTILS[2], OUTILS[3]];
+  const choix = [];
+  for (const o of [...trouves, ...repli]) if (!choix.includes(o) && choix.length < 2) choix.push(o);
+  return choix;
 }
 
 /** Une carte d'article, partagee par l'index et les pages de rubrique. */
