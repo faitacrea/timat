@@ -15,6 +15,13 @@ import { INSTAGRAM_URL, FACEBOOK_PAGE_URL, FACEBOOK_GROUPE_URL } from "../data/c
 // Le prix d'appel des encarts vient des montants Stripe, comme la page des
 // offres : un article ne doit jamais annoncer un autre prix que celui prélevé.
 import { MONTANTS } from "../api/_offres.js";
+import { EMAIL_CONTACT } from "../data/coordonnees.js";
+// L'ENCADRÉ « ÉCRIT PAR SOPHIE » (texte validé par Sophie le 7/11/2026) : le
+// prénom seul, à sa demande — la documentation de Google sur les articles ne
+// demande que le nom de l'auteur, sans exiger le nom complet. Pas de photo,
+// à sa demande. Son agrément est EN PRÉPARATION : le texte ne dit jamais
+// qu'elle est agréée. La ville est celle des mentions légales.
+const AUTRICE = { prenom: "Sophie", titre: "Fondatrice de TiMat", lieu: "Cachan (Val-de-Marne)" };
 import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -409,6 +416,10 @@ article figcaption{font-size:13px;color:${T.light};margin-top:9px;text-align:cen
 .lire a:hover .t{text-decoration:underline}
 .lire .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   font-size:13px;color:${T.mauve};line-height:1.5;margin-top:4px}
+.auteur{margin:36px 0 0;background:${T.white};border:1px solid ${T.border};border-left:4px solid ${T.terracotta};border-radius:4px 14px 14px 4px;padding:18px 22px}
+.auteur p{margin:0 0 10px;font-size:15px;line-height:1.6;color:${T.ink}}
+.auteur p:last-child{margin-bottom:0}
+.auteur .auteur-tete{font-family:'Outfit',system-ui,-apple-system,sans-serif;font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:${T.terracotta};font-weight:800}
 .outils-lies{margin-top:26px}
 .outils-tous{margin:10px 0 0;font-size:14px;font-weight:700}
 .outils-tous a{color:${T.terracotta}}
@@ -684,7 +695,7 @@ function pageArticle(a, tous = []) {
       datePublished: a.datePublication,
       dateModified: a.dateMiseAJour || a.datePublication,
       mainEntityOfPage: { "@type": "WebPage", "@id": url },
-      author: { "@type": "Organization", name: "TiMat", url: SITE },
+      author: { "@type": "Person", name: AUTRICE.prenom, jobTitle: AUTRICE.titre, worksFor: { "@type": "Organization", name: "TiMat", url: SITE } },
       publisher: {
         "@type": "Organization",
         name: "TiMat",
@@ -798,6 +809,11 @@ function pageArticle(a, tous = []) {
           .join("")}</section>`
       : ""
   }
+  <aside class="auteur" aria-label="Autrice">
+    <p class="auteur-tete">Écrit par Sophie, fondatrice de TiMat · ${esc(AUTRICE.lieu)}</p>
+    <p>J'ai un CAP petite enfance et j'ai travaillé plusieurs années en crèche. J'ai créé TiMat en préparant mon propre agrément d'assistante maternelle, quand j'ai découvert la montagne administrative que le métier impose et que personne n'explique nulle part.</p>
+    <p>Chaque article s'appuie sur les textes officiels : convention collective, code du travail, Légifrance, Pajemploi. Ils sont cités en bas de page, pour que vous puissiez tout vérifier vous-même. Une erreur, une question ? Écrivez-moi : <a href="mailto:${escAttr(EMAIL_CONTACT)}">${esc(EMAIL_CONTACT)}</a>.</p>
+  </aside>
   ${
     true
       ? `<section class="sources"><h2>Sources officielles</h2><ul>${[...sourcesValides, CCN_SOURCE]

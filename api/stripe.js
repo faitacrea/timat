@@ -205,7 +205,7 @@ export default async function handler(req, res) {
     // au prorata ; le webhook « customer.subscription.updated » met l'offre a
     // jour dans le profil.
     const { data: profil, error: errProfil } = await sb.from('profiles')
-      .select('stripe_customer_id').eq('id', userId).maybeSingle();
+      .select('stripe_customer_id, subscription_status, subscription_end_date').eq('id', userId).maybeSingle();
     if (errProfil) return res.status(502).json({ error: 'Profil illisible : ' + errProfil.message });
     if (profil?.stripe_customer_id) {
       const { data: abonnements } = await stripe.subscriptions.list({ customer: profil.stripe_customer_id, status: 'all', limit: 10 });
@@ -227,6 +227,15 @@ export default async function handler(req, res) {
       }
     }
 
+    // CHOISIR SON OFFRE PENDANT L'ESSAI NE FAIT PERDRE AUCUN JOUR. Sans cela,
+    // une assistante maternelle qui s'abonnait au 20e jour de ses 2 mois
+    // d'essai payait le jour même et perdait les 40 jours restants. Le premier
+    // prélèvement est donc fixé à la fin de l'essai ; Stripe exige au moins
+    // 48 heures d'écart, en deçà le paiement commence tout de suite.
+    const finEssai = profil?.subscription_status === 'trialing' && profil?.subscription_end_date
+      ? Math.floor(new Date(profil.subscription_end_date).getTime() / 1000) : 0;
+    const essaiRestant = finEssai > Math.floor(Date.now() / 1000) + 2 * 86400 ? finEssai : 0;
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -243,6 +252,7 @@ export default async function handler(req, res) {
       // le premier paiement de deux mois de plus.
       subscription_data: {
         metadata: { userId, offre, periode },
+        ...(essaiRestant ? { trial_end: essaiRestant } : {}),
       },
     });
 

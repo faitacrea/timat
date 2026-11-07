@@ -58,7 +58,7 @@ export const EMAIL_TEMPLATES = {
   essai_rappel_7: {
     subject: "Il vous reste une semaine d'essai TiMat",
     html: (v) => `<h2>${salut(v.prenom)}</h2>
-<p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>, dans ${esc(v.jours)} jours.</p>
+<p>Votre essai gratuit de 2 mois se termine le <strong>${esc(v.fin)}</strong>, dans ${esc(v.jours)} jours.</p>
 <p>Vous n'avez rien à faire tout de suite, et aucune carte bancaire ne vous a été demandée. Si vous souhaitez continuer, vous pourrez le faire d'un clic depuis votre espace.</p>
 <p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ouvrir TiMat</a></p>
 <p style="color:#55707C;font-size:14px">Si vous ne continuez pas, votre compte repasse simplement en formule gratuite. Vos enfants, vos pointages et vos documents restent là où ils sont.</p>`,
@@ -66,7 +66,7 @@ export const EMAIL_TEMPLATES = {
   essai_rappel_3: {
     subject: "Vos deux mois d'essai TiMat se terminent dans 3 jours",
     html: (v) => `<h2>${salut(v.prenom)}</h2>
-<p>Vos deux mois offerts se terminent le <strong>${esc(v.fin)}</strong>.</p>
+<p>Votre essai gratuit de 2 mois se termine le <strong>${esc(v.fin)}</strong>.</p>
 <p>Pour garder les bulletins de salaire et le récapitulatif Pajemploi, choisissez votre offre : Essentiel à 4,99 € par mois pour un enfant, ou Pro à 9,99 € par mois sans limite d'enfants (ou à l'année, avec 2 mois offerts) — sans engagement, résiliable en un clic.</p>
 <p><a href="${lien(v.url)}" style="display:inline-block;background:#B4543F;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Choisir mon offre</a></p>
 <p style="color:#55707C;font-size:14px">Si vous ne faites rien, votre compte repasse en formule gratuite. <strong>Rien n'est supprimé</strong> : vos enfants, vos pointages et vos documents vous attendent, et reprendre l'abonnement rouvre exactement le dossier que vous aviez laissé.</p>`,
