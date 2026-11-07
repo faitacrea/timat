@@ -630,7 +630,7 @@ export function CarteAbonnement({user,nbEnfants=0,lancerCheckout,ouvrirPortail})
   // proposé qu'à qui accueille au plus un enfant.
   const choix=offre==="pro"?[]:offre==="essentiel"?["pro"]:["essentiel","pro"];
   const texte={
-    essai:"Votre essai gratuit vous donne tout TiMat"+(jours!==null&&jours>0?", encore "+jours+" jour"+(jours>1?"s":""):"")+". Aucun abonnement n'est en cours : sans rien faire, le compte repasse en gratuit à la fin de l'essai, et vos données restent là. Pour continuer avec tout TiMat, choisissez votre offre.",
+    essai:"Votre essai gratuit vous donne tout TiMat"+(jours!==null&&jours>0?", encore "+jours+" jour"+(jours>1?"s":""):"")+". Aucun abonnement n'est en cours : sans rien faire, le compte repasse en gratuit à la fin de l'essai, et vos données restent là. Pour continuer avec tout TiMat, choisissez votre offre"+(jours!==null&&jours>2?" : le premier paiement aura lieu à la fin de l'essai, vous ne perdez aucun jour.":"."),
     gratuit:"Compte gratuit : un enfant, et tout son quotidien. Pour la paie et les documents officiels, choisissez une offre.",
     essentiel:"Offre Essentiel active : tout TiMat, pour un enfant."+(nbEnfants>=1?" Pour accueillir un deuxième enfant, passez au Pro : le changement se fait au prorata, sans second abonnement.":""),
     pro:"Offre Pro active : tout TiMat, sans limite d'enfants.",

@@ -5308,7 +5308,7 @@ export function ModaleListeAttente({ ouverte, fermer }){
             <>
               <p style={{fontSize:14.5,lineHeight:1.7,color:"#55707C",margin:"0 0 18px"}}>
                 Vous recevrez un e-mail le jour où les inscriptions ouvrent. Un seul.
-                Vous pourrez créer votre compte dans la foulée : <b style={{color:"#2E4859"}}>deux mois offerts, sans carte bancaire</b>.
+                Vous pourrez créer votre compte dans la foulée : <b style={{color:"#2E4859"}}>deux mois d'essai gratuit, sans carte bancaire</b>.
               </p>
               <p style={{fontSize:14.5,lineHeight:1.7,color:"#55707C",margin:"0 0 14px"}}>
                 D'ici là, tout ceci est déjà en ligne, gratuitement et sans compte :
@@ -5839,7 +5839,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>{role === "asmat" ? "Espace pro" : "Espace famille"}</div>
-                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
+                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois d'essai gratuit · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
                 </div>
                 <button onClick={() => { try{window.location.href="/";}catch(e){} }} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
               </div>
@@ -6941,7 +6941,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <p><strong>Formule Pro :</strong> 9,99 € TTC par mois, ou 99 € TTC par an. Accès à toutes les fonctionnalités, sans limite du nombre d'enfants accueillis.</p>
               <p><strong>Essai gratuit :</strong> tout compte d'assistante maternelle s'ouvre sur un essai gratuit de 2 mois, avec l'accès de la formule Pro, à compter de la création du compte. <strong>Aucune carte bancaire n'est demandée pour cet essai</strong>, et aucun abonnement n'est créé pendant sa durée : il ne peut donc pas se transformer en prélèvement. Un rappel est envoyé 7 jours puis 3 jours avant la fin.</p>
               <p>À l'issue des 2 mois, le compte repasse automatiquement en formule gratuite. <strong>Aucune donnée n'est supprimée</strong> : enfants, pointages, contrats et documents sont conservés, seules les fonctions des formules payantes cessent d'être accessibles. Reprendre un abonnement les rouvre en l'état.</p>
-              <p>La carte bancaire n'est demandée qu'au moment de souscrire l'abonnement, si vous choisissez de continuer. L'abonnement est alors mensuel ou annuel, selon le choix fait à la souscription, et résiliable à tout moment sans frais depuis l'espace utilisateur ; la résiliation prend effet à la fin de la période déjà payée. Le passage d'une formule à l'autre, ou d'une période à l'autre, prend effet immédiatement : la différence de prix est calculée au prorata de la période en cours, puis facturée ou créditée. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
+              <p>La carte bancaire n'est demandée qu'au moment de souscrire l'abonnement, si vous choisissez de continuer. Un abonnement souscrit pendant l'essai n'est prélevé qu'à la fin de celui-ci. L'abonnement est alors mensuel ou annuel, selon le choix fait à la souscription, et résiliable à tout moment sans frais depuis l'espace utilisateur ; la résiliation prend effet à la fin de la période déjà payée. Le passage d'une formule à l'autre, ou d'une période à l'autre, prend effet immédiatement : la différence de prix est calculée au prorata de la période en cours, puis facturée ou créditée. Le paiement est géré par Stripe (prestataire certifié PCI-DSS). Aucune donnée bancaire n'est stockée par TiMat.</p>
 
               <h3 style={{fontSize:15,fontWeight:700,color:"#2E4859",margin:"20px 0 12px"}}>5. Données et contenu utilisateur</h3>
               <p>L'utilisateur reste propriétaire de toutes les données qu'il saisit dans TiMat (informations sur les enfants, contrats, pointages, transmissions, documents). TiMat ne revendique aucun droit de propriété sur ces données. L'utilisateur peut exporter ou supprimer ses données à tout moment.</p>
@@ -7101,7 +7101,7 @@ export function LandingPage({onLogin,dark,setDark,config=DEFAULT_CONFIG,preview=
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <div style={{ fontFamily: fTitle, fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>{role === "asmat" ? "Espace pro" : "Espace famille"}</div>
-                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois gratuits · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
+                  <div style={{ fontSize: 11, color: "#A68970", marginTop: 2 }}>{modeAuth === "inscription" ? (role === "asmat" ? "2 mois d'essai gratuit · sans carte" : "Inscription gratuite") : "Content de vous revoir !"}</div>
                 </div>
                 <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#A68970" }}>✕</button>
               </div>
@@ -7330,24 +7330,24 @@ export const DEFAULT_CONFIG = {
     heroSub:"Vous saisissez vos heures. TiMat calcule le salaire, les congés et les indemnités, et prépare votre déclaration Pajemploi.",
     heroBtn:"Commencer gratuitement →",
     prixMensuel:"9,99",
-    prixEssai:"2 mois offerts",
+    prixEssai:"2 mois d'essai gratuit",
     heroDesc:"",
     heroBadge:"Conforme à la convention IDCC 3239",
     heroSubDesc:"",
-    heroBtnPrimTxt:"2 mois offerts, sans carte bancaire →",
+    heroBtnPrimTxt:"2 mois d'essai gratuit, sans carte bancaire →",
     // La barre du bas a son propre libellé : elle porte déjà le prix et la
     // durée à gauche, reprendre le bouton du hero disait tout deux fois.
-    barreBtnTxt:"Je démarre mes 2 mois offerts",
+    barreBtnTxt:"Je démarre mon essai gratuit",
     heroBtnSecTxt:"Voir l'app en démo ↓",
     // Les deux portes d'entrée du hero, et la troisième voie sans compte.
     heroRoleAsmat:"Je suis assistante maternelle",
-    heroRoleAsmatSub:"2 mois offerts, sans carte bancaire",
+    heroRoleAsmatSub:"2 mois d'essai gratuit, sans carte bancaire",
     heroRoleParent:"Je suis parent employeur",
     heroRoleParentSub:"Gratuit, invité par votre assistante maternelle",
     heroOutilTxt:"Calculer un salaire mensualisé — sans compte",
     heroBtnNavTxt:"Commencer gratuitement →",
-    heroTags:"2 mois offerts,Sans carte bancaire,Une saisie — le reste se calcule,Données en France",
-    ctaBtnTxt:"Je commence - 2 mois gratuits →",
+    heroTags:"2 mois d'essai gratuit,Sans carte bancaire,Une saisie — le reste se calcule,Données en France",
+    ctaBtnTxt:"Je commence mon essai gratuit →",
     ctaSub:"TiMat s'occupe de ça. Pour que vous puissiez vous occuper des enfants.",
     ctaFooter:"Créé par une professionnelle de la petite enfance · Données hébergées en France 🇫🇷",
     proLabel:"⭐ SANS LIMITE D'ENFANTS",
@@ -8862,7 +8862,7 @@ export default function App(){
             <div style={{margin:"10px 12px 0",background:"#FFF4EF",border:"1px solid #F0D6CB",borderLeft:"3px solid #B4543F",borderRadius:12,padding:"12px 14px",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
               <div style={{flex:"1 1 200px",minWidth:0}}>
                 <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>
-                  {joursEssai===1?"Vos deux mois offerts se terminent demain.":"Vos deux mois offerts se terminent dans "+joursEssai+" jours."}
+                  {joursEssai===1?"Votre essai gratuit se termine demain.":"Votre essai gratuit se termine dans "+joursEssai+" jours."}
                 </div>
                 <div style={{fontSize:12.5,color:"#55707C",marginTop:2,lineHeight:1.5}}>
                   Sans rien faire, votre compte repasse en formule gratuite. Rien n'est supprimé.
@@ -8877,7 +8877,7 @@ export default function App(){
           {role!=="parent"&&essaiFini&&(
             <div style={{margin:"10px 12px 0",background:"#F4F7F6",border:"1px solid #D8E4E1",borderLeft:"3px solid #2F655F",borderRadius:12,padding:"12px 14px",display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
               <div style={{flex:"1 1 200px",minWidth:0}}>
-                <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>Vos deux mois offerts sont terminés.</div>
+                <div style={{fontWeight:700,color:"#2E4859",fontSize:14}}>Votre essai gratuit de 2 mois est terminé.</div>
                 <div style={{fontSize:12.5,color:"#55707C",marginTop:2,lineHeight:1.5}}>
                   Vos enfants, vos pointages et vos documents sont intacts. Reprendre l'abonnement rouvre le dossier exactement où vous l'aviez laissé.
                 </div>

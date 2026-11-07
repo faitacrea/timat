@@ -12,11 +12,11 @@
 // d'audit compare le texte legal a son empreinte : toute modification du
 // texte fait echouer la construction tant que la date et l'empreinte n'ont
 // pas ete mises a jour ensemble.
-export const MAJ_DOCUMENTS_LEGAUX = "2026-11-05";
+export const MAJ_DOCUMENTS_LEGAUX = "2026-11-07";
 
 // Empreinte du texte lisible des trois documents. Se regenere avec :
 //   node scripts/empreinte-legale.mjs --ecrire
-export const EMPREINTE_DOCUMENTS_LEGAUX = "e82acc7b572bbcc15f4eeaede2de1baf";
+export const EMPREINTE_DOCUMENTS_LEGAUX = "3da3c9d9740b3496d30dcb8d6d5ef7f9";
 
 export const majLisible = () => {
   const [a, m, j] = MAJ_DOCUMENTS_LEGAUX.split("-");

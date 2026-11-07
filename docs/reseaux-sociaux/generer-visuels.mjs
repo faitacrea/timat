@@ -219,7 +219,7 @@ pub("21-publication-10-pointage-signe.png", `
     <div style="margin-top:10px">2. Le parent valide, depuis son accès gratuit.</div>
     <div style="margin-top:10px">3. Le salaire et le récapitulatif Pajemploi partent de ces heures-là.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 22-24. STORIES DU 23 OCTOBRE 2026 (a la place du canal de diffusion) :
@@ -380,7 +380,7 @@ pub("34-publication-15-fin-de-contrat-timat.png", `
     <div style="margin-top:10px">2. Les congés payés restants et l'indemnité de rupture, quand elle est due.</div>
     <div style="margin-top:10px">3. La lettre, le certificat de travail et le reçu pour solde de tout compte, prêts à imprimer.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 35. LES REPAS
@@ -438,7 +438,7 @@ pub("39-publication-20-trajets-timat.png", `
     <div style="margin-top:10px">2. TiMat vous prévient si le taux est sous le minimum de la convention.</div>
     <div style="margin-top:10px">3. Le total du mois et la feuille de route sont prêts pour le parent.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 40-42. STORIES DU 31 OCTOBRE AU 6 NOVEMBRE 2026.
@@ -566,7 +566,7 @@ pub("61-publication-23-conges-payes-timat.png", `
     <div style="margin-top:10px">2. Le dixième et le maintien de salaire, comparés : la méthode la plus favorable est retenue.</div>
     <div style="margin-top:10px">3. Le solde suivi, mois après mois.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 62. LES ABSENCES DE L'ENFANT PENDANT LES FETES
@@ -618,7 +618,7 @@ pub("65-publication-27-sante-timat.png", `
     <div style="margin-top:10px">2. Le registre des médicaments : la date, l'heure, le médicament, la posologie, qui l'a donné.</div>
     <div style="margin-top:10px">3. Imprimable à tout moment.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 66. LES DATES DE CONGES PAYES AVANT LE 1ER MARS
@@ -665,7 +665,7 @@ pub("78-publication-31-rapport-annuel-timat.png", `
     <div style="margin-top:10px">2. Le salaire net de l'année et les indemnités d'entretien.</div>
     <div style="margin-top:10px">3. Un rapport par enfant, avec votre signature.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 79. AUGMENTER SON TARIF
@@ -700,7 +700,7 @@ pub("81-publication-34-minimum-surveille-timat.png", `
     <div style="margin-top:10px">2. En dessous : une alerte sur le contrat, qui dit qu'un avenant est nécessaire.</div>
     <div style="margin-top:10px">3. Les bulletins calculés au minimum du mois payé, jamais en dessous.</div>
   </div>
-  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois offerts, sans carte bancaire.</div>
+  <div style="font-size:33px;font-weight:700;margin-top:48px;color:${TERRA}">2 mois d'essai gratuit, sans carte bancaire.</div>
 `);
 
 // 82. LE CONGE DE NAISSANCE AVANT LE 31 MARS 2027
